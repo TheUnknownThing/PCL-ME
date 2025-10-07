@@ -507,7 +507,7 @@ Public Class MyListItem
             If IsLoaded AndAlso AniControlEnabled = 0 AndAlso anime Then '防止默认属性变更触发动画
                 Dim Anim As New List(Of AniData)
                 If Checked Then
-                    '由无变有 
+                    '由无变有
                     If Not IsNothing(RectCheck) Then
                         Dim Delta = 20
                         Anim.Add(AaHeight(RectCheck, Delta * 0.4, 200,, New AniEaseOutFluent(AniEasePower.Weak)))
