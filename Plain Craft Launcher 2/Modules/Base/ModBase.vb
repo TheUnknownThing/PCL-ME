@@ -1236,6 +1236,9 @@ Re:
                 For Each Entry As ZipArchiveEntry In Archive.Entries
                     If ProgressIncrementHandler IsNot Nothing Then ProgressIncrementHandler(1 / TotalCount)
                     Dim DestinationPath As String = IO.Path.Combine(DestDirectory, Entry.FullName)
+                    If Not DestinationPath.StartsWithF(DestDirectory) Then
+                        Throw New Exception($"解压文件 {Entry.FullName} 错误：解压文件路径 {DestinationPath} 不在目标目录 {DestDirectory} 内")
+                    End If
                     If DestinationPath.EndsWithF("\") OrElse DestinationPath.EndsWithF("/") Then
                         Continue For '不创建空文件夹
                     Else
