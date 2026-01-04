@@ -1021,7 +1021,7 @@ Public Class PageInstanceInstall
             Function(Left As DlOptiFineListEntry, Right As DlOptiFineListEntry) As Boolean
                 If Not Left.IsPreview AndAlso Right.IsPreview Then Return True
                 If Left.IsPreview AndAlso Not Right.IsPreview Then Return False
-                Return CompareVersionGe(Left.DisplayName, Right.DisplayName)
+                Return CompareVersion(Left.DisplayName, Right.DisplayName)
             End Function)
             '可视化
             PanOptiFine.Children.Clear()

@@ -383,7 +383,7 @@ Public Class PageInstanceOverall
     Private Sub BtnManageRestore_Click(sender As Object, e As EventArgs) Handles BtnManageRestore.Click
         Try
             Dim CurrentVersion = PageInstanceLeft.Instance.Info
-            If Not CurrentVersion.Drop = 99 AndAlso CompareVersionGe(CurrentVersion.VanillaName, "1.5.2") = -1 AndAlso CurrentVersion.HasForge Then
+            If Not CurrentVersion.Drop = 99 AndAlso CompareVersion(CurrentVersion.VanillaName, "1.5.2") = -1 AndAlso CurrentVersion.HasForge Then
                 Hint("该实例暂不支持重置！", HintType.Info)
                 Exit Sub
             End If

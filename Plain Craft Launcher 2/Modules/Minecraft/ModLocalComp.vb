@@ -1809,7 +1809,7 @@ Finished:
                                 Dim IndexVersion As String = IndexEntry("gameVersion")
                                 If IndexVersion <> McInstance Then Continue For 'MC 版本匹配
                                 '由于 latestFilesIndexes 是按时间从新到老排序的，所以只需取第一个；如果需要检查多个 releaseType 下的文件，将 > -1 改为 = 1，但这应当并不会获取到更新的文件
-                                If NewestVersion IsNot Nothing AndAlso CompareVersionGe(NewestVersion, IndexVersion) > -1 Then Continue For '只保留最新 MC 版本
+                                If NewestVersion IsNot Nothing AndAlso CompareVersion(NewestVersion, IndexVersion) > -1 Then Continue For '只保留最新 MC 版本
                                 If NewestVersion <> IndexVersion Then
                                     NewestVersion = IndexVersion
                                     NewestFileIds.Clear()
