@@ -84,8 +84,8 @@ public static class IdentifyOld
     {
         try
         {
-            if (string.IsNullOrEmpty(Config.System.LaunchUuid)) Config.System.LaunchUuid = GetGuid();
-            var hashCode = GetMachineId(Config.System.LaunchUuid)
+            if (string.IsNullOrEmpty(States.System.LaunchUuid)) States.System.LaunchUuid = GetGuid();
+            var hashCode = GetMachineId(States.System.LaunchUuid)
                 .Substring(6, 16)
                 .Insert(4, "-")
                 .Insert(9, "-")

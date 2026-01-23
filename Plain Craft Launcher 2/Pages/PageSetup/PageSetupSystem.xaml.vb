@@ -58,7 +58,7 @@ Class PageSetupSystem
         TextSystemHttpProxyCustomUsername.Text = Setup.Get("SystemHttpProxyCustomUsername")
         TextSystemHttpProxyCustomPassword.Text = Setup.Get("SystemHttpProxyCustomPassword")
         CType(FindName($"RadioHttpProxyType{Setup.Get("SystemHttpProxyType")}"), MyRadioBox).SetChecked(True, False)
-        CheckNetDohEnable.Checked = Config.System.NetworkConfig.EnableDoH
+        CheckNetDohEnable.Checked = Config.Network.EnableDoH
 
         '调试选项
         CheckDebugMode.Checked = Setup.Get("SystemDebugMode")
@@ -97,7 +97,7 @@ Class PageSetupSystem
             Setup.Reset("SystemHttpProxyCustomUsername")
             Setup.Reset("SystemHttpProxyCustomPassword")
             Setup.Reset("SystemUseDefaultProxy")
-            Config.System.NetworkConfig.Reset()
+            Config.Network.Reset()
             Setup.Reset("UiAniFPS")
 
             Log("[Setup] 已初始化启动器页设置")

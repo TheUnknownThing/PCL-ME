@@ -325,7 +325,7 @@ Public Class FormMain
         End If
         '解除帮助页面的隐藏
         If LastVersionCode <= 205 Then
-            Config.UI.Hide.SetupAbout = False
+            Config.Preference.Hide.SetupAbout = False
             Log("[Start] 已解除帮助页面的隐藏")
         End If
         '迁移旧版用户档案
@@ -570,8 +570,8 @@ Public Class FormMain
     Public IsSizeSaveable As Boolean = False
     Private Sub FormMain_SizeChanged() Handles Me.SizeChanged
         If IsSizeSaveable Then
-            Config.UI.WindowHeight = Height
-            Config.UI.WindowWidth = Width
+            States.UI.WindowHeight = Height
+            States.UI.WindowWidth = Width
         End If
         If PanBack IsNot Nothing Then
             RectForm.Rect = New Rect(0, 0, PanBack.ActualWidth, PanBack.ActualHeight)

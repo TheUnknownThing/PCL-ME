@@ -27,7 +27,7 @@ Class PageSetupGameLink
         '        TextLinkRelay.Text = Config.Link.RelayServer
         '        ComboRelayType.SelectedIndex = Config.Link.RelayType
         '        ComboServerType.SelectedIndex = Config.Link.ServerType
-        CheckLatencyFirstMode.Checked = Config.Link.LatencyFirstMode
+        CheckLatencyFirstMode.Checked = Config.Link.UseLatencyFirstMode
         ComboPreferProtocol.SelectedIndex = CInt(Config.Link.ProtocolPreference)
         CheckTryPunchSym.Checked = Config.Link.TryPunchSym
         CheckEnableIPv6.Checked = Config.Link.EnableIPv6
@@ -59,10 +59,10 @@ Class PageSetupGameLink
     Public Sub Reset()
         Try
             Config.Link.UsernameConfig.Reset()
-            Config.Link.RelayServerConfig.Reset()
+            Config.Link.CustomRelayServerConfig.Reset()
             Config.Link.RelayTypeConfig.Reset()
             Config.Link.ServerTypeConfig.Reset()
-            Config.Link.LatencyFirstModeConfig.Reset()
+            Config.Link.UseLatencyFirstModeConfig.Reset()
             Config.Link.ProtocolPreferenceConfig.Reset()
             Config.Link.TryPunchSymConfig.Reset()
             Config.Link.EnableIPv6Config.Reset()

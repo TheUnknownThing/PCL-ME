@@ -137,7 +137,7 @@ WaitRetry:
             Setup.Load("ToolDownloadThread")
             Setup.Load("ToolDownloadSpeed")
             Setup.Load("UiFont")
-            Dim updateBranchCfg = Config.System.Update.UpdateChannelConfig
+            Dim updateBranchCfg = Config.Update.UpdateChannelConfig
             If updateBranchCfg.IsDefault() Then
                 updateBranchCfg.SetValue(If(VersionBaseName.Contains("beta"), 1, 0))
             End If

@@ -1634,7 +1634,7 @@ LoginFinish:
         End If
 
         '设置代理
-        If Config.Instance.UseProxy.Item(instance.PathIndie) AndAlso Config.System.HttpProxy.Type.Equals(2) AndAlso Not String.IsNullOrWhiteSpace(Config.System.HttpProxy.CustomAddress) Then
+        If Config.Instance.UseProxy.Item(instance.PathIndie) AndAlso Config.Network.HttpProxy.Type.Equals(2) AndAlso Not String.IsNullOrWhiteSpace(Config.Network.HttpProxy.CustomAddress) Then
             Try
                 Dim ProxyAddress As New Uri(Setup.Get("SystemHttpProxy"))
                 DataList.Add($"-D{If(ProxyAddress.Scheme.ToString.StartsWithF("https:"), "https", "http")}.proxyHost={ProxyAddress.AbsoluteUri}")
@@ -1731,7 +1731,7 @@ NextInstance:
         End If
 
         '设置代理
-        If Config.Instance.UseProxy.Item(instance.PathIndie) AndAlso Config.System.HttpProxy.Type.Equals(2) AndAlso Not String.IsNullOrWhiteSpace(Config.System.HttpProxy.CustomAddress) Then
+        If Config.Instance.UseProxy.Item(instance.PathIndie) AndAlso Config.Network.HttpProxy.Type.Equals(2) AndAlso Not String.IsNullOrWhiteSpace(Config.Network.HttpProxy.CustomAddress) Then
             Try
                 Dim ProxyAddress As New Uri(Setup.Get("SystemHttpProxy"))
                 DataList.Add($"-D{If(ProxyAddress.Scheme.ToString.StartsWithF("https:"), "https", "http")}.proxyHost={ProxyAddress.AbsoluteUri}")

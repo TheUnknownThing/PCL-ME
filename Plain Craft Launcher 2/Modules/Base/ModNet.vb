@@ -1120,7 +1120,7 @@ NotSupportRange:
                         End If
                         '开始下载
                         Using httpStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
-                            If Config.System.Debug.AddRandomDelay Then Threading.Thread.Sleep(RandomUtils.NextInt(50, 3000))
+                            If Config.Debug.AddRandomDelay Then Threading.Thread.Sleep(RandomUtils.NextInt(50, 3000))
                             Const bufferSize As Integer = 16384
                             Using httpDataBufferOwner = MemoryPool(Of Byte).Shared.Rent(bufferSize)
                                 Dim dataBuffer = httpDataBufferOwner.Memory.Span
