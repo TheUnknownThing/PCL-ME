@@ -1,7 +1,7 @@
 ﻿{
   "name": "Plain Craft Launcher Community Edition",
   "version": {
-    "base": "2.14.0",
+    "base": "2.14.1",
     "upstream": "2.12.1",
     "suffix": "",
     "code": 506
