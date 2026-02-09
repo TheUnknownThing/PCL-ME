@@ -135,8 +135,6 @@ WaitRetry:
                 Dim oldLogFile = $"{ExePath}PCL\Log-CE{i}.log"
                 If File.Exists(oldLogFile) Then File.Delete(oldLogFile)
             Next
-            'Pipe RPC 初始化
-            StartEchoPipe()
             '计时
             Log("[Start] 第一阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
             ApplicationStartTick = TimeUtils.GetTimeTick()
