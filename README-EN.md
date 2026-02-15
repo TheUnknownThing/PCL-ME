@@ -14,7 +14,7 @@
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/PCL-Community/PCL2-CE/total)
 [![Bilibili](https://img.shields.io/badge/Threads-bilibili-00A4DB?style=flat&labelColor=444444&logo=bilibili)](https://space.bilibili.com/3546847192811755/dynamic) <br />
 
-[CE download](https://github.com/PCL-Community/PCL2-CE/releases) |
+[download](https://github.com/PCL-Community/PCL2-CE/releases/latest) |
 [Upstream repo](https://github.com/Meloong-Git/PCL) |
 [Help Center repo](https://github.com/PCL-Community/PCL2CEHelp)
 
