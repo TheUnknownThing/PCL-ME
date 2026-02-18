@@ -17,11 +17,7 @@ public static class ByteExtension
 
             return sb.ToString();
         }
-    }
-
-    extension(byte[] input)
-    {
-        public string FromByteToB64() => Convert.ToBase64String(input);
-        public string FromBytesToB64UrlSafe() => input.FromByteToB64().FromB64ToB64UrlSafe();        
+        public string FromByteToB64() => Convert.ToBase64String(bytes);
+        public string FromBytesToB64UrlSafe() => bytes.FromByteToB64().FromB64ToB64UrlSafe();
     }
 }
