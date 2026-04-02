@@ -21,7 +21,10 @@ Latest continuation update:
 - shell-spike execute mode now supports explicit crash-export destination handoff and records the selected archive target as a shell artifact
 - shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
 - portable Java runtime selection and manifest file planning now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
+- portable Java runtime manifest/file request coordination now lives in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - launcher Java runtime manifest selection / file planning in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now route through `MinecraftJavaRuntimeDownloadService`
+- launcher Java runtime index / manifest / file source shaping in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadWorkflowService`
+- portable Java runtime download planning now preserves Windows-style runtime paths even when the backend is exercised on non-Windows hosts
 - a new portable `net8.0` backend assembly now lives in `PCL.Core.Backend`, compiling the extracted startup / launch / crash workflow layer outside `PCL.Core`'s `net8.0-windows` target
 - a new portable backend test lane now lives in `PCL.Core.Backend.Test`, and its extracted workflow/service coverage runs on macOS/Linux hosts
 - `PCL.Frontend.Spike` now targets plain `net8.0` and runs against `PCL.Core.Backend` instead of `PCL.Core`
@@ -139,6 +142,7 @@ What is already true:
 - a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
 - the remaining launcher logic is now primarily shell adapters, prompt adapters, concrete network IO, and Windows-facing compatibility code rather than portable runtime policy
 - `PCL.Frontend.Spike` is now strong enough to review login request execution, Java runtime download planning, host-backed path wiring, and crash-export target handoff without pulling WPF back into scope
+- `PCL.Frontend.Spike` can now also inspect launcher-style Java index / manifest request artifacts and materialize a stub runtime tree from the portable download workflow during `execute` mode
 
 What is not true yet:
 
