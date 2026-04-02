@@ -831,27 +831,12 @@ Retry:
             End If
         End Try
 
-        Dim ResultJson As JObject = GetJson(Result)
-        Dim AccessToken As String = ResultJson("access_token").ToString
-        Dim RefreshToken As String = ResultJson("refresh_token").ToString
+        Dim refreshResult = MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(Result)
         Return New MicrosoftOAuthStepResult With {
             .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
-            .AccessToken = AccessToken,
-            .RefreshToken = RefreshToken}
+            .AccessToken = refreshResult.AccessToken,
+            .RefreshToken = refreshResult.RefreshToken}
     End Function
-
-
-    Private Class XBLTokenRequestData
-        Public Class PropertiesData
-            Public Property AuthMethod As String
-            Public Property SiteName As String
-            Public Property RpsTicket As String
-        End Class
-        Public Property Properties As PropertiesData
-        Public Property RelyingParty As String
-        Public Property TokenType As String
-    End Class
-
     ''' <summary>
     ''' 正版验证步骤 2：从 OAuth accessToken 获取 XBLToken
     ''' </summary>
@@ -860,15 +845,7 @@ Retry:
     Private Function MsLoginStep2(accessToken As String) As MicrosoftStringStepResult
         ProfileLog("开始正版验证 Step 2/6: 获取 XBLToken")
         If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
-        Dim requestData As New XBLTokenRequestData With {
-            .Properties = New XBLTokenRequestData.PropertiesData With {
-                .AuthMethod = "RPS",
-                .SiteName = "user.auth.xboxlive.com",
-                .RpsTicket = $"d={accessToken}"
-            },
-            .RelyingParty = "http://auth.xboxlive.com",
-            .TokenType = "JWT"
-        }
+        Dim requestData = MinecraftLaunchMicrosoftProtocolService.BuildXboxLiveTokenRequest(accessToken)
         Dim Result As String = Nothing
         Try
             Using response = HttpRequest.
@@ -889,23 +866,10 @@ Retry:
             End If
         End Try
 
-        Dim ResultJson As JObject = GetJson(Result)
-        Dim XBLToken As String = ResultJson("Token").ToString
         Return New MicrosoftStringStepResult With {
             .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .Value = XBLToken}
+            .Value = MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(Result)}
     End Function
-
-
-    Private Class XSTSTokenRequestData
-        Public Class PropertiesData
-            Public Property SandboxId As String
-            Public Property UserTokens As List(Of String)
-        End Class
-        Public Property Properties As PropertiesData
-        Public Property RelyingParty As String
-        Public Property TokenType As String
-    End Class
     ''' <summary>
     ''' 正版验证步骤 3：从 XBLToken 获取 {XSTSToken, UHS}
     ''' </summary>
@@ -913,14 +877,7 @@ Retry:
     Private Function MsLoginStep3(xblTokenResult As MicrosoftStringStepResult) As MicrosoftXstsStepResult
         ProfileLog("开始正版验证 Step 3/6: 获取 XSTSToken")
         If String.IsNullOrEmpty(xblTokenResult.Value) Then Throw New ArgumentException("XBLToken 为空，无法获取数据", NameOf(xblTokenResult))
-        Dim requestData As New XSTSTokenRequestData With {
-            .Properties = New XSTSTokenRequestData.PropertiesData With {
-                .SandboxId = "RETAIL",
-                .UserTokens = {xblTokenResult.Value}.ToList()
-            },
-            .RelyingParty = "rp://api.minecraftservices.com/",
-            .TokenType = "JWT"
-        }
+        Dim requestData = MinecraftLaunchMicrosoftProtocolService.BuildXstsTokenRequest(xblTokenResult.Value)
         Dim result As String
         Using response = HttpRequest.CreatePost("https://xsts.auth.xboxlive.com/xsts/authorize").
                 WithJsonContent(requestData).
@@ -946,13 +903,11 @@ Retry:
             End If
         End Using
 
-        Dim ResultJson As JObject = GetJson(result)
-        Dim XSTSToken As String = ResultJson("Token").ToString
-        Dim UHS As String = ResultJson("DisplayClaims")("xui")(0)("uhs").ToString
+        Dim xstsResult = MinecraftLaunchMicrosoftProtocolService.ParseXstsTokenResponseJson(result)
         Return New MicrosoftXstsStepResult With {
             .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .XstsToken = XSTSToken,
-            .UserHash = UHS}
+            .XstsToken = xstsResult.Token,
+            .UserHash = xstsResult.UserHash}
     End Function
     ''' <summary>
     ''' 正版验证步骤 4：从 {XSTSToken, UHS} 获取 Minecraft accessToken
@@ -962,9 +917,7 @@ Retry:
     Private Function MsLoginStep4(tokens As MicrosoftXstsStepResult) As MicrosoftStringStepResult
         ProfileLog("开始正版验证 Step 4/6: 获取 Minecraft AccessToken")
         If String.IsNullOrEmpty(tokens.XstsToken) OrElse String.IsNullOrEmpty(tokens.UserHash) Then Throw New ArgumentException("传入的 XSTSToken 或者 UHS 错误", NameOf(tokens))
-        Dim requestData As New Dictionary(Of String, String) From {
-            {"identityToken", $"XBL3.0 x={tokens.UserHash};{tokens.XstsToken}"}
-        }
+        Dim requestData = MinecraftLaunchMicrosoftProtocolService.BuildMinecraftAccessTokenRequest(tokens.UserHash, tokens.XstsToken)
         Dim Result As String
         Try
             Using response = HttpRequest.
@@ -995,8 +948,7 @@ Retry:
             End If
         End Try
 
-        Dim ResultJson As JObject = GetJson(Result)
-        Dim AccessToken As String = ResultJson("access_token").ToString()
+        Dim AccessToken As String = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftAccessTokenResponseJson(Result)
         If String.IsNullOrWhiteSpace(AccessToken) Then Throw New Exception("获取到的 Minecraft AccessToken 为空，登录流程异常！")
         Return New MicrosoftStringStepResult With {
             .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
@@ -1020,12 +972,7 @@ Retry:
                 response.EnsureSuccessStatusCode()
                 result = response.AsString()
             End Using
-            Dim ResultJson As JObject = GetJson(result)
-            If Not (ResultJson.ContainsKey("items") AndAlso
-                ResultJson("items").Any(Function(x)
-                                            Return x("name")?.ToString() = "product_minecraft" OrElse
-                                            x("name")?.ToString() = "game_minecraft"
-                                        End Function)) Then
+            If Not MinecraftLaunchMicrosoftProtocolService.HasMinecraftOwnership(result) Then
                 RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt())
                 Throw New Exception("$$")
             End If
@@ -1075,14 +1022,12 @@ Retry:
                 Throw
             End If
         End Try
-        Dim ResultJson As JObject = GetJson(Result)
-        Dim UUID As String = ResultJson("id").ToString
-        Dim UserName As String = ResultJson("name").ToString
+        Dim profileResponse = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftProfileResponseJson(Result)
         Return New MicrosoftProfileStepResult With {
             .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .Uuid = UUID,
-            .UserName = UserName,
-            .ProfileJson = Result}
+            .Uuid = profileResponse.Uuid,
+            .UserName = profileResponse.UserName,
+            .ProfileJson = profileResponse.ProfileJson}
     End Function
 #End Region
 
