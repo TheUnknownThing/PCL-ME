@@ -930,7 +930,8 @@ Retry:
                 Dim IsIgnore As Boolean = False
                 RunInUiWait(Sub()
                                 If Not IsLaunching Then Exit Sub
-                                If MyMsgBox($"启动器在尝试刷新账号信息时(Step 4)遇到了网络错误。{vbCrLf}你可以选择取消，检查网络后再次启动，也可以选择忽略错误继续启动，但可能无法游玩部分服务器。", "账号信息获取失败", "继续", "取消") = 1 Then IsIgnore = True
+                                Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 4"))
+                                If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
                             End Sub)
                 If IsIgnore Then
                     Return "Ignore"
@@ -1049,13 +1050,15 @@ Retry:
                 ProfileLog("验证登录失败：" & AllMessage)
                 If (AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout")) AndAlso Not AllMessage.Contains("403") Then
                     ProfileLog("已触发超时登录失败")
-                    MyMsgBox("$登录失败：连接登录服务器超时。" & vbCrLf & "请检查你的网络状况是否良好，或尝试使用 VPN！" & vbCrLf & vbCrLf & "详细信息：" & ex.InnerHttpException.WebResponse, "第三方验证失败", IsWarn:=True)
-                    Throw New Exception("$登录失败：连接登录服务器超时。" & vbCrLf & "请检查你的网络状况是否良好，或尝试使用 VPN！" & vbCrLf & vbCrLf & "详细信息：" & ex.InnerHttpException.WebResponse)
+                    Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationTimeoutFailure(ex.InnerHttpException.WebResponse)
+                    MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                    Throw New Exception(failure.WrappedExceptionMessage)
                 End If
             Catch ex As Exception
                 Dim AllMessage = ex.ToString()
                 ProfileLog("验证登录失败：" & AllMessage)
-                MyMsgBox("验证登录失败: " & AllMessage, "第三方验证失败", IsWarn:=True)
+                Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationFailure(AllMessage)
+                MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
                 Throw
             End Try
             Data.Progress = 0.25
@@ -1067,7 +1070,8 @@ Refresh:
                 GoTo LoginFinish
             Catch ex As Exception
                 ProfileLog("刷新登录失败：" & ex.ToString())
-                MyMsgBox("刷新登录失败: " & ex.ToString(), "第三方验证失败", IsWarn:=True)
+                Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetRefreshFailure(ex.ToString())
+                MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
                 If WasRefreshed Then Throw New Exception("二轮刷新登录失败", ex)
             End Try
             Data.Progress = If(NeedRefresh, 0.85, 0.45)
@@ -1078,21 +1082,15 @@ Refresh:
             NeedRefresh = McLoginRequestLogin(Data)
         Catch ex As HttpWebException
             ProfileLog("验证失败：" & ex.ToString())
-            Dim message As String = Nothing
             Dim responseText = ex.InnerHttpException.WebResponse
-            Try
-                Dim err = JsonNode.Parse(responseText)("errorMessage")
-                If err IsNot Nothing Then message = "登录失败：" & err.ToString()
-            Catch
-                '忽略
-            End Try
-            If message Is Nothing Then message = "第三方验证登录失败，请检查你的网络状况是否良好。" & vbCrLf & vbCrLf & "详细信息：" & responseText
-            MyMsgBox("刷新登录失败: " & ex.ToString(), "第三方验证失败", IsWarn:=True)
-            Throw New Exception("$" & message)
+            Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginHttpFailure(ex.ToString(), responseText)
+            MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+            Throw New Exception(failure.WrappedExceptionMessage)
         Catch ex As Exception
             ProfileLog("验证失败：" & ex.ToString())
-            MyMsgBox("刷新登录失败: " & ex.ToString(), "第三方验证失败", IsWarn:=True)
-            Throw New Exception("$第三方验证登录失败" & vbCrLf & vbCrLf & "详细信息：" & ex.ToString())
+            Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginFailure(ex.ToString())
+            MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+            Throw New Exception(failure.WrappedExceptionMessage)
         End Try
         If NeedRefresh Then
             ProfileLog("重新进行刷新登录")
