@@ -884,6 +884,44 @@ NextStack:
 
     '4：根据原因输出信息
     Private OutputFiles As New List(Of String)
+    Private Function RunOutputPrompt(prompt As MinecraftCrashOutputPrompt) As MinecraftCrashOutputPromptButton
+        If prompt Is Nothing OrElse prompt.Buttons Is Nothing OrElse prompt.Buttons.Count = 0 Then Return Nothing
+        Dim button1Action As Action = Nothing
+        Dim button2Action As Action = Nothing
+        Dim button3Action As Action = Nothing
+        If prompt.Buttons.Count >= 1 AndAlso Not prompt.Buttons(0).ClosesPrompt Then button1Action = Sub() RunOutputPromptAction(prompt.Buttons(0).Action)
+        If prompt.Buttons.Count >= 2 AndAlso Not prompt.Buttons(1).ClosesPrompt Then button2Action = Sub() RunOutputPromptAction(prompt.Buttons(1).Action)
+        If prompt.Buttons.Count >= 3 AndAlso Not prompt.Buttons(2).ClosesPrompt Then button3Action = Sub() RunOutputPromptAction(prompt.Buttons(2).Action)
+
+        Dim result = MyMsgBox(
+            prompt.Message,
+            prompt.Title,
+            prompt.Buttons(0).Label,
+            If(prompt.Buttons.Count >= 2, prompt.Buttons(1).Label, ""),
+            If(prompt.Buttons.Count >= 3, prompt.Buttons(2).Label, ""),
+            Button1Action:=button1Action,
+            Button2Action:=button2Action,
+            Button3Action:=button3Action)
+
+        If result >= 1 AndAlso result <= prompt.Buttons.Count Then Return prompt.Buttons(result - 1)
+        Return Nothing
+    End Function
+    Private Sub RunOutputPromptAction(action As MinecraftCrashOutputPromptActionKind)
+        Select Case action
+            Case MinecraftCrashOutputPromptActionKind.ViewLog
+                OpenDirectLogFile()
+        End Select
+    End Sub
+    Private Sub OpenDirectLogFile()
+        If DirectFile Is Nothing Then Return
+        If File.Exists(DirectFile.Value.Key) Then
+            ShellOnly(DirectFile.Value.Key)
+        Else
+            Dim FilePath As String = PathTemp & "Crash.txt"
+            WriteFile(FilePath, Join(DirectFile.Value.Value, vbCrLf))
+            ShellOnly(FilePath)
+        End If
+    End Sub
     ''' <summary>
     ''' 弹出崩溃弹窗，并指导导出崩溃报告。
     ''' </summary>
@@ -891,33 +929,26 @@ NextStack:
         '弹窗提示
         FrmMain.ShowWindowToTop()
         Dim resultText = GetAnalyzeResult(IsHandAnalyze)
-        '确定是否是加载器版本不兼容问题
-        Dim isModLoaderIncompatible = _version IsNot Nothing AndAlso resultText.StartsWith("Mod 加载器版本与 Mod 不兼容")
-        Select Case MyMsgBox(resultText, If(IsHandAnalyze, "错误报告分析结果", "Minecraft 出现错误"),
-            "确定", 
-            If(IsHandAnalyze OrElse DirectFile Is Nothing, "", If(isModLoaderIncompatible, "前往修改", "查看日志")),
-            If(IsHandAnalyze, "", "导出错误报告"),
-            Button2Action:=If(IsHandAnalyze OrElse DirectFile Is Nothing OrElse isModLoaderIncompatible, Nothing,
-            Sub()
-                '弹窗选择：查看日志
-                If File.Exists(DirectFile.Value.Key) Then
-                    ShellOnly(DirectFile.Value.Key)
-                Else
-                    Dim FilePath As String = PathTemp & "Crash.txt"
-                    WriteFile(FilePath, Join(DirectFile.Value.Value, vbCrLf))
-                    ShellOnly(FilePath)
-                End If
-            End Sub))
-            Case 2
+        Dim prompt = MinecraftCrashWorkflowService.BuildOutputPrompt(
+            New MinecraftCrashOutputPromptRequest(
+                resultText,
+                IsHandAnalyze,
+                DirectFile IsNot Nothing,
+                _version IsNot Nothing))
+        Dim selectedButton = RunOutputPrompt(prompt)
+        If selectedButton Is Nothing OrElse Not selectedButton.ClosesPrompt Then Return
+
+        Select Case selectedButton.Action
+            Case MinecraftCrashOutputPromptActionKind.OpenInstanceSettings
                 '弹窗选择：前往修改
                 PageInstanceLeft.Instance = _version
                 RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
-            Case 3
+            Case MinecraftCrashOutputPromptActionKind.ExportReport
                 '弹窗选择：导出错误报告
                 Dim FileAddress As String = Nothing
                 Try
                     '获取文件路径
-                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", "错误报告-" & Date.Now.ToString("G").Replace("/", "-").Replace(":", ".").Replace(" ", "_") & ".zip", "Minecraft 错误报告(*.zip)|*.zip"))
+                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", MinecraftCrashWorkflowService.GetSuggestedExportArchiveName(Date.Now), "Minecraft 错误报告(*.zip)|*.zip"))
                     If String.IsNullOrEmpty(FileAddress) Then Return
                     Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
                     If File.Exists(FileAddress) Then File.Delete(FileAddress)
