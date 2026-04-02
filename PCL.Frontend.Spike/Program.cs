@@ -82,6 +82,39 @@ static object BuildLaunchSample(string scenario)
             HasOptiFine: false,
             HasForge: false,
             DpiScale: 1));
+    var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(
+        new MinecraftLaunchClasspathRequest(
+            Libraries:
+            [
+                new MinecraftLaunchClasspathLibrary("com.cleanroommc:cleanroom:0.2.4-alpha", @"C:\Minecraft\libraries\cleanroom.jar", false),
+                new MinecraftLaunchClasspathLibrary("com.example:core", @"C:\Minecraft\libraries\core.jar", false),
+                new MinecraftLaunchClasspathLibrary("optifine:OptiFine", @"C:\Minecraft\libraries\optifine.jar", false)
+            ],
+            CustomHeadEntries: [@"C:\Minecraft\libraries\override.jar"],
+            RetroWrapperPath: @"C:\Minecraft\libraries\retrowrapper\RetroWrapper.jar",
+            ClasspathSeparator: ";"));
+    var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(
+        new MinecraftLaunchReplacementValueRequest(
+            ClasspathSeparator: ";",
+            NativesDirectory: @"C:\Minecraft\natives",
+            LibraryDirectory: @"C:\Minecraft\libraries",
+            LibrariesDirectory: @"C:\Minecraft\libraries",
+            LauncherName: "PCLCE",
+            LauncherVersion: "2110",
+            VersionName: "Demo Instance",
+            VersionType: "PCL CE",
+            GameDirectory: @"C:\Minecraft\.minecraft",
+            AssetsRoot: @"C:\Minecraft\assets",
+            UserProperties: "{}",
+            AuthPlayerName: "DemoPlayer",
+            AuthUuid: "uuid",
+            AccessToken: "token",
+            UserType: "msa",
+            ResolutionWidth: resolutionPlan.Width,
+            ResolutionHeight: resolutionPlan.Height,
+            GameAssetsDirectory: @"C:\Minecraft\assets\virtual\legacy",
+            AssetsIndexName: "8",
+            Classpath: classpathPlan.JoinedClasspath));
     var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(
         new MinecraftLaunchPrerunWorkflowRequest(
             LauncherProfilesPath: @"C:\Minecraft\.minecraft\launcher_profiles.json",
@@ -181,6 +214,8 @@ static object BuildLaunchSample(string scenario)
             MinecraftLaunchJavaPromptDecision.Download),
         postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, hasSelectedJava: true),
         resolutionPlan,
+        classpathPlan,
+        replacementPlan,
         argumentPlan,
         prerunPlan,
         sessionStartPlan,

@@ -1829,27 +1829,7 @@ NextInstance:
 
     '替换 Arguments
     Private Function McLaunchArgumentsReplace(instance As McInstance, ByRef loader As LoaderTask(Of String, List(Of McLibToken))) As Dictionary(Of String, String)
-        Dim GameArguments As New Dictionary(Of String, String)
-
-        '基础参数
-        GameArguments.Add("${classpath_separator}", ";")
-        GameArguments.Add("${natives_directory}", ShortenPath(GetNativesFolder()))
-        GameArguments.Add("${library_directory}", ShortenPath(McFolderSelected & "libraries"))
-        GameArguments.Add("${libraries_directory}", ShortenPath(McFolderSelected & "libraries"))
-        GameArguments.Add("${launcher_name}", "PCLCE")
-        GameArguments.Add("${launcher_version}", VersionCode)
-        GameArguments.Add("${version_name}", instance.Name)
         Dim ArgumentInfo As String = Setup.Get("VersionArgumentInfo", instance:=McInstanceSelected)
-        GameArguments.Add("${version_type}", If(ArgumentInfo = "", Setup.Get("LaunchArgumentInfo"), ArgumentInfo))
-        GameArguments.Add("${game_directory}", ShortenPath(Left(McInstanceSelected.PathIndie, McInstanceSelected.PathIndie.Count - 1)))
-        GameArguments.Add("${assets_root}", ShortenPath(McFolderSelected & "assets"))
-        GameArguments.Add("${user_properties}", "{}")
-        GameArguments.Add("${auth_player_name}", McLoginLoader.Output.Name)
-        GameArguments.Add("${auth_uuid}", McLoginLoader.Output.Uuid)
-        GameArguments.Add("${auth_access_token}", McLoginLoader.Output.AccessToken)
-        GameArguments.Add("${access_token}", McLoginLoader.Output.AccessToken)
-        GameArguments.Add("${auth_session}", McLoginLoader.Output.AccessToken)
-        GameArguments.Add("${user_type}", "msa") '#1221
 
         '窗口尺寸参数
         Dim launcherWindowWidth As Double? = Nothing
@@ -1876,47 +1856,64 @@ NextInstance:
                 McInstanceSelected.Info.HasForge,
                 DPI / 96))
         If resolutionPlan.LogMessage IsNot Nothing Then McLaunchLog(resolutionPlan.LogMessage)
-        GameArguments.Add("${resolution_width}", resolutionPlan.Width)
-        GameArguments.Add("${resolution_height}", resolutionPlan.Height)
-
-        'Assets 相关参数
-        GameArguments.Add("${game_assets}", ShortenPath(McFolderSelected & "assets\virtual\legacy")) '1.5.2 的 pre-1.6 资源索引应与 legacy 合并
-        GameArguments.Add("${assets_index_name}", McAssetsGetIndexName(instance))
 
         '支持库参数
         Dim LibList As List(Of McLibToken) = McLibListGet(instance, True)
         loader.Output = LibList
-        Dim CpStrings As New List(Of String)
-        Dim OptiFineCp As String = Nothing
+        Dim retroWrapperPath As String = Nothing
 
         'RetroWrapper 释放
         If McLaunchNeedsRetroWrapper(instance) Then
             Dim WrapperPath As String = McFolderSelected & "libraries\retrowrapper\RetroWrapper.jar"
             Try
                 WriteFile(WrapperPath, GetResourceStream("Resources/retro-wrapper.jar"))
-                CpStrings.Add(WrapperPath)
+                retroWrapperPath = ShortenPath(WrapperPath)
             Catch ex As Exception
                 Log(ex, "RetroWrapper 释放失败")
             End Try
         End If
 
-        For Each Library As McLibToken In LibList
-            If Library.IsNatives Then Continue For
-            If Library.Name IsNot Nothing AndAlso Library.Name.Contains("com.cleanroommc:cleanroom:0.2") Then 'Cleanroom 的主 Jar 必须放在 ClassPath 第一位
-                CpStrings.Insert(0, Library.LocalPath)
-            End If
-            If Library.Name IsNot Nothing AndAlso Library.Name = "optifine:OptiFine" Then
-                OptiFineCp = Library.LocalPath
-            Else
-                CpStrings.Add(Library.LocalPath)
-            End If
+        Dim classpathPlan = MinecraftLaunchClasspathService.BuildPlan(
+            New MinecraftLaunchClasspathRequest(
+                LibList.Select(Function(library) New MinecraftLaunchClasspathLibrary(
+                    library.Name,
+                    ShortenPath(library.LocalPath),
+                    library.IsNatives)).ToList(),
+                Config.Instance.ClasspathHead(instance.PathInstance).
+                    Split(";"c).
+                    Where(Function(library) Not String.IsNullOrWhiteSpace(library)).
+                    Select(Function(library) ShortenPath(library)).
+                    ToList(),
+                retroWrapperPath,
+                ";"))
+
+        Dim replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(
+            New MinecraftLaunchReplacementValueRequest(
+                ";",
+                ShortenPath(GetNativesFolder()),
+                ShortenPath(McFolderSelected & "libraries"),
+                ShortenPath(McFolderSelected & "libraries"),
+                "PCLCE",
+                VersionCode.ToString(),
+                instance.Name,
+                If(ArgumentInfo = "", Setup.Get("LaunchArgumentInfo"), ArgumentInfo),
+                ShortenPath(Left(McInstanceSelected.PathIndie, McInstanceSelected.PathIndie.Count - 1)),
+                ShortenPath(McFolderSelected & "assets"),
+                "{}",
+                If(McLoginLoader.Output.Name, ""),
+                If(McLoginLoader.Output.Uuid, ""),
+                If(McLoginLoader.Output.AccessToken, ""),
+                "msa",
+                resolutionPlan.Width,
+                resolutionPlan.Height,
+                ShortenPath(McFolderSelected & "assets\virtual\legacy"),
+                McAssetsGetIndexName(instance),
+                classpathPlan.JoinedClasspath))
+
+        Dim GameArguments As New Dictionary(Of String, String)
+        For Each Entry In replacementPlan.Values
+            GameArguments.Add(Entry.Key, Entry.Value)
         Next
-        For Each library As String In Config.Instance.ClasspathHead(instance.PathInstance).Split(";") '自定义 Classpath 头部
-            If String.IsNullOrWhiteSpace(library) Then Continue For
-            CpStrings.Insert(0, library)
-        Next
-        If OptiFineCp IsNot Nothing Then CpStrings.Insert(CpStrings.Count - 2, OptiFineCp) 'OptiFine 的总是需要放到倒数第二位
-        GameArguments.Add("${classpath}", Join(CpStrings.Select(Function(c) ShortenPath(c)), ";"))
 
         Return GameArguments
     End Function
