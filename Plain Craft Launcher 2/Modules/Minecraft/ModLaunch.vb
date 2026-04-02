@@ -360,6 +360,26 @@ NextInner:
         Next
     End Sub
 
+    Private Function RunAccountDecisionPrompt(prompt As MinecraftLaunchAccountDecisionPrompt) As MinecraftLaunchAccountDecisionOption
+        If prompt Is Nothing OrElse prompt.Options Is Nothing OrElse prompt.Options.Count = 0 Then Throw New ArgumentException("缺少可用的账号流程操作。", NameOf(prompt))
+
+        Dim result = MyMsgBox(
+            prompt.Message,
+            prompt.Title,
+            prompt.Options(0).Label,
+            If(prompt.Options.Count >= 2, prompt.Options(1).Label, ""),
+            If(prompt.Options.Count >= 3, prompt.Options(2).Label, ""),
+            prompt.IsWarning)
+        If result < 1 OrElse result > prompt.Options.Count Then result = prompt.Options.Count
+
+        Dim selectedOption = prompt.Options(result - 1)
+        If selectedOption.Url IsNot Nothing Then OpenWebsite(selectedOption.Url)
+        If selectedOption.Followup IsNot Nothing Then
+            MyMsgBox(selectedOption.Followup.Message, selectedOption.Followup.Title, IsWarn:=selectedOption.Followup.IsWarning)
+        End If
+        Return selectedOption
+    End Function
+
 #End Region
 
 #Region "档案验证"
@@ -677,9 +697,8 @@ Retry:
             Thread.Sleep(100)
         End While
         If TypeOf Converter.Result Is RestartException Then
-            If MyMsgBox($"请在登录时选择 {vbLQ}其他登录方法{vbRQ}，然后选择 {vbLQ}使用我的密码{vbRQ}。{vbCrLf}如果没有该选项，请选择 {vbLQ}设置密码{vbRQ}，设置完毕后再登录。",
-                "需要使用密码登录", "重新登录", "设置密码", "取消",
-                Button2Action:=Sub() OpenWebsite("https://account.live.com/password/Change")) = 1 Then
+            Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetPasswordLoginPrompt())
+            If decision.Decision = MinecraftLaunchAccountDecisionKind.Retry Then
                 GoTo Retry
             Else
                 Throw New Exception("$$")
@@ -727,7 +746,8 @@ Retry:
                 Dim IsIgnore As Boolean = False
                 RunInUiWait(Sub()
                                 If Not IsLaunching Then Exit Sub
-                                If MyMsgBox($"启动器在尝试刷新账号信息时遇到了网络错误。{vbCrLf}你可以选择取消，检查网络后再次启动，也可以选择忽略错误继续启动，但可能无法游玩部分服务器。", "账号信息获取失败", "继续", "取消") = 1 Then IsIgnore = True
+                                Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt())
+                                If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
                             End Sub)
                 If IsIgnore Then
                     Return {"Ignore", ""}
@@ -787,7 +807,8 @@ Retry:
             Dim IsIgnore As Boolean = False
             RunInUiWait(Sub()
                             If Not IsLaunching Then Exit Sub
-                            If MyMsgBox($"启动器在尝试刷新账号信息时(Step 2)遇到了网络错误。{vbCrLf}你可以选择取消，检查网络后再次启动，也可以选择忽略错误继续启动，但可能无法游玩部分服务器。", "账号信息获取失败", "继续", "取消") = 1 Then IsIgnore = True
+                            Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 2"))
+                            If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
                         End Sub)
             If IsIgnore Then
                 Return "Ignore"
@@ -834,36 +855,17 @@ Retry:
             result = response.AsString()
 
             If Not response.IsSuccessStatusCode Then
-                '参考 https://github.com/PrismarineJS/prismarine-auth/blob/master/src/common/Constants.js
-                If result.Contains("2148916227") Then
-                    MyMsgBox("该账号似乎已被微软封禁，无法登录。", "登录失败", "我知道了", IsWarn:=True)
-                    Throw New Exception("$$")
-                ElseIf result.Contains("2148916233") Then
-                    If MyMsgBox("你尚未注册 Xbox 账户，请在注册后再登录。", "登录提示", "注册", "取消") = 1 Then
-                        OpenWebsite("https://signup.live.com/signup")
-                    End If
-                    Throw New Exception("$$")
-                ElseIf result.Contains("2148916235") Then
-                    MyMsgBox($"你的网络所在的国家或地区无法登录微软账号。{vbCrLf}请使用加速器或 VPN。", "登录失败", "我知道了")
-                    Throw New Exception("$$")
-                ElseIf result.Contains("2148916238") Then
-                    If MyMsgBox("该账号年龄不足，你需要先修改出生日期，然后才能登录。" & vbCrLf &
-                                "该账号目前填写的年龄是否在 13 岁以上？", "登录提示", "13 岁以上", "12 岁以下", "我不知道") = 1 Then
-                        OpenWebsite("https://account.live.com/editprof.aspx")
-                        MyMsgBox("请在打开的网页中修改账号的出生日期（至少改为 18 岁以上）。" & vbCrLf &
-                                 "在修改成功后等待一分钟，然后再回到 PCL，就可以正常登录了！", "登录提示")
-                    Else
-                        OpenWebsite("https://support.microsoft.com/zh-cn/account-billing/如何更改-microsoft-帐户上的出生日期-837badbc-999e-54d2-2617-d19206b9540a")
-                        MyMsgBox("请根据打开的网页的说明，修改账号的出生日期（至少改为 18 岁以上）。" & vbCrLf &
-                                 "在修改成功后等待一分钟，然后再回到 PCL，就可以正常登录了！", "登录提示")
-                    End If
+                Dim xstsPrompt = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt(result)
+                If xstsPrompt IsNot Nothing Then
+                    RunAccountDecisionPrompt(xstsPrompt)
                     Throw New Exception("$$")
                 Else
                     ProfileLog("正版验证 Step 3/6 获取 XSTSToken 失败：" & response.StatusCode)
                     Dim IsIgnore As Boolean = False
                     RunInUiWait(Sub()
                                     If Not IsLaunching Then Exit Sub
-                                    If MyMsgBox($"启动器在尝试刷新账号信息时(Step 3)遇到了网络错误。{vbCrLf}你可以选择取消，检查网络后再次启动，也可以选择忽略错误继续启动，但可能无法游玩部分服务器。", "账号信息获取失败", "继续", "取消") = 1 Then IsIgnore = True
+                                    Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 3"))
+                                    If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
                                 End Sub)
                     If IsIgnore Then
                         Return {SelectedProfile.AccessToken, "Ignore"}
@@ -954,10 +956,7 @@ Retry:
                                             Return x("name")?.ToString() = "product_minecraft" OrElse
                                             x("name")?.ToString() = "game_minecraft"
                                         End Function)) Then
-                Select Case MyMsgBox($"暂时无法获取到此账户信息，此账户可能没有购买 Minecraft Java Edition 或者账户的 Xbox Game Pass 已过期", "登录失败", "购买 Minecraft", "取消")
-                    Case 1
-                        OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj")
-                End Select
+                RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt())
                 Throw New Exception("$$")
             End If
         Catch ex As Exception
@@ -994,10 +993,7 @@ Retry:
                 Log(ex, "正版验证 Step 6 汇报 404")
                 RunInNewThread(
                 Sub()
-                    Select Case MyMsgBox("请先创建 Minecraft 玩家档案，然后再重新登录。", "登录失败", "创建档案", "取消")
-                        Case 1
-                            OpenWebsite("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile")
-                    End Select
+                    RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetCreateProfilePrompt())
                 End Sub, "Login Failed: Create Profile")
                 Throw New Exception("$$")
             Else
@@ -1005,7 +1001,8 @@ Retry:
                 Dim IsIgnore As Boolean = False
                 RunInUiWait(Sub()
                                 If Not IsLaunching Then Exit Sub
-                                If MyMsgBox($"启动器在尝试刷新账号信息时(Step 6)遇到了网络错误。{vbCrLf}你可以选择取消，检查网络后再次启动，也可以选择忽略错误继续启动，但可能无法游玩部分服务器。", "账号信息获取失败", "继续", "取消") = 1 Then IsIgnore = True
+                                Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 6"))
+                                If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
                             End Sub)
                 If IsIgnore Then
                     Return {SelectedProfile.Uuid, SelectedProfile.Username, "Ignore"}
@@ -1175,45 +1172,38 @@ LoginFinish:
                 ContentType:="application/json"))
             '检查登录结果
             If LoginJson("availableProfiles").Count = 0 Then
-                If Data.Input.ForceReselectProfile Then Hint("你还没有创建角色，无法更换！", HintType.Critical)
-                Throw New Exception("$你还没有创建角色，请在创建角色后再试！")
-            ElseIf Data.Input.ForceReselectProfile AndAlso LoginJson("availableProfiles").Count = 1 Then
-                Hint("你的账户中只有一个角色，无法更换！", HintType.Critical)
+                ' handled below through the core workflow result
             End If
-            Dim SelectedName As String = Nothing
-            Dim SelectedId As String = Nothing
-            If (LoginJson("selectedProfile") Is Nothing OrElse Data.Input.ForceReselectProfile) AndAlso LoginJson("availableProfiles").Count > 1 Then
-                '要求选择档案；优先从缓存读取
-                NeedRefresh = True
-                Dim CacheId As String = If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, "")
-                For Each Profile In LoginJson("availableProfiles")
-                    If Profile("id").ToString = CacheId Then
-                        SelectedName = Profile("name").ToString
-                        SelectedId = Profile("id").ToString
-                        ProfileLog("根据缓存选择的角色：" & SelectedName)
-                    End If
-                Next
-                '缓存无效，要求玩家选择
-                If SelectedName Is Nothing Then
-                    ProfileLog("要求玩家选择角色")
-                    RunInUiWait(
-                                            Sub()
-                                                Dim SelectionControl As New List(Of IMyRadio)
-                                                Dim SelectionJson As New List(Of JToken)
-                                                For Each Profile In LoginJson("availableProfiles")
-                                                    SelectionControl.Add(New MyRadioBox With {.Text = Profile("name").ToString})
-                                                    SelectionJson.Add(Profile)
-                                                Next
-                                                Dim SelectedIndex As Integer = MyMsgBoxSelect(SelectionControl, "选择使用的角色")
-                                                SelectedName = SelectionJson(SelectedIndex)("name").ToString
-                                                SelectedId = SelectionJson(SelectedIndex)("id").ToString
-                                            End Sub)
+            Dim availableProfiles = LoginJson("availableProfiles").
+                Select(Function(profile) New MinecraftLaunchAuthProfileOption(profile("id").ToString, profile("name").ToString)).
+                ToList()
+            Dim selectionResult = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
+                New MinecraftLaunchAuthProfileSelectionRequest(
+                    Data.Input.ForceReselectProfile,
+                    If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
+                    If(LoginJson("selectedProfile") Is Nothing, Nothing, LoginJson("selectedProfile")("id").ToString),
+                    availableProfiles))
+            If Not String.IsNullOrWhiteSpace(selectionResult.NoticeMessage) Then Hint(selectionResult.NoticeMessage, HintType.Critical)
+            If selectionResult.Kind = MinecraftLaunchAuthProfileSelectionKind.Fail Then Throw New Exception(selectionResult.FailureMessage)
 
-                    ProfileLog("玩家选择的角色：" & SelectedName)
-                End If
-            Else
-                SelectedName = LoginJson("selectedProfile")("name").ToString
-                SelectedId = LoginJson("selectedProfile")("id").ToString
+            Dim SelectedName As String = selectionResult.SelectedProfileName
+            Dim SelectedId As String = selectionResult.SelectedProfileId
+            NeedRefresh = selectionResult.NeedsRefresh
+            If selectionResult.Kind = MinecraftLaunchAuthProfileSelectionKind.PromptForSelection Then
+                ProfileLog("要求玩家选择角色")
+                RunInUiWait(
+                    Sub()
+                        Dim SelectionControl As New List(Of IMyRadio)
+                        For Each Profile In selectionResult.PromptOptions
+                            SelectionControl.Add(New MyRadioBox With {.Text = Profile.Name})
+                        Next
+                        Dim SelectedIndex As Integer = MyMsgBoxSelect(SelectionControl, selectionResult.PromptTitle)
+                        SelectedName = selectionResult.PromptOptions(SelectedIndex).Name
+                        SelectedId = selectionResult.PromptOptions(SelectedIndex).Id
+                    End Sub)
+                ProfileLog("玩家选择的角色：" & SelectedName)
+            ElseIf selectionResult.NeedsRefresh Then
+                ProfileLog("根据缓存选择的角色：" & SelectedName)
             End If
             '将登录结果输出
             Data.Output.AccessToken = LoginJson("accessToken").ToString
