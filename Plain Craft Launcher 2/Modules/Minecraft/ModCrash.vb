@@ -947,27 +947,29 @@ NextStack:
                 '弹窗选择：导出错误报告
                 Dim FileAddress As String = Nothing
                 Try
-                    '获取文件路径
-                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", MinecraftCrashWorkflowService.GetSuggestedExportArchiveName(Date.Now), "Minecraft 错误报告(*.zip)|*.zip"))
-                    If String.IsNullOrEmpty(FileAddress) Then Return
-                    Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
-                    If File.Exists(FileAddress) Then File.Delete(FileAddress)
                     '输出诊断信息
                     FeedbackInfo()
-                    If ExtraFiles IsNot Nothing Then OutputFiles.AddRange(ExtraFiles)
                     Dim currentLauncherLogPath As String = Nothing
                     If LogWrapper.CurrentLogger.CurrentLogFiles.Any Then currentLauncherLogPath = LogWrapper.CurrentLogger.CurrentLogFiles.Last()
-                    Dim exportResult = MinecraftCrashExportService.PrepareReportDirectory(
-                        New MinecraftCrashExportRequest(
+                    Dim exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(
+                        New MinecraftCrashExportPlanRequest(
+                            Date.Now,
                             TempFolder & "Report\",
                             VersionBaseName,
                             UniqueAddress,
-                            OutputFiles.Distinct.Select(Function(path) New MinecraftCrashExportFile(path)).ToList,
+                            OutputFiles,
+                            ExtraFiles,
                             currentLauncherLogPath,
                             SystemEnvironmentInfo.GetSnapshot(),
                             McLoginLoader.Output.AccessToken,
                             McLoginLoader.Output.Uuid,
                             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
+                    '获取文件路径
+                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", exportPlan.SuggestedArchiveName, "Minecraft 错误报告(*.zip)|*.zip"))
+                    If String.IsNullOrEmpty(FileAddress) Then Return
+                    Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
+                    If File.Exists(FileAddress) Then File.Delete(FileAddress)
+                    Dim exportResult = MinecraftCrashExportService.PrepareReportDirectory(exportPlan.ExportRequest)
                     '导出报告
                     Compression.ZipFile.CreateFromDirectory(exportResult.ReportDirectory, FileAddress)
                     DeleteDirectory(exportResult.ReportDirectory)
