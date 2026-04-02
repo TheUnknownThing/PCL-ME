@@ -1124,71 +1124,74 @@ Retry:
 #Region "第三方验证"
     Private Sub McLoginServerStart(Data As LoaderTask(Of McLoginServer, McLoginResult))
         Dim Input As McLoginServer = Data.Input
-        Dim NeedRefresh As Boolean = False, WasRefreshed As Boolean = False
         ProfileLog("验证方式：" & Input.Description)
-        Data.Progress = 0.05
-        '尝试登录
-        If (Not Data.Input.ForceReselectProfile) AndAlso (Not IsCreatingProfile) Then
-            '尝试验证登录
-            Try
-                If Data.IsAborted Then Throw New ThreadInterruptedException
-                McLoginRequestValidate(Data)
-                GoTo LoginFinish
-            Catch ex As HttpWebException
-                Dim AllMessage = ex.ToString()
-                ProfileLog("验证登录失败：" & AllMessage)
-                If (AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout")) AndAlso Not AllMessage.Contains("403") Then
-                    ProfileLog("已触发超时登录失败")
-                    Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationTimeoutFailure(ex.InnerHttpException.WebResponse)
-                    MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
-                    Throw New Exception(failure.WrappedExceptionMessage)
-                End If
-            Catch ex As Exception
-                Dim AllMessage = ex.ToString()
-                ProfileLog("验证登录失败：" & AllMessage)
-                Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationFailure(AllMessage)
-                MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
-                Throw
-            End Try
-            Data.Progress = 0.25
-            '尝试刷新登录
-Refresh:
-            Try
-                If Data.IsAborted Then Throw New ThreadInterruptedException
-                McLoginRequestRefresh(Data, NeedRefresh)
-                GoTo LoginFinish
-            Catch ex As Exception
-                ProfileLog("刷新登录失败：" & ex.ToString())
-                Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetRefreshFailure(ex.ToString())
-                MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
-                If WasRefreshed Then Throw New Exception("二轮刷新登录失败", ex)
-            End Try
-            Data.Progress = If(NeedRefresh, 0.85, 0.45)
-        End If
-        '尝试普通登录
-        Try
-            If Data.IsAborted Then Throw New ThreadInterruptedException
-            NeedRefresh = McLoginRequestLogin(Data)
-        Catch ex As HttpWebException
-            ProfileLog("验证失败：" & ex.ToString())
-            Dim responseText = ex.InnerHttpException.WebResponse
-            Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginHttpFailure(ex.ToString(), responseText)
-            MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
-            Throw New Exception(failure.WrappedExceptionMessage)
-        Catch ex As Exception
-            ProfileLog("验证失败：" & ex.ToString())
-            Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginFailure(ex.ToString())
-            MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
-            Throw New Exception(failure.WrappedExceptionMessage)
-        End Try
-        If NeedRefresh Then
-            ProfileLog("重新进行刷新登录")
-            WasRefreshed = True
-            Data.Progress = 0.65
-            GoTo Refresh
-        End If
-LoginFinish:
-        Data.Progress = 0.95
+        Dim currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetInitialStep(
+            New MinecraftLaunchThirdPartyLoginExecutionRequest(
+                Data.Input.ForceReselectProfile OrElse IsCreatingProfile))
+        Do
+            Data.Progress = currentStep.Progress
+            Select Case currentStep.Kind
+                Case MinecraftLaunchThirdPartyLoginStepKind.ValidateCachedSession
+                    Try
+                        If Data.IsAborted Then Throw New ThreadInterruptedException
+                        McLoginRequestValidate(Data)
+                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateSuccess()
+                    Catch ex As HttpWebException
+                        Dim AllMessage = ex.ToString()
+                        ProfileLog("验证登录失败：" & AllMessage)
+                        If (AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout")) AndAlso Not AllMessage.Contains("403") Then
+                            ProfileLog("已触发超时登录失败")
+                            Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationTimeoutFailure(ex.InnerHttpException.WebResponse)
+                            MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                            Throw New Exception(failure.WrappedExceptionMessage)
+                        End If
+                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateFailure()
+                    Catch ex As Exception
+                        Dim AllMessage = ex.ToString()
+                        ProfileLog("验证登录失败：" & AllMessage)
+                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationFailure(AllMessage)
+                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        Throw
+                    End Try
+                Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
+                    Try
+                        If Data.IsAborted Then Throw New ThreadInterruptedException
+                        McLoginRequestRefresh(Data, currentStep.HasRetriedRefresh)
+                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshSuccess(currentStep.HasRetriedRefresh)
+                    Catch ex As Exception
+                        ProfileLog("刷新登录失败：" & ex.ToString())
+                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetRefreshFailure(ex.ToString())
+                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshFailure(currentStep.HasRetriedRefresh)
+                        If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.Fail Then
+                            Throw New Exception(currentStep.FailureMessage, ex)
+                        End If
+                    End Try
+                Case MinecraftLaunchThirdPartyLoginStepKind.Authenticate
+                    Try
+                        If Data.IsAborted Then Throw New ThreadInterruptedException
+                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(McLoginRequestLogin(Data))
+                        If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession AndAlso currentStep.HasRetriedRefresh Then
+                            ProfileLog("重新进行刷新登录")
+                        End If
+                    Catch ex As HttpWebException
+                        ProfileLog("验证失败：" & ex.ToString())
+                        Dim responseText = ex.InnerHttpException.WebResponse
+                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginHttpFailure(ex.ToString(), responseText)
+                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        Throw New Exception(failure.WrappedExceptionMessage)
+                    Catch ex As Exception
+                        ProfileLog("验证失败：" & ex.ToString())
+                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginFailure(ex.ToString())
+                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        Throw New Exception(failure.WrappedExceptionMessage)
+                    End Try
+                Case MinecraftLaunchThirdPartyLoginStepKind.Finish
+                    Exit Do
+                Case Else
+                    Throw New InvalidOperationException("未知的第三方登录执行步骤。")
+            End Select
+        Loop
     End Sub
     'Server 登录：三种验证方式的请求
     Private Sub McLoginRequestValidate(ByRef Data As LoaderTask(Of McLoginServer, McLoginResult))
