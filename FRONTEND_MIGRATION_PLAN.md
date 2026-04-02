@@ -12,8 +12,8 @@ This plan is ready to hand to another engineer.
 
 Current estimate:
 
-- portable runtime/core extraction: roughly `89%~90%`
-- backend readiness for a replacement frontend shell: roughly `80%~82%`
+- portable runtime/core extraction: roughly `90%~91%`
+- backend readiness for a replacement frontend shell: roughly `82%~84%`
 
 The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
 
@@ -86,6 +86,8 @@ These workflow extractions are already done and should be treated as available m
 - launch argument final composition, placeholder application, and quick-play/server append policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchArgumentWorkflowService`
 - launch classpath ordering is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchClasspathService`
 - launch placeholder/replacement value assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchReplacementValueService`
+- launch natives-directory selection is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesDirectoryService`
+- launch natives archive sync is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesSyncService`
 
 Do not redo these in the frontend migration branch; build on top of them.
 
@@ -160,6 +162,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - Microsoft request / response protocol shaping is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - launch argument window-size planning and final argument composition are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher state, JSON/lib inputs, and applies prompt-side effects
 - launch classpath ordering and replacement value assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher path/lib state and applies launcher-specific file extraction
+- launch natives-directory selection and archive sync are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly passes selected native archives and forwards returned log output
 - `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, or prompt rendering; it still owns save-picker invocation, report zip creation, and Explorer opening
 - `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, warning prompt construction, or startup visual defaults; it still owns WPF startup shell work such as splash-screen display, tooltip metadata application, memory optimization execution, and process exit behavior
 - `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, startup open-count milestone policy, or startup update-log prompt policy; it still owns WPF startup presentation and shell adapters

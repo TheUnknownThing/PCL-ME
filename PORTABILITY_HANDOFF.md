@@ -44,6 +44,8 @@ Latest continuation update:
 - launch argument final composition, placeholder application, and quick-play/server append policy now live in `PCL.Core.Minecraft.Launch.MinecraftLaunchArgumentWorkflowService`
 - launch classpath ordering now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchClasspathService`
 - launch placeholder/replacement value assembly now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchReplacementValueService`
+- launch natives-directory selection now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesDirectoryService`
+- launch natives archive sync now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesSyncService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-transition application planning now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionWorkflowService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
@@ -83,6 +85,8 @@ Latest continuation update:
 - launcher launch argument final composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchArgumentWorkflowService`
 - launcher launch classpath ordering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchClasspathService`
 - launcher launch placeholder/replacement value assembly now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchReplacementValueService`
+- launcher natives-directory selection now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchNativesDirectoryService`
+- launcher natives archive sync now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchNativesSyncService`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -118,7 +122,7 @@ What is already true:
 What is not true yet:
 
 - `ModLaunch.vb` still owns too much step execution, request coordination, watcher lifecycle wiring, and Java-selection / download shell bridging
-- `ModLaunch.vb` still owns the JSON/lib-driven JVM & game argument extraction and native preparation that feed the new argument/classpath seams
+- `ModLaunch.vb` still owns the JSON/lib-driven JVM & game argument extraction that feed the new argument/classpath seams, while native preparation now routes through backend services
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
 - `PCL.Core.Backend` is not yet the whole runtime/backend surface; it currently hosts the extracted workflow/services slice rather than every reusable backend/runtime service
