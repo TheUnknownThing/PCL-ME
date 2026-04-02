@@ -100,14 +100,15 @@ This is **not** a fully portable backend yet.
 
 Honest status estimate at this handoff point:
 
-- portable runtime/core extraction: roughly `87%~88%` complete
-- backend readiness for a replacement non-Windows frontend: roughly `76%~79%` complete
+- portable backend architecture: roughly `92%~94%` complete
+- fully usable frontend-independent portable backend: roughly `74%~78%` complete
 
 What is already true:
 
 - `PCL.Core.Foundation` is real, headless, and validated on macOS
 - `PCL.Core.Backend` now proves a substantial extracted workflow layer can compile as plain `net8.0` without WPF
 - `PCL.Core.Backend.Test` now proves that extracted backend slice can execute on macOS in automated tests
+- `PCL.Core` now consumes `PCL.Core.Backend` as the canonical implementation of the extracted startup / launch / crash workflow slice
 - the major runtime seams are no longer speculative; they exist in code and have tests/build validation
 - a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
 
@@ -120,6 +121,34 @@ What is not true yet:
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 
 This branch is handoff-ready for another engineer. The next engineer should continue from the existing seams rather than reopening Foundation extraction.
+
+## New Engineer Quick Start
+
+Use this checklist before making changes:
+
+1. read `PORTABILITY_HANDOFF.md` and `FRONTEND_MIGRATION_PLAN.md`
+2. inspect the latest extraction commits listed near the end of this document
+3. build the portable backend lane first:
+   - `dotnet build PCL.Core.Backend/PCL.Core.Backend.csproj -c Debug`
+   - `dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug`
+   - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- startup`
+   - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge`
+   - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash`
+4. only then validate the Windows-facing compatibility projects:
+   - `dotnet build PCL.Core/PCL.Core.csproj -c Debug`
+   - `dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug`
+
+If you need one sentence of orientation: `PCL.Core.Backend` is now the portable source of truth for the extracted workflow layer, while `PCL.Core` and `Plain Craft Launcher 2` should keep shrinking toward adapter-only responsibilities.
+
+## Canonical Boundaries
+
+Treat these statements as current architecture truth:
+
+- `PCL.Core.Foundation` is the lowest-level portable library for headless utilities, storage/network/runtime helpers, and reusable domain primitives
+- `PCL.Core.Backend` is the portable backend/workflow assembly and should absorb additional reusable startup / launch / crash runtime services over time
+- `PCL.Core` is now a Windows compatibility/adaptation layer and should prefer referencing `PCL.Core.Backend` over carrying duplicate workflow implementations
+- `Plain Craft Launcher 2` should keep moving toward prompt rendering, WPF presentation, and Windows shell/interop adapters only
+- `PCL.Frontend.Spike` is the safe place to prove a new shell can consume the extracted contracts without pulling WPF back into the backend
 
 ## What Has Been Completed
 
@@ -341,14 +370,17 @@ These seams are deliberate and should stay intact until the broader runtime extr
 
 Highest-value next slices, in order:
 
-1. reduce `ModLaunch.vb` further
-   - extract remaining reusable launch-prep file mutation and launch-step orchestration that still lives inline
-   - especially target `launcher_profiles.json` update policy and any remaining request/prompt sequencing glue that is not inherently UI-specific
-2. reduce startup orchestration further
+1. move more reusable runtime/services from `PCL.Core` into `PCL.Core.Backend`
+   - prefer migrating portable service implementations instead of adding new workflow code to the Windows-targeted project
+   - keep `PCL.Core` focused on adapters, compatibility surfaces, and Windows-only composition
+2. reduce `ModLaunch.vb` further
+   - finish extracting reusable request execution / coordination and Java-selection or Java-download bridging that is not inherently UI-specific
+   - keep shell prompts, popup lifecycle, and launcher-local side effects in adapters
+3. reduce startup orchestration further
    - continue trimming `Application.xaml.vb` and `FormMain.xaml.vb` so they become shell/application adapters rather than owners of startup decision flow
-3. trim `ModCrash.vb`
-   - move any remaining reusable crash-export shell decisions or file-preparation workflow into `PCL.Core`
-4. start a narrow shell-replacement spike
+4. trim `ModCrash.vb`
+   - move any remaining reusable crash-export shell decisions or file-preparation workflow into `PCL.Core.Backend`
+5. keep extending the shell-replacement spike
    - prove that a small non-WPF shell can consume the extracted startup / launch / crash contracts without rewriting the whole launcher
 
 Work that should stay in launcher adapters for now:
@@ -444,6 +476,18 @@ Reason:
 
 This is the meaningful history for the current portability work:
 
+- `f9cf278e` `Make windows core consume portable backend`
+- `5f509f86` `Create portable backend assembly and test lane`
+- `24b3cfcf` `Extract startup version transition application plan`
+- `4ac73df0` `Extract launch prerun workflow composition`
+- `12f77990` `Refactor launcher to consume session workflow plan`
+- `c3d402b3` `Add launch session workflow planning seam`
+- `3485cf8b` `Extract startup workflow composition`
+- `d08c1b2f` `Extract launch execution workflow`
+- `1b73dd43` `Extract crash export archive service`
+- `46c7567c` `Extract launch watcher workflow`
+- `b0c55d2d` `Extract launcher_profiles workflow and seed`
+- `f92822b7` `Update migration handoff for shell spike`
 - `ab55901f` `refactor(paths): extract portable app path layout into foundation`
 - `ad18ee67` `refactor(config): move headless config storage into foundation`
 - `633c41a8` `refactor(network): split proxy core from windows registry adapter`
@@ -500,7 +544,7 @@ This is the meaningful history for the current portability work:
 - `41f13f26` `Extract auth profile selection shell flow`
 - `2ce1d80e` `Extract login dialog shell handling`
 
-If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
+If the next engineer wants to understand the current extraction shape, start with the twelve newest commits above, then continue downward through the earlier Wave 1 / Wave 2 extraction history.
 
 ## Wave 2 Completion Status
 
