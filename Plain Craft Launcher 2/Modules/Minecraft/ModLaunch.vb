@@ -100,6 +100,7 @@ Public Module ModLaunch
     Public McLaunchLoaderReal As LoaderCombo(Of Object)
     Public McLaunchProcess As Process
     Public McLaunchWatcher As Watcher
+    Private McLaunchSessionPlan As MinecraftLaunchSessionStartWorkflowPlan = Nothing
     Private Sub McLaunchState(Loader As LoaderTask(Of McLaunchOptions, Object))
         Select Case McLaunchLoader.State
             Case LoadState.Finished, LoadState.Failed, LoadState.Waiting, LoadState.Aborted
@@ -118,6 +119,7 @@ Public Module ModLaunch
     Private Sub McLaunchStart(Loader As LoaderTask(Of McLaunchOptions, Object))
         '开始动画
         RunInUiWait(AddressOf FrmLaunchLeft.PageChangeToLaunching)
+        McLaunchSessionPlan = Nothing
         '预检测（预检测的错误将直接抛出）
         Try
             McLaunchPrecheck()
@@ -2134,22 +2136,36 @@ NextInstance:
         If CustomCommandGlobal <> "" Then CustomCommandGlobal = ArgumentReplace(CustomCommandGlobal, True)
         Dim CustomCommandVersion As String = Setup.Get("VersionAdvanceRun", instance:=McInstanceSelected)
         If CustomCommandVersion <> "" Then CustomCommandVersion = ArgumentReplace(CustomCommandVersion, True)
-        Dim customCommandPlan = MinecraftLaunchCustomCommandService.BuildPlan(
-            New MinecraftLaunchCustomCommandRequest(
-                McLaunchJavaSelected.Installation.MajorVersion,
-                McInstanceSelected.Name,
-                ShortenPath(McInstanceSelected.PathIndie),
-                McLaunchJavaSelected.Installation.JavaExePath,
-                McLaunchArgument,
-                CustomCommandGlobal,
-                Setup.Get("LaunchAdvanceRunWait"),
-                CustomCommandVersion,
-                Setup.Get("VersionAdvanceRunWait", instance:=McInstanceSelected)))
+        McLaunchSessionPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(
+            New MinecraftLaunchSessionStartWorkflowRequest(
+                New MinecraftLaunchCustomCommandWorkflowRequest(
+                    New MinecraftLaunchCustomCommandRequest(
+                        McLaunchJavaSelected.Installation.MajorVersion,
+                        McInstanceSelected.Name,
+                        ShortenPath(McInstanceSelected.PathIndie),
+                        McLaunchJavaSelected.Installation.JavaExePath,
+                        McLaunchArgument,
+                        CustomCommandGlobal,
+                        Setup.Get("LaunchAdvanceRunWait"),
+                        CustomCommandVersion,
+                        Setup.Get("VersionAdvanceRunWait", instance:=McInstanceSelected)),
+                    ShortenPath(McFolderSelected)),
+                New MinecraftLaunchProcessRequest(
+                    Setup.Get("LaunchAdvanceNoJavaw"),
+                    McLaunchJavaSelected.Installation.JavaExePath,
+                    McLaunchJavaSelected.Installation.JavawExePath,
+                    ShortenPath(McLaunchJavaSelected.Installation.JavaFolder),
+                    Environment.GetEnvironmentVariable("Path"),
+                    ShortenPath(McFolderSelected),
+                    ShortenPath(McInstanceSelected.PathIndie),
+                    McLaunchArgument,
+                    Setup.Get("LaunchArgumentPriority")),
+                BuildWatcherWorkflowRequest()))
 
         '输出 bat
         Try
-            WriteFile(If(CurrentLaunchOptions.SaveBatch, ExePath & "PCL\LatestLaunch.bat"), FilterAccessToken(customCommandPlan.BatchScriptContent, "F"),
-                      Encoding:=If(customCommandPlan.UseUtf8Encoding, Encoding.UTF8, Encoding.Default))
+            WriteFile(If(CurrentLaunchOptions.SaveBatch, ExePath & "PCL\LatestLaunch.bat"), FilterAccessToken(McLaunchSessionPlan.CustomCommandPlan.BatchScriptContent, "F"),
+                      Encoding:=If(McLaunchSessionPlan.CustomCommandPlan.UseUtf8Encoding, Encoding.UTF8, Encoding.Default))
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
                 McLaunchLog("导出启动脚本完成，强制结束启动过程")
                 AbortHint = "导出启动脚本成功！"
@@ -2163,20 +2179,13 @@ NextInstance:
         End Try
 
         '执行自定义命令
-        For Each commandExecution In customCommandPlan.CommandExecutions
-            ExecuteCustomCommand(commandExecution, Loader)
+        For Each shellPlan In McLaunchSessionPlan.CustomCommandShellPlans
+            ExecuteCustomCommand(shellPlan, Loader)
         Next
 
     End Sub
 
-    Private Sub ExecuteCustomCommand(commandExecution As MinecraftLaunchCustomCommandExecution, Loader As LoaderTask(Of Integer, Integer))
-        Dim shellPlan = MinecraftLaunchExecutionWorkflowService.BuildCustomCommandShellPlan(
-            New MinecraftLaunchCustomCommandShellRequest(
-                commandExecution.Command,
-                commandExecution.WaitForExit,
-                ShortenPath(McFolderSelected),
-                commandExecution.StartLogMessage,
-                commandExecution.FailureLogMessage))
+    Private Sub ExecuteCustomCommand(shellPlan As MinecraftLaunchCustomCommandShellPlan, Loader As LoaderTask(Of Integer, Integer))
         McLaunchLog(shellPlan.StartLogMessage)
         Dim customProcess As New Process
         Try
@@ -2202,17 +2211,8 @@ NextInstance:
     End Sub
 
     Private Sub McLaunchRun(Loader As LoaderTask(Of Integer, Process))
-        Dim shellPlan = MinecraftLaunchExecutionWorkflowService.BuildProcessShellPlan(
-            New MinecraftLaunchProcessRequest(
-                Setup.Get("LaunchAdvanceNoJavaw"),
-                McLaunchJavaSelected.Installation.JavaExePath,
-                McLaunchJavaSelected.Installation.JavawExePath,
-                ShortenPath(McLaunchJavaSelected.Installation.JavaFolder),
-                Environment.GetEnvironmentVariable("Path"),
-                ShortenPath(McFolderSelected),
-                ShortenPath(McInstanceSelected.PathIndie),
-                McLaunchArgument,
-                Setup.Get("LaunchArgumentPriority")))
+        If McLaunchSessionPlan Is Nothing Then Throw New InvalidOperationException("缺少启动会话计划。")
+        Dim shellPlan = McLaunchSessionPlan.ProcessShellPlan
 
         '启动信息
         Dim GameProcess = New Process()
@@ -2258,51 +2258,20 @@ NextInstance:
     End Sub
     Private Sub McLaunchWait(Loader As LoaderTask(Of Process, Integer))
 
-        '输出信息
-        Dim allocatedRam = PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit)
-        Dim watcherWorkflow = MinecraftLaunchWatcherWorkflowService.BuildPlan(
-            New MinecraftLaunchWatcherWorkflowRequest(
-                New MinecraftLaunchSessionLogRequest(
-                    VersionBaseName,
-                    VersionCode,
-                    McInstanceSelected.Info.VanillaName,
-                    If(McInstanceSelected.Info.Vanilla?.ToString(), ""),
-                    McInstanceSelected.Info.Drop,
-                    McInstanceSelected.Info.Reliable,
-                    McAssetsGetIndexName(McInstanceSelected),
-                    McInstanceSelected.InheritInstanceName,
-                    allocatedRam,
-                    McFolderSelected,
-                    McInstanceSelected.PathInstance,
-                    McInstanceSelected.PathIndie = McInstanceSelected.PathInstance,
-                    McInstanceSelected.IsHmclFormatJson,
-                    If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString(), Nothing),
-                    GetNativesFolder(),
-                    McLoginLoader.Output.Name,
-                    McLoginLoader.Output.AccessToken,
-                    McLoginLoader.Output.ClientToken,
-                    McLoginLoader.Output.Uuid,
-                    McLoginLoader.Output.Type),
-                New MinecraftLaunchWatcherRequest(
-                    Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected),
-                    Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected),
-                    Setup.Get("LaunchArgumentTitle"),
-                    McLaunchJavaSelected.Installation.JavaFolder,
-                    File.Exists(McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe")),
-                CurrentLaunchOptions.IsTest))
-        For Each logLine In watcherWorkflow.StartupSummaryLogLines
+        If McLaunchSessionPlan Is Nothing Then Throw New InvalidOperationException("缺少启动会话计划。")
+        For Each logLine In McLaunchSessionPlan.WatcherWorkflowPlan.StartupSummaryLogLines
             McLaunchLog(logLine)
         Next
 
         '获取窗口标题
-        Dim WindowTitle As String = ArgumentReplace(watcherWorkflow.RawWindowTitleTemplate, False)
+        Dim WindowTitle As String = ArgumentReplace(McLaunchSessionPlan.WatcherWorkflowPlan.RawWindowTitleTemplate, False)
 
         '初始化等待
-        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, watcherWorkflow.JstackExecutablePath, watcherWorkflow.ShouldAttachRealtimeLog)
+        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, McLaunchSessionPlan.WatcherWorkflowPlan.JstackExecutablePath, McLaunchSessionPlan.WatcherWorkflowPlan.ShouldAttachRealtimeLog)
         McLaunchWatcher = Watcher
 
         '显示实时日志
-        If watcherWorkflow.ShouldAttachRealtimeLog Then
+        If McLaunchSessionPlan.WatcherWorkflowPlan.ShouldAttachRealtimeLog Then
             If FrmLogLeft Is Nothing Then RunInUiWait(Sub() FrmLogLeft = New PageLogLeft)
             If FrmLogRight Is Nothing Then RunInUiWait(Sub()
                                                            AniControlEnabled += 1
@@ -2310,7 +2279,7 @@ NextInstance:
                                                            AniControlEnabled -= 1
                                                        End Sub)
             FrmLogLeft.Add(Watcher)
-            If watcherWorkflow.RealtimeLogAttachedMessage IsNot Nothing Then McLaunchLog(watcherWorkflow.RealtimeLogAttachedMessage)
+            If McLaunchSessionPlan.WatcherWorkflowPlan.RealtimeLogAttachedMessage IsNot Nothing Then McLaunchLog(McLaunchSessionPlan.WatcherWorkflowPlan.RealtimeLogAttachedMessage)
         End If
 
         '等待
@@ -2324,7 +2293,7 @@ NextInstance:
     End Sub
     Private Sub McLaunchEnd()
         McLaunchLog("开始启动结束处理")
-        Dim shellPlan = MinecraftLaunchShellService.GetPostLaunchShellPlan(
+        Dim shellPlan = MinecraftLaunchSessionWorkflowService.BuildPostLaunchPlan(
             New MinecraftLaunchPostLaunchShellRequest(
                 Config.Launch.LauncherVisibility,
                 Setup.Get("UiMusicStop"),
@@ -2345,6 +2314,39 @@ NextInstance:
         Setup.Set("VersionLaunchCount", Setup.Get("VersionLaunchCount", McInstanceSelected) + shellPlan.InstanceLaunchCountIncrement, instance:=McInstanceSelected)
 
     End Sub
+
+    Private Function BuildWatcherWorkflowRequest() As MinecraftLaunchWatcherWorkflowRequest
+        Dim allocatedRam = PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit)
+        Return New MinecraftLaunchWatcherWorkflowRequest(
+            New MinecraftLaunchSessionLogRequest(
+                VersionBaseName,
+                VersionCode,
+                McInstanceSelected.Info.VanillaName,
+                If(McInstanceSelected.Info.Vanilla?.ToString(), ""),
+                McInstanceSelected.Info.Drop,
+                McInstanceSelected.Info.Reliable,
+                McAssetsGetIndexName(McInstanceSelected),
+                McInstanceSelected.InheritInstanceName,
+                allocatedRam,
+                McFolderSelected,
+                McInstanceSelected.PathInstance,
+                McInstanceSelected.PathIndie = McInstanceSelected.PathInstance,
+                McInstanceSelected.IsHmclFormatJson,
+                If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString(), Nothing),
+                GetNativesFolder(),
+                McLoginLoader.Output.Name,
+                McLoginLoader.Output.AccessToken,
+                McLoginLoader.Output.ClientToken,
+                McLoginLoader.Output.Uuid,
+                McLoginLoader.Output.Type),
+            New MinecraftLaunchWatcherRequest(
+                Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected),
+                Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected),
+                Setup.Get("LaunchArgumentTitle"),
+                McLaunchJavaSelected.Installation.JavaFolder,
+                File.Exists(McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe")),
+            CurrentLaunchOptions.IsTest)
+    End Function
 
     ''' <summary>
     ''' 对替换标记进行处理。会对替换内容使用 EscapeHandler 进行转义。

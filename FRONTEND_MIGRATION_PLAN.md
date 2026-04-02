@@ -68,6 +68,7 @@ These workflow extractions are already done and should be treated as available m
 - launch process / watcher runtime planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
 - launch custom-command / game-process shell execution planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchExecutionWorkflowService`
 - launch watcher startup composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
+- launch-session start/post-launch shell composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
 - Authlib request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Microsoft request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 
@@ -138,6 +139,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch custom-command / batch-script planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes scripts and executes returned shell commands
 - launch-session startup summary formatting is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly prints the returned lines before watcher startup
 - launch process / watcher runtime planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts the returned process plan and constructs the watcher from the returned runtime plan
+- launch-session start/post-launch composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned shell plans and watcher adapter inputs
 - Authlib request / response protocol shaping is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - Microsoft request / response protocol shaping is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, or prompt rendering; it still owns save-picker invocation, report zip creation, and Explorer opening
@@ -161,7 +163,7 @@ Create launcher-facing services in `PCL.Core` for:
 Most practical next code targets:
 
 1. finish shrinking `ModLaunch.vb`
-   Focus on remaining step orchestration, network/request coordination, watcher lifecycle glue, and Java-selection / download shell bridging that are not inherently tied to WPF.
+   Focus on remaining network/request coordination and Java-selection / download shell bridging that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
 2. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
    Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
 3. trim `ModCrash.vb`

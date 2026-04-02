@@ -32,6 +32,7 @@ Latest continuation update:
 - launch process / watcher runtime planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
 - launch custom-command / game-process shell execution planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchExecutionWorkflowService`
 - launch watcher startup composition now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
+- launch-session start/post-launch shell composition now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
 - Authlib request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
@@ -62,6 +63,7 @@ Latest continuation update:
 - launcher process start / watcher preparation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRuntimeService`
 - launcher custom-command / game-process shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchExecutionWorkflowService`
 - launcher watcher startup composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchWatcherWorkflowService`
+- launcher launch-session batch export, custom-command shell execution, process shell startup, watcher startup, and post-launch shell composition now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionWorkflowService`
 - launcher Java requirement / missing-Java recovery orchestration now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchJavaWorkflowService`
 - launcher Authlib validate / refresh / authenticate request shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibProtocolService`
 - launcher Microsoft OAuth / XBL / XSTS / profile protocol shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftProtocolService`
@@ -237,6 +239,9 @@ These were completed after Wave 2 was declared stable:
 - launch process / watcher runtime planning moved out of the launcher
   - `MinecraftLaunchRuntimeService` now owns Java executable selection, process environment composition, process-priority mapping, watcher title fallback rules, and JStack path selection
   - `ModLaunch.vb` now only applies the returned process plan and constructs the watcher with the returned runtime plan
+- launch-session start/post-launch composition moved out of the launcher
+  - `MinecraftLaunchSessionWorkflowService` now owns composition of batch export content, custom-command shell plans, process shell startup, watcher startup inputs, and post-launch shell policy reuse
+  - `ModLaunch.vb` now mainly applies the returned shell plans and watcher adapter inputs instead of rebuilding that session flow step-by-step
 - Authlib request / response protocol shaping moved out of the launcher
   - `MinecraftLaunchAuthlibProtocolService` now owns Authlib validate / refresh / authenticate request payloads, response parsing, available-profile extraction, and server-name metadata parsing
   - `ModLaunch.vb` now only performs the HTTP requests, applies prompt/shell actions, and feeds the parsed data into existing workflow services
