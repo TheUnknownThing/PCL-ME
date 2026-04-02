@@ -1282,13 +1282,9 @@ Retry:
                 ProfileLog("要求玩家选择角色")
                 RunInUiWait(
                     Sub()
-                        Dim SelectionControl As New List(Of IMyRadio)
-                        For Each Profile In selectionResult.PromptOptions
-                            SelectionControl.Add(New MyRadioBox With {.Text = Profile.Name})
-                        Next
-                        Dim SelectedIndex As Integer = MyMsgBoxSelect(SelectionControl, selectionResult.PromptTitle)
-                        SelectedName = selectionResult.PromptOptions(SelectedIndex).Name
-                        SelectedId = selectionResult.PromptOptions(SelectedIndex).Id
+                        Dim selectedProfile = ModLaunchPromptShell.RunAuthProfileSelectionPrompt(selectionResult.PromptTitle, selectionResult.PromptOptions)
+                        SelectedName = selectedProfile.Name
+                        SelectedId = selectedProfile.Id
                     End Sub)
                 ProfileLog("玩家选择的角色：" & SelectedName)
             ElseIf selectionResult.NeedsRefresh Then

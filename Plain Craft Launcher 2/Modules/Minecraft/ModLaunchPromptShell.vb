@@ -79,4 +79,17 @@ Public Module ModLaunchPromptShell
         Return prompt.Options(result - 1)
     End Function
 
+    Public Function RunAuthProfileSelectionPrompt(title As String, options As IReadOnlyList(Of MinecraftLaunchAuthProfileOption)) As MinecraftLaunchAuthProfileOption
+        If String.IsNullOrWhiteSpace(title) Then Throw New ArgumentException("缺少角色选择标题。", NameOf(title))
+        If options Is Nothing OrElse options.Count = 0 Then Throw New ArgumentException("缺少可选角色。", NameOf(options))
+
+        Dim selectionControls As New List(Of IMyRadio)
+        For Each profile In options
+            selectionControls.Add(New MyRadioBox With {.Text = profile.Name})
+        Next
+
+        Dim selectedIndex As Integer = MyMsgBoxSelect(selectionControls, title)
+        Return options(selectedIndex)
+    End Function
+
 End Module
