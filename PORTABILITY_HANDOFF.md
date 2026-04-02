@@ -27,6 +27,7 @@ Latest continuation update:
 - launch-session startup summary logging now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - launch process / watcher runtime planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
 - Authlib request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
+- Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
@@ -46,6 +47,7 @@ Latest continuation update:
 - launcher startup session summary logging now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionLogService`
 - launcher process start / watcher preparation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRuntimeService`
 - launcher Authlib validate / refresh / authenticate request shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibProtocolService`
+- launcher Microsoft OAuth / XBL / XSTS / profile protocol shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftProtocolService`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -221,6 +223,9 @@ These were completed after Wave 2 was declared stable:
 - Authlib request / response protocol shaping moved out of the launcher
   - `MinecraftLaunchAuthlibProtocolService` now owns Authlib validate / refresh / authenticate request payloads, response parsing, available-profile extraction, and server-name metadata parsing
   - `ModLaunch.vb` now only performs the HTTP requests, applies prompt/shell actions, and feeds the parsed data into existing workflow services
+- Microsoft request / response protocol shaping moved out of the launcher
+  - `MinecraftLaunchMicrosoftProtocolService` now owns OAuth refresh parsing, Xbox Live / XSTS request payloads, Minecraft access-token request payloads, ownership parsing, and profile parsing
+  - `ModLaunch.vb` now only performs the HTTP requests, applies prompt/shell actions, and feeds the parsed data into the existing Microsoft login workflow
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
