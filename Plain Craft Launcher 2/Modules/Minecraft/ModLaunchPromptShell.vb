@@ -2,6 +2,28 @@ Imports PCL.Core.Minecraft.Launch
 
 Public Module ModLaunchPromptShell
 
+    Public Function RunMicrosoftDeviceCodeLoginPrompt(prepareJson As JObject) As MicrosoftDeviceCodePromptResult
+        Dim converter As New MyMsgBoxConverter With {.Content = prepareJson, .ForceWait = True, .Type = MyMsgBoxType.Login}
+        WaitingMyMsgBox.Add(converter)
+        While converter.Result Is Nothing
+            Thread.Sleep(100)
+        End While
+
+        If TypeOf converter.Result Is RestartException Then
+            Return New MicrosoftDeviceCodePromptResult(MicrosoftDeviceCodePromptResultKind.PasswordLoginRequired)
+        End If
+
+        If TypeOf converter.Result Is Exception Then
+            Return New MicrosoftDeviceCodePromptResult(MicrosoftDeviceCodePromptResultKind.Failed, [Error]:=CType(converter.Result, Exception))
+        End If
+
+        Dim result = CType(converter.Result, String())
+        Return New MicrosoftDeviceCodePromptResult(
+            MicrosoftDeviceCodePromptResultKind.Succeeded,
+            result(0),
+            result(1))
+    End Function
+
     Public Sub RunLaunchPrompt(prompt As MinecraftLaunchPrompt, launchOptions As ModLaunch.McLaunchOptions)
         If prompt Is Nothing OrElse prompt.Buttons Is Nothing OrElse prompt.Buttons.Count = 0 Then Return
 
@@ -91,5 +113,33 @@ Public Module ModLaunchPromptShell
         Dim selectedIndex As Integer = MyMsgBoxSelect(selectionControls, title)
         Return options(selectedIndex)
     End Function
+
+    Public Sub ShowThirdPartyLoginFailure(failure As MinecraftLaunchThirdPartyLoginFailure)
+        If failure Is Nothing Then Throw New ArgumentNullException(NameOf(failure))
+        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+    End Sub
+
+    Public Enum MicrosoftDeviceCodePromptResultKind
+        Succeeded = 0
+        PasswordLoginRequired = 1
+        Failed = 2
+    End Enum
+
+    Public Structure MicrosoftDeviceCodePromptResult
+        Public Sub New(kind As MicrosoftDeviceCodePromptResultKind,
+                       Optional accessToken As String = Nothing,
+                       Optional refreshToken As String = Nothing,
+                       Optional [error] As Exception = Nothing)
+            Me.Kind = kind
+            Me.AccessToken = accessToken
+            Me.RefreshToken = refreshToken
+            Me.Error = [error]
+        End Sub
+
+        Public Kind As MicrosoftDeviceCodePromptResultKind
+        Public AccessToken As String
+        Public RefreshToken As String
+        Public [Error] As Exception
+    End Structure
 
 End Module

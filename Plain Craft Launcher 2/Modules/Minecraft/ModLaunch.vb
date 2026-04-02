@@ -772,27 +772,21 @@ Retry:
 
         McLaunchLog("网页登录地址：" & PrepareJson("verification_uri").ToString)
 
-        '弹窗
-        Dim Converter As New MyMsgBoxConverter With {.Content = PrepareJson, .ForceWait = True, .Type = MyMsgBoxType.Login}
-        WaitingMyMsgBox.Add(Converter)
-        While Converter.Result Is Nothing
-            Thread.Sleep(100)
-        End While
-        If TypeOf Converter.Result Is RestartException Then
+        Dim promptResult = ModLaunchPromptShell.RunMicrosoftDeviceCodeLoginPrompt(PrepareJson)
+        If promptResult.Kind = MicrosoftDeviceCodePromptResultKind.PasswordLoginRequired Then
             Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetPasswordLoginPrompt())
             If decision.Decision = MinecraftLaunchAccountDecisionKind.Retry Then
                 GoTo Retry
             Else
                 Throw New Exception("$$")
             End If
-        ElseIf TypeOf Converter.Result Is Exception Then
-            Throw CType(Converter.Result, Exception)
+        ElseIf promptResult.Kind = MicrosoftDeviceCodePromptResultKind.Failed Then
+            Throw promptResult.Error
         Else
-            Dim result = CType(Converter.Result, String())
             Return New MicrosoftOAuthStepResult With {
                 .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
-                .AccessToken = result(0),
-                .RefreshToken = result(1)}
+                .AccessToken = promptResult.AccessToken,
+                .RefreshToken = promptResult.RefreshToken}
         End If
     End Function
     ''' <summary>
@@ -1118,7 +1112,7 @@ Retry:
                         If (AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout")) AndAlso Not AllMessage.Contains("403") Then
                             ProfileLog("已触发超时登录失败")
                             Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationTimeoutFailure(ex.InnerHttpException.WebResponse)
-                            MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                            ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
                             Throw New Exception(failure.WrappedExceptionMessage)
                         End If
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateFailure()
@@ -1126,7 +1120,7 @@ Retry:
                         Dim AllMessage = ex.ToString()
                         ProfileLog("验证登录失败：" & AllMessage)
                         Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationFailure(AllMessage)
-                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
                         Throw
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
@@ -1137,7 +1131,7 @@ Retry:
                     Catch ex As Exception
                         ProfileLog("刷新登录失败：" & ex.ToString())
                         Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetRefreshFailure(ex.ToString())
-                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshFailure(currentStep.HasRetriedRefresh)
                         If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.Fail Then
                             Throw New Exception(currentStep.FailureMessage, ex)
@@ -1156,12 +1150,12 @@ Retry:
                         ProfileLog("验证失败：" & ex.ToString())
                         Dim responseText = ex.InnerHttpException.WebResponse
                         Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginHttpFailure(ex.ToString(), responseText)
-                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
                         Throw New Exception(failure.WrappedExceptionMessage)
                     Catch ex As Exception
                         ProfileLog("验证失败：" & ex.ToString())
                         Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginFailure(ex.ToString())
-                        MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
                         Throw New Exception(failure.WrappedExceptionMessage)
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.Finish
