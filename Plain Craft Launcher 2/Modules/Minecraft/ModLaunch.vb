@@ -1180,12 +1180,10 @@ Retry:
             Name = SelectedProfile.Username
         End If
         '发送登录请求
-        Dim RequestData As New JObject(
-            New JProperty("accessToken", AccessToken), New JProperty("clientToken", ClientToken))
         NetRequestRetry(
             Url:=input.BaseUrl & "/validate",
             Method:="POST",
-            Data:=RequestData.ToString(0),
+            Data:=MinecraftLaunchAuthlibProtocolService.BuildValidateRequestJson(AccessToken, ClientToken),
             Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
             ContentType:="application/json") '没有返回值的
         '不更改缓存，直接结束
@@ -1198,28 +1196,22 @@ Retry:
             .Type = "Auth"}
     End Function
     Private Function McLoginRequestRefresh(input As McLoginServer) As McLoginResult
-        Dim RefreshInfo As New JObject
-        Dim SelectProfile As New JObject From {
-            {"name", SelectedProfile.Username},
-            {"id", SelectedProfile.Uuid}
-        }
-        RefreshInfo.Add("selectedProfile", SelectProfile)
-        RefreshInfo.Add(New JProperty("accessToken", SelectedProfile.AccessToken))
-        RefreshInfo.Add(New JProperty("requestUser", True))
         ProfileLog("刷新登录开始（Refresh, Authlib")
-        Dim LoginJson As JObject = GetJson(NetRequestRetry(
+        Dim refreshResponse = MinecraftLaunchAuthlibProtocolService.ParseRefreshResponseJson(NetRequestRetry(
                Url:=input.BaseUrl & "/refresh",
                Method:="POST",
-               Data:=RefreshInfo.ToString(0),
+               Data:=MinecraftLaunchAuthlibProtocolService.BuildRefreshRequestJson(
+                   SelectedProfile.Username,
+                   SelectedProfile.Uuid,
+                   SelectedProfile.AccessToken),
                Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
                ContentType:="application/json"))
-        If LoginJson("selectedProfile") Is Nothing Then Throw New Exception("选择的角色 " & SelectedProfile.Username & " 无效！")
 
         Dim loginResult = New McLoginResult With {
-            .AccessToken = LoginJson("accessToken").ToString,
-            .ClientToken = LoginJson("clientToken").ToString,
-            .Uuid = LoginJson("selectedProfile")("id").ToString,
-            .Name = LoginJson("selectedProfile")("name").ToString,
+            .AccessToken = refreshResponse.AccessToken,
+            .ClientToken = refreshResponse.ClientToken,
+            .Uuid = refreshResponse.SelectedProfileId,
+            .Name = refreshResponse.SelectedProfileName,
             .Type = "Auth"}
         '保存缓存
         Dim authRefreshMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
@@ -1242,30 +1234,22 @@ Retry:
         Try
             Dim NeedRefresh As Boolean = False
             ProfileLog("登录开始（Login, Authlib）")
-            Dim RequestData As New JObject(
-                New JProperty("agent", New JObject(New JProperty("name", "Minecraft"), New JProperty("version", 1))),
-                New JProperty("username", input.UserName),
-                New JProperty("password", input.Password),
-                New JProperty("requestUser", True))
-            Dim LoginJson As JObject = GetJson(NetRequestRetry(
+            Dim authResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(NetRequestRetry(
                 Url:=input.BaseUrl & "/authenticate",
                 Method:="POST",
-                Data:=RequestData.ToString(0),
+                Data:=MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson(input.UserName, input.Password),
                 Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
                 ContentType:="application/json"))
             '检查登录结果
-            If LoginJson("availableProfiles").Count = 0 Then
+            If authResponse.AvailableProfiles.Count = 0 Then
                 ' handled below through the core workflow result
             End If
-            Dim availableProfiles = LoginJson("availableProfiles").
-                Select(Function(profile) New MinecraftLaunchAuthProfileOption(profile("id").ToString, profile("name").ToString)).
-                ToList()
             Dim selectionResult = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
                 New MinecraftLaunchAuthProfileSelectionRequest(
                     input.ForceReselectProfile,
                     If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
-                    If(LoginJson("selectedProfile") Is Nothing, Nothing, LoginJson("selectedProfile")("id").ToString),
-                    availableProfiles))
+                    authResponse.SelectedProfileId,
+                    authResponse.AvailableProfiles))
             If Not String.IsNullOrWhiteSpace(selectionResult.NoticeMessage) Then Hint(selectionResult.NoticeMessage, HintType.Critical)
             If selectionResult.Kind = MinecraftLaunchAuthProfileSelectionKind.Fail Then Throw New Exception(selectionResult.FailureMessage)
 
@@ -1286,14 +1270,14 @@ Retry:
             End If
 
             Dim loginResult = New McLoginResult With {
-                .AccessToken = LoginJson("accessToken").ToString,
-                .ClientToken = LoginJson("clientToken").ToString,
+                .AccessToken = authResponse.AccessToken,
+                .ClientToken = authResponse.ClientToken,
                 .Name = SelectedName,
                 .Uuid = SelectedId,
                 .Type = "Auth"}
             '获取服务器信息
             Dim Response As String = NetGetCodeByRequestRetry(input.BaseUrl.Replace("/authserver", ""), Encoding.UTF8)
-            Dim ServerName As String = JObject.Parse(Response)("meta")("serverName").ToString()
+            Dim ServerName As String = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(Response)
             Dim authMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
                 New MinecraftLaunchAuthProfileMutationRequest(
                     input.IsExist,
