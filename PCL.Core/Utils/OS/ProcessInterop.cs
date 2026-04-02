@@ -4,13 +4,15 @@ using System.IO;
 using System.Management;
 using System.Security;
 using System.Security.Principal;
-using System.Threading.Tasks;
 using Microsoft.Win32;
 using PCL.Core.Logging;
+using PCL.Core.Utils.Processes;
 
 namespace PCL.Core.Utils.OS;
 
 public class ProcessInterop {
+    private static readonly IProcessManager _processManager = SystemProcessManager.Current;
+
     /// <summary>
     /// 检查当前程序是否以管理员权限运行。
     /// </summary>
@@ -37,9 +39,17 @@ public class ProcessInterop {
     /// <param name="runAsAdmin">指定是否以管理员身份启动该进程</param>
     /// <returns>新的进程实例</returns>
     public static Process? Start(string path, string? arguments = null, bool runAsAdmin = false) {
-        var psi = new ProcessStartInfo(path);
+        if (!runAsAdmin) {
+            return _processManager.Start(new ProcessStartRequest(path) {
+                Arguments = arguments
+            });
+        }
+
+        var psi = new ProcessStartInfo(path) {
+            UseShellExecute = true,
+            Verb = "runas"
+        };
         if (arguments != null) psi.Arguments = arguments;
-        if (runAsAdmin) psi.Verb = "runas";
         return Process.Start(psi);
     }
 
@@ -48,12 +58,7 @@ public class ProcessInterop {
     /// </summary>
     /// <param name="process">进程实例</param>
     /// <returns>可执行文件路径，若无法获取则为 <c>null</c></returns>
-    public static string? GetExecutablePath(Process process) {
-        try {
-            var path = process.MainModule?.FileName;
-            return (path == null) ? null : Path.GetFullPath(path);
-        } catch { return null; }
-    }
+    public static string? GetExecutablePath(Process process) => _processManager.GetExecutablePath(process);
 
     /// <summary>
     /// 从本地可执行文件以管理员身份启动新的进程。<see cref="Start"/> 的套壳。
@@ -68,15 +73,10 @@ public class ProcessInterop {
     /// </summary>
     /// <param name="process">要结束的进程实例</param>
     /// <param name="timeout">等待进程退出超时，以毫秒为单位，-1 表示无限制</param>
-    /// <param name="force">指定是否强制结束，若为 <c>true</c> 将通过带 <c>/F</c> 参数的 <c>TASKKILL.EXE</c> 结束进程</param>
+    /// <param name="force">指定是否强制结束，若为 <c>true</c> 将尝试结束整个进程树</param>
     /// <returns>进程返回值，若等待超时将返回 <see cref="int.MinValue"/></returns>
-    public static int Kill(Process process, int timeout = 3000, bool force = false) {
-        if (force) Process.Start(new ProcessStartInfo("TASKKILL.EXE", $"/PID {process.Id} /F") { UseShellExecute = false });
-        else process.Kill();
-        if (timeout == -1) process.WaitForExit();
-        else if (timeout != 0) process.WaitForExit(timeout);
-        return process.HasExited ? process.ExitCode : int.MinValue;
-    }
+    public static int Kill(Process process, int timeout = 3000, bool force = false) =>
+        _processManager.Kill(process, timeout, force);
 
     /// <summary>
     /// 将特定程序设置为使用高性能显卡启动。
