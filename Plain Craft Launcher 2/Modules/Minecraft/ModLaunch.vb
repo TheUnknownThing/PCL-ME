@@ -281,15 +281,8 @@ NextInner:
         If CurrentLaunchOptions?.SaveBatch Is Nothing Then '保存脚本时不提示
             RunInNewThread(
             Sub()
-                Select Case Setup.Get("SystemLaunchCount")
-                    Case 10, 20, 40, 60, 80, 100, 120, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000
-                        If MyMsgBox("PCL 已经为你启动了 " & Setup.Get("SystemLaunchCount") & " 次游戏啦！" & vbCrLf &
-                                    "如果 PCL 还算好用的话，也许可以考虑赞助一下 PCL 原作者……" & vbCrLf &
-                                    "如果没有大家的支持，PCL 很难在免费、无任何广告的情况下维持数年的更新（磕头）……！",
-                                    Setup.Get("SystemLaunchCount") & " 次启动！", "支持一下！", "但是我拒绝") = 1 Then
-                            OpenWebsite("https://afdian.com/a/LTCat")
-                        End If
-                End Select
+                Dim supportPrompt = MinecraftLaunchShellService.GetSupportPrompt(Setup.Get("SystemLaunchCount"))
+                If supportPrompt IsNot Nothing Then RunLaunchPrompt(supportPrompt)
             End Sub, "Donate")
         End If
 #End If
@@ -2206,18 +2199,23 @@ NextInstance:
         Try
             ProcessInterop.SetGpuPreference(javaExePath, Config.Launch.SetGpuPreference)
         Catch ex As Exception
-            If ProcessInterop.IsAdmin() OrElse Not Config.Launch.SetGpuPreference Then
+            Dim failurePlan = MinecraftLaunchGpuPreferenceWorkflowService.BuildFailurePlan(
+                New MinecraftLaunchGpuPreferenceFailureRequest(
+                    javaExePath,
+                    Config.Launch.SetGpuPreference,
+                    ProcessInterop.IsAdmin()))
+            If failurePlan.ActionKind = MinecraftLaunchGpuPreferenceFailureActionKind.LogDirectFailure Then
                 Log(ex, "直接调整显卡设置失败")
             Else
-                Log(ex, "直接调整显卡设置失败，将以管理员权限重启 PCL 再次尝试")
+                Log(ex, failurePlan.RetryLogMessage)
                 Try
-                    If ProcessInterop.StartAsAdmin($"--gpu ""{javaExePath}""").ExitCode = ProcessReturnValues.TaskDone Then
+                    If ProcessInterop.StartAsAdmin(failurePlan.AdminRetryArguments).ExitCode = ProcessReturnValues.TaskDone Then
                         McLaunchLog("以管理员权限重启 PCL 并调整显卡设置成功")
                     Else
                         Throw New Exception("调整过程中出现异常")
                     End If
                 Catch exx As Exception
-                    Log(exx, "调整显卡设置失败，Minecraft 可能会使用默认显卡运行", LogLevel.Hint)
+                    Log(exx, failurePlan.RetryFailureHintMessage, LogLevel.Hint)
                 End Try
             End If
         End Try
