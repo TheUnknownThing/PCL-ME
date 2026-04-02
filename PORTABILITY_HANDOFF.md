@@ -73,8 +73,8 @@ This is **not** a fully portable backend yet.
 
 Honest status estimate at this handoff point:
 
-- portable runtime/core extraction: roughly `80%` complete
-- backend readiness for a replacement non-Windows frontend: roughly `65%~70%` complete
+- portable runtime/core extraction: roughly `87%~88%` complete
+- backend readiness for a replacement non-Windows frontend: roughly `76%~79%` complete
 
 What is already true:
 
@@ -84,7 +84,7 @@ What is already true:
 
 What is not true yet:
 
-- `ModLaunch.vb` still owns too much step execution and launch-prep orchestration
+- `ModLaunch.vb` still owns too much step execution, request coordination, watcher lifecycle wiring, and Java-selection / download shell bridging
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
@@ -366,7 +366,7 @@ Additional note about validation on this machine:
 
 If “portable backend” means “the non-GUI services a future macOS/Linux launcher could call without depending on WPF or Windows-only APIs”, the current estimate is:
 
-- about `80%` complete
+- about `87%~88%` complete
 
 Rationale:
 
@@ -387,7 +387,7 @@ Concrete current state:
 
 If “fully working portable backend” means “all non-frontend launcher behavior can run cross-platform today without the current Windows launcher layer”, the honest estimate is lower:
 
-- about `55%` complete
+- about `62%~65%` complete
 
 Reason:
 
