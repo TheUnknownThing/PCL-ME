@@ -13,7 +13,7 @@ internal sealed class WindowsRegistrySystemProxySource : ISystemProxySource
     private readonly WebProxy _systemWebProxy = new() { BypassProxyOnLocal = true };
     private const string ProxyRegPathFull = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings";
     private const string ProxyRegPath = @"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
-    private readonly RegistryChangeMonitor _proxyMonitor = new(ProxyRegPath);
+    private readonly IRegistryChangeMonitor _proxyMonitor = RegistryChangeMonitorProvider.Create(ProxyRegPath);
 
     public WindowsRegistrySystemProxySource()
     {
