@@ -38,7 +38,7 @@ Public Class Application
                 If args(0) = "--gpu" Then
                     '调整显卡设置
                     Try
-                        SetGPUPreference(args(1).Trim(""""))
+                        ProcessInterop.SetGpuPreference(args(1).Trim(""""))
                         Environment.Exit(ProcessReturnValues.TaskDone)
                     Catch ex As Exception
                         Environment.Exit(ProcessReturnValues.Fail)

@@ -2116,7 +2116,7 @@ NextInstance:
         '要求 Java 使用高性能显卡
         Dim javaExePath = If(McLaunchJavaSelected.Installation.JavawExePath, McLaunchJavaSelected.Installation.JavaExePath)
         Try
-            SetGPUPreference(javaExePath, Config.Launch.SetGpuPreference)
+            ProcessInterop.SetGpuPreference(javaExePath, Config.Launch.SetGpuPreference)
         Catch ex As Exception
             If ProcessInterop.IsAdmin() OrElse Not Config.Launch.SetGpuPreference Then
                 Log(ex, "直接调整显卡设置失败")
