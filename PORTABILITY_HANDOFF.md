@@ -25,6 +25,7 @@ Latest continuation update:
 - launch-session music / video-background / launcher-visibility shell policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch custom-command / batch-script planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
+- launch process / watcher runtime planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
@@ -42,6 +43,7 @@ Latest continuation update:
 - launcher prerun `launcher_profiles.json` mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesService`
 - launcher custom-command / batch-script shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchCustomCommandService`
 - launcher startup session summary logging now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionLogService`
+- launcher process start / watcher preparation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRuntimeService`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -211,6 +213,9 @@ These were completed after Wave 2 was declared stable:
 - launch-session startup summary logging moved out of the launcher
   - `MinecraftLaunchSessionLogService` now owns launch-session summary line formatting for launcher / instance / profile diagnostics
   - `ModLaunch.vb` now only prints the returned log lines before watcher startup
+- launch process / watcher runtime planning moved out of the launcher
+  - `MinecraftLaunchRuntimeService` now owns Java executable selection, process environment composition, process-priority mapping, watcher title fallback rules, and JStack path selection
+  - `ModLaunch.vb` now only applies the returned process plan and constructs the watcher with the returned runtime plan
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
