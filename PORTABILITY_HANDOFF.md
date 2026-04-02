@@ -24,6 +24,8 @@ Latest continuation update:
 - launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
 - launch prerun options-file mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
 - launch prerun `launcher_profiles.json` mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`
+- launcher_profiles default file seeding now lives in `PCL.Core.Minecraft.MinecraftLauncherProfilesFileService`
+- launch prerun `launcher_profiles.json` retry / reset workflow now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesWorkflowService`
 - launch-session music / video-background / launcher-visibility shell policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch custom-command / batch-script planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
@@ -45,6 +47,8 @@ Latest continuation update:
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
 - launcher prerun `launcher_profiles.json` mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesService`
+- launcher Minecraft-folder `launcher_profiles.json` creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModMinecraft.vb` consuming `MinecraftLauncherProfilesFileService`
+- launcher prerun `launcher_profiles.json` retry / reset application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesWorkflowService`
 - launcher custom-command / batch-script shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchCustomCommandService`
 - launcher startup session summary logging now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionLogService`
 - launcher process start / watcher preparation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRuntimeService`

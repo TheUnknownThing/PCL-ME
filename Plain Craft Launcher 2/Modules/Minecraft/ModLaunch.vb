@@ -2097,32 +2097,34 @@ NextInstance:
     Private Sub UpdateLauncherProfilesJson()
         If Not McLoginLoader.Output.Type = "Microsoft" Then Exit Sub
 
+        Dim launcherProfilesPath = McFolderSelected & "launcher_profiles.json"
+        McFolderLauncherProfilesJsonCreate(McFolderSelected)
+        Dim workflowPlan = MinecraftLaunchLauncherProfilesWorkflowService.BuildPlan(
+            New MinecraftLaunchLauncherProfilesWorkflowRequest(
+                True,
+                ReadFile(launcherProfilesPath),
+                McLoginLoader.Output.Name,
+                McLoginLoader.Output.ClientToken,
+                Date.Now))
+        If Not workflowPlan.ShouldWrite Then Exit Sub
+
         Try
-            WriteLauncherProfilesJson("已更新 launcher_profiles.json")
+            WriteLauncherProfilesJson(launcherProfilesPath, workflowPlan.InitialAttempt)
         Catch ex As Exception
-            Log(ex, "更新 launcher_profiles.json 失败，将在删除文件后重试")
+            Log(ex, workflowPlan.RetryLogMessage)
             Try
-                File.Delete(McFolderSelected & "launcher_profiles.json")
-                WriteLauncherProfilesJson("已在删除后更新 launcher_profiles.json")
+                File.Delete(launcherProfilesPath)
+                McFolderLauncherProfilesJsonCreate(McFolderSelected)
+                WriteLauncherProfilesJson(launcherProfilesPath, workflowPlan.RetryAttempt)
             Catch retryEx As Exception
-                Log(retryEx, "更新 launcher_profiles.json 失败", LogLevel.Feedback)
+                Log(retryEx, workflowPlan.FailureLogMessage, LogLevel.Feedback)
             End Try
         End Try
     End Sub
 
-    Private Sub WriteLauncherProfilesJson(logMessage As String)
-        McFolderLauncherProfilesJsonCreate(McFolderSelected)
-        Dim launcherProfilesPath = McFolderSelected & "launcher_profiles.json"
-        Dim updatePlan = MinecraftLaunchLauncherProfilesService.BuildUpdatePlan(
-            New MinecraftLaunchLauncherProfilesUpdateRequest(
-                McLoginLoader.Output.Type = "Microsoft",
-                ReadFile(launcherProfilesPath),
-                McLoginLoader.Output.Name,
-                McLoginLoader.Output.ClientToken))
-        If Not updatePlan.ShouldWrite Then Exit Sub
-
-        WriteFile(launcherProfilesPath, updatePlan.UpdatedProfilesJson, Encoding:=Encoding.GetEncoding("GB18030"))
-        McLaunchLog(logMessage)
+    Private Sub WriteLauncherProfilesJson(launcherProfilesPath As String, attempt As MinecraftLaunchLauncherProfilesWriteAttempt)
+        WriteFile(launcherProfilesPath, attempt.UpdatedProfilesJson, Encoding:=Encoding.GetEncoding("GB18030"))
+        McLaunchLog(attempt.SuccessLogMessage)
     End Sub
 
     Private Sub McLaunchCustom(Loader As LoaderTask(Of Integer, Integer))

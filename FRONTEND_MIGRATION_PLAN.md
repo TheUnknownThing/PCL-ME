@@ -58,6 +58,8 @@ These workflow extractions are already done and should be treated as available m
 - launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch prerun `options.txt` target selection and write policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
 - launch prerun Microsoft `launcher_profiles.json` mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`
+- launcher_profiles default file seeding is owned by `PCL.Core.Minecraft.MinecraftLauncherProfilesFileService`
+- launch prerun `launcher_profiles.json` retry / reset workflow is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesWorkflowService`
 - launch custom-command / batch-script planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - launch process / watcher runtime planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
