@@ -248,63 +248,54 @@ Public Class FormMain
     End Sub
 
     Private Sub ApplyVersionTransition(lastVersionCode As Integer)
-        Dim highestRecordedVersionCode = GetHighestRecordedVersionCode()
-        Dim transition = LauncherVersionTransitionService.Evaluate(New LauncherVersionTransitionRequest(
-            lastVersionCode,
-            VersionCode,
-            IsBetaBuild(),
-            highestRecordedVersionCode,
-            CInt(Setup.Get("LaunchArgumentWindowType")),
-            If(Setup.IsUnset("UiLauncherThemeHide"), Nothing, Setup.Get("UiLauncherThemeHide").ToString()),
-            If(Setup.IsUnset("UiLauncherThemeHide2"), Nothing, Setup.Get("UiLauncherThemeHide2").ToString()),
-            File.Exists(ExePath & "PCL\CustomSkin.png"),
-            File.Exists(PathTemp & "CustomSkin.png"),
-            File.Exists(PathAppdata & "CustomSkin.png"),
-            Not Setup.IsUnset("ToolDownloadTranslate"),
-            Not Setup.IsUnset("ToolDownloadTranslateV2"),
-            If(Setup.IsUnset("ToolDownloadTranslate"), 0, CInt(Setup.Get("ToolDownloadTranslate")))))
+        Dim workflowPlan = LauncherVersionTransitionWorkflowService.BuildPlan(New LauncherVersionTransitionWorkflowRequest(
+            New LauncherVersionTransitionRequest(
+                lastVersionCode,
+                VersionCode,
+                IsBetaBuild(),
+                GetHighestRecordedVersionCode(),
+                CInt(Setup.Get("LaunchArgumentWindowType")),
+                If(Setup.IsUnset("UiLauncherThemeHide"), Nothing, Setup.Get("UiLauncherThemeHide").ToString()),
+                If(Setup.IsUnset("UiLauncherThemeHide2"), Nothing, Setup.Get("UiLauncherThemeHide2").ToString()),
+                File.Exists(ExePath & "PCL\CustomSkin.png"),
+                File.Exists(PathTemp & "CustomSkin.png"),
+                File.Exists(PathAppdata & "CustomSkin.png"),
+                Not Setup.IsUnset("ToolDownloadTranslate"),
+                Not Setup.IsUnset("ToolDownloadTranslateV2"),
+                If(Setup.IsUnset("ToolDownloadTranslate"), 0, CInt(Setup.Get("ToolDownloadTranslate")))),
+            ExePath & "PCL\CustomSkin.png",
+            PathTemp & "CustomSkin.png",
+            PathAppdata & "CustomSkin.png"))
 
-        If transition.ShouldStoreCurrentVersion Then
-            Setup.Set("SystemLastVersionReg", VersionCode)
+        For Each settingWrite In workflowPlan.SettingWrites
+            Setup.Set(settingWrite.Key, settingWrite.Value)
+        Next
+        If workflowPlan.HighestVersionLogMessage IsNot Nothing Then
+            Log(workflowPlan.HighestVersionLogMessage)
         End If
-        If transition.HighestVersionStorageKey IsNot Nothing AndAlso transition.HighestVersionToStore.HasValue Then
-            Setup.Set(transition.HighestVersionStorageKey, transition.HighestVersionToStore.Value)
-            Log("[Start] 最高版本号从 " & highestRecordedVersionCode & " 升高到 " & transition.HighestVersionToStore.Value)
-        End If
-        If transition.LaunchArgumentWindowTypeToStore.HasValue Then
-            Setup.Set("LaunchArgumentWindowType", transition.LaunchArgumentWindowTypeToStore.Value)
-        End If
-        If transition.ThemeHiddenV2ToStore IsNot Nothing Then
-            Setup.Set("UiLauncherThemeHide2", transition.ThemeHiddenV2ToStore)
-        End If
-        For Each notice In transition.Notices
+        For Each notice In workflowPlan.Transition.Notices
             MyMsgBox(notice.Message, notice.Title)
         Next
 
-        Select Case transition.CustomSkinMigrationSource
-            Case LauncherCustomSkinMigrationSourceKind.ExecutableDirectory
-                CopyFile(ExePath & "PCL\CustomSkin.png", PathAppdata & "CustomSkin.png")
-                Log("[Start] 已移动离线自定义皮肤 (162)")
-            Case LauncherCustomSkinMigrationSourceKind.TempDirectory
-                CopyFile(PathTemp & "CustomSkin.png", PathAppdata & "CustomSkin.png")
-                Log("[Start] 已移动离线自定义皮肤 (264)")
-        End Select
-
-        If transition.ShouldUnhideSetupAbout Then
-            Config.Preference.Hide.SetupAbout = False
-            Log("[Start] 已解除帮助页面的隐藏")
+        If workflowPlan.CustomSkinMigration IsNot Nothing Then
+            CopyFile(workflowPlan.CustomSkinMigration.SourcePath, workflowPlan.CustomSkinMigration.TargetPath)
+            Log(workflowPlan.CustomSkinMigration.LogMessage)
         End If
-        If transition.ShouldMigrateOldProfile Then
+
+        If workflowPlan.Transition.ShouldUnhideSetupAbout Then
+            Config.Preference.Hide.SetupAbout = False
+            Log(workflowPlan.SetupAboutUnhideLogMessage)
+        End If
+        If workflowPlan.Transition.ShouldMigrateOldProfile Then
             RunInNewThread(Sub() MigrateOldProfile())
         End If
-        If transition.ModNameSettingV2ToStore.HasValue Then
-            Setup.Set("ToolDownloadTranslateV2", transition.ModNameSettingV2ToStore.Value)
-            Log("[Start] 已从老版本迁移 Mod 命名设置")
+        If workflowPlan.ModNameMigrationLogMessage IsNot Nothing Then
+            Log(workflowPlan.ModNameMigrationLogMessage)
         End If
-        If transition.ShouldShowCommunityAnnouncement Then
+        If workflowPlan.Transition.ShouldShowCommunityAnnouncement Then
             ShowCEAnnounce()
         End If
-        If transition.ShouldShowUpdateLog Then
+        If workflowPlan.Transition.ShouldShowUpdateLog Then
             ShowUpdateLog()
         End If
     End Sub

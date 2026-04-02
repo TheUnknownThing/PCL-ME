@@ -37,6 +37,7 @@ Latest continuation update:
 - Authlib request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
+- startup version-transition application planning now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionWorkflowService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
 - crash-export archive creation now lives in `PCL.Core.Minecraft.MinecraftCrashExportArchiveService`
@@ -49,6 +50,7 @@ Latest continuation update:
 - launcher startup shell composition now routes through `Plain Craft Launcher 2/Application.xaml.vb` consuming `LauncherStartupWorkflowService`
 - launcher startup open-count milestone application now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherStartupMilestoneService`
 - launcher main-window startup composition now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherMainWindowStartupWorkflowService`
+- launcher startup version-transition setting/file/log application now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherVersionTransitionWorkflowService`
 - launcher startup update-log rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
@@ -205,6 +207,9 @@ These were completed after Wave 2 was declared stable:
 - startup version upgrade / downgrade policy moved out of the launcher
   - `LauncherVersionTransitionService` now owns version-transition migrations, notices, custom-skin migration selection, and update-log eligibility
   - `FormMain.xaml.vb` applies the returned plan instead of owning that decision tree
+- startup version-transition application planning moved out of the launcher
+  - `LauncherVersionTransitionWorkflowService` now owns the concrete setup writes, custom-skin copy plan, and related startup log-message planning needed to apply version transitions
+  - `FormMain.xaml.vb` now mainly applies the returned shell actions like prompt display, file copy, announcement display, and old-profile migration kickoff
 - startup version-isolation migration policy moved out of the launcher
   - `LauncherStartupVersionIsolationMigrationService` now owns legacy `LaunchArgumentIndie` to `LaunchArgumentIndieV2` migration rules
   - `FormMain.xaml.vb` only applies the returned value and log message
