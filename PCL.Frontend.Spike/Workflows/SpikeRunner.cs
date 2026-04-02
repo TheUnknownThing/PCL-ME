@@ -45,6 +45,13 @@ internal static class SpikeRunner
             new("Java Selection", BuildJavaSelectionLines(plan, javaPromptDecision, promptOutcome, postDownloadSelection))
         };
 
+        if (plan.JavaRuntimeSelection is not null && plan.JavaRuntimeDownloadPlan is not null)
+        {
+            sections.Add(new SpikeTranscriptSection(
+                "Java Download Plan",
+                BuildJavaDownloadLines(plan.JavaRuntimeSelection, plan.JavaRuntimeDownloadPlan)));
+        }
+
         if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
         {
             sections.Add(new SpikeTranscriptSection(
@@ -187,6 +194,23 @@ internal static class SpikeRunner
         }
 
         return lines;
+    }
+
+    private static IReadOnlyList<string> BuildJavaDownloadLines(
+        MinecraftJavaRuntimeSelection selection,
+        MinecraftJavaRuntimeDownloadPlan plan)
+    {
+        return
+        [
+            $"Platform: {selection.PlatformKey}",
+            $"Requested component: {selection.RequestedComponent}",
+            $"Resolved component: {selection.ComponentKey}",
+            $"Version: {selection.VersionName}",
+            $"Manifest: {selection.ManifestUrl}",
+            $"Runtime directory: {plan.RuntimeBaseDirectory}",
+            $"Planned files: {plan.Files.Count}",
+            ..plan.Files.Take(3).Select(file => $"File: {file.RelativePath} ({file.Size} bytes)")
+        ];
     }
 
     private static IReadOnlyList<string> BuildLoginLines(LaunchLoginSpikePlan plan)

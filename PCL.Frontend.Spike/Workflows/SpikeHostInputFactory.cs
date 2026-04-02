@@ -64,6 +64,7 @@ internal static class SpikeHostInputFactory
 
         return sample with
         {
+            JavaRuntimeInputs = BuildJavaRuntimeInputs(sample.JavaRuntimeInputs, scenario, minecraftRoot),
             ClasspathRequest = sample.ClasspathRequest with
             {
                 Libraries =
@@ -237,5 +238,22 @@ internal static class SpikeHostInputFactory
         return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
             ? path
             : path + Path.DirectorySeparatorChar;
+    }
+
+    private static JavaRuntimeSpikeInputs BuildJavaRuntimeInputs(JavaRuntimeSpikeInputs sample, string scenario, string minecraftRoot)
+    {
+        var platformKey = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? $"windows-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? $"mac-os-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}"
+                : $"linux-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}";
+        var componentKey = scenario == "legacy-forge" ? "jre-8u412" : "jre-legacy";
+
+        return sample with
+        {
+            PlatformKey = platformKey,
+            RuntimeBaseDirectory = Path.Combine(minecraftRoot, "runtime", componentKey),
+            IndexJson = sample.IndexJson.Replace("windows-x64", platformKey, StringComparison.Ordinal)
+        };
     }
 }

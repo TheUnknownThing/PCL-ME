@@ -165,6 +165,25 @@ internal static class SpikeExecutor
                 new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
         }
 
+        if (plan.JavaRuntimeSelection is not null && plan.JavaRuntimeDownloadPlan is not null)
+        {
+            var javaDownloadPlanPath = Path.Combine(workspaceRoot, "_artifacts", "java-download-plan.txt");
+            WriteTextFile(
+                javaDownloadPlanPath,
+                BuildJavaDownloadPlanText(plan.JavaRuntimeSelection, plan.JavaRuntimeDownloadPlan));
+            writtenFiles.Add(javaDownloadPlanPath);
+            artifacts.Add(new SpikeExecutionArtifact("Java download plan", javaDownloadPlanPath));
+
+            sections.Add(new SpikeTranscriptSection(
+                "Java Download Plan",
+                [
+                    $"Resolved component: {plan.JavaRuntimeSelection.ComponentKey}",
+                    $"Runtime directory: {plan.JavaRuntimeDownloadPlan.RuntimeBaseDirectory}",
+                    $"Planned files: {plan.JavaRuntimeDownloadPlan.Files.Count}",
+                    $"Plan artifact: {javaDownloadPlanPath}"
+                ]));
+        }
+
         if (plan.PrerunPlan.LauncherProfiles.Path is not null)
         {
             var launcherProfilesPath = MapSamplePath(plan.PrerunPlan.LauncherProfiles.Path, workspaceRoot);
@@ -433,6 +452,23 @@ internal static class SpikeExecutor
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildJavaDownloadPlanText(
+        MinecraftJavaRuntimeSelection selection,
+        MinecraftJavaRuntimeDownloadPlan plan)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"Platform={selection.PlatformKey}",
+                $"RequestedComponent={selection.RequestedComponent}",
+                $"ResolvedComponent={selection.ComponentKey}",
+                $"Version={selection.VersionName}",
+                $"Manifest={selection.ManifestUrl}",
+                $"RuntimeBaseDirectory={plan.RuntimeBaseDirectory}",
+                ..plan.Files.Select(file => $"{file.RelativePath}|{file.TargetPath}|{file.Size}|{file.Sha1}|{file.Url}")
+            ]);
     }
 
     private static string ResolveCrashArchivePath(string workspaceRoot, string suggestedArchiveName, string? exportArchivePath)

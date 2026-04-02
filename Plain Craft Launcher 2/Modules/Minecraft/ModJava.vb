@@ -1,5 +1,6 @@
 ﻿Imports PCL.Core.Minecraft
 Imports PCL.Core.App
+Imports PCL.Core.Minecraft.Launch
 Imports System.Text.Json
 Imports PCL.Core.Utils.Exts
 Imports PCL.Core.Minecraft.Java.UserPreference
@@ -275,40 +276,26 @@ Public Module ModJava
             {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
             {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
         ), IsJson:=True)
-        '查找要下载的目标 Java
-        Dim TargetEntry As JProperty = Nothing
-        Dim Components As JObject = CType(GetJson(IndexFileStr), JObject)($"windows-x{If(Is32BitSystem, "86", "64")}")
-        If Components.ContainsKey(Loader.Input) Then '精确匹配
-            TargetEntry = Components.Property(Loader.Input)
-        Else '模糊匹配
-            TargetEntry = Components.Properties.FirstOrDefault(
-                Function(c) c.Value?.ToArray.FirstOrDefault()?("version")("name").ToString.StartsWithF(Loader.Input))
-            If TargetEntry Is Nothing Then Throw New Exception($"未能找到所需的 Java {Loader.Input}")
-        End If
-        Dim TargetComponent = TargetEntry.Value.ToArray.FirstOrDefault
-        If TargetComponent Is Nothing Then Throw New Exception($"Mojang 未提供所需的 Java {Loader.Input}")
+        Dim runtimeSelection = MinecraftJavaRuntimeDownloadService.SelectRuntime(
+            New MinecraftJavaRuntimeSelectionRequest(
+                IndexFileStr,
+                $"windows-x{If(Is32BitSystem, "86", "64")}",
+                Loader.Input))
         '获取文件列表
-        Dim Address As String = TargetComponent("manifest")("url")
-        McLaunchLog($"准备下载 Java {TargetComponent("version")("name")}（{TargetEntry.Name}）：{Address}")
-        Dim ListFileStr As JObject = NetGetCodeByRequestRetry(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}).First(), IsJson:=True)
-        LastJavaBaseDir = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime", TargetEntry.Name)
-        Dim Results As New List(Of NetFile)(ListFileStr("files").Count())
-        For Each File As JProperty In ListFileStr("files")
-            If CType(File.Value, JObject)("downloads")?("raw") Is Nothing Then Continue For
-
-            Dim Info As JObject = CType(File.Value, JObject)("downloads")("raw")
-            Dim checkHash = Info("sha1")
-            If IgnoreHash.Contains(checkHash) Then Continue For '跳过 3 个无意义大量重复文件（#3827）
-
-            Dim Checker As New FileChecker(ActualSize:=Info("size"), Hash:=Info("sha1"))
-            Dim filePath = IO.Path.GetFullPath(IO.Path.Combine(LastJavaBaseDir, File.Name))
-            If Not Files.IsPathWithinDirectory(filePath, LastJavaBaseDir) Then
-                Throw New Exception($"{filePath} 不在 {LastJavaBaseDir} 中")
-            End If
-
-            If Checker.Check(filePath) Is Nothing Then Continue For '跳过已存在的文件
-            Dim Url As String = Info("url")
-            Results.Add(New NetFile(DlSourceOrder({Url}, {Url.Replace("piston-data.mojang.com", "bmclapi2.bangbang93.com")}), filePath, Checker))
+        Dim Address As String = runtimeSelection.ManifestUrl
+        McLaunchLog($"准备下载 Java {runtimeSelection.VersionName}（{runtimeSelection.ComponentKey}）：{Address}")
+        Dim ListFileStr As String = NetGetCodeByRequestRetry(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}).First(), IsJson:=True)
+        LastJavaBaseDir = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime", runtimeSelection.ComponentKey)
+        Dim runtimePlan = MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(
+            New MinecraftJavaRuntimeDownloadPlanRequest(
+                ListFileStr,
+                LastJavaBaseDir,
+                IgnoreHash.ToList()))
+        Dim Results As New List(Of NetFile)(runtimePlan.Files.Count)
+        For Each filePlan In runtimePlan.Files
+            Dim Checker As New FileChecker(ActualSize:=filePlan.Size, Hash:=filePlan.Sha1)
+            If Checker.Check(filePlan.TargetPath) Is Nothing Then Continue For '跳过已存在的文件
+            Results.Add(New NetFile(DlSourceOrder({filePlan.Url}, {filePlan.Url.Replace("piston-data.mojang.com", "bmclapi2.bangbang93.com")}), filePlan.TargetPath, Checker))
         Next
         Loader.Output = Results
         Log($"[Java] 需要下载 {Results.Count} 个文件，目标文件夹：{LastJavaBaseDir}")

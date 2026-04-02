@@ -115,6 +115,13 @@ internal static class SpikeTextRenderer
                         $"Post-download selection: {plan.PostDownloadSelection.ActionKind}"
                     ]),
                 new SpikeTranscriptSection(
+                    "Java Download",
+                    [
+                        $"Resolved component: {plan.JavaRuntimeSelection?.ComponentKey ?? "none"}",
+                        $"Runtime directory: {plan.JavaRuntimeDownloadPlan?.RuntimeBaseDirectory ?? "none"}",
+                        $"Planned files: {plan.JavaRuntimeDownloadPlan?.Files.Count ?? 0}"
+                    ]),
+                new SpikeTranscriptSection(
                     "Launch Composition",
                     [
                         $"Resolution: {plan.ResolutionPlan.Width}x{plan.ResolutionPlan.Height}",

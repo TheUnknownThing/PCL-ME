@@ -10,6 +10,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - the portable backend can drive both machine-readable output and shell-oriented transcript output
 - the same prototype shell can materialize bootstrap, prerun, and crash-export artifacts in a real workspace through adapter-style file execution
 - launch scenarios can now trace Authlib or Microsoft login request execution with inspectable request/response artifacts
+- launch scenarios now also expose a portable Java runtime download plan, including the resolved runtime component and planned manifest files
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
@@ -58,6 +59,7 @@ Useful reviewer commands:
 - startup execution creates bootstrap directories, deletes seeded legacy log placeholders, and writes prompt/config artifacts
 - launch execution can materialize `launcher_profiles.json`, `options.txt`, a generated launch batch file, and session summary artifacts
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
+- launch execution now writes `_artifacts/java-download-plan.txt` when the backend selects an automatic Java download path
 - crash execution can stage sample input files and build a real crash zip archive via `MinecraftCrashExportArchiveService`
 - crash execution records the selected archive destination in `_artifacts/crash-export-target.txt`, and `--export-path` can override the default workspace output path
 - aborting the launch Java prompt in `execute` mode stops before prerun file work, so no launch artifacts are created

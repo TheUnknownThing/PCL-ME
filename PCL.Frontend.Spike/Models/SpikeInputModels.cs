@@ -11,6 +11,7 @@ internal sealed record StartupSpikeInputs(
 internal sealed record LaunchSpikeInputs(
     string Scenario,
     LaunchLoginSpikeInputs LoginInputs,
+    JavaRuntimeSpikeInputs JavaRuntimeInputs,
     MinecraftLaunchJavaWorkflowRequest JavaWorkflowRequest,
     MinecraftLaunchResolutionRequest ResolutionRequest,
     MinecraftLaunchClasspathRequest ClasspathRequest,
@@ -21,6 +22,13 @@ internal sealed record LaunchSpikeInputs(
     MinecraftLaunchArgumentPlanRequest ArgumentPlanRequest,
     MinecraftLaunchPostLaunchShellRequest PostLaunchShellRequest,
     MinecraftLaunchCompletionRequest CompletionRequest);
+
+internal sealed record JavaRuntimeSpikeInputs(
+    string PlatformKey,
+    string RuntimeBaseDirectory,
+    string IndexJson,
+    string ManifestJson,
+    IReadOnlyList<string> IgnoredSha1Hashes);
 
 internal sealed record CrashSpikeInputs(
     MinecraftCrashOutputPromptRequest OutputPromptRequest,

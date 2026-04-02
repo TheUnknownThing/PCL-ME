@@ -47,6 +47,7 @@ internal static class SpikeSampleFactory
         return new LaunchSpikeInputs(
             Scenario: scenario,
             LoginInputs: BuildLoginInputs(scenario),
+            JavaRuntimeInputs: BuildJavaRuntimeInputs(scenario),
             JavaWorkflowRequest: BuildJavaWorkflowRequest(scenario),
             ResolutionRequest: new MinecraftLaunchResolutionRequest(
                 WindowMode: 3,
@@ -198,6 +199,20 @@ internal static class SpikeSampleFactory
     {
         var loginPlan = SpikeLaunchLoginFactory.BuildPlan(inputs.LoginInputs);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(inputs.JavaWorkflowRequest);
+        var javaRuntimeSelection = javaWorkflow.MissingJavaPrompt.DownloadTarget is null
+            ? null
+            : MinecraftJavaRuntimeDownloadService.SelectRuntime(
+                new MinecraftJavaRuntimeSelectionRequest(
+                    inputs.JavaRuntimeInputs.IndexJson,
+                    inputs.JavaRuntimeInputs.PlatformKey,
+                    javaWorkflow.MissingJavaPrompt.DownloadTarget));
+        var javaRuntimeDownloadPlan = javaRuntimeSelection is null
+            ? null
+            : MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(
+                new MinecraftJavaRuntimeDownloadPlanRequest(
+                    inputs.JavaRuntimeInputs.ManifestJson,
+                    inputs.JavaRuntimeInputs.RuntimeBaseDirectory,
+                    inputs.JavaRuntimeInputs.IgnoredSha1Hashes));
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(inputs.ResolutionRequest);
         var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(inputs.ClasspathRequest);
         var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(inputs.NativesDirectoryRequest);
@@ -215,6 +230,8 @@ internal static class SpikeSampleFactory
         return new LaunchSpikePlan(
             inputs.Scenario,
             loginPlan,
+            javaRuntimeSelection,
+            javaRuntimeDownloadPlan,
             javaWorkflow,
             MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, hasSelectedJava: false),
             MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(
@@ -460,5 +477,68 @@ internal static class SpikeSampleFactory
                     ]),
                 Authlib: null)
         };
+    }
+
+    private static JavaRuntimeSpikeInputs BuildJavaRuntimeInputs(string scenario)
+    {
+        var requestedComponent = scenario == "legacy-forge" ? "8" : "jre-legacy";
+        var versionName = scenario == "legacy-forge" ? "8u412-b08" : "21.0.4+7";
+        var componentKey = scenario == "legacy-forge" ? "jre-8u412" : "jre-legacy";
+
+        return new JavaRuntimeSpikeInputs(
+            PlatformKey: "windows-x64",
+            RuntimeBaseDirectory: Path.Combine(@"C:\Minecraft\.minecraft\runtime", componentKey),
+            IndexJson:
+            $$"""
+            {
+              "windows-x64": {
+                "{{componentKey}}": [
+                  {
+                    "version": {
+                      "name": "{{versionName}}"
+                    },
+                    "manifest": {
+                      "url": "https://example.invalid/{{componentKey}}/manifest.json"
+                    }
+                  }
+                ]
+              }
+            }
+            """,
+            ManifestJson:
+            $$"""
+            {
+              "files": {
+                "bin/java.exe": {
+                  "downloads": {
+                    "raw": {
+                      "url": "https://example.invalid/{{componentKey}}/bin/java.exe",
+                      "size": 1024,
+                      "sha1": "keep-bin"
+                    }
+                  }
+                },
+                "conf/net.properties": {
+                  "downloads": {
+                    "raw": {
+                      "url": "https://example.invalid/{{componentKey}}/conf/net.properties",
+                      "size": 256,
+                      "sha1": "keep-conf"
+                    }
+                  }
+                },
+                "legal/java.base/LICENSE": {
+                  "downloads": {
+                    "raw": {
+                      "url": "https://example.invalid/{{componentKey}}/legal/license",
+                      "size": 128,
+                      "sha1": "skip-license"
+                    }
+                  }
+                }
+              }
+            }
+            """,
+            IgnoredSha1Hashes: ["skip-license"]);
     }
 }
