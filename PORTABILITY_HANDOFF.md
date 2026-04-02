@@ -55,6 +55,30 @@ Target architecture:
 
 The mission is still “stabilize the runtime boundary before touching the frontend.”
 
+## Current State
+
+This is **not** a fully portable backend yet.
+
+Honest status estimate at this handoff point:
+
+- portable runtime/core extraction: roughly `80%` complete
+- backend readiness for a replacement non-Windows frontend: roughly `65%~70%` complete
+
+What is already true:
+
+- `PCL.Core.Foundation` is real, headless, and validated on macOS
+- the major runtime seams are no longer speculative; they exist in code and have tests/build validation
+- a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
+
+What is not true yet:
+
+- `ModLaunch.vb` still owns too much step execution and launch-prep orchestration
+- startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
+- crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
+- `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
+
+This branch is handoff-ready for another engineer. The next engineer should continue from the existing seams rather than reopening Foundation extraction.
+
 ## What Has Been Completed
 
 ### Wave 1
@@ -243,6 +267,35 @@ These seams are deliberate and should stay intact until the broader runtime extr
 - Java seam
   - Foundation owns Java runtime/discovery core
   - `PCL.Core/Minecraft/Java/JavaService.cs` still owns the Windows assembly of scanners/parsers/storage
+
+## Recommended Next Work
+
+Highest-value next slices, in order:
+
+1. reduce `ModLaunch.vb` further
+   - extract remaining reusable launch-prep file mutation and launch-step orchestration that still lives inline
+   - especially target `launcher_profiles.json` update policy and any remaining request/prompt sequencing glue that is not inherently UI-specific
+2. reduce startup orchestration further
+   - continue trimming `Application.xaml.vb` and `FormMain.xaml.vb` so they become shell/application adapters rather than owners of startup decision flow
+3. trim `ModCrash.vb`
+   - move any remaining reusable crash-export shell decisions or file-preparation workflow into `PCL.Core`
+4. start a narrow shell-replacement spike
+   - prove that a small non-WPF shell can consume the extracted startup / launch / crash contracts without rewriting the whole launcher
+
+Work that should stay in launcher adapters for now:
+
+- message boxes / markdown dialogs / hints
+- WPF dispatcher marshaling
+- window activation / visibility / Explorer / browser opening
+- raw Win32 interop and monitor/window manipulation
+
+Good handoff starting files:
+
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+- `Plain Craft Launcher 2/Application.xaml.vb`
+- `Plain Craft Launcher 2/FormMain.xaml.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
+- `FRONTEND_MIGRATION_PLAN.md`
 
 ## Current Verified Status
 

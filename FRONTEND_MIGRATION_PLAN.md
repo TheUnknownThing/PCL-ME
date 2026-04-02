@@ -6,6 +6,17 @@ Wave 2 left the runtime boundary in a good state, and a substantial set of launc
 
 That means the next engineer can keep pushing frontend-migration prep work without reopening runtime extraction. The migration should still be compatibility-first: keep the current launcher behavior, reuse the existing core/runtime services, finish the last high-value workflow extractions, and only then replace launcher UI/shell layers incrementally.
 
+## Handoff Status
+
+This plan is ready to hand to another engineer.
+
+Current estimate:
+
+- portable runtime/core extraction: roughly `80%`
+- backend readiness for a replacement frontend shell: roughly `65%~70%`
+
+The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
+
 ## Completed Migration Prerequisites
 
 These workflow extractions are already done and should be treated as available migration seams:
@@ -125,6 +136,17 @@ Create launcher-facing services in `PCL.Core` for:
 2. optional follow-up launch-step adapter cleanup only where `ModLaunch.vb` still mixes shell/UI work with reusable decision logic
 3. selective reduction of `PCL.Core` Windows-only shell helpers when they still block a future non-Windows frontend
 4. a small shell-replacement spike that consumes the extracted services
+
+Most practical next code targets:
+
+1. finish shrinking `ModLaunch.vb`
+   Focus on remaining launch-prep mutation logic and step orchestration that is not inherently tied to WPF.
+2. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
+   Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
+3. trim `ModCrash.vb`
+   Keep only picker / zip / Explorer shell work in the launcher.
+4. build a tiny replacement shell spike
+   It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
 
 Keep the following in the launcher as adapters:
 
