@@ -709,23 +709,38 @@ NextInner:
     Private McLoginMsRefreshTime As Long = 0 '上次刷新登录的时间
 
 #Region "正版验证"
-    Private Function GetMicrosoftOAuthRefreshOutcome(oAuthTokens As String()) As MinecraftLaunchMicrosoftOAuthRefreshOutcome
-        If oAuthTokens Is Nothing OrElse oAuthTokens.Length = 0 Then Throw New ArgumentException("缺少微软登录 OAuth 结果。", NameOf(oAuthTokens))
+    Private Structure MicrosoftOAuthStepResult
+        Public Outcome As MinecraftLaunchMicrosoftOAuthRefreshOutcome
+        Public AccessToken As String
+        Public RefreshToken As String
+    End Structure
 
-        Select Case oAuthTokens(0)
-            Case "Relogin"
-                Return MinecraftLaunchMicrosoftOAuthRefreshOutcome.RequireRelogin
-            Case "Ignore"
-                Return MinecraftLaunchMicrosoftOAuthRefreshOutcome.IgnoreAndContinue
-            Case Else
-                Return MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded
-        End Select
-    End Function
+    Private Structure MicrosoftStringStepResult
+        Public Outcome As MinecraftLaunchMicrosoftStepOutcome
+        Public Value As String
+    End Structure
 
-    Private Function GetMicrosoftStepOutcome(value As String) As MinecraftLaunchMicrosoftStepOutcome
-        Return If(value = "Ignore",
-                  MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue,
-                  MinecraftLaunchMicrosoftStepOutcome.Succeeded)
+    Private Structure MicrosoftXstsStepResult
+        Public Outcome As MinecraftLaunchMicrosoftStepOutcome
+        Public XstsToken As String
+        Public UserHash As String
+    End Structure
+
+    Private Structure MicrosoftProfileStepResult
+        Public Outcome As MinecraftLaunchMicrosoftStepOutcome
+        Public Uuid As String
+        Public UserName As String
+        Public ProfileJson As String
+    End Structure
+
+    Private Function ShouldIgnoreMicrosoftRefreshFailure(Optional stepLabel As String = Nothing) As Boolean
+        Dim isIgnore As Boolean = False
+        RunInUiWait(Sub()
+                        If Not IsLaunching Then Exit Sub
+                        Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt(stepLabel))
+                        If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then isIgnore = True
+                    End Sub)
+        Return isIgnore
     End Function
 
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
@@ -743,10 +758,10 @@ NextInner:
                 Not String.IsNullOrEmpty(Input.OAuthRefreshToken)))
         Dim oAuthAccessToken As String = Nothing
         Dim oAuthRefreshToken As String = Nothing
-        Dim xblToken As String = Nothing
-        Dim xstsTokens As String() = Nothing
-        Dim accessToken As String = Nothing
-        Dim profileResult As String() = Nothing
+        Dim xblToken As New MicrosoftStringStepResult
+        Dim xstsTokens As New MicrosoftXstsStepResult
+        Dim accessToken As New MicrosoftStringStepResult
+        Dim profileResult As New MicrosoftProfileStepResult
 
         Do
             Data.Progress = currentStep.Progress
@@ -758,47 +773,47 @@ NextInner:
                     Exit Do
                 Case MinecraftLaunchMicrosoftLoginStepKind.RequestDeviceCodeOAuthTokens
                     Dim oAuthTokens = MsLoginStep1New(Data)
-                    oAuthAccessToken = oAuthTokens(0)
-                    oAuthRefreshToken = oAuthTokens(1)
+                    oAuthAccessToken = oAuthTokens.AccessToken
+                    oAuthRefreshToken = oAuthTokens.RefreshToken
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterDeviceCodeOAuthSuccess()
                 Case MinecraftLaunchMicrosoftLoginStepKind.RefreshOAuthTokens
                     Dim oAuthTokens = MsLoginStep1Refresh(Input.OAuthRefreshToken)
-                    Dim refreshOutcome = GetMicrosoftOAuthRefreshOutcome(oAuthTokens)
+                    Dim refreshOutcome = oAuthTokens.Outcome
                     If refreshOutcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded Then
-                        oAuthAccessToken = oAuthTokens(0)
-                        oAuthRefreshToken = oAuthTokens(1)
+                        oAuthAccessToken = oAuthTokens.AccessToken
+                        oAuthRefreshToken = oAuthTokens.RefreshToken
                     End If
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterRefreshOAuth(refreshOutcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetXboxLiveToken
                     xblToken = MsLoginStep2(oAuthAccessToken)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxLiveToken(GetMicrosoftStepOutcome(xblToken))
+                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxLiveToken(xblToken.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetXboxSecurityToken
                     xstsTokens = MsLoginStep3(xblToken)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxSecurityToken(GetMicrosoftStepOutcome(xstsTokens(1)))
+                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxSecurityToken(xstsTokens.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetMinecraftAccessToken
                     accessToken = MsLoginStep4(xstsTokens)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftAccessToken(GetMicrosoftStepOutcome(accessToken))
+                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftAccessToken(accessToken.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.VerifyOwnership
-                    MsLoginStep5(accessToken)
+                    MsLoginStep5(accessToken.Value)
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterOwnershipVerification()
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetMinecraftProfile
-                    profileResult = MsLoginStep6(accessToken)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftProfile(GetMicrosoftStepOutcome(profileResult(2)))
+                    profileResult = MsLoginStep6(accessToken.Value)
+                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftProfile(profileResult.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.ApplyProfileMutation
                     Dim microsoftMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveMicrosoftProfileMutation(
                         New MinecraftLaunchMicrosoftProfileMutationRequest(
                             IsCreatingProfile,
                             GetSelectedProfileIndex(),
                             GetStoredProfiles(),
-                            profileResult(0),
-                            profileResult(1),
-                            accessToken,
+                            profileResult.Uuid,
+                            profileResult.UserName,
+                            accessToken.Value,
                             oAuthRefreshToken,
-                            profileResult(2)))
+                            profileResult.ProfileJson))
                     ApplyProfileMutationPlan(microsoftMutationPlan)
                     If microsoftMutationPlan.Kind <> MinecraftLaunchProfileMutationKind.UpdateExistingDuplicate Then
                         SaveProfile()
-                        Data.Output = CreateMicrosoftLoginResult(accessToken, profileResult(1), profileResult(0), profileResult(2))
+                        Data.Output = CreateMicrosoftLoginResult(accessToken.Value, profileResult.UserName, profileResult.Uuid, profileResult.ProfileJson)
                     Else
                         Data.Output = CreateMicrosoftLoginResultFromStored(microsoftMutationPlan.UpdateProfile)
                     End If
@@ -815,7 +830,7 @@ NextInner:
     ''' 正版验证步骤 1：通过设备代码流获取账号信息
     ''' </summary>
     ''' <returns>OAuth 验证完成的返回结果</returns>
-    Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As String()
+    Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As MicrosoftOAuthStepResult
         '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
 
         '初始请求
@@ -856,7 +871,11 @@ Retry:
         ElseIf TypeOf Converter.Result Is Exception Then
             Throw CType(Converter.Result, Exception)
         Else
-            Return Converter.Result
+            Dim result = CType(Converter.Result, String())
+            Return New MicrosoftOAuthStepResult With {
+                .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
+                .AccessToken = result(0),
+                .RefreshToken = result(1)}
         End If
     End Function
     ''' <summary>
@@ -864,7 +883,7 @@ Retry:
     ''' </summary>
     ''' <param name="Code"></param>
     ''' <returns></returns>
-    Private Function MsLoginStep1Refresh(Code As String) As String()
+    Private Function MsLoginStep1Refresh(Code As String) As MicrosoftOAuthStepResult
         McLaunchLog("开始正版验证 Step 1/6（刷新登录）")
         If String.IsNullOrEmpty(Code) Then Throw New ArgumentException("传入的 Code 为空", NameOf(Code))
         Dim Result As String = Nothing
@@ -890,17 +909,13 @@ Retry:
         Catch ex As Exception
             If ex.Message.ContainsF("must sign in again", True) OrElse ex.Message.ContainsF("password expired", True) OrElse
                (ex.Message.Contains("refresh_token") AndAlso ex.Message.Contains("is not valid")) Then '#269
-                Return {"Relogin", ""}
+                Return New MicrosoftOAuthStepResult With {
+                    .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.RequireRelogin}
             Else
                 ProfileLog("正版验证 Step 1/6 获取 OAuth Token 失败：" & ex.ToString())
-                Dim IsIgnore As Boolean = False
-                RunInUiWait(Sub()
-                                If Not IsLaunching Then Exit Sub
-                                Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt())
-                                If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
-                            End Sub)
-                If IsIgnore Then
-                    Return {"Ignore", ""}
+                If ShouldIgnoreMicrosoftRefreshFailure() Then
+                    Return New MicrosoftOAuthStepResult With {
+                        .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.IgnoreAndContinue}
                 End If
             End If
         End Try
@@ -908,7 +923,10 @@ Retry:
         Dim ResultJson As JObject = GetJson(Result)
         Dim AccessToken As String = ResultJson("access_token").ToString
         Dim RefreshToken As String = ResultJson("refresh_token").ToString
-        Return {AccessToken, RefreshToken}
+        Return New MicrosoftOAuthStepResult With {
+            .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
+            .AccessToken = AccessToken,
+            .RefreshToken = RefreshToken}
     End Function
 
 
@@ -928,7 +946,7 @@ Retry:
     ''' </summary>
     ''' <param name="accessToken">OAuth accessToken</param>
     ''' <returns>XBLToken</returns>
-    Private Function MsLoginStep2(accessToken As String) As String
+    Private Function MsLoginStep2(accessToken As String) As MicrosoftStringStepResult
         ProfileLog("开始正版验证 Step 2/6: 获取 XBLToken")
         If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
         Dim requestData As New XBLTokenRequestData With {
@@ -954,20 +972,17 @@ Retry:
             End Using
         Catch ex As Exception
             ProfileLog("正版验证 Step 2/6 获取 XBLToken 失败：" & ex.ToString())
-            Dim IsIgnore As Boolean = False
-            RunInUiWait(Sub()
-                            If Not IsLaunching Then Exit Sub
-                            Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 2"))
-                            If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
-                        End Sub)
-            If IsIgnore Then
-                Return "Ignore"
+            If ShouldIgnoreMicrosoftRefreshFailure("Step 2") Then
+                Return New MicrosoftStringStepResult With {
+                    .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
             End If
         End Try
 
         Dim ResultJson As JObject = GetJson(Result)
         Dim XBLToken As String = ResultJson("Token").ToString
-        Return XBLToken
+        Return New MicrosoftStringStepResult With {
+            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
+            .Value = XBLToken}
     End Function
 
 
@@ -984,13 +999,13 @@ Retry:
     ''' 正版验证步骤 3：从 XBLToken 获取 {XSTSToken, UHS}
     ''' </summary>
     ''' <returns>包含 XSTSToken 与 UHS 的字符串组</returns>
-    Private Function MsLoginStep3(XBLToken As String) As String()
+    Private Function MsLoginStep3(xblTokenResult As MicrosoftStringStepResult) As MicrosoftXstsStepResult
         ProfileLog("开始正版验证 Step 3/6: 获取 XSTSToken")
-        If String.IsNullOrEmpty(XBLToken) Then Throw New ArgumentException("XBLToken 为空，无法获取数据", NameOf(XBLToken))
+        If String.IsNullOrEmpty(xblTokenResult.Value) Then Throw New ArgumentException("XBLToken 为空，无法获取数据", NameOf(xblTokenResult))
         Dim requestData As New XSTSTokenRequestData With {
             .Properties = New XSTSTokenRequestData.PropertiesData With {
                 .SandboxId = "RETAIL",
-                .UserTokens = {XBLToken}.ToList()
+                .UserTokens = {xblTokenResult.Value}.ToList()
             },
             .RelyingParty = "rp://api.minecraftservices.com/",
             .TokenType = "JWT"
@@ -1011,15 +1026,9 @@ Retry:
                     Throw New Exception("$$")
                 Else
                     ProfileLog("正版验证 Step 3/6 获取 XSTSToken 失败：" & response.StatusCode)
-                    Dim IsIgnore As Boolean = False
-                    RunInUiWait(Sub()
-                                    If Not IsLaunching Then Exit Sub
-                                    Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 3"))
-                                    If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
-                                End Sub)
-                    If IsIgnore Then
-                        Return {SelectedProfile.AccessToken, "Ignore"}
-                        Exit Function
+                    If ShouldIgnoreMicrosoftRefreshFailure("Step 3") Then
+                        Return New MicrosoftXstsStepResult With {
+                            .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                     End If
                     response.EnsureSuccessStatusCode()
                 End If
@@ -1029,18 +1038,21 @@ Retry:
         Dim ResultJson As JObject = GetJson(result)
         Dim XSTSToken As String = ResultJson("Token").ToString
         Dim UHS As String = ResultJson("DisplayClaims")("xui")(0)("uhs").ToString
-        Return {XSTSToken, UHS}
+        Return New MicrosoftXstsStepResult With {
+            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
+            .XstsToken = XSTSToken,
+            .UserHash = UHS}
     End Function
     ''' <summary>
     ''' 正版验证步骤 4：从 {XSTSToken, UHS} 获取 Minecraft accessToken
     ''' </summary>
     ''' <param name="Tokens">包含 XSTSToken 与 UHS 的字符串组</param>
     ''' <returns>Minecraft accessToken</returns>
-    Private Function MsLoginStep4(Tokens As String()) As String
+    Private Function MsLoginStep4(tokens As MicrosoftXstsStepResult) As MicrosoftStringStepResult
         ProfileLog("开始正版验证 Step 4/6: 获取 Minecraft AccessToken")
-        If Tokens.Length < 2 OrElse String.IsNullOrEmpty(Tokens.ElementAt(0)) OrElse String.IsNullOrEmpty(Tokens.ElementAt(1)) Then Throw New ArgumentException("传入的 XSTSToken 或者 UHS 错误", NameOf(Tokens))
+        If String.IsNullOrEmpty(tokens.XstsToken) OrElse String.IsNullOrEmpty(tokens.UserHash) Then Throw New ArgumentException("传入的 XSTSToken 或者 UHS 错误", NameOf(tokens))
         Dim requestData As New Dictionary(Of String, String) From {
-            {"identityToken", $"XBL3.0 x={Tokens(1)};{Tokens(0)}"}
+            {"identityToken", $"XBL3.0 x={tokens.UserHash};{tokens.XstsToken}"}
         }
         Dim Result As String
         Try
@@ -1064,15 +1076,9 @@ Retry:
                 Throw New Exception("$当前 IP 的登录尝试异常。" & vbCrLf & "如果你使用了 VPN 或加速器，请把它们关掉或更换节点后再试！")
             Else
                 ProfileLog("正版验证 Step 4/6 获取 MC AccessToken 失败：" & ex.ToString())
-                Dim IsIgnore As Boolean = False
-                RunInUiWait(Sub()
-                                If Not IsLaunching Then Exit Sub
-                                Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 4"))
-                                If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
-                            End Sub)
-                If IsIgnore Then
-                    Return "Ignore"
-                    Exit Function
+                If ShouldIgnoreMicrosoftRefreshFailure("Step 4") Then
+                    Return New MicrosoftStringStepResult With {
+                        .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                 End If
                 Throw
             End If
@@ -1081,7 +1087,9 @@ Retry:
         Dim ResultJson As JObject = GetJson(Result)
         Dim AccessToken As String = ResultJson("access_token").ToString()
         If String.IsNullOrWhiteSpace(AccessToken) Then Throw New Exception("获取到的 Minecraft AccessToken 为空，登录流程异常！")
-        Return AccessToken
+        Return New MicrosoftStringStepResult With {
+            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
+            .Value = AccessToken}
     End Function
     ''' <summary>
     ''' 正版验证步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
@@ -1120,7 +1128,7 @@ Retry:
     ''' </summary>
     ''' <param name="AccessToken">Minecraft accessToken</param>
     ''' <returns>包含 UUID, UserName 和 ProfileJson 的字符串组</returns>
-    Private Function MsLoginStep6(AccessToken As String) As String()
+    Private Function MsLoginStep6(AccessToken As String) As MicrosoftProfileStepResult
         ProfileLog("开始正版验证 Step 6/6: 获取玩家 ID 与 UUID 等相关信息")
         If String.IsNullOrEmpty(AccessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(AccessToken))
         Dim Result As String
@@ -1149,15 +1157,9 @@ Retry:
                 Throw New Exception("$$")
             Else
                 ProfileLog("正版验证 Step 6/6 获取玩家档案信息失败：" & ex.ToString())
-                Dim IsIgnore As Boolean = False
-                RunInUiWait(Sub()
-                                If Not IsLaunching Then Exit Sub
-                                Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 6"))
-                                If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then IsIgnore = True
-                            End Sub)
-                If IsIgnore Then
-                    Return {SelectedProfile.Uuid, SelectedProfile.Username, "Ignore"}
-                    Exit Function
+                If ShouldIgnoreMicrosoftRefreshFailure("Step 6") Then
+                    Return New MicrosoftProfileStepResult With {
+                        .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                 End If
                 Throw
             End If
@@ -1165,7 +1167,11 @@ Retry:
         Dim ResultJson As JObject = GetJson(Result)
         Dim UUID As String = ResultJson("id").ToString
         Dim UserName As String = ResultJson("name").ToString
-        Return {UUID, UserName, Result}
+        Return New MicrosoftProfileStepResult With {
+            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
+            .Uuid = UUID,
+            .UserName = UserName,
+            .ProfileJson = Result}
     End Function
 #End Region
 
