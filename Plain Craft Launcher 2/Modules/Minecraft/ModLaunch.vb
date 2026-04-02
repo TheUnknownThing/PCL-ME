@@ -2205,22 +2205,22 @@ NextInstance:
         If CustomCommandGlobal <> "" Then CustomCommandGlobal = ArgumentReplace(CustomCommandGlobal, True)
         Dim CustomCommandVersion As String = Setup.Get("VersionAdvanceRun", instance:=McInstanceSelected)
         If CustomCommandVersion <> "" Then CustomCommandVersion = ArgumentReplace(CustomCommandVersion, True)
+        Dim customCommandPlan = MinecraftLaunchCustomCommandService.BuildPlan(
+            New MinecraftLaunchCustomCommandRequest(
+                McLaunchJavaSelected.Installation.MajorVersion,
+                McInstanceSelected.Name,
+                ShortenPath(McInstanceSelected.PathIndie),
+                McLaunchJavaSelected.Installation.JavaExePath,
+                McLaunchArgument,
+                CustomCommandGlobal,
+                Setup.Get("LaunchAdvanceRunWait"),
+                CustomCommandVersion,
+                Setup.Get("VersionAdvanceRunWait", instance:=McInstanceSelected)))
 
         '输出 bat
         Try
-            Dim CmdString As String =
-                $"{If(McLaunchJavaSelected.Installation.MajorVersion > 8, "chcp 65001>nul" & vbCrLf, "")}" &
-                "@echo off" & vbCrLf &
-                $"title 启动 - {McInstanceSelected.Name}" & vbCrLf &
-                "echo 游戏正在启动，请稍候。" & vbCrLf &
-                $"cd /D ""{ShortenPath(McInstanceSelected.PathIndie)}""" & vbCrLf &
-                CustomCommandGlobal & vbCrLf &
-                CustomCommandVersion & vbCrLf &
-                $"""{McLaunchJavaSelected.Installation.JavaExePath}"" {McLaunchArgument}" & vbCrLf &
-                "echo 游戏已退出。" & vbCrLf &
-                "pause"
-            WriteFile(If(CurrentLaunchOptions.SaveBatch, ExePath & "PCL\LatestLaunch.bat"), FilterAccessToken(CmdString, "F"),
-                      Encoding:=If(McLaunchJavaSelected.Installation.MajorVersion > 8, Encoding.UTF8, Encoding.Default))
+            WriteFile(If(CurrentLaunchOptions.SaveBatch, ExePath & "PCL\LatestLaunch.bat"), FilterAccessToken(customCommandPlan.BatchScriptContent, "F"),
+                      Encoding:=If(customCommandPlan.UseUtf8Encoding, Encoding.UTF8, Encoding.Default))
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
                 McLaunchLog("导出启动脚本完成，强制结束启动过程")
                 AbortHint = "导出启动脚本成功！"
@@ -2234,56 +2234,37 @@ NextInstance:
         End Try
 
         '执行自定义命令
-        If CustomCommandGlobal <> "" Then
-            McLaunchLog("正在执行全局自定义命令：" & CustomCommandGlobal)
-            Dim CustomProcess As New Process
-            Try
-                CustomProcess.StartInfo.FileName = "cmd.exe"
-                CustomProcess.StartInfo.Arguments = "/c """ & CustomCommandGlobal & """"
-                CustomProcess.StartInfo.WorkingDirectory = ShortenPath(McFolderSelected)
-                CustomProcess.StartInfo.UseShellExecute = False
-                CustomProcess.StartInfo.CreateNoWindow = True
-                CustomProcess.Start()
-                If Setup.Get("LaunchAdvanceRunWait") Then
-                    Do Until CustomProcess.HasExited OrElse Loader.IsAborted
-                        Thread.Sleep(10)
-                    Loop
-                End If
-            Catch ex As Exception
-                Log(ex, "执行全局自定义命令失败", LogLevel.Hint)
-            Finally
-                If Not CustomProcess.HasExited AndAlso Loader.IsAborted Then
-                    McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
-                    CustomProcess.Kill()
-                End If
-            End Try
-        End If
-        If CustomCommandVersion <> "" Then
-            McLaunchLog("正在执行实例自定义命令：" & CustomCommandVersion)
-            Dim CustomProcess As New Process
-            Try
-                CustomProcess.StartInfo.FileName = "cmd.exe"
-                CustomProcess.StartInfo.Arguments = "/c """ & CustomCommandVersion & """"
-                CustomProcess.StartInfo.WorkingDirectory = ShortenPath(McFolderSelected)
-                CustomProcess.StartInfo.UseShellExecute = False
-                CustomProcess.StartInfo.CreateNoWindow = True
-                CustomProcess.Start()
-                If Setup.Get("VersionAdvanceRunWait", instance:=McInstanceSelected) Then
-                    Do Until CustomProcess.HasExited OrElse Loader.IsAborted
-                        Thread.Sleep(10)
-                    Loop
-                End If
-            Catch ex As Exception
-                Log(ex, "执行实例自定义命令失败", LogLevel.Hint)
-            Finally
-                If Not CustomProcess.HasExited AndAlso Loader.IsAborted Then
-                    McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
-                    CustomProcess.Kill()
-                End If
-            End Try
-        End If
+        For Each commandExecution In customCommandPlan.CommandExecutions
+            ExecuteCustomCommand(commandExecution, Loader)
+        Next
 
     End Sub
+
+    Private Sub ExecuteCustomCommand(commandExecution As MinecraftLaunchCustomCommandExecution, Loader As LoaderTask(Of Integer, Integer))
+        McLaunchLog(commandExecution.StartLogMessage)
+        Dim customProcess As New Process
+        Try
+            customProcess.StartInfo.FileName = "cmd.exe"
+            customProcess.StartInfo.Arguments = "/c """ & commandExecution.Command & """"
+            customProcess.StartInfo.WorkingDirectory = ShortenPath(McFolderSelected)
+            customProcess.StartInfo.UseShellExecute = False
+            customProcess.StartInfo.CreateNoWindow = True
+            customProcess.Start()
+            If commandExecution.WaitForExit Then
+                Do Until customProcess.HasExited OrElse Loader.IsAborted
+                    Thread.Sleep(10)
+                Loop
+            End If
+        Catch ex As Exception
+            Log(ex, commandExecution.FailureLogMessage, LogLevel.Hint)
+        Finally
+            If Not customProcess.HasExited AndAlso Loader.IsAborted Then
+                McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
+                customProcess.Kill()
+            End If
+        End Try
+    End Sub
+
     Private Sub McLaunchRun(Loader As LoaderTask(Of Integer, Process))
         Dim noJavaw As Boolean = Setup.Get("LaunchAdvanceNoJavaw") AndAlso McLaunchJavaSelected.Installation.JavawExePath IsNot Nothing
 
@@ -2334,28 +2315,32 @@ NextInstance:
     Private Sub McLaunchWait(Loader As LoaderTask(Of Process, Integer))
 
         '输出信息
-        McLaunchLog("")
-        McLaunchLog("~ 基础参数 ~")
-        McLaunchLog("PCL 版本：" & VersionBaseName & " (" & VersionCode & ")")
-        McLaunchLog($"游戏版本：{McInstanceSelected.Info.VanillaName}（{McInstanceSelected.Info.Vanilla}，Drop {McInstanceSelected.Info.Drop}{If(McInstanceSelected.Info.Reliable, "", "，无法完全确定")}）")
-        McLaunchLog("资源版本：" & McAssetsGetIndexName(McInstanceSelected))
-        McLaunchLog("实例继承：" & If(McInstanceSelected.InheritInstanceName = "", "无", McInstanceSelected.InheritInstanceName))
-        McLaunchLog("分配的内存：" & PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) & " GB（" & Math.Round(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024) & " MB）")
-        McLaunchLog("MC 文件夹：" & McFolderSelected)
-        McLaunchLog("实例文件夹：" & McInstanceSelected.PathInstance)
-        McLaunchLog("版本隔离：" & (McInstanceSelected.PathIndie = McInstanceSelected.PathInstance))
-        McLaunchLog("HMCL 格式：" & McInstanceSelected.IsHmclFormatJson)
-        McLaunchLog("Java 信息：" & If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString, "无可用 Java"))
-        'McLaunchLog("环境变量：" & If(McLaunchJavaSelected IsNot Nothing, If(McLaunchJavaSelected.HasEnvironment, "已设置", "未设置"), "未设置"))
-        McLaunchLog("Natives 文件夹：" & GetNativesFolder())
-        McLaunchLog("")
-        McLaunchLog("~ 档案参数 ~")
-        McLaunchLog("玩家用户名：" & McLoginLoader.Output.Name)
-        McLaunchLog("AccessToken：" & McLoginLoader.Output.AccessToken)
-        McLaunchLog("ClientToken：" & McLoginLoader.Output.ClientToken)
-        McLaunchLog("UUID：" & McLoginLoader.Output.Uuid)
-        McLaunchLog("验证方式：" & McLoginLoader.Output.Type)
-        McLaunchLog("")
+        Dim allocatedRam = PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit)
+        Dim startupSummary = MinecraftLaunchSessionLogService.BuildStartupSummary(
+            New MinecraftLaunchSessionLogRequest(
+                VersionBaseName,
+                VersionCode,
+                McInstanceSelected.Info.VanillaName,
+                McInstanceSelected.Info.Vanilla,
+                McInstanceSelected.Info.Drop,
+                McInstanceSelected.Info.Reliable,
+                McAssetsGetIndexName(McInstanceSelected),
+                McInstanceSelected.InheritInstanceName,
+                allocatedRam,
+                McFolderSelected,
+                McInstanceSelected.PathInstance,
+                McInstanceSelected.PathIndie = McInstanceSelected.PathInstance,
+                McInstanceSelected.IsHmclFormatJson,
+                If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString(), Nothing),
+                GetNativesFolder(),
+                McLoginLoader.Output.Name,
+                McLoginLoader.Output.AccessToken,
+                McLoginLoader.Output.ClientToken,
+                McLoginLoader.Output.Uuid,
+                McLoginLoader.Output.Type))
+        For Each logLine In startupSummary.LogLines
+            McLaunchLog(logLine)
+        Next
 
         '获取窗口标题
         Dim WindowTitle As String = Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected)
