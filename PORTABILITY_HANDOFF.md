@@ -22,7 +22,7 @@ Latest continuation update:
 - `PCL.Frontend.Spike` now targets plain `net8.0` and runs against `PCL.Core.Backend` instead of `PCL.Core`
 - `PCL.Core` now references `PCL.Core.Backend` and no longer compiles that extracted workflow slice directly, making the portable backend assembly the source of truth for those services
 - launch Java requirement / missing-Java recovery workflow now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaWorkflowService`
-- a thin replacement-shell spike now lives in `PCL.Frontend.Spike`, can exercise extracted startup / launch / crash services without WPF page code, and now exposes `plan` / `run` CLI modes with both JSON payloads and text-mode shell transcripts
+- a thin replacement-shell spike now lives in `PCL.Frontend.Spike`, can exercise extracted startup / launch / crash services without WPF page code, and now exposes `plan` / `run` / `execute` CLI modes with JSON payloads, text-mode shell transcripts, and workspace artifact materialization
 - startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`
 - launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
@@ -150,6 +150,7 @@ Use this checklist before making changes:
    - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge`
    - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash`
    - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode run --format text`
+   - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode execute --format text`
 4. only then validate the Windows-facing compatibility projects:
    - `dotnet build PCL.Core/PCL.Core.csproj -c Debug`
    - `dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug`
@@ -164,7 +165,7 @@ Treat these statements as current architecture truth:
 - `PCL.Core.Backend` is the portable backend/workflow assembly and should absorb additional reusable startup / launch / crash runtime services over time
 - `PCL.Core` is now a Windows compatibility/adaptation layer and should prefer referencing `PCL.Core.Backend` over carrying duplicate workflow implementations
 - `Plain Craft Launcher 2` should keep moving toward prompt rendering, WPF presentation, and Windows shell/interop adapters only
-- `PCL.Frontend.Spike` is the safe place to prove a new shell can consume the extracted contracts without pulling WPF back into the backend; use its `run` text transcripts to review adapter boundaries quickly
+- `PCL.Frontend.Spike` is the safe place to prove a new shell can consume the extracted contracts without pulling WPF back into the backend; use its `run` text transcripts and `execute` workspaces to review adapter boundaries quickly
 
 ## What Has Been Completed
 
@@ -398,7 +399,8 @@ Highest-value next slices, in order:
    - move any remaining reusable crash-export shell decisions or file-preparation workflow into `PCL.Core.Backend`
 5. keep extending the shell-replacement spike
    - the spike now proves that a small non-WPF shell can consume the extracted startup / launch / crash contracts without rewriting the whole launcher
-   - the next extension should focus on real adapter or file-execution seams instead of rebuilding command parsing or output plumbing
+   - the spike now also proves basic workspace/file execution and crash-archive materialization on top of those contracts
+   - the next extension should focus on real adapter integration or live environment inputs instead of rebuilding command parsing or output plumbing
 
 Work that should stay in launcher adapters for now:
 
@@ -439,6 +441,7 @@ Verified successfully after the latest changes:
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode run --format text`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode execute --format text`
 - `dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug`
 
 Current Foundation test count:
