@@ -46,6 +46,10 @@ Latest continuation update:
 - launch placeholder/replacement value assembly now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchReplacementValueService`
 - launch natives-directory selection now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesDirectoryService`
 - launch natives archive sync now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesSyncService`
+- launch RetroWrapper selection policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchRetroWrapperService`
+- launch JSON argument-section extraction now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJsonArgumentService`
+- launch JVM argument assembly now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJvmArgumentService`
+- launch game argument assembly now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchGameArgumentService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-transition application planning now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionWorkflowService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
@@ -87,6 +91,10 @@ Latest continuation update:
 - launcher launch placeholder/replacement value assembly now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchReplacementValueService`
 - launcher natives-directory selection now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchNativesDirectoryService`
 - launcher natives archive sync now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchNativesSyncService`
+- launcher RetroWrapper selection now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRetroWrapperService`
+- launcher JSON argument-section extraction now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchJsonArgumentService`
+- launcher JVM argument assembly now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchJvmArgumentService`
+- launcher game argument assembly now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchGameArgumentService`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -108,7 +116,7 @@ The mission is still “stabilize the runtime boundary before touching the front
 
 ## Current State
 
-This is **not** a fully portable backend yet.
+Portable runtime/core extraction is now complete for the current review scope, but the project is **not** a finished replacement frontend/backend shell yet.
 
 What is already true:
 
@@ -118,14 +126,13 @@ What is already true:
 - `PCL.Core` now consumes `PCL.Core.Backend` as the canonical implementation of the extracted startup / launch / crash workflow slice
 - the major runtime seams are no longer speculative; they exist in code and have tests/build validation
 - a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
+- the remaining launcher logic is now primarily shell adapters, prompt adapters, concrete network IO, and Windows-facing compatibility code rather than portable runtime policy
 
 What is not true yet:
 
-- `ModLaunch.vb` still owns too much step execution, request coordination, watcher lifecycle wiring, and Java-selection / download shell bridging
-- `ModLaunch.vb` still owns the JSON/lib-driven JVM & game argument extraction that feed the new argument/classpath seams, while native preparation now routes through backend services
+- `ModLaunch.vb` still owns adapter-level request execution, Java-selection / download shell bridging, and launcher prompt integration
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
-- `PCL.Core.Backend` is not yet the whole runtime/backend surface; it currently hosts the extracted workflow/services slice rather than every reusable backend/runtime service
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 
 This branch is handoff-ready for another engineer. The next engineer should continue from the existing seams rather than reopening Foundation extraction.
@@ -146,7 +153,7 @@ Use this checklist before making changes:
    - `dotnet build PCL.Core/PCL.Core.csproj -c Debug`
    - `dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug`
 
-If you need one sentence of orientation: `PCL.Core.Backend` is now the portable source of truth for the extracted workflow layer, while `PCL.Core` and `Plain Craft Launcher 2` should keep shrinking toward adapter-only responsibilities.
+If you need one sentence of orientation: `PCL.Core.Backend` is now the portable source of truth for runtime/workflow policy, while `PCL.Core` and `Plain Craft Launcher 2` should keep shrinking toward adapter-only responsibilities.
 
 ## Canonical Boundaries
 
