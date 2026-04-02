@@ -108,7 +108,7 @@ WaitRetry:
             '检测异常环境
             Dim environmentWarningPrompt = LauncherStartupShellService.GetEnvironmentWarningPrompt(bootstrapResult.EnvironmentWarningMessage)
             If environmentWarningPrompt IsNot Nothing Then
-                ShowStartupPrompt(environmentWarningPrompt)
+                RunStartupPrompt(environmentWarningPrompt)
             End If
             '设置初始化
             For Each configKey In bootstrapResult.ConfigKeysToLoad
@@ -179,18 +179,6 @@ WaitRetry:
     End Sub
     Private Sub TooltipUnloaded(sender As Object, e As RoutedEventArgs)
         ShowingTooltips.Remove(CType(sender, Border))
-    End Sub
-
-    Private Shared Sub ShowStartupPrompt(prompt As LauncherStartupPrompt)
-        If prompt Is Nothing OrElse prompt.Buttons Is Nothing OrElse prompt.Buttons.Count = 0 Then Return
-
-        MyMsgBox(
-            prompt.Message,
-            prompt.Title,
-            prompt.Buttons(0).Label,
-            If(prompt.Buttons.Count >= 2, prompt.Buttons(1).Label, ""),
-            If(prompt.Buttons.Count >= 3, prompt.Buttons(2).Label, ""),
-            IsWarn:=prompt.IsWarning)
     End Sub
 
     ' 自定义监听器类
