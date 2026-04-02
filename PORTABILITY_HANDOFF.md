@@ -21,7 +21,10 @@ Latest continuation update:
 - launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
 - launch prerun options-file mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
+- launch prerun `launcher_profiles.json` mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`
 - launch-session music / video-background / launcher-visibility shell policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- launch custom-command / batch-script planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
+- launch-session startup summary logging now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
@@ -36,6 +39,9 @@ Latest continuation update:
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
+- launcher prerun `launcher_profiles.json` mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesService`
+- launcher custom-command / batch-script shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchCustomCommandService`
+- launcher startup session summary logging now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionLogService`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -196,6 +202,15 @@ These were completed after Wave 2 was declared stable:
 - launch prerun options-file mutation policy moved out of the launcher
   - `MinecraftLaunchOptionsFileService` now owns `options.txt` target selection, Yosbr fallback behavior, language-format rules, force-unicode initialization, and fullscreen write policy
   - `ModLaunch.vb` now only applies the returned option writes and log messages
+- launch prerun `launcher_profiles.json` mutation policy moved out of the launcher
+  - `MinecraftLaunchLauncherProfilesService` now owns Microsoft `launcher_profiles.json` merge/update composition
+  - `ModLaunch.vb` now only ensures the file exists, writes the returned JSON, and keeps the retry-after-delete shell flow
+- launch custom-command / batch-script planning moved out of the launcher
+  - `MinecraftLaunchCustomCommandService` now owns batch-script content generation, UTF-8 vs legacy encoding selection, and custom-command execution plans
+  - `ModLaunch.vb` now only writes the returned script and executes the returned command plans
+- launch-session startup summary logging moved out of the launcher
+  - `MinecraftLaunchSessionLogService` now owns launch-session summary line formatting for launcher / instance / profile diagnostics
+  - `ModLaunch.vb` now only prints the returned log lines before watcher startup
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
