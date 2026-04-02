@@ -13,7 +13,7 @@ The long-term direction is still:
 2. keep current Windows launcher behavior working through adapters
 3. replace the WPF/VB frontend only after the runtime boundary is stable
 
-The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, Wave 2 runtime/platform extraction is complete, and the first Wave 3 launcher-workflow cleanup slices have been landed.
+The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, Wave 2 runtime/platform extraction is complete, and a substantial set of Wave 3 launcher-workflow cleanup slices have been landed.
 
 ## Big Goal
 
@@ -115,6 +115,21 @@ These were completed after Wave 2 was declared stable:
 - startup environment warning rules moved out of the launcher
   - `LauncherStartupEnvironmentWarningService` now evaluates startup warnings in `PCL.Core`
   - `Application.xaml.vb` only decides how to display the warnings
+- launch precheck workflow moved out of the launcher
+  - `MinecraftLaunchPrecheckService` now owns launch precheck policy and prompt definitions
+  - `ModLaunch.vb` only renders those prompts and applies shell actions
+- startup consent workflow moved out of the launcher
+  - `LauncherStartupConsentService` now owns special-build / EULA / telemetry prompt sequencing
+  - `FormMain.xaml.vb` only renders those prompts and applies shell actions
+- crash export packaging moved out of the launcher
+  - `MinecraftCrashExportService` now owns report packaging, filename normalization, and sanitization
+  - `ModCrash.vb` keeps picker / zip destination / Explorer opening only
+- post-launch shell policy moved out of the launcher
+  - `MinecraftLaunchShellService` now owns completion notification policy, failure titles, and launcher-visibility decisions
+  - `ModLaunch.vb` performs the returned shell action instead of deciding it
+- startup bootstrap policy moved out of the launcher
+  - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
+  - `Application.xaml.vb` consumes the bootstrap result
 - frontend migration planning artifact added
   - see `FRONTEND_MIGRATION_PLAN.md`
 
@@ -186,6 +201,15 @@ This is the meaningful history for the current portability work:
 - `24a3332a` `docs(portability): outline frontend migration tracks`
 - `767e6fcf` `refactor(crash): move environment report assembly into core`
 - `20dcecfc` `refactor(startup): move environment warning rules into core`
+- `89a1474a` `feat(launch): add core launch precheck workflow models`
+- `cead4dcf` `refactor(launcher): route launch precheck through core workflow`
+- `3da5635e` `feat(startup): add startup consent workflow service`
+- `ccfda6a5` `refactor(launcher): route startup prompts through core workflow`
+- `4b381762` `feat(crash): add crash export packaging service`
+- `3621fa20` `refactor(launcher): route crash export through core helper`
+- `ef054bb4` `test(migration): cover launcher workflow extraction regressions`
+- `3c448760` `refactor(launch): extract post-launch shell policy`
+- `3c9edf1e` `refactor(startup): extract bootstrap policy`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
@@ -217,15 +241,17 @@ What remains in `PCL.Core` is now either:
 
 ## Recommended Next Steps
 
-The next engineer should treat the runtime extraction and early launcher cleanup as finished enough to begin frontend migration work. Do not reopen the runtime seams that are now stable unless a migration blocker forces it.
+The next engineer should treat the runtime extraction as finished and the launcher-workflow cleanup as well underway, but not fully complete. Do not reopen the runtime seams that are now stable unless a migration blocker forces it.
 
 Recommended order:
 
 1. keep `PCL.Core.Foundation` stable and avoid leaking UI/Win32 concerns back into it
 2. use `FRONTEND_MIGRATION_PLAN.md` as the working migration brief
-3. begin frontend migration from launcher-side view/shell replacement boundaries, not from runtime/core extraction
-4. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
-5. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
+3. finish the highest-value remaining launcher workflow extraction before attempting an actual shell replacement
+4. specifically target the remaining login / account-recovery / Java-selection prompt policy in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+5. after that, reevaluate whether a small cross-platform shell spike can start without dragging WPF logic forward
+6. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
+7. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
 
 ## Important Non-Goals Right Now
 
@@ -243,6 +269,7 @@ Do not do these yet unless the runtime boundary is already stable:
 - Java launch and remaining launcher-side VB/WPF flows still contain Windows assumptions even though the runtime/discovery core is portable
 - `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
+- the single biggest remaining workflow blocker before a shell-replacement spike is the login / account-recovery / Java-selection prompt tree still embedded in `ModLaunch.vb`
 - frontend migration is now mostly blocked by view/shell replacement and remaining launcher workflow/UI entanglement, not by runtime-core portability
 
 ## Working Rules For The Next Engineer
@@ -284,7 +311,25 @@ The Wave 3 launcher cleanup commits after that are:
 - `24a3332a` `docs(portability): outline frontend migration tracks`
 - `767e6fcf` `refactor(crash): move environment report assembly into core`
 - `20dcecfc` `refactor(startup): move environment warning rules into core`
+- `89a1474a` `feat(launch): add core launch precheck workflow models`
+- `cead4dcf` `refactor(launcher): route launch precheck through core workflow`
+- `3da5635e` `feat(startup): add startup consent workflow service`
+- `ccfda6a5` `refactor(launcher): route startup prompts through core workflow`
+- `4b381762` `feat(crash): add crash export packaging service`
+- `3621fa20` `refactor(launcher): route crash export through core helper`
+- `ef054bb4` `test(migration): cover launcher workflow extraction regressions`
+- `3c448760` `refactor(launch): extract post-launch shell policy`
+- `3c9edf1e` `refactor(startup): extract bootstrap policy`
+
+## Phase Call
+
+Do not treat the project as ready for a true “next phase” frontend-shell replacement yet.
+
+It is ready for handoff to another engineer, but the recommended near-term phase is still:
+
+1. finish the last high-value launcher workflow extraction slices
+2. then start a narrow shell-migration spike
 
 ## One-Line Summary
 
-Wave 2 is complete and the first Wave 3 launcher cleanup slices are landed: the runtime/core portability seams are stabilized, startup/crash/system-summary launcher workflows now have core-side services, Foundation remains headless and macOS-valid, and the next engineer should start from frontend migration work rather than further runtime extraction.
+Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, launch/startup/crash/bootstrap shell policies now have core-side services, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining `ModLaunch.vb` workflow extraction before attempting a real frontend-shell cutover.

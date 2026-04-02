@@ -2,9 +2,9 @@
 
 ## Summary
 
-Wave 2 left the runtime boundary in a good state, and the first launcher-workflow cleanup slices are now done: shared runtime/platform behavior lives behind explicit `PCL.Core` seams, startup environment warnings live in a core service, and crash-report environment assembly also lives in a core service.
+Wave 2 left the runtime boundary in a good state, and a substantial set of launcher-workflow cleanup slices are now done: shared runtime/platform behavior lives behind explicit `PCL.Core` seams, startup environment warnings live in a core service, and crash-report environment assembly also lives in a core service.
 
-That means the next engineer can move on to frontend migration work. The migration should still be compatibility-first: keep the current launcher behavior, reuse the existing core/runtime services, and replace launcher UI/shell layers incrementally instead of reopening runtime extraction.
+That means the next engineer can keep pushing frontend-migration prep work without reopening runtime extraction. The migration should still be compatibility-first: keep the current launcher behavior, reuse the existing core/runtime services, finish the last high-value workflow extractions, and only then replace launcher UI/shell layers incrementally.
 
 ## Completed Migration Prerequisites
 
@@ -14,6 +14,11 @@ These workflow extractions are already done and should be treated as available m
 - system environment summary is exposed through `PCL.Core.Utils.OS.SystemEnvironmentInfo`
 - crash-report environment text is built by `PCL.Core.Minecraft.MinecraftCrashReportBuilder`
 - startup environment warnings are evaluated by `PCL.Core.App.Essentials.LauncherStartupEnvironmentWarningService`
+- launch precheck prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrecheckService`
+- startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
+- crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
+- post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
 
 Do not redo these in the frontend migration branch; build on top of them.
 
@@ -73,17 +78,21 @@ These flows still combine:
 - WPF-specific navigation / dispatcher coordination
 - some launch-specific decision logic
 
+After the latest cleanup slices, the single biggest remaining mixed area is:
+
+- login / account-recovery / Java-selection prompt policy in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+
 A future frontend should only own the prompts and view transitions, not the workflow logic itself.
 
 ## Recommended Next Boundary
 
-The next implementation phase should be **frontend migration on top of the extracted workflow seams**.
+The next implementation phase should still be **one more round of launcher workflow extraction on top of the extracted seams**, not a full shell rewrite yet.
 
 Create launcher-facing services in `PCL.Core` for:
 
-1. launch preparation / post-launch orchestration that does not require direct control access
-2. startup shell flow models that return view-agnostic decisions/results instead of directly showing WPF UI
-3. crash export workflow helpers that stop short of filesystem picker / shell opening concerns
+1. remaining launch login / account-recovery / Java-selection prompt policy
+2. any leftover startup shell policy still assembled directly in launcher files
+3. only after that, a small shell-replacement spike that consumes the extracted services
 
 Keep the following in the launcher as adapters:
 
@@ -97,10 +106,9 @@ This boundary keeps the current launcher behavior intact while making the eventu
 ## Execution Order
 
 1. Extract launch workflow orchestration next.
-   This is the highest-value remaining workflow seam and is still the biggest blocker to swapping frontend shells.
-2. Introduce a frontend-agnostic presentation model for startup and crash-export flows.
-   The evaluation/building logic is already in core; the next step is to stop binding shell flow directly to WPF windows and message boxes.
-3. Start the actual frontend shell migration.
+   The remaining login / account-recovery / Java-selection prompt tree in `ModLaunch.vb` is still the biggest blocker to swapping frontend shells.
+2. Finish trimming startup shell policy in the launcher if any new blocker is found during that extraction.
+3. Start the actual frontend shell migration only after step 1 is no longer a major blocker.
    Replace or parallel a small launcher surface first, while continuing to use existing `PCL.Core` services and Windows shell adapters as needed.
 
 ## Acceptance Criteria
@@ -109,3 +117,4 @@ This boundary keeps the current launcher behavior intact while making the eventu
 - New launcher workflow services do not introduce `System.Windows` dependencies into `PCL.Core.Foundation`.
 - The launcher becomes a consumer of workflow results plus shell adapters, not the owner of business logic assembly.
 - Frontend migration can proceed without reopening runtime seams or reintroducing launcher-local copies of runtime/system logic.
+- The project does not move into full shell-migration mode until `ModLaunch.vb` no longer owns the majority of login / recovery prompt policy.
