@@ -20,6 +20,7 @@ Latest continuation update:
 - startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`
 - launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
+- launch prerun options-file mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
 - launch-session music / video-background / launcher-visibility shell policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
@@ -34,6 +35,7 @@ Latest continuation update:
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
+- launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -167,6 +169,9 @@ These were completed after Wave 2 was declared stable:
 - launch GPU-preference failure / retry policy moved out of the launcher
   - `MinecraftLaunchGpuPreferenceWorkflowService` now owns “log directly vs retry as admin” recovery policy plus retry arguments / hint wording
   - `ModLaunch.vb` only executes the returned recovery plan
+- launch prerun options-file mutation policy moved out of the launcher
+  - `MinecraftLaunchOptionsFileService` now owns `options.txt` target selection, Yosbr fallback behavior, language-format rules, force-unicode initialization, and fullscreen write policy
+  - `ModLaunch.vb` now only applies the returned option writes and log messages
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
