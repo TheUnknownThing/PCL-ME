@@ -231,12 +231,10 @@ Public Class FormMain
 
     '根据打开次数触发的事件
     Private Sub RunCountSub()
-        Setup.Set("SystemCount", Setup.Get("SystemCount") + 1)
-        If Setup.Get("SystemCount") >= 99 Then
-            If ThemeUnlock(6, False) Then
-                MyMsgBox("你已经打开了 99 次 PCL 社区版啦，感谢你长期以来的支持！" & vbCrLf &
-                         "隐藏主题 铁杆粉 未解锁！社区版不包含隐藏主题！", "提示")
-            End If
+        Dim milestoneResult = LauncherStartupMilestoneService.AdvanceStartupCount(Setup.Get("SystemCount"))
+        Setup.Set("SystemCount", milestoneResult.UpdatedCount)
+        If milestoneResult.ShouldAttemptUnlockHiddenTheme AndAlso ThemeUnlock(6, False) Then
+            MyMsgBox(milestoneResult.HiddenThemeNotice.Message, milestoneResult.HiddenThemeNotice.Title)
         End If
     End Sub
     '升级与降级事件
