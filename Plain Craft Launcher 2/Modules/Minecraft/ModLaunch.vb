@@ -380,6 +380,19 @@ NextInner:
         Return selectedOption
     End Function
 
+    Private Function RunJavaPrompt(prompt As MinecraftLaunchJavaPrompt) As MinecraftLaunchJavaPromptOption
+        If prompt Is Nothing OrElse prompt.Options Is Nothing OrElse prompt.Options.Count = 0 Then Throw New ArgumentException("缺少可用的 Java 操作。", NameOf(prompt))
+
+        Dim result = MyMsgBox(
+            prompt.Message,
+            prompt.Title,
+            prompt.Options(0).Label,
+            If(prompt.Options.Count >= 2, prompt.Options(1).Label, ""),
+            If(prompt.Options.Count >= 3, prompt.Options(2).Label, ""))
+        If result < 1 OrElse result > prompt.Options.Count Then result = prompt.Options.Count
+        Return prompt.Options(result - 1)
+    End Function
+
 #End Region
 
 #Region "档案验证"
@@ -1279,132 +1292,34 @@ LoginFinish:
 
     Public McLaunchJavaSelected As JavaEntry = Nothing
     Private Sub McLaunchJava(task As LoaderTask(Of Integer, Integer))
-        Dim minVer As New Version(0, 0, 0, 0), maxVer As New Version(999, 999, 999, 999)
-
-        'MC 大版本检测
-        If (Not McInstanceSelected.Info.Valid AndAlso McInstanceSelected.ReleaseTime >= New Date(2024, 4, 2)) OrElse
-           (McInstanceSelected.Info.Valid AndAlso McInstanceSelected.Info.Vanilla >= New Version(20, 0, 5)) Then
-            '1.20.5+ (24w14a+)：至少 Java 21
-            If ModeDebug Then Log("[Launch] [Debug] MC 1.20.5+ (24w14a+) 要求至少 Java 21")
-            minVer = New Version(21, 0, 0, 0)
-        ElseIf (Not McInstanceSelected.Info.Valid AndAlso McInstanceSelected.ReleaseTime >= New Date(2021, 11, 16)) OrElse
-            (McInstanceSelected.Info.Valid AndAlso McInstanceSelected.Info.Vanilla.Major >= 18) Then
-            '1.18 pre2+：至少 Java 17
-            If ModeDebug Then Log("[Launch] [Debug] MC 1.18 pre2+ 要求至少 Java 17")
-            minVer = New Version(17, 0, 0, 0)
-        ElseIf (Not McInstanceSelected.Info.Valid AndAlso McInstanceSelected.ReleaseTime >= New Date(2021, 5, 11)) OrElse
-           (McInstanceSelected.Info.Valid AndAlso McInstanceSelected.Info.Vanilla.Major >= 17) Then
-            '1.17+ (21w19a+)：至少 Java 16
-            If ModeDebug Then Log("[Launch] [Debug] MC 1.17+ (21w19a+) 要求至少 Java 16")
-            minVer = New Version(16, 0, 0, 0)
-        ElseIf McInstanceSelected.ReleaseTime.Year >= 2017 Then 'Minecraft 1.12 与 1.11 的分界线正好是 2017 年，太棒了
-            '1.12+：至少 Java 8
-            If ModeDebug Then Log("[Launch] [Debug] MC 1.12+ 要求至少 Java 8")
-            minVer = New Version(1, 8, 0, 0)
-        ElseIf McInstanceSelected.ReleaseTime <= New Date(2013, 5, 1) AndAlso McInstanceSelected.ReleaseTime.Year >= 2001 Then '避免某些版本写个 1960 年
-            '1.5.2-：最高 Java 8
-            If ModeDebug Then Log("[Launch] [Debug] MC 1.5.2- 要求最高 Java 12")
-            maxVer = New Version(1, 8, 999, 999)
-        End If
-        
-        '原版 26+：获取 Mojang 要求的 Java 版本
-        Dim recommendedComponent As String = Nothing
         Dim recommendedCode As Integer =
                 If(McInstanceSelected.JsonObject?("javaVersion")?("majorVersion")?.ToObject(Of Integer),
                    If(McInstanceSelected.JsonVersion?("java_version")?.ToObject(Of Integer), 0))
-        If recommendedCode >= 22 Then
-            McLaunchLog("Mojang 要求至少使用 Java " & recommendedCode)
-            minVer = New Version(1, recommendedCode, 0, 0)
-            recommendedComponent =
+        Dim recommendedComponent As String =
                 If(McInstanceSelected.JsonObject?("javaVersion")?("component")?.ToString,
                    McInstanceSelected.JsonVersion?("java_component")?.ToString)
-            If recommendedComponent = "" Then recommendedComponent = Nothing
-        End If
+        If recommendedComponent = "" Then recommendedComponent = Nothing
+        Dim jsonRequiredMajorVersion As Integer? = Nothing
+        If McInstanceSelected.JsonObject("javaVersion") IsNot Nothing Then jsonRequiredMajorVersion = CInt(Val(McInstanceSelected.JsonObject("javaVersion")("majorVersion")))
 
-        'OptiFine 检测
-        If McInstanceSelected.Info.HasOptiFine AndAlso McInstanceSelected.Info.Valid Then '不管非标准版本
-            If McInstanceSelected.Info.Vanilla.Major < 7 Then
-                '<1.7：至多 Java 8
-                maxVer = New Version(1, 8, 999, 999)
-            ElseIf McInstanceSelected.Info.Vanilla.Major >= 8 AndAlso McInstanceSelected.Info.Vanilla.Major < 12 Then
-                '1.8 - 1.11：必须恰好 Java 8
-                minVer = New Version(1, 8, 0, 0) : maxVer = New Version(1, 8, 999, 999)
-            ElseIf McInstanceSelected.Info.Vanilla.Major = 12 Then
-                '1.12：最高 Java 8
-                maxVer = New Version(1, 8, 999, 999)
-            End If
-        End If
-
-        'Forge 检测
-        If McInstanceSelected.Info.HasForge Then
-            If McInstanceSelected.Info.Vanilla >= New Version(6, 0, 1) AndAlso McInstanceSelected.Info.Vanilla <= New Version(7, 0, 2) Then
-                '1.6.1 - 1.7.2：必须 Java 7
-                minVer = If(New Version(1, 7, 0, 0) > minVer, New Version(1, 7, 0, 0), minVer)
-                maxVer = If(New Version(1, 7, 999, 999) < maxVer, New Version(1, 7, 999, 999), maxVer)
-            ElseIf McInstanceSelected.Info.Vanilla.Major <= 12 OrElse Not McInstanceSelected.Info.Valid Then '非标准版本
-                '<=1.12：Java 8
-                maxVer = New Version(1, 8, 999, 999)
-            ElseIf McInstanceSelected.Info.Vanilla.Major <= 14 Then
-                '1.13 - 1.14：Java 8 - 10
-                minVer = If(New Version(1, 8, 0, 0) > minVer, New Version(1, 8, 0, 0), minVer)
-                maxVer = If(New Version(1, 10, 999, 999) < maxVer, New Version(1, 10, 999, 999), maxVer)
-            ElseIf McInstanceSelected.Info.Vanilla.Major = 15 Then
-                '1.15：Java 8 - 15
-                minVer = If(New Version(1, 8, 0, 0) > minVer, New Version(1, 8, 0, 0), minVer)
-                maxVer = If(New Version(1, 15, 999, 999) < maxVer, New Version(1, 15, 999, 999), maxVer)
-            ElseIf CompareVersionGE(McInstanceSelected.Info.Forge, "34.0.0") AndAlso CompareVersionGE("36.2.25", McInstanceSelected.Info.Forge) Then
-                '1.16，Forge 34.X ~ 36.2.25：最高 Java 8u321
-                maxVer = If(New Version(1, 8, 0, 320) < maxVer, New Version(1, 8, 0, 321), maxVer)
-            ElseIf McInstanceSelected.Info.Vanilla.Major >= 18 AndAlso McInstanceSelected.Info.Vanilla.Major < 19 AndAlso McInstanceSelected.Info.HasOptiFine Then '#305
-                '1.18：若安装了 OptiFine，最高 Java 18
-                maxVer = If(New Version(1, 18, 999, 999) < maxVer, New Version(1, 18, 999, 999), maxVer)
-            End If
-        End If
-
-        'Cleanroom 检测
-        If McInstanceSelected.Info.HasCleanroom Then
-            '需要至少 Java 21
-            If ModeDebug Then Log("[Launch] [Debug] Cleanroom 要求至少 Java 21")
-            minVer = If(New Version(21, 0, 0, 0) > minVer, New Version(21, 0, 0, 0), minVer)
-        End If
-
-        'Fabric 检测
-        If McInstanceSelected.Info.HasFabric AndAlso McInstanceSelected.Info.Valid Then '不管非标准版本
-            If McInstanceSelected.Info.Vanilla.Major >= 15 AndAlso McInstanceSelected.Info.Vanilla.Major <= 16 Then
-                '1.15 - 1.16：Java 8+
-                minVer = If(New Version(1, 8, 0, 0) > minVer, New Version(1, 8, 0, 0), minVer)
-            ElseIf McInstanceSelected.Info.Vanilla.Major >= 18 Then
-                '1.18+：Java 17+
-                minVer = If(New Version(1, 17, 0, 0) > minVer, New Version(1, 17, 0, 0), minVer)
-            End If
-        End If
-
-        'LiteLoader 检测
-        If McInstanceSelected.Info.HasLiteLoader AndAlso McInstanceSelected.Info.Valid Then
-            '最高 Java 8
-            If ModeDebug Then Log("[Launch] [Debug] LiteLoader 要求最高 Java 8")
-            maxVer = If(New Version(8, 999, 999, 999) < maxVer, New Version(8, 999, 999, 999), maxVer)
-        End If
-        
-        'LabyMod 检测
-        If McInstanceSelected.Info.HasLabyMod Then
-            If ModeDebug Then Log("[Launch] [Debug] LabyMod 要求至少 Java 21")
-            minVer = If(New Version(21, 0, 0, 0) > minVer, New Version(21, 0, 0, 0), minVer)
-            maxVer = New Version(999, 999, 999, 999)
-        End If
-
-        'JSON 中要求的版本
-        If McInstanceSelected.JsonObject("javaVersion") IsNot Nothing Then
-            Dim majorVersion = Val(McInstanceSelected.JsonObject("javaVersion")("majorVersion"))
-            If ModeDebug Then Log("[Launch] [Debug] JSON 中参数要求至少 Java " & majorVersion.ToString())
-            If majorVersion <= 8 Then
-                minVer = If(New Version(1, majorVersion, 0, 0) > minVer, New Version(1, majorVersion, 0, 0), minVer)
-            Else
-                minVer = If(New Version(majorVersion, 0, 0, 0) > minVer, New Version(majorVersion, 0, 0, 0), minVer)
-            End If
-            
-            If maxVer < minVer Then maxVer = New Version(999, 999, 999, 999)
-        End If
+        Dim javaRequirement = MinecraftLaunchJavaRequirementService.Evaluate(
+            New MinecraftLaunchJavaRequirementRequest(
+                McInstanceSelected.Info.Valid,
+                McInstanceSelected.ReleaseTime,
+                If(McInstanceSelected.Info.Valid, McInstanceSelected.Info.Vanilla, Nothing),
+                McInstanceSelected.Info.HasOptiFine,
+                McInstanceSelected.Info.HasForge,
+                If(McInstanceSelected.Info.HasForge, McInstanceSelected.Info.Forge, Nothing),
+                McInstanceSelected.Info.HasCleanroom,
+                McInstanceSelected.Info.HasFabric,
+                McInstanceSelected.Info.HasLiteLoader,
+                McInstanceSelected.Info.HasLabyMod,
+                jsonRequiredMajorVersion,
+                recommendedCode,
+                recommendedComponent))
+        Dim minVer = javaRequirement.MinimumVersion
+        Dim maxVer = javaRequirement.MaximumVersion
+        If javaRequirement.RecommendedMajorVersion >= 22 Then McLaunchLog("Mojang 要求至少使用 Java " & javaRequirement.RecommendedMajorVersion)
 
         SyncLock JavaLock
 
@@ -1420,31 +1335,18 @@ LoginFinish:
             '无合适的 Java
             If task.IsAborted Then Return '中断加载会导致 JavaSelect 异常地返回空值，误判找不到 Java
             McLaunchLog("无合适的 Java，需要确认是否自动下载")
-            Dim javaCode As String
-            If minVer >= New Version(1, 9) Then
-                javaCode = minVer.Major
-            ElseIf maxVer < New Version(1, 8) Then
-                If McInstanceSelected.Info.HasForge Then
-                    MyMsgBox($"你需要先安装 LegacyJavaFixer Mod，或安装 Java 7 才能启动该版本。{vbCrLf}请自行搜索并安装 Java 7，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。", "未找到 Java")
-                Else
-                    MyMsgBox($"你需要安装 Java 7 才能启动该版本。{vbCrLf}请自行搜索并安装 Java 7，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。", "未找到 Java")
-                End If
-                Throw New Exception("$$")
-            ElseIf minVer > New Version(1, 8, 0, 140) AndAlso maxVer < New Version(1, 8, 0, 321) Then
-                MyMsgBox($"你需要安装 Java 8u141 ~ 8u320 才能启动该版本。{vbCrLf}请自行搜索并安装，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。", "未找到 Java")
-                Throw New Exception("$$")
-            ElseIf minVer > New Version(1, 8, 0, 140) Then
-                MyMsgBox($"你需要安装 Java 8u141 或更高版本的 Java 8 才能启动该版本。{vbCrLf}请自行搜索并安装，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。", "未找到 Java")
-                Throw New Exception("$$")
-            Else
-                javaCode = 8
-            End If
-
-            If Not JavaDownloadConfirm($"Java {javaCode}") Then Throw New Exception("$$")
+            Dim javaPrompt = MinecraftLaunchJavaPromptService.BuildMissingJavaPrompt(
+                New MinecraftLaunchJavaPromptRequest(
+                    minVer,
+                    maxVer,
+                    McInstanceSelected.Info.HasForge,
+                    javaRequirement.RecommendedComponent))
+            Dim javaDecision = RunJavaPrompt(javaPrompt)
+            If javaDecision.Decision <> MinecraftLaunchJavaPromptDecision.Download Then Throw New Exception("$$")
             '开始自动下载
             Dim javaLoader = GetJavaDownloadLoader()
             Try
-                javaLoader.Start(If(RecommendedComponent, javaCode), IsForceRestart:=True) '在 Java 22+ 时优先使用 Mojang 提供的 Component 字段
+                javaLoader.Start(javaPrompt.DownloadTarget, IsForceRestart:=True)
                 Do While javaLoader.State = LoadState.Loading AndAlso Not task.IsAborted
                     task.Progress = javaLoader.Progress
                     Thread.Sleep(10)
