@@ -30,6 +30,7 @@ Latest continuation update:
 - launch custom-command / batch-script planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - launch process / watcher runtime planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
+- launch watcher startup composition now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
 - Authlib request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
@@ -52,6 +53,7 @@ Latest continuation update:
 - launcher custom-command / batch-script shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchCustomCommandService`
 - launcher startup session summary logging now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionLogService`
 - launcher process start / watcher preparation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRuntimeService`
+- launcher watcher startup composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchWatcherWorkflowService`
 - launcher Java requirement / missing-Java recovery orchestration now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchJavaWorkflowService`
 - launcher Authlib validate / refresh / authenticate request shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibProtocolService`
 - launcher Microsoft OAuth / XBL / XSTS / profile protocol shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftProtocolService`

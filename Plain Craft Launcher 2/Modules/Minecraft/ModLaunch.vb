@@ -2253,48 +2253,49 @@ NextInstance:
 
         '输出信息
         Dim allocatedRam = PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit)
-        Dim startupSummary = MinecraftLaunchSessionLogService.BuildStartupSummary(
-            New MinecraftLaunchSessionLogRequest(
-                VersionBaseName,
-                VersionCode,
-                McInstanceSelected.Info.VanillaName,
-                If(McInstanceSelected.Info.Vanilla?.ToString(), ""),
-                McInstanceSelected.Info.Drop,
-                McInstanceSelected.Info.Reliable,
-                McAssetsGetIndexName(McInstanceSelected),
-                McInstanceSelected.InheritInstanceName,
-                allocatedRam,
-                McFolderSelected,
-                McInstanceSelected.PathInstance,
-                McInstanceSelected.PathIndie = McInstanceSelected.PathInstance,
-                McInstanceSelected.IsHmclFormatJson,
-                If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString(), Nothing),
-                GetNativesFolder(),
-                McLoginLoader.Output.Name,
-                McLoginLoader.Output.AccessToken,
-                McLoginLoader.Output.ClientToken,
-                McLoginLoader.Output.Uuid,
-                McLoginLoader.Output.Type))
-        For Each logLine In startupSummary.LogLines
+        Dim watcherWorkflow = MinecraftLaunchWatcherWorkflowService.BuildPlan(
+            New MinecraftLaunchWatcherWorkflowRequest(
+                New MinecraftLaunchSessionLogRequest(
+                    VersionBaseName,
+                    VersionCode,
+                    McInstanceSelected.Info.VanillaName,
+                    If(McInstanceSelected.Info.Vanilla?.ToString(), ""),
+                    McInstanceSelected.Info.Drop,
+                    McInstanceSelected.Info.Reliable,
+                    McAssetsGetIndexName(McInstanceSelected),
+                    McInstanceSelected.InheritInstanceName,
+                    allocatedRam,
+                    McFolderSelected,
+                    McInstanceSelected.PathInstance,
+                    McInstanceSelected.PathIndie = McInstanceSelected.PathInstance,
+                    McInstanceSelected.IsHmclFormatJson,
+                    If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString(), Nothing),
+                    GetNativesFolder(),
+                    McLoginLoader.Output.Name,
+                    McLoginLoader.Output.AccessToken,
+                    McLoginLoader.Output.ClientToken,
+                    McLoginLoader.Output.Uuid,
+                    McLoginLoader.Output.Type),
+                New MinecraftLaunchWatcherRequest(
+                    Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected),
+                    Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected),
+                    Setup.Get("LaunchArgumentTitle"),
+                    McLaunchJavaSelected.Installation.JavaFolder,
+                    File.Exists(McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe")),
+                CurrentLaunchOptions.IsTest))
+        For Each logLine In watcherWorkflow.StartupSummaryLogLines
             McLaunchLog(logLine)
         Next
 
         '获取窗口标题
-        Dim watcherPlan = MinecraftLaunchRuntimeService.BuildWatcherPlan(
-            New MinecraftLaunchWatcherRequest(
-                Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected),
-                Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected),
-                Setup.Get("LaunchArgumentTitle"),
-                McLaunchJavaSelected.Installation.JavaFolder,
-                File.Exists(McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe")))
-        Dim WindowTitle As String = ArgumentReplace(watcherPlan.RawWindowTitleTemplate, False)
+        Dim WindowTitle As String = ArgumentReplace(watcherWorkflow.RawWindowTitleTemplate, False)
 
         '初始化等待
-        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, watcherPlan.JstackExecutablePath, CurrentLaunchOptions.IsTest)
+        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, watcherWorkflow.JstackExecutablePath, watcherWorkflow.ShouldAttachRealtimeLog)
         McLaunchWatcher = Watcher
 
         '显示实时日志
-        If CurrentLaunchOptions.IsTest Then
+        If watcherWorkflow.ShouldAttachRealtimeLog Then
             If FrmLogLeft Is Nothing Then RunInUiWait(Sub() FrmLogLeft = New PageLogLeft)
             If FrmLogRight Is Nothing Then RunInUiWait(Sub()
                                                            AniControlEnabled += 1
@@ -2302,7 +2303,7 @@ NextInstance:
                                                            AniControlEnabled -= 1
                                                        End Sub)
             FrmLogLeft.Add(Watcher)
-            McLaunchLog("已显示游戏实时日志")
+            If watcherWorkflow.RealtimeLogAttachedMessage IsNot Nothing Then McLaunchLog(watcherWorkflow.RealtimeLogAttachedMessage)
         End If
 
         '等待

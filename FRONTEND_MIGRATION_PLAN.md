@@ -63,6 +63,7 @@ These workflow extractions are already done and should be treated as available m
 - launch custom-command / batch-script planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - launch process / watcher runtime planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
+- launch watcher startup composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
 - Authlib request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Microsoft request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 
