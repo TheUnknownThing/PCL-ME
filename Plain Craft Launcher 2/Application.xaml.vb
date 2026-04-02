@@ -61,11 +61,21 @@ Public Class Application
                 End If
             End If
             '初始化文件结构
-            Directory.CreateDirectory(ExePath & "PCL\Pictures")
-            Directory.CreateDirectory(ExePath & "PCL\Musics")
-            Directory.CreateDirectory(PathTemp & "Cache")
-            Directory.CreateDirectory(PathTemp & "Download")
-            Directory.CreateDirectory(PathAppdata)
+            Dim problemList = LauncherStartupEnvironmentWarningService.GetWarnings(
+                New LauncherStartupEnvironmentWarningRequest(
+                    ExePath,
+                    NtInterop.GetCurrentOsVersion(),
+                    Not Is32BitSystem))
+            Dim bootstrapResult = LauncherStartupBootstrapService.Build(
+                New LauncherStartupBootstrapRequest(
+                    ExePath,
+                    PathTemp,
+                    PathAppdata,
+                    VersionBaseName.Contains("beta"),
+                    problemList))
+            For Each directoryPath In bootstrapResult.DirectoriesToCreate
+                Directory.CreateDirectory(directoryPath)
+            Next
 #If False Then
             '检测单例
             Dim ShouldWaitForExit As Boolean = args.Length > 0 AndAlso args(0) = "--wait" '要求等待已有的 PCL 退出
@@ -99,32 +109,19 @@ WaitRetry:
                 FrmStart.Show(False, True)
             End If
             '检测异常环境
-            Dim problemList = LauncherStartupEnvironmentWarningService.GetWarnings(
-                New LauncherStartupEnvironmentWarningRequest(
-                    ExePath,
-                    NtInterop.GetCurrentOsVersion(),
-                    Not Is32BitSystem))
-            If problemList.Count <> 0 Then
-                MyMsgBox("PCL CE 在启动时检测到环境问题：" & vbCrLf & vbCrLf &
-                         problemList.Join(vbCrLf) & vbCrLf & vbCrLf &
-                         "不解决这些问题可能会导致部分功能无法正常工作……", "环境警告", "我知道了", IsWarn:=True)
+            If bootstrapResult.EnvironmentWarningMessage IsNot Nothing Then
+                MyMsgBox(bootstrapResult.EnvironmentWarningMessage, "环境警告", "我知道了", IsWarn:=True)
             End If
             '设置初始化
-            Setup.Load("SystemDebugMode")
-            Setup.Load("SystemDebugAnim")
-            Setup.Load("SystemHttpProxy")
-            Setup.Load("SystemHttpProxyCustomUsername")
-            Setup.Load("SystemHttpProxyType")
-            Setup.Load("ToolDownloadThread")
-            Setup.Load("ToolDownloadSpeed")
-            Setup.Load("UiFont")
+            For Each configKey In bootstrapResult.ConfigKeysToLoad
+                Setup.Load(configKey)
+            Next
             Dim updateBranchCfg = Config.Update.UpdateChannelConfig
             If updateBranchCfg.IsDefault() Then
-                updateBranchCfg.SetValue(If(VersionBaseName.Contains("beta"), 1, 0))
+                updateBranchCfg.SetValue(CInt(bootstrapResult.DefaultUpdateChannel))
             End If
             '删除旧日志
-            For i = 1 To 5
-                Dim oldLogFile = $"{ExePath}PCL\Log-CE{i}.log"
+            For Each oldLogFile In bootstrapResult.LegacyLogFilesToDelete
                 If File.Exists(oldLogFile) Then File.Delete(oldLogFile)
             Next
             '计时
