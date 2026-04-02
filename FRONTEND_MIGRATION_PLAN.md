@@ -17,6 +17,12 @@ Current estimate:
 
 The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
 
+The project is now also past the point where the extracted backend only exists inside `PCL.Core`'s Windows target:
+
+- `PCL.Core.Backend` now compiles the extracted startup / launch / crash workflow layer as plain `net8.0`
+- `PCL.Core.Backend.Test` now runs portable workflow/service tests on macOS/Linux hosts
+- `PCL.Frontend.Spike` now targets plain `net8.0` and consumes `PCL.Core.Backend`
+
 ## Completed Migration Prerequisites
 
 These workflow extractions are already done and should be treated as available migration seams:
@@ -60,6 +66,7 @@ These workflow extractions are already done and should be treated as available m
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - a thin replacement-shell spike exists in `PCL.Frontend.Spike` and can print startup / launch / crash service plans as JSON without WPF views
+- a portable extracted-backend assembly exists in `PCL.Core.Backend`, and the spike now consumes that assembly instead of the Windows-only `PCL.Core` project
 - launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch prerun `options.txt` target selection and write policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
 - launch prerun Microsoft `launcher_profiles.json` mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`

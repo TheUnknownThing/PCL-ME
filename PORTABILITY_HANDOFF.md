@@ -17,6 +17,9 @@ The repo is no longer at the “portability is just an idea” stage. There is n
 
 Latest continuation update:
 
+- a new portable `net8.0` backend assembly now lives in `PCL.Core.Backend`, compiling the extracted startup / launch / crash workflow layer outside `PCL.Core`'s `net8.0-windows` target
+- a new portable backend test lane now lives in `PCL.Core.Backend.Test`, and its extracted workflow/service coverage runs on macOS/Linux hosts
+- `PCL.Frontend.Spike` now targets plain `net8.0` and runs against `PCL.Core.Backend` instead of `PCL.Core`
 - launch Java requirement / missing-Java recovery workflow now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaWorkflowService`
 - a thin replacement-shell spike now lives in `PCL.Frontend.Spike` and can exercise extracted startup / launch / crash services without WPF page code
 - startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`
@@ -102,6 +105,8 @@ Honest status estimate at this handoff point:
 What is already true:
 
 - `PCL.Core.Foundation` is real, headless, and validated on macOS
+- `PCL.Core.Backend` now proves a substantial extracted workflow layer can compile as plain `net8.0` without WPF
+- `PCL.Core.Backend.Test` now proves that extracted backend slice can execute on macOS in automated tests
 - the major runtime seams are no longer speculative; they exist in code and have tests/build validation
 - a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
 
@@ -110,6 +115,7 @@ What is not true yet:
 - `ModLaunch.vb` still owns too much step execution, request coordination, watcher lifecycle wiring, and Java-selection / download shell bridging
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
+- `PCL.Core.Backend` is not yet the whole runtime/backend surface; it currently hosts the extracted workflow/services slice rather than every reusable backend/runtime service
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 
 This branch is handoff-ready for another engineer. The next engineer should continue from the existing seams rather than reopening Foundation extraction.
@@ -377,6 +383,11 @@ Verified successfully after the latest changes:
 - `dotnet test PCL.Core.Foundation.Test/PCL.Core.Foundation.Test.csproj -c Debug`
 - `dotnet build PCL.Core/PCL.Core.csproj -c Debug`
 - `dotnet build PCL.Core.Test/PCL.Core.Test.csproj -c Debug`
+- `dotnet build PCL.Core.Backend/PCL.Core.Backend.csproj -c Debug`
+- `dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- startup`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash`
 - `dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug`
 
 Current Foundation test count:
@@ -393,12 +404,13 @@ Current Foundation regression scan is clean:
 Additional note about validation on this machine:
 
 - `PCL.Core.Test` builds successfully on macOS, but running that `net8.0-windows` test assembly is blocked locally because `Microsoft.WindowsDesktop.App` testhost runtime is not available on this host
+- `PCL.Core.Backend.Test` is the new portable test lane for extracted backend workflows and does run successfully on this macOS host
 
 ## Current Portability Estimate
 
 If “portable backend” means “the non-GUI services a future macOS/Linux launcher could call without depending on WPF or Windows-only APIs”, the current estimate is:
 
-- about `87%~88%` complete
+- about `92%~94%` complete
 
 Rationale:
 
@@ -419,7 +431,7 @@ Concrete current state:
 
 If “fully working portable backend” means “all non-frontend launcher behavior can run cross-platform today without the current Windows launcher layer”, the honest estimate is lower:
 
-- about `62%~65%` complete
+- about `74%~78%` complete
 
 Reason:
 
