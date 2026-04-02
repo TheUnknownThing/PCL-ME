@@ -100,6 +100,13 @@ internal static class SpikeTextRenderer
             $"Launch Plan ({plan.Scenario})",
             [
                 new SpikeTranscriptSection(
+                    "Login",
+                    [
+                        $"Provider: {plan.LoginPlan.Provider}",
+                        $"Request or shell steps: {plan.LoginPlan.Steps.Count}",
+                        $"Final mutation: {plan.LoginPlan.MutationPlan?.Kind.ToString() ?? "none"}"
+                    ]),
+                new SpikeTranscriptSection(
                     "Java Workflow",
                     [
                         plan.JavaWorkflow.RequirementLogMessage,

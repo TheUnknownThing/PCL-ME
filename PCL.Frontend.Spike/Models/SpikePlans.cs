@@ -10,6 +10,7 @@ internal sealed record StartupSpikePlan(
 
 internal sealed record LaunchSpikePlan(
     string Scenario,
+    LaunchLoginSpikePlan LoginPlan,
     MinecraftLaunchJavaWorkflowPlan JavaWorkflow,
     MinecraftLaunchJavaSelectionOutcome InitialSelection,
     MinecraftLaunchJavaPromptOutcome AcceptedPromptOutcome,

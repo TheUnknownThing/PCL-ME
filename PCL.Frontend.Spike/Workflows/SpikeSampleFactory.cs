@@ -46,6 +46,7 @@ internal static class SpikeSampleFactory
     {
         return new LaunchSpikeInputs(
             Scenario: scenario,
+            LoginInputs: BuildLoginInputs(scenario),
             JavaWorkflowRequest: BuildJavaWorkflowRequest(scenario),
             ResolutionRequest: new MinecraftLaunchResolutionRequest(
                 WindowMode: 3,
@@ -195,6 +196,7 @@ internal static class SpikeSampleFactory
 
     public static LaunchSpikePlan BuildLaunchPlan(LaunchSpikeInputs inputs)
     {
+        var loginPlan = SpikeLaunchLoginFactory.BuildPlan(inputs.LoginInputs);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(inputs.JavaWorkflowRequest);
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(inputs.ResolutionRequest);
         var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(inputs.ClasspathRequest);
@@ -212,6 +214,7 @@ internal static class SpikeSampleFactory
         var argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(inputs.ArgumentPlanRequest);
         return new LaunchSpikePlan(
             inputs.Scenario,
+            loginPlan,
             javaWorkflow,
             MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, hasSelectedJava: false),
             MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(
@@ -321,6 +324,141 @@ internal static class SpikeSampleFactory
                 JsonRequiredMajorVersion: 21,
                 MojangRecommendedMajorVersion: 21,
                 MojangRecommendedComponent: "jre-legacy")
+        };
+    }
+
+    private static LaunchLoginSpikeInputs BuildLoginInputs(string scenario)
+    {
+        return scenario switch
+        {
+            "legacy-forge" => new LaunchLoginSpikeInputs(
+                LaunchLoginProviderKind.Authlib,
+                Microsoft: null,
+                Authlib: new AuthlibLaunchLoginSpikeInputs(
+                    ForceReselectProfile: true,
+                    CachedProfileId: "cached-profile-id",
+                    ServerSelectedProfileId: null,
+                    IsExistingProfile: false,
+                    SelectedProfileIndex: null,
+                    ServerBaseUrl: "https://auth.example.invalid/authserver",
+                    LoginName: "demo@example.invalid",
+                    Password: "demo-password",
+                    AuthenticateResponseJson:
+                    """
+                    {
+                      "accessToken": "authlib-access-token",
+                      "clientToken": "authlib-client-token",
+                      "selectedProfile": {
+                        "id": "server-selected-profile",
+                        "name": "ServerDefault"
+                      },
+                      "availableProfiles": [
+                        {
+                          "id": "cached-profile-id",
+                          "name": "CachedDemo"
+                        },
+                        {
+                          "id": "alt-profile-id",
+                          "name": "AltDemo"
+                        }
+                      ]
+                    }
+                    """,
+                    RefreshResponseJson:
+                    """
+                    {
+                      "accessToken": "authlib-refreshed-access-token",
+                      "clientToken": "authlib-refreshed-client-token",
+                      "selectedProfile": {
+                        "id": "cached-profile-id",
+                        "name": "CachedDemo"
+                      }
+                    }
+                    """,
+                    MetadataResponseJson:
+                    """
+                    {
+                      "meta": {
+                        "serverName": "Demo Auth Server"
+                      }
+                    }
+                    """)),
+            _ => new LaunchLoginSpikeInputs(
+                LaunchLoginProviderKind.Microsoft,
+                Microsoft: new MicrosoftLaunchLoginSpikeInputs(
+                    SessionReuseRequest: new MinecraftLaunchMicrosoftSessionReuseRequest(
+                        IsForceRestarting: false,
+                        AccessToken: "cached-access-token",
+                        LastRefreshTick: 0,
+                        CurrentTick: 1000 * 60 * 60),
+                    OAuthRefreshToken: "cached-refresh-token",
+                    OAuthRefreshResponseJson:
+                    """
+                    {
+                      "access_token": "oauth-access-token",
+                      "refresh_token": "oauth-refresh-token"
+                    }
+                    """,
+                    XboxLiveResponseJson:
+                    """
+                    {
+                      "Token": "xbl-token"
+                    }
+                    """,
+                    XstsResponseJson:
+                    """
+                    {
+                      "Token": "xsts-token",
+                      "DisplayClaims": {
+                        "xui": [
+                          {
+                            "uhs": "user-hash"
+                          }
+                        ]
+                      }
+                    }
+                    """,
+                    MinecraftAccessTokenResponseJson:
+                    """
+                    {
+                      "access_token": "minecraft-access-token"
+                    }
+                    """,
+                    OwnershipResponseJson:
+                    """
+                    {
+                      "items": [
+                        {
+                          "name": "product_minecraft"
+                        }
+                      ]
+                    }
+                    """,
+                    ProfileResponseJson:
+                    """
+                    {
+                      "id": "demo-uuid",
+                      "name": "DemoPlayer"
+                    }
+                    """,
+                    IsCreatingProfile: true,
+                    SelectedProfileIndex: null,
+                    Profiles:
+                    [
+                        new MinecraftLaunchStoredProfile(
+                            MinecraftLaunchStoredProfileKind.Microsoft,
+                            "existing-uuid",
+                            "ExistingPlayer",
+                            Server: null,
+                            ServerName: null,
+                            AccessToken: "existing-access-token",
+                            RefreshToken: "existing-refresh-token",
+                            LoginName: null,
+                            Password: null,
+                            ClientToken: null,
+                            RawJson: "{}")
+                    ]),
+                Authlib: null)
         };
     }
 }

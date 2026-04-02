@@ -10,6 +10,7 @@ internal sealed record StartupSpikeInputs(
 
 internal sealed record LaunchSpikeInputs(
     string Scenario,
+    LaunchLoginSpikeInputs LoginInputs,
     MinecraftLaunchJavaWorkflowRequest JavaWorkflowRequest,
     MinecraftLaunchResolutionRequest ResolutionRequest,
     MinecraftLaunchClasspathRequest ClasspathRequest,

@@ -41,6 +41,7 @@ internal static class SpikeRunner
 
         var sections = new List<SpikeTranscriptSection>
         {
+            new("Login Execution", BuildLoginLines(plan.LoginPlan)),
             new("Java Selection", BuildJavaSelectionLines(plan, javaPromptDecision, promptOutcome, postDownloadSelection))
         };
 
@@ -183,6 +184,36 @@ internal static class SpikeRunner
         if (plan.ArgumentPlan.ShouldWarnAboutLegacyServerWithOptiFine)
         {
             lines.Add("Legacy server / OptiFine warning would be shown.");
+        }
+
+        return lines;
+    }
+
+    private static IReadOnlyList<string> BuildLoginLines(LaunchLoginSpikePlan plan)
+    {
+        var lines = new List<string>
+        {
+            $"Provider: {plan.Provider}",
+            $"Step count: {plan.Steps.Count}"
+        };
+
+        foreach (var step in plan.Steps)
+        {
+            lines.Add($"{step.Progress:P0} {step.Title}");
+            if (!string.IsNullOrWhiteSpace(step.Method) && !string.IsNullOrWhiteSpace(step.Url))
+            {
+                lines.Add($"Request: {step.Method} {step.Url}");
+            }
+
+            foreach (var note in step.Notes)
+            {
+                lines.Add($"Note: {note}");
+            }
+        }
+
+        if (plan.MutationPlan is not null)
+        {
+            lines.Add($"Final mutation: {plan.MutationPlan.Kind}");
         }
 
         return lines;

@@ -96,6 +96,60 @@ internal static class SpikeExecutor
             ])
         };
 
+        var loginRoot = Path.Combine(workspaceRoot, "_artifacts", "login", plan.LoginPlan.Provider.ToString().ToLowerInvariant());
+        Directory.CreateDirectory(loginRoot);
+        createdDirectories.Add(loginRoot);
+        var loginLines = new List<string>
+        {
+            $"Provider: {plan.LoginPlan.Provider}",
+            $"Step count: {plan.LoginPlan.Steps.Count}"
+        };
+
+        for (var index = 0; index < plan.LoginPlan.Steps.Count; index++)
+        {
+            var step = plan.LoginPlan.Steps[index];
+            var stepDirectoryName = $"{index + 1:D2}-{SanitizePathSegment(step.Title)}";
+            var stepRoot = Path.Combine(loginRoot, stepDirectoryName);
+            Directory.CreateDirectory(stepRoot);
+            createdDirectories.Add(stepRoot);
+            loginLines.Add($"{index + 1:D2}. {step.Title}");
+
+            if (!string.IsNullOrWhiteSpace(step.Method) && !string.IsNullOrWhiteSpace(step.Url))
+            {
+                var requestSummaryPath = Path.Combine(stepRoot, "request.txt");
+                WriteTextFile(
+                    requestSummaryPath,
+                    BuildLoginRequestText(step));
+                writtenFiles.Add(requestSummaryPath);
+                artifacts.Add(new SpikeExecutionArtifact($"{step.Title} request", requestSummaryPath));
+                loginLines.Add($"Request artifact: {requestSummaryPath}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(step.ResponseBody))
+            {
+                var responsePath = Path.Combine(stepRoot, "response.json");
+                WriteTextFile(responsePath, step.ResponseBody);
+                writtenFiles.Add(responsePath);
+                artifacts.Add(new SpikeExecutionArtifact($"{step.Title} response", responsePath));
+                loginLines.Add($"Response artifact: {responsePath}");
+            }
+
+            if (step.Notes.Count > 0)
+            {
+                var notesPath = Path.Combine(stepRoot, "notes.txt");
+                WriteTextFile(notesPath, string.Join(Environment.NewLine, step.Notes));
+                writtenFiles.Add(notesPath);
+                artifacts.Add(new SpikeExecutionArtifact($"{step.Title} notes", notesPath));
+            }
+        }
+
+        if (plan.LoginPlan.MutationPlan is not null)
+        {
+            loginLines.Add($"Final mutation: {plan.LoginPlan.MutationPlan.Kind}");
+        }
+
+        sections.Add(new SpikeTranscriptSection("Login Execution", loginLines));
+
         if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
         {
             sections.Add(new SpikeTranscriptSection(
@@ -349,6 +403,24 @@ internal static class SpikeExecutor
         File.WriteAllText(path, content, useUtf8Bom ? new UTF8Encoding(true) : new UTF8Encoding(false));
     }
 
+    private static string BuildLoginRequestText(LaunchLoginSpikeStepPlan step)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"{step.Method} {step.Url}");
+        if (!string.IsNullOrWhiteSpace(step.ContentType))
+        {
+            builder.AppendLine($"Content-Type: {step.ContentType}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(step.RequestBody))
+        {
+            builder.AppendLine();
+            builder.Append(step.RequestBody);
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
     private static string MapSamplePath(string samplePath, string workspaceRoot)
     {
         var normalizedPath = samplePath.Replace('\\', '/');
@@ -372,6 +444,29 @@ internal static class SpikeExecutor
             .Where(path => !string.IsNullOrWhiteSpace(path))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
+    }
+
+    private static string SanitizePathSegment(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value.ToLowerInvariant())
+        {
+            if (invalidCharacters.Contains(character))
+            {
+                continue;
+            }
+
+            builder.Append(character switch
+            {
+                ' ' => '-',
+                '/' => '-',
+                '\\' => '-',
+                _ => character
+            });
+        }
+
+        return builder.Length == 0 ? "step" : builder.ToString();
     }
 
     private static IReadOnlyList<string> BuildStartupPromptLines(LauncherStartupPrompt prompt)
