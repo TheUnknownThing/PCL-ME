@@ -68,47 +68,59 @@ static object BuildStartupSample()
 static object BuildLaunchSample(string scenario)
 {
     var javaWorkflow = BuildJavaWorkflowPlan(scenario);
-    var watcherWorkflow = MinecraftLaunchWatcherWorkflowService.BuildPlan(
-        new MinecraftLaunchWatcherWorkflowRequest(
-            new MinecraftLaunchSessionLogRequest(
-                LauncherVersionName: "2.11.0",
-                LauncherVersionCode: 2110,
-                GameVersionDisplayName: "1.20.5",
-                GameVersionRaw: "1.20.5",
-                GameVersionDrop: 8,
-                IsGameVersionReliable: true,
-                AssetsIndexName: "8",
-                InheritedInstanceName: "Base",
-                AllocatedMemoryInGigabytes: 4,
-                MinecraftFolder: @"C:\Minecraft\.minecraft",
-                InstanceFolder: @"C:\Minecraft\.minecraft\versions\demo",
-                IsVersionIsolated: true,
-                IsHmclFormatJson: false,
-                JavaDescription: "Java 21",
-                NativesFolder: @"C:\Minecraft\natives",
-                PlayerName: "DemoPlayer",
-                AccessToken: "token",
-                ClientToken: "client",
-                Uuid: "uuid",
-                LoginType: "Microsoft"),
-            new MinecraftLaunchWatcherRequest(
-                VersionSpecificWindowTitleTemplate: "${version_name} - demo",
-                VersionTitleExplicitlyEmpty: false,
-                GlobalWindowTitleTemplate: "{user_type}",
+    var sessionStartPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(
+        new MinecraftLaunchSessionStartWorkflowRequest(
+            new MinecraftLaunchCustomCommandWorkflowRequest(
+                new MinecraftLaunchCustomCommandRequest(
+                    JavaMajorVersion: 21,
+                    InstanceName: "Demo Instance",
+                    WorkingDirectory: @"C:\Minecraft\.minecraft",
+                    JavaExecutablePath: @"C:\Java\bin\java.exe",
+                    LaunchArguments: "--username DemoPlayer --version 1.20.5",
+                    GlobalCommand: "echo preparing",
+                    WaitForGlobalCommand: true,
+                    InstanceCommand: "echo instance hook",
+                    WaitForInstanceCommand: false),
+                ShellWorkingDirectory: @"C:\Minecraft"),
+            new MinecraftLaunchProcessRequest(
+                PreferConsoleJava: false,
+                JavaExecutablePath: @"C:\Java\bin\java.exe",
+                JavawExecutablePath: @"C:\Java\bin\javaw.exe",
                 JavaFolder: @"C:\Java\bin",
-                JstackExecutableExists: true),
-            OutputRealTimeLog: true));
-    var processPlan = MinecraftLaunchRuntimeService.BuildProcessPlan(
-        new MinecraftLaunchProcessRequest(
-            PreferConsoleJava: false,
-            JavaExecutablePath: @"C:\Java\bin\java.exe",
-            JavawExecutablePath: @"C:\Java\bin\javaw.exe",
-            JavaFolder: @"C:\Java\bin",
-            CurrentPathEnvironmentValue: @"C:\Windows\System32;C:\Windows",
-            AppDataPath: @"C:\Minecraft\.minecraft",
-            WorkingDirectory: @"C:\Minecraft\.minecraft",
-            LaunchArguments: "--username DemoPlayer --version 1.20.5",
-            PrioritySetting: 0));
+                CurrentPathEnvironmentValue: @"C:\Windows\System32;C:\Windows",
+                AppDataPath: @"C:\Minecraft\.minecraft",
+                WorkingDirectory: @"C:\Minecraft\.minecraft",
+                LaunchArguments: "--username DemoPlayer --version 1.20.5",
+                PrioritySetting: 0),
+            new MinecraftLaunchWatcherWorkflowRequest(
+                new MinecraftLaunchSessionLogRequest(
+                    LauncherVersionName: "2.11.0",
+                    LauncherVersionCode: 2110,
+                    GameVersionDisplayName: "1.20.5",
+                    GameVersionRaw: "1.20.5",
+                    GameVersionDrop: 8,
+                    IsGameVersionReliable: true,
+                    AssetsIndexName: "8",
+                    InheritedInstanceName: "Base",
+                    AllocatedMemoryInGigabytes: 4,
+                    MinecraftFolder: @"C:\Minecraft\.minecraft",
+                    InstanceFolder: @"C:\Minecraft\.minecraft\versions\demo",
+                    IsVersionIsolated: true,
+                    IsHmclFormatJson: false,
+                    JavaDescription: "Java 21",
+                    NativesFolder: @"C:\Minecraft\natives",
+                    PlayerName: "DemoPlayer",
+                    AccessToken: "token",
+                    ClientToken: "client",
+                    Uuid: "uuid",
+                    LoginType: "Microsoft"),
+                new MinecraftLaunchWatcherRequest(
+                    VersionSpecificWindowTitleTemplate: "${version_name} - demo",
+                    VersionTitleExplicitlyEmpty: false,
+                    GlobalWindowTitleTemplate: "{user_type}",
+                    JavaFolder: @"C:\Java\bin",
+                    JstackExecutableExists: true),
+                OutputRealTimeLog: true)));
     return new
     {
         scenario,
@@ -118,8 +130,7 @@ static object BuildLaunchSample(string scenario)
             javaWorkflow.MissingJavaPrompt,
             MinecraftLaunchJavaPromptDecision.Download),
         postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, hasSelectedJava: true),
-        processPlan,
-        watcherWorkflow,
+        sessionStartPlan,
         postLaunchShell = MinecraftLaunchShellService.GetPostLaunchShellPlan(
             new MinecraftLaunchPostLaunchShellRequest(
                 LauncherVisibility.HideAndReopen,
