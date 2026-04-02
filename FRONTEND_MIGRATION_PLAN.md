@@ -2,9 +2,20 @@
 
 ## Summary
 
-Wave 2 left the runtime boundary in a good state: shared runtime/platform behavior now lives behind explicit `PCL.Core` seams, while the remaining portability blockers are concentrated in the WPF/VB launcher.
+Wave 2 left the runtime boundary in a good state, and the first launcher-workflow cleanup slices are now done: shared runtime/platform behavior lives behind explicit `PCL.Core` seams, startup environment warnings live in a core service, and crash-report environment assembly also lives in a core service.
 
-The next phase should not replace the frontend yet. The next boundary should be launcher workflow extraction: keep the current WPF views, but move non-visual launcher workflows behind service interfaces so a future frontend can reuse them.
+That means the next engineer can move on to frontend migration work. The migration should still be compatibility-first: keep the current launcher behavior, reuse the existing core/runtime services, and replace launcher UI/shell layers incrementally instead of reopening runtime extraction.
+
+## Completed Migration Prerequisites
+
+These workflow extractions are already done and should be treated as available migration seams:
+
+- GPU preference handling routes through `PCL.Core.Utils.OS.ProcessInterop`
+- system environment summary is exposed through `PCL.Core.Utils.OS.SystemEnvironmentInfo`
+- crash-report environment text is built by `PCL.Core.Minecraft.MinecraftCrashReportBuilder`
+- startup environment warnings are evaluated by `PCL.Core.App.Essentials.LauncherStartupEnvironmentWarningService`
+
+Do not redo these in the frontend migration branch; build on top of them.
 
 ## Remaining Launcher-Only Dependency Tracks
 
@@ -50,29 +61,29 @@ This is the most important migration track because it blocks frontend replacemen
 
 Current mixed areas include:
 
-- startup orchestration and environment warnings in `Plain Craft Launcher 2/Application.xaml.vb`
-- crash-report assembly in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
 - launch pre/post workflow in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
 - form startup sequencing in `Plain Craft Launcher 2/FormMain.xaml.vb`
+- remaining startup shell orchestration in `Plain Craft Launcher 2/Application.xaml.vb`
+- crash-report export shell flow in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
 
 These flows still combine:
 
 - launcher state gathering
-- environment inspection
-- formatting/report assembly
 - user-facing prompts and shell actions
+- WPF-specific navigation / dispatcher coordination
+- some launch-specific decision logic
 
 A future frontend should only own the prompts and view transitions, not the workflow logic itself.
 
 ## Recommended Next Boundary
 
-The next implementation phase should be **launcher workflow extraction without replacing WPF**.
+The next implementation phase should be **frontend migration on top of the extracted workflow seams**.
 
 Create launcher-facing services in `PCL.Core` for:
 
-1. startup environment evaluation
-2. crash-report environment snapshot assembly
-3. launch preparation / post-launch side effects that do not require direct control access
+1. launch preparation / post-launch orchestration that does not require direct control access
+2. startup shell flow models that return view-agnostic decisions/results instead of directly showing WPF UI
+3. crash export workflow helpers that stop short of filesystem picker / shell opening concerns
 
 Keep the following in the launcher as adapters:
 
@@ -85,16 +96,16 @@ This boundary keeps the current launcher behavior intact while making the eventu
 
 ## Execution Order
 
-1. Extract crash-report environment assembly first.
-   This already depends on launcher-readable runtime/system data and now has a clean system-environment facade in `PCL.Core`.
-2. Extract startup environment checks next.
-   Move environment warning evaluation into a core service that returns warning items, then let WPF decide how to show them.
-3. Extract launch workflow orchestration after that.
-   Keep Java/game process control in the current launcher initially, but move decision-making and reportable state assembly into reusable services.
+1. Extract launch workflow orchestration next.
+   This is the highest-value remaining workflow seam and is still the biggest blocker to swapping frontend shells.
+2. Introduce a frontend-agnostic presentation model for startup and crash-export flows.
+   The evaluation/building logic is already in core; the next step is to stop binding shell flow directly to WPF windows and message boxes.
+3. Start the actual frontend shell migration.
+   Replace or parallel a small launcher surface first, while continuing to use existing `PCL.Core` services and Windows shell adapters as needed.
 
 ## Acceptance Criteria
 
 - WPF pages and controls remain unchanged in behavior.
 - New launcher workflow services do not introduce `System.Windows` dependencies into `PCL.Core.Foundation`.
 - The launcher becomes a consumer of workflow results plus shell adapters, not the owner of business logic assembly.
-- After the workflow extraction phase, frontend migration planning can choose a replacement UI stack without reopening runtime seams.
+- Frontend migration can proceed without reopening runtime seams or reintroducing launcher-local copies of runtime/system logic.

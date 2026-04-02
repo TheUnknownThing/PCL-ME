@@ -13,7 +13,7 @@ The long-term direction is still:
 2. keep current Windows launcher behavior working through adapters
 3. replace the WPF/VB frontend only after the runtime boundary is stable
 
-The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, and Wave 2 runtime/platform extraction is now complete.
+The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, Wave 2 runtime/platform extraction is complete, and the first Wave 3 launcher-workflow cleanup slices have been landed.
 
 ## Big Goal
 
@@ -99,6 +99,25 @@ This was also completed in this branch:
   - Windows Microsoft Store scanner
   - config-backed Java storage adapter in `PCL.Core`
 
+### Wave 3 Launcher Cleanup
+
+These were completed after Wave 2 was declared stable:
+
+- launcher GPU preference handling unified through `PCL.Core.Utils.OS.ProcessInterop`
+  - launcher-local registry-writing GPU helper was removed
+  - admin-elevation retry behavior for GPU preference remains intact
+- launcher-consumable system environment facade added in `PCL.Core`
+  - `SystemEnvironmentInfo` now exposes OS summary, physical memory, CPU name, and GPU list
+  - Windows WMI-backed collection remains in `PCL.Core`; portable fallback returns safe partial data
+- crash-report environment summary moved out of the launcher
+  - `MinecraftCrashReportBuilder` now assembles the exported `环境与启动信息.txt` content in `PCL.Core`
+  - launcher-side cached CPU/GPU/system-summary globals were removed
+- startup environment warning rules moved out of the launcher
+  - `LauncherStartupEnvironmentWarningService` now evaluates startup warnings in `PCL.Core`
+  - `Application.xaml.vb` only decides how to display the warnings
+- frontend migration planning artifact added
+  - see `FRONTEND_MIGRATION_PLAN.md`
+
 ## Important Compatibility Seams
 
 These seams are deliberate and should stay intact until the broader runtime extraction is finished:
@@ -133,10 +152,12 @@ Verified successfully after the latest changes:
 - `dotnet build PCL.Core.Foundation/PCL.Core.Foundation.csproj -c Debug`
 - `dotnet test PCL.Core.Foundation.Test/PCL.Core.Foundation.Test.csproj -c Debug`
 - `dotnet build PCL.Core/PCL.Core.csproj -c Debug`
+- `dotnet build PCL.Core.Test/PCL.Core.Test.csproj -c Debug`
+- `dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug`
 
 Current Foundation test count:
 
-- `93/93` passing
+- `99/99` passing
 
 Current Foundation regression scan is clean:
 
@@ -144,6 +165,10 @@ Current Foundation regression scan is clean:
 - no `Microsoft.Win32`
 - no `DllImport`
 - no `LibraryImport`
+
+Additional note about validation on this machine:
+
+- `PCL.Core.Test` builds successfully on macOS, but running that `net8.0-windows` test assembly is blocked locally because `Microsoft.WindowsDesktop.App` testhost runtime is not available on this host
 
 ## Recent Checkpoint Commits
 
@@ -155,6 +180,12 @@ This is the meaningful history for the current portability work:
 - `37aa3d5e` `test(portability): add regression coverage and rerun mac build matrix`
 - `91428de6` `refactor(java): extract portable java runtime and scanning core`
 - `9422e395` `test(java): add portable runtime and scanner coverage`
+- `4209a9bd` `refactor(launcher): route gpu preference through process interop`
+- `d4b8d415` `feat(runtime): add launcher system environment facade`
+- `9ce41769` `refactor(launcher): source system summary from core facade`
+- `24a3332a` `docs(portability): outline frontend migration tracks`
+- `767e6fcf` `refactor(crash): move environment report assembly into core`
+- `20dcecfc` `refactor(startup): move environment warning rules into core`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
@@ -186,16 +217,15 @@ What remains in `PCL.Core` is now either:
 
 ## Recommended Next Steps
 
-The next engineer should treat Wave 2 as finished and move to the next boundary, not reopen the runtime seams that are now stable.
+The next engineer should treat the runtime extraction and early launcher cleanup as finished enough to begin frontend migration work. Do not reopen the runtime seams that are now stable unless a migration blocker forces it.
 
 Recommended order:
 
 1. keep `PCL.Core.Foundation` stable and avoid leaking UI/Win32 concerns back into it
-2. decide whether the next phase is:
-   - Wave 3 launcher/runtime integration cleanup, or
-   - frontend migration planning
-3. if continuing portability work, focus on launcher-side WPF/VB OS dependencies rather than runtime-core extraction
-4. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
+2. use `FRONTEND_MIGRATION_PLAN.md` as the working migration brief
+3. begin frontend migration from launcher-side view/shell replacement boundaries, not from runtime/core extraction
+4. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
+5. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
 
 ## Important Non-Goals Right Now
 
@@ -210,9 +240,10 @@ Do not do these yet unless the runtime boundary is already stable:
 ## Known Risks / Sticky Areas
 
 - `ConfigService` is still in `PCL.Core`; only the storage/runtime seam is headless
-- Java launch and the launcher-side VB/WPF flows still contain Windows assumptions even though the runtime/discovery core is portable
+- Java launch and remaining launcher-side VB/WPF flows still contain Windows assumptions even though the runtime/discovery core is portable
 - `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
+- frontend migration is now mostly blocked by view/shell replacement and remaining launcher workflow/UI entanglement, not by runtime-core portability
 
 ## Working Rules For The Next Engineer
 
@@ -245,6 +276,15 @@ The final Wave 2 checkpoint history after the previous handoff is:
 - `cd8da717` `refactor(io): isolate directory permission checks behind platform service`
 - `1bb1befe` `refactor(runtime): route easytier and dependency checks through runtime info`
 
+The Wave 3 launcher cleanup commits after that are:
+
+- `4209a9bd` `refactor(launcher): route gpu preference through process interop`
+- `d4b8d415` `feat(runtime): add launcher system environment facade`
+- `9ce41769` `refactor(launcher): source system summary from core facade`
+- `24a3332a` `docs(portability): outline frontend migration tracks`
+- `767e6fcf` `refactor(crash): move environment report assembly into core`
+- `20dcecfc` `refactor(startup): move environment warning rules into core`
+
 ## One-Line Summary
 
-Wave 2 is complete: the runtime/core portability seams are now extracted and stabilized, Windows-specific runtime behavior lives behind explicit adapters in `PCL.Core`, Foundation remains headless and macOS-valid, and the next phase should move up to launcher-side or frontend-level portability work rather than further core-runtime extraction.
+Wave 2 is complete and the first Wave 3 launcher cleanup slices are landed: the runtime/core portability seams are stabilized, startup/crash/system-summary launcher workflows now have core-side services, Foundation remains headless and macOS-valid, and the next engineer should start from frontend migration work rather than further runtime extraction.
