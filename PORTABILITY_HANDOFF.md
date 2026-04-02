@@ -133,6 +133,10 @@ These were completed after Wave 2 was declared stable:
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
+- startup command parsing and preparation composition moved out of the launcher
+  - `LauncherStartupCommandService` now owns recognition of launcher startup commands like `--gpu` and `--memory`
+  - `LauncherStartupPreparationService` now composes environment warning collection with bootstrap-policy generation
+  - `Application.xaml.vb` now only executes the selected startup shell task and applies the returned preparation result
 - launch account prompt policy moved out of the launcher
   - `MinecraftLaunchAccountWorkflowService` now owns Microsoft account-recovery prompts, ownership/profile-required prompts, and Authlib role-selection decisions
   - `ModLaunch.vb` only renders those prompts and applies the returned actions
@@ -249,6 +253,7 @@ This is the meaningful history for the current portability work:
 - `9899021f` `refactor(launch): return authlib login step results explicitly`
 - `4b6ab80e` `feat(crash): add core crash workflow service`
 - `94ebef70` `refactor(crash): consume core crash workflow prompt service`
+- `590ffbd5` `refactor(startup): extract startup command and preparation services`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
