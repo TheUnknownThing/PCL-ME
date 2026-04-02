@@ -2170,32 +2170,39 @@ NextInstance:
     End Sub
 
     Private Sub ExecuteCustomCommand(commandExecution As MinecraftLaunchCustomCommandExecution, Loader As LoaderTask(Of Integer, Integer))
-        McLaunchLog(commandExecution.StartLogMessage)
+        Dim shellPlan = MinecraftLaunchExecutionWorkflowService.BuildCustomCommandShellPlan(
+            New MinecraftLaunchCustomCommandShellRequest(
+                commandExecution.Command,
+                commandExecution.WaitForExit,
+                ShortenPath(McFolderSelected),
+                commandExecution.StartLogMessage,
+                commandExecution.FailureLogMessage))
+        McLaunchLog(shellPlan.StartLogMessage)
         Dim customProcess As New Process
         Try
-            customProcess.StartInfo.FileName = "cmd.exe"
-            customProcess.StartInfo.Arguments = "/c """ & commandExecution.Command & """"
-            customProcess.StartInfo.WorkingDirectory = ShortenPath(McFolderSelected)
-            customProcess.StartInfo.UseShellExecute = False
-            customProcess.StartInfo.CreateNoWindow = True
+            customProcess.StartInfo.FileName = shellPlan.FileName
+            customProcess.StartInfo.Arguments = shellPlan.Arguments
+            customProcess.StartInfo.WorkingDirectory = shellPlan.WorkingDirectory
+            customProcess.StartInfo.UseShellExecute = shellPlan.UseShellExecute
+            customProcess.StartInfo.CreateNoWindow = shellPlan.CreateNoWindow
             customProcess.Start()
-            If commandExecution.WaitForExit Then
+            If shellPlan.WaitForExit Then
                 Do Until customProcess.HasExited OrElse Loader.IsAborted
                     Thread.Sleep(10)
                 Loop
             End If
         Catch ex As Exception
-            Log(ex, commandExecution.FailureLogMessage, LogLevel.Hint)
+            Log(ex, shellPlan.FailureLogMessage, LogLevel.Hint)
         Finally
             If Not customProcess.HasExited AndAlso Loader.IsAborted Then
-                McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
+                McLaunchLog(shellPlan.AbortKillLogMessage) '#1183
                 customProcess.Kill()
             End If
         End Try
     End Sub
 
     Private Sub McLaunchRun(Loader As LoaderTask(Of Integer, Process))
-        Dim runtimePlan = MinecraftLaunchRuntimeService.BuildProcessPlan(
+        Dim shellPlan = MinecraftLaunchExecutionWorkflowService.BuildProcessShellPlan(
             New MinecraftLaunchProcessRequest(
                 Setup.Get("LaunchAdvanceNoJavaw"),
                 McLaunchJavaSelected.Installation.JavaExePath,
@@ -2209,26 +2216,26 @@ NextInstance:
 
         '启动信息
         Dim GameProcess = New Process()
-        Dim StartInfo As New ProcessStartInfo(runtimePlan.ExecutablePath)
+        Dim StartInfo As New ProcessStartInfo(shellPlan.FileName)
 
         '设置环境变量
-        StartInfo.EnvironmentVariables("Path") = runtimePlan.PathEnvironmentValue
-        StartInfo.EnvironmentVariables("appdata") = runtimePlan.AppDataEnvironmentValue
+        StartInfo.EnvironmentVariables("Path") = shellPlan.PathEnvironmentValue
+        StartInfo.EnvironmentVariables("appdata") = shellPlan.AppDataEnvironmentValue
 
         '设置其他参数
-        StartInfo.WorkingDirectory = runtimePlan.WorkingDirectory
-        StartInfo.UseShellExecute = False
-        StartInfo.RedirectStandardOutput = True
-        StartInfo.RedirectStandardError = True
-        StartInfo.CreateNoWindow = runtimePlan.CreateNoWindow
-        StartInfo.Arguments = runtimePlan.LaunchArguments
+        StartInfo.WorkingDirectory = shellPlan.WorkingDirectory
+        StartInfo.UseShellExecute = shellPlan.UseShellExecute
+        StartInfo.RedirectStandardOutput = shellPlan.RedirectStandardOutput
+        StartInfo.RedirectStandardError = shellPlan.RedirectStandardError
+        StartInfo.CreateNoWindow = shellPlan.CreateNoWindow
+        StartInfo.Arguments = shellPlan.Arguments
         GameProcess.StartInfo = StartInfo
 
         '开始进程
         GameProcess.Start()
-        McLaunchLog("已启动游戏进程：" & StartInfo.FileName)
+        McLaunchLog(shellPlan.StartedLogMessage)
         If Loader.IsAborted Then
-            McLaunchLog("由于取消启动，已强制结束游戏进程") '#1631
+            McLaunchLog(shellPlan.AbortKillLogMessage) '#1631
             GameProcess.Kill()
             Return
         End If
@@ -2237,7 +2244,7 @@ NextInstance:
         '进程优先级处理
         Try
             GameProcess.PriorityBoostEnabled = True
-            Select Case runtimePlan.PriorityKind
+            Select Case shellPlan.PriorityKind
                 Case MinecraftLaunchProcessPriorityKind.AboveNormal
                     GameProcess.PriorityClass = ProcessPriorityClass.AboveNormal
                 Case MinecraftLaunchProcessPriorityKind.BelowNormal
