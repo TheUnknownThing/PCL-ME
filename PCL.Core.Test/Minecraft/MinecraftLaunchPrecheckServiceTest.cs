@@ -76,6 +76,7 @@ public sealed class MinecraftLaunchPrecheckServiceTest
                 MinecraftLaunchPromptActionKind.Continue
             },
             purchasePrompt.Buttons[1].Actions.Select(action => action.Kind).ToArray());
+        Assert.AreEqual(MinecraftLaunchPromptActionKind.Abort, purchasePrompt.Buttons[2].Actions.Single().Kind);
     }
 
     [TestMethod]

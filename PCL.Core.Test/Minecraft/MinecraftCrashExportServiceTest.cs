@@ -91,4 +91,44 @@ public sealed class MinecraftCrashExportServiceTest
             }
         }
     }
+
+    [TestMethod]
+    public void PrepareReportDirectoryStillWritesEnvironmentReportWhenSourceFilesAreMissing()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-crash-export-" + Guid.NewGuid().ToString("N"));
+        var reportDirectory = Path.Combine(root, "Report");
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var result = MinecraftCrashExportService.PrepareReportDirectory(new MinecraftCrashExportRequest(
+                reportDirectory,
+                "2.14.5",
+                "device-456",
+                [new MinecraftCrashExportFile(Path.Combine(root, "missing.log"))],
+                CurrentLauncherLogFilePath: null,
+                new SystemEnvironmentSnapshot(
+                    "Windows",
+                    new Version(10, 0, 19045, 0),
+                    Architecture.X64,
+                    true,
+                    8UL * 1024 * 1024 * 1024,
+                    "CPU",
+                    []),
+                CurrentAccessToken: null,
+                CurrentUserUuid: null,
+                UserProfilePath: null));
+
+            Assert.AreEqual(1, result.WrittenFiles.Count);
+            Assert.AreEqual(Path.Combine(reportDirectory, "环境与启动信息.txt"), result.WrittenFiles.Single());
+            StringAssert.Contains(File.ReadAllText(result.WrittenFiles.Single(), Encoding.UTF8), "识别码：device-456");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, true);
+            }
+        }
+    }
 }

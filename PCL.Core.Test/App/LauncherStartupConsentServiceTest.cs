@@ -49,6 +49,25 @@ public sealed class LauncherStartupConsentServiceTest
     }
 
     [TestMethod]
+    public void EvaluateReturnsSpecialBuildExitPath()
+    {
+        var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
+            LauncherStartupSpecialBuildKind.Ci,
+            IsSpecialBuildHintDisabled: false,
+            HasAcceptedEula: true,
+            IsTelemetryDefault: false));
+
+        var prompt = result.Prompts.Single();
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                LauncherStartupPromptActionKind.OpenUrl,
+                LauncherStartupPromptActionKind.ExitLauncher
+            },
+            prompt.Buttons[1].Actions.Select(action => action.Kind).ToArray());
+    }
+
+    [TestMethod]
     public void EvaluateReturnsTelemetryPromptWithExplicitDecisionActions()
     {
         var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
