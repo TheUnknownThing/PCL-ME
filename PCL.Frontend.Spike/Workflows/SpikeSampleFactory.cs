@@ -199,20 +199,23 @@ internal static class SpikeSampleFactory
     {
         var loginPlan = SpikeLaunchLoginFactory.BuildPlan(inputs.LoginInputs);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(inputs.JavaWorkflowRequest);
-        var javaRuntimeSelection = javaWorkflow.MissingJavaPrompt.DownloadTarget is null
+        var javaRuntimeIndexRequestUrls = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan();
+        var javaRuntimeManifestPlan = javaWorkflow.MissingJavaPrompt.DownloadTarget is null
             ? null
-            : MinecraftJavaRuntimeDownloadService.SelectRuntime(
-                new MinecraftJavaRuntimeSelectionRequest(
+            : MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
+                new MinecraftJavaRuntimeManifestRequestPlanRequest(
                     inputs.JavaRuntimeInputs.IndexJson,
                     inputs.JavaRuntimeInputs.PlatformKey,
-                    javaWorkflow.MissingJavaPrompt.DownloadTarget));
-        var javaRuntimeDownloadPlan = javaRuntimeSelection is null
+                    javaWorkflow.MissingJavaPrompt.DownloadTarget,
+                    MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
+        var javaRuntimeDownloadWorkflowPlan = javaRuntimeManifestPlan is null
             ? null
-            : MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(
-                new MinecraftJavaRuntimeDownloadPlanRequest(
+            : MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+                new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                     inputs.JavaRuntimeInputs.ManifestJson,
                     inputs.JavaRuntimeInputs.RuntimeBaseDirectory,
-                    inputs.JavaRuntimeInputs.IgnoredSha1Hashes));
+                    inputs.JavaRuntimeInputs.IgnoredSha1Hashes,
+                    MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(inputs.ResolutionRequest);
         var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(inputs.ClasspathRequest);
         var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(inputs.NativesDirectoryRequest);
@@ -230,8 +233,9 @@ internal static class SpikeSampleFactory
         return new LaunchSpikePlan(
             inputs.Scenario,
             loginPlan,
-            javaRuntimeSelection,
-            javaRuntimeDownloadPlan,
+            javaRuntimeIndexRequestUrls,
+            javaRuntimeManifestPlan,
+            javaRuntimeDownloadWorkflowPlan,
             javaWorkflow,
             MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, hasSelectedJava: false),
             MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(

@@ -45,11 +45,14 @@ internal static class SpikeRunner
             new("Java Selection", BuildJavaSelectionLines(plan, javaPromptDecision, promptOutcome, postDownloadSelection))
         };
 
-        if (plan.JavaRuntimeSelection is not null && plan.JavaRuntimeDownloadPlan is not null)
+        if (plan.JavaRuntimeManifestPlan is not null && plan.JavaRuntimeDownloadWorkflowPlan is not null)
         {
             sections.Add(new SpikeTranscriptSection(
                 "Java Download Plan",
-                BuildJavaDownloadLines(plan.JavaRuntimeSelection, plan.JavaRuntimeDownloadPlan)));
+                BuildJavaDownloadLines(
+                    plan.JavaRuntimeIndexRequestUrls,
+                    plan.JavaRuntimeManifestPlan,
+                    plan.JavaRuntimeDownloadWorkflowPlan)));
         }
 
         if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
@@ -197,19 +200,24 @@ internal static class SpikeRunner
     }
 
     private static IReadOnlyList<string> BuildJavaDownloadLines(
-        MinecraftJavaRuntimeSelection selection,
-        MinecraftJavaRuntimeDownloadPlan plan)
+        MinecraftJavaRuntimeRequestUrlPlan indexRequestUrls,
+        MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
+        MinecraftJavaRuntimeDownloadWorkflowPlan downloadWorkflowPlan)
     {
+        var selection = manifestPlan.Selection;
+        var downloadPlan = downloadWorkflowPlan.DownloadPlan;
         return
         [
+            $"Index sources: {string.Join(" | ", indexRequestUrls.AllUrls)}",
             $"Platform: {selection.PlatformKey}",
             $"Requested component: {selection.RequestedComponent}",
             $"Resolved component: {selection.ComponentKey}",
             $"Version: {selection.VersionName}",
-            $"Manifest: {selection.ManifestUrl}",
-            $"Runtime directory: {plan.RuntimeBaseDirectory}",
-            $"Planned files: {plan.Files.Count}",
-            ..plan.Files.Take(3).Select(file => $"File: {file.RelativePath} ({file.Size} bytes)")
+            $"Manifest sources: {string.Join(" | ", manifestPlan.RequestUrls.AllUrls)}",
+            $"Runtime directory: {downloadPlan.RuntimeBaseDirectory}",
+            $"Planned files: {downloadWorkflowPlan.Files.Count}",
+            ..downloadWorkflowPlan.Files.Take(3).Select(file =>
+                $"File: {file.RelativePath} ({file.Size} bytes) <= {string.Join(" | ", file.RequestUrls.AllUrls)}")
         ];
     }
 

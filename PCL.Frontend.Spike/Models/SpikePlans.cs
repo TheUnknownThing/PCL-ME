@@ -11,8 +11,9 @@ internal sealed record StartupSpikePlan(
 internal sealed record LaunchSpikePlan(
     string Scenario,
     LaunchLoginSpikePlan LoginPlan,
-    MinecraftJavaRuntimeSelection? JavaRuntimeSelection,
-    MinecraftJavaRuntimeDownloadPlan? JavaRuntimeDownloadPlan,
+    MinecraftJavaRuntimeRequestUrlPlan JavaRuntimeIndexRequestUrls,
+    MinecraftJavaRuntimeManifestRequestPlan? JavaRuntimeManifestPlan,
+    MinecraftJavaRuntimeDownloadWorkflowPlan? JavaRuntimeDownloadWorkflowPlan,
     MinecraftLaunchJavaWorkflowPlan JavaWorkflow,
     MinecraftLaunchJavaSelectionOutcome InitialSelection,
     MinecraftLaunchJavaPromptOutcome AcceptedPromptOutcome,

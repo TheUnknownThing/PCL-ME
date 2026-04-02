@@ -62,7 +62,7 @@ public static class MinecraftJavaRuntimeDownloadService
 
         var ignoredSha1Hashes = request.IgnoredSha1Hashes?.ToHashSet(StringComparer.OrdinalIgnoreCase) ??
                                 [];
-        var baseDirectory = Path.GetFullPath(request.RuntimeBaseDirectory);
+        var baseDirectory = NormalizeBaseDirectory(request.RuntimeBaseDirectory);
         var root = ParseObject(request.ManifestJson);
         var filesNode = root["files"] as JsonObject
                         ?? throw new InvalidOperationException("Java manifest 缺少 files 字段。");
@@ -88,7 +88,7 @@ public static class MinecraftJavaRuntimeDownloadService
             }
 
             var relativePath = file.Key.Replace('\\', '/');
-            var targetPath = Path.GetFullPath(Path.Combine(baseDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+            var targetPath = CombineRuntimePath(baseDirectory, relativePath);
             if (!IsPathWithinDirectory(targetPath, baseDirectory))
             {
                 throw new InvalidOperationException($"{targetPath} 不在 {baseDirectory} 中");
@@ -148,10 +148,48 @@ public static class MinecraftJavaRuntimeDownloadService
         throw new InvalidOperationException($"JSON 中的 {propertyName} 字段不是数字。");
     }
 
+    private static string NormalizeBaseDirectory(string runtimeBaseDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(runtimeBaseDirectory))
+        {
+            throw new ArgumentException("运行时目录不能为空。", nameof(runtimeBaseDirectory));
+        }
+
+        return IsWindowsStyleAbsolutePath(runtimeBaseDirectory)
+            ? runtimeBaseDirectory
+                .Replace('/', '\\')
+                .TrimEnd('\\')
+            : Path.GetFullPath(runtimeBaseDirectory);
+    }
+
+    private static string CombineRuntimePath(string baseDirectory, string relativePath)
+    {
+        if (IsWindowsStyleAbsolutePath(baseDirectory))
+        {
+            return $"{baseDirectory}\\{relativePath.Replace('/', '\\')}";
+        }
+
+        return Path.GetFullPath(Path.Combine(baseDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+    }
+
     private static bool IsPathWithinDirectory(string path, string directory)
     {
-        var normalizedDirectory = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        return path.StartsWith(normalizedDirectory, StringComparison.OrdinalIgnoreCase);
+        if (IsWindowsStyleAbsolutePath(directory))
+        {
+            var normalizedDirectory = directory.TrimEnd('\\', '/') + "\\";
+            return path.StartsWith(normalizedDirectory, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var normalized = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        return path.StartsWith(normalized, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsWindowsStyleAbsolutePath(string path)
+    {
+        return path.Length >= 3 &&
+               char.IsLetter(path[0]) &&
+               path[1] == ':' &&
+               (path[2] == '\\' || path[2] == '/');
     }
 }
 

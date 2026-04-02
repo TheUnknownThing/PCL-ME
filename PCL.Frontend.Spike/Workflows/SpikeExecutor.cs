@@ -165,21 +165,55 @@ internal static class SpikeExecutor
                 new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
         }
 
-        if (plan.JavaRuntimeSelection is not null && plan.JavaRuntimeDownloadPlan is not null)
+        if (plan.JavaRuntimeManifestPlan is not null && plan.JavaRuntimeDownloadWorkflowPlan is not null)
         {
+            var javaDownloadRoot = Path.Combine(workspaceRoot, "_artifacts", "java-download");
+            Directory.CreateDirectory(javaDownloadRoot);
+            createdDirectories.Add(javaDownloadRoot);
+
+            var javaIndexRequestPath = Path.Combine(javaDownloadRoot, "index-request.txt");
+            WriteTextFile(javaIndexRequestPath, BuildUrlPlanText("Java runtime index", plan.JavaRuntimeIndexRequestUrls));
+            writtenFiles.Add(javaIndexRequestPath);
+            artifacts.Add(new SpikeExecutionArtifact("Java index request", javaIndexRequestPath));
+
+            var javaManifestRequestPath = Path.Combine(javaDownloadRoot, "manifest-request.txt");
+            WriteTextFile(javaManifestRequestPath, BuildUrlPlanText("Java runtime manifest", plan.JavaRuntimeManifestPlan.RequestUrls));
+            writtenFiles.Add(javaManifestRequestPath);
+            artifacts.Add(new SpikeExecutionArtifact("Java manifest request", javaManifestRequestPath));
+
             var javaDownloadPlanPath = Path.Combine(workspaceRoot, "_artifacts", "java-download-plan.txt");
             WriteTextFile(
                 javaDownloadPlanPath,
-                BuildJavaDownloadPlanText(plan.JavaRuntimeSelection, plan.JavaRuntimeDownloadPlan));
+                BuildJavaDownloadPlanText(
+                    plan.JavaRuntimeIndexRequestUrls,
+                    plan.JavaRuntimeManifestPlan,
+                    plan.JavaRuntimeDownloadWorkflowPlan));
             writtenFiles.Add(javaDownloadPlanPath);
             artifacts.Add(new SpikeExecutionArtifact("Java download plan", javaDownloadPlanPath));
 
+            var runtimeRoot = MapSamplePath(plan.JavaRuntimeDownloadWorkflowPlan.DownloadPlan.RuntimeBaseDirectory, workspaceRoot);
+            Directory.CreateDirectory(runtimeRoot);
+            createdDirectories.Add(runtimeRoot);
+
+            var materializedJavaFiles = new List<string>();
+            foreach (var filePlan in plan.JavaRuntimeDownloadWorkflowPlan.Files)
+            {
+                var mappedPath = MapSamplePath(filePlan.TargetPath, workspaceRoot);
+                Directory.CreateDirectory(Path.GetDirectoryName(mappedPath)!);
+                createdDirectories.Add(Path.GetDirectoryName(mappedPath)!);
+                WriteTextFile(mappedPath, BuildJavaRuntimeFileContent(filePlan));
+                writtenFiles.Add(mappedPath);
+                materializedJavaFiles.Add(mappedPath);
+            }
+
             sections.Add(new SpikeTranscriptSection(
-                "Java Download Plan",
+                "Java Download Execution",
                 [
-                    $"Resolved component: {plan.JavaRuntimeSelection.ComponentKey}",
-                    $"Runtime directory: {plan.JavaRuntimeDownloadPlan.RuntimeBaseDirectory}",
-                    $"Planned files: {plan.JavaRuntimeDownloadPlan.Files.Count}",
+                    $"Resolved component: {plan.JavaRuntimeManifestPlan.Selection.ComponentKey}",
+                    $"Runtime directory: {runtimeRoot}",
+                    $"Materialized runtime files: {materializedJavaFiles.Count}",
+                    $"Index request artifact: {javaIndexRequestPath}",
+                    $"Manifest request artifact: {javaManifestRequestPath}",
                     $"Plan artifact: {javaDownloadPlanPath}"
                 ]));
         }
@@ -454,20 +488,48 @@ internal static class SpikeExecutor
         return builder.ToString().TrimEnd();
     }
 
-    private static string BuildJavaDownloadPlanText(
-        MinecraftJavaRuntimeSelection selection,
-        MinecraftJavaRuntimeDownloadPlan plan)
+    private static string BuildUrlPlanText(string label, MinecraftJavaRuntimeRequestUrlPlan requestUrls)
     {
         return string.Join(
             Environment.NewLine,
             [
+                $"{label} sources",
+                $"Official={string.Join(" | ", requestUrls.OfficialUrls)}",
+                $"Mirror={string.Join(" | ", requestUrls.MirrorUrls)}"
+            ]);
+    }
+
+    private static string BuildJavaDownloadPlanText(
+        MinecraftJavaRuntimeRequestUrlPlan indexRequestUrls,
+        MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
+        MinecraftJavaRuntimeDownloadWorkflowPlan workflowPlan)
+    {
+        var selection = manifestPlan.Selection;
+        var plan = workflowPlan.DownloadPlan;
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"IndexSources={string.Join(" | ", indexRequestUrls.AllUrls)}",
                 $"Platform={selection.PlatformKey}",
                 $"RequestedComponent={selection.RequestedComponent}",
                 $"ResolvedComponent={selection.ComponentKey}",
                 $"Version={selection.VersionName}",
-                $"Manifest={selection.ManifestUrl}",
+                $"ManifestSources={string.Join(" | ", manifestPlan.RequestUrls.AllUrls)}",
                 $"RuntimeBaseDirectory={plan.RuntimeBaseDirectory}",
-                ..plan.Files.Select(file => $"{file.RelativePath}|{file.TargetPath}|{file.Size}|{file.Sha1}|{file.Url}")
+                ..workflowPlan.Files.Select(file =>
+                    $"{file.RelativePath}|{file.TargetPath}|{file.Size}|{file.Sha1}|{string.Join(" | ", file.RequestUrls.AllUrls)}")
+            ]);
+    }
+
+    private static string BuildJavaRuntimeFileContent(MinecraftJavaRuntimeDownloadRequestFilePlan filePlan)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"downloaded {filePlan.RelativePath}",
+                $"size={filePlan.Size}",
+                $"sha1={filePlan.Sha1}",
+                $"sources={string.Join(" | ", filePlan.RequestUrls.AllUrls)}"
             ]);
     }
 

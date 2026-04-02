@@ -117,9 +117,11 @@ internal static class SpikeTextRenderer
                 new SpikeTranscriptSection(
                     "Java Download",
                     [
-                        $"Resolved component: {plan.JavaRuntimeSelection?.ComponentKey ?? "none"}",
-                        $"Runtime directory: {plan.JavaRuntimeDownloadPlan?.RuntimeBaseDirectory ?? "none"}",
-                        $"Planned files: {plan.JavaRuntimeDownloadPlan?.Files.Count ?? 0}"
+                        $"Index sources: {string.Join(" | ", plan.JavaRuntimeIndexRequestUrls.AllUrls)}",
+                        $"Resolved component: {plan.JavaRuntimeManifestPlan?.Selection.ComponentKey ?? "none"}",
+                        $"Manifest sources: {string.Join(" | ", plan.JavaRuntimeManifestPlan?.RequestUrls.AllUrls ?? ["none"])}",
+                        $"Runtime directory: {plan.JavaRuntimeDownloadWorkflowPlan?.DownloadPlan.RuntimeBaseDirectory ?? "none"}",
+                        $"Planned files: {plan.JavaRuntimeDownloadWorkflowPlan?.Files.Count ?? 0}"
                     ]),
                 new SpikeTranscriptSection(
                     "Launch Composition",

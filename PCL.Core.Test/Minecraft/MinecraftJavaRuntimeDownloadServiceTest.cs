@@ -92,6 +92,31 @@ public sealed class MinecraftJavaRuntimeDownloadServiceTest
     }
 
     [TestMethod]
+    public void BuildDownloadPlanPreservesWindowsStyleRuntimePathsOnNonWindowsHosts()
+    {
+        var result = MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(new MinecraftJavaRuntimeDownloadPlanRequest(
+            """
+            {
+              "files": {
+                "bin/java.exe": {
+                  "downloads": {
+                    "raw": {
+                      "url": "https://example.invalid/bin/java.exe",
+                      "size": 123,
+                      "sha1": "keep-me"
+                    }
+                  }
+                }
+              }
+            }
+            """,
+            @"C:\Minecraft\.minecraft\runtime\jre-legacy"));
+
+        Assert.AreEqual(@"C:\Minecraft\.minecraft\runtime\jre-legacy", result.RuntimeBaseDirectory);
+        Assert.AreEqual(@"C:\Minecraft\.minecraft\runtime\jre-legacy\bin\java.exe", result.Files[0].TargetPath);
+    }
+
+    [TestMethod]
     public void BuildDownloadPlanRejectsPathsOutsideRuntimeDirectory()
     {
         Assert.ThrowsExactly<InvalidOperationException>(() =>
