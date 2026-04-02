@@ -5,8 +5,8 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.Win32;
 using PCL.Core.App.IoC;
+using PCL.Core.App.Essentials.Telemetry;
 using PCL.Core.IO.Net;
 using PCL.Core.IO.Net.Dns;
 using PCL.Core.Logging;
@@ -168,9 +168,7 @@ public sealed partial class TelemetryService
                 UpdateChannel.Dev => "Dev",
                 _ => "Unknown"
             },
-            UsedOfficialPcl =
-                bool.TryParse(Registry.GetValue(@"HKEY_CURRENT_USER\Software\PCL", "SystemEula", "false") as string,
-                    out var officialPcl) && officialPcl,
+            UsedOfficialPcl = OfficialLauncherUsageProbeProvider.Current.HasUsedOfficialLauncher(),
             UsedHmcl = Directory.Exists(Path.Combine(appDataFolder, ".hmcl")),
             UsedBakaXl = Directory.Exists(Path.Combine(appDataFolder, "BakaXL")),
             Memory = KernelInterop.GetPhysicalMemoryBytes().Total,
