@@ -34,18 +34,19 @@ Public Class Application
             PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error
             SecretOnApplicationStart()
             '检查参数调用
-            Dim startupCommand = LauncherStartupCommandService.Parse(Basics.CommandLineArguments)
-            Select Case startupCommand.Kind
-                Case LauncherStartupCommandKind.SetGpuPreference
+            Dim startupCommandPlan = LauncherStartupShellService.ResolveImmediateCommand(Basics.CommandLineArguments)
+            Select Case startupCommandPlan.Kind
+                Case LauncherStartupImmediateCommandKind.Invalid
+                    Throw New ArgumentException(startupCommandPlan.InvalidMessage)
+                Case LauncherStartupImmediateCommandKind.SetGpuPreference
                     '调整显卡设置
                     Try
-                        If Not startupCommand.IsValid Then Throw New ArgumentException("缺少需要设置显卡偏好的可执行文件路径。")
-                        ProcessInterop.SetGpuPreference(startupCommand.Argument)
+                        ProcessInterop.SetGpuPreference(startupCommandPlan.Argument)
                         Environment.Exit(ProcessReturnValues.TaskDone)
                     Catch ex As Exception
                         Environment.Exit(ProcessReturnValues.Fail)
                     End Try
-                Case LauncherStartupCommandKind.OptimizeMemory
+                Case LauncherStartupImmediateCommandKind.OptimizeMemory
                     '内存优化
                     Dim Ram = KernelInterop.GetAvailablePhysicalMemoryBytes()
                     Try
@@ -105,8 +106,9 @@ WaitRetry:
                 FrmStart.Show(False, True)
             End If
             '检测异常环境
-            If bootstrapResult.EnvironmentWarningMessage IsNot Nothing Then
-                MyMsgBox(bootstrapResult.EnvironmentWarningMessage, "环境警告", "我知道了", IsWarn:=True)
+            Dim environmentWarningPrompt = LauncherStartupShellService.GetEnvironmentWarningPrompt(bootstrapResult.EnvironmentWarningMessage)
+            If environmentWarningPrompt IsNot Nothing Then
+                ShowStartupPrompt(environmentWarningPrompt)
             End If
             '设置初始化
             For Each configKey In bootstrapResult.ConfigKeysToLoad
@@ -177,6 +179,18 @@ WaitRetry:
     End Sub
     Private Sub TooltipUnloaded(sender As Object, e As RoutedEventArgs)
         ShowingTooltips.Remove(CType(sender, Border))
+    End Sub
+
+    Private Shared Sub ShowStartupPrompt(prompt As LauncherStartupPrompt)
+        If prompt Is Nothing OrElse prompt.Buttons Is Nothing OrElse prompt.Buttons.Count = 0 Then Return
+
+        MyMsgBox(
+            prompt.Message,
+            prompt.Title,
+            prompt.Buttons(0).Label,
+            If(prompt.Buttons.Count >= 2, prompt.Buttons(1).Label, ""),
+            If(prompt.Buttons.Count >= 3, prompt.Buttons(2).Label, ""),
+            IsWarn:=prompt.IsWarning)
     End Sub
 
     ' 自定义监听器类
