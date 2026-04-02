@@ -923,44 +923,23 @@ NextStack:
                     If File.Exists(FileAddress) Then File.Delete(FileAddress)
                     '输出诊断信息
                     FeedbackInfo()
-                    '复制文件
                     If ExtraFiles IsNot Nothing Then OutputFiles.AddRange(ExtraFiles)
-                    For Each OutputFile In OutputFiles
-                        Dim FileName As String = GetFileNameFromPath(OutputFile)
-                        Dim FileEncoding As Encoding = Nothing
-                        Select Case FileName
-                            Case "LatestLaunch.bat"
-                                FileName = "启动脚本.bat"
-                            Case "RawOutput.log"
-                                FileName = "游戏崩溃前的输出.txt"
-                                FileEncoding = Encoding.UTF8
-                        End Select
-                        If LogWrapper.CurrentLogger.CurrentLogFiles.Last().AfterLast("\") = FileName Then
-                            FileName = "PCL 启动器日志.txt"
-                            FileEncoding = Encoding.UTF8
-                        End If
-                        If File.Exists(OutputFile) Then
-                            If FileEncoding Is Nothing Then FileEncoding = EncodingDetector.DetectEncoding(ReadFileBytes(OutputFile))
-                            Dim FileContent As String = ReadFile(OutputFile, FileEncoding)
-                            FileContent = FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*"))
-                            FileContent = FilterUserName(FileContent, "*")
-                            WriteFile(TempFolder & "Report\" & FileName, FileContent, Encoding:=FileEncoding)
-                            Log($"[Crash] 导出文件：{FileName}，编码：{FileEncoding.HeaderName}")
-                        End If
-                    Next
-                    '输出环境与启动信息
-                    Dim EnvInfo As String = MinecraftCrashReportBuilder.BuildEnvironmentReport(
-                        New MinecraftCrashEnvironmentReportRequest(
+                    Dim currentLauncherLogPath As String = Nothing
+                    If LogWrapper.CurrentLogger.CurrentLogFiles.Any Then currentLauncherLogPath = LogWrapper.CurrentLogger.CurrentLogFiles.Last()
+                    Dim exportResult = MinecraftCrashExportService.PrepareReportDirectory(
+                        New MinecraftCrashExportRequest(
+                            TempFolder & "Report\",
                             VersionBaseName,
                             UniqueAddress,
-                            ReadFile(TempFolder & "Report\PCL 启动器日志.txt"),
-                            ReadFile(TempFolder & "Report\启动脚本.bat"),
-                            SystemEnvironmentInfo.GetSnapshot()))
-                    File.CreateText(TempFolder & "Report\环境与启动信息.txt").Close()
-                    WriteFile(TempFolder & "Report\环境与启动信息.txt", EnvInfo, Encoding:=Encoding.UTF8)
+                            OutputFiles.Distinct.Select(Function(path) New MinecraftCrashExportFile(path)).ToList,
+                            currentLauncherLogPath,
+                            SystemEnvironmentInfo.GetSnapshot(),
+                            McLoginLoader.Output.AccessToken,
+                            McLoginLoader.Output.Uuid,
+                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
                     '导出报告
-                    Compression.ZipFile.CreateFromDirectory(TempFolder & "Report\", FileAddress)
-                    DeleteDirectory(TempFolder & "Report\")
+                    Compression.ZipFile.CreateFromDirectory(exportResult.ReportDirectory, FileAddress)
+                    DeleteDirectory(exportResult.ReportDirectory)
                     Hint("错误报告已导出！", HintType.Finish)
                 Catch ex As Exception
                     Log(ex, "导出错误报告失败", LogLevel.Feedback)
