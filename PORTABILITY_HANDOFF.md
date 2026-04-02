@@ -41,8 +41,12 @@ Latest continuation update:
 - launch-count support prompt policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - prelaunch GPU-preference failure / admin-retry policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup immediate-command shell policy and environment-warning prompt contract now live in `PCL.Core.App.Essentials.LauncherStartupShellService`
+- startup shell composition now lives in `PCL.Core.App.Essentials.LauncherStartupWorkflowService`
+- main-window startup composition now lives in `PCL.Core.App.Essentials.LauncherMainWindowStartupWorkflowService`
 - launcher startup visual application now routes through `Plain Craft Launcher 2/Application.xaml.vb` consuming `LauncherStartupVisualService`
+- launcher startup shell composition now routes through `Plain Craft Launcher 2/Application.xaml.vb` consuming `LauncherStartupWorkflowService`
 - launcher startup open-count milestone application now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherStartupMilestoneService`
+- launcher main-window startup composition now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherMainWindowStartupWorkflowService`
 - launcher startup update-log rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`

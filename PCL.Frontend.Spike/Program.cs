@@ -39,21 +39,23 @@ Console.WriteLine(JsonSerializer.Serialize(payload, jsonOptions));
 
 static object BuildStartupSample()
 {
-    var preparation = LauncherStartupPreparationService.Prepare(
-        new LauncherStartupPreparationRequest(
+    var startupPlan = LauncherStartupWorkflowService.BuildPlan(
+        new LauncherStartupWorkflowRequest(
+            CommandLineArguments: ["--memory"],
             ExecutableDirectory: @"C:\Users\demo\AppData\Local\Temp\PCL\",
             TempDirectory: @"C:\Users\demo\AppData\Local\Temp\PCL\Temp\",
             AppDataDirectory: @"C:\Users\demo\AppData\Roaming\PCL\",
             IsBetaVersion: false,
             DetectedWindowsVersion: new Version(10, 0, 17700),
-            Is64BitOperatingSystem: true));
+            Is64BitOperatingSystem: true,
+            ShowStartupLogo: true));
 
     return new
     {
-        immediateCommand = LauncherStartupShellService.ResolveImmediateCommand(["--memory"]),
-        bootstrap = preparation,
-        environmentPrompt = LauncherStartupShellService.GetEnvironmentWarningPrompt(preparation.EnvironmentWarningMessage),
-        visual = LauncherStartupVisualService.GetVisualPlan(showStartupLogo: true),
+        immediateCommand = startupPlan.ImmediateCommand,
+        bootstrap = startupPlan.Bootstrap,
+        environmentPrompt = startupPlan.EnvironmentWarningPrompt,
+        visual = startupPlan.Visual,
         consent = LauncherStartupConsentService.Evaluate(
             new LauncherStartupConsentRequest(
                 LauncherStartupSpecialBuildKind.Ci,

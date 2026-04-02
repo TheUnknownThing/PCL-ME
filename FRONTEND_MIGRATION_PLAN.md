@@ -47,6 +47,8 @@ These workflow extractions are already done and should be treated as available m
 - startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
 - startup immediate-command shell policy and environment-warning prompt contract are owned by `PCL.Core.App.Essentials.LauncherStartupShellService`
 - startup visual defaults are owned by `PCL.Core.App.Essentials.LauncherStartupVisualService`
+- startup shell composition is owned by `PCL.Core.App.Essentials.LauncherStartupWorkflowService`
+- main-window startup composition is owned by `PCL.Core.App.Essentials.LauncherMainWindowStartupWorkflowService`
 - startup open-count milestone policy is owned by `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - startup update-log prompt policy is owned by `PCL.Core.App.Essentials.LauncherUpdateLogService`
 - fatal log dialog presentation is routed through `PCL.Core.Logging.LogRuntimeHooks` instead of being hardcoded in `PCL.Core.Logging.LogService`

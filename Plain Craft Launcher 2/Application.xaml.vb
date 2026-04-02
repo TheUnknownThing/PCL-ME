@@ -34,7 +34,17 @@ Public Class Application
             PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error
             SecretOnApplicationStart()
             '检查参数调用
-            Dim startupCommandPlan = LauncherStartupShellService.ResolveImmediateCommand(Basics.CommandLineArguments)
+            Dim startupPlan = LauncherStartupWorkflowService.BuildPlan(
+                New LauncherStartupWorkflowRequest(
+                    Basics.CommandLineArguments,
+                    ExePath,
+                    PathTemp,
+                    PathAppdata,
+                    VersionBaseName.Contains("beta"),
+                    NtInterop.GetCurrentOsVersion(),
+                    Not Is32BitSystem,
+                    Setup.Get("UiLauncherLogo")))
+            Dim startupCommandPlan = startupPlan.ImmediateCommand
             Select Case startupCommandPlan.Kind
                 Case LauncherStartupImmediateCommandKind.Invalid
                     Throw New ArgumentException(startupCommandPlan.InvalidMessage)
@@ -62,14 +72,7 @@ Public Class Application
                     End If
             End Select
             '初始化文件结构
-            Dim bootstrapResult = LauncherStartupPreparationService.Prepare(
-                New LauncherStartupPreparationRequest(
-                    ExePath,
-                    PathTemp,
-                    PathAppdata,
-                    VersionBaseName.Contains("beta"),
-                    NtInterop.GetCurrentOsVersion(),
-                    Not Is32BitSystem))
+            Dim bootstrapResult = startupPlan.Bootstrap
             For Each directoryPath In bootstrapResult.DirectoriesToCreate
                 Directory.CreateDirectory(directoryPath)
             Next
@@ -94,7 +97,7 @@ WaitRetry:
             End If
 #End If
             '设置 ToolTipService 默认值
-            Dim visualPlan = LauncherStartupVisualService.GetVisualPlan(Setup.Get("UiLauncherLogo"))
+            Dim visualPlan = startupPlan.Visual
             ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.InitialShowDelayMilliseconds))
             ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.BetweenShowDelayMilliseconds))
             ToolTipService.ShowDurationProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.ShowDurationMilliseconds))
@@ -107,7 +110,7 @@ WaitRetry:
                 FrmStart.Show(False, True)
             End If
             '检测异常环境
-            Dim environmentWarningPrompt = LauncherStartupShellService.GetEnvironmentWarningPrompt(bootstrapResult.EnvironmentWarningMessage)
+            Dim environmentWarningPrompt = startupPlan.EnvironmentWarningPrompt
             If environmentWarningPrompt IsNot Nothing Then
                 RunStartupPrompt(environmentWarningPrompt)
             End If

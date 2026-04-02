@@ -13,6 +13,8 @@ Imports PCL.Core.Utils.OS
 
 Public Class FormMain
 
+    Private ReadOnly _startupWorkflowPlan As LauncherMainWindowStartupWorkflowPlan
+
 #Region "基础"
 
     '更新日志
@@ -51,14 +53,20 @@ Public Class FormMain
             '触发降级
             DowngradeSub(LastVersion)
         End If
-        '版本隔离设置迁移
-        Dim versionIsolationMigration = LauncherStartupVersionIsolationMigrationService.Evaluate(New LauncherStartupVersionIsolationMigrationRequest(
+        _startupWorkflowPlan = LauncherMainWindowStartupWorkflowService.BuildPlan(New LauncherMainWindowStartupWorkflowRequest(
             Not Setup.IsUnset("LaunchArgumentIndieV2"),
             Not Setup.IsUnset("LaunchArgumentIndie"),
             If(Setup.IsUnset("LaunchArgumentIndie"), 0, CInt(Setup.Get("LaunchArgumentIndie"))),
             Not Setup.IsUnset("WindowHeight"),
             CInt(Setup.GetDefault("LaunchArgumentIndie")),
-            CInt(Setup.GetDefault("LaunchArgumentIndieV2"))))
+            CInt(Setup.GetDefault("LaunchArgumentIndieV2")),
+            GetStartupSpecialBuildKind(),
+            Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT") IsNot Nothing,
+            Setup.Get("SystemEula"),
+            Config.System.TelemetryConfig.IsDefault(),
+            Setup.Get("SystemCount")))
+        '版本隔离设置迁移
+        Dim versionIsolationMigration = _startupWorkflowPlan.VersionIsolationMigration
         If versionIsolationMigration.ShouldStoreVersionIsolationV2 Then
             Setup.Set("LaunchArgumentIndieV2", versionIsolationMigration.VersionIsolationV2Value)
             Log(versionIsolationMigration.LogMessage)
@@ -187,12 +195,7 @@ Public Class FormMain
         RunInNewThread(
             Sub()
                 Try
-                    Dim consentResult = LauncherStartupConsentService.Evaluate(New LauncherStartupConsentRequest(
-                        GetStartupSpecialBuildKind(),
-                        Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT") IsNot Nothing,
-                        Setup.Get("SystemEula"),
-                        Config.System.TelemetryConfig.IsDefault()))
-                    For Each prompt In consentResult.Prompts
+                    For Each prompt In _startupWorkflowPlan.Consent.Prompts
                         If Not ModStartupPromptShell.RunStartupPrompt(prompt, Sub() EndProgram(False)) Then Exit For
                     Next
                 Catch ex As Exception
@@ -228,7 +231,7 @@ Public Class FormMain
 
     '根据打开次数触发的事件
     Private Sub RunCountSub()
-        Dim milestoneResult = LauncherStartupMilestoneService.AdvanceStartupCount(Setup.Get("SystemCount"))
+        Dim milestoneResult = _startupWorkflowPlan.Milestone
         Setup.Set("SystemCount", milestoneResult.UpdatedCount)
         If milestoneResult.ShouldAttemptUnlockHiddenTheme AndAlso ThemeUnlock(6, False) Then
             MyMsgBox(milestoneResult.HiddenThemeNotice.Message, milestoneResult.HiddenThemeNotice.Title)
