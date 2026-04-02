@@ -52,6 +52,7 @@ Latest continuation update:
 - Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - Authlib request URL / header / body planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibRequestWorkflowService`
 - Microsoft login request URL / header / body / bearer-token planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftRequestWorkflowService`
+- Microsoft login refresh / XSTS / ownership / profile failure policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftFailureWorkflowService`
 - launch argument window-size planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchResolutionService`
 - launch argument final composition, placeholder application, and quick-play/server append policy now live in `PCL.Core.Minecraft.Launch.MinecraftLaunchArgumentWorkflowService`
 - launch classpath ordering now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchClasspathService`
@@ -101,6 +102,7 @@ Latest continuation update:
 - launcher Microsoft OAuth / XBL / XSTS / profile protocol shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftProtocolService`
 - launcher Authlib validate / refresh / authenticate / metadata request coordination now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibRequestWorkflowService`
 - launcher Microsoft device-code / OAuth refresh / XBL / XSTS / access-token / ownership / profile request coordination now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftRequestWorkflowService`
+- launcher Microsoft refresh / XSTS / ownership / profile failure handling now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftFailureWorkflowService`
 - launcher launch argument window-size planning now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchResolutionService`
 - launcher launch argument final composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchArgumentWorkflowService`
 - launcher launch classpath ordering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchClasspathService`
