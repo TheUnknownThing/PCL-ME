@@ -13,7 +13,7 @@ This plan is ready to hand to another engineer.
 Current estimate:
 
 - portable runtime/core extraction: `complete`
-- backend readiness for a replacement frontend shell: roughly `88%~90%`
+- backend readiness for a replacement frontend shell: roughly `89%~91%`
 
 The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
 
@@ -23,7 +23,7 @@ The project is now also past the point where the extracted backend only exists i
 - `PCL.Core.Backend.Test` now runs portable workflow/service tests on macOS/Linux hosts
 - `PCL.Frontend.Spike` now targets plain `net8.0`, consumes `PCL.Core.Backend`, and gives reviewers a small CLI surface for exercising extracted frontend contracts
 - `PCL.Core` now references `PCL.Core.Backend` for that extracted workflow slice instead of compiling duplicate implementations locally
-- `PCL.Frontend.Spike/README.md` now documents the shell-prototype commands, review workflow, and executable workspace mode
+- `PCL.Frontend.Spike/README.md` now documents the shell-prototype commands, review workflow, executable workspace mode, and file-backed input replay
 
 ## Completed Migration Prerequisites
 
@@ -67,7 +67,7 @@ These workflow extractions are already done and should be treated as available m
 - launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
-- a thin replacement-shell spike exists in `PCL.Frontend.Spike` and can now expose startup / launch / crash workflows in `plan`, `run`, and `execute` modes, with JSON payloads, text-mode shell transcripts, and workspace artifact materialization, without WPF views
+- a thin replacement-shell spike exists in `PCL.Frontend.Spike` and can now expose startup / launch / crash workflows in `plan`, `run`, and `execute` modes, with JSON payloads, text-mode shell transcripts, workspace artifact materialization, and file-backed input replay, without WPF views
 - a portable extracted-backend assembly exists in `PCL.Core.Backend`, and the spike now consumes that assembly instead of the Windows-only `PCL.Core` project
 - launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch prerun `options.txt` target selection and write policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`

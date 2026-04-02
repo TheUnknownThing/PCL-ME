@@ -22,7 +22,7 @@ Latest continuation update:
 - `PCL.Frontend.Spike` now targets plain `net8.0` and runs against `PCL.Core.Backend` instead of `PCL.Core`
 - `PCL.Core` now references `PCL.Core.Backend` and no longer compiles that extracted workflow slice directly, making the portable backend assembly the source of truth for those services
 - launch Java requirement / missing-Java recovery workflow now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaWorkflowService`
-- a thin replacement-shell spike now lives in `PCL.Frontend.Spike`, can exercise extracted startup / launch / crash services without WPF page code, and now exposes `plan` / `run` / `execute` CLI modes with JSON payloads, text-mode shell transcripts, and workspace artifact materialization
+- a thin replacement-shell spike now lives in `PCL.Frontend.Spike`, can exercise extracted startup / launch / crash services without WPF page code, and now exposes `plan` / `run` / `execute` CLI modes with JSON payloads, text-mode shell transcripts, workspace artifact materialization, and file-backed input replay
 - startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`
 - launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
