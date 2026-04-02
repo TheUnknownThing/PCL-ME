@@ -38,6 +38,7 @@ These workflow extractions are already done and should be treated as available m
 - startup version-transition and version-isolation migration policy are owned by `PCL.Core.App.Essentials.LauncherVersionTransitionService` and `LauncherStartupVersionIsolationMigrationService`
 - crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
 - crash export request assembly is owned by `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
+- crash export archive creation is owned by `PCL.Core.Minecraft.MinecraftCrashExportArchiveService`
 - crash result prompt policy and export filename suggestion are owned by `PCL.Core.Minecraft.MinecraftCrashWorkflowService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`

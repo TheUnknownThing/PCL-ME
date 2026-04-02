@@ -36,6 +36,7 @@ Latest continuation update:
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
+- crash-export archive creation now lives in `PCL.Core.Minecraft.MinecraftCrashExportArchiveService`
 - launch-count support prompt policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - prelaunch GPU-preference failure / admin-retry policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup immediate-command shell policy and environment-warning prompt contract now live in `PCL.Core.App.Essentials.LauncherStartupShellService`
@@ -45,6 +46,7 @@ Latest continuation update:
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
+- launcher crash-export archive creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashExportArchiveService`
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
 - launcher prerun `launcher_profiles.json` mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesService`

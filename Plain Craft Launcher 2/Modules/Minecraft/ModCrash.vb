@@ -939,12 +939,10 @@ NextStack:
                     '获取文件路径
                     RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", exportPlan.SuggestedArchiveName, "Minecraft 错误报告(*.zip)|*.zip"))
                     If String.IsNullOrEmpty(FileAddress) Then Return
-                    Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
-                    If File.Exists(FileAddress) Then File.Delete(FileAddress)
-                    Dim exportResult = MinecraftCrashExportService.PrepareReportDirectory(exportPlan.ExportRequest)
-                    '导出报告
-                    Compression.ZipFile.CreateFromDirectory(exportResult.ReportDirectory, FileAddress)
-                    DeleteDirectory(exportResult.ReportDirectory)
+                    MinecraftCrashExportArchiveService.CreateArchive(
+                        New MinecraftCrashExportArchiveRequest(
+                            FileAddress,
+                            exportPlan.ExportRequest))
                     Hint("错误报告已导出！", HintType.Finish)
                 Catch ex As Exception
                     Log(ex, "导出错误报告失败", LogLevel.Feedback)
