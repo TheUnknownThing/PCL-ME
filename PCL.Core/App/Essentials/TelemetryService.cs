@@ -135,6 +135,7 @@ public sealed partial class TelemetryService
     {
         if (!Config.System.Telemetry) return;
         _InitSentry();
+        var runtime = SystemRuntimeInfoSourceProvider.Current.GetSnapshot();
         
         var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
@@ -157,9 +158,9 @@ public sealed partial class TelemetryService
         {
             Tag = "Telemetry",
             Id = Utils.Secret.Identify.LauncherId,
-            Os = Environment.OSVersion.Version.Build,
-            Is64Bit = Environment.Is64BitOperatingSystem,
-            IsArm64 = RuntimeInformation.OSArchitecture.Equals(Architecture.Arm64),
+            Os = runtime.OsVersion.Build,
+            Is64Bit = runtime.Is64BitOperatingSystem,
+            IsArm64 = runtime.OsArchitecture.Equals(Architecture.Arm64),
             Launcher = Basics.VersionName,
             LauncherBranch = Config.Update.UpdateChannel switch
             {
@@ -171,7 +172,7 @@ public sealed partial class TelemetryService
             UsedOfficialPcl = OfficialLauncherUsageProbeProvider.Current.HasUsedOfficialLauncher(),
             UsedHmcl = Directory.Exists(Path.Combine(appDataFolder, ".hmcl")),
             UsedBakaXl = Directory.Exists(Path.Combine(appDataFolder, "BakaXL")),
-            Memory = KernelInterop.GetPhysicalMemoryBytes().Total,
+            Memory = runtime.TotalPhysicalMemoryBytes,
             NatMapBehaviour = natTest?.State.MappingBehavior.ToString(),
             NatFilterBehaviour = natTest?.State.FilteringBehavior.ToString(),
             Ipv6Status = NetworkInterfaceUtils.GetIPv6Status().ToString()
