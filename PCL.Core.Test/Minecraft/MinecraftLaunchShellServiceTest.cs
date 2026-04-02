@@ -79,4 +79,53 @@ public sealed class MinecraftLaunchShellServiceTest
             MinecraftLaunchShellActionKind.None,
             MinecraftLaunchShellService.GetPostLaunchShellAction(LauncherVisibility.DoNothing).Kind);
     }
+
+    [TestMethod]
+    public void GetPostLaunchShellPlanReturnsMusicVideoVisibilityAndCounterPlan()
+    {
+        var result = MinecraftLaunchShellService.GetPostLaunchShellPlan(
+            new MinecraftLaunchPostLaunchShellRequest(
+                LauncherVisibility.HideAndReopen,
+                StopMusicInGame: true,
+                StartMusicInGame: false));
+
+        Assert.AreEqual(MinecraftLaunchMusicActionKind.Pause, result.MusicAction.Kind);
+        Assert.AreEqual("[Music] 已根据设置，在启动后暂停音乐播放", result.MusicAction.LogMessage);
+        Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Pause, result.VideoBackgroundAction.Kind);
+        Assert.AreEqual(MinecraftLaunchShellActionKind.HideLauncher, result.LauncherAction.Kind);
+        Assert.AreEqual(1, result.GlobalLaunchCountIncrement);
+        Assert.AreEqual(1, result.InstanceLaunchCountIncrement);
+    }
+
+    [TestMethod]
+    public void GetWatcherStopShellPlanRestoresLauncherWithoutShutdown()
+    {
+        var result = MinecraftLaunchShellService.GetWatcherStopShellPlan(
+            new MinecraftLaunchWatcherStopShellRequest(
+                LauncherVisibility.HideAndExit,
+                StopMusicInGame: false,
+                StartMusicInGame: true,
+                TriggerLauncherShutdown: false));
+
+        Assert.AreEqual(MinecraftLaunchMusicActionKind.Pause, result.MusicAction.Kind);
+        Assert.AreEqual("[Music] 已根据设置，在结束后暂停音乐播放", result.MusicAction.LogMessage);
+        Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Play, result.VideoBackgroundAction.Kind);
+        Assert.AreEqual(MinecraftLaunchShellActionKind.ShowLauncher, result.LauncherAction.Kind);
+        Assert.AreEqual(0, result.GlobalLaunchCountIncrement);
+        Assert.AreEqual(0, result.InstanceLaunchCountIncrement);
+    }
+
+    [TestMethod]
+    public void GetWatcherStopShellPlanClosesLauncherWhenHideAndExitShouldShutdown()
+    {
+        var result = MinecraftLaunchShellService.GetWatcherStopShellPlan(
+            new MinecraftLaunchWatcherStopShellRequest(
+                LauncherVisibility.HideAndExit,
+                StopMusicInGame: true,
+                StartMusicInGame: false,
+                TriggerLauncherShutdown: true));
+
+        Assert.AreEqual(MinecraftLaunchMusicActionKind.Resume, result.MusicAction.Kind);
+        Assert.AreEqual(MinecraftLaunchShellActionKind.ExitLauncher, result.LauncherAction.Kind);
+    }
 }

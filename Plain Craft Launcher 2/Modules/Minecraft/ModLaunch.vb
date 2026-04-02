@@ -2464,33 +2464,25 @@ NextInstance:
     End Sub
     Private Sub McLaunchEnd()
         McLaunchLog("开始启动结束处理")
+        Dim shellPlan = MinecraftLaunchShellService.GetPostLaunchShellPlan(
+            New MinecraftLaunchPostLaunchShellRequest(
+                Config.Launch.LauncherVisibility,
+                Setup.Get("UiMusicStop"),
+                Setup.Get("UiMusicStart")))
 
         '暂停或开始音乐播放
-        If Setup.Get("UiMusicStop") Then
-            RunInUi(Sub() If MusicPause() Then Log("[Music] 已根据设置，在启动后暂停音乐播放"))
-        ElseIf Setup.Get("UiMusicStart") Then
-            RunInUi(Sub() If MusicResume() Then Log("[Music] 已根据设置，在启动后开始音乐播放"))
-        End If
+        ModLaunchSessionShell.ApplyMusicAction(shellPlan.MusicAction)
         '暂停视频背景播放
-        ModVideoBack.IsGaming = True
-        VideoPause()
+        ModLaunchSessionShell.ApplyVideoBackgroundAction(shellPlan.VideoBackgroundAction)
         '启动器可见性
         McLaunchLog("启动器可见性：" & Setup.Get("LaunchArgumentVisible"))
-        Dim shellAction = MinecraftLaunchShellService.GetPostLaunchShellAction(Config.Launch.LauncherVisibility)
-        If shellAction.LogMessage <> "" Then McLaunchLog(shellAction.LogMessage)
-        Select Case shellAction.Kind
-            Case MinecraftLaunchShellActionKind.ExitLauncher
-                RunInUi(Sub() FrmMain.EndProgram(False))
-            Case MinecraftLaunchShellActionKind.HideLauncher
-                RunInUi(Sub() FrmMain.Hidden = True)
-            Case MinecraftLaunchShellActionKind.MinimizeLauncher
-                RunInUi(Sub() FrmMain.WindowState = WindowState.Minimized)
-        End Select
+        If shellPlan.LauncherAction.LogMessage <> "" Then McLaunchLog(shellPlan.LauncherAction.LogMessage)
+        ModLaunchSessionShell.ApplyLauncherAction(shellPlan.LauncherAction)
 
         '启动计数
-        Setup.Set("SystemLaunchCount", Setup.Get("SystemLaunchCount") + 1)
+        Setup.Set("SystemLaunchCount", Setup.Get("SystemLaunchCount") + shellPlan.GlobalLaunchCountIncrement)
 
-        Setup.Set("VersionLaunchCount", Setup.Get("VersionLaunchCount", McInstanceSelected) + 1, instance:=McInstanceSelected)
+        Setup.Set("VersionLaunchCount", Setup.Get("VersionLaunchCount", McInstanceSelected) + shellPlan.InstanceLaunchCountIncrement, instance:=McInstanceSelected)
 
     End Sub
 

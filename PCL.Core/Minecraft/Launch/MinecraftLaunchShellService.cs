@@ -57,6 +57,26 @@ public static class MinecraftLaunchShellService
             IsWarning: false);
     }
 
+    public static MinecraftGameShellPlan GetPostLaunchShellPlan(MinecraftLaunchPostLaunchShellRequest request)
+    {
+        return new MinecraftGameShellPlan(
+            GetLaunchMusicAction(request.StopMusicInGame, request.StartMusicInGame),
+            new MinecraftLaunchVideoBackgroundShellAction(MinecraftLaunchVideoBackgroundActionKind.Pause),
+            GetPostLaunchShellAction(request.Visibility),
+            GlobalLaunchCountIncrement: 1,
+            InstanceLaunchCountIncrement: 1);
+    }
+
+    public static MinecraftGameShellPlan GetWatcherStopShellPlan(MinecraftLaunchWatcherStopShellRequest request)
+    {
+        return new MinecraftGameShellPlan(
+            GetWatcherStopMusicAction(request.StopMusicInGame, request.StartMusicInGame),
+            new MinecraftLaunchVideoBackgroundShellAction(MinecraftLaunchVideoBackgroundActionKind.Play),
+            GetWatcherStopShellAction(request.Visibility, request.TriggerLauncherShutdown),
+            GlobalLaunchCountIncrement: 0,
+            InstanceLaunchCountIncrement: 0);
+    }
+
     public static MinecraftLaunchShellAction GetPostLaunchShellAction(LauncherVisibility visibility)
     {
         return visibility switch
@@ -75,6 +95,60 @@ public static class MinecraftLaunchShellService
                 string.Empty)
         };
     }
+
+    private static MinecraftLaunchMusicShellAction GetLaunchMusicAction(bool stopMusicInGame, bool startMusicInGame)
+    {
+        if (stopMusicInGame)
+        {
+            return new MinecraftLaunchMusicShellAction(
+                MinecraftLaunchMusicActionKind.Pause,
+                "[Music] 已根据设置，在启动后暂停音乐播放");
+        }
+
+        if (startMusicInGame)
+        {
+            return new MinecraftLaunchMusicShellAction(
+                MinecraftLaunchMusicActionKind.Resume,
+                "[Music] 已根据设置，在启动后开始音乐播放");
+        }
+
+        return MinecraftLaunchMusicShellAction.None;
+    }
+
+    private static MinecraftLaunchMusicShellAction GetWatcherStopMusicAction(bool stopMusicInGame, bool startMusicInGame)
+    {
+        if (stopMusicInGame)
+        {
+            return new MinecraftLaunchMusicShellAction(
+                MinecraftLaunchMusicActionKind.Resume,
+                "[Music] 已根据设置，在结束后开始音乐播放");
+        }
+
+        if (startMusicInGame)
+        {
+            return new MinecraftLaunchMusicShellAction(
+                MinecraftLaunchMusicActionKind.Pause,
+                "[Music] 已根据设置，在结束后暂停音乐播放");
+        }
+
+        return MinecraftLaunchMusicShellAction.None;
+    }
+
+    private static MinecraftLaunchShellAction GetWatcherStopShellAction(LauncherVisibility visibility, bool triggerLauncherShutdown)
+    {
+        return visibility switch
+        {
+            LauncherVisibility.HideAndExit when triggerLauncherShutdown => new MinecraftLaunchShellAction(
+                MinecraftLaunchShellActionKind.ExitLauncher,
+                string.Empty),
+            LauncherVisibility.HideAndExit or LauncherVisibility.HideAndReopen => new MinecraftLaunchShellAction(
+                MinecraftLaunchShellActionKind.ShowLauncher,
+                string.Empty),
+            _ => new MinecraftLaunchShellAction(
+                MinecraftLaunchShellActionKind.None,
+                string.Empty)
+        };
+    }
 }
 
 public sealed record MinecraftLaunchCompletionRequest(
@@ -83,6 +157,17 @@ public sealed record MinecraftLaunchCompletionRequest(
     bool IsScriptExport,
     string? AbortHint);
 
+public sealed record MinecraftLaunchPostLaunchShellRequest(
+    LauncherVisibility Visibility,
+    bool StopMusicInGame,
+    bool StartMusicInGame);
+
+public sealed record MinecraftLaunchWatcherStopShellRequest(
+    LauncherVisibility Visibility,
+    bool StopMusicInGame,
+    bool StartMusicInGame,
+    bool TriggerLauncherShutdown);
+
 public sealed record MinecraftLaunchNotification(
     string Message,
     MinecraftLaunchNotificationKind Kind);
@@ -90,6 +175,23 @@ public sealed record MinecraftLaunchNotification(
 public sealed record MinecraftLaunchFailureDisplay(
     string DialogTitle,
     string LogTitle);
+
+public sealed record MinecraftGameShellPlan(
+    MinecraftLaunchMusicShellAction MusicAction,
+    MinecraftLaunchVideoBackgroundShellAction VideoBackgroundAction,
+    MinecraftLaunchShellAction LauncherAction,
+    int GlobalLaunchCountIncrement,
+    int InstanceLaunchCountIncrement);
+
+public sealed record MinecraftLaunchMusicShellAction(
+    MinecraftLaunchMusicActionKind Kind,
+    string LogMessage)
+{
+    public static MinecraftLaunchMusicShellAction None { get; } = new(MinecraftLaunchMusicActionKind.None, string.Empty);
+}
+
+public sealed record MinecraftLaunchVideoBackgroundShellAction(
+    MinecraftLaunchVideoBackgroundActionKind Kind);
 
 public sealed record MinecraftLaunchShellAction(
     MinecraftLaunchShellActionKind Kind,
@@ -114,5 +216,20 @@ public enum MinecraftLaunchShellActionKind
     None = 0,
     ExitLauncher = 1,
     HideLauncher = 2,
-    MinimizeLauncher = 3
+    MinimizeLauncher = 3,
+    ShowLauncher = 4
+}
+
+public enum MinecraftLaunchMusicActionKind
+{
+    None = 0,
+    Pause = 1,
+    Resume = 2
+}
+
+public enum MinecraftLaunchVideoBackgroundActionKind
+{
+    None = 0,
+    Pause = 1,
+    Play = 2
 }

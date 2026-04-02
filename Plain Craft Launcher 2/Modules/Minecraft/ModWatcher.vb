@@ -1,4 +1,6 @@
-﻿Imports PCL.Core.Logging
+﻿Imports PCL.Core.App
+Imports PCL.Core.Logging
+Imports PCL.Core.Minecraft.Launch
 Imports PCL.Core.Utils.Exts
 
 Public Module ModWatcher
@@ -35,28 +37,18 @@ Public Module ModWatcher
         McLaunchLog("[全局] 已无运行中的 Minecraft")
         HasRunningMinecraft = False
         FrmMain.BtnExtraShutdown.ShowRefresh()
+        Dim shellPlan = MinecraftLaunchShellService.GetWatcherStopShellPlan(
+            New MinecraftLaunchWatcherStopShellRequest(
+                Config.Launch.LauncherVisibility,
+                Setup.Get("UiMusicStop"),
+                Setup.Get("UiMusicStart"),
+                TriggerLauncherShutdown))
         '音乐播放
-        If Setup.Get("UiMusicStop") Then
-            RunInUi(Sub() If MusicResume() Then Log("[Music] 已根据设置，在结束后开始音乐播放"))
-        ElseIf Setup.Get("UiMusicStart") Then
-            RunInUi(Sub() If MusicPause() Then Log("[Music] 已根据设置，在结束后暂停音乐播放"))
-        End If
+        ModLaunchSessionShell.ApplyMusicAction(shellPlan.MusicAction)
         '开始视频背景播放
-        ModVideoBack.IsGaming = False
-        VideoPlay()
+        ModLaunchSessionShell.ApplyVideoBackgroundAction(shellPlan.VideoBackgroundAction)
         '启动器可见性
-        Select Case Setup.Get("LaunchArgumentVisible")
-            Case 2
-                '直接关闭
-                If TriggerLauncherShutdown Then
-                    RunInUi(Sub() FrmMain.EndProgram(False))
-                Else
-                    RunInUi(Sub() FrmMain.Hidden = False)
-                End If
-            Case 3
-                '恢复
-                RunInUi(Sub() FrmMain.Hidden = False)
-        End Select
+        ModLaunchSessionShell.ApplyLauncherAction(shellPlan.LauncherAction)
     End Sub
 
     '实时日志处理
