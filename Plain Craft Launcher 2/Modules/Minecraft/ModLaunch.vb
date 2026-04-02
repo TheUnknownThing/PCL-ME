@@ -1923,76 +1923,28 @@ NextInstance:
 #Region "解压 Natives"
 
     Private Sub McLaunchNatives(Loader As LoaderTask(Of List(Of McLibToken), Integer))
-
-        '创建文件夹
-        Dim Target As String = GetNativesFolder() & "\"
-        Directory.CreateDirectory(Target)
-
-        '解压文件
-        McLaunchLog("正在解压 Natives 文件")
-        Dim ExistFiles As New List(Of String)
-        For Each Native As McLibToken In Loader.Input
-            If Not Native.IsNatives Then Continue For
-            Dim Zip As ZipArchive
-            Try
-                Zip = New ZipArchive(New FileStream(Native.LocalPath, FileMode.Open))
-            Catch ex As InvalidDataException
-                Log(ex, "打开 Natives 文件失败（" & Native.LocalPath & "）")
-                File.Delete(Native.LocalPath)
-                Throw New Exception("无法打开 Natives 文件（" & Native.LocalPath & "），该文件可能已损坏，请重新尝试启动游戏")
-            End Try
-            For Each Entry In Zip.Entries
-                Dim FileName As String = Entry.FullName
-                If FileName.EndsWithF(".dll", True) Then
-                    '实际解压文件的步骤
-                    Dim FilePath As String = Target & FileName
-                    ExistFiles.Add(FilePath)
-                    Dim OriginalFile As New FileInfo(FilePath)
-                    If OriginalFile.Exists Then
-                        If OriginalFile.Length = Entry.Length Then
-                            If ModeDebug Then McLaunchLog("无需解压：" & FilePath)
-                            Continue For
-                        End If
-                        '删除原文件
-                        Try
-                            File.Delete(FilePath)
-                        Catch ex As UnauthorizedAccessException
-                            McLaunchLog("删除原 dll 访问被拒绝，这通常代表有一个 MC 正在运行，跳过解压：" & FilePath)
-                            McLaunchLog("实际的错误信息：" & ex.ToString())
-                            Exit For
-                        End Try
-                    End If
-                    '解压新文件
-                    WriteFile(FilePath, Entry.Open)
-                    McLaunchLog("已解压：" & FilePath)
-                End If
-            Next
-            If Zip IsNot Nothing Then Zip.Dispose()
+        Dim nativeSyncResult = MinecraftLaunchNativesSyncService.Sync(
+            New MinecraftLaunchNativesSyncRequest(
+                GetNativesFolder(),
+                Loader.Input.
+                    Where(Function(native) native.IsNatives).
+                    Select(Function(native) native.LocalPath).
+                    ToList(),
+                ModeDebug))
+        For Each logMessage In nativeSyncResult.LogMessages
+            McLaunchLog(logMessage)
         Next
-
-        '删除多余文件
-        For Each FileName As String In Directory.GetFiles(Target)
-            If ExistFiles.Contains(FileName) Then Continue For
-            Try
-                McLaunchLog("删除：" & FileName)
-                File.Delete(FileName)
-            Catch ex As UnauthorizedAccessException
-                McLaunchLog("删除多余文件访问被拒绝，跳过删除步骤")
-                McLaunchLog("实际的错误信息：" & ex.ToString())
-                Return
-            End Try
-        Next
-
     End Sub
     ''' <summary>
     ''' 获取 Natives 文件夹路径，不以 \ 结尾。
     ''' </summary>
     Private Function GetNativesFolder() As String
-        Dim Result As String = McInstanceSelected.PathInstance & McInstanceSelected.Name & "-natives"
-        If IsGBKEncoding OrElse Result.IsASCII() Then Return Result
-        Result = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\bin\natives"
-        If Result.IsASCII() Then Return Result
-        Return OsDrive & "ProgramData\PCL\natives"
+        Return MinecraftLaunchNativesDirectoryService.ResolvePath(
+            New MinecraftLaunchNativesDirectoryRequest(
+                McInstanceSelected.PathInstance & McInstanceSelected.Name & "-natives",
+                IsGBKEncoding,
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\bin\natives",
+                OsDrive & "ProgramData\PCL\natives"))
     End Function
 
 #End Region

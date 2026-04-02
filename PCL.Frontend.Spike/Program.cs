@@ -93,10 +93,16 @@ static object BuildLaunchSample(string scenario)
             CustomHeadEntries: [@"C:\Minecraft\libraries\override.jar"],
             RetroWrapperPath: @"C:\Minecraft\libraries\retrowrapper\RetroWrapper.jar",
             ClasspathSeparator: ";"));
+    var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(
+        new MinecraftLaunchNativesDirectoryRequest(
+            PreferredInstanceDirectory: @"C:\Minecraft\instances\demo\demo-natives",
+            PreferInstanceDirectory: false,
+            AppDataNativesDirectory: @"C:\Users\demo\AppData\Roaming\.minecraft\bin\natives",
+            FinalFallbackDirectory: @"C:\ProgramData\PCL\natives"));
     var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(
         new MinecraftLaunchReplacementValueRequest(
             ClasspathSeparator: ";",
-            NativesDirectory: @"C:\Minecraft\natives",
+            NativesDirectory: nativesDirectory,
             LibraryDirectory: @"C:\Minecraft\libraries",
             LibrariesDirectory: @"C:\Minecraft\libraries",
             LauncherName: "PCLCE",
@@ -215,6 +221,7 @@ static object BuildLaunchSample(string scenario)
         postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, hasSelectedJava: true),
         resolutionPlan,
         classpathPlan,
+        nativesDirectory,
         replacementPlan,
         argumentPlan,
         prerunPlan,
