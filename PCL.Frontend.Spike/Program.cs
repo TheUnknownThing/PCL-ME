@@ -39,6 +39,7 @@ static object BuildPayload(SpikeCommandOptions options)
     {
         SpikeOutputMode.Plan => BuildPlanPayload(options),
         SpikeOutputMode.Run => BuildRunPayload(options),
+        SpikeOutputMode.Execute => BuildExecutePayload(options),
         _ => throw new InvalidOperationException($"Unsupported mode '{options.Mode}'.")
     };
 }
@@ -77,6 +78,39 @@ static object BuildRunPayload(SpikeCommandOptions options)
     };
 }
 
+static object BuildExecutePayload(SpikeCommandOptions options)
+{
+    var workspaceRoot = ResolveWorkspaceRoot(options.WorkspaceRoot);
+
+    return options.Command switch
+    {
+        SpikeCommandKind.Startup => SpikeExecutor.ExecuteStartup(
+            SpikeSampleFactory.BuildStartupPlan(),
+            workspaceRoot),
+        SpikeCommandKind.Launch => SpikeExecutor.ExecuteLaunch(
+            SpikeSampleFactory.BuildLaunchPlan(options.Scenario),
+            workspaceRoot,
+            options.JavaPromptDecision),
+        SpikeCommandKind.Crash => SpikeExecutor.ExecuteCrash(
+            SpikeSampleFactory.BuildCrashPlan(),
+            workspaceRoot,
+            options.CrashAction),
+        SpikeCommandKind.All => new SpikeExecutionBundle(
+            SpikeExecutor.ExecuteStartup(
+                SpikeSampleFactory.BuildStartupPlan(),
+                Path.Combine(workspaceRoot, "startup")),
+            SpikeExecutor.ExecuteLaunch(
+                SpikeSampleFactory.BuildLaunchPlan(options.Scenario),
+                Path.Combine(workspaceRoot, "launch"),
+                options.JavaPromptDecision),
+            SpikeExecutor.ExecuteCrash(
+                SpikeSampleFactory.BuildCrashPlan(),
+                Path.Combine(workspaceRoot, "crash"),
+                options.CrashAction)),
+        _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
+    };
+}
+
 static JsonSerializerOptions CreateJsonOptions()
 {
     return new JsonSerializerOptions
@@ -84,4 +118,15 @@ static JsonSerializerOptions CreateJsonOptions()
         WriteIndented = true,
         Converters = { new JsonStringEnumConverter() }
     };
+}
+
+static string ResolveWorkspaceRoot(string? requestedWorkspaceRoot)
+{
+    if (!string.IsNullOrWhiteSpace(requestedWorkspaceRoot))
+    {
+        return Path.GetFullPath(requestedWorkspaceRoot);
+    }
+
+    var directoryName = $"spike-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N[..8]}";
+    return Path.Combine(Path.GetTempPath(), "PCL.Frontend.Spike", directoryName);
 }

@@ -9,7 +9,8 @@ internal sealed record SpikeCommandOptions(
     SpikeOutputMode Mode,
     SpikeOutputFormat Format,
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
-    MinecraftCrashOutputPromptActionKind CrashAction);
+    MinecraftCrashOutputPromptActionKind CrashAction,
+    string? WorkspaceRoot);
 
 internal sealed record SpikeParseResult(
     SpikeCommandOptions? Options,
@@ -27,7 +28,8 @@ internal enum SpikeCommandKind
 internal enum SpikeOutputMode
 {
     Plan = 0,
-    Run = 1
+    Run = 1,
+    Execute = 2
 }
 
 internal enum SpikeOutputFormat

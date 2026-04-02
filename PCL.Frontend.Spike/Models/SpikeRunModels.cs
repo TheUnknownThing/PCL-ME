@@ -26,3 +26,34 @@ internal sealed record SpikeTranscript(
 internal sealed record SpikeTranscriptSection(
     string Heading,
     IReadOnlyList<string> Lines);
+
+internal sealed record SpikeExecutionArtifact(
+    string Label,
+    string Path);
+
+internal sealed record SpikeExecutionSummary(
+    string WorkspaceRoot,
+    IReadOnlyList<string> CreatedDirectories,
+    IReadOnlyList<string> WrittenFiles,
+    IReadOnlyList<string> DeletedFiles,
+    IReadOnlyList<SpikeExecutionArtifact> Artifacts);
+
+internal sealed record StartupSpikeExecution(
+    SpikeExecutionSummary Execution,
+    SpikeTranscript Transcript);
+
+internal sealed record LaunchSpikeExecution(
+    MinecraftLaunchJavaPromptDecision JavaPromptDecision,
+    SpikeExecutionSummary Execution,
+    SpikeTranscript Transcript);
+
+internal sealed record CrashSpikeExecution(
+    MinecraftCrashOutputPromptActionKind SelectedAction,
+    SpikeExecutionSummary Execution,
+    IReadOnlyList<string> ArchivedFileNames,
+    SpikeTranscript Transcript);
+
+internal sealed record SpikeExecutionBundle(
+    StartupSpikeExecution Startup,
+    LaunchSpikeExecution Launch,
+    CrashSpikeExecution Crash);

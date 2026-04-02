@@ -19,6 +19,10 @@ internal static class SpikeTextRenderer
             LaunchSpikeRun launchRun => RenderTranscript(launchRun.Transcript),
             CrashSpikeRun crashRun => RenderTranscript(crashRun.Transcript),
             SpikeRunBundle runBundle => RenderRunBundle(runBundle),
+            StartupSpikeExecution startupExecution => RenderTranscript(startupExecution.Transcript),
+            LaunchSpikeExecution launchExecution => RenderTranscript(launchExecution.Transcript),
+            CrashSpikeExecution crashExecution => RenderTranscript(crashExecution.Transcript),
+            SpikeExecutionBundle executionBundle => RenderExecutionBundle(executionBundle),
             _ => payload.ToString() ?? string.Empty
         };
     }
@@ -35,6 +39,17 @@ internal static class SpikeTextRenderer
     }
 
     private static string RenderRunBundle(SpikeRunBundle bundle)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(RenderTranscript(bundle.Startup.Transcript));
+        builder.AppendLine();
+        builder.AppendLine(RenderTranscript(bundle.Launch.Transcript));
+        builder.AppendLine();
+        builder.Append(RenderTranscript(bundle.Crash.Transcript));
+        return builder.ToString();
+    }
+
+    private static string RenderExecutionBundle(SpikeExecutionBundle bundle)
     {
         var builder = new StringBuilder();
         builder.AppendLine(RenderTranscript(bundle.Startup.Transcript));

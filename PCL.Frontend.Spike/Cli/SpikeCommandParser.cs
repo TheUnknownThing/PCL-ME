@@ -15,7 +15,8 @@ internal static class SpikeCommandParser
                 Mode: SpikeOutputMode.Plan,
                 Format: SpikeOutputFormat.Json,
                 JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
-                CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport));
+                CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
+                WorkspaceRoot: null));
         }
 
         if (IsHelpToken(args[0]))
@@ -33,6 +34,7 @@ internal static class SpikeCommandParser
         var format = SpikeOutputFormat.Json;
         var javaPromptDecision = MinecraftLaunchJavaPromptDecision.Download;
         var crashAction = MinecraftCrashOutputPromptActionKind.ExportReport;
+        string? workspaceRoot = null;
 
         var index = 1;
         if (command is SpikeCommandKind.Launch or SpikeCommandKind.All &&
@@ -86,6 +88,9 @@ internal static class SpikeCommandParser
                 case "scenario":
                     scenario = value!.Trim().ToLowerInvariant();
                     break;
+                case "workspace":
+                    workspaceRoot = value;
+                    break;
                 default:
                     return Error($"Unknown option '--{name}'.");
             }
@@ -99,7 +104,8 @@ internal static class SpikeCommandParser
             mode,
             format,
             javaPromptDecision,
-            crashAction));
+            crashAction,
+            workspaceRoot));
     }
 
     public static string GetUsageText()
@@ -108,10 +114,10 @@ internal static class SpikeCommandParser
 PCL.Frontend.Spike
 
 Usage:
-  startup [--mode plan|run] [--format json|text]
-  launch [modern-fabric|legacy-forge] [--mode plan|run] [--format json|text] [--java-prompt download|abort]
-  crash [--mode plan|run] [--format json|text] [--crash-action close|view-log|open-settings|export]
-  all [modern-fabric|legacy-forge] [--mode plan|run] [--format json|text] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export]
+  startup [--mode plan|run|execute] [--format json|text] [--workspace path]
+  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--workspace path]
+  crash [--mode plan|run|execute] [--format json|text] [--crash-action close|view-log|open-settings|export] [--workspace path]
+  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export] [--workspace path]
   help
 
 Defaults:
@@ -164,6 +170,9 @@ Defaults:
                 return true;
             case "run":
                 mode = SpikeOutputMode.Run;
+                return true;
+            case "execute":
+                mode = SpikeOutputMode.Execute;
                 return true;
             default:
                 mode = default;

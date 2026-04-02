@@ -41,12 +41,27 @@ internal static class SpikeRunner
 
         var sections = new List<SpikeTranscriptSection>
         {
-            new("Java Selection", BuildJavaSelectionLines(plan, javaPromptDecision, promptOutcome, postDownloadSelection)),
-            new("Launch Inputs", BuildLaunchInputLines(plan)),
-            new("Prerun File Work", BuildPrerunLines(plan.PrerunPlan)),
-            new("Session Shell", BuildSessionLines(plan.SessionStartPlan)),
-            new("Post Launch", BuildPostLaunchLines(plan.PostLaunchShell, plan.CompletionNotification))
+            new("Java Selection", BuildJavaSelectionLines(plan, javaPromptDecision, promptOutcome, postDownloadSelection))
         };
+
+        if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
+        {
+            sections.Add(new SpikeTranscriptSection(
+                "Outcome",
+                [
+                    "Launch stopped before prerun file work.",
+                    "The frontend would return to the shell without starting the game process."
+                ]));
+
+            return new LaunchSpikeRun(
+                javaPromptDecision,
+                new SpikeTranscript($"Launch Shell Transcript ({plan.Scenario})", sections));
+        }
+
+        sections.Add(new SpikeTranscriptSection("Launch Inputs", BuildLaunchInputLines(plan)));
+        sections.Add(new SpikeTranscriptSection("Prerun File Work", BuildPrerunLines(plan.PrerunPlan)));
+        sections.Add(new SpikeTranscriptSection("Session Shell", BuildSessionLines(plan.SessionStartPlan)));
+        sections.Add(new SpikeTranscriptSection("Post Launch", BuildPostLaunchLines(plan.PostLaunchShell, plan.CompletionNotification)));
 
         return new LaunchSpikeRun(
             javaPromptDecision,

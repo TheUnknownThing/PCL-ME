@@ -1,0 +1,386 @@
+using System.Text;
+using PCL.Core.App.Essentials;
+using PCL.Core.Minecraft;
+using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Spike.Models;
+
+namespace PCL.Frontend.Spike.Workflows;
+
+internal static class SpikeExecutor
+{
+    public static StartupSpikeExecution ExecuteStartup(StartupSpikePlan plan, string workspaceRoot)
+    {
+        Directory.CreateDirectory(workspaceRoot);
+
+        var createdDirectories = new List<string>();
+        foreach (var directory in plan.StartupPlan.Bootstrap.DirectoriesToCreate)
+        {
+            var mappedDirectory = MapSamplePath(directory, workspaceRoot);
+            Directory.CreateDirectory(mappedDirectory);
+            createdDirectories.Add(mappedDirectory);
+        }
+
+        var deletedFiles = new List<string>();
+        foreach (var legacyLogPath in plan.StartupPlan.Bootstrap.LegacyLogFilesToDelete)
+        {
+            var mappedLogPath = MapSamplePath(legacyLogPath, workspaceRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(mappedLogPath)!);
+            File.WriteAllText(mappedLogPath, "legacy log placeholder", new UTF8Encoding(false));
+            File.Delete(mappedLogPath);
+            deletedFiles.Add(mappedLogPath);
+        }
+
+        var artifacts = new List<SpikeExecutionArtifact>();
+        var writtenFiles = new List<string>();
+
+        var configKeyPath = Path.Combine(workspaceRoot, "_artifacts", "loaded-config-keys.txt");
+        WriteTextFile(configKeyPath, string.Join(Environment.NewLine, plan.StartupPlan.Bootstrap.ConfigKeysToLoad));
+        artifacts.Add(new SpikeExecutionArtifact("Loaded config keys", configKeyPath));
+        writtenFiles.Add(configKeyPath);
+
+        var consentPath = Path.Combine(workspaceRoot, "_artifacts", "startup-prompts.txt");
+        WriteTextFile(consentPath, BuildConsentText(plan.Consent));
+        artifacts.Add(new SpikeExecutionArtifact("Startup prompts", consentPath));
+        writtenFiles.Add(consentPath);
+
+        var sections = new List<SpikeTranscriptSection>
+        {
+            new("Workspace",
+            [
+                $"Workspace root: {workspaceRoot}",
+                $"Created directories: {createdDirectories.Count}",
+                $"Deleted legacy logs: {deletedFiles.Count}"
+            ]),
+            new("Artifacts",
+            artifacts.Select(artifact => $"{artifact.Label}: {artifact.Path}").ToArray())
+        };
+
+        if (plan.StartupPlan.EnvironmentWarningPrompt is not null)
+        {
+            sections.Add(new SpikeTranscriptSection(
+                "Environment Prompt",
+                BuildStartupPromptLines(plan.StartupPlan.EnvironmentWarningPrompt)));
+        }
+
+        return new StartupSpikeExecution(
+            new SpikeExecutionSummary(
+                workspaceRoot,
+                createdDirectories,
+                writtenFiles,
+                deletedFiles,
+                artifacts),
+            new SpikeTranscript("Startup Shell Execution", sections));
+    }
+
+    public static LaunchSpikeExecution ExecuteLaunch(
+        LaunchSpikePlan plan,
+        string workspaceRoot,
+        MinecraftLaunchJavaPromptDecision javaPromptDecision)
+    {
+        Directory.CreateDirectory(workspaceRoot);
+
+        var promptOutcome = MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(
+            plan.JavaWorkflow.MissingJavaPrompt,
+            javaPromptDecision);
+
+        var createdDirectories = new List<string>();
+        var writtenFiles = new List<string>();
+        var artifacts = new List<SpikeExecutionArtifact>();
+        var sections = new List<SpikeTranscriptSection>
+        {
+            new("Workspace",
+            [
+                $"Workspace root: {workspaceRoot}",
+                $"Java decision: {javaPromptDecision}",
+                $"Prompt outcome: {promptOutcome.ActionKind}"
+            ])
+        };
+
+        if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
+        {
+            sections.Add(new SpikeTranscriptSection(
+                "Outcome",
+                [
+                    "Launch stopped before prerun file work.",
+                    "No launch files were materialized because the Java prompt resolved to abort."
+                ]));
+
+            return new LaunchSpikeExecution(
+                javaPromptDecision,
+                new SpikeExecutionSummary(workspaceRoot, createdDirectories, writtenFiles, [], artifacts),
+                new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
+        }
+
+        if (plan.PrerunPlan.LauncherProfiles.Path is not null)
+        {
+            var launcherProfilesPath = MapSamplePath(plan.PrerunPlan.LauncherProfiles.Path, workspaceRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(launcherProfilesPath)!);
+            createdDirectories.Add(Path.GetDirectoryName(launcherProfilesPath)!);
+
+            var launcherProfilesJson = plan.PrerunPlan.LauncherProfiles.Workflow.InitialAttempt?.UpdatedProfilesJson ?? "{}";
+            File.WriteAllText(launcherProfilesPath, launcherProfilesJson, new UTF8Encoding(false));
+            writtenFiles.Add(launcherProfilesPath);
+            artifacts.Add(new SpikeExecutionArtifact("launcher_profiles.json", launcherProfilesPath));
+        }
+
+        var optionsPath = MapSamplePath(plan.PrerunPlan.Options.TargetFilePath, workspaceRoot);
+        Directory.CreateDirectory(Path.GetDirectoryName(optionsPath)!);
+        createdDirectories.Add(Path.GetDirectoryName(optionsPath)!);
+        SeedOptionsFile(optionsPath);
+        ApplyOptionsWrites(optionsPath, plan.PrerunPlan.Options.SyncPlan.Writes);
+        writtenFiles.Add(optionsPath);
+        artifacts.Add(new SpikeExecutionArtifact("options.txt", optionsPath));
+
+        var launchScriptPath = Path.Combine(workspaceRoot, "_artifacts", "Launch.bat");
+        WriteTextFile(
+            launchScriptPath,
+            plan.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
+            plan.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding);
+        writtenFiles.Add(launchScriptPath);
+        artifacts.Add(new SpikeExecutionArtifact("Launch batch script", launchScriptPath));
+
+        var startupSummaryPath = Path.Combine(workspaceRoot, "_artifacts", "startup-summary.log");
+        WriteTextFile(startupSummaryPath, string.Join(Environment.NewLine, plan.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines));
+        writtenFiles.Add(startupSummaryPath);
+        artifacts.Add(new SpikeExecutionArtifact("Startup summary log", startupSummaryPath));
+
+        var processCommandPath = Path.Combine(workspaceRoot, "_artifacts", "process-command.txt");
+        WriteTextFile(processCommandPath, BuildProcessCommandText(plan.SessionStartPlan.ProcessShellPlan));
+        writtenFiles.Add(processCommandPath);
+        artifacts.Add(new SpikeExecutionArtifact("Process command summary", processCommandPath));
+
+        sections.Add(new SpikeTranscriptSection(
+            "Artifacts",
+            artifacts.Select(artifact => $"{artifact.Label}: {artifact.Path}").ToArray()));
+        sections.Add(new SpikeTranscriptSection(
+            "Outcome",
+            [
+                $"Materialized options target: {optionsPath}",
+                $"Materialized batch script: {launchScriptPath}",
+                $"Process would start: {plan.SessionStartPlan.ProcessShellPlan.FileName}"
+            ]));
+
+        return new LaunchSpikeExecution(
+            javaPromptDecision,
+            new SpikeExecutionSummary(workspaceRoot, DistinctPaths(createdDirectories), writtenFiles, [], artifacts),
+            new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
+    }
+
+    public static CrashSpikeExecution ExecuteCrash(
+        CrashSpikePlan plan,
+        string workspaceRoot,
+        MinecraftCrashOutputPromptActionKind selectedAction)
+    {
+        Directory.CreateDirectory(workspaceRoot);
+
+        var createdDirectories = new List<string>();
+        var writtenFiles = new List<string>();
+        var artifacts = new List<SpikeExecutionArtifact>();
+        var archivedFileNames = Array.Empty<string>();
+        var sections = new List<SpikeTranscriptSection>
+        {
+            new("Workspace",
+            [
+                $"Workspace root: {workspaceRoot}",
+                $"Selected action: {selectedAction}"
+            ])
+        };
+
+        if (selectedAction != MinecraftCrashOutputPromptActionKind.ExportReport)
+        {
+            sections.Add(new SpikeTranscriptSection(
+                "Outcome",
+                [
+                    "Crash export was not executed.",
+                    "The selected prompt action does not require archive creation."
+                ]));
+
+            return new CrashSpikeExecution(
+                selectedAction,
+                new SpikeExecutionSummary(workspaceRoot, createdDirectories, writtenFiles, [], artifacts),
+                archivedFileNames,
+                new SpikeTranscript("Crash Shell Execution", sections));
+        }
+
+        var inputRoot = Path.Combine(workspaceRoot, "input");
+        Directory.CreateDirectory(inputRoot);
+        createdDirectories.Add(inputRoot);
+
+        var remappedSourceFiles = new List<MinecraftCrashExportFile>();
+        foreach (var sourceFile in plan.ExportPlan.ExportRequest.SourceFiles)
+        {
+            var mappedPath = MapSamplePath(sourceFile.SourcePath, inputRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(mappedPath)!);
+            createdDirectories.Add(Path.GetDirectoryName(mappedPath)!);
+            File.WriteAllText(
+                mappedPath,
+                BuildCrashSourceContent(Path.GetFileName(mappedPath), plan.ExportPlan.ExportRequest),
+                new UTF8Encoding(false));
+            writtenFiles.Add(mappedPath);
+            remappedSourceFiles.Add(new MinecraftCrashExportFile(mappedPath));
+        }
+
+        var launcherLogPath = plan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath is null
+            ? null
+            : MapSamplePath(plan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath, inputRoot);
+        if (launcherLogPath is not null)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(launcherLogPath)!);
+            createdDirectories.Add(Path.GetDirectoryName(launcherLogPath)!);
+            File.WriteAllText(launcherLogPath, "launcher log placeholder", new UTF8Encoding(false));
+            writtenFiles.Add(launcherLogPath);
+        }
+
+        var outputRoot = Path.Combine(workspaceRoot, "output");
+        Directory.CreateDirectory(outputRoot);
+        createdDirectories.Add(outputRoot);
+
+        var exportRequest = plan.ExportPlan.ExportRequest with
+        {
+            ReportDirectory = Path.Combine(outputRoot, "report"),
+            SourceFiles = remappedSourceFiles,
+            CurrentLauncherLogFilePath = launcherLogPath,
+            UserProfilePath = Path.Combine(workspaceRoot, "Users", "demo")
+        };
+
+        var archivePath = Path.Combine(outputRoot, plan.ExportPlan.SuggestedArchiveName);
+        var archiveResult = MinecraftCrashExportArchiveService.CreateArchive(
+            new MinecraftCrashExportArchiveRequest(
+                archivePath,
+                exportRequest));
+        archivedFileNames = archiveResult.ArchivedFileNames.ToArray();
+        writtenFiles.Add(archiveResult.ArchiveFilePath);
+        artifacts.Add(new SpikeExecutionArtifact("Crash archive", archiveResult.ArchiveFilePath));
+
+        sections.Add(new SpikeTranscriptSection(
+            "Artifacts",
+            [
+                $"Crash archive: {archiveResult.ArchiveFilePath}",
+                $"Archived files: {string.Join(", ", archiveResult.ArchivedFileNames)}"
+            ]));
+
+        return new CrashSpikeExecution(
+            selectedAction,
+            new SpikeExecutionSummary(workspaceRoot, DistinctPaths(createdDirectories), writtenFiles, [], artifacts),
+            archivedFileNames,
+            new SpikeTranscript("Crash Shell Execution", sections));
+    }
+
+    private static void ApplyOptionsWrites(string optionsPath, IReadOnlyList<MinecraftLaunchOptionWrite> writes)
+    {
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (File.Exists(optionsPath))
+        {
+            foreach (var line in File.ReadAllLines(optionsPath))
+            {
+                var separatorIndex = line.IndexOf(':');
+                if (separatorIndex <= 0)
+                {
+                    continue;
+                }
+
+                var key = line[..separatorIndex];
+                var value = line[(separatorIndex + 1)..];
+                values[key] = value;
+            }
+        }
+
+        foreach (var write in writes)
+        {
+            values[write.Key] = write.Value;
+        }
+
+        var output = values.Select(pair => $"{pair.Key}:{pair.Value}");
+        File.WriteAllLines(optionsPath, output, new UTF8Encoding(false));
+    }
+
+    private static void SeedOptionsFile(string optionsPath)
+    {
+        if (!File.Exists(optionsPath))
+        {
+            File.WriteAllLines(
+                optionsPath,
+                ["lang:en_us", "fullscreen:false"],
+                new UTF8Encoding(false));
+        }
+    }
+
+    private static string BuildConsentText(LauncherStartupConsentResult consent)
+    {
+        var builder = new StringBuilder();
+        foreach (var prompt in consent.Prompts)
+        {
+            builder.AppendLine(prompt.Title);
+            builder.AppendLine(prompt.Message.ReplaceLineEndings(" "));
+            builder.AppendLine(string.Join(" | ", prompt.Buttons.Select(button => button.Label)));
+            builder.AppendLine();
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildProcessCommandText(MinecraftLaunchProcessShellPlan plan)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"FileName={plan.FileName}",
+                $"Arguments={plan.Arguments}",
+                $"WorkingDirectory={plan.WorkingDirectory}",
+                $"Priority={plan.PriorityKind}",
+                $"PATH={plan.PathEnvironmentValue}",
+                $"APPDATA={plan.AppDataEnvironmentValue}"
+            ]);
+    }
+
+    private static string BuildCrashSourceContent(string fileName, MinecraftCrashExportRequest request)
+    {
+        return fileName switch
+        {
+            "LatestLaunch.bat" => $"echo launching with accessToken {request.CurrentAccessToken} and user profile {request.UserProfilePath}",
+            "RawOutput.log" => $"Raw output with token {request.CurrentAccessToken} and uuid {request.CurrentUserUuid}",
+            _ => $"Crash sidecar file from {fileName} for {request.UniqueAddress}"
+        };
+    }
+
+    private static void WriteTextFile(string path, string content, bool useUtf8Bom = false)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, content, useUtf8Bom ? new UTF8Encoding(true) : new UTF8Encoding(false));
+    }
+
+    private static string MapSamplePath(string samplePath, string workspaceRoot)
+    {
+        var normalizedPath = samplePath.Replace('\\', '/');
+        if (normalizedPath.Length >= 2 &&
+            char.IsLetter(normalizedPath[0]) &&
+            normalizedPath[1] == ':')
+        {
+            normalizedPath = normalizedPath[2..];
+        }
+
+        var segments = normalizedPath
+            .TrimStart('/')
+            .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        return Path.Combine([workspaceRoot, .. segments]);
+    }
+
+    private static string[] DistinctPaths(IEnumerable<string> paths)
+    {
+        return paths
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> BuildStartupPromptLines(LauncherStartupPrompt prompt)
+    {
+        return
+        [
+            $"Prompt title: {prompt.Title}",
+            $"Message: {prompt.Message.ReplaceLineEndings(" ")}",
+            $"Buttons: {string.Join(" | ", prompt.Buttons.Select(button => button.Label))}"
+        ];
+    }
+}
