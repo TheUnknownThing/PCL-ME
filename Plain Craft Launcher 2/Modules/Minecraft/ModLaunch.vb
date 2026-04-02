@@ -2266,25 +2266,33 @@ NextInstance:
     End Sub
 
     Private Sub McLaunchRun(Loader As LoaderTask(Of Integer, Process))
-        Dim noJavaw As Boolean = Setup.Get("LaunchAdvanceNoJavaw") AndAlso McLaunchJavaSelected.Installation.JavawExePath IsNot Nothing
+        Dim runtimePlan = MinecraftLaunchRuntimeService.BuildProcessPlan(
+            New MinecraftLaunchProcessRequest(
+                Setup.Get("LaunchAdvanceNoJavaw"),
+                McLaunchJavaSelected.Installation.JavaExePath,
+                McLaunchJavaSelected.Installation.JavawExePath,
+                ShortenPath(McLaunchJavaSelected.Installation.JavaFolder),
+                Environment.GetEnvironmentVariable("Path"),
+                ShortenPath(McFolderSelected),
+                ShortenPath(McInstanceSelected.PathIndie),
+                McLaunchArgument,
+                Setup.Get("LaunchArgumentPriority")))
 
         '启动信息
         Dim GameProcess = New Process()
-        Dim StartInfo As New ProcessStartInfo(If(noJavaw, McLaunchJavaSelected.Installation.JavaExePath, McLaunchJavaSelected.Installation.JavawExePath))
+        Dim StartInfo As New ProcessStartInfo(runtimePlan.ExecutablePath)
 
         '设置环境变量
-        Dim Paths As New List(Of String)(StartInfo.EnvironmentVariables("Path").Split(";"))
-        Paths.Add(ShortenPath(McLaunchJavaSelected.Installation.JavaFolder))
-        StartInfo.EnvironmentVariables("Path") = Join(Paths.Distinct.ToList, ";")
-        StartInfo.EnvironmentVariables("appdata") = ShortenPath(McFolderSelected)
+        StartInfo.EnvironmentVariables("Path") = runtimePlan.PathEnvironmentValue
+        StartInfo.EnvironmentVariables("appdata") = runtimePlan.AppDataEnvironmentValue
 
         '设置其他参数
-        StartInfo.WorkingDirectory = ShortenPath(McInstanceSelected.PathIndie)
+        StartInfo.WorkingDirectory = runtimePlan.WorkingDirectory
         StartInfo.UseShellExecute = False
         StartInfo.RedirectStandardOutput = True
         StartInfo.RedirectStandardError = True
-        StartInfo.CreateNoWindow = noJavaw
-        StartInfo.Arguments = McLaunchArgument
+        StartInfo.CreateNoWindow = runtimePlan.CreateNoWindow
+        StartInfo.Arguments = runtimePlan.LaunchArguments
         GameProcess.StartInfo = StartInfo
 
         '开始进程
@@ -2300,12 +2308,12 @@ NextInstance:
         '进程优先级处理
         Try
             GameProcess.PriorityBoostEnabled = True
-            Select Case Setup.Get("LaunchArgumentPriority")
-                Case 0 '高
+            Select Case runtimePlan.PriorityKind
+                Case MinecraftLaunchProcessPriorityKind.AboveNormal
                     GameProcess.PriorityClass = ProcessPriorityClass.AboveNormal
-                Case 2 '低
+                Case MinecraftLaunchProcessPriorityKind.BelowNormal
                     GameProcess.PriorityClass = ProcessPriorityClass.BelowNormal
-                Case Else '中
+                Case Else
             End Select
         Catch ex As Exception
             Log(ex, "设置进程优先级失败", LogLevel.Feedback)
@@ -2343,15 +2351,17 @@ NextInstance:
         Next
 
         '获取窗口标题
-        Dim WindowTitle As String = Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected)
-        If WindowTitle.IsNullOrEmpty() AndAlso Not Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected) Then WindowTitle = Setup.Get("LaunchArgumentTitle")
-        WindowTitle = ArgumentReplace(WindowTitle, False)
-
-        'JStack 路径
-        Dim JStackPath As String = McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe"
+        Dim watcherPlan = MinecraftLaunchRuntimeService.BuildWatcherPlan(
+            New MinecraftLaunchWatcherRequest(
+                Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected),
+                Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected),
+                Setup.Get("LaunchArgumentTitle"),
+                McLaunchJavaSelected.Installation.JavaFolder,
+                File.Exists(McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe")))
+        Dim WindowTitle As String = ArgumentReplace(watcherPlan.RawWindowTitleTemplate, False)
 
         '初始化等待
-        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, If(File.Exists(JStackPath), JStackPath, ""), CurrentLaunchOptions.IsTest)
+        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, watcherPlan.JstackExecutablePath, CurrentLaunchOptions.IsTest)
         McLaunchWatcher = Watcher
 
         '显示实时日志
