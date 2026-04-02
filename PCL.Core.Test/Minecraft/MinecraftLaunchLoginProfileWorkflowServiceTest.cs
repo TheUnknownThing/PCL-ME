@@ -133,6 +133,31 @@ public sealed class MinecraftLaunchLoginProfileWorkflowServiceTest
     }
 
     [TestMethod]
+    public void ResolveAuthProfileMutationPreservesLoginCredentialsForRefreshUpdate()
+    {
+        var result = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
+            new MinecraftLaunchAuthProfileMutationRequest(
+                IsExistingProfile: true,
+                SelectedProfileIndex: 1,
+                ServerBaseUrl: "https://auth.example.com/authserver",
+                ServerName: "Example Server",
+                ResultUuid: "uuid-refresh",
+                ResultUsername: "Refreshed Player",
+                AccessToken: "access-refresh",
+                ClientToken: "client-refresh",
+                LoginName: "account@example.com",
+                Password: "password-123"));
+
+        Assert.AreEqual(MinecraftLaunchProfileMutationKind.UpdateSelected, result.Kind);
+        Assert.AreEqual("https://auth.example.com/authserver", result.UpdateProfile!.Server);
+        Assert.AreEqual("Refreshed Player", result.UpdateProfile.Username);
+        Assert.AreEqual("access-refresh", result.UpdateProfile.AccessToken);
+        Assert.AreEqual("client-refresh", result.UpdateProfile.ClientToken);
+        Assert.AreEqual("account@example.com", result.UpdateProfile.LoginName);
+        Assert.AreEqual("password-123", result.UpdateProfile.Password);
+    }
+
+    [TestMethod]
     public void ResolveAuthProfileMutationReturnsCreatePlanForNewProfile()
     {
         var result = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(

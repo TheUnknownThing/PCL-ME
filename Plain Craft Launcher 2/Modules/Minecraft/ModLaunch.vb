@@ -1246,13 +1246,19 @@ LoginFinish:
         Data.Output.Name = LoginJson("selectedProfile")("name").ToString
         Data.Output.Type = "Auth"
         '保存缓存
-        Dim ProfileIndex = ProfileList.IndexOf(SelectedProfile)
-        ProfileList(ProfileIndex).Username = Data.Output.Name
-        ProfileList(ProfileIndex).AccessToken = Data.Output.AccessToken
-        ProfileList(ProfileIndex).ClientToken = Data.Output.ClientToken
-        ProfileList(ProfileIndex).Uuid = Data.Output.Uuid
-        ProfileList(ProfileIndex).Name = Data.Input.UserName
-        ProfileList(ProfileIndex).Password = Data.Input.Password
+        Dim authRefreshMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
+            New MinecraftLaunchAuthProfileMutationRequest(
+                True,
+                GetSelectedProfileIndex(),
+                SelectedProfile.Server,
+                SelectedProfile.ServerName,
+                Data.Output.Uuid,
+                Data.Output.Name,
+                Data.Output.AccessToken,
+                Data.Output.ClientToken,
+                Data.Input.UserName,
+                Data.Input.Password))
+        ApplyProfileMutationPlan(authRefreshMutationPlan)
         ProfileLog("刷新登录成功（Refresh, Authlib）")
     End Sub
     Private Function McLoginRequestLogin(ByRef Data As LoaderTask(Of McLoginServer, McLoginResult)) As Boolean
