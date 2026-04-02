@@ -166,6 +166,26 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
         Assert.AreEqual(MinecraftLaunchJavaPromptDecision.Abort, result.Options[1].Decision);
     }
 
+    [TestMethod]
+    public void BuildMissingJavaPromptDisplaysModernJavaMajorVersion()
+    {
+        var result = MinecraftLaunchJavaPromptService.BuildMissingJavaPrompt(
+            new MinecraftLaunchJavaPromptRequest(
+                new Version(22, 0, 0, 0),
+                new Version(999, 999, 999, 999),
+                HasForge: false,
+                RecommendedComponent: null));
+
+        StringAssert.Contains(result.Message, "Java 22");
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                MinecraftLaunchJavaPromptDecision.Download,
+                MinecraftLaunchJavaPromptDecision.Abort
+            },
+            result.Options.Select(option => option.Decision).ToArray());
+    }
+
     private static MinecraftLaunchJavaRequirementRequest CreateRequirementRequest()
     {
         return new MinecraftLaunchJavaRequirementRequest(

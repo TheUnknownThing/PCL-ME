@@ -84,6 +84,14 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
     }
 
     [TestMethod]
+    public void TryGetMicrosoftXstsErrorPromptReturnsNullForUnhandledResponse()
+    {
+        var result = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt("some other error");
+
+        Assert.IsNull(result);
+    }
+
+    [TestMethod]
     public void GetOwnershipPromptReturnsPurchaseAndCancelOptions()
     {
         var result = MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt();
@@ -177,5 +185,25 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
         Assert.IsTrue(result.NeedsRefresh);
         Assert.AreEqual("选择使用的角色", result.PromptTitle);
         Assert.AreEqual(2, result.PromptOptions.Count);
+    }
+
+    [TestMethod]
+    public void ResolveAuthProfileSelectionUsesServerSelectedProfileWhenPromptNotRequired()
+    {
+        var result = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
+            new MinecraftLaunchAuthProfileSelectionRequest(
+                ForceReselectProfile: false,
+                CachedProfileId: "cached",
+                ServerSelectedProfileId: "server",
+                AvailableProfiles:
+                [
+                    new MinecraftLaunchAuthProfileOption("server", "Server Role"),
+                    new MinecraftLaunchAuthProfileOption("cached", "Cached Role")
+                ]));
+
+        Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.Resolved, result.Kind);
+        Assert.IsFalse(result.NeedsRefresh);
+        Assert.AreEqual("server", result.SelectedProfileId);
+        Assert.AreEqual("Server Role", result.SelectedProfileName);
     }
 }
