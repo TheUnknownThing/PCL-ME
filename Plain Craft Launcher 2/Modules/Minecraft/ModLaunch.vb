@@ -169,13 +169,9 @@ Public Module ModLaunch
             '成功与失败处理
             Select Case LaunchLoader.State
                 Case LoadState.Finished
-                    Hint(McInstanceSelected.Name & " 启动成功！", HintType.Finish)
+                    ShowLaunchCompletionNotification(MinecraftLaunchOutcome.Succeeded)
                 Case LoadState.Aborted
-                    If AbortHint Is Nothing Then
-                        Hint(If(CurrentLaunchOptions?.SaveBatch Is Nothing, "已取消启动！", "已取消导出启动脚本！"), HintType.Info)
-                    Else
-                        Hint(AbortHint, HintType.Finish)
-                    End If
+                    ShowLaunchCompletionNotification(MinecraftLaunchOutcome.Aborted)
                 Case LoadState.Failed
                     Throw LaunchLoader.Error
                 Case Else
@@ -188,7 +184,7 @@ NextInner:
             If CurrentEx.Message.StartsWithF("$") Then
                 '若有以 $ 开头的错误信息，则以此为准显示提示
                 '若错误信息为 $$，则不提示
-                If Not CurrentEx.Message = "$$" Then MyMsgBox(CurrentEx.Message.TrimStart("$"), If(CurrentLaunchOptions?.SaveBatch Is Nothing, "启动失败", "导出启动脚本失败"))
+                If Not CurrentEx.Message = "$$" Then MyMsgBox(CurrentEx.Message.TrimStart("$"), GetLaunchFailureDisplay().DialogTitle)
                 Throw
             ElseIf CurrentEx.InnerException IsNot Nothing Then
                 '检查下一级错误
@@ -197,13 +193,33 @@ NextInner:
             Else
                 '没有特殊处理过的错误信息
                 McLaunchLog("错误：" & ex.ToString())
+                Dim failureDisplay = GetLaunchFailureDisplay()
                 Log(ex,
-                    If(CurrentLaunchOptions?.SaveBatch Is Nothing, "Minecraft 启动失败", "导出启动脚本失败"), LogLevel.Msgbox,
-                    If(CurrentLaunchOptions?.SaveBatch Is Nothing, "启动失败", "导出启动脚本失败"))
+                    failureDisplay.LogTitle, LogLevel.Msgbox,
+                    failureDisplay.DialogTitle)
                 Throw
             End If
         End Try
     End Sub
+
+    Private Sub ShowLaunchCompletionNotification(outcome As MinecraftLaunchOutcome)
+        Dim notification = MinecraftLaunchShellService.GetCompletionNotification(
+            New MinecraftLaunchCompletionRequest(
+                If(McInstanceSelected?.Name, ""),
+                outcome,
+                CurrentLaunchOptions?.SaveBatch IsNot Nothing,
+                AbortHint))
+        Select Case notification.Kind
+            Case MinecraftLaunchNotificationKind.Info
+                Hint(notification.Message, HintType.Info)
+            Case MinecraftLaunchNotificationKind.Finish
+                Hint(notification.Message, HintType.Finish)
+        End Select
+    End Sub
+
+    Private Function GetLaunchFailureDisplay() As MinecraftLaunchFailureDisplay
+        Return MinecraftLaunchShellService.GetFailureDisplay(CurrentLaunchOptions?.SaveBatch IsNot Nothing)
+    End Function
 
 #End Region
 
@@ -2507,21 +2523,15 @@ NextInstance:
         VideoPause()
         '启动器可见性
         McLaunchLog("启动器可见性：" & Setup.Get("LaunchArgumentVisible"))
-        Select Case Setup.Get("LaunchArgumentVisible")
-            Case 0
-                '直接关闭
-                McLaunchLog("已根据设置，在启动后关闭启动器")
+        Dim shellAction = MinecraftLaunchShellService.GetPostLaunchShellAction(Config.Launch.LauncherVisibility)
+        If shellAction.LogMessage <> "" Then McLaunchLog(shellAction.LogMessage)
+        Select Case shellAction.Kind
+            Case MinecraftLaunchShellActionKind.ExitLauncher
                 RunInUi(Sub() FrmMain.EndProgram(False))
-            Case 2, 3
-                '隐藏
-                McLaunchLog("已根据设置，在启动后隐藏启动器")
+            Case MinecraftLaunchShellActionKind.HideLauncher
                 RunInUi(Sub() FrmMain.Hidden = True)
-            Case 4
-                '最小化
-                McLaunchLog("已根据设置，在启动后最小化启动器")
+            Case MinecraftLaunchShellActionKind.MinimizeLauncher
                 RunInUi(Sub() FrmMain.WindowState = WindowState.Minimized)
-            Case 5
-                '啥都不干
         End Select
 
         '启动计数
