@@ -10,7 +10,8 @@ internal sealed record SpikeCommandOptions(
     SpikeOutputFormat Format,
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
     MinecraftCrashOutputPromptActionKind CrashAction,
-    string? WorkspaceRoot);
+    string? WorkspaceRoot,
+    string? InputRoot);
 
 internal sealed record SpikeParseResult(
     SpikeCommandOptions? Options,

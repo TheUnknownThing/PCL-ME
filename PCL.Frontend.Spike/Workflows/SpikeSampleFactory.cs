@@ -10,9 +10,9 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class SpikeSampleFactory
 {
-    public static StartupSpikePlan BuildStartupPlan()
+    public static StartupSpikeInputs CreateDefaultStartupInputs()
     {
-        var startupPlan = LauncherStartupWorkflowService.BuildPlan(
+        return new StartupSpikeInputs(
             new LauncherStartupWorkflowRequest(
                 CommandLineArguments: ["--memory"],
                 ExecutableDirectory: @"C:\Users\demo\AppData\Local\Temp\PCL\",
@@ -21,23 +21,33 @@ internal static class SpikeSampleFactory
                 IsBetaVersion: false,
                 DetectedWindowsVersion: new Version(10, 0, 17700),
                 Is64BitOperatingSystem: true,
-                ShowStartupLogo: true));
-
-        var consent = LauncherStartupConsentService.Evaluate(
+                ShowStartupLogo: true),
             new LauncherStartupConsentRequest(
                 LauncherStartupSpecialBuildKind.Ci,
                 IsSpecialBuildHintDisabled: false,
                 HasAcceptedEula: false,
                 IsTelemetryDefault: true));
+    }
+
+    public static StartupSpikePlan BuildStartupPlan(StartupSpikeInputs inputs)
+    {
+        var startupPlan = LauncherStartupWorkflowService.BuildPlan(inputs.StartupWorkflowRequest);
+        var consent = LauncherStartupConsentService.Evaluate(inputs.StartupConsentRequest);
 
         return new StartupSpikePlan(startupPlan, consent);
     }
 
-    public static LaunchSpikePlan BuildLaunchPlan(string scenario)
+    public static StartupSpikePlan BuildStartupPlan()
     {
-        var javaWorkflow = BuildJavaWorkflowPlan(scenario);
-        var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(
-            new MinecraftLaunchResolutionRequest(
+        return BuildStartupPlan(CreateDefaultStartupInputs());
+    }
+
+    public static LaunchSpikeInputs CreateDefaultLaunchInputs(string scenario)
+    {
+        return new LaunchSpikeInputs(
+            Scenario: scenario,
+            JavaWorkflowRequest: BuildJavaWorkflowRequest(scenario),
+            ResolutionRequest: new MinecraftLaunchResolutionRequest(
                 WindowMode: 3,
                 LauncherWindowWidth: null,
                 LauncherWindowHeight: null,
@@ -49,9 +59,8 @@ internal static class SpikeSampleFactory
                 JavaRevision: 0,
                 HasOptiFine: false,
                 HasForge: false,
-                DpiScale: 1));
-        var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(
-            new MinecraftLaunchClasspathRequest(
+                DpiScale: 1),
+            ClasspathRequest: new MinecraftLaunchClasspathRequest(
                 Libraries:
                 [
                     new MinecraftLaunchClasspathLibrary("com.cleanroommc:cleanroom:0.2.4-alpha", @"C:\Minecraft\libraries\cleanroom.jar", false),
@@ -60,17 +69,15 @@ internal static class SpikeSampleFactory
                 ],
                 CustomHeadEntries: [@"C:\Minecraft\libraries\override.jar"],
                 RetroWrapperPath: @"C:\Minecraft\libraries\retrowrapper\RetroWrapper.jar",
-                ClasspathSeparator: ";"));
-        var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(
-            new MinecraftLaunchNativesDirectoryRequest(
+                ClasspathSeparator: ";"),
+            NativesDirectoryRequest: new MinecraftLaunchNativesDirectoryRequest(
                 PreferredInstanceDirectory: @"C:\Minecraft\instances\demo\demo-natives",
                 PreferInstanceDirectory: false,
                 AppDataNativesDirectory: @"C:\Users\demo\AppData\Roaming\.minecraft\bin\natives",
-                FinalFallbackDirectory: @"C:\ProgramData\PCL\natives"));
-        var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(
-            new MinecraftLaunchReplacementValueRequest(
+                FinalFallbackDirectory: @"C:\ProgramData\PCL\natives"),
+            ReplacementValueRequest: new MinecraftLaunchReplacementValueRequest(
                 ClasspathSeparator: ";",
-                NativesDirectory: nativesDirectory,
+                NativesDirectory: @"C:\Minecraft\instances\demo\demo-natives",
                 LibraryDirectory: @"C:\Minecraft\libraries",
                 LibrariesDirectory: @"C:\Minecraft\libraries",
                 LauncherName: "PCLCE",
@@ -84,13 +91,12 @@ internal static class SpikeSampleFactory
                 AuthUuid: "uuid",
                 AccessToken: "token",
                 UserType: "msa",
-                ResolutionWidth: resolutionPlan.Width,
-                ResolutionHeight: resolutionPlan.Height,
+                ResolutionWidth: 1280,
+                ResolutionHeight: 720,
                 GameAssetsDirectory: @"C:\Minecraft\assets\virtual\legacy",
                 AssetsIndexName: "8",
-                Classpath: classpathPlan.JoinedClasspath));
-        var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(
-            new MinecraftLaunchPrerunWorkflowRequest(
+                Classpath: "C:\\Minecraft\\libraries\\override.jar;C:\\Minecraft\\libraries\\cleanroom.jar;C:\\Minecraft\\libraries\\retrowrapper\\RetroWrapper.jar;C:\\Minecraft\\libraries\\optifine.jar;C:\\Minecraft\\libraries\\cleanroom.jar;C:\\Minecraft\\libraries\\core.jar"),
+            PrerunWorkflowRequest: new MinecraftLaunchPrerunWorkflowRequest(
                 LauncherProfilesPath: @"C:\Minecraft\.minecraft\launcher_profiles.json",
                 IsMicrosoftLogin: true,
                 ExistingLauncherProfilesJson: "{}",
@@ -105,9 +111,8 @@ internal static class SpikeSampleFactory
                 HasExistingSaves: true,
                 ReleaseTime: new DateTime(2024, 4, 23),
                 LaunchWindowType: 0,
-                AutoChangeLanguage: true));
-        var sessionStartPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(
-            new MinecraftLaunchSessionStartWorkflowRequest(
+                AutoChangeLanguage: true),
+            SessionStartWorkflowRequest: new MinecraftLaunchSessionStartWorkflowRequest(
                 new MinecraftLaunchCustomCommandWorkflowRequest(
                     new MinecraftLaunchCustomCommandRequest(
                         JavaMajorVersion: 21,
@@ -158,9 +163,8 @@ internal static class SpikeSampleFactory
                         GlobalWindowTitleTemplate: "{user_type}",
                         JavaFolder: @"C:\Java\bin",
                         JstackExecutableExists: true),
-                    OutputRealTimeLog: true)));
-        var argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(
-            new MinecraftLaunchArgumentPlanRequest(
+                    OutputRealTimeLog: true)),
+            ArgumentPlanRequest: new MinecraftLaunchArgumentPlanRequest(
                 BaseArguments: "--username ${auth_player_name} --versionType ${version_type} --gameDir ${game_directory}",
                 JavaMajorVersion: 21,
                 UseFullscreen: false,
@@ -171,16 +175,43 @@ internal static class SpikeSampleFactory
                     ["${auth_player_name}"] = "DemoPlayer",
                     ["${version_type}"] = "PCL CE",
                     ["${game_directory}"] = @"C:\Minecraft\.minecraft",
-                    ["${resolution_width}"] = resolutionPlan.Width.ToString(),
-                    ["${resolution_height}"] = resolutionPlan.Height.ToString()
+                    ["${resolution_width}"] = "1280",
+                    ["${resolution_height}"] = "720"
                 },
                 WorldName: null,
                 ServerAddress: "play.example.invalid",
                 ReleaseTime: new DateTime(2024, 4, 23),
-                HasOptiFine: false));
+                HasOptiFine: false),
+            PostLaunchShellRequest: new MinecraftLaunchPostLaunchShellRequest(
+                LauncherVisibility.HideAndReopen,
+                StopMusicInGame: true,
+                StartMusicInGame: false),
+            CompletionRequest: new MinecraftLaunchCompletionRequest(
+                InstanceName: "Demo Instance",
+                Outcome: MinecraftLaunchOutcome.Succeeded,
+                IsScriptExport: false,
+                AbortHint: null));
+    }
 
+    public static LaunchSpikePlan BuildLaunchPlan(LaunchSpikeInputs inputs)
+    {
+        var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(inputs.JavaWorkflowRequest);
+        var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(inputs.ResolutionRequest);
+        var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(inputs.ClasspathRequest);
+        var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(inputs.NativesDirectoryRequest);
+        var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(
+            inputs.ReplacementValueRequest with
+            {
+                NativesDirectory = nativesDirectory,
+                ResolutionWidth = resolutionPlan.Width,
+                ResolutionHeight = resolutionPlan.Height,
+                Classpath = classpathPlan.JoinedClasspath
+            });
+        var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(inputs.PrerunWorkflowRequest);
+        var sessionStartPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(inputs.SessionStartWorkflowRequest);
+        var argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(inputs.ArgumentPlanRequest);
         return new LaunchSpikePlan(
-            scenario,
+            inputs.Scenario,
             javaWorkflow,
             MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, hasSelectedJava: false),
             MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(
@@ -195,19 +226,16 @@ internal static class SpikeSampleFactory
             prerunPlan,
             sessionStartPlan,
             MinecraftLaunchShellService.GetPostLaunchShellPlan(
-                new MinecraftLaunchPostLaunchShellRequest(
-                    LauncherVisibility.HideAndReopen,
-                    StopMusicInGame: true,
-                    StartMusicInGame: false)),
-            MinecraftLaunchShellService.GetCompletionNotification(
-                new MinecraftLaunchCompletionRequest(
-                    InstanceName: "Demo Instance",
-                    Outcome: MinecraftLaunchOutcome.Succeeded,
-                    IsScriptExport: false,
-                    AbortHint: null)));
+                inputs.PostLaunchShellRequest),
+            MinecraftLaunchShellService.GetCompletionNotification(inputs.CompletionRequest));
     }
 
-    public static CrashSpikePlan BuildCrashPlan()
+    public static LaunchSpikePlan BuildLaunchPlan(string scenario)
+    {
+        return BuildLaunchPlan(CreateDefaultLaunchInputs(scenario));
+    }
+
+    public static CrashSpikeInputs CreateDefaultCrashInputs()
     {
         var environment = new SystemEnvironmentSnapshot(
             OsDescription: "Windows 11 Pro",
@@ -222,38 +250,48 @@ internal static class SpikeSampleFactory
                 new SystemGpuInfo("AMD Radeon(TM) Graphics", 512, "31.0")
             ]);
 
-        return new CrashSpikePlan(
-            MinecraftCrashWorkflowService.BuildOutputPrompt(
-                new MinecraftCrashOutputPromptRequest(
-                    ResultText: "Mod 加载器版本与 Mod 不兼容: DemoMod requires a newer loader.",
-                    IsManualAnalysis: false,
-                    HasDirectFile: true,
-                    CanOpenModLoaderSettings: true)),
-            MinecraftCrashExportWorkflowService.CreatePlan(
-                new MinecraftCrashExportPlanRequest(
-                    Timestamp: new DateTime(2026, 4, 2, 10, 15, 0),
-                    ReportDirectory: @"C:\PCL\CrashReport\2026-04-02\",
-                    LauncherVersionName: "2.11.0",
-                    UniqueAddress: "demo-unique-address",
-                    SourceFilePaths:
-                    [
-                        @"C:\PCL\LatestLaunch.bat",
-                        @"C:\PCL\RawOutput.log"
-                    ],
-                    AdditionalSourceFilePaths:
-                    [
-                        @"C:\PCL\Logs\latest.log"
-                    ],
-                    CurrentLauncherLogFilePath: @"C:\PCL\Logs\PCL.log",
-                    Environment: environment,
-                    CurrentAccessToken: "12345abcdefghijklmnopqrstuvwxyz67890",
-                    CurrentUserUuid: "demo-uuid",
-                    UserProfilePath: @"C:\Users\demo")));
+        return new CrashSpikeInputs(
+            new MinecraftCrashOutputPromptRequest(
+                ResultText: "Mod 加载器版本与 Mod 不兼容: DemoMod requires a newer loader.",
+                IsManualAnalysis: false,
+                HasDirectFile: true,
+                CanOpenModLoaderSettings: true),
+            new MinecraftCrashExportPlanRequest(
+                Timestamp: new DateTime(2026, 4, 2, 10, 15, 0),
+                ReportDirectory: @"C:\PCL\CrashReport\2026-04-02\",
+                LauncherVersionName: "2.11.0",
+                UniqueAddress: "demo-unique-address",
+                SourceFilePaths:
+                [
+                    @"C:\PCL\LatestLaunch.bat",
+                    @"C:\PCL\RawOutput.log"
+                ],
+                AdditionalSourceFilePaths:
+                [
+                    @"C:\PCL\Logs\latest.log"
+                ],
+                CurrentLauncherLogFilePath: @"C:\PCL\Logs\PCL.log",
+                Environment: environment,
+                CurrentAccessToken: "12345abcdefghijklmnopqrstuvwxyz67890",
+                CurrentUserUuid: "demo-uuid",
+                UserProfilePath: @"C:\Users\demo"));
     }
 
-    private static MinecraftLaunchJavaWorkflowPlan BuildJavaWorkflowPlan(string scenario)
+    public static CrashSpikePlan BuildCrashPlan(CrashSpikeInputs inputs)
     {
-        var request = scenario switch
+        return new CrashSpikePlan(
+            MinecraftCrashWorkflowService.BuildOutputPrompt(inputs.OutputPromptRequest),
+            MinecraftCrashExportWorkflowService.CreatePlan(inputs.ExportPlanRequest));
+    }
+
+    public static CrashSpikePlan BuildCrashPlan()
+    {
+        return BuildCrashPlan(CreateDefaultCrashInputs());
+    }
+
+    private static MinecraftLaunchJavaWorkflowRequest BuildJavaWorkflowRequest(string scenario)
+    {
+        return scenario switch
         {
             "legacy-forge" => new MinecraftLaunchJavaWorkflowRequest(
                 IsVersionInfoValid: true,
@@ -284,7 +322,5 @@ internal static class SpikeSampleFactory
                 MojangRecommendedMajorVersion: 21,
                 MojangRecommendedComponent: "jre-legacy")
         };
-
-        return MinecraftLaunchJavaWorkflowService.BuildPlan(request);
     }
 }
