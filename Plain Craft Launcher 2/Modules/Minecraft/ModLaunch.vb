@@ -758,14 +758,10 @@ NextInner:
 Retry:
         McLaunchLog("开始正版验证 Step 1/6（原始登录）")
         Dim PrepareJson As JObject
-        Dim parameters As New Dictionary(Of String, String) From {
-            {"client_id", OAuthClientId},
-            {"tenant", "/consumers"},
-            {"scope", "XboxLive.signin offline_access"}
-        }
+        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(OAuthClientId)
         Using response = HttpRequest.
-            CreatePost("https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode").
-            WithFormContent(parameters).
+            CreatePost(requestPlan.Url).
+            WithFormContent(requestPlan.Body).
             SendAsync().
             GetAwaiter().
             GetResult()
@@ -803,15 +799,10 @@ Retry:
         If String.IsNullOrEmpty(Code) Then Throw New ArgumentException("传入的 Code 为空", NameOf(Code))
         Dim Result As String = Nothing
         Try
-            Dim parameters As New Dictionary(Of String, String) From {
-                {"client_id", OAuthClientId},
-                {"refresh_token", Code},
-                {"grant_type", "refresh_token"},
-                {"scope", "XboxLive.signin offline_access"}
-            }
+            Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOAuthRefreshRequest(Code, OAuthClientId)
             Using response = HttpRequest.
-                CreatePost("https://login.live.com/oauth20_token.srf").
-                WithFormContent(parameters).
+                CreatePost(requestPlan.Url).
+                WithFormContent(requestPlan.Body).
                 SendAsync().
                 GetAwaiter().
                 GetResult()
@@ -849,12 +840,12 @@ Retry:
     Private Function MsLoginStep2(accessToken As String) As MicrosoftStringStepResult
         ProfileLog("开始正版验证 Step 2/6: 获取 XBLToken")
         If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
-        Dim requestData = MinecraftLaunchMicrosoftProtocolService.BuildXboxLiveTokenRequest(accessToken)
+        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(accessToken)
         Dim Result As String = Nothing
         Try
             Using response = HttpRequest.
-                CreatePost("https://user.auth.xboxlive.com/user/authenticate").
-                WithJsonContent(requestData).
+                CreatePost(requestPlan.Url).
+                WithJsonContent(JsonNode.Parse(requestPlan.Body)).
                 SendAsync().
                 GetAwaiter().
                 GetResult()
@@ -881,10 +872,10 @@ Retry:
     Private Function MsLoginStep3(xblTokenResult As MicrosoftStringStepResult) As MicrosoftXstsStepResult
         ProfileLog("开始正版验证 Step 3/6: 获取 XSTSToken")
         If String.IsNullOrEmpty(xblTokenResult.Value) Then Throw New ArgumentException("XBLToken 为空，无法获取数据", NameOf(xblTokenResult))
-        Dim requestData = MinecraftLaunchMicrosoftProtocolService.BuildXstsTokenRequest(xblTokenResult.Value)
+        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(xblTokenResult.Value)
         Dim result As String
-        Using response = HttpRequest.CreatePost("https://xsts.auth.xboxlive.com/xsts/authorize").
-                WithJsonContent(requestData).
+        Using response = HttpRequest.CreatePost(requestPlan.Url).
+                WithJsonContent(JsonNode.Parse(requestPlan.Body)).
                 SendAsync().
                 GetAwaiter().
                 GetResult()
@@ -921,12 +912,12 @@ Retry:
     Private Function MsLoginStep4(tokens As MicrosoftXstsStepResult) As MicrosoftStringStepResult
         ProfileLog("开始正版验证 Step 4/6: 获取 Minecraft AccessToken")
         If String.IsNullOrEmpty(tokens.XstsToken) OrElse String.IsNullOrEmpty(tokens.UserHash) Then Throw New ArgumentException("传入的 XSTSToken 或者 UHS 错误", NameOf(tokens))
-        Dim requestData = MinecraftLaunchMicrosoftProtocolService.BuildMinecraftAccessTokenRequest(tokens.UserHash, tokens.XstsToken)
+        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(tokens.UserHash, tokens.XstsToken)
         Dim Result As String
         Try
             Using response = HttpRequest.
-                CreatePost("https://api.minecraftservices.com/authentication/login_with_xbox").
-                WithJsonContent(requestData).
+                CreatePost(requestPlan.Url).
+                WithJsonContent(JsonNode.Parse(requestPlan.Body)).
                 SendAsync().
                 GetAwaiter().
                 GetResult()
@@ -965,10 +956,11 @@ Retry:
     Private Sub MsLoginStep5(accessToken As String)
         ProfileLog("开始正版验证 Step 5/6: 验证账户是否持有 MC")
         If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
+        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(accessToken)
         Dim result As String = ""
         Try
-            Using response = HttpRequest.Create("https://api.minecraftservices.com/entitlements/mcstore").
-                WithBearerToken(accessToken).
+            Using response = HttpRequest.Create(requestPlan.Url).
+                WithBearerToken(requestPlan.BearerToken).
                 SendAsync().
                 GetAwaiter().
                 GetResult()
@@ -993,11 +985,12 @@ Retry:
     Private Function MsLoginStep6(AccessToken As String) As MicrosoftProfileStepResult
         ProfileLog("开始正版验证 Step 6/6: 获取玩家 ID 与 UUID 等相关信息")
         If String.IsNullOrEmpty(AccessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(AccessToken))
+        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(AccessToken)
         Dim Result As String
         Try
             Using response = HttpRequest.
-                Create("https://api.minecraftservices.com/minecraft/profile").
-                WithBearerToken(AccessToken).
+                Create(requestPlan.Url).
+                WithBearerToken(requestPlan.BearerToken).
                 SendAsync().
                 GetAwaiter().
                 GetResult()
@@ -1129,12 +1122,16 @@ Retry:
             Name = SelectedProfile.Username
         End If
         '发送登录请求
+        Dim requestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildValidateRequest(
+            input.BaseUrl,
+            AccessToken,
+            ClientToken)
         NetRequestRetry(
-            Url:=input.BaseUrl & "/validate",
-            Method:="POST",
-            Data:=MinecraftLaunchAuthlibProtocolService.BuildValidateRequestJson(AccessToken, ClientToken),
-            Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
-            ContentType:="application/json") '没有返回值的
+            Url:=requestPlan.Url,
+            Method:=requestPlan.Method,
+            Data:=requestPlan.Body,
+            Headers:=New Dictionary(Of String, String)(requestPlan.Headers),
+            ContentType:=requestPlan.ContentType) '没有返回值的
         '不更改缓存，直接结束
         ProfileLog("验证登录成功（Validate, Authlib")
         Return New McLoginResult With {
@@ -1146,15 +1143,17 @@ Retry:
     End Function
     Private Function McLoginRequestRefresh(input As McLoginServer) As McLoginResult
         ProfileLog("刷新登录开始（Refresh, Authlib")
+        Dim requestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
+            input.BaseUrl,
+            SelectedProfile.Username,
+            SelectedProfile.Uuid,
+            SelectedProfile.AccessToken)
         Dim refreshResponse = MinecraftLaunchAuthlibProtocolService.ParseRefreshResponseJson(NetRequestRetry(
-               Url:=input.BaseUrl & "/refresh",
-               Method:="POST",
-               Data:=MinecraftLaunchAuthlibProtocolService.BuildRefreshRequestJson(
-                   SelectedProfile.Username,
-                   SelectedProfile.Uuid,
-                   SelectedProfile.AccessToken),
-               Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
-               ContentType:="application/json"))
+               Url:=requestPlan.Url,
+               Method:=requestPlan.Method,
+               Data:=requestPlan.Body,
+               Headers:=New Dictionary(Of String, String)(requestPlan.Headers),
+               ContentType:=requestPlan.ContentType))
 
         Dim loginResult = New McLoginResult With {
             .AccessToken = refreshResponse.AccessToken,
@@ -1183,12 +1182,16 @@ Retry:
         Try
             Dim NeedRefresh As Boolean = False
             ProfileLog("登录开始（Login, Authlib）")
+            Dim authenticateRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
+                input.BaseUrl,
+                input.UserName,
+                input.Password)
             Dim authResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(NetRequestRetry(
-                Url:=input.BaseUrl & "/authenticate",
-                Method:="POST",
-                Data:=MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson(input.UserName, input.Password),
-                Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
-                ContentType:="application/json"))
+                Url:=authenticateRequestPlan.Url,
+                Method:=authenticateRequestPlan.Method,
+                Data:=authenticateRequestPlan.Body,
+                Headers:=New Dictionary(Of String, String)(authenticateRequestPlan.Headers),
+                ContentType:=authenticateRequestPlan.ContentType))
             '检查登录结果
             If authResponse.AvailableProfiles.Count = 0 Then
                 ' handled below through the core workflow result
@@ -1225,7 +1228,8 @@ Retry:
                 .Uuid = SelectedId,
                 .Type = "Auth"}
             '获取服务器信息
-            Dim Response As String = NetGetCodeByRequestRetry(input.BaseUrl.Replace("/authserver", ""), Encoding.UTF8)
+            Dim metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(input.BaseUrl)
+            Dim Response As String = NetGetCodeByRequestRetry(metadataRequestPlan.Url, Encoding.UTF8)
             Dim ServerName As String = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(Response)
             Dim authMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
                 New MinecraftLaunchAuthProfileMutationRequest(

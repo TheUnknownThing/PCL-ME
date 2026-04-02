@@ -6,8 +6,6 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class SpikeLaunchLoginFactory
 {
-    private const string MicrosoftClientId = "00000000402b5328";
-
     public static LaunchLoginSpikePlan BuildPlan(LaunchLoginSpikeInputs inputs)
     {
         return inputs.Provider switch
@@ -50,22 +48,15 @@ internal static class SpikeLaunchLoginFactory
 
         var steps = new List<LaunchLoginSpikeStepPlan>();
 
-        var refreshRequestBody = BuildFormBody(
-            new Dictionary<string, string>
-            {
-                ["client_id"] = MicrosoftClientId,
-                ["refresh_token"] = inputs.OAuthRefreshToken,
-                ["grant_type"] = "refresh_token",
-                ["scope"] = "XboxLive.signin offline_access"
-            });
+        var refreshRequestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOAuthRefreshRequest(inputs.OAuthRefreshToken);
         var refreshResponse = MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(inputs.OAuthRefreshResponseJson);
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Refresh OAuth tokens",
             currentStep.Progress,
-            "POST",
-            "https://login.live.com/oauth20_token.srf",
-            "application/x-www-form-urlencoded",
-            refreshRequestBody,
+            refreshRequestPlan.Method,
+            refreshRequestPlan.Url,
+            refreshRequestPlan.ContentType,
+            refreshRequestPlan.Body,
             PrettyJson(inputs.OAuthRefreshResponseJson),
             [
                 $"Refreshed OAuth access token length: {refreshResponse.AccessToken.Length}",
@@ -74,29 +65,29 @@ internal static class SpikeLaunchLoginFactory
         currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterRefreshOAuth(
             MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded);
 
-        var xboxRequest = MinecraftLaunchMicrosoftProtocolService.BuildXboxLiveTokenRequest(refreshResponse.AccessToken);
+        var xboxRequestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(refreshResponse.AccessToken);
         var xboxLiveToken = MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(inputs.XboxLiveResponseJson);
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Request Xbox Live token",
             currentStep.Progress,
-            "POST",
-            "https://user.auth.xboxlive.com/user/authenticate",
-            "application/json",
-            PrettyJson(JsonSerializer.Serialize(xboxRequest)),
+            xboxRequestPlan.Method,
+            xboxRequestPlan.Url,
+            xboxRequestPlan.ContentType,
+            PrettyJson(xboxRequestPlan.Body!),
             PrettyJson(inputs.XboxLiveResponseJson),
             [$"Parsed XBL token length: {xboxLiveToken.Length}"]));
         currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxLiveToken(
             MinecraftLaunchMicrosoftStepOutcome.Succeeded);
 
-        var xstsRequest = MinecraftLaunchMicrosoftProtocolService.BuildXstsTokenRequest(xboxLiveToken);
+        var xstsRequestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(xboxLiveToken);
         var xstsResponse = MinecraftLaunchMicrosoftProtocolService.ParseXstsTokenResponseJson(inputs.XstsResponseJson);
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Request Xbox security token",
             currentStep.Progress,
-            "POST",
-            "https://xsts.auth.xboxlive.com/xsts/authorize",
-            "application/json",
-            PrettyJson(JsonSerializer.Serialize(xstsRequest)),
+            xstsRequestPlan.Method,
+            xstsRequestPlan.Url,
+            xstsRequestPlan.ContentType,
+            PrettyJson(xstsRequestPlan.Body!),
             PrettyJson(inputs.XstsResponseJson),
             [
                 $"Parsed XSTS token length: {xstsResponse.Token.Length}",
@@ -105,7 +96,7 @@ internal static class SpikeLaunchLoginFactory
         currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxSecurityToken(
             MinecraftLaunchMicrosoftStepOutcome.Succeeded);
 
-        var minecraftAccessRequest = MinecraftLaunchMicrosoftProtocolService.BuildMinecraftAccessTokenRequest(
+        var minecraftAccessRequestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(
             xstsResponse.UserHash,
             xstsResponse.Token);
         var minecraftAccessToken = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftAccessTokenResponseJson(
@@ -113,21 +104,22 @@ internal static class SpikeLaunchLoginFactory
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Request Minecraft access token",
             currentStep.Progress,
-            "POST",
-            "https://api.minecraftservices.com/authentication/login_with_xbox",
-            "application/json",
-            PrettyJson(JsonSerializer.Serialize(minecraftAccessRequest)),
+            minecraftAccessRequestPlan.Method,
+            minecraftAccessRequestPlan.Url,
+            minecraftAccessRequestPlan.ContentType,
+            PrettyJson(minecraftAccessRequestPlan.Body!),
             PrettyJson(inputs.MinecraftAccessTokenResponseJson),
             [$"Parsed Minecraft access token length: {minecraftAccessToken.Length}"]));
         currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftAccessToken(
             MinecraftLaunchMicrosoftStepOutcome.Succeeded);
 
         var hasOwnership = MinecraftLaunchMicrosoftProtocolService.HasMinecraftOwnership(inputs.OwnershipResponseJson);
+        var ownershipRequestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(minecraftAccessToken);
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Verify Minecraft ownership",
             currentStep.Progress,
-            "GET",
-            "https://api.minecraftservices.com/entitlements/mcstore",
+            ownershipRequestPlan.Method,
+            ownershipRequestPlan.Url,
             ContentType: null,
             RequestBody: null,
             PrettyJson(inputs.OwnershipResponseJson),
@@ -135,11 +127,12 @@ internal static class SpikeLaunchLoginFactory
         currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterOwnershipVerification();
 
         var profileResponse = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftProfileResponseJson(inputs.ProfileResponseJson);
+        var profileRequestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(minecraftAccessToken);
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Fetch Minecraft profile",
             currentStep.Progress,
-            "GET",
-            "https://api.minecraftservices.com/minecraft/profile",
+            profileRequestPlan.Method,
+            profileRequestPlan.Url,
             ContentType: null,
             RequestBody: null,
             PrettyJson(inputs.ProfileResponseJson),
@@ -188,7 +181,8 @@ internal static class SpikeLaunchLoginFactory
 
         var steps = new List<LaunchLoginSpikeStepPlan>();
 
-        var authenticateRequestJson = MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson(
+        var authenticateRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
+            inputs.ServerBaseUrl,
             inputs.LoginName,
             inputs.Password);
         var authenticateResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(
@@ -196,10 +190,10 @@ internal static class SpikeLaunchLoginFactory
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Authenticate with Authlib server",
             currentStep.Progress,
-            "POST",
-            $"{inputs.ServerBaseUrl}/authenticate",
-            "application/json",
-            PrettyJson(authenticateRequestJson),
+            authenticateRequestPlan.Method,
+            authenticateRequestPlan.Url,
+            authenticateRequestPlan.ContentType,
+            PrettyJson(authenticateRequestPlan.Body!),
             PrettyJson(inputs.AuthenticateResponseJson),
             [
                 $"Available profiles: {authenticateResponse.AvailableProfiles.Count}",
@@ -253,7 +247,8 @@ internal static class SpikeLaunchLoginFactory
         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(selection.NeedsRefresh);
         if (currentStep.Kind == MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession)
         {
-            var refreshRequestJson = MinecraftLaunchAuthlibProtocolService.BuildRefreshRequestJson(
+            var refreshRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
+                inputs.ServerBaseUrl,
                 selection.SelectedProfileName!,
                 selection.SelectedProfileId!,
                 authenticateResponse.AccessToken);
@@ -261,10 +256,10 @@ internal static class SpikeLaunchLoginFactory
             steps.Add(new LaunchLoginSpikeStepPlan(
                 "Refresh selected Authlib profile",
                 currentStep.Progress,
-                "POST",
-                $"{inputs.ServerBaseUrl}/refresh",
-                "application/json",
-                PrettyJson(refreshRequestJson),
+                refreshRequestPlan.Method,
+                refreshRequestPlan.Url,
+                refreshRequestPlan.ContentType,
+                PrettyJson(refreshRequestPlan.Body!),
                 PrettyJson(inputs.RefreshResponseJson),
                 [
                     $"Refreshed profile id: {refreshResponse.SelectedProfileId}",
@@ -285,11 +280,12 @@ internal static class SpikeLaunchLoginFactory
 
         var metadataJson = inputs.MetadataResponseJson;
         var serverName = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(metadataJson);
+        var metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(inputs.ServerBaseUrl);
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Fetch Authlib server metadata",
             0.85,
-            "GET",
-            inputs.ServerBaseUrl.Replace("/authserver", string.Empty, StringComparison.Ordinal),
+            metadataRequestPlan.Method,
+            metadataRequestPlan.Url,
             ContentType: null,
             RequestBody: null,
             PrettyJson(metadataJson),
@@ -325,13 +321,6 @@ internal static class SpikeLaunchLoginFactory
             LaunchLoginProviderKind.Authlib,
             steps,
             mutationPlan);
-    }
-
-    private static string BuildFormBody(IReadOnlyDictionary<string, string> parameters)
-    {
-        return string.Join(
-            "&",
-            parameters.Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}"));
     }
 
     private static string PrettyJson(string json)

@@ -94,6 +94,8 @@ These workflow extractions are already done and should be treated as available m
 - launch-session start/post-launch shell composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
 - Authlib request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Microsoft request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
+- Authlib request URL / header / body planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibRequestWorkflowService`
+- Microsoft login request URL / header / body / bearer-token planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftRequestWorkflowService`
 - launch argument window-size planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchResolutionService`
 - launch argument final composition, placeholder application, and quick-play/server append policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchArgumentWorkflowService`
 - launch classpath ordering is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchClasspathService`
@@ -178,8 +180,8 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch-session startup summary formatting is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly prints the returned lines before watcher startup
 - launch process / watcher runtime planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts the returned process plan and constructs the watcher from the returned runtime plan
 - launch-session start/post-launch composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned shell plans and watcher adapter inputs
-- Authlib request / response protocol shaping is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
-- Microsoft request / response protocol shaping is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
+- Authlib request / response protocol shaping and request coordination are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
+- Microsoft request / response protocol shaping and request coordination are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - launch argument window-size planning and final argument composition are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher state, JSON/lib inputs, and applies prompt-side effects
 - launch classpath ordering and replacement value assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher path/lib state and applies launcher-specific file extraction
 - launch natives-directory selection and archive sync are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly passes selected native archives and forwards returned log output
