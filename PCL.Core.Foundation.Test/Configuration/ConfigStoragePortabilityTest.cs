@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Configuration;
 using PCL.Core.App.Configuration.Storage;
@@ -123,6 +124,7 @@ public class ConfigStoragePortabilityTest
 
         var storage = new FileConfigStorage(new ThrowingFileProvider());
         storage.SetValue("alpha", 1);
+        Thread.Sleep(50);
         storage.Stop();
 
         Assert.IsNotNull(captured);
