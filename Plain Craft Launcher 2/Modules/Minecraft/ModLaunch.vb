@@ -393,6 +393,114 @@ NextInner:
         Return prompt.Options(result - 1)
     End Function
 
+    Private Function GetSelectedProfileIndex() As Integer?
+        If SelectedProfile Is Nothing Then Return Nothing
+        Dim index = ProfileList.IndexOf(SelectedProfile)
+        Return If(index >= 0, index, Nothing)
+    End Function
+
+    Private Function GetStoredProfiles() As List(Of MinecraftLaunchStoredProfile)
+        Return ProfileList.Select(AddressOf ConvertToStoredProfile).ToList()
+    End Function
+
+    Private Function ConvertToStoredProfile(profile As McProfile) As MinecraftLaunchStoredProfile
+        Dim kind = MinecraftLaunchStoredProfileKind.Offline
+        Select Case profile.Type
+            Case McLoginType.Auth
+                kind = MinecraftLaunchStoredProfileKind.Authlib
+            Case McLoginType.Ms
+                kind = MinecraftLaunchStoredProfileKind.Microsoft
+        End Select
+
+        Return New MinecraftLaunchStoredProfile(
+            kind,
+            profile.Uuid,
+            profile.Username,
+            profile.Server,
+            profile.ServerName,
+            profile.AccessToken,
+            profile.RefreshToken,
+            profile.Name,
+            profile.Password,
+            profile.ClientToken,
+            profile.RawJson)
+    End Function
+
+    Private Sub ApplyProfileMutationPlan(plan As MinecraftLaunchProfileMutationPlan)
+        If plan Is Nothing Then Throw New ArgumentNullException(NameOf(plan))
+        If Not String.IsNullOrWhiteSpace(plan.NoticeMessage) Then Hint(plan.NoticeMessage, HintType.Critical)
+
+        Select Case plan.Kind
+            Case MinecraftLaunchProfileMutationKind.CreateNew
+                Dim createdProfile = CreateProfileFromStored(plan.CreateProfile)
+                ProfileList.Add(createdProfile)
+                If plan.ShouldSelectCreatedProfile Then SelectedProfile = createdProfile
+            Case MinecraftLaunchProfileMutationKind.UpdateSelected, MinecraftLaunchProfileMutationKind.UpdateExistingDuplicate
+                If Not plan.TargetProfileIndex.HasValue OrElse plan.TargetProfileIndex.Value < 0 OrElse plan.TargetProfileIndex.Value >= ProfileList.Count Then
+                    Throw New InvalidOperationException("无法应用档案变更：目标档案不存在。")
+                End If
+                UpdateProfileFromStored(ProfileList(plan.TargetProfileIndex.Value), plan.UpdateProfile)
+            Case Else
+                Throw New InvalidOperationException("未知的档案变更类型。")
+        End Select
+
+        If plan.ShouldClearCreatingProfile Then IsCreatingProfile = False
+    End Sub
+
+    Private Function CreateProfileFromStored(profile As MinecraftLaunchStoredProfile) As McProfile
+        If profile Is Nothing Then Throw New ArgumentNullException(NameOf(profile))
+
+        Select Case profile.Kind
+            Case MinecraftLaunchStoredProfileKind.Microsoft
+                Return New McProfile With {
+                    .Type = McLoginType.Ms,
+                    .Uuid = profile.Uuid,
+                    .Username = profile.Username,
+                    .AccessToken = profile.AccessToken,
+                    .RefreshToken = profile.RefreshToken,
+                    .Expires = 1743779140286,
+                    .Desc = "",
+                    .RawJson = profile.RawJson
+                }
+            Case MinecraftLaunchStoredProfileKind.Authlib
+                Return New McProfile With {
+                    .Type = McLoginType.Auth,
+                    .Uuid = profile.Uuid,
+                    .Username = profile.Username,
+                    .Server = profile.Server,
+                    .ServerName = profile.ServerName,
+                    .Name = profile.LoginName,
+                    .Password = profile.Password,
+                    .AccessToken = profile.AccessToken,
+                    .ClientToken = profile.ClientToken,
+                    .Expires = 1743779140286,
+                    .Desc = ""
+                }
+            Case Else
+                Throw New InvalidOperationException("不支持从该档案类型创建变更。")
+        End Select
+    End Function
+
+    Private Sub UpdateProfileFromStored(targetProfile As McProfile, profile As MinecraftLaunchStoredProfile)
+        If targetProfile Is Nothing Then Throw New ArgumentNullException(NameOf(targetProfile))
+        If profile Is Nothing Then Throw New ArgumentNullException(NameOf(profile))
+
+        targetProfile.Uuid = profile.Uuid
+        targetProfile.Username = profile.Username
+        If profile.Kind = MinecraftLaunchStoredProfileKind.Microsoft Then
+            targetProfile.AccessToken = profile.AccessToken
+            targetProfile.RefreshToken = profile.RefreshToken
+            If profile.RawJson IsNot Nothing Then targetProfile.RawJson = profile.RawJson
+        ElseIf profile.Kind = MinecraftLaunchStoredProfileKind.Authlib Then
+            targetProfile.Server = profile.Server
+            targetProfile.ServerName = profile.ServerName
+            targetProfile.AccessToken = profile.AccessToken
+            targetProfile.ClientToken = profile.ClientToken
+            targetProfile.Name = profile.LoginName
+            targetProfile.Password = profile.Password
+        End If
+    End Sub
+
 #End Region
 
 #Region "档案验证"
@@ -567,13 +675,15 @@ NextInner:
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
         Dim Input As McLoginMs = Data.Input
         Dim LogUsername As String = Input.UserName
-        Dim IsNewProfile As Boolean = True
         ProfileLog("验证方式：正版（" & If(String.IsNullOrEmpty(LogUsername), "尚未登录", LogUsername) & "）")
         Data.Progress = 0.05
         '检查是否已经登录完成
-        If Not Data.IsForceRestarting AndAlso '不要求强行重启
-           Not String.IsNullOrEmpty(Input.AccessToken) AndAlso '已经登录过了
-           (McLoginMsRefreshTime > 0 AndAlso TimeUtils.GetTimeTick() - McLoginMsRefreshTime < 1000 * 60 * 10) Then '完成时间在 10 分钟内
+        If MinecraftLaunchLoginProfileWorkflowService.ShouldReuseMicrosoftLogin(
+            New MinecraftLaunchMicrosoftSessionReuseRequest(
+                Data.IsForceRestarting,
+                Input.AccessToken,
+                McLoginMsRefreshTime,
+                TimeUtils.GetTimeTick())) Then
             Data.Output = New McLoginResult With
                 {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
             GoTo SkipLogin
@@ -620,40 +730,19 @@ Relogin:
         If Result(2) = "Ignore" Then GoTo SkipLogin
         Data.Progress = 0.98
 
-        For Each Profile In ProfileList
-            If Profile.Type = McLoginType.Ms AndAlso Profile.Username = Result(1) AndAlso Profile.Uuid = Result(0) Then
-                IsNewProfile = False
-                If IsCreatingProfile Then
-                    Dim ProfileIndex = ProfileList.IndexOf(Profile)
-                    ProfileList(ProfileIndex).Username = Result(1)
-                    ProfileList(ProfileIndex).AccessToken = AccessToken
-                    ProfileList(ProfileIndex).RefreshToken = OAuthRefreshToken
-                    Hint("你已经添加了这个档案...")
-                    GoTo SkipLogin
-                End If
-            End If
-        Next
-        '输出登录结果
-        If IsNewProfile Then
-            Dim NewProfile = New McProfile With {
-                .Type = McLoginType.Ms,
-                .Uuid = Result(0),
-                .Username = Result(1),
-                .AccessToken = AccessToken,
-                .RefreshToken = OAuthRefreshToken,
-                .Expires = 1743779140286,
-                .Desc = "",
-                .RawJson = Result(2)
-            }
-            ProfileList.Add(NewProfile)
-            SelectedProfile = NewProfile
-            IsCreatingProfile = False
-        Else
-            Dim ProfileIndex = ProfileList.IndexOf(SelectedProfile)
-            ProfileList(ProfileIndex).Username = Result(1)
-            ProfileList(ProfileIndex).AccessToken = AccessToken
-            ProfileList(ProfileIndex).RefreshToken = OAuthRefreshToken
-        End If
+        Dim microsoftMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveMicrosoftProfileMutation(
+            New MinecraftLaunchMicrosoftProfileMutationRequest(
+                IsCreatingProfile,
+                GetSelectedProfileIndex(),
+                GetStoredProfiles(),
+                Result(0),
+                Result(1),
+                AccessToken,
+                OAuthRefreshToken,
+                Result(2)))
+        ApplyProfileMutationPlan(microsoftMutationPlan)
+        If microsoftMutationPlan.Kind = MinecraftLaunchProfileMutationKind.UpdateExistingDuplicate Then GoTo SkipLogin
+
         SaveProfile()
         Data.Output = New McLoginResult With {
             .AccessToken = AccessToken,
@@ -1225,32 +1314,19 @@ LoginFinish:
             '获取服务器信息
             Dim Response As String = NetGetCodeByRequestRetry(Data.Input.BaseUrl.Replace("/authserver", ""), Encoding.UTF8)
             Dim ServerName As String = JObject.Parse(Response)("meta")("serverName").ToString()
-            '保存缓存
-            If Data.Input.IsExist Then
-                Dim ProfileIndex = ProfileList.IndexOf(SelectedProfile)
-                ProfileList(ProfileIndex).Username = Data.Output.Name
-                ProfileList(ProfileIndex).Uuid = Data.Output.Uuid
-                ProfileList(ProfileIndex).ServerName = ServerName
-                ProfileList(ProfileIndex).AccessToken = Data.Output.AccessToken
-                ProfileList(ProfileIndex).ClientToken = Data.Output.ClientToken
-            Else
-                Dim NewProfile As New McProfile With {
-                    .Type = McLoginType.Auth,
-                    .Uuid = Data.Output.Uuid,
-                    .Username = Data.Output.Name,
-                    .Server = Data.Input.BaseUrl,
-                    .ServerName = ServerName,
-                    .Name = Data.Input.UserName,
-                    .Password = Data.Input.Password,
-                    .AccessToken = Data.Output.AccessToken,
-                    .ClientToken = Data.Output.ClientToken,
-                    .Expires = 1743779140286,
-                    .Desc = ""
-                }
-                ProfileList.Add(NewProfile)
-                SelectedProfile = NewProfile
-                IsCreatingProfile = False
-            End If
+            Dim authMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
+                New MinecraftLaunchAuthProfileMutationRequest(
+                    Data.Input.IsExist,
+                    GetSelectedProfileIndex(),
+                    Data.Input.BaseUrl,
+                    ServerName,
+                    Data.Output.Uuid,
+                    Data.Output.Name,
+                    Data.Output.AccessToken,
+                    Data.Output.ClientToken,
+                    Data.Input.UserName,
+                    Data.Input.Password))
+            ApplyProfileMutationPlan(authMutationPlan)
             SaveProfile()
             ProfileLog("登录成功（Login, Authlib）")
             Return NeedRefresh
