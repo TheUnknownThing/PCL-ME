@@ -16,7 +16,8 @@ public abstract class CommonFileProvider(string path) : IKeyValueFileProvider
 
     public void Sync()
     {
-        if (!File.Exists(FilePath)) Directory.CreateDirectory(Basics.GetParentPath(FilePath)!);
+        var parentDirectory = Path.GetDirectoryName(FilePath);
+        if (!string.IsNullOrWhiteSpace(parentDirectory)) Directory.CreateDirectory(parentDirectory);
         var tmpFile = $"{FilePath}.tmp{RandomUtils.NextInt(1, 99999):00000}";
         var bakFile = $"{FilePath}.bak";
         using (var stream = new FileStream(tmpFile, FileMode.Create, FileAccess.Write, FileShare.Read))

@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using PCL.Core.App.IoC;
 using PCL.Core.Logging;
 using PCL.Core.Utils.Diagnostics;
 
@@ -35,10 +34,6 @@ public abstract class ConfigStorage : IConfigProvider
     /// </summary>
     public void Stop() => OnStop();
 
-#if DEBUG
-    private static readonly bool _EnableTrace = Basics.CommandLineArguments.Contains("--trace-traffic");
-#endif
-
     /// <summary>
     /// 执行存取操作。
     /// </summary>
@@ -68,10 +63,20 @@ public abstract class ConfigStorage : IConfigProvider
                 $"[Diagnostics Info]\n{_GenerateDiagnosticsInfo(action, key, value, hasOutput, argument, true)}\n\n" +
                 $"[Exception Details]\n{ex}";
             LogWrapper.Fatal(logModule, msg);
-            Lifecycle.ForceShutdown(-2);
+            var context = new ConfigStorageAccessFailureContext(
+                this,
+                action,
+                key,
+                value,
+                hasOutput,
+                argument,
+                msg,
+                ex);
+            if (ConfigStorageHooks.AccessFailureHandler?.Invoke(context) == true) return hasOutput;
+            throw new InvalidOperationException(msg, ex);
         }
 #if DEBUG
-        if (_EnableTrace)
+        if (ConfigStorageHooks.EnableTrace)
         {
             LogWrapper.Trace(logModule, _GenerateDiagnosticsInfo(action, key, value, hasOutput, argument));
         }

@@ -53,7 +53,8 @@ public class YamlFileProvider : CommonFileProvider, IEnumerableKeyProvider
         }
         try // 尝试从 JSON 和 LTCat-style ini 转换
         {
-            var jsonPath = Path.Combine(Basics.GetParentPath(path)!, Path.GetFileNameWithoutExtension(path) + ".json");
+            var parentDirectory = Path.GetDirectoryName(path) ?? string.Empty;
+            var jsonPath = Path.Combine(parentDirectory, Path.GetFileNameWithoutExtension(path) + ".json");
             if (File.Exists(jsonPath))
             {
                 using var jsonStream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
