@@ -94,15 +94,16 @@ WaitRetry:
             End If
 #End If
             '设置 ToolTipService 默认值
-            ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(300))
-            ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(400))
-            ToolTipService.ShowDurationProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(9999999))
+            Dim visualPlan = LauncherStartupVisualService.GetVisualPlan(Setup.Get("UiLauncherLogo"))
+            ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.InitialShowDelayMilliseconds))
+            ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.BetweenShowDelayMilliseconds))
+            ToolTipService.ShowDurationProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.ShowDurationMilliseconds))
             ToolTipService.PlacementProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(Primitives.PlacementMode.Bottom))
-            ToolTipService.HorizontalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(8.0))
-            ToolTipService.VerticalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(4.0))
+            ToolTipService.HorizontalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.HorizontalOffset))
+            ToolTipService.VerticalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.VerticalOffset))
             '设置初始窗口
-            If Setup.Get("UiLauncherLogo") Then
-                FrmStart = New SplashScreen("Images\icon.ico")
+            If visualPlan.ShouldShowSplashScreen Then
+                FrmStart = New SplashScreen(visualPlan.SplashScreen.IconPath)
                 FrmStart.Show(False, True)
             End If
             '检测异常环境
