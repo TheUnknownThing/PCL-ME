@@ -22,8 +22,10 @@ Latest continuation update:
 - shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
 - portable Java runtime selection and manifest file planning now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
 - portable Java runtime manifest/file request coordination now lives in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
+- portable Java launch selection transition/log/hint policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaSelectionWorkflowService`
 - launcher Java runtime manifest selection / file planning in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now route through `MinecraftJavaRuntimeDownloadService`
 - launcher Java runtime index / manifest / file source shaping in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadWorkflowService`
+- launcher Java selection / prompt / download retry orchestration in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` is now funneled through `ModJava.vb` consuming `MinecraftLaunchJavaSelectionWorkflowService`
 - portable Java runtime download planning now preserves Windows-style runtime paths even when the backend is exercised on non-Windows hosts
 - a new portable `net8.0` backend assembly now lives in `PCL.Core.Backend`, compiling the extracted startup / launch / crash workflow layer outside `PCL.Core`'s `net8.0-windows` target
 - a new portable backend test lane now lives in `PCL.Core.Backend.Test`, and its extracted workflow/service coverage runs on macOS/Linux hosts
@@ -146,7 +148,7 @@ What is already true:
 
 What is not true yet:
 
-- `ModLaunch.vb` still owns adapter-level request execution, Java download job orchestration, Java-selection retry flow, and launcher prompt integration
+- `ModLaunch.vb` still owns adapter-level request execution and launcher prompt integration, while `ModJava.vb` still owns the launcher download job lifecycle and loader polling
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts

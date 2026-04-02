@@ -1306,53 +1306,10 @@ Retry:
                 jsonRequiredMajorVersion,
                 recommendedCode,
                 recommendedComponent))
-        Dim minVer = javaWorkflow.MinimumVersion
-        Dim maxVer = javaWorkflow.MaximumVersion
         If javaWorkflow.RecommendedVersionLogMessage IsNot Nothing Then McLaunchLog(javaWorkflow.RecommendedVersionLogMessage)
 
-        SyncLock JavaLock
-
-            '选择 Java
-            McLaunchLog(javaWorkflow.RequirementLogMessage)
-            McLaunchJavaSelected = JavaSelect("$$", minVer, maxVer, McInstanceSelected)
-            If task.IsAborted Then Return
-            Dim initialSelection = MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, McLaunchJavaSelected IsNot Nothing)
-            If initialSelection.ActionKind = MinecraftLaunchJavaSelectionActionKind.UseSelectedJava Then
-                McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
-                Return
-            End If
-
-            '无合适的 Java
-            If task.IsAborted Then Return '中断加载会导致 JavaSelect 异常地返回空值，误判找不到 Java
-            McLaunchLog(initialSelection.LogMessage)
-            Dim javaPrompt = initialSelection.Prompt
-            Dim javaDecision = RunJavaPrompt(javaPrompt)
-            Dim promptOutcome = MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(javaPrompt, javaDecision.Decision)
-            If promptOutcome.ActionKind <> MinecraftLaunchJavaPromptActionKind.DownloadAndRetrySelection Then Throw New Exception("$$")
-            '开始自动下载
-            Dim javaLoader = GetJavaDownloadLoader()
-            Try
-                javaLoader.Start(promptOutcome.DownloadTarget, IsForceRestart:=True)
-                Do While javaLoader.State = LoadState.Loading AndAlso Not task.IsAborted
-                    task.Progress = javaLoader.Progress
-                    Thread.Sleep(10)
-                Loop
-            Finally
-                javaLoader.Abort() '确保取消时中止 Java 下载
-            End Try
-
-            '检查下载结果
-            McLaunchJavaSelected = JavaSelect("$$", minVer, maxVer, McInstanceSelected)
-            If task.IsAborted Then Return
-            Dim postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, McLaunchJavaSelected IsNot Nothing)
-            If postDownloadSelection.ActionKind = MinecraftLaunchJavaPostDownloadActionKind.UseSelectedJava Then
-                McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString())
-            Else
-                Hint(postDownloadSelection.HintMessage, HintType.Critical)
-                Throw New Exception("$$")
-            End If
-
-        End SyncLock
+        McLaunchJavaSelected = ResolveLaunchJavaSelection(task, javaWorkflow, McInstanceSelected)
+        If task.IsAborted Then Return
     End Sub
 
 #End Region
