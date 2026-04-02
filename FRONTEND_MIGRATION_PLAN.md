@@ -23,6 +23,7 @@ These workflow extractions are already done and should be treated as available m
 - Microsoft login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftLoginExecutionService`
 - startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
 - crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
+- crash result prompt policy and export filename suggestion are owned by `PCL.Core.Minecraft.MinecraftCrashWorkflowService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
 
@@ -87,6 +88,7 @@ These flows still combine:
 After the latest cleanup slices, the former biggest blocker has changed:
 
 - login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution, prompt rendering, and shell/UI adapter work
+- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, or export archive naming; it still owns save-picker invocation, report zip creation, and Explorer opening
 
 A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
 

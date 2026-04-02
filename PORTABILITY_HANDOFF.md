@@ -124,6 +124,9 @@ These were completed after Wave 2 was declared stable:
 - crash export packaging moved out of the launcher
   - `MinecraftCrashExportService` now owns report packaging, filename normalization, and sanitization
   - `ModCrash.vb` keeps picker / zip destination / Explorer opening only
+- crash result prompt policy moved out of the launcher
+  - `MinecraftCrashWorkflowService` now owns crash-result dialog titles, button policy, and export filename suggestion
+  - `ModCrash.vb` now only renders the prompt and executes the selected shell action
 - post-launch shell policy moved out of the launcher
   - `MinecraftLaunchShellService` now owns completion notification policy, failure titles, and launcher-visibility decisions
   - `ModLaunch.vb` performs the returned shell action instead of deciding it
@@ -244,6 +247,8 @@ This is the meaningful history for the current portability work:
 - `1d67a31d` `feat(launch): extract microsoft login execution workflow`
 - `d881161b` `refactor(launch): replace microsoft login magic step markers`
 - `9899021f` `refactor(launch): return authlib login step results explicitly`
+- `4b6ab80e` `feat(crash): add core crash workflow service`
+- `94ebef70` `refactor(crash): consume core crash workflow prompt service`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
