@@ -130,6 +130,19 @@ These were completed after Wave 2 was declared stable:
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
+- launch account prompt policy moved out of the launcher
+  - `MinecraftLaunchAccountWorkflowService` now owns Microsoft account-recovery prompts, ownership/profile-required prompts, and Authlib role-selection decisions
+  - `ModLaunch.vb` only renders those prompts and applies the returned actions
+- launch Java requirement and missing-Java prompt policy moved out of the launcher
+  - `MinecraftLaunchJavaRequirementService` now owns launch-time Java version bounds and Mojang component preference calculation
+  - `MinecraftLaunchJavaPromptService` now owns missing-Java/manual-download vs auto-download prompt policy
+  - `ModLaunch.vb` still performs actual Java selection and Java download execution
+- third-party login failure policy moved out of the launcher
+  - `MinecraftLaunchThirdPartyLoginWorkflowService` now owns Authlib validation / refresh / login failure wording and wrapped error messages
+  - `ModLaunch.vb` only displays the returned failure dialogs and throws the returned wrapped errors
+- login profile mutation and Microsoft cached-session reuse policy moved out of the launcher
+  - `MinecraftLaunchLoginProfileWorkflowService` now owns Microsoft cached-login reuse rules plus Microsoft/Authlib profile creation and update plans
+  - `ModLaunch.vb` still performs the network requests and applies the returned mutation plans to launcher profile state
 - frontend migration planning artifact added
   - see `FRONTEND_MIGRATION_PLAN.md`
 
@@ -210,6 +223,15 @@ This is the meaningful history for the current portability work:
 - `ef054bb4` `test(migration): cover launcher workflow extraction regressions`
 - `3c448760` `refactor(launch): extract post-launch shell policy`
 - `3c9edf1e` `refactor(startup): extract bootstrap policy`
+- `510b2974` `feat(launch): add account prompt workflow service`
+- `2dc7194d` `refactor(launcher): route launch account prompts through core workflow`
+- `ba5c9882` `feat(launch): add java requirement and prompt workflow`
+- `ee20387b` `refactor(launcher): route java launch policy through core workflow`
+- `8d139e36` `test(migration): cover launch workflow extraction regressions`
+- `2ed9ce55` `feat(launch): add third-party login workflow service`
+- `e5960538` `refactor(launcher): route authlib failure policy through core workflow`
+- `1929b08f` `feat(launch): add login profile workflow service`
+- `dc49a7f2` `refactor(launcher): route login profile workflow through core service`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
@@ -269,7 +291,7 @@ Do not do these yet unless the runtime boundary is already stable:
 - Java launch and remaining launcher-side VB/WPF flows still contain Windows assumptions even though the runtime/discovery core is portable
 - `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
-- the single biggest remaining workflow blocker before a shell-replacement spike is the login / account-recovery / Java-selection prompt tree still embedded in `ModLaunch.vb`
+- the single biggest remaining workflow blocker before a shell-replacement spike is the login execution / orchestration and launcher-state mutation flow still embedded in `ModLaunch.vb`
 - frontend migration is now mostly blocked by view/shell replacement and remaining launcher workflow/UI entanglement, not by runtime-core portability
 
 ## Working Rules For The Next Engineer
@@ -320,6 +342,15 @@ The Wave 3 launcher cleanup commits after that are:
 - `ef054bb4` `test(migration): cover launcher workflow extraction regressions`
 - `3c448760` `refactor(launch): extract post-launch shell policy`
 - `3c9edf1e` `refactor(startup): extract bootstrap policy`
+- `510b2974` `feat(launch): add account prompt workflow service`
+- `2dc7194d` `refactor(launcher): route launch account prompts through core workflow`
+- `ba5c9882` `feat(launch): add java requirement and prompt workflow`
+- `ee20387b` `refactor(launcher): route java launch policy through core workflow`
+- `8d139e36` `test(migration): cover launch workflow extraction regressions`
+- `2ed9ce55` `feat(launch): add third-party login workflow service`
+- `e5960538` `refactor(launcher): route authlib failure policy through core workflow`
+- `1929b08f` `feat(launch): add login profile workflow service`
+- `dc49a7f2` `refactor(launcher): route login profile workflow through core service`
 
 ## Phase Call
 
@@ -332,4 +363,4 @@ It is ready for handoff to another engineer, but the recommended near-term phase
 
 ## One-Line Summary
 
-Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, launch/startup/crash/bootstrap shell policies now have core-side services, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining `ModLaunch.vb` workflow extraction before attempting a real frontend-shell cutover.
+Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, launch/startup/crash/bootstrap shell policies now have core-side services, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining `ModLaunch.vb` login execution/orchestration extraction before attempting a real frontend-shell cutover.

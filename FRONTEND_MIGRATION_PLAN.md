@@ -15,6 +15,10 @@ These workflow extractions are already done and should be treated as available m
 - crash-report environment text is built by `PCL.Core.Minecraft.MinecraftCrashReportBuilder`
 - startup environment warnings are evaluated by `PCL.Core.App.Essentials.LauncherStartupEnvironmentWarningService`
 - launch precheck prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrecheckService`
+- launch account prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAccountWorkflowService`
+- launch Java requirement and missing-Java prompt policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaRequirementService` and `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptService`
+- third-party login failure policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginWorkflowService`
+- login profile mutation / cached-session reuse policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLoginProfileWorkflowService`
 - startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
 - crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
@@ -80,7 +84,7 @@ These flows still combine:
 
 After the latest cleanup slices, the single biggest remaining mixed area is:
 
-- login / account-recovery / Java-selection prompt policy in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+- login execution / orchestration and launcher-state mutation in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
 
 A future frontend should only own the prompts and view transitions, not the workflow logic itself.
 
@@ -90,9 +94,10 @@ The next implementation phase should still be **one more round of launcher workf
 
 Create launcher-facing services in `PCL.Core` for:
 
-1. remaining launch login / account-recovery / Java-selection prompt policy
+1. remaining launch login execution / orchestration results and state-application policy
 2. any leftover startup shell policy still assembled directly in launcher files
-3. only after that, a small shell-replacement spike that consumes the extracted services
+3. any remaining crash-export shell policy that still mixes business logic with picker / Explorer flow
+4. only after that, a small shell-replacement spike that consumes the extracted services
 
 Keep the following in the launcher as adapters:
 
@@ -106,9 +111,10 @@ This boundary keeps the current launcher behavior intact while making the eventu
 ## Execution Order
 
 1. Extract launch workflow orchestration next.
-   The remaining login / account-recovery / Java-selection prompt tree in `ModLaunch.vb` is still the biggest blocker to swapping frontend shells.
+   The remaining login execution / orchestration flow in `ModLaunch.vb` is still the biggest blocker to swapping frontend shells.
 2. Finish trimming startup shell policy in the launcher if any new blocker is found during that extraction.
-3. Start the actual frontend shell migration only after step 1 is no longer a major blocker.
+3. Trim crash-export shell orchestration if it still blocks frontend swap readiness.
+4. Start the actual frontend shell migration only after step 1 is no longer a major blocker.
    Replace or parallel a small launcher surface first, while continuing to use existing `PCL.Core` services and Windows shell adapters as needed.
 
 ## Acceptance Criteria
@@ -117,4 +123,4 @@ This boundary keeps the current launcher behavior intact while making the eventu
 - New launcher workflow services do not introduce `System.Windows` dependencies into `PCL.Core.Foundation`.
 - The launcher becomes a consumer of workflow results plus shell adapters, not the owner of business logic assembly.
 - Frontend migration can proceed without reopening runtime seams or reintroducing launcher-local copies of runtime/system logic.
-- The project does not move into full shell-migration mode until `ModLaunch.vb` no longer owns the majority of login / recovery prompt policy.
+- The project does not move into full shell-migration mode until `ModLaunch.vb` no longer owns the majority of login execution / orchestration policy.
