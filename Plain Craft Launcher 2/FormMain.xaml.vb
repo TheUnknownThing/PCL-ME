@@ -55,17 +55,16 @@ Public Class FormMain
             DowngradeSub(LastVersion)
         End If
         '版本隔离设置迁移
-        If Setup.IsUnset("LaunchArgumentIndieV2") Then
-            If Not Setup.IsUnset("LaunchArgumentIndie") Then
-                Log("[Start] 从老 PCL 迁移版本隔离")
-                Setup.Set("LaunchArgumentIndieV2", Setup.Get("LaunchArgumentIndie"))
-            ElseIf Not Setup.IsUnset("WindowHeight") Then
-                Log("[Start] 从老 PCL 升级，但此前未调整版本隔离，使用老的版本隔离默认值")
-                Setup.Set("LaunchArgumentIndieV2", Setup.GetDefault("LaunchArgumentIndie"))
-            Else
-                Log("[Start] 全新的 PCL，使用新的版本隔离默认值")
-                Setup.Set("LaunchArgumentIndieV2", Setup.GetDefault("LaunchArgumentIndieV2"))
-            End If
+        Dim versionIsolationMigration = LauncherStartupVersionIsolationMigrationService.Evaluate(New LauncherStartupVersionIsolationMigrationRequest(
+            Not Setup.IsUnset("LaunchArgumentIndieV2"),
+            Not Setup.IsUnset("LaunchArgumentIndie"),
+            If(Setup.IsUnset("LaunchArgumentIndie"), 0, CInt(Setup.Get("LaunchArgumentIndie"))),
+            Not Setup.IsUnset("WindowHeight"),
+            CInt(Setup.GetDefault("LaunchArgumentIndie")),
+            CInt(Setup.GetDefault("LaunchArgumentIndieV2"))))
+        If versionIsolationMigration.ShouldStoreVersionIsolationV2 Then
+            Setup.Set("LaunchArgumentIndieV2", versionIsolationMigration.VersionIsolationV2Value)
+            Log(versionIsolationMigration.LogMessage)
         End If
         Setup.Load("UiLauncherTheme")
         '注册拖拽事件（不能直接加 Handles，否则没用；#6340）
