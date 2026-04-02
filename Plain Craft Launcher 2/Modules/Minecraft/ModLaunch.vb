@@ -2,6 +2,7 @@ Imports System.IO.Compression
 Imports System.Net.Http
 Imports System.Text.Json.Nodes
 Imports PCL.Core.Minecraft
+Imports PCL.Core.Minecraft.Launch
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.OS
 Imports PCL.Core.App
@@ -232,50 +233,33 @@ NextInner:
 
     Private Sub McLaunchPrecheck()
         If Setup.Get("SystemDebugDelay") Then Thread.Sleep(RandomUtils.NextInt(100, 2000))
-        '检查路径
-        If McInstanceSelected.PathIndie.Contains("!") OrElse McInstanceSelected.PathIndie.Contains(";") Then Throw New Exception("游戏路径中不可包含 ! 或 ;（" & McInstanceSelected.PathIndie & "）")
-        If McInstanceSelected.PathInstance.Contains("!") OrElse McInstanceSelected.PathInstance.Contains(";") Then Throw New Exception("游戏路径中不可包含 ! 或 ;（" & McInstanceSelected.PathInstance & "）")
-        If IsUtf8CodePage() AndAlso Not Setup.Get("HintDisableGamePathCheckTip") AndAlso Not McInstanceSelected.PathInstance.IsASCII() Then
-            Dim userChoice = MyMsgBox(
-                $"欲启动实例 ""{McInstanceSelected.Name}"" 的路径中存在可能影响游戏正常运行的字符（非 ASCII 字符），是否仍旧启动游戏？{vbCrLf}{vbCrLf}如果不清楚具体作用，你可以先选择 ""继续""，发现游戏在启动后很快出现崩溃的情况后再尝试修改游戏路径等操作",
-                "游戏路径检查",
-                "继续",
-                "返回处理",
-                "不再提示")
-            If userChoice = 2 Then
-                Throw New Exception("$$")
-            End If
-            If userChoice = 3 Then
-                Setup.Set("HintDisableGamePathCheckTip", True)
-            End If
-        End If
         '检查实例
-        If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 实例！")
-        McInstanceSelected.Load()
-        If McInstanceSelected.State = McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Desc)
+        If McInstanceSelected IsNot Nothing Then McInstanceSelected.Load()
         '检查输入信息
         Dim CheckResult As String = ""
-        RunInUiWait(Sub() CheckResult = IsProfileValid())
-        If SelectedProfile Is Nothing Then '没选档案
-            CheckResult = "请先选择一个档案再启动游戏！"
-        ElseIf McInstanceSelected.Info.HasLabyMod OrElse Setup.Get("VersionServerLoginRequire", McInstanceSelected) = 1 Then '要求正版验证
-            If Not SelectedProfile.Type = McLoginType.Ms Then
-                CheckResult = "当前实例要求使用正版验证，请使用正版验证档案启动游戏！"
-            End If
-        ElseIf Setup.Get("VersionServerLoginRequire", McInstanceSelected) = 2 Then '要求第三方验证
-            If Not SelectedProfile.Type = McLoginType.Auth Then
-                CheckResult = "当前实例要求使用第三方验证，请使用第三方验证档案启动游戏！"
-            ElseIf Not SelectedProfile.Server.BeforeLast("/authserver") = Setup.Get("VersionServerAuthServer", McInstanceSelected) Then
-                CheckResult = "当前档案使用的第三方验证服务器与实例要求使用的不一致，请使用符合要求的档案启动游戏！"
-            End If
-        ElseIf Setup.Get("VersionServerLoginRequire", McInstanceSelected) = 3 Then '要求正版验证或第三方验证
-            If SelectedProfile.Type = McLoginType.Legacy Then
-                CheckResult = "当前实例要求使用正版验证或第三方验证，请使用符合要求的档案启动游戏！"
-            ElseIf SelectedProfile.Type = McLoginType.Auth AndAlso Not SelectedProfile.Server.BeforeLast("/authserver") = Setup.Get("VersionServerAuthServer", McInstanceSelected) Then
-                CheckResult = "当前档案使用的第三方验证服务器与实例要求使用的不一致，请使用符合要求的档案启动游戏！"
-            End If
+        RunInUiWait(Sub() CheckResult = If(SelectedProfile Is Nothing, "", IsProfileValid()))
+        Dim precheckResult = MinecraftLaunchPrecheckService.Evaluate(New MinecraftLaunchPrecheckRequest(
+            If(McInstanceSelected?.Name, ""),
+            If(McInstanceSelected?.PathIndie, ""),
+            If(McInstanceSelected?.PathInstance, ""),
+            McInstanceSelected IsNot Nothing,
+            McInstanceSelected?.State = McInstanceState.Error,
+            If(McInstanceSelected?.Desc, ""),
+            IsUtf8CodePage(),
+            Setup.Get("HintDisableGamePathCheckTip"),
+            If(McInstanceSelected Is Nothing, True, McInstanceSelected.PathInstance.IsASCII()),
+            CheckResult,
+            GetCurrentProfileKind(),
+            McInstanceSelected IsNot Nothing AndAlso McInstanceSelected.Info.HasLabyMod,
+            If(McInstanceSelected Is Nothing, MinecraftLaunchLoginRequirement.None, CType(Setup.Get("VersionServerLoginRequire", McInstanceSelected), MinecraftLaunchLoginRequirement)),
+            If(McInstanceSelected Is Nothing, Nothing, Setup.Get("VersionServerAuthServer", McInstanceSelected)),
+            GetSelectedAuthServerBase(),
+            ProfileList.Any(Function(x) x.Type = McLoginType.Ms),
+            RegionUtils.IsRestrictedFeatAllowed))
+        If Not precheckResult.IsSuccess Then Throw New ArgumentException(precheckResult.FailureMessage)
+        If precheckResult.Prompts.Count > 0 Then
+            RunLaunchPrompt(precheckResult.Prompts(0))
         End If
-        If CheckResult <> "" Then Throw New ArgumentException(CheckResult)
 #If BETA Then
         '求赞助
         If CurrentLaunchOptions?.SaveBatch Is Nothing Then '保存脚本时不提示
@@ -293,24 +277,71 @@ NextInner:
             End Sub, "Donate")
         End If
 #End If
-        '正版购买提示
-        If Not ProfileList.Any(Function(x) x.Type = McLoginType.Ms) Then
-            If RegionUtils.IsRestrictedFeatAllowed Then
-                If MyMsgBox($"看起来你似乎没买正版...{vbCrLf}如果觉得 Minecraft 还不错，可以购买正版支持一下，毕竟开发游戏也真的很不容易...不要一直白嫖啦。{vbCrLf}{vbCrLf}在验证一个正版账号之后，就不会出现这个提示了！", 
-                            "考虑一下正版？", "支持正版游戏！", "下次一定") = 1 Then
-                    OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj")
-                End If
-            Else
-                Select Case MyMsgBox("你必须先登录正版账号才能启动游戏！", "正版验证", "购买正版", "试玩", "返回",
-                                     Button1Action:=Sub() OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj"))
-                    Case 2
-                        Hint("游戏将以试玩模式启动！", HintType.Critical)
-                        CurrentLaunchOptions.ExtraArgs.Add("--demo")
-                    Case 3
-                        Throw New Exception("$$")
-                End Select
-            End If
+        For index = 1 To precheckResult.Prompts.Count - 1
+            RunLaunchPrompt(precheckResult.Prompts(index))
+        Next
+    End Sub
+
+    Private Function GetCurrentProfileKind() As MinecraftLaunchProfileKind
+        If SelectedProfile Is Nothing Then Return MinecraftLaunchProfileKind.None
+        Select Case SelectedProfile.Type
+            Case McLoginType.Legacy
+                Return MinecraftLaunchProfileKind.Legacy
+            Case McLoginType.Auth
+                Return MinecraftLaunchProfileKind.Auth
+            Case McLoginType.Ms
+                Return MinecraftLaunchProfileKind.Microsoft
+            Case Else
+                Return MinecraftLaunchProfileKind.None
+        End Select
+    End Function
+
+    Private Function GetSelectedAuthServerBase() As String
+        If SelectedProfile Is Nothing OrElse SelectedProfile.Type <> McLoginType.Auth Then Return Nothing
+        Return SelectedProfile.Server.BeforeLast("/authserver")
+    End Function
+
+    Private Sub RunLaunchPrompt(prompt As MinecraftLaunchPrompt)
+        If prompt Is Nothing OrElse prompt.Buttons Is Nothing OrElse prompt.Buttons.Count = 0 Then Return
+        Dim button1Action As Action = Nothing
+        Dim button2Action As Action = Nothing
+        Dim button3Action As Action = Nothing
+        If prompt.Buttons.Count >= 1 AndAlso Not prompt.Buttons(0).ClosesPrompt Then button1Action = Sub() RunLaunchPromptButtonActions(prompt.Buttons(0).Actions)
+        If prompt.Buttons.Count >= 2 AndAlso Not prompt.Buttons(1).ClosesPrompt Then button2Action = Sub() RunLaunchPromptButtonActions(prompt.Buttons(1).Actions)
+        If prompt.Buttons.Count >= 3 AndAlso Not prompt.Buttons(2).ClosesPrompt Then button3Action = Sub() RunLaunchPromptButtonActions(prompt.Buttons(2).Actions)
+
+        Dim result = MyMsgBox(
+            prompt.Message,
+            prompt.Title,
+            prompt.Buttons(0).Label,
+            If(prompt.Buttons.Count >= 2, prompt.Buttons(1).Label, ""),
+            If(prompt.Buttons.Count >= 3, prompt.Buttons(2).Label, ""),
+            prompt.IsWarning,
+            Button1Action:=button1Action,
+            Button2Action:=button2Action,
+            Button3Action:=button3Action)
+
+        If result >= 1 AndAlso result <= prompt.Buttons.Count Then
+            Dim selectedButton = prompt.Buttons(result - 1)
+            If selectedButton.ClosesPrompt Then RunLaunchPromptButtonActions(selectedButton.Actions)
         End If
+    End Sub
+
+    Private Sub RunLaunchPromptButtonActions(actions As IReadOnlyList(Of MinecraftLaunchPromptAction))
+        For Each promptAction In actions
+            Select Case promptAction.Kind
+                Case MinecraftLaunchPromptActionKind.OpenUrl
+                    OpenWebsite(promptAction.Value)
+                Case MinecraftLaunchPromptActionKind.AppendLaunchArgument
+                    If promptAction.Value = "--demo" Then Hint("游戏将以试玩模式启动！", HintType.Critical)
+                    CurrentLaunchOptions.ExtraArgs.Add(promptAction.Value)
+                Case MinecraftLaunchPromptActionKind.PersistNonAsciiPathWarningDisabled
+                    Setup.Set("HintDisableGamePathCheckTip", True)
+                Case MinecraftLaunchPromptActionKind.Abort
+                    Throw New Exception("$$")
+                Case MinecraftLaunchPromptActionKind.Continue
+            End Select
+        Next
     End Sub
 
 #End Region
