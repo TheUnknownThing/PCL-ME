@@ -31,7 +31,11 @@ These workflow extractions are already done and should be treated as available m
 - launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch GPU-preference failure / admin-retry policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
+- startup immediate-command shell policy and environment-warning prompt contract are owned by `PCL.Core.App.Essentials.LauncherStartupShellService`
 - fatal log dialog presentation is routed through `PCL.Core.Logging.LogRuntimeHooks` instead of being hardcoded in `PCL.Core.Logging.LogService`
+- launcher startup prompt rendering/action application is centralized in `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
+- launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
+- launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 
 Do not redo these in the frontend migration branch; build on top of them.
 
@@ -93,9 +97,9 @@ These flows still combine:
 
 After the latest cleanup slices, the former biggest blocker has changed:
 
-- login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution, prompt rendering, and shell/UI adapter work
-- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, or export-request assembly; it still owns save-picker invocation, report zip creation, and Explorer opening
-- `Application.xaml.vb` no longer assembles startup command parsing or warning/bootstrap composition; it still owns WPF startup shell work such as splash-screen display, tooltip metadata, memory optimization execution, and warning dialog rendering
+- login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution and the remaining shell/UI adapter work
+- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, or prompt rendering; it still owns save-picker invocation, report zip creation, and Explorer opening
+- `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, or warning prompt construction; it still owns WPF startup shell work such as splash-screen display, tooltip metadata, memory optimization execution, and process exit behavior
 - `FormMain.xaml.vb` no longer owns version-transition migration policy or version-isolation migration policy; it still owns WPF startup presentation and shell adapters
 - `Program.vb` now reattaches the current fatal-dialog presentation behavior through a runtime hook instead of that behavior being hardcoded in `PCL.Core`
 
@@ -109,7 +113,8 @@ Create launcher-facing services in `PCL.Core` for:
 
 1. any leftover startup shell policy still assembled directly in launcher files
 2. optional follow-up launch-step adapter cleanup only where `ModLaunch.vb` still mixes shell/UI work with reusable decision logic
-3. a small shell-replacement spike that consumes the extracted services
+3. selective reduction of `PCL.Core` Windows-only shell helpers when they still block a future non-Windows frontend
+4. a small shell-replacement spike that consumes the extracted services
 
 Keep the following in the launcher as adapters:
 
@@ -127,6 +132,7 @@ This boundary keeps the current launcher behavior intact while making the eventu
 2. Trim startup shell policy in the launcher if it blocks that spike.
 3. Keep refining `ModLaunch.vb` only where the new shell surface needs cleaner step-level adapters.
 4. Trim any remaining `ModCrash.vb` picker / Explorer glue only if the shell spike needs it.
+5. Start shrinking `PCL.Core` Windows helpers that still mix reusable logic with Windows shell APIs.
 
 ## Acceptance Criteria
 
