@@ -47,6 +47,23 @@ public sealed class MinecraftLaunchShellServiceTest
     }
 
     [TestMethod]
+    public void GetSupportPromptReturnsDonationPromptAtMilestone()
+    {
+        var result = MinecraftLaunchShellService.GetSupportPrompt(200);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual("200 次启动！", result.Title);
+        Assert.AreEqual("支持一下！", result.Buttons[0].Label);
+        Assert.AreEqual(MinecraftLaunchPromptActionKind.OpenUrl, result.Buttons[0].Actions[0].Kind);
+    }
+
+    [TestMethod]
+    public void GetSupportPromptReturnsNullOutsideMilestones()
+    {
+        Assert.IsNull(MinecraftLaunchShellService.GetSupportPrompt(201));
+    }
+
+    [TestMethod]
     public void GetPostLaunchShellActionMapsVisibilityModes()
     {
         Assert.AreEqual(

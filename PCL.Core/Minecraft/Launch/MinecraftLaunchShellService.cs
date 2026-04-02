@@ -1,9 +1,15 @@
 using PCL.Core.App;
+using System.Collections.Generic;
 
 namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchShellService
 {
+    private static readonly HashSet<int> _supportPromptMilestones =
+    [
+        10, 20, 40, 60, 80, 100, 120, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000
+    ];
+
     public static MinecraftLaunchNotification GetCompletionNotification(MinecraftLaunchCompletionRequest request)
     {
         return request.Outcome switch
@@ -26,6 +32,29 @@ public static class MinecraftLaunchShellService
         return isScriptExport
             ? new MinecraftLaunchFailureDisplay("导出启动脚本失败", "导出启动脚本失败")
             : new MinecraftLaunchFailureDisplay("启动失败", "Minecraft 启动失败");
+    }
+
+    public static MinecraftLaunchPrompt? GetSupportPrompt(int launchCount)
+    {
+        if (!_supportPromptMilestones.Contains(launchCount))
+        {
+            return null;
+        }
+
+        return new MinecraftLaunchPrompt(
+            "PCL 已经为你启动了 " + launchCount + " 次游戏啦！" + System.Environment.NewLine +
+            "如果 PCL 还算好用的话，也许可以考虑赞助一下 PCL 原作者……" + System.Environment.NewLine +
+            "如果没有大家的支持，PCL 很难在免费、无任何广告的情况下维持数年的更新（磕头）……！",
+            launchCount + " 次启动！",
+            [
+                new MinecraftLaunchPromptButton(
+                    "支持一下！",
+                    [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.OpenUrl, "https://afdian.com/a/LTCat")]),
+                new MinecraftLaunchPromptButton(
+                    "但是我拒绝",
+                    [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])
+            ],
+            IsWarning: false);
     }
 
     public static MinecraftLaunchShellAction GetPostLaunchShellAction(LauncherVisibility visibility)
