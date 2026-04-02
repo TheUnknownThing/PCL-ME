@@ -137,6 +137,10 @@ These were completed after Wave 2 was declared stable:
   - `LauncherStartupCommandService` now owns recognition of launcher startup commands like `--gpu` and `--memory`
   - `LauncherStartupPreparationService` now composes environment warning collection with bootstrap-policy generation
   - `Application.xaml.vb` now only executes the selected startup shell task and applies the returned preparation result
+- fatal log dialog presentation moved behind a runtime hook
+  - `LogRuntimeHooks` now owns fatal-dialog presentation indirection for `PCL.Core.Logging.LogService`
+  - the current WPF/VB launcher reattaches the Windows `MsgBox` behavior from `Program.vb`
+  - this removes one more direct WPF dialog dependency from shared core logging flow
 - launch account prompt policy moved out of the launcher
   - `MinecraftLaunchAccountWorkflowService` now owns Microsoft account-recovery prompts, ownership/profile-required prompts, and Authlib role-selection decisions
   - `ModLaunch.vb` only renders those prompts and applies the returned actions
@@ -212,6 +216,27 @@ Additional note about validation on this machine:
 
 - `PCL.Core.Test` builds successfully on macOS, but running that `net8.0-windows` test assembly is blocked locally because `Microsoft.WindowsDesktop.App` testhost runtime is not available on this host
 
+## Current Portability Estimate
+
+If “portable backend” means “the non-GUI services a future macOS/Linux launcher could call without depending on WPF or Windows-only APIs”, the current estimate is:
+
+- about `70%` complete
+
+Rationale:
+
+- `PCL.Core.Foundation` is already real, portable, and validated on macOS
+- a substantial amount of launcher workflow policy has already been extracted into headless/core services
+- the biggest remaining backend gap is no longer basic business logic extraction; it is the separation of reusable services from `PCL.Core`’s remaining WPF/UI and Windows-adapter code
+
+Concrete current state:
+
+- `PCL.Core.Foundation` is the strongest part of the portability work
+- `PCL.Core` still contains a significant mix of:
+  - reusable runtime/backend services
+  - WPF/UI infrastructure
+  - Windows-only adapters and interop helpers
+- the frontend is still the biggest blocker to a cross-platform launcher binary, but the backend is already far enough along that a new frontend can be built on top of the extracted seams
+
 ## Recent Checkpoint Commits
 
 This is the meaningful history for the current portability work:
@@ -254,6 +279,8 @@ This is the meaningful history for the current portability work:
 - `4b6ab80e` `feat(crash): add core crash workflow service`
 - `94ebef70` `refactor(crash): consume core crash workflow prompt service`
 - `590ffbd5` `refactor(startup): extract startup command and preparation services`
+- `b2332da3` `docs(portability): note startup workflow extraction`
+- `4ab0c302` `refactor(logging): move fatal dialog presentation behind runtime hook`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
@@ -290,12 +317,23 @@ The next engineer should treat the runtime extraction as finished and the launch
 Recommended order:
 
 1. keep `PCL.Core.Foundation` stable and avoid leaking UI/Win32 concerns back into it
-2. use `FRONTEND_MIGRATION_PLAN.md` as the working migration brief
-3. treat the launch login-orchestration blocker as mostly addressed and begin a small shell-replacement / frontend-contract phase
-4. keep `ModLaunch.vb` cleanup incremental: only peel off remaining step-local adapter glue or prompt/shell wrappers when they materially simplify a new shell consumer
-5. focus the next migration spike on replacing or paralleling a narrow launcher surface while continuing to reuse `PCL.Core` launch/startup/crash services
-6. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
-7. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
+2. continue shrinking `PCL.Core` itself by moving reusable non-UI behavior away from WPF/UI infrastructure and Windows-only dialog/shell code
+3. use `FRONTEND_MIGRATION_PLAN.md` as the working migration brief
+4. treat the launch login-orchestration blocker as mostly addressed and begin a small shell-replacement / frontend-contract phase
+5. keep `ModLaunch.vb` cleanup incremental: only peel off remaining step-local adapter glue or prompt/shell wrappers when they materially simplify a new shell consumer
+6. focus the next migration spike on replacing or paralleling a narrow launcher surface while continuing to reuse `PCL.Core` launch/startup/crash services
+7. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
+8. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
+
+Suggested next engineer targets, in priority order:
+
+1. keep reducing `PCL.Core` WPF coupling
+   - likely candidates: dialog/clipboard/system-dialog helpers, UI-facing logging/hint/message-box seams, and any service that currently depends on dispatcher-bound wrappers only for presentation
+2. keep `Application.xaml.vb` and `FormMain.xaml.vb` as shell adapters only
+   - do not move more policy back into them
+3. only touch Windows interop helpers when the goal is to isolate them better
+   - not to make them “portable” in place
+4. avoid spending time on visual/frontend replacement until the next narrow shell contract is chosen
 
 ## Important Non-Goals Right Now
 
