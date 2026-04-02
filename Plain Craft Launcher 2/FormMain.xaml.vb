@@ -3,6 +3,7 @@ Imports System.Runtime.InteropServices
 Imports System.Windows.Interop
 Imports System.Windows.Media.Effects
 Imports PCL.Core.App
+Imports PCL.Core.App.Essentials
 Imports PCL.Core.App.IoC
 Imports PCL.Core.Logging
 Imports PCL.Core.UI
@@ -190,54 +191,14 @@ Public Class FormMain
         RunInNewThread(
             Sub()
                 Try
-                    '特殊版本提示
-#If DEBUG Or DEBUGCI Then
-                    If Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT") Is Nothing Then
-#If DEBUG Then
-                        Const hint = "当前运行的 PCL 社区版为 Debug 版本。" & vbCrLf &
-                                     "该版本仅适合开发者调试运行，可能会有严重的性能下降以及各种奇怪的网络问题。" & vbCrLf &
-                                     vbCrLf &
-                                     "非开发者用户使用该版本造成的一切问题均不被社区支持，相关 issue 可能会被直接关闭。" & vbCrLf &
-                                     "除非您是开发者，否则请立即删除该版本，并下载最新稳定版使用。"
-#Else
-                        Const hint = "当前运行的 PCL 社区版为 CI 自动构建版本。" & vbCrLf &
-                                     "该版本包含最新的漏洞修复、优化和新特性，但性能和稳定性较差，不适合日常使用和制作整合包。" & vbCrLf &
-                                     vbCrLf &
-                                     "除非社区开发者要求或您自己想要这么做，否则请下载最新稳定版使用。"
-#End If
-                        MyMsgBox($"{hint}{vbCrLf}{vbCrLf}可以添加 PCL_DISABLE_DEBUG_HINT 环境变量 (任意值) 来隐藏这个提示。",
-                                 "特殊版本提示", "我清楚我在做什么", "打开最新版下载页并退出", IsWarn:=True,
-                                 Button2Action:=Sub()
-                                                    OpenWebsite("https://github.com/PCL-Community/PCL2-CE/releases/latest")
-                                                    EndProgram(False)
-                                                End Sub)
-                    End If
-#End If
-                    'EULA 提示
-                    If Not Setup.Get("SystemEula") Then
-                        Select Case MyMsgBox("在使用 PCL 前，请同意 PCL 的用户协议与免责声明。", "协议授权", "同意", "拒绝", "查看用户协议与免责声明",
-                                Button3Action:=Sub() OpenWebsite("https://shimo.im/docs/rGrd8pY8xWkt6ryW"))
-                            Case 1
-                                Setup.Set("SystemEula", True)
-                            Case 2
-                                EndProgram(False)
-                        End Select
-                    End If
-                    '遥测提示
-                    If Config.System.TelemetryConfig.IsDefault() Then
-                        Dim selection = MyMsgBox("启用遥测数据收集后，启动器将会收集并上报错误与设备环境信息，这可以帮助开发者修复潜在的问题、更好的进行规划和开发。" & vbCrLf &
-                                             "若启用此功能，我们将会收集以下信息：" & vbCrLf & vbCrLf &
-                                             "- 启动器内出现的错误" & vbCrLf &
-                                             "- 启动器版本信息与识别码" & vbCrLf &
-                                             "- Windows 系统版本与架构" & vbCrLf &
-                                             "- 已安装的物理内存大小" & vbCrLf &
-                                             "- NAT 与 IPv6 支持情况" & vbCrLf &
-                                             "- 是否使用过官方版 PCL、HMCL 或 BakaXL" & vbCrLf & vbCrLf &
-                                             "这些数据均不与你关联，我们也绝不会向第三方出售数据。" & vbCrLf &
-                                             "如果不希望启用遥测，可以选择拒绝。这不会影响其他功能的正常使用，但可能会影响开发者修复潜在 Bug。" & vbCrLf &
-                                             "你可以随时在启动器设置中调整这项设置。", "启用遥测数据收集", "同意", "拒绝")
-                        Config.System.TelemetryConfig.SetValue(selection = 1, forceNewValue:=True)
-                    End If
+                    Dim consentResult = LauncherStartupConsentService.Evaluate(New LauncherStartupConsentRequest(
+                        GetStartupSpecialBuildKind(),
+                        Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT") IsNot Nothing,
+                        Setup.Get("SystemEula"),
+                        Config.System.TelemetryConfig.IsDefault()))
+                    For Each prompt In consentResult.Prompts
+                        If Not RunStartupPrompt(prompt) Then Exit For
+                    Next
                 Catch ex As Exception
                     Log(ex, "初始弹窗提示运行失败", LogLevel.Feedback)
                 End Try
@@ -258,6 +219,61 @@ Public Class FormMain
 
         Log("[Start] 第三阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
     End Sub
+
+    Private Shared Function GetStartupSpecialBuildKind() As LauncherStartupSpecialBuildKind
+#If DEBUG Then
+        Return LauncherStartupSpecialBuildKind.Debug
+#ElseIf DEBUGCI Then
+        Return LauncherStartupSpecialBuildKind.Ci
+#Else
+        Return LauncherStartupSpecialBuildKind.None
+#End If
+    End Function
+
+    Private Function RunStartupPrompt(prompt As LauncherStartupPrompt) As Boolean
+        If prompt Is Nothing OrElse prompt.Buttons Is Nothing OrElse prompt.Buttons.Count = 0 Then Return True
+        Dim button1Action As Action = Nothing
+        Dim button2Action As Action = Nothing
+        Dim button3Action As Action = Nothing
+        If prompt.Buttons.Count >= 1 AndAlso Not prompt.Buttons(0).ClosesPrompt Then button1Action = Sub() RunStartupPromptActions(prompt.Buttons(0).Actions)
+        If prompt.Buttons.Count >= 2 AndAlso Not prompt.Buttons(1).ClosesPrompt Then button2Action = Sub() RunStartupPromptActions(prompt.Buttons(1).Actions)
+        If prompt.Buttons.Count >= 3 AndAlso Not prompt.Buttons(2).ClosesPrompt Then button3Action = Sub() RunStartupPromptActions(prompt.Buttons(2).Actions)
+
+        Dim result = MyMsgBox(
+            prompt.Message,
+            prompt.Title,
+            prompt.Buttons(0).Label,
+            If(prompt.Buttons.Count >= 2, prompt.Buttons(1).Label, ""),
+            If(prompt.Buttons.Count >= 3, prompt.Buttons(2).Label, ""),
+            IsWarn:=prompt.IsWarning,
+            Button1Action:=button1Action,
+            Button2Action:=button2Action,
+            Button3Action:=button3Action)
+
+        If result >= 1 AndAlso result <= prompt.Buttons.Count Then
+            Dim selectedButton = prompt.Buttons(result - 1)
+            If selectedButton.ClosesPrompt Then Return RunStartupPromptActions(selectedButton.Actions)
+        End If
+        Return True
+    End Function
+
+    Private Function RunStartupPromptActions(actions As IReadOnlyList(Of LauncherStartupPromptAction)) As Boolean
+        For Each promptAction In actions
+            Select Case promptAction.Kind
+                Case LauncherStartupPromptActionKind.Accept
+                    Setup.Set("SystemEula", True)
+                Case LauncherStartupPromptActionKind.OpenUrl
+                    OpenWebsite(promptAction.Value)
+                Case LauncherStartupPromptActionKind.ExitLauncher
+                    EndProgram(False)
+                    Return False
+                Case LauncherStartupPromptActionKind.SetTelemetryEnabled
+                    Config.System.TelemetryConfig.SetValue(Boolean.Parse(promptAction.Value), forceNewValue:=True)
+                Case LauncherStartupPromptActionKind.Reject, LauncherStartupPromptActionKind.Continue
+            End Select
+        Next
+        Return True
+    End Function
     '根据打开次数触发的事件
     Private Sub RunCountSub()
         Setup.Set("SystemCount", Setup.Get("SystemCount") + 1)
