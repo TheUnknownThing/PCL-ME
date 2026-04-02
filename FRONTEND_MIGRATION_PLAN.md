@@ -19,7 +19,7 @@ Decision:
 Current estimate:
 
 - portable runtime/core extraction: `complete`
-- backend readiness for a replacement frontend shell: roughly `89%~91%`
+- backend readiness for a replacement frontend shell: roughly `85%~89%` for a real end-to-end frontend cutover, and roughly `93%~95%` for reusable portable workflow/policy coverage
 
 The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
 
@@ -74,6 +74,9 @@ These workflow extractions are already done and should be treated as available m
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - a thin replacement-shell spike exists in `PCL.Frontend.Spike` and can now expose startup / launch / crash workflows in `plan`, `run`, and `execute` modes, with JSON payloads, text-mode shell transcripts, workspace artifact materialization, and file-backed input replay, without WPF views
+- the spike can now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt outcomes
+- the spike can now accept explicit crash-export target paths and record the selected destination as a shell artifact
+- the spike can now derive best-effort host-backed startup / launch / crash inputs with `--host-env true`
 - a portable extracted-backend assembly exists in `PCL.Core.Backend`, and the spike now consumes that assembly instead of the Windows-only `PCL.Core` project
 - launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch prerun `options.txt` target selection and write policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
@@ -99,6 +102,7 @@ These workflow extractions are already done and should be treated as available m
 - launch JSON argument-section extraction is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJsonArgumentService`
 - launch JVM argument assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJvmArgumentService`
 - launch game argument assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGameArgumentService`
+- Java runtime selection and manifest file planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
 
 Do not redo these in the frontend migration branch; build on top of them.
 
@@ -161,6 +165,7 @@ These flows still combine:
 After the latest cleanup slices, the former biggest blocker has changed:
 
 - login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution and the remaining shell/UI adapter work
+- Java runtime manifest selection / download file planning are now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModJava.vb` still own the download-job lifecycle, cancellation, and retry shell behavior
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
 - launch prerun `launcher_profiles.json` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly handles file existence, writes, and retry shell behavior
@@ -197,15 +202,15 @@ Create launcher-facing services in `PCL.Core` for:
 Most practical next code targets:
 
 1. finish shrinking `ModLaunch.vb`
-   Focus on remaining network/request coordination and Java-selection / download shell bridging that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
+   Focus on remaining network/request coordination and Java download job shell bridging that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
 2. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
    Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
 3. trim `ModCrash.vb`
    Keep only picker / zip / Explorer shell work in the launcher.
 4. build a tiny replacement shell spike
    It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
-   The current spike already proves text-mode startup / launch / crash shell consumption and basic workspace/file execution, so the next extension work should focus on real adapter integration rather than rebuilding command plumbing.
-   The best next spike step is feeding more real launcher-backed inputs into the shell, especially launch request execution and crash export destination handling.
+   The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, Java runtime download planning, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
+   The best next spike step is feeding more real launcher-backed request execution and Java-download job outcomes into the shell, instead of only modeled responses.
 
 Keep the following in the launcher as adapters:
 

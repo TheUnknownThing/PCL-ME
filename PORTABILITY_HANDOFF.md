@@ -17,6 +17,11 @@ The repo is no longer at the “portability is just an idea” stage. There is n
 
 Latest continuation update:
 
+- shell-spike launch scenarios now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt transcripts
+- shell-spike execute mode now supports explicit crash-export destination handoff and records the selected archive target as a shell artifact
+- shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
+- portable Java runtime selection and manifest file planning now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
+- launcher Java runtime manifest selection / file planning in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now route through `MinecraftJavaRuntimeDownloadService`
 - a new portable `net8.0` backend assembly now lives in `PCL.Core.Backend`, compiling the extracted startup / launch / crash workflow layer outside `PCL.Core`'s `net8.0-windows` target
 - a new portable backend test lane now lives in `PCL.Core.Backend.Test`, and its extracted workflow/service coverage runs on macOS/Linux hosts
 - `PCL.Frontend.Spike` now targets plain `net8.0` and runs against `PCL.Core.Backend` instead of `PCL.Core`
@@ -133,10 +138,11 @@ What is already true:
 - the major runtime seams are no longer speculative; they exist in code and have tests/build validation
 - a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
 - the remaining launcher logic is now primarily shell adapters, prompt adapters, concrete network IO, and Windows-facing compatibility code rather than portable runtime policy
+- `PCL.Frontend.Spike` is now strong enough to review login request execution, Java runtime download planning, host-backed path wiring, and crash-export target handoff without pulling WPF back into scope
 
 What is not true yet:
 
-- `ModLaunch.vb` still owns adapter-level request execution, Java-selection / download shell bridging, and launcher prompt integration
+- `ModLaunch.vb` still owns adapter-level request execution, Java download job orchestration, Java-selection retry flow, and launcher prompt integration
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
@@ -582,6 +588,10 @@ This is the meaningful history for the current portability work:
 - `53c09fdf` `Extract crash prompt shell adapter`
 - `41f13f26` `Extract auth profile selection shell flow`
 - `2ce1d80e` `Extract login dialog shell handling`
+- `b2a4e939` `Add spike launch login execution modeling`
+- `622b0e36` `Add explicit crash export path handling`
+- `4f52b60a` `Add host-backed spike input mode`
+- `cbe6a6f3` `Extract Java runtime download planning`
 
 If the next engineer wants to understand the current extraction shape, start with the twelve newest commits above, then continue downward through the earlier Wave 1 / Wave 2 extraction history.
 
@@ -634,7 +644,7 @@ Suggested next engineer targets, in priority order:
 2. keep `Application.xaml.vb` and `FormMain.xaml.vb` as shell adapters only
    - do not move more policy back into them
 3. keep trimming `ModLaunch.vb`
-   - likely next slices: remaining launch-step adapter glue, Java-selection / download shell bridging, and post-step launcher notifications or dialogs that still sit inline in the step runner
+   - likely next slices: remaining launch-step adapter glue, Java download job lifecycle / retry shell bridging, and post-step launcher notifications or dialogs that still sit inline in the step runner
 4. keep trimming `Application.xaml.vb`
    - likely next slices: startup command execution shell flow and remaining startup presentation hooks that still assemble local policy
 5. only touch Windows interop helpers when the goal is to isolate them better
@@ -662,6 +672,7 @@ Do not do these yet unless the runtime boundary is already stable:
 - `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
 - the largest former workflow blocker, launch login execution / orchestration, is now largely expressed through `PCL.Core` execution and mutation services, but the step adapters in `ModLaunch.vb` are still VB/WPF-coupled
+- Java runtime manifest selection and download file planning are now portable, but the actual launcher-managed download job lifecycle and retry UX are still adapter-owned
 - `Application.xaml.vb` still owns startup command execution shell work and WPF-specific startup presentation
 - `ModCrash.vb` still owns save-picker invocation, export destination flow, and Explorer opening
 - `PCL.Core` still contains Windows-only shell/platform helpers such as `IO/Files.cs` shortcut/dialog logic and `App/Tools/DependencyCheckService.cs` Microsoft Store / PowerShell checks
@@ -751,7 +762,7 @@ It is ready for handoff to another engineer, but the recommended near-term phase
 
 ## One-Line Summary
 
-Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, startup/crash/launch shell policies now have broader core-side coverage, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining launcher shell cleanup plus `PCL.Core` Windows-helper reduction before claiming a truly portable backend or attempting a real frontend-shell cutover.
+Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, startup/crash/launch shell policies now have broader core-side coverage, Java runtime download planning is now portable, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining launcher shell cleanup plus `PCL.Core` Windows-helper reduction before claiming a truly portable backend or attempting a real frontend-shell cutover.
 
 ## Updated Bottom Line
 
