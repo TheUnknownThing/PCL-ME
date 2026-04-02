@@ -254,7 +254,6 @@ Public Class FormMain
             Catch ex As Exception
                 Log(ex, "初始化加载池运行失败", LogLevel.Feedback)
             End Try
-            GetSystemInfo()
         End Sub, "Start Loader", ThreadPriority.BelowNormal)
 
         Log("[Start] 第三阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")

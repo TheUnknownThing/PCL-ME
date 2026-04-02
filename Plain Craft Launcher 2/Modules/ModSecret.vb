@@ -511,53 +511,6 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
 
 #End Region
 
-#Region "系统信息"
-    Friend CPUName As String = Nothing
-    ''' <summary>
-    ''' 系统 GPU 信息
-    ''' </summary>
-    Friend GPUs As New List(Of GPUInfo)
-    ''' <summary>
-    ''' 已安装物理内存大小，单位 MB
-    ''' </summary>
-    Friend SystemMemorySize As Long = KernelInterop.GetPhysicalMemoryBytes().Total / 1024 / 1024
-    ''' <summary>
-    ''' 系统信息描述，例如 Microsoft Windows 11 专业工作站版 10.0.22635.0
-    ''' </summary>
-    Public OSInfo As String = $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} {Environment.OSVersion.Version}".Trim()
-    Class GPUInfo
-        Friend Name As String
-        ''' <summary>
-        ''' 显存大小，单位 MB
-        ''' </summary>
-        Friend Memory As Long
-        Friend DriverVersion As String
-    End Class
-    ''' <summary>
-    ''' 获取系统信息，例如 CPU 与 GPU，并存储到 CPUName 和 GPUs
-    ''' </summary>
-    Friend Sub GetSystemInfo()
-        Try
-            Dim snapshot = SystemEnvironmentInfo.GetSnapshot()
-            CPUName = snapshot.CpuName
-            SystemMemorySize = CLng(snapshot.TotalPhysicalMemoryBytes / 1024 / 1024)
-            OSInfo = $"{snapshot.OsDescription} {snapshot.OsVersion}".Trim()
-            GPUs.Clear()
-            For Each gpu In snapshot.Gpus
-                GPUs.Add(New GPUInfo With {
-                    .Name = gpu.Name,
-                    .Memory = gpu.MemoryMegabytes,
-                    .DriverVersion = gpu.DriverVersion
-                })
-            Next
-
-            Log("已获取系统环境信息")
-        Catch ex As Exception
-            Log(ex, "获取系统环境信息时出错", LogLevel.Normal)
-        End Try
-    End Sub
-#End Region
-
 #Region "主题"
 
     ''' <summary>
