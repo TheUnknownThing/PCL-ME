@@ -20,15 +20,12 @@ Public Class FormMain
         RunInNewThread(
             Sub()
                 Dim ChangelogFile = $"{PathTemp}CEUpdateLog.md"
-                Dim Changelog As String
+                Dim changelog As String = Nothing
                 If File.Exists(ChangelogFile) Then
-                    Changelog = ReadFile(ChangelogFile)
-                Else
-                    Changelog = "欢迎使用呀~"
+                    changelog = ReadFile(ChangelogFile)
                 End If
-                If MyMsgBoxMarkdown(Changelog, "PCL CE 已更新至 " & VersionBranchName & " " & VersionBaseName, "确定", "完整更新日志") = 2 Then
-                    OpenWebsite("https://github.com/PCL-Community/PCL2-CE/releases")
-                End If
+                Dim prompt = LauncherUpdateLogService.BuildPrompt(New LauncherUpdateLogRequest(changelog, VersionBranchName, VersionBaseName))
+                ModUpdateLogShell.ShowUpdateLog(prompt)
             End Sub, "UpdateLog Output")
     End Sub
 

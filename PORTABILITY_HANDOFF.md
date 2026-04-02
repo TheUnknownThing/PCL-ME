@@ -19,6 +19,7 @@ Latest continuation update:
 
 - startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`
 - launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
+- launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
 - launch-session music / video-background / launcher-visibility shell policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
@@ -28,6 +29,7 @@ Latest continuation update:
 - startup immediate-command shell policy and environment-warning prompt contract now live in `PCL.Core.App.Essentials.LauncherStartupShellService`
 - launcher startup visual application now routes through `Plain Craft Launcher 2/Application.xaml.vb` consuming `LauncherStartupVisualService`
 - launcher startup open-count milestone application now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherStartupMilestoneService`
+- launcher startup update-log rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
@@ -181,6 +183,9 @@ These were completed after Wave 2 was declared stable:
 - startup open-count milestone policy moved out of the launcher
   - `LauncherStartupMilestoneService` now owns startup-count advancement plus the hidden-theme milestone notice contract
   - `FormMain.xaml.vb` now only applies the returned count update and launcher-local theme-unlock side effect
+- startup update-log prompt policy moved out of the launcher
+  - `LauncherUpdateLogService` now owns update-log fallback content, title text, button labels, and release-log URL contract
+  - `FormMain.xaml.vb` now only loads the changelog file and delegates markdown rendering/browser opening to `ModUpdateLogShell.vb`
 - fatal log dialog presentation moved behind a runtime hook
   - `LogRuntimeHooks` now owns fatal-dialog presentation indirection for `PCL.Core.Logging.LogService`
   - the current WPF/VB launcher reattaches the Windows `MsgBox` behavior from `Program.vb`

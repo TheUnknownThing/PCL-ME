@@ -34,8 +34,10 @@ These workflow extractions are already done and should be treated as available m
 - startup immediate-command shell policy and environment-warning prompt contract are owned by `PCL.Core.App.Essentials.LauncherStartupShellService`
 - startup visual defaults are owned by `PCL.Core.App.Essentials.LauncherStartupVisualService`
 - startup open-count milestone policy is owned by `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
+- startup update-log prompt policy is owned by `PCL.Core.App.Essentials.LauncherUpdateLogService`
 - fatal log dialog presentation is routed through `PCL.Core.Logging.LogRuntimeHooks` instead of being hardcoded in `PCL.Core.Logging.LogService`
 - launcher startup prompt rendering/action application is centralized in `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
+- launcher startup update-log rendering is centralized in `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
 - launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
@@ -105,7 +107,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, or prompt rendering; it still owns save-picker invocation, report zip creation, and Explorer opening
 - `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, warning prompt construction, or startup visual defaults; it still owns WPF startup shell work such as splash-screen display, tooltip metadata application, memory optimization execution, and process exit behavior
-- `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, or startup open-count milestone policy; it still owns WPF startup presentation and shell adapters
+- `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, startup open-count milestone policy, or startup update-log prompt policy; it still owns WPF startup presentation and shell adapters
 - `Program.vb` now reattaches the current fatal-dialog presentation behavior through a runtime hook instead of that behavior being hardcoded in `PCL.Core`
 
 A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
