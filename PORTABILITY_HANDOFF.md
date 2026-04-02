@@ -17,15 +17,21 @@ The repo is no longer at the “portability is just an idea” stage. There is n
 
 Latest continuation update:
 
+- startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`
+- launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
+- launch-session music / video-background / launcher-visibility shell policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
 - launch-count support prompt policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - prelaunch GPU-preference failure / admin-retry policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup immediate-command shell policy and environment-warning prompt contract now live in `PCL.Core.App.Essentials.LauncherStartupShellService`
+- launcher startup visual application now routes through `Plain Craft Launcher 2/Application.xaml.vb` consuming `LauncherStartupVisualService`
+- launcher startup open-count milestone application now routes through `Plain Craft Launcher 2/FormMain.xaml.vb` consuming `LauncherStartupMilestoneService`
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
+- launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - Authlib role-selection UI is now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 - Microsoft device-code login popup lifecycle and third-party login failure dialogs are now isolated behind the launch shell adapter instead of being embedded in `ModLaunch.vb`
 
@@ -169,6 +175,12 @@ These were completed after Wave 2 was declared stable:
 - startup shell contract added for immediate commands and warning prompts
   - `LauncherStartupShellService` now owns startup immediate-command resolution and environment-warning prompt construction
   - `Application.xaml.vb` consumes the returned plan instead of directly assembling those shell decisions
+- startup visual defaults moved out of the launcher
+  - `LauncherStartupVisualService` now owns startup splash-screen eligibility plus default tooltip presentation values
+  - `Application.xaml.vb` applies the returned visual plan instead of hardcoding those shell defaults inline
+- startup open-count milestone policy moved out of the launcher
+  - `LauncherStartupMilestoneService` now owns startup-count advancement plus the hidden-theme milestone notice contract
+  - `FormMain.xaml.vb` now only applies the returned count update and launcher-local theme-unlock side effect
 - fatal log dialog presentation moved behind a runtime hook
   - `LogRuntimeHooks` now owns fatal-dialog presentation indirection for `PCL.Core.Logging.LogService`
   - the current WPF/VB launcher reattaches the Windows `MsgBox` behavior from `Program.vb`
@@ -198,6 +210,10 @@ These were completed after Wave 2 was declared stable:
   - launch prompt rendering, account-decision dialogs, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialogs now live in `ModLaunchPromptShell.vb`
   - crash-result prompt rendering now lives in `ModCrashPromptShell.vb`
   - this further reduces the amount of mixed UI logic still embedded directly in `Application.xaml.vb`, `FormMain.xaml.vb`, `ModLaunch.vb`, and `ModCrash.vb`
+- launch session shell application was split into a dedicated shell adapter
+  - `MinecraftLaunchShellService` now owns launch-start and watcher-stop music/video/visibility policy plus launch-count increment contracts
+  - `ModLaunchSessionShell.vb` now applies those returned shell actions for both `ModLaunch.vb` and `ModWatcher.vb`
+  - this removes another shared decision cluster from launcher-local gameplay lifecycle code
 - frontend migration planning artifact added
   - see `FRONTEND_MIGRATION_PLAN.md`
 

@@ -32,10 +32,14 @@ These workflow extractions are already done and should be treated as available m
 - launch GPU-preference failure / admin-retry policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
 - startup immediate-command shell policy and environment-warning prompt contract are owned by `PCL.Core.App.Essentials.LauncherStartupShellService`
+- startup visual defaults are owned by `PCL.Core.App.Essentials.LauncherStartupVisualService`
+- startup open-count milestone policy is owned by `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - fatal log dialog presentation is routed through `PCL.Core.Logging.LogRuntimeHooks` instead of being hardcoded in `PCL.Core.Logging.LogService`
 - launcher startup prompt rendering/action application is centralized in `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
+- launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
+- launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 
 Do not redo these in the frontend migration branch; build on top of them.
 
@@ -98,9 +102,10 @@ These flows still combine:
 After the latest cleanup slices, the former biggest blocker has changed:
 
 - login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution and the remaining shell/UI adapter work
+- launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, or prompt rendering; it still owns save-picker invocation, report zip creation, and Explorer opening
-- `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, or warning prompt construction; it still owns WPF startup shell work such as splash-screen display, tooltip metadata, memory optimization execution, and process exit behavior
-- `FormMain.xaml.vb` no longer owns version-transition migration policy or version-isolation migration policy; it still owns WPF startup presentation and shell adapters
+- `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, warning prompt construction, or startup visual defaults; it still owns WPF startup shell work such as splash-screen display, tooltip metadata application, memory optimization execution, and process exit behavior
+- `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, or startup open-count milestone policy; it still owns WPF startup presentation and shell adapters
 - `Program.vb` now reattaches the current fatal-dialog presentation behavior through a runtime hook instead of that behavior being hardcoded in `PCL.Core`
 
 A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
