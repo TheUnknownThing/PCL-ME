@@ -272,30 +272,34 @@ Public Module ModJava
     Private ReadOnly IgnoreHash As HashSet(Of String) = {"12976a6c2b227cbac58969c1455444596c894656", "c80e4bab46e34d02826eab226a4441d0970f2aba", "84d2102ad171863db04e7ee22a259d1f6c5de4a5"}.ToHashSet()
     Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
         Log("[Java] 开始获取 Java 下载信息")
-        Dim IndexFileStr As String = NetGetCodeByLoader(DlVersionListOrder(
-            {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
-            {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
-        ), IsJson:=True)
-        Dim runtimeSelection = MinecraftJavaRuntimeDownloadService.SelectRuntime(
-            New MinecraftJavaRuntimeSelectionRequest(
+        Dim indexRequestPlan = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan()
+        Dim IndexFileStr As String = NetGetCodeByLoader(
+            DlVersionListOrder(indexRequestPlan.OfficialUrls, indexRequestPlan.MirrorUrls),
+            IsJson:=True)
+        Dim manifestPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
+            New MinecraftJavaRuntimeManifestRequestPlanRequest(
                 IndexFileStr,
                 $"windows-x{If(Is32BitSystem, "86", "64")}",
-                Loader.Input))
+                Loader.Input,
+                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()))
         '获取文件列表
-        Dim Address As String = runtimeSelection.ManifestUrl
-        McLaunchLog($"准备下载 Java {runtimeSelection.VersionName}（{runtimeSelection.ComponentKey}）：{Address}")
-        Dim ListFileStr As String = NetGetCodeByRequestRetry(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}).First(), IsJson:=True)
-        LastJavaBaseDir = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime", runtimeSelection.ComponentKey)
-        Dim runtimePlan = MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(
-            New MinecraftJavaRuntimeDownloadPlanRequest(
+        McLaunchLog(manifestPlan.LogMessage)
+        Dim ListFileStr As String = NetGetCodeByRequestRetry(
+            DlSourceOrder(manifestPlan.RequestUrls.OfficialUrls, manifestPlan.RequestUrls.MirrorUrls).First(),
+            IsJson:=True)
+        LastJavaBaseDir = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime", manifestPlan.Selection.ComponentKey)
+        Dim runtimePlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+            New MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                 ListFileStr,
                 LastJavaBaseDir,
-                IgnoreHash.ToList()))
+                IgnoreHash.ToList(),
+                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()))
+        LastJavaBaseDir = runtimePlan.DownloadPlan.RuntimeBaseDirectory
         Dim Results As New List(Of NetFile)(runtimePlan.Files.Count)
         For Each filePlan In runtimePlan.Files
             Dim Checker As New FileChecker(ActualSize:=filePlan.Size, Hash:=filePlan.Sha1)
             If Checker.Check(filePlan.TargetPath) Is Nothing Then Continue For '跳过已存在的文件
-            Results.Add(New NetFile(DlSourceOrder({filePlan.Url}, {filePlan.Url.Replace("piston-data.mojang.com", "bmclapi2.bangbang93.com")}), filePlan.TargetPath, Checker))
+            Results.Add(New NetFile(DlSourceOrder(filePlan.RequestUrls.OfficialUrls, filePlan.RequestUrls.MirrorUrls), filePlan.TargetPath, Checker))
         Next
         Loader.Output = Results
         Log($"[Java] 需要下载 {Results.Count} 个文件，目标文件夹：{LastJavaBaseDir}")
