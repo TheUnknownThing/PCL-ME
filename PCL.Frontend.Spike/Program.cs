@@ -68,6 +68,20 @@ static object BuildStartupSample()
 static object BuildLaunchSample(string scenario)
 {
     var javaWorkflow = BuildJavaWorkflowPlan(scenario);
+    var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(
+        new MinecraftLaunchResolutionRequest(
+            WindowMode: 3,
+            LauncherWindowWidth: null,
+            LauncherWindowHeight: null,
+            LauncherTitleBarHeight: 0,
+            CustomWidth: 1280,
+            CustomHeight: 720,
+            GameVersionDrop: 8,
+            JavaMajorVersion: 21,
+            JavaRevision: 0,
+            HasOptiFine: false,
+            HasForge: false,
+            DpiScale: 1));
     var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(
         new MinecraftLaunchPrerunWorkflowRequest(
             LauncherProfilesPath: @"C:\Minecraft\.minecraft\launcher_profiles.json",
@@ -138,6 +152,25 @@ static object BuildLaunchSample(string scenario)
                     JavaFolder: @"C:\Java\bin",
                     JstackExecutableExists: true),
                 OutputRealTimeLog: true)));
+    var argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(
+        new MinecraftLaunchArgumentPlanRequest(
+            BaseArguments: "--username ${auth_player_name} --versionType ${version_type} --gameDir ${game_directory}",
+            JavaMajorVersion: 21,
+            UseFullscreen: false,
+            ExtraArguments: ["--demo"],
+            CustomGameArguments: "--width ${resolution_width} --height ${resolution_height}",
+            ReplacementValues: new Dictionary<string, string>
+            {
+                ["${auth_player_name}"] = "DemoPlayer",
+                ["${version_type}"] = "PCL CE",
+                ["${game_directory}"] = @"C:\Minecraft\.minecraft",
+                ["${resolution_width}"] = resolutionPlan.Width.ToString(),
+                ["${resolution_height}"] = resolutionPlan.Height.ToString()
+            },
+            WorldName: null,
+            ServerAddress: "play.example.invalid",
+            ReleaseTime: new DateTime(2024, 4, 23),
+            HasOptiFine: false));
     return new
     {
         scenario,
@@ -147,6 +180,8 @@ static object BuildLaunchSample(string scenario)
             javaWorkflow.MissingJavaPrompt,
             MinecraftLaunchJavaPromptDecision.Download),
         postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, hasSelectedJava: true),
+        resolutionPlan,
+        argumentPlan,
         prerunPlan,
         sessionStartPlan,
         postLaunchShell = MinecraftLaunchShellService.GetPostLaunchShellPlan(

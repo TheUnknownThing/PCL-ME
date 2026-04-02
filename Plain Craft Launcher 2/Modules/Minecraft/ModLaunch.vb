@@ -1487,68 +1487,29 @@ Retry:
             Arguments += " " & McLaunchArgumentsGameNew(McInstanceSelected)
             McLaunchLog("新版 Game 参数获取成功")
         End If
-        '编码参数（#4700、#5892、#5909）
-        If McLaunchJavaSelected.Installation.MajorVersion > 8 Then
-            If Not Arguments.Contains("-Dstdout.encoding=") Then Arguments = "-Dstdout.encoding=UTF-8 " & Arguments
-            If Not Arguments.Contains("-Dstderr.encoding=") Then Arguments = "-Dstderr.encoding=UTF-8 " & Arguments
-        End If
-        If McLaunchJavaSelected.Installation.MajorVersion >= 18 Then
-            If Not Arguments.Contains("-Dfile.encoding=") Then Arguments = "-Dfile.encoding=COMPAT " & Arguments
-        End If
-        'MJSB
-        Arguments = Arguments.Replace(" -Dos.name=Windows 10", " -Dos.name=""Windows 10""")
-        '全屏
-        If Setup.Get("LaunchArgumentWindowType") = 0 Then Arguments += " --fullscreen"
-        '由 Option 传入的额外参数
-        For Each Arg In CurrentLaunchOptions.ExtraArgs
-            Arguments += " " & Arg.Trim
-        Next
-        '自定义参数
         Dim ArgumentGame As String = Setup.Get("VersionAdvanceGame", instance:=McInstanceSelected)
-        Arguments += " " & If(ArgumentGame = "", Setup.Get("LaunchAdvanceGame"), ArgumentGame)
-        '替换参数
         Dim ReplaceArguments = McLaunchArgumentsReplace(McInstanceSelected, Loader)
-        If String.IsNullOrWhiteSpace(ReplaceArguments("${version_type}")) Then
-            '若自定义信息为空，则去掉该部分
-            Arguments = Arguments.Replace(" --versionType ${version_type}", "")
-            ReplaceArguments("${version_type}") = """"""
-        End If
-        Dim FinalArguments As String = ""
-        For Each Argument In Arguments.Split(" ")
-            For Each Entry As KeyValuePair(Of String, String) In ReplaceArguments
-                Argument = Argument.Replace(Entry.Key, Entry.Value)
-            Next
-            If (Argument.Contains(" ") OrElse Argument.Contains(":\")) AndAlso Not Argument.EndsWithF("""") Then Argument = $"""{Argument}"""
-            FinalArguments += Argument & " "
-        Next
-        FinalArguments = FinalArguments.TrimEnd()
-        '进存档
         Dim WorldName As String = CurrentLaunchOptions.WorldName
-        If WorldName IsNot Nothing Then
-            FinalArguments += $" --quickPlaySingleplayer ""{WorldName}"""
-        End If
-        '进服
         Dim Server As String = If(String.IsNullOrEmpty(CurrentLaunchOptions.ServerIp), Setup.Get("VersionServerEnter", McInstanceSelected), CurrentLaunchOptions.ServerIp)
-        If String.IsNullOrWhiteSpace(WorldName) AndAlso Not String.IsNullOrWhiteSpace(Server) Then
-            If McInstanceSelected.ReleaseTime > New Date(2023, 4, 4) Then
-                'QuickPlay
-                FinalArguments += $" --quickPlayMultiplayer ""{Server}"""
-            Else
-                '老版本
-                If Server.Contains(":") Then
-                    '包含端口号
-                    FinalArguments += " --server " & Server.Split(":")(0) & " --port " & Server.Split(":")(1)
-                Else
-                    '不包含端口号
-                    FinalArguments += " --server " & Server & " --port 25565"
-                End If
-                If McInstanceSelected.Info.HasOptiFine Then Hint("OptiFine 与自动进入服务器可能不兼容，有概率导致材质丢失甚至游戏崩溃！", HintType.Critical)
-            End If
+        Dim argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(
+            New MinecraftLaunchArgumentPlanRequest(
+                Arguments,
+                McLaunchJavaSelected.Installation.MajorVersion,
+                Setup.Get("LaunchArgumentWindowType") = 0,
+                CurrentLaunchOptions.ExtraArgs,
+                If(ArgumentGame = "", Setup.Get("LaunchAdvanceGame"), ArgumentGame),
+                ReplaceArguments,
+                WorldName,
+                Server,
+                McInstanceSelected.ReleaseTime,
+                McInstanceSelected.Info.HasOptiFine))
+        If argumentPlan.ShouldWarnAboutLegacyServerWithOptiFine Then
+            Hint("OptiFine 与自动进入服务器可能不兼容，有概率导致材质丢失甚至游戏崩溃！", HintType.Critical)
         End If
         '输出
         McLaunchLog("Minecraft 启动参数：")
-        McLaunchLog(FinalArguments)
-        McLaunchArgument = FinalArguments
+        McLaunchLog(argumentPlan.FinalArguments)
+        McLaunchArgument = argumentPlan.FinalArguments
     End Sub
 
     'Jvm 部分（第一段）
@@ -1891,28 +1852,32 @@ NextInstance:
         GameArguments.Add("${user_type}", "msa") '#1221
 
         '窗口尺寸参数
-        Dim GameSize As Size
-        Select Case Setup.Get("LaunchArgumentWindowType")
-            Case 2 '与启动器尺寸一致
-                Dim Result As Size
-                RunInUiWait(Sub() Result = New Size(GetPixelSize(FrmMain.PanForm.ActualWidth), GetPixelSize(FrmMain.PanForm.ActualHeight)))
-                GameSize = Result
-                GameSize.Height -= 29.5 * DPI / 96 '标题栏高度
-            Case 3 '自定义
-                GameSize = New Size(Math.Max(100, Setup.Get("LaunchArgumentWindowWidth")), Math.Max(100, Setup.Get("LaunchArgumentWindowHeight")))
-            Case Else
-                GameSize = New Size(854, 480)
-        End Select
-        If McInstanceSelected.Info.Drop <= 120 AndAlso
-            McLaunchJavaSelected.Installation.MajorVersion <= 8 AndAlso McLaunchJavaSelected.Installation.Version.Revision >= 200 AndAlso McLaunchJavaSelected.Installation.Version.Revision <= 321 AndAlso
-            Not McInstanceSelected.Info.HasOptiFine AndAlso Not McInstanceSelected.Info.HasForge Then
-            '修复 #3463：1.12.2-，JRE 8u200~321 下窗口大小为设置大小的 DPI% 倍
-            McLaunchLog($"已应用窗口大小过大修复（{McLaunchJavaSelected.Installation.Version.Revision}）")
-            GameSize.Width /= DPI / 96
-            GameSize.Height /= DPI / 96
+        Dim launcherWindowWidth As Double? = Nothing
+        Dim launcherWindowHeight As Double? = Nothing
+        If Setup.Get("LaunchArgumentWindowType") = 2 Then
+            RunInUiWait(
+                Sub()
+                    launcherWindowWidth = GetPixelSize(FrmMain.PanForm.ActualWidth)
+                    launcherWindowHeight = GetPixelSize(FrmMain.PanForm.ActualHeight)
+                End Sub)
         End If
-        GameArguments.Add("${resolution_width}", Math.Round(GameSize.Width))
-        GameArguments.Add("${resolution_height}", Math.Round(GameSize.Height))
+        Dim resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(
+            New MinecraftLaunchResolutionRequest(
+                CInt(Setup.Get("LaunchArgumentWindowType")),
+                launcherWindowWidth,
+                launcherWindowHeight,
+                29.5 * DPI / 96,
+                CInt(Setup.Get("LaunchArgumentWindowWidth")),
+                CInt(Setup.Get("LaunchArgumentWindowHeight")),
+                McInstanceSelected.Info.Drop,
+                McLaunchJavaSelected.Installation.MajorVersion,
+                McLaunchJavaSelected.Installation.Version.Revision,
+                McInstanceSelected.Info.HasOptiFine,
+                McInstanceSelected.Info.HasForge,
+                DPI / 96))
+        If resolutionPlan.LogMessage IsNot Nothing Then McLaunchLog(resolutionPlan.LogMessage)
+        GameArguments.Add("${resolution_width}", resolutionPlan.Width)
+        GameArguments.Add("${resolution_height}", resolutionPlan.Height)
 
         'Assets 相关参数
         GameArguments.Add("${game_assets}", ShortenPath(McFolderSelected & "assets\virtual\legacy")) '1.5.2 的 pre-1.6 资源索引应与 legacy 合并
