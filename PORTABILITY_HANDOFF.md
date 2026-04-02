@@ -13,7 +13,7 @@ The long-term direction is still:
 2. keep current Windows launcher behavior working through adapters
 3. replace the WPF/VB frontend only after the runtime boundary is stable
 
-The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, and several Wave 2 runtime seams are already extracted.
+The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, and Wave 2 runtime/platform extraction is now complete.
 
 ## Big Goal
 
@@ -158,40 +158,44 @@ This is the meaningful history for the current portability work:
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
-## What Still Remains For Wave 2
+## Wave 2 Completion Status
 
-Wave 2 is not fully done yet.
+Wave 2 runtime/platform extraction is complete.
 
-The biggest remaining runtime/platform work is now concentrated in:
+The Windows-bound runtime responsibilities that were still mixed into shared services have now been isolated behind explicit Windows adapters or platform services:
 
-1. process/platform service abstraction
-2. remaining `Utils.OS` Windows-specific helpers
-3. remaining Windows-bound app/runtime services that still directly inspect OS/registry/process state
+- process/platform service abstraction completed
+  - non-admin process lifecycle is portable in Foundation
+  - Windows admin/UAC/WMI/GPU preference behavior is isolated in `WindowsProcessPlatformService`
+- system theme probing completed
+  - theme detection is isolated in `WindowsRegistrySystemThemeSource`
+- registry monitoring completed
+  - registry change observation is isolated in `WindowsRegistryChangeMonitor`
+- telemetry OS and registry probes completed
+  - official launcher detection is isolated in `WindowsRegistryOfficialLauncherUsageProbe`
+  - startup/telemetry runtime inspection flows through `SystemRuntimeInfoSourceProvider`
+- directory permission probing completed
+  - Windows ACL-based logic is isolated in `WindowsAclDirectoryPermissionService`
+  - portable fallback probing exists for non-Windows environments
 
-The most obvious remaining hotspots:
+What remains in `PCL.Core` is now either:
 
-- `PCL.Core/Utils/OS/ProcessInterop.cs`
-  - uses Windows admin checks, WMI, registry GPU preference logic, `TASKKILL.EXE`
-- `PCL.Core/Utils/OS/SystemTheme.cs`
-- `PCL.Core/UI/Theme/SystemThemeHelper.cs`
-- `PCL.Core/Utils/OS/RegistryChangeMonitor.cs`
-- `PCL.Core/App/Essentials/TelemetryService.cs`
-  - still uses registry reads
-- some startup/diagnostic helpers that still read OS/process state directly
-- `Utils.Secret`
-  - still depends on Windows-specific crypto/device assumptions and remains explicitly out of scope for now
+- deliberate Windows adapter/implementation code
+- launcher/UI-specific Windows code in WPF/VB layers
+- explicitly deferred secure/device identity code under `Utils.Secret`
 
 ## Recommended Next Steps
 
-The next engineer should stay focused on runtime extraction, not UI migration.
+The next engineer should treat Wave 2 as finished and move to the next boundary, not reopen the runtime seams that are now stable.
 
 Recommended order:
 
-1. extract process/platform abstractions out of `ProcessInterop`
-   - separate pure process start/kill/command querying from Windows-only admin/WMI/registry behavior
-2. extract remaining non-UI OS/environment helpers that can become Foundation-safe
-3. isolate theme/registry observers and telemetry OS probes behind Windows adapters
-4. do another macOS validation pass and Foundation scan after each slice
+1. keep `PCL.Core.Foundation` stable and avoid leaking UI/Win32 concerns back into it
+2. decide whether the next phase is:
+   - Wave 3 launcher/runtime integration cleanup, or
+   - frontend migration planning
+3. if continuing portability work, focus on launcher-side WPF/VB OS dependencies rather than runtime-core extraction
+4. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
 
 ## Important Non-Goals Right Now
 
@@ -205,10 +209,9 @@ Do not do these yet unless the runtime boundary is already stable:
 
 ## Known Risks / Sticky Areas
 
-- `ConfigService` is still in `PCL.Core`; only the storage layer is headless so far
-- Java launch/launcher UI still has many Windows-specific assumptions in VB/WPF call sites even though discovery/runtime core is more portable now
-- `ProcessInterop` is still one of the densest Windows-specific runtime clusters
-- `Utils.Secret` still blocks a truly headless secure config/auth story
+- `ConfigService` is still in `PCL.Core`; only the storage/runtime seam is headless
+- Java launch and the launcher-side VB/WPF flows still contain Windows assumptions even though the runtime/discovery core is portable
+- `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
 
 ## Working Rules For The Next Engineer
@@ -220,6 +223,28 @@ Do not do these yet unless the runtime boundary is already stable:
 - run `dotnet build PCL.Core/PCL.Core.csproj -c Debug`
 - rerun the Foundation Windows-API scan after each extraction chunk
 
+## Recent Completion Commits
+
+The final Wave 2 checkpoint history after the previous handoff is:
+
+- `5e2cf992` `refactor(process): add portable foundation process manager`
+- `a497f672` `refactor(process): delegate core process helpers through windows facade`
+- `459b79ce` `test(portability): rerun process portability validation`
+- `4873eb24` `refactor(theme): isolate system theme reads behind windows source`
+- `64e00ad3` `refactor(telemetry): isolate official launcher probe behind windows adapter`
+- `08edf3ef` `test(portability): rerun theme and telemetry validation`
+- `5e0e7c92` `refactor(runtime): add system runtime probe adapters`
+- `b64cf13f` `refactor(runtime): route startup and telemetry through runtime probe`
+- `4e8a7134` `test(portability): rerun runtime probe validation`
+- `0728569d` `refactor(registry): isolate registry monitor behind windows implementation`
+- `22c972a3` `refactor(proxy): route registry proxy monitoring through adapter`
+- `946b1569` `test(portability): rerun registry adapter validation`
+- `e88b5d55` `refactor(process): add windows process platform service`
+- `d317faf3` `refactor(process): delegate interop facade through platform service`
+- `b95cc838` `test(portability): rerun process platform validation`
+- `cd8da717` `refactor(io): isolate directory permission checks behind platform service`
+- `1bb1befe` `refactor(runtime): route easytier and dependency checks through runtime info`
+
 ## One-Line Summary
 
-The project is now partway through Wave 2: paths, config storage, proxy/network seams, and the Java runtime/discovery core are extracted into Foundation, the repo is green on macOS validation, and the next engineer should focus on the remaining process/platform and OS-bound runtime helpers without touching the UI migration yet.
+Wave 2 is complete: the runtime/core portability seams are now extracted and stabilized, Windows-specific runtime behavior lives behind explicit adapters in `PCL.Core`, Foundation remains headless and macOS-valid, and the next phase should move up to launcher-side or frontend-level portability work rather than further core-runtime extraction.
