@@ -86,23 +86,6 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
         Return Identify.LauncherId
     End Function
 
-    Friend Sub SecretLaunchJvmArgs(ByRef DataList As List(Of String))
-        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", instance:=McInstanceSelected)
-        DataList.Insert(0, If(DataJvmCustom = "", Setup.Get("LaunchAdvanceJvm"), DataJvmCustom)) '可变 JVM 参数
-        Select Case Setup.Get("LaunchPreferredIpStack")
-            Case 0
-                DataList.Add("-Djava.net.preferIPv4Stack=true")
-                DataList.Add("-Djava.net.preferIPv4Addresses=true")
-            Case 2
-                DataList.Add("-Djava.net.preferIPv6Stack=true")
-                DataList.Add("-Djava.net.preferIPv6Addresses=true")
-        End Select
-        McLaunchLog("当前剩余内存：" & Math.Round(KernelInterop.GetAvailablePhysicalMemoryBytes() / 1024 / 1024 / 1024 * 10) / 10 & "G")
-        DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15) & "m")
-        DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & "m")
-        If Not DataList.Any(Function(d) d.Contains("-Dlog4j2.formatMsgNoLookups=true")) Then DataList.Add("-Dlog4j2.formatMsgNoLookups=true")
-    End Sub
-
 #End Region
 
 #Region "网络鉴权"

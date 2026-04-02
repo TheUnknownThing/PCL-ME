@@ -1454,10 +1454,12 @@ Retry:
     ''' TODO: 在更换为 Drop 比较版本号后可能不准确，需要测试确认。
     ''' </summary>
     Private Function McLaunchNeedsRetroWrapper(Mc As McInstance) As Boolean
-        Return (Mc.ReleaseTime >= New Date(2013, 6, 25) AndAlso Mc.Info.Drop = 99) OrElse
-            (Mc.Info.Drop < 60 AndAlso Mc.Info.Drop <> 99) AndAlso
-            Not Setup.Get("LaunchAdvanceDisableRW") AndAlso
-            Not Setup.Get("VersionAdvanceDisableRW", Mc) '<1.6
+        Return MinecraftLaunchRetroWrapperService.ShouldUse(
+            New MinecraftLaunchRetroWrapperRequest(
+                Mc.ReleaseTime,
+                Mc.Info.Drop,
+                Setup.Get("LaunchAdvanceDisableRW"),
+                Setup.Get("VersionAdvanceDisableRW", Mc)))
     End Function
 
 
@@ -1514,317 +1516,83 @@ Retry:
 
     'Jvm 部分（第一段）
     Private Function McLaunchArgumentsJvmOld(instance As McInstance) As String
-        '存储以空格为间隔的启动参数列表
-        Dim DataList As New List(Of String)
+        Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024)
+        Dim youngMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024 * 0.15)
+        Dim proxyAddress = TryGetLaunchProxyAddress(instance)
 
-        '输出固定参数
-        DataList.Add("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump")
-        Dim ArgumentJvm As String = Setup.Get("VersionAdvanceJvm", instance:=McInstanceSelected)
-        If ArgumentJvm = "" Then ArgumentJvm = Setup.Get("LaunchAdvanceJvm")
-        If Not ArgumentJvm.Contains("-Dlog4j2.formatMsgNoLookups=true") Then ArgumentJvm += " -Dlog4j2.formatMsgNoLookups=true"
-        ArgumentJvm = ArgumentJvm.Replace(" -XX:MaxDirectMemorySize=256M", "") '#3511 的清理
-        DataList.Insert(0, ArgumentJvm) '可变 JVM 参数
-        DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024 * 0.15) & "m")
-        DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024) & "m")
-        DataList.Add("""-Djava.library.path=" & GetNativesFolder() & """")
-        DataList.Add("-cp ${classpath}") '把支持库添加进启动参数表
-
-        'Authlib-Injector
-        If McLoginLoader.Output.Type = "Auth" Then
-            If McLaunchJavaSelected.Installation.MajorVersion >= 6 Then DataList.Add("-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT") '信任系统根证书（Meloong-Git/#5252）
-            Dim Server As String = McLoginAuthLoader.Input.BaseUrl.Replace("/authserver", "")
-            Try
-                Dim Response As String = NetGetCodeByRequestRetry(Server, Encoding.UTF8)
-                DataList.Insert(0, "-javaagent:""" & PathPure & "authlib-injector.jar""=" & Server &
-                              " -Dauthlibinjector.side=client" &
-                              " -Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(Response)))
-            Catch ex As HttpWebException
-                Throw New Exception($"无法连接到第三方登录服务器（{If(Server, Nothing)}）{vbCrLf}详细信息：" & ex.InnerHttpException.WebResponse, ex)
-            Catch ex As Exception
-                Throw New Exception($"无法连接到第三方登录服务器（{If(Server, Nothing)}）", ex)
-            End Try
-        End If
-        
-        If Config.Instance.UseDebugLof4j2Config.Item(instance.PathIndie) Then
-            If McInstanceSelected.ReleaseTime.Year >= 2017 Then
-                DataList.Insert(0, "-Dlog4j.configurationFile=""" & LaunchEnvUtils.ExtractDebugLog4j2Config() & """")
-            Else 
-                DataList.Insert(0, "-Dlog4j.configurationFile=""" & LaunchEnvUtils.ExtractLegacyDebugLog4j2Config() & """")
-            End If
-        End If
-        
-        '渲染器
-        Dim Renderer = 0
-        If Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) <> 0 Then
-            Renderer = Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) - 1
-        Else
-            Renderer = Setup.Get("LaunchAdvanceRenderer")
-        End If
-        Dim MesaLoaderWindowsVersion = "25.3.5"
-        Dim MesaLoaderWindowsTargetFile = PathPure & "\mesa-loader-windows\" & MesaLoaderWindowsVersion & "\Loader.jar"
-
-        If Renderer <> 0 Then
-            DataList.Insert(0, "-javaagent:""" & MesaLoaderWindowsTargetFile & """=" & If(Renderer = 1, "llvmpipe", If(Renderer = 2, "d3d12", "zink")))
-        End If
-
-        '设置代理
-        If Config.Instance.UseProxy.Item(instance.PathIndie) AndAlso Config.Network.HttpProxy.Type.Equals(2) AndAlso Not String.IsNullOrWhiteSpace(Config.Network.HttpProxy.CustomAddress) Then
-            Try
-                Dim ProxyAddress As New Uri(Setup.Get("SystemHttpProxy"))
-                DataList.Add($"-D{If(ProxyAddress.Scheme.ToString.StartsWithF("https:"), "https", "http")}.proxyHost={ProxyAddress.AbsoluteUri}")
-                DataList.Add($"-D{If(ProxyAddress.Scheme.ToString.StartsWithF("https:"), "https", "http")}.proxyPort={ProxyAddress.Port}")
-            Catch ex As Exception
-                Log(ex, "添加代理信息到游戏失败，放弃加入", LogLevel.Hint)
-            End Try
-        End If
-        
-        '添加 Java Wrapper 作为主 Jar
-        If IsUtf8CodePage() AndAlso Not Setup.Get("LaunchAdvanceDisableJLW") AndAlso Not Setup.Get("VersionAdvanceDisableJLW", McInstanceSelected) Then
-            If McLaunchJavaSelected.Installation.MajorVersion >= 9 Then DataList.Add("--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED")
-            DataList.Add("-Doolloo.jlw.tmpdir=""" & PathPure.TrimEnd("\") & """")
-            DataList.Add("-jar """ & ExtractJavaWrapper() & """")
-        End If
-
-        '添加 MainClass
-        If instance.JsonObject("mainClass") Is Nothing Then
-            Throw New Exception("实例 JSON 中没有 mainClass 项！")
-        Else
-            DataList.Add(instance.JsonObject("mainClass"))
-        End If
-
-        Return Join(DataList, " ")
+        Return MinecraftLaunchJvmArgumentService.BuildLegacyArguments(
+            New MinecraftLaunchLegacyJvmArgumentRequest(
+                GetSelectedJvmArgumentOverrides(),
+                youngMemory,
+                totalMemory,
+                GetNativesFolder(),
+                McLaunchJavaSelected.Installation.MajorVersion,
+                BuildAuthlibInjectorArgument(includeDetailedHttpError:=True),
+                GetDebugLog4jConfigurationPath(instance),
+                GetRendererAgentArgument(instance),
+                If(proxyAddress Is Nothing, Nothing, GetLaunchProxyScheme(proxyAddress)),
+                If(proxyAddress Is Nothing, Nothing, proxyAddress.AbsoluteUri),
+                If(proxyAddress Is Nothing, CType(Nothing, Integer?), proxyAddress.Port),
+                ShouldUseJavaWrapper(),
+                PathPure.TrimEnd("\"),
+                If(ShouldUseJavaWrapper(), ExtractJavaWrapper(), Nothing),
+                GetMainClassOrThrow(instance)))
     End Function
     Private Function McLaunchArgumentsJvmNew(instance As McInstance) As String
-        Dim DataList As New List(Of String)
+        Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024)
+        Dim youngMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15)
+        Dim proxyAddress = TryGetLaunchProxyAddress(instance)
 
-        '获取 Json 中的 DataList
-        Dim currentInstance As McInstance = instance
-NextInstance:
-        If currentInstance.JsonObject("arguments") IsNot Nothing AndAlso currentInstance.JsonObject("arguments")("jvm") IsNot Nothing Then
-            For Each SubJson As JToken In currentInstance.JsonObject("arguments")("jvm")
-                If SubJson.Type = JTokenType.String Then
-                    '字符串类型
-                    DataList.Add(SubJson.ToString)
-                Else
-                    '非字符串类型
-                    If McJsonRuleCheck(SubJson("rules")) Then
-                        '满足准则
-                        If SubJson("value").Type = JTokenType.String Then
-                            DataList.Add(SubJson("value").ToString)
-                        Else
-                            For Each value As JToken In SubJson("value")
-                                DataList.Add(value.ToString)
-                            Next
-                        End If
-                    End If
-                End If
-            Next
-        End If
-        If currentInstance.InheritInstanceName <> "" Then
-            currentInstance = New McInstance(currentInstance.InheritInstanceName)
-            GoTo NextInstance
-        End If
-
-        '内存、Log4j 防御参数等
-        SecretLaunchJvmArgs(DataList)
-
-        'Authlib-Injector
-        If McLoginLoader.Output.Type = "Auth" Then
-            If McLaunchJavaSelected.Installation.MajorVersion >= 6 Then DataList.Add("-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT") '信任系统根证书（Meloong-Git/#5252）
-            Dim Server As String = McLoginAuthLoader.Input.BaseUrl.Replace("/authserver", "")
-            Try
-                Dim Response As String = NetGetCodeByRequestRetry(Server, Encoding.UTF8)
-                DataList.Insert(0, "-javaagent:""" & PathPure & "authlib-injector.jar""=" & Server &
-                              " -Dauthlibinjector.side=client" &
-                              " -Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(Response)))
-            Catch ex As Exception
-                Throw New Exception("无法连接到第三方登录服务器（" & If(Server, Nothing) & "）", ex)
-            End Try
-        End If
-
-        If Config.Instance.UseDebugLof4j2Config.Item(instance.PathIndie) Then
-            If McInstanceSelected.ReleaseTime.Year >= 2017 Then
-                DataList.Insert(0, "-Dlog4j.configurationFile=""" & LaunchEnvUtils.ExtractDebugLog4j2Config() & """")
-            Else
-                DataList.Insert(0, "-Dlog4j.configurationFile=""" & LaunchEnvUtils.ExtractLegacyDebugLog4j2Config() & """")
-            End If
-        End If
-
-        '渲染器
-        Dim Renderer = 0
-        If Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) <> 0 Then
-            Renderer = Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) - 1
-        Else
-            Renderer = Setup.Get("LaunchAdvanceRenderer")
-        End If
-        Dim MesaLoaderWindowsVersion = "25.3.5"
-        Dim MesaLoaderWindowsTargetFile = PathPure & "\mesa-loader-windows\" & MesaLoaderWindowsVersion & "\Loader.jar"
-
-        If Renderer <> 0 Then
-            DataList.Insert(0, "-javaagent:""" & MesaLoaderWindowsTargetFile & """=" & If(Renderer = 1, "llvmpipe", If(Renderer = 2, "d3d12", "zink")))
-        End If
-
-        '设置代理
-        If Config.Instance.UseProxy.Item(instance.PathIndie) AndAlso Config.Network.HttpProxy.Type.Equals(2) AndAlso Not String.IsNullOrWhiteSpace(Config.Network.HttpProxy.CustomAddress) Then
-            Try
-                Dim ProxyAddress As New Uri(Setup.Get("SystemHttpProxy"))
-                DataList.Add($"-D{If(ProxyAddress.Scheme.ToString.StartsWithF("https:"), "https", "http")}.proxyHost={ProxyAddress.AbsoluteUri}")
-                DataList.Add($"-D{If(ProxyAddress.Scheme.ToString.StartsWithF("https:"), "https", "http")}.proxyPort={ProxyAddress.Port}")
-            Catch ex As Exception
-                Log(ex, "添加代理信息到游戏失败，放弃加入", LogLevel.Hint)
-            End Try
-        End If
-        '添加 RetroWrapper 相关参数
-        If McLaunchNeedsRetroWrapper(instance) Then
-            'https://github.com/NeRdTheNed/RetroWrapper/wiki/RetroWrapper-flags
-            DataList.Add("-Dretrowrapper.doUpdateCheck=false")
-        End If
-        '添加 Java Wrapper 作为主 Jar
-        If IsUtf8CodePage() AndAlso Not Setup.Get("LaunchAdvanceDisableJLW") AndAlso Not Setup.Get("VersionAdvanceDisableJLW", McInstanceSelected) Then
-            If McLaunchJavaSelected.Installation.MajorVersion >= 9 Then DataList.Add("--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED")
-            DataList.Add("-Doolloo.jlw.tmpdir=""" & PathPure.TrimEnd("\") & """")
-            DataList.Add("-jar """ & ExtractJavaWrapper() & """")
-        End If
-
-
-        '将 "-XXX" 与后面 "XXX" 合并到一起
-        '如果不合并，会导致 Forge 1.17 启动无效，它有两个 --add-exports，进一步导致其中一个在后面被去重
-        Dim DeDuplicateDataList As New List(Of String)
-        For i = 0 To DataList.Count - 1
-            Dim CurrentEntry As String = DataList(i)
-            If DataList(i).StartsWithF("-") Then
-                Do While i < DataList.Count - 1
-                    If DataList(i + 1).StartsWithF("-") Then
-                        Exit Do
-                    Else
-                        i += 1
-                        CurrentEntry += " " + DataList(i)
-                    End If
-                Loop
-            End If
-            DeDuplicateDataList.Add(CurrentEntry.Trim.Replace("McEmu= ", "McEmu="))
-        Next
-
-        '#3511 的清理
-        DeDuplicateDataList.Remove("-XX:MaxDirectMemorySize=256M")
-
-        '去重
-        Dim Result As String = Join(DeDuplicateDataList.Distinct.ToList, " ")
-
-        '添加 MainClass
-        If instance.JsonObject("mainClass") Is Nothing Then
-            Throw New Exception("实例 JSON 中没有 mainClass 项！")
-        Else
-            Result += " " & instance.JsonObject("mainClass").ToString
-        End If
-
-        Return Result
+        Return MinecraftLaunchJvmArgumentService.BuildModernArguments(
+            New MinecraftLaunchModernJvmArgumentRequest(
+                MinecraftLaunchJsonArgumentService.ExtractValues(
+                    New MinecraftLaunchJsonArgumentRequest(
+                        CollectArgumentSectionJsons(instance, "jvm"),
+                        Environment.OSVersion.Version.ToString(),
+                        Is32BitSystem)).
+                    ToList(),
+                GetSelectedJvmArgumentOverrides(),
+                CType(Setup.Get("LaunchPreferredIpStack"), JvmPreferredIpStack),
+                youngMemory,
+                totalMemory,
+                McLaunchNeedsRetroWrapper(instance),
+                McLaunchJavaSelected.Installation.MajorVersion,
+                BuildAuthlibInjectorArgument(includeDetailedHttpError:=False),
+                GetDebugLog4jConfigurationPath(instance),
+                GetRendererAgentArgument(instance),
+                If(proxyAddress Is Nothing, Nothing, GetLaunchProxyScheme(proxyAddress)),
+                If(proxyAddress Is Nothing, Nothing, proxyAddress.AbsoluteUri),
+                If(proxyAddress Is Nothing, CType(Nothing, Integer?), proxyAddress.Port),
+                ShouldUseJavaWrapper(),
+                PathPure.TrimEnd("\"),
+                If(ShouldUseJavaWrapper(), ExtractJavaWrapper(), Nothing),
+                GetMainClassOrThrow(instance)))
     End Function
 
     'Game 部分（第二段）
     Private Function McLaunchArgumentsGameOld(Version As McInstance) As String
-        Dim DataList As New List(Of String)
-
-        '添加 RetroWrapper 相关参数
-        If McLaunchNeedsRetroWrapper(Version) Then
-            DataList.Add("--tweakClass com.zero.retrowrapper.RetroTweaker")
-        End If
-
-        '本地化 Minecraft 启动信息
-        Dim BasicString As String = Version.JsonObject("minecraftArguments").ToString
-        If Not BasicString.Contains("--height") Then BasicString += " --height ${resolution_height} --width ${resolution_width}"
-        DataList.Add(BasicString)
-
-        Dim Result As String = Join(DataList, " ")
-
-        '特别改变 OptiFineTweaker
-        If (Version.Info.HasForge OrElse Version.Info.HasLiteLoader) AndAlso Version.Info.HasOptiFine Then
-            '把 OptiFineForgeTweaker 放在最后，不然会导致崩溃！
-            If Result.Contains("--tweakClass optifine.OptiFineForgeTweaker") Then
-                Log("[Launch] 发现正确的 OptiFineForge TweakClass，目前参数：" & Result)
-                Result = Result.Replace(" --tweakClass optifine.OptiFineForgeTweaker", "").Replace("--tweakClass optifine.OptiFineForgeTweaker ", "") & " --tweakClass optifine.OptiFineForgeTweaker"
-            End If
-            If Result.Contains("--tweakClass optifine.OptiFineTweaker") Then
-                Log("[Launch] 发现错误的 OptiFineForge TweakClass，目前参数：" & Result)
-                Result = Result.Replace(" --tweakClass optifine.OptiFineTweaker", "").Replace("--tweakClass optifine.OptiFineTweaker ", "") & " --tweakClass optifine.OptiFineForgeTweaker"
-                Try
-                    WriteFile(Version.PathInstance & Version.Name & ".json", ReadFile(Version.PathInstance & Version.Name & ".json").Replace("optifine.OptiFineTweaker", "optifine.OptiFineForgeTweaker"))
-                Catch ex As Exception
-                    Log(ex, "替换 OptiFineForge TweakClass 失败")
-                End Try
-            End If
-        End If
-
-        Return Result
+        Dim plan = MinecraftLaunchGameArgumentService.BuildLegacyPlan(
+            New MinecraftLaunchLegacyGameArgumentRequest(
+                Version.JsonObject("minecraftArguments").ToString(),
+                McLaunchNeedsRetroWrapper(Version),
+                Version.Info.HasForge OrElse Version.Info.HasLiteLoader,
+                Version.Info.HasOptiFine))
+        ApplyGameArgumentPlan(plan, Version)
+        Return plan.Arguments
     End Function
     Private Function McLaunchArgumentsGameNew(instance As McInstance) As String
-        Dim dataList As New List(Of String)
-
-        '获取 Json 中的 DataList
-        Dim currentInstance As McInstance = instance
-NextInstance:
-        If currentInstance.JsonObject("arguments") IsNot Nothing AndAlso currentInstance.JsonObject("arguments")("game") IsNot Nothing Then
-            For Each SubJson As JToken In currentInstance.JsonObject("arguments")("game")
-                If SubJson.Type = JTokenType.String Then
-                    '字符串类型
-                    dataList.Add(SubJson.ToString)
-                Else
-                    '非字符串类型
-                    If McJsonRuleCheck(SubJson("rules")) Then
-                        '满足准则
-                        If SubJson("value").Type = JTokenType.String Then
-                            dataList.Add(SubJson("value").ToString)
-                        Else
-                            For Each value As JToken In SubJson("value")
-                                dataList.Add(value.ToString)
-                            Next
-                        End If
-                    End If
-                End If
-            Next
-        End If
-        If currentInstance.InheritInstanceName <> "" Then
-            currentInstance = New McInstance(currentInstance.InheritInstanceName)
-            GoTo NextInstance
-        End If
-
-        '将 "-XXX" 与后面 "XXX" 合并到一起
-        '如果不进行合并 Impact 会启动无效，它有两个 --tweakclass
-        Dim DeDuplicateDataList As New List(Of String)
-        For i = 0 To dataList.Count - 1
-            Dim CurrentEntry As String = dataList(i)
-            If dataList(i).StartsWithF("-") Then
-                Do While i < dataList.Count - 1
-                    If dataList(i + 1).StartsWithF("-") Then
-                        Exit Do
-                    Else
-                        i += 1
-                        CurrentEntry += " " + dataList(i)
-                    End If
-                Loop
-            End If
-            DeDuplicateDataList.Add(CurrentEntry)
-        Next
-        '去重
-        McLaunchArgumentsGameNew = Join(DeDuplicateDataList.Distinct.ToList, " ")
-
-        '特别改变 OptiFineTweaker
-        If (instance.Info.HasForge OrElse instance.Info.HasLiteLoader) AndAlso instance.Info.HasOptiFine Then
-            '把 OptiFineForgeTweaker 放在最后，不然会导致崩溃！
-            If McLaunchArgumentsGameNew.Contains("--tweakClass optifine.OptiFineForgeTweaker") Then
-                Log("[Launch] 发现正确的 OptiFineForge TweakClass，目前参数：" & McLaunchArgumentsGameNew)
-                McLaunchArgumentsGameNew = McLaunchArgumentsGameNew.Replace(" --tweakClass optifine.OptiFineForgeTweaker", "").Replace("--tweakClass optifine.OptiFineForgeTweaker ", "") & " --tweakClass optifine.OptiFineForgeTweaker"
-            End If
-            If McLaunchArgumentsGameNew.Contains("--tweakClass optifine.OptiFineTweaker") Then
-                Log("[Launch] 发现错误的 OptiFineForge TweakClass，目前参数：" & McLaunchArgumentsGameNew)
-                McLaunchArgumentsGameNew = McLaunchArgumentsGameNew.Replace(" --tweakClass optifine.OptiFineTweaker", "").Replace("--tweakClass optifine.OptiFineTweaker ", "") & " --tweakClass optifine.OptiFineForgeTweaker"
-                Try
-                    WriteFile(instance.PathInstance & instance.Name & ".json", ReadFile(instance.PathInstance & instance.Name & ".json").Replace("optifine.OptiFineTweaker", "optifine.OptiFineForgeTweaker"))
-                Catch ex As Exception
-                    Log(ex, "替换 OptiFineForge TweakClass 失败")
-                End Try
-            End If
-        End If
+        Dim plan = MinecraftLaunchGameArgumentService.BuildModernPlan(
+            New MinecraftLaunchModernGameArgumentRequest(
+                MinecraftLaunchJsonArgumentService.ExtractValues(
+                    New MinecraftLaunchJsonArgumentRequest(
+                        CollectArgumentSectionJsons(instance, "game"),
+                        Environment.OSVersion.Version.ToString(),
+                        Is32BitSystem)).
+                    ToList(),
+                instance.Info.HasForge OrElse instance.Info.HasLiteLoader,
+                instance.Info.HasOptiFine))
+        ApplyGameArgumentPlan(plan, instance)
+        Return plan.Arguments
     End Function
 
     '替换 Arguments
@@ -1917,6 +1685,111 @@ NextInstance:
 
         Return GameArguments
     End Function
+
+    Private Function CollectArgumentSectionJsons(instance As McInstance, sectionName As String) As List(Of String)
+        Dim sections As New List(Of String)
+        Dim currentInstance As McInstance = instance
+        Do
+            Dim argumentsToken = currentInstance.JsonObject("arguments")
+            Dim sectionToken = If(argumentsToken Is Nothing, Nothing, argumentsToken(sectionName))
+            If sectionToken IsNot Nothing Then sections.Add(sectionToken.ToString())
+            If currentInstance.InheritInstanceName = "" Then Exit Do
+            currentInstance = New McInstance(currentInstance.InheritInstanceName)
+        Loop
+        Return sections
+    End Function
+
+    Private Function GetSelectedJvmArgumentOverrides() As String
+        Dim argumentJvm As String = Setup.Get("VersionAdvanceJvm", instance:=McInstanceSelected)
+        If argumentJvm = "" Then argumentJvm = Setup.Get("LaunchAdvanceJvm")
+        Return argumentJvm
+    End Function
+
+    Private Function BuildAuthlibInjectorArgument(includeDetailedHttpError As Boolean) As String
+        If McLoginLoader.Output.Type <> "Auth" Then Return Nothing
+
+        Dim server As String = McLoginAuthLoader.Input.BaseUrl.Replace("/authserver", "")
+        Try
+            Dim response As String = NetGetCodeByRequestRetry(server, Encoding.UTF8)
+            Return "-javaagent:""" & PathPure & "authlib-injector.jar""=" & server &
+                   " -Dauthlibinjector.side=client" &
+                   " -Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(response))
+        Catch ex As HttpWebException When includeDetailedHttpError
+            Throw New Exception($"无法连接到第三方登录服务器（{If(server, Nothing)}）{vbCrLf}详细信息：" & ex.InnerHttpException.WebResponse, ex)
+        Catch ex As Exception
+            Throw New Exception($"无法连接到第三方登录服务器（{If(server, Nothing)}）", ex)
+        End Try
+    End Function
+
+    Private Function GetDebugLog4jConfigurationPath(instance As McInstance) As String
+        If Not Config.Instance.UseDebugLof4j2Config.Item(instance.PathIndie) Then Return Nothing
+        If McInstanceSelected.ReleaseTime.Year >= 2017 Then
+            Return LaunchEnvUtils.ExtractDebugLog4j2Config()
+        Else
+            Return LaunchEnvUtils.ExtractLegacyDebugLog4j2Config()
+        End If
+    End Function
+
+    Private Function GetRendererAgentArgument(instance As McInstance) As String
+        Dim renderer As Integer
+        If Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) <> 0 Then
+            renderer = Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) - 1
+        Else
+            renderer = Setup.Get("LaunchAdvanceRenderer")
+        End If
+        If renderer = 0 Then Return Nothing
+
+        Dim mesaLoaderWindowsVersion = "25.3.5"
+        Dim mesaLoaderWindowsTargetFile = PathPure & "\mesa-loader-windows\" & mesaLoaderWindowsVersion & "\Loader.jar"
+        Return "-javaagent:""" & mesaLoaderWindowsTargetFile & """=" & If(renderer = 1, "llvmpipe", If(renderer = 2, "d3d12", "zink"))
+    End Function
+
+    Private Function TryGetLaunchProxyAddress(instance As McInstance) As Uri
+        If Not Config.Instance.UseProxy.Item(instance.PathIndie) OrElse
+           Not Config.Network.HttpProxy.Type.Equals(2) OrElse
+           String.IsNullOrWhiteSpace(Config.Network.HttpProxy.CustomAddress) Then
+            Return Nothing
+        End If
+
+        Try
+            Return New Uri(Setup.Get("SystemHttpProxy"))
+        Catch ex As Exception
+            Log(ex, "添加代理信息到游戏失败，放弃加入", LogLevel.Hint)
+            Return Nothing
+        End Try
+    End Function
+
+    Private Function GetLaunchProxyScheme(proxyAddress As Uri) As String
+        If proxyAddress Is Nothing Then Return Nothing
+        Return If(proxyAddress.Scheme.StartsWith("https", StringComparison.OrdinalIgnoreCase), "https", "http")
+    End Function
+
+    Private Function ShouldUseJavaWrapper() As Boolean
+        Return IsUtf8CodePage() AndAlso
+               Not Setup.Get("LaunchAdvanceDisableJLW") AndAlso
+               Not Setup.Get("VersionAdvanceDisableJLW", McInstanceSelected)
+    End Function
+
+    Private Function GetMainClassOrThrow(instance As McInstance) As String
+        If instance.JsonObject("mainClass") Is Nothing Then
+            Throw New Exception("实例 JSON 中没有 mainClass 项！")
+        End If
+        Return instance.JsonObject("mainClass").ToString()
+    End Function
+
+    Private Sub ApplyGameArgumentPlan(plan As MinecraftLaunchGameArgumentPlan, instance As McInstance)
+        If plan Is Nothing Then Throw New ArgumentNullException(NameOf(plan))
+        For Each logMessage In plan.LogMessages
+            Log(logMessage)
+        Next
+        If plan.ShouldRewriteOptiFineTweakerInJson Then
+            Try
+                WriteFile(instance.PathInstance & instance.Name & ".json", ReadFile(instance.PathInstance & instance.Name & ".json").Replace("optifine.OptiFineTweaker", "optifine.OptiFineForgeTweaker"))
+            Catch ex As Exception
+                Log(ex, "替换 OptiFineForge TweakClass 失败")
+            End Try
+        End If
+    End Sub
 
 #End Region
 
