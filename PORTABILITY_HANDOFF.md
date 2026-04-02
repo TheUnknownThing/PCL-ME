@@ -118,6 +118,12 @@ The mission is still “stabilize the runtime boundary before touching the front
 
 Portable runtime/core extraction is now complete for the current review scope, but the project is **not** a finished replacement frontend/backend shell yet.
 
+Handoff decision:
+
+- this is **not** yet a fully working portable backend end-to-end
+- this **is** ready to hand to another engineer right now
+- the next engineer should treat the backend/runtime extraction as stable, and focus on frontend-shell migration plus the remaining Windows-adapter cleanup
+
 What is already true:
 
 - `PCL.Core.Foundation` is real, headless, and validated on macOS
@@ -497,6 +503,18 @@ Reason:
 
 This is the meaningful history for the current portability work:
 
+- `3bf8d465` `Document shell spike input replay workflow`
+- `0693fbac` `Add file-backed input replay to shell spike`
+- `753a11ea` `Fix auto-generated shell spike workspace ids`
+- `d57b87b0` `Document shell spike execution mode`
+- `3b18efa5` `Add executable workspace mode to shell spike`
+- `461a8a92` `Document replacement shell spike workflow`
+- `b5c40f8e` `Expand spike into replacement shell prototype`
+- `2e1225de` `Mark portable runtime extraction complete for review`
+- `4e1c155c` `Route launcher argument assembly through backend services`
+- `7ff46b57` `Extract portable launch argument assembly services`
+- `9d374376` `Update portability estimate after natives extraction`
+- `9dbe1d5f` `Route launcher natives handling through backend services`
 - `f9cf278e` `Make windows core consume portable backend`
 - `5f509f86` `Create portable backend assembly and test lane`
 - `24b3cfcf` `Extract startup version transition application plan`

@@ -10,6 +10,12 @@ That means the next engineer can keep pushing frontend-migration prep work witho
 
 This plan is ready to hand to another engineer.
 
+Decision:
+
+- do **not** describe the repo as a fully working portable backend yet
+- do hand the migration to another engineer now
+- have that engineer continue from the existing backend seams and the shell spike instead of reopening runtime extraction
+
 Current estimate:
 
 - portable runtime/core extraction: `complete`
@@ -199,6 +205,7 @@ Most practical next code targets:
 4. build a tiny replacement shell spike
    It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
    The current spike already proves text-mode startup / launch / crash shell consumption and basic workspace/file execution, so the next extension work should focus on real adapter integration rather than rebuilding command plumbing.
+   The best next spike step is feeding more real launcher-backed inputs into the shell, especially launch request execution and crash export destination handling.
 
 Keep the following in the launcher as adapters:
 
