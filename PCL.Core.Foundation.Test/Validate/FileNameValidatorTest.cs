@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.IO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Utils.Validate;
 
 namespace PCL.Core.Test.Validate;
@@ -40,15 +42,32 @@ public class FileNameValidatorTest
     [DataRow("关注初音未来初音ミクHatsuneMiku0831谢谢喵!!!", true)]
     public void TestFileNameValidateWithParentFolder(string fileName, bool expected)
     {
-        var validator = new FileNameValidator("C:\\Windows");
-        var result = validator.Validate(fileName);
-        if (!result.IsValid)
+        var parentFolder = Path.Combine(Path.GetTempPath(), "PCLTest", "FileNameValidator", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(parentFolder);
+
+        try
         {
-            foreach (var error in result.Errors)
+            File.WriteAllText(Path.Combine(parentFolder, "explorer.exe"), string.Empty);
+            File.WriteAllText(Path.Combine(parentFolder, "notepad.exe"), string.Empty);
+
+            var validator = new FileNameValidator(parentFolder);
+            var result = validator.Validate(fileName);
+            if (!result.IsValid)
             {
-                TestContext.WriteLine(error.ErrorMessage);
+                foreach (var error in result.Errors)
+                {
+                    TestContext.WriteLine(error.ErrorMessage);
+                }
+            }
+
+            Assert.AreEqual(expected, result.IsValid);
+        }
+        finally
+        {
+            if (Directory.Exists(parentFolder))
+            {
+                Directory.Delete(parentFolder, true);
             }
         }
-        Assert.AreEqual(expected, result.IsValid);
     }
 }

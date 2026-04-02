@@ -52,16 +52,16 @@ public static class EncodingDetector
         if (actualRead != sampleLength) throw new Exception("无法获取样本长度");
 
         // 对样本进行分析
-        if (sampleLength >= 3 && buffer is [0xef, 0xbb, 0xbf])
+        if (sampleLength >= 3 && buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf)
             return Encoding.UTF8; // UTF-8
 
         if (sampleLength >= 2)
         {
-            if (buffer is [0xfe, 0xff])
+            if (buffer[0] == 0xfe && buffer[1] == 0xff)
                 return Encoding.BigEndianUnicode; // UTF-16 BE
-            if (buffer is [0xff, 0xfe])
+            if (buffer[0] == 0xff && buffer[1] == 0xfe)
             {
-                if (sampleLength >= 4 && buffer is [_, _, 0x00, 0x00])
+                if (sampleLength >= 4 && buffer[2] == 0x00 && buffer[3] == 0x00)
                     return Encoding.UTF32; // UTF-32 LE
                 return Encoding.Unicode;   // UTF-16 LE
             }
@@ -69,9 +69,9 @@ public static class EncodingDetector
 
         if (sampleLength >= 4)
         {
-            if (buffer is [0x00, 0x00, 0xfe, 0xff])
+            if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xfe && buffer[3] == 0xff)
                 return Encoding.GetEncoding("utf-32BE"); // UTF-32 BE
-            if (buffer is [0xff, 0xfe, 0x00, 0x00])
+            if (buffer[0] == 0xff && buffer[1] == 0xfe && buffer[2] == 0x00 && buffer[3] == 0x00)
                 return Encoding.UTF32; // UTF-32 LE
         }
 
@@ -98,9 +98,11 @@ public static class EncodingDetector
 
         try
         {
-            var decoded = Encoding.UTF8.GetString(buffer);
+            var bytesRead = stream.Read(buffer, 0, buffer.Length);
+            var sample = buffer.AsSpan(0, bytesRead).ToArray();
+            var decoded = Encoding.UTF8.GetString(sample);
             var roundTrip = Encoding.UTF8.GetBytes(decoded);
-            return roundTrip.SequenceEqual(buffer);
+            return roundTrip.SequenceEqual(sample);
         }
         catch
         {

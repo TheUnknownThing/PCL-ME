@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentValidation;
@@ -7,11 +8,16 @@ namespace PCL.Core.Utils.Validate;
 
 public abstract class FileSystemValidator : AbstractValidator<string>
 {
+    private static readonly string[] WindowsInvalidFileNameStrings = Enumerable.Range(0, 32)
+        .Select(i => ((char)i).ToString())
+        .Concat(["<", ">", ":", "\"", "/", "\\", "|", "?", "*"])
+        .ToArray();
+
     protected static string? CheckInvalidStrings(string input, string[] extraInvalidStrings)
     {
         if (string.IsNullOrEmpty(input)) return null;
 
-        var invalidStrings = Path.GetInvalidFileNameChars().Select(c => c.ToString());
+        var invalidStrings = WindowsInvalidFileNameStrings.AsEnumerable();
         invalidStrings = invalidStrings.Concat(extraInvalidStrings);
         
         // 找出字符串中包含的非法字符
@@ -38,7 +44,7 @@ public abstract class FileSystemValidator : AbstractValidator<string>
         reserved = reserved.Concat(extraReservedWords);
 
         // 找出匹配的保留字
-        var matched = reserved.FirstOrDefault(r => r.Equals(nameWithoutExtension));
+        var matched = reserved.FirstOrDefault(r => r.Equals(nameWithoutExtension, StringComparison.OrdinalIgnoreCase));
 
         return matched ?? null;
     }

@@ -58,10 +58,24 @@ public class FolderPathValidator(bool useMinecraftCharCheck) : FileSystemValidat
         {
             return [];
         }
-        
-        var fullPath = new DirectoryInfo(path).FullName;
-        return fullPath[Path.GetPathRoot(fullPath)!.Length..]
-            .TrimEnd(Path.DirectorySeparatorChar)
-            .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+
+        var normalizedPath = path.Replace('\\', '/');
+        var segments = normalizedPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0)
+        {
+            return [];
+        }
+
+        var startIndex = 0;
+        if (normalizedPath.StartsWith("//", StringComparison.Ordinal))
+        {
+            startIndex = Math.Min(2, segments.Length);
+        }
+        else if (segments[0].EndsWith(':'))
+        {
+            startIndex = 1;
+        }
+
+        return segments[startIndex..];
     }
 }

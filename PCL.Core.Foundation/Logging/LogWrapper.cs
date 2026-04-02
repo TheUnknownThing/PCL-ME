@@ -7,6 +7,15 @@ public delegate void LogHandler(LogLevel level, string msg, string? module = nul
 public static class LogWrapper
 {
     public static event LogHandler? OnLog;
+    private static Logger? _currentLogger;
+    private static LoggerFactoryAdapter? _loggerFactory;
+
+    public static void AttachLogger(Logger logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        _currentLogger = logger;
+        _loggerFactory = new LoggerFactoryAdapter(logger);
+    }
     
     // Fatal: can handle exceptions
     public static void Fatal(Exception? ex, string? module, string msg) => OnLog?.Invoke(LogLevel.Fatal, msg, module, ex);
@@ -38,11 +47,6 @@ public static class LogWrapper
     public static void Trace(string? module, string msg) => OnLog?.Invoke(LogLevel.Trace, msg, module);
     public static void Trace(string msg) => Trace(null, msg);
 
-    public static Logger CurrentLogger => LogService.Logger;
-
-    private static readonly Lazy<LoggerFactoryAdapter> _LoggerFactory = new(static () =>
-    {
-        return new LoggerFactoryAdapter(CurrentLogger);
-    });
-    public static LoggerFactoryAdapter LoggerFactory => _LoggerFactory.Value;
+    public static Logger CurrentLogger => _currentLogger ?? throw new InvalidOperationException("Logger has not been attached.");
+    public static LoggerFactoryAdapter LoggerFactory => _loggerFactory ??= new LoggerFactoryAdapter(CurrentLogger);
 }

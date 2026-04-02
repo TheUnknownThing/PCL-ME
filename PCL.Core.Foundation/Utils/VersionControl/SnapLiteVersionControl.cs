@@ -398,7 +398,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
             LogWrapper.Warn($"[SnapLite] 无法打开指定对象的文件流：{x.Hash}");
             return false;
         }, deepCheck ? 12 : 25);
-        return (await checkTasks.ConfigureAwait(false)).ToArray().Any(x => !x);
+        return (await checkTasks.ConfigureAwait(false)).ToArray().All(x => x);
     }
 
     public async Task CleanUnrecordObjects()

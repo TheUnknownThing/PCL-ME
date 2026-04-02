@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Logging;
@@ -11,23 +12,26 @@ namespace PCL.Core.Test;
 public class LoggerTest
 {
     [TestMethod]
-    public void TestSimpleWrite()
+    public async Task TestSimpleWrite()
     {
+        var tempDir = Path.Combine(Path.GetTempPath(), "PCLTest", "Logger", Guid.NewGuid().ToString("N"));
         var loggerOps = new LoggerConfiguration(
-            Path.Combine(Path.GetTempPath(), "PCLTest", "Logger"),
-            LoggerSegmentMode.BySize,
+            tempDir,
             10 * 1024 * 1024);
-        var logger = new Logger(loggerOps);
+        await using var logger = new Logger(loggerOps);
         for (var i = 0; i < 10; i++)
             logger.Info($"Current we got {i}");
+        await logger.DisposeAsync();
+        Assert.IsTrue(logger.CurrentLogFiles.Any(File.Exists));
     }
 
     [TestMethod]
     public async Task TestHeavyWrite()
     {
+        var tempDir = Path.Combine(Path.GetTempPath(), "PCLTest", "Logger", Guid.NewGuid().ToString("N"));
         var loggerOps = new LoggerConfiguration(
-            Path.Combine(Path.GetTempPath(), "PCLTest", "Logger"));
-        var logger = new Logger(loggerOps);
+            tempDir);
+        await using var logger = new Logger(loggerOps);
         var tasks = new List<Task>();
         for (var i = 0; i < 25; i++)
         {
@@ -41,6 +45,7 @@ public class LoggerTest
             }));
         }
         await Task.WhenAll(tasks.ToArray());
-        logger.Dispose();
+        await logger.DisposeAsync();
+        Assert.IsTrue(logger.CurrentLogFiles.Any(File.Exists));
     }
 }

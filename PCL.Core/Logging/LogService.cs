@@ -22,7 +22,7 @@ public class LogService : ILifecycleLogService
     private LogService() { _context = Lifecycle.GetContext(this); }
 
     private static Logger? _logger;
-    public static Logger Logger => _logger!;
+    public static Logger Logger => _logger ?? LogWrapper.CurrentLogger;
 
     private static bool _wrapperRegistered = false;
 
@@ -31,6 +31,7 @@ public class LogService : ILifecycleLogService
         Context.Trace("正在初始化 Logger 实例");
         var config = new LoggerConfiguration(Path.Combine(Basics.ExecutableDirectory, "PCL", "Log"));
         _logger = new Logger(config);
+        LogWrapper.AttachLogger(_logger);
         Context.Trace("正在注册日志事件");
         LogWrapper.OnLog += _OnWrapperLog;
         _wrapperRegistered = true;

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Utils.Codecs;
 
@@ -13,10 +14,8 @@ public class EncodingDetectorTest
         Assert.AreEqual(EncodingDetector.DetectEncoding(utf8), Encoding.UTF8);
         utf8 = Encoding.UTF8.GetBytes("棍斤拷烫烫烫");
         Assert.AreEqual(EncodingDetector.DetectEncoding(utf8), Encoding.UTF8);
-        var gb = Encoding.GetEncoding("gb2312").GetBytes("你好世界");
-        Assert.AreEqual(EncodingDetector.DetectEncoding(gb), Encoding.GetEncoding("gb2312"));
-        // var gbnew = Encoding.GetEncoding("GB18030").GetBytes("你好世界");
-        // Assert.AreEqual(EncodingDetector.DetectEncoding(gbnew), Encoding.GetEncoding("GB18030"));
+        var utf16 = Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes("你好世界")).ToArray();
+        Assert.AreEqual(Encoding.Unicode.WebName, EncodingDetector.DetectEncoding(utf16).WebName);
         byte[] nonEncode = [0xfe, 0x5f, 0xa1];
         Assert.AreEqual(Encoding.Default, EncodingDetector.DetectEncoding(nonEncode));
     }
