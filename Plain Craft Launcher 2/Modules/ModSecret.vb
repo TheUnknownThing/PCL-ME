@@ -1,7 +1,5 @@
 Imports System.ComponentModel
-Imports System.Management
 Imports System.Net.Http
-Imports System.Runtime.InteropServices
 Imports PCL.Core.App
 Imports PCL.Core.UI.Theme
 Imports PCL.Core.Utils
@@ -526,7 +524,7 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
     ''' <summary>
     ''' 系统信息描述，例如 Microsoft Windows 11 专业工作站版 10.0.22635.0
     ''' </summary>
-    Public OSInfo As String = RuntimeInformation.OSDescription & " " & Environment.OSVersion.Version.ToString()
+    Public OSInfo As String = $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} {Environment.OSVersion.Version}".Trim()
     Class GPUInfo
         Friend Name As String
         ''' <summary>
@@ -539,42 +537,23 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
     ''' 获取系统信息，例如 CPU 与 GPU，并存储到 CPUName 和 GPUs
     ''' </summary>
     Friend Sub GetSystemInfo()
-        'CPU
         Try
-            Dim searcher As New ManagementObjectSearcher("root\CIMV2", "SELECT * FROM Win32_Processor")
-
-            For Each queryObj As ManagementObject In searcher.Get()
-                CPUName = queryObj("Name").ToString().Trim()
-                Exit For '通常只需要第一个CPU的信息
-            Next
-        Catch ex As Exception
-            Log(ex, "获取 CPU 信息时出错", LogLevel.Normal)
-        End Try
-
-        'GPU
-        Try
-            Dim searcher As New ManagementObjectSearcher("root\CIMV2", "SELECT * FROM Win32_VideoController")
-
-            For Each queryObj As ManagementObject In searcher.Get()
-                Dim gpuInfo As New GPUInfo
-
-                If queryObj("Name") IsNot Nothing Then
-                    gpuInfo.Name = queryObj("Name")
-                End If
-                If queryObj("AdapterRAM") IsNot Nothing Then
-                    Dim ramMB As Long = CLng(queryObj("AdapterRAM")) \ (1024 * 1024)
-                    gpuInfo.Memory = ramMB
-                End If
-                If queryObj("DriverVersion") IsNot Nothing Then
-                    gpuInfo.DriverVersion = queryObj("DriverVersion")
-                End If
-
-                GPUs.Add(gpuInfo)
+            Dim snapshot = SystemEnvironmentInfo.GetSnapshot()
+            CPUName = snapshot.CpuName
+            SystemMemorySize = CLng(snapshot.TotalPhysicalMemoryBytes / 1024 / 1024)
+            OSInfo = $"{snapshot.OsDescription} {snapshot.OsVersion}".Trim()
+            GPUs.Clear()
+            For Each gpu In snapshot.Gpus
+                GPUs.Add(New GPUInfo With {
+                    .Name = gpu.Name,
+                    .Memory = gpu.MemoryMegabytes,
+                    .DriverVersion = gpu.DriverVersion
+                })
             Next
 
             Log("已获取系统环境信息")
         Catch ex As Exception
-            Log(ex, "获取 GPU 信息时出错", LogLevel.Normal)
+            Log(ex, "获取系统环境信息时出错", LogLevel.Normal)
         End Try
     End Sub
 #End Region
