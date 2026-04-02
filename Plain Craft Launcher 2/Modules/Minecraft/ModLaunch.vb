@@ -1176,6 +1176,11 @@ Retry:
 #End Region
 
 #Region "第三方验证"
+    Private Structure AuthlibLoginStepResult
+        Public LoginResult As McLoginResult
+        Public NeedsRefresh As Boolean
+    End Structure
+
     Private Sub McLoginServerStart(Data As LoaderTask(Of McLoginServer, McLoginResult))
         Dim Input As McLoginServer = Data.Input
         ProfileLog("验证方式：" & Input.Description)
@@ -1188,7 +1193,7 @@ Retry:
                 Case MinecraftLaunchThirdPartyLoginStepKind.ValidateCachedSession
                     Try
                         If Data.IsAborted Then Throw New ThreadInterruptedException
-                        McLoginRequestValidate(Data)
+                        Data.Output = McLoginRequestValidate(Data.Input)
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateSuccess()
                     Catch ex As HttpWebException
                         Dim AllMessage = ex.ToString()
@@ -1210,7 +1215,7 @@ Retry:
                 Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
                     Try
                         If Data.IsAborted Then Throw New ThreadInterruptedException
-                        McLoginRequestRefresh(Data, currentStep.HasRetriedRefresh)
+                        Data.Output = McLoginRequestRefresh(Data.Input)
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshSuccess(currentStep.HasRetriedRefresh)
                     Catch ex As Exception
                         ProfileLog("刷新登录失败：" & ex.ToString())
@@ -1224,7 +1229,9 @@ Retry:
                 Case MinecraftLaunchThirdPartyLoginStepKind.Authenticate
                     Try
                         If Data.IsAborted Then Throw New ThreadInterruptedException
-                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(McLoginRequestLogin(Data))
+                        Dim loginStepResult = McLoginRequestLogin(Data.Input)
+                        Data.Output = loginStepResult.LoginResult
+                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(loginStepResult.NeedsRefresh)
                         If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession AndAlso currentStep.HasRetriedRefresh Then
                             ProfileLog("重新进行刷新登录")
                         End If
@@ -1248,7 +1255,7 @@ Retry:
         Loop
     End Sub
     'Server 登录：三种验证方式的请求
-    Private Sub McLoginRequestValidate(ByRef Data As LoaderTask(Of McLoginServer, McLoginResult))
+    Private Function McLoginRequestValidate(input As McLoginServer) As McLoginResult
         ProfileLog("验证登录开始（Validate, Authlib")
         '提前缓存信息，否则如果在登录请求过程中退出登录，设置项目会被清空，导致输出存在空值
         Dim AccessToken As String = ""
@@ -1265,21 +1272,21 @@ Retry:
         Dim RequestData As New JObject(
             New JProperty("accessToken", AccessToken), New JProperty("clientToken", ClientToken))
         NetRequestRetry(
-            Url:=Data.Input.BaseUrl & "/validate",
+            Url:=input.BaseUrl & "/validate",
             Method:="POST",
             Data:=RequestData.ToString(0),
             Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
             ContentType:="application/json") '没有返回值的
-        '将登录结果输出
-        Data.Output.AccessToken = AccessToken
-        Data.Output.ClientToken = ClientToken
-        Data.Output.Uuid = Uuid
-        Data.Output.Name = Name
-        Data.Output.Type = "Auth"
         '不更改缓存，直接结束
         ProfileLog("验证登录成功（Validate, Authlib")
-    End Sub
-    Private Sub McLoginRequestRefresh(ByRef Data As LoaderTask(Of McLoginServer, McLoginResult), RequestUser As Boolean)
+        Return New McLoginResult With {
+            .AccessToken = AccessToken,
+            .ClientToken = ClientToken,
+            .Uuid = Uuid,
+            .Name = Name,
+            .Type = "Auth"}
+    End Function
+    Private Function McLoginRequestRefresh(input As McLoginServer) As McLoginResult
         Dim RefreshInfo As New JObject
         Dim SelectProfile As New JObject From {
             {"name", SelectedProfile.Username},
@@ -1290,18 +1297,19 @@ Retry:
         RefreshInfo.Add(New JProperty("requestUser", True))
         ProfileLog("刷新登录开始（Refresh, Authlib")
         Dim LoginJson As JObject = GetJson(NetRequestRetry(
-               Url:=Data.Input.BaseUrl & "/refresh",
+               Url:=input.BaseUrl & "/refresh",
                Method:="POST",
                Data:=RefreshInfo.ToString(0),
                Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
                ContentType:="application/json"))
-        '将登录结果输出
         If LoginJson("selectedProfile") Is Nothing Then Throw New Exception("选择的角色 " & SelectedProfile.Username & " 无效！")
-        Data.Output.AccessToken = LoginJson("accessToken").ToString
-        Data.Output.ClientToken = LoginJson("clientToken").ToString
-        Data.Output.Uuid = LoginJson("selectedProfile")("id").ToString
-        Data.Output.Name = LoginJson("selectedProfile")("name").ToString
-        Data.Output.Type = "Auth"
+
+        Dim loginResult = New McLoginResult With {
+            .AccessToken = LoginJson("accessToken").ToString,
+            .ClientToken = LoginJson("clientToken").ToString,
+            .Uuid = LoginJson("selectedProfile")("id").ToString,
+            .Name = LoginJson("selectedProfile")("name").ToString,
+            .Type = "Auth"}
         '保存缓存
         Dim authRefreshMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
             New MinecraftLaunchAuthProfileMutationRequest(
@@ -1309,26 +1317,27 @@ Retry:
                 GetSelectedProfileIndex(),
                 SelectedProfile.Server,
                 SelectedProfile.ServerName,
-                Data.Output.Uuid,
-                Data.Output.Name,
-                Data.Output.AccessToken,
-                Data.Output.ClientToken,
-                Data.Input.UserName,
-                Data.Input.Password))
+                loginResult.Uuid,
+                loginResult.Name,
+                loginResult.AccessToken,
+                loginResult.ClientToken,
+                input.UserName,
+                input.Password))
         ApplyProfileMutationPlan(authRefreshMutationPlan)
         ProfileLog("刷新登录成功（Refresh, Authlib）")
-    End Sub
-    Private Function McLoginRequestLogin(ByRef Data As LoaderTask(Of McLoginServer, McLoginResult)) As Boolean
+        Return loginResult
+    End Function
+    Private Function McLoginRequestLogin(input As McLoginServer) As AuthlibLoginStepResult
         Try
             Dim NeedRefresh As Boolean = False
             ProfileLog("登录开始（Login, Authlib）")
             Dim RequestData As New JObject(
                 New JProperty("agent", New JObject(New JProperty("name", "Minecraft"), New JProperty("version", 1))),
-                New JProperty("username", Data.Input.UserName),
-                New JProperty("password", Data.Input.Password),
+                New JProperty("username", input.UserName),
+                New JProperty("password", input.Password),
                 New JProperty("requestUser", True))
             Dim LoginJson As JObject = GetJson(NetRequestRetry(
-                Url:=Data.Input.BaseUrl & "/authenticate",
+                Url:=input.BaseUrl & "/authenticate",
                 Method:="POST",
                 Data:=RequestData.ToString(0),
                 Headers:=New Dictionary(Of String, String) From {{"Accept-Language", "zh-CN"}},
@@ -1342,7 +1351,7 @@ Retry:
                 ToList()
             Dim selectionResult = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
                 New MinecraftLaunchAuthProfileSelectionRequest(
-                    Data.Input.ForceReselectProfile,
+                    input.ForceReselectProfile,
                     If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
                     If(LoginJson("selectedProfile") Is Nothing, Nothing, LoginJson("selectedProfile")("id").ToString),
                     availableProfiles))
@@ -1368,31 +1377,34 @@ Retry:
             ElseIf selectionResult.NeedsRefresh Then
                 ProfileLog("根据缓存选择的角色：" & SelectedName)
             End If
-            '将登录结果输出
-            Data.Output.AccessToken = LoginJson("accessToken").ToString
-            Data.Output.ClientToken = LoginJson("clientToken").ToString
-            Data.Output.Name = SelectedName
-            Data.Output.Uuid = SelectedId
-            Data.Output.Type = "Auth"
+
+            Dim loginResult = New McLoginResult With {
+                .AccessToken = LoginJson("accessToken").ToString,
+                .ClientToken = LoginJson("clientToken").ToString,
+                .Name = SelectedName,
+                .Uuid = SelectedId,
+                .Type = "Auth"}
             '获取服务器信息
-            Dim Response As String = NetGetCodeByRequestRetry(Data.Input.BaseUrl.Replace("/authserver", ""), Encoding.UTF8)
+            Dim Response As String = NetGetCodeByRequestRetry(input.BaseUrl.Replace("/authserver", ""), Encoding.UTF8)
             Dim ServerName As String = JObject.Parse(Response)("meta")("serverName").ToString()
             Dim authMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
                 New MinecraftLaunchAuthProfileMutationRequest(
-                    Data.Input.IsExist,
+                    input.IsExist,
                     GetSelectedProfileIndex(),
-                    Data.Input.BaseUrl,
+                    input.BaseUrl,
                     ServerName,
-                    Data.Output.Uuid,
-                    Data.Output.Name,
-                    Data.Output.AccessToken,
-                    Data.Output.ClientToken,
-                    Data.Input.UserName,
-                    Data.Input.Password))
+                    loginResult.Uuid,
+                    loginResult.Name,
+                    loginResult.AccessToken,
+                    loginResult.ClientToken,
+                    input.UserName,
+                    input.Password))
             ApplyProfileMutationPlan(authMutationPlan)
             SaveProfile()
             ProfileLog("登录成功（Login, Authlib）")
-            Return NeedRefresh
+            Return New AuthlibLoginStepResult With {
+                .LoginResult = loginResult,
+                .NeedsRefresh = NeedRefresh}
         Catch ex As HttpWebException
             Throw
         Catch ex As Exception
