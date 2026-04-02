@@ -287,81 +287,90 @@ Public Class FormMain
     '升级与降级事件
     Private Sub UpgradeSub(LastVersionCode As Integer)
         Log("[Start] 版本号从 " & LastVersionCode & " 升高到 " & VersionCode)
-        Setup.Set("SystemLastVersionReg", VersionCode)
-        '检查有记录的最高版本号
-        Dim LowerVersionCode As Integer
-#If BETA Then
-        LowerVersionCode = Setup.Get("SystemHighestBetaVersionReg")
-        If LowerVersionCode < VersionCode Then
-            Setup.Set("SystemHighestBetaVersionReg", VersionCode)
-            Log("[Start] 最高版本号从 " & LowerVersionCode & " 升高到 " & VersionCode)
-        End If
-#Else
-        LowerVersionCode = Setup.Get("SystemHighestAlphaVersionReg")
-        If LowerVersionCode < VersionCode Then
-            Setup.Set("SystemHighestAlphaVersionReg", VersionCode)
-            Log("[Start] 最高版本号从 " & LowerVersionCode & " 升高到 " & VersionCode)
-        End If
-#End If
-        '被移除的窗口设置选项
-        If Setup.Get("LaunchArgumentWindowType") = 5 Then Setup.Set("LaunchArgumentWindowType", 1)
-        '修改主题设置项名称
-        If LowerVersionCode <= 207 Then
-            Dim UnlockedTheme As New List(Of String) From {"2"}
-            UnlockedTheme.AddRange(New List(Of String)(Setup.Get("UiLauncherThemeHide").ToString.Split("|")))
-            UnlockedTheme.AddRange(New List(Of String)(Setup.Get("UiLauncherThemeHide2").ToString.Split("|")))
-            Setup.Set("UiLauncherThemeHide2", Join(UnlockedTheme.Distinct.ToList, "|"))
-        End If
-        '重置欧皇彩
-        If LastVersionCode <= 115 AndAlso Setup.Get("UiLauncherThemeHide2").ToString.Split("|").Contains("13") Then
-            Dim UnlockedTheme As New List(Of String)(Setup.Get("UiLauncherThemeHide2").ToString.Split("|"))
-            UnlockedTheme.Remove("13")
-            Setup.Set("UiLauncherThemeHide2", Join(UnlockedTheme, "|"))
-            MyMsgBox("由于新版 PCL 修改了欧皇彩的解锁方式，你需要重新解锁欧皇彩。" & vbCrLf &
-                     "多谢各位的理解啦！", "重新解锁提醒")
-        End If
-        '重置滑稽彩
-        If LastVersionCode <= 152 AndAlso Setup.Get("UiLauncherThemeHide2").ToString.Split("|").Contains("12") Then
-            Dim UnlockedTheme As New List(Of String)(Setup.Get("UiLauncherThemeHide2").ToString.Split("|"))
-            UnlockedTheme.Remove("12")
-            Setup.Set("UiLauncherThemeHide2", Join(UnlockedTheme, "|"))
-            MyMsgBox("由于新版 PCL 修改了滑稽彩的解锁方式，你需要重新解锁滑稽彩。" & vbCrLf &
-                     "多谢各位的理解啦！", "重新解锁提醒")
-        End If
-        '移动自定义皮肤
-        If LastVersionCode <= 161 AndAlso File.Exists(ExePath & "PCL\CustomSkin.png") AndAlso Not File.Exists(PathAppdata & "CustomSkin.png") Then
-            CopyFile(ExePath & "PCL\CustomSkin.png", PathAppdata & "CustomSkin.png")
-            Log("[Start] 已移动离线自定义皮肤 (162)")
-        End If
-        If LastVersionCode <= 263 AndAlso File.Exists(PathTemp & "CustomSkin.png") AndAlso Not File.Exists(PathAppdata & "CustomSkin.png") Then
-            CopyFile(PathTemp & "CustomSkin.png", PathAppdata & "CustomSkin.png")
-            Log("[Start] 已移动离线自定义皮肤 (264)")
-        End If
-        '解除帮助页面的隐藏
-        If LastVersionCode <= 205 Then
-            Config.Preference.Hide.SetupAbout = False
-            Log("[Start] 已解除帮助页面的隐藏")
-        End If
-        '迁移旧版用户档案
-        If LastVersionCode <= 368 Then
-            RunInNewThread(Sub() MigrateOldProfile())
-        End If
-        'Mod 命名设置迁移
-        If Not Setup.IsUnset("ToolDownloadTranslate") AndAlso Setup.IsUnset("ToolDownloadTranslateV2") Then
-            Setup.Set("ToolDownloadTranslateV2", Setup.Get("ToolDownloadTranslate") + 1)
-            Log("[Start] 已从老版本迁移 Mod 命名设置")
-        End If
-        '更新后展示社区版提示
-        ShowCEAnnounce()
-        '输出更新日志
-        If LastVersionCode <= 0 Then Return
-        If LowerVersionCode >= VersionCode Then Return
-        ShowUpdateLog()
+        ApplyVersionTransition(LastVersionCode)
     End Sub
     Private Sub DowngradeSub(LastVersionCode As Integer)
         Log("[Start] 版本号从 " & LastVersionCode & " 降低到 " & VersionCode)
-        Setup.Set("SystemLastVersionReg", VersionCode)
+        ApplyVersionTransition(LastVersionCode)
     End Sub
+
+    Private Sub ApplyVersionTransition(lastVersionCode As Integer)
+        Dim highestRecordedVersionCode = GetHighestRecordedVersionCode()
+        Dim transition = LauncherVersionTransitionService.Evaluate(New LauncherVersionTransitionRequest(
+            lastVersionCode,
+            VersionCode,
+            IsBetaBuild(),
+            highestRecordedVersionCode,
+            CInt(Setup.Get("LaunchArgumentWindowType")),
+            If(Setup.IsUnset("UiLauncherThemeHide"), Nothing, Setup.Get("UiLauncherThemeHide").ToString()),
+            If(Setup.IsUnset("UiLauncherThemeHide2"), Nothing, Setup.Get("UiLauncherThemeHide2").ToString()),
+            File.Exists(ExePath & "PCL\CustomSkin.png"),
+            File.Exists(PathTemp & "CustomSkin.png"),
+            File.Exists(PathAppdata & "CustomSkin.png"),
+            Not Setup.IsUnset("ToolDownloadTranslate"),
+            Not Setup.IsUnset("ToolDownloadTranslateV2"),
+            If(Setup.IsUnset("ToolDownloadTranslate"), 0, CInt(Setup.Get("ToolDownloadTranslate")))))
+
+        If transition.ShouldStoreCurrentVersion Then
+            Setup.Set("SystemLastVersionReg", VersionCode)
+        End If
+        If transition.HighestVersionStorageKey IsNot Nothing AndAlso transition.HighestVersionToStore.HasValue Then
+            Setup.Set(transition.HighestVersionStorageKey, transition.HighestVersionToStore.Value)
+            Log("[Start] 最高版本号从 " & highestRecordedVersionCode & " 升高到 " & transition.HighestVersionToStore.Value)
+        End If
+        If transition.LaunchArgumentWindowTypeToStore.HasValue Then
+            Setup.Set("LaunchArgumentWindowType", transition.LaunchArgumentWindowTypeToStore.Value)
+        End If
+        If transition.ThemeHiddenV2ToStore IsNot Nothing Then
+            Setup.Set("UiLauncherThemeHide2", transition.ThemeHiddenV2ToStore)
+        End If
+        For Each notice In transition.Notices
+            MyMsgBox(notice.Message, notice.Title)
+        Next
+
+        Select Case transition.CustomSkinMigrationSource
+            Case LauncherCustomSkinMigrationSourceKind.ExecutableDirectory
+                CopyFile(ExePath & "PCL\CustomSkin.png", PathAppdata & "CustomSkin.png")
+                Log("[Start] 已移动离线自定义皮肤 (162)")
+            Case LauncherCustomSkinMigrationSourceKind.TempDirectory
+                CopyFile(PathTemp & "CustomSkin.png", PathAppdata & "CustomSkin.png")
+                Log("[Start] 已移动离线自定义皮肤 (264)")
+        End Select
+
+        If transition.ShouldUnhideSetupAbout Then
+            Config.Preference.Hide.SetupAbout = False
+            Log("[Start] 已解除帮助页面的隐藏")
+        End If
+        If transition.ShouldMigrateOldProfile Then
+            RunInNewThread(Sub() MigrateOldProfile())
+        End If
+        If transition.ModNameSettingV2ToStore.HasValue Then
+            Setup.Set("ToolDownloadTranslateV2", transition.ModNameSettingV2ToStore.Value)
+            Log("[Start] 已从老版本迁移 Mod 命名设置")
+        End If
+        If transition.ShouldShowCommunityAnnouncement Then
+            ShowCEAnnounce()
+        End If
+        If transition.ShouldShowUpdateLog Then
+            ShowUpdateLog()
+        End If
+    End Sub
+
+    Private Shared Function GetHighestRecordedVersionCode() As Integer
+#If BETA Then
+        Return Setup.Get("SystemHighestBetaVersionReg")
+#Else
+        Return Setup.Get("SystemHighestAlphaVersionReg")
+#End If
+    End Function
+
+    Private Shared Function IsBetaBuild() As Boolean
+#If BETA Then
+        Return True
+#Else
+        Return False
+#End If
+    End Function
 
 #End Region
 
