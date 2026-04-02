@@ -65,6 +65,7 @@ Latest continuation update:
 - startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
 - crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
 - crash-export archive creation now lives in `PCL.Core.Minecraft.MinecraftCrashExportArchiveService`
+- crash prompt response / export completion shell policy now lives in `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
 - launch-count support prompt policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - prelaunch GPU-preference failure / admin-retry policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup immediate-command shell policy and environment-warning prompt contract now live in `PCL.Core.App.Essentials.LauncherStartupShellService`
@@ -80,6 +81,7 @@ Latest continuation update:
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher crash-export archive creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashExportArchiveService`
+- launcher crash prompt action handling and export completion hint/reveal flow now route through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashResponseWorkflowService`
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
 - launcher prerun GPU recovery, `launcher_profiles.json`, and `options.txt` composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchPrerunWorkflowService`
@@ -150,7 +152,7 @@ What is not true yet:
 
 - `ModLaunch.vb` still owns adapter-level request execution and launcher prompt integration, while `ModJava.vb` still owns the launcher download job lifecycle and loader polling
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
-- crash export still has launcher-owned picker / zip / Explorer flow in `ModCrash.vb`
+- crash export still has launcher-owned picker / Explorer flow in `ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 
 This branch is handoff-ready for another engineer. The next engineer should continue from the existing seams rather than reopening Foundation extraction.

@@ -294,13 +294,14 @@ internal static class SpikeExecutor
             ])
         };
 
-        if (selectedAction != MinecraftCrashOutputPromptActionKind.ExportReport)
+        var response = MinecraftCrashResponseWorkflowService.ResolvePromptResponse(selectedAction);
+        if (response.Kind != MinecraftCrashPromptResponseKind.ExportReport)
         {
             sections.Add(new SpikeTranscriptSection(
                 "Outcome",
                 [
                     "Crash export was not executed.",
-                    "The selected prompt action does not require archive creation."
+                    $"The selected prompt action resolves to {response.Kind}."
                 ]));
 
             return new CrashSpikeExecution(
@@ -361,13 +362,16 @@ internal static class SpikeExecutor
         artifacts.Add(new SpikeExecutionArtifact("Crash archive", archiveResult.ArchiveFilePath));
 
         var pickerDecisionPath = Path.Combine(workspaceRoot, "_artifacts", "crash-export-target.txt");
+        var completionPlan = MinecraftCrashResponseWorkflowService.BuildExportCompletionPlan(archiveResult.ArchiveFilePath);
         WriteTextFile(
             pickerDecisionPath,
             string.Join(
                 Environment.NewLine,
                 [
                     $"Requested path: {exportArchivePath ?? "default"}",
-                    $"Resolved archive path: {archiveResult.ArchiveFilePath}"
+                    $"Resolved archive path: {archiveResult.ArchiveFilePath}",
+                    $"Success hint: {completionPlan.HintMessage}",
+                    $"Reveal target: {completionPlan.RevealInShellPath}"
                 ]));
         writtenFiles.Add(pickerDecisionPath);
         artifacts.Add(new SpikeExecutionArtifact("Crash export target", pickerDecisionPath));
@@ -377,7 +381,9 @@ internal static class SpikeExecutor
             [
                 $"Crash archive: {archiveResult.ArchiveFilePath}",
                 $"Archived files: {string.Join(", ", archiveResult.ArchivedFileNames)}",
-                $"Export target record: {pickerDecisionPath}"
+                $"Export target record: {pickerDecisionPath}",
+                $"Success hint: {completionPlan.HintMessage}",
+                $"Shell reveal target: {completionPlan.RevealInShellPath}"
             ]));
 
         return new CrashSpikeExecution(

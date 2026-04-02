@@ -333,18 +333,24 @@ internal static class SpikeRunner
         MinecraftCrashExportPlan plan,
         MinecraftCrashOutputPromptActionKind selectedAction)
     {
+        var response = MinecraftCrashResponseWorkflowService.ResolvePromptResponse(selectedAction);
         var lines = new List<string>
         {
             $"Suggested archive: {plan.SuggestedArchiveName}",
             $"Report directory: {plan.ExportRequest.ReportDirectory}",
             $"Included files: {plan.ExportRequest.SourceFiles.Count}",
-            $"Launcher log: {plan.ExportRequest.CurrentLauncherLogFilePath ?? "none"}"
+            $"Launcher log: {plan.ExportRequest.CurrentLauncherLogFilePath ?? "none"}",
+            $"Resolved response: {response.Kind}"
         };
 
-        if (selectedAction == MinecraftCrashOutputPromptActionKind.ExportReport)
+        if (response.Kind == MinecraftCrashPromptResponseKind.ExportReport)
         {
+            var completionPlan = MinecraftCrashResponseWorkflowService.BuildExportCompletionPlan(
+                $"<workspace>/output/{plan.SuggestedArchiveName}");
             lines.Add("Frontend should ask for a destination path, then pass the export request to the archive writer.");
             lines.Add($"Default execute-mode export path: <workspace>/output/{plan.SuggestedArchiveName}");
+            lines.Add($"Success hint: {completionPlan.HintMessage}");
+            lines.Add($"Shell reveal target: {completionPlan.RevealInShellPath}");
         }
         else
         {

@@ -910,12 +910,13 @@ NextStack:
         Dim selectedButton = ModCrashPromptShell.RunOutputPrompt(prompt, AddressOf OpenDirectLogFile)
         If selectedButton Is Nothing OrElse Not selectedButton.ClosesPrompt Then Return
 
-        Select Case selectedButton.Action
-            Case MinecraftCrashOutputPromptActionKind.OpenInstanceSettings
+        Dim response = MinecraftCrashResponseWorkflowService.ResolvePromptResponse(selectedButton.Action)
+        Select Case response.Kind
+            Case MinecraftCrashPromptResponseKind.OpenInstanceSettings
                 '弹窗选择：前往修改
                 PageInstanceLeft.Instance = _version
                 RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
-            Case MinecraftCrashOutputPromptActionKind.ExportReport
+            Case MinecraftCrashPromptResponseKind.ExportReport
                 '弹窗选择：导出错误报告
                 Dim FileAddress As String = Nothing
                 Try
@@ -943,12 +944,13 @@ NextStack:
                         New MinecraftCrashExportArchiveRequest(
                             FileAddress,
                             exportPlan.ExportRequest))
-                    Hint("错误报告已导出！", HintType.Finish)
+                    Dim completionPlan = MinecraftCrashResponseWorkflowService.BuildExportCompletionPlan(FileAddress)
+                    Hint(completionPlan.HintMessage, HintType.Finish)
+                    OpenExplorer(completionPlan.RevealInShellPath)
                 Catch ex As Exception
                     Log(ex, "导出错误报告失败", LogLevel.Feedback)
                     Return
                 End Try
-                OpenExplorer(FileAddress)
         End Select
     End Sub
     
