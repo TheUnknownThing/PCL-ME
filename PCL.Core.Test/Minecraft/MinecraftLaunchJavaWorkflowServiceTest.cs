@@ -9,6 +9,63 @@ namespace PCL.Core.Test.Minecraft;
 public sealed class MinecraftLaunchJavaWorkflowServiceTest
 {
     [TestMethod]
+    public void BuildPlanIncludesRequirementLogAndPrompt()
+    {
+        var result = MinecraftLaunchJavaWorkflowService.BuildPlan(CreateWorkflowRequest() with
+        {
+            IsVersionInfoValid = true,
+            VanillaVersion = new Version(20, 0, 5),
+            MojangRecommendedMajorVersion = 22,
+            MojangRecommendedComponent = "jre-legacy"
+        });
+
+        Assert.AreEqual(new Version(22, 0, 0, 0), result.MinimumVersion);
+        Assert.AreEqual("Mojang 要求至少使用 Java 22", result.RecommendedVersionLogMessage);
+        Assert.AreEqual("Java 版本需求：最低 22.0.0.0，最高 999.999.999.999", result.RequirementLogMessage);
+        Assert.AreEqual("无合适的 Java，需要确认是否自动下载", result.MissingJavaLogMessage);
+        Assert.AreEqual("jre-legacy", result.MissingJavaPrompt.DownloadTarget);
+    }
+
+    [TestMethod]
+    public void ResolveInitialSelectionPromptsWhenJavaIsMissing()
+    {
+        var plan = MinecraftLaunchJavaWorkflowService.BuildPlan(CreateWorkflowRequest());
+
+        var result = MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(plan, hasSelectedJava: false);
+
+        Assert.AreEqual(MinecraftLaunchJavaSelectionActionKind.PromptForDownload, result.ActionKind);
+        Assert.AreEqual(plan.MissingJavaLogMessage, result.LogMessage);
+        Assert.AreEqual(plan.MissingJavaPrompt, result.Prompt);
+    }
+
+    [TestMethod]
+    public void ResolvePromptDecisionRequestsDownloadWhenUserAccepts()
+    {
+        var prompt = MinecraftLaunchJavaPromptService.BuildMissingJavaPrompt(
+            new MinecraftLaunchJavaPromptRequest(
+                new Version(17, 0, 0, 0),
+                new Version(999, 999, 999, 999),
+                HasForge: false,
+                RecommendedComponent: "17"));
+
+        var result = MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(prompt, MinecraftLaunchJavaPromptDecision.Download);
+
+        Assert.AreEqual(MinecraftLaunchJavaPromptActionKind.DownloadAndRetrySelection, result.ActionKind);
+        Assert.AreEqual("17", result.DownloadTarget);
+    }
+
+    [TestMethod]
+    public void ResolvePostDownloadSelectionReturnsAbortHintWhenJavaIsStillMissing()
+    {
+        var plan = MinecraftLaunchJavaWorkflowService.BuildPlan(CreateWorkflowRequest());
+
+        var result = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(plan, hasSelectedJava: false);
+
+        Assert.AreEqual(MinecraftLaunchJavaPostDownloadActionKind.AbortLaunch, result.ActionKind);
+        Assert.AreEqual("没有可用的 Java，已取消启动！", result.HintMessage);
+    }
+
+    [TestMethod]
     public void EvaluateRequiresJava21ForModernMinecraft()
     {
         var result = MinecraftLaunchJavaRequirementService.Evaluate(CreateRequirementRequest() with
@@ -189,6 +246,24 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
     private static MinecraftLaunchJavaRequirementRequest CreateRequirementRequest()
     {
         return new MinecraftLaunchJavaRequirementRequest(
+            IsVersionInfoValid: false,
+            ReleaseTime: new DateTime(2018, 1, 1),
+            VanillaVersion: new Version(1, 12, 2),
+            HasOptiFine: false,
+            HasForge: false,
+            ForgeVersion: null,
+            HasCleanroom: false,
+            HasFabric: false,
+            HasLiteLoader: false,
+            HasLabyMod: false,
+            JsonRequiredMajorVersion: null,
+            MojangRecommendedMajorVersion: 0,
+            MojangRecommendedComponent: null);
+    }
+
+    private static MinecraftLaunchJavaWorkflowRequest CreateWorkflowRequest()
+    {
+        return new MinecraftLaunchJavaWorkflowRequest(
             IsVersionInfoValid: false,
             ReleaseTime: new DateTime(2018, 1, 1),
             VanillaVersion: new Version(1, 12, 2),

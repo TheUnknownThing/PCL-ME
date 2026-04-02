@@ -1287,8 +1287,8 @@ Retry:
         Dim jsonRequiredMajorVersion As Integer? = Nothing
         If McInstanceSelected.JsonObject("javaVersion") IsNot Nothing Then jsonRequiredMajorVersion = CInt(Val(McInstanceSelected.JsonObject("javaVersion")("majorVersion")))
 
-        Dim javaRequirement = MinecraftLaunchJavaRequirementService.Evaluate(
-            New MinecraftLaunchJavaRequirementRequest(
+        Dim javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(
+            New MinecraftLaunchJavaWorkflowRequest(
                 McInstanceSelected.Info.Valid,
                 McInstanceSelected.ReleaseTime,
                 If(McInstanceSelected.Info.Valid, McInstanceSelected.Info.Vanilla, Nothing),
@@ -1302,36 +1302,33 @@ Retry:
                 jsonRequiredMajorVersion,
                 recommendedCode,
                 recommendedComponent))
-        Dim minVer = javaRequirement.MinimumVersion
-        Dim maxVer = javaRequirement.MaximumVersion
-        If javaRequirement.RecommendedMajorVersion >= 22 Then McLaunchLog("Mojang 要求至少使用 Java " & javaRequirement.RecommendedMajorVersion)
+        Dim minVer = javaWorkflow.MinimumVersion
+        Dim maxVer = javaWorkflow.MaximumVersion
+        If javaWorkflow.RecommendedVersionLogMessage IsNot Nothing Then McLaunchLog(javaWorkflow.RecommendedVersionLogMessage)
 
         SyncLock JavaLock
 
             '选择 Java
-            McLaunchLog("Java 版本需求：最低 " & minVer.ToString & "，最高 " & maxVer.ToString)
+            McLaunchLog(javaWorkflow.RequirementLogMessage)
             McLaunchJavaSelected = JavaSelect("$$", minVer, maxVer, McInstanceSelected)
             If task.IsAborted Then Return
-            If McLaunchJavaSelected IsNot Nothing Then
+            Dim initialSelection = MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, McLaunchJavaSelected IsNot Nothing)
+            If initialSelection.ActionKind = MinecraftLaunchJavaSelectionActionKind.UseSelectedJava Then
                 McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
                 Return
             End If
 
             '无合适的 Java
             If task.IsAborted Then Return '中断加载会导致 JavaSelect 异常地返回空值，误判找不到 Java
-            McLaunchLog("无合适的 Java，需要确认是否自动下载")
-            Dim javaPrompt = MinecraftLaunchJavaPromptService.BuildMissingJavaPrompt(
-                New MinecraftLaunchJavaPromptRequest(
-                    minVer,
-                    maxVer,
-                    McInstanceSelected.Info.HasForge,
-                    javaRequirement.RecommendedComponent))
+            McLaunchLog(initialSelection.LogMessage)
+            Dim javaPrompt = initialSelection.Prompt
             Dim javaDecision = RunJavaPrompt(javaPrompt)
-            If javaDecision.Decision <> MinecraftLaunchJavaPromptDecision.Download Then Throw New Exception("$$")
+            Dim promptOutcome = MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(javaPrompt, javaDecision.Decision)
+            If promptOutcome.ActionKind <> MinecraftLaunchJavaPromptActionKind.DownloadAndRetrySelection Then Throw New Exception("$$")
             '开始自动下载
             Dim javaLoader = GetJavaDownloadLoader()
             Try
-                javaLoader.Start(javaPrompt.DownloadTarget, IsForceRestart:=True)
+                javaLoader.Start(promptOutcome.DownloadTarget, IsForceRestart:=True)
                 Do While javaLoader.State = LoadState.Loading AndAlso Not task.IsAborted
                     task.Progress = javaLoader.Progress
                     Thread.Sleep(10)
@@ -1343,10 +1340,11 @@ Retry:
             '检查下载结果
             McLaunchJavaSelected = JavaSelect("$$", minVer, maxVer, McInstanceSelected)
             If task.IsAborted Then Return
-            If McLaunchJavaSelected IsNot Nothing Then
+            Dim postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, McLaunchJavaSelected IsNot Nothing)
+            If postDownloadSelection.ActionKind = MinecraftLaunchJavaPostDownloadActionKind.UseSelectedJava Then
                 McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString())
             Else
-                Hint("没有可用的 Java，已取消启动！", HintType.Critical)
+                Hint(postDownloadSelection.HintMessage, HintType.Critical)
                 Throw New Exception("$$")
             End If
 
@@ -2084,8 +2082,8 @@ NextInstance:
             primaryOptionsFileAddress)
         Try
             If optionsPlan.TargetSelectionLogMessage IsNot Nothing Then McLaunchLog(optionsPlan.TargetSelectionLogMessage)
-            For Each write In optionsPlan.Writes
-                WriteIni(setupFileAddress, write.Key, write.Value)
+            For Each optionWrite In optionsPlan.Writes
+                WriteIni(setupFileAddress, optionWrite.Key, optionWrite.Value)
             Next
             For Each logMessage In optionsPlan.LogMessages
                 McLaunchLog(logMessage)
@@ -2258,7 +2256,7 @@ NextInstance:
                 VersionBaseName,
                 VersionCode,
                 McInstanceSelected.Info.VanillaName,
-                McInstanceSelected.Info.Vanilla,
+                If(McInstanceSelected.Info.Vanilla?.ToString(), ""),
                 McInstanceSelected.Info.Drop,
                 McInstanceSelected.Info.Reliable,
                 McAssetsGetIndexName(McInstanceSelected),
