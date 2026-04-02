@@ -11,6 +11,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - the same prototype shell can materialize bootstrap, prerun, and crash-export artifacts in a real workspace through adapter-style file execution
 - launch scenarios can now trace Authlib or Microsoft login request execution with inspectable request/response artifacts
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
+- the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
 
 ## Commands
@@ -35,12 +36,15 @@ Useful reviewer commands:
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike --export-path exports/demo-report.zip`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode execute --format text --workspace /tmp/pcl-shell-spike`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch modern-fabric --mode run --format text --input-root /tmp/pcl-launch-spike/_inputs/launch.json`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch modern-fabric --mode run --format text --host-env true`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-host-crash --host-env true --export-path reports/host-report.zip`
 
 ## Options
 
 - `--mode plan|run|execute`
 - `--format json|text`
 - `--scenario modern-fabric|legacy-forge`
+- `--host-env true|false`
 - `--java-prompt download|abort`
 - `--crash-action close|view-log|open-settings|export`
 - `--workspace /absolute/or/relative/path`
@@ -65,8 +69,14 @@ Useful reviewer commands:
 - when `--input-root` is provided, the spike reuses those serialized inputs instead of the built-in defaults
 - this makes it easy to execute once, tweak the saved JSON, and rerun the shell against file-backed state
 
+## Host-backed inputs
+
+- `--host-env true` tells the spike to derive startup, launch, and crash inputs from the current machine when `--input-root` is not provided
+- this currently swaps in host paths, home/config/log locations, OS snapshot data, and portable Java/process defaults so the shell transcript is closer to a real non-Windows environment
+- host-backed mode is still best-effort shell prototyping, not a live launcher adapter; account tokens, network responses, and some launcher-specific shell commands remain modeled inputs
+
 ## Current limitations
 
 - the spike is still a prototype shell, not a user-facing replacement launcher
 - launch request execution, Java download plumbing, and crash save-picker or Explorer behavior still live in the real launcher
-- the spike still starts from deterministic defaults unless you point it at saved or edited input JSON, and it does not yet source those inputs from a live launcher environment
+- the spike can now derive best-effort host-backed inputs, but it still does not source full live launcher state or perform real login/network execution against the current machine

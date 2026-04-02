@@ -8,6 +8,7 @@ internal sealed record SpikeCommandOptions(
     string Scenario,
     SpikeOutputMode Mode,
     SpikeOutputFormat Format,
+    bool UseHostEnvironment,
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
     MinecraftCrashOutputPromptActionKind CrashAction,
     string? WorkspaceRoot,

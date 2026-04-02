@@ -125,17 +125,26 @@ static string ResolveWorkspaceRoot(string? requestedWorkspaceRoot)
 
 static StartupSpikeInputs ResolveStartupInputs(SpikeCommandOptions options)
 {
-    return SpikeInputStore.LoadStartupInputs(options.InputRoot) ?? SpikeSampleFactory.CreateDefaultStartupInputs();
+    return SpikeInputStore.LoadStartupInputs(options.InputRoot) ??
+           (options.UseHostEnvironment
+               ? SpikeHostInputFactory.CreateStartupInputs()
+               : SpikeSampleFactory.CreateDefaultStartupInputs());
 }
 
 static LaunchSpikeInputs ResolveLaunchInputs(SpikeCommandOptions options)
 {
-    return SpikeInputStore.LoadLaunchInputs(options.InputRoot) ?? SpikeSampleFactory.CreateDefaultLaunchInputs(options.Scenario);
+    return SpikeInputStore.LoadLaunchInputs(options.InputRoot) ??
+           (options.UseHostEnvironment
+               ? SpikeHostInputFactory.CreateLaunchInputs(options.Scenario)
+               : SpikeSampleFactory.CreateDefaultLaunchInputs(options.Scenario));
 }
 
 static CrashSpikeInputs ResolveCrashInputs(SpikeCommandOptions options)
 {
-    return SpikeInputStore.LoadCrashInputs(options.InputRoot) ?? SpikeSampleFactory.CreateDefaultCrashInputs();
+    return SpikeInputStore.LoadCrashInputs(options.InputRoot) ??
+           (options.UseHostEnvironment
+               ? SpikeHostInputFactory.CreateCrashInputs()
+               : SpikeSampleFactory.CreateDefaultCrashInputs());
 }
 
 static StartupSpikeExecution CreateStartupExecution(StartupSpikeInputs inputs, string workspaceRoot)

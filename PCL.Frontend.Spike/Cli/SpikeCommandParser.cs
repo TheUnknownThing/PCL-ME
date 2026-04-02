@@ -14,6 +14,7 @@ internal static class SpikeCommandParser
                 Scenario: "modern-fabric",
                 Mode: SpikeOutputMode.Plan,
                 Format: SpikeOutputFormat.Json,
+                UseHostEnvironment: false,
                 JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
                 CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
                 WorkspaceRoot: null,
@@ -34,6 +35,7 @@ internal static class SpikeCommandParser
         var scenario = "modern-fabric";
         var mode = SpikeOutputMode.Plan;
         var format = SpikeOutputFormat.Json;
+        var useHostEnvironment = false;
         var javaPromptDecision = MinecraftLaunchJavaPromptDecision.Download;
         var crashAction = MinecraftCrashOutputPromptActionKind.ExportReport;
         string? workspaceRoot = null;
@@ -77,6 +79,12 @@ internal static class SpikeCommandParser
                         return Error($"Unknown format '{value}'.");
                     }
                     break;
+                case "host-env":
+                    if (!TryParseBooleanFlag(value!, out useHostEnvironment))
+                    {
+                        return Error($"Unknown host environment flag '{value}'.");
+                    }
+                    break;
                 case "java-prompt":
                     if (!TryParseJavaPromptDecision(value!, out javaPromptDecision))
                     {
@@ -113,6 +121,7 @@ internal static class SpikeCommandParser
             scenario,
             mode,
             format,
+            useHostEnvironment,
             javaPromptDecision,
             crashAction,
             workspaceRoot,
@@ -126,10 +135,10 @@ internal static class SpikeCommandParser
 PCL.Frontend.Spike
 
 Usage:
-  startup [--mode plan|run|execute] [--format json|text] [--workspace path] [--input-root path]
-  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--workspace path] [--input-root path]
-  crash [--mode plan|run|execute] [--format json|text] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
-  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
+  startup [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
+  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--workspace path] [--input-root path]
+  crash [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
+  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
   help
 
 Defaults:
@@ -137,6 +146,7 @@ Defaults:
   scenario: modern-fabric
   mode: plan
   format: json
+  host env: false
   java prompt: download
   crash action: export
 """;
@@ -204,6 +214,28 @@ Defaults:
                 return true;
             default:
                 format = default;
+                return false;
+        }
+    }
+
+    private static bool TryParseBooleanFlag(string value, out bool result)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "true":
+            case "1":
+            case "yes":
+            case "on":
+                result = true;
+                return true;
+            case "false":
+            case "0":
+            case "no":
+            case "off":
+                result = false;
+                return true;
+            default:
+                result = false;
                 return false;
         }
     }
