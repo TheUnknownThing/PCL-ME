@@ -127,6 +127,7 @@ static string ResolveWorkspaceRoot(string? requestedWorkspaceRoot)
         return Path.GetFullPath(requestedWorkspaceRoot);
     }
 
-    var directoryName = $"spike-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N[..8]}";
+    var workspaceId = Guid.NewGuid().ToString("N")[..8];
+    var directoryName = $"spike-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{workspaceId}";
     return Path.Combine(Path.GetTempPath(), "PCL.Frontend.Spike", directoryName);
 }
