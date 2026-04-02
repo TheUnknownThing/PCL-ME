@@ -143,6 +143,13 @@ These were completed after Wave 2 was declared stable:
 - login profile mutation and Microsoft cached-session reuse policy moved out of the launcher
   - `MinecraftLaunchLoginProfileWorkflowService` now owns Microsoft cached-login reuse rules plus Microsoft/Authlib profile creation and update plans
   - `ModLaunch.vb` still performs the network requests and applies the returned mutation plans to launcher profile state
+- launch login execution sequencing moved out of the launcher
+  - `MinecraftLaunchThirdPartyLoginExecutionService` now owns Authlib validate / refresh / authenticate step sequencing and retry transitions
+  - `MinecraftLaunchMicrosoftLoginExecutionService` now owns Microsoft cached-session reuse vs refresh vs device-code flow sequencing plus step progression
+  - `ModLaunch.vb` now acts mainly as a step runner that performs requests, prompts, and returned mutation/application work
+- launcher login step adapters were further normalized
+  - Microsoft login step adapters no longer communicate through launcher-local magic strings like `Ignore` / `Relogin`
+  - Authlib validate / refresh / authenticate helpers now return explicit results instead of mutating loader output by side effect
 - frontend migration planning artifact added
   - see `FRONTEND_MIGRATION_PLAN.md`
 
@@ -232,6 +239,11 @@ This is the meaningful history for the current portability work:
 - `e5960538` `refactor(launcher): route authlib failure policy through core workflow`
 - `1929b08f` `feat(launch): add login profile workflow service`
 - `dc49a7f2` `refactor(launcher): route login profile workflow through core service`
+- `eb72c877` `refactor(launch): route auth refresh profile updates through core workflow`
+- `5e1b4ee3` `feat(launch): extract authlib login execution workflow`
+- `1d67a31d` `feat(launch): extract microsoft login execution workflow`
+- `d881161b` `refactor(launch): replace microsoft login magic step markers`
+- `9899021f` `refactor(launch): return authlib login step results explicitly`
 
 If the next engineer wants to understand the current extraction shape, reading those commits in order is the fastest path.
 
@@ -269,9 +281,9 @@ Recommended order:
 
 1. keep `PCL.Core.Foundation` stable and avoid leaking UI/Win32 concerns back into it
 2. use `FRONTEND_MIGRATION_PLAN.md` as the working migration brief
-3. finish the highest-value remaining launcher workflow extraction before attempting an actual shell replacement
-4. specifically target the remaining login / account-recovery / Java-selection prompt policy in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
-5. after that, reevaluate whether a small cross-platform shell spike can start without dragging WPF logic forward
+3. treat the launch login-orchestration blocker as mostly addressed and begin a small shell-replacement / frontend-contract phase
+4. keep `ModLaunch.vb` cleanup incremental: only peel off remaining step-local adapter glue or prompt/shell wrappers when they materially simplify a new shell consumer
+5. focus the next migration spike on replacing or paralleling a narrow launcher surface while continuing to reuse `PCL.Core` launch/startup/crash services
 6. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
 7. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
 
@@ -291,7 +303,7 @@ Do not do these yet unless the runtime boundary is already stable:
 - Java launch and remaining launcher-side VB/WPF flows still contain Windows assumptions even though the runtime/discovery core is portable
 - `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
-- the single biggest remaining workflow blocker before a shell-replacement spike is the login execution / orchestration and launcher-state mutation flow still embedded in `ModLaunch.vb`
+- the largest former workflow blocker, launch login execution / orchestration, is now largely expressed through `PCL.Core` execution and mutation services, but the step adapters in `ModLaunch.vb` are still VB/WPF-coupled
 - frontend migration is now mostly blocked by view/shell replacement and remaining launcher workflow/UI entanglement, not by runtime-core portability
 
 ## Working Rules For The Next Engineer

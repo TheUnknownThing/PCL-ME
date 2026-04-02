@@ -19,6 +19,8 @@ These workflow extractions are already done and should be treated as available m
 - launch Java requirement and missing-Java prompt policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaRequirementService` and `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptService`
 - third-party login failure policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginWorkflowService`
 - login profile mutation / cached-session reuse policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLoginProfileWorkflowService`
+- authlib login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginExecutionService`
+- Microsoft login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftLoginExecutionService`
 - startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
 - crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
@@ -82,22 +84,22 @@ These flows still combine:
 - WPF-specific navigation / dispatcher coordination
 - some launch-specific decision logic
 
-After the latest cleanup slices, the single biggest remaining mixed area is:
+After the latest cleanup slices, the former biggest blocker has changed:
 
-- login execution / orchestration and launcher-state mutation in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+- login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution, prompt rendering, and shell/UI adapter work
 
-A future frontend should only own the prompts and view transitions, not the workflow logic itself.
+A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
 
 ## Recommended Next Boundary
 
-The next implementation phase should still be **one more round of launcher workflow extraction on top of the extracted seams**, not a full shell rewrite yet.
+The next implementation phase can move into a **small shell-replacement / frontend-contract spike on top of the extracted seams**.
 
 Create launcher-facing services in `PCL.Core` for:
 
-1. remaining launch login execution / orchestration results and state-application policy
-2. any leftover startup shell policy still assembled directly in launcher files
-3. any remaining crash-export shell policy that still mixes business logic with picker / Explorer flow
-4. only after that, a small shell-replacement spike that consumes the extracted services
+1. any leftover startup shell policy still assembled directly in launcher files
+2. any remaining crash-export shell policy that still mixes business logic with picker / Explorer flow
+3. optional follow-up launch-step adapter cleanup only when a new shell consumer needs a cleaner contract
+4. a small shell-replacement spike that consumes the extracted services
 
 Keep the following in the launcher as adapters:
 
@@ -110,12 +112,11 @@ This boundary keeps the current launcher behavior intact while making the eventu
 
 ## Execution Order
 
-1. Extract launch workflow orchestration next.
-   The remaining login execution / orchestration flow in `ModLaunch.vb` is still the biggest blocker to swapping frontend shells.
-2. Finish trimming startup shell policy in the launcher if any new blocker is found during that extraction.
-3. Trim crash-export shell orchestration if it still blocks frontend swap readiness.
-4. Start the actual frontend shell migration only after step 1 is no longer a major blocker.
-   Replace or parallel a small launcher surface first, while continuing to use existing `PCL.Core` services and Windows shell adapters as needed.
+1. Start a small frontend-shell migration spike now that login execution / orchestration is no longer the main blocker.
+   Prefer a narrow surface that can consume the extracted launch/startup/crash services without rewriting the whole launcher.
+2. Trim startup shell policy in the launcher if it blocks that spike.
+3. Trim crash-export shell orchestration if it blocks that spike.
+4. Keep refining `ModLaunch.vb` only where the new shell surface needs cleaner step-level adapters.
 
 ## Acceptance Criteria
 
@@ -123,4 +124,4 @@ This boundary keeps the current launcher behavior intact while making the eventu
 - New launcher workflow services do not introduce `System.Windows` dependencies into `PCL.Core.Foundation`.
 - The launcher becomes a consumer of workflow results plus shell adapters, not the owner of business logic assembly.
 - Frontend migration can proceed without reopening runtime seams or reintroducing launcher-local copies of runtime/system logic.
-- The project does not move into full shell-migration mode until `ModLaunch.vb` no longer owns the majority of login execution / orchestration policy.
+- The project can enter a small shell-migration phase now that `ModLaunch.vb` no longer owns the majority of login execution / orchestration policy.
