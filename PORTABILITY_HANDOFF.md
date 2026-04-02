@@ -98,11 +98,6 @@ The mission is still “stabilize the runtime boundary before touching the front
 
 This is **not** a fully portable backend yet.
 
-Honest status estimate at this handoff point:
-
-- portable backend architecture: roughly `92%~94%` complete
-- fully usable frontend-independent portable backend: roughly `74%~78%` complete
-
 What is already true:
 
 - `PCL.Core.Foundation` is real, headless, and validated on macOS
