@@ -312,6 +312,7 @@ internal static class SpikeRunner
         if (selectedAction == MinecraftCrashOutputPromptActionKind.ExportReport)
         {
             lines.Add("Frontend should ask for a destination path, then pass the export request to the archive writer.");
+            lines.Add($"Default execute-mode export path: <workspace>/output/{plan.SuggestedArchiveName}");
         }
         else
         {

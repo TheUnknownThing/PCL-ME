@@ -97,11 +97,11 @@ static object BuildExecutePayload(SpikeCommandOptions options)
     {
         SpikeCommandKind.Startup => CreateStartupExecution(startupInputs, workspaceRoot),
         SpikeCommandKind.Launch => CreateLaunchExecution(launchInputs, workspaceRoot, options.JavaPromptDecision),
-        SpikeCommandKind.Crash => CreateCrashExecution(crashInputs, workspaceRoot, options.CrashAction),
+        SpikeCommandKind.Crash => CreateCrashExecution(crashInputs, workspaceRoot, options.CrashAction, options.ExportArchivePath),
         SpikeCommandKind.All => new SpikeExecutionBundle(
             CreateStartupExecution(startupInputs, Path.Combine(workspaceRoot, "startup")),
             CreateLaunchExecution(launchInputs, Path.Combine(workspaceRoot, "launch"), options.JavaPromptDecision),
-            CreateCrashExecution(crashInputs, Path.Combine(workspaceRoot, "crash"), options.CrashAction)),
+            CreateCrashExecution(crashInputs, Path.Combine(workspaceRoot, "crash"), options.CrashAction, options.ExportArchivePath)),
         _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
     };
 }
@@ -163,12 +163,14 @@ static LaunchSpikeExecution CreateLaunchExecution(
 static CrashSpikeExecution CreateCrashExecution(
     CrashSpikeInputs inputs,
     string workspaceRoot,
-    PCL.Core.Minecraft.MinecraftCrashOutputPromptActionKind crashAction)
+    PCL.Core.Minecraft.MinecraftCrashOutputPromptActionKind crashAction,
+    string? exportArchivePath)
 {
     var execution = SpikeExecutor.ExecuteCrash(
         SpikeSampleFactory.BuildCrashPlan(inputs),
         workspaceRoot,
-        crashAction);
+        crashAction,
+        exportArchivePath);
     var inputArtifact = SpikeInputStore.SaveCrashInputs(execution.Execution.WorkspaceRoot, inputs);
     return SpikeExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
 }

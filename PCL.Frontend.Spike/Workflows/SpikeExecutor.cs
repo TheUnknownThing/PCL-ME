@@ -223,7 +223,8 @@ internal static class SpikeExecutor
     public static CrashSpikeExecution ExecuteCrash(
         CrashSpikePlan plan,
         string workspaceRoot,
-        MinecraftCrashOutputPromptActionKind selectedAction)
+        MinecraftCrashOutputPromptActionKind selectedAction,
+        string? exportArchivePath)
     {
         Directory.CreateDirectory(workspaceRoot);
 
@@ -285,7 +286,8 @@ internal static class SpikeExecutor
             writtenFiles.Add(launcherLogPath);
         }
 
-        var outputRoot = Path.Combine(workspaceRoot, "output");
+        var archivePath = ResolveCrashArchivePath(workspaceRoot, plan.ExportPlan.SuggestedArchiveName, exportArchivePath);
+        var outputRoot = Path.GetDirectoryName(archivePath)!;
         Directory.CreateDirectory(outputRoot);
         createdDirectories.Add(outputRoot);
 
@@ -297,7 +299,6 @@ internal static class SpikeExecutor
             UserProfilePath = Path.Combine(workspaceRoot, "Users", "demo")
         };
 
-        var archivePath = Path.Combine(outputRoot, plan.ExportPlan.SuggestedArchiveName);
         var archiveResult = MinecraftCrashExportArchiveService.CreateArchive(
             new MinecraftCrashExportArchiveRequest(
                 archivePath,
@@ -306,11 +307,24 @@ internal static class SpikeExecutor
         writtenFiles.Add(archiveResult.ArchiveFilePath);
         artifacts.Add(new SpikeExecutionArtifact("Crash archive", archiveResult.ArchiveFilePath));
 
+        var pickerDecisionPath = Path.Combine(workspaceRoot, "_artifacts", "crash-export-target.txt");
+        WriteTextFile(
+            pickerDecisionPath,
+            string.Join(
+                Environment.NewLine,
+                [
+                    $"Requested path: {exportArchivePath ?? "default"}",
+                    $"Resolved archive path: {archiveResult.ArchiveFilePath}"
+                ]));
+        writtenFiles.Add(pickerDecisionPath);
+        artifacts.Add(new SpikeExecutionArtifact("Crash export target", pickerDecisionPath));
+
         sections.Add(new SpikeTranscriptSection(
             "Artifacts",
             [
                 $"Crash archive: {archiveResult.ArchiveFilePath}",
-                $"Archived files: {string.Join(", ", archiveResult.ArchivedFileNames)}"
+                $"Archived files: {string.Join(", ", archiveResult.ArchivedFileNames)}",
+                $"Export target record: {pickerDecisionPath}"
             ]));
 
         return new CrashSpikeExecution(
@@ -419,6 +433,18 @@ internal static class SpikeExecutor
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static string ResolveCrashArchivePath(string workspaceRoot, string suggestedArchiveName, string? exportArchivePath)
+    {
+        if (string.IsNullOrWhiteSpace(exportArchivePath))
+        {
+            return Path.Combine(workspaceRoot, "output", suggestedArchiveName);
+        }
+
+        return Path.IsPathRooted(exportArchivePath)
+            ? Path.GetFullPath(exportArchivePath)
+            : Path.GetFullPath(Path.Combine(workspaceRoot, exportArchivePath));
     }
 
     private static string MapSamplePath(string samplePath, string workspaceRoot)

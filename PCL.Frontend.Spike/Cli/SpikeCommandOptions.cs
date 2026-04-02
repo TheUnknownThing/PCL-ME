@@ -11,7 +11,8 @@ internal sealed record SpikeCommandOptions(
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
     MinecraftCrashOutputPromptActionKind CrashAction,
     string? WorkspaceRoot,
-    string? InputRoot);
+    string? InputRoot,
+    string? ExportArchivePath);
 
 internal sealed record SpikeParseResult(
     SpikeCommandOptions? Options,

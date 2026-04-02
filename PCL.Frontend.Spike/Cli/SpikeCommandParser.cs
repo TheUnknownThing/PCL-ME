@@ -17,7 +17,8 @@ internal static class SpikeCommandParser
                 JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
                 CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
                 WorkspaceRoot: null,
-                InputRoot: null));
+                InputRoot: null,
+                ExportArchivePath: null));
         }
 
         if (IsHelpToken(args[0]))
@@ -37,6 +38,7 @@ internal static class SpikeCommandParser
         var crashAction = MinecraftCrashOutputPromptActionKind.ExportReport;
         string? workspaceRoot = null;
         string? inputRoot = null;
+        string? exportArchivePath = null;
 
         var index = 1;
         if (command is SpikeCommandKind.Launch or SpikeCommandKind.All &&
@@ -96,6 +98,9 @@ internal static class SpikeCommandParser
                 case "input-root":
                     inputRoot = value;
                     break;
+                case "export-path":
+                    exportArchivePath = value;
+                    break;
                 default:
                     return Error($"Unknown option '--{name}'.");
             }
@@ -111,7 +116,8 @@ internal static class SpikeCommandParser
             javaPromptDecision,
             crashAction,
             workspaceRoot,
-            inputRoot));
+            inputRoot,
+            exportArchivePath));
     }
 
     public static string GetUsageText()
@@ -122,8 +128,8 @@ PCL.Frontend.Spike
 Usage:
   startup [--mode plan|run|execute] [--format json|text] [--workspace path] [--input-root path]
   launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--workspace path] [--input-root path]
-  crash [--mode plan|run|execute] [--format json|text] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path]
-  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path]
+  crash [--mode plan|run|execute] [--format json|text] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
+  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
   help
 
 Defaults:

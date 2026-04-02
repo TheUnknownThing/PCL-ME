@@ -9,6 +9,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - a non-WPF shell can consume the extracted startup, launch, and crash contracts
 - the portable backend can drive both machine-readable output and shell-oriented transcript output
 - the same prototype shell can materialize bootstrap, prerun, and crash-export artifacts in a real workspace through adapter-style file execution
+- launch scenarios can now trace Authlib or Microsoft login request execution with inspectable request/response artifacts
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
 
@@ -31,6 +32,7 @@ Useful reviewer commands:
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode execute --format text --workspace /tmp/pcl-launch-spike`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike --export-path exports/demo-report.zip`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode execute --format text --workspace /tmp/pcl-shell-spike`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch modern-fabric --mode run --format text --input-root /tmp/pcl-launch-spike/_inputs/launch.json`
 
@@ -43,6 +45,7 @@ Useful reviewer commands:
 - `--crash-action close|view-log|open-settings|export`
 - `--workspace /absolute/or/relative/path`
 - `--input-root /path/to/file/or/_inputs_directory`
+- `--export-path /absolute/or/workspace-relative/archive.zip`
 
 `execute` mode creates a workspace root automatically when `--workspace` is omitted.
 
@@ -50,7 +53,9 @@ Useful reviewer commands:
 
 - startup execution creates bootstrap directories, deletes seeded legacy log placeholders, and writes prompt/config artifacts
 - launch execution can materialize `launcher_profiles.json`, `options.txt`, a generated launch batch file, and session summary artifacts
+- launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
 - crash execution can stage sample input files and build a real crash zip archive via `MinecraftCrashExportArchiveService`
+- crash execution records the selected archive destination in `_artifacts/crash-export-target.txt`, and `--export-path` can override the default workspace output path
 - aborting the launch Java prompt in `execute` mode stops before prerun file work, so no launch artifacts are created
 - each execution workspace also stores `_inputs/*.json` snapshots so the same shell inputs can be replayed later
 
