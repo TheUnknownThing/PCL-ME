@@ -23,9 +23,13 @@ These workflow extractions are already done and should be treated as available m
 - Microsoft login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftLoginExecutionService`
 - startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
 - startup command parsing and startup preparation composition are owned by `PCL.Core.App.Essentials.LauncherStartupCommandService` and `LauncherStartupPreparationService`
+- startup version-transition and version-isolation migration policy are owned by `PCL.Core.App.Essentials.LauncherVersionTransitionService` and `LauncherStartupVersionIsolationMigrationService`
 - crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
+- crash export request assembly is owned by `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
 - crash result prompt policy and export filename suggestion are owned by `PCL.Core.Minecraft.MinecraftCrashWorkflowService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- launch GPU-preference failure / admin-retry policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
 - fatal log dialog presentation is routed through `PCL.Core.Logging.LogRuntimeHooks` instead of being hardcoded in `PCL.Core.Logging.LogService`
 
@@ -90,8 +94,9 @@ These flows still combine:
 After the latest cleanup slices, the former biggest blocker has changed:
 
 - login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution, prompt rendering, and shell/UI adapter work
-- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, or export archive naming; it still owns save-picker invocation, report zip creation, and Explorer opening
+- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, or export-request assembly; it still owns save-picker invocation, report zip creation, and Explorer opening
 - `Application.xaml.vb` no longer assembles startup command parsing or warning/bootstrap composition; it still owns WPF startup shell work such as splash-screen display, tooltip metadata, memory optimization execution, and warning dialog rendering
+- `FormMain.xaml.vb` no longer owns version-transition migration policy or version-isolation migration policy; it still owns WPF startup presentation and shell adapters
 - `Program.vb` now reattaches the current fatal-dialog presentation behavior through a runtime hook instead of that behavior being hardcoded in `PCL.Core`
 
 A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
@@ -103,9 +108,8 @@ The next implementation phase can move into a **small shell-replacement / fronte
 Create launcher-facing services in `PCL.Core` for:
 
 1. any leftover startup shell policy still assembled directly in launcher files
-2. any remaining crash-export shell policy that still mixes business logic with picker / Explorer flow
-3. optional follow-up launch-step adapter cleanup only when a new shell consumer needs a cleaner contract
-4. a small shell-replacement spike that consumes the extracted services
+2. optional follow-up launch-step adapter cleanup only where `ModLaunch.vb` still mixes shell/UI work with reusable decision logic
+3. a small shell-replacement spike that consumes the extracted services
 
 Keep the following in the launcher as adapters:
 
@@ -121,8 +125,8 @@ This boundary keeps the current launcher behavior intact while making the eventu
 1. Start a small frontend-shell migration spike now that login execution / orchestration is no longer the main blocker.
    Prefer a narrow surface that can consume the extracted launch/startup/crash services without rewriting the whole launcher.
 2. Trim startup shell policy in the launcher if it blocks that spike.
-3. Trim crash-export shell orchestration if it blocks that spike.
-4. Keep refining `ModLaunch.vb` only where the new shell surface needs cleaner step-level adapters.
+3. Keep refining `ModLaunch.vb` only where the new shell surface needs cleaner step-level adapters.
+4. Trim any remaining `ModCrash.vb` picker / Explorer glue only if the shell spike needs it.
 
 ## Acceptance Criteria
 

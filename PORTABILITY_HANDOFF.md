@@ -15,6 +15,14 @@ The long-term direction is still:
 
 The repo is no longer at the “portability is just an idea” stage. There is now a real headless `PCL.Core.Foundation` project, it builds and tests on macOS, Wave 2 runtime/platform extraction is complete, and a substantial set of Wave 3 launcher-workflow cleanup slices have been landed.
 
+Latest continuation update:
+
+- startup version-transition policy now lives in `PCL.Core.App.Essentials.LauncherVersionTransitionService`
+- startup version-isolation migration policy now lives in `PCL.Core.App.Essentials.LauncherStartupVersionIsolationMigrationService`
+- crash-export request assembly now lives in `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
+- launch-count support prompt policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- prelaunch GPU-preference failure / admin-retry policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
+
 ## Big Goal
 
 Target architecture:
@@ -121,15 +129,30 @@ These were completed after Wave 2 was declared stable:
 - startup consent workflow moved out of the launcher
   - `LauncherStartupConsentService` now owns special-build / EULA / telemetry prompt sequencing
   - `FormMain.xaml.vb` only renders those prompts and applies shell actions
+- startup version upgrade / downgrade policy moved out of the launcher
+  - `LauncherVersionTransitionService` now owns version-transition migrations, notices, custom-skin migration selection, and update-log eligibility
+  - `FormMain.xaml.vb` applies the returned plan instead of owning that decision tree
+- startup version-isolation migration policy moved out of the launcher
+  - `LauncherStartupVersionIsolationMigrationService` now owns legacy `LaunchArgumentIndie` to `LaunchArgumentIndieV2` migration rules
+  - `FormMain.xaml.vb` only applies the returned value and log message
 - crash export packaging moved out of the launcher
   - `MinecraftCrashExportService` now owns report packaging, filename normalization, and sanitization
   - `ModCrash.vb` keeps picker / zip destination / Explorer opening only
+- crash export request assembly moved out of the launcher
+  - `MinecraftCrashExportWorkflowService` now owns archive-name suggestion and export-request composition
+  - `ModCrash.vb` now only picks the destination and executes the package/export shell actions
 - crash result prompt policy moved out of the launcher
   - `MinecraftCrashWorkflowService` now owns crash-result dialog titles, button policy, and export filename suggestion
   - `ModCrash.vb` now only renders the prompt and executes the selected shell action
 - post-launch shell policy moved out of the launcher
   - `MinecraftLaunchShellService` now owns completion notification policy, failure titles, and launcher-visibility decisions
   - `ModLaunch.vb` performs the returned shell action instead of deciding it
+- launch support prompt policy moved out of the launcher
+  - `MinecraftLaunchShellService` now owns launch-count milestone support-prompt wording and button policy
+  - `ModLaunch.vb` only renders the returned prompt
+- launch GPU-preference failure / retry policy moved out of the launcher
+  - `MinecraftLaunchGpuPreferenceWorkflowService` now owns “log directly vs retry as admin” recovery policy plus retry arguments / hint wording
+  - `ModLaunch.vb` only executes the returned recovery plan
 - startup bootstrap policy moved out of the launcher
   - `LauncherStartupBootstrapService` now owns startup directory targets, config preload keys, old log cleanup targets, default update-channel selection, and environment warning message assembly
   - `Application.xaml.vb` consumes the bootstrap result
@@ -220,13 +243,14 @@ Additional note about validation on this machine:
 
 If “portable backend” means “the non-GUI services a future macOS/Linux launcher could call without depending on WPF or Windows-only APIs”, the current estimate is:
 
-- about `70%` complete
+- about `78%` complete
 
 Rationale:
 
 - `PCL.Core.Foundation` is already real, portable, and validated on macOS
 - a substantial amount of launcher workflow policy has already been extracted into headless/core services
 - the biggest remaining backend gap is no longer basic business logic extraction; it is the separation of reusable services from `PCL.Core`’s remaining WPF/UI and Windows-adapter code
+- the residual blockers are now concentrated in a smaller set of launcher shell adapters, especially `ModLaunch.vb` and `Application.xaml.vb`
 
 Concrete current state:
 
@@ -235,6 +259,7 @@ Concrete current state:
   - reusable runtime/backend services
   - WPF/UI infrastructure
   - Windows-only adapters and interop helpers
+- the launcher now consumes core-owned startup/crash/launch shell policies for more of its migration and prompt logic than before, but some step orchestration is still VB/WPF-local
 - the frontend is still the biggest blocker to a cross-platform launcher binary, but the backend is already far enough along that a new frontend can be built on top of the extracted seams
 
 ## Recent Checkpoint Commits
@@ -271,6 +296,14 @@ This is the meaningful history for the current portability work:
 - `e5960538` `refactor(launcher): route authlib failure policy through core workflow`
 - `1929b08f` `feat(launch): add login profile workflow service`
 - `dc49a7f2` `refactor(launcher): route login profile workflow through core service`
+- `f3cb24d6` `feat(startup): add launcher version transition workflow`
+- `c0b1ac9f` `refactor(launcher): route version migration through core workflow`
+- `9c3ed1fc` `feat(startup): add version isolation migration workflow`
+- `c3e9949b` `refactor(startup): route version isolation migration through core workflow`
+- `5ae28075` `feat(crash): add export workflow planner`
+- `93fdf3f3` `refactor(crash): route export assembly through core workflow`
+- `8fdaf8e4` `feat(launch): add shell prompt and gpu retry workflows`
+- `3f339b39` `refactor(launcher): route launch shell policies through core workflows`
 - `eb72c877` `refactor(launch): route auth refresh profile updates through core workflow`
 - `5e1b4ee3` `feat(launch): extract authlib login execution workflow`
 - `1d67a31d` `feat(launch): extract microsoft login execution workflow`
@@ -331,9 +364,13 @@ Suggested next engineer targets, in priority order:
    - likely candidates: dialog/clipboard/system-dialog helpers, UI-facing logging/hint/message-box seams, and any service that currently depends on dispatcher-bound wrappers only for presentation
 2. keep `Application.xaml.vb` and `FormMain.xaml.vb` as shell adapters only
    - do not move more policy back into them
-3. only touch Windows interop helpers when the goal is to isolate them better
+3. keep trimming `ModLaunch.vb`
+   - likely next slices: remaining launch-step adapter glue, Java-selection / download shell bridging, and any residual prompt-selection helpers that still embed policy locally
+4. keep trimming `Application.xaml.vb`
+   - likely next slices: startup command execution shell flow and remaining startup presentation hooks that still assemble local policy
+5. only touch Windows interop helpers when the goal is to isolate them better
    - not to make them “portable” in place
-4. avoid spending time on visual/frontend replacement until the next narrow shell contract is chosen
+6. avoid spending time on visual/frontend replacement until the next narrow shell contract is chosen
 
 ## Important Non-Goals Right Now
 
@@ -352,6 +389,7 @@ Do not do these yet unless the runtime boundary is already stable:
 - `Utils.Secret` still blocks a truly headless secure config/auth story and remains explicitly deferred
 - the frontend is still WPF/VB and therefore still the biggest blocker to an actually cross-platform launcher binary
 - the largest former workflow blocker, launch login execution / orchestration, is now largely expressed through `PCL.Core` execution and mutation services, but the step adapters in `ModLaunch.vb` are still VB/WPF-coupled
+- `Application.xaml.vb` still owns startup command execution shell work and WPF-specific startup presentation
 - frontend migration is now mostly blocked by view/shell replacement and remaining launcher workflow/UI entanglement, not by runtime-core portability
 
 ## Working Rules For The Next Engineer
@@ -411,6 +449,14 @@ The Wave 3 launcher cleanup commits after that are:
 - `e5960538` `refactor(launcher): route authlib failure policy through core workflow`
 - `1929b08f` `feat(launch): add login profile workflow service`
 - `dc49a7f2` `refactor(launcher): route login profile workflow through core service`
+- `f3cb24d6` `feat(startup): add launcher version transition workflow`
+- `c0b1ac9f` `refactor(launcher): route version migration through core workflow`
+- `9c3ed1fc` `feat(startup): add version isolation migration workflow`
+- `c3e9949b` `refactor(startup): route version isolation migration through core workflow`
+- `5ae28075` `feat(crash): add export workflow planner`
+- `93fdf3f3` `refactor(crash): route export assembly through core workflow`
+- `8fdaf8e4` `feat(launch): add shell prompt and gpu retry workflows`
+- `3f339b39` `refactor(launcher): route launch shell policies through core workflows`
 
 ## Phase Call
 
@@ -418,9 +464,9 @@ Do not treat the project as ready for a true “next phase” frontend-shell rep
 
 It is ready for handoff to another engineer, but the recommended near-term phase is still:
 
-1. finish the last high-value launcher workflow extraction slices
+1. finish the last high-value launcher workflow extraction slices, now concentrated mainly in `ModLaunch.vb` and `Application.xaml.vb`
 2. then start a narrow shell-migration spike
 
 ## One-Line Summary
 
-Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, launch/startup/crash/bootstrap shell policies now have core-side services, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining `ModLaunch.vb` login execution/orchestration extraction before attempting a real frontend-shell cutover.
+Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, startup/crash/launch shell policies now have broader core-side coverage, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining `ModLaunch.vb` / `Application.xaml.vb` shell-extraction slices before attempting a real frontend-shell cutover.
