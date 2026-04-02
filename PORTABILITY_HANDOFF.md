@@ -20,6 +20,7 @@ Latest continuation update:
 - a new portable `net8.0` backend assembly now lives in `PCL.Core.Backend`, compiling the extracted startup / launch / crash workflow layer outside `PCL.Core`'s `net8.0-windows` target
 - a new portable backend test lane now lives in `PCL.Core.Backend.Test`, and its extracted workflow/service coverage runs on macOS/Linux hosts
 - `PCL.Frontend.Spike` now targets plain `net8.0` and runs against `PCL.Core.Backend` instead of `PCL.Core`
+- `PCL.Core` now references `PCL.Core.Backend` and no longer compiles that extracted workflow slice directly, making the portable backend assembly the source of truth for those services
 - launch Java requirement / missing-Java recovery workflow now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaWorkflowService`
 - a thin replacement-shell spike now lives in `PCL.Frontend.Spike` and can exercise extracted startup / launch / crash services without WPF page code
 - startup visual shell defaults now live in `PCL.Core.App.Essentials.LauncherStartupVisualService`

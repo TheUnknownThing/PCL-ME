@@ -22,6 +22,7 @@ The project is now also past the point where the extracted backend only exists i
 - `PCL.Core.Backend` now compiles the extracted startup / launch / crash workflow layer as plain `net8.0`
 - `PCL.Core.Backend.Test` now runs portable workflow/service tests on macOS/Linux hosts
 - `PCL.Frontend.Spike` now targets plain `net8.0` and consumes `PCL.Core.Backend`
+- `PCL.Core` now references `PCL.Core.Backend` for that extracted workflow slice instead of compiling duplicate implementations locally
 
 ## Completed Migration Prerequisites
 
