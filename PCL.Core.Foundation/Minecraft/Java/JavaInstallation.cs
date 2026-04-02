@@ -14,17 +14,22 @@ public sealed record JavaInstallation(
     JavaBrandType Brand,
     MachineType Architecture,
     bool Is64Bit,
-    bool IsJre)
+    bool IsJre,
+    string JavaExecutableName = "java.exe",
+    string? JavaWindowExecutableName = "javaw.exe",
+    string CompilerExecutableName = "javac.exe")
 {
-    public string JavaExePath => Path.Combine(JavaFolder, "java.exe");
+    public string JavaExePath => Path.Combine(JavaFolder, JavaExecutableName);
     public string? JavawExePath
     {
         get
         {
-            var javaw = Path.Combine(JavaFolder, "javaw.exe");
+            if (JavaWindowExecutableName == null) return null;
+            var javaw = Path.Combine(JavaFolder, JavaWindowExecutableName);
             return File.Exists(javaw) ? javaw : null;
         }
     }
+    public string JavacPath => Path.Combine(JavaFolder, CompilerExecutableName);
 
     /// <summary>
     /// Java 主版本号（处理 1.8 → 8 的映射）

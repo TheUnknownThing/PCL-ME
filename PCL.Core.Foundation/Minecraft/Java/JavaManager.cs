@@ -2,7 +2,6 @@ using PCL.Core.Logging;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Scanner;
-using PCL.Core.App;
 using PCL.Core.Utils.Exts;
 using System;
 using System.Collections.Concurrent;
@@ -11,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
 
 namespace PCL.Core.Minecraft;
 
@@ -22,6 +20,8 @@ public class JavaManager
 
     private readonly IJavaParser _parser;
     private readonly IJavaScanner[] _scanners;
+    private readonly IJavaStorage _storage;
+    private readonly IJavaInstallationEvaluator _installationEvaluator;
 
     private readonly SemaphoreSlim _scanLock = new(1, 1);
     private DateTime _lastScanTime = DateTime.MinValue;
@@ -30,8 +30,17 @@ public class JavaManager
     public JavaManager(
         IJavaParser parser,
         params IJavaScanner[] scanners)
+        : this(parser, NullJavaStorage.Instance, new DefaultJavaInstallationEvaluator(SystemJavaRuntimeEnvironment.Current), scanners) { }
+
+    public JavaManager(
+        IJavaParser parser,
+        IJavaStorage storage,
+        IJavaInstallationEvaluator installationEvaluator,
+        params IJavaScanner[] scanners)
     {
         _parser = parser;
+        _storage = storage;
+        _installationEvaluator = installationEvaluator;
         _scanners = scanners;
     }
 
@@ -47,7 +56,7 @@ public class JavaManager
                     Source = x.Value.Source
                 })
                 .ToArray();
-            States.Game.JavaList = JsonSerializer.Serialize(items);
+            _storage.Save(items);
         }
         catch(Exception ex)
         {
@@ -59,8 +68,8 @@ public class JavaManager
     {
         try
         {
-            var items = JsonSerializer.Deserialize<JavaStorageItem[]>(States.Game.JavaList);
-            if (items == null) return;
+            var items = _storage.Load();
+            if (items.Length == 0) return;
 
             var itemsAdded = new List<JavaEntry>();
 
@@ -153,7 +162,7 @@ public class JavaManager
                 Installation = inst!,
                 IsEnabled = _javaEntrys.TryGetValue(_NormalizePath(inst!.JavaExePath), out var existingJava)
                     ? existingJava.IsEnabled
-                    : _ShouldEnableByDefault(inst!),
+                    : _installationEvaluator.ShouldEnableByDefault(inst!),
                 Source = JavaSource.AutoScanned
             })
             .ToList();
@@ -165,17 +174,6 @@ public class JavaManager
                 _javaEntrys[entry.Installation.JavaExePath] = entry;
             }
         }
-    }
-
-    private static bool _ShouldEnableByDefault(JavaInstallation inst)
-    {
-        var libDir = Path.Combine(Directory.GetParent(inst.JavaFolder)!.FullName, "lib");
-        var isUsable = (!inst.IsJre && File.Exists(Path.Combine(libDir, "jvm.lib"))) ||
-                       (inst.IsJre && File.Exists(Path.Combine(libDir, "rt.jar")));
-
-        return !((inst.IsJre && inst.MajorVersion > 8) ||
-                 (inst.Is64Bit ^ Environment.Is64BitOperatingSystem) ||
-                 !isUsable);
     }
 
     public List<JavaEntry> GetSortedJavaList()
@@ -233,7 +231,7 @@ public class JavaManager
                 var entry = new JavaEntry
                 {
                     Installation = installation,
-                    IsEnabled = _ShouldEnableByDefault(installation),
+                    IsEnabled = _installationEvaluator.ShouldEnableByDefault(installation),
                     Source = JavaSource.ManualAdded
                 };
 
@@ -268,7 +266,7 @@ public class JavaManager
                 var entry = new JavaEntry
                 {
                     Installation = installation,
-                    IsEnabled = _ShouldEnableByDefault(installation),
+                    IsEnabled = _installationEvaluator.ShouldEnableByDefault(installation),
                     Source = JavaSource.ManualAdded
                 };
 

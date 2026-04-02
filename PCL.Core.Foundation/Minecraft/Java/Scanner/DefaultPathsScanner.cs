@@ -1,16 +1,15 @@
-﻿using PCL.Core.App;
-using PCL.Core.Logging;
+﻿using PCL.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace PCL.Core.Minecraft.Java.Scanner;
 
-public class DefaultPathsScanner : IJavaScanner
+public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJavaScanner
 {
     private const int MaxSearchDepth = 8;
+    private readonly IJavaRuntimeEnvironment _runtime = runtime ?? SystemJavaRuntimeEnvironment.Current;
 
     public void Scan(ICollection<string> results)
     {
@@ -30,24 +29,20 @@ public class DefaultPathsScanner : IJavaScanner
         }
     }
 
-    private static HashSet<string> _GetSearchRoots()
+    private HashSet<string> _GetSearchRoots()
     {
         var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            Path.Combine(Basics.ExecutableDirectory, "PCL")
+            _runtime.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            _runtime.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            _runtime.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            Path.Combine(_runtime.ExecutableDirectory, "PCL")
         };
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (_runtime.IsWindows)
         {
             var keyFolders = new[] { "Program Files", "Program Files (x86)" };
-            var drives = DriveInfo.GetDrives()
-                .Where(d => d.DriveType.Equals(DriveType.Fixed) && d.IsReady)
-                .Select(d => d.Name);
-
-            foreach (var drive in drives)
+            foreach (var drive in _runtime.GetFixedDriveRoots())
             {
                 foreach (var folder in keyFolders)
                 {
@@ -68,21 +63,23 @@ public class DefaultPathsScanner : IJavaScanner
                 catch (IOException) { /* 忽略IO错误 */ }
             }
         }
+        else if (_runtime.IsMacOS)
+        {
+            roots.Add("/Library/Java/JavaVirtualMachines");
+            roots.Add(Path.Combine(_runtime.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Java", "JavaVirtualMachines"));
+            roots.Add("/opt");
+        }
         else
         {
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-
-            if (!string.IsNullOrEmpty(programFiles) && Directory.Exists(programFiles))
-                roots.Add(programFiles);
-            if (!string.IsNullOrEmpty(programFilesX86) && Directory.Exists(programFilesX86))
-                roots.Add(programFilesX86);
+            roots.Add("/usr/lib/jvm");
+            roots.Add("/usr/java");
+            roots.Add("/opt");
         }
 
         return roots;
     }
 
-    private static void _BfsSearch(string rootPath, ICollection<string> results)
+    private void _BfsSearch(string rootPath, ICollection<string> results)
     {
         if (!Directory.Exists(rootPath)) return;
 
@@ -104,8 +101,10 @@ public class DefaultPathsScanner : IJavaScanner
 
                 foreach (var dir in dirsToScan)
                 {
-                    var javaExe = Path.Combine(dir, "java.exe");
-                    if (File.Exists(javaExe))
+                    var javaExe = _runtime.JavaExecutableNames
+                        .Select(executableName => Path.Combine(dir, executableName))
+                        .FirstOrDefault(File.Exists);
+                    if (javaExe != null)
                     {
                         results.Add(javaExe);
                     }
