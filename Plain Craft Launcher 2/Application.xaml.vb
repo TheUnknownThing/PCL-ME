@@ -34,17 +34,18 @@ Public Class Application
             PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error
             SecretOnApplicationStart()
             '检查参数调用
-            Dim args = Basics.CommandLineArguments
-            If args.Length > 0 Then
-                If args(0) = "--gpu" Then
+            Dim startupCommand = LauncherStartupCommandService.Parse(Basics.CommandLineArguments)
+            Select Case startupCommand.Kind
+                Case LauncherStartupCommandKind.SetGpuPreference
                     '调整显卡设置
                     Try
-                        ProcessInterop.SetGpuPreference(args(1).Trim(""""))
+                        If Not startupCommand.IsValid Then Throw New ArgumentException("缺少需要设置显卡偏好的可执行文件路径。")
+                        ProcessInterop.SetGpuPreference(startupCommand.Argument)
                         Environment.Exit(ProcessReturnValues.TaskDone)
                     Catch ex As Exception
                         Environment.Exit(ProcessReturnValues.Fail)
                     End Try
-                ElseIf args(0).StartsWithF("--memory") Then
+                Case LauncherStartupCommandKind.OptimizeMemory
                     '内存优化
                     Dim Ram = KernelInterop.GetAvailablePhysicalMemoryBytes()
                     Try
@@ -58,21 +59,16 @@ Public Class Application
                     Else
                         Environment.Exit((KernelInterop.GetAvailablePhysicalMemoryBytes() - Ram) / 1024) '返回清理的内存量（K）
                     End If
-                End If
-            End If
+            End Select
             '初始化文件结构
-            Dim problemList = LauncherStartupEnvironmentWarningService.GetWarnings(
-                New LauncherStartupEnvironmentWarningRequest(
-                    ExePath,
-                    NtInterop.GetCurrentOsVersion(),
-                    Not Is32BitSystem))
-            Dim bootstrapResult = LauncherStartupBootstrapService.Build(
-                New LauncherStartupBootstrapRequest(
+            Dim bootstrapResult = LauncherStartupPreparationService.Prepare(
+                New LauncherStartupPreparationRequest(
                     ExePath,
                     PathTemp,
                     PathAppdata,
                     VersionBaseName.Contains("beta"),
-                    problemList))
+                    NtInterop.GetCurrentOsVersion(),
+                    Not Is32BitSystem))
             For Each directoryPath In bootstrapResult.DirectoriesToCreate
                 Directory.CreateDirectory(directoryPath)
             Next
