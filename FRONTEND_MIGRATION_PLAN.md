@@ -44,6 +44,7 @@ These workflow extractions are already done and should be treated as available m
 - launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch GPU-preference failure / admin-retry policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - launch prerun options-file mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
+- launch prerun composition for GPU recovery, `launcher_profiles.json`, and `options.txt` is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrerunWorkflowService`
 - startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
 - startup immediate-command shell policy and environment-warning prompt contract are owned by `PCL.Core.App.Essentials.LauncherStartupShellService`
 - startup visual defaults are owned by `PCL.Core.App.Essentials.LauncherStartupVisualService`
@@ -63,6 +64,7 @@ These workflow extractions are already done and should be treated as available m
 - launch prerun Microsoft `launcher_profiles.json` mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`
 - launcher_profiles default file seeding is owned by `PCL.Core.Minecraft.MinecraftLauncherProfilesFileService`
 - launch prerun `launcher_profiles.json` retry / reset workflow is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesWorkflowService`
+- launch prerun GPU recovery, `launcher_profiles.json`, and `options.txt` composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrerunWorkflowService`
 - launch custom-command / batch-script planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - launch process / watcher runtime planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
@@ -136,6 +138,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
 - launch prerun `launcher_profiles.json` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly handles file existence, writes, and retry shell behavior
+- launch prerun GPU recovery / file-prep composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned prerun shell and file plans
 - launch custom-command / batch-script planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes scripts and executes returned shell commands
 - launch-session startup summary formatting is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly prints the returned lines before watcher startup
 - launch process / watcher runtime planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts the returned process plan and constructs the watcher from the returned runtime plan

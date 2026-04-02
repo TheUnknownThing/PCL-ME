@@ -68,6 +68,23 @@ static object BuildStartupSample()
 static object BuildLaunchSample(string scenario)
 {
     var javaWorkflow = BuildJavaWorkflowPlan(scenario);
+    var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(
+        new MinecraftLaunchPrerunWorkflowRequest(
+            LauncherProfilesPath: @"C:\Minecraft\.minecraft\launcher_profiles.json",
+            IsMicrosoftLogin: true,
+            ExistingLauncherProfilesJson: "{}",
+            UserName: "DemoPlayer",
+            ClientToken: "client",
+            LauncherProfilesDefaultTimestamp: new DateTime(2026, 4, 2, 10, 20, 0),
+            PrimaryOptionsFilePath: @"C:\Minecraft\.minecraft\options.txt",
+            PrimaryOptionsFileExists: true,
+            PrimaryCurrentLanguage: "en_us",
+            YosbrOptionsFilePath: @"C:\Minecraft\.minecraft\config\yosbr\options.txt",
+            YosbrOptionsFileExists: false,
+            HasExistingSaves: true,
+            ReleaseTime: new DateTime(2024, 4, 23),
+            LaunchWindowType: 0,
+            AutoChangeLanguage: true));
     var sessionStartPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(
         new MinecraftLaunchSessionStartWorkflowRequest(
             new MinecraftLaunchCustomCommandWorkflowRequest(
@@ -130,6 +147,7 @@ static object BuildLaunchSample(string scenario)
             javaWorkflow.MissingJavaPrompt,
             MinecraftLaunchJavaPromptDecision.Download),
         postDownloadSelection = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(javaWorkflow, hasSelectedJava: true),
+        prerunPlan,
         sessionStartPlan,
         postLaunchShell = MinecraftLaunchShellService.GetPostLaunchShellPlan(
             new MinecraftLaunchPostLaunchShellRequest(

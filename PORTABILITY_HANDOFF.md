@@ -23,6 +23,7 @@ Latest continuation update:
 - launcher startup open-count milestone policy now lives in `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
 - launcher startup update-log prompt policy now lives in `PCL.Core.App.Essentials.LauncherUpdateLogService`
 - launch prerun options-file mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
+- launch prerun composition for GPU recovery, `launcher_profiles.json`, and `options.txt` now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchPrerunWorkflowService`
 - launch prerun `launcher_profiles.json` mutation policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`
 - launcher_profiles default file seeding now lives in `PCL.Core.Minecraft.MinecraftLauncherProfilesFileService`
 - launch prerun `launcher_profiles.json` retry / reset workflow now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesWorkflowService`
@@ -55,6 +56,7 @@ Latest continuation update:
 - launcher crash-export archive creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashExportArchiveService`
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
+- launcher prerun GPU recovery, `launcher_profiles.json`, and `options.txt` composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchPrerunWorkflowService`
 - launcher prerun `launcher_profiles.json` mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesService`
 - launcher Minecraft-folder `launcher_profiles.json` creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModMinecraft.vb` consuming `MinecraftLauncherProfilesFileService`
 - launcher prerun `launcher_profiles.json` retry / reset application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchLauncherProfilesWorkflowService`
@@ -227,6 +229,9 @@ These were completed after Wave 2 was declared stable:
 - launch prerun options-file mutation policy moved out of the launcher
   - `MinecraftLaunchOptionsFileService` now owns `options.txt` target selection, Yosbr fallback behavior, language-format rules, force-unicode initialization, and fullscreen write policy
   - `ModLaunch.vb` now only applies the returned option writes and log messages
+- launch prerun composition moved out of the launcher
+  - `MinecraftLaunchPrerunWorkflowService` now owns composition of GPU failure recovery planning, Microsoft `launcher_profiles.json` prerun workflow selection, and `options.txt` target-file selection
+  - `ModLaunch.vb` now mainly applies the returned prerun shell/file plans instead of rebuilding that launch-prep composition inline
 - launch prerun `launcher_profiles.json` mutation policy moved out of the launcher
   - `MinecraftLaunchLauncherProfilesService` now owns Microsoft `launcher_profiles.json` merge/update composition
   - `ModLaunch.vb` now only ensures the file exists, writes the returned JSON, and keeps the retry-after-delete shell flow

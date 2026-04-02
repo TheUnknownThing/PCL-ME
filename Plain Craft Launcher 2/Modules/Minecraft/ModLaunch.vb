@@ -101,6 +101,7 @@ Public Module ModLaunch
     Public McLaunchProcess As Process
     Public McLaunchWatcher As Watcher
     Private McLaunchSessionPlan As MinecraftLaunchSessionStartWorkflowPlan = Nothing
+    Private McLaunchPrerunPlan As MinecraftLaunchPrerunWorkflowPlan = Nothing
     Private Sub McLaunchState(Loader As LoaderTask(Of McLaunchOptions, Object))
         Select Case McLaunchLoader.State
             Case LoadState.Finished, LoadState.Failed, LoadState.Waiting, LoadState.Aborted
@@ -120,6 +121,7 @@ Public Module ModLaunch
         '开始动画
         RunInUiWait(AddressOf FrmLaunchLeft.PageChangeToLaunching)
         McLaunchSessionPlan = Nothing
+        McLaunchPrerunPlan = Nothing
         '预检测（预检测的错误将直接抛出）
         Try
             McLaunchPrecheck()
@@ -2036,13 +2038,31 @@ NextInstance:
 #Region "启动与前后处理"
 
     Private Sub McLaunchPrerun()
+        Dim launcherProfilesPath = McFolderSelected & "launcher_profiles.json"
+        McLaunchPrerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(
+            New MinecraftLaunchPrerunWorkflowRequest(
+                launcherProfilesPath,
+                McLoginLoader.Output.Type = "Microsoft",
+                If(McLoginLoader.Output.Type = "Microsoft" AndAlso File.Exists(launcherProfilesPath), ReadFile(launcherProfilesPath), Nothing),
+                McLoginLoader.Output.Name,
+                McLoginLoader.Output.ClientToken,
+                Date.Now,
+                McInstanceSelected.PathIndie & "options.txt",
+                File.Exists(McInstanceSelected.PathIndie & "options.txt"),
+                ReadIni(McInstanceSelected.PathIndie & "options.txt", "lang", "none"),
+                McInstanceSelected.PathIndie & "config\yosbr\options.txt",
+                File.Exists(McInstanceSelected.PathIndie & "config\yosbr\options.txt"),
+                Directory.Exists(McInstanceSelected.PathIndie & "saves"),
+                McInstanceSelected.ReleaseTime,
+                Setup.Get("LaunchArgumentWindowType"),
+                Config.Tool.AutoChangeLanguage))
 
         '要求 Java 使用高性能显卡
         Dim javaExePath = If(McLaunchJavaSelected.Installation.JavawExePath, McLaunchJavaSelected.Installation.JavaExePath)
         Try
             ProcessInterop.SetGpuPreference(javaExePath, Config.Launch.SetGpuPreference)
         Catch ex As Exception
-            Dim failurePlan = MinecraftLaunchGpuPreferenceWorkflowService.BuildFailurePlan(
+            Dim failurePlan = MinecraftLaunchPrerunWorkflowService.BuildGpuPreferenceFailurePlan(
                 New MinecraftLaunchGpuPreferenceFailureRequest(
                     javaExePath,
                     Config.Launch.SetGpuPreference,
@@ -2064,30 +2084,15 @@ NextInstance:
         End Try
 
         '更新 launcher_profiles.json
-        UpdateLauncherProfilesJson()
+        UpdateLauncherProfilesJson(McLaunchPrerunPlan.LauncherProfiles)
 
         '更新 options.txt
-        Dim primaryOptionsFileAddress As String = McInstanceSelected.PathIndie & "options.txt"
-        Dim yosbrOptionsFileAddress As String = McInstanceSelected.PathIndie & "config\yosbr\options.txt"
-        Dim optionsPlan = MinecraftLaunchOptionsFileService.BuildPlan(
-            New MinecraftLaunchOptionsSyncRequest(
-                Config.Tool.AutoChangeLanguage,
-                File.Exists(primaryOptionsFileAddress),
-                ReadIni(primaryOptionsFileAddress, "lang", "none"),
-                File.Exists(yosbrOptionsFileAddress),
-                Directory.Exists(McInstanceSelected.PathIndie & "saves"),
-                McInstanceSelected.ReleaseTime,
-                Setup.Get("LaunchArgumentWindowType")))
-        Dim setupFileAddress As String = If(
-            optionsPlan.TargetKind = MinecraftLaunchOptionsFileTargetKind.Yosbr,
-            yosbrOptionsFileAddress,
-            primaryOptionsFileAddress)
         Try
-            If optionsPlan.TargetSelectionLogMessage IsNot Nothing Then McLaunchLog(optionsPlan.TargetSelectionLogMessage)
-            For Each optionWrite In optionsPlan.Writes
-                WriteIni(setupFileAddress, optionWrite.Key, optionWrite.Value)
+            If McLaunchPrerunPlan.Options.SyncPlan.TargetSelectionLogMessage IsNot Nothing Then McLaunchLog(McLaunchPrerunPlan.Options.SyncPlan.TargetSelectionLogMessage)
+            For Each optionWrite In McLaunchPrerunPlan.Options.SyncPlan.Writes
+                WriteIni(McLaunchPrerunPlan.Options.TargetFilePath, optionWrite.Key, optionWrite.Value)
             Next
-            For Each logMessage In optionsPlan.LogMessages
+            For Each logMessage In McLaunchPrerunPlan.Options.SyncPlan.LogMessages
                 McLaunchLog(logMessage)
             Next
         Catch ex As Exception
@@ -2096,35 +2101,28 @@ NextInstance:
 
     End Sub
 
-    Private Sub UpdateLauncherProfilesJson()
-        If Not McLoginLoader.Output.Type = "Microsoft" Then Exit Sub
-
-        Dim launcherProfilesPath = McFolderSelected & "launcher_profiles.json"
-        McFolderLauncherProfilesJsonCreate(McFolderSelected)
-        Dim workflowPlan = MinecraftLaunchLauncherProfilesWorkflowService.BuildPlan(
-            New MinecraftLaunchLauncherProfilesWorkflowRequest(
-                True,
-                ReadFile(launcherProfilesPath),
-                McLoginLoader.Output.Name,
-                McLoginLoader.Output.ClientToken,
-                Date.Now))
-        If Not workflowPlan.ShouldWrite Then Exit Sub
+    Private Sub UpdateLauncherProfilesJson(plan As MinecraftLaunchLauncherProfilesPrerunPlan)
+        If plan Is Nothing Then Throw New ArgumentNullException(NameOf(plan))
+        If Not plan.ShouldEnsureFileExists OrElse String.IsNullOrWhiteSpace(plan.Path) Then Exit Sub
+        If Not plan.Workflow.ShouldWrite Then Exit Sub
 
         Try
-            WriteLauncherProfilesJson(launcherProfilesPath, workflowPlan.InitialAttempt)
+            McFolderLauncherProfilesJsonCreate(McFolderSelected)
+            WriteLauncherProfilesJson(plan.Path, plan.Workflow.InitialAttempt)
         Catch ex As Exception
-            Log(ex, workflowPlan.RetryLogMessage)
+            Log(ex, plan.Workflow.RetryLogMessage)
             Try
-                File.Delete(launcherProfilesPath)
+                File.Delete(plan.Path)
                 McFolderLauncherProfilesJsonCreate(McFolderSelected)
-                WriteLauncherProfilesJson(launcherProfilesPath, workflowPlan.RetryAttempt)
+                WriteLauncherProfilesJson(plan.Path, plan.Workflow.RetryAttempt)
             Catch retryEx As Exception
-                Log(retryEx, workflowPlan.FailureLogMessage, LogLevel.Feedback)
+                Log(retryEx, plan.Workflow.FailureLogMessage, LogLevel.Feedback)
             End Try
         End Try
     End Sub
 
     Private Sub WriteLauncherProfilesJson(launcherProfilesPath As String, attempt As MinecraftLaunchLauncherProfilesWriteAttempt)
+        If attempt Is Nothing Then Throw New ArgumentNullException(NameOf(attempt))
         WriteFile(launcherProfilesPath, attempt.UpdatedProfilesJson, Encoding:=Encoding.GetEncoding("GB18030"))
         McLaunchLog(attempt.SuccessLogMessage)
     End Sub
