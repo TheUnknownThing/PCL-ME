@@ -14,6 +14,9 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<string> IconDataProperty =
         AvaloniaProperty.Register<PclListItem, string>(nameof(IconData), string.Empty);
 
+    public static readonly StyledProperty<string> InfoProperty =
+        AvaloniaProperty.Register<PclListItem, string>(nameof(Info), string.Empty);
+
     public static readonly StyledProperty<double> IconScaleProperty =
         AvaloniaProperty.Register<PclListItem, double>(nameof(IconScale), 1.0);
 
@@ -65,6 +68,7 @@ internal sealed partial class PclListItem : UserControl
         };
 
         TitleBlock.Text = Title;
+        UpdateInfo(Info);
         UpdateIcon(IconData);
         UpdateAccessory();
         ApplyIconScale(IconScale);
@@ -81,6 +85,12 @@ internal sealed partial class PclListItem : UserControl
     {
         get => GetValue(IconDataProperty);
         set => SetValue(IconDataProperty, value);
+    }
+
+    public string Info
+    {
+        get => GetValue(InfoProperty);
+        set => SetValue(InfoProperty, value);
     }
 
     public double IconScale
@@ -127,6 +137,10 @@ internal sealed partial class PclListItem : UserControl
         {
             TitleBlock.Text = change.GetNewValue<string>();
         }
+        else if (change.Property == InfoProperty)
+        {
+            UpdateInfo(change.GetNewValue<string>());
+        }
         else if (change.Property == IconDataProperty)
         {
             UpdateIcon(change.GetNewValue<string>());
@@ -152,6 +166,13 @@ internal sealed partial class PclListItem : UserControl
         LogoPath.Data = hasIcon ? Geometry.Parse(data) : null;
     }
 
+    private void UpdateInfo(string info)
+    {
+        var hasInfo = !string.IsNullOrWhiteSpace(info);
+        InfoBlock.IsVisible = hasInfo;
+        InfoBlock.Text = hasInfo ? info : string.Empty;
+    }
+
     private void UpdateAccessory()
     {
         var hasAccessory = !string.IsNullOrWhiteSpace(AccessoryIconData) && AccessoryCommand is not null;
@@ -172,6 +193,7 @@ internal sealed partial class PclListItem : UserControl
         RectBack.BorderBrush = IsSelected ? Brush.Parse("#D5E6FD") : Brush.Parse("#EDF3FC");
         SelectionBar.IsVisible = IsSelected;
         TitleBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#404040");
+        InfoBlock.Foreground = IsSelected ? Brush.Parse("#4B78C2") : Brush.Parse("#7D8897");
         LogoPath.Fill = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#737373");
         AccessoryPath.Fill = _isHovered ? Brush.Parse("#4890F5") : Brush.Parse("#96C0F9");
         RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);

@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     x:Name="Root">
   <Grid
-      Height="36"
+      MinHeight="36"
       Background="{DynamicResource ColorBrushSemiTransparent}"
       ColumnDefinitions="2,10,18,Auto,*,Auto,6"
       RenderTransformOrigin="0.5,0.5"
@@ -53,13 +53,20 @@
         BorderThickness="0"
         Command="{Binding Command, ElementName=Root}"
         HorizontalContentAlignment="Stretch">
-      <TextBlock
-          x:Name="TitleBlock"
-          Margin="4,0,0,0"
-          VerticalAlignment="Center"
-          FontSize="14"
-          Foreground="#404040"
-          TextTrimming="CharacterEllipsis" />
+      <StackPanel Margin="4,6,0,6" VerticalAlignment="Center" Spacing="1">
+        <TextBlock
+            x:Name="TitleBlock"
+            FontSize="14"
+            Foreground="#404040"
+            TextTrimming="CharacterEllipsis" />
+        <TextBlock
+            x:Name="InfoBlock"
+            FontSize="11.5"
+            Foreground="#7D8897"
+            IsVisible="False"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="Wrap" />
+      </StackPanel>
     </Button>
 
     <Button
