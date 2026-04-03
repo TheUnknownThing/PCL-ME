@@ -797,45 +797,13 @@ Public Class FormMain
     ''' </summary>
     Public Sub PageChange(Stack As PageStackData, Optional SubType As PageSubType = PageSubType.Default)
         If PageNameGet(Stack) = "" Then
-            '切换到主页面
             PageChangeExit()
-            IsChangingPage = True '防止下面的勾选直接触发了 PageChangeActual
-            CType(PanTitleSelect.Children(Stack), MyRadioButton).SetChecked(True, True, PageNameGet(PageCurrent) = "")
+            IsChangingPage = True
+            ModMainWindowPageSelectionShell.SelectMainPage(Me, Stack, SubType, PageNameGet(PageCurrent) = "")
             IsChangingPage = False
-            Select Case Stack.Page
-                Case PageType.Download
-                    If FrmDownloadLeft Is Nothing Then FrmDownloadLeft = New PageDownloadLeft
-                    For Each item In FrmDownloadLeft.PanItem.Children
-                        If item.GetType() Is GetType(MyListItem) AndAlso Val(item.tag) = SubType Then
-                            CType(item, MyListItem).SetChecked(True, True, Stack = PageCurrent)
-                            Exit For
-                        End If
-                    Next
-                Case PageType.Setup
-                    If FrmSetupLeft Is Nothing Then FrmSetupLeft = New PageSetupLeft
-                    If TypeOf FrmSetupLeft.PanItem.Children(SubType) Is MyListItem Then CType(FrmSetupLeft.PanItem.Children(SubType), MyListItem).SetChecked(True, True, Stack = PageCurrent)
-            End Select
             PageChangeActual(Stack, SubType)
         Else
-            '切换到次页面
-            Select Case Stack.Page
-                Case PageType.InstanceSetup
-                    If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
-                    For Each item In FrmInstanceLeft.PanItem.Children
-                        If item.GetType() Is GetType(MyListItem) AndAlso Val(item.tag) = SubType Then
-                            CType(item, MyListItem).SetChecked(True, True, Stack = PageCurrent)
-                            Exit For
-                        End If
-                    Next
-                Case PageType.VersionSaves
-                    If FrmInstanceSavesLeft Is Nothing Then FrmInstanceSavesLeft = New PageInstanceSavesLeft
-                    For Each item In FrmInstanceSavesLeft.PanItem.Children
-                        If item.GetType() Is GetType(MyListItem) AndAlso Val(item.tag) = SubType Then
-                            CType(item, MyListItem).SetChecked(True, True, Stack = PageCurrent)
-                            Exit For
-                        End If
-                    Next
-            End Select
+            ModMainWindowPageSelectionShell.SelectSubPage(Me, Stack, SubType)
             PageChangeActual(Stack, SubType)
         End If
     End Sub
