@@ -257,11 +257,20 @@ Public Module ModJava
         })
         AddHandler JavaDownloadLoader.OnStateChangedThread,
         Sub(Raw As LoaderBase, NewState As LoadState, OldState As LoadState)
-            If (NewState = LoadState.Failed OrElse NewState = LoadState.Aborted) AndAlso LastJavaBaseDir IsNot Nothing Then
-                Log($"[Java] 由于下载未完成，清理未下载完成的 Java 文件：{LastJavaBaseDir}", LogLevel.Debug)
-                DeleteDirectory(LastJavaBaseDir)
-            ElseIf NewState = LoadState.Finished Then
+            Dim sessionState = ResolveJavaDownloadSessionState(NewState)
+            If sessionState Is Nothing Then Exit Sub
+
+            Dim transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(sessionState.Value, LastJavaBaseDir)
+            If transitionPlan.CleanupLogMessage IsNot Nothing Then
+                Log(transitionPlan.CleanupLogMessage, LogLevel.Debug)
+            End If
+            If transitionPlan.CleanupDirectoryPath IsNot Nothing Then
+                DeleteDirectory(transitionPlan.CleanupDirectoryPath)
+            End If
+            If transitionPlan.ShouldRefreshJavaInventory Then
                 Javas.ScanJavaAsync().GetAwaiter().GetResult()
+            End If
+            If transitionPlan.ShouldClearTrackedRuntimeDirectory Then
                 LastJavaBaseDir = Nothing
             End If
         End Sub
@@ -269,7 +278,7 @@ Public Module ModJava
         Return Loader
     End Function
     Private LastJavaBaseDir As String = Nothing '用于在下载中断或失败时删除未完成下载的 Java 文件夹，防止残留只下了一半但 -version 能跑的 Java
-    Private ReadOnly IgnoreHash As HashSet(Of String) = {"12976a6c2b227cbac58969c1455444596c894656", "c80e4bab46e34d02826eab226a4441d0970f2aba", "84d2102ad171863db04e7ee22a259d1f6c5de4a5"}.ToHashSet()
+    Private ReadOnly IgnoreHash As IReadOnlyList(Of String) = MinecraftJavaRuntimeDownloadSessionService.GetDefaultIgnoredSha1Hashes()
     Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
         Log("[Java] 开始获取 Java 下载信息")
         Dim indexRequestPlan = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan()
@@ -287,12 +296,14 @@ Public Module ModJava
         Dim ListFileStr As String = NetGetCodeByRequestRetry(
             DlSourceOrder(manifestPlan.RequestUrls.OfficialUrls, manifestPlan.RequestUrls.MirrorUrls).First(),
             IsJson:=True)
-        LastJavaBaseDir = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime", manifestPlan.Selection.ComponentKey)
+        LastJavaBaseDir = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
+            IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft"),
+            manifestPlan.Selection.ComponentKey)
         Dim runtimePlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
             New MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                 ListFileStr,
                 LastJavaBaseDir,
-                IgnoreHash.ToList(),
+                IgnoreHash,
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()))
         LastJavaBaseDir = runtimePlan.DownloadPlan.RuntimeBaseDirectory
         Dim existingRelativePaths As New List(Of String)(runtimePlan.Files.Count)
@@ -314,6 +325,19 @@ Public Module ModJava
         Loader.Output = Results
         Log(transferPlan.LogMessage)
     End Sub
+
+    Private Function ResolveJavaDownloadSessionState(state As LoadState) As MinecraftJavaRuntimeDownloadSessionState?
+        Select Case state
+            Case LoadState.Finished
+                Return MinecraftJavaRuntimeDownloadSessionState.Finished
+            Case LoadState.Failed
+                Return MinecraftJavaRuntimeDownloadSessionState.Failed
+            Case LoadState.Aborted
+                Return MinecraftJavaRuntimeDownloadSessionState.Aborted
+            Case Else
+                Return Nothing
+        End Select
+    End Function
 
 #End Region
 

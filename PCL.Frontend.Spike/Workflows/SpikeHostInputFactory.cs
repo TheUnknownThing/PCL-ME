@@ -248,7 +248,7 @@ internal static class SpikeHostInputFactory
                 ? $"mac-os-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}"
                 : $"linux-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}";
         var componentKey = scenario == "legacy-forge" ? "jre-8u412" : "jre-legacy";
-        var runtimeBaseDirectory = Path.Combine(minecraftRoot, "runtime", componentKey);
+        var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(minecraftRoot, componentKey);
         var downloadWorkflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
             new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                 sample.ManifestJson,

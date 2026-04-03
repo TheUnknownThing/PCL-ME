@@ -499,10 +499,13 @@ internal static class SpikeSampleFactory
         var requestedComponent = scenario == "legacy-forge" ? "8" : "jre-legacy";
         var versionName = scenario == "legacy-forge" ? "8u412-b08" : "21.0.4+7";
         var componentKey = scenario == "legacy-forge" ? "jre-8u412" : "jre-legacy";
+        var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
+            @"C:\Minecraft\.minecraft",
+            componentKey);
 
         return new JavaRuntimeSpikeInputs(
             PlatformKey: "windows-x64",
-            RuntimeBaseDirectory: Path.Combine(@"C:\Minecraft\.minecraft\runtime", componentKey),
+            RuntimeBaseDirectory: runtimeBaseDirectory,
             IndexJson:
             $$"""
             {
