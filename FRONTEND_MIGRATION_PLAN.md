@@ -221,7 +221,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, warning prompt construction, or startup visual defaults, and now routes immediate-command / bootstrap / visual shell application through `ModApplicationStartupShell.vb`; it still owns WPF startup shell work such as splash-screen display, tooltip metadata application, memory optimization execution, and process exit behavior
 - `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, startup open-count milestone policy, or startup update-log prompt policy; milestone / version-transition shell application now route through `ModMainWindowStartupShell.vb`, while it still owns WPF startup presentation and shell adapters
 - `FormMain.xaml.vb` now consumes a core-owned version-transition application plan for setup writes, custom-skin migration, and startup log messaging; it still owns WPF prompt/display adapters and shell side effects
-- launcher modules now consume `PCL.Core.App.Secrets` / `LauncherIdentity` instead of reading launcher-facing secret values directly from `Utils.Secret`
+- launcher modules plus app/link telemetry and machine-identity call sites now consume `PCL.Core.App.Secrets` / `LauncherIdentity` instead of reading launcher-facing secret values directly from `Utils.Secret`
 - `Program.vb` now reattaches the current fatal-dialog presentation behavior through a runtime hook instead of that behavior being hardcoded in `PCL.Core`
 
 A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.

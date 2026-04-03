@@ -194,7 +194,7 @@ What is not true yet:
 - `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns parts of the concrete transfer lifecycle such as file hashing and download-job construction, but Java selection prompt / download retry shell behavior, cleanup / refresh shell application, runtime fetch execution, reused-file detection, and concrete download file shaping are now isolated behind dedicated Java shell modules
 - startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`, but immediate-command / bootstrap / visual shell application and milestone / version-transition application are now isolated behind dedicated startup shell modules
 - crash export still has launcher-owned picker / destination / Explorer flow, now isolated in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
-- launcher modules now consume `PCL.Core.App.Secrets` and `PCL.Core.App.LauncherIdentity` instead of reading launcher-facing secret and identify values from `PCL.Core.Utils.Secret` directly
+- launcher modules plus app/link telemetry and machine-identity call sites now consume `PCL.Core.App.Secrets` and `PCL.Core.App.LauncherIdentity` instead of reading launcher-facing secret and identify values from `PCL.Core.Utils.Secret` directly
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 - `Utils.Secret` is still deliberately deferred and still blocks a truly headless secure auth/config story
 

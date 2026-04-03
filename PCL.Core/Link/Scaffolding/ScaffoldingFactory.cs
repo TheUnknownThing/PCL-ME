@@ -22,7 +22,7 @@ public static class ScaffoldingFactory
     public static async Task<ScaffoldingClientEntity> CreateClientAsync
         (string playerName, string lobbyCode, LobbyType from)
     {
-        var machineId = Utils.Secret.Identify.LauncherId;
+        var machineId = LauncherIdentity.LauncherId;
 
         if (!LobbyCodeGenerator.TryParse(lobbyCode, out var info))
         {
