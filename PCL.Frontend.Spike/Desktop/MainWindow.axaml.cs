@@ -29,7 +29,17 @@ internal sealed partial class MainWindow : Window
         WindowState = WindowState.Minimized;
     }
 
+    private void MinimizeGlyph_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
     private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void CloseGlyph_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         Close();
     }

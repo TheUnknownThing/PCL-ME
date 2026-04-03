@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using Avalonia.Media;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
@@ -18,6 +19,11 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
     private readonly List<LauncherFrontendRoute> _routeHistory = [];
     private readonly ActionCommand _backCommand;
+    private readonly ActionCommand _togglePromptOverlayCommand;
+    private readonly ActionCommand _dismissPromptOverlayCommand;
+    private readonly ActionCommand _launchCommand;
+    private readonly ActionCommand _versionSelectCommand;
+    private readonly ActionCommand _versionSetupCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -31,6 +37,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private string _promptInboxSummary = string.Empty;
     private string _promptEmptyState = string.Empty;
     private bool _canGoBack;
+    private bool _isPromptOverlayOpen;
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
@@ -41,6 +48,11 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _currentRoute = _shellInputs.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
+        _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
+        _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
+        _launchCommand = new ActionCommand(() => AddActivity("Launch requested.", $"Would start {LaunchVersionSubtitle}."));
+        _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
+        _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -127,9 +139,44 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         private set => SetProperty(ref _promptEmptyState, value);
     }
 
+    public bool IsLaunchRoute => _currentRoute.Page == LauncherFrontendPageKey.Launch;
+
     public bool HasActivePrompts => ActivePrompts.Count > 0;
 
     public bool HasNoActivePrompts => !HasActivePrompts;
+
+    public bool IsPromptOverlayVisible => HasActivePrompts && _isPromptOverlayOpen;
+
+    public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
+        ? authPlayerName
+        : "DemoPlayer";
+
+    public string LaunchAuthLabel => _launchPlan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft
+        ? "正版验证"
+        : "外置验证";
+
+    public string LaunchButtonTitle => "启动游戏";
+
+    public string LaunchVersionSubtitle => _launchPlan.ReplacementPlan.Values.TryGetValue("${version_name}", out var versionName)
+        ? versionName
+        : "Demo Instance";
+
+    public string LaunchWelcomeBanner => "欢迎使用新闻主页";
+
+    public string LaunchMigrationHeadline => "新特性与迁移";
+
+    public string LaunchNewsTitle => "最新快照版 - 25w20a";
+
+    public string LaunchNewsImagePath => new Uri(Path.GetFullPath(Path.Combine(
+        AppContext.BaseDirectory,
+        "..",
+        "..",
+        "..",
+        "..",
+        "Plain Craft Launcher 2",
+        "Images",
+        "Backgrounds",
+        "server_bg.png"))).AbsoluteUri;
 
     public bool CanGoBack
     {
@@ -144,6 +191,16 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     }
 
     public ActionCommand BackCommand => _backCommand;
+
+    public ActionCommand TogglePromptOverlayCommand => _togglePromptOverlayCommand;
+
+    public ActionCommand DismissPromptOverlayCommand => _dismissPromptOverlayCommand;
+
+    public ActionCommand LaunchCommand => _launchCommand;
+
+    public ActionCommand VersionSelectCommand => _versionSelectCommand;
+
+    public ActionCommand VersionSetupCommand => _versionSetupCommand;
 
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
@@ -215,6 +272,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
         SelectPromptLane(_selectedPromptLane, updateActivity: false);
         AddActivity(activityMessage, $"{shellPlan.Navigation.CurrentPage.Title} • {shellPlan.Navigation.CurrentPage.Route.Page}/{shellPlan.Navigation.CurrentPage.Route.Subpage}");
+        RaiseShellStateProperties();
     }
 
     private NavigationEntryViewModel CreateNavigationEntry(LauncherFrontendNavigationEntry entry, NavigationVisualStyle style)
@@ -302,6 +360,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         ReplaceItems(ActivePrompts, _promptCatalog[lane]);
         RaisePropertyChanged(nameof(HasActivePrompts));
         RaisePropertyChanged(nameof(HasNoActivePrompts));
+        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);
         PromptInboxTitle = $"{selectedLane.Title} prompt lane";
@@ -360,6 +419,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             _promptCatalog[lane].RemoveAll(prompt => prompt.Id == promptId);
             SyncPromptLaneState();
             SelectPromptLane(_selectedPromptLane, updateActivity: false);
+            if (!HasActivePrompts)
+            {
+                SetPromptOverlayOpen(false);
+            }
             AddActivity("Prompt closed.", $"{promptId} was dismissed from the {lane} lane.");
         }
     }
@@ -409,6 +472,32 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         {
             ActivityEntries.RemoveAt(ActivityEntries.Count - 1);
         }
+    }
+
+    private void TogglePromptOverlay()
+    {
+        SetPromptOverlayOpen(!IsPromptOverlayVisible);
+    }
+
+    private void SetPromptOverlayOpen(bool isOpen)
+    {
+        if (_isPromptOverlayOpen == isOpen)
+        {
+            RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+            return;
+        }
+
+        _isPromptOverlayOpen = isOpen;
+        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+    }
+
+    private void RaiseShellStateProperties()
+    {
+        RaisePropertyChanged(nameof(IsLaunchRoute));
+        RaisePropertyChanged(nameof(LaunchUserName));
+        RaisePropertyChanged(nameof(LaunchAuthLabel));
+        RaisePropertyChanged(nameof(LaunchVersionSubtitle));
+        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
     }
 
     private static string DescribePromptOption(LauncherFrontendPromptOption option)
