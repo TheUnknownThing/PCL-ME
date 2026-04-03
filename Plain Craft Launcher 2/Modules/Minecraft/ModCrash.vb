@@ -25,115 +25,13 @@ Public Class CrashAnalyzer
     ''' </summary>
     ''' <param name="LatestLog">从 PCL 捕获到的最后 200 行程序输出。</param>
     Public Sub Collect(VersionPathIndie As String, Optional LatestLog As IList(Of String) = Nothing)
-        Log("[Crash] 步骤 1：收集日志文件")
-
-        '简单收集可能的日志文件路径
-        Dim PossibleLogs As New List(Of String)
-        Try
-            Dim DirInfo As New DirectoryInfo(VersionPathIndie & "crash-reports\")
-            If DirInfo.Exists Then
-                For Each File In DirInfo.EnumerateFiles
-                    PossibleLogs.Add(File.FullName)
-                Next
-            End If
-        Catch ex As Exception
-            Log(ex, "收集 Minecraft 崩溃日志文件夹下的日志失败")
-        End Try
-        Try
-            For Each File In New DirectoryInfo(VersionPathIndie).Parent.Parent.EnumerateFiles
-                If If(File.Extension, "") <> ".log" Then Continue For
-                PossibleLogs.Add(File.FullName)
-            Next
-        Catch ex As Exception
-            Log(ex, "收集 Minecraft 主文件夹下的日志失败")
-        End Try
-        Try
-            For Each File In New DirectoryInfo(VersionPathIndie).EnumerateFiles
-                If If(File.Extension, "") <> ".log" Then Continue For
-                PossibleLogs.Add(File.FullName)
-            Next
-        Catch ex As Exception
-            Log(ex, "收集 Minecraft 隔离文件夹下的日志失败")
-        End Try
-        PossibleLogs.Add(VersionPathIndie & "logs\latest.log") 'Minecraft 日志
-        Dim LaunchScript As String = ReadFile(ExePath & "PCL\LatestLaunch.bat")
-        If LaunchScript.ContainsF("-Dlog4j2.formatMsgNoLookups=false") Then
-            PossibleLogs.Add(VersionPathIndie & "logs\debug.log") 'Minecraft Debug 日志
-        End If
-        PossibleLogs = PossibleLogs.Distinct.ToList
-
-        '确定最新的日志文件
-        Dim RightLogs As New List(Of String)
-        For Each LogFile In PossibleLogs
-            Try
-                Dim Info As New FileInfo(LogFile)
-                If Not Info.Exists Then Continue For
-                Dim Time = Math.Abs((Info.LastWriteTime - Date.Now).TotalMinutes)
-                If Time < 3 AndAlso Info.Length > 0 Then
-                    RightLogs.Add(LogFile)
-                    Log("[Crash] 可能可用的日志文件：" & LogFile & "（" & Math.Round(Time, 1) & " 分钟）")
-                End If
-            Catch ex As Exception
-                Log(ex, "确认崩溃日志时间失败（" & LogFile & "）")
-            End Try
-        Next
-        If Not RightLogs.Any() Then Log("[Crash] 未发现可能可用的日志文件")
-
-        '将可能可用的日志文件导出
-        For Each FilePath In RightLogs
-            Try
-                AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(FilePath, ReadFile(FilePath).Split(vbCrLf.ToCharArray)))
-            Catch ex As Exception
-                Log(ex, "读取可能的崩溃日志文件失败（" & FilePath & "）")
-            End Try
-        Next
-        If LatestLog IsNot Nothing AndAlso LatestLog.Any Then
-            Dim RawOutput As String = Join(LatestLog, vbCrLf)
-            Log("[Crash] 以下为游戏输出的最后一段内容：" & vbCrLf & RawOutput)
-            WriteFile(TempFolder & "RawOutput.log", RawOutput)
-            AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TempFolder & "RawOutput.log", LatestLog.ToArray))
-            LatestLog.Clear()
-        End If
-
-        Log("[Crash] 步骤 1：收集日志文件完成，收集到 " & AnalyzeRawFiles.Count & " 个文件")
+        AnalyzeRawFiles = ModCrashCollectionShell.CollectAnalyzeRawFiles(VersionPathIndie, LatestLog, TempFolder)
     End Sub
     ''' <summary>
     ''' 从文件路径直接导入日志文件或崩溃报告压缩包。
     ''' </summary>
     Public Sub Import(FilePath As String)
-        Log("[Crash] 步骤 1：自主导入日志文件")
-
-        '尝试视作压缩包解压
-        Try
-            Dim Info As New FileInfo(FilePath)
-            If Info.Exists AndAlso Info.Length > 0 AndAlso Not FilePath.EndsWithF(".jar", True) Then
-                ExtractFile(FilePath, TempFolder & "Temp\")
-                Log("[Crash] 已解压导入的日志文件：" & FilePath)
-                GoTo Extracted
-            End If
-        Catch
-        End Try
-        '并非压缩包
-        CopyFile(FilePath, TempFolder & "Temp\" & GetFileNameFromPath(FilePath))
-        Log("[Crash] 已复制导入的日志文件：" & FilePath)
-Extracted:
-
-        '导入其中的日志文件
-        For Each TargetFile As FileInfo In New DirectoryInfo(TempFolder & "Temp\").EnumerateFiles.ToList()
-            Try
-                If Not TargetFile.Exists OrElse TargetFile.Length = 0 Then Continue For
-                Dim Ext As String = TargetFile.Extension.ToLower
-                If Ext = ".log" OrElse Ext = ".txt" Then
-                    AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TargetFile.FullName, ReadFile(TargetFile.FullName).Split(vbCrLf.ToCharArray)))
-                Else
-                    File.Delete(TargetFile.FullName)
-                End If
-            Catch ex As Exception
-                Log(ex, "导入单个日志文件失败")
-            End Try
-        Next
-
-        Log("[Crash] 步骤 1：自主导入日志文件，收集到 " & AnalyzeRawFiles.Count & " 个文件")
+        AnalyzeRawFiles = ModCrashCollectionShell.ImportAnalyzeRawFiles(FilePath, TempFolder)
     End Sub
 
     '2：确认实际用于分析的 Log 文本
@@ -901,29 +799,7 @@ NextStack:
                 ModCrashPromptShell.OpenInstanceSettings(_version)
             Case MinecraftCrashPromptResponseKind.ExportReport
                 '弹窗选择：导出错误报告
-                Try
-                    '输出诊断信息
-                    FeedbackInfo()
-                    Dim currentLauncherLogPath As String = Nothing
-                    If LogWrapper.CurrentLogger.CurrentLogFiles.Any Then currentLauncherLogPath = LogWrapper.CurrentLogger.CurrentLogFiles.Last()
-                    Dim exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(
-                        New MinecraftCrashExportPlanRequest(
-                            Date.Now,
-                            TempFolder & "Report\",
-                            VersionBaseName,
-                            UniqueAddress,
-                            OutputFiles,
-                            ExtraFiles,
-                            currentLauncherLogPath,
-                            SystemEnvironmentInfo.GetSnapshot(),
-                            McLoginLoader.Output.AccessToken,
-                            McLoginLoader.Output.Uuid,
-                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
-                    If Not ModCrashExportShell.TryExportReport(exportPlan) Then Return
-                Catch ex As Exception
-                    Log(ex, "导出错误报告失败", LogLevel.Feedback)
-                    Return
-                End Try
+                If Not ModCrashExportShell.TryExportCurrentReport(TempFolder, OutputFiles, ExtraFiles) Then Return
         End Select
     End Sub
     
