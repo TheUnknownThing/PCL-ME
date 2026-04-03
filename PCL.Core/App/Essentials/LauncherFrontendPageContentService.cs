@@ -144,6 +144,7 @@ public static class LauncherFrontendPageContentService
         {
             LauncherFrontendSubpageKey.SetupAbout => BuildSetupAboutContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupGameLink => BuildSetupGameLinkContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupUpdate => BuildSetupUpdateContent(request, promptTotal),
             _ => BuildGenericSetupContent(request, promptTotal)
@@ -319,6 +320,47 @@ public static class LauncherFrontendPageContentService
                     [
                         "这是一个典型的设置页右侧面板，适合继续验证 MyCard / MyButton 风格的复制方式。",
                         "它还顺带覆盖了组合框、文本框、状态卡和次级文本按钮这些常见控件。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupGameLinkContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "游戏联机页面",
+            "EasyTier 设置面板已经可以按原版表单结构进入新前端，而不是停留在通用摘要卡片上。",
+            [
+                new LauncherFrontendPageFact("当前分区", "游戏联机"),
+                new LauncherFrontendPageFact("协议偏好", "TCP / UDP"),
+                new LauncherFrontendPageFact("网络提示", "需要重启大厅后生效"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "EasyTier",
+                    "联机设置表单",
+                    [
+                        "保留了顶部黄色提示条、用户名输入框、协议偏好下拉框和四个复选项。",
+                        "这一页继续沿用原版的紧凑表单密度，而不是变成另一种新的设置布局。",
+                        "左侧附加按钮会在 Spike 中把这些字段重置到默认演示值。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "前端该做什么",
+                    [
+                        "联机策略与真实网络行为仍然应该由后端或外部组件负责。",
+                        "前端只需要渲染这些字段、收集输入并触发意图。",
+                        "隐藏的网络测试区块可以等真实测试合同更明确后再继续复制。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "迁移",
+                    "为什么现在做这页",
+                    [
+                        "它是一个比界面页更紧凑的设置表单，适合继续打磨组合框、文本框和复选框的复制方式。",
+                        "这也让设置分组不再只剩更新页一个已复制的右侧面板。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);

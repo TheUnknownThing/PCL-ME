@@ -53,6 +53,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _openFullChangelogCommand;
     private readonly ActionCommand _downloadOptionalUpdateCommand;
     private readonly ActionCommand _showOptionalUpdateDetailCommand;
+    private readonly ActionCommand _resetGameLinkSettingsCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -75,6 +76,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private int _selectedUpdateModeIndex;
     private string _mirrorCdk = string.Empty;
     private UpdateSurfaceState _updateSurfaceState = UpdateSurfaceState.Available;
+    private string _linkUsername = string.Empty;
+    private int _selectedProtocolPreferenceIndex;
+    private bool _preferLowestLatencyPath = true;
+    private bool _tryPunchSymmetricNat = true;
+    private bool _allowIpv6Communication = true;
+    private bool _enableLinkCliOutput;
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
@@ -105,6 +112,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/PCL-Community/PCL2-CE/releases");
         _downloadOptionalUpdateCommand = CreateIntentCommand("下载可选更新", "Would start the optional AquaCL upgrade flow.");
         _showOptionalUpdateDetailCommand = CreateIntentCommand("查看 AquaCL 更新详情", "Would open the optional upgrade changelog surface.");
+        _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -116,6 +124,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeFeedbackSections();
         InitializeLogEntries();
         InitializeUpdateSurface();
+        InitializeGameLinkSurface();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
@@ -261,6 +270,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupUpdateSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate;
 
+    public bool IsSetupGameLinkSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupGameLink;
+
     public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
 
@@ -269,6 +281,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         && !IsSetupFeedbackSurface
         && !IsSetupLogSurface
         && !IsSetupUpdateSurface
+        && !IsSetupGameLinkSurface
         && !IsToolsHelpSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
@@ -365,6 +378,48 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public string OptionalUpdateDescription => "20.0 MB";
 
     public string OptionalUpdateSummary => "AquaCL 3 是 PCL CE 的第一个主要更新，带来了让人眼前一亮的新设计，使用了最新开发技术，完全重构了基础体验，并更支持 macOS、Linux 等其他平台。";
+
+    public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
+    [
+        "TCP",
+        "UDP"
+    ];
+
+    public string LinkUsername
+    {
+        get => _linkUsername;
+        set => SetProperty(ref _linkUsername, value);
+    }
+
+    public int SelectedProtocolPreferenceIndex
+    {
+        get => _selectedProtocolPreferenceIndex;
+        set => SetProperty(ref _selectedProtocolPreferenceIndex, Math.Clamp(value, 0, LinkProtocolPreferenceOptions.Count - 1));
+    }
+
+    public bool PreferLowestLatencyPath
+    {
+        get => _preferLowestLatencyPath;
+        set => SetProperty(ref _preferLowestLatencyPath, value);
+    }
+
+    public bool TryPunchSymmetricNat
+    {
+        get => _tryPunchSymmetricNat;
+        set => SetProperty(ref _tryPunchSymmetricNat, value);
+    }
+
+    public bool AllowIpv6Communication
+    {
+        get => _allowIpv6Communication;
+        set => SetProperty(ref _allowIpv6Communication, value);
+    }
+
+    public bool EnableLinkCliOutput
+    {
+        get => _enableLinkCliOutput;
+        set => SetProperty(ref _enableLinkCliOutput, value);
+    }
 
     public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
         ? authPlayerName
@@ -481,6 +536,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ActionCommand DownloadOptionalUpdateCommand => _downloadOptionalUpdateCommand;
 
     public ActionCommand ShowOptionalUpdateDetailCommand => _showOptionalUpdateDetailCommand;
+
+    public ActionCommand ResetGameLinkSettingsCommand => _resetGameLinkSettingsCommand;
 
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
@@ -812,6 +869,16 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _updateSurfaceState = UpdateSurfaceState.Available;
     }
 
+    private void InitializeGameLinkSurface()
+    {
+        _linkUsername = "PCL CE 玩家";
+        _selectedProtocolPreferenceIndex = 0;
+        _preferLowestLatencyPath = true;
+        _tryPunchSymmetricNat = true;
+        _allowIpv6Communication = true;
+        _enableLinkCliOutput = false;
+    }
+
     private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()
     {
         return
@@ -953,6 +1020,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             return;
         }
 
+        if (IsSetupGameLinkSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetGameLinkSurface();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -998,6 +1071,18 @@ internal sealed class FrontendShellViewModel : ViewModelBase
                 : "当前已是最新版本，右侧面板切换为本地版本状态卡。");
     }
 
+    private void ResetGameLinkSurface()
+    {
+        InitializeGameLinkSurface();
+        RaisePropertyChanged(nameof(LinkUsername));
+        RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
+        RaisePropertyChanged(nameof(PreferLowestLatencyPath));
+        RaisePropertyChanged(nameof(TryPunchSymmetricNat));
+        RaisePropertyChanged(nameof(AllowIpv6Communication));
+        RaisePropertyChanged(nameof(EnableLinkCliOutput));
+        AddActivity("重置联机设置", "EasyTier 设置已恢复到 Spike 的默认演示值。");
+    }
+
     private void SetPromptOverlayOpen(bool isOpen)
     {
         if (_isPromptOverlayOpen == isOpen)
@@ -1018,6 +1103,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupFeedbackSurface));
         RaisePropertyChanged(nameof(IsSetupLogSurface));
         RaisePropertyChanged(nameof(IsSetupUpdateSurface));
+        RaisePropertyChanged(nameof(IsSetupGameLinkSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
