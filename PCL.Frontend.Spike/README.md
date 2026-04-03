@@ -22,6 +22,7 @@ The project now has two complementary faces:
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
 - the shell can now also round-trip a backend-driven frontend shell snapshot that includes startup prompts, top navigation, sidebar state, and utility surfaces
 - the shell now also exposes a frontend prompt queue and a richer current-page surface contract with breadcrumbs and back-target semantics
+- the spike now also renders route-specific page facts and sections from portable frontend page-content contracts instead of generic placeholder cards
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - the spike can now also boot a real desktop shell from those same portable contracts with `app`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
@@ -86,13 +87,15 @@ Current desktop shell behavior:
 
 - top-level routes, sidebar sections, and utility surfaces are rendered from `LauncherFrontendNavigationService`
 - startup, launch, and crash prompt lanes are rendered from `LauncherFrontendPromptService`
+- route-specific center-pane facts and sections are rendered from `LauncherFrontendPageContentService`
 - route switching, shell back-navigation, and prompt dismissal stay in the frontend layer without copying WPF event flow
 - the activity feed records prompt decisions and route changes so contract-driven behavior can be reviewed visually
 
 The desktop shell is intentionally still a migration scaffold, not a full launcher:
 
 - it renders portable shell surfaces and prompt intents
-- it does not yet implement real page-level data contracts or live backend execution
+- it now renders portable page-level summaries for launch, setup, tools, logs, and instance routes
+- it still does not implement live backend execution or full page-specific production data
 - it keeps policy in backend services and limits the frontend to composition, routing, and prompt interaction
 
 ## Execute mode outputs
@@ -126,6 +129,6 @@ The desktop shell is intentionally still a migration scaffold, not a full launch
 ## Current limitations
 
 - the spike is still a prototype shell, not a user-facing replacement launcher
-- the new desktop shell is still a shell-level migration surface; page-specific contracts are still incomplete
+- the new desktop shell now has a portable page-content seam, but many page-specific production contracts are still incomplete
 - live launch request execution, real Java transfer networking, and crash save-picker or Explorer behavior still live in the real launcher
 - the spike can now derive best-effort host-backed inputs, but it still does not source full live launcher state or perform real login/network execution against the current machine
