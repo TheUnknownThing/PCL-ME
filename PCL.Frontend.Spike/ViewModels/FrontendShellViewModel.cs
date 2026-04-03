@@ -22,6 +22,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         "Plain Craft Launcher 2"));
     private static readonly string LaunchAvatarImageFilePath = GetLauncherAssetPath("Images", "Heads", "PCL-Community.png");
     private static readonly string LaunchNewsImageFilePath = GetLauncherAssetPath("Images", "Backgrounds", "server_bg.png");
+    private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
+    private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
+    private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private readonly ShellSpikeInputs _shellInputs;
     private readonly StartupSpikePlan _startupPlan;
     private readonly LaunchSpikePlan _launchPlan;
@@ -43,6 +46,13 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _exportAllLogsCommand;
     private readonly ActionCommand _openLogDirectoryCommand;
     private readonly ActionCommand _cleanLogsCommand;
+    private readonly ActionCommand _getMirrorCdkCommand;
+    private readonly ActionCommand _downloadUpdateCommand;
+    private readonly ActionCommand _showUpdateDetailCommand;
+    private readonly ActionCommand _checkUpdateAgainCommand;
+    private readonly ActionCommand _openFullChangelogCommand;
+    private readonly ActionCommand _downloadOptionalUpdateCommand;
+    private readonly ActionCommand _showOptionalUpdateDetailCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -61,6 +71,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _isLaunchNewsExpanded = true;
     private bool _showLaunchCommunityHint = true;
     private string _helpSearchQuery = string.Empty;
+    private int _selectedUpdateChannelIndex;
+    private int _selectedUpdateModeIndex;
+    private string _mirrorCdk = string.Empty;
+    private UpdateSurfaceState _updateSurfaceState = UpdateSurfaceState.Available;
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
@@ -84,6 +98,13 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _exportAllLogsCommand = CreateIntentCommand("导出全部日志", "Would export the complete launcher log archive.");
         _openLogDirectoryCommand = CreateIntentCommand("打开日志目录", "Would reveal the launcher log directory.");
         _cleanLogsCommand = CreateIntentCommand("清理历史日志", "Would remove archived launcher logs.");
+        _getMirrorCdkCommand = CreateLinkCommand("获取 Mirror 酱 CDK", "https://mirrorchyan.com/");
+        _downloadUpdateCommand = CreateIntentCommand("下载并安装更新", "Would start the launcher self-update workflow.");
+        _showUpdateDetailCommand = CreateIntentCommand("查看更新详情", "Would open the markdown changelog dialog for the selected launcher update.");
+        _checkUpdateAgainCommand = new ActionCommand(CycleUpdateSurfaceState);
+        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/PCL-Community/PCL2-CE/releases");
+        _downloadOptionalUpdateCommand = CreateIntentCommand("下载可选更新", "Would start the optional AquaCL upgrade flow.");
+        _showOptionalUpdateDetailCommand = CreateIntentCommand("查看 AquaCL 更新详情", "Would open the optional upgrade changelog surface.");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -94,6 +115,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeAboutEntries();
         InitializeFeedbackSections();
         InitializeLogEntries();
+        InitializeUpdateSurface();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
@@ -236,6 +258,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupLogSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLog;
 
+    public bool IsSetupUpdateSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate;
+
     public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
 
@@ -243,6 +268,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         && !IsSetupAboutSurface
         && !IsSetupFeedbackSurface
         && !IsSetupLogSurface
+        && !IsSetupUpdateSurface
         && !IsToolsHelpSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
@@ -258,6 +284,87 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
         ?? _currentNavigation?.CurrentPage.Title
         ?? Title;
+
+    public IReadOnlyList<string> UpdateChannelOptions { get; } =
+    [
+        "正式版 / Release",
+        "测试版 / Beta",
+        "开发版 / Dev"
+    ];
+
+    public IReadOnlyList<string> UpdateModeOptions { get; } =
+    [
+        "自动下载并安装更新",
+        "自动下载并提示更新",
+        "提示更新",
+        "不自动检查更新（不推荐）"
+    ];
+
+    public int SelectedUpdateChannelIndex
+    {
+        get => _selectedUpdateChannelIndex;
+        set
+        {
+            var clampedValue = Math.Clamp(value, 0, UpdateChannelOptions.Count - 1);
+            if (SetProperty(ref _selectedUpdateChannelIndex, clampedValue))
+            {
+                AddActivity("切换更新通道", UpdateChannelOptions[clampedValue]);
+            }
+        }
+    }
+
+    public int SelectedUpdateModeIndex
+    {
+        get => _selectedUpdateModeIndex;
+        set
+        {
+            var clampedValue = Math.Clamp(value, 0, UpdateModeOptions.Count - 1);
+            if (SetProperty(ref _selectedUpdateModeIndex, clampedValue))
+            {
+                AddActivity("切换自动更新设置", UpdateModeOptions[clampedValue]);
+            }
+        }
+    }
+
+    public string MirrorCdk
+    {
+        get => _mirrorCdk;
+        set => SetProperty(ref _mirrorCdk, value);
+    }
+
+    public Bitmap? UpdateAvailableIcon => File.Exists(UpdateAvailableIconFilePath)
+        ? new Bitmap(UpdateAvailableIconFilePath)
+        : null;
+
+    public Bitmap? UpdateCurrentIcon => File.Exists(UpdateCurrentIconFilePath)
+        ? new Bitmap(UpdateCurrentIconFilePath)
+        : null;
+
+    public Bitmap? UpdateOptionalIcon => File.Exists(UpdateOptionalIconFilePath)
+        ? new Bitmap(UpdateOptionalIconFilePath)
+        : null;
+
+    public bool ShowAvailableUpdateCard => _updateSurfaceState == UpdateSurfaceState.Available;
+
+    public bool ShowCurrentVersionCard => _updateSurfaceState == UpdateSurfaceState.Latest;
+
+    public bool ShowOptionalUpdateCard => false;
+
+    public string AvailableUpdateName => "PCL CE 2.14.0";
+
+    public string AvailableUpdatePublisher => "by PCL-Community";
+
+    public string AvailableUpdateSummary => "PCL CE 2.14.0 带来了让人眼前一亮的新设计和 Pigeon 智能的多项功能，同时还带来了令人愉快的跨实例工作方式，助你提高工作效率。";
+
+    public string CurrentVersionName => "PCL CE 2.13.4";
+
+    public string CurrentVersionDescription => ShowCurrentVersionCard ? "已是最新版本" : "正在检查更新...";
+
+    public string OptionalUpdateName => "AquaCL 3.0.0";
+
+    public string OptionalUpdateDescription => "20.0 MB";
+
+    public string OptionalUpdateSummary => "AquaCL 3 是 PCL CE 的第一个主要更新，带来了让人眼前一亮的新设计，使用了最新开发技术，完全重构了基础体验，并更支持 macOS、Linux 等其他平台。";
 
     public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
         ? authPlayerName
@@ -360,6 +467,20 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ActionCommand OpenLogDirectoryCommand => _openLogDirectoryCommand;
 
     public ActionCommand CleanLogsCommand => _cleanLogsCommand;
+
+    public ActionCommand GetMirrorCdkCommand => _getMirrorCdkCommand;
+
+    public ActionCommand DownloadUpdateCommand => _downloadUpdateCommand;
+
+    public ActionCommand ShowUpdateDetailCommand => _showUpdateDetailCommand;
+
+    public ActionCommand CheckUpdateAgainCommand => _checkUpdateAgainCommand;
+
+    public ActionCommand OpenFullChangelogCommand => _openFullChangelogCommand;
+
+    public ActionCommand DownloadOptionalUpdateCommand => _downloadOptionalUpdateCommand;
+
+    public ActionCommand ShowOptionalUpdateDetailCommand => _showOptionalUpdateDetailCommand;
 
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
@@ -683,6 +804,14 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         ]);
     }
 
+    private void InitializeUpdateSurface()
+    {
+        _selectedUpdateChannelIndex = Math.Clamp((int)_startupPlan.StartupPlan.Bootstrap.DefaultUpdateChannel, 0, UpdateChannelOptions.Count - 1);
+        _selectedUpdateModeIndex = 0;
+        _mirrorCdk = string.Empty;
+        _updateSurfaceState = UpdateSurfaceState.Available;
+    }
+
     private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()
     {
         return
@@ -818,6 +947,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
+        if (IsSetupUpdateSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            CycleUpdateSurfaceState();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -847,6 +982,22 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         IsLaunchNewsExpanded = !IsLaunchNewsExpanded;
     }
 
+    private void CycleUpdateSurfaceState()
+    {
+        _updateSurfaceState = _updateSurfaceState switch
+        {
+            UpdateSurfaceState.Available => UpdateSurfaceState.Latest,
+            _ => UpdateSurfaceState.Available
+        };
+
+        RaiseUpdateSurfaceProperties();
+        AddActivity(
+            "刷新更新页",
+            _updateSurfaceState == UpdateSurfaceState.Available
+                ? "检测到可用的新版本，右侧面板切换为更新摘要卡。"
+                : "当前已是最新版本，右侧面板切换为本地版本状态卡。");
+    }
+
     private void SetPromptOverlayOpen(bool isOpen)
     {
         if (_isPromptOverlayOpen == isOpen)
@@ -866,6 +1017,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupAboutSurface));
         RaisePropertyChanged(nameof(IsSetupFeedbackSurface));
         RaisePropertyChanged(nameof(IsSetupLogSurface));
+        RaisePropertyChanged(nameof(IsSetupUpdateSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
@@ -875,6 +1027,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LaunchAuthLabel));
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+        RaiseUpdateSurfaceProperties();
     }
 
     private void RaiseCollectionStateProperties()
@@ -891,6 +1044,14 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(HasFeedbackSections));
         RaisePropertyChanged(nameof(HasHelpTopicGroups));
         RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
+    }
+
+    private void RaiseUpdateSurfaceProperties()
+    {
+        RaisePropertyChanged(nameof(ShowAvailableUpdateCard));
+        RaisePropertyChanged(nameof(ShowCurrentVersionCard));
+        RaisePropertyChanged(nameof(ShowOptionalUpdateCard));
+        RaisePropertyChanged(nameof(CurrentVersionDescription));
     }
 
     private static string DescribePromptOption(LauncherFrontendPromptOption option)
@@ -1633,4 +1794,10 @@ internal enum SpikePromptLaneKind
     Startup = 0,
     Launch = 1,
     Crash = 2
+}
+
+internal enum UpdateSurfaceState
+{
+    Available = 0,
+    Latest = 1
 }

@@ -145,6 +145,7 @@ public static class LauncherFrontendPageContentService
             LauncherFrontendSubpageKey.SetupAbout => BuildSetupAboutContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupUpdate => BuildSetupUpdateContent(request, promptTotal),
             _ => BuildGenericSetupContent(request, promptTotal)
         };
     }
@@ -275,6 +276,49 @@ public static class LauncherFrontendPageContentService
                     [
                         "复制原版布局优先于设计一个更通用但更抽象的新反馈页。",
                         "如果未来需要真实反馈数据，应通过新合同输入而不是页面内抓取。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupUpdateContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        var startup = request.StartupPlan;
+
+        return new LauncherFrontendPageContent(
+            "更新页面",
+            "更新通道、自动检查策略和版本卡片已经可以用更接近原版 PageSetupUpdate 的布局进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "更新"),
+                new LauncherFrontendPageFact("Update channel", startup.Bootstrap.DefaultUpdateChannel.ToString()),
+                new LauncherFrontendPageFact("Config keys", startup.Bootstrap.ConfigKeysToLoad.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "设置",
+                    "更新通道与策略",
+                    [
+                        "保留了原版页面顶部的三行设置布局：更新通道、自动更新设置和 Mirror 酱 CDK。",
+                        "优先继续沿用原来的控件密度，而不是把它改造成更通用的设置表单。",
+                        "刷新动作仍然只是前端意图，真正的更新策略不应重新塞回壳层。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "状态",
+                    "版本卡片",
+                    [
+                        "可用更新与当前已是最新版本这两种状态继续按原页面拆成不同卡片。",
+                        "更新摘要保留原版的大标题、说明文字和底部详情入口。",
+                        "完整的版本数据以后应来自更具体的更新合同，而不是由页面自己推断。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "迁移",
+                    "为什么先复制这里",
+                    [
+                        "这是一个典型的设置页右侧面板，适合继续验证 MyCard / MyButton 风格的复制方式。",
+                        "它还顺带覆盖了组合框、文本框、状态卡和次级文本按钮这些常见控件。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);
