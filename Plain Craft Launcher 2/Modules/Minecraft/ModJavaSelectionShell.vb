@@ -49,18 +49,7 @@ Public Module ModJavaSelectionShell
     End Function
 
     Private Sub ExecuteJavaDownload(downloadTarget As String, task As LoaderTask(Of Integer, Integer))
-        If String.IsNullOrWhiteSpace(downloadTarget) Then Throw New ArgumentException("缺少 Java 下载目标。", NameOf(downloadTarget))
-
-        Dim javaLoader = ModJava.GetJavaDownloadLoader()
-        Try
-            javaLoader.Start(downloadTarget, IsForceRestart:=True)
-            Do While javaLoader.State = LoadState.Loading AndAlso Not task.IsAborted
-                task.Progress = javaLoader.Progress
-                Thread.Sleep(10)
-            Loop
-        Finally
-            javaLoader.Abort() '确保取消时中止 Java 下载
-        End Try
+        ModJavaLoaderShell.ExecuteJavaDownload(downloadTarget, task)
     End Sub
 
 End Module

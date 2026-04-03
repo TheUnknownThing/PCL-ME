@@ -241,34 +241,8 @@ Public Module ModJava
     ''' 获取下载 Java 的加载器。需要开启 IsForceRestart 以正常刷新 Java 列表。
     ''' </summary>
     Public Function GetJavaDownloadLoader() As LoaderCombo(Of String)
-        Dim JavaDownloadLoader As New LoaderDownload("下载 Java 文件", New List(Of NetFile)) With {.ProgressWeight = 10}
-        Dim Loader = New LoaderCombo(Of String)($"下载 Java", {
-            New LoaderTask(Of String, List(Of NetFile))("获取 Java 下载信息", AddressOf JavaFileList) With {.ProgressWeight = 2},
-            JavaDownloadLoader
-        })
-        AddHandler JavaDownloadLoader.OnStateChangedThread,
-        Sub(Raw As LoaderBase, NewState As LoadState, OldState As LoadState)
-            Dim sessionState = ModJavaDownloadSessionShell.ResolveSessionState(NewState)
-            If sessionState Is Nothing Then Exit Sub
-
-            Dim transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(sessionState.Value, LastJavaBaseDir)
-            ModJavaDownloadSessionShell.ApplyStateTransition(transitionPlan, LastJavaBaseDir)
-        End Sub
-        JavaDownloadLoader.HasOnStateChangedThread = True
-        Return Loader
+        Return ModJavaLoaderShell.CreateDownloadLoader()
     End Function
-    Private LastJavaBaseDir As String = Nothing '用于在下载中断或失败时删除未完成下载的 Java 文件夹，防止残留只下了一半但 -version 能跑的 Java
-    Private ReadOnly IgnoreHash As IReadOnlyList(Of String) = MinecraftJavaRuntimeDownloadSessionService.GetDefaultIgnoredSha1Hashes()
-    Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
-        Log("[Java] 开始获取 Java 下载信息")
-        Dim downloadFiles = ModJavaTransferShell.ResolveDownloadFiles(
-            Loader.Input,
-            IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft"),
-            IgnoreHash,
-            Is32BitSystem)
-        LastJavaBaseDir = downloadFiles.RuntimeBaseDirectory
-        Loader.Output = downloadFiles.Files
-    End Sub
 
 #End Region
 
