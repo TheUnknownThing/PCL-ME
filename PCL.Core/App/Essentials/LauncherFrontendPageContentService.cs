@@ -140,6 +140,19 @@ public static class LauncherFrontendPageContentService
         LauncherFrontendPageContentRequest request,
         int promptTotal)
     {
+        return request.Navigation.CurrentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.SetupAbout => BuildSetupAboutContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
+            _ => BuildGenericSetupContent(request, promptTotal)
+        };
+    }
+
+    private static LauncherFrontendPageContent BuildGenericSetupContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
         var launch = request.Launch;
         var startup = request.StartupPlan;
 
@@ -183,7 +196,147 @@ public static class LauncherFrontendPageContentService
             ]);
     }
 
+    private static LauncherFrontendPageContent BuildSetupAboutContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        var startup = request.StartupPlan;
+
+        return new LauncherFrontendPageContent(
+            "关于页面",
+            "版本信息、社区团队与特别鸣谢已经可以通过可移植路由与页面内容合同进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "关于"),
+                new LauncherFrontendPageFact("Update channel", startup.Bootstrap.DefaultUpdateChannel.ToString()),
+                new LauncherFrontendPageFact("Config keys", startup.Bootstrap.ConfigKeysToLoad.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "关于",
+                    "项目与团队",
+                    [
+                        "保留原版的头像、介绍文案与右侧按钮布局。",
+                        "关于页适合优先复制，因为它主要是只读展示内容。",
+                        "这能验证 MyCard / MyListItem 风格在 Avalonia 中的复用方式。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "鸣谢",
+                    "特别鸣谢",
+                    [
+                        "保留原版的名单顺序、图片位置和操作按钮文案。",
+                        "优先复用已有头像资源而不是替换成新的通用占位图。",
+                        "这一页不需要把任何项目元数据逻辑重新塞回前端。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "迁移",
+                    "为什么先复制这里",
+                    [
+                        "只读页面可以先验证视觉复制，再逐步替换为更真实的数据来源。",
+                        "前端仍只负责展示与外部意图触发，不拥有项目策略。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupFeedbackContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "反馈页面",
+            "反馈入口、状态分栏和折叠卡片结构可以先在新前端中复制出来，再逐步接真实来源。",
+            [
+                new LauncherFrontendPageFact("当前分区", "反馈"),
+                new LauncherFrontendPageFact("Consent prompts", request.Consent.Prompts.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString()),
+                new LauncherFrontendPageFact("Page kind", request.Navigation.CurrentPage.Kind.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "提交",
+                    "反馈入口",
+                    [
+                        "顶部保留原版说明文案和单个高亮按钮入口。",
+                        "是否跳转到 GitHub 仍应表现为显式前端意图。",
+                        "反馈页本身不应拥有网络或工单同步策略。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "状态",
+                    "分栏与折叠卡片",
+                    [
+                        "保留“正在处理 / 等待处理 / 已完成”等状态卡片结构。",
+                        "默认折叠行为也可以在前端层模拟，而不必借用旧窗口事件流。",
+                        "这能帮助新前端验证更多 MyCard 风格页面。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "迁移规则",
+                    [
+                        "复制原版布局优先于设计一个更通用但更抽象的新反馈页。",
+                        "如果未来需要真实反馈数据，应通过新合同输入而不是页面内抓取。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupLogContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        var crash = request.Crash;
+
+        return new LauncherFrontendPageContent(
+            "日志页面",
+            "日志操作区和日志列表区可以直接迁移为前端工具面，而日志收集与导出规划继续停留在后端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "日志"),
+                new LauncherFrontendPageFact("Crash archive", crash?.SuggestedArchiveName ?? "Not provided"),
+                new LauncherFrontendPageFact("Launcher log", FormatBool(crash?.IncludesLauncherLog)),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "操作",
+                    "日志操作",
+                    [
+                        "保留导出日志、导出全部日志、打开目录与清理历史日志的按钮分组。",
+                        "这些按钮应触发明确的壳层意图，而不是隐式调用旧页面代码。",
+                        "日志页是很适合迁移的低风险工具页。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "数据",
+                    "日志与导出",
+                    [
+                        $"Suggested archive: {crash?.SuggestedArchiveName ?? "No archive suggestion"}",
+                        $"Launcher log path: {FormatPath(crash?.LauncherLogPath)}",
+                        "列表内容将来可以接到真实日志目录或运行态源。",
+                        "目前前端只需要准备承载原始布局的容器。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "职责分离",
+                    [
+                        "前端拥有按钮布局、列表渲染和目录打开意图。",
+                        "后端拥有日志收集、归档规划和崩溃恢复信息。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
     private static LauncherFrontendPageContent BuildToolsContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return request.Navigation.CurrentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.ToolsLauncherHelp => BuildToolsHelpContent(request, promptTotal, visibleUtilityCount),
+            _ => BuildGenericToolsContent(request, promptTotal, visibleUtilityCount)
+        };
+    }
+
+    private static LauncherFrontendPageContent BuildGenericToolsContent(
         LauncherFrontendPageContentRequest request,
         int promptTotal,
         int visibleUtilityCount)
@@ -226,6 +379,48 @@ public static class LauncherFrontendPageContentService
                         "Desktop UI owns composition, navigation, and user intent collection.",
                         "Backend services still own diagnostics, export planning, and workflow policy.",
                         "Tool pages are a good place to harden those seams before broader cutover."
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildToolsHelpContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return new LauncherFrontendPageContent(
+            "帮助页面",
+            "帮助页已经适合直接复制搜索框、结果卡片与帮助列表结构，后续再接更细的帮助条目合同。",
+            [
+                new LauncherFrontendPageFact("当前分区", "帮助"),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "搜索",
+                    "搜索帮助",
+                    [
+                        "顶部保留原版的单行搜索入口。",
+                        "搜索结果区和默认列表区可以共存，由前端负责切换。",
+                        "搜索交互不需要旧窗口生命周期参与。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "列表",
+                    "帮助卡片",
+                    [
+                        "帮助条目继续使用卡片和列表项结构，而不是退回通用摘要面板。",
+                        "详情页路由应保持显式，这样后续可以平滑接入 HelpDetail。",
+                        "这也是复制 MySearchBox / MyCard 风格的低风险入口。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "后续所需合同",
+                    [
+                        "真实帮助条目、分类与详情正文仍需要更细的后端输入合同。",
+                        "在合同到位前，前端可以先验证页面结构与搜索交互。",
+                        $"当前可见提示数：{promptTotal}"
                     ])
             ]);
     }

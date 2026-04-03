@@ -92,6 +92,40 @@ public sealed class LauncherFrontendPageContentServiceTest
             section.Lines.Any(line => line.Contains("Java 21", StringComparison.Ordinal))));
     }
 
+    [TestMethod]
+    public void BuildSetupAboutContentDescribesCopiedAboutSurface()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupAbout))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes()));
+
+        Assert.AreEqual("关于页面", content.Eyebrow);
+        Assert.AreEqual("关于", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "项目与团队" &&
+            section.Lines.Any(line => line.Contains("头像", StringComparison.Ordinal))));
+    }
+
+    [TestMethod]
+    public void BuildToolsHelpContentDescribesSearchAndListSeams()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsLauncherHelp))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes()));
+
+        Assert.AreEqual("帮助页面", content.Eyebrow);
+        Assert.AreEqual("帮助", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "搜索帮助" &&
+            section.Lines.Any(line => line.Contains("搜索结果区", StringComparison.Ordinal))));
+    }
+
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
     {
         return LauncherStartupWorkflowService.BuildPlan(new LauncherStartupWorkflowRequest(
