@@ -104,6 +104,7 @@ These areas are already substantially portable or backend-owned:
 
 - startup workflow planning
 - frontend shell planning and navigation catalog generation
+- frontend prompt queue and prompt-command mapping
 - startup bootstrap and visual planning
 - version transition and milestone policy
 - launch prerun and launch session planning
@@ -114,6 +115,9 @@ These areas are already substantially portable or backend-owned:
 - crash collection/export/prompt planning
 - profile document parsing and serialization in `PCL.Core/Minecraft/Launch/MinecraftLaunchProfileStorageService.cs`
 - launcher identity resolution in `PCL.Core/App/Essentials/LauncherIdentityResolutionService.cs`
+- launcher secret-key resolution in `PCL.Core/App/Essentials/LauncherSecretKeyResolutionService.cs`
+- launcher versioned secret-envelope parsing in `PCL.Core/App/Essentials/LauncherVersionedDataService.cs`
+- launcher legacy identity derivation in `PCL.Core/App/Essentials/LauncherLegacyIdentityService.cs`
 - launcher identity fallback in `PCL.Core/App/LauncherIdentity.cs`
 - encryption-key fallback in `PCL.Core/Utils/Secret/EncryptHelper.cs`
 - Windows device identity extraction in `PCL.Core/Utils/Secret/WindowsDeviceIdentityProvider.cs`
@@ -141,6 +145,11 @@ These are the key migration checkpoints leading to the current state:
 - `b67430a9` `feat: add frontend subpage title lookup`
 - `410563a7` `docs: polish shell spike contract output`
 - `67f2665e` `refactor: isolate windows device identity adapter`
+- `6e966b19` `refactor: extract legacy secret derivation service`
+- `dfdd48d2` `refactor: extract secret key resolution services`
+- `f3520e89` `feat: add frontend prompt and page surface contracts`
+- `b9786c5c` `test: cover secret portability services`
+- `6d4b7ff3` `feat: expose frontend shell artifacts in spike`
 
 ## What Still Remains Before A Full Frontend Cutover
 
@@ -188,12 +197,16 @@ Progress already made:
 - launcher identity resolution now lives in a dedicated service
 - Windows device identity access is now isolated behind `WindowsDeviceIdentityProvider`
 - profile document persistence is now routed through `MinecraftLaunchProfileStorageService`
+- secret key resolution now lives in `LauncherSecretKeyResolutionService`
+- versioned envelope parsing now lives in `LauncherVersionedDataService`
+- legacy identity and legacy key derivation logic now live in `LauncherLegacyIdentityService`
+- this area now has dedicated tests covering the new secret portability services
 
 What still remains:
 
-- a cleaner headless secret boundary
-- reducing remaining assumptions around device identity and legacy secret handling
-- making profile/config secret access predictable for a future non-Windows frontend
+- a final audit of remaining direct `Utils.Secret` assumptions outside the new services
+- deciding whether any remaining secret/file-host operations should move behind a narrower adapter interface
+- making profile/config secret access fully predictable for a future non-Windows frontend without depending on legacy helper knowledge
 
 This is still one of the biggest backend-side architectural blockers, but it is now more isolated than before.
 
@@ -209,12 +222,11 @@ Needed outcome:
 - reusable services stop depending on clipboard/dialog/process/UI assumptions by accident
 - Windows-only behavior becomes clearly adapter-owned
 
-### 4. Expand backend-consumable frontend seams beyond startup
+### 4. Expand backend-consumable frontend seams beyond startup and prompt queues
 
-`PCL.Frontend.Spike` now proves startup plus a first portable shell/navigation contract, but the replacement frontend engineer will still benefit from additional stable seams for:
+`PCL.Frontend.Spike` now proves startup, navigation, prompt queues, and shell artifact rendering, but the replacement frontend engineer will still benefit from additional stable seams for:
 
-- prompt rendering models
-- richer navigation/page data contracts beyond the current catalog/view seam
+- richer page data contracts beyond the current catalog/view seam
 - launch/profile/auth flow view models or request/response adapters
 - crash presentation/export interactions
 
@@ -245,8 +257,8 @@ Guardrails:
 Recommended first frontend milestones:
 
 1. consume the existing `LauncherFrontendShellService` contract for startup plus navigation shell rendering
-2. build the real window/app shell and route model on top of that contract
-3. add prompt rendering abstractions that align with backend prompt plans
+2. consume `LauncherFrontendPromptService` for startup, launch, and crash prompt rendering
+3. build the real window/app shell and route model on top of those contracts
 4. implement low-risk read-only or mostly-read-only pages
 5. request missing launch/profile/auth contracts instead of deriving them from WPF state
 
@@ -263,6 +275,18 @@ Focus:
 - add any missing backend-facing contracts the frontend engineer uncovers
 - keep `Plain Craft Launcher 2` moving toward a pure shell role instead of regressing into policy ownership
 
+If you want this engineer to "finish backend next turn", define that as:
+
+- finish the remaining backend portability cleanup
+- close the remaining secret-boundary audit
+- complete the next missing frontend-facing contracts discovered so far
+
+Do not define it as:
+
+- finishing the remaining WPF shell cleanup in `Application.xaml.vb` and `FormMain.xaml.vb`
+
+Those files are now better treated as frontend-shell work, even if they still contain legacy coordination logic.
+
 ## Are We Ready To Start Frontend Migration?
 
 Yes, with the right framing.
@@ -276,10 +300,12 @@ Why the answer is now yes:
 
 - the old major blockers in `ModLaunch.vb`, `ModJava.vb`, and `ModCrash.vb` are no longer the dominant risk
 - the frontend engineer now has an actual portable shell/navigation contract to build against
+- the frontend engineer now also has portable prompt contracts to build against
 - the spike now demonstrates shell-oriented startup and navigation output instead of only backend JSON
+- the spike now emits frontend shell artifacts that are closer to a real replacement-shell integration target
 - `PCL.Core.Backend` is already the source of truth for most important portable workflows
 - `PCL.Frontend.Spike` already proves that backend-driven non-WPF startup is viable
-- the remaining work is now concentrated in startup/window shell cleanup, deeper frontend contract coverage, and secret portability, which can be handled in parallel with frontend development
+- the remaining work is now concentrated in startup/window shell cleanup, deeper page-level frontend contract coverage, and final secret portability cleanup, which can be handled in parallel with frontend development
 
 What this means in practice:
 

@@ -36,6 +36,7 @@ What is already in a usable migration state:
 - `PCL.Core.Backend.Test` gives a regression harness for backend behavior
 - `PCL.Frontend.Spike` proves non-WPF backend consumption
 - `LauncherFrontendShellService` and `LauncherFrontendNavigationService` now provide a portable startup plus navigation shell seam
+- `LauncherFrontendPromptService` now provides portable startup, launch, Java-download, and crash prompt contracts
 - `ModLaunch.vb` is now a thin launch coordinator
 - `ModJava.vb` is effectively a thin adapter for this phase
 - `ModCrash.vb` is now just the crash analyzer entry point
@@ -50,7 +51,8 @@ Recent backend/shell milestones:
 - crash collection, export, prepare, analyze, and result logic were split away from `ModCrash.vb`
 - profile persistence is now routed through `MinecraftLaunchProfileStorageService`
 - launcher identity resolution and Windows device identity access are now more clearly separated
-- the spike can now render a backend-driven shell/navigation transcript and execution artifact set
+- secret key resolution and versioned secret-envelope parsing now live in dedicated services
+- the spike can now render a backend-driven shell/navigation/prompt transcript and execution artifact set
 
 Recent checkpoint commits:
 
@@ -66,6 +68,11 @@ Recent checkpoint commits:
 - `9125cb51` `refactor: extract launcher identity resolution`
 - `b67430a9` `feat: add frontend subpage title lookup`
 - `67f2665e` `refactor: isolate windows device identity adapter`
+- `6e966b19` `refactor: extract legacy secret derivation service`
+- `dfdd48d2` `refactor: extract secret key resolution services`
+- `f3520e89` `feat: add frontend prompt and page surface contracts`
+- `b9786c5c` `test: cover secret portability services`
+- `6d4b7ff3` `feat: expose frontend shell artifacts in spike`
 
 ## Remaining Work Before Full Frontend Cutover
 
@@ -107,6 +114,7 @@ Needed outcome:
 Progress note:
 
 - this track is healthier than before because device identity access and launcher identity resolution are now separated
+- core secret-key and versioned-envelope logic are now in dedicated services with tests
 - it is still not finished enough to ignore
 
 ### Priority 3: reduce Windows leakage in `PCL.Core`
@@ -124,11 +132,11 @@ Needed outcome:
 
 Likely areas:
 
-- prompt models and prompt results
 - startup/bootstrap and consent interactions
 - navigation/page state inputs
 - profile/auth presentation models
 - crash result/export interactions
+- page-specific surface contracts
 
 Needed outcome:
 
@@ -138,7 +146,8 @@ Needed outcome:
 Current starting seam:
 
 - startup plus navigation shell data is already available via `LauncherFrontendShellService`
-- the next contracts should extend that seam into prompts, page-specific data, and profile/auth surfaces
+- prompt queue data is already available via `LauncherFrontendPromptService`
+- the next contracts should extend those seams into page-specific data and profile/auth surfaces
 
 ## Two Parallel Workstreams
 
@@ -153,8 +162,8 @@ Primary objective:
 Recommended order:
 
 1. consume the existing startup plus navigation shell contract
-2. build app shell and route rendering on top of that contract
-3. build prompt rendering abstractions
+2. consume the portable prompt contract for startup, launch, and crash prompts
+3. build app shell and route rendering on top of those contracts
 4. implement low-risk pages first
 5. integrate profile/auth and launch UI after the missing contracts are filled in
 
@@ -174,12 +183,12 @@ Primary objective:
 
 Recommended order:
 
-1. keep shrinking `Application.xaml.vb`
-2. keep shrinking `FormMain.xaml.vb`
-3. finish `Utils.Secret`
-4. tighten Windows-only boundaries in `PCL.Core`
-5. add missing frontend-facing contracts discovered by the frontend engineer
-6. keep expanding the spike only where it helps prove a new seam
+1. finish `Utils.Secret`
+2. tighten Windows-only boundaries in `PCL.Core`
+3. add missing frontend-facing contracts discovered by the frontend engineer
+4. keep expanding the spike only where it helps prove a new seam
+5. keep shrinking `Application.xaml.vb`
+6. keep shrinking `FormMain.xaml.vb`
 
 Rules:
 
@@ -221,7 +230,7 @@ We are ready for full cutover only when these additional statements are true:
 
 ### Milestone A: frontend kickoff
 
-- frontend engineer builds the real startup shell and navigation skeleton from the existing portable shell contract
+- frontend engineer builds the real startup shell, navigation skeleton, and prompt rendering from the existing portable contracts
 - backend engineer supports with any missing startup/prompt contracts
 
 ### Milestone B: contract hardening
@@ -233,6 +242,19 @@ We are ready for full cutover only when these additional statements are true:
 
 - `PCL.Frontend.Spike` and/or the new frontend can exercise the key workflows cleanly
 - remaining work becomes UI completeness and cutover planning instead of architectural untangling
+
+## When You Can Expect A Real Frontend
+
+As of April 3, 2026, if the engineers keep moving at roughly the current pace:
+
+- you should be able to see a real frontend shell prototype soon, likely after one more focused frontend iteration
+- a more convincing "real frontend" with actual startup, navigation, and prompt handling feels more like the next 1 to 3 engineering turns
+- a frontend that is meaningfully usable for broader day-to-day flows will still take longer, because page-level surfaces and some backend seams are not finished yet
+
+The short version is:
+
+- first real frontend shell: soon
+- full replacement frontend: not next turn
 
 ## Validation
 
