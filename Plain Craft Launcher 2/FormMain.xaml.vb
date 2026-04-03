@@ -428,64 +428,10 @@ Public Class FormMain
 
     '按键事件
     Private Sub FormMain_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
-        If e.IsRepeat Then Return
-        '调用弹窗：回车选择第一个，Esc 选择最后一个
-        If PanMsg.Children.Count > 0 Then
-            If e.Key = Key.Enter Then
-                CType(PanMsg.Children(0), Object).Btn1_Click()
-                Return
-            ElseIf e.Key = Key.Escape Then
-                Dim Msg As Object = PanMsg.Children(0)
-                If TypeOf Msg IsNot MyMsgInput AndAlso TypeOf Msg IsNot MyMsgSelect AndAlso Msg.Btn3.Visibility = Visibility.Visible Then
-                    Msg.Btn3_Click()
-                ElseIf Msg.Btn2.Visibility = Visibility.Visible Then
-                    Msg.Btn2_Click()
-                Else
-                    Msg.Btn1_Click()
-                End If
-                Return
-            End If
-        End If
-        '按 ESC 返回上一级
-        If e.Key = Key.Escape Then TriggerPageBack()
-        '更改隐藏实例可见性
-        If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
-            FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
-            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
-            Return
-        End If
-        '更改功能隐藏可见性
-        If e.Key = Key.F12 Then
-            PageSetupUI.HiddenForceShow = Not PageSetupUI.HiddenForceShow
-            If PageSetupUI.HiddenForceShow Then
-                Hint("功能隐藏设置已暂时关闭！", HintType.Finish)
-            Else
-                Hint("功能隐藏设置已重新开启！", HintType.Finish)
-            End If
-            PageSetupUI.HiddenRefresh()
-            Return
-        End If
-        '按 F5 刷新页面
-        If e.Key = Key.F5 Then
-            If TypeOf PageLeft Is IRefreshable Then CType(PageLeft, IRefreshable).Refresh()
-            If TypeOf PageRight Is IRefreshable Then CType(PageRight, IRefreshable).Refresh()
-            Return
-        End If
-        '调用启动游戏
-        If e.Key = Key.Enter AndAlso PageCurrent = FormMain.PageType.Launch Then
-            If IsAprilEnabled AndAlso Not IsAprilGiveup Then
-                Hint("木大！")
-            Else
-                FrmLaunchLeft.LaunchButtonClick()
-            End If
-        End If
-        '修复按下 Alt 后误认为弹出系统菜单导致的冻结
-        If e.SystemKey = Key.LeftAlt OrElse e.SystemKey = Key.RightAlt Then e.Handled = True
+        ModMainWindowInputShell.HandleKeyDown(Me, e, AddressOf TriggerPageBack)
     End Sub
     Private Sub FormMain_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseDown
-        '鼠标侧键返回上一级
-        If FrmMain.PanMsg.Children.Count > 0 OrElse WaitingMyMsgBox.Any Then Return '弹窗中（#5513）
-        If e.ChangedButton = MouseButton.XButton1 OrElse e.ChangedButton = MouseButton.XButton2 Then TriggerPageBack()
+        ModMainWindowInputShell.HandleMouseDown(Me, e, AddressOf TriggerPageBack)
     End Sub
     Private Sub TriggerPageBack()
         ModMainWindowNavigationShell.TriggerPageBack(PageCurrent, PageCurrentSub, AddressOf PageBack)
