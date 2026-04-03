@@ -189,7 +189,7 @@ What is not true yet:
 
 - `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup polling lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
 - `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns login step orchestration, device-code popup lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows, but raw live request execution is now isolated behind dedicated launcher request shells
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns Java selection orchestration plus parts of the concrete transfer lifecycle such as loader polling, cancellation, and retry, but launcher-side prompt handling, cleanup / refresh shell application, runtime fetch execution, reused-file detection, and concrete download file shaping are now isolated behind dedicated Java shell modules
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns parts of the concrete transfer lifecycle such as file hashing and download-job construction, but Java selection prompt / download retry shell behavior, cleanup / refresh shell application, runtime fetch execution, reused-file detection, and concrete download file shaping are now isolated behind dedicated Java shell modules
 - startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`, but immediate-command / bootstrap / visual shell application and milestone / version-transition application are now isolated behind dedicated startup shell modules
 - crash export still has launcher-owned picker / destination / Explorer flow, now isolated in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
 - launcher modules now consume `PCL.Core.App.Secrets` and `PCL.Core.App.LauncherIdentity` instead of reading launcher-facing secret and identify values from `PCL.Core.Utils.Secret` directly
@@ -459,7 +459,7 @@ These are the remaining parts to finish before calling the project ready for a r
    - Reduce the remaining inline launcher notifications, device-code popup lifecycle glue, account decision handling, and post-step shell side effects to adapter-only behavior.
 2. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` as a thin Java transfer adapter.
    - The Java runtime transfer plan and reused-file selection are already portable.
-   - The remaining work is the concrete download engine lifecycle: file hashing, loader polling, cancellation, retry, cleanup, and Java list/runtime refresh after install.
+   - The remaining work is the concrete download engine lifecycle: file hashing, download-job construction, cleanup, and Java list/runtime refresh after install.
    - A frontend migration should not start while those behaviors are still effectively launcher-owned.
 3. Finish startup adapter cleanup in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`.
    - Leave splash screen, window lifetime, tooltip metadata, and WPF presentation in the launcher.

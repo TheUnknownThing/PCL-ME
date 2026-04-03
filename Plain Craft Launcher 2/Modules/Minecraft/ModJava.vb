@@ -294,54 +294,7 @@ Public Module ModJava
     Public Function ResolveLaunchJavaSelection(task As LoaderTask(Of Integer, Integer),
                                                javaWorkflow As MinecraftLaunchJavaWorkflowPlan,
                                                relatedInstance As McInstance) As JavaEntry
-        If task Is Nothing Then Throw New ArgumentNullException(NameOf(task))
-        If javaWorkflow Is Nothing Then Throw New ArgumentNullException(NameOf(javaWorkflow))
-        If relatedInstance Is Nothing Then Throw New ArgumentNullException(NameOf(relatedInstance))
-
-        SyncLock JavaLock
-            McLaunchLog(javaWorkflow.RequirementLogMessage)
-
-            Dim selectedJava = JavaSelect("$$", javaWorkflow.MinimumVersion, javaWorkflow.MaximumVersion, relatedInstance)
-            If task.IsAborted Then Return Nothing
-
-            Dim initialSelection = MinecraftLaunchJavaSelectionWorkflowService.ResolveInitialSelection(
-                javaWorkflow,
-                selectedJava?.ToString())
-            If initialSelection.LogMessage IsNot Nothing Then McLaunchLog(initialSelection.LogMessage)
-            If initialSelection.ActionKind = MinecraftLaunchJavaSelectionActionKind.UseSelectedJava Then
-                Return selectedJava
-            End If
-
-            If task.IsAborted Then Return Nothing '中断加载会导致 JavaSelect 异常地返回空值，误判找不到 Java
-            Dim javaDecision = RunJavaPrompt(initialSelection.Prompt)
-            Dim promptOutcome = MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(initialSelection.Prompt, javaDecision.Decision)
-            If promptOutcome.ActionKind <> MinecraftLaunchJavaPromptActionKind.DownloadAndRetrySelection Then Throw New Exception("$$")
-
-            Dim javaLoader = GetJavaDownloadLoader()
-            Try
-                javaLoader.Start(promptOutcome.DownloadTarget, IsForceRestart:=True)
-                Do While javaLoader.State = LoadState.Loading AndAlso Not task.IsAborted
-                    task.Progress = javaLoader.Progress
-                    Thread.Sleep(10)
-                Loop
-            Finally
-                javaLoader.Abort() '确保取消时中止 Java 下载
-            End Try
-
-            selectedJava = JavaSelect("$$", javaWorkflow.MinimumVersion, javaWorkflow.MaximumVersion, relatedInstance)
-            If task.IsAborted Then Return Nothing
-
-            Dim postDownloadSelection = MinecraftLaunchJavaSelectionWorkflowService.ResolvePostDownloadSelection(
-                javaWorkflow,
-                selectedJava?.ToString())
-            If postDownloadSelection.ActionKind = MinecraftLaunchJavaPostDownloadActionKind.UseSelectedJava Then
-                If postDownloadSelection.LogMessage IsNot Nothing Then McLaunchLog(postDownloadSelection.LogMessage)
-                Return selectedJava
-            End If
-
-            ModJavaPromptShell.ShowJavaSelectionFailureHint(postDownloadSelection.HintMessage)
-            Throw New Exception("$$")
-        End SyncLock
+        Return ModJavaSelectionShell.ResolveLaunchJavaSelectionShell(task, javaWorkflow, relatedInstance)
     End Function
 
 End Module
