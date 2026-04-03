@@ -886,29 +886,7 @@ Public Class FormMain
         PanMainLeft_Resize(e.NewSize.Width)
     End Sub
     Private Sub PanMainLeft_Resize(NewWidth As Double)
-        Dim Delta As Double = NewWidth - RectLeftBackground.Width
-        If Math.Abs(Delta) > 0.1 AndAlso AniControlEnabled = 0 Then
-            If PanMain.Opacity < 0.1 Then PanMainLeft.IsHitTestVisible = False '避免左边栏指向背景未能完美覆盖左边栏
-            If NewWidth > 0 Then
-                '宽度足够，显示
-                AniStart({
-                    AaWidth(RectLeftBackground, NewWidth - RectLeftBackground.Width, 180,, New AniEaseOutFluent(AniEasePower.ExtraStrong)),
-                    AaOpacity(RectLeftShadow, 1 - RectLeftShadow.Opacity, 180),
-                    AaCode(Sub() PanMainLeft.IsHitTestVisible = True, 150)
-                }, "FrmMain LeftChange", True)
-            Else
-                '宽度不足，隐藏
-                AniStart({
-                    AaWidth(RectLeftBackground, -RectLeftBackground.Width, 180,, New AniEaseOutFluent),
-                    AaOpacity(RectLeftShadow, -RectLeftShadow.Opacity, 180),
-                    AaCode(Sub() PanMainLeft.IsHitTestVisible = True, 150)
-                }, "FrmMain LeftChange", True)
-            End If
-        Else
-            RectLeftBackground.Width = NewWidth
-            PanMainLeft.IsHitTestVisible = True
-            AniStop("FrmMain LeftChange")
-        End If
+        ModMainWindowSidebarShell.ResizeLeftSidebar(Me, NewWidth)
     End Sub
 
 #End Region
