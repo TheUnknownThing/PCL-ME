@@ -116,6 +116,7 @@ These workflow extractions are already done and should be treated as available m
 - launch game argument assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGameArgumentService`
 - Java runtime selection and manifest file planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
 - Java runtime manifest/file request coordination is owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
+- Java runtime transfer selection, reused-file filtering, and remaining download queue shaping are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - Java launch selection transition/log/hint policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaSelectionWorkflowService`
 
 Do not redo these in the frontend migration branch; build on top of them.
@@ -180,6 +181,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 
 - login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution and the remaining shell/UI adapter work
 - Java runtime manifest selection / download file planning, request source shaping, and selection transition policy are now expressed through `PCL.Core`, while `ModJava.vb` still owns the download-job lifecycle, cancellation, and retry shell behavior and `ModLaunch.vb` mainly delegates into that adapter path
+- Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns file hashing, the concrete download job lifecycle, cancellation, and retry shell behavior
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
 - launch prerun `launcher_profiles.json` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly handles file existence, writes, and retry shell behavior
@@ -223,8 +225,8 @@ Most practical next code targets:
    Keep only picker / zip / Explorer shell work in the launcher.
 4. build a tiny replacement shell spike
    It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
-   The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, launcher-style Java request planning, Java runtime file materialization, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
-   The best next spike step is feeding more real launcher-backed request execution and Java-download transfer outcomes into the shell, instead of only modeled responses and placeholder runtime file contents.
+   The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, launcher-style Java request planning, Java runtime file materialization, Java transfer/reuse review, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
+   The best next spike step is feeding more real launcher-backed request execution and concrete Java-download transfer results into the shell, instead of only modeled responses and placeholder runtime file contents.
 
 Keep the following in the launcher as adapters:
 

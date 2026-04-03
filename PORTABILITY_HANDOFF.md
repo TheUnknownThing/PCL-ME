@@ -17,6 +17,9 @@ The repo is no longer at the “portability is just an idea” stage. There is n
 
 Latest continuation update:
 
+- portable Java runtime transfer selection and reused-file filtering now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
+- launcher Java download candidate filtering in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadWorkflowService`
+- `PCL.Frontend.Spike` now distinguishes reused Java runtime files from actual transfer files, writes a dedicated transfer artifact, and can detect best-effort existing runtime files in `--host-env true` mode
 - shell-spike launch scenarios now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt transcripts
 - shell-spike execute mode now supports explicit crash-export destination handoff and records the selected archive target as a shell artifact
 - shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
@@ -156,6 +159,7 @@ What is already true:
 - the remaining launcher logic is now primarily shell adapters, prompt adapters, concrete network IO, and Windows-facing compatibility code rather than portable runtime policy
 - `PCL.Frontend.Spike` is now strong enough to review login request execution, Java runtime download planning, host-backed path wiring, and crash-export target handoff without pulling WPF back into scope
 - `PCL.Frontend.Spike` can now also inspect launcher-style Java index / manifest request artifacts and materialize a stub runtime tree from the portable download workflow during `execute` mode
+- `PCL.Frontend.Spike` can now also review which Java runtime files are reused versus newly transferred, making partial-runtime recovery visible without WPF
 - `PCL.Frontend.Spike` now sources modeled Authlib / Microsoft request URLs, headers, bodies, and Authlib profile-selection / mutation planning from the same core workflow services as the real launcher
 
 What is not true yet:
