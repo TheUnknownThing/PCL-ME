@@ -884,22 +884,10 @@ NextStack:
 
     '4：根据原因输出信息
     Private OutputFiles As New List(Of String)
-    Private Sub OpenDirectLogFile()
-        If DirectFile Is Nothing Then Return
-        If File.Exists(DirectFile.Value.Key) Then
-            ShellOnly(DirectFile.Value.Key)
-        Else
-            Dim FilePath As String = PathTemp & "Crash.txt"
-            WriteFile(FilePath, Join(DirectFile.Value.Value, vbCrLf))
-            ShellOnly(FilePath)
-        End If
-    End Sub
     ''' <summary>
     ''' 弹出崩溃弹窗，并指导导出崩溃报告。
     ''' </summary>
     Public Sub Output(IsHandAnalyze As Boolean, Optional ExtraFiles As List(Of String) = Nothing)
-        '弹窗提示
-        FrmMain.ShowWindowToTop()
         Dim resultText = GetAnalyzeResult(IsHandAnalyze)
         Dim prompt = MinecraftCrashWorkflowService.BuildOutputPrompt(
             New MinecraftCrashOutputPromptRequest(
@@ -907,10 +895,7 @@ NextStack:
                 IsHandAnalyze,
                 DirectFile IsNot Nothing,
                 _version IsNot Nothing))
-        Dim selectedButton = ModCrashPromptShell.RunOutputPrompt(prompt, AddressOf OpenDirectLogFile)
-        If selectedButton Is Nothing OrElse Not selectedButton.ClosesPrompt Then Return
-
-        Dim response = MinecraftCrashResponseWorkflowService.ResolvePromptResponse(selectedButton.Action)
+        Dim response = ModCrashPromptShell.ShowOutputPrompt(prompt, DirectFile, PathTemp & "Crash.txt")
         Select Case response.Kind
             Case MinecraftCrashPromptResponseKind.OpenInstanceSettings
                 ModCrashPromptShell.OpenInstanceSettings(_version)
