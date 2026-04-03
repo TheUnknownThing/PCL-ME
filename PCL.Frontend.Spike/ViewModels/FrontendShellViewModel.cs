@@ -59,6 +59,22 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _exportSettingsCommand;
     private readonly ActionCommand _importSettingsCommand;
     private readonly ActionCommand _applyProxySettingsCommand;
+    private readonly ActionCommand _addJavaRuntimeCommand;
+    private readonly ActionCommand _selectAutoJavaCommand;
+    private readonly ActionCommand _resetUiSettingsCommand;
+    private readonly ActionCommand _openSnapshotBuildCommand;
+    private readonly ActionCommand _backgroundOpenFolderCommand;
+    private readonly ActionCommand _backgroundRefreshCommand;
+    private readonly ActionCommand _backgroundClearCommand;
+    private readonly ActionCommand _musicOpenFolderCommand;
+    private readonly ActionCommand _musicRefreshCommand;
+    private readonly ActionCommand _musicClearCommand;
+    private readonly ActionCommand _changeLogoImageCommand;
+    private readonly ActionCommand _deleteLogoImageCommand;
+    private readonly ActionCommand _refreshHomepageCommand;
+    private readonly ActionCommand _generateHomepageTutorialFileCommand;
+    private readonly ActionCommand _viewHomepageTutorialCommand;
+    private readonly ActionCommand _openHomepageMarketCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -115,6 +131,34 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _skipCopyDuringDownload;
     private bool _debugModeEnabled;
     private bool _debugDelayEnabled;
+    private int _selectedDarkModeIndex = 2;
+    private int _selectedLightColorIndex;
+    private int _selectedDarkColorIndex = 1;
+    private double _launcherOpacity = 360;
+    private bool _showLauncherLogo = true;
+    private bool _lockWindowSize;
+    private bool _showLaunchingHint = true;
+    private bool _enableAdvancedMaterial;
+    private double _blurRadius = 14;
+    private double _blurSamplingRate = 65;
+    private int _selectedBlurTypeIndex;
+    private int _selectedGlobalFontIndex;
+    private int _selectedMotdFontIndex = 1;
+    private bool _autoPauseVideo = true;
+    private bool _backgroundColorful = true;
+    private double _musicVolume = 680;
+    private bool _musicRandomPlay = true;
+    private bool _musicAutoStart;
+    private bool _musicStartOnGameLaunch = true;
+    private bool _musicStopOnGameLaunch;
+    private bool _musicEnableSmtc = true;
+    private int _selectedLogoTypeIndex = 1;
+    private bool _logoAlignLeft = true;
+    private string _logoText = "Point Cloud Library";
+    private int _selectedHomepageTypeIndex = 1;
+    private string _homepageUrl = "https://example.invalid/homepage.json";
+    private int _selectedHomepagePresetIndex = 14;
+    private string _selectedJavaRuntimeKey = "auto";
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
@@ -151,6 +195,22 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _exportSettingsCommand = CreateIntentCommand("导出设置", "Would export the shared launcher configuration to a JSON file.");
         _importSettingsCommand = CreateIntentCommand("导入设置", "Would import a shared launcher configuration and request a restart.");
         _applyProxySettingsCommand = CreateIntentCommand("应用代理信息", "Would persist the custom HTTP proxy address, username, and password.");
+        _addJavaRuntimeCommand = new ActionCommand(AddJavaRuntime);
+        _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
+        _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
+        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/PCL-Community/PCL2-CE");
+        _backgroundOpenFolderCommand = CreateIntentCommand("打开背景文件夹", "Would open the launcher background asset directory.");
+        _backgroundRefreshCommand = CreateIntentCommand("刷新背景内容", "Would reload launcher background images or videos.");
+        _backgroundClearCommand = CreateIntentCommand("清空背景内容", "Would remove custom background assets.");
+        _musicOpenFolderCommand = CreateIntentCommand("打开音乐文件夹", "Would open the launcher music asset directory.");
+        _musicRefreshCommand = CreateIntentCommand("刷新背景音乐", "Would reload launcher background music.");
+        _musicClearCommand = CreateIntentCommand("清空背景音乐", "Would remove custom background music files.");
+        _changeLogoImageCommand = CreateIntentCommand("更改标题栏图片", "Would choose a custom title bar image.");
+        _deleteLogoImageCommand = CreateIntentCommand("清空标题栏图片", "Would remove the custom title bar image.");
+        _refreshHomepageCommand = CreateIntentCommand("刷新主页", "Would reload the current homepage source.");
+        _generateHomepageTutorialFileCommand = CreateIntentCommand("生成教学文件", "Would create a sample homepage tutorial file.");
+        _viewHomepageTutorialCommand = CreateIntentCommand("查看主页教程", "Would open the homepage customization tutorial.");
+        _openHomepageMarketCommand = CreateIntentCommand("前往主页市场", "Would open the launcher homepage market.");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -165,6 +225,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();
+        InitializeJavaSurface();
+        InitializeUiSurface();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
@@ -197,6 +259,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ObservableCollection<SimpleListEntryViewModel> LogEntries { get; } = [];
 
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
+
+    public ObservableCollection<JavaRuntimeEntryViewModel> JavaRuntimeEntries { get; } = [];
+
+    public ObservableCollection<UiFeatureToggleGroupViewModel> UiFeatureToggleGroups { get; } = [];
 
     public string ScenarioLabel { get; }
 
@@ -319,6 +385,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupLauncherMiscSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLauncherMisc;
 
+    public bool IsSetupJavaSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupJava;
+
+    public bool IsSetupUiSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUI;
+
     public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
 
@@ -330,6 +402,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         && !IsSetupGameLinkSurface
         && !IsSetupGameManageSurface
         && !IsSetupLauncherMiscSurface
+        && !IsSetupJavaSurface
+        && !IsSetupUiSurface
         && !IsToolsHelpSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
@@ -756,6 +830,338 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         set => SetProperty(ref _debugDelayEnabled, value);
     }
 
+    public IReadOnlyList<string> DarkModeOptions { get; } =
+    [
+        "浅色",
+        "深色",
+        "跟随系统"
+    ];
+
+    public IReadOnlyList<string> ThemeColorOptions { get; } =
+    [
+        "龙猫蓝",
+        "甜柠青",
+        "小草绿",
+        "菠萝黄",
+        "橡木棕"
+    ];
+
+    public IReadOnlyList<string> BlurTypeOptions { get; } =
+    [
+        "高斯模糊",
+        "方框模糊"
+    ];
+
+    public IReadOnlyList<string> FontOptions { get; } =
+    [
+        "默认字体",
+        "思源黑体",
+        "霞鹜文楷",
+        "JetBrains Mono"
+    ];
+
+    public IReadOnlyList<string> HomepagePresetOptions { get; } =
+    [
+        "你知道吗？",
+        "Minecraft 新闻（作者：最亮的信标）",
+        "简单主页（作者：MFn233）",
+        "每日整合包推荐（作者：wkea）",
+        "Minecraft 皮肤推荐（作者：wkea）",
+        "OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）",
+        "PCL 主页市场（作者：凌云）",
+        "PCL 新闻速报（作者：Joker2184）",
+        "PCL 新功能说明书（作者：WForst-Breeze）",
+        "杂志主页（作者：CreeperIsASpy）",
+        "PCL GitHub 仪表盘（作者：Deep-Dark-Forest）",
+        "Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）",
+        "PCL CE 公告栏",
+        "Minecraft 官方信息流"
+    ];
+
+    public int SelectedDarkModeIndex
+    {
+        get => _selectedDarkModeIndex;
+        set => SetProperty(ref _selectedDarkModeIndex, Math.Clamp(value, 0, DarkModeOptions.Count - 1));
+    }
+
+    public int SelectedLightColorIndex
+    {
+        get => _selectedLightColorIndex;
+        set => SetProperty(ref _selectedLightColorIndex, Math.Clamp(value, 0, ThemeColorOptions.Count - 1));
+    }
+
+    public int SelectedDarkColorIndex
+    {
+        get => _selectedDarkColorIndex;
+        set => SetProperty(ref _selectedDarkColorIndex, Math.Clamp(value, 0, ThemeColorOptions.Count - 1));
+    }
+
+    public double LauncherOpacity
+    {
+        get => _launcherOpacity;
+        set
+        {
+            if (SetProperty(ref _launcherOpacity, value))
+            {
+                RaisePropertyChanged(nameof(LauncherOpacityLabel));
+            }
+        }
+    }
+
+    public string LauncherOpacityLabel => $"{Math.Round(LauncherOpacity / 10)}%";
+
+    public bool ShowLauncherLogoSetting
+    {
+        get => _showLauncherLogo;
+        set => SetProperty(ref _showLauncherLogo, value);
+    }
+
+    public bool LockWindowSizeSetting
+    {
+        get => _lockWindowSize;
+        set => SetProperty(ref _lockWindowSize, value);
+    }
+
+    public bool ShowLaunchingHintSetting
+    {
+        get => _showLaunchingHint;
+        set => SetProperty(ref _showLaunchingHint, value);
+    }
+
+    public bool EnableAdvancedMaterial
+    {
+        get => _enableAdvancedMaterial;
+        set => SetProperty(ref _enableAdvancedMaterial, value);
+    }
+
+    public double BlurRadius
+    {
+        get => _blurRadius;
+        set
+        {
+            if (SetProperty(ref _blurRadius, value))
+            {
+                RaisePropertyChanged(nameof(BlurRadiusLabel));
+            }
+        }
+    }
+
+    public string BlurRadiusLabel => $"{Math.Round(BlurRadius)}";
+
+    public double BlurSamplingRate
+    {
+        get => _blurSamplingRate;
+        set
+        {
+            if (SetProperty(ref _blurSamplingRate, value))
+            {
+                RaisePropertyChanged(nameof(BlurSamplingRateLabel));
+            }
+        }
+    }
+
+    public string BlurSamplingRateLabel => $"{Math.Round(BlurSamplingRate)}%";
+
+    public int SelectedBlurTypeIndex
+    {
+        get => _selectedBlurTypeIndex;
+        set => SetProperty(ref _selectedBlurTypeIndex, Math.Clamp(value, 0, BlurTypeOptions.Count - 1));
+    }
+
+    public int SelectedGlobalFontIndex
+    {
+        get => _selectedGlobalFontIndex;
+        set => SetProperty(ref _selectedGlobalFontIndex, Math.Clamp(value, 0, FontOptions.Count - 1));
+    }
+
+    public int SelectedMotdFontIndex
+    {
+        get => _selectedMotdFontIndex;
+        set => SetProperty(ref _selectedMotdFontIndex, Math.Clamp(value, 0, FontOptions.Count - 1));
+    }
+
+    public bool AutoPauseVideo
+    {
+        get => _autoPauseVideo;
+        set => SetProperty(ref _autoPauseVideo, value);
+    }
+
+    public bool BackgroundColorful
+    {
+        get => _backgroundColorful;
+        set => SetProperty(ref _backgroundColorful, value);
+    }
+
+    public double MusicVolume
+    {
+        get => _musicVolume;
+        set
+        {
+            if (SetProperty(ref _musicVolume, value))
+            {
+                RaisePropertyChanged(nameof(MusicVolumeLabel));
+            }
+        }
+    }
+
+    public string MusicVolumeLabel => $"{Math.Round(MusicVolume / 10)}%";
+
+    public bool MusicRandomPlay
+    {
+        get => _musicRandomPlay;
+        set => SetProperty(ref _musicRandomPlay, value);
+    }
+
+    public bool MusicAutoStart
+    {
+        get => _musicAutoStart;
+        set => SetProperty(ref _musicAutoStart, value);
+    }
+
+    public bool MusicStartOnGameLaunch
+    {
+        get => _musicStartOnGameLaunch;
+        set => SetProperty(ref _musicStartOnGameLaunch, value);
+    }
+
+    public bool MusicStopOnGameLaunch
+    {
+        get => _musicStopOnGameLaunch;
+        set => SetProperty(ref _musicStopOnGameLaunch, value);
+    }
+
+    public bool MusicEnableSmtc
+    {
+        get => _musicEnableSmtc;
+        set => SetProperty(ref _musicEnableSmtc, value);
+    }
+
+    public int SelectedLogoTypeIndex
+    {
+        get => _selectedLogoTypeIndex;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 3);
+            if (SetProperty(ref _selectedLogoTypeIndex, clamped))
+            {
+                RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
+                RaisePropertyChanged(nameof(IsLogoTypeDefaultSelected));
+                RaisePropertyChanged(nameof(IsLogoTypeTextSelected));
+                RaisePropertyChanged(nameof(IsLogoTypeImageSelected));
+                RaisePropertyChanged(nameof(IsLogoLeftVisible));
+                RaisePropertyChanged(nameof(IsLogoTextVisible));
+                RaisePropertyChanged(nameof(IsLogoImageActionsVisible));
+            }
+        }
+    }
+
+    public bool IsLogoTypeNoneSelected
+    {
+        get => SelectedLogoTypeIndex == 0;
+        set { if (value) SelectedLogoTypeIndex = 0; }
+    }
+
+    public bool IsLogoTypeDefaultSelected
+    {
+        get => SelectedLogoTypeIndex == 1;
+        set { if (value) SelectedLogoTypeIndex = 1; }
+    }
+
+    public bool IsLogoTypeTextSelected
+    {
+        get => SelectedLogoTypeIndex == 2;
+        set { if (value) SelectedLogoTypeIndex = 2; }
+    }
+
+    public bool IsLogoTypeImageSelected
+    {
+        get => SelectedLogoTypeIndex == 3;
+        set { if (value) SelectedLogoTypeIndex = 3; }
+    }
+
+    public bool IsLogoLeftVisible => SelectedLogoTypeIndex != 0;
+
+    public bool LogoAlignLeft
+    {
+        get => _logoAlignLeft;
+        set => SetProperty(ref _logoAlignLeft, value);
+    }
+
+    public bool IsLogoTextVisible => SelectedLogoTypeIndex == 2;
+
+    public string LogoTextValue
+    {
+        get => _logoText;
+        set => SetProperty(ref _logoText, value);
+    }
+
+    public bool IsLogoImageActionsVisible => SelectedLogoTypeIndex == 3;
+
+    public int SelectedHomepageTypeIndex
+    {
+        get => _selectedHomepageTypeIndex;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 3);
+            if (SetProperty(ref _selectedHomepageTypeIndex, clamped))
+            {
+                RaisePropertyChanged(nameof(IsHomepageBlankSelected));
+                RaisePropertyChanged(nameof(IsHomepagePresetSelected));
+                RaisePropertyChanged(nameof(IsHomepageLocalSelected));
+                RaisePropertyChanged(nameof(IsHomepageNetSelected));
+                RaisePropertyChanged(nameof(IsHomepageLocalActionsVisible));
+                RaisePropertyChanged(nameof(IsHomepageNetVisible));
+                RaisePropertyChanged(nameof(IsHomepagePresetVisible));
+            }
+        }
+    }
+
+    public bool IsHomepageBlankSelected
+    {
+        get => SelectedHomepageTypeIndex == 0;
+        set { if (value) SelectedHomepageTypeIndex = 0; }
+    }
+
+    public bool IsHomepagePresetSelected
+    {
+        get => SelectedHomepageTypeIndex == 1;
+        set { if (value) SelectedHomepageTypeIndex = 1; }
+    }
+
+    public bool IsHomepageLocalSelected
+    {
+        get => SelectedHomepageTypeIndex == 2;
+        set { if (value) SelectedHomepageTypeIndex = 2; }
+    }
+
+    public bool IsHomepageNetSelected
+    {
+        get => SelectedHomepageTypeIndex == 3;
+        set { if (value) SelectedHomepageTypeIndex = 3; }
+    }
+
+    public bool IsHomepageLocalActionsVisible => SelectedHomepageTypeIndex == 2;
+
+    public bool IsHomepageNetVisible => SelectedHomepageTypeIndex == 3;
+
+    public string HomepageUrl
+    {
+        get => _homepageUrl;
+        set => SetProperty(ref _homepageUrl, value);
+    }
+
+    public bool IsHomepagePresetVisible => SelectedHomepageTypeIndex == 1;
+
+    public int SelectedHomepagePresetIndex
+    {
+        get => _selectedHomepagePresetIndex;
+        set => SetProperty(ref _selectedHomepagePresetIndex, Math.Clamp(value, 0, HomepagePresetOptions.Count - 1));
+    }
+
+    public bool HasJavaRuntimeEntries => JavaRuntimeEntries.Count > 0;
+
+    public bool IsAutoJavaSelected => _selectedJavaRuntimeKey == "auto";
+
     public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
         ? authPlayerName
         : "DemoPlayer";
@@ -883,6 +1289,38 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ActionCommand ImportSettingsCommand => _importSettingsCommand;
 
     public ActionCommand ApplyProxySettingsCommand => _applyProxySettingsCommand;
+
+    public ActionCommand AddJavaRuntimeCommand => _addJavaRuntimeCommand;
+
+    public ActionCommand SelectAutoJavaCommand => _selectAutoJavaCommand;
+
+    public ActionCommand ResetUiSettingsCommand => _resetUiSettingsCommand;
+
+    public ActionCommand OpenSnapshotBuildCommand => _openSnapshotBuildCommand;
+
+    public ActionCommand BackgroundOpenFolderCommand => _backgroundOpenFolderCommand;
+
+    public ActionCommand BackgroundRefreshCommand => _backgroundRefreshCommand;
+
+    public ActionCommand BackgroundClearCommand => _backgroundClearCommand;
+
+    public ActionCommand MusicOpenFolderCommand => _musicOpenFolderCommand;
+
+    public ActionCommand MusicRefreshCommand => _musicRefreshCommand;
+
+    public ActionCommand MusicClearCommand => _musicClearCommand;
+
+    public ActionCommand ChangeLogoImageCommand => _changeLogoImageCommand;
+
+    public ActionCommand DeleteLogoImageCommand => _deleteLogoImageCommand;
+
+    public ActionCommand RefreshHomepageCommand => _refreshHomepageCommand;
+
+    public ActionCommand GenerateHomepageTutorialFileCommand => _generateHomepageTutorialFileCommand;
+
+    public ActionCommand ViewHomepageTutorialCommand => _viewHomepageTutorialCommand;
+
+    public ActionCommand OpenHomepageMarketCommand => _openHomepageMarketCommand;
 
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
@@ -1260,6 +1698,116 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _debugDelayEnabled = false;
     }
 
+    private void InitializeJavaSurface()
+    {
+        _selectedJavaRuntimeKey = "auto";
+        ReplaceItems(JavaRuntimeEntries,
+        [
+            CreateJavaRuntimeEntry(
+                "temurin-17",
+                "JDK 17",
+                "/Users/demo/.pcl/java/temurin-17/Contents/Home",
+                ["64 Bit", "Temurin"],
+                isEnabled: true),
+            CreateJavaRuntimeEntry(
+                "zulu-21",
+                "JDK 21",
+                "/Users/demo/.pcl/java/zulu-21/Contents/Home",
+                ["64 Bit", "Zulu"],
+                isEnabled: true),
+            CreateJavaRuntimeEntry(
+                "graalvm-8",
+                "JRE 8",
+                "/Users/demo/.pcl/java/graalvm-8/Contents/Home",
+                ["64 Bit", "GraalVM"],
+                isEnabled: false)
+        ]);
+        SyncJavaSelection();
+    }
+
+    private void InitializeUiSurface()
+    {
+        _selectedDarkModeIndex = 2;
+        _selectedLightColorIndex = 0;
+        _selectedDarkColorIndex = 1;
+        _launcherOpacity = 360;
+        _showLauncherLogo = true;
+        _lockWindowSize = false;
+        _showLaunchingHint = true;
+        _enableAdvancedMaterial = false;
+        _blurRadius = 14;
+        _blurSamplingRate = 65;
+        _selectedBlurTypeIndex = 0;
+        _selectedGlobalFontIndex = 0;
+        _selectedMotdFontIndex = 1;
+        _autoPauseVideo = true;
+        _backgroundColorful = true;
+        _musicVolume = 680;
+        _musicRandomPlay = true;
+        _musicAutoStart = false;
+        _musicStartOnGameLaunch = true;
+        _musicStopOnGameLaunch = false;
+        _musicEnableSmtc = true;
+        _selectedLogoTypeIndex = 1;
+        _logoAlignLeft = true;
+        _logoText = "Point Cloud Library";
+        _selectedHomepageTypeIndex = 1;
+        _homepageUrl = "https://example.invalid/homepage.json";
+        _selectedHomepagePresetIndex = Math.Min(12, HomepagePresetOptions.Count - 1);
+
+        ReplaceItems(UiFeatureToggleGroups,
+        [
+            new UiFeatureToggleGroupViewModel(
+                "主页面",
+                [
+                    new UiFeatureToggleItemViewModel("下载", false),
+                    new UiFeatureToggleItemViewModel("设置", false),
+                    new UiFeatureToggleItemViewModel("工具", false)
+                ]),
+            new UiFeatureToggleGroupViewModel(
+                "子页面 设置",
+                [
+                    new UiFeatureToggleItemViewModel("启动", false),
+                    new UiFeatureToggleItemViewModel("Java", false),
+                    new UiFeatureToggleItemViewModel("管理", false),
+                    new UiFeatureToggleItemViewModel("联机", false),
+                    new UiFeatureToggleItemViewModel("个性化", false),
+                    new UiFeatureToggleItemViewModel("杂项", false),
+                    new UiFeatureToggleItemViewModel("软件更新", false),
+                    new UiFeatureToggleItemViewModel("关于", false),
+                    new UiFeatureToggleItemViewModel("反馈", false),
+                    new UiFeatureToggleItemViewModel("查看日志", false)
+                ]),
+            new UiFeatureToggleGroupViewModel(
+                "子页面 工具",
+                [
+                    new UiFeatureToggleItemViewModel("联机", false),
+                    new UiFeatureToggleItemViewModel("百宝箱", false),
+                    new UiFeatureToggleItemViewModel("帮助", false)
+                ]),
+            new UiFeatureToggleGroupViewModel(
+                "子页面 实例设置",
+                [
+                    new UiFeatureToggleItemViewModel("修改", false),
+                    new UiFeatureToggleItemViewModel("导出", false),
+                    new UiFeatureToggleItemViewModel("存档", false),
+                    new UiFeatureToggleItemViewModel("截图", false),
+                    new UiFeatureToggleItemViewModel("Mod", false),
+                    new UiFeatureToggleItemViewModel("资源包", false),
+                    new UiFeatureToggleItemViewModel("光影包", false),
+                    new UiFeatureToggleItemViewModel("投影原理图", false),
+                    new UiFeatureToggleItemViewModel("服务器", false)
+                ]),
+            new UiFeatureToggleGroupViewModel(
+                "特定功能",
+                [
+                    new UiFeatureToggleItemViewModel("实例管理", false),
+                    new UiFeatureToggleItemViewModel("Mod 更新", false),
+                    new UiFeatureToggleItemViewModel("功能隐藏", false)
+                ])
+        ]);
+    }
+
     private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()
     {
         return
@@ -1419,6 +1967,18 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             return;
         }
 
+        if (IsSetupJavaSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            RefreshJavaSurface();
+            return;
+        }
+
+        if (IsSetupUiSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetUiSurface();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -1525,6 +2085,133 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         AddActivity("重置启动器杂项设置", "系统、网络和调试选项已恢复到默认演示值。");
     }
 
+    private void RefreshJavaSurface()
+    {
+        InitializeJavaSurface();
+        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
+        RaisePropertyChanged(nameof(IsAutoJavaSelected));
+        AddActivity("刷新 Java 列表", "Java 列表已恢复到可移植前端的默认演示数据。");
+    }
+
+    private void AddJavaRuntime()
+    {
+        var newIndex = JavaRuntimeEntries.Count + 1;
+        JavaRuntimeEntries.Add(CreateJavaRuntimeEntry(
+            $"custom-{newIndex}",
+            $"JDK {17 + newIndex}",
+            $"/Users/demo/.pcl/java/custom-{newIndex}/Contents/Home",
+            ["64 Bit", "Custom"],
+            isEnabled: true));
+        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
+        AddActivity("添加 Java", $"已向演示列表追加自定义 Java #{newIndex}。");
+    }
+
+    private JavaRuntimeEntryViewModel CreateJavaRuntimeEntry(
+        string key,
+        string title,
+        string folder,
+        IReadOnlyList<string> tags,
+        bool isEnabled)
+    {
+        return new JavaRuntimeEntryViewModel(
+            key,
+            title,
+            folder,
+            tags,
+            isEnabled,
+            new ActionCommand(() => SelectJavaRuntime(key)),
+            CreateIntentCommand($"打开 Java 文件夹: {title}", folder),
+            CreateIntentCommand($"查看 Java 详情: {title}", $"{title} • {folder} • {string.Join(" / ", tags)}"),
+            new ActionCommand(() => ToggleJavaEnabled(key)));
+    }
+
+    private void SelectJavaRuntime(string key)
+    {
+        _selectedJavaRuntimeKey = key;
+        SyncJavaSelection();
+        RaisePropertyChanged(nameof(IsAutoJavaSelected));
+        AddActivity("切换默认 Java", key == "auto" ? "自动选择" : key);
+    }
+
+    private void ToggleJavaEnabled(string key)
+    {
+        var entry = JavaRuntimeEntries.FirstOrDefault(item => item.Key == key);
+        if (entry is null)
+        {
+            return;
+        }
+
+        if (_selectedJavaRuntimeKey == key && entry.IsEnabled)
+        {
+            AddActivity("Java 禁用被阻止", "请先取消默认选择后再禁用当前 Java。");
+            return;
+        }
+
+        entry.IsEnabled = !entry.IsEnabled;
+        AddActivity(
+            entry.IsEnabled ? "启用 Java" : "禁用 Java",
+            $"{entry.Title} • {(entry.IsEnabled ? "已启用" : "已禁用")}");
+    }
+
+    private void SyncJavaSelection()
+    {
+        foreach (var entry in JavaRuntimeEntries)
+        {
+            entry.IsSelected = _selectedJavaRuntimeKey == entry.Key;
+        }
+    }
+
+    private void ResetUiSurface()
+    {
+        InitializeUiSurface();
+        RaisePropertyChanged(nameof(SelectedDarkModeIndex));
+        RaisePropertyChanged(nameof(SelectedLightColorIndex));
+        RaisePropertyChanged(nameof(SelectedDarkColorIndex));
+        RaisePropertyChanged(nameof(LauncherOpacity));
+        RaisePropertyChanged(nameof(LauncherOpacityLabel));
+        RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
+        RaisePropertyChanged(nameof(LockWindowSizeSetting));
+        RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
+        RaisePropertyChanged(nameof(EnableAdvancedMaterial));
+        RaisePropertyChanged(nameof(BlurRadius));
+        RaisePropertyChanged(nameof(BlurRadiusLabel));
+        RaisePropertyChanged(nameof(BlurSamplingRate));
+        RaisePropertyChanged(nameof(BlurSamplingRateLabel));
+        RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
+        RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
+        RaisePropertyChanged(nameof(SelectedMotdFontIndex));
+        RaisePropertyChanged(nameof(AutoPauseVideo));
+        RaisePropertyChanged(nameof(BackgroundColorful));
+        RaisePropertyChanged(nameof(MusicVolume));
+        RaisePropertyChanged(nameof(MusicVolumeLabel));
+        RaisePropertyChanged(nameof(MusicRandomPlay));
+        RaisePropertyChanged(nameof(MusicAutoStart));
+        RaisePropertyChanged(nameof(MusicStartOnGameLaunch));
+        RaisePropertyChanged(nameof(MusicStopOnGameLaunch));
+        RaisePropertyChanged(nameof(MusicEnableSmtc));
+        RaisePropertyChanged(nameof(SelectedLogoTypeIndex));
+        RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
+        RaisePropertyChanged(nameof(IsLogoTypeDefaultSelected));
+        RaisePropertyChanged(nameof(IsLogoTypeTextSelected));
+        RaisePropertyChanged(nameof(IsLogoTypeImageSelected));
+        RaisePropertyChanged(nameof(IsLogoLeftVisible));
+        RaisePropertyChanged(nameof(LogoAlignLeft));
+        RaisePropertyChanged(nameof(IsLogoTextVisible));
+        RaisePropertyChanged(nameof(LogoTextValue));
+        RaisePropertyChanged(nameof(IsLogoImageActionsVisible));
+        RaisePropertyChanged(nameof(SelectedHomepageTypeIndex));
+        RaisePropertyChanged(nameof(IsHomepageBlankSelected));
+        RaisePropertyChanged(nameof(IsHomepagePresetSelected));
+        RaisePropertyChanged(nameof(IsHomepageLocalSelected));
+        RaisePropertyChanged(nameof(IsHomepageNetSelected));
+        RaisePropertyChanged(nameof(IsHomepageLocalActionsVisible));
+        RaisePropertyChanged(nameof(IsHomepageNetVisible));
+        RaisePropertyChanged(nameof(HomepageUrl));
+        RaisePropertyChanged(nameof(IsHomepagePresetVisible));
+        RaisePropertyChanged(nameof(SelectedHomepagePresetIndex));
+        AddActivity("重置界面设置", "个性化界面页已恢复到默认演示值。");
+    }
+
     private void SetPromptOverlayOpen(bool isOpen)
     {
         if (_isPromptOverlayOpen == isOpen)
@@ -1548,6 +2235,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupGameLinkSurface));
         RaisePropertyChanged(nameof(IsSetupGameManageSurface));
         RaisePropertyChanged(nameof(IsSetupLauncherMiscSurface));
+        RaisePropertyChanged(nameof(IsSetupJavaSurface));
+        RaisePropertyChanged(nameof(IsSetupUiSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
@@ -1574,6 +2263,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(HasFeedbackSections));
         RaisePropertyChanged(nameof(HasHelpTopicGroups));
         RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
+        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
     }
 
     private void RaiseUpdateSurfaceProperties()
@@ -2197,6 +2887,83 @@ internal sealed class HelpTopicViewModel(
     public string Summary { get; } = summary;
 
     public ActionCommand Command { get; } = command;
+}
+
+internal sealed class JavaRuntimeEntryViewModel(
+    string key,
+    string title,
+    string info,
+    IReadOnlyList<string> tags,
+    bool isEnabled,
+    ActionCommand selectCommand,
+    ActionCommand openCommand,
+    ActionCommand infoCommand,
+    ActionCommand toggleEnabledCommand) : ViewModelBase
+{
+    private bool _isSelected;
+    private bool _isEnabled = isEnabled;
+
+    public string Key { get; } = key;
+
+    public string Title { get; } = title;
+
+    public string Info { get; } = info;
+
+    public IReadOnlyList<string> Tags { get; } = tags;
+
+    public ActionCommand SelectCommand { get; } = selectCommand;
+
+    public ActionCommand OpenCommand { get; } = openCommand;
+
+    public ActionCommand InfoCommand { get; } = infoCommand;
+
+    public ActionCommand ToggleEnabledCommand { get; } = toggleEnabledCommand;
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+
+    public bool IsEnabled
+    {
+        get => _isEnabled;
+        set
+        {
+            if (SetProperty(ref _isEnabled, value))
+            {
+                RaisePropertyChanged(nameof(ToggleButtonText));
+                RaisePropertyChanged(nameof(TitleOpacity));
+                RaisePropertyChanged(nameof(TitleForeground));
+            }
+        }
+    }
+
+    public string ToggleButtonText => IsEnabled ? "禁用" : "启用";
+
+    public double TitleOpacity => IsEnabled ? 1.0 : 0.48;
+
+    public IBrush TitleForeground => IsEnabled ? Brush.Parse("#343D4A") : Brush.Parse("#7D8897");
+}
+
+internal sealed class UiFeatureToggleGroupViewModel(string title, IReadOnlyList<UiFeatureToggleItemViewModel> items)
+{
+    public string Title { get; } = title;
+
+    public IReadOnlyList<UiFeatureToggleItemViewModel> Items { get; } = items;
+}
+
+internal sealed class UiFeatureToggleItemViewModel(string title, bool isChecked) : ViewModelBase
+{
+    private bool _isChecked = isChecked;
+
+    public string Title { get; } = title;
+
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set => SetProperty(ref _isChecked, value);
+    }
 }
 
 internal sealed class HelpTopicGroupViewModel(string title, IReadOnlyList<HelpTopicViewModel> items)

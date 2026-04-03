@@ -146,8 +146,10 @@ public static class LauncherFrontendPageContentService
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameManage => BuildSetupGameManageContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameLink => BuildSetupGameLinkContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupJava => BuildSetupJavaContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLauncherMisc => BuildSetupLauncherMiscContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupUI => BuildSetupUiContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupUpdate => BuildSetupUpdateContent(request, promptTotal),
             _ => BuildGenericSetupContent(request, promptTotal)
         };
@@ -409,6 +411,49 @@ public static class LauncherFrontendPageContentService
             ]);
     }
 
+    private static LauncherFrontendPageContent BuildSetupJavaContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        var launch = request.Launch;
+
+        return new LauncherFrontendPageContent(
+            "Java 页面",
+            "Java 列表已经可以按原版的添加入口加运行时列表结构进入新前端，而不是停留在设置摘要卡片。",
+            [
+                new LauncherFrontendPageFact("当前分区", "Java"),
+                new LauncherFrontendPageFact("Recommended runtime", launch?.JavaRuntimeLabel ?? "No Java summary"),
+                new LauncherFrontendPageFact("Download target", launch?.JavaDownloadTarget ?? "No download target"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "列表",
+                    "Java 选择",
+                    [
+                        "保留了顶部添加按钮、自动选择条目和运行时列表这三个关键层级。",
+                        "每个 Java 项继续保留路径、副标签以及打开 / 详情 / 启用状态切换入口。",
+                        "这一页更接近原版的工具型列表，而不是新的通用设置表单。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "前端该做什么",
+                    [
+                        "前端只负责展示 Java 运行时清单和收集选择意图。",
+                        "真实扫描、启用状态持久化和 Java 工作流策略仍然属于后端或运行时适配层。",
+                        "刷新列表动作在 Spike 中仍然只是演示用的壳层行为。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "迁移",
+                    "为什么现在做这页",
+                    [
+                        "它能验证列表型设置页、按钮条和更细的行内操作布局。",
+                        "也让设置页不再只有卡片式表单，还覆盖了实例化资源列表这类常见页面。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
     private static LauncherFrontendPageContent BuildSetupLauncherMiscContent(
         LauncherFrontendPageContentRequest request,
         int promptTotal)
@@ -445,6 +490,47 @@ public static class LauncherFrontendPageContentService
                     [
                         "调试选项继续以默认折叠的卡片出现，保留动画速度和三个复选框。",
                         "这也让新前端继续验证折叠卡片和更密集表单的组合方式。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupUiContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "界面页面",
+            "个性化界面页已经切换为更接近原版 PageSetupUI 的多卡片设置结构，而不是通用迁移摘要。",
+            [
+                new LauncherFrontendPageFact("当前分区", "界面"),
+                new LauncherFrontendPageFact("卡片分组", "基础 / 字体 / 背景 / 标题栏 / 主页 / 功能隐藏"),
+                new LauncherFrontendPageFact("主要控件", "滑块、单选框、复选框、组合框"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "基础",
+                    "主题与高级材质",
+                    [
+                        "保留了不透明度、主题组合框、基础复选项和高级材质区域的主要结构。",
+                        "顶部快照版提示也继续保留为独立提示块，而不是被吞进普通说明文字。",
+                        "这页是当前设置分组中最密集的页面之一，适合持续检验控件复用。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "扩展",
+                    "字体、背景、标题栏与主页",
+                    [
+                        "字体、背景内容、背景音乐、标题栏和主页都继续按原版拆成独立卡片。",
+                        "标题栏与主页仍然保留单选模式切换以及对应的条件区域。",
+                        "按钮文案和分组顺序尽量贴近旧版，而不是重新命名为更抽象的通用配置项。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "隐藏",
+                    "功能隐藏",
+                    [
+                        "功能隐藏页块继续保留主页面、设置子页、工具子页、实例设置和特定功能这些分组。",
+                        "未来如果要接真实配置值，应直接通过前端合同注入而不是重建旧页面事件流。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);
