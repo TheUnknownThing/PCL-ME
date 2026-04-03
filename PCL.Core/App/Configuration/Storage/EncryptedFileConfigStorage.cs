@@ -3,8 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PCL.Core.App;
 using PCL.Core.Logging;
-using PCL.Core.Utils.Secret;
 
 namespace PCL.Core.App.Configuration.Storage;
 
@@ -16,8 +16,8 @@ public class EncryptedFileConfigStorage : ConfigStorage
         Func<string?, string>? unprotect = null)
     {
         Source = source;
-        Protect = protect ?? EncryptHelper.SecretEncrypt;
-        Unprotect = unprotect ?? EncryptHelper.SecretDecrypt;
+        Protect = protect ?? SecretDataProtection.Protect;
+        Unprotect = unprotect ?? SecretDataProtection.Unprotect;
     }
 
     public ConfigStorage Source { get; }

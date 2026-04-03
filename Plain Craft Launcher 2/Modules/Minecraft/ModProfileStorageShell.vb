@@ -1,12 +1,12 @@
+Imports PCL.Core.App
 Imports PCL.Core.Minecraft.Launch
-Imports PCL.Core.Utils.Secret
 
 Public Module ModProfileStorageShell
 
     Public Function ReadProfilesDocument(json As String) As MinecraftLaunchProfileDocument
         Return MinecraftLaunchProfileStorageService.ParseDocument(
             json,
-            Function(value) EncryptHelper.SecretDecrypt(value))
+            Function(value) SecretDataProtection.Unprotect(value))
     End Function
 
     Public Function WriteProfilesDocument(lastUsedProfile As Integer, profileList As IEnumerable(Of McProfile)) As String
@@ -15,7 +15,7 @@ Public Module ModProfileStorageShell
             profileList.Select(AddressOf ConvertToPersistedProfile).ToList())
         Return MinecraftLaunchProfileStorageService.SerializeDocument(
             document,
-            Function(value) EncryptHelper.SecretEncrypt(value))
+            Function(value) SecretDataProtection.Protect(value))
     End Function
 
     Public Function CreateProfileFromPersisted(profile As MinecraftLaunchPersistedProfile) As McProfile

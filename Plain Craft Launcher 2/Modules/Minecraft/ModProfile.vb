@@ -4,7 +4,6 @@ Imports System.Security.Cryptography
 Imports System.Text.Json
 Imports PCL.Core.IO.Net
 Imports PCL.Core.Utils
-Imports PCL.Core.Utils.Secret
 
 Public Module ModProfile
 
