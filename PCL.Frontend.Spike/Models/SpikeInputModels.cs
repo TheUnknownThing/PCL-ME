@@ -8,6 +8,10 @@ internal sealed record StartupSpikeInputs(
     LauncherStartupWorkflowRequest StartupWorkflowRequest,
     LauncherStartupConsentRequest StartupConsentRequest);
 
+internal sealed record ShellSpikeInputs(
+    StartupSpikeInputs StartupInputs,
+    LauncherFrontendNavigationViewRequest NavigationRequest);
+
 internal sealed record LaunchSpikeInputs(
     string Scenario,
     LaunchLoginSpikeInputs LoginInputs,

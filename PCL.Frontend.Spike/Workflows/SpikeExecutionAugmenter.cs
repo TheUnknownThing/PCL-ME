@@ -13,6 +13,15 @@ internal static class SpikeExecutionAugmenter
         };
     }
 
+    public static ShellSpikeExecution AddInputArtifact(ShellSpikeExecution execution, SpikeExecutionArtifact artifact)
+    {
+        return execution with
+        {
+            Execution = AddArtifact(execution.Execution, artifact),
+            Transcript = AddArtifactSection(execution.Transcript, artifact)
+        };
+    }
+
     public static LaunchSpikeExecution AddInputArtifact(LaunchSpikeExecution execution, SpikeExecutionArtifact artifact)
     {
         return execution with

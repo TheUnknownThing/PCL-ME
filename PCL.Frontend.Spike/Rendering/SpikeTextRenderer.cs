@@ -11,14 +11,17 @@ internal static class SpikeTextRenderer
     {
         return payload switch
         {
+            LauncherFrontendShellPlan shellPlan => RenderShellPlan(shellPlan),
             StartupSpikePlan startupPlan => RenderStartupPlan(startupPlan),
             LaunchSpikePlan launchPlan => RenderLaunchPlan(launchPlan),
             CrashSpikePlan crashPlan => RenderCrashPlan(crashPlan),
             SpikePlanBundle bundle => RenderPlanBundle(bundle),
+            ShellSpikeRun shellRun => RenderTranscript(shellRun.Transcript),
             StartupSpikeRun startupRun => RenderTranscript(startupRun.Transcript),
             LaunchSpikeRun launchRun => RenderTranscript(launchRun.Transcript),
             CrashSpikeRun crashRun => RenderTranscript(crashRun.Transcript),
             SpikeRunBundle runBundle => RenderRunBundle(runBundle),
+            ShellSpikeExecution shellExecution => RenderTranscript(shellExecution.Transcript),
             StartupSpikeExecution startupExecution => RenderTranscript(startupExecution.Transcript),
             LaunchSpikeExecution launchExecution => RenderTranscript(launchExecution.Transcript),
             CrashSpikeExecution crashExecution => RenderTranscript(crashExecution.Transcript),
@@ -36,6 +39,53 @@ internal static class SpikeTextRenderer
         builder.AppendLine();
         builder.Append(RenderCrashPlan(bundle.Crash));
         return builder.ToString();
+    }
+
+    private static string RenderShellPlan(LauncherFrontendShellPlan plan)
+    {
+        var sidebarLines = plan.Navigation.SidebarEntries.Count == 0
+            ? ["Current route has no sidebar entries."]
+            : plan.Navigation.SidebarEntries.Select(entry =>
+                $"{(entry.IsSelected ? "*" : "-")} {entry.Title}: {entry.Summary}").ToArray();
+        var utilityLines = plan.Navigation.UtilityEntries
+            .Where(entry => entry.IsVisible)
+            .Select(entry => $"{(entry.IsSelected ? "*" : "-")} {entry.Title}")
+            .ToArray();
+
+        return RenderTranscript(new SpikeTranscript(
+            "Frontend Shell Plan",
+            [
+                new SpikeTranscriptSection(
+                    "Startup",
+                    [
+                        $"Splash screen: {plan.StartupPlan.Visual.ShouldShowSplashScreen}",
+                        $"Immediate command: {plan.StartupPlan.ImmediateCommand.Kind}",
+                        $"Consent prompts: {plan.Consent.Prompts.Count}"
+                    ]),
+                new SpikeTranscriptSection(
+                    "Current Surface",
+                    [
+                        $"Page: {plan.Navigation.CurrentRoute.Page}",
+                        $"Subpage: {plan.Navigation.CurrentRoute.Subpage}",
+                        $"Title: {plan.Navigation.CurrentPageTitle}",
+                        $"Shows back button: {plan.Navigation.ShowsBackButton}"
+                    ]),
+                new SpikeTranscriptSection(
+                    "Top Navigation",
+                    plan.Navigation.TopLevelEntries.Select(entry =>
+                        $"{(entry.IsSelected ? "*" : "-")} {entry.Title}: {entry.Summary}").ToArray()),
+                new SpikeTranscriptSection("Sidebar", sidebarLines),
+                new SpikeTranscriptSection(
+                    "Utility Surfaces",
+                    utilityLines.Length == 0 ? ["No utility surfaces are visible."] : utilityLines),
+                new SpikeTranscriptSection(
+                    "Catalog Coverage",
+                    [
+                        $"Top-level pages: {plan.Catalog.TopLevelPages.Count}",
+                        $"Sidebar groups: {plan.Catalog.SidebarGroups.Count}",
+                        $"Secondary pages: {plan.Catalog.SecondaryPages.Count}"
+                    ])
+            ]));
     }
 
     private static string RenderRunBundle(SpikeRunBundle bundle)

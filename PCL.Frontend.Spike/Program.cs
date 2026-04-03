@@ -46,6 +46,7 @@ static object BuildPayload(SpikeCommandOptions options)
 
 static object BuildPlanPayload(SpikeCommandOptions options)
 {
+    var shellInputs = ResolveShellInputs(options);
     var startupInputs = ResolveStartupInputs(options);
     var launchInputs = ResolveLaunchInputs(options);
     var crashInputs = ResolveCrashInputs(options);
@@ -53,6 +54,7 @@ static object BuildPlanPayload(SpikeCommandOptions options)
     return options.Command switch
     {
         SpikeCommandKind.Startup => SpikeSampleFactory.BuildStartupPlan(startupInputs),
+        SpikeCommandKind.Shell => SpikeSampleFactory.BuildShellPlan(shellInputs),
         SpikeCommandKind.Launch => SpikeSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
         SpikeCommandKind.Crash => SpikeSampleFactory.BuildCrashPlan(crashInputs),
         SpikeCommandKind.All => new SpikePlanBundle(
@@ -65,6 +67,7 @@ static object BuildPlanPayload(SpikeCommandOptions options)
 
 static object BuildRunPayload(SpikeCommandOptions options)
 {
+    var shellInputs = ResolveShellInputs(options);
     var startupInputs = ResolveStartupInputs(options);
     var launchInputs = ResolveLaunchInputs(options);
     var crashInputs = ResolveCrashInputs(options);
@@ -72,6 +75,7 @@ static object BuildRunPayload(SpikeCommandOptions options)
     return options.Command switch
     {
         SpikeCommandKind.Startup => SpikeRunner.BuildStartupRun(SpikeSampleFactory.BuildStartupPlan(startupInputs)),
+        SpikeCommandKind.Shell => SpikeRunner.BuildShellRun(SpikeSampleFactory.BuildShellPlan(shellInputs)),
         SpikeCommandKind.Launch => SpikeRunner.BuildLaunchRun(
             SpikeSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
             options.JavaPromptDecision,
@@ -93,6 +97,7 @@ static object BuildRunPayload(SpikeCommandOptions options)
 static object BuildExecutePayload(SpikeCommandOptions options)
 {
     var workspaceRoot = ResolveWorkspaceRoot(options.WorkspaceRoot);
+    var shellInputs = ResolveShellInputs(options);
     var startupInputs = ResolveStartupInputs(options);
     var launchInputs = ResolveLaunchInputs(options);
     var crashInputs = ResolveCrashInputs(options);
@@ -100,6 +105,7 @@ static object BuildExecutePayload(SpikeCommandOptions options)
     return options.Command switch
     {
         SpikeCommandKind.Startup => CreateStartupExecution(startupInputs, workspaceRoot),
+        SpikeCommandKind.Shell => CreateShellExecution(shellInputs, workspaceRoot),
         SpikeCommandKind.Launch => CreateLaunchExecution(
             launchInputs,
             workspaceRoot,
@@ -145,6 +151,14 @@ static StartupSpikeInputs ResolveStartupInputs(SpikeCommandOptions options)
                : SpikeSampleFactory.CreateDefaultStartupInputs());
 }
 
+static ShellSpikeInputs ResolveShellInputs(SpikeCommandOptions options)
+{
+    return SpikeInputStore.LoadShellInputs(options.InputRoot) ??
+           (options.UseHostEnvironment
+               ? SpikeHostInputFactory.CreateShellInputs()
+               : SpikeSampleFactory.CreateDefaultShellInputs());
+}
+
 static LaunchSpikeInputs ResolveLaunchInputs(SpikeCommandOptions options)
 {
     return SpikeInputStore.LoadLaunchInputs(options.InputRoot) ??
@@ -167,6 +181,15 @@ static StartupSpikeExecution CreateStartupExecution(StartupSpikeInputs inputs, s
         SpikeSampleFactory.BuildStartupPlan(inputs),
         workspaceRoot);
     var inputArtifact = SpikeInputStore.SaveStartupInputs(execution.Execution.WorkspaceRoot, inputs);
+    return SpikeExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+}
+
+static ShellSpikeExecution CreateShellExecution(ShellSpikeInputs inputs, string workspaceRoot)
+{
+    var execution = SpikeExecutor.ExecuteShell(
+        SpikeSampleFactory.BuildShellPlan(inputs),
+        workspaceRoot);
+    var inputArtifact = SpikeInputStore.SaveShellInputs(execution.Execution.WorkspaceRoot, inputs);
     return SpikeExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
 }
 

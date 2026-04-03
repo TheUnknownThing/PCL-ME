@@ -6,6 +6,9 @@ namespace PCL.Frontend.Spike.Models;
 internal sealed record StartupSpikeRun(
     SpikeTranscript Transcript);
 
+internal sealed record ShellSpikeRun(
+    SpikeTranscript Transcript);
+
 internal sealed record LaunchSpikeRun(
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
     SpikeTranscript Transcript);
@@ -39,6 +42,10 @@ internal sealed record SpikeExecutionSummary(
     IReadOnlyList<SpikeExecutionArtifact> Artifacts);
 
 internal sealed record StartupSpikeExecution(
+    SpikeExecutionSummary Execution,
+    SpikeTranscript Transcript);
+
+internal sealed record ShellSpikeExecution(
     SpikeExecutionSummary Execution,
     SpikeTranscript Transcript);
 

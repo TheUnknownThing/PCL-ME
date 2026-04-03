@@ -11,6 +11,11 @@ internal static class SpikeInputStore
         return LoadJson<StartupSpikeInputs>(ResolveInputPath(inputRoot, "startup.json"));
     }
 
+    public static ShellSpikeInputs? LoadShellInputs(string? inputRoot)
+    {
+        return LoadJson<ShellSpikeInputs>(ResolveInputPath(inputRoot, "shell.json"));
+    }
+
     public static LaunchSpikeInputs? LoadLaunchInputs(string? inputRoot)
     {
         return LoadJson<LaunchSpikeInputs>(ResolveInputPath(inputRoot, "launch.json"));
@@ -24,6 +29,11 @@ internal static class SpikeInputStore
     public static SpikeExecutionArtifact SaveStartupInputs(string workspaceRoot, StartupSpikeInputs inputs)
     {
         return SaveJson(Path.Combine(workspaceRoot, "_inputs", "startup.json"), inputs, "Startup inputs");
+    }
+
+    public static SpikeExecutionArtifact SaveShellInputs(string workspaceRoot, ShellSpikeInputs inputs)
+    {
+        return SaveJson(Path.Combine(workspaceRoot, "_inputs", "shell.json"), inputs, "Shell inputs");
     }
 
     public static SpikeExecutionArtifact SaveLaunchInputs(string workspaceRoot, LaunchSpikeInputs inputs)

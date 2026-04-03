@@ -151,6 +151,7 @@ PCL.Frontend.Spike
 
 Usage:
   startup [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
+  shell [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
   launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--java-download-state finished|failed|aborted] [--save-batch path] [--workspace path] [--input-root path]
   crash [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
   all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--java-download-state finished|failed|aborted] [--save-batch path] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
@@ -192,6 +193,9 @@ Defaults:
                 return true;
             case "all":
                 command = SpikeCommandKind.All;
+                return true;
+            case "shell":
+                command = SpikeCommandKind.Shell;
                 return true;
             default:
                 command = default;

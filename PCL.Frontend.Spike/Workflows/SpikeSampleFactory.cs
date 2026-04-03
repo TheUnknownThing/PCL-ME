@@ -42,6 +42,24 @@ internal static class SpikeSampleFactory
         return BuildStartupPlan(CreateDefaultStartupInputs());
     }
 
+    public static ShellSpikeInputs CreateDefaultShellInputs()
+    {
+        return new ShellSpikeInputs(
+            CreateDefaultStartupInputs(),
+            new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                HasRunningTasks: true,
+                HasGameLogs: true));
+    }
+
+    public static LauncherFrontendShellPlan BuildShellPlan(ShellSpikeInputs inputs)
+    {
+        return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
+            inputs.StartupInputs.StartupWorkflowRequest,
+            inputs.StartupInputs.StartupConsentRequest,
+            inputs.NavigationRequest));
+    }
+
     public static LaunchSpikeInputs CreateDefaultLaunchInputs(string scenario)
     {
         return new LaunchSpikeInputs(

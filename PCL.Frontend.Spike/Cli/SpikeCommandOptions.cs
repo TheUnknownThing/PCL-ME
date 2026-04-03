@@ -27,7 +27,8 @@ internal enum SpikeCommandKind
     Startup = 0,
     Launch = 1,
     Crash = 2,
-    All = 3
+    All = 3,
+    Shell = 4
 }
 
 internal enum SpikeOutputMode

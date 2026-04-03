@@ -8,6 +8,41 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class SpikeRunner
 {
+    public static ShellSpikeRun BuildShellRun(LauncherFrontendShellPlan plan)
+    {
+        var sidebarLines = plan.Navigation.SidebarEntries.Count == 0
+            ? ["Current route has no sidebar entries."]
+            : plan.Navigation.SidebarEntries.Select(entry =>
+                $"{(entry.IsSelected ? "selected" : "available")} {entry.Title}: {entry.Summary}").ToArray();
+        var utilityLines = plan.Navigation.UtilityEntries
+            .Where(entry => entry.IsVisible)
+            .Select(entry => $"{(entry.IsSelected ? "active" : "available")} {entry.Title}")
+            .ToArray();
+
+        return new ShellSpikeRun(new SpikeTranscript(
+            "Frontend Shell Transcript",
+            [
+                new SpikeTranscriptSection("Startup Bootstrap", BuildBootstrapLines(plan.StartupPlan)),
+                new SpikeTranscriptSection("Startup Prompts", BuildConsentLines(plan.Consent)),
+                new SpikeTranscriptSection(
+                    "Current Surface",
+                    [
+                        $"Page: {plan.Navigation.CurrentRoute.Page}",
+                        $"Subpage: {plan.Navigation.CurrentRoute.Subpage}",
+                        $"Title: {plan.Navigation.CurrentPageTitle}",
+                        $"Back button: {plan.Navigation.ShowsBackButton}"
+                    ]),
+                new SpikeTranscriptSection(
+                    "Top Navigation",
+                    plan.Navigation.TopLevelEntries.Select(entry =>
+                        $"{(entry.IsSelected ? "selected" : "available")} {entry.Title}").ToArray()),
+                new SpikeTranscriptSection("Sidebar", sidebarLines),
+                new SpikeTranscriptSection(
+                    "Utility Surfaces",
+                    utilityLines.Length == 0 ? ["No utility surfaces are visible."] : utilityLines)
+            ]));
+    }
+
     public static StartupSpikeRun BuildStartupRun(StartupSpikePlan plan)
     {
         var sections = new List<SpikeTranscriptSection>

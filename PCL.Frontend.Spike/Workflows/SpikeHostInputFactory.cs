@@ -33,6 +33,16 @@ internal static class SpikeHostInputFactory
                 IsTelemetryDefault: true));
     }
 
+    public static ShellSpikeInputs CreateShellInputs()
+    {
+        return new ShellSpikeInputs(
+            CreateStartupInputs(),
+            new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                HasRunningTasks: true,
+                HasGameLogs: true));
+    }
+
     public static LaunchSpikeInputs CreateLaunchInputs(string scenario)
     {
         var sample = SpikeSampleFactory.CreateDefaultLaunchInputs(scenario);

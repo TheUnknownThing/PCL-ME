@@ -9,6 +9,51 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class SpikeExecutor
 {
+    public static ShellSpikeExecution ExecuteShell(LauncherFrontendShellPlan plan, string workspaceRoot)
+    {
+        Directory.CreateDirectory(workspaceRoot);
+
+        var artifacts = new List<SpikeExecutionArtifact>();
+        var writtenFiles = new List<string>();
+
+        var promptsPath = Path.Combine(workspaceRoot, "_artifacts", "startup-prompts.txt");
+        WriteTextFile(promptsPath, BuildConsentText(plan.Consent));
+        artifacts.Add(new SpikeExecutionArtifact("Startup prompts", promptsPath));
+        writtenFiles.Add(promptsPath);
+
+        var navigationPath = Path.Combine(workspaceRoot, "_artifacts", "navigation-view.txt");
+        WriteTextFile(navigationPath, BuildNavigationViewText(plan.Navigation));
+        artifacts.Add(new SpikeExecutionArtifact("Navigation view", navigationPath));
+        writtenFiles.Add(navigationPath);
+
+        var catalogPath = Path.Combine(workspaceRoot, "_artifacts", "navigation-catalog.txt");
+        WriteTextFile(catalogPath, BuildNavigationCatalogText(plan.Catalog));
+        artifacts.Add(new SpikeExecutionArtifact("Navigation catalog", catalogPath));
+        writtenFiles.Add(catalogPath);
+
+        return new ShellSpikeExecution(
+            new SpikeExecutionSummary(
+                workspaceRoot,
+                [workspaceRoot, Path.Combine(workspaceRoot, "_artifacts")],
+                writtenFiles,
+                [],
+                artifacts),
+            new SpikeTranscript(
+                "Frontend Shell Execution",
+                [
+                    new SpikeTranscriptSection(
+                        "Workspace",
+                        [
+                            $"Workspace root: {workspaceRoot}",
+                            $"Current page: {plan.Navigation.CurrentRoute.Page}",
+                            $"Current title: {plan.Navigation.CurrentPageTitle}"
+                        ]),
+                    new SpikeTranscriptSection(
+                        "Artifacts",
+                        artifacts.Select(artifact => $"{artifact.Label}: {artifact.Path}").ToArray())
+                ]));
+    }
+
     public static StartupSpikeExecution ExecuteStartup(StartupSpikePlan plan, string workspaceRoot)
     {
         Directory.CreateDirectory(workspaceRoot);
@@ -543,6 +588,37 @@ internal static class SpikeExecutor
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildNavigationViewText(LauncherFrontendNavigationView navigation)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"CurrentPage={navigation.CurrentRoute.Page}",
+                $"CurrentSubpage={navigation.CurrentRoute.Subpage}",
+                $"CurrentTitle={navigation.CurrentPageTitle}",
+                $"ShowsBackButton={navigation.ShowsBackButton}",
+                $"TopLevel={string.Join(" | ", navigation.TopLevelEntries.Select(entry => $"{entry.Title}:{entry.IsSelected}"))}",
+                $"Sidebar={string.Join(" | ", navigation.SidebarEntries.Select(entry => $"{entry.Title}:{entry.IsSelected}"))}",
+                $"Utilities={string.Join(" | ", navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(entry => $"{entry.Title}:{entry.IsSelected}"))}"
+            ]);
+    }
+
+    private static string BuildNavigationCatalogText(LauncherFrontendNavigationCatalog catalog)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"TopLevelPages={catalog.TopLevelPages.Count}",
+                ..catalog.TopLevelPages.Select(page => $"top|{page.Page}|{page.Title}|{page.Summary}"),
+                $"SidebarGroups={catalog.SidebarGroups.Count}",
+                ..catalog.SidebarGroups.Select(group =>
+                    $"sidebar|{group.Page}|{group.Title}|{string.Join(",", group.Items.Select(item => item.Subpage))}"),
+                $"SecondaryPages={catalog.SecondaryPages.Count}",
+                ..catalog.SecondaryPages.Select(page =>
+                    $"secondary|{page.Page}|{page.Title}|{page.Kind}|{page.SidebarGroupPage}")
+            ]);
     }
 
     private static string BuildProcessCommandText(
