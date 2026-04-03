@@ -54,6 +54,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _downloadOptionalUpdateCommand;
     private readonly ActionCommand _showOptionalUpdateDetailCommand;
     private readonly ActionCommand _resetGameLinkSettingsCommand;
+    private readonly ActionCommand _resetGameManageSettingsCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -82,6 +83,20 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _tryPunchSymmetricNat = true;
     private bool _allowIpv6Communication = true;
     private bool _enableLinkCliOutput;
+    private int _selectedDownloadSourceIndex;
+    private int _selectedVersionSourceIndex;
+    private double _downloadThreadLimit = 63;
+    private double _downloadSpeedLimit = 42;
+    private bool _autoSelectNewInstance = true;
+    private bool _upgradePartialAuthlib = true;
+    private int _selectedCommunityDownloadSourceIndex = 1;
+    private int _selectedFileNameFormatIndex = 1;
+    private int _selectedModLocalNameStyleIndex;
+    private bool _ignoreQuiltLoader;
+    private bool _notifyReleaseUpdates = true;
+    private bool _notifySnapshotUpdates;
+    private bool _autoSwitchGameLanguageToChinese = true;
+    private bool _detectClipboardResourceLinks = true;
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
@@ -113,6 +128,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _downloadOptionalUpdateCommand = CreateIntentCommand("下载可选更新", "Would start the optional AquaCL upgrade flow.");
         _showOptionalUpdateDetailCommand = CreateIntentCommand("查看 AquaCL 更新详情", "Would open the optional upgrade changelog surface.");
         _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
+        _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -125,6 +141,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeLogEntries();
         InitializeUpdateSurface();
         InitializeGameLinkSurface();
+        InitializeGameManageSurface();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
@@ -273,6 +290,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupGameLinkSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupGameLink;
 
+    public bool IsSetupGameManageSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupGameManage;
+
     public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
 
@@ -282,6 +302,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         && !IsSetupLogSurface
         && !IsSetupUpdateSurface
         && !IsSetupGameLinkSurface
+        && !IsSetupGameManageSurface
         && !IsToolsHelpSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
@@ -421,6 +442,128 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         set => SetProperty(ref _enableLinkCliOutput, value);
     }
 
+    public IReadOnlyList<string> DownloadSourceOptions { get; } =
+    [
+        "尽量使用镜像源",
+        "优先使用官方源，在加载缓慢时换用镜像源",
+        "尽量使用官方源"
+    ];
+
+    public IReadOnlyList<string> FileNameFormatOptions { get; } =
+    [
+        "【机械动力】create-1.21.1-6.0.4",
+        "[机械动力] create-1.21.1-6.0.4",
+        "机械动力-create-1.21.1-6.0.4",
+        "create-1.21.1-6.0.4-机械动力",
+        "create-1.21.1-6.0.4"
+    ];
+
+    public IReadOnlyList<string> ModLocalNameStyleOptions { get; } =
+    [
+        "标题显示译名，详情显示文件名",
+        "标题显示文件名，详情显示译名"
+    ];
+
+    public int SelectedDownloadSourceIndex
+    {
+        get => _selectedDownloadSourceIndex;
+        set => SetProperty(ref _selectedDownloadSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+    }
+
+    public int SelectedVersionSourceIndex
+    {
+        get => _selectedVersionSourceIndex;
+        set => SetProperty(ref _selectedVersionSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+    }
+
+    public double DownloadThreadLimit
+    {
+        get => _downloadThreadLimit;
+        set
+        {
+            if (SetProperty(ref _downloadThreadLimit, value))
+            {
+                RaisePropertyChanged(nameof(DownloadThreadLimitLabel));
+            }
+        }
+    }
+
+    public string DownloadThreadLimitLabel => $"{Math.Round(DownloadThreadLimit)}";
+
+    public double DownloadSpeedLimit
+    {
+        get => _downloadSpeedLimit;
+        set
+        {
+            if (SetProperty(ref _downloadSpeedLimit, value))
+            {
+                RaisePropertyChanged(nameof(DownloadSpeedLimitLabel));
+            }
+        }
+    }
+
+    public string DownloadSpeedLimitLabel => $"{Math.Round(DownloadSpeedLimit)}";
+
+    public bool AutoSelectNewInstance
+    {
+        get => _autoSelectNewInstance;
+        set => SetProperty(ref _autoSelectNewInstance, value);
+    }
+
+    public bool UpgradePartialAuthlib
+    {
+        get => _upgradePartialAuthlib;
+        set => SetProperty(ref _upgradePartialAuthlib, value);
+    }
+
+    public int SelectedCommunityDownloadSourceIndex
+    {
+        get => _selectedCommunityDownloadSourceIndex;
+        set => SetProperty(ref _selectedCommunityDownloadSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+    }
+
+    public int SelectedFileNameFormatIndex
+    {
+        get => _selectedFileNameFormatIndex;
+        set => SetProperty(ref _selectedFileNameFormatIndex, Math.Clamp(value, 0, FileNameFormatOptions.Count - 1));
+    }
+
+    public int SelectedModLocalNameStyleIndex
+    {
+        get => _selectedModLocalNameStyleIndex;
+        set => SetProperty(ref _selectedModLocalNameStyleIndex, Math.Clamp(value, 0, ModLocalNameStyleOptions.Count - 1));
+    }
+
+    public bool IgnoreQuiltLoader
+    {
+        get => _ignoreQuiltLoader;
+        set => SetProperty(ref _ignoreQuiltLoader, value);
+    }
+
+    public bool NotifyReleaseUpdates
+    {
+        get => _notifyReleaseUpdates;
+        set => SetProperty(ref _notifyReleaseUpdates, value);
+    }
+
+    public bool NotifySnapshotUpdates
+    {
+        get => _notifySnapshotUpdates;
+        set => SetProperty(ref _notifySnapshotUpdates, value);
+    }
+
+    public bool AutoSwitchGameLanguageToChinese
+    {
+        get => _autoSwitchGameLanguageToChinese;
+        set => SetProperty(ref _autoSwitchGameLanguageToChinese, value);
+    }
+
+    public bool DetectClipboardResourceLinks
+    {
+        get => _detectClipboardResourceLinks;
+        set => SetProperty(ref _detectClipboardResourceLinks, value);
+    }
+
     public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
         ? authPlayerName
         : "DemoPlayer";
@@ -538,6 +681,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ActionCommand ShowOptionalUpdateDetailCommand => _showOptionalUpdateDetailCommand;
 
     public ActionCommand ResetGameLinkSettingsCommand => _resetGameLinkSettingsCommand;
+
+    public ActionCommand ResetGameManageSettingsCommand => _resetGameManageSettingsCommand;
 
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
@@ -879,6 +1024,24 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _enableLinkCliOutput = false;
     }
 
+    private void InitializeGameManageSurface()
+    {
+        _selectedDownloadSourceIndex = 1;
+        _selectedVersionSourceIndex = 1;
+        _downloadThreadLimit = 63;
+        _downloadSpeedLimit = 42;
+        _autoSelectNewInstance = true;
+        _upgradePartialAuthlib = true;
+        _selectedCommunityDownloadSourceIndex = 1;
+        _selectedFileNameFormatIndex = 1;
+        _selectedModLocalNameStyleIndex = 0;
+        _ignoreQuiltLoader = false;
+        _notifyReleaseUpdates = true;
+        _notifySnapshotUpdates = false;
+        _autoSwitchGameLanguageToChinese = true;
+        _detectClipboardResourceLinks = true;
+    }
+
     private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()
     {
         return
@@ -1026,6 +1189,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             return;
         }
 
+        if (IsSetupGameManageSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetGameManageSurface();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -1083,6 +1252,28 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         AddActivity("重置联机设置", "EasyTier 设置已恢复到 Spike 的默认演示值。");
     }
 
+    private void ResetGameManageSurface()
+    {
+        InitializeGameManageSurface();
+        RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
+        RaisePropertyChanged(nameof(SelectedVersionSourceIndex));
+        RaisePropertyChanged(nameof(DownloadThreadLimit));
+        RaisePropertyChanged(nameof(DownloadThreadLimitLabel));
+        RaisePropertyChanged(nameof(DownloadSpeedLimit));
+        RaisePropertyChanged(nameof(DownloadSpeedLimitLabel));
+        RaisePropertyChanged(nameof(AutoSelectNewInstance));
+        RaisePropertyChanged(nameof(UpgradePartialAuthlib));
+        RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
+        RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
+        RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
+        RaisePropertyChanged(nameof(IgnoreQuiltLoader));
+        RaisePropertyChanged(nameof(NotifyReleaseUpdates));
+        RaisePropertyChanged(nameof(NotifySnapshotUpdates));
+        RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
+        RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
+        AddActivity("重置游戏管理设置", "下载、社区资源和辅助功能设置已恢复到默认演示值。");
+    }
+
     private void SetPromptOverlayOpen(bool isOpen)
     {
         if (_isPromptOverlayOpen == isOpen)
@@ -1104,6 +1295,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupLogSurface));
         RaisePropertyChanged(nameof(IsSetupUpdateSurface));
         RaisePropertyChanged(nameof(IsSetupGameLinkSurface));
+        RaisePropertyChanged(nameof(IsSetupGameManageSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));

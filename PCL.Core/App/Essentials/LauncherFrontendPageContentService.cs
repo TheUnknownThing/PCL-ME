@@ -144,6 +144,7 @@ public static class LauncherFrontendPageContentService
         {
             LauncherFrontendSubpageKey.SetupAbout => BuildSetupAboutContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupGameManage => BuildSetupGameManageContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameLink => BuildSetupGameLinkContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupUpdate => BuildSetupUpdateContent(request, promptTotal),
@@ -361,6 +362,47 @@ public static class LauncherFrontendPageContentService
                     [
                         "它是一个比界面页更紧凑的设置表单，适合继续打磨组合框、文本框和复选框的复制方式。",
                         "这也让设置分组不再只剩更新页一个已复制的右侧面板。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupGameManageContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "游戏管理页面",
+            "下载源、线程限制、社区资源命名和辅助功能都可以按原版三张设置卡的结构进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "游戏管理"),
+                new LauncherFrontendPageFact("下载分组", "游戏资源 / 社区资源 / 辅助功能"),
+                new LauncherFrontendPageFact("主要控件", "下拉框、滑块、复选框"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "下载",
+                    "游戏资源获取行为",
+                    [
+                        "保留了文件下载源、版本列表源、线程数、速度限制和安装行为的原始分组。",
+                        "目标文件夹仍然保持成一段只读提示，而不是在新前端里重新发明设置流程。",
+                        "左侧附加按钮会在 Spike 中把这些字段恢复到默认演示值。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "社区",
+                    "社区资源获取行为",
+                    [
+                        "文件名格式、Mod 管理样式和 Quilt 显示选项继续按原页面拆到单独卡片。",
+                        "这种页面很适合持续验证表单控件复制，而不需要引入新的视觉语言。",
+                        "真正的下载与安装策略仍应停留在后端边界之外。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "辅助",
+                    "提示与语言",
+                    [
+                        "正式版 / 测试版更新提示、自动中文和剪贴板识别继续保留原始布局层级。",
+                        "这页补上后，设置分组里已经有多个不再依赖通用摘要卡的右侧页面。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);
