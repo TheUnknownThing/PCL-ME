@@ -868,43 +868,14 @@ Public Class FormMain
 
 #Region "子页面处理"
             Dim PageName As String = PageNameGet(Stack)
-            If PageName = "" Then
-                '即将切换到一个顶级页面
-                PageChangeExit()
-            Else
-                '即将切换到一个子页面
-                If PageStack.Any Then
-                    '子页面 → 另一个子页面，更新
-                    AniStart({
-                        AaOpacity(LabTitleInner, -LabTitleInner.Opacity, 130),
-                        AaCode(Sub() LabTitleInner.Text = PageName,, True),
-                        AaOpacity(LabTitleInner, 1, 150, 30)
-                    }, "FrmMain Titlebar SubLayer")
-                    If PageStack.Contains(Stack) Then
-                        '返回到更上层的子页面
-                        Do While PageStack.Contains(Stack)
-                            PageStack.RemoveAt(0)
-                        Loop
-                    Else
-                        '进入更深层的子页面
-                        PageStack.Insert(0, PageCurrent)
-                    End If
-                Else
-                    '主页面 → 子页面，进入
-                    PanTitleInner.Visibility = Visibility.Visible
-                    PanTitleMain.IsHitTestVisible = False
-                    PanTitleInner.IsHitTestVisible = True
-                    PageNameRefresh(Stack)
-                    AniStart({
-                        AaOpacity(PanTitleMain, -PanTitleMain.Opacity, 150),
-                        AaX(PanTitleMain, 12 - PanTitleMain.Margin.Left, 150,, New AniEaseInFluent(AniEasePower.Weak)),
-                        AaOpacity(PanTitleInner, 1 - PanTitleInner.Opacity, 150, 200),
-                        AaX(PanTitleInner, -PanTitleInner.Margin.Left, 350, 200, New AniEaseOutBack),
-                        AaCode(Sub() PanTitleMain.Visibility = Visibility.Collapsed,, True)
-                    }, "FrmMain Titlebar FirstLayer")
-                    PageStack.Insert(0, PageCurrent)
-                End If
-            End If
+            ModMainWindowPageTitleShell.ApplyTitleTransition(
+                Me,
+                Stack,
+                PageName,
+                PageCurrent,
+                PageStack,
+                AddressOf PageNameRefresh,
+                AddressOf PageChangeExit)
 #End Region
 
 #Region "实际更改页面框架 UI"
