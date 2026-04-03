@@ -52,6 +52,8 @@ What is already in a usable migration state:
 - the Avalonia spike now has route-aware shell composition instead of rendering only the launch page
 - the Avalonia spike now copies launcher-style grouped left navigation for non-launch routes
 - the Avalonia spike now uses closer launcher-style chrome for top-level and secondary routes
+- the Avalonia spike now also has copied non-launch right panes for `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助`
+- those copied routes now also have page-specific frontend page-content seams instead of only the generic summary contract
 - `ModLaunch.vb` is now a thin launch coordinator
 - `ModJava.vb` is effectively a thin adapter for this phase
 - `ModCrash.vb` is now just the crash analyzer entry point
@@ -101,6 +103,8 @@ Recent checkpoint commits:
 - `b2d7c574` `feat: align spike chrome with launcher routes`
 - `cb7cdab0` `feat: copy launcher-style sidebar navigation`
 - `dc20914d` `feat: simplify spike content cards`
+- `9231a0be` `feat: copy setup and help shell surfaces`
+- `7aea529a` `feat: add page-specific frontend content seams`
 
 ## Current Frontend Spike State
 
@@ -110,10 +114,14 @@ The current Avalonia spike now proves more than startup plumbing:
 - non-launch routes now switch through a route-aware shell body
 - non-launch left panes now follow the grouped `MyListItem` navigation pattern from the current launcher
 - top chrome now switches between top tabs and inner-route back-title mode
+- `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助` now render copied page-specific right panes rather than the generic shell summary panel
 
 What still needs frontend parity work:
 
-- most non-launch right panes are still summary-card approximations, not copied page-specific layouts yet
+- many non-launch right panes are still summary-card approximations, not copied page-specific layouts yet
+- setup still needs copied parity for `启动`, `界面`, `游戏管理`, `联机`, `更新`, `Java`, and `启动器杂项`
+- download still needs a copied `自动安装` route and then the easier resource-list routes
+- tools still needs parity beyond the copied help page, especially `联机大厅` and `测试`
 - page-specific controls such as search boxes, list blocks, person/about rows, and richer settings cards still need direct migration
 - some current Avalonia controls are faithful first passes, but should continue to converge toward the original WPF behavior and spacing
 
@@ -182,6 +190,7 @@ Likely areas:
 - crash result/export interactions
 - page-specific surface contracts
 - richer right-pane page models so copied layouts can render real content without falling back to generic summaries
+- copied settings/download/tools routes that still need denser list/search/update/install data than the current seam exposes
 
 Needed outcome:
 
@@ -193,7 +202,8 @@ Current starting seam:
 - startup plus navigation shell data is already available via `LauncherFrontendShellService`
 - prompt queue data is already available via `LauncherFrontendPromptService`
 - a real desktop shell scaffold already exists in the Avalonia spike
-- the next contracts should extend those seams into page-specific data and profile/auth surfaces
+- a first page-specific seam now exists for copied settings/tools routes in `LauncherFrontendPageContentService`
+- the next contracts should extend those seams into richer update/install/profile/auth surfaces
 
 ## Two Parallel Workstreams
 
@@ -210,8 +220,9 @@ Recommended order:
 1. consume the existing startup plus navigation shell contract
 2. consume the portable prompt contract for startup, launch, and crash prompts
 3. build on the existing Avalonia shell spike instead of starting from zero
-4. replace generic route surfaces with copied WPF page structures, starting with the simplest right panes
-5. integrate profile/auth and launch UI after the missing contracts are filled in
+4. keep the copied `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助` pages stable as the reference pattern for right-pane migration
+5. replace the next generic route surfaces with copied WPF page structures, starting with `设置/更新` and the simpler settings cards
+6. integrate profile/auth and launch UI after the missing contracts are filled in
 
 Rules:
 

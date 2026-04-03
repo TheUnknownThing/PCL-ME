@@ -34,6 +34,7 @@ Use these boundaries as the current source of truth:
   - non-WPF proving ground
   - now includes both CLI shell tooling and an Avalonia desktop shell spike
   - the desktop shell now has launcher-style top chrome, floating utility buttons, a copied launch surface, and grouped left navigation modeled after the existing WPF pages
+  - copied non-launch right panes now also exist for `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助`
   - use it to validate backend contracts and bootstrap flows before or alongside a real replacement frontend
 
 ## What Has Been Finished
@@ -109,6 +110,8 @@ These areas are already substantially portable or backend-owned:
 - frontend prompt queue and prompt-command mapping
 - frontend shell desktop composition via the Avalonia spike
 - launcher-style sidebar grouping, route-aware shell composition, and copied icon/control reuse inside the Avalonia spike
+- first copied non-launch right-pane surfaces for about, feedback, log, and help pages
+- page-specific frontend page-content seams for those copied settings/tools routes
 - startup bootstrap and visual planning
 - version transition and milestone policy
 - launch prerun and launch session planning
@@ -168,6 +171,8 @@ These are the key migration checkpoints leading to the current state:
 - `b2d7c574` `feat: align spike chrome with launcher routes`
 - `cb7cdab0` `feat: copy launcher-style sidebar navigation`
 - `dc20914d` `feat: simplify spike content cards`
+- `9231a0be` `feat: copy setup and help shell surfaces`
+- `7aea529a` `feat: add page-specific frontend content seams`
 
 ## Current Frontend Spike Status
 
@@ -180,11 +185,14 @@ Current Avalonia spike status:
 - top chrome now switches between top-level tabs and inner back-title mode, matching the current launcher more closely
 - non-launch left navigation now uses grouped launcher-style list items with copied labels, logos, and small right-side action buttons
 - non-launch right content now uses a simpler `MyCard`-style stacked surface instead of spike-only dashboard chrome
+- `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助` now render copied page-specific Avalonia layouts instead of the generic summary panel
+- those copied routes now also have page-specific frontend page-content seams in `LauncherFrontendPageContentService`
 
 What is still incomplete on the frontend side:
 
 - many right-side route surfaces are still contract-driven summary cards, not copied page-specific WPF layouts yet
-- setup, download, tools, and instance routes still need deeper page-by-page visual parity work
+- setup still needs copied parity work for `启动`, `界面`, `游戏管理`, `联机`, `更新`, `Java`, and `启动器杂项`
+- download, tools, and instance routes still need deeper page-by-page visual parity work beyond the newly copied help page
 - some launcher controls are only approximated in Avalonia and should keep converging toward the WPF originals
 
 ## Frontend Migration Rule
@@ -298,9 +306,9 @@ Start from the current Avalonia spike, not from a blank window.
 
 Priority order for the next frontend pass:
 
-1. keep the copied launch route stable while expanding page-specific parity for download/setup/tools right panes
-2. continue replacing generic non-launch content with copied WPF page structures
-3. keep building Avalonia controls that explicitly mirror existing launcher controls
+1. keep the copied launch route stable while expanding page-specific parity for the remaining setup right panes, starting with `更新` and the simpler settings cards
+2. continue replacing generic non-launch content with copied WPF page structures, especially download auto-install and instance overview/setup pages
+3. keep building Avalonia controls that explicitly mirror existing launcher controls such as `MySearchBox`, denser list rows, and richer card headers
 4. ask the backend engineer for missing page data seams instead of compensating with frontend-only redesigns
 
 Non-negotiable rule for this engineer:
@@ -330,7 +338,8 @@ Recommended first frontend milestones:
 2. consume `LauncherFrontendPromptService` for startup, launch, and crash prompt rendering
 3. build on the Avalonia shell spike instead of starting from zero
 4. implement low-risk read-only or mostly-read-only pages
-5. request missing launch/profile/auth contracts instead of deriving them from WPF state
+5. use the copied `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助` routes as the template for how future right panes should be migrated
+6. request missing launch/profile/auth contracts instead of deriving them from WPF state
 
 ### Engineer 2: remaining backend and shell cleanup
 
