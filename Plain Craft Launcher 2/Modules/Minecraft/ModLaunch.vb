@@ -621,6 +621,7 @@ NextInner:
             New ModLaunchMicrosoftLoginShell.MicrosoftLoginExecutionContext With {
                 .Data = Data,
                 .Input = Input,
+                .OAuthClientId = OAuthClientId,
                 .ShouldReuseCachedLogin = MinecraftLaunchLoginProfileWorkflowService.ShouldReuseMicrosoftLogin(
                     New MinecraftLaunchMicrosoftSessionReuseRequest(
                         Data.IsForceRestarting,
@@ -635,81 +636,10 @@ NextInner:
                 .CreateMicrosoftLoginResult = AddressOf CreateMicrosoftLoginResult,
                 .CreateMicrosoftLoginResultFromStored = AddressOf CreateMicrosoftLoginResultFromStored,
                 .ApplyProfileMutationPlan = AddressOf ApplyProfileMutationPlan,
-                .SaveProfile = AddressOf SaveProfile,
-                .RequestDeviceCodeOAuthTokens = AddressOf MsLoginStep1New,
-                .RefreshOAuthTokens = AddressOf MsLoginStep1Refresh,
-                .GetXboxLiveToken = AddressOf MsLoginStep2,
-                .GetXboxSecurityToken = AddressOf MsLoginStep3,
-                .GetMinecraftAccessToken = AddressOf MsLoginStep4,
-                .VerifyOwnership = AddressOf MsLoginStep5,
-                .GetMinecraftProfile = AddressOf MsLoginStep6})
+                .SaveProfile = AddressOf SaveProfile})
         McLoginMsRefreshTime = TimeUtils.GetTimeTick()
         ProfileLog("正版验证完成")
     End Sub
-    ''' <summary>
-    ''' 正版验证步骤 1：通过设备代码流获取账号信息
-    ''' </summary>
-    ''' <returns>OAuth 验证完成的返回结果</returns>
-    Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As MicrosoftOAuthStepResult
-        '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
-
-        '初始请求
-        Return ModLaunchInteractionShell.RequestMicrosoftDeviceCodeOAuthTokens(Data, OAuthClientId)
-    End Function
-    ''' <summary>
-    ''' 正版验证步骤 1，刷新登录：从 OAuth Code 或 OAuth RefreshToken 获取 {OAuth accessToken, OAuth RefreshToken}
-    ''' </summary>
-    ''' <param name="Code"></param>
-    ''' <returns></returns>
-    Private Function MsLoginStep1Refresh(Code As String) As MicrosoftOAuthStepResult
-        Return ModLaunchMicrosoftStepShell.RefreshOAuthTokens(Code, OAuthClientId)
-    End Function
-    ''' <summary>
-    ''' 正版验证步骤 2：从 OAuth accessToken 获取 XBLToken
-    ''' </summary>
-    ''' <param name="accessToken">OAuth accessToken</param>
-    ''' <returns>XBLToken</returns>
-    Private Function MsLoginStep2(accessToken As String) As MicrosoftStringStepResult
-        Return ModLaunchMicrosoftStepShell.GetXboxLiveToken(accessToken)
-    End Function
-    ''' <summary>
-    ''' 正版验证步骤 3：从 XBLToken 获取 {XSTSToken, UHS}
-    ''' </summary>
-    ''' <returns>包含 XSTSToken 与 UHS 的字符串组</returns>
-    Private Function MsLoginStep3(xblTokenResult As MicrosoftStringStepResult) As MicrosoftXstsStepResult
-        Return ModLaunchMicrosoftStepShell.GetXboxSecurityToken(xblTokenResult)
-    End Function
-    ''' <summary>
-    ''' 正版验证步骤 4：从 {XSTSToken, UHS} 获取 Minecraft accessToken
-    ''' </summary>
-    ''' <param name="Tokens">包含 XSTSToken 与 UHS 的字符串组</param>
-    ''' <returns>Minecraft accessToken</returns>
-    Private Function MsLoginStep4(tokens As MicrosoftXstsStepResult) As MicrosoftStringStepResult
-        Return ModLaunchMicrosoftStepShell.GetMinecraftAccessToken(tokens)
-    End Function
-    ''' <summary>
-    ''' 正版验证步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
-    ''' </summary>
-    ''' <param name="accessToken">Minecraft accessToken</param>
-    Private Sub MsLoginStep5(accessToken As String)
-        ProfileLog("开始正版验证 Step 5/6: 验证账户是否持有 MC")
-        If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
-        Dim result As String = ""
-        Try
-            ModLaunchInteractionShell.EnsureMicrosoftOwnership(accessToken)
-        Catch ex As Exception
-            Log(ex, "正版验证 Step 5 异常：" & result)
-            Throw
-        End Try
-    End Sub
-    ''' <summary>
-    ''' 正版验证步骤 6：从 Minecraft accessToken 获取 {UUID, UserName, ProfileJson}
-    ''' </summary>
-    ''' <param name="AccessToken">Minecraft accessToken</param>
-    ''' <returns>包含 UUID, UserName 和 ProfileJson 的字符串组</returns>
-    Private Function MsLoginStep6(AccessToken As String) As MicrosoftProfileStepResult
-        Return ModLaunchMicrosoftStepShell.GetMinecraftProfile(AccessToken)
-    End Function
 #End Region
 
 #Region "第三方验证"

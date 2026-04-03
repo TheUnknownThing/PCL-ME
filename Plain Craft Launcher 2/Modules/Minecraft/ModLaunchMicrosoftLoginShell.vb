@@ -30,6 +30,7 @@ Public Module ModLaunchMicrosoftLoginShell
     Public Class MicrosoftLoginExecutionContext
         Public Property Data As LoaderTask(Of ModLaunch.McLoginMs, ModLaunch.McLoginResult)
         Public Property Input As ModLaunch.McLoginMs
+        Public Property OAuthClientId As String
         Public Property ShouldReuseCachedLogin As Boolean
         Public Property HasOAuthRefreshToken As Boolean
         Public Property IsCreatingProfile As Boolean
@@ -40,19 +41,13 @@ Public Module ModLaunchMicrosoftLoginShell
         Public Property CreateMicrosoftLoginResultFromStored As Func(Of MinecraftLaunchStoredProfile, ModLaunch.McLoginResult)
         Public Property ApplyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan)
         Public Property SaveProfile As Action
-        Public Property RequestDeviceCodeOAuthTokens As Func(Of LoaderTask(Of ModLaunch.McLoginMs, ModLaunch.McLoginResult), MicrosoftOAuthStepResult)
-        Public Property RefreshOAuthTokens As Func(Of String, MicrosoftOAuthStepResult)
-        Public Property GetXboxLiveToken As Func(Of String, MicrosoftStringStepResult)
-        Public Property GetXboxSecurityToken As Func(Of MicrosoftStringStepResult, MicrosoftXstsStepResult)
-        Public Property GetMinecraftAccessToken As Func(Of MicrosoftXstsStepResult, MicrosoftStringStepResult)
-        Public Property VerifyOwnership As Action(Of String)
-        Public Property GetMinecraftProfile As Func(Of String, MicrosoftProfileStepResult)
     End Class
 
     Public Sub RunLogin(context As MicrosoftLoginExecutionContext)
         If context Is Nothing Then Throw New ArgumentNullException(NameOf(context))
         If context.Data Is Nothing Then Throw New ArgumentNullException(NameOf(context.Data))
         If context.Input Is Nothing Then Throw New ArgumentNullException(NameOf(context.Input))
+        If String.IsNullOrWhiteSpace(context.OAuthClientId) Then Throw New ArgumentException("缺少微软 OAuth Client ID。", NameOf(context.OAuthClientId))
 
         Dim currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetInitialStep(
             New MinecraftLaunchMicrosoftLoginExecutionRequest(
@@ -74,12 +69,12 @@ Public Module ModLaunchMicrosoftLoginShell
                     context.Data.Output = context.CreateCurrentMicrosoftLoginResult(context.Input)
                     Exit Do
                 Case MinecraftLaunchMicrosoftLoginStepKind.RequestDeviceCodeOAuthTokens
-                    Dim oAuthTokens = context.RequestDeviceCodeOAuthTokens(context.Data)
+                    Dim oAuthTokens = ModLaunchInteractionShell.RequestMicrosoftDeviceCodeOAuthTokens(context.Data, context.OAuthClientId)
                     oAuthAccessToken = oAuthTokens.AccessToken
                     oAuthRefreshToken = oAuthTokens.RefreshToken
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterDeviceCodeOAuthSuccess()
                 Case MinecraftLaunchMicrosoftLoginStepKind.RefreshOAuthTokens
-                    Dim oAuthTokens = context.RefreshOAuthTokens(context.Input.OAuthRefreshToken)
+                    Dim oAuthTokens = ModLaunchMicrosoftStepShell.RefreshOAuthTokens(context.Input.OAuthRefreshToken, context.OAuthClientId)
                     Dim refreshOutcome = oAuthTokens.Outcome
                     If refreshOutcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded Then
                         oAuthAccessToken = oAuthTokens.AccessToken
@@ -87,19 +82,19 @@ Public Module ModLaunchMicrosoftLoginShell
                     End If
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterRefreshOAuth(refreshOutcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetXboxLiveToken
-                    xblToken = context.GetXboxLiveToken(oAuthAccessToken)
+                    xblToken = ModLaunchMicrosoftStepShell.GetXboxLiveToken(oAuthAccessToken)
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxLiveToken(xblToken.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetXboxSecurityToken
-                    xstsTokens = context.GetXboxSecurityToken(xblToken)
+                    xstsTokens = ModLaunchMicrosoftStepShell.GetXboxSecurityToken(xblToken)
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxSecurityToken(xstsTokens.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetMinecraftAccessToken
-                    accessToken = context.GetMinecraftAccessToken(xstsTokens)
+                    accessToken = ModLaunchMicrosoftStepShell.GetMinecraftAccessToken(xstsTokens)
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftAccessToken(accessToken.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.VerifyOwnership
-                    context.VerifyOwnership.Invoke(accessToken.Value)
+                    ModLaunchInteractionShell.EnsureMicrosoftOwnership(accessToken.Value)
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterOwnershipVerification()
                 Case MinecraftLaunchMicrosoftLoginStepKind.GetMinecraftProfile
-                    profileResult = context.GetMinecraftProfile(accessToken.Value)
+                    profileResult = ModLaunchMicrosoftStepShell.GetMinecraftProfile(accessToken.Value)
                     currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftProfile(profileResult.Outcome)
                 Case MinecraftLaunchMicrosoftLoginStepKind.ApplyProfileMutation
                     Dim microsoftMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveMicrosoftProfileMutation(
