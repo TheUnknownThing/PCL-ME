@@ -268,167 +268,40 @@ NextInner:
     End Sub
 
     Private Function GetCurrentProfileKind() As MinecraftLaunchProfileKind
-        If SelectedProfile Is Nothing Then Return MinecraftLaunchProfileKind.None
-        Select Case SelectedProfile.Type
-            Case McLoginType.Legacy
-                Return MinecraftLaunchProfileKind.Legacy
-            Case McLoginType.Auth
-                Return MinecraftLaunchProfileKind.Auth
-            Case McLoginType.Ms
-                Return MinecraftLaunchProfileKind.Microsoft
-            Case Else
-                Return MinecraftLaunchProfileKind.None
-        End Select
+        Return ModLaunchProfileShell.GetCurrentProfileKind(SelectedProfile)
     End Function
 
     Private Function GetSelectedAuthServerBase() As String
-        If SelectedProfile Is Nothing OrElse SelectedProfile.Type <> McLoginType.Auth Then Return Nothing
-        Return SelectedProfile.Server.BeforeLast("/authserver")
+        Return ModLaunchProfileShell.GetSelectedAuthServerBase(SelectedProfile)
     End Function
 
     Private Function GetSelectedProfileIndex() As Integer?
-        If SelectedProfile Is Nothing Then Return Nothing
-        Dim index = ProfileList.IndexOf(SelectedProfile)
-        Return If(index >= 0, index, Nothing)
+        Return ModLaunchProfileShell.GetSelectedProfileIndex(SelectedProfile, ProfileList)
     End Function
 
     Private Function GetStoredProfiles() As List(Of MinecraftLaunchStoredProfile)
-        Return ProfileList.Select(AddressOf ConvertToStoredProfile).ToList()
-    End Function
-
-    Private Function ConvertToStoredProfile(profile As McProfile) As MinecraftLaunchStoredProfile
-        Dim kind = MinecraftLaunchStoredProfileKind.Offline
-        Select Case profile.Type
-            Case McLoginType.Auth
-                kind = MinecraftLaunchStoredProfileKind.Authlib
-            Case McLoginType.Ms
-                kind = MinecraftLaunchStoredProfileKind.Microsoft
-        End Select
-
-        Return New MinecraftLaunchStoredProfile(
-            kind,
-            profile.Uuid,
-            profile.Username,
-            profile.Server,
-            profile.ServerName,
-            profile.AccessToken,
-            profile.RefreshToken,
-            profile.Name,
-            profile.Password,
-            profile.ClientToken,
-            profile.RawJson)
+        Return ModLaunchProfileShell.GetStoredProfiles(ProfileList)
     End Function
 
     Private Function CreateMicrosoftLoginResult(accessToken As String, userName As String, uuid As String, profileJson As String) As McLoginResult
-        Return New McLoginResult With {
-            .AccessToken = accessToken,
-            .Name = userName,
-            .Uuid = uuid,
-            .Type = "Microsoft",
-            .ClientToken = uuid,
-            .ProfileJson = profileJson}
+        Return ModLaunchProfileShell.CreateMicrosoftLoginResult(accessToken, userName, uuid, profileJson)
     End Function
 
     Private Function CreateMicrosoftLoginResultFromStored(profile As MinecraftLaunchStoredProfile) As McLoginResult
-        If profile Is Nothing Then Throw New ArgumentNullException(NameOf(profile))
-        Return CreateMicrosoftLoginResult(
-            If(profile.AccessToken, ""),
-            profile.Username,
-            profile.Uuid,
-            If(profile.RawJson, ""))
+        Return ModLaunchProfileShell.CreateMicrosoftLoginResultFromStored(profile)
     End Function
 
     Private Function CreateCurrentMicrosoftLoginResult(input As McLoginMs) As McLoginResult
-        If SelectedProfile IsNot Nothing AndAlso SelectedProfile.Type = McLoginType.Ms Then
-            Return CreateMicrosoftLoginResultFromStored(ConvertToStoredProfile(SelectedProfile))
-        End If
-
-        If String.IsNullOrWhiteSpace(input?.AccessToken) OrElse
-           String.IsNullOrWhiteSpace(input?.UserName) OrElse
-           String.IsNullOrWhiteSpace(input?.Uuid) Then
-            Throw New InvalidOperationException("当前没有可继续使用的正版登录结果。")
-        End If
-
-        Return CreateMicrosoftLoginResult(
-            If(input?.AccessToken, ""),
-            If(input?.UserName, ""),
-            If(input?.Uuid, ""),
-            If(input?.ProfileJson, ""))
+        Return ModLaunchProfileShell.CreateCurrentMicrosoftLoginResult(SelectedProfile, input)
     End Function
 
     Private Sub ApplyProfileMutationPlan(plan As MinecraftLaunchProfileMutationPlan)
-        If plan Is Nothing Then Throw New ArgumentNullException(NameOf(plan))
-        If Not String.IsNullOrWhiteSpace(plan.NoticeMessage) Then Hint(plan.NoticeMessage, HintType.Critical)
-
-        Select Case plan.Kind
-            Case MinecraftLaunchProfileMutationKind.CreateNew
-                Dim createdProfile = CreateProfileFromStored(plan.CreateProfile)
-                ProfileList.Add(createdProfile)
-                If plan.ShouldSelectCreatedProfile Then SelectedProfile = createdProfile
-            Case MinecraftLaunchProfileMutationKind.UpdateSelected, MinecraftLaunchProfileMutationKind.UpdateExistingDuplicate
-                If Not plan.TargetProfileIndex.HasValue OrElse plan.TargetProfileIndex.Value < 0 OrElse plan.TargetProfileIndex.Value >= ProfileList.Count Then
-                    Throw New InvalidOperationException("无法应用档案变更：目标档案不存在。")
-                End If
-                UpdateProfileFromStored(ProfileList(plan.TargetProfileIndex.Value), plan.UpdateProfile)
-            Case Else
-                Throw New InvalidOperationException("未知的档案变更类型。")
-        End Select
-
-        If plan.ShouldClearCreatingProfile Then IsCreatingProfile = False
-    End Sub
-
-    Private Function CreateProfileFromStored(profile As MinecraftLaunchStoredProfile) As McProfile
-        If profile Is Nothing Then Throw New ArgumentNullException(NameOf(profile))
-
-        Select Case profile.Kind
-            Case MinecraftLaunchStoredProfileKind.Microsoft
-                Return New McProfile With {
-                    .Type = McLoginType.Ms,
-                    .Uuid = profile.Uuid,
-                    .Username = profile.Username,
-                    .AccessToken = profile.AccessToken,
-                    .RefreshToken = profile.RefreshToken,
-                    .Expires = 1743779140286,
-                    .Desc = "",
-                    .RawJson = profile.RawJson
-                }
-            Case MinecraftLaunchStoredProfileKind.Authlib
-                Return New McProfile With {
-                    .Type = McLoginType.Auth,
-                    .Uuid = profile.Uuid,
-                    .Username = profile.Username,
-                    .Server = profile.Server,
-                    .ServerName = profile.ServerName,
-                    .Name = profile.LoginName,
-                    .Password = profile.Password,
-                    .AccessToken = profile.AccessToken,
-                    .ClientToken = profile.ClientToken,
-                    .Expires = 1743779140286,
-                    .Desc = ""
-                }
-            Case Else
-                Throw New InvalidOperationException("不支持从该档案类型创建变更。")
-        End Select
-    End Function
-
-    Private Sub UpdateProfileFromStored(targetProfile As McProfile, profile As MinecraftLaunchStoredProfile)
-        If targetProfile Is Nothing Then Throw New ArgumentNullException(NameOf(targetProfile))
-        If profile Is Nothing Then Throw New ArgumentNullException(NameOf(profile))
-
-        targetProfile.Uuid = profile.Uuid
-        targetProfile.Username = profile.Username
-        If profile.Kind = MinecraftLaunchStoredProfileKind.Microsoft Then
-            targetProfile.AccessToken = profile.AccessToken
-            targetProfile.RefreshToken = profile.RefreshToken
-            If profile.RawJson IsNot Nothing Then targetProfile.RawJson = profile.RawJson
-        ElseIf profile.Kind = MinecraftLaunchStoredProfileKind.Authlib Then
-            targetProfile.Server = profile.Server
-            targetProfile.ServerName = profile.ServerName
-            targetProfile.AccessToken = profile.AccessToken
-            targetProfile.ClientToken = profile.ClientToken
-            targetProfile.Name = profile.LoginName
-            targetProfile.Password = profile.Password
-        End If
+        ModLaunchProfileShell.ApplyProfileMutationPlan(
+            plan,
+            ProfileList,
+            SelectedProfile,
+            IsCreatingProfile,
+            Sub(message) Hint(message, HintType.Critical))
     End Sub
 
 #End Region
@@ -1040,51 +913,20 @@ NextInner:
     End Sub
 
     Private Sub McLaunchCustom(Loader As LoaderTask(Of Integer, Integer))
-
-        '获取自定义命令
-        Dim CustomCommandGlobal As String = Setup.Get("LaunchAdvanceRun")
-        If CustomCommandGlobal <> "" Then CustomCommandGlobal = ArgumentReplace(CustomCommandGlobal, True)
-        Dim CustomCommandVersion As String = Setup.Get("VersionAdvanceRun", instance:=McInstanceSelected)
-        If CustomCommandVersion <> "" Then CustomCommandVersion = ArgumentReplace(CustomCommandVersion, True)
-        McLaunchSessionPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(
-            New MinecraftLaunchSessionStartWorkflowRequest(
-                New MinecraftLaunchCustomCommandWorkflowRequest(
-                    New MinecraftLaunchCustomCommandRequest(
-                        McLaunchJavaSelected.Installation.MajorVersion,
-                        McInstanceSelected.Name,
-                        ShortenPath(McInstanceSelected.PathIndie),
-                        McLaunchJavaSelected.Installation.JavaExePath,
-                        McLaunchArgument,
-                        CustomCommandGlobal,
-                        Setup.Get("LaunchAdvanceRunWait"),
-                        CustomCommandVersion,
-                        Setup.Get("VersionAdvanceRunWait", instance:=McInstanceSelected)),
-                    ShortenPath(McFolderSelected)),
-                New MinecraftLaunchProcessRequest(
-                    Setup.Get("LaunchAdvanceNoJavaw"),
-                    McLaunchJavaSelected.Installation.JavaExePath,
-                    McLaunchJavaSelected.Installation.JavawExePath,
-                    ShortenPath(McLaunchJavaSelected.Installation.JavaFolder),
-                    Environment.GetEnvironmentVariable("Path"),
-                    ShortenPath(McFolderSelected),
-                    ShortenPath(McInstanceSelected.PathIndie),
-                    McLaunchArgument,
-                    Setup.Get("LaunchArgumentPriority")),
-                BuildWatcherWorkflowRequest()))
+        McLaunchSessionPlan = ModLaunchSessionPlanShell.BuildSessionStartPlan(
+            McInstanceSelected,
+            McLaunchJavaSelected,
+            McLaunchArgument,
+            BuildWatcherWorkflowRequest(),
+            Function(text, replaceTime) ArgumentReplace(text, replaceTime))
 
         '输出 bat
         Try
-            WriteFile(If(CurrentLaunchOptions.SaveBatch, ExePath & "PCL\LatestLaunch.bat"), FilterAccessToken(McLaunchSessionPlan.CustomCommandPlan.BatchScriptContent, "F"),
-                      Encoding:=If(McLaunchSessionPlan.CustomCommandPlan.UseUtf8Encoding, Encoding.UTF8, Encoding.Default))
-            If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
-                Dim scriptExportPlan = MinecraftLaunchShellService.BuildScriptExportPlan(CurrentLaunchOptions.SaveBatch)
-                ModLaunchSessionShell.CompleteScriptExport(
-                    scriptExportPlan,
-                    AddressOf McLaunchLog,
-                    Sub(hint) AbortHint = hint,
-                    Sub() Loader.Parent.Abort())
-                Return '导出脚本完成
-            End If
+            If ModLaunchSessionPlanShell.TryWriteLaunchScript(
+                McLaunchSessionPlan,
+                CurrentLaunchOptions.SaveBatch,
+                Sub(hint) AbortHint = hint,
+                Sub() Loader.Parent.Abort()) Then Return
         Catch ex As Exception
             Log(ex, "输出启动脚本失败")
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then Throw '直接触发启动失败
