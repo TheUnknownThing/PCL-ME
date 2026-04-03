@@ -37,6 +37,7 @@ What is already in a usable migration state:
 - `PCL.Frontend.Spike` proves non-WPF backend consumption
 - `LauncherFrontendShellService` and `LauncherFrontendNavigationService` now provide a portable startup plus navigation shell seam
 - `LauncherFrontendPromptService` now provides portable startup, launch, Java-download, and crash prompt contracts
+- `PCL.Frontend.Spike` now also includes an Avalonia desktop shell spike that renders those portable contracts as a real UI
 - `ModLaunch.vb` is now a thin launch coordinator
 - `ModJava.vb` is effectively a thin adapter for this phase
 - `ModCrash.vb` is now just the crash analyzer entry point
@@ -52,7 +53,9 @@ Recent backend/shell milestones:
 - profile persistence is now routed through `MinecraftLaunchProfileStorageService`
 - launcher identity resolution and Windows device identity access are now more clearly separated
 - secret key resolution and versioned secret-envelope parsing now live in dedicated services
+- shell/runtime secret access now routes through app-layer runtime services
 - the spike can now render a backend-driven shell/navigation/prompt transcript and execution artifact set
+- the spike can now boot a real Avalonia shell from those same contracts
 
 Recent checkpoint commits:
 
@@ -73,6 +76,12 @@ Recent checkpoint commits:
 - `f3520e89` `feat: add frontend prompt and page surface contracts`
 - `b9786c5c` `test: cover secret portability services`
 - `6d4b7ff3` `feat: expose frontend shell artifacts in spike`
+- `262bbb11` `refactor: extract launcher data protection service`
+- `34746e39` `test: cover data protection storage seams`
+- `4e01bcb7` `feat: add avalonia frontend shell spike`
+- `408d8a4c` `refactor: route shell secret access through app runtime`
+- `2674a878` `refactor: extract identity and legacy secret runtime services`
+- `3ed64a54` `refactor: move encryption runtime into app layer`
 
 ## Remaining Work Before Full Frontend Cutover
 
@@ -115,6 +124,7 @@ Progress note:
 
 - this track is healthier than before because device identity access and launcher identity resolution are now separated
 - core secret-key and versioned-envelope logic are now in dedicated services with tests
+- runtime ownership has also moved upward into app-layer services, which is a better fit for a future frontend adapter boundary
 - it is still not finished enough to ignore
 
 ### Priority 3: reduce Windows leakage in `PCL.Core`
@@ -147,6 +157,7 @@ Current starting seam:
 
 - startup plus navigation shell data is already available via `LauncherFrontendShellService`
 - prompt queue data is already available via `LauncherFrontendPromptService`
+- a real desktop shell scaffold already exists in the Avalonia spike
 - the next contracts should extend those seams into page-specific data and profile/auth surfaces
 
 ## Two Parallel Workstreams
@@ -163,7 +174,7 @@ Recommended order:
 
 1. consume the existing startup plus navigation shell contract
 2. consume the portable prompt contract for startup, launch, and crash prompts
-3. build app shell and route rendering on top of those contracts
+3. build on the existing Avalonia shell spike instead of starting from zero
 4. implement low-risk pages first
 5. integrate profile/auth and launch UI after the missing contracts are filled in
 
@@ -187,8 +198,7 @@ Recommended order:
 2. tighten Windows-only boundaries in `PCL.Core`
 3. add missing frontend-facing contracts discovered by the frontend engineer
 4. keep expanding the spike only where it helps prove a new seam
-5. keep shrinking `Application.xaml.vb`
-6. keep shrinking `FormMain.xaml.vb`
+5. only after that, return to any remaining WPF shell cleanup worth extracting
 
 Rules:
 
@@ -230,7 +240,7 @@ We are ready for full cutover only when these additional statements are true:
 
 ### Milestone A: frontend kickoff
 
-- frontend engineer builds the real startup shell, navigation skeleton, and prompt rendering from the existing portable contracts
+- frontend engineer builds forward from the existing Avalonia shell, startup shell, navigation skeleton, and prompt rendering contracts
 - backend engineer supports with any missing startup/prompt contracts
 
 ### Milestone B: contract hardening
@@ -247,13 +257,13 @@ We are ready for full cutover only when these additional statements are true:
 
 As of April 3, 2026, if the engineers keep moving at roughly the current pace:
 
-- you should be able to see a real frontend shell prototype soon, likely after one more focused frontend iteration
-- a more convincing "real frontend" with actual startup, navigation, and prompt handling feels more like the next 1 to 3 engineering turns
+- you can already see the beginning of a real frontend shell now via the Avalonia spike
+- a more convincing "real frontend" with actual startup, navigation, and prompt handling feels like the next 1 to 2 focused frontend iterations
 - a frontend that is meaningfully usable for broader day-to-day flows will still take longer, because page-level surfaces and some backend seams are not finished yet
 
 The short version is:
 
-- first real frontend shell: soon
+- first real frontend shell: now, in spike form
 - full replacement frontend: not next turn
 
 ## Validation

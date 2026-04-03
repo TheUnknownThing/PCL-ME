@@ -32,6 +32,7 @@ Use these boundaries as the current source of truth:
   - should keep shrinking toward UI composition, prompts, windowing, routing, and OS actions
 - `PCL.Frontend.Spike`
   - non-WPF proving ground
+  - now includes both CLI shell tooling and an Avalonia desktop shell spike
   - use it to validate backend contracts and bootstrap flows before or alongside a real replacement frontend
 
 ## What Has Been Finished
@@ -105,6 +106,7 @@ These areas are already substantially portable or backend-owned:
 - startup workflow planning
 - frontend shell planning and navigation catalog generation
 - frontend prompt queue and prompt-command mapping
+- frontend shell desktop composition via the Avalonia spike
 - startup bootstrap and visual planning
 - version transition and milestone policy
 - launch prerun and launch session planning
@@ -118,7 +120,10 @@ These areas are already substantially portable or backend-owned:
 - launcher secret-key resolution in `PCL.Core/App/Essentials/LauncherSecretKeyResolutionService.cs`
 - launcher versioned secret-envelope parsing in `PCL.Core/App/Essentials/LauncherVersionedDataService.cs`
 - launcher legacy identity derivation in `PCL.Core/App/Essentials/LauncherLegacyIdentityService.cs`
+- launcher identity runtime resolution in `PCL.Core/App/Essentials/LauncherIdentityRuntimeService.cs`
+- launcher legacy secret runtime resolution in `PCL.Core/App/Essentials/LauncherLegacySecretResolutionService.cs`
 - launcher identity fallback in `PCL.Core/App/LauncherIdentity.cs`
+- launcher data-protection runtime in `PCL.Core/App/LauncherDataProtectionRuntime.cs`
 - encryption-key fallback in `PCL.Core/Utils/Secret/EncryptHelper.cs`
 - Windows device identity extraction in `PCL.Core/Utils/Secret/WindowsDeviceIdentityProvider.cs`
 
@@ -150,6 +155,13 @@ These are the key migration checkpoints leading to the current state:
 - `f3520e89` `feat: add frontend prompt and page surface contracts`
 - `b9786c5c` `test: cover secret portability services`
 - `6d4b7ff3` `feat: expose frontend shell artifacts in spike`
+- `262bbb11` `refactor: extract launcher data protection service`
+- `34746e39` `test: cover data protection storage seams`
+- `4e01bcb7` `feat: add avalonia frontend shell spike`
+- `ea9ab3d0` `docs: document desktop frontend shell spike`
+- `408d8a4c` `refactor: route shell secret access through app runtime`
+- `2674a878` `refactor: extract identity and legacy secret runtime services`
+- `3ed64a54` `refactor: move encryption runtime into app layer`
 
 ## What Still Remains Before A Full Frontend Cutover
 
@@ -200,7 +212,11 @@ Progress already made:
 - secret key resolution now lives in `LauncherSecretKeyResolutionService`
 - versioned envelope parsing now lives in `LauncherVersionedDataService`
 - legacy identity and legacy key derivation logic now live in `LauncherLegacyIdentityService`
+- shell secret access now routes through app runtime services instead of reaching directly into the old helper path
+- identity/runtime resolution now has dedicated runtime services instead of mixing persistence and derivation in one place
+- encryption runtime ownership has moved into `PCL.Core/App/LauncherDataProtectionRuntime.cs`
 - this area now has dedicated tests covering the new secret portability services
+- data-protection storage seams now also have focused tests
 
 What still remains:
 
@@ -209,6 +225,11 @@ What still remains:
 - making profile/config secret access fully predictable for a future non-Windows frontend without depending on legacy helper knowledge
 
 This is still one of the biggest backend-side architectural blockers, but it is now more isolated than before.
+
+Current assessment:
+
+- this backend track is close to done
+- what remains is now more like final boundary hardening than large architectural extraction
 
 ### 3. Reduce leftover Windows helper leakage in `PCL.Core`
 
@@ -222,9 +243,9 @@ Needed outcome:
 - reusable services stop depending on clipboard/dialog/process/UI assumptions by accident
 - Windows-only behavior becomes clearly adapter-owned
 
-### 4. Expand backend-consumable frontend seams beyond startup and prompt queues
+### 4. Expand backend-consumable frontend seams beyond startup, prompt queues, and shell composition
 
-`PCL.Frontend.Spike` now proves startup, navigation, prompt queues, and shell artifact rendering, but the replacement frontend engineer will still benefit from additional stable seams for:
+`PCL.Frontend.Spike` now proves startup, navigation, prompt queues, shell artifact rendering, and a real Avalonia desktop shell composition, but the replacement frontend engineer will still benefit from additional stable seams for:
 
 - richer page data contracts beyond the current catalog/view seam
 - launch/profile/auth flow view models or request/response adapters
@@ -258,7 +279,7 @@ Recommended first frontend milestones:
 
 1. consume the existing `LauncherFrontendShellService` contract for startup plus navigation shell rendering
 2. consume `LauncherFrontendPromptService` for startup, launch, and crash prompt rendering
-3. build the real window/app shell and route model on top of those contracts
+3. build on the Avalonia shell spike instead of starting from zero
 4. implement low-risk read-only or mostly-read-only pages
 5. request missing launch/profile/auth contracts instead of deriving them from WPF state
 
@@ -268,12 +289,16 @@ This engineer should continue the portability cleanup.
 
 Focus:
 
-- keep shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
 - tighten `PCL.Core` Windows-only boundaries
 - finish `Utils.Secret` portability
 - keep expanding frontend-consumable shell contracts where the new frontend hits gaps
 - add any missing backend-facing contracts the frontend engineer uncovers
 - keep `Plain Craft Launcher 2` moving toward a pure shell role instead of regressing into policy ownership
+
+Secondary follow-up work:
+
+- support the frontend engineer with page-specific surfaces
+- only then return to any remaining WPF shell cleanup that is still worth separating
 
 If you want this engineer to "finish backend next turn", define that as:
 
@@ -303,6 +328,7 @@ Why the answer is now yes:
 - the frontend engineer now also has portable prompt contracts to build against
 - the spike now demonstrates shell-oriented startup and navigation output instead of only backend JSON
 - the spike now emits frontend shell artifacts that are closer to a real replacement-shell integration target
+- the frontend engineer now has an actual Avalonia desktop shell spike to iterate on
 - `PCL.Core.Backend` is already the source of truth for most important portable workflows
 - `PCL.Frontend.Spike` already proves that backend-driven non-WPF startup is viable
 - the remaining work is now concentrated in startup/window shell cleanup, deeper page-level frontend contract coverage, and final secret portability cleanup, which can be handled in parallel with frontend development
