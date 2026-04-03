@@ -262,9 +262,7 @@ Public Module ModJava
     Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
         Log("[Java] 开始获取 Java 下载信息")
         Dim indexRequestPlan = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan()
-        Dim IndexFileStr As String = NetGetCodeByLoader(
-            DlVersionListOrder(indexRequestPlan.OfficialUrls, indexRequestPlan.MirrorUrls),
-            IsJson:=True)
+        Dim IndexFileStr As String = ModJavaTransferShell.DownloadRuntimeIndex(indexRequestPlan)
         Dim manifestPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
             New MinecraftJavaRuntimeManifestRequestPlanRequest(
                 IndexFileStr,
@@ -272,10 +270,7 @@ Public Module ModJava
                 Loader.Input,
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()))
         '获取文件列表
-        McLaunchLog(manifestPlan.LogMessage)
-        Dim ListFileStr As String = NetGetCodeByRequestRetry(
-            DlSourceOrder(manifestPlan.RequestUrls.OfficialUrls, manifestPlan.RequestUrls.MirrorUrls).First(),
-            IsJson:=True)
+        Dim ListFileStr As String = ModJavaTransferShell.DownloadRuntimeManifest(manifestPlan)
         LastJavaBaseDir = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
             IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft"),
             manifestPlan.Selection.ComponentKey)
@@ -286,24 +281,12 @@ Public Module ModJava
                 IgnoreHash,
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()))
         LastJavaBaseDir = runtimePlan.DownloadPlan.RuntimeBaseDirectory
-        Dim existingRelativePaths As New List(Of String)(runtimePlan.Files.Count)
-        For Each filePlan In runtimePlan.Files
-            Dim Checker As New FileChecker(ActualSize:=filePlan.Size, Hash:=filePlan.Sha1)
-            If Checker.Check(filePlan.TargetPath) Is Nothing Then
-                existingRelativePaths.Add(filePlan.RelativePath)
-            End If
-        Next
+        Dim existingRelativePaths = ModJavaTransferShell.DetectExistingRelativePaths(runtimePlan)
         Dim transferPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
             New MinecraftJavaRuntimeDownloadTransferPlanRequest(
                 runtimePlan,
                 existingRelativePaths))
-        Dim Results As New List(Of NetFile)(transferPlan.FilesToDownload.Count)
-        For Each filePlan In transferPlan.FilesToDownload
-            Dim Checker As New FileChecker(ActualSize:=filePlan.Size, Hash:=filePlan.Sha1)
-            Results.Add(New NetFile(DlSourceOrder(filePlan.RequestUrls.OfficialUrls, filePlan.RequestUrls.MirrorUrls), filePlan.TargetPath, Checker))
-        Next
-        Loader.Output = Results
-        Log(transferPlan.LogMessage)
+        Loader.Output = ModJavaTransferShell.BuildDownloadFiles(transferPlan)
     End Sub
 
 #End Region

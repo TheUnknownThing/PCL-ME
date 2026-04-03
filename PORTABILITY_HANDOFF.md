@@ -22,6 +22,7 @@ Latest continuation update:
 - portable Java runtime default ignored-hash policy, runtime base-directory selection, and download state transition cleanup/refresh planning now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadSessionService`
 - launcher Java runtime download lifecycle cleanup / refresh handling in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadSessionService`
 - launcher Java runtime download lifecycle cleanup / refresh shell application is now centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaDownloadSessionShell.vb`
+- launcher Java runtime index / manifest fetch plus reused-file detection and concrete download file shaping are now centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb`
 - launcher Microsoft live HTTP request execution is now centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftRequestShell.vb`
 - launcher Authlib live HTTP request / metadata execution is now centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibRequestShell.vb`
 - `PCL.Frontend.Spike` now sources Java runtime base-directory selection from `MinecraftJavaRuntimeDownloadSessionService` instead of duplicating that path policy locally
@@ -188,7 +189,7 @@ What is not true yet:
 
 - `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup polling lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
 - `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns login step orchestration, device-code popup lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows, but raw live request execution is now isolated behind dedicated launcher request shells
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns the concrete Java transfer lifecycle, including hashing, loader polling, cancellation, and retry, but launcher-side prompt and cleanup / refresh shell application are now isolated behind dedicated Java shell modules
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns Java selection orchestration plus parts of the concrete transfer lifecycle such as loader polling, cancellation, and retry, but launcher-side prompt handling, cleanup / refresh shell application, runtime fetch execution, reused-file detection, and concrete download file shaping are now isolated behind dedicated Java shell modules
 - startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`, but immediate-command / bootstrap / visual shell application and milestone / version-transition application are now isolated behind dedicated startup shell modules
 - crash export still has launcher-owned picker / destination / Explorer flow, now isolated in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
 - launcher modules now consume `PCL.Core.App.Secrets` and `PCL.Core.App.LauncherIdentity` instead of reading launcher-facing secret and identify values from `PCL.Core.Utils.Secret` directly
