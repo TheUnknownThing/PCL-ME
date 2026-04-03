@@ -1,0 +1,323 @@
+<Window
+    x:Class="PCL.Frontend.Spike.Desktop.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="PCL Frontend Spike"
+    Width="1460"
+    Height="920"
+    MinWidth="1180"
+    MinHeight="760">
+  <Grid Margin="22" ColumnDefinitions="280,*,360">
+    <Border Grid.Column="0"
+            Margin="0,0,18,0"
+            Padding="22"
+            Background="#FCFBF8"
+            BorderBrush="#D8E4E7"
+            BorderThickness="1"
+            CornerRadius="28">
+      <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <StackPanel Spacing="6">
+          <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#1D7C73" Text="PCL Frontend Spike" />
+          <TextBlock FontSize="28" FontWeight="Bold" Foreground="#15313A" Text="Shell Routes" />
+          <TextBlock Foreground="#5B6A70"
+                     TextWrapping="Wrap"
+                     Text="This pane is driven from the portable shell catalog, not from WPF event glue." />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,18,0,0" Spacing="10">
+          <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#4B6B72" Text="Top-level pages" />
+          <ItemsControl ItemsSource="{Binding TopLevelEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Margin="0,0,0,10"
+                        Padding="12"
+                        Background="{Binding BackgroundBrush}"
+                        BorderBrush="{Binding BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="18">
+                  <Button Padding="0"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Command="{Binding Command}"
+                          HorizontalContentAlignment="Stretch">
+                    <StackPanel Spacing="4">
+                      <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{Binding ForegroundBrush}" Text="{Binding Title}" />
+                      <TextBlock Foreground="{Binding ForegroundBrush}" Opacity="0.82" TextWrapping="Wrap" Text="{Binding Summary}" />
+                    </StackPanel>
+                  </Button>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,18,0,0" Spacing="10">
+          <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#4B6B72" Text="Sidebar / section routes" />
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding SidebarEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="0,0,0,10"
+                          Padding="12"
+                          Background="{Binding BackgroundBrush}"
+                          BorderBrush="{Binding BorderBrush}"
+                          BorderThickness="1"
+                          CornerRadius="18">
+                    <Button Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Command="{Binding Command}"
+                            HorizontalContentAlignment="Stretch">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="4">
+                          <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{Binding ForegroundBrush}" Text="{Binding Title}" />
+                          <TextBlock Foreground="{Binding ForegroundBrush}" Opacity="0.82" TextWrapping="Wrap" Text="{Binding Summary}" />
+                        </StackPanel>
+                        <Border Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Padding="8,4"
+                                Background="{Binding AccentBrush}"
+                                CornerRadius="999">
+                          <TextBlock Foreground="White" Text="{Binding Meta}" />
+                        </Border>
+                      </Grid>
+                    </Button>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Margin="0,18,0,0" Spacing="10">
+          <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#4B6B72" Text="Utility surfaces" />
+          <ItemsControl ItemsSource="{Binding UtilityEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Margin="0,0,0,10"
+                        Padding="12"
+                        Background="{Binding BackgroundBrush}"
+                        BorderBrush="{Binding BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="18">
+                  <Button Padding="0"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Command="{Binding Command}"
+                          HorizontalContentAlignment="Stretch">
+                    <StackPanel Spacing="4">
+                      <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{Binding ForegroundBrush}" Text="{Binding Title}" />
+                      <TextBlock Foreground="{Binding ForegroundBrush}" Opacity="0.82" TextWrapping="Wrap" Text="{Binding Summary}" />
+                    </StackPanel>
+                  </Button>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Column="1" Margin="0,0,18,0" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="18">
+        <Border Padding="26"
+                Background="#FFFDF8"
+                BorderBrush="#D7E5E8"
+                BorderThickness="1"
+                CornerRadius="30">
+          <StackPanel Spacing="14">
+            <WrapPanel ItemWidth="180" Orientation="Horizontal">
+              <Border Margin="0,0,10,10" Padding="12,6" Background="#E8F4F5" CornerRadius="999">
+                <TextBlock FontWeight="SemiBold" Foreground="#18535D" Text="{Binding ScenarioLabel}" />
+              </Border>
+              <Border Margin="0,0,10,10" Padding="12,6" Background="#FFF0E5" CornerRadius="999">
+                <TextBlock FontWeight="SemiBold" Foreground="#A15029" Text="{Binding EnvironmentLabel}" />
+              </Border>
+              <Border Margin="0,0,10,10" Padding="12,6" Background="#EDF3FE" CornerRadius="999">
+                <TextBlock FontWeight="SemiBold" Foreground="#36558E" Text="{Binding InputLabel}" />
+              </Border>
+            </WrapPanel>
+
+            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#1D7C73" Text="{Binding Eyebrow}" />
+            <TextBlock FontSize="40" FontWeight="Bold" Foreground="#15313A" Text="{Binding Title}" />
+            <TextBlock FontSize="16" Foreground="#57676D" TextWrapping="Wrap" Text="{Binding Description}" />
+
+            <Grid ColumnDefinitions="Auto,*" Margin="0,6,0,0">
+              <Button Width="160"
+                      Padding="14,10"
+                      Background="#123F49"
+                      BorderThickness="0"
+                      Command="{Binding BackCommand}"
+                      IsEnabled="{Binding CanGoBack}">
+                <TextBlock HorizontalAlignment="Center" Foreground="White" Text="Back in shell" />
+              </Button>
+              <Border Grid.Column="1"
+                      Margin="14,0,0,0"
+                      Padding="16,12"
+                      Background="#F2F8F8"
+                      CornerRadius="18">
+                <StackPanel Spacing="6">
+                  <TextBlock FontWeight="SemiBold" Foreground="#29474E" Text="{Binding SurfaceMeta}" />
+                  <TextBlock Foreground="#57676D" TextWrapping="Wrap" Text="{Binding Status}" />
+                  <TextBlock Foreground="#57676D" TextWrapping="Wrap" Text="{Binding BreadcrumbTrail}" />
+                </StackPanel>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding SurfaceCards}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Width="300"
+                      Margin="0,0,14,14"
+                      Padding="18"
+                      Background="{Binding BackgroundBrush}"
+                      CornerRadius="24">
+                <StackPanel Spacing="10">
+                  <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{Binding AccentBrush}" Text="{Binding Eyebrow}" />
+                  <TextBlock FontSize="20" FontWeight="Bold" Foreground="#19333B" Text="{Binding Title}" />
+                  <TextBlock Foreground="#44565D" TextWrapping="Wrap" Text="{Binding Body}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border Padding="24"
+                Background="#FFFDF8"
+                BorderBrush="#D7E5E8"
+                BorderThickness="1"
+                CornerRadius="30">
+          <StackPanel Spacing="14">
+            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#375F9C" Text="Activity feed" />
+            <TextBlock FontSize="28" FontWeight="Bold" Foreground="#15313A" Text="Shell events" />
+            <TextBlock Foreground="#57676D"
+                       TextWrapping="Wrap"
+                       Text="Prompt decisions and route changes show up here so the migrated shell can be inspected without rebuilding launcher policy in the UI." />
+            <ItemsControl ItemsSource="{Binding ActivityEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="0,0,0,12"
+                          Padding="14"
+                          Background="#F5F7FB"
+                          CornerRadius="20">
+                    <Grid ColumnDefinitions="Auto,*">
+                      <Border Padding="8,4" Background="#DCE8FC" CornerRadius="999">
+                        <TextBlock Foreground="#36558E" Text="{Binding Time}" />
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
+                        <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="#20323C" Text="{Binding Title}" />
+                        <TextBlock Foreground="#58666C" TextWrapping="Wrap" Text="{Binding Body}" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Column="2"
+            Padding="22"
+            Background="#FCFBF8"
+            BorderBrush="#D8E4E7"
+            BorderThickness="1"
+            CornerRadius="28">
+      <Grid RowDefinitions="Auto,Auto,*">
+        <StackPanel Spacing="6">
+          <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#D8743C" Text="Prompt Inbox" />
+          <TextBlock FontSize="30" FontWeight="Bold" Foreground="#15313A" Text="{Binding PromptInboxTitle}" />
+          <TextBlock Foreground="#5B6A70" TextWrapping="Wrap" Text="{Binding PromptInboxSummary}" />
+        </StackPanel>
+
+        <ItemsControl Grid.Row="1" Margin="0,18,0,0" ItemsSource="{Binding PromptLanes}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Margin="0,0,10,10"
+                      Padding="12"
+                      Background="{Binding BackgroundBrush}"
+                      BorderBrush="{Binding BorderBrush}"
+                      BorderThickness="1"
+                      CornerRadius="18">
+                <Button Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding Command}">
+                  <StackPanel Spacing="4">
+                    <TextBlock FontWeight="SemiBold" Foreground="{Binding ForegroundBrush}" Text="{Binding Title}" />
+                    <TextBlock Foreground="{Binding ForegroundBrush}" Opacity="0.82" Text="{Binding Count}" />
+                  </StackPanel>
+                </Button>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ScrollViewer Grid.Row="2" Margin="0,18,0,0" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="14">
+            <TextBlock IsVisible="{Binding HasNoActivePrompts}"
+                       Foreground="#5B6A70"
+                       TextWrapping="Wrap"
+                       Text="{Binding PromptEmptyState}" />
+            <ItemsControl ItemsSource="{Binding ActivePrompts}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="0,0,0,14"
+                          Padding="18"
+                          Background="{Binding BackgroundBrush}"
+                          CornerRadius="24">
+                    <StackPanel Spacing="12">
+                      <StackPanel Spacing="6">
+                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{Binding AccentBrush}" Text="{Binding Source}" />
+                        <TextBlock FontSize="22" FontWeight="Bold" Foreground="#1F3540" Text="{Binding Title}" />
+                        <TextBlock Foreground="#56666C" TextWrapping="Wrap" Text="{Binding Message}" />
+                        <TextBlock Foreground="{Binding AccentBrush}" Text="{Binding Severity}" />
+                      </StackPanel>
+
+                      <ItemsControl ItemsSource="{Binding Options}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border Margin="0,0,0,10"
+                                    Padding="12"
+                                    Background="#FFFFFF"
+                                    BorderBrush="#E1E7EA"
+                                    BorderThickness="1"
+                                    CornerRadius="18">
+                              <Button Padding="0"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      Command="{Binding Command}"
+                                      HorizontalContentAlignment="Stretch">
+                                <StackPanel Spacing="4">
+                                  <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="#20323C" Text="{Binding Label}" />
+                                  <TextBlock Foreground="#58666C" TextWrapping="Wrap" Text="{Binding Detail}" />
+                                </StackPanel>
+                              </Button>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

@@ -150,6 +150,7 @@ internal static class SpikeCommandParser
 PCL.Frontend.Spike
 
 Usage:
+  app [--scenario modern-fabric|legacy-forge] [--host-env true|false] [--input-root path]
   startup [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
   shell [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
   launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--java-download-state finished|failed|aborted] [--save-batch path] [--workspace path] [--input-root path]
@@ -196,6 +197,9 @@ Defaults:
                 return true;
             case "shell":
                 command = SpikeCommandKind.Shell;
+                return true;
+            case "app":
+                command = SpikeCommandKind.App;
                 return true;
             default:
                 command = default;

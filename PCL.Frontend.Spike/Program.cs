@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PCL.Frontend.Spike.Desktop;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Rendering;
@@ -22,6 +23,12 @@ if (parseResult.ErrorMessage is not null || parseResult.Options is null)
 }
 
 var options = parseResult.Options;
+if (options.Command == SpikeCommandKind.App)
+{
+    SpikeDesktopHost.Run(options);
+    return;
+}
+
 var payload = BuildPayload(options);
 
 if (options.Format == SpikeOutputFormat.Text)
@@ -46,10 +53,10 @@ static object BuildPayload(SpikeCommandOptions options)
 
 static object BuildPlanPayload(SpikeCommandOptions options)
 {
-    var shellInputs = ResolveShellInputs(options);
-    var startupInputs = ResolveStartupInputs(options);
-    var launchInputs = ResolveLaunchInputs(options);
-    var crashInputs = ResolveCrashInputs(options);
+    var shellInputs = SpikeInputResolver.ResolveShellInputs(options);
+    var startupInputs = SpikeInputResolver.ResolveStartupInputs(options);
+    var launchInputs = SpikeInputResolver.ResolveLaunchInputs(options);
+    var crashInputs = SpikeInputResolver.ResolveCrashInputs(options);
 
     return options.Command switch
     {
@@ -67,10 +74,10 @@ static object BuildPlanPayload(SpikeCommandOptions options)
 
 static object BuildRunPayload(SpikeCommandOptions options)
 {
-    var shellInputs = ResolveShellInputs(options);
-    var startupInputs = ResolveStartupInputs(options);
-    var launchInputs = ResolveLaunchInputs(options);
-    var crashInputs = ResolveCrashInputs(options);
+    var shellInputs = SpikeInputResolver.ResolveShellInputs(options);
+    var startupInputs = SpikeInputResolver.ResolveStartupInputs(options);
+    var launchInputs = SpikeInputResolver.ResolveLaunchInputs(options);
+    var crashInputs = SpikeInputResolver.ResolveCrashInputs(options);
 
     return options.Command switch
     {
@@ -97,10 +104,10 @@ static object BuildRunPayload(SpikeCommandOptions options)
 static object BuildExecutePayload(SpikeCommandOptions options)
 {
     var workspaceRoot = ResolveWorkspaceRoot(options.WorkspaceRoot);
-    var shellInputs = ResolveShellInputs(options);
-    var startupInputs = ResolveStartupInputs(options);
-    var launchInputs = ResolveLaunchInputs(options);
-    var crashInputs = ResolveCrashInputs(options);
+    var shellInputs = SpikeInputResolver.ResolveShellInputs(options);
+    var startupInputs = SpikeInputResolver.ResolveStartupInputs(options);
+    var launchInputs = SpikeInputResolver.ResolveLaunchInputs(options);
+    var crashInputs = SpikeInputResolver.ResolveCrashInputs(options);
 
     return options.Command switch
     {
@@ -141,38 +148,6 @@ static string ResolveWorkspaceRoot(string? requestedWorkspaceRoot)
     var workspaceId = Guid.NewGuid().ToString("N")[..8];
     var directoryName = $"spike-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{workspaceId}";
     return Path.Combine(Path.GetTempPath(), "PCL.Frontend.Spike", directoryName);
-}
-
-static StartupSpikeInputs ResolveStartupInputs(SpikeCommandOptions options)
-{
-    return SpikeInputStore.LoadStartupInputs(options.InputRoot) ??
-           (options.UseHostEnvironment
-               ? SpikeHostInputFactory.CreateStartupInputs()
-               : SpikeSampleFactory.CreateDefaultStartupInputs());
-}
-
-static ShellSpikeInputs ResolveShellInputs(SpikeCommandOptions options)
-{
-    return SpikeInputStore.LoadShellInputs(options.InputRoot) ??
-           (options.UseHostEnvironment
-               ? SpikeHostInputFactory.CreateShellInputs()
-               : SpikeSampleFactory.CreateDefaultShellInputs());
-}
-
-static LaunchSpikeInputs ResolveLaunchInputs(SpikeCommandOptions options)
-{
-    return SpikeInputStore.LoadLaunchInputs(options.InputRoot) ??
-           (options.UseHostEnvironment
-               ? SpikeHostInputFactory.CreateLaunchInputs(options.Scenario)
-               : SpikeSampleFactory.CreateDefaultLaunchInputs(options.Scenario));
-}
-
-static CrashSpikeInputs ResolveCrashInputs(SpikeCommandOptions options)
-{
-    return SpikeInputStore.LoadCrashInputs(options.InputRoot) ??
-           (options.UseHostEnvironment
-               ? SpikeHostInputFactory.CreateCrashInputs()
-               : SpikeSampleFactory.CreateDefaultCrashInputs());
 }
 
 static StartupSpikeExecution CreateStartupExecution(StartupSpikeInputs inputs, string workspaceRoot)

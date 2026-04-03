@@ -1,0 +1,18 @@
+<Application
+    x:Class="PCL.Frontend.Spike.Desktop.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Window">
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+          <GradientStop Color="#F7F2EA" Offset="0" />
+          <GradientStop Color="#E8F4F5" Offset="0.55" />
+          <GradientStop Color="#D7E7F7" Offset="1" />
+        </LinearGradientBrush>
+      </Setter>
+      <Setter Property="FontFamily" Value="Avenir Next, Segoe UI Variable, PingFang SC, sans-serif" />
+    </Style>
+  </Application.Styles>
+</Application>
