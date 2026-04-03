@@ -1080,18 +1080,20 @@ Retry:
                     Catch ex As HttpWebException
                         Dim AllMessage = ex.ToString()
                         ProfileLog("验证登录失败：" & AllMessage)
-                        If (AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout")) AndAlso Not AllMessage.Contains("403") Then
+                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveValidationHttpFailure(
+                            AllMessage,
+                            ex.InnerHttpException.WebResponse)
+                        If resolution.Kind = MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped Then
                             ProfileLog("已触发超时登录失败")
-                            Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationTimeoutFailure(ex.InnerHttpException.WebResponse)
-                            ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
-                            Throw New Exception(failure.WrappedExceptionMessage)
+                            ShowThirdPartyFailureIfPresent(resolution)
+                            Throw New Exception(resolution.WrappedExceptionMessage)
                         End If
-                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateFailure()
+                        currentStep = resolution.NextStep
                     Catch ex As Exception
                         Dim AllMessage = ex.ToString()
                         ProfileLog("验证登录失败：" & AllMessage)
-                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationFailure(AllMessage)
-                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
+                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveValidationFailure(AllMessage)
+                        ShowThirdPartyFailureIfPresent(resolution)
                         Throw
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
@@ -1101,11 +1103,11 @@ Retry:
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshSuccess(currentStep.HasRetriedRefresh)
                     Catch ex As Exception
                         ProfileLog("刷新登录失败：" & ex.ToString())
-                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetRefreshFailure(ex.ToString())
-                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
-                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshFailure(currentStep.HasRetriedRefresh)
-                        If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.Fail Then
-                            Throw New Exception(currentStep.FailureMessage, ex)
+                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveRefreshFailure(ex.ToString(), currentStep.HasRetriedRefresh)
+                        ShowThirdPartyFailureIfPresent(resolution)
+                        currentStep = resolution.NextStep
+                        If resolution.Kind = MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped Then
+                            Throw New Exception(resolution.WrappedExceptionMessage, ex)
                         End If
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.Authenticate
@@ -1119,15 +1121,16 @@ Retry:
                         End If
                     Catch ex As HttpWebException
                         ProfileLog("验证失败：" & ex.ToString())
-                        Dim responseText = ex.InnerHttpException.WebResponse
-                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginHttpFailure(ex.ToString(), responseText)
-                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
-                        Throw New Exception(failure.WrappedExceptionMessage)
+                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginHttpFailure(
+                            ex.ToString(),
+                            ex.InnerHttpException.WebResponse)
+                        ShowThirdPartyFailureIfPresent(resolution)
+                        Throw New Exception(resolution.WrappedExceptionMessage)
                     Catch ex As Exception
                         ProfileLog("验证失败：" & ex.ToString())
-                        Dim failure = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginFailure(ex.ToString())
-                        ModLaunchPromptShell.ShowThirdPartyLoginFailure(failure)
-                        Throw New Exception(failure.WrappedExceptionMessage)
+                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginFailure(ex.ToString())
+                        ShowThirdPartyFailureIfPresent(resolution)
+                        Throw New Exception(resolution.WrappedExceptionMessage)
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.Finish
                     Exit Do
@@ -1282,6 +1285,12 @@ Retry:
 
         Return authenticatePlan.SelectedProfileId
     End Function
+
+    Private Sub ShowThirdPartyFailureIfPresent(resolution As MinecraftLaunchThirdPartyLoginFailureResolution)
+        If resolution.Failure IsNot Nothing Then
+            ModLaunchPromptShell.ShowThirdPartyLoginFailure(resolution.Failure)
+        End If
+    End Sub
 #End Region
 
 #Region "离线验证"

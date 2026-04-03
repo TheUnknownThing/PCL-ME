@@ -50,6 +50,7 @@ Latest continuation update:
 - launch-session start/post-launch shell composition now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
 - Authlib request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
 - Authlib response planning for profile selection, refresh-session resolution, and profile mutation now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibLoginWorkflowService`
+- third-party/Authlib login failure transition policy now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginWorkflowService`
 - Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - Authlib request URL / header / body planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibRequestWorkflowService`
 - Microsoft login request URL / header / body / bearer-token planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftRequestWorkflowService`
@@ -372,7 +373,8 @@ These were completed after Wave 2 was declared stable:
   - `ModLaunch.vb` still performs actual Java selection and Java download execution
 - third-party login failure policy moved out of the launcher
   - `MinecraftLaunchThirdPartyLoginWorkflowService` now owns Authlib validation / refresh / login failure wording and wrapped error messages
-  - `ModLaunch.vb` only displays the returned failure dialogs and throws the returned wrapped errors
+  - `MinecraftLaunchThirdPartyLoginWorkflowService` now also owns the validate/refresh/login failure transition resolution for advance-vs-abort behavior
+  - `ModLaunch.vb` only displays the returned failure dialogs, advances to the returned next step, and throws the returned wrapped errors
 - login profile mutation and Microsoft cached-session reuse policy moved out of the launcher
   - `MinecraftLaunchLoginProfileWorkflowService` now owns Microsoft cached-login reuse rules plus Microsoft/Authlib profile creation and update plans
   - `ModLaunch.vb` still performs the network requests and applies the returned mutation plans to launcher profile state
