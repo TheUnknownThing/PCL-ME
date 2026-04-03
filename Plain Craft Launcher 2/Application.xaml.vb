@@ -28,11 +28,7 @@ Public Class Application
     '开始
     Private Sub Application_Startup() '(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)
-            '创建自定义跟踪监听器，用于检测是否存在 Binding 失败
-            PresentationTraceSources.DataBindingSource.Listeners.Add(New BindingErrorTraceListener())
-            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error
-            SecretOnApplicationStart()
+            ModApplicationRuntimeShell.PrepareRuntime()
             '检查参数调用
             Dim startupPlan = LauncherStartupWorkflowService.BuildPlan(
                 New LauncherStartupWorkflowRequest(
@@ -79,13 +75,7 @@ WaitRetry:
 #End If
             AniControlEnabled += 1
         Catch ex As Exception
-            Dim FilePath As String = Nothing
-            Try
-                FilePath = ExePathWithName
-            Catch
-            End Try
-            MsgBox(ex.ToString() & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
-            FormMain.EndProgramForce(ProcessReturnValues.Exception)
+            ModApplicationRuntimeShell.HandleInitializationFailure(ex)
         End Try
     End Sub
 
@@ -128,18 +118,5 @@ WaitRetry:
     Private Sub TooltipUnloaded(sender As Object, e As RoutedEventArgs)
         ShowingTooltips.Remove(CType(sender, Border))
     End Sub
-
-    ' 自定义监听器类
-    Public Class BindingErrorTraceListener
-        Inherits TraceListener
-
-        Public Overrides Sub Write(message As String)
-            Log($"警告，检测到 Binding 失败：{message}")
-        End Sub
-
-        Public Overrides Sub WriteLine(message As String)
-            Log($"警告，检测到 Binding 失败：{message}")
-        End Sub
-    End Class
 
 End Class
