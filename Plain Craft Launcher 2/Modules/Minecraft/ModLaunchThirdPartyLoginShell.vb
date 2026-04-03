@@ -10,14 +10,17 @@ Public Module ModLaunchThirdPartyLoginShell
     Public Class ThirdPartyLoginExecutionContext
         Public Property Data As LoaderTask(Of ModLaunch.McLoginServer, ModLaunch.McLoginResult)
         Public Property IsCreatingProfile As Boolean
-        Public Property RunValidate As Func(Of ModLaunch.McLoginServer, ModLaunch.McLoginResult)
-        Public Property RunRefresh As Func(Of ModLaunch.McLoginServer, ModLaunch.McLoginResult)
-        Public Property RunLogin As Func(Of ModLaunch.McLoginServer, AuthlibLoginStepResult)
+        Public Property SelectedProfile As McProfile
+        Public Property SelectedProfileIndex As Integer?
+        Public Property ApplyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan)
+        Public Property SaveProfile As Action
     End Class
 
     Public Sub RunLogin(context As ThirdPartyLoginExecutionContext)
         If context Is Nothing Then Throw New ArgumentNullException(NameOf(context))
         If context.Data Is Nothing Then Throw New ArgumentNullException(NameOf(context.Data))
+        If context.ApplyProfileMutationPlan Is Nothing Then Throw New ArgumentNullException(NameOf(context.ApplyProfileMutationPlan))
+        If context.SaveProfile Is Nothing Then Throw New ArgumentNullException(NameOf(context.SaveProfile))
 
         Dim currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetInitialStep(
             New MinecraftLaunchThirdPartyLoginExecutionRequest(
@@ -28,7 +31,7 @@ Public Module ModLaunchThirdPartyLoginShell
                 Case MinecraftLaunchThirdPartyLoginStepKind.ValidateCachedSession
                     Try
                         If context.Data.IsAborted Then Throw New ThreadInterruptedException
-                        context.Data.Output = context.RunValidate(context.Data.Input)
+                        context.Data.Output = ModLaunchAuthlibStepShell.ValidateCachedSession(context.Data.Input, context.SelectedProfile)
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateSuccess()
                     Catch ex As HttpWebException
                         Dim allMessage = ex.ToString()
@@ -52,7 +55,11 @@ Public Module ModLaunchThirdPartyLoginShell
                 Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
                     Try
                         If context.Data.IsAborted Then Throw New ThreadInterruptedException
-                        context.Data.Output = context.RunRefresh(context.Data.Input)
+                        context.Data.Output = ModLaunchAuthlibStepShell.RefreshCachedSession(
+                            context.Data.Input,
+                            context.SelectedProfile,
+                            context.SelectedProfileIndex,
+                            context.ApplyProfileMutationPlan)
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshSuccess(currentStep.HasRetriedRefresh)
                     Catch ex As Exception
                         ProfileLog("刷新登录失败：" & ex.ToString())
@@ -66,7 +73,12 @@ Public Module ModLaunchThirdPartyLoginShell
                 Case MinecraftLaunchThirdPartyLoginStepKind.Authenticate
                     Try
                         If context.Data.IsAborted Then Throw New ThreadInterruptedException
-                        Dim loginStepResult = context.RunLogin(context.Data.Input)
+                        Dim loginStepResult = ModLaunchAuthlibStepShell.Authenticate(
+                            context.Data.Input,
+                            context.SelectedProfile,
+                            context.SelectedProfileIndex,
+                            context.ApplyProfileMutationPlan,
+                            context.SaveProfile)
                         context.Data.Output = loginStepResult.LoginResult
                         currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(loginStepResult.NeedsRefresh)
                         If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession AndAlso currentStep.HasRetriedRefresh Then

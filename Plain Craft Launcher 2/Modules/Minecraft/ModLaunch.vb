@@ -720,40 +720,11 @@ NextInner:
             New ModLaunchThirdPartyLoginShell.ThirdPartyLoginExecutionContext With {
                 .Data = Data,
                 .IsCreatingProfile = IsCreatingProfile,
-                .RunValidate = AddressOf McLoginRequestValidate,
-                .RunRefresh = AddressOf McLoginRequestRefresh,
-                .RunLogin = AddressOf McLoginRequestLogin})
+                .SelectedProfile = SelectedProfile,
+                .SelectedProfileIndex = GetSelectedProfileIndex(),
+                .ApplyProfileMutationPlan = AddressOf ApplyProfileMutationPlan,
+                .SaveProfile = AddressOf SaveProfile})
     End Sub
-    'Server 登录：三种验证方式的请求
-    Private Function McLoginRequestValidate(input As McLoginServer) As McLoginResult
-        Return ModLaunchAuthlibStepShell.ValidateCachedSession(input, SelectedProfile, AddressOf ExecuteAuthlibRequest)
-    End Function
-    Private Function McLoginRequestRefresh(input As McLoginServer) As McLoginResult
-        Return ModLaunchAuthlibStepShell.RefreshCachedSession(
-            input,
-            SelectedProfile,
-            GetSelectedProfileIndex(),
-            AddressOf ExecuteAuthlibRequest,
-            AddressOf ApplyProfileMutationPlan)
-    End Function
-    Private Function McLoginRequestLogin(input As McLoginServer) As AuthlibLoginStepResult
-        Return ModLaunchAuthlibStepShell.Authenticate(
-            input,
-            SelectedProfile,
-            GetSelectedProfileIndex(),
-            AddressOf ExecuteAuthlibRequest,
-            AddressOf ExecuteAuthlibMetadataRequest,
-            AddressOf ApplyProfileMutationPlan,
-            AddressOf SaveProfile)
-    End Function
-
-    Private Function ExecuteAuthlibRequest(requestPlan As MinecraftLaunchHttpRequestPlan) As String
-        Return ModLaunchAuthlibRequestShell.ExecuteRequest(requestPlan)
-    End Function
-
-    Private Function ExecuteAuthlibMetadataRequest(url As String) As String
-        Return ModLaunchAuthlibRequestShell.ExecuteMetadataRequest(url)
-    End Function
 
 #End Region
 

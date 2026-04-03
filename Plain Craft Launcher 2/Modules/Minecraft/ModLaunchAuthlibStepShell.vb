@@ -3,8 +3,7 @@ Imports PCL.Core.Minecraft.Launch
 Public Module ModLaunchAuthlibStepShell
 
     Public Function ValidateCachedSession(input As ModLaunch.McLoginServer,
-                                          selectedProfile As McProfile,
-                                          executeRequest As Func(Of MinecraftLaunchHttpRequestPlan, String)) As ModLaunch.McLoginResult
+                                          selectedProfile As McProfile) As ModLaunch.McLoginResult
         ProfileLog("验证登录开始（Validate, Authlib")
 
         Dim accessToken As String = ""
@@ -22,7 +21,7 @@ Public Module ModLaunchAuthlibStepShell
             input.BaseUrl,
             accessToken,
             clientToken)
-        executeRequest.Invoke(requestPlan)
+        ModLaunchAuthlibRequestShell.ExecuteRequest(requestPlan)
 
         ProfileLog("验证登录成功（Validate, Authlib")
         Return New ModLaunch.McLoginResult With {
@@ -36,7 +35,6 @@ Public Module ModLaunchAuthlibStepShell
     Public Function RefreshCachedSession(input As ModLaunch.McLoginServer,
                                          selectedProfile As McProfile,
                                          selectedProfileIndex As Integer?,
-                                         executeRequest As Func(Of MinecraftLaunchHttpRequestPlan, String),
                                          applyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan)) As ModLaunch.McLoginResult
         If selectedProfile Is Nothing Then Throw New InvalidOperationException("当前没有可刷新的第三方验证档案。")
 
@@ -48,7 +46,7 @@ Public Module ModLaunchAuthlibStepShell
             selectedProfile.AccessToken)
         Dim refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
             New MinecraftLaunchAuthlibRefreshWorkflowRequest(
-                executeRequest.Invoke(requestPlan),
+                ModLaunchAuthlibRequestShell.ExecuteRequest(requestPlan),
                 selectedProfileIndex,
                 selectedProfile.Server,
                 selectedProfile.ServerName,
@@ -69,8 +67,6 @@ Public Module ModLaunchAuthlibStepShell
     Public Function Authenticate(input As ModLaunch.McLoginServer,
                                  selectedProfile As McProfile,
                                  selectedProfileIndex As Integer?,
-                                 executeRequest As Func(Of MinecraftLaunchHttpRequestPlan, String),
-                                 executeMetadataRequest As Func(Of String, String),
                                  applyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan),
                                  saveProfile As Action) As ModLaunchThirdPartyLoginShell.AuthlibLoginStepResult
         Try
@@ -83,14 +79,14 @@ Public Module ModLaunchAuthlibStepShell
                 New MinecraftLaunchAuthlibAuthenticatePlanRequest(
                     input.ForceReselectProfile,
                     If(selectedProfile IsNot Nothing, selectedProfile.Uuid, Nothing),
-                    executeRequest.Invoke(authenticateRequestPlan)))
+                    ModLaunchAuthlibRequestShell.ExecuteRequest(authenticateRequestPlan)))
             Dim selectedId = ModLaunchInteractionShell.ResolveAuthlibAuthenticateSelection(authenticatePlan)
 
             Dim metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(input.BaseUrl)
             Dim authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
                 New MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
                     authenticatePlan,
-                    executeMetadataRequest.Invoke(metadataRequestPlan.Url),
+                    ModLaunchAuthlibRequestShell.ExecuteMetadataRequest(metadataRequestPlan.Url),
                     input.IsExist,
                     selectedProfileIndex,
                     input.BaseUrl,
