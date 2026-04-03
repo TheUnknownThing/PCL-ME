@@ -170,9 +170,10 @@ What is already true:
 
 What is not true yet:
 
-- `ModLaunch.vb` still owns adapter-level request execution and launcher prompt integration, while `ModJava.vb` still owns the launcher download job lifecycle and loader polling
-- startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
-- crash export still has launcher-owned picker / Explorer flow in `ModCrash.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns the concrete Java transfer lifecycle, including hashing, loader polling, cancellation, retry, cleanup, and runtime refresh behavior after install
+- startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`
+- crash export still has launcher-owned picker / destination / Explorer flow in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 - `Utils.Secret` is still deliberately deferred and still blocks a truly headless secure auth/config story
 
@@ -427,22 +428,53 @@ These seams are deliberate and should stay intact until the broader runtime extr
 
 ## Recommended Next Work
 
+Before a real frontend migration starts, the remaining work is now mostly adapter cleanup rather than new backend architecture. The next engineer should treat the current backend seams as stable and finish the following tracks first.
+
+## Remaining Before Frontend Migration
+
+These are the remaining parts to finish before calling the project ready for a real frontend migration.
+
+1. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` as a thin login/launch shell adapter.
+   - Keep `PCL.Core.Backend` as the source of truth for request planning, failure transitions, launch composition, and process start requests.
+   - Pull any remaining reusable request execution / coordination out of `ModLaunch.vb` where it is still mixed with launcher-local state transitions.
+   - Reduce the remaining inline launcher notifications, device-code popup lifecycle glue, account decision handling, and post-step shell side effects to adapter-only behavior.
+2. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` as a thin Java transfer adapter.
+   - The Java runtime transfer plan and reused-file selection are already portable.
+   - The remaining work is the concrete download engine lifecycle: file hashing, loader polling, cancellation, retry, cleanup, and Java list/runtime refresh after install.
+   - A frontend migration should not start while those behaviors are still effectively launcher-owned.
+3. Finish startup adapter cleanup in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`.
+   - Leave splash screen, window lifetime, tooltip metadata, and WPF presentation in the launcher.
+   - Keep moving any startup sequencing, prompt timing, and decision flow that is still reusable out of those files and into backend-facing contracts.
+4. Finish crash shell cleanup in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`.
+   - The backend already owns crash export planning, naming, save-dialog defaults, and completion policy.
+   - The remaining launcher-owned work should shrink toward picker invocation, chosen-destination plumbing, direct log opening, and Explorer reveal only.
+5. Reduce the Windows-only helper surface that still leaks into reusable backend paths.
+   - Highest-value examples remain `PCL.Core/IO/Files.cs`, `PCL.Core/App/Tools/DependencyCheckService.cs`, and dialog / clipboard / shell helpers that still combine reusable logic with Windows-only APIs.
+   - The goal is not to make those helpers portable in place; it is to wrap or split them so a future frontend does not need them as backend dependencies.
+6. Resolve `Utils.Secret` enough for a headless auth/config story.
+   - This is still the biggest architectural holdout for a truly portable end-to-end backend.
+   - The next engineer does not need to redesign all secrets/auth storage at once, but they do need a boundary that a non-Windows frontend can eventually call.
+7. Keep extending `PCL.Frontend.Spike` only where it proves the remaining seams.
+   - The spike is already good enough for startup / launch / crash contract review, login request execution transcripts, Java request planning, Java transfer/reuse review, crash export destination handoff, launch-script export, host-backed inputs, and portable process-start request inspection.
+   - The next spike work should focus on proving the remaining adapter seams above, not rebuilding frontend concerns.
+
+## Recommended Next Work
+
 Highest-value next slices, in order:
 
-1. move more reusable runtime/services from `PCL.Core` into `PCL.Core.Backend`
-   - prefer migrating portable service implementations instead of adding new workflow code to the Windows-targeted project
-   - keep `PCL.Core` focused on adapters, compatibility surfaces, and Windows-only composition
-2. reduce `ModLaunch.vb` further
-   - finish extracting reusable request execution / coordination and Java-selection or Java-download bridging that is not inherently UI-specific
-   - keep shell prompts, popup lifecycle, and launcher-local side effects in adapters
+1. finish shrinking `ModLaunch.vb`
+   - focus on live Authlib / Microsoft request execution adapters, remaining popup/prompt bridges, and any launcher-only notifications still mixed with reusable login or launch steps
+2. finish shrinking `ModJava.vb`
+   - focus on the real transfer lifecycle, cancellation/retry, cleanup, and runtime refresh path
 3. reduce startup orchestration further
    - continue trimming `Application.xaml.vb` and `FormMain.xaml.vb` so they become shell/application adapters rather than owners of startup decision flow
 4. trim `ModCrash.vb`
-   - move any remaining reusable crash-export shell decisions or file-preparation workflow into `PCL.Core.Backend`
-5. keep extending the shell-replacement spike
-   - the spike now proves that a small non-WPF shell can consume the extracted startup / launch / crash contracts without rewriting the whole launcher
-   - the spike now also proves basic workspace/file execution and crash-archive materialization on top of those contracts
-   - the next extension should focus on real adapter integration or live environment inputs instead of rebuilding command parsing or output plumbing
+   - keep only picker / destination / Explorer shell work in the launcher
+5. move more reusable runtime/services from `PCL.Core` into `PCL.Core.Backend`
+   - prefer migrating portable service implementations instead of adding new workflow code to the Windows-targeted project
+   - keep `PCL.Core` focused on adapters, compatibility surfaces, and Windows-only composition
+6. keep extending the shell-replacement spike
+   - the next extension should prove the remaining adapter seams above, especially login execution and Java transfer lifecycle boundaries
 
 Work that should stay in launcher adapters for now:
 
@@ -504,41 +536,37 @@ Additional note about validation on this machine:
 
 ## Current Portability Estimate
 
-If “portable backend” means “the non-GUI services a future macOS/Linux launcher could call without depending on WPF or Windows-only APIs”, the current estimate is:
+Use these numbers when handing the work to another engineer:
 
-- about `97%~98%` complete
+- portable workflow/policy backend coverage: about `98%`
+- backend readiness for a replacement frontend shell: about `95%~96%`
+- truly portable end-to-end backend: about `90%~91%`
 
-Rationale:
+Why those numbers are different:
 
 - `PCL.Core.Foundation` is already real, portable, and validated on macOS
-- a substantial amount of launcher workflow policy has already been extracted into headless/core services
-- the biggest remaining backend gap is no longer basic business logic extraction; it is the separation of reusable services from `PCL.Core`’s remaining WPF/UI and Windows-adapter code
-- the residual blockers are now concentrated in a smaller set of launcher shell adapters, especially `ModLaunch.vb` and `Application.xaml.vb`
+- `PCL.Core.Backend` now owns most of the launcher workflow/policy seams that matter for startup / launch / crash
+- the remaining work is no longer “prove the architecture”; it is finishing the last launcher-owned live adapters and Windows-bound helper seams so a replacement frontend can stand on top of them cleanly
 
 Concrete current state:
 
 - `PCL.Core.Foundation` is the strongest part of the portability work
-- `PCL.Core` still contains a significant mix of:
-  - reusable runtime/backend services
-  - WPF/UI infrastructure
-  - Windows-only adapters and interop helpers
-- the launcher now consumes core-owned startup/crash/launch shell policies for more of its migration and prompt logic than before, but some step orchestration is still VB/WPF-local
-- the frontend is still the biggest blocker to a cross-platform launcher binary, but the backend is already far enough along that a new frontend can be built on top of the extracted seams
-
-If “fully working portable backend” means “all non-frontend launcher behavior can run cross-platform today without the current Windows launcher layer”, the honest estimate is lower:
-
-- about `80%~84%` complete
-
-Reason:
-
-- `PCL.Core.Foundation` is genuinely portable
-- `PCL.Core` still targets `net8.0-windows` and still mixes reusable backend/runtime services with Windows adapters, WPF-facing helpers, and shell/device integrations
-- the remaining work is no longer proving the architecture; it is continuing the separation until a new frontend can consume the backend without depending on those Windows-specific layers
+- `PCL.Core.Backend` is already a credible portable source of truth for the extracted workflow layer
+- `PCL.Core` still contains a smaller but meaningful mix of Windows-only adapters and compatibility helpers
+- `Plain Craft Launcher 2` still owns the last major adapter-heavy launch / Java / startup / crash behaviors that must be trimmed before a real frontend migration
+- the frontend is still the biggest blocker to a cross-platform launcher binary, but the backend is now close enough that the remaining work should be framed as adapter cleanup rather than new backend architecture
 
 ## Recent Checkpoint Commits
 
 This is the meaningful history for the current portability work:
 
+- `3771109e` `Extract portable launch process execution`
+- `e07aad7b` `Model launch script export in shell services`
+- `79b8db58` `Extract crash export dialog planning`
+- `64703c2a` `Refresh migration handoff for Java transfer seam`
+- `6b332959` `Model Java transfer reuse in shell spike`
+- `094e6d67` `Extract Java download transfer planning`
+- `6108afda` `Refresh migration handoff for next owner`
 - `1c2847e7` `Extract third-party login failure transitions`
 - `894fe9ca` `Clean up launch adapter helpers and docs`
 - `8899b936` `Extract Authlib login response workflow into core`
@@ -632,7 +660,7 @@ This is the meaningful history for the current portability work:
 - `4f52b60a` `Add host-backed spike input mode`
 - `cbe6a6f3` `Extract Java runtime download planning`
 
-If the next engineer wants to understand the current extraction shape, start with the eight newest commits above, then continue downward through the earlier Wave 1 / Wave 2 extraction history.
+If the next engineer wants to understand the current extraction shape, start with the newest seven commits above, then continue downward through the earlier Wave 3 / Wave 2 history.
 
 ## Wave 2 Completion Status
 
@@ -726,80 +754,36 @@ Do not do these yet unless the runtime boundary is already stable:
 
 ## Recent Completion Commits
 
-The final Wave 2 checkpoint history after the previous handoff is:
+Use this shorter checkpoint list for handoff orientation:
 
-- `5e2cf992` `refactor(process): add portable foundation process manager`
-- `a497f672` `refactor(process): delegate core process helpers through windows facade`
-- `459b79ce` `test(portability): rerun process portability validation`
-- `4873eb24` `refactor(theme): isolate system theme reads behind windows source`
-- `64e00ad3` `refactor(telemetry): isolate official launcher probe behind windows adapter`
-- `08edf3ef` `test(portability): rerun theme and telemetry validation`
-- `5e0e7c92` `refactor(runtime): add system runtime probe adapters`
-- `b64cf13f` `refactor(runtime): route startup and telemetry through runtime probe`
-- `4e8a7134` `test(portability): rerun runtime probe validation`
-- `0728569d` `refactor(registry): isolate registry monitor behind windows implementation`
-- `22c972a3` `refactor(proxy): route registry proxy monitoring through adapter`
-- `946b1569` `test(portability): rerun registry adapter validation`
-- `e88b5d55` `refactor(process): add windows process platform service`
-- `d317faf3` `refactor(process): delegate interop facade through platform service`
-- `b95cc838` `test(portability): rerun process platform validation`
-- `cd8da717` `refactor(io): isolate directory permission checks behind platform service`
-- `1bb1befe` `refactor(runtime): route easytier and dependency checks through runtime info`
+- `3771109e` `Extract portable launch process execution`
+- `e07aad7b` `Model launch script export in shell services`
+- `79b8db58` `Extract crash export dialog planning`
+- `64703c2a` `Refresh migration handoff for Java transfer seam`
+- `6b332959` `Model Java transfer reuse in shell spike`
+- `094e6d67` `Extract Java download transfer planning`
+- `6108afda` `Refresh migration handoff for next owner`
+- `1c2847e7` `Extract third-party login failure transitions`
+- `894fe9ca` `Clean up launch adapter helpers and docs`
+- `8899b936` `Extract Authlib login response workflow into core`
+- `e44bc97b` `Extract Microsoft login failure policy into core`
+- `f75a3a58` `Extract login request planning into core workflows`
 
-The Wave 3 launcher cleanup commits after that are:
-
-- `4209a9bd` `refactor(launcher): route gpu preference through process interop`
-- `d4b8d415` `feat(runtime): add launcher system environment facade`
-- `9ce41769` `refactor(launcher): source system summary from core facade`
-- `24a3332a` `docs(portability): outline frontend migration tracks`
-- `767e6fcf` `refactor(crash): move environment report assembly into core`
-- `20dcecfc` `refactor(startup): move environment warning rules into core`
-- `89a1474a` `feat(launch): add core launch precheck workflow models`
-- `cead4dcf` `refactor(launcher): route launch precheck through core workflow`
-- `3da5635e` `feat(startup): add startup consent workflow service`
-- `ccfda6a5` `refactor(launcher): route startup prompts through core workflow`
-- `4b381762` `feat(crash): add crash export packaging service`
-- `3621fa20` `refactor(launcher): route crash export through core helper`
-- `ef054bb4` `test(migration): cover launcher workflow extraction regressions`
-- `3c448760` `refactor(launch): extract post-launch shell policy`
-- `3c9edf1e` `refactor(startup): extract bootstrap policy`
-- `510b2974` `feat(launch): add account prompt workflow service`
-- `2dc7194d` `refactor(launcher): route launch account prompts through core workflow`
-- `ba5c9882` `feat(launch): add java requirement and prompt workflow`
-- `ee20387b` `refactor(launcher): route java launch policy through core workflow`
-- `8d139e36` `test(migration): cover launch workflow extraction regressions`
-- `2ed9ce55` `feat(launch): add third-party login workflow service`
-- `e5960538` `refactor(launcher): route authlib failure policy through core workflow`
-- `1929b08f` `feat(launch): add login profile workflow service`
-- `dc49a7f2` `refactor(launcher): route login profile workflow through core service`
-- `f3cb24d6` `feat(startup): add launcher version transition workflow`
-- `c0b1ac9f` `refactor(launcher): route version migration through core workflow`
-- `9c3ed1fc` `feat(startup): add version isolation migration workflow`
-- `c3e9949b` `refactor(startup): route version isolation migration through core workflow`
-- `5ae28075` `feat(crash): add export workflow planner`
-- `93fdf3f3` `refactor(crash): route export assembly through core workflow`
-- `8fdaf8e4` `feat(launch): add shell prompt and gpu retry workflows`
-- `3f339b39` `refactor(launcher): route launch shell policies through core workflows`
-- `7deae4f8` `Add startup shell service contract`
-- `67c9c0cd` `Refactor startup shell handling in launcher`
-- `28d0726c` `Extract startup prompt shell adapter`
-- `f81f56f5` `Extract launch prompt shell adapter`
-- `53c09fdf` `Extract crash prompt shell adapter`
-- `41f13f26` `Extract auth profile selection shell flow`
-- `2ce1d80e` `Extract login dialog shell handling`
+The longer Wave 2 / earlier Wave 3 history is preserved in the `Recent Checkpoint Commits` section above.
 
 ## Phase Call
 
-Do not treat the project as ready for a true “next phase” frontend-shell replacement yet.
+Treat the project as ready for a handoff into frontend-migration preparation, but not yet ready for a real frontend cutover.
 
-It is ready for handoff to another engineer, but the recommended near-term phase is still:
+The recommended near-term phase is:
 
-1. finish the last high-value launcher workflow extraction slices, now concentrated mainly in `ModLaunch.vb` and `Application.xaml.vb`
-2. then start a narrow shell-migration spike
+1. finish the remaining adapter-heavy launcher cleanup, mainly in `ModLaunch.vb`, `ModJava.vb`, `Application.xaml.vb`, `FormMain.xaml.vb`, and `ModCrash.vb`
+2. reduce the last Windows-helper dependencies in `PCL.Core` that still block a future frontend consumer
+3. only then start a real frontend migration on top of those seams
 
 ## One-Line Summary
 
-Wave 2 is complete and a substantial Wave 3 cleanup set is landed: the runtime/core portability seams are stabilized, startup/crash/launch shell policies now have broader core-side coverage, Java runtime download planning is now portable, Foundation remains headless and macOS-valid, and the next engineer should finish the remaining launcher shell cleanup plus `PCL.Core` Windows-helper reduction before claiming a truly portable backend or attempting a real frontend-shell cutover.
+Wave 2 is complete and the backend extraction is now far enough along to hand off confidently: startup / crash / launch policy is largely portable, Java transfer planning and process start construction are now shared seams, and the next engineer should finish the remaining adapter cleanup plus `PCL.Core` Windows-helper reduction before attempting a real frontend migration.
 
 ## Updated Bottom Line
 
@@ -809,8 +793,8 @@ The correct framing for that handoff is:
 
 - Wave 2 runtime/platform extraction is complete
 - Wave 3 launcher-workflow cleanup is well underway and has already removed a large amount of mixed prompt/policy logic from the launcher files
-- the project does **not** yet have a fully working cross-platform backend end-to-end, because `PCL.Core` still contains Windows-specific runtime and shell helpers
+- the project does **not** yet have a fully working cross-platform backend end-to-end, because the last live launcher adapters and some Windows-specific runtime/shell helpers are still in the way
 - the next engineer should not restart the portability effort; they should continue the current extraction path by:
   - finishing the remaining launcher shell-adapter cleanup
   - then shrinking `PCL.Core` Windows coupling
-  - then choosing a narrow frontend-shell replacement spike on top of those seams
+  - then starting frontend migration only after those remaining seams are adapter-dominant instead of workflow-dominant

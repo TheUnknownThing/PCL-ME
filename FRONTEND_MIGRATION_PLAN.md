@@ -19,7 +19,9 @@ Decision:
 Current estimate:
 
 - portable runtime/core extraction: `complete`
-- backend readiness for a replacement frontend shell: roughly `92%~93%` for a real end-to-end frontend cutover, and roughly `97%~98%` for reusable portable workflow/policy coverage
+- backend readiness for a replacement frontend shell: roughly `95%~96%`
+- reusable portable workflow/policy coverage: roughly `98%`
+- truly portable end-to-end backend readiness: roughly `90%~91%`
 
 Current handoff decision:
 
@@ -208,29 +210,52 @@ After the latest cleanup slices, the former biggest blocker has changed:
 
 A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
 
+## Required Before Frontend Migration
+
+The migration is handoff-ready, but these tracks should be finished before starting a real frontend replacement.
+
+1. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` as an adapter-first launch/login shell.
+   - Remaining work is live request execution, device-code popup lifecycle bridging, account/prompt application, and launcher-local side effects that still wrap the extracted Authlib / Microsoft services.
+2. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` as an adapter-first Java transfer shell.
+   - Remaining work is the concrete download lifecycle: hashing, loader polling, cancellation, retry, cleanup, and post-install Java/runtime refresh.
+3. Finish startup adapter cleanup in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`.
+   - A new frontend should not have to rediscover startup sequencing, prompt timing, or startup-side decision flow from WPF files.
+4. Finish crash shell cleanup in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`.
+   - Remaining launcher-owned behavior should shrink toward picker invocation, chosen destination plumbing, direct log opening, and Explorer reveal only.
+5. Reduce `PCL.Core` Windows helper dependencies that still block a clean backend contract.
+   - High-value examples remain `PCL.Core/IO/Files.cs`, `PCL.Core/App/Tools/DependencyCheckService.cs`, and dialog / clipboard / system-shell helpers that still mix reusable logic with Windows-only APIs.
+6. Resolve `Utils.Secret` enough for a headless auth/config boundary.
+   - This remains the largest architectural blocker to calling the backend from a truly non-Windows frontend.
+7. Keep `PCL.Frontend.Spike` aligned with those seams.
+   - The spike should keep proving the extracted shell contracts rather than growing into a replacement frontend prematurely.
+
 ## Recommended Next Boundary
 
-The next implementation phase can move into a **small shell-replacement / frontend-contract spike on top of the extracted seams**.
+The next implementation phase should finish the remaining adapter cleanup and only then move into a **small shell-replacement / frontend-contract spike on top of the extracted seams**.
 
 Create launcher-facing services in `PCL.Core` for:
 
 1. any leftover startup shell policy still assembled directly in launcher files
-2. optional follow-up launch-step adapter cleanup only where `ModLaunch.vb` still mixes shell/UI work with reusable decision logic
-3. selective reduction of `PCL.Core` Windows-only shell helpers when they still block a future non-Windows frontend
-4. a small shell-replacement spike that consumes the extracted services
+2. follow-up launch/login adapter cleanup where `ModLaunch.vb` still mixes shell/UI work with reusable decision logic
+3. Java transfer adapter cleanup where `ModJava.vb` still owns workflow-heavy lifecycle behavior
+4. selective reduction of `PCL.Core` Windows-only shell helpers when they still block a future non-Windows frontend
+5. a small shell-replacement spike that consumes the extracted services once the remaining adapter-heavy seams above are under control
 
 Most practical next code targets:
 
 1. finish shrinking `ModLaunch.vb`
-   Focus on remaining request-execution adapters, Java download job shell bridging, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
-2. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
+   Focus on remaining request-execution adapters, popup/prompt bridging, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
+2. finish shrinking `ModJava.vb`
+   Focus on the concrete Java download lifecycle and retry/cancellation/cleanup behavior so the backend owns the policy and the launcher only applies it.
+3. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
    Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
-3. trim `ModCrash.vb`
+4. trim `ModCrash.vb`
    Keep only picker / zip / Explorer shell work in the launcher.
-4. build a tiny replacement shell spike
+5. reduce `PCL.Core` Windows-helper coupling where it still blocks frontend consumers.
+6. build a tiny replacement shell spike
    It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
    The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, launcher-style Java request planning, Java runtime file materialization, Java transfer/reuse review, launch-script export handling, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
-   The best next spike step is feeding more real launcher-backed request execution and concrete Java-download transfer results into the shell, instead of only modeled responses and placeholder runtime file contents.
+   The best next spike step is feeding more of the remaining real adapter seams into the shell after those adapters are narrowed, rather than letting the spike absorb launcher-only complexity.
 
 Keep the following in the launcher as adapters:
 
@@ -243,17 +268,18 @@ This boundary keeps the current launcher behavior intact while making the eventu
 
 ## Execution Order
 
-1. Start a small frontend-shell migration spike now that portable runtime/core extraction is complete.
-   Prefer a narrow surface that can consume the extracted launch/startup/crash services without rewriting the whole launcher.
-2. Trim startup shell policy in the launcher if it blocks that spike.
-3. Keep refining `ModLaunch.vb` only where the new shell surface needs cleaner step-level adapters.
-4. Trim any remaining `ModCrash.vb` picker / Explorer glue only if the shell spike needs it.
+1. Finish the remaining adapter-heavy cleanup in `ModLaunch.vb`.
+2. Finish the remaining adapter-heavy cleanup in `ModJava.vb`.
+3. Trim startup shell policy in `Application.xaml.vb` and `FormMain.xaml.vb` until those files are presentation/lifetime adapters.
+4. Trim the remaining `ModCrash.vb` picker / Explorer glue.
 5. Start shrinking `PCL.Core` Windows helpers that still mix reusable logic with Windows shell APIs.
+6. Only then start a small frontend-shell migration spike on top of the extracted contracts.
 
 ## Acceptance Criteria
 
 - WPF pages and controls remain unchanged in behavior.
 - New launcher workflow services do not introduce `System.Windows` dependencies into `PCL.Core.Foundation`.
 - The launcher becomes a consumer of workflow results plus shell adapters, not the owner of business logic assembly.
+- `ModLaunch.vb`, `ModJava.vb`, `Application.xaml.vb`, `FormMain.xaml.vb`, and `ModCrash.vb` are adapter-dominant rather than workflow-dominant.
 - Frontend migration can proceed without reopening runtime seams or reintroducing launcher-local copies of runtime/system logic.
-- The project can enter a small shell-migration phase now that `ModLaunch.vb` no longer owns the majority of login execution / orchestration policy.
+- The shell spike can exercise the chosen startup / launch / crash contracts without needing to pull new workflow logic back out of launcher files.
