@@ -8,7 +8,7 @@ Public Module ModLaunchArgumentWorkflowShell
     Public Function BuildLaunchArguments(instance As McInstance,
                                          options As ModLaunch.McLaunchOptions,
                                          selectedJava As JavaEntry,
-                                         loginResult As ModLaunch.McLoginResult,
+                                         loginResult As McLoginResult,
                                          authBaseUrl As String,
                                          getNativesFolder As Func(Of String),
                                          loader As LoaderTask(Of String, List(Of McLibToken)),
@@ -71,7 +71,7 @@ Public Module ModLaunchArgumentWorkflowShell
 
     Private Function BuildLegacyJvmArguments(instance As McInstance,
                                              selectedJava As JavaEntry,
-                                             loginResult As ModLaunch.McLoginResult,
+                                             loginResult As McLoginResult,
                                              authBaseUrl As String,
                                              nativesFolder As String) As String
         Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(instance, Not selectedJava.Installation.Is64Bit) * 1024)
@@ -99,7 +99,7 @@ Public Module ModLaunchArgumentWorkflowShell
 
     Private Function BuildModernJvmArguments(instance As McInstance,
                                              selectedJava As JavaEntry,
-                                             loginResult As ModLaunch.McLoginResult,
+                                             loginResult As McLoginResult,
                                              authBaseUrl As String,
                                              nativesFolder As String) As String
         Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(instance) * 1024)
@@ -160,7 +160,7 @@ Public Module ModLaunchArgumentWorkflowShell
 
     Private Function BuildReplacementArguments(instance As McInstance,
                                                selectedJava As JavaEntry,
-                                               loginResult As ModLaunch.McLoginResult,
+                                               loginResult As McLoginResult,
                                                getNativesFolder As Func(Of String),
                                                loader As LoaderTask(Of String, List(Of McLibToken)),
                                                logMessage As Action(Of String)) As Dictionary(Of String, String)

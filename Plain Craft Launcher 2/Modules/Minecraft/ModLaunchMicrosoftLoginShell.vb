@@ -28,17 +28,17 @@ Public Module ModLaunchMicrosoftLoginShell
     End Structure
 
     Public Class MicrosoftLoginExecutionContext
-        Public Property Data As LoaderTask(Of ModLaunch.McLoginMs, ModLaunch.McLoginResult)
-        Public Property Input As ModLaunch.McLoginMs
+        Public Property Data As LoaderTask(Of McLoginMs, McLoginResult)
+        Public Property Input As McLoginMs
         Public Property OAuthClientId As String
         Public Property ShouldReuseCachedLogin As Boolean
         Public Property HasOAuthRefreshToken As Boolean
         Public Property IsCreatingProfile As Boolean
         Public Property SelectedProfileIndex As Integer?
         Public Property StoredProfiles As List(Of MinecraftLaunchStoredProfile)
-        Public Property CreateCurrentMicrosoftLoginResult As Func(Of ModLaunch.McLoginMs, ModLaunch.McLoginResult)
-        Public Property CreateMicrosoftLoginResult As Func(Of String, String, String, String, ModLaunch.McLoginResult)
-        Public Property CreateMicrosoftLoginResultFromStored As Func(Of MinecraftLaunchStoredProfile, ModLaunch.McLoginResult)
+        Public Property CreateCurrentMicrosoftLoginResult As Func(Of McLoginMs, McLoginResult)
+        Public Property CreateMicrosoftLoginResult As Func(Of String, String, String, String, McLoginResult)
+        Public Property CreateMicrosoftLoginResultFromStored As Func(Of MinecraftLaunchStoredProfile, McLoginResult)
         Public Property ApplyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan)
         Public Property SaveProfile As Action
     End Class

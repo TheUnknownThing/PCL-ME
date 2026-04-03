@@ -3,12 +3,12 @@ Imports PCL.Core.Minecraft.Launch
 Public Module ModLaunchThirdPartyLoginShell
 
     Public Structure AuthlibLoginStepResult
-        Public LoginResult As ModLaunch.McLoginResult
+        Public LoginResult As McLoginResult
         Public NeedsRefresh As Boolean
     End Structure
 
     Public Class ThirdPartyLoginExecutionContext
-        Public Property Data As LoaderTask(Of ModLaunch.McLoginServer, ModLaunch.McLoginResult)
+        Public Property Data As LoaderTask(Of McLoginServer, McLoginResult)
         Public Property IsCreatingProfile As Boolean
         Public Property SelectedProfile As McProfile
         Public Property SelectedProfileIndex As Integer?

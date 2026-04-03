@@ -26,7 +26,7 @@ Public Module ModLaunchPrecheckShell
                 If(instance Is Nothing, MinecraftLaunchLoginRequirement.None, CType(Setup.Get("VersionServerLoginRequire", instance), MinecraftLaunchLoginRequirement)),
                 If(instance Is Nothing, Nothing, Setup.Get("VersionServerAuthServer", instance)),
                 ModLaunchProfileShell.GetSelectedAuthServerBase(selectedProfile),
-                If(profileList, New List(Of McProfile)).Any(Function(x) x.Type = ModLaunch.McLoginType.Ms),
+                If(profileList, New List(Of McProfile)).Any(Function(x) x.Type = McLoginType.Ms),
                 RegionUtils.IsRestrictedFeatAllowed))
     End Function
 

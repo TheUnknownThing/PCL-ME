@@ -22,7 +22,7 @@ Public Module ModLaunchInteractionShell
         Next
     End Sub
 
-    Public Function RequestMicrosoftDeviceCodeOAuthTokens(data As LoaderTask(Of ModLaunch.McLoginMs, ModLaunch.McLoginResult),
+    Public Function RequestMicrosoftDeviceCodeOAuthTokens(data As LoaderTask(Of McLoginMs, McLoginResult),
                                                           oAuthClientId As String) As ModLaunchMicrosoftLoginShell.MicrosoftOAuthStepResult
         If data Is Nothing Then Throw New ArgumentNullException(NameOf(data))
         If String.IsNullOrWhiteSpace(oAuthClientId) Then Throw New ArgumentException("缺少微软 OAuth Client ID。", NameOf(oAuthClientId))

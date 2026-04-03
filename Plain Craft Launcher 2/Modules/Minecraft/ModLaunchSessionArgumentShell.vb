@@ -6,7 +6,7 @@ Public Module ModLaunchSessionArgumentShell
 
     Public Function BuildWatcherWorkflowRequest(instance As McInstance,
                                                 selectedJava As JavaEntry,
-                                                loginResult As ModLaunch.McLoginResult,
+                                                loginResult As McLoginResult,
                                                 isTestLaunch As Boolean,
                                                 getNativesFolder As Func(Of String)) As MinecraftLaunchWatcherWorkflowRequest
         If instance Is Nothing Then Throw New ArgumentNullException(NameOf(instance))
@@ -49,8 +49,8 @@ Public Module ModLaunchSessionArgumentShell
                                           selectedJava As JavaEntry,
                                           instance As McInstance,
                                           loginState As LoadState,
-                                          loginInput As ModLaunch.McLoginData,
-                                          loginResult As ModLaunch.McLoginResult,
+                                          loginInput As McLoginData,
+                                          loginResult As McLoginResult,
                                           Optional escapeHandler As Func(Of String, String) = Nothing) As String
         If text Is Nothing Then Return Nothing
 
@@ -96,11 +96,11 @@ Public Module ModLaunchSessionArgumentShell
             text = text.Replace("{user}", replacer(loginResult.Name))
             text = text.Replace("{uuid}", replacer(loginResult.Uuid?.ToLower))
             Select Case loginInput.Type
-                Case ModLaunch.McLoginType.Legacy
+                Case McLoginType.Legacy
                     text = text.Replace("{login}", replacer("离线"))
-                Case ModLaunch.McLoginType.Ms
+                Case McLoginType.Ms
                     text = text.Replace("{login}", replacer("正版"))
-                Case ModLaunch.McLoginType.Auth
+                Case McLoginType.Auth
                     text = text.Replace("{login}", replacer("Authlib-Injector"))
             End Select
         Else

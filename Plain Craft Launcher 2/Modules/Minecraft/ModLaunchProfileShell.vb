@@ -6,11 +6,11 @@ Public Module ModLaunchProfileShell
     Public Function GetCurrentProfileKind(selectedProfile As McProfile) As MinecraftLaunchProfileKind
         If selectedProfile Is Nothing Then Return MinecraftLaunchProfileKind.None
         Select Case selectedProfile.Type
-            Case ModLaunch.McLoginType.Legacy
+            Case McLoginType.Legacy
                 Return MinecraftLaunchProfileKind.Legacy
-            Case ModLaunch.McLoginType.Auth
+            Case McLoginType.Auth
                 Return MinecraftLaunchProfileKind.Auth
-            Case ModLaunch.McLoginType.Ms
+            Case McLoginType.Ms
                 Return MinecraftLaunchProfileKind.Microsoft
             Case Else
                 Return MinecraftLaunchProfileKind.None
@@ -18,7 +18,7 @@ Public Module ModLaunchProfileShell
     End Function
 
     Public Function GetSelectedAuthServerBase(selectedProfile As McProfile) As String
-        If selectedProfile Is Nothing OrElse selectedProfile.Type <> ModLaunch.McLoginType.Auth Then Return Nothing
+        If selectedProfile Is Nothing OrElse selectedProfile.Type <> McLoginType.Auth Then Return Nothing
         Return selectedProfile.Server.BeforeLast("/authserver")
     End Function
 
@@ -33,8 +33,8 @@ Public Module ModLaunchProfileShell
         Return profileList.Select(AddressOf ConvertToStoredProfile).ToList()
     End Function
 
-    Public Function CreateMicrosoftLoginResult(accessToken As String, userName As String, uuid As String, profileJson As String) As ModLaunch.McLoginResult
-        Return New ModLaunch.McLoginResult With {
+    Public Function CreateMicrosoftLoginResult(accessToken As String, userName As String, uuid As String, profileJson As String) As McLoginResult
+        Return New McLoginResult With {
             .AccessToken = accessToken,
             .Name = userName,
             .Uuid = uuid,
@@ -43,7 +43,7 @@ Public Module ModLaunchProfileShell
             .ProfileJson = profileJson}
     End Function
 
-    Public Function CreateMicrosoftLoginResultFromStored(profile As MinecraftLaunchStoredProfile) As ModLaunch.McLoginResult
+    Public Function CreateMicrosoftLoginResultFromStored(profile As MinecraftLaunchStoredProfile) As McLoginResult
         If profile Is Nothing Then Throw New ArgumentNullException(NameOf(profile))
         Return CreateMicrosoftLoginResult(
             If(profile.AccessToken, ""),
@@ -53,8 +53,8 @@ Public Module ModLaunchProfileShell
     End Function
 
     Public Function CreateCurrentMicrosoftLoginResult(selectedProfile As McProfile,
-                                                      input As ModLaunch.McLoginMs) As ModLaunch.McLoginResult
-        If selectedProfile IsNot Nothing AndAlso selectedProfile.Type = ModLaunch.McLoginType.Ms Then
+                                                      input As McLoginMs) As McLoginResult
+        If selectedProfile IsNot Nothing AndAlso selectedProfile.Type = McLoginType.Ms Then
             Return CreateMicrosoftLoginResultFromStored(ConvertToStoredProfile(selectedProfile))
         End If
 
@@ -100,9 +100,9 @@ Public Module ModLaunchProfileShell
     Private Function ConvertToStoredProfile(profile As McProfile) As MinecraftLaunchStoredProfile
         Dim kind = MinecraftLaunchStoredProfileKind.Offline
         Select Case profile.Type
-            Case ModLaunch.McLoginType.Auth
+            Case McLoginType.Auth
                 kind = MinecraftLaunchStoredProfileKind.Authlib
-            Case ModLaunch.McLoginType.Ms
+            Case McLoginType.Ms
                 kind = MinecraftLaunchStoredProfileKind.Microsoft
         End Select
 
@@ -126,7 +126,7 @@ Public Module ModLaunchProfileShell
         Select Case profile.Kind
             Case MinecraftLaunchStoredProfileKind.Microsoft
                 Return New McProfile With {
-                    .Type = ModLaunch.McLoginType.Ms,
+                    .Type = McLoginType.Ms,
                     .Uuid = profile.Uuid,
                     .Username = profile.Username,
                     .AccessToken = profile.AccessToken,
@@ -137,7 +137,7 @@ Public Module ModLaunchProfileShell
                 }
             Case MinecraftLaunchStoredProfileKind.Authlib
                 Return New McProfile With {
-                    .Type = ModLaunch.McLoginType.Auth,
+                    .Type = McLoginType.Auth,
                     .Uuid = profile.Uuid,
                     .Username = profile.Username,
                     .Server = profile.Server,

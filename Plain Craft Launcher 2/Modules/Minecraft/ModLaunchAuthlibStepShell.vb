@@ -2,8 +2,8 @@ Imports PCL.Core.Minecraft.Launch
 
 Public Module ModLaunchAuthlibStepShell
 
-    Public Function ValidateCachedSession(input As ModLaunch.McLoginServer,
-                                          selectedProfile As McProfile) As ModLaunch.McLoginResult
+    Public Function ValidateCachedSession(input As McLoginServer,
+                                          selectedProfile As McProfile) As McLoginResult
         ProfileLog("验证登录开始（Validate, Authlib")
 
         Dim accessToken As String = ""
@@ -24,7 +24,7 @@ Public Module ModLaunchAuthlibStepShell
         ModLaunchAuthlibRequestShell.ExecuteRequest(requestPlan)
 
         ProfileLog("验证登录成功（Validate, Authlib")
-        Return New ModLaunch.McLoginResult With {
+        Return New McLoginResult With {
             .AccessToken = accessToken,
             .ClientToken = clientToken,
             .Uuid = uuid,
@@ -32,10 +32,10 @@ Public Module ModLaunchAuthlibStepShell
             .Type = "Auth"}
     End Function
 
-    Public Function RefreshCachedSession(input As ModLaunch.McLoginServer,
+    Public Function RefreshCachedSession(input As McLoginServer,
                                          selectedProfile As McProfile,
                                          selectedProfileIndex As Integer?,
-                                         applyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan)) As ModLaunch.McLoginResult
+                                         applyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan)) As McLoginResult
         If selectedProfile Is Nothing Then Throw New InvalidOperationException("当前没有可刷新的第三方验证档案。")
 
         ProfileLog("刷新登录开始（Refresh, Authlib")
@@ -53,7 +53,7 @@ Public Module ModLaunchAuthlibStepShell
                 input.UserName,
                 input.Password))
 
-        Dim loginResult = New ModLaunch.McLoginResult With {
+        Dim loginResult = New McLoginResult With {
             .AccessToken = refreshResult.Session.AccessToken,
             .ClientToken = refreshResult.Session.ClientToken,
             .Uuid = refreshResult.Session.ProfileId,
@@ -64,7 +64,7 @@ Public Module ModLaunchAuthlibStepShell
         Return loginResult
     End Function
 
-    Public Function Authenticate(input As ModLaunch.McLoginServer,
+    Public Function Authenticate(input As McLoginServer,
                                  selectedProfile As McProfile,
                                  selectedProfileIndex As Integer?,
                                  applyProfileMutationPlan As Action(Of MinecraftLaunchProfileMutationPlan),
@@ -93,7 +93,7 @@ Public Module ModLaunchAuthlibStepShell
                     input.UserName,
                     input.Password,
                     selectedId))
-            Dim loginResult = New ModLaunch.McLoginResult With {
+            Dim loginResult = New McLoginResult With {
                 .AccessToken = authenticateResult.Session.AccessToken,
                 .ClientToken = authenticateResult.Session.ClientToken,
                 .Name = authenticateResult.Session.ProfileName,
