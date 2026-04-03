@@ -19,16 +19,7 @@ Public Class FormMain
 
     '更新日志
     Private Sub ShowUpdateLog()
-        RunInNewThread(
-            Sub()
-                Dim ChangelogFile = $"{PathTemp}CEUpdateLog.md"
-                Dim changelog As String = Nothing
-                If File.Exists(ChangelogFile) Then
-                    changelog = ReadFile(ChangelogFile)
-                End If
-                Dim prompt = LauncherUpdateLogService.BuildPrompt(New LauncherUpdateLogRequest(changelog, VersionBranchName, VersionBaseName))
-                ModUpdateLogShell.ShowUpdateLog(prompt)
-            End Sub, "UpdateLog Output")
+        ModUpdateLogShell.ShowUpdateLogFromFile($"{PathTemp}CEUpdateLog.md", VersionBranchName, VersionBaseName)
     End Sub
 
     '窗口加载
