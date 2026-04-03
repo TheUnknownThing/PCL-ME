@@ -20,14 +20,22 @@
           <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
         </Transitions>
       </Border.Transitions>
-      <Grid>
+      <Grid Margin="0,3,0,0">
         <TextBlock
             x:Name="TitleBlock"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Margin="0,-6,0,0"
-            FontSize="13"
+            Margin="0,-7,0,0"
+            FontSize="21"
             Foreground="{DynamicResource ColorBrush3}" />
+        <TextBlock
+            x:Name="SubtitleBlock"
+            Margin="26,0,26,7"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            FontSize="11"
+            Foreground="{DynamicResource ColorBrushGray3}"
+            TextTrimming="CharacterEllipsis" />
       </Grid>
     </Border>
     <Button

@@ -53,21 +53,12 @@
     </Grid>
 
     <Grid Grid.Row="2" Grid.ColumnSpan="5">
-      <controls:PclButton
+      <controls:PclLaunchButton
           Height="54"
           Margin="20,0"
-          ColorType="Highlight"
-          ContentPadding="30,0,30,15"
           Command="{Binding LaunchCommand}"
-          Text="{Binding LaunchButtonTitle}" />
-      <TextBlock
-          Margin="35,0,35,10"
-          HorizontalAlignment="Center"
-          VerticalAlignment="Bottom"
-          Foreground="{DynamicResource ColorBrushGray3}"
-          FontSize="11"
-          Text="{Binding LaunchVersionSubtitle}"
-          TextTrimming="CharacterEllipsis" />
+          Subtitle="{Binding LaunchVersionSubtitle}"
+          Title="{Binding LaunchButtonTitle}" />
     </Grid>
 
     <controls:PclButton

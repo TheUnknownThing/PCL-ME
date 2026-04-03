@@ -173,6 +173,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     public bool IsStandardShellRoute => !IsLaunchRoute;
 
+    public bool ShowTopLevelNavigation => !CanGoBack;
+
+    public bool ShowInnerNavigation => CanGoBack;
+
     public bool HasActivePrompts => ActivePrompts.Count > 0;
 
     public bool HasNoActivePrompts => !HasActivePrompts;
@@ -188,6 +192,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool HasActivityEntries => ActivityEntries.Count > 0;
 
     public bool HasUtilityEntries => UtilityEntries.Count > 0;
+
+    public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
+        ?? _currentNavigation?.CurrentPage.Title
+        ?? Title;
 
     public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
         ? authPlayerName
@@ -257,6 +265,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             if (SetProperty(ref _canGoBack, value))
             {
                 _backCommand.NotifyCanExecuteChanged();
+                RaisePropertyChanged(nameof(ShowTopLevelNavigation));
+                RaisePropertyChanged(nameof(ShowInnerNavigation));
             }
         }
     }
@@ -593,6 +603,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         RaisePropertyChanged(nameof(IsLaunchRoute));
         RaisePropertyChanged(nameof(IsStandardShellRoute));
+        RaisePropertyChanged(nameof(ShowTopLevelNavigation));
+        RaisePropertyChanged(nameof(ShowInnerNavigation));
+        RaisePropertyChanged(nameof(TitleBarLabel));
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));

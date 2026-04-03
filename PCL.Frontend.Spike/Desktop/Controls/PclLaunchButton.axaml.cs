@@ -56,6 +56,7 @@ internal sealed partial class PclLaunchButton : UserControl
 
         RefreshVisualState();
         TitleBlock.Text = Title;
+        SubtitleBlock.Text = Subtitle;
     }
 
     public string Title
@@ -83,6 +84,10 @@ internal sealed partial class PclLaunchButton : UserControl
         if (change.Property == TitleProperty)
         {
             TitleBlock.Text = change.GetNewValue<string>();
+        }
+        else if (change.Property == SubtitleProperty)
+        {
+            SubtitleBlock.Text = change.GetNewValue<string>();
         }
     }
 
