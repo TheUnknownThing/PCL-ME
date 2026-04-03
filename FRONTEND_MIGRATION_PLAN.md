@@ -88,10 +88,13 @@ These workflow extractions are already done and should be treated as available m
 - launcher launch precheck prompt choreography, Microsoft device-code retry bridging, Microsoft ownership prompt handling, and Authlib authenticate-selection shell behavior are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchInteractionShell.vb`
 - launcher Java download confirmation and post-download failure hint rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPromptShell.vb`
 - launcher Java runtime index / manifest fetch plus reused-file detection and concrete download file shaping are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb`
+- launcher Java runtime index / manifest / transfer sequencing now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb` instead of being assembled in `ModJava.vb`
 - launcher Microsoft login step execution bridging is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftLoginShell.vb`
 - launcher Authlib login step execution bridging is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchThirdPartyLoginShell.vb`
 - launcher Microsoft login step request/failure handling is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftStepShell.vb`
 - launcher Authlib validate / refresh / authenticate step handling is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibStepShell.vb`
+- launcher Microsoft login execution now consumes device-code / refresh / step request handling directly from dedicated Microsoft shells instead of thin `ModLaunch.vb` wrappers
+- launcher Authlib login execution now consumes live request / metadata execution directly from dedicated Authlib shells instead of thin `ModLaunch.vb` wrappers
 - launcher Microsoft live HTTP request execution is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftRequestShell.vb`
 - launcher Authlib live HTTP request / metadata execution is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibRequestShell.vb`
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
@@ -200,10 +203,10 @@ These flows still combine:
 
 After the latest cleanup slices, the former biggest blocker has changed:
 
-- login execution / orchestration is now mostly expressed through `PCL.Core` services and dedicated launcher login/interaction shells, while `ModLaunch.vb` still owns only the remaining request-helper seams and shell/UI adapter work
+- login execution / orchestration is now mostly expressed through `PCL.Core` services and dedicated launcher login/interaction shells, while `ModLaunch.vb` now mainly owns shell/UI adapter work plus a smaller set of remaining launcher-side effect wiring
 - Microsoft device-code popup text / URL planning is now expressed through `PCL.Core`, while launcher shell modules and `MyMsgLogin.xaml.vb` still own the concrete popup polling loop and launcher shell integration
-- Java runtime manifest selection / download file planning, request source shaping, install path selection, ignored-file policy, transfer completion cleanup, and selection transition policy are now expressed through `PCL.Core`, while `ModJava.vb` still owns file hashing and download-job construction and `ModLaunch.vb` mainly delegates into a dedicated Java shell path for the remaining interactive retry flow
-- Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns file hashing and the remaining concrete transfer execution loop
+- Java runtime manifest selection / download file planning, request source shaping, install path selection, ignored-file policy, transfer completion cleanup, selection transition policy, and transfer sequencing are now expressed through `PCL.Core` plus dedicated Java shell modules, while `ModJava.vb` mainly owns loader composition, polling/cancellation, and refresh application and `ModLaunch.vb` mainly delegates into a dedicated Java shell path for the remaining interactive retry flow
+- Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns the remaining concrete download execution loop
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - launch script-export completion behavior is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes the batch file and applies the returned shell reveal
 - launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
@@ -263,9 +266,9 @@ Create launcher-facing services in `PCL.Core` for:
 Most practical next code targets:
 
 1. finish shrinking `ModLaunch.vb`
-   Focus on remaining request-execution adapters, popup polling / prompt bridging, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
+   Focus on popup polling / prompt bridging, launch completion / failure notification application, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
 2. finish shrinking `ModJava.vb`
-   Focus on the concrete Java download lifecycle and retry/cancellation behavior so the backend owns the policy and the launcher only applies the resulting transfer, cleanup, and refresh actions.
+   Focus on the remaining Java download loader lifecycle and retry/cancellation behavior so the backend owns the policy and the launcher only applies the resulting transfer, cleanup, and refresh actions.
 3. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
    Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
 4. trim `ModCrash.vb`
