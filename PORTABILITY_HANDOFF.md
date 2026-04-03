@@ -21,6 +21,7 @@ Latest continuation update:
 - launcher Microsoft device-code login prompt construction in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` and `Plain Craft Launcher 2/Pages/PageLaunch/MyMsgLogin.xaml.vb` now route through `MinecraftLaunchMicrosoftDeviceCodePromptService` instead of consuming raw OAuth JSON directly
 - portable Java runtime default ignored-hash policy, runtime base-directory selection, and download state transition cleanup/refresh planning now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadSessionService`
 - launcher Java runtime download lifecycle cleanup / refresh handling in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadSessionService`
+- launcher Java runtime download lifecycle cleanup / refresh shell application is now centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaDownloadSessionShell.vb`
 - `PCL.Frontend.Spike` now sources Java runtime base-directory selection from `MinecraftJavaRuntimeDownloadSessionService` instead of duplicating that path policy locally
 - `PCL.Frontend.Spike` can now model finished / failed / aborted Java download session transitions, including cleanup / refresh artifacts, from `MinecraftJavaRuntimeDownloadSessionService`
 - portable Java runtime transfer selection and reused-file filtering now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
@@ -96,6 +97,7 @@ Latest continuation update:
 - launcher startup update-log rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
+- launcher Java download confirmation / post-download failure hint shell handling now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher crash export picker / completion shell flow now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
 - launcher crash-export archive creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashExportArchiveService`

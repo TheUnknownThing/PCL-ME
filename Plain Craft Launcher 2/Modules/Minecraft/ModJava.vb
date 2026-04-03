@@ -234,16 +234,7 @@ Public Module ModJava
     ''' 提示 Java 缺失，并弹窗确认是否自动下载。返回玩家选择是否下载。
     ''' </summary>
     Public Function JavaDownloadConfirm(VersionDescription As String, Optional ForcedManualDownload As Boolean = False) As Boolean
-        If ForcedManualDownload Then
-            MyMsgBox($"PCL 未找到 {VersionDescription}。" & vbCrLf &
-                     $"请自行搜索并安装 {VersionDescription}，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。",
-                     "未找到 Java")
-            Return False
-        Else
-            Return MyMsgBox($"PCL 未找到 {VersionDescription}，是否需要 PCL 自动下载？" & vbCrLf &
-                            $"如果你已经安装了 {VersionDescription}，可以在 设置 → 启动选项 → 游戏 Java 中手动导入。",
-                            "自动下载 Java？", "自动下载", "取消") = 1
-        End If
+        Return ModJavaPromptShell.ConfirmJavaDownload(VersionDescription, ForcedManualDownload)
     End Function
 
     ''' <summary>
@@ -257,22 +248,11 @@ Public Module ModJava
         })
         AddHandler JavaDownloadLoader.OnStateChangedThread,
         Sub(Raw As LoaderBase, NewState As LoadState, OldState As LoadState)
-            Dim sessionState = ResolveJavaDownloadSessionState(NewState)
+            Dim sessionState = ModJavaDownloadSessionShell.ResolveSessionState(NewState)
             If sessionState Is Nothing Then Exit Sub
 
             Dim transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(sessionState.Value, LastJavaBaseDir)
-            If transitionPlan.CleanupLogMessage IsNot Nothing Then
-                Log(transitionPlan.CleanupLogMessage, LogLevel.Debug)
-            End If
-            If transitionPlan.CleanupDirectoryPath IsNot Nothing Then
-                DeleteDirectory(transitionPlan.CleanupDirectoryPath)
-            End If
-            If transitionPlan.ShouldRefreshJavaInventory Then
-                Javas.ScanJavaAsync().GetAwaiter().GetResult()
-            End If
-            If transitionPlan.ShouldClearTrackedRuntimeDirectory Then
-                LastJavaBaseDir = Nothing
-            End If
+            ModJavaDownloadSessionShell.ApplyStateTransition(transitionPlan, LastJavaBaseDir)
         End Sub
         JavaDownloadLoader.HasOnStateChangedThread = True
         Return Loader
@@ -326,19 +306,6 @@ Public Module ModJava
         Log(transferPlan.LogMessage)
     End Sub
 
-    Private Function ResolveJavaDownloadSessionState(state As LoadState) As MinecraftJavaRuntimeDownloadSessionState?
-        Select Case state
-            Case LoadState.Finished
-                Return MinecraftJavaRuntimeDownloadSessionState.Finished
-            Case LoadState.Failed
-                Return MinecraftJavaRuntimeDownloadSessionState.Failed
-            Case LoadState.Aborted
-                Return MinecraftJavaRuntimeDownloadSessionState.Aborted
-            Case Else
-                Return Nothing
-        End Select
-    End Function
-
 #End Region
 
     Public Function ResolveLaunchJavaSelection(task As LoaderTask(Of Integer, Integer),
@@ -389,7 +356,7 @@ Public Module ModJava
                 Return selectedJava
             End If
 
-            Hint(postDownloadSelection.HintMessage, HintType.Critical)
+            ModJavaPromptShell.ShowJavaSelectionFailureHint(postDownloadSelection.HintMessage)
             Throw New Exception("$$")
         End SyncLock
     End Function

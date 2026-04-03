@@ -83,6 +83,7 @@ These workflow extractions are already done and should be treated as available m
 - launcher startup prompt rendering/action application is centralized in `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher startup update-log rendering is centralized in `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
 - launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
+- launcher Java download confirmation and post-download failure hint rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPromptShell.vb`
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher crash export picker / completion shell flow is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
 - launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
@@ -125,6 +126,7 @@ These workflow extractions are already done and should be treated as available m
 - Java runtime manifest/file request coordination is owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - Java runtime transfer selection, reused-file filtering, and remaining download queue shaping are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - Java runtime default ignored-hash policy, runtime-base-directory selection, and transfer state cleanup/refresh planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadSessionService`
+- launcher-side Java runtime download cleanup / refresh application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaDownloadSessionShell.vb`
 - Java launch selection transition/log/hint policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaSelectionWorkflowService`
 
 Do not redo these in the frontend migration branch; build on top of them.
