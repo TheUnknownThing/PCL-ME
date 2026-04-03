@@ -231,11 +231,7 @@ Public Class FormMain
 
     '根据打开次数触发的事件
     Private Sub RunCountSub()
-        Dim milestoneResult = _startupWorkflowPlan.Milestone
-        Setup.Set("SystemCount", milestoneResult.UpdatedCount)
-        If milestoneResult.ShouldAttemptUnlockHiddenTheme AndAlso ThemeUnlock(6, False) Then
-            MyMsgBox(milestoneResult.HiddenThemeNotice.Message, milestoneResult.HiddenThemeNotice.Title)
-        End If
+        ModMainWindowStartupShell.ApplyMilestone(_startupWorkflowPlan.Milestone)
     End Sub
     '升级与降级事件
     Private Sub UpgradeSub(LastVersionCode As Integer)
@@ -266,38 +262,11 @@ Public Class FormMain
             ExePath & "PCL\CustomSkin.png",
             PathTemp & "CustomSkin.png",
             PathAppdata & "CustomSkin.png"))
-
-        For Each settingWrite In workflowPlan.SettingWrites
-            Setup.Set(settingWrite.Key, settingWrite.Value)
-        Next
-        If workflowPlan.HighestVersionLogMessage IsNot Nothing Then
-            Log(workflowPlan.HighestVersionLogMessage)
-        End If
-        For Each notice In workflowPlan.Transition.Notices
-            MyMsgBox(notice.Message, notice.Title)
-        Next
-
-        If workflowPlan.CustomSkinMigration IsNot Nothing Then
-            CopyFile(workflowPlan.CustomSkinMigration.SourcePath, workflowPlan.CustomSkinMigration.TargetPath)
-            Log(workflowPlan.CustomSkinMigration.LogMessage)
-        End If
-
-        If workflowPlan.Transition.ShouldUnhideSetupAbout Then
-            Config.Preference.Hide.SetupAbout = False
-            Log(workflowPlan.SetupAboutUnhideLogMessage)
-        End If
-        If workflowPlan.Transition.ShouldMigrateOldProfile Then
-            RunInNewThread(Sub() MigrateOldProfile())
-        End If
-        If workflowPlan.ModNameMigrationLogMessage IsNot Nothing Then
-            Log(workflowPlan.ModNameMigrationLogMessage)
-        End If
-        If workflowPlan.Transition.ShouldShowCommunityAnnouncement Then
-            ShowCEAnnounce()
-        End If
-        If workflowPlan.Transition.ShouldShowUpdateLog Then
-            ShowUpdateLog()
-        End If
+        ModMainWindowStartupShell.ApplyVersionTransition(
+            workflowPlan,
+            AddressOf MigrateOldProfile,
+            AddressOf ShowCEAnnounce,
+            AddressOf ShowUpdateLog)
     End Sub
 
     Private Shared Function GetHighestRecordedVersionCode() As Integer

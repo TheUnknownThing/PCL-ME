@@ -1,6 +1,5 @@
 Imports System.IO.Compression
 Imports System.Net.Http
-Imports System.Text.Json.Nodes
 Imports PCL.Core.Minecraft
 Imports PCL.Core.Minecraft.Launch
 Imports PCL.Core.Utils
@@ -8,9 +7,7 @@ Imports PCL.Core.Utils.OS
 Imports PCL.Core.Utils.Processes
 Imports PCL.Core.App
 Imports PCL.Core.Minecraft.Launch.Utils
-Imports PCL.Core.Utils.Secret
 Imports PCL.Core.Utils.Exts
-Imports PCL.Core.IO.Net.Http.Client.Request
 
 Public Module ModLaunch
 
@@ -748,18 +745,8 @@ NextInner:
         '初始请求
 Retry:
         McLaunchLog("开始正版验证 Step 1/6（原始登录）")
-        Dim responseBody As String
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(OAuthClientId)
-        Using response = HttpRequest.
-            CreatePost(requestPlan.Url).
-            WithFormContent(requestPlan.Body).
-            SendAsync().
-            GetAwaiter().
-            GetResult()
-
-            response.EnsureSuccessStatusCode()
-            responseBody = response.AsString()
-        End Using
+        Dim responseBody = ModLaunchMicrosoftRequestShell.ExecuteFormPost(requestPlan)
 
         Dim promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(responseBody)
         McLaunchLog(promptPlan.LogMessage)
@@ -785,16 +772,7 @@ Retry:
         Dim Result As String = Nothing
         Try
             Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOAuthRefreshRequest(Code, OAuthClientId)
-            Using response = HttpRequest.
-                CreatePost(requestPlan.Url).
-                WithFormContent(requestPlan.Body).
-                SendAsync().
-                GetAwaiter().
-                GetResult()
-
-                response.EnsureSuccessStatusCode()
-                Result = response.AsString()
-            End Using
+            Result = ModLaunchMicrosoftRequestShell.ExecuteFormPost(requestPlan)
         Catch ex As ThreadInterruptedException
             Log(ex, "加载线程已终止")
         Catch ex As Exception
@@ -830,16 +808,7 @@ Retry:
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(accessToken)
         Dim Result As String = Nothing
         Try
-            Using response = HttpRequest.
-                CreatePost(requestPlan.Url).
-                WithJsonContent(JsonNode.Parse(requestPlan.Body)).
-                SendAsync().
-                GetAwaiter().
-                GetResult()
-
-                response.EnsureSuccessStatusCode()
-                Result = response.AsString()
-            End Using
+            Result = ModLaunchMicrosoftRequestShell.ExecuteJsonPost(requestPlan)
         Catch ex As Exception
             ProfileLog("正版验证 Step 2/6 获取 XBLToken 失败：" & ex.ToString())
             If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(MinecraftLaunchMicrosoftFailureWorkflowService.GetRetryableStepFailure("Step 2")) Then
@@ -862,29 +831,25 @@ Retry:
         ProfileLog("开始正版验证 Step 3/6: 获取 XSTSToken")
         If String.IsNullOrEmpty(xblTokenResult.Value) Then Throw New ArgumentException("XBLToken 为空，无法获取数据", NameOf(xblTokenResult))
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(xblTokenResult.Value)
-        Dim result As String
-        Using response = HttpRequest.CreatePost(requestPlan.Url).
-                WithJsonContent(JsonNode.Parse(requestPlan.Body)).
-                SendAsync().
-                GetAwaiter().
-                GetResult()
+        Dim response = ModLaunchMicrosoftRequestShell.ExecuteJsonPostWithStatus(requestPlan)
+        Dim result = response.Body
 
-            result = response.AsString()
-
-            If Not response.IsSuccessStatusCode Then
-                Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveXstsFailure(result)
-                If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort Then
-                    ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
-                Else
-                    ProfileLog("正版验证 Step 3/6 获取 XSTSToken 失败：" & response.StatusCode)
-                    If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
-                        Return New MicrosoftXstsStepResult With {
-                            .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
-                    End If
-                    response.EnsureSuccessStatusCode()
+        If Not response.IsSuccessStatusCode Then
+            Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveXstsFailure(result)
+            If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort Then
+                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
+            Else
+                ProfileLog("正版验证 Step 3/6 获取 XSTSToken 失败：" & response.StatusCode)
+                If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
+                    Return New MicrosoftXstsStepResult With {
+                        .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                 End If
+                Throw New HttpRequestException(
+                    $"HTTP request failed with status code {CInt(response.StatusCode)} ({response.StatusCode}).",
+                    Nothing,
+                    response.StatusCode)
             End If
-        End Using
+        End If
 
         Dim xstsResult = MinecraftLaunchMicrosoftProtocolService.ParseXstsTokenResponseJson(result)
         Return New MicrosoftXstsStepResult With {
@@ -903,16 +868,7 @@ Retry:
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(tokens.UserHash, tokens.XstsToken)
         Dim Result As String
         Try
-            Using response = HttpRequest.
-                CreatePost(requestPlan.Url).
-                WithJsonContent(JsonNode.Parse(requestPlan.Body)).
-                SendAsync().
-                GetAwaiter().
-                GetResult()
-
-                response.EnsureSuccessStatusCode()
-                Result = response.AsString()
-            End Using
+            Result = ModLaunchMicrosoftRequestShell.ExecuteJsonPost(requestPlan)
         Catch ex As HttpRequestException
             Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveMinecraftAccessTokenFailure(ex.StatusCode)
             If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException Then
@@ -950,15 +906,7 @@ Retry:
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(accessToken)
         Dim result As String = ""
         Try
-            Using response = HttpRequest.Create(requestPlan.Url).
-                WithBearerToken(requestPlan.BearerToken).
-                SendAsync().
-                GetAwaiter().
-                GetResult()
-
-                response.EnsureSuccessStatusCode()
-                result = response.AsString()
-            End Using
+            result = ModLaunchMicrosoftRequestShell.ExecuteBearerGet(requestPlan)
             Dim ownershipPrompt = MinecraftLaunchMicrosoftFailureWorkflowService.TryGetOwnershipFailurePrompt(result)
             If ownershipPrompt IsNot Nothing Then
                 ModLaunchPromptShell.ShowMicrosoftOwnershipPrompt(ownershipPrompt)
@@ -980,16 +928,7 @@ Retry:
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(AccessToken)
         Dim Result As String
         Try
-            Using response = HttpRequest.
-                Create(requestPlan.Url).
-                WithBearerToken(requestPlan.BearerToken).
-                SendAsync().
-                GetAwaiter().
-                GetResult()
-
-                response.EnsureSuccessStatusCode()
-                Result = response.AsString()
-            End Using
+            Result = ModLaunchMicrosoftRequestShell.ExecuteBearerGet(requestPlan)
         Catch ex As HttpRequestException
             Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveMinecraftProfileFailure(ex.StatusCode)
             If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException Then
@@ -1210,21 +1149,11 @@ Retry:
     End Function
 
     Private Function ExecuteAuthlibRequest(requestPlan As MinecraftLaunchHttpRequestPlan) As String
-        Return NetRequestRetry(
-            Url:=requestPlan.Url,
-            Method:=requestPlan.Method,
-            Data:=requestPlan.Body,
-            Headers:=BuildRequestHeaders(requestPlan),
-            ContentType:=requestPlan.ContentType)
+        Return ModLaunchAuthlibRequestShell.ExecuteRequest(requestPlan)
     End Function
 
     Private Function ExecuteAuthlibMetadataRequest(url As String) As String
-        Return NetGetCodeByRequestRetry(url, Encoding.UTF8)
-    End Function
-
-    Private Function BuildRequestHeaders(requestPlan As MinecraftLaunchHttpRequestPlan) As Dictionary(Of String, String)
-        If requestPlan.Headers Is Nothing Then Return New Dictionary(Of String, String)
-        Return New Dictionary(Of String, String)(requestPlan.Headers)
+        Return ModLaunchAuthlibRequestShell.ExecuteMetadataRequest(url)
     End Function
 
     Private Function ResolveAuthlibSelectedProfileId(authenticatePlan As MinecraftLaunchAuthlibAuthenticatePlan) As String
@@ -2074,7 +2003,7 @@ Retry:
         text = text.Replace("{pcl_version}", replacer(VersionBaseName))
         text = text.Replace("{pcl_version_code}", replacer(VersionCode))
         text = text.Replace("{pcl_version_branch}", replacer(VersionBranchName))
-        text = text.Replace("{identify}", replacer(Identify.LauncherId))
+        text = text.Replace("{identify}", replacer(LauncherIdentity.LauncherId))
         text = text.Replace("{path}", replacer(Basics.CurrentDirectory))
         text = text.Replace("{path_with_name}", replacer(Basics.ExecutablePath))
         text = text.Replace("{path_temp}", replacer(PathTemp))
