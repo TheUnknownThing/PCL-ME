@@ -23,7 +23,7 @@ public static class LauncherDataProtectionRuntime
 
     public static string Unprotect(string? data)
     {
-        return LauncherDataProtectionService.Unprotect(data, EncryptionKey, LegacySecretKeyProvider.LegacyDecryptKey);
+        return LauncherDataProtectionService.Unprotect(data, EncryptionKey, LegacySecretRuntimeService.LegacyDecryptKey);
     }
 
     private static byte[] ResolveEncryptionKey()
