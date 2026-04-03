@@ -103,6 +103,39 @@ Public Module ModLaunchPromptShell
         Return prompt.Options(result - 1)
     End Function
 
+    Public Function ShouldIgnoreMicrosoftRefreshFailure(Optional stepLabel As String = Nothing) As Boolean
+        Dim isIgnore As Boolean = False
+        RunInUiWait(Sub()
+                        If Not ModLaunch.IsLaunching Then Exit Sub
+                        Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt(stepLabel))
+                        If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then isIgnore = True
+                    End Sub)
+        Return isIgnore
+    End Function
+
+    Public Function TryHandleMicrosoftFailureResolution(resolution As MinecraftLaunchMicrosoftFailureResolution,
+                                                         Optional runPromptInBackground As Boolean = False) As Boolean
+        Select Case resolution.Kind
+            Case MinecraftLaunchMicrosoftFailureResolutionKind.OfferIgnoreAndContinue
+                Return ShouldIgnoreMicrosoftRefreshFailure(resolution.StepLabel)
+            Case MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort
+                If resolution.Prompt Is Nothing Then Throw New InvalidOperationException("缺少微软登录失败提示内容。")
+                If runPromptInBackground Then
+                    RunInNewThread(
+                        Sub()
+                            RunAccountDecisionPrompt(resolution.Prompt)
+                        End Sub, "Login Failed: Account Prompt")
+                Else
+                    RunAccountDecisionPrompt(resolution.Prompt)
+                End If
+                Throw New Exception("$$")
+            Case MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException
+                Throw New Exception(resolution.WrappedExceptionMessage)
+            Case Else
+                Throw New InvalidOperationException("未知的微软登录失败处理结果。")
+        End Select
+    End Function
+
     Public Function RunAuthProfileSelectionPrompt(title As String, options As IReadOnlyList(Of MinecraftLaunchAuthProfileOption)) As MinecraftLaunchAuthProfileOption
         If String.IsNullOrWhiteSpace(title) Then Throw New ArgumentException("缺少角色选择标题。", NameOf(title))
         If options Is Nothing OrElse options.Count = 0 Then Throw New ArgumentException("缺少可选角色。", NameOf(options))
@@ -119,6 +152,12 @@ Public Module ModLaunchPromptShell
     Public Sub ShowThirdPartyLoginFailure(failure As MinecraftLaunchThirdPartyLoginFailure)
         If failure Is Nothing Then Throw New ArgumentNullException(NameOf(failure))
         MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
+    End Sub
+
+    Public Sub ShowThirdPartyFailureIfPresent(resolution As MinecraftLaunchThirdPartyLoginFailureResolution)
+        If resolution.Failure IsNot Nothing Then
+            ShowThirdPartyLoginFailure(resolution.Failure)
+        End If
     End Sub
 
     Public Enum MicrosoftDeviceCodePromptResultKind

@@ -655,39 +655,6 @@ NextInner:
         Public ProfileJson As String
     End Structure
 
-    Private Function ShouldIgnoreMicrosoftRefreshFailure(Optional stepLabel As String = Nothing) As Boolean
-        Dim isIgnore As Boolean = False
-        RunInUiWait(Sub()
-                        If Not IsLaunching Then Exit Sub
-                        Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt(stepLabel))
-                        If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then isIgnore = True
-                    End Sub)
-        Return isIgnore
-    End Function
-
-    Private Function TryHandleMicrosoftFailureResolution(resolution As MinecraftLaunchMicrosoftFailureResolution,
-                                                         Optional runPromptInBackground As Boolean = False) As Boolean
-        Select Case resolution.Kind
-            Case MinecraftLaunchMicrosoftFailureResolutionKind.OfferIgnoreAndContinue
-                Return ShouldIgnoreMicrosoftRefreshFailure(resolution.StepLabel)
-            Case MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort
-                If resolution.Prompt Is Nothing Then Throw New InvalidOperationException("缺少微软登录失败提示内容。")
-                If runPromptInBackground Then
-                    RunInNewThread(
-                        Sub()
-                            RunAccountDecisionPrompt(resolution.Prompt)
-                        End Sub, "Login Failed: Account Prompt")
-                Else
-                    RunAccountDecisionPrompt(resolution.Prompt)
-                End If
-                Throw New Exception("$$")
-            Case MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException
-                Throw New Exception(resolution.WrappedExceptionMessage)
-            Case Else
-                Throw New InvalidOperationException("未知的微软登录失败处理结果。")
-        End Select
-    End Function
-
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
         Dim Input As McLoginMs = Data.Input
         Dim LogUsername As String = Input.UserName
@@ -845,7 +812,7 @@ Retry:
             End If
 
             ProfileLog("正版验证 Step 1/6 获取 OAuth Token 失败：" & ex.ToString())
-            If TryHandleMicrosoftFailureResolution(failure) Then
+            If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
                 Return New MicrosoftOAuthStepResult With {
                     .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.IgnoreAndContinue}
             End If
@@ -882,7 +849,7 @@ Retry:
             End Using
         Catch ex As Exception
             ProfileLog("正版验证 Step 2/6 获取 XBLToken 失败：" & ex.ToString())
-            If TryHandleMicrosoftFailureResolution(MinecraftLaunchMicrosoftFailureWorkflowService.GetRetryableStepFailure("Step 2")) Then
+            If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(MinecraftLaunchMicrosoftFailureWorkflowService.GetRetryableStepFailure("Step 2")) Then
                 Return New MicrosoftStringStepResult With {
                     .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
             End If
@@ -914,10 +881,10 @@ Retry:
             If Not response.IsSuccessStatusCode Then
                 Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveXstsFailure(result)
                 If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort Then
-                    TryHandleMicrosoftFailureResolution(failure)
+                    ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
                 Else
                     ProfileLog("正版验证 Step 3/6 获取 XSTSToken 失败：" & response.StatusCode)
-                    If TryHandleMicrosoftFailureResolution(failure) Then
+                    If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
                         Return New MicrosoftXstsStepResult With {
                             .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                     End If
@@ -961,11 +928,11 @@ Retry:
                 ElseIf ex.StatusCode = HttpStatusCode.Forbidden Then
                     Log(ex, "正版验证 Step 4 汇报 403")
                 End If
-                TryHandleMicrosoftFailureResolution(failure)
+                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
                 Throw New InvalidOperationException("微软登录失败处理未终止流程。")
             Else
                 ProfileLog("正版验证 Step 4/6 获取 MC AccessToken 失败：" & ex.ToString())
-                If TryHandleMicrosoftFailureResolution(failure) Then
+                If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
                     Return New MicrosoftStringStepResult With {
                         .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                 End If
@@ -1034,15 +1001,15 @@ Retry:
             Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveMinecraftProfileFailure(ex.StatusCode)
             If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException Then
                 Log(ex, "正版验证 Step 6 汇报 429")
-                TryHandleMicrosoftFailureResolution(failure)
+                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
                 Throw New InvalidOperationException("微软登录失败处理未终止流程。")
             ElseIf failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort Then
                 Log(ex, "正版验证 Step 6 汇报 404")
-                TryHandleMicrosoftFailureResolution(failure, runPromptInBackground:=True)
+                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure, runPromptInBackground:=True)
                 Throw New InvalidOperationException("微软登录失败处理未终止流程。")
             Else
                 ProfileLog("正版验证 Step 6/6 获取玩家档案信息失败：" & ex.ToString())
-                If TryHandleMicrosoftFailureResolution(failure) Then
+                If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
                     Return New MicrosoftProfileStepResult With {
                         .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
                 End If
@@ -1087,7 +1054,7 @@ Retry:
                             ex.InnerHttpException.WebResponse)
                         If resolution.Kind = MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped Then
                             ProfileLog("已触发超时登录失败")
-                            ShowThirdPartyFailureIfPresent(resolution)
+                            ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
                             Throw New Exception(resolution.WrappedExceptionMessage)
                         End If
                         currentStep = resolution.NextStep
@@ -1095,7 +1062,7 @@ Retry:
                         Dim AllMessage = ex.ToString()
                         ProfileLog("验证登录失败：" & AllMessage)
                         Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveValidationFailure(AllMessage)
-                        ShowThirdPartyFailureIfPresent(resolution)
+                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
                         Throw
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
@@ -1106,7 +1073,7 @@ Retry:
                     Catch ex As Exception
                         ProfileLog("刷新登录失败：" & ex.ToString())
                         Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveRefreshFailure(ex.ToString(), currentStep.HasRetriedRefresh)
-                        ShowThirdPartyFailureIfPresent(resolution)
+                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
                         currentStep = resolution.NextStep
                         If resolution.Kind = MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped Then
                             Throw New Exception(resolution.WrappedExceptionMessage, ex)
@@ -1126,12 +1093,12 @@ Retry:
                         Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginHttpFailure(
                             ex.ToString(),
                             ex.InnerHttpException.WebResponse)
-                        ShowThirdPartyFailureIfPresent(resolution)
+                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
                         Throw New Exception(resolution.WrappedExceptionMessage)
                     Catch ex As Exception
                         ProfileLog("验证失败：" & ex.ToString())
                         Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginFailure(ex.ToString())
-                        ShowThirdPartyFailureIfPresent(resolution)
+                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
                         Throw New Exception(resolution.WrappedExceptionMessage)
                     End Try
                 Case MinecraftLaunchThirdPartyLoginStepKind.Finish
@@ -1288,11 +1255,6 @@ Retry:
         Return authenticatePlan.SelectedProfileId
     End Function
 
-    Private Sub ShowThirdPartyFailureIfPresent(resolution As MinecraftLaunchThirdPartyLoginFailureResolution)
-        If resolution.Failure IsNot Nothing Then
-            ModLaunchPromptShell.ShowThirdPartyLoginFailure(resolution.Failure)
-        End If
-    End Sub
 #End Region
 
 #Region "离线验证"
