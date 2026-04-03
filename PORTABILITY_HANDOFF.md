@@ -1,62 +1,83 @@
 # PCL-CE Portability Handoff
 
-## What This Repo Is Now
+## Executive Summary
 
-This repo is no longer in the "prove portability is possible" phase.
+This repo is ready to hand to two engineers working in parallel:
 
-Current reality:
+- one engineer can start the frontend migration now
+- one engineer should continue the remaining backend and shell cleanup
 
-- `PCL.Core.Foundation` is a real portable base library.
-- `PCL.Core.Backend` is the portable workflow/policy backend.
-- `PCL.Core` is increasingly a Windows adapter layer.
-- `Plain Craft Launcher 2` is increasingly a WPF shell/adaptation layer.
-- `PCL.Frontend.Spike` is the non-WPF proving ground for frontend replacement work.
+The important nuance is:
 
-You can hand this repo to another engineer now.
+- yes, the project is ready to start frontend migration work
+- no, it is not ready for a full frontend cutover with zero backend follow-up
 
-Do **not** describe it as "frontend migration ready today with nothing left".
-Do describe it as "portable backend mostly established, with a finite Windows-shell cleanup list remaining before a real frontend replacement".
+The repo is no longer in a "prove portability is possible" phase. The portable backend is real, the WPF shell has been heavily thinned, and the remaining work is now a finite set of shell and boundary cleanup tasks.
 
 ## Current Architecture
 
 Use these boundaries as the current source of truth:
 
 - `PCL.Core.Foundation`
-  - portable primitives and helpers
-  - no WPF
-  - no launcher UI assumptions
+  - portable primitives, regexes, helpers, utilities
+  - no WPF ownership
 - `PCL.Core.Backend`
-  - portable startup / launch / crash / Java / login workflow and policy
-  - the main place new reusable backend logic should go
+  - portable workflow and policy backend
+  - startup, launch, login, Java, crash, prompt-plan, and related orchestration logic belongs here by default
 - `PCL.Core`
-  - Windows compatibility layer
-  - still contains some Windows-only helpers and legacy glue
+  - Windows compatibility and adapter layer
+  - still contains some Windows-only helper leakage that should keep shrinking
 - `Plain Craft Launcher 2`
-  - current WPF frontend
-  - should keep shrinking toward prompts, windowing, UI composition, and OS shell actions
+  - current WPF frontend and Windows shell
+  - should keep shrinking toward UI composition, prompts, windowing, routing, and OS actions
 - `PCL.Frontend.Spike`
-  - small non-WPF shell prototype
-  - use it to prove backend contracts before building a real replacement frontend
+  - non-WPF proving ground
+  - use it to validate backend contracts and bootstrap flows before or alongside a real replacement frontend
 
-## What Has Already Been Extracted
+## What Has Been Finished
 
-These areas are already substantially moved out of launcher-local policy code:
+The major launcher-local extraction targets are no longer the blockers they were before.
 
-- startup workflow planning
-- startup visual/bootstrap policy
-- version transition and milestone policy
-- crash export planning and crash response policy
-- launch prerun policy
-- launch argument/classpath/native/runtime composition
-- Microsoft login protocol/request/failure policy
-- Authlib login protocol/request/failure policy
-- Java runtime selection, transfer planning, and session transition policy
-- launcher identity fallback logic in `PCL.Core/App/LauncherIdentity.cs`
-- portable encryption-key fallback logic in `PCL.Core/Utils/Secret/EncryptHelper.cs`
+### Minecraft launcher modules
 
-The WPF launcher also now has a large shell split instead of keeping everything in giant files.
+Current thin-shell state:
 
-Important shell modules already in place:
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+  - now down to roughly 457 lines
+  - no longer the giant mixed policy hub it used to be
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb`
+  - now down to roughly 72 lines
+  - effectively a thin adapter for this migration phase
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
+  - now down to roughly 22 lines
+  - crash analyzer has been split into partial shell files
+
+Important extracted launch/crash shell modules now in place:
+
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchExecutionShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPrerunShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchArgumentShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionArgumentShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchProfileShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionPlanShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPrecheckShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchJavaWorkflowShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchNativesShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchArgumentWorkflowShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchLoginModels.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchLoginWorkflowShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchArgumentModel.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPreferenceShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashCollectionShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPrepareShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashAnalysisShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashResultShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
+
+### Startup / window / shell extraction
+
+These shell modules already exist and should be treated as the continuation point:
 
 - `Plain Craft Launcher 2/Modules/Base/ModApplicationRuntimeShell.vb`
 - `Plain Craft Launcher 2/Modules/Base/ModMainWindowLoadedShell.vb`
@@ -76,155 +97,194 @@ Important shell modules already in place:
 - `Plain Craft Launcher 2/Modules/Base/ModMainWindowInputShell.vb`
 - `Plain Craft Launcher 2/Modules/Base/ModMainWindowPageNameShell.vb`
 - `Plain Craft Launcher 2/Modules/Base/ModMainWindowExtraButtonShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchInteractionShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftLoginShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchThirdPartyLoginShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftStepShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibStepShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftRequestShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibRequestShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchResultShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJavaLoaderShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJavaDownloadSessionShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJavaSelectionShell.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 
-That shell split is real progress. Another engineer should continue from it instead of reopening old extraction debates.
+### Backend and portability progress already established
 
-## What Still Blocks A Frontend Migration
+These areas are already substantially portable or backend-owned:
 
-These are the remaining tracks that matter before a serious frontend replacement.
+- startup workflow planning
+- startup bootstrap and visual planning
+- version transition and milestone policy
+- launch prerun and launch session planning
+- launch argument, classpath, native, and Java workflow planning
+- Microsoft login request/step/failure workflow
+- Authlib login request/step/failure workflow
+- Java selection and transfer planning
+- crash collection/export/prompt planning
+- launcher identity fallback in `PCL.Core/App/LauncherIdentity.cs`
+- encryption-key fallback in `PCL.Core/Utils/Secret/EncryptHelper.cs`
 
-### 1. `ModLaunch.vb` is still not just a thin adapter
+## Recent Checkpoint Commits
 
-File:
+These are the key migration checkpoints leading to the current state:
 
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+- `5b163bd1` `refactor: extract launch execution shell`
+- `d6ff6d28` `refactor: extract launch prerun shell`
+- `ff9f74ea` `refactor: extract launch argument shell helpers`
+- `89d45e0d` `refactor: extract launch session argument shell`
+- `e8e4eb0d` `refactor: extract launch profile and session planning shells`
+- `df9f6883` `refactor: extract java preference selection shell`
+- `542cf2a6` `refactor: extract crash collection and export shells`
+- `092a5751` `refactor: finish launch workflow shell extraction`
+- `2fe1c0a7` `refactor: finish launch login shell extraction`
+- `9fe1317d` `refactor: split crash analyzer shells`
 
-Still needs cleanup around:
+## What Still Remains Before A Full Frontend Cutover
 
-- remaining launch-session orchestration
-- remaining launcher-side effects
-- concrete process/watcher adaptation
-- prompt/application glue still mixed with launcher state gathering
+These are the real remaining tracks. This list replaces the older stale blocker list.
 
-This is still one of the biggest blockers.
-
-### 2. `ModJava.vb` still owns concrete download lifecycle behavior
-
-File:
-
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb`
-
-Still needs cleanup around:
-
-- concrete loader lifecycle
-- polling / cancellation / retry behavior
-- applying refresh / post-download effects
-- final adapter-only shape for Java download execution
-
-### 3. Startup is improved, but not fully adapter-only yet
+### 1. Finish the startup and main-window shell boundary
 
 Files:
 
 - `Plain Craft Launcher 2/Application.xaml.vb`
 - `Plain Craft Launcher 2/FormMain.xaml.vb`
 
-`FormMain.xaml.vb` is much smaller in responsibility than before, but it still owns:
+Current state:
 
-- remaining page transition orchestration in `PageChange` / `PageChangeActual`
-- some thin event wrappers
-- WPF page composition / navigation ownership
-- current window/page shell coordination
+- `Application.xaml.vb` is already fairly small at roughly 122 lines
+- `FormMain.xaml.vb` is much smaller in responsibility than before, but still around 897 lines
 
-`Application.xaml.vb` still owns:
+What still remains:
 
-- WPF application startup
-- splash/runtime presentation
-- process-lifetime coordination
-- remaining Windows application-shell behavior
+- remaining WPF event glue and lifecycle coordination
+- page routing and page transition ownership
+- prompt and consent thread wiring
+- window composition, drag, DPI, and hook integration cleanup
+- making the remaining frontend shell responsibilities explicit enough for a non-WPF frontend to mirror cleanly
 
-These files are no longer the main policy source, but they are still frontend-owned shell code.
+This is now the biggest frontend-facing cleanup track.
 
-### 4. Crash flow still has launcher-owned shell work
+### 2. Finish the secret / auth portability boundary
 
-File:
-
-- `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
-
-Still needs cleanup around:
-
-- picker invocation
-- direct log opening / reveal behavior
-- remaining concrete crash shell actions
-
-### 5. `PCL.Core` still contains Windows-only helpers that block a cleaner backend contract
-
-Examples:
-
-- Windows shell helpers
-- clipboard/dialog/process helpers mixed into reusable code paths
-- some OS-specific utilities that are still too close to broader services
-
-This does not block all backend work, but it still blocks a cleaner frontend-facing contract.
-
-### 6. `Utils.Secret` is still the biggest architectural portability blocker
-
-Files / area:
+Area:
 
 - `PCL.Core/Utils/Secret/*`
-- profile encryption/decryption call sites such as `Plain Craft Launcher 2/Modules/Minecraft/ModProfile.vb`
+- related encrypted profile/config call sites
 
-Recent progress:
+Key files:
 
-- launcher identity now has a portable fallback path
-- encryption key storage now has a portable fallback path
+- `PCL.Core/Utils/Secret/EncryptHelper.cs`
+- `PCL.Core/Utils/Secret/Identify.cs`
+- `PCL.Core/Utils/Secret/IdentifyOld.cs`
 
-Still not solved:
+Progress already made:
 
-- a clean, truly headless secret/config/auth boundary
-- replacement of the remaining old secret/device-identity assumptions
+- launcher identity has a portable fallback path
+- encryption key storage has a portable fallback path
 
-If someone asks "what is the last serious backend portability blocker?", this is the best answer.
+What still remains:
 
-## What A New Engineer Should Do Next
+- a cleaner headless secret boundary
+- reducing remaining assumptions around device identity and legacy secret handling
+- making profile/config secret access predictable for a future non-Windows frontend
 
-Recommended order:
+This is the biggest backend-side architectural blocker left.
 
-1. finish `ModLaunch.vb`
-2. finish `ModJava.vb`
-3. finish `ModCrash.vb`
-4. keep shrinking `FormMain.xaml.vb` and `Application.xaml.vb`
-5. reduce remaining `PCL.Core` Windows-only helper leakage
-6. finish the `Utils.Secret` portability story
-7. only then start a real frontend replacement branch
+### 3. Reduce leftover Windows helper leakage in `PCL.Core`
+
+Current issue:
+
+- some reusable code paths still rely on Windows-oriented helpers too directly
+
+Needed outcome:
+
+- backend-facing contracts are easier for a non-WPF frontend to consume
+- reusable services stop depending on clipboard/dialog/process/UI assumptions by accident
+- Windows-only behavior becomes clearly adapter-owned
+
+### 4. Expand backend-consumable frontend seams beyond startup
+
+`PCL.Frontend.Spike` currently proves startup consumption well enough to be useful, but the replacement frontend engineer will still benefit from additional stable seams for:
+
+- prompt rendering models
+- navigation/page data contracts
+- launch/profile/auth flow view models or request/response adapters
+- crash presentation/export interactions
+
+This does not require re-centralizing WPF logic. It means making the backend and shell seams easier to consume from a new frontend.
+
+## Two-Engineer Split
+
+This is the recommended handoff structure.
+
+### Engineer 1: frontend migration
+
+This engineer can start now.
+
+Focus:
+
+- build the replacement frontend shell in parallel
+- use `PCL.Frontend.Spike` and `PCL.Core.Backend` as the contract proving ground
+- implement startup, consent, prompt, navigation, and page composition patterns without borrowing WPF-only behavior
+- target low-risk flows first
+- surface missing backend contracts clearly instead of re-implementing backend policy in the new frontend
+
+Guardrails:
+
+- do not port WPF code mechanically
+- do not recreate launch/login/Java/crash policy in the frontend
+- do not depend on `FormMain.xaml.vb` as a source of truth for domain logic
+
+Recommended first frontend milestones:
+
+1. startup bootstrap and consent flow using backend plans
+2. window/app shell and navigation skeleton
+3. prompt rendering abstractions
+4. low-risk read-only or mostly-read-only pages
+5. controlled integration of launch/profile/auth UI against backend contracts
+
+### Engineer 2: remaining backend and shell cleanup
+
+This engineer should continue the portability cleanup.
+
+Focus:
+
+- keep shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
+- tighten `PCL.Core` Windows-only boundaries
+- finish `Utils.Secret` portability
+- add any missing backend-facing contracts the frontend engineer uncovers
+- keep `Plain Craft Launcher 2` moving toward a pure shell role instead of regressing into policy ownership
+
+## Are We Ready To Start Frontend Migration?
+
+Yes, with the right framing.
+
+The honest assessment is:
+
+- ready to start a frontend migration workstream: yes
+- ready to cut over fully to a new frontend immediately: no
+
+Why the answer is now yes:
+
+- the old major blockers in `ModLaunch.vb`, `ModJava.vb`, and `ModCrash.vb` are no longer the dominant risk
+- `PCL.Core.Backend` is already the source of truth for most important portable workflows
+- `PCL.Frontend.Spike` already proves that backend-driven non-WPF startup is viable
+- the remaining work is now concentrated in startup/window shell cleanup and secret portability, which can be handled in parallel with frontend development
+
+What this means in practice:
+
+- start the frontend now
+- do not promise full frontend replacement without continued backend cleanup
+- keep the frontend engineer building against explicit contracts, not WPF internals
 
 ## What Not To Do
 
 Do not:
 
 - move WPF controls/pages into the backend
-- reopen already-extracted backend policy work unless there is a bug
-- start a brand-new frontend before `ModLaunch.vb`, `ModJava.vb`, and `Utils.Secret` are in better shape
-- treat `PCL.Core` as the main home for new portable workflow logic when `PCL.Core.Backend` is the better target
+- re-implement backend workflow logic in the new frontend
+- reopen already-extracted backend workflow code unless fixing a bug or missing seam
+- treat the old launcher modules as the long-term home for new portable policy
+- wait for perfect backend cleanup before starting all frontend work
 
-## Frontend Migration Readiness
+Also do not say:
 
-Current practical status:
+- "nothing important is left before frontend migration"
 
-- backend policy extraction: strong
-- launcher shell thinning: well underway
-- actual frontend replacement readiness: not done yet
+Instead say:
 
-The migration can be handed off now, but the handoff should be:
-
-"continue shrinking the Windows shell until the replacement frontend only has to own UI and OS adapters"
-
-not:
-
-"build the new frontend immediately and figure the backend out later"
+- "the project is ready for parallel frontend migration and backend cleanup, but not for an immediate no-risk frontend cutover"
 
 ## Validation Commands
 
@@ -240,6 +300,6 @@ dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug
 
 ## Short Handoff Message
 
-If you need to hand this to another engineer in one paragraph:
+If you need a one-paragraph handoff:
 
-`PCL.Core.Backend` is now the portable source of truth for most startup/launch/crash/login/Java policy, and the WPF launcher is being reduced into shell modules. The remaining blockers before a real frontend migration are mainly `ModLaunch.vb`, `ModJava.vb`, `ModCrash.vb`, the last startup/page shell work in `Application.xaml.vb` and `FormMain.xaml.vb`, and the unfinished `Utils.Secret` portability story. Build on the existing shell split; do not restart the extraction from scratch.`
+`PCL.Core.Backend` is now the portable source of truth for most startup, launch, login, Java, and crash policy, and the old WPF launcher has been aggressively reduced into shell modules. `ModLaunch.vb`, `ModJava.vb`, and `ModCrash.vb` are no longer the primary blockers. The remaining work before a full frontend cutover is mainly the last startup/main-window shell cleanup in `Application.xaml.vb` and `FormMain.xaml.vb`, the unfinished `Utils.Secret` portability boundary, and reducing leftover Windows-only leakage in `PCL.Core`. You can now split the project between a frontend engineer building the replacement UI against backend contracts and a backend engineer finishing the remaining shell and portability cleanup in parallel.`
