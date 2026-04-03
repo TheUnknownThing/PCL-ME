@@ -22,6 +22,16 @@ public static class MinecraftCrashResponseWorkflowService
             HintMessage: "错误报告已导出！",
             RevealInShellPath: archivePath);
     }
+
+    public static MinecraftCrashExportSaveDialogPlan BuildExportSaveDialogPlan(string suggestedArchiveName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(suggestedArchiveName);
+
+        return new MinecraftCrashExportSaveDialogPlan(
+            Title: "选择保存位置",
+            DefaultFileName: suggestedArchiveName,
+            Filter: "Minecraft 错误报告(*.zip)|*.zip");
+    }
 }
 
 public sealed record MinecraftCrashPromptResponse(
@@ -40,3 +50,8 @@ public enum MinecraftCrashPromptResponseKind
 public sealed record MinecraftCrashExportCompletionPlan(
     string HintMessage,
     string RevealInShellPath);
+
+public sealed record MinecraftCrashExportSaveDialogPlan(
+    string Title,
+    string DefaultFileName,
+    string Filter);

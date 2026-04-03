@@ -365,6 +365,8 @@ internal static class SpikeExecutor
         var outputRoot = Path.GetDirectoryName(archivePath)!;
         Directory.CreateDirectory(outputRoot);
         createdDirectories.Add(outputRoot);
+        var saveDialogPlan = MinecraftCrashResponseWorkflowService.BuildExportSaveDialogPlan(
+            plan.ExportPlan.SuggestedArchiveName);
 
         var exportRequest = plan.ExportPlan.ExportRequest with
         {
@@ -389,6 +391,9 @@ internal static class SpikeExecutor
             string.Join(
                 Environment.NewLine,
                 [
+                    $"Dialog title: {saveDialogPlan.Title}",
+                    $"Dialog default: {saveDialogPlan.DefaultFileName}",
+                    $"Dialog filter: {saveDialogPlan.Filter}",
                     $"Requested path: {exportArchivePath ?? "default"}",
                     $"Resolved archive path: {archiveResult.ArchiveFilePath}",
                     $"Success hint: {completionPlan.HintMessage}",

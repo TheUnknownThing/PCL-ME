@@ -33,4 +33,15 @@ public sealed class MinecraftCrashResponseWorkflowServiceTest
         Assert.AreEqual("错误报告已导出！", result.HintMessage);
         Assert.AreEqual("/tmp/crash-report.zip", result.RevealInShellPath);
     }
+
+    [TestMethod]
+    public void BuildExportSaveDialogPlanReturnsLauncherDialogContract()
+    {
+        var result = MinecraftCrashResponseWorkflowService.BuildExportSaveDialogPlan(
+            "错误报告-2026-4-3_10.00.00.zip");
+
+        Assert.AreEqual("选择保存位置", result.Title);
+        Assert.AreEqual("错误报告-2026-4-3_10.00.00.zip", result.DefaultFileName);
+        Assert.AreEqual("Minecraft 错误报告(*.zip)|*.zip", result.Filter);
+    }
 }

@@ -352,8 +352,13 @@ internal static class SpikeRunner
 
         if (response.Kind == MinecraftCrashPromptResponseKind.ExportReport)
         {
+            var saveDialogPlan = MinecraftCrashResponseWorkflowService.BuildExportSaveDialogPlan(
+                plan.SuggestedArchiveName);
             var completionPlan = MinecraftCrashResponseWorkflowService.BuildExportCompletionPlan(
                 $"<workspace>/output/{plan.SuggestedArchiveName}");
+            lines.Add($"Save dialog: {saveDialogPlan.Title}");
+            lines.Add($"Save default: {saveDialogPlan.DefaultFileName}");
+            lines.Add($"Save filter: {saveDialogPlan.Filter}");
             lines.Add("Frontend should ask for a destination path, then pass the export request to the archive writer.");
             lines.Add($"Default execute-mode export path: <workspace>/output/{plan.SuggestedArchiveName}");
             lines.Add($"Success hint: {completionPlan.HintMessage}");

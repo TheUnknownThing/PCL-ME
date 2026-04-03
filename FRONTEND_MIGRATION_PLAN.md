@@ -61,7 +61,7 @@ These workflow extractions are already done and should be treated as available m
 - crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
 - crash export request assembly is owned by `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
 - crash export archive creation is owned by `PCL.Core.Minecraft.MinecraftCrashExportArchiveService`
-- crash prompt response and export-completion shell policy are owned by `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
+- crash prompt response, export save-dialog defaults, and export-completion shell policy are owned by `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
 - crash result prompt policy and export filename suggestion are owned by `PCL.Core.Minecraft.MinecraftCrashWorkflowService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
@@ -196,7 +196,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch classpath ordering and replacement value assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher path/lib state and applies launcher-specific file extraction
 - launch natives-directory selection and archive sync are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly passes selected native archives and forwards returned log output
 - launch RetroWrapper selection, JSON argument-section extraction, JVM argument assembly, and game argument assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly supplies JSON text, config values, and adapter-owned network/file side effects
-- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, prompt rendering, or export-completion shell policy; it still owns save-picker invocation and Explorer opening
+- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, export save-dialog defaults, prompt rendering, or export-completion shell policy; it still owns save-picker invocation and Explorer opening
 - `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, warning prompt construction, or startup visual defaults; it still owns WPF startup shell work such as splash-screen display, tooltip metadata application, memory optimization execution, and process exit behavior
 - `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, startup open-count milestone policy, or startup update-log prompt policy; it still owns WPF startup presentation and shell adapters
 - `FormMain.xaml.vb` now consumes a core-owned version-transition application plan for setup writes, custom-skin migration, and startup log messaging; it still owns WPF prompt/display adapters and shell side effects

@@ -20,6 +20,7 @@ Latest continuation update:
 - portable Java runtime transfer selection and reused-file filtering now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - launcher Java download candidate filtering in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadWorkflowService`
 - `PCL.Frontend.Spike` now distinguishes reused Java runtime files from actual transfer files, writes a dedicated transfer artifact, and can detect best-effort existing runtime files in `--host-env true` mode
+- crash export save-dialog title / default filename / filter planning now live in `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
 - shell-spike launch scenarios now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt transcripts
 - shell-spike execute mode now supports explicit crash-export destination handoff and records the selected archive target as a shell artifact
 - shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
@@ -90,6 +91,7 @@ Latest continuation update:
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher crash-export archive creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashExportArchiveService`
 - launcher crash prompt action handling and export completion hint/reveal flow now route through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashResponseWorkflowService`
+- launcher crash-export save dialog defaults now route through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashResponseWorkflowService`
 - launcher in-game music / video / visibility shell application now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
 - launcher prerun options-file mutation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchOptionsFileService`
 - launcher prerun GPU recovery, `launcher_profiles.json`, and `options.txt` composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchPrerunWorkflowService`

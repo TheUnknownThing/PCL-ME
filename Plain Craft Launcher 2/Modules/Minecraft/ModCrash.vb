@@ -938,7 +938,8 @@ NextStack:
                             McLoginLoader.Output.Uuid,
                             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
                     '获取文件路径
-                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", exportPlan.SuggestedArchiveName, "Minecraft 错误报告(*.zip)|*.zip"))
+                    Dim saveDialogPlan = MinecraftCrashResponseWorkflowService.BuildExportSaveDialogPlan(exportPlan.SuggestedArchiveName)
+                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile(saveDialogPlan.Title, saveDialogPlan.DefaultFileName, saveDialogPlan.Filter))
                     If String.IsNullOrEmpty(FileAddress) Then Return
                     MinecraftCrashExportArchiveService.CreateArchive(
                         New MinecraftCrashExportArchiveRequest(
