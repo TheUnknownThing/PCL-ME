@@ -781,7 +781,7 @@ NextInner:
         '初始请求
 Retry:
         McLaunchLog("开始正版验证 Step 1/6（原始登录）")
-        Dim PrepareJson As JObject
+        Dim responseBody As String
         Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(OAuthClientId)
         Using response = HttpRequest.
             CreatePost(requestPlan.Url).
@@ -791,12 +791,13 @@ Retry:
             GetResult()
 
             response.EnsureSuccessStatusCode()
-            PrepareJson = GetJson(response.AsString())
+            responseBody = response.AsString()
         End Using
 
-        McLaunchLog("网页登录地址：" & PrepareJson("verification_uri").ToString)
+        Dim promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(responseBody)
+        McLaunchLog(promptPlan.LogMessage)
 
-        Dim promptResult = ModLaunchPromptShell.RunMicrosoftDeviceCodeLoginPrompt(PrepareJson)
+        Dim promptResult = ModLaunchPromptShell.RunMicrosoftDeviceCodeLoginPrompt(promptPlan)
         If promptResult.Kind = MicrosoftDeviceCodePromptResultKind.PasswordLoginRequired Then
             Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetPasswordLoginPrompt())
             If decision.Decision = MinecraftLaunchAccountDecisionKind.Retry Then

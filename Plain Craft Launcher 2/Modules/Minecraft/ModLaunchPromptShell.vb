@@ -2,8 +2,10 @@ Imports PCL.Core.Minecraft.Launch
 
 Public Module ModLaunchPromptShell
 
-    Public Function RunMicrosoftDeviceCodeLoginPrompt(prepareJson As JObject) As MicrosoftDeviceCodePromptResult
-        Dim converter As New MyMsgBoxConverter With {.Content = prepareJson, .ForceWait = True, .Type = MyMsgBoxType.Login}
+    Public Function RunMicrosoftDeviceCodeLoginPrompt(prompt As MinecraftLaunchMicrosoftDeviceCodePromptPlan) As MicrosoftDeviceCodePromptResult
+        If prompt Is Nothing Then Throw New ArgumentNullException(NameOf(prompt))
+
+        Dim converter As New MyMsgBoxConverter With {.Content = prompt, .ForceWait = True, .Type = MyMsgBoxType.Login}
         WaitingMyMsgBox.Add(converter)
         While converter.Result Is Nothing
             Thread.Sleep(100)

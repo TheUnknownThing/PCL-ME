@@ -7,6 +7,18 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchMicrosoftProtocolService
 {
+    public static MinecraftLaunchMicrosoftDeviceCodeResponse ParseDeviceCodeResponseJson(string json)
+    {
+        var root = ParseObject(json);
+        return new MinecraftLaunchMicrosoftDeviceCodeResponse(
+            GetRequiredString(root, "device_code"),
+            GetRequiredString(root, "user_code"),
+            GetRequiredString(root, "verification_uri"),
+            root["verification_uri_complete"]?.ToString(),
+            GetRequiredInt(root, "expires_in"),
+            GetRequiredInt(root, "interval"));
+    }
+
     public static MinecraftLaunchXboxLiveTokenRequest BuildXboxLiveTokenRequest(string accessToken)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
@@ -135,12 +147,41 @@ public static class MinecraftLaunchMicrosoftProtocolService
 
         return value;
     }
+
+    private static int GetRequiredInt(JsonObject obj, string propertyName)
+    {
+        if (obj[propertyName] is null)
+        {
+            throw new InvalidOperationException($"JSON 内容缺少 {propertyName} 字段。");
+        }
+
+        if (obj[propertyName] is JsonValue value &&
+            value.TryGetValue<int>(out var intValue))
+        {
+            return intValue;
+        }
+
+        if (int.TryParse(obj[propertyName]!.ToString(), out var parsed))
+        {
+            return parsed;
+        }
+
+        throw new InvalidOperationException($"JSON 中的 {propertyName} 字段不是数字。");
+    }
 }
 
 public sealed record MinecraftLaunchXboxLiveTokenRequest(
     MinecraftLaunchXboxLiveTokenRequestProperties Properties,
     string RelyingParty,
     string TokenType);
+
+public sealed record MinecraftLaunchMicrosoftDeviceCodeResponse(
+    string DeviceCode,
+    string UserCode,
+    string VerificationUrl,
+    string? VerificationUrlComplete,
+    int ExpiresInSeconds,
+    int IntervalSeconds);
 
 public sealed record MinecraftLaunchXboxLiveTokenRequestProperties(
     string AuthMethod,

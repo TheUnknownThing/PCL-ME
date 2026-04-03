@@ -185,12 +185,10 @@ EndHint:
         ''' <summary>
         ''' 输入模式：文本框的文本。
         ''' 选择模式：需要放进去的 List(Of MyListItem)。
-        ''' 登录模式：登录步骤 1 中返回的 JSON。
+        ''' 登录模式：微软设备代码登录提示计划。
         ''' </summary>
         Public Content As Object
 
-        '设置轮询 Url
-        Public AuthUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
         ''' <summary>
         ''' 输入模式：输入验证规则。
         ''' </summary>

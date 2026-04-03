@@ -7,6 +7,30 @@ namespace PCL.Core.Test.Minecraft;
 public sealed class MinecraftLaunchMicrosoftProtocolServiceTest
 {
     [TestMethod]
+    public void ParseDeviceCodeResponseJsonExtractsPromptFields()
+    {
+        const string json = """
+            {
+              "device_code": "device-code",
+              "user_code": "user-code",
+              "verification_uri": "https://microsoft.com/devicelogin",
+              "verification_uri_complete": "https://microsoft.com/devicelogin?otc=user-code",
+              "expires_in": 900,
+              "interval": 5
+            }
+            """;
+
+        var result = MinecraftLaunchMicrosoftProtocolService.ParseDeviceCodeResponseJson(json);
+
+        Assert.AreEqual("device-code", result.DeviceCode);
+        Assert.AreEqual("user-code", result.UserCode);
+        Assert.AreEqual("https://microsoft.com/devicelogin", result.VerificationUrl);
+        Assert.AreEqual("https://microsoft.com/devicelogin?otc=user-code", result.VerificationUrlComplete);
+        Assert.AreEqual(900, result.ExpiresInSeconds);
+        Assert.AreEqual(5, result.IntervalSeconds);
+    }
+
+    [TestMethod]
     public void BuildXboxLiveTokenRequestFormatsRpsTicket()
     {
         var result = MinecraftLaunchMicrosoftProtocolService.BuildXboxLiveTokenRequest("oauth-token");
