@@ -1,0 +1,87 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclListItem"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+  <Grid
+      Height="36"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      ColumnDefinitions="2,10,18,Auto,*,Auto,6"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Grid.Transitions>
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+        <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+      </Transitions>
+    </Grid.Transitions>
+
+    <Border
+        x:Name="SelectionBar"
+        Grid.RowSpan="3"
+        Background="#1370F3"
+        IsVisible="False" />
+
+    <Border
+        x:Name="RectBack"
+        Grid.ColumnSpan="7"
+        Margin="0"
+        Background="#EAF2FE"
+        BorderBrush="#D5E6FD"
+        BorderThickness="1"
+        CornerRadius="6"
+        Opacity="0" />
+
+    <Path
+        x:Name="LogoPath"
+        Grid.Column="2"
+        Width="16"
+        Height="16"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Stretch="Uniform"
+        Fill="#737373"
+        IsVisible="False" />
+
+    <Button
+        x:Name="MainButton"
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        Padding="0"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalContentAlignment="Stretch">
+      <TextBlock
+          x:Name="TitleBlock"
+          Margin="4,0,0,0"
+          VerticalAlignment="Center"
+          FontSize="14"
+          Foreground="#404040"
+          TextTrimming="CharacterEllipsis" />
+    </Button>
+
+    <Button
+        x:Name="AccessoryButton"
+        Grid.Column="5"
+        Width="25"
+        Height="25"
+        Margin="0,0,5,0"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding AccessoryCommand, ElementName=Root}"
+        IsVisible="False"
+        ToolTip.Tip="{Binding AccessoryToolTip, ElementName=Root}">
+      <Path
+          x:Name="AccessoryPath"
+          Width="15"
+          Height="15"
+          Stretch="Uniform"
+          Fill="#96C0F9" />
+    </Button>
+  </Grid>
+</UserControl>
