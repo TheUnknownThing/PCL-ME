@@ -913,9 +913,7 @@ NextStack:
         Dim response = MinecraftCrashResponseWorkflowService.ResolvePromptResponse(selectedButton.Action)
         Select Case response.Kind
             Case MinecraftCrashPromptResponseKind.OpenInstanceSettings
-                '弹窗选择：前往修改
-                PageInstanceLeft.Instance = _version
-                RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
+                ModCrashPromptShell.OpenInstanceSettings(_version)
             Case MinecraftCrashPromptResponseKind.ExportReport
                 '弹窗选择：导出错误报告
                 Try

@@ -33,4 +33,11 @@ Public Module ModCrashPromptShell
         End Select
     End Sub
 
+    Public Sub OpenInstanceSettings(version As McInstance)
+        If version Is Nothing Then Throw New ArgumentNullException(NameOf(version))
+
+        PageInstanceLeft.Instance = version
+        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
+    End Sub
+
 End Module
