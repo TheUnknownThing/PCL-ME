@@ -53,11 +53,11 @@ static object BuildPlanPayload(SpikeCommandOptions options)
     return options.Command switch
     {
         SpikeCommandKind.Startup => SpikeSampleFactory.BuildStartupPlan(startupInputs),
-        SpikeCommandKind.Launch => SpikeSampleFactory.BuildLaunchPlan(launchInputs),
+        SpikeCommandKind.Launch => SpikeSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
         SpikeCommandKind.Crash => SpikeSampleFactory.BuildCrashPlan(crashInputs),
         SpikeCommandKind.All => new SpikePlanBundle(
             SpikeSampleFactory.BuildStartupPlan(startupInputs),
-            SpikeSampleFactory.BuildLaunchPlan(launchInputs),
+            SpikeSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
             SpikeSampleFactory.BuildCrashPlan(crashInputs)),
         _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
     };
@@ -73,14 +73,14 @@ static object BuildRunPayload(SpikeCommandOptions options)
     {
         SpikeCommandKind.Startup => SpikeRunner.BuildStartupRun(SpikeSampleFactory.BuildStartupPlan(startupInputs)),
         SpikeCommandKind.Launch => SpikeRunner.BuildLaunchRun(
-            SpikeSampleFactory.BuildLaunchPlan(launchInputs),
+            SpikeSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
             options.JavaPromptDecision),
         SpikeCommandKind.Crash => SpikeRunner.BuildCrashRun(
             SpikeSampleFactory.BuildCrashPlan(crashInputs),
             options.CrashAction),
         SpikeCommandKind.All => new SpikeRunBundle(
             SpikeRunner.BuildStartupRun(SpikeSampleFactory.BuildStartupPlan(startupInputs)),
-            SpikeRunner.BuildLaunchRun(SpikeSampleFactory.BuildLaunchPlan(launchInputs), options.JavaPromptDecision),
+            SpikeRunner.BuildLaunchRun(SpikeSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath), options.JavaPromptDecision),
             SpikeRunner.BuildCrashRun(SpikeSampleFactory.BuildCrashPlan(crashInputs), options.CrashAction)),
         _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
     };
@@ -96,11 +96,11 @@ static object BuildExecutePayload(SpikeCommandOptions options)
     return options.Command switch
     {
         SpikeCommandKind.Startup => CreateStartupExecution(startupInputs, workspaceRoot),
-        SpikeCommandKind.Launch => CreateLaunchExecution(launchInputs, workspaceRoot, options.JavaPromptDecision),
+        SpikeCommandKind.Launch => CreateLaunchExecution(launchInputs, workspaceRoot, options.JavaPromptDecision, options.SaveBatchPath),
         SpikeCommandKind.Crash => CreateCrashExecution(crashInputs, workspaceRoot, options.CrashAction, options.ExportArchivePath),
         SpikeCommandKind.All => new SpikeExecutionBundle(
             CreateStartupExecution(startupInputs, Path.Combine(workspaceRoot, "startup")),
-            CreateLaunchExecution(launchInputs, Path.Combine(workspaceRoot, "launch"), options.JavaPromptDecision),
+            CreateLaunchExecution(launchInputs, Path.Combine(workspaceRoot, "launch"), options.JavaPromptDecision, options.SaveBatchPath),
             CreateCrashExecution(crashInputs, Path.Combine(workspaceRoot, "crash"), options.CrashAction, options.ExportArchivePath)),
         _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
     };
@@ -159,10 +159,11 @@ static StartupSpikeExecution CreateStartupExecution(StartupSpikeInputs inputs, s
 static LaunchSpikeExecution CreateLaunchExecution(
     LaunchSpikeInputs inputs,
     string workspaceRoot,
-    PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptDecision javaPromptDecision)
+    PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptDecision javaPromptDecision,
+    string? saveBatchPath)
 {
     var execution = SpikeExecutor.ExecuteLaunch(
-        SpikeSampleFactory.BuildLaunchPlan(inputs),
+        SpikeSampleFactory.BuildLaunchPlan(inputs, saveBatchPath),
         workspaceRoot,
         javaPromptDecision);
     var inputArtifact = SpikeInputStore.SaveLaunchInputs(execution.Execution.WorkspaceRoot, inputs);

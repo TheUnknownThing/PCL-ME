@@ -11,6 +11,7 @@ internal sealed record SpikeCommandOptions(
     bool UseHostEnvironment,
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
     MinecraftCrashOutputPromptActionKind CrashAction,
+    string? SaveBatchPath,
     string? WorkspaceRoot,
     string? InputRoot,
     string? ExportArchivePath);

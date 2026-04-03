@@ -13,6 +13,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - launch scenarios now also expose a portable Java runtime download plan, including the resolved runtime component and planned manifest files
 - launch scenarios now also trace the launcher-style Java index and manifest request sources, and `execute` mode can materialize a stub runtime tree from the portable download workflow
 - launch scenarios now also separate reused runtime files from actual download transfers so the shell can model partial-runtime recovery instead of only all-or-nothing downloads
+- launch scenarios can now also model launcher-style batch-script export, including the export target, abort hint, and shell reveal behavior
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
@@ -32,9 +33,11 @@ Useful reviewer commands:
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- startup --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt download`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt abort`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --save-batch exports/Launch.bat`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode run --format text --crash-action export`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode execute --format text --workspace /tmp/pcl-launch-spike`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode execute --format text --workspace /tmp/pcl-launch-spike --save-batch exports/Launch.bat`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike --export-path exports/demo-report.zip`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode execute --format text --workspace /tmp/pcl-shell-spike`
@@ -49,6 +52,7 @@ Useful reviewer commands:
 - `--scenario modern-fabric|legacy-forge`
 - `--host-env true|false`
 - `--java-prompt download|abort`
+- `--save-batch /absolute/or/workspace-relative/Launch.bat`
 - `--crash-action close|view-log|open-settings|export`
 - `--workspace /absolute/or/relative/path`
 - `--input-root /path/to/file/or/_inputs_directory`
@@ -63,6 +67,7 @@ Useful reviewer commands:
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
 - launch execution now writes Java index/manifest request artifacts under `_artifacts/java-download/`, writes `_artifacts/java-download-plan.txt`, and materializes a stub runtime tree when the backend selects an automatic Java download path
 - launch execution now also writes `_artifacts/java-download-transfer.txt`, seeds reused runtime files, and only materializes transfer files for the remaining Java download queue
+- launch execution with `--save-batch` now exports the batch script to the requested path, records the export shell policy, and stops before custom-command/process startup
 - crash execution can stage sample input files and build a real crash zip archive via `MinecraftCrashExportArchiveService`
 - crash execution records the selected archive destination in `_artifacts/crash-export-target.txt`, and `--export-path` can override the default workspace output path
 - aborting the launch Java prompt in `execute` mode stops before prerun file work, so no launch artifacts are created

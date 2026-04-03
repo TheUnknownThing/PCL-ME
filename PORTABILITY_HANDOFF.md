@@ -21,6 +21,7 @@ Latest continuation update:
 - launcher Java download candidate filtering in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadWorkflowService`
 - `PCL.Frontend.Spike` now distinguishes reused Java runtime files from actual transfer files, writes a dedicated transfer artifact, and can detect best-effort existing runtime files in `--host-env true` mode
 - crash export save-dialog title / default filename / filter planning now live in `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
+- launch script-export completion log / abort hint / reveal-target policy now live in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - shell-spike launch scenarios now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt transcripts
 - shell-spike execute mode now supports explicit crash-export destination handoff and records the selected archive target as a shell artifact
 - shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
@@ -104,6 +105,7 @@ Latest continuation update:
 - launcher custom-command / game-process shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchExecutionWorkflowService`
 - launcher watcher startup composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchWatcherWorkflowService`
 - launcher launch-session batch export, custom-command shell execution, process shell startup, watcher startup, and post-launch shell composition now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionWorkflowService`
+- launcher launch script-export completion handling now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchShellService`
 - launcher Java requirement / missing-Java recovery orchestration now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchJavaWorkflowService`
 - launcher Authlib validate / refresh / authenticate request shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibProtocolService`
 - launcher Authlib refresh-session resolution and authenticate profile-selection / mutation planning now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibLoginWorkflowService`

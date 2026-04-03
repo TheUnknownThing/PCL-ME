@@ -34,6 +34,17 @@ public static class MinecraftLaunchShellService
             : new MinecraftLaunchFailureDisplay("启动失败", "Minecraft 启动失败");
     }
 
+    public static MinecraftLaunchScriptExportPlan BuildScriptExportPlan(string exportPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(exportPath);
+
+        return new MinecraftLaunchScriptExportPlan(
+            exportPath,
+            "导出启动脚本完成，强制结束启动过程",
+            "导出启动脚本成功！",
+            exportPath);
+    }
+
     public static MinecraftLaunchPrompt? GetSupportPrompt(int launchCount)
     {
         if (!_supportPromptMilestones.Contains(launchCount))
@@ -175,6 +186,12 @@ public sealed record MinecraftLaunchNotification(
 public sealed record MinecraftLaunchFailureDisplay(
     string DialogTitle,
     string LogTitle);
+
+public sealed record MinecraftLaunchScriptExportPlan(
+    string TargetPath,
+    string CompletionLogMessage,
+    string AbortHint,
+    string RevealInShellPath);
 
 public sealed record MinecraftGameShellPlan(
     MinecraftLaunchMusicShellAction MusicAction,

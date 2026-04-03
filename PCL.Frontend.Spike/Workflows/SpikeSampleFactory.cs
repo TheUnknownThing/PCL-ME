@@ -195,7 +195,7 @@ internal static class SpikeSampleFactory
                 AbortHint: null));
     }
 
-    public static LaunchSpikePlan BuildLaunchPlan(LaunchSpikeInputs inputs)
+    public static LaunchSpikePlan BuildLaunchPlan(LaunchSpikeInputs inputs, string? saveBatchPath = null)
     {
         var loginPlan = SpikeLaunchLoginFactory.BuildPlan(inputs.LoginInputs);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(inputs.JavaWorkflowRequest);
@@ -236,6 +236,9 @@ internal static class SpikeSampleFactory
         var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(inputs.PrerunWorkflowRequest);
         var sessionStartPlan = MinecraftLaunchSessionWorkflowService.BuildStartPlan(inputs.SessionStartWorkflowRequest);
         var argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(inputs.ArgumentPlanRequest);
+        var scriptExportPlan = string.IsNullOrWhiteSpace(saveBatchPath)
+            ? null
+            : MinecraftLaunchShellService.BuildScriptExportPlan(saveBatchPath);
         return new LaunchSpikePlan(
             inputs.Scenario,
             loginPlan,
@@ -256,14 +259,15 @@ internal static class SpikeSampleFactory
             argumentPlan,
             prerunPlan,
             sessionStartPlan,
+            scriptExportPlan,
             MinecraftLaunchShellService.GetPostLaunchShellPlan(
                 inputs.PostLaunchShellRequest),
             MinecraftLaunchShellService.GetCompletionNotification(inputs.CompletionRequest));
     }
 
-    public static LaunchSpikePlan BuildLaunchPlan(string scenario)
+    public static LaunchSpikePlan BuildLaunchPlan(string scenario, string? saveBatchPath = null)
     {
-        return BuildLaunchPlan(CreateDefaultLaunchInputs(scenario));
+        return BuildLaunchPlan(CreateDefaultLaunchInputs(scenario), saveBatchPath);
     }
 
     public static CrashSpikeInputs CreateDefaultCrashInputs()

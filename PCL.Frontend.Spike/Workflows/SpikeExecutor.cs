@@ -259,6 +259,50 @@ internal static class SpikeExecutor
         writtenFiles.Add(optionsPath);
         artifacts.Add(new SpikeExecutionArtifact("options.txt", optionsPath));
 
+        if (plan.ScriptExportPlan is not null)
+        {
+            var resolvedScriptExportPath = ResolveLaunchScriptExportPath(workspaceRoot, plan.ScriptExportPlan.TargetPath);
+            var scriptExportPlan = MinecraftLaunchShellService.BuildScriptExportPlan(resolvedScriptExportPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(resolvedScriptExportPath)!);
+            createdDirectories.Add(Path.GetDirectoryName(resolvedScriptExportPath)!);
+            WriteTextFile(
+                resolvedScriptExportPath,
+                plan.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
+                plan.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding);
+            writtenFiles.Add(resolvedScriptExportPath);
+            artifacts.Add(new SpikeExecutionArtifact("Exported launch batch script", resolvedScriptExportPath));
+
+            var scriptExportRecordPath = Path.Combine(workspaceRoot, "_artifacts", "launch-script-export.txt");
+            WriteTextFile(
+                scriptExportRecordPath,
+                string.Join(
+                    Environment.NewLine,
+                    [
+                        $"Target path: {scriptExportPlan.TargetPath}",
+                        $"Completion log: {scriptExportPlan.CompletionLogMessage}",
+                        $"Abort hint: {scriptExportPlan.AbortHint}",
+                        $"Reveal target: {scriptExportPlan.RevealInShellPath}"
+                    ]));
+            writtenFiles.Add(scriptExportRecordPath);
+            artifacts.Add(new SpikeExecutionArtifact("Launch script export", scriptExportRecordPath));
+
+            sections.Add(new SpikeTranscriptSection(
+                "Artifacts",
+                artifacts.Select(artifact => $"{artifact.Label}: {artifact.Path}").ToArray()));
+            sections.Add(new SpikeTranscriptSection(
+                "Outcome",
+                [
+                    "Launch stopped after exporting the batch script.",
+                    $"Exported batch script: {resolvedScriptExportPath}",
+                    $"Reveal target: {scriptExportPlan.RevealInShellPath}"
+                ]));
+
+            return new LaunchSpikeExecution(
+                javaPromptDecision,
+                new SpikeExecutionSummary(workspaceRoot, DistinctPaths(createdDirectories), writtenFiles, [], artifacts),
+                new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
+        }
+
         var launchScriptPath = Path.Combine(workspaceRoot, "_artifacts", "Launch.bat");
         WriteTextFile(
             launchScriptPath,
@@ -605,6 +649,13 @@ internal static class SpikeExecutor
         return Path.IsPathRooted(exportArchivePath)
             ? Path.GetFullPath(exportArchivePath)
             : Path.GetFullPath(Path.Combine(workspaceRoot, exportArchivePath));
+    }
+
+    private static string ResolveLaunchScriptExportPath(string workspaceRoot, string scriptExportPath)
+    {
+        return Path.IsPathRooted(scriptExportPath)
+            ? Path.GetFullPath(scriptExportPath)
+            : Path.GetFullPath(Path.Combine(workspaceRoot, scriptExportPath));
     }
 
     private static string MapSamplePath(string samplePath, string workspaceRoot)

@@ -17,6 +17,7 @@ internal static class SpikeCommandParser
                 UseHostEnvironment: false,
                 JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
                 CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
+                SaveBatchPath: null,
                 WorkspaceRoot: null,
                 InputRoot: null,
                 ExportArchivePath: null));
@@ -38,6 +39,7 @@ internal static class SpikeCommandParser
         var useHostEnvironment = false;
         var javaPromptDecision = MinecraftLaunchJavaPromptDecision.Download;
         var crashAction = MinecraftCrashOutputPromptActionKind.ExportReport;
+        string? saveBatchPath = null;
         string? workspaceRoot = null;
         string? inputRoot = null;
         string? exportArchivePath = null;
@@ -103,6 +105,9 @@ internal static class SpikeCommandParser
                 case "workspace":
                     workspaceRoot = value;
                     break;
+                case "save-batch":
+                    saveBatchPath = value;
+                    break;
                 case "input-root":
                     inputRoot = value;
                     break;
@@ -124,6 +129,7 @@ internal static class SpikeCommandParser
             useHostEnvironment,
             javaPromptDecision,
             crashAction,
+            saveBatchPath,
             workspaceRoot,
             inputRoot,
             exportArchivePath));
@@ -136,9 +142,9 @@ PCL.Frontend.Spike
 
 Usage:
   startup [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
-  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--workspace path] [--input-root path]
+  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--save-batch path] [--workspace path] [--input-root path]
   crash [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
-  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
+  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--save-batch path] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
   help
 
 Defaults:

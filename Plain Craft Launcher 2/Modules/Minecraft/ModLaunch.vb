@@ -1943,9 +1943,10 @@ Retry:
             WriteFile(If(CurrentLaunchOptions.SaveBatch, ExePath & "PCL\LatestLaunch.bat"), FilterAccessToken(McLaunchSessionPlan.CustomCommandPlan.BatchScriptContent, "F"),
                       Encoding:=If(McLaunchSessionPlan.CustomCommandPlan.UseUtf8Encoding, Encoding.UTF8, Encoding.Default))
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
-                McLaunchLog("导出启动脚本完成，强制结束启动过程")
-                AbortHint = "导出启动脚本成功！"
-                OpenExplorer(CurrentLaunchOptions.SaveBatch)
+                Dim scriptExportPlan = MinecraftLaunchShellService.BuildScriptExportPlan(CurrentLaunchOptions.SaveBatch)
+                McLaunchLog(scriptExportPlan.CompletionLogMessage)
+                AbortHint = scriptExportPlan.AbortHint
+                OpenExplorer(scriptExportPlan.RevealInShellPath)
                 Loader.Parent.Abort()
                 Return '导出脚本完成
             End If

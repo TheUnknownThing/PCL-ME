@@ -65,6 +65,7 @@ These workflow extractions are already done and should be treated as available m
 - crash result prompt policy and export filename suggestion are owned by `PCL.Core.Minecraft.MinecraftCrashWorkflowService`
 - post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- launch script-export completion log / abort hint / reveal-target policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch GPU-preference failure / admin-retry policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
 - launch prerun options-file mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
 - launch prerun composition for GPU recovery, `launcher_profiles.json`, and `options.txt` is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrerunWorkflowService`
@@ -183,6 +184,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - Java runtime manifest selection / download file planning, request source shaping, and selection transition policy are now expressed through `PCL.Core`, while `ModJava.vb` still owns the download-job lifecycle, cancellation, and retry shell behavior and `ModLaunch.vb` mainly delegates into that adapter path
 - Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns file hashing, the concrete download job lifecycle, cancellation, and retry shell behavior
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
+- launch script-export completion behavior is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes the batch file and applies the returned shell reveal
 - launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
 - launch prerun `launcher_profiles.json` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly handles file existence, writes, and retry shell behavior
 - launch prerun GPU recovery / file-prep composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned prerun shell and file plans
@@ -225,7 +227,7 @@ Most practical next code targets:
    Keep only picker / zip / Explorer shell work in the launcher.
 4. build a tiny replacement shell spike
    It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
-   The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, launcher-style Java request planning, Java runtime file materialization, Java transfer/reuse review, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
+   The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, launcher-style Java request planning, Java runtime file materialization, Java transfer/reuse review, launch-script export handling, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
    The best next spike step is feeding more real launcher-backed request execution and concrete Java-download transfer results into the shell, instead of only modeled responses and placeholder runtime file contents.
 
 Keep the following in the launcher as adapters:

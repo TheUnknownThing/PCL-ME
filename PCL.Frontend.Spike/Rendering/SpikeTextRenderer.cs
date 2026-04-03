@@ -145,6 +145,7 @@ internal static class SpikeTextRenderer
                 new SpikeTranscriptSection(
                     "Session",
                     [
+                        $"Script export: {plan.ScriptExportPlan?.TargetPath ?? "disabled"}",
                         $"Custom command shells: {plan.SessionStartPlan.CustomCommandShellPlans.Count}",
                         $"Process: {plan.SessionStartPlan.ProcessShellPlan.FileName}",
                         $"Realtime log: {plan.SessionStartPlan.WatcherWorkflowPlan.ShouldAttachRealtimeLog}",

@@ -74,6 +74,21 @@ internal static class SpikeRunner
 
         sections.Add(new SpikeTranscriptSection("Launch Inputs", BuildLaunchInputLines(plan)));
         sections.Add(new SpikeTranscriptSection("Prerun File Work", BuildPrerunLines(plan.PrerunPlan)));
+        if (plan.ScriptExportPlan is not null)
+        {
+            sections.Add(new SpikeTranscriptSection("Script Export", BuildScriptExportLines(plan.ScriptExportPlan)));
+            sections.Add(new SpikeTranscriptSection(
+                "Outcome",
+                [
+                    "Launch stopped after exporting the batch script.",
+                    $"Frontend would reveal: {plan.ScriptExportPlan.RevealInShellPath}"
+                ]));
+
+            return new LaunchSpikeRun(
+                javaPromptDecision,
+                new SpikeTranscript($"Launch Shell Transcript ({plan.Scenario})", sections));
+        }
+
         sections.Add(new SpikeTranscriptSection("Session Shell", BuildSessionLines(plan.SessionStartPlan)));
         sections.Add(new SpikeTranscriptSection("Post Launch", BuildPostLaunchLines(plan.PostLaunchShell, plan.CompletionNotification)));
 
@@ -306,6 +321,25 @@ internal static class SpikeRunner
         lines.Add($"Startup summary lines: {plan.WatcherWorkflowPlan.StartupSummaryLogLines.Count}");
 
         return lines;
+    }
+
+    private static IReadOnlyList<string> BuildScriptExportLines(MinecraftLaunchScriptExportPlan plan)
+    {
+        var completionNotification = MinecraftLaunchShellService.GetCompletionNotification(
+            new MinecraftLaunchCompletionRequest(
+                InstanceName: string.Empty,
+                Outcome: MinecraftLaunchOutcome.Aborted,
+                IsScriptExport: true,
+                AbortHint: plan.AbortHint));
+
+        return
+        [
+            $"Target path: {plan.TargetPath}",
+            $"Completion log: {plan.CompletionLogMessage}",
+            $"Abort hint: {plan.AbortHint}",
+            $"Reveal target: {plan.RevealInShellPath}",
+            $"Completion notification: {completionNotification.Kind} - {completionNotification.Message}"
+        ];
     }
 
     private static IReadOnlyList<string> BuildPostLaunchLines(

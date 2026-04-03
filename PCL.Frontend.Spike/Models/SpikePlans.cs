@@ -26,6 +26,7 @@ internal sealed record LaunchSpikePlan(
     MinecraftLaunchArgumentPlan ArgumentPlan,
     MinecraftLaunchPrerunWorkflowPlan PrerunPlan,
     MinecraftLaunchSessionStartWorkflowPlan SessionStartPlan,
+    MinecraftLaunchScriptExportPlan? ScriptExportPlan,
     MinecraftGameShellPlan PostLaunchShell,
     MinecraftLaunchNotification CompletionNotification);
 
