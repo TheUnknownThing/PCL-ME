@@ -895,28 +895,14 @@ Public Class FormMain
 
     '在时钟中调用，使得即使鼠标在窗口外松开，也可以释放控件
     Public Sub DragTick()
-        If DragControl Is Nothing Then Return
-        If Not Mouse.LeftButton = MouseButtonState.Pressed Then
-            DragStop()
-        End If
+        ModMainWindowDragControlShell.TickDragControl(AddressOf DragStop)
     End Sub
     '在鼠标移动时调用，以改变 Slider 位置
     Public Sub DragDoing() Handles PanBack.MouseMove
-        If DragControl Is Nothing Then Return
-        If Mouse.LeftButton = MouseButtonState.Pressed Then
-            DragControl.DragDoing()
-        Else
-            DragStop()
-        End If
+        ModMainWindowDragControlShell.ContinueDragControl(AddressOf DragStop)
     End Sub
     Public Sub DragStop()
-        '存在其他线程调用的可能性，因此需要确保在 UI 线程运行
-        RunInUi(Sub()
-                    If DragControl Is Nothing Then Return
-                    Dim Control = DragControl
-                    DragControl = Nothing
-                    Control.DragStop() '控件会在该事件中判断 DragControl，所以得放在后面
-                End Sub)
+        ModMainWindowDragControlShell.StopDragControl()
     End Sub
 
 #End Region
