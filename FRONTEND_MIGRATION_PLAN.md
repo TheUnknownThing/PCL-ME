@@ -56,6 +56,7 @@ These workflow extractions are already done and should be treated as available m
 - login profile mutation / cached-session reuse policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLoginProfileWorkflowService`
 - authlib login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginExecutionService`
 - Microsoft login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftLoginExecutionService`
+- Microsoft device-code response parsing and popup prompt planning are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftDeviceCodePromptService`
 - startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
 - startup command parsing and startup preparation composition are owned by `PCL.Core.App.Essentials.LauncherStartupCommandService` and `LauncherStartupPreparationService`
 - startup version-transition and version-isolation migration policy are owned by `PCL.Core.App.Essentials.LauncherVersionTransitionService` and `LauncherStartupVersionIsolationMigrationService`
@@ -121,6 +122,7 @@ These workflow extractions are already done and should be treated as available m
 - Java runtime selection and manifest file planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
 - Java runtime manifest/file request coordination is owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - Java runtime transfer selection, reused-file filtering, and remaining download queue shaping are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
+- Java runtime default ignored-hash policy, runtime-base-directory selection, and transfer state cleanup/refresh planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadSessionService`
 - Java launch selection transition/log/hint policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaSelectionWorkflowService`
 
 Do not redo these in the frontend migration branch; build on top of them.
@@ -184,8 +186,9 @@ These flows still combine:
 After the latest cleanup slices, the former biggest blocker has changed:
 
 - login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution and the remaining shell/UI adapter work
-- Java runtime manifest selection / download file planning, request source shaping, and selection transition policy are now expressed through `PCL.Core`, while `ModJava.vb` still owns the download-job lifecycle, cancellation, and retry shell behavior and `ModLaunch.vb` mainly delegates into that adapter path
-- Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns file hashing, the concrete download job lifecycle, cancellation, and retry shell behavior
+- Microsoft device-code popup text / URL planning is now expressed through `PCL.Core`, while `ModLaunch.vb` and `MyMsgLogin.xaml.vb` still own the concrete popup polling loop and launcher shell integration
+- Java runtime manifest selection / download file planning, request source shaping, install path selection, ignored-file policy, transfer completion cleanup, and selection transition policy are now expressed through `PCL.Core`, while `ModJava.vb` still owns file hashing, the concrete download-job lifecycle, cancellation, and retry shell behavior and `ModLaunch.vb` mainly delegates into that adapter path
+- Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns file hashing and the remaining concrete transfer execution loop
 - launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
 - launch script-export completion behavior is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes the batch file and applies the returned shell reveal
 - launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
@@ -215,9 +218,9 @@ A future frontend should only own prompts, view transitions, and shell adapters,
 The migration is handoff-ready, but these tracks should be finished before starting a real frontend replacement.
 
 1. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` as an adapter-first launch/login shell.
-   - Remaining work is live request execution, device-code popup lifecycle bridging, account/prompt application, and launcher-local side effects that still wrap the extracted Authlib / Microsoft services.
+   - Remaining work is live request execution, device-code popup polling lifecycle bridging, account/prompt application, and launcher-local side effects that still wrap the extracted Authlib / Microsoft services.
 2. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` as an adapter-first Java transfer shell.
-   - Remaining work is the concrete download lifecycle: hashing, loader polling, cancellation, retry, cleanup, and post-install Java/runtime refresh.
+   - Remaining work is the concrete download lifecycle: hashing, loader polling, cancellation, retry, and applying the returned cleanup / post-install refresh actions.
 3. Finish startup adapter cleanup in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`.
    - A new frontend should not have to rediscover startup sequencing, prompt timing, or startup-side decision flow from WPF files.
 4. Finish crash shell cleanup in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`.
@@ -244,9 +247,9 @@ Create launcher-facing services in `PCL.Core` for:
 Most practical next code targets:
 
 1. finish shrinking `ModLaunch.vb`
-   Focus on remaining request-execution adapters, popup/prompt bridging, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
+   Focus on remaining request-execution adapters, popup polling / prompt bridging, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
 2. finish shrinking `ModJava.vb`
-   Focus on the concrete Java download lifecycle and retry/cancellation/cleanup behavior so the backend owns the policy and the launcher only applies it.
+   Focus on the concrete Java download lifecycle and retry/cancellation behavior so the backend owns the policy and the launcher only applies the resulting transfer, cleanup, and refresh actions.
 3. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
    Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
 4. trim `ModCrash.vb`

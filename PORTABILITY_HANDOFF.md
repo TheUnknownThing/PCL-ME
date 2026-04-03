@@ -17,6 +17,11 @@ The repo is no longer at the “portability is just an idea” stage. There is n
 
 Latest continuation update:
 
+- Microsoft device-code response parsing and popup prompt planning now live in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftDeviceCodePromptService`
+- launcher Microsoft device-code login prompt construction in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` and `Plain Craft Launcher 2/Pages/PageLaunch/MyMsgLogin.xaml.vb` now route through `MinecraftLaunchMicrosoftDeviceCodePromptService` instead of consuming raw OAuth JSON directly
+- portable Java runtime default ignored-hash policy, runtime base-directory selection, and download state transition cleanup/refresh planning now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadSessionService`
+- launcher Java runtime download lifecycle cleanup / refresh handling in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadSessionService`
+- `PCL.Frontend.Spike` now sources Java runtime base-directory selection from `MinecraftJavaRuntimeDownloadSessionService` instead of duplicating that path policy locally
 - portable Java runtime transfer selection and reused-file filtering now live in `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
 - launcher Java download candidate filtering in `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` now routes through `MinecraftJavaRuntimeDownloadWorkflowService`
 - `PCL.Frontend.Spike` now distinguishes reused Java runtime files from actual transfer files, writes a dedicated transfer artifact, and can detect best-effort existing runtime files in `--host-env true` mode
@@ -163,6 +168,8 @@ What is already true:
 - the major runtime seams are no longer speculative; they exist in code and have tests/build validation
 - a large amount of launcher workflow policy has been moved out of WPF/VB files into `PCL.Core`
 - the remaining launcher logic is now primarily shell adapters, prompt adapters, concrete network IO, and Windows-facing compatibility code rather than portable runtime policy
+- Microsoft device-code popup text / URL / polling contract now comes from a reusable core prompt plan instead of raw launcher-side JSON parsing
+- Java runtime install path selection, ignored-file policy, and transfer completion / abort cleanup transitions now come from reusable core services instead of launcher-local rules
 - `PCL.Frontend.Spike` is now strong enough to review login request execution, Java runtime download planning, host-backed path wiring, and crash-export target handoff without pulling WPF back into scope
 - `PCL.Frontend.Spike` can now also inspect launcher-style Java index / manifest request artifacts and materialize a stub runtime tree from the portable download workflow during `execute` mode
 - `PCL.Frontend.Spike` can now also review which Java runtime files are reused versus newly transferred, making partial-runtime recovery visible without WPF
@@ -170,8 +177,8 @@ What is already true:
 
 What is not true yet:
 
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
-- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns the concrete Java transfer lifecycle, including hashing, loader polling, cancellation, retry, cleanup, and runtime refresh behavior after install
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup polling lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns the concrete Java transfer lifecycle, including hashing, loader polling, cancellation, retry, and applying the returned cleanup / runtime refresh actions after install
 - startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`
 - crash export still has launcher-owned picker / destination / Explorer flow in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
