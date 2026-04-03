@@ -171,9 +171,17 @@ Public Module ModLaunch
             '成功与失败处理
             Select Case LaunchLoader.State
                 Case LoadState.Finished
-                    ShowLaunchCompletionNotification(MinecraftLaunchOutcome.Succeeded)
+                    ModLaunchResultShell.ShowCompletionNotification(
+                        If(McInstanceSelected?.Name, ""),
+                        MinecraftLaunchOutcome.Succeeded,
+                        CurrentLaunchOptions?.SaveBatch IsNot Nothing,
+                        AbortHint)
                 Case LoadState.Aborted
-                    ShowLaunchCompletionNotification(MinecraftLaunchOutcome.Aborted)
+                    ModLaunchResultShell.ShowCompletionNotification(
+                        If(McInstanceSelected?.Name, ""),
+                        MinecraftLaunchOutcome.Aborted,
+                        CurrentLaunchOptions?.SaveBatch IsNot Nothing,
+                        AbortHint)
                 Case LoadState.Failed
                     Throw LaunchLoader.Error
                 Case Else
@@ -186,7 +194,11 @@ NextInner:
             If CurrentEx.Message.StartsWithF("$") Then
                 '若有以 $ 开头的错误信息，则以此为准显示提示
                 '若错误信息为 $$，则不提示
-                If Not CurrentEx.Message = "$$" Then MyMsgBox(CurrentEx.Message.TrimStart("$"), GetLaunchFailureDisplay().DialogTitle)
+                If Not CurrentEx.Message = "$$" Then
+                    ModLaunchResultShell.ShowFailureMessage(
+                        CurrentEx.Message.TrimStart("$"),
+                        CurrentLaunchOptions?.SaveBatch IsNot Nothing)
+                End If
                 Throw
             ElseIf CurrentEx.InnerException IsNot Nothing Then
                 '检查下一级错误
@@ -194,34 +206,11 @@ NextInner:
                 GoTo NextInner
             Else
                 '没有特殊处理过的错误信息
-                McLaunchLog("错误：" & ex.ToString())
-                Dim failureDisplay = GetLaunchFailureDisplay()
-                Log(ex,
-                    failureDisplay.LogTitle, LogLevel.Msgbox,
-                    failureDisplay.DialogTitle)
+                ModLaunchResultShell.LogUnhandledFailure(ex, CurrentLaunchOptions?.SaveBatch IsNot Nothing, AddressOf McLaunchLog)
                 Throw
             End If
         End Try
     End Sub
-
-    Private Sub ShowLaunchCompletionNotification(outcome As MinecraftLaunchOutcome)
-        Dim notification = MinecraftLaunchShellService.GetCompletionNotification(
-            New MinecraftLaunchCompletionRequest(
-                If(McInstanceSelected?.Name, ""),
-                outcome,
-                CurrentLaunchOptions?.SaveBatch IsNot Nothing,
-                AbortHint))
-        Select Case notification.Kind
-            Case MinecraftLaunchNotificationKind.Info
-                Hint(notification.Message, HintType.Info)
-            Case MinecraftLaunchNotificationKind.Finish
-                Hint(notification.Message, HintType.Finish)
-        End Select
-    End Sub
-
-    Private Function GetLaunchFailureDisplay() As MinecraftLaunchFailureDisplay
-        Return MinecraftLaunchShellService.GetFailureDisplay(CurrentLaunchOptions?.SaveBatch IsNot Nothing)
-    End Function
 
 #End Region
 
@@ -1309,10 +1298,11 @@ NextInner:
                       Encoding:=If(McLaunchSessionPlan.CustomCommandPlan.UseUtf8Encoding, Encoding.UTF8, Encoding.Default))
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
                 Dim scriptExportPlan = MinecraftLaunchShellService.BuildScriptExportPlan(CurrentLaunchOptions.SaveBatch)
-                McLaunchLog(scriptExportPlan.CompletionLogMessage)
-                AbortHint = scriptExportPlan.AbortHint
-                OpenExplorer(scriptExportPlan.RevealInShellPath)
-                Loader.Parent.Abort()
+                ModLaunchSessionShell.CompleteScriptExport(
+                    scriptExportPlan,
+                    AddressOf McLaunchLog,
+                    Sub(hint) AbortHint = hint,
+                    Sub() Loader.Parent.Abort())
                 Return '导出脚本完成
             End If
         Catch ex As Exception
@@ -1389,14 +1379,10 @@ NextInner:
 
         '显示实时日志
         If McLaunchSessionPlan.WatcherWorkflowPlan.ShouldAttachRealtimeLog Then
-            If FrmLogLeft Is Nothing Then RunInUiWait(Sub() FrmLogLeft = New PageLogLeft)
-            If FrmLogRight Is Nothing Then RunInUiWait(Sub()
-                                                           AniControlEnabled += 1
-                                                           FrmLogRight = New PageLogRight
-                                                           AniControlEnabled -= 1
-                                                       End Sub)
-            FrmLogLeft.Add(Watcher)
-            If McLaunchSessionPlan.WatcherWorkflowPlan.RealtimeLogAttachedMessage IsNot Nothing Then McLaunchLog(McLaunchSessionPlan.WatcherWorkflowPlan.RealtimeLogAttachedMessage)
+            ModLaunchSessionShell.AttachRealtimeLog(
+                Watcher,
+                McLaunchSessionPlan.WatcherWorkflowPlan.RealtimeLogAttachedMessage,
+                AddressOf McLaunchLog)
         End If
 
         '等待
