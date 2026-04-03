@@ -628,110 +628,36 @@ NextInner:
     Private McLoginMsRefreshTime As Long = 0 '上次刷新登录的时间
 
 #Region "正版验证"
-    Private Structure MicrosoftOAuthStepResult
-        Public Outcome As MinecraftLaunchMicrosoftOAuthRefreshOutcome
-        Public AccessToken As String
-        Public RefreshToken As String
-    End Structure
-
-    Private Structure MicrosoftStringStepResult
-        Public Outcome As MinecraftLaunchMicrosoftStepOutcome
-        Public Value As String
-    End Structure
-
-    Private Structure MicrosoftXstsStepResult
-        Public Outcome As MinecraftLaunchMicrosoftStepOutcome
-        Public XstsToken As String
-        Public UserHash As String
-    End Structure
-
-    Private Structure MicrosoftProfileStepResult
-        Public Outcome As MinecraftLaunchMicrosoftStepOutcome
-        Public Uuid As String
-        Public UserName As String
-        Public ProfileJson As String
-    End Structure
-
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
         Dim Input As McLoginMs = Data.Input
         Dim LogUsername As String = Input.UserName
         ProfileLog("验证方式：正版（" & If(String.IsNullOrEmpty(LogUsername), "尚未登录", LogUsername) & "）")
-        Dim currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetInitialStep(
-            New MinecraftLaunchMicrosoftLoginExecutionRequest(
-                MinecraftLaunchLoginProfileWorkflowService.ShouldReuseMicrosoftLogin(
+        ModLaunchMicrosoftLoginShell.RunLogin(
+            New ModLaunchMicrosoftLoginShell.MicrosoftLoginExecutionContext With {
+                .Data = Data,
+                .Input = Input,
+                .ShouldReuseCachedLogin = MinecraftLaunchLoginProfileWorkflowService.ShouldReuseMicrosoftLogin(
                     New MinecraftLaunchMicrosoftSessionReuseRequest(
                         Data.IsForceRestarting,
                         Input.AccessToken,
                         McLoginMsRefreshTime,
                         TimeUtils.GetTimeTick())),
-                Not String.IsNullOrEmpty(Input.OAuthRefreshToken)))
-        Dim oAuthAccessToken As String = Nothing
-        Dim oAuthRefreshToken As String = Nothing
-        Dim xblToken As New MicrosoftStringStepResult
-        Dim xstsTokens As New MicrosoftXstsStepResult
-        Dim accessToken As New MicrosoftStringStepResult
-        Dim profileResult As New MicrosoftProfileStepResult
-
-        Do
-            Data.Progress = currentStep.Progress
-            If Data.IsAborted Then Throw New ThreadInterruptedException
-
-            Select Case currentStep.Kind
-                Case MinecraftLaunchMicrosoftLoginStepKind.FinishWithCachedSession
-                    Data.Output = CreateCurrentMicrosoftLoginResult(Input)
-                    Exit Do
-                Case MinecraftLaunchMicrosoftLoginStepKind.RequestDeviceCodeOAuthTokens
-                    Dim oAuthTokens = MsLoginStep1New(Data)
-                    oAuthAccessToken = oAuthTokens.AccessToken
-                    oAuthRefreshToken = oAuthTokens.RefreshToken
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterDeviceCodeOAuthSuccess()
-                Case MinecraftLaunchMicrosoftLoginStepKind.RefreshOAuthTokens
-                    Dim oAuthTokens = MsLoginStep1Refresh(Input.OAuthRefreshToken)
-                    Dim refreshOutcome = oAuthTokens.Outcome
-                    If refreshOutcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded Then
-                        oAuthAccessToken = oAuthTokens.AccessToken
-                        oAuthRefreshToken = oAuthTokens.RefreshToken
-                    End If
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterRefreshOAuth(refreshOutcome)
-                Case MinecraftLaunchMicrosoftLoginStepKind.GetXboxLiveToken
-                    xblToken = MsLoginStep2(oAuthAccessToken)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxLiveToken(xblToken.Outcome)
-                Case MinecraftLaunchMicrosoftLoginStepKind.GetXboxSecurityToken
-                    xstsTokens = MsLoginStep3(xblToken)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterXboxSecurityToken(xstsTokens.Outcome)
-                Case MinecraftLaunchMicrosoftLoginStepKind.GetMinecraftAccessToken
-                    accessToken = MsLoginStep4(xstsTokens)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftAccessToken(accessToken.Outcome)
-                Case MinecraftLaunchMicrosoftLoginStepKind.VerifyOwnership
-                    MsLoginStep5(accessToken.Value)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterOwnershipVerification()
-                Case MinecraftLaunchMicrosoftLoginStepKind.GetMinecraftProfile
-                    profileResult = MsLoginStep6(accessToken.Value)
-                    currentStep = MinecraftLaunchMicrosoftLoginExecutionService.GetStepAfterMinecraftProfile(profileResult.Outcome)
-                Case MinecraftLaunchMicrosoftLoginStepKind.ApplyProfileMutation
-                    Dim microsoftMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveMicrosoftProfileMutation(
-                        New MinecraftLaunchMicrosoftProfileMutationRequest(
-                            IsCreatingProfile,
-                            GetSelectedProfileIndex(),
-                            GetStoredProfiles(),
-                            profileResult.Uuid,
-                            profileResult.UserName,
-                            accessToken.Value,
-                            oAuthRefreshToken,
-                            profileResult.ProfileJson))
-                    ApplyProfileMutationPlan(microsoftMutationPlan)
-                    If microsoftMutationPlan.Kind <> MinecraftLaunchProfileMutationKind.UpdateExistingDuplicate Then
-                        SaveProfile()
-                        Data.Output = CreateMicrosoftLoginResult(accessToken.Value, profileResult.UserName, profileResult.Uuid, profileResult.ProfileJson)
-                    Else
-                        Data.Output = CreateMicrosoftLoginResultFromStored(microsoftMutationPlan.UpdateProfile)
-                    End If
-                    Exit Do
-                Case Else
-                    Throw New InvalidOperationException("未知的微软登录执行步骤。")
-            End Select
-        Loop
-
+                .HasOAuthRefreshToken = Not String.IsNullOrEmpty(Input.OAuthRefreshToken),
+                .IsCreatingProfile = IsCreatingProfile,
+                .SelectedProfileIndex = GetSelectedProfileIndex(),
+                .StoredProfiles = GetStoredProfiles(),
+                .CreateCurrentMicrosoftLoginResult = AddressOf CreateCurrentMicrosoftLoginResult,
+                .CreateMicrosoftLoginResult = AddressOf CreateMicrosoftLoginResult,
+                .CreateMicrosoftLoginResultFromStored = AddressOf CreateMicrosoftLoginResultFromStored,
+                .ApplyProfileMutationPlan = AddressOf ApplyProfileMutationPlan,
+                .SaveProfile = AddressOf SaveProfile,
+                .RequestDeviceCodeOAuthTokens = AddressOf MsLoginStep1New,
+                .RefreshOAuthTokens = AddressOf MsLoginStep1Refresh,
+                .GetXboxLiveToken = AddressOf MsLoginStep2,
+                .GetXboxSecurityToken = AddressOf MsLoginStep3,
+                .GetMinecraftAccessToken = AddressOf MsLoginStep4,
+                .VerifyOwnership = AddressOf MsLoginStep5,
+                .GetMinecraftProfile = AddressOf MsLoginStep6})
         McLoginMsRefreshTime = TimeUtils.GetTimeTick()
         ProfileLog("正版验证完成")
     End Sub
@@ -959,86 +885,16 @@ Retry:
 #End Region
 
 #Region "第三方验证"
-    Private Structure AuthlibLoginStepResult
-        Public LoginResult As McLoginResult
-        Public NeedsRefresh As Boolean
-    End Structure
-
     Private Sub McLoginServerStart(Data As LoaderTask(Of McLoginServer, McLoginResult))
         Dim Input As McLoginServer = Data.Input
         ProfileLog("验证方式：" & Input.Description)
-        Dim currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetInitialStep(
-            New MinecraftLaunchThirdPartyLoginExecutionRequest(
-                Data.Input.ForceReselectProfile OrElse IsCreatingProfile))
-        Do
-            Data.Progress = currentStep.Progress
-            Select Case currentStep.Kind
-                Case MinecraftLaunchThirdPartyLoginStepKind.ValidateCachedSession
-                    Try
-                        If Data.IsAborted Then Throw New ThreadInterruptedException
-                        Data.Output = McLoginRequestValidate(Data.Input)
-                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateSuccess()
-                    Catch ex As HttpWebException
-                        Dim AllMessage = ex.ToString()
-                        ProfileLog("验证登录失败：" & AllMessage)
-                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveValidationHttpFailure(
-                            AllMessage,
-                            ex.InnerHttpException.WebResponse)
-                        If resolution.Kind = MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped Then
-                            ProfileLog("已触发超时登录失败")
-                            ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
-                            Throw New Exception(resolution.WrappedExceptionMessage)
-                        End If
-                        currentStep = resolution.NextStep
-                    Catch ex As Exception
-                        Dim AllMessage = ex.ToString()
-                        ProfileLog("验证登录失败：" & AllMessage)
-                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveValidationFailure(AllMessage)
-                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
-                        Throw
-                    End Try
-                Case MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession
-                    Try
-                        If Data.IsAborted Then Throw New ThreadInterruptedException
-                        Data.Output = McLoginRequestRefresh(Data.Input)
-                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshSuccess(currentStep.HasRetriedRefresh)
-                    Catch ex As Exception
-                        ProfileLog("刷新登录失败：" & ex.ToString())
-                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveRefreshFailure(ex.ToString(), currentStep.HasRetriedRefresh)
-                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
-                        currentStep = resolution.NextStep
-                        If resolution.Kind = MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped Then
-                            Throw New Exception(resolution.WrappedExceptionMessage, ex)
-                        End If
-                    End Try
-                Case MinecraftLaunchThirdPartyLoginStepKind.Authenticate
-                    Try
-                        If Data.IsAborted Then Throw New ThreadInterruptedException
-                        Dim loginStepResult = McLoginRequestLogin(Data.Input)
-                        Data.Output = loginStepResult.LoginResult
-                        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(loginStepResult.NeedsRefresh)
-                        If currentStep.Kind = MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession AndAlso currentStep.HasRetriedRefresh Then
-                            ProfileLog("重新进行刷新登录")
-                        End If
-                    Catch ex As HttpWebException
-                        ProfileLog("验证失败：" & ex.ToString())
-                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginHttpFailure(
-                            ex.ToString(),
-                            ex.InnerHttpException.WebResponse)
-                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
-                        Throw New Exception(resolution.WrappedExceptionMessage)
-                    Catch ex As Exception
-                        ProfileLog("验证失败：" & ex.ToString())
-                        Dim resolution = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginFailure(ex.ToString())
-                        ModLaunchPromptShell.ShowThirdPartyFailureIfPresent(resolution)
-                        Throw New Exception(resolution.WrappedExceptionMessage)
-                    End Try
-                Case MinecraftLaunchThirdPartyLoginStepKind.Finish
-                    Exit Do
-                Case Else
-                    Throw New InvalidOperationException("未知的第三方登录执行步骤。")
-            End Select
-        Loop
+        ModLaunchThirdPartyLoginShell.RunLogin(
+            New ModLaunchThirdPartyLoginShell.ThirdPartyLoginExecutionContext With {
+                .Data = Data,
+                .IsCreatingProfile = IsCreatingProfile,
+                .RunValidate = AddressOf McLoginRequestValidate,
+                .RunRefresh = AddressOf McLoginRequestRefresh,
+                .RunLogin = AddressOf McLoginRequestLogin})
     End Sub
     'Server 登录：三种验证方式的请求
     Private Function McLoginRequestValidate(input As McLoginServer) As McLoginResult

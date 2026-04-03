@@ -87,6 +87,8 @@ These workflow extractions are already done and should be treated as available m
 - launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher Java download confirmation and post-download failure hint rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPromptShell.vb`
 - launcher Java runtime index / manifest fetch plus reused-file detection and concrete download file shaping are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb`
+- launcher Microsoft login step execution bridging is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftLoginShell.vb`
+- launcher Authlib login step execution bridging is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchThirdPartyLoginShell.vb`
 - launcher Microsoft live HTTP request execution is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftRequestShell.vb`
 - launcher Authlib live HTTP request / metadata execution is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibRequestShell.vb`
 - launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
@@ -195,7 +197,7 @@ These flows still combine:
 
 After the latest cleanup slices, the former biggest blocker has changed:
 
-- login execution / orchestration is now mostly expressed through `PCL.Core` services, while `ModLaunch.vb` still owns request execution and the remaining shell/UI adapter work
+- login execution / orchestration is now mostly expressed through `PCL.Core` services and dedicated launcher login shells, while `ModLaunch.vb` still owns request helpers and the remaining shell/UI adapter work
 - Microsoft device-code popup text / URL planning is now expressed through `PCL.Core`, while `ModLaunch.vb` and `MyMsgLogin.xaml.vb` still own the concrete popup polling loop and launcher shell integration
 - Java runtime manifest selection / download file planning, request source shaping, install path selection, ignored-file policy, transfer completion cleanup, and selection transition policy are now expressed through `PCL.Core`, while `ModJava.vb` still owns file hashing and download-job construction and `ModLaunch.vb` mainly delegates into a dedicated Java shell path for the remaining interactive retry flow
 - Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns file hashing and the remaining concrete transfer execution loop
