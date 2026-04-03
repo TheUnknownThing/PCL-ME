@@ -1191,72 +1191,14 @@ NextInner:
 
         '要求 Java 使用高性能显卡
         Dim javaExePath = If(McLaunchJavaSelected.Installation.JavawExePath, McLaunchJavaSelected.Installation.JavaExePath)
-        Try
-            ProcessInterop.SetGpuPreference(javaExePath, Config.Launch.SetGpuPreference)
-        Catch ex As Exception
-            Dim failurePlan = MinecraftLaunchPrerunWorkflowService.BuildGpuPreferenceFailurePlan(
-                New MinecraftLaunchGpuPreferenceFailureRequest(
-                    javaExePath,
-                    Config.Launch.SetGpuPreference,
-                    ProcessInterop.IsAdmin()))
-            If failurePlan.ActionKind = MinecraftLaunchGpuPreferenceFailureActionKind.LogDirectFailure Then
-                Log(ex, "直接调整显卡设置失败")
-            Else
-                Log(ex, failurePlan.RetryLogMessage)
-                Try
-                    If ProcessInterop.StartAsAdmin(failurePlan.AdminRetryArguments).ExitCode = ProcessReturnValues.TaskDone Then
-                        McLaunchLog("以管理员权限重启 PCL 并调整显卡设置成功")
-                    Else
-                        Throw New Exception("调整过程中出现异常")
-                    End If
-                Catch exx As Exception
-                    Log(exx, failurePlan.RetryFailureHintMessage, LogLevel.Hint)
-                End Try
-            End If
-        End Try
+        ModLaunchPrerunShell.ApplyGpuPreference(javaExePath, Config.Launch.SetGpuPreference, AddressOf McLaunchLog)
 
         '更新 launcher_profiles.json
-        UpdateLauncherProfilesJson(McLaunchPrerunPlan.LauncherProfiles)
+        ModLaunchPrerunShell.UpdateLauncherProfilesJson(McLaunchPrerunPlan.LauncherProfiles, McFolderSelected, AddressOf McLaunchLog)
 
         '更新 options.txt
-        Try
-            If McLaunchPrerunPlan.Options.SyncPlan.TargetSelectionLogMessage IsNot Nothing Then McLaunchLog(McLaunchPrerunPlan.Options.SyncPlan.TargetSelectionLogMessage)
-            For Each optionWrite In McLaunchPrerunPlan.Options.SyncPlan.Writes
-                WriteIni(McLaunchPrerunPlan.Options.TargetFilePath, optionWrite.Key, optionWrite.Value)
-            Next
-            For Each logMessage In McLaunchPrerunPlan.Options.SyncPlan.LogMessages
-                McLaunchLog(logMessage)
-            Next
-        Catch ex As Exception
-            Log(ex, "更新 options.txt 失败", LogLevel.Hint)
-        End Try
+        ModLaunchPrerunShell.ApplyOptionsSync(McLaunchPrerunPlan.Options, AddressOf McLaunchLog)
 
-    End Sub
-
-    Private Sub UpdateLauncherProfilesJson(plan As MinecraftLaunchLauncherProfilesPrerunPlan)
-        If plan Is Nothing Then Throw New ArgumentNullException(NameOf(plan))
-        If Not plan.ShouldEnsureFileExists OrElse String.IsNullOrWhiteSpace(plan.Path) Then Exit Sub
-        If Not plan.Workflow.ShouldWrite Then Exit Sub
-
-        Try
-            McFolderLauncherProfilesJsonCreate(McFolderSelected)
-            WriteLauncherProfilesJson(plan.Path, plan.Workflow.InitialAttempt)
-        Catch ex As Exception
-            Log(ex, plan.Workflow.RetryLogMessage)
-            Try
-                File.Delete(plan.Path)
-                McFolderLauncherProfilesJsonCreate(McFolderSelected)
-                WriteLauncherProfilesJson(plan.Path, plan.Workflow.RetryAttempt)
-            Catch retryEx As Exception
-                Log(retryEx, plan.Workflow.FailureLogMessage, LogLevel.Feedback)
-            End Try
-        End Try
-    End Sub
-
-    Private Sub WriteLauncherProfilesJson(launcherProfilesPath As String, attempt As MinecraftLaunchLauncherProfilesWriteAttempt)
-        If attempt Is Nothing Then Throw New ArgumentNullException(NameOf(attempt))
-        WriteFile(launcherProfilesPath, attempt.UpdatedProfilesJson, Encoding:=Encoding.GetEncoding("GB18030"))
-        McLaunchLog(attempt.SuccessLogMessage)
     End Sub
 
     Private Sub McLaunchCustom(Loader As LoaderTask(Of Integer, Integer))
