@@ -307,31 +307,8 @@ Public Class FormMain
     End Function
 
     Protected Overrides Sub OnSourceInitialized(e As EventArgs)
-        '硬件加速
-        If Setup.Get("SystemDisableHardwareAcceleration") Then
-            Dim hwndSource As HwndSource = TryCast(PresentationSource.FromVisual(Me), HwndSource)
-            If hwndSource IsNot Nothing Then
-                hwndSource.CompositionTarget.RenderMode = RenderMode.SoftwareOnly
-            End If
-        End If
-
         MyBase.OnSourceInitialized(e)
-
-        ' 获取当前窗口句柄
-        Dim hwnd As IntPtr = New WindowInteropHelper(Me).Handle
-        Dim source As HwndSource = HwndSource.FromHwnd(hwnd)
-        If source IsNot Nothing Then
-            ' 渲染层允许 Alpha 通道通过
-            source.CompositionTarget.BackgroundColor = Colors.Transparent
-            ' 魔改窗口边缘判定
-            source.AddHook(AddressOf _SizeWndProc)
-        End If
-        ' 设置 DWM 窗口框架
-        Try
-            WindowInterop.ExtendFrameIntoClientArea(hwnd, -1)
-        Catch ex As Exception
-            LogWrapper.Error("DWM 窗口框架应用失败: " & ex.Message)
-        End Try
+        ModMainWindowChromeShell.InitializeCustomWindow(Me, AddressOf _SizeWndProc)
     End Sub
 
     '关闭
