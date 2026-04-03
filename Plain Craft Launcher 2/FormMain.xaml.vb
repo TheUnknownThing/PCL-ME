@@ -116,16 +116,6 @@ Public Class FormMain
         FormMain_SizeChanged()
         ApplicationStartTick = TimeUtils.GetTimeTick()
         FrmHandle = New WindowInteropHelper(Me).Handle
-        '读取设置
-        Setup.Load("UiBackgroundOpacity")
-        Setup.Load("UiBackgroundBlur")
-        Setup.Load("UiLogoType")
-        Setup.Load("UiHiddenPageDownload")
-        Setup.Load("UiAutoPauseVideo") '智能暂停视频背景
-        PageSetupUI.HiddenRefresh()
-        PageSetupUI.BackgroundRefresh(False, True)
-        MusicRefreshPlay(False, True)
-        '扩展按钮
         BtnExtraUpdateRestart.ShowCheck = AddressOf BtnExtraUpdateRestart_ShowCheck
         BtnExtraDownload.ShowCheck = AddressOf BtnExtraDownload_ShowCheck
         BtnExtraBack.ShowCheck = AddressOf BtnExtraBack_ShowCheck
@@ -133,20 +123,7 @@ Public Class FormMain
         BtnExtraShutdown.ShowCheck = AddressOf BtnExtraShutdown_ShowCheck
         BtnExtraLog.ShowCheck = AddressOf BtnExtraLog_ShowCheck
         BtnExtraApril.ShowRefresh()
-        '初始化尺寸改变
-        If Not Setup.Get("UiLockWindowSize") Then
-            AddResizer()
-        Else
-            RemoveResizer()
-        End If
-        'PLC 彩蛋
-        If RandomUtils.NextInt(1, 1000) = 233 Then
-            ShapeTitleLogo.Data = New GeometryConverter().ConvertFromString("M26,29 v-25 h6 a7,7 180 0 1 0,14 h-6 M83,6.5 a10,11.5 180 1 0 0,18 M48,2.5 v24.5 h13.5")
-        End If
-        '加载窗口
-
-        ThemeRefresh()
-
+        ModMainWindowLoadedShell.PrepareLoadedWindow(Me, AddressOf AddResizer, AddressOf RemoveResizer)
         Application.Current.Resources("BlurSamplingRate") = Setup.Get("UiBlurSamplingRate") * 0.01
         Application.Current.Resources("BlurType") = CType(Setup.Get("UiBlurType"), KernelType)
         If Setup.Get("UiBlur") Then
