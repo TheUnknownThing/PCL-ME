@@ -131,35 +131,10 @@ Public Class FormMain
         Else
             Application.Current.Resources("BlurRadius") = 0.0
         End If
-
-        '#If DEBUG Then
-        '        MinHeight = 50
-        '        MinWidth = 50
-        '#End If
-        Topmost = False
-        If FrmStart IsNot Nothing Then FrmStart.Close(New TimeSpan(0, 0, 0, 0, 400 / AniSpeed))
-        '更改窗口
-        'Top = (GetWPFSize(My.Computer.Screen.WorkingArea.Height) - Height) / 2
-        'Left = (GetWPFSize(My.Computer.Screen.WorkingArea.Width) - Width) / 2
-        IsSizeSaveable = True
-        ShowWindowToTop()
-        Dim HwndSource As Interop.HwndSource = PresentationSource.FromVisual(Me)
-        HwndSource.AddHook(New Interop.HwndSourceHook(AddressOf WndProc))
-        AniStart({
-            AaCode(Sub() AniControlEnabled -= 1, 50),
-            AaOpacity(Me, Setup.Get("UiLauncherTransparent") / 1000 + 0.4, 250, 100),
-            AaDouble(Sub(i) TransformPos.Y += i, -TransformPos.Y, 600, 100, New AniEaseOutBack(AniEasePower.Weak)),
-            AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 500, 100, New AniEaseOutBack(AniEasePower.Weak)),
-            AaCode(
-            Sub()
-                RenderTransform = Nothing
-                IsWindowLoadFinished = True
-                Log($"[System] DPI：{DPI}，系统版本：{Environment.OSVersion.VersionString}，PCL 位置：{ExePathWithName}")
-            End Sub, , True)
-        }, "Form Show")
-        'Timer 启动
-        AniStart()
-        TimerMainStart()
+        ModMainWindowPresentationShell.PresentLoadedWindow(
+            Me,
+            AddressOf AttachWindowHook,
+            AddressOf CompleteWindowPresentation)
         ModMainWindowStartupThreadShell.StartConsentPromptThread(
             _startupWorkflowPlan.Consent,
             Sub() EndProgram(False))
@@ -169,6 +144,17 @@ Public Class FormMain
             AddressOf TryClearTaskTemp)
 
         Log("[Start] 第三阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
+    End Sub
+
+    Private Sub AttachWindowHook()
+        Dim HwndSource As Interop.HwndSource = PresentationSource.FromVisual(Me)
+        HwndSource.AddHook(New Interop.HwndSourceHook(AddressOf WndProc))
+    End Sub
+
+    Private Sub CompleteWindowPresentation()
+        RenderTransform = Nothing
+        IsWindowLoadFinished = True
+        Log($"[System] DPI：{DPI}，系统版本：{Environment.OSVersion.VersionString}，PCL 位置：{ExePathWithName}")
     End Sub
 
     Private Shared Function GetStartupSpecialBuildKind() As LauncherStartupSpecialBuildKind
