@@ -662,35 +662,7 @@ NextInner:
     ''' <param name="Code"></param>
     ''' <returns></returns>
     Private Function MsLoginStep1Refresh(Code As String) As MicrosoftOAuthStepResult
-        McLaunchLog("开始正版验证 Step 1/6（刷新登录）")
-        If String.IsNullOrEmpty(Code) Then Throw New ArgumentException("传入的 Code 为空", NameOf(Code))
-        Dim Result As String = Nothing
-        Try
-            Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOAuthRefreshRequest(Code, OAuthClientId)
-            Result = ModLaunchMicrosoftRequestShell.ExecuteFormPost(requestPlan)
-        Catch ex As ThreadInterruptedException
-            Log(ex, "加载线程已终止")
-        Catch ex As Exception
-            Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveOAuthRefreshFailure(ex.Message)
-            If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.RequireRelogin Then
-                Return New MicrosoftOAuthStepResult With {
-                    .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.RequireRelogin}
-            End If
-
-            ProfileLog("正版验证 Step 1/6 获取 OAuth Token 失败：" & ex.ToString())
-            If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
-                Return New MicrosoftOAuthStepResult With {
-                    .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.IgnoreAndContinue}
-            End If
-
-            Throw
-        End Try
-
-        Dim refreshResult = MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(Result)
-        Return New MicrosoftOAuthStepResult With {
-            .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
-            .AccessToken = refreshResult.AccessToken,
-            .RefreshToken = refreshResult.RefreshToken}
+        Return ModLaunchMicrosoftStepShell.RefreshOAuthTokens(Code, OAuthClientId)
     End Function
     ''' <summary>
     ''' 正版验证步骤 2：从 OAuth accessToken 获取 XBLToken
@@ -698,59 +670,14 @@ NextInner:
     ''' <param name="accessToken">OAuth accessToken</param>
     ''' <returns>XBLToken</returns>
     Private Function MsLoginStep2(accessToken As String) As MicrosoftStringStepResult
-        ProfileLog("开始正版验证 Step 2/6: 获取 XBLToken")
-        If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
-        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(accessToken)
-        Dim Result As String = Nothing
-        Try
-            Result = ModLaunchMicrosoftRequestShell.ExecuteJsonPost(requestPlan)
-        Catch ex As Exception
-            ProfileLog("正版验证 Step 2/6 获取 XBLToken 失败：" & ex.ToString())
-            If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(MinecraftLaunchMicrosoftFailureWorkflowService.GetRetryableStepFailure("Step 2")) Then
-                Return New MicrosoftStringStepResult With {
-                    .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
-            End If
-
-            Throw
-        End Try
-
-        Return New MicrosoftStringStepResult With {
-            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .Value = MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(Result)}
+        Return ModLaunchMicrosoftStepShell.GetXboxLiveToken(accessToken)
     End Function
     ''' <summary>
     ''' 正版验证步骤 3：从 XBLToken 获取 {XSTSToken, UHS}
     ''' </summary>
     ''' <returns>包含 XSTSToken 与 UHS 的字符串组</returns>
     Private Function MsLoginStep3(xblTokenResult As MicrosoftStringStepResult) As MicrosoftXstsStepResult
-        ProfileLog("开始正版验证 Step 3/6: 获取 XSTSToken")
-        If String.IsNullOrEmpty(xblTokenResult.Value) Then Throw New ArgumentException("XBLToken 为空，无法获取数据", NameOf(xblTokenResult))
-        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(xblTokenResult.Value)
-        Dim response = ModLaunchMicrosoftRequestShell.ExecuteJsonPostWithStatus(requestPlan)
-        Dim result = response.Body
-
-        If Not response.IsSuccessStatusCode Then
-            Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveXstsFailure(result)
-            If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort Then
-                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
-            Else
-                ProfileLog("正版验证 Step 3/6 获取 XSTSToken 失败：" & response.StatusCode)
-                If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
-                    Return New MicrosoftXstsStepResult With {
-                        .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
-                End If
-                Throw New HttpRequestException(
-                    $"HTTP request failed with status code {CInt(response.StatusCode)} ({response.StatusCode}).",
-                    Nothing,
-                    response.StatusCode)
-            End If
-        End If
-
-        Dim xstsResult = MinecraftLaunchMicrosoftProtocolService.ParseXstsTokenResponseJson(result)
-        Return New MicrosoftXstsStepResult With {
-            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .XstsToken = xstsResult.Token,
-            .UserHash = xstsResult.UserHash}
+        Return ModLaunchMicrosoftStepShell.GetXboxSecurityToken(xblTokenResult)
     End Function
     ''' <summary>
     ''' 正版验证步骤 4：从 {XSTSToken, UHS} 获取 Minecraft accessToken
@@ -758,38 +685,7 @@ NextInner:
     ''' <param name="Tokens">包含 XSTSToken 与 UHS 的字符串组</param>
     ''' <returns>Minecraft accessToken</returns>
     Private Function MsLoginStep4(tokens As MicrosoftXstsStepResult) As MicrosoftStringStepResult
-        ProfileLog("开始正版验证 Step 4/6: 获取 Minecraft AccessToken")
-        If String.IsNullOrEmpty(tokens.XstsToken) OrElse String.IsNullOrEmpty(tokens.UserHash) Then Throw New ArgumentException("传入的 XSTSToken 或者 UHS 错误", NameOf(tokens))
-        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(tokens.UserHash, tokens.XstsToken)
-        Dim Result As String
-        Try
-            Result = ModLaunchMicrosoftRequestShell.ExecuteJsonPost(requestPlan)
-        Catch ex As HttpRequestException
-            Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveMinecraftAccessTokenFailure(ex.StatusCode)
-            If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException Then
-                If ex.StatusCode.Equals(HttpStatusCode.TooManyRequests) Then
-                    Log(ex, "正版验证 Step 4 汇报 429")
-                ElseIf ex.StatusCode = HttpStatusCode.Forbidden Then
-                    Log(ex, "正版验证 Step 4 汇报 403")
-                End If
-                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
-                Throw New InvalidOperationException("微软登录失败处理未终止流程。")
-            Else
-                ProfileLog("正版验证 Step 4/6 获取 MC AccessToken 失败：" & ex.ToString())
-                If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
-                    Return New MicrosoftStringStepResult With {
-                        .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
-                End If
-
-                Throw
-            End If
-        End Try
-
-        Dim AccessToken As String = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftAccessTokenResponseJson(Result)
-        If String.IsNullOrWhiteSpace(AccessToken) Then Throw New Exception("获取到的 Minecraft AccessToken 为空，登录流程异常！")
-        Return New MicrosoftStringStepResult With {
-            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .Value = AccessToken}
+        Return ModLaunchMicrosoftStepShell.GetMinecraftAccessToken(tokens)
     End Function
     ''' <summary>
     ''' 正版验证步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
@@ -812,38 +708,7 @@ NextInner:
     ''' <param name="AccessToken">Minecraft accessToken</param>
     ''' <returns>包含 UUID, UserName 和 ProfileJson 的字符串组</returns>
     Private Function MsLoginStep6(AccessToken As String) As MicrosoftProfileStepResult
-        ProfileLog("开始正版验证 Step 6/6: 获取玩家 ID 与 UUID 等相关信息")
-        If String.IsNullOrEmpty(AccessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(AccessToken))
-        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(AccessToken)
-        Dim Result As String
-        Try
-            Result = ModLaunchMicrosoftRequestShell.ExecuteBearerGet(requestPlan)
-        Catch ex As HttpRequestException
-            Dim failure = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveMinecraftProfileFailure(ex.StatusCode)
-            If failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException Then
-                Log(ex, "正版验证 Step 6 汇报 429")
-                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure)
-                Throw New InvalidOperationException("微软登录失败处理未终止流程。")
-            ElseIf failure.Kind = MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort Then
-                Log(ex, "正版验证 Step 6 汇报 404")
-                ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure, runPromptInBackground:=True)
-                Throw New InvalidOperationException("微软登录失败处理未终止流程。")
-            Else
-                ProfileLog("正版验证 Step 6/6 获取玩家档案信息失败：" & ex.ToString())
-                If ModLaunchPromptShell.TryHandleMicrosoftFailureResolution(failure) Then
-                    Return New MicrosoftProfileStepResult With {
-                        .Outcome = MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue}
-                End If
-
-                Throw
-            End If
-        End Try
-        Dim profileResponse = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftProfileResponseJson(Result)
-        Return New MicrosoftProfileStepResult With {
-            .Outcome = MinecraftLaunchMicrosoftStepOutcome.Succeeded,
-            .Uuid = profileResponse.Uuid,
-            .UserName = profileResponse.UserName,
-            .ProfileJson = profileResponse.ProfileJson}
+        Return ModLaunchMicrosoftStepShell.GetMinecraftProfile(AccessToken)
     End Function
 #End Region
 
@@ -861,107 +726,25 @@ NextInner:
     End Sub
     'Server 登录：三种验证方式的请求
     Private Function McLoginRequestValidate(input As McLoginServer) As McLoginResult
-        ProfileLog("验证登录开始（Validate, Authlib")
-        '提前缓存信息，否则如果在登录请求过程中退出登录，设置项目会被清空，导致输出存在空值
-        Dim AccessToken As String = ""
-        Dim ClientToken As String = ""
-        Dim Uuid As String = ""
-        Dim Name As String = ""
-        If SelectedProfile IsNot Nothing Then
-            AccessToken = SelectedProfile.AccessToken
-            ClientToken = SelectedProfile.ClientToken
-            Uuid = SelectedProfile.Uuid
-            Name = SelectedProfile.Username
-        End If
-        '发送登录请求
-        Dim requestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildValidateRequest(
-            input.BaseUrl,
-            AccessToken,
-            ClientToken)
-        ExecuteAuthlibRequest(requestPlan) '没有返回值的
-        '不更改缓存，直接结束
-        ProfileLog("验证登录成功（Validate, Authlib")
-        Return New McLoginResult With {
-            .AccessToken = AccessToken,
-            .ClientToken = ClientToken,
-            .Uuid = Uuid,
-            .Name = Name,
-            .Type = "Auth"}
+        Return ModLaunchAuthlibStepShell.ValidateCachedSession(input, SelectedProfile, AddressOf ExecuteAuthlibRequest)
     End Function
     Private Function McLoginRequestRefresh(input As McLoginServer) As McLoginResult
-        ProfileLog("刷新登录开始（Refresh, Authlib")
-        Dim requestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
-            input.BaseUrl,
-            SelectedProfile.Username,
-            SelectedProfile.Uuid,
-            SelectedProfile.AccessToken)
-        Dim refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
-            New MinecraftLaunchAuthlibRefreshWorkflowRequest(
-                ExecuteAuthlibRequest(requestPlan),
-                GetSelectedProfileIndex(),
-                SelectedProfile.Server,
-                SelectedProfile.ServerName,
-                input.UserName,
-                input.Password))
-
-        Dim loginResult = New McLoginResult With {
-            .AccessToken = refreshResult.Session.AccessToken,
-            .ClientToken = refreshResult.Session.ClientToken,
-            .Uuid = refreshResult.Session.ProfileId,
-            .Name = refreshResult.Session.ProfileName,
-            .Type = "Auth"}
-        ApplyProfileMutationPlan(refreshResult.MutationPlan)
-        ProfileLog("刷新登录成功（Refresh, Authlib）")
-        Return loginResult
+        Return ModLaunchAuthlibStepShell.RefreshCachedSession(
+            input,
+            SelectedProfile,
+            GetSelectedProfileIndex(),
+            AddressOf ExecuteAuthlibRequest,
+            AddressOf ApplyProfileMutationPlan)
     End Function
     Private Function McLoginRequestLogin(input As McLoginServer) As AuthlibLoginStepResult
-        Try
-            ProfileLog("登录开始（Login, Authlib）")
-            Dim authenticateRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
-                input.BaseUrl,
-                input.UserName,
-                input.Password)
-            Dim authenticatePlan = MinecraftLaunchAuthlibLoginWorkflowService.PlanAuthenticate(
-                New MinecraftLaunchAuthlibAuthenticatePlanRequest(
-                    input.ForceReselectProfile,
-                    If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
-                    ExecuteAuthlibRequest(authenticateRequestPlan)))
-            Dim selectedId As String = ModLaunchInteractionShell.ResolveAuthlibAuthenticateSelection(authenticatePlan)
-
-            Dim metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(input.BaseUrl)
-            Dim authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
-                New MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
-                    authenticatePlan,
-                    ExecuteAuthlibMetadataRequest(metadataRequestPlan.Url),
-                    input.IsExist,
-                    GetSelectedProfileIndex(),
-                    input.BaseUrl,
-                    input.UserName,
-                    input.Password,
-                    selectedId))
-            Dim loginResult = New McLoginResult With {
-                .AccessToken = authenticateResult.Session.AccessToken,
-                .ClientToken = authenticateResult.Session.ClientToken,
-                .Name = authenticateResult.Session.ProfileName,
-                .Uuid = authenticateResult.Session.ProfileId,
-                .Type = "Auth"}
-            ApplyProfileMutationPlan(authenticateResult.MutationPlan)
-            SaveProfile()
-            ProfileLog("登录成功（Login, Authlib）")
-            Return New AuthlibLoginStepResult With {
-                .LoginResult = loginResult,
-                .NeedsRefresh = authenticateResult.NeedsRefresh}
-        Catch ex As HttpWebException
-            Throw
-        Catch ex As Exception
-            Dim AllMessage As String = ex.ToString()
-            ProfileLog("第三方验证失败: " & ex.ToString())
-            If ex.Message.StartsWithF("$") Then
-                Throw
-            Else
-                Throw New Exception("登录失败：" & ex.Message, ex)
-            End If
-        End Try
+        Return ModLaunchAuthlibStepShell.Authenticate(
+            input,
+            SelectedProfile,
+            GetSelectedProfileIndex(),
+            AddressOf ExecuteAuthlibRequest,
+            AddressOf ExecuteAuthlibMetadataRequest,
+            AddressOf ApplyProfileMutationPlan,
+            AddressOf SaveProfile)
     End Function
 
     Private Function ExecuteAuthlibRequest(requestPlan As MinecraftLaunchHttpRequestPlan) As String
