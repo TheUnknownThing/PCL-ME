@@ -966,77 +966,18 @@ Public Class FormMain
         End Try
     End Sub
     Private Sub PageChangeAnim(TargetLeft As FrameworkElement, TargetRight As FrameworkElement)
-        AniStop("FrmMain LeftChange")
-        AniStop("PageLeft PageChange") '停止左边栏变更导致的右页面切换动画，防止它与本动画一起触发多次 PageOnEnter
-        AniControlEnabled += 1
-        '清除新页面关联性
-        If Not IsNothing(TargetLeft.Parent) Then TargetLeft.SetValue(ContentPresenter.ContentProperty, Nothing)
-        If Not IsNothing(TargetRight) AndAlso Not IsNothing(TargetRight.Parent) Then TargetRight.SetValue(ContentPresenter.ContentProperty, Nothing)
-        PageLeft = TargetLeft
-        PageRight = TargetRight
-        '触发页面通用动画
-        CType(PanMainLeft.Child, MyPageLeft).TriggerHideAnimation()
-        CType(PanMainRight.Child, MyPageRight).PageOnExit()
-        AniControlEnabled -= 1
-        '执行动画
-        AniStart({
-            AaCode(
-            Sub()
-                AniControlEnabled += 1
-                '把新页面添加进容器
-                PanMainLeft.Child = PageLeft
-                PageLeft.Opacity = 0
-                PanMainLeft.Background = Nothing
-                AniControlEnabled -= 1
-                RunInUi(Sub() PanMainLeft_Resize(PanMainLeft.ActualWidth), True)
-            End Sub, 110),
-            AaCode(
-            Sub()
-                '延迟触发页面通用动画，以使得在 Loaded 事件中加载的控件得以处理
-                PageLeft.Opacity = 1
-                PageLeft.TriggerShowAnimation()
-            End Sub, 30, True)
-        }, "FrmMain PageChangeLeft")
-        AniStart({
-            AaCode(
-            Sub()
-                AniControlEnabled += 1
-                CType(PanMainRight.Child, MyPageRight).PageOnForceExit()
-                '把新页面添加进容器
-                PanMainRight.Child = PageRight
-                PageRight.Opacity = 0
-                PanMainRight.Background = Nothing
-                AniControlEnabled -= 1
-                RunInUi(Sub() BtnExtraBack.ShowRefresh(), True)
-            End Sub, 110),
-            AaCode(
-            Sub()
-                '延迟触发页面通用动画，以使得在 Loaded 事件中加载的控件得以处理
-                PageRight.Opacity = 1
-                PageRight.PageOnEnter()
-            End Sub, 30, True)
-        }, "FrmMain PageChangeRight")
+        ModMainWindowPageAnimationShell.AnimatePageChange(
+            Me,
+            CType(TargetLeft, MyPageLeft),
+            CType(TargetRight, MyPageRight),
+            Sub() RunInUi(Sub() PanMainLeft_Resize(PanMainLeft.ActualWidth), True),
+            Sub() RunInUi(Sub() BtnExtraBack.ShowRefresh(), True))
     End Sub
     ''' <summary>
     ''' 退出子界面。
     ''' </summary>
     Private Sub PageChangeExit()
-        If PageStack.Any Then
-            '子页面 → 主页面，退出
-            PanTitleMain.Visibility = Visibility.Visible
-            PanTitleMain.IsHitTestVisible = True
-            PanTitleInner.IsHitTestVisible = False
-            AniStart({
-                AaOpacity(PanTitleInner, -PanTitleInner.Opacity, 150),
-                AaX(PanTitleInner, -18 - PanTitleInner.Margin.Left, 150,, New AniEaseInFluent),
-                AaOpacity(PanTitleMain, 1 - PanTitleMain.Opacity, 150, 200),
-                AaX(PanTitleMain, -PanTitleMain.Margin.Left, 350, 200, New AniEaseOutBack(AniEasePower.Weak)),
-                AaCode(Sub() PanTitleInner.Visibility = Visibility.Collapsed,, True)
-            }, "FrmMain Titlebar FirstLayer")
-            PageStack.Clear()
-        Else
-            '主页面 → 主页面，无事发生
-        End If
+        ModMainWindowPageAnimationShell.ExitSubPage(Me, PageStack)
     End Sub
 
     '左边栏改变
