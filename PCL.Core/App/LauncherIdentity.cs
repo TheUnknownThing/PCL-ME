@@ -40,7 +40,7 @@ public static class LauncherIdentity
 
         try
         {
-            return LauncherIdentityResolutionService.NormalizeLauncherId(Identify.LauncherId);
+            return LauncherIdentityResolutionService.NormalizeLauncherId(WindowsDeviceIdentityProvider.GetLauncherId());
         }
         catch (Exception ex)
         {
