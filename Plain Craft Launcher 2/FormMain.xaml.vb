@@ -540,32 +540,13 @@ Public Class FormMain
     '接受到 Windows 窗体事件
     Public IsSystemTimeChanged As Boolean = False
     Private Function WndProc(hwnd As IntPtr, msg As Integer, wParam As IntPtr, lParam As IntPtr, ByRef handled As Boolean) As IntPtr
-        If msg = 30 Then
-            Dim NowDate = Date.Now
-            If NowDate.Date = ApplicationOpenTime.Date Then
-                Log("[System] 系统时间微调为：" & NowDate.ToLongDateString & " " & NowDate.ToLongTimeString)
-                IsSystemTimeChanged = False
-            Else
-                Log("[System] 系统时间修改为：" & NowDate.ToLongDateString & " " & NowDate.ToLongTimeString)
-                IsSystemTimeChanged = True
-            End If
-        ElseIf msg = 400 * 16 + 2 Then
-            Log("[System] 收到置顶信息：" & hwnd.ToInt64)
-            If Not IsWindowLoadFinished Then
-                Log("[System] 窗口尚未加载完成，忽略置顶请求")
-                Return IntPtr.Zero
-            End If
-            ShowWindowToTop()
-            handled = True
-        ElseIf msg = 26 Then 'WM_SETTINGCHANGE
-            If Marshal.PtrToStringAuto(lParam) = "ImmersiveColorSet" Then
-                Log($"[System] 系统主题更改，深色模式：{SystemTheme.IsSystemInDarkMode()}")
-                If Setup.Get("UiDarkMode") = 2 And IsDarkMode <> SystemTheme.IsSystemInDarkMode() Then
-                    ThemeService.RefreshColorMode()
-                End If
-            End If
-        End If
-
+        handled = ModMainWindowWindowShell.HandleWindowMessage(
+            hwnd,
+            msg,
+            lParam,
+            IsWindowLoadFinished,
+            AddressOf ShowWindowToTop,
+            Sub(value) IsSystemTimeChanged = value)
         Return IntPtr.Zero
     End Function
 
@@ -578,17 +559,7 @@ Public Class FormMain
         Set(value As Boolean)
             If _Hidden = value Then Return
             _Hidden = value
-            If value Then
-                '隐藏
-                Left -= 10000
-                ShowInTaskbar = False
-                Visibility = Visibility.Hidden
-                Log("[System] 窗口已隐藏，位置：(" & Left & "," & Top & ")")
-            Else
-                '取消隐藏
-                If Left < -2000 Then Left += 10000
-                ShowWindowToTop()
-            End If
+            ModMainWindowWindowShell.ApplyHiddenState(Me, value, AddressOf ShowWindowToTop)
         End Set
     End Property
     '解决龙猫的非通用实现史山
@@ -600,19 +571,7 @@ Public Class FormMain
     ''' 把当前窗口拖到最前面。
     ''' </summary>
     Public Sub ShowWindowToTop()
-        RunInUi(
-        Sub()
-            '这一坨乱七八糟的，别改，改了指不定就炸了，自己电脑还复现不出来
-            Visibility = Visibility.Visible
-            ShowInTaskbar = True
-            WindowState = WindowState.Normal
-            Hidden = False
-            Topmost = True '偶尔 SetForegroundWindow 失效
-            Topmost = False
-            SetForegroundWindow(FrmHandle)
-            Focus()
-            Log($"[System] 窗口已置顶，位置：({Left}, {Top}), {Width} x {Height}")
-        End Sub)
+        ModMainWindowWindowShell.ShowWindowToTop(Me, FrmHandle, Sub() _Hidden = False)
     End Sub
     '背景视频循环播放
     Private Sub VideoEnded(sender As Object, e As RoutedEventArgs)
