@@ -16,6 +16,7 @@ internal static class SpikeCommandParser
                 Format: SpikeOutputFormat.Json,
                 UseHostEnvironment: false,
                 JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
+                JavaDownloadState: SpikeJavaDownloadSessionState.Finished,
                 CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
                 SaveBatchPath: null,
                 WorkspaceRoot: null,
@@ -38,6 +39,7 @@ internal static class SpikeCommandParser
         var format = SpikeOutputFormat.Json;
         var useHostEnvironment = false;
         var javaPromptDecision = MinecraftLaunchJavaPromptDecision.Download;
+        var javaDownloadState = SpikeJavaDownloadSessionState.Finished;
         var crashAction = MinecraftCrashOutputPromptActionKind.ExportReport;
         string? saveBatchPath = null;
         string? workspaceRoot = null;
@@ -93,6 +95,12 @@ internal static class SpikeCommandParser
                         return Error($"Unknown Java prompt decision '{value}'.");
                     }
                     break;
+                case "java-download-state":
+                    if (!TryParseJavaDownloadState(value!, out javaDownloadState))
+                    {
+                        return Error($"Unknown Java download state '{value}'.");
+                    }
+                    break;
                 case "crash-action":
                     if (!TryParseCrashAction(value!, out crashAction))
                     {
@@ -128,6 +136,7 @@ internal static class SpikeCommandParser
             format,
             useHostEnvironment,
             javaPromptDecision,
+            javaDownloadState,
             crashAction,
             saveBatchPath,
             workspaceRoot,
@@ -142,9 +151,9 @@ PCL.Frontend.Spike
 
 Usage:
   startup [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
-  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--save-batch path] [--workspace path] [--input-root path]
+  launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--java-download-state finished|failed|aborted] [--save-batch path] [--workspace path] [--input-root path]
   crash [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
-  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--save-batch path] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
+  all [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--java-download-state finished|failed|aborted] [--save-batch path] [--crash-action close|view-log|open-settings|export] [--workspace path] [--input-root path] [--export-path path]
   help
 
 Defaults:
@@ -154,6 +163,7 @@ Defaults:
   format: json
   host env: false
   java prompt: download
+  java download state: finished
   crash action: export
 """;
     }
@@ -258,6 +268,25 @@ Defaults:
                 return true;
             default:
                 decision = default;
+                return false;
+        }
+    }
+
+    private static bool TryParseJavaDownloadState(string value, out SpikeJavaDownloadSessionState state)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "finished":
+                state = SpikeJavaDownloadSessionState.Finished;
+                return true;
+            case "failed":
+                state = SpikeJavaDownloadSessionState.Failed;
+                return true;
+            case "aborted":
+                state = SpikeJavaDownloadSessionState.Aborted;
+                return true;
+            default:
+                state = default;
                 return false;
         }
     }

@@ -10,6 +10,7 @@ internal sealed record SpikeCommandOptions(
     SpikeOutputFormat Format,
     bool UseHostEnvironment,
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
+    SpikeJavaDownloadSessionState JavaDownloadState,
     MinecraftCrashOutputPromptActionKind CrashAction,
     string? SaveBatchPath,
     string? WorkspaceRoot,
@@ -40,4 +41,11 @@ internal enum SpikeOutputFormat
 {
     Json = 0,
     Text = 1
+}
+
+internal enum SpikeJavaDownloadSessionState
+{
+    Finished = 0,
+    Failed = 1,
+    Aborted = 2
 }

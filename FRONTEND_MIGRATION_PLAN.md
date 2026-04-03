@@ -90,6 +90,7 @@ These workflow extractions are already done and should be treated as available m
 - the spike can now accept explicit crash-export target paths and record the selected destination as a shell artifact
 - the spike can now derive best-effort host-backed startup / launch / crash inputs with `--host-env true`
 - the spike can now trace launcher-style Java index / manifest request sources and materialize a stub runtime tree from the portable download workflow during `execute` mode
+- the spike can now also model finished / failed / aborted Java download session transitions, including cleanup / refresh artifacts, from the extracted session service
 - a portable extracted-backend assembly exists in `PCL.Core.Backend`, and the spike now consumes that assembly instead of the Windows-only `PCL.Core` project
 - launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
 - launch prerun `options.txt` target selection and write policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`

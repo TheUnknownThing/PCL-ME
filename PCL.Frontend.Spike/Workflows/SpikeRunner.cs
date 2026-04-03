@@ -1,6 +1,7 @@
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 
 namespace PCL.Frontend.Spike.Workflows;
@@ -28,7 +29,8 @@ internal static class SpikeRunner
 
     public static LaunchSpikeRun BuildLaunchRun(
         LaunchSpikePlan plan,
-        MinecraftLaunchJavaPromptDecision javaPromptDecision)
+        MinecraftLaunchJavaPromptDecision javaPromptDecision,
+        SpikeJavaDownloadSessionState javaDownloadState)
     {
         var promptOutcome = MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(
             plan.JavaWorkflow.MissingJavaPrompt,
@@ -55,7 +57,8 @@ internal static class SpikeRunner
                     plan.JavaRuntimeIndexRequestUrls,
                     plan.JavaRuntimeManifestPlan,
                     plan.JavaRuntimeDownloadWorkflowPlan,
-                    plan.JavaRuntimeTransferPlan)));
+                    plan.JavaRuntimeTransferPlan,
+                    javaDownloadState)));
         }
 
         if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
@@ -221,10 +224,14 @@ internal static class SpikeRunner
         MinecraftJavaRuntimeRequestUrlPlan indexRequestUrls,
         MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
         MinecraftJavaRuntimeDownloadWorkflowPlan downloadWorkflowPlan,
-        MinecraftJavaRuntimeDownloadTransferPlan transferPlan)
+        MinecraftJavaRuntimeDownloadTransferPlan transferPlan,
+        SpikeJavaDownloadSessionState javaDownloadState)
     {
         var selection = manifestPlan.Selection;
         var downloadPlan = downloadWorkflowPlan.DownloadPlan;
+        var transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(
+            ResolveJavaDownloadSessionState(javaDownloadState),
+            downloadPlan.RuntimeBaseDirectory);
         return [
             $"Index sources: {string.Join(" | ", indexRequestUrls.AllUrls)}",
             $"Platform: {selection.PlatformKey}",
@@ -236,11 +243,25 @@ internal static class SpikeRunner
             $"Planned files: {downloadWorkflowPlan.Files.Count}",
             $"Files to download: {transferPlan.FilesToDownload.Count} ({transferPlan.DownloadBytes} bytes)",
             $"Reused files: {transferPlan.ReusedFiles.Count}",
+            $"Session state: {javaDownloadState}",
+            $"Cleanup directory: {transitionPlan.CleanupDirectoryPath ?? "none"}",
+            $"Refresh Java inventory: {transitionPlan.ShouldRefreshJavaInventory}",
             ..transferPlan.FilesToDownload.Take(3).Select(file =>
                 $"Download: {file.RelativePath} ({file.Size} bytes) <= {string.Join(" | ", file.RequestUrls.AllUrls)}"),
             ..transferPlan.ReusedFiles.Take(2).Select(file =>
                 $"Reuse: {file.RelativePath}")
         ];
+    }
+
+    private static MinecraftJavaRuntimeDownloadSessionState ResolveJavaDownloadSessionState(SpikeJavaDownloadSessionState state)
+    {
+        return state switch
+        {
+            SpikeJavaDownloadSessionState.Finished => MinecraftJavaRuntimeDownloadSessionState.Finished,
+            SpikeJavaDownloadSessionState.Failed => MinecraftJavaRuntimeDownloadSessionState.Failed,
+            SpikeJavaDownloadSessionState.Aborted => MinecraftJavaRuntimeDownloadSessionState.Aborted,
+            _ => throw new InvalidOperationException($"Unsupported Java download session state '{state}'.")
+        };
     }
 
     private static IReadOnlyList<string> BuildLoginLines(LaunchLoginSpikePlan plan)

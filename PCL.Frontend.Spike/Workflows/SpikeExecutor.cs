@@ -2,6 +2,7 @@ using System.Text;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 
 namespace PCL.Frontend.Spike.Workflows;
@@ -75,7 +76,8 @@ internal static class SpikeExecutor
     public static LaunchSpikeExecution ExecuteLaunch(
         LaunchSpikePlan plan,
         string workspaceRoot,
-        MinecraftLaunchJavaPromptDecision javaPromptDecision)
+        MinecraftLaunchJavaPromptDecision javaPromptDecision,
+        SpikeJavaDownloadSessionState javaDownloadState)
     {
         Directory.CreateDirectory(workspaceRoot);
 
@@ -169,6 +171,10 @@ internal static class SpikeExecutor
             plan.JavaRuntimeDownloadWorkflowPlan is not null &&
             plan.JavaRuntimeTransferPlan is not null)
         {
+            var sessionState = ResolveJavaDownloadSessionState(javaDownloadState);
+            var transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(
+                sessionState,
+                plan.JavaRuntimeDownloadWorkflowPlan.DownloadPlan.RuntimeBaseDirectory);
             var javaDownloadRoot = Path.Combine(workspaceRoot, "_artifacts", "java-download");
             Directory.CreateDirectory(javaDownloadRoot);
             createdDirectories.Add(javaDownloadRoot);
@@ -202,6 +208,11 @@ internal static class SpikeExecutor
             writtenFiles.Add(javaTransferPlanPath);
             artifacts.Add(new SpikeExecutionArtifact("Java transfer plan", javaTransferPlanPath));
 
+            var javaSessionPath = Path.Combine(workspaceRoot, "_artifacts", "java-download-session.txt");
+            WriteTextFile(javaSessionPath, BuildJavaDownloadSessionText(javaDownloadState, transitionPlan));
+            writtenFiles.Add(javaSessionPath);
+            artifacts.Add(new SpikeExecutionArtifact("Java download session", javaSessionPath));
+
             var reusedJavaFiles = new List<string>();
             foreach (var filePlan in plan.JavaRuntimeTransferPlan.ReusedFiles)
             {
@@ -224,6 +235,15 @@ internal static class SpikeExecutor
                 downloadedJavaFiles.Add(mappedPath);
             }
 
+            if (!string.IsNullOrWhiteSpace(transitionPlan.CleanupDirectoryPath))
+            {
+                var cleanupPath = MapSamplePath(transitionPlan.CleanupDirectoryPath, workspaceRoot);
+                if (Directory.Exists(cleanupPath))
+                {
+                    Directory.Delete(cleanupPath, recursive: true);
+                }
+            }
+
             sections.Add(new SpikeTranscriptSection(
                 "Java Download Execution",
                 [
@@ -232,10 +252,14 @@ internal static class SpikeExecutor
                     $"Planned files: {plan.JavaRuntimeDownloadWorkflowPlan.Files.Count}",
                     $"Downloaded runtime files: {downloadedJavaFiles.Count}",
                     $"Reused runtime files: {reusedJavaFiles.Count}",
+                    $"Session state: {javaDownloadState}",
+                    $"Cleanup directory: {transitionPlan.CleanupDirectoryPath ?? "none"}",
+                    $"Refresh Java inventory: {transitionPlan.ShouldRefreshJavaInventory}",
                     $"Index request artifact: {javaIndexRequestPath}",
                     $"Manifest request artifact: {javaManifestRequestPath}",
                     $"Plan artifact: {javaDownloadPlanPath}",
-                    $"Transfer artifact: {javaTransferPlanPath}"
+                    $"Transfer artifact: {javaTransferPlanPath}",
+                    $"Session artifact: {javaSessionPath}"
                 ]));
         }
 
@@ -624,6 +648,21 @@ internal static class SpikeExecutor
             ]);
     }
 
+    private static string BuildJavaDownloadSessionText(
+        SpikeJavaDownloadSessionState state,
+        MinecraftJavaRuntimeDownloadStateTransitionPlan transitionPlan)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"State={state}",
+                $"CleanupDirectory={transitionPlan.CleanupDirectoryPath ?? "none"}",
+                $"CleanupLog={transitionPlan.CleanupLogMessage ?? "none"}",
+                $"RefreshJavaInventory={transitionPlan.ShouldRefreshJavaInventory}",
+                $"ClearTrackedRuntimeDirectory={transitionPlan.ShouldClearTrackedRuntimeDirectory}"
+            ]);
+    }
+
     private static string BuildJavaRuntimeFileContent(MinecraftJavaRuntimeDownloadRequestFilePlan filePlan)
     {
         return string.Join(
@@ -665,6 +704,17 @@ internal static class SpikeExecutor
         return Path.IsPathRooted(scriptExportPath)
             ? Path.GetFullPath(scriptExportPath)
             : Path.GetFullPath(Path.Combine(workspaceRoot, scriptExportPath));
+    }
+
+    private static MinecraftJavaRuntimeDownloadSessionState ResolveJavaDownloadSessionState(SpikeJavaDownloadSessionState state)
+    {
+        return state switch
+        {
+            SpikeJavaDownloadSessionState.Finished => MinecraftJavaRuntimeDownloadSessionState.Finished,
+            SpikeJavaDownloadSessionState.Failed => MinecraftJavaRuntimeDownloadSessionState.Failed,
+            SpikeJavaDownloadSessionState.Aborted => MinecraftJavaRuntimeDownloadSessionState.Aborted,
+            _ => throw new InvalidOperationException($"Unsupported Java download session state '{state}'.")
+        };
     }
 
     private static string MapSamplePath(string samplePath, string workspaceRoot)

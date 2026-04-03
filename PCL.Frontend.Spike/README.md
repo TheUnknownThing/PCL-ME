@@ -32,11 +32,13 @@ Useful reviewer commands:
 
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- startup --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt download`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt download --java-download-state failed`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt abort`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --save-batch exports/Launch.bat`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode run --format text --crash-action export`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- all legacy-forge --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode execute --format text --workspace /tmp/pcl-launch-spike`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode execute --format text --workspace /tmp/pcl-launch-spike --java-download-state aborted`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode execute --format text --workspace /tmp/pcl-launch-spike --save-batch exports/Launch.bat`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- crash --mode execute --format text --workspace /tmp/pcl-crash-spike --export-path exports/demo-report.zip`
@@ -52,6 +54,7 @@ Useful reviewer commands:
 - `--scenario modern-fabric|legacy-forge`
 - `--host-env true|false`
 - `--java-prompt download|abort`
+- `--java-download-state finished|failed|aborted`
 - `--save-batch /absolute/or/workspace-relative/Launch.bat`
 - `--crash-action close|view-log|open-settings|export`
 - `--workspace /absolute/or/relative/path`
@@ -67,6 +70,7 @@ Useful reviewer commands:
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
 - launch execution now writes Java index/manifest request artifacts under `_artifacts/java-download/`, writes `_artifacts/java-download-plan.txt`, and materializes a stub runtime tree when the backend selects an automatic Java download path
 - launch execution now also writes `_artifacts/java-download-transfer.txt`, seeds reused runtime files, and only materializes transfer files for the remaining Java download queue
+- launch execution can now also model finished vs failed vs aborted Java download session transitions, including cleanup and refresh artifacts sourced from `MinecraftJavaRuntimeDownloadSessionService`
 - launch execution with `--save-batch` now exports the batch script to the requested path, records the export shell policy, and stops before custom-command/process startup
 - crash execution can stage sample input files and build a real crash zip archive via `MinecraftCrashExportArchiveService`
 - crash execution records the selected archive destination in `_artifacts/crash-export-target.txt`, and `--export-path` can override the default workspace output path
@@ -88,5 +92,5 @@ Useful reviewer commands:
 ## Current limitations
 
 - the spike is still a prototype shell, not a user-facing replacement launcher
-- live launch request execution, real Java download transfers, and crash save-picker or Explorer behavior still live in the real launcher
+- live launch request execution, real Java transfer networking, and crash save-picker or Explorer behavior still live in the real launcher
 - the spike can now derive best-effort host-backed inputs, but it still does not source full live launcher state or perform real login/network execution against the current machine
