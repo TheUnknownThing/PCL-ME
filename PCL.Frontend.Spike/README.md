@@ -4,6 +4,11 @@
 
 It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoids WPF or Windows-only frontend code.
 
+The project now has two complementary faces:
+
+- a CLI shell that still emits plan, run, and execute artifacts for reviewer-friendly inspection
+- an Avalonia desktop shell that renders the portable startup, navigation, and prompt contracts as a real replacement-frontend surface
+
 ## What it proves
 
 - a non-WPF shell can consume the extracted startup, launch, and crash contracts
@@ -18,6 +23,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - the shell can now also round-trip a backend-driven frontend shell snapshot that includes startup prompts, top navigation, sidebar state, and utility surfaces
 - the shell now also exposes a frontend prompt queue and a richer current-page surface contract with breadcrumbs and back-target semantics
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
+- the spike can now also boot a real desktop shell from those same portable contracts with `app`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
 
 ## Commands
@@ -32,6 +38,9 @@ These emit `plan`-mode JSON by default.
 
 Useful reviewer commands:
 
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app --scenario legacy-forge`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app --host-env true`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- shell --mode plan --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- shell --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- shell --mode execute --format text --workspace /tmp/pcl-shell-nav`
@@ -54,6 +63,7 @@ Useful reviewer commands:
 
 ## Options
 
+- `app`
 - `--mode plan|run|execute`
 - `--format json|text`
 - `--scenario modern-fabric|legacy-forge`
@@ -67,6 +77,23 @@ Useful reviewer commands:
 - `--export-path /absolute/or/workspace-relative/archive.zip`
 
 `execute` mode creates a workspace root automatically when `--workspace` is omitted.
+
+## Desktop shell
+
+The `app` command launches a real cross-platform desktop shell built with Avalonia.
+
+Current desktop shell behavior:
+
+- top-level routes, sidebar sections, and utility surfaces are rendered from `LauncherFrontendNavigationService`
+- startup, launch, and crash prompt lanes are rendered from `LauncherFrontendPromptService`
+- route switching, shell back-navigation, and prompt dismissal stay in the frontend layer without copying WPF event flow
+- the activity feed records prompt decisions and route changes so contract-driven behavior can be reviewed visually
+
+The desktop shell is intentionally still a migration scaffold, not a full launcher:
+
+- it renders portable shell surfaces and prompt intents
+- it does not yet implement real page-level data contracts or live backend execution
+- it keeps policy in backend services and limits the frontend to composition, routing, and prompt interaction
 
 ## Execute mode outputs
 
@@ -99,5 +126,6 @@ Useful reviewer commands:
 ## Current limitations
 
 - the spike is still a prototype shell, not a user-facing replacement launcher
+- the new desktop shell is still a shell-level migration surface; page-specific contracts are still incomplete
 - live launch request execution, real Java transfer networking, and crash save-picker or Explorer behavior still live in the real launcher
 - the spike can now derive best-effort host-backed inputs, but it still does not source full live launcher state or perform real login/network execution against the current machine
