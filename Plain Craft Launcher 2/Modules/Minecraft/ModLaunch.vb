@@ -245,24 +245,11 @@ NextInner:
         '检查输入信息
         Dim CheckResult As String = ""
         RunInUiWait(Sub() CheckResult = If(SelectedProfile Is Nothing, "", IsProfileValid()))
-        Dim precheckResult = MinecraftLaunchPrecheckService.Evaluate(New MinecraftLaunchPrecheckRequest(
-            If(McInstanceSelected?.Name, ""),
-            If(McInstanceSelected?.PathIndie, ""),
-            If(McInstanceSelected?.PathInstance, ""),
-            McInstanceSelected IsNot Nothing,
-            McInstanceSelected?.State = McInstanceState.Error,
-            If(McInstanceSelected?.Desc, ""),
-            IsUtf8CodePage(),
-            Setup.Get("HintDisableGamePathCheckTip"),
-            If(McInstanceSelected Is Nothing, True, McInstanceSelected.PathInstance.IsASCII()),
-            CheckResult,
-            GetCurrentProfileKind(),
-            McInstanceSelected IsNot Nothing AndAlso McInstanceSelected.Info.HasLabyMod,
-            If(McInstanceSelected Is Nothing, MinecraftLaunchLoginRequirement.None, CType(Setup.Get("VersionServerLoginRequire", McInstanceSelected), MinecraftLaunchLoginRequirement)),
-            If(McInstanceSelected Is Nothing, Nothing, Setup.Get("VersionServerAuthServer", McInstanceSelected)),
-            GetSelectedAuthServerBase(),
-            ProfileList.Any(Function(x) x.Type = McLoginType.Ms),
-            RegionUtils.IsRestrictedFeatAllowed))
+        Dim precheckResult = ModLaunchPrecheckShell.EvaluatePrecheck(
+            McInstanceSelected,
+            SelectedProfile,
+            ProfileList,
+            CheckResult)
         If Not precheckResult.IsSuccess Then Throw New ArgumentException(precheckResult.FailureMessage)
         ModLaunchInteractionShell.RunPrecheckPrompts(precheckResult, CurrentLaunchOptions)
     End Sub
@@ -542,34 +529,11 @@ NextInner:
 
     Public McLaunchJavaSelected As JavaEntry = Nothing
     Private Sub McLaunchJava(task As LoaderTask(Of Integer, Integer))
-        Dim recommendedCode As Integer =
-                If(McInstanceSelected.JsonObject?("javaVersion")?("majorVersion")?.ToObject(Of Integer),
-                   If(McInstanceSelected.JsonVersion?("java_version")?.ToObject(Of Integer), 0))
-        Dim recommendedComponent As String =
-                If(McInstanceSelected.JsonObject?("javaVersion")?("component")?.ToString,
-                   McInstanceSelected.JsonVersion?("java_component")?.ToString)
-        If recommendedComponent = "" Then recommendedComponent = Nothing
-        Dim jsonRequiredMajorVersion As Integer? = Nothing
-        If McInstanceSelected.JsonObject("javaVersion") IsNot Nothing Then jsonRequiredMajorVersion = CInt(Val(McInstanceSelected.JsonObject("javaVersion")("majorVersion")))
-
-        Dim javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(
-            New MinecraftLaunchJavaWorkflowRequest(
-                McInstanceSelected.Info.Valid,
-                McInstanceSelected.ReleaseTime,
-                If(McInstanceSelected.Info.Valid, McInstanceSelected.Info.Vanilla, Nothing),
-                McInstanceSelected.Info.HasOptiFine,
-                McInstanceSelected.Info.HasForge,
-                If(McInstanceSelected.Info.HasForge, McInstanceSelected.Info.Forge, Nothing),
-                McInstanceSelected.Info.HasCleanroom,
-                McInstanceSelected.Info.HasFabric,
-                McInstanceSelected.Info.HasLiteLoader,
-                McInstanceSelected.Info.HasLabyMod,
-                jsonRequiredMajorVersion,
-                recommendedCode,
-                recommendedComponent))
-        If javaWorkflow.RecommendedVersionLogMessage IsNot Nothing Then McLaunchLog(javaWorkflow.RecommendedVersionLogMessage)
-
-        McLaunchJavaSelected = ResolveLaunchJavaSelection(task, javaWorkflow, McInstanceSelected)
+        McLaunchJavaSelected = ModLaunchJavaWorkflowShell.ResolveLaunchJava(
+            McInstanceSelected,
+            task,
+            AddressOf ResolveLaunchJavaSelection,
+            AddressOf McLaunchLog)
         If task.IsAborted Then Return
     End Sub
 
@@ -626,254 +590,29 @@ NextInner:
 
     '主方法，合并 Jvm、Game、Replace 三部分的参数数据
     Private Sub McLaunchArgumentMain(Loader As LoaderTask(Of String, List(Of McLibToken)))
-        McLaunchLog("开始获取 Minecraft 启动参数")
-        '获取基准字符串与参数信息
-        Dim Arguments As String
-        If McInstanceSelected.JsonObject("arguments") IsNot Nothing AndAlso McInstanceSelected.JsonObject("arguments")("jvm") IsNot Nothing Then
-            McLaunchLog("获取新版 JVM 参数")
-            Arguments = McLaunchArgumentsJvmNew(McInstanceSelected)
-            McLaunchLog("新版 JVM 参数获取成功：")
-            McLaunchLog(Arguments)
-        Else
-            McLaunchLog("获取旧版 JVM 参数")
-            Arguments = McLaunchArgumentsJvmOld(McInstanceSelected)
-            McLaunchLog("旧版 JVM 参数获取成功：")
-            McLaunchLog(Arguments)
-        End If
-        If Not String.IsNullOrEmpty(McInstanceSelected.JsonObject("minecraftArguments")) Then '有的实例 JSON 中是空字符串
-            McLaunchLog("获取旧版 Game 参数")
-            Arguments += " " & McLaunchArgumentsGameOld(McInstanceSelected)
-            McLaunchLog("旧版 Game 参数获取成功")
-        End If
-        If McInstanceSelected.JsonObject("arguments") IsNot Nothing AndAlso McInstanceSelected.JsonObject("arguments")("game") IsNot Nothing Then
-            McLaunchLog("获取新版 Game 参数")
-            Arguments += " " & McLaunchArgumentsGameNew(McInstanceSelected)
-            McLaunchLog("新版 Game 参数获取成功")
-        End If
-        Dim ArgumentGame As String = Setup.Get("VersionAdvanceGame", instance:=McInstanceSelected)
-        Dim ReplaceArguments = McLaunchArgumentsReplace(McInstanceSelected, Loader)
-        Dim WorldName As String = CurrentLaunchOptions.WorldName
-        Dim Server As String = If(String.IsNullOrEmpty(CurrentLaunchOptions.ServerIp), Setup.Get("VersionServerEnter", McInstanceSelected), CurrentLaunchOptions.ServerIp)
-        Dim argumentPlan = MinecraftLaunchArgumentWorkflowService.BuildPlan(
-            New MinecraftLaunchArgumentPlanRequest(
-                Arguments,
-                McLaunchJavaSelected.Installation.MajorVersion,
-                Setup.Get("LaunchArgumentWindowType") = 0,
-                CurrentLaunchOptions.ExtraArgs,
-                If(ArgumentGame = "", Setup.Get("LaunchAdvanceGame"), ArgumentGame),
-                ReplaceArguments,
-                WorldName,
-                Server,
-                McInstanceSelected.ReleaseTime,
-                McInstanceSelected.Info.HasOptiFine))
-        If argumentPlan.ShouldWarnAboutLegacyServerWithOptiFine Then
-            Hint("OptiFine 与自动进入服务器可能不兼容，有概率导致材质丢失甚至游戏崩溃！", HintType.Critical)
-        End If
-        '输出
-        McLaunchLog("Minecraft 启动参数：")
-        McLaunchLog(argumentPlan.FinalArguments)
-        McLaunchArgument = argumentPlan.FinalArguments
+        McLaunchArgument = ModLaunchArgumentWorkflowShell.BuildLaunchArguments(
+            McInstanceSelected,
+            CurrentLaunchOptions,
+            McLaunchJavaSelected,
+            McLoginLoader.Output,
+            If(McLoginAuthLoader.Input?.BaseUrl, Nothing),
+            AddressOf GetNativesFolder,
+            Loader,
+            AddressOf McLaunchLog)
     End Sub
-
-    'Jvm 部分（第一段）
-    Private Function McLaunchArgumentsJvmOld(instance As McInstance) As String
-        Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024)
-        Dim youngMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024 * 0.15)
-        Dim proxyAddress = ModLaunchArgumentShell.TryGetLaunchProxyAddress(instance)
-
-        Return MinecraftLaunchJvmArgumentService.BuildLegacyArguments(
-            New MinecraftLaunchLegacyJvmArgumentRequest(
-                ModLaunchArgumentShell.GetSelectedJvmArgumentOverrides(instance),
-                youngMemory,
-                totalMemory,
-                GetNativesFolder(),
-                McLaunchJavaSelected.Installation.MajorVersion,
-                ModLaunchArgumentShell.BuildAuthlibInjectorArgument(McLoginLoader.Output.Type, McLoginAuthLoader.Input.BaseUrl, PathPure, includeDetailedHttpError:=True),
-                ModLaunchArgumentShell.GetDebugLog4jConfigurationPath(instance),
-                ModLaunchArgumentShell.GetRendererAgentArgument(instance, PathPure),
-                If(proxyAddress Is Nothing, Nothing, ModLaunchArgumentShell.GetLaunchProxyScheme(proxyAddress)),
-                If(proxyAddress Is Nothing, Nothing, proxyAddress.AbsoluteUri),
-                If(proxyAddress Is Nothing, CType(Nothing, Integer?), proxyAddress.Port),
-                ModLaunchArgumentShell.ShouldUseJavaWrapper(instance),
-                PathPure.TrimEnd("\"),
-                If(ModLaunchArgumentShell.ShouldUseJavaWrapper(instance), ExtractJavaWrapper(), Nothing),
-                ModLaunchArgumentShell.GetMainClassOrThrow(instance)))
-    End Function
-    Private Function McLaunchArgumentsJvmNew(instance As McInstance) As String
-        Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024)
-        Dim youngMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15)
-        Dim proxyAddress = ModLaunchArgumentShell.TryGetLaunchProxyAddress(instance)
-
-        Return MinecraftLaunchJvmArgumentService.BuildModernArguments(
-            New MinecraftLaunchModernJvmArgumentRequest(
-                MinecraftLaunchJsonArgumentService.ExtractValues(
-                    New MinecraftLaunchJsonArgumentRequest(
-                        ModLaunchArgumentShell.CollectArgumentSectionJsons(instance, "jvm"),
-                        Environment.OSVersion.Version.ToString(),
-                        Is32BitSystem)).
-                    ToList(),
-                ModLaunchArgumentShell.GetSelectedJvmArgumentOverrides(instance),
-                CType(Setup.Get("LaunchPreferredIpStack"), JvmPreferredIpStack),
-                youngMemory,
-                totalMemory,
-                McLaunchNeedsRetroWrapper(instance),
-                McLaunchJavaSelected.Installation.MajorVersion,
-                ModLaunchArgumentShell.BuildAuthlibInjectorArgument(McLoginLoader.Output.Type, McLoginAuthLoader.Input.BaseUrl, PathPure, includeDetailedHttpError:=False),
-                ModLaunchArgumentShell.GetDebugLog4jConfigurationPath(instance),
-                ModLaunchArgumentShell.GetRendererAgentArgument(instance, PathPure),
-                If(proxyAddress Is Nothing, Nothing, ModLaunchArgumentShell.GetLaunchProxyScheme(proxyAddress)),
-                If(proxyAddress Is Nothing, Nothing, proxyAddress.AbsoluteUri),
-                If(proxyAddress Is Nothing, CType(Nothing, Integer?), proxyAddress.Port),
-                ModLaunchArgumentShell.ShouldUseJavaWrapper(instance),
-                PathPure.TrimEnd("\"),
-                If(ModLaunchArgumentShell.ShouldUseJavaWrapper(instance), ExtractJavaWrapper(), Nothing),
-                ModLaunchArgumentShell.GetMainClassOrThrow(instance)))
-    End Function
-
-    'Game 部分（第二段）
-    Private Function McLaunchArgumentsGameOld(Version As McInstance) As String
-        Dim plan = MinecraftLaunchGameArgumentService.BuildLegacyPlan(
-            New MinecraftLaunchLegacyGameArgumentRequest(
-                Version.JsonObject("minecraftArguments").ToString(),
-                McLaunchNeedsRetroWrapper(Version),
-                Version.Info.HasForge OrElse Version.Info.HasLiteLoader,
-                Version.Info.HasOptiFine))
-        ModLaunchArgumentShell.ApplyGameArgumentPlan(plan, Version)
-        Return plan.Arguments
-    End Function
-    Private Function McLaunchArgumentsGameNew(instance As McInstance) As String
-        Dim plan = MinecraftLaunchGameArgumentService.BuildModernPlan(
-            New MinecraftLaunchModernGameArgumentRequest(
-                MinecraftLaunchJsonArgumentService.ExtractValues(
-                    New MinecraftLaunchJsonArgumentRequest(
-                        ModLaunchArgumentShell.CollectArgumentSectionJsons(instance, "game"),
-                        Environment.OSVersion.Version.ToString(),
-                        Is32BitSystem)).
-                    ToList(),
-                instance.Info.HasForge OrElse instance.Info.HasLiteLoader,
-                instance.Info.HasOptiFine))
-        ModLaunchArgumentShell.ApplyGameArgumentPlan(plan, instance)
-        Return plan.Arguments
-    End Function
-
-    '替换 Arguments
-    Private Function McLaunchArgumentsReplace(instance As McInstance, ByRef loader As LoaderTask(Of String, List(Of McLibToken))) As Dictionary(Of String, String)
-        Dim ArgumentInfo As String = Setup.Get("VersionArgumentInfo", instance:=McInstanceSelected)
-
-        '窗口尺寸参数
-        Dim launcherWindowWidth As Double? = Nothing
-        Dim launcherWindowHeight As Double? = Nothing
-        If Setup.Get("LaunchArgumentWindowType") = 2 Then
-            RunInUiWait(
-                Sub()
-                    launcherWindowWidth = GetPixelSize(FrmMain.PanForm.ActualWidth)
-                    launcherWindowHeight = GetPixelSize(FrmMain.PanForm.ActualHeight)
-                End Sub)
-        End If
-        Dim resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(
-            New MinecraftLaunchResolutionRequest(
-                CInt(Setup.Get("LaunchArgumentWindowType")),
-                launcherWindowWidth,
-                launcherWindowHeight,
-                29.5 * DPI / 96,
-                CInt(Setup.Get("LaunchArgumentWindowWidth")),
-                CInt(Setup.Get("LaunchArgumentWindowHeight")),
-                McInstanceSelected.Info.Drop,
-                McLaunchJavaSelected.Installation.MajorVersion,
-                McLaunchJavaSelected.Installation.Version.Revision,
-                McInstanceSelected.Info.HasOptiFine,
-                McInstanceSelected.Info.HasForge,
-                DPI / 96))
-        If resolutionPlan.LogMessage IsNot Nothing Then McLaunchLog(resolutionPlan.LogMessage)
-
-        '支持库参数
-        Dim LibList As List(Of McLibToken) = McLibListGet(instance, True)
-        loader.Output = LibList
-        Dim retroWrapperPath As String = Nothing
-
-        'RetroWrapper 释放
-        If McLaunchNeedsRetroWrapper(instance) Then
-            Dim WrapperPath As String = McFolderSelected & "libraries\retrowrapper\RetroWrapper.jar"
-            Try
-                WriteFile(WrapperPath, GetResourceStream("Resources/retro-wrapper.jar"))
-                retroWrapperPath = ShortenPath(WrapperPath)
-            Catch ex As Exception
-                Log(ex, "RetroWrapper 释放失败")
-            End Try
-        End If
-
-        Dim classpathPlan = MinecraftLaunchClasspathService.BuildPlan(
-            New MinecraftLaunchClasspathRequest(
-                LibList.Select(Function(library) New MinecraftLaunchClasspathLibrary(
-                    library.Name,
-                    ShortenPath(library.LocalPath),
-                    library.IsNatives)).ToList(),
-                Config.Instance.ClasspathHead(instance.PathInstance).
-                    Split(";"c).
-                    Where(Function(library) Not String.IsNullOrWhiteSpace(library)).
-                    Select(Function(library) ShortenPath(library)).
-                    ToList(),
-                retroWrapperPath,
-                ";"))
-
-        Dim replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(
-            New MinecraftLaunchReplacementValueRequest(
-                ";",
-                ShortenPath(GetNativesFolder()),
-                ShortenPath(McFolderSelected & "libraries"),
-                ShortenPath(McFolderSelected & "libraries"),
-                "PCLCE",
-                VersionCode.ToString(),
-                instance.Name,
-                If(ArgumentInfo = "", Setup.Get("LaunchArgumentInfo"), ArgumentInfo),
-                ShortenPath(Left(McInstanceSelected.PathIndie, McInstanceSelected.PathIndie.Count - 1)),
-                ShortenPath(McFolderSelected & "assets"),
-                "{}",
-                If(McLoginLoader.Output.Name, ""),
-                If(McLoginLoader.Output.Uuid, ""),
-                If(McLoginLoader.Output.AccessToken, ""),
-                "msa",
-                resolutionPlan.Width,
-                resolutionPlan.Height,
-                ShortenPath(McFolderSelected & "assets\virtual\legacy"),
-                McAssetsGetIndexName(instance),
-                classpathPlan.JoinedClasspath))
-
-        Dim GameArguments As New Dictionary(Of String, String)
-        For Each Entry In replacementPlan.Values
-            GameArguments.Add(Entry.Key, Entry.Value)
-        Next
-
-        Return GameArguments
-    End Function
 
 #End Region
 
 #Region "解压 Natives"
 
     Private Sub McLaunchNatives(Loader As LoaderTask(Of List(Of McLibToken), Integer))
-        Dim nativeSyncResult = MinecraftLaunchNativesSyncService.Sync(
-            New MinecraftLaunchNativesSyncRequest(
-                GetNativesFolder(),
-                Loader.Input.
-                    Where(Function(native) native.IsNatives).
-                    Select(Function(native) native.LocalPath).
-                    ToList(),
-                ModeDebug))
-        For Each logMessage In nativeSyncResult.LogMessages
-            McLaunchLog(logMessage)
-        Next
+        ModLaunchNativesShell.SyncNatives(GetNativesFolder(), Loader.Input, ModeDebug, AddressOf McLaunchLog)
     End Sub
     ''' <summary>
     ''' 获取 Natives 文件夹路径，不以 \ 结尾。
     ''' </summary>
     Private Function GetNativesFolder() As String
-        Return MinecraftLaunchNativesDirectoryService.ResolvePath(
-            New MinecraftLaunchNativesDirectoryRequest(
-                McInstanceSelected.PathInstance & McInstanceSelected.Name & "-natives",
-                IsGBKEncoding,
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\bin\natives",
-                OsDrive & "ProgramData\PCL\natives"))
+        Return ModLaunchNativesShell.GetNativesFolder(McInstanceSelected)
     End Function
 
 #End Region
