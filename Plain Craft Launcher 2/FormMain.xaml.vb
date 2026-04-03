@@ -910,47 +910,8 @@ Public Class FormMain
 #Region "实际更改页面框架 UI"
             PageLast = PageCurrent
             PageCurrent = Stack
-            Select Case Stack.Page
-                Case PageType.Launch '启动
-                    PageChangeAnim(FrmLaunchLeft, FrmLaunchRight)
-                Case PageType.Download '下载
-                    If FrmDownloadLeft Is Nothing Then FrmDownloadLeft = New PageDownloadLeft
-                    'PageGet 方法会在未设置 SubType 时指定默认值，并建立相关页面的实例
-                    PageChangeAnim(FrmDownloadLeft, FrmDownloadLeft.PageGet(SubType))
-                Case PageType.Tools '联机
-                    If FrmToolsLeft Is Nothing Then FrmToolsLeft = New PageToolsLeft
-                    PageChangeAnim(FrmToolsLeft, FrmToolsLeft.PageGet(SubType))
-                Case PageType.Setup '设置
-                    If FrmSetupLeft Is Nothing Then FrmSetupLeft = New PageSetupLeft
-                    PageChangeAnim(FrmSetupLeft, FrmSetupLeft.PageGet(SubType))
-                Case PageType.GameLog '实时日志
-                    If FrmLogLeft Is Nothing Then FrmLogLeft = New PageLogLeft
-                    If FrmLogLeft Is Nothing Then FrmLogRight = New PageLogRight
-                    PageChangeAnim(FrmLogLeft, FrmLogRight)
-                Case PageType.InstanceSelect '实例选择
-                    If FrmSelectLeft Is Nothing Then FrmSelectLeft = New PageSelectLeft
-                    If FrmSelectRight Is Nothing Then FrmSelectRight = New PageSelectRight
-                    PageChangeAnim(FrmSelectLeft, FrmSelectRight)
-                Case PageType.TaskManager '任务管理
-                    If FrmSpeedLeft Is Nothing Then FrmSpeedLeft = New PageSpeedLeft
-                    If FrmSpeedRight Is Nothing Then FrmSpeedRight = New PageSpeedRight
-                    PageChangeAnim(FrmSpeedLeft, FrmSpeedRight)
-                Case PageType.InstanceSetup '实例设置
-                    If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
-                    PageChangeAnim(FrmInstanceLeft, FrmInstanceLeft.PageGet(SubType))
-                Case PageType.CompDetail 'Mod 信息
-                    If FrmDownloadCompDetail Is Nothing Then FrmDownloadCompDetail = New PageDownloadCompDetail
-                    PageChangeAnim(New MyPageLeft, FrmDownloadCompDetail)
-                Case PageType.HelpDetail '帮助详情
-                    PageChangeAnim(New MyPageLeft, Stack.Additional(1))
-                Case PageType.VersionSaves '存档管理
-                    If FrmInstanceSavesLeft Is Nothing Then FrmInstanceSavesLeft = New PageInstanceSavesLeft
-                    PageInstanceSavesLeft.CurrentSave = Stack.Additional
-                    PageChangeAnim(FrmInstanceSavesLeft, FrmInstanceSavesLeft.PageGet(SubType))
-                Case PageType.HomePageMarket '主页市场
-                    FrmHomepageMarket = If(FrmHomepageMarket, New PageHomePageMarket)
-                    PageChangeAnim(New MyPageLeft, FrmHomepageMarket)
-            End Select
+            Dim pageTargets = ModMainWindowPageFrameShell.ResolvePageTargets(Stack, SubType)
+            PageChangeAnim(pageTargets.Left, pageTargets.Right)
 #End Region
 
 #Region "设置为最新状态"
