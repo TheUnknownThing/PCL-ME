@@ -10,7 +10,6 @@ internal static class SpikeRunner
 {
     public static ShellSpikeRun BuildShellRun(LauncherFrontendShellPlan plan)
     {
-        var subpageTitle = LauncherFrontendNavigationService.GetSubpageTitle(plan.Navigation.CurrentRoute) ?? "none";
         var sidebarLines = plan.Navigation.SidebarEntries.Count == 0
             ? ["Current route has no sidebar entries."]
             : plan.Navigation.SidebarEntries.Select(entry =>
@@ -24,15 +23,10 @@ internal static class SpikeRunner
             "Frontend Shell Transcript",
             [
                 new SpikeTranscriptSection("Startup Bootstrap", BuildBootstrapLines(plan.StartupPlan)),
-                new SpikeTranscriptSection("Startup Prompts", BuildConsentLines(plan.Consent)),
+                new SpikeTranscriptSection("Frontend Prompt Queue", BuildFrontendPromptLines(plan.Prompts)),
                 new SpikeTranscriptSection(
                     "Current Surface",
-                    [
-                        $"Page: {plan.Navigation.CurrentRoute.Page}",
-                        $"Subpage: {subpageTitle}",
-                        $"Title: {plan.Navigation.CurrentPageTitle}",
-                        $"Back button: {plan.Navigation.ShowsBackButton}"
-                    ]),
+                    BuildCurrentSurfaceLines(plan.Navigation)),
                 new SpikeTranscriptSection(
                     "Top Navigation",
                     plan.Navigation.TopLevelEntries.Select(entry =>
@@ -197,6 +191,42 @@ internal static class SpikeRunner
         }
 
         return lines;
+    }
+
+    private static IReadOnlyList<string> BuildFrontendPromptLines(IReadOnlyList<LauncherFrontendPrompt> prompts)
+    {
+        if (prompts.Count == 0)
+        {
+            return ["No frontend prompts are queued."];
+        }
+
+        var lines = new List<string>();
+        foreach (var prompt in prompts)
+        {
+            lines.Add($"Prompt: {prompt.Title}");
+            lines.Add($"Source: {prompt.Source}");
+            lines.Add($"Severity: {prompt.Severity}");
+            lines.Add($"Message: {prompt.Message.ReplaceLineEndings(" ")}");
+            lines.Add($"Options: {string.Join(" | ", prompt.Options.Select(option => option.Label))}");
+        }
+
+        return lines;
+    }
+
+    private static IReadOnlyList<string> BuildCurrentSurfaceLines(LauncherFrontendNavigationView navigation)
+    {
+        return
+        [
+            $"Page: {navigation.CurrentPage.Route.Page}",
+            $"Kind: {navigation.CurrentPage.Kind}",
+            $"Title: {navigation.CurrentPage.Title}",
+            $"Summary: {navigation.CurrentPage.Summary}",
+            $"Sidebar group: {navigation.CurrentPage.SidebarGroupTitle ?? "none"}",
+            $"Sidebar item: {navigation.CurrentPage.SidebarItemTitle ?? "none"}",
+            $"Breadcrumbs: {string.Join(" > ", navigation.Breadcrumbs.Select(crumb => crumb.Title))}",
+            $"Back target: {navigation.BackTarget?.Label ?? "none"} ({navigation.BackTarget?.Kind.ToString() ?? "none"})",
+            $"Back button: {navigation.ShowsBackButton}"
+        ];
     }
 
     private static IReadOnlyList<string> BuildJavaSelectionLines(

@@ -16,10 +16,15 @@ internal static class SpikeExecutor
         var artifacts = new List<SpikeExecutionArtifact>();
         var writtenFiles = new List<string>();
 
-        var promptsPath = Path.Combine(workspaceRoot, "_artifacts", "startup-prompts.txt");
-        WriteTextFile(promptsPath, BuildConsentText(plan.Consent));
-        artifacts.Add(new SpikeExecutionArtifact("Startup prompts", promptsPath));
+        var promptsPath = Path.Combine(workspaceRoot, "_artifacts", "frontend-prompts.txt");
+        WriteTextFile(promptsPath, BuildFrontendPromptText(plan.Prompts));
+        artifacts.Add(new SpikeExecutionArtifact("Frontend prompts", promptsPath));
         writtenFiles.Add(promptsPath);
+
+        var surfacePath = Path.Combine(workspaceRoot, "_artifacts", "page-surface.txt");
+        WriteTextFile(surfacePath, BuildPageSurfaceText(plan.Navigation));
+        artifacts.Add(new SpikeExecutionArtifact("Page surface", surfacePath));
+        writtenFiles.Add(surfacePath);
 
         var navigationPath = Path.Combine(workspaceRoot, "_artifacts", "navigation-view.txt");
         WriteTextFile(navigationPath, BuildNavigationViewText(plan.Navigation));
@@ -46,7 +51,8 @@ internal static class SpikeExecutor
                         [
                             $"Workspace root: {workspaceRoot}",
                             $"Current page: {plan.Navigation.CurrentRoute.Page}",
-                            $"Current title: {plan.Navigation.CurrentPageTitle}"
+                            $"Current title: {plan.Navigation.CurrentPageTitle}",
+                            $"Breadcrumbs: {string.Join(" > ", plan.Navigation.Breadcrumbs.Select(crumb => crumb.Title))}"
                         ]),
                     new SpikeTranscriptSection(
                         "Artifacts",
@@ -592,18 +598,57 @@ internal static class SpikeExecutor
 
     private static string BuildNavigationViewText(LauncherFrontendNavigationView navigation)
     {
-        var subpageTitle = LauncherFrontendNavigationService.GetSubpageTitle(navigation.CurrentRoute) ?? "none";
         return string.Join(
             Environment.NewLine,
             [
                 $"CurrentPage={navigation.CurrentRoute.Page}",
-                $"CurrentSubpage={subpageTitle}",
                 $"CurrentTitle={navigation.CurrentPageTitle}",
+                $"CurrentKind={navigation.CurrentPage.Kind}",
+                $"CurrentSummary={navigation.CurrentPage.Summary}",
+                $"SidebarGroup={navigation.CurrentPage.SidebarGroupTitle ?? "none"}",
+                $"SidebarItem={navigation.CurrentPage.SidebarItemTitle ?? "none"}",
+                $"Breadcrumbs={string.Join(" > ", navigation.Breadcrumbs.Select(crumb => crumb.Title))}",
+                $"BackTarget={navigation.BackTarget?.Label ?? "none"}",
+                $"BackTargetKind={navigation.BackTarget?.Kind.ToString() ?? "none"}",
                 $"ShowsBackButton={navigation.ShowsBackButton}",
                 $"TopLevel={string.Join(" | ", navigation.TopLevelEntries.Select(entry => $"{entry.Title}:{entry.IsSelected}"))}",
                 $"Sidebar={string.Join(" | ", navigation.SidebarEntries.Select(entry => $"{entry.Title}:{entry.IsSelected}"))}",
                 $"Utilities={string.Join(" | ", navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(entry => $"{entry.Title}:{entry.IsSelected}"))}"
             ]);
+    }
+
+    private static string BuildPageSurfaceText(LauncherFrontendNavigationView navigation)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"Page={navigation.CurrentPage.Route.Page}",
+                $"SubpageTitle={navigation.CurrentPage.SidebarItemTitle ?? "none"}",
+                $"Kind={navigation.CurrentPage.Kind}",
+                $"Title={navigation.CurrentPage.Title}",
+                $"Summary={navigation.CurrentPage.Summary}",
+                $"SidebarGroupTitle={navigation.CurrentPage.SidebarGroupTitle ?? "none"}",
+                $"SidebarItemTitle={navigation.CurrentPage.SidebarItemTitle ?? "none"}",
+                $"SidebarItemSummary={navigation.CurrentPage.SidebarItemSummary ?? "none"}",
+                $"HasSidebar={navigation.CurrentPage.HasSidebar}"
+            ]);
+    }
+
+    private static string BuildFrontendPromptText(IReadOnlyList<LauncherFrontendPrompt> prompts)
+    {
+        var builder = new StringBuilder();
+        foreach (var prompt in prompts)
+        {
+            builder.AppendLine(prompt.Id);
+            builder.AppendLine(prompt.Source.ToString());
+            builder.AppendLine(prompt.Title);
+            builder.AppendLine(prompt.Message.ReplaceLineEndings(" "));
+            builder.AppendLine(prompt.Severity.ToString());
+            builder.AppendLine(string.Join(" | ", prompt.Options.Select(option => option.Label)));
+            builder.AppendLine();
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     private static string BuildNavigationCatalogText(LauncherFrontendNavigationCatalog catalog)

@@ -16,6 +16,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - launch scenarios can now also model launcher-style batch-script export, including the export target, abort hint, and shell reveal behavior
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
 - the shell can now also round-trip a backend-driven frontend shell snapshot that includes startup prompts, top navigation, sidebar state, and utility surfaces
+- the shell now also exposes a frontend prompt queue and a richer current-page surface contract with breadcrumbs and back-target semantics
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
 
@@ -70,6 +71,7 @@ Useful reviewer commands:
 ## Execute mode outputs
 
 - shell execution writes startup prompt, navigation view, and navigation catalog artifacts so a replacement frontend can inspect the portable shell seam directly
+- shell execution now also writes frontend prompt queue and page-surface artifacts so route composition can be validated without WPF state
 - startup execution creates bootstrap directories, deletes seeded legacy log placeholders, and writes prompt/config artifacts
 - launch execution can materialize `launcher_profiles.json`, `options.txt`, a generated launch batch file, and session summary artifacts
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
