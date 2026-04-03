@@ -488,13 +488,7 @@ Public Class FormMain
         If e.ChangedButton = MouseButton.XButton1 OrElse e.ChangedButton = MouseButton.XButton2 Then TriggerPageBack()
     End Sub
     Private Sub TriggerPageBack()
-        If PageCurrent = PageType.Download AndAlso PageCurrentSub = PageSubType.DownloadInstall AndAlso FrmDownloadInstall.IsInSelectPage Then
-            FrmDownloadInstall.ExitSelectPage()
-        ElseIf PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.VersionInstall AndAlso FrmInstanceInstall.IsInSelectPage Then
-            FrmInstanceInstall.ExitSelectPage()
-        Else
-            PageBack()
-        End If
+        ModMainWindowNavigationShell.TriggerPageBack(PageCurrent, PageCurrentSub, AddressOf PageBack)
     End Sub
 
     '切回窗口
@@ -811,18 +805,13 @@ Public Class FormMain
     ''' 通过点击导航栏改变页面。
     ''' </summary>
     Private Sub BtnTitleSelect_Click(sender As MyRadioButton, raiseByMouse As Boolean) Handles BtnTitleSelect0.Check, BtnTitleSelect1.Check, BtnTitleSelect2.Check, BtnTitleSelect3.Check
-        If IsChangingPage Then Return
-        PageChangeActual(Val(sender.Tag))
+        ModMainWindowNavigationShell.HandleTitleSelection(IsChangingPage, sender.Tag, AddressOf PageChangeActual)
     End Sub
     ''' <summary>
     ''' 通过点击返回按钮或手动触发返回来改变页面。
     ''' </summary>
     Public Sub PageBack() Handles BtnTitleInner.Click
-        If PageStack.Any() Then
-            PageChangeActual(PageStack(0))
-        Else
-            PageChange(PageType.Launch)
-        End If
+        ModMainWindowNavigationShell.HandlePageBack(PageStack, AddressOf PageChangeActual, Sub() PageChange(PageType.Launch))
     End Sub
 
     '实际处理页面切换
