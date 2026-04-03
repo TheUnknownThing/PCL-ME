@@ -1139,100 +1139,27 @@ NextInner:
     End Sub
 
     Private Function BuildWatcherWorkflowRequest() As MinecraftLaunchWatcherWorkflowRequest
-        Dim allocatedRam = PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit)
-        Return New MinecraftLaunchWatcherWorkflowRequest(
-            New MinecraftLaunchSessionLogRequest(
-                VersionBaseName,
-                VersionCode,
-                McInstanceSelected.Info.VanillaName,
-                If(McInstanceSelected.Info.Vanilla?.ToString(), ""),
-                McInstanceSelected.Info.Drop,
-                McInstanceSelected.Info.Reliable,
-                McAssetsGetIndexName(McInstanceSelected),
-                McInstanceSelected.InheritInstanceName,
-                allocatedRam,
-                McFolderSelected,
-                McInstanceSelected.PathInstance,
-                McInstanceSelected.PathIndie = McInstanceSelected.PathInstance,
-                McInstanceSelected.IsHmclFormatJson,
-                If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString(), Nothing),
-                GetNativesFolder(),
-                McLoginLoader.Output.Name,
-                McLoginLoader.Output.AccessToken,
-                McLoginLoader.Output.ClientToken,
-                McLoginLoader.Output.Uuid,
-                McLoginLoader.Output.Type),
-            New MinecraftLaunchWatcherRequest(
-                Setup.Get("VersionArgumentTitle", instance:=McInstanceSelected),
-                Setup.Get("VersionArgumentTitleEmpty", instance:=McInstanceSelected),
-                Setup.Get("LaunchArgumentTitle"),
-                McLaunchJavaSelected.Installation.JavaFolder,
-                File.Exists(McLaunchJavaSelected.Installation.JavaFolder & "\jstack.exe")),
-            CurrentLaunchOptions.IsTest)
+        Return ModLaunchSessionArgumentShell.BuildWatcherWorkflowRequest(
+            McInstanceSelected,
+            McLaunchJavaSelected,
+            McLoginLoader.Output,
+            CurrentLaunchOptions.IsTest,
+            AddressOf GetNativesFolder)
     End Function
 
     ''' <summary>
     ''' 对替换标记进行处理。会对替换内容使用 EscapeHandler 进行转义。
     ''' </summary>
     Private Function ArgumentReplace(text As String, replaceTime As Boolean, Optional escapeHandler As Func(Of String, String) = Nothing) As String
-        '预处理
-        If text Is Nothing Then Return Nothing
-        Dim replacer =
-        Function(s As String) As String
-            If s Is Nothing Then Return ""
-            If EscapeHandler Is Nothing Then Return s
-            If s.Contains(":\") Then s = ShortenPath(s)
-            Return EscapeHandler(s)
-        End Function
-        '基础
-        text = text.Replace("{pcl_version}", replacer(VersionBaseName))
-        text = text.Replace("{pcl_version_code}", replacer(VersionCode))
-        text = text.Replace("{pcl_version_branch}", replacer(VersionBranchName))
-        text = text.Replace("{identify}", replacer(LauncherIdentity.LauncherId))
-        text = text.Replace("{path}", replacer(Basics.CurrentDirectory))
-        text = text.Replace("{path_with_name}", replacer(Basics.ExecutablePath))
-        text = text.Replace("{path_temp}", replacer(PathTemp))
-        '时间
-        If ReplaceTime Then '在窗口标题中，时间会被后续动态替换，所以此时不应该替换
-            text = text.Replace("{date}", replacer(Date.Now.ToString("yyyy'/'M'/'d")))
-            text = text.Replace("{time}", replacer(Date.Now.ToString("HH':'mm':'ss")))
-        End If
-        'Minecraft
-        text = text.Replace("{java}", replacer(McLaunchJavaSelected?.Installation.JavaFolder))
-        text = text.Replace("{minecraft}", replacer(McFolderSelected))
-        If McInstanceSelected?.IsLoaded Then
-            text = text.Replace("{version_path}", replacer(McInstanceSelected.PathInstance)) : text = text.Replace("{verpath}", replacer(McInstanceSelected.PathInstance))
-            text = text.Replace("{version_indie}", replacer(McInstanceSelected.PathIndie)) : text = text.Replace("{verindie}", replacer(McInstanceSelected.PathIndie))
-            text = text.Replace("{name}", replacer(McInstanceSelected.Name))
-            If {"unknown", "old", "pending"}.Contains(McInstanceSelected.Info.VanillaName.ToLower) Then
-                text = text.Replace("{version}", replacer(McInstanceSelected.Name))
-            Else
-                text = text.Replace("{version}", replacer(McInstanceSelected.Info.VanillaName))
-            End If
-        Else
-            text = text.Replace("{version_path}", replacer(Nothing)) : text = text.Replace("{verpath}", replacer(Nothing))
-            text = text.Replace("{version_indie}", replacer(Nothing)) : text = text.Replace("{verindie}", replacer(Nothing))
-            text = text.Replace("{name}", replacer(Nothing))
-            text = text.Replace("{version}", replacer(Nothing))
-        End If
-        '登录信息
-        If McLoginLoader.State = LoadState.Finished Then
-            text = text.Replace("{user}", replacer(McLoginLoader.Output.Name))
-            text = text.Replace("{uuid}", replacer(McLoginLoader.Output.Uuid?.ToLower))
-            Select Case McLoginLoader.Input.Type
-                Case McLoginType.Legacy
-                    text = text.Replace("{login}", replacer("离线"))
-                Case McLoginType.Ms
-                    text = text.Replace("{login}", replacer("正版"))
-                Case McLoginType.Auth
-                    text = text.Replace("{login}", replacer("Authlib-Injector"))
-            End Select
-        Else
-            text = text.Replace("{user}", replacer(Nothing))
-            text = text.Replace("{uuid}", replacer(Nothing))
-            text = text.Replace("{login}", replacer(Nothing))
-        End If
-        Return text
+        Return ModLaunchSessionArgumentShell.ReplaceArgumentTokens(
+            text,
+            replaceTime,
+            McLaunchJavaSelected,
+            McInstanceSelected,
+            McLoginLoader.State,
+            McLoginLoader.Input,
+            McLoginLoader.Output,
+            escapeHandler)
     End Function
 
 #End Region
