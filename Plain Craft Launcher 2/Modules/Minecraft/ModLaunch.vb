@@ -732,79 +732,22 @@ NextInner:
     ''' 释放 Java Wrapper 并返回完整文件路径。
     ''' </summary>
     Public Function ExtractJavaWrapper() As String
-        Dim WrapperPath As String = PathPure & "JavaWrapper.jar"
-        Log("[Java] 选定的 Java Wrapper 路径：" & WrapperPath)
-        SyncLock ExtractJavaWrapperLock '避免 OptiFine 和 Forge 安装时同时释放 Java Wrapper 导致冲突
-            Try
-                WriteJavaWrapper(WrapperPath)
-            Catch ex As Exception
-                If File.Exists(WrapperPath) Then
-                    '因为未知原因 Java Wrapper 可能变为只读文件（#4243）
-                    Log(ex, "Java Wrapper 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
-                    Try
-                        File.Delete(WrapperPath)
-                        WriteJavaWrapper(WrapperPath)
-                    Catch ex2 As Exception
-                        Log(ex2, "Java Wrapper 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
-                        WrapperPath = PathPure & "JavaWrapper2.jar"
-                        Try
-                            WriteJavaWrapper(WrapperPath)
-                        Catch ex3 As Exception
-                            Throw New FileNotFoundException("释放 Java Wrapper 最终尝试失败", ex3)
-                        End Try
-                    End Try
-                Else
-                    Throw New FileNotFoundException("释放 Java Wrapper 失败", ex)
-                End If
-            End Try
-        End SyncLock
-        Return WrapperPath
+        Return ModLaunchArgumentShell.ExtractJavaWrapperShell(PathPure)
     End Function
-    Private ExtractJavaWrapperLock As New Object
-    Private Sub WriteJavaWrapper(Path As String)
-        WriteFile(Path, GetResourceStream("Resources/java-wrapper.jar"))
-    End Sub
 
     ''' <summary>
     ''' 释放 linkd 并返回完整文件路径。
     ''' </summary>
     Public Function ExtractLinkD() As String
-        Dim LinkDPath As String = PathPure & "linkd.exe"
-        SyncLock ExtractLinkDLock '避免 OptiFine 和 Forge 安装时同时释放 Java Wrapper 导致冲突
-            Try
-                WriteLinkD(LinkDPath)
-            Catch ex As Exception
-                If File.Exists(LinkDPath) Then
-                    Log(ex, "linkd 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
-                    Try
-                        File.Delete(LinkDPath)
-                        WriteLinkD(LinkDPath)
-                    Catch ex2 As Exception
-                        Throw New FileNotFoundException("释放 linkd 失败", ex2)
-                    End Try
-                Else
-                    Throw New FileNotFoundException("释放 linkd 失败", ex)
-                End If
-            End Try
-        End SyncLock
-        Return LinkDPath
+        Return ModLaunchArgumentShell.ExtractLinkDShell(PathPure)
     End Function
-    Private ExtractLinkDLock As New Object
-    Private Sub WriteLinkD(Path As String)
-        WriteFile(Path, GetResourceStream("Resources/linkd.exe"))
-    End Sub
 
     ''' <summary>
     ''' 判断是否使用 RetroWrapper。
     ''' TODO: 在更换为 Drop 比较版本号后可能不准确，需要测试确认。
     ''' </summary>
     Private Function McLaunchNeedsRetroWrapper(Mc As McInstance) As Boolean
-        Return MinecraftLaunchRetroWrapperService.ShouldUse(
-            New MinecraftLaunchRetroWrapperRequest(
-                Mc.ReleaseTime,
-                Mc.Info.Drop,
-                Setup.Get("LaunchAdvanceDisableRW"),
-                Setup.Get("VersionAdvanceDisableRW", Mc)))
+        Return ModLaunchArgumentShell.ShouldUseRetroWrapper(Mc)
     End Function
 
 
@@ -863,55 +806,55 @@ NextInner:
     Private Function McLaunchArgumentsJvmOld(instance As McInstance) As String
         Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024)
         Dim youngMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected, Not McLaunchJavaSelected.Installation.Is64Bit) * 1024 * 0.15)
-        Dim proxyAddress = TryGetLaunchProxyAddress(instance)
+        Dim proxyAddress = ModLaunchArgumentShell.TryGetLaunchProxyAddress(instance)
 
         Return MinecraftLaunchJvmArgumentService.BuildLegacyArguments(
             New MinecraftLaunchLegacyJvmArgumentRequest(
-                GetSelectedJvmArgumentOverrides(),
+                ModLaunchArgumentShell.GetSelectedJvmArgumentOverrides(instance),
                 youngMemory,
                 totalMemory,
                 GetNativesFolder(),
                 McLaunchJavaSelected.Installation.MajorVersion,
-                BuildAuthlibInjectorArgument(includeDetailedHttpError:=True),
-                GetDebugLog4jConfigurationPath(instance),
-                GetRendererAgentArgument(instance),
-                If(proxyAddress Is Nothing, Nothing, GetLaunchProxyScheme(proxyAddress)),
+                ModLaunchArgumentShell.BuildAuthlibInjectorArgument(McLoginLoader.Output.Type, McLoginAuthLoader.Input.BaseUrl, PathPure, includeDetailedHttpError:=True),
+                ModLaunchArgumentShell.GetDebugLog4jConfigurationPath(instance),
+                ModLaunchArgumentShell.GetRendererAgentArgument(instance, PathPure),
+                If(proxyAddress Is Nothing, Nothing, ModLaunchArgumentShell.GetLaunchProxyScheme(proxyAddress)),
                 If(proxyAddress Is Nothing, Nothing, proxyAddress.AbsoluteUri),
                 If(proxyAddress Is Nothing, CType(Nothing, Integer?), proxyAddress.Port),
-                ShouldUseJavaWrapper(),
+                ModLaunchArgumentShell.ShouldUseJavaWrapper(instance),
                 PathPure.TrimEnd("\"),
-                If(ShouldUseJavaWrapper(), ExtractJavaWrapper(), Nothing),
-                GetMainClassOrThrow(instance)))
+                If(ModLaunchArgumentShell.ShouldUseJavaWrapper(instance), ExtractJavaWrapper(), Nothing),
+                ModLaunchArgumentShell.GetMainClassOrThrow(instance)))
     End Function
     Private Function McLaunchArgumentsJvmNew(instance As McInstance) As String
         Dim totalMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024)
         Dim youngMemory = Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15)
-        Dim proxyAddress = TryGetLaunchProxyAddress(instance)
+        Dim proxyAddress = ModLaunchArgumentShell.TryGetLaunchProxyAddress(instance)
 
         Return MinecraftLaunchJvmArgumentService.BuildModernArguments(
             New MinecraftLaunchModernJvmArgumentRequest(
                 MinecraftLaunchJsonArgumentService.ExtractValues(
                     New MinecraftLaunchJsonArgumentRequest(
-                        CollectArgumentSectionJsons(instance, "jvm"),
+                        ModLaunchArgumentShell.CollectArgumentSectionJsons(instance, "jvm"),
                         Environment.OSVersion.Version.ToString(),
                         Is32BitSystem)).
                     ToList(),
-                GetSelectedJvmArgumentOverrides(),
+                ModLaunchArgumentShell.GetSelectedJvmArgumentOverrides(instance),
                 CType(Setup.Get("LaunchPreferredIpStack"), JvmPreferredIpStack),
                 youngMemory,
                 totalMemory,
                 McLaunchNeedsRetroWrapper(instance),
                 McLaunchJavaSelected.Installation.MajorVersion,
-                BuildAuthlibInjectorArgument(includeDetailedHttpError:=False),
-                GetDebugLog4jConfigurationPath(instance),
-                GetRendererAgentArgument(instance),
-                If(proxyAddress Is Nothing, Nothing, GetLaunchProxyScheme(proxyAddress)),
+                ModLaunchArgumentShell.BuildAuthlibInjectorArgument(McLoginLoader.Output.Type, McLoginAuthLoader.Input.BaseUrl, PathPure, includeDetailedHttpError:=False),
+                ModLaunchArgumentShell.GetDebugLog4jConfigurationPath(instance),
+                ModLaunchArgumentShell.GetRendererAgentArgument(instance, PathPure),
+                If(proxyAddress Is Nothing, Nothing, ModLaunchArgumentShell.GetLaunchProxyScheme(proxyAddress)),
                 If(proxyAddress Is Nothing, Nothing, proxyAddress.AbsoluteUri),
                 If(proxyAddress Is Nothing, CType(Nothing, Integer?), proxyAddress.Port),
-                ShouldUseJavaWrapper(),
+                ModLaunchArgumentShell.ShouldUseJavaWrapper(instance),
                 PathPure.TrimEnd("\"),
-                If(ShouldUseJavaWrapper(), ExtractJavaWrapper(), Nothing),
-                GetMainClassOrThrow(instance)))
+                If(ModLaunchArgumentShell.ShouldUseJavaWrapper(instance), ExtractJavaWrapper(), Nothing),
+                ModLaunchArgumentShell.GetMainClassOrThrow(instance)))
     End Function
 
     'Game 部分（第二段）
@@ -922,7 +865,7 @@ NextInner:
                 McLaunchNeedsRetroWrapper(Version),
                 Version.Info.HasForge OrElse Version.Info.HasLiteLoader,
                 Version.Info.HasOptiFine))
-        ApplyGameArgumentPlan(plan, Version)
+        ModLaunchArgumentShell.ApplyGameArgumentPlan(plan, Version)
         Return plan.Arguments
     End Function
     Private Function McLaunchArgumentsGameNew(instance As McInstance) As String
@@ -930,13 +873,13 @@ NextInner:
             New MinecraftLaunchModernGameArgumentRequest(
                 MinecraftLaunchJsonArgumentService.ExtractValues(
                     New MinecraftLaunchJsonArgumentRequest(
-                        CollectArgumentSectionJsons(instance, "game"),
+                        ModLaunchArgumentShell.CollectArgumentSectionJsons(instance, "game"),
                         Environment.OSVersion.Version.ToString(),
                         Is32BitSystem)).
                     ToList(),
                 instance.Info.HasForge OrElse instance.Info.HasLiteLoader,
                 instance.Info.HasOptiFine))
-        ApplyGameArgumentPlan(plan, instance)
+        ModLaunchArgumentShell.ApplyGameArgumentPlan(plan, instance)
         Return plan.Arguments
     End Function
 
@@ -1030,111 +973,6 @@ NextInner:
 
         Return GameArguments
     End Function
-
-    Private Function CollectArgumentSectionJsons(instance As McInstance, sectionName As String) As List(Of String)
-        Dim sections As New List(Of String)
-        Dim currentInstance As McInstance = instance
-        Do
-            Dim argumentsToken = currentInstance.JsonObject("arguments")
-            Dim sectionToken = If(argumentsToken Is Nothing, Nothing, argumentsToken(sectionName))
-            If sectionToken IsNot Nothing Then sections.Add(sectionToken.ToString())
-            If currentInstance.InheritInstanceName = "" Then Exit Do
-            currentInstance = New McInstance(currentInstance.InheritInstanceName)
-        Loop
-        Return sections
-    End Function
-
-    Private Function GetSelectedJvmArgumentOverrides() As String
-        Dim argumentJvm As String = Setup.Get("VersionAdvanceJvm", instance:=McInstanceSelected)
-        If argumentJvm = "" Then argumentJvm = Setup.Get("LaunchAdvanceJvm")
-        Return argumentJvm
-    End Function
-
-    Private Function BuildAuthlibInjectorArgument(includeDetailedHttpError As Boolean) As String
-        If McLoginLoader.Output.Type <> "Auth" Then Return Nothing
-
-        Dim server As String = McLoginAuthLoader.Input.BaseUrl.Replace("/authserver", "")
-        Try
-            Dim response As String = NetGetCodeByRequestRetry(server, Encoding.UTF8)
-            Return "-javaagent:""" & PathPure & "authlib-injector.jar""=" & server &
-                   " -Dauthlibinjector.side=client" &
-                   " -Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(response))
-        Catch ex As HttpWebException When includeDetailedHttpError
-            Throw New Exception($"无法连接到第三方登录服务器（{If(server, Nothing)}）{vbCrLf}详细信息：" & ex.InnerHttpException.WebResponse, ex)
-        Catch ex As Exception
-            Throw New Exception($"无法连接到第三方登录服务器（{If(server, Nothing)}）", ex)
-        End Try
-    End Function
-
-    Private Function GetDebugLog4jConfigurationPath(instance As McInstance) As String
-        If Not Config.Instance.UseDebugLof4j2Config.Item(instance.PathIndie) Then Return Nothing
-        If McInstanceSelected.ReleaseTime.Year >= 2017 Then
-            Return LaunchEnvUtils.ExtractDebugLog4j2Config()
-        Else
-            Return LaunchEnvUtils.ExtractLegacyDebugLog4j2Config()
-        End If
-    End Function
-
-    Private Function GetRendererAgentArgument(instance As McInstance) As String
-        Dim renderer As Integer
-        If Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) <> 0 Then
-            renderer = Setup.Get("VersionAdvanceRenderer", instance:=McInstanceSelected) - 1
-        Else
-            renderer = Setup.Get("LaunchAdvanceRenderer")
-        End If
-        If renderer = 0 Then Return Nothing
-
-        Dim mesaLoaderWindowsVersion = "25.3.5"
-        Dim mesaLoaderWindowsTargetFile = PathPure & "\mesa-loader-windows\" & mesaLoaderWindowsVersion & "\Loader.jar"
-        Return "-javaagent:""" & mesaLoaderWindowsTargetFile & """=" & If(renderer = 1, "llvmpipe", If(renderer = 2, "d3d12", "zink"))
-    End Function
-
-    Private Function TryGetLaunchProxyAddress(instance As McInstance) As Uri
-        If Not Config.Instance.UseProxy.Item(instance.PathIndie) OrElse
-           Not Config.Network.HttpProxy.Type.Equals(2) OrElse
-           String.IsNullOrWhiteSpace(Config.Network.HttpProxy.CustomAddress) Then
-            Return Nothing
-        End If
-
-        Try
-            Return New Uri(Setup.Get("SystemHttpProxy"))
-        Catch ex As Exception
-            Log(ex, "添加代理信息到游戏失败，放弃加入", LogLevel.Hint)
-            Return Nothing
-        End Try
-    End Function
-
-    Private Function GetLaunchProxyScheme(proxyAddress As Uri) As String
-        If proxyAddress Is Nothing Then Return Nothing
-        Return If(proxyAddress.Scheme.StartsWith("https", StringComparison.OrdinalIgnoreCase), "https", "http")
-    End Function
-
-    Private Function ShouldUseJavaWrapper() As Boolean
-        Return IsUtf8CodePage() AndAlso
-               Not Setup.Get("LaunchAdvanceDisableJLW") AndAlso
-               Not Setup.Get("VersionAdvanceDisableJLW", McInstanceSelected)
-    End Function
-
-    Private Function GetMainClassOrThrow(instance As McInstance) As String
-        If instance.JsonObject("mainClass") Is Nothing Then
-            Throw New Exception("实例 JSON 中没有 mainClass 项！")
-        End If
-        Return instance.JsonObject("mainClass").ToString()
-    End Function
-
-    Private Sub ApplyGameArgumentPlan(plan As MinecraftLaunchGameArgumentPlan, instance As McInstance)
-        If plan Is Nothing Then Throw New ArgumentNullException(NameOf(plan))
-        For Each logMessage In plan.LogMessages
-            Log(logMessage)
-        Next
-        If plan.ShouldRewriteOptiFineTweakerInJson Then
-            Try
-                WriteFile(instance.PathInstance & instance.Name & ".json", ReadFile(instance.PathInstance & instance.Name & ".json").Replace("optifine.OptiFineTweaker", "optifine.OptiFineForgeTweaker"))
-            Catch ex As Exception
-                Log(ex, "替换 OptiFineForge TweakClass 失败")
-            End Try
-        End If
-    End Sub
 
 #End Region
 
