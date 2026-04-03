@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Management;
 using PCL.Core.App;
 using PCL.Core.App.Essentials;
 using PCL.Core.Logging;
@@ -9,7 +8,7 @@ namespace PCL.Core.Utils.Secret;
 [Obsolete("Use PCL.Core.Utils.Secret.Identify instead")]
 public static class IdentifyOld
 {
-    private static readonly Lazy<string?> _LazyCpuId = new(_GetCpuId);
+    private static readonly Lazy<string?> _LazyCpuId = new(WindowsLegacyCpuIdProvider.GetCpuId);
 
     private static readonly Lazy<string> _LazyRawCode = new(() => LauncherLegacyIdentityService.DeriveRawCode(CpuId));
 
@@ -26,52 +25,6 @@ public static class IdentifyOld
     public static string LaunchId => _LaunchId.Value;
     [Obsolete]
     public static string EncryptKey => _LazyEncryptKey.Value;
-
-    private static string? _GetCpuId()
-    {
-        try
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT ProcessorId FROM Win32_Processor");
-            using var collection = searcher.Get();
-
-            foreach (var item in collection)
-            {
-                try
-                {
-                    return item["ProcessorId"]?.ToString();
-                }
-                catch (ManagementException ex)
-                {
-                    LogWrapper.Warn("Identify", $"WMI属性读取失败: {ex.Message}");
-                }
-                finally
-                {
-                    item.Dispose();
-                }
-            }
-
-            LogWrapper.Warn("Identify", "未找到有效的CPU ID");
-            return null;
-        }
-        catch (ManagementException ex)
-        {
-            LogWrapper.Error(ex, "Identify", $"WMI查询失败");
-        }
-        catch (System.Runtime.InteropServices.COMException ex)
-        {
-            LogWrapper.Error(ex, "Identify", $"COM异常，请确保WMI服务正在运行");
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            LogWrapper.Error(ex, "Identify", "访问被拒绝，请以管理员权限运行");
-        }
-        catch (Exception ex)
-        {
-            LogWrapper.Error(ex, "Identify", $"意外的系统异常");
-        }
-
-        return null;
-    }
 
     public static string GetMachineId(string randomId)
     {

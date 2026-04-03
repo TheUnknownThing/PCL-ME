@@ -14,21 +14,12 @@ internal static class LegacySecretKeyProvider
 
     private static string? ResolveLegacyDecryptKey()
     {
-        var environmentKey = TryReadEnvironmentOverride();
-        if (!string.IsNullOrWhiteSpace(environmentKey))
-        {
-            return environmentKey;
-        }
-
-        if (!OperatingSystem.IsWindows())
-        {
-            return null;
-        }
-
         try
         {
-            var legacyCpuId = TryReadLegacyDeviceSeed();
-            return LauncherLegacyIdentityService.DeriveEncryptionKey(legacyCpuId);
+            var plan = LauncherLegacySecretResolutionService.Resolve(new LauncherLegacySecretResolutionRequest(
+                ExplicitLegacyDecryptKey: TryReadEnvironmentOverride(),
+                LegacyDeviceSeed: TryReadLegacyDeviceSeed()));
+            return plan.DecryptKey;
         }
         catch (Exception ex)
         {
@@ -39,11 +30,14 @@ internal static class LegacySecretKeyProvider
 
     private static string? TryReadLegacyDeviceSeed()
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
         try
         {
-#pragma warning disable CS0612,CS0618 // Type or member is obsolete
-            return IdentifyOld.CpuId;
-#pragma warning restore CS0612,CS0618 // Type or member is obsolete
+            return WindowsLegacyCpuIdProvider.GetCpuId();
         }
         catch (Exception ex)
         {

@@ -17,16 +17,12 @@ public static class LauncherIdentity
     private static string ResolveLauncherId()
     {
         var persistedPath = GetPersistedLauncherIdPath();
-        var plan = LauncherIdentityResolutionService.Resolve(new LauncherIdentityResolutionRequest(
+        var plan = LauncherIdentityRuntimeService.Resolve(new LauncherIdentityRuntimeRequest(
             ExplicitLauncherId: EnvironmentInterop.GetSecret("LAUNCHER_ID", readEnvDebugOnly: true),
             PersistedLauncherId: TryReadPersistedLauncherId(persistedPath),
-            DeviceLauncherId: TryGetWindowsLauncherId(),
-            GeneratedLauncherId: Guid.NewGuid().ToString("N")));
-
-        if (plan.ShouldPersist)
-        {
-            PersistLauncherId(persistedPath, plan.LauncherId);
-        }
+            ReadDeviceLauncherId: TryGetWindowsLauncherId,
+            GenerateLauncherId: () => Guid.NewGuid().ToString("N"),
+            PersistLauncherId: launcherId => PersistLauncherId(persistedPath, launcherId)));
 
         return plan.LauncherId;
     }
