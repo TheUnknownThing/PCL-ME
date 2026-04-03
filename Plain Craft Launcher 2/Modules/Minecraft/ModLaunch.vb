@@ -764,22 +764,15 @@ Retry:
         Dim promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(responseBody)
         McLaunchLog(promptPlan.LogMessage)
 
-        Dim promptResult = ModLaunchPromptShell.RunMicrosoftDeviceCodeLoginPrompt(promptPlan)
-        If promptResult.Kind = MicrosoftDeviceCodePromptResultKind.PasswordLoginRequired Then
-            Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetPasswordLoginPrompt())
-            If decision.Decision = MinecraftLaunchAccountDecisionKind.Retry Then
-                GoTo Retry
-            Else
-                Throw New Exception("$$")
-            End If
-        ElseIf promptResult.Kind = MicrosoftDeviceCodePromptResultKind.Failed Then
-            Throw promptResult.Error
-        Else
-            Return New MicrosoftOAuthStepResult With {
-                .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
-                .AccessToken = promptResult.AccessToken,
-                .RefreshToken = promptResult.RefreshToken}
+        Dim promptResult = ModLaunchPromptShell.RunMicrosoftDeviceCodeLoginShell(promptPlan)
+        If promptResult.Kind = MicrosoftDeviceCodeShellResultKind.RetryDeviceCodeLogin Then
+            GoTo Retry
         End If
+
+        Return New MicrosoftOAuthStepResult With {
+            .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
+            .AccessToken = promptResult.AccessToken,
+            .RefreshToken = promptResult.RefreshToken}
     End Function
     ''' <summary>
     ''' 正版验证步骤 1，刷新登录：从 OAuth Code 或 OAuth RefreshToken 获取 {OAuth accessToken, OAuth RefreshToken}
@@ -968,7 +961,7 @@ Retry:
             End Using
             Dim ownershipPrompt = MinecraftLaunchMicrosoftFailureWorkflowService.TryGetOwnershipFailurePrompt(result)
             If ownershipPrompt IsNot Nothing Then
-                RunAccountDecisionPrompt(ownershipPrompt)
+                ModLaunchPromptShell.ShowMicrosoftOwnershipPrompt(ownershipPrompt)
                 Throw New Exception("$$")
             End If
         Catch ex As Exception
