@@ -1177,107 +1177,87 @@ Retry:
             SelectedProfile.Username,
             SelectedProfile.Uuid,
             SelectedProfile.AccessToken)
-        Dim refreshResponse = MinecraftLaunchAuthlibProtocolService.ParseRefreshResponseJson(NetRequestRetry(
+        Dim refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
+            New MinecraftLaunchAuthlibRefreshWorkflowRequest(
+                NetRequestRetry(
                Url:=requestPlan.Url,
                Method:=requestPlan.Method,
                Data:=requestPlan.Body,
                Headers:=New Dictionary(Of String, String)(requestPlan.Headers),
-               ContentType:=requestPlan.ContentType))
-
-        Dim loginResult = New McLoginResult With {
-            .AccessToken = refreshResponse.AccessToken,
-            .ClientToken = refreshResponse.ClientToken,
-            .Uuid = refreshResponse.SelectedProfileId,
-            .Name = refreshResponse.SelectedProfileName,
-            .Type = "Auth"}
-        '保存缓存
-        Dim authRefreshMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
-            New MinecraftLaunchAuthProfileMutationRequest(
-                True,
+               ContentType:=requestPlan.ContentType),
                 GetSelectedProfileIndex(),
                 SelectedProfile.Server,
                 SelectedProfile.ServerName,
-                loginResult.Uuid,
-                loginResult.Name,
-                loginResult.AccessToken,
-                loginResult.ClientToken,
                 input.UserName,
                 input.Password))
-        ApplyProfileMutationPlan(authRefreshMutationPlan)
+
+        Dim loginResult = New McLoginResult With {
+            .AccessToken = refreshResult.Session.AccessToken,
+            .ClientToken = refreshResult.Session.ClientToken,
+            .Uuid = refreshResult.Session.ProfileId,
+            .Name = refreshResult.Session.ProfileName,
+            .Type = "Auth"}
+        ApplyProfileMutationPlan(refreshResult.MutationPlan)
         ProfileLog("刷新登录成功（Refresh, Authlib）")
         Return loginResult
     End Function
     Private Function McLoginRequestLogin(input As McLoginServer) As AuthlibLoginStepResult
         Try
-            Dim NeedRefresh As Boolean = False
             ProfileLog("登录开始（Login, Authlib）")
             Dim authenticateRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
                 input.BaseUrl,
                 input.UserName,
                 input.Password)
-            Dim authResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(NetRequestRetry(
-                Url:=authenticateRequestPlan.Url,
-                Method:=authenticateRequestPlan.Method,
-                Data:=authenticateRequestPlan.Body,
-                Headers:=New Dictionary(Of String, String)(authenticateRequestPlan.Headers),
-                ContentType:=authenticateRequestPlan.ContentType))
-            '检查登录结果
-            If authResponse.AvailableProfiles.Count = 0 Then
-                ' handled below through the core workflow result
-            End If
-            Dim selectionResult = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
-                New MinecraftLaunchAuthProfileSelectionRequest(
+            Dim authenticatePlan = MinecraftLaunchAuthlibLoginWorkflowService.PlanAuthenticate(
+                New MinecraftLaunchAuthlibAuthenticatePlanRequest(
                     input.ForceReselectProfile,
                     If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
-                    authResponse.SelectedProfileId,
-                    authResponse.AvailableProfiles))
-            If Not String.IsNullOrWhiteSpace(selectionResult.NoticeMessage) Then Hint(selectionResult.NoticeMessage, HintType.Critical)
-            If selectionResult.Kind = MinecraftLaunchAuthProfileSelectionKind.Fail Then Throw New Exception(selectionResult.FailureMessage)
+                    NetRequestRetry(
+                        Url:=authenticateRequestPlan.Url,
+                        Method:=authenticateRequestPlan.Method,
+                        Data:=authenticateRequestPlan.Body,
+                        Headers:=New Dictionary(Of String, String)(authenticateRequestPlan.Headers),
+                        ContentType:=authenticateRequestPlan.ContentType)))
+            If Not String.IsNullOrWhiteSpace(authenticatePlan.NoticeMessage) Then Hint(authenticatePlan.NoticeMessage, HintType.Critical)
+            If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.Fail Then Throw New Exception(authenticatePlan.FailureMessage)
 
-            Dim SelectedName As String = selectionResult.SelectedProfileName
-            Dim SelectedId As String = selectionResult.SelectedProfileId
-            NeedRefresh = selectionResult.NeedsRefresh
-            If selectionResult.Kind = MinecraftLaunchAuthProfileSelectionKind.PromptForSelection Then
+            Dim selectedId As String = authenticatePlan.SelectedProfileId
+            If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.PromptForSelection Then
                 ProfileLog("要求玩家选择角色")
                 RunInUiWait(
                     Sub()
-                        Dim selectedProfile = ModLaunchPromptShell.RunAuthProfileSelectionPrompt(selectionResult.PromptTitle, selectionResult.PromptOptions)
-                        SelectedName = selectedProfile.Name
-                        SelectedId = selectedProfile.Id
+                        Dim selectedProfile = ModLaunchPromptShell.RunAuthProfileSelectionPrompt(authenticatePlan.PromptTitle, authenticatePlan.PromptOptions)
+                        selectedId = selectedProfile.Id
                     End Sub)
-                ProfileLog("玩家选择的角色：" & SelectedName)
-            ElseIf selectionResult.NeedsRefresh Then
-                ProfileLog("根据缓存选择的角色：" & SelectedName)
+                Dim promptSelection = authenticatePlan.PromptOptions.First(Function(profile) profile.Id = selectedId)
+                ProfileLog("玩家选择的角色：" & promptSelection.Name)
+            ElseIf authenticatePlan.NeedsRefresh Then
+                ProfileLog("根据缓存选择的角色：" & authenticatePlan.SelectedProfileName)
             End If
 
-            Dim loginResult = New McLoginResult With {
-                .AccessToken = authResponse.AccessToken,
-                .ClientToken = authResponse.ClientToken,
-                .Name = SelectedName,
-                .Uuid = SelectedId,
-                .Type = "Auth"}
-            '获取服务器信息
             Dim metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(input.BaseUrl)
-            Dim Response As String = NetGetCodeByRequestRetry(metadataRequestPlan.Url, Encoding.UTF8)
-            Dim ServerName As String = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(Response)
-            Dim authMutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
-                New MinecraftLaunchAuthProfileMutationRequest(
+            Dim authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
+                New MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
+                    authenticatePlan,
+                    NetGetCodeByRequestRetry(metadataRequestPlan.Url, Encoding.UTF8),
                     input.IsExist,
                     GetSelectedProfileIndex(),
                     input.BaseUrl,
-                    ServerName,
-                    loginResult.Uuid,
-                    loginResult.Name,
-                    loginResult.AccessToken,
-                    loginResult.ClientToken,
                     input.UserName,
-                    input.Password))
-            ApplyProfileMutationPlan(authMutationPlan)
+                    input.Password,
+                    selectedId))
+            Dim loginResult = New McLoginResult With {
+                .AccessToken = authenticateResult.Session.AccessToken,
+                .ClientToken = authenticateResult.Session.ClientToken,
+                .Name = authenticateResult.Session.ProfileName,
+                .Uuid = authenticateResult.Session.ProfileId,
+                .Type = "Auth"}
+            ApplyProfileMutationPlan(authenticateResult.MutationPlan)
             SaveProfile()
             ProfileLog("登录成功（Login, Authlib）")
             Return New AuthlibLoginStepResult With {
                 .LoginResult = loginResult,
-                .NeedsRefresh = NeedRefresh}
+                .NeedsRefresh = authenticateResult.NeedsRefresh}
         Catch ex As HttpWebException
             Throw
         Catch ex As Exception

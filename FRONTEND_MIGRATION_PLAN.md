@@ -44,6 +44,7 @@ These workflow extractions are already done and should be treated as available m
 - launch Java requirement and missing-Java prompt policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaRequirementService` and `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptService`
 - launch Java selection / missing-Java recovery orchestration is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaWorkflowService`
 - third-party login failure policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginWorkflowService`
+- Authlib response planning for profile selection, refresh-session resolution, and profile mutation is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibLoginWorkflowService`
 - login profile mutation / cached-session reuse policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLoginProfileWorkflowService`
 - authlib login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginExecutionService`
 - Microsoft login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftLoginExecutionService`
@@ -181,7 +182,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch-session startup summary formatting is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly prints the returned lines before watcher startup
 - launch process / watcher runtime planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts the returned process plan and constructs the watcher from the returned runtime plan
 - launch-session start/post-launch composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned shell plans and watcher adapter inputs
-- Authlib request / response protocol shaping and request coordination are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
+- Authlib request / response protocol shaping, request coordination, and profile-selection / mutation planning are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - Microsoft request / response protocol shaping, request coordination, and failure policy are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - launch argument window-size planning and final argument composition are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher state, JSON/lib inputs, and applies prompt-side effects
 - launch classpath ordering and replacement value assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher path/lib state and applies launcher-specific file extraction

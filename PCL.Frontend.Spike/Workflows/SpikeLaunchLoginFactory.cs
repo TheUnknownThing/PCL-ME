@@ -185,8 +185,11 @@ internal static class SpikeLaunchLoginFactory
             inputs.ServerBaseUrl,
             inputs.LoginName,
             inputs.Password);
-        var authenticateResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(
-            inputs.AuthenticateResponseJson);
+        var authenticatePlan = MinecraftLaunchAuthlibLoginWorkflowService.PlanAuthenticate(
+            new MinecraftLaunchAuthlibAuthenticatePlanRequest(
+                inputs.ForceReselectProfile,
+                inputs.CachedProfileId,
+                inputs.AuthenticateResponseJson));
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Authenticate with Authlib server",
             currentStep.Progress,
@@ -196,41 +199,26 @@ internal static class SpikeLaunchLoginFactory
             PrettyJson(authenticateRequestPlan.Body!),
             PrettyJson(inputs.AuthenticateResponseJson),
             [
-                $"Available profiles: {authenticateResponse.AvailableProfiles.Count}",
-                $"Server-selected profile id: {authenticateResponse.SelectedProfileId ?? "none"}"
+                $"Selection result: {authenticatePlan.Kind}",
+                $"Needs refresh: {authenticatePlan.NeedsRefresh}"
             ]));
-
-        var selection = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
-            new MinecraftLaunchAuthProfileSelectionRequest(
-                inputs.ForceReselectProfile,
-                inputs.CachedProfileId,
-                inputs.ServerSelectedProfileId ?? authenticateResponse.SelectedProfileId,
-                authenticateResponse.AvailableProfiles));
-
-        var selectionNotes = new List<string>
+        var selectionNotes = new List<string>();
+        if (!string.IsNullOrWhiteSpace(authenticatePlan.NoticeMessage))
         {
-            $"Selection result: {selection.Kind}",
-            $"Needs refresh: {selection.NeedsRefresh}"
-        };
-        if (!string.IsNullOrWhiteSpace(selection.NoticeMessage))
+            selectionNotes.Add($"Notice: {authenticatePlan.NoticeMessage}");
+        }
+        if (!string.IsNullOrWhiteSpace(authenticatePlan.SelectedProfileName))
         {
-            selectionNotes.Add($"Notice: {selection.NoticeMessage}");
+            selectionNotes.Add($"Resolved profile: {authenticatePlan.SelectedProfileName} ({authenticatePlan.SelectedProfileId})");
         }
 
-        if (!string.IsNullOrWhiteSpace(selection.SelectedProfileName))
+        string? selectedProfileId = authenticatePlan.SelectedProfileId;
+        string? selectedProfileName = authenticatePlan.SelectedProfileName;
+        if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.PromptForSelection)
         {
-            selectionNotes.Add($"Resolved profile: {selection.SelectedProfileName} ({selection.SelectedProfileId})");
-        }
-
-        if (selection.Kind == MinecraftLaunchAuthProfileSelectionKind.PromptForSelection)
-        {
-            var selectedProfile = selection.PromptOptions.First();
-            selection = selection with
-            {
-                Kind = MinecraftLaunchAuthProfileSelectionKind.Resolved,
-                SelectedProfileId = selectedProfile.Id,
-                SelectedProfileName = selectedProfile.Name
-            };
+            var selectedProfile = authenticatePlan.PromptOptions.First();
+            selectedProfileId = selectedProfile.Id;
+            selectedProfileName = selectedProfile.Name;
             selectionNotes.Add($"Spike auto-selected prompt option: {selectedProfile.Name}");
         }
 
@@ -242,17 +230,24 @@ internal static class SpikeLaunchLoginFactory
             ContentType: null,
             RequestBody: null,
             ResponseBody: null,
-            selectionNotes));
+            selectionNotes.Count == 0 ? ["Selection already resolved by backend workflow."] : selectionNotes));
 
-        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(selection.NeedsRefresh);
+        currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterLoginSuccess(authenticatePlan.NeedsRefresh);
         if (currentStep.Kind == MinecraftLaunchThirdPartyLoginStepKind.RefreshCachedSession)
         {
             var refreshRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
                 inputs.ServerBaseUrl,
-                selection.SelectedProfileName!,
-                selection.SelectedProfileId!,
-                authenticateResponse.AccessToken);
-            var refreshResponse = MinecraftLaunchAuthlibProtocolService.ParseRefreshResponseJson(inputs.RefreshResponseJson);
+                selectedProfileName!,
+                selectedProfileId!,
+                authenticatePlan.AccessToken);
+            var refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
+                new MinecraftLaunchAuthlibRefreshWorkflowRequest(
+                    inputs.RefreshResponseJson,
+                    inputs.SelectedProfileIndex ?? -1,
+                    inputs.ServerBaseUrl,
+                    "Authlib Server",
+                    inputs.LoginName,
+                    inputs.Password));
             steps.Add(new LaunchLoginSpikeStepPlan(
                 "Refresh selected Authlib profile",
                 currentStep.Progress,
@@ -262,25 +257,24 @@ internal static class SpikeLaunchLoginFactory
                 PrettyJson(refreshRequestPlan.Body!),
                 PrettyJson(inputs.RefreshResponseJson),
                 [
-                    $"Refreshed profile id: {refreshResponse.SelectedProfileId}",
-                    $"Refreshed profile name: {refreshResponse.SelectedProfileName}"
+                    $"Refreshed profile id: {refreshResult.Session.ProfileId}",
+                    $"Refreshed profile name: {refreshResult.Session.ProfileName}"
                 ]));
-            authenticateResponse = authenticateResponse with
-            {
-                AccessToken = refreshResponse.AccessToken,
-                ClientToken = refreshResponse.ClientToken
-            };
-            selection = selection with
-            {
-                SelectedProfileId = refreshResponse.SelectedProfileId,
-                SelectedProfileName = refreshResponse.SelectedProfileName
-            };
             currentStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshSuccess(hasRetriedRefresh: true);
         }
 
         var metadataJson = inputs.MetadataResponseJson;
-        var serverName = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(metadataJson);
         var metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(inputs.ServerBaseUrl);
+        var authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
+            new MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
+                authenticatePlan,
+                metadataJson,
+                inputs.IsExistingProfile,
+                inputs.SelectedProfileIndex ?? -1,
+                inputs.ServerBaseUrl,
+                inputs.LoginName,
+                inputs.Password,
+                selectedProfileId));
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Fetch Authlib server metadata",
             0.85,
@@ -289,20 +283,8 @@ internal static class SpikeLaunchLoginFactory
             ContentType: null,
             RequestBody: null,
             PrettyJson(metadataJson),
-            [$"Parsed server name: {serverName}"]));
-
-        var mutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(
-            new MinecraftLaunchAuthProfileMutationRequest(
-                inputs.IsExistingProfile,
-                inputs.SelectedProfileIndex,
-                inputs.ServerBaseUrl,
-                serverName,
-                selection.SelectedProfileId!,
-                selection.SelectedProfileName!,
-                authenticateResponse.AccessToken,
-                authenticateResponse.ClientToken,
-                inputs.LoginName,
-                inputs.Password));
+            [$"Parsed server name: {authenticateResult.ServerName}"]));
+        var mutationPlan = authenticateResult.MutationPlan;
         steps.Add(new LaunchLoginSpikeStepPlan(
             "Apply Authlib profile mutation",
             currentStep.Progress,

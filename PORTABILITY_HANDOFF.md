@@ -49,6 +49,7 @@ Latest continuation update:
 - launch watcher startup composition now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
 - launch-session start/post-launch shell composition now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
 - Authlib request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
+- Authlib response planning for profile selection, refresh-session resolution, and profile mutation now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibLoginWorkflowService`
 - Microsoft request / response protocol shaping now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
 - Authlib request URL / header / body planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibRequestWorkflowService`
 - Microsoft login request URL / header / body / bearer-token planning now lives in `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftRequestWorkflowService`
@@ -99,6 +100,7 @@ Latest continuation update:
 - launcher launch-session batch export, custom-command shell execution, process shell startup, watcher startup, and post-launch shell composition now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionWorkflowService`
 - launcher Java requirement / missing-Java recovery orchestration now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchJavaWorkflowService`
 - launcher Authlib validate / refresh / authenticate request shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibProtocolService`
+- launcher Authlib refresh-session resolution and authenticate profile-selection / mutation planning now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibLoginWorkflowService`
 - launcher Microsoft OAuth / XBL / XSTS / profile protocol shaping now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftProtocolService`
 - launcher Authlib validate / refresh / authenticate / metadata request coordination now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchAuthlibRequestWorkflowService`
 - launcher Microsoft device-code / OAuth refresh / XBL / XSTS / access-token / ownership / profile request coordination now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchMicrosoftRequestWorkflowService`
@@ -153,7 +155,7 @@ What is already true:
 - the remaining launcher logic is now primarily shell adapters, prompt adapters, concrete network IO, and Windows-facing compatibility code rather than portable runtime policy
 - `PCL.Frontend.Spike` is now strong enough to review login request execution, Java runtime download planning, host-backed path wiring, and crash-export target handoff without pulling WPF back into scope
 - `PCL.Frontend.Spike` can now also inspect launcher-style Java index / manifest request artifacts and materialize a stub runtime tree from the portable download workflow during `execute` mode
-- `PCL.Frontend.Spike` now sources modeled Authlib / Microsoft request URLs, headers, and bodies from the same core request workflow services as the real launcher
+- `PCL.Frontend.Spike` now sources modeled Authlib / Microsoft request URLs, headers, bodies, and Authlib profile-selection / mutation planning from the same core workflow services as the real launcher
 
 What is not true yet:
 
