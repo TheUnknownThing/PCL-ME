@@ -918,7 +918,6 @@ NextStack:
                 RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
             Case MinecraftCrashPromptResponseKind.ExportReport
                 '弹窗选择：导出错误报告
-                Dim FileAddress As String = Nothing
                 Try
                     '输出诊断信息
                     FeedbackInfo()
@@ -937,17 +936,7 @@ NextStack:
                             McLoginLoader.Output.AccessToken,
                             McLoginLoader.Output.Uuid,
                             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
-                    '获取文件路径
-                    Dim saveDialogPlan = MinecraftCrashResponseWorkflowService.BuildExportSaveDialogPlan(exportPlan.SuggestedArchiveName)
-                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile(saveDialogPlan.Title, saveDialogPlan.DefaultFileName, saveDialogPlan.Filter))
-                    If String.IsNullOrEmpty(FileAddress) Then Return
-                    MinecraftCrashExportArchiveService.CreateArchive(
-                        New MinecraftCrashExportArchiveRequest(
-                            FileAddress,
-                            exportPlan.ExportRequest))
-                    Dim completionPlan = MinecraftCrashResponseWorkflowService.BuildExportCompletionPlan(FileAddress)
-                    Hint(completionPlan.HintMessage, HintType.Finish)
-                    OpenExplorer(completionPlan.RevealInShellPath)
+                    If Not ModCrashExportShell.TryExportReport(exportPlan) Then Return
                 Catch ex As Exception
                     Log(ex, "导出错误报告失败", LogLevel.Feedback)
                     Return

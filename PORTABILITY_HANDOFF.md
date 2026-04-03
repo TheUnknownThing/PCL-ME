@@ -97,6 +97,7 @@ Latest continuation update:
 - launcher startup prompt rendering now routes through `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
+- launcher crash export picker / completion shell flow now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
 - launcher crash-export archive creation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashExportArchiveService`
 - launcher crash prompt action handling and export completion hint/reveal flow now route through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashResponseWorkflowService`
 - launcher crash-export save dialog defaults now route through `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb` consuming `MinecraftCrashResponseWorkflowService`
@@ -182,7 +183,7 @@ What is not true yet:
 - `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup polling lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
 - `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns the concrete Java transfer lifecycle, including hashing, loader polling, cancellation, retry, and applying the returned cleanup / runtime refresh actions after install
 - startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`
-- crash export still has launcher-owned picker / destination / Explorer flow in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
+- crash export still has launcher-owned picker / destination / Explorer flow, now isolated in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
 - `Utils.Secret` is still deliberately deferred and still blocks a truly headless secure auth/config story
 
