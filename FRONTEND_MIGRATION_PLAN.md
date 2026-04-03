@@ -21,6 +21,12 @@ Current estimate:
 - portable runtime/core extraction: `complete`
 - backend readiness for a replacement frontend shell: roughly `92%~93%` for a real end-to-end frontend cutover, and roughly `97%~98%` for reusable portable workflow/policy coverage
 
+Current handoff decision:
+
+- this is ready to pass to another engineer now
+- do not represent it as a finished fully working portable backend yet
+- have the next engineer focus on adapter cleanup and shell migration, not reopening backend-policy extraction that is already green
+
 The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
 
 The project is now also past the point where the extracted backend only exists inside `PCL.Core`'s Windows target:
@@ -210,7 +216,7 @@ Create launcher-facing services in `PCL.Core` for:
 Most practical next code targets:
 
 1. finish shrinking `ModLaunch.vb`
-   Focus on remaining network/request coordination and Java download job shell bridging that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
+   Focus on remaining request-execution adapters, Java download job shell bridging, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
 2. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
    Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
 3. trim `ModCrash.vb`

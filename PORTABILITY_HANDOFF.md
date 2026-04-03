@@ -164,6 +164,7 @@ What is not true yet:
 - startup sequencing is still partly assembled in `Application.xaml.vb` and `FormMain.xaml.vb`
 - crash export still has launcher-owned picker / Explorer flow in `ModCrash.vb`
 - `PCL.Core` still contains deliberate Windows adapter code that is acceptable for now, but not yet wrapped behind the final frontend-facing contracts
+- `Utils.Secret` is still deliberately deferred and still blocks a truly headless secure auth/config story
 
 This branch is handoff-ready for another engineer. The next engineer should continue from the existing seams rather than reopening Foundation extraction.
 
@@ -528,6 +529,15 @@ Reason:
 
 This is the meaningful history for the current portability work:
 
+- `1c2847e7` `Extract third-party login failure transitions`
+- `894fe9ca` `Clean up launch adapter helpers and docs`
+- `8899b936` `Extract Authlib login response workflow into core`
+- `e44bc97b` `Extract Microsoft login failure policy into core`
+- `f75a3a58` `Extract login request planning into core workflows`
+- `ffccf8fb` `Trim crash response shell orchestration`
+- `b899edbc` `Trim launch Java selection orchestration`
+- `42c87fa5` `Refresh handoff for Java workflow progress`
+
 - `3bf8d465` `Document shell spike input replay workflow`
 - `0693fbac` `Add file-backed input replay to shell spike`
 - `753a11ea` `Fix auto-generated shell spike workspace ids`
@@ -612,7 +622,7 @@ This is the meaningful history for the current portability work:
 - `4f52b60a` `Add host-backed spike input mode`
 - `cbe6a6f3` `Extract Java runtime download planning`
 
-If the next engineer wants to understand the current extraction shape, start with the twelve newest commits above, then continue downward through the earlier Wave 1 / Wave 2 extraction history.
+If the next engineer wants to understand the current extraction shape, start with the eight newest commits above, then continue downward through the earlier Wave 1 / Wave 2 extraction history.
 
 ## Wave 2 Completion Status
 
@@ -649,30 +659,28 @@ Recommended order:
 1. keep `PCL.Core.Foundation` stable and avoid leaking UI/Win32 concerns back into it
 2. continue shrinking `PCL.Core` itself by moving reusable non-UI behavior away from WPF/UI infrastructure and Windows-only dialog/shell code
 3. use `FRONTEND_MIGRATION_PLAN.md` as the working migration brief
-4. treat the launch login-orchestration blocker as mostly addressed and begin a small shell-replacement / frontend-contract phase
-5. keep `ModLaunch.vb` cleanup incremental: only peel off remaining step-local adapter glue or prompt/shell wrappers when they materially simplify a new shell consumer
+4. treat launch login-orchestration as largely addressed and begin a small shell-replacement / frontend-contract phase
+5. keep `ModLaunch.vb` cleanup incremental: only peel off remaining request-execution adapters, Java download shell bridging, or prompt wrappers when they materially simplify a new shell consumer
 6. focus the next migration spike on replacing or paralleling a narrow launcher surface while continuing to reuse `PCL.Core` launch/startup/crash services
 7. if additional workflow logic must move before a frontend cutover, keep moving it into `PCL.Core` services instead of duplicating it in the launcher
-8. keep validating with the Foundation test suite and Foundation API scan whenever new shared logic is moved
+8. keep validating with `PCL.Core.Backend.Test`, the spike, and launcher builds after each extraction slice
 9. do not claim “fully portable backend” yet; there is still meaningful Windows-specific backend code left in `PCL.Core`
 
 Suggested next engineer targets, in priority order:
 
-1. keep reducing `PCL.Core` WPF coupling
-   - likely candidates: dialog/clipboard/system-dialog helpers, UI-facing logging/hint/message-box seams, and any service that currently depends on dispatcher-bound wrappers only for presentation
+1. keep trimming `ModLaunch.vb`
+   - highest-value slices now are remaining request-execution adapters, Java download job lifecycle / retry shell bridging, and any post-step launcher notifications or dialogs still inline in the step runner
 2. keep `Application.xaml.vb` and `FormMain.xaml.vb` as shell adapters only
-   - do not move more policy back into them
-3. keep trimming `ModLaunch.vb`
-   - likely next slices: remaining launch-step adapter glue, Java download job lifecycle / retry shell bridging, and post-step launcher notifications or dialogs that still sit inline in the step runner
-4. keep trimming `Application.xaml.vb`
-   - likely next slices: startup command execution shell flow and remaining startup presentation hooks that still assemble local policy
+   - do not move more policy back into them; keep extracting startup composition if a new shell consumer needs it
+3. trim `ModCrash.vb` further only where it helps a future shell consumer
+   - likely next slices: save-picker invocation, export destination handling, success hint / Explorer opening
+4. keep reducing `PCL.Core` WPF coupling
+   - likely candidates: dialog/clipboard/system-dialog helpers, UI-facing logging/hint/message-box seams, and any service that currently depends on dispatcher-bound wrappers only for presentation
 5. only touch Windows interop helpers when the goal is to isolate them better
    - not to make them “portable” in place
-6. trim `ModCrash.vb` further only where it helps a future shell consumer
-   - likely next slices: save-picker invocation, export destination handling, success hint / Explorer opening
-7. begin shrinking `PCL.Core` itself once the launcher shell adapters are no longer the main blocker
+6. begin shrinking `PCL.Core` itself once the launcher shell adapters are no longer the main blocker
    - highest-value examples right now: `PCL.Core/IO/Files.cs`, `PCL.Core/App/Tools/DependencyCheckService.cs`, and other helpers that still combine reusable logic with Windows-only shell APIs
-8. avoid spending time on visual/frontend replacement until the next narrow shell contract is chosen
+7. avoid spending time on visual/frontend replacement until the next narrow shell contract is chosen
 
 ## Important Non-Goals Right Now
 
