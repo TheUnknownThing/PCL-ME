@@ -62,14 +62,11 @@ public static class EncryptHelper
         }
         else
         {
-            try
+            decryptError = TryDecryptLegacyData(rawData, out var legacyPlainText);
+            if (legacyPlainText is not null)
             {
-#pragma warning disable CS0612,CS0618 // Type or member is obsolete
-                var decryptedData = AesCbcProvider.Instance.Decrypt(rawData, Encoding.UTF8.GetBytes(IdentifyOld.EncryptKey));
-#pragma warning restore CS0612,CS0618 // Type or member is obsolete
-                return Encoding.UTF8.GetString(decryptedData);
+                return legacyPlainText;
             }
-            catch (Exception ex) { decryptError = ex; }
         }
 
         throw new Exception($"Unknown Encryption data, the data may broken", decryptError);
@@ -223,6 +220,29 @@ public static class EncryptHelper
         catch (Exception ex)
         {
             throw new InvalidOperationException("环境变量 PCL_ENCRYPTION_KEY 无法转换为有效密钥。", ex);
+        }
+    }
+
+    private static Exception? TryDecryptLegacyData(byte[] rawData, out string? plainText)
+    {
+        plainText = null;
+        var legacyKey = LegacySecretKeyProvider.LegacyDecryptKey;
+        if (legacyKey.IsNullOrEmpty())
+        {
+            return new InvalidOperationException("旧版密文缺少可用的兼容解密密钥。可通过 PCL_LEGACY_ENCRYPTION_KEY 提供旧版密钥。");
+        }
+
+        try
+        {
+#pragma warning disable CS0612,CS0618 // Type or member is obsolete
+            var decryptedData = AesCbcProvider.Instance.Decrypt(rawData, Encoding.UTF8.GetBytes(legacyKey!));
+#pragma warning restore CS0612,CS0618 // Type or member is obsolete
+            plainText = Encoding.UTF8.GetString(decryptedData);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex;
         }
     }
 
