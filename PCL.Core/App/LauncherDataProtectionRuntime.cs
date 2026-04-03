@@ -1,9 +1,7 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using PCL.Core.App.Essentials;
-using PCL.Core.Utils;
 using PCL.Core.Utils.Encryption;
 using PCL.Core.Utils.OS;
 using PCL.Core.Utils.Secret;
@@ -30,26 +28,16 @@ public static class LauncherDataProtectionRuntime
 
     private static byte[] ResolveEncryptionKey()
     {
-        var keyFile = Path.Combine(Paths.SharedData, "UserKey.bin");
+        var keyFile = LauncherSecretKeyStorageService.GetPersistedKeyPath(Paths.SharedData);
         var resolution = LauncherSecretKeyResolutionService.Resolve(new LauncherSecretKeyResolutionRequest(
             ExplicitKeyOverride: EnvironmentInterop.GetSecret("ENCRYPTION_KEY", readEnvDebugOnly: true),
-            PersistedKeyEnvelope: File.Exists(keyFile) ? File.ReadAllBytes(keyFile) : null,
+            PersistedKeyEnvelope: LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(keyFile),
             ReadPersistedKey: ReadStoredKey,
             ProtectGeneratedKey: CreateStoredKeyEnvelope));
 
         if (resolution.ShouldPersist && resolution.PersistedKeyEnvelope is not null)
         {
-            var tmpFile = $"{keyFile}.tmp{RandomUtils.NextInt(10000, 99999)}";
-            using (var fs = new FileStream(tmpFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
-            {
-                fs.Write(resolution.PersistedKeyEnvelope);
-                fs.Flush(true);
-            }
-
-            TryApplyPortableKeyFilePermissions(tmpFile);
-
-            File.Move(tmpFile, keyFile, true);
-            TryApplyPortableKeyFilePermissions(keyFile);
+            LauncherSecretKeyStorageService.PersistKeyEnvelope(keyFile, resolution.PersistedKeyEnvelope);
         }
 
         return resolution.Key;
@@ -77,22 +65,5 @@ public static class LauncherDataProtectionRuntime
             2 => data.Data,
             _ => throw new NotSupportedException("Unsupported key version")
         };
-    }
-
-    private static void TryApplyPortableKeyFilePermissions(string filePath)
-    {
-        if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-        {
-            return;
-        }
-
-        try
-        {
-            File.SetUnixFileMode(filePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-        }
-        catch
-        {
-            // Ignore best-effort permission hardening failures on non-Windows hosts.
-        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using PCL.Core.App.Essentials;
 using PCL.Core.Logging;
 using PCL.Core.Utils.OS;
@@ -10,13 +9,12 @@ namespace PCL.Core.App;
 public static class LauncherIdentity
 {
     private const string LogModule = "LauncherIdentity";
-    private const string LauncherIdFileName = "launcher-id.txt";
 
     public static string LauncherId { get; } = ResolveLauncherId();
 
     private static string ResolveLauncherId()
     {
-        var persistedPath = GetPersistedLauncherIdPath();
+        var persistedPath = LauncherIdentityStorageService.GetPersistedLauncherIdPath(Paths.SharedData);
         var plan = LauncherIdentityRuntimeService.Resolve(new LauncherIdentityRuntimeRequest(
             ExplicitLauncherId: EnvironmentInterop.GetSecret("LAUNCHER_ID", readEnvDebugOnly: true),
             PersistedLauncherId: TryReadPersistedLauncherId(persistedPath),
@@ -49,12 +47,8 @@ public static class LauncherIdentity
     {
         try
         {
-            if (!File.Exists(persistedPath))
-            {
-                return null;
-            }
-
-            return LauncherIdentityResolutionService.NormalizeLauncherId(File.ReadAllText(persistedPath));
+            return LauncherIdentityResolutionService.NormalizeLauncherId(
+                LauncherIdentityStorageService.TryReadPersistedLauncherId(persistedPath));
         }
         catch (Exception ex)
         {
@@ -67,22 +61,11 @@ public static class LauncherIdentity
     {
         try
         {
-            var directoryPath = Path.GetDirectoryName(persistedPath);
-            if (!string.IsNullOrWhiteSpace(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            File.WriteAllText(persistedPath, launcherId);
+            LauncherIdentityStorageService.PersistLauncherId(persistedPath, launcherId);
         }
         catch (Exception ex)
         {
             LogWrapper.Warn(ex, LogModule, $"持久化识别码失败：{persistedPath}");
         }
-    }
-
-    private static string GetPersistedLauncherIdPath()
-    {
-        return Path.Combine(Paths.SharedData, LauncherIdFileName);
     }
 }
