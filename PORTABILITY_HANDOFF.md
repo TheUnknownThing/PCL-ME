@@ -104,6 +104,7 @@ Latest continuation update:
 - launcher application startup immediate-command / bootstrap / visual shell application now routes through `Plain Craft Launcher 2/Modules/Base/ModApplicationStartupShell.vb`
 - launcher main-window startup milestone / version-transition shell application now routes through `Plain Craft Launcher 2/Modules/Base/ModMainWindowStartupShell.vb`
 - launcher launch prompt / account decision / Java prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
+- launcher launch precheck prompt choreography, Microsoft device-code retry bridging, Microsoft ownership prompt handling, and Authlib authenticate-selection shell behavior now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchInteractionShell.vb`
 - launcher Java download confirmation / post-download failure hint shell handling now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPromptShell.vb`
 - launcher crash-result prompt rendering now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
 - launcher crash export picker / completion shell flow now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
@@ -189,8 +190,8 @@ What is already true:
 
 What is not true yet:
 
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution, device-code popup polling lifecycle bridging, account/prompt application, and other launcher-side effects around Authlib / Microsoft login flows
-- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` no longer owns the Authlib / Microsoft login step loops directly, but it still owns request helpers, device-code popup lifecycle bridging, account/prompt application, and other launcher-side effects around those flows
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` still owns live request execution and some launcher-side effects around Authlib / Microsoft login flows
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` no longer owns the Authlib / Microsoft login step loops, launch precheck prompt choreography, Authlib role-selection UI, Microsoft device-code retry bridging, or Microsoft ownership prompt handling directly, but it still owns request helpers and some remaining launcher-side effect wiring around those flows
 - `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` still owns parts of the concrete transfer lifecycle such as file hashing and download-job construction, but Java selection prompt / download retry shell behavior, cleanup / refresh shell application, runtime fetch execution, reused-file detection, and concrete download file shaping are now isolated behind dedicated Java shell modules
 - startup sequencing is still partly assembled in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`, but immediate-command / bootstrap / visual shell application, milestone / version-transition application, and main-window startup thread orchestration are now isolated behind dedicated startup shell modules
 - crash export still has launcher-owned picker / destination / Explorer flow, now isolated in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`

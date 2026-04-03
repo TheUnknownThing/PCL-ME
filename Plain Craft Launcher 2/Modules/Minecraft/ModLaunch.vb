@@ -275,22 +275,7 @@ NextInner:
             ProfileList.Any(Function(x) x.Type = McLoginType.Ms),
             RegionUtils.IsRestrictedFeatAllowed))
         If Not precheckResult.IsSuccess Then Throw New ArgumentException(precheckResult.FailureMessage)
-        If precheckResult.Prompts.Count > 0 Then
-            ModLaunchPromptShell.RunLaunchPrompt(precheckResult.Prompts(0), CurrentLaunchOptions)
-        End If
-#If BETA Then
-        '求赞助
-        If CurrentLaunchOptions?.SaveBatch Is Nothing Then '保存脚本时不提示
-            RunInNewThread(
-            Sub()
-                Dim supportPrompt = MinecraftLaunchShellService.GetSupportPrompt(Setup.Get("SystemLaunchCount"))
-                If supportPrompt IsNot Nothing Then ModLaunchPromptShell.RunLaunchPrompt(supportPrompt, CurrentLaunchOptions)
-            End Sub, "Donate")
-        End If
-#End If
-        For index = 1 To precheckResult.Prompts.Count - 1
-            ModLaunchPromptShell.RunLaunchPrompt(precheckResult.Prompts(index), CurrentLaunchOptions)
-        Next
+        ModLaunchInteractionShell.RunPrecheckPrompts(precheckResult, CurrentLaunchOptions)
     End Sub
 
     Private Function GetCurrentProfileKind() As MinecraftLaunchProfileKind
@@ -669,23 +654,7 @@ NextInner:
         '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
 
         '初始请求
-Retry:
-        McLaunchLog("开始正版验证 Step 1/6（原始登录）")
-        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(OAuthClientId)
-        Dim responseBody = ModLaunchMicrosoftRequestShell.ExecuteFormPost(requestPlan)
-
-        Dim promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(responseBody)
-        McLaunchLog(promptPlan.LogMessage)
-
-        Dim promptResult = ModLaunchPromptShell.RunMicrosoftDeviceCodeLoginShell(promptPlan)
-        If promptResult.Kind = MicrosoftDeviceCodeShellResultKind.RetryDeviceCodeLogin Then
-            GoTo Retry
-        End If
-
-        Return New MicrosoftOAuthStepResult With {
-            .Outcome = MinecraftLaunchMicrosoftOAuthRefreshOutcome.Succeeded,
-            .AccessToken = promptResult.AccessToken,
-            .RefreshToken = promptResult.RefreshToken}
+        Return ModLaunchInteractionShell.RequestMicrosoftDeviceCodeOAuthTokens(Data, OAuthClientId)
     End Function
     ''' <summary>
     ''' 正版验证步骤 1，刷新登录：从 OAuth Code 或 OAuth RefreshToken 获取 {OAuth accessToken, OAuth RefreshToken}
@@ -829,15 +798,9 @@ Retry:
     Private Sub MsLoginStep5(accessToken As String)
         ProfileLog("开始正版验证 Step 5/6: 验证账户是否持有 MC")
         If String.IsNullOrEmpty(accessToken) Then Throw New ArgumentException("传入的 AccessToken 为空", NameOf(accessToken))
-        Dim requestPlan = MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(accessToken)
         Dim result As String = ""
         Try
-            result = ModLaunchMicrosoftRequestShell.ExecuteBearerGet(requestPlan)
-            Dim ownershipPrompt = MinecraftLaunchMicrosoftFailureWorkflowService.TryGetOwnershipFailurePrompt(result)
-            If ownershipPrompt IsNot Nothing Then
-                ModLaunchPromptShell.ShowMicrosoftOwnershipPrompt(ownershipPrompt)
-                Throw New Exception("$$")
-            End If
+            ModLaunchInteractionShell.EnsureMicrosoftOwnership(accessToken)
         Catch ex As Exception
             Log(ex, "正版验证 Step 5 异常：" & result)
             Throw
@@ -963,10 +926,7 @@ Retry:
                     input.ForceReselectProfile,
                     If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
                     ExecuteAuthlibRequest(authenticateRequestPlan)))
-            If Not String.IsNullOrWhiteSpace(authenticatePlan.NoticeMessage) Then Hint(authenticatePlan.NoticeMessage, HintType.Critical)
-            If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.Fail Then Throw New Exception(authenticatePlan.FailureMessage)
-
-            Dim selectedId As String = ResolveAuthlibSelectedProfileId(authenticatePlan)
+            Dim selectedId As String = ModLaunchInteractionShell.ResolveAuthlibAuthenticateSelection(authenticatePlan)
 
             Dim metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(input.BaseUrl)
             Dim authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
@@ -1010,27 +970,6 @@ Retry:
 
     Private Function ExecuteAuthlibMetadataRequest(url As String) As String
         Return ModLaunchAuthlibRequestShell.ExecuteMetadataRequest(url)
-    End Function
-
-    Private Function ResolveAuthlibSelectedProfileId(authenticatePlan As MinecraftLaunchAuthlibAuthenticatePlan) As String
-        If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.PromptForSelection Then
-            ProfileLog("要求玩家选择角色")
-            Dim selectedId As String = Nothing
-            RunInUiWait(
-                Sub()
-                    Dim selectedProfile = ModLaunchPromptShell.RunAuthProfileSelectionPrompt(authenticatePlan.PromptTitle, authenticatePlan.PromptOptions)
-                    selectedId = selectedProfile.Id
-                End Sub)
-            Dim promptSelection = authenticatePlan.PromptOptions.First(Function(profile) profile.Id = selectedId)
-            ProfileLog("玩家选择的角色：" & promptSelection.Name)
-            Return selectedId
-        End If
-
-        If authenticatePlan.NeedsRefresh Then
-            ProfileLog("根据缓存选择的角色：" & authenticatePlan.SelectedProfileName)
-        End If
-
-        Return authenticatePlan.SelectedProfileId
     End Function
 
 #End Region
