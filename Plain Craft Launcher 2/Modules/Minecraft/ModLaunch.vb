@@ -5,6 +5,7 @@ Imports PCL.Core.Minecraft
 Imports PCL.Core.Minecraft.Launch
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.OS
+Imports PCL.Core.Utils.Processes
 Imports PCL.Core.App
 Imports PCL.Core.Minecraft.Launch.Utils
 Imports PCL.Core.Utils.Secret
@@ -1964,14 +1965,11 @@ Retry:
 
     Private Sub ExecuteCustomCommand(shellPlan As MinecraftLaunchCustomCommandShellPlan, Loader As LoaderTask(Of Integer, Integer))
         McLaunchLog(shellPlan.StartLogMessage)
-        Dim customProcess As New Process
+        Dim customProcess As Process = Nothing
         Try
-            customProcess.StartInfo.FileName = shellPlan.FileName
-            customProcess.StartInfo.Arguments = shellPlan.Arguments
-            customProcess.StartInfo.WorkingDirectory = shellPlan.WorkingDirectory
-            customProcess.StartInfo.UseShellExecute = shellPlan.UseShellExecute
-            customProcess.StartInfo.CreateNoWindow = shellPlan.CreateNoWindow
-            customProcess.Start()
+            customProcess = SystemProcessManager.Current.Start(
+                MinecraftLaunchProcessExecutionService.BuildCustomCommandStartRequest(shellPlan))
+            If customProcess Is Nothing Then Throw New InvalidOperationException("自定义命令进程启动失败。")
             If shellPlan.WaitForExit Then
                 Do Until customProcess.HasExited OrElse Loader.IsAborted
                     Thread.Sleep(10)
@@ -1980,9 +1978,9 @@ Retry:
         Catch ex As Exception
             Log(ex, shellPlan.FailureLogMessage, LogLevel.Hint)
         Finally
-            If Not customProcess.HasExited AndAlso Loader.IsAborted Then
+            If customProcess IsNot Nothing AndAlso Not customProcess.HasExited AndAlso Loader.IsAborted Then
                 McLaunchLog(shellPlan.AbortKillLogMessage) '#1183
-                customProcess.Kill()
+                SystemProcessManager.Current.Kill(customProcess)
             End If
         End Try
     End Sub
@@ -1992,45 +1990,23 @@ Retry:
         Dim shellPlan = McLaunchSessionPlan.ProcessShellPlan
 
         '启动信息
-        Dim GameProcess = New Process()
-        Dim StartInfo As New ProcessStartInfo(shellPlan.FileName)
-
-        '设置环境变量
-        StartInfo.EnvironmentVariables("Path") = shellPlan.PathEnvironmentValue
-        StartInfo.EnvironmentVariables("appdata") = shellPlan.AppDataEnvironmentValue
-
-        '设置其他参数
-        StartInfo.WorkingDirectory = shellPlan.WorkingDirectory
-        StartInfo.UseShellExecute = shellPlan.UseShellExecute
-        StartInfo.RedirectStandardOutput = shellPlan.RedirectStandardOutput
-        StartInfo.RedirectStandardError = shellPlan.RedirectStandardError
-        StartInfo.CreateNoWindow = shellPlan.CreateNoWindow
-        StartInfo.Arguments = shellPlan.Arguments
-        GameProcess.StartInfo = StartInfo
+        Dim GameProcess = SystemProcessManager.Current.Start(
+            MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(shellPlan))
+        If GameProcess Is Nothing Then Throw New InvalidOperationException("游戏进程启动失败。")
 
         '开始进程
-        GameProcess.Start()
         McLaunchLog(shellPlan.StartedLogMessage)
         If Loader.IsAborted Then
             McLaunchLog(shellPlan.AbortKillLogMessage) '#1631
-            GameProcess.Kill()
+            SystemProcessManager.Current.Kill(GameProcess)
             Return
         End If
         Loader.Output = GameProcess
         McLaunchProcess = GameProcess
         '进程优先级处理
-        Try
-            GameProcess.PriorityBoostEnabled = True
-            Select Case shellPlan.PriorityKind
-                Case MinecraftLaunchProcessPriorityKind.AboveNormal
-                    GameProcess.PriorityClass = ProcessPriorityClass.AboveNormal
-                Case MinecraftLaunchProcessPriorityKind.BelowNormal
-                    GameProcess.PriorityClass = ProcessPriorityClass.BelowNormal
-                Case Else
-            End Select
-        Catch ex As Exception
-            Log(ex, "设置进程优先级失败", LogLevel.Feedback)
-        End Try
+        If Not MinecraftLaunchProcessExecutionService.TryApplyPriority(GameProcess, shellPlan.PriorityKind) Then
+            Log("设置进程优先级失败", LogLevel.Feedback)
+        End If
 
     End Sub
     Private Sub McLaunchWait(Loader As LoaderTask(Of Process, Integer))

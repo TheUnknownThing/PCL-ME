@@ -22,6 +22,7 @@ Latest continuation update:
 - `PCL.Frontend.Spike` now distinguishes reused Java runtime files from actual transfer files, writes a dedicated transfer artifact, and can detect best-effort existing runtime files in `--host-env true` mode
 - crash export save-dialog title / default filename / filter planning now live in `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
 - launch script-export completion log / abort hint / reveal-target policy now live in `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
+- launch custom-command and game-process `ProcessStartRequest` construction plus priority application now live in `PCL.Core.Minecraft.Launch.MinecraftLaunchProcessExecutionService`
 - shell-spike launch scenarios now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt transcripts
 - shell-spike execute mode now supports explicit crash-export destination handoff and records the selected archive target as a shell artifact
 - shell-spike can now derive best-effort host-backed startup / launch / crash inputs from the current machine with `--host-env true`
@@ -102,6 +103,7 @@ Latest continuation update:
 - launcher custom-command / batch-script shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchCustomCommandService`
 - launcher startup session summary logging now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionLogService`
 - launcher process start / watcher preparation now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchRuntimeService`
+- launcher custom-command and game-process `ProcessStartInfo` construction now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchProcessExecutionService`
 - launcher custom-command / game-process shell execution now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchExecutionWorkflowService`
 - launcher watcher startup composition now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchWatcherWorkflowService`
 - launcher launch-session batch export, custom-command shell execution, process shell startup, watcher startup, and post-launch shell composition now route through `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` consuming `MinecraftLaunchSessionWorkflowService`

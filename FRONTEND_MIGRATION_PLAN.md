@@ -97,6 +97,7 @@ These workflow extractions are already done and should be treated as available m
 - launch custom-command / batch-script planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
 - launch-session startup summary logging is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
 - launch process / watcher runtime planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
+- launch custom-command and game-process `ProcessStartRequest` construction plus priority application are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchProcessExecutionService`
 - launch custom-command / game-process shell execution planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchExecutionWorkflowService`
 - launch watcher startup composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
 - launch-session start/post-launch shell composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
@@ -191,6 +192,7 @@ After the latest cleanup slices, the former biggest blocker has changed:
 - launch custom-command / batch-script planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes scripts and executes returned shell commands
 - launch-session startup summary formatting is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly prints the returned lines before watcher startup
 - launch process / watcher runtime planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts the returned process plan and constructs the watcher from the returned runtime plan
+- launch custom-command and game-process `ProcessStartInfo` construction are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts/kills the returned requests and attaches launcher-specific watcher behavior
 - launch-session start/post-launch composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned shell plans and watcher adapter inputs
 - Authlib request / response protocol shaping, request coordination, profile-selection / mutation planning, and failure transitions are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
 - Microsoft request / response protocol shaping, request coordination, and failure policy are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects

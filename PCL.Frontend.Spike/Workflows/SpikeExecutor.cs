@@ -317,7 +317,12 @@ internal static class SpikeExecutor
         artifacts.Add(new SpikeExecutionArtifact("Startup summary log", startupSummaryPath));
 
         var processCommandPath = Path.Combine(workspaceRoot, "_artifacts", "process-command.txt");
-        WriteTextFile(processCommandPath, BuildProcessCommandText(plan.SessionStartPlan.ProcessShellPlan));
+        WriteTextFile(
+            processCommandPath,
+            BuildProcessCommandText(
+                MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(
+                    plan.SessionStartPlan.ProcessShellPlan),
+                plan.SessionStartPlan.ProcessShellPlan.PriorityKind));
         writtenFiles.Add(processCommandPath);
         artifacts.Add(new SpikeExecutionArtifact("Process command summary", processCommandPath));
 
@@ -516,17 +521,21 @@ internal static class SpikeExecutor
         return builder.ToString().TrimEnd();
     }
 
-    private static string BuildProcessCommandText(MinecraftLaunchProcessShellPlan plan)
+    private static string BuildProcessCommandText(
+        PCL.Core.Utils.Processes.ProcessStartRequest request,
+        MinecraftLaunchProcessPriorityKind priorityKind)
     {
         return string.Join(
             Environment.NewLine,
             [
-                $"FileName={plan.FileName}",
-                $"Arguments={plan.Arguments}",
-                $"WorkingDirectory={plan.WorkingDirectory}",
-                $"Priority={plan.PriorityKind}",
-                $"PATH={plan.PathEnvironmentValue}",
-                $"APPDATA={plan.AppDataEnvironmentValue}"
+                $"FileName={request.FileName}",
+                $"Arguments={request.Arguments}",
+                $"WorkingDirectory={request.WorkingDirectory}",
+                $"Priority={priorityKind}",
+                $"RedirectStandardOutput={request.RedirectStandardOutput}",
+                $"RedirectStandardError={request.RedirectStandardError}",
+                $"PATH={request.EnvironmentVariables?["Path"]}",
+                $"APPDATA={request.EnvironmentVariables?["appdata"]}"
             ]);
     }
 
