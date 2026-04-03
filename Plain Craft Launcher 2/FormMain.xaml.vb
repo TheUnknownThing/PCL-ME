@@ -950,7 +950,7 @@ Public Class FormMain
         UpdateRestart(True, True)
     End Sub
     Private Function BtnExtraUpdateRestart_ShowCheck() As Boolean
-        Return IsUpdateWaitingRestart
+        Return ModMainWindowExtraButtonShell.ShouldShowUpdateRestart()
     End Function
     
     '音乐
@@ -966,37 +966,23 @@ Public Class FormMain
         PageChange(PageType.TaskManager)
     End Sub
     Private Function BtnExtraDownload_ShowCheck() As Boolean
-        Return HasDownloadingTask() AndAlso Not PageCurrent = PageType.TaskManager
+        Return ModMainWindowExtraButtonShell.ShouldShowDownloadButton(PageCurrent)
     End Function
 
     '投降
     Public Sub AprilGiveup() Handles BtnExtraApril.Click
-        If IsAprilEnabled AndAlso Not IsAprilGiveup Then
-            Hint("=D", HintType.Finish)
-            IsAprilGiveup = True
-            FrmLaunchLeft.AprilScaleTrans.ScaleX = 1
-            FrmLaunchLeft.AprilScaleTrans.ScaleY = 1
-            BtnExtraApril.ShowRefresh()
-        End If
+        ModMainWindowExtraButtonShell.ApplyAprilGiveup(Sub() BtnExtraApril.ShowRefresh())
     End Sub
     Public Function BtnExtraApril_ShowCheck() As Boolean
-        Return IsAprilEnabled AndAlso Not IsAprilGiveup AndAlso PageCurrent = PageType.Launch
+        Return ModMainWindowExtraButtonShell.ShouldShowAprilButton(PageCurrent)
     End Function
 
     '关闭 Minecraft
     Public Sub BtnExtraShutdown_Click() Handles BtnExtraShutdown.Click
-        Try
-            If McLaunchLoaderReal IsNot Nothing Then McLaunchLoaderReal.Abort()
-            For Each Watcher In McWatcherList
-                Watcher.Kill()
-            Next
-            Hint("已关闭运行中的 Minecraft！", HintType.Finish)
-        Catch ex As Exception
-            Log(ex, "强制关闭所有 Minecraft 失败", LogLevel.Feedback)
-        End Try
+        ModMainWindowExtraButtonShell.ShutdownRunningMinecraft()
     End Sub
     Public Function BtnExtraShutdown_ShowCheck() As Boolean
-        Return HasRunningMinecraft
+        Return ModMainWindowExtraButtonShell.ShouldShowShutdownButton()
     End Function
 
     '游戏日志
@@ -1004,28 +990,20 @@ Public Class FormMain
         PageChange(PageType.GameLog)
     End Sub
     Public Function BtnExtraLog_ShowCheck() As Boolean
-        If FrmLogLeft Is Nothing OrElse FrmLogRight Is Nothing OrElse PageCurrent = PageType.GameLog Then Return False
-        Return FrmLogLeft.ShownLogs.Count > 0
+        Return ModMainWindowExtraButtonShell.ShouldShowLogButton(PageCurrent)
     End Function
 
     ''' <summary>
     ''' 返回顶部。
     ''' </summary>
     Public Sub BackToTop() Handles BtnExtraBack.Click
-        Dim RealScroll As MyScrollViewer = BtnExtraBack_GetRealChild()
-        If RealScroll IsNot Nothing Then
-            RealScroll.PerformVerticalOffsetDelta(-RealScroll.VerticalOffset)
-        Else
-            Log("[UI] 无法返回顶部，未找到合适的 RealScroll", LogLevel.Hint)
-        End If
+        ModMainWindowExtraButtonShell.BackToTop(Me)
     End Sub
     Private Function BtnExtraBack_ShowCheck() As Boolean
-        Dim RealScroll As MyScrollViewer = BtnExtraBack_GetRealChild()
-        Return RealScroll IsNot Nothing AndAlso RealScroll.Visibility = Visibility.Visible AndAlso RealScroll.VerticalOffset > Height + If(BtnExtraBack.Show, 0, 700)
+        Return ModMainWindowExtraButtonShell.ShouldShowBackToTop(Me, BtnExtraBack.Show)
     End Function
     Private Function BtnExtraBack_GetRealChild() As MyScrollViewer
-        If PanMainRight.Child Is Nothing OrElse TypeOf PanMainRight.Child IsNot MyPageRight Then Return Nothing
-        Return CType(PanMainRight.Child, MyPageRight).PanScroll
+        Return ModMainWindowExtraButtonShell.GetBackToTopScroll(Me)
     End Function
 
 #End Region
