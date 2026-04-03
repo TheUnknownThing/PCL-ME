@@ -55,6 +55,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _showOptionalUpdateDetailCommand;
     private readonly ActionCommand _resetGameLinkSettingsCommand;
     private readonly ActionCommand _resetGameManageSettingsCommand;
+    private readonly ActionCommand _resetLauncherMiscSettingsCommand;
+    private readonly ActionCommand _exportSettingsCommand;
+    private readonly ActionCommand _importSettingsCommand;
+    private readonly ActionCommand _applyProxySettingsCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -97,6 +101,20 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _notifySnapshotUpdates;
     private bool _autoSwitchGameLanguageToChinese = true;
     private bool _detectClipboardResourceLinks = true;
+    private int _selectedSystemActivityIndex;
+    private double _animationFpsLimit = 59;
+    private double _maxRealTimeLogValue = 13;
+    private bool _disableHardwareAcceleration;
+    private bool _enableTelemetry = true;
+    private bool _enableDoH = true;
+    private int _selectedHttpProxyTypeIndex;
+    private string _httpProxyAddress = string.Empty;
+    private string _httpProxyUsername = string.Empty;
+    private string _httpProxyPassword = string.Empty;
+    private double _debugAnimationSpeed = 30;
+    private bool _skipCopyDuringDownload;
+    private bool _debugModeEnabled;
+    private bool _debugDelayEnabled;
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
@@ -129,6 +147,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _showOptionalUpdateDetailCommand = CreateIntentCommand("查看 AquaCL 更新详情", "Would open the optional upgrade changelog surface.");
         _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
+        _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
+        _exportSettingsCommand = CreateIntentCommand("导出设置", "Would export the shared launcher configuration to a JSON file.");
+        _importSettingsCommand = CreateIntentCommand("导入设置", "Would import a shared launcher configuration and request a restart.");
+        _applyProxySettingsCommand = CreateIntentCommand("应用代理信息", "Would persist the custom HTTP proxy address, username, and password.");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -142,6 +164,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeUpdateSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
+        InitializeLauncherMiscSurface();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
@@ -293,6 +316,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupGameManageSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupGameManage;
 
+    public bool IsSetupLauncherMiscSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLauncherMisc;
+
     public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
 
@@ -303,6 +329,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         && !IsSetupUpdateSurface
         && !IsSetupGameLinkSurface
         && !IsSetupGameManageSurface
+        && !IsSetupLauncherMiscSurface
         && !IsToolsHelpSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
@@ -564,6 +591,171 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         set => SetProperty(ref _detectClipboardResourceLinks, value);
     }
 
+    public IReadOnlyList<string> SystemActivityOptions { get; } =
+    [
+        "显示所有公告",
+        "仅在有重要通知时显示公告",
+        "关闭所有公告"
+    ];
+
+    public int SelectedSystemActivityIndex
+    {
+        get => _selectedSystemActivityIndex;
+        set => SetProperty(ref _selectedSystemActivityIndex, Math.Clamp(value, 0, SystemActivityOptions.Count - 1));
+    }
+
+    public double AnimationFpsLimit
+    {
+        get => _animationFpsLimit;
+        set
+        {
+            if (SetProperty(ref _animationFpsLimit, value))
+            {
+                RaisePropertyChanged(nameof(AnimationFpsLabel));
+            }
+        }
+    }
+
+    public string AnimationFpsLabel => $"{Math.Round(AnimationFpsLimit) + 1} FPS";
+
+    public double MaxRealTimeLogValue
+    {
+        get => _maxRealTimeLogValue;
+        set
+        {
+            if (SetProperty(ref _maxRealTimeLogValue, value))
+            {
+                RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
+            }
+        }
+    }
+
+    public string MaxRealTimeLogLabel => FormatMaxRealTimeLog(MaxRealTimeLogValue);
+
+    public bool DisableHardwareAcceleration
+    {
+        get => _disableHardwareAcceleration;
+        set => SetProperty(ref _disableHardwareAcceleration, value);
+    }
+
+    public bool EnableTelemetry
+    {
+        get => _enableTelemetry;
+        set => SetProperty(ref _enableTelemetry, value);
+    }
+
+    public bool EnableDoH
+    {
+        get => _enableDoH;
+        set => SetProperty(ref _enableDoH, value);
+    }
+
+    public int SelectedHttpProxyTypeIndex
+    {
+        get => _selectedHttpProxyTypeIndex;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 2);
+            if (SetProperty(ref _selectedHttpProxyTypeIndex, clamped))
+            {
+                RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
+                RaisePropertyChanged(nameof(IsNoHttpProxySelected));
+                RaisePropertyChanged(nameof(IsSystemHttpProxySelected));
+                RaisePropertyChanged(nameof(IsCustomHttpProxySelected));
+            }
+        }
+    }
+
+    public bool IsCustomHttpProxyEnabled => SelectedHttpProxyTypeIndex == 2;
+
+    public bool IsNoHttpProxySelected
+    {
+        get => SelectedHttpProxyTypeIndex == 0;
+        set
+        {
+            if (value)
+            {
+                SelectedHttpProxyTypeIndex = 0;
+            }
+        }
+    }
+
+    public bool IsSystemHttpProxySelected
+    {
+        get => SelectedHttpProxyTypeIndex == 1;
+        set
+        {
+            if (value)
+            {
+                SelectedHttpProxyTypeIndex = 1;
+            }
+        }
+    }
+
+    public bool IsCustomHttpProxySelected
+    {
+        get => SelectedHttpProxyTypeIndex == 2;
+        set
+        {
+            if (value)
+            {
+                SelectedHttpProxyTypeIndex = 2;
+            }
+        }
+    }
+
+    public string HttpProxyAddress
+    {
+        get => _httpProxyAddress;
+        set => SetProperty(ref _httpProxyAddress, value);
+    }
+
+    public string HttpProxyUsername
+    {
+        get => _httpProxyUsername;
+        set => SetProperty(ref _httpProxyUsername, value);
+    }
+
+    public string HttpProxyPassword
+    {
+        get => _httpProxyPassword;
+        set => SetProperty(ref _httpProxyPassword, value);
+    }
+
+    public double DebugAnimationSpeed
+    {
+        get => _debugAnimationSpeed;
+        set
+        {
+            if (SetProperty(ref _debugAnimationSpeed, value))
+            {
+                RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
+            }
+        }
+    }
+
+    public string DebugAnimationSpeedLabel => Math.Round(DebugAnimationSpeed) > 29
+        ? "关闭"
+        : $"{Math.Round(DebugAnimationSpeed / 10 + 0.1, 1):0.0}x";
+
+    public bool SkipCopyDuringDownload
+    {
+        get => _skipCopyDuringDownload;
+        set => SetProperty(ref _skipCopyDuringDownload, value);
+    }
+
+    public bool DebugModeEnabled
+    {
+        get => _debugModeEnabled;
+        set => SetProperty(ref _debugModeEnabled, value);
+    }
+
+    public bool DebugDelayEnabled
+    {
+        get => _debugDelayEnabled;
+        set => SetProperty(ref _debugDelayEnabled, value);
+    }
+
     public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
         ? authPlayerName
         : "DemoPlayer";
@@ -683,6 +875,14 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ActionCommand ResetGameLinkSettingsCommand => _resetGameLinkSettingsCommand;
 
     public ActionCommand ResetGameManageSettingsCommand => _resetGameManageSettingsCommand;
+
+    public ActionCommand ResetLauncherMiscSettingsCommand => _resetLauncherMiscSettingsCommand;
+
+    public ActionCommand ExportSettingsCommand => _exportSettingsCommand;
+
+    public ActionCommand ImportSettingsCommand => _importSettingsCommand;
+
+    public ActionCommand ApplyProxySettingsCommand => _applyProxySettingsCommand;
 
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
@@ -1042,6 +1242,24 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _detectClipboardResourceLinks = true;
     }
 
+    private void InitializeLauncherMiscSurface()
+    {
+        _selectedSystemActivityIndex = 1;
+        _animationFpsLimit = 59;
+        _maxRealTimeLogValue = 13;
+        _disableHardwareAcceleration = false;
+        _enableTelemetry = true;
+        _enableDoH = true;
+        _selectedHttpProxyTypeIndex = 1;
+        _httpProxyAddress = "http://127.0.0.1:1080/";
+        _httpProxyUsername = string.Empty;
+        _httpProxyPassword = string.Empty;
+        _debugAnimationSpeed = 30;
+        _skipCopyDuringDownload = false;
+        _debugModeEnabled = false;
+        _debugDelayEnabled = false;
+    }
+
     private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()
     {
         return
@@ -1195,6 +1413,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             return;
         }
 
+        if (IsSetupLauncherMiscSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetLauncherMiscSurface();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -1274,6 +1498,33 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         AddActivity("重置游戏管理设置", "下载、社区资源和辅助功能设置已恢复到默认演示值。");
     }
 
+    private void ResetLauncherMiscSurface()
+    {
+        InitializeLauncherMiscSurface();
+        RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
+        RaisePropertyChanged(nameof(AnimationFpsLimit));
+        RaisePropertyChanged(nameof(AnimationFpsLabel));
+        RaisePropertyChanged(nameof(MaxRealTimeLogValue));
+        RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
+        RaisePropertyChanged(nameof(DisableHardwareAcceleration));
+        RaisePropertyChanged(nameof(EnableTelemetry));
+        RaisePropertyChanged(nameof(EnableDoH));
+        RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
+        RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
+        RaisePropertyChanged(nameof(IsNoHttpProxySelected));
+        RaisePropertyChanged(nameof(IsSystemHttpProxySelected));
+        RaisePropertyChanged(nameof(IsCustomHttpProxySelected));
+        RaisePropertyChanged(nameof(HttpProxyAddress));
+        RaisePropertyChanged(nameof(HttpProxyUsername));
+        RaisePropertyChanged(nameof(HttpProxyPassword));
+        RaisePropertyChanged(nameof(DebugAnimationSpeed));
+        RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
+        RaisePropertyChanged(nameof(SkipCopyDuringDownload));
+        RaisePropertyChanged(nameof(DebugModeEnabled));
+        RaisePropertyChanged(nameof(DebugDelayEnabled));
+        AddActivity("重置启动器杂项设置", "系统、网络和调试选项已恢复到默认演示值。");
+    }
+
     private void SetPromptOverlayOpen(bool isOpen)
     {
         if (_isPromptOverlayOpen == isOpen)
@@ -1296,6 +1547,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupUpdateSurface));
         RaisePropertyChanged(nameof(IsSetupGameLinkSurface));
         RaisePropertyChanged(nameof(IsSetupGameManageSurface));
+        RaisePropertyChanged(nameof(IsSetupLauncherMiscSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
@@ -1726,6 +1978,18 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             LauncherFrontendPageKey.Setup when title is "关于" or "日志" => (string.Empty, string.Empty, string.Empty, null),
             LauncherFrontendPageKey.Setup => ("初始化设置", resetIcon, "重置", $"初始化 {title} 页面设置"),
             _ => (string.Empty, string.Empty, string.Empty, null)
+        };
+    }
+
+    private static string FormatMaxRealTimeLog(double value)
+    {
+        var rounded = Math.Round(value);
+        return rounded switch
+        {
+            <= 5 => $"{rounded * 10 + 50}",
+            <= 13 => $"{rounded * 50 - 150}",
+            <= 28 => $"{rounded * 100 - 800}",
+            _ => "无限制"
         };
     }
 

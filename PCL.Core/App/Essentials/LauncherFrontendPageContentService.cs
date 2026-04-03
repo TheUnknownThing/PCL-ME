@@ -146,6 +146,7 @@ public static class LauncherFrontendPageContentService
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameManage => BuildSetupGameManageContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameLink => BuildSetupGameLinkContent(request, promptTotal),
+            LauncherFrontendSubpageKey.SetupLauncherMisc => BuildSetupLauncherMiscContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupUpdate => BuildSetupUpdateContent(request, promptTotal),
             _ => BuildGenericSetupContent(request, promptTotal)
@@ -403,6 +404,47 @@ public static class LauncherFrontendPageContentService
                     [
                         "正式版 / 测试版更新提示、自动中文和剪贴板识别继续保留原始布局层级。",
                         "这页补上后，设置分组里已经有多个不再依赖通用摘要卡的右侧页面。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildSetupLauncherMiscContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "启动器杂项页面",
+            "系统、网络和调试三组原版设置卡已经可以继续按 PageSetupLauncherMisc 的结构进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "启动器杂项"),
+                new LauncherFrontendPageFact("卡片分组", "系统 / 网络 / 调试"),
+                new LauncherFrontendPageFact("主要控件", "下拉框、滑块、单选框、复选框"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "系统",
+                    "公告、帧率与日志",
+                    [
+                        "保留了启动器公告、最高动画帧率、实时日志行数和导入导出设置按钮的原始顺序。",
+                        "系统卡片中的复选框和底部按钮继续沿用原来的紧凑排布。",
+                        "这类页面很适合继续收敛到原版控件密度，而不是引入新的设置页风格。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "网络",
+                    "DoH 与 HTTP 代理",
+                    [
+                        "网络卡片继续保留 DoH 复选框、三段 HTTP 代理模式和自定义代理输入区。",
+                        "自定义代理区域只在选中对应模式时显示，和原页面保持一致。",
+                        "应用代理按钮仍然只是前端意图，真实网络与配置写入边界不应回流到页面内部。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "调试",
+                    "折叠的调试选项",
+                    [
+                        "调试选项继续以默认折叠的卡片出现，保留动画速度和三个复选框。",
+                        "这也让新前端继续验证折叠卡片和更密集表单的组合方式。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);
