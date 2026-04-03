@@ -10,6 +10,7 @@ internal static class SpikeRunner
 {
     public static ShellSpikeRun BuildShellRun(LauncherFrontendShellPlan plan)
     {
+        var subpageTitle = LauncherFrontendNavigationService.GetSubpageTitle(plan.Navigation.CurrentRoute) ?? "none";
         var sidebarLines = plan.Navigation.SidebarEntries.Count == 0
             ? ["Current route has no sidebar entries."]
             : plan.Navigation.SidebarEntries.Select(entry =>
@@ -28,7 +29,7 @@ internal static class SpikeRunner
                     "Current Surface",
                     [
                         $"Page: {plan.Navigation.CurrentRoute.Page}",
-                        $"Subpage: {plan.Navigation.CurrentRoute.Subpage}",
+                        $"Subpage: {subpageTitle}",
                         $"Title: {plan.Navigation.CurrentPageTitle}",
                         $"Back button: {plan.Navigation.ShowsBackButton}"
                     ]),

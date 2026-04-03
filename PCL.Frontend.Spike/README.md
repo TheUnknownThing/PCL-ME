@@ -15,6 +15,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - launch scenarios now also separate reused runtime files from actual download transfers so the shell can model partial-runtime recovery instead of only all-or-nothing downloads
 - launch scenarios can now also model launcher-style batch-script export, including the export target, abort hint, and shell reveal behavior
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
+- the shell can now also round-trip a backend-driven frontend shell snapshot that includes startup prompts, top navigation, sidebar state, and utility surfaces
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
 
@@ -30,6 +31,9 @@ These emit `plan`-mode JSON by default.
 
 Useful reviewer commands:
 
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- shell --mode plan --format text`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- shell --mode run --format text`
+- `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- shell --mode execute --format text --workspace /tmp/pcl-shell-nav`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- startup --mode run --format text`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt download`
 - `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- launch legacy-forge --mode run --format text --java-prompt download --java-download-state failed`
@@ -65,6 +69,7 @@ Useful reviewer commands:
 
 ## Execute mode outputs
 
+- shell execution writes startup prompt, navigation view, and navigation catalog artifacts so a replacement frontend can inspect the portable shell seam directly
 - startup execution creates bootstrap directories, deletes seeded legacy log placeholders, and writes prompt/config artifacts
 - launch execution can materialize `launcher_profiles.json`, `options.txt`, a generated launch batch file, and session summary artifacts
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
@@ -79,7 +84,7 @@ Useful reviewer commands:
 
 ## Input replay
 
-- `--input-root` accepts either a single JSON file such as `launch.json` or a directory containing `startup.json`, `launch.json`, or `crash.json`
+- `--input-root` accepts either a single JSON file such as `launch.json` or a directory containing `shell.json`, `startup.json`, `launch.json`, or `crash.json`
 - when `--input-root` is provided, the spike reuses those serialized inputs instead of the built-in defaults
 - this makes it easy to execute once, tweak the saved JSON, and rerun the shell against file-backed state
 

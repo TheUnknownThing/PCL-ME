@@ -592,11 +592,12 @@ internal static class SpikeExecutor
 
     private static string BuildNavigationViewText(LauncherFrontendNavigationView navigation)
     {
+        var subpageTitle = LauncherFrontendNavigationService.GetSubpageTitle(navigation.CurrentRoute) ?? "none";
         return string.Join(
             Environment.NewLine,
             [
                 $"CurrentPage={navigation.CurrentRoute.Page}",
-                $"CurrentSubpage={navigation.CurrentRoute.Subpage}",
+                $"CurrentSubpage={subpageTitle}",
                 $"CurrentTitle={navigation.CurrentPageTitle}",
                 $"ShowsBackButton={navigation.ShowsBackButton}",
                 $"TopLevel={string.Join(" | ", navigation.TopLevelEntries.Select(entry => $"{entry.Title}:{entry.IsSelected}"))}",

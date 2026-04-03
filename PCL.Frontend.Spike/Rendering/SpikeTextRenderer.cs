@@ -43,6 +43,7 @@ internal static class SpikeTextRenderer
 
     private static string RenderShellPlan(LauncherFrontendShellPlan plan)
     {
+        var subpageTitle = LauncherFrontendNavigationService.GetSubpageTitle(plan.Navigation.CurrentRoute) ?? "none";
         var sidebarLines = plan.Navigation.SidebarEntries.Count == 0
             ? ["Current route has no sidebar entries."]
             : plan.Navigation.SidebarEntries.Select(entry =>
@@ -66,7 +67,7 @@ internal static class SpikeTextRenderer
                     "Current Surface",
                     [
                         $"Page: {plan.Navigation.CurrentRoute.Page}",
-                        $"Subpage: {plan.Navigation.CurrentRoute.Subpage}",
+                        $"Subpage: {subpageTitle}",
                         $"Title: {plan.Navigation.CurrentPageTitle}",
                         $"Shows back button: {plan.Navigation.ShowsBackButton}"
                     ]),
