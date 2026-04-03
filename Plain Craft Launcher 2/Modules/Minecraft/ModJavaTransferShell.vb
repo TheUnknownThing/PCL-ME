@@ -3,6 +3,16 @@ Imports PCL.Core.IO
 
 Public Module ModJavaTransferShell
 
+    Public Structure JavaRuntimeDownloadFilesResult
+        Public Sub New(runtimeBaseDirectory As String, files As List(Of NetFile))
+            Me.RuntimeBaseDirectory = runtimeBaseDirectory
+            Me.Files = files
+        End Sub
+
+        Public Property RuntimeBaseDirectory As String
+        Public Property Files As List(Of NetFile)
+    End Structure
+
     Public Function DownloadRuntimeIndex(indexRequestPlan As MinecraftJavaRuntimeRequestUrlPlan) As String
         If indexRequestPlan Is Nothing Then Throw New ArgumentNullException(NameOf(indexRequestPlan))
 
@@ -45,6 +55,43 @@ Public Module ModJavaTransferShell
 
         Log(transferPlan.LogMessage)
         Return results
+    End Function
+
+    Public Function ResolveDownloadFiles(downloadTarget As String,
+                                         minecraftRootPath As String,
+                                         ignoredHashes As IReadOnlyList(Of String),
+                                         is32BitSystem As Boolean) As JavaRuntimeDownloadFilesResult
+        If String.IsNullOrWhiteSpace(downloadTarget) Then Throw New ArgumentException("缺少 Java 下载目标。", NameOf(downloadTarget))
+        If String.IsNullOrWhiteSpace(minecraftRootPath) Then Throw New ArgumentException("缺少 Minecraft 根目录。", NameOf(minecraftRootPath))
+        If ignoredHashes Is Nothing Then Throw New ArgumentNullException(NameOf(ignoredHashes))
+
+        Dim indexRequestPlan = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan()
+        Dim indexFileStr = DownloadRuntimeIndex(indexRequestPlan)
+        Dim manifestPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
+            New MinecraftJavaRuntimeManifestRequestPlanRequest(
+                indexFileStr,
+                $"windows-x{If(is32BitSystem, "86", "64")}",
+                downloadTarget,
+                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()))
+
+        Dim manifestFileStr = DownloadRuntimeManifest(manifestPlan)
+        Dim runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
+            minecraftRootPath,
+            manifestPlan.Selection.ComponentKey)
+        Dim runtimePlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+            New MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
+                manifestFileStr,
+                runtimeBaseDirectory,
+                ignoredHashes,
+                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()))
+        runtimeBaseDirectory = runtimePlan.DownloadPlan.RuntimeBaseDirectory
+
+        Dim existingRelativePaths = DetectExistingRelativePaths(runtimePlan)
+        Dim transferPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
+            New MinecraftJavaRuntimeDownloadTransferPlanRequest(
+                runtimePlan,
+                existingRelativePaths))
+        Return New JavaRuntimeDownloadFilesResult(runtimeBaseDirectory, BuildDownloadFiles(transferPlan))
     End Function
 
 End Module

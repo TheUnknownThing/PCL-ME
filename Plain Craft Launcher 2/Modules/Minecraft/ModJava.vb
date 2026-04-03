@@ -261,32 +261,13 @@ Public Module ModJava
     Private ReadOnly IgnoreHash As IReadOnlyList(Of String) = MinecraftJavaRuntimeDownloadSessionService.GetDefaultIgnoredSha1Hashes()
     Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
         Log("[Java] 开始获取 Java 下载信息")
-        Dim indexRequestPlan = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan()
-        Dim IndexFileStr As String = ModJavaTransferShell.DownloadRuntimeIndex(indexRequestPlan)
-        Dim manifestPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
-            New MinecraftJavaRuntimeManifestRequestPlanRequest(
-                IndexFileStr,
-                $"windows-x{If(Is32BitSystem, "86", "64")}",
-                Loader.Input,
-                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()))
-        '获取文件列表
-        Dim ListFileStr As String = ModJavaTransferShell.DownloadRuntimeManifest(manifestPlan)
-        LastJavaBaseDir = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
+        Dim downloadFiles = ModJavaTransferShell.ResolveDownloadFiles(
+            Loader.Input,
             IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft"),
-            manifestPlan.Selection.ComponentKey)
-        Dim runtimePlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
-            New MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
-                ListFileStr,
-                LastJavaBaseDir,
-                IgnoreHash,
-                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()))
-        LastJavaBaseDir = runtimePlan.DownloadPlan.RuntimeBaseDirectory
-        Dim existingRelativePaths = ModJavaTransferShell.DetectExistingRelativePaths(runtimePlan)
-        Dim transferPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
-            New MinecraftJavaRuntimeDownloadTransferPlanRequest(
-                runtimePlan,
-                existingRelativePaths))
-        Loader.Output = ModJavaTransferShell.BuildDownloadFiles(transferPlan)
+            IgnoreHash,
+            Is32BitSystem)
+        LastJavaBaseDir = downloadFiles.RuntimeBaseDirectory
+        Loader.Output = downloadFiles.Files
     End Sub
 
 #End Region
