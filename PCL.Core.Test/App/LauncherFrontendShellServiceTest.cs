@@ -33,7 +33,9 @@ public sealed class LauncherFrontendShellServiceTest
 
         Assert.AreEqual(4, plan.Catalog.TopLevelPages.Count);
         Assert.AreEqual(3, plan.Consent.Prompts.Count);
+        Assert.AreEqual(3, plan.Prompts.Count);
         Assert.AreEqual(LauncherFrontendPageKey.Launch, plan.Navigation.CurrentRoute.Page);
+        Assert.AreEqual(LauncherFrontendPageKind.TopLevel, plan.Navigation.CurrentPage.Kind);
         Assert.AreEqual(2, plan.Navigation.UtilityEntries.Count(entry => entry.IsVisible));
     }
 }

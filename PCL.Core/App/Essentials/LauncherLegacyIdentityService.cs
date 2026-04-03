@@ -12,13 +12,12 @@ public static class LauncherLegacyIdentityService
         var normalizedDeviceSeed = NormalizeDeviceSeed(deviceSeed);
         return normalizedDeviceSeed is null
             ? DefaultRawCode
-            : SHA256Provider.Instance.ComputeHash(normalizedDeviceSeed).ToHexString().ToUpperInvariant();
+            : Convert.ToHexString(SHA256Provider.Instance.ComputeHash(normalizedDeviceSeed)).ToUpperInvariant();
     }
 
     public static string DeriveEncryptionKey(string? deviceSeed)
     {
-        return SHA512Provider.Instance.ComputeHash(DeriveRawCode(deviceSeed))
-            .ToHexString()
+        return Convert.ToHexString(SHA512Provider.Instance.ComputeHash(DeriveRawCode(deviceSeed)))
             .Substring(4, 32)
             .ToUpperInvariant();
     }
@@ -28,8 +27,7 @@ public static class LauncherLegacyIdentityService
         ArgumentException.ThrowIfNullOrWhiteSpace(randomId);
 
         var normalizedDeviceSeed = NormalizeDeviceSeed(deviceSeed) ?? string.Empty;
-        return SHA512Provider.Instance.ComputeHash($"{randomId}|{normalizedDeviceSeed}")
-            .ToHexString()
+        return Convert.ToHexString(SHA512Provider.Instance.ComputeHash($"{randomId}|{normalizedDeviceSeed}"))
             .ToUpperInvariant();
     }
 

@@ -36,8 +36,13 @@ public sealed class LauncherFrontendNavigationServiceTest
 
         Assert.AreEqual("下载", view.CurrentPageTitle);
         Assert.IsFalse(view.ShowsBackButton);
+        Assert.AreEqual(LauncherFrontendPageKind.TopLevel, view.CurrentPage.Kind);
+        Assert.AreEqual("下载分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.AreEqual("光影包", view.CurrentPage.SidebarItemTitle);
         Assert.AreEqual("光影包", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
         Assert.AreEqual("光影包", LauncherFrontendNavigationService.GetSubpageTitle(view.CurrentRoute));
+        CollectionAssert.AreEqual(new[] { "下载", "光影包" }, view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+        Assert.IsNull(view.BackTarget);
         Assert.IsTrue(view.UtilityEntries.Single(entry => entry.Id == "task-manager").IsVisible);
         Assert.IsFalse(view.UtilityEntries.Single(entry => entry.Id == "game-log").IsVisible);
     }
@@ -52,6 +57,12 @@ public sealed class LauncherFrontendNavigationServiceTest
 
         Assert.AreEqual("实例设置 - Demo Instance", view.CurrentPageTitle);
         Assert.IsTrue(view.ShowsBackButton);
+        Assert.AreEqual(LauncherFrontendPageKind.Secondary, view.CurrentPage.Kind);
+        Assert.AreEqual("实例设置分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.AreEqual(LauncherFrontendBackTargetKind.History, view.BackTarget?.Kind);
         Assert.AreEqual("Mod", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
+        CollectionAssert.AreEqual(
+            new[] { "实例设置 - Demo Instance", "Mod" },
+            view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
     }
 }

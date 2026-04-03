@@ -24,29 +24,48 @@ public static class LauncherFrontendNavigationService
         var sidebarGroupPage = currentPage.SidebarGroupPage ?? request.CurrentRoute.Page;
         var sidebarGroup = Catalog.SidebarGroups.FirstOrDefault(group => group.Page == sidebarGroupPage);
         var showsBackButton = currentPage.Kind != LauncherFrontendPageKind.TopLevel || request.BackstackDepth > 0;
+        var topLevelEntries = Catalog.TopLevelPages.Select(page => new LauncherFrontendNavigationEntry(
+            page.Page.ToString(),
+            page.Title,
+            page.Summary,
+            new LauncherFrontendRoute(page.Page),
+            IsSelected: request.CurrentRoute.Page == page.Page)).ToArray();
+        var sidebarEntries = sidebarGroup?.Items.Select(item => new LauncherFrontendNavigationEntry(
+            item.Subpage.ToString(),
+            item.Title,
+            item.Summary,
+            new LauncherFrontendRoute(sidebarGroup.Page, item.Subpage),
+            IsSelected: request.CurrentRoute.Page == sidebarGroup.Page && request.CurrentRoute.Subpage == item.Subpage)).ToArray() ??
+            Array.Empty<LauncherFrontendNavigationEntry>();
+        var selectedSidebarEntry = sidebarEntries.FirstOrDefault(entry => entry.IsSelected);
+        var backTarget = ResolveBackTarget(
+            request,
+            currentPage,
+            showsBackButton,
+            topLevelEntries);
 
         return new LauncherFrontendNavigationView(
             request.CurrentRoute,
             currentTitle,
+            new LauncherFrontendPageSurface(
+                request.CurrentRoute,
+                currentPage.Kind,
+                currentTitle,
+                currentPage.Summary,
+                sidebarGroup?.Title,
+                selectedSidebarEntry?.Title,
+                selectedSidebarEntry?.Summary,
+                sidebarEntries.Length > 0),
+            BuildBreadcrumbs(currentPage, currentTitle, selectedSidebarEntry, topLevelEntries),
+            backTarget,
             showsBackButton,
-            Catalog.TopLevelPages.Select(page => new LauncherFrontendNavigationEntry(
-                page.Page.ToString(),
-                page.Title,
-                page.Summary,
-                new LauncherFrontendRoute(page.Page),
-                IsSelected: request.CurrentRoute.Page == page.Page)).ToArray(),
-            sidebarGroup?.Items.Select(item => new LauncherFrontendNavigationEntry(
-                item.Subpage.ToString(),
-                item.Title,
-                item.Summary,
-                new LauncherFrontendRoute(sidebarGroup.Page, item.Subpage),
-                IsSelected: request.CurrentRoute.Page == sidebarGroup.Page && request.CurrentRoute.Subpage == item.Subpage)).ToArray() ??
-            Array.Empty<LauncherFrontendNavigationEntry>(),
+            topLevelEntries,
+            sidebarEntries,
             [
                 new LauncherFrontendUtilityEntry(
                     "back",
                     "返回",
-                    new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                    backTarget?.Route ?? new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
                     IsVisible: showsBackButton,
                     IsSelected: false),
                 new LauncherFrontendUtilityEntry(
@@ -211,6 +230,66 @@ public static class LauncherFrontendNavigationService
         string Summary,
         LauncherFrontendPageKind Kind,
         LauncherFrontendPageKey? SidebarGroupPage = null);
+
+    private static IReadOnlyList<LauncherFrontendBreadcrumb> BuildBreadcrumbs(
+        LauncherFrontendPageResolution currentPage,
+        string currentTitle,
+        LauncherFrontendNavigationEntry? selectedSidebarEntry,
+        IReadOnlyList<LauncherFrontendNavigationEntry> topLevelEntries)
+    {
+        var breadcrumbs = new List<LauncherFrontendBreadcrumb>();
+        if (currentPage.Kind == LauncherFrontendPageKind.TopLevel)
+        {
+            breadcrumbs.Add(new LauncherFrontendBreadcrumb(
+                currentTitle,
+                new LauncherFrontendRoute(currentPage.Page)));
+        }
+        else
+        {
+            var fallbackRoute = currentPage.SidebarGroupPage is null
+                ? null
+                : new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value);
+            breadcrumbs.Add(new LauncherFrontendBreadcrumb(currentTitle, fallbackRoute));
+        }
+
+        if (selectedSidebarEntry is not null)
+        {
+            breadcrumbs.Add(new LauncherFrontendBreadcrumb(
+                selectedSidebarEntry.Title,
+                selectedSidebarEntry.Route));
+        }
+
+        return breadcrumbs;
+    }
+
+    private static LauncherFrontendBackTarget? ResolveBackTarget(
+        LauncherFrontendNavigationViewRequest request,
+        LauncherFrontendPageResolution currentPage,
+        bool showsBackButton,
+        IReadOnlyList<LauncherFrontendNavigationEntry> topLevelEntries)
+    {
+        if (!showsBackButton)
+        {
+            return null;
+        }
+
+        if (request.BackstackDepth > 0)
+        {
+            return new LauncherFrontendBackTarget(
+                LauncherFrontendBackTargetKind.History,
+                Route: null,
+                Label: "返回上一页");
+        }
+
+        var route = currentPage.SidebarGroupPage is not null
+            ? new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value)
+            : new LauncherFrontendRoute(LauncherFrontendPageKey.Launch);
+        var label = topLevelEntries.FirstOrDefault(entry => entry.Route.Page == route.Page)?.Title ?? "启动";
+        return new LauncherFrontendBackTarget(
+            LauncherFrontendBackTargetKind.Route,
+            route,
+            $"返回到 {label}");
+    }
 }
 
 public static class LauncherFrontendShellService
@@ -219,9 +298,13 @@ public static class LauncherFrontendShellService
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var startupPlan = LauncherStartupWorkflowService.BuildPlan(request.StartupWorkflowRequest);
+        var consent = LauncherStartupConsentService.Evaluate(request.StartupConsentRequest);
+
         return new LauncherFrontendShellPlan(
-            LauncherStartupWorkflowService.BuildPlan(request.StartupWorkflowRequest),
-            LauncherStartupConsentService.Evaluate(request.StartupConsentRequest),
+            startupPlan,
+            consent,
+            LauncherFrontendPromptService.BuildStartupPromptQueue(startupPlan, consent),
             LauncherFrontendNavigationService.GetCatalog(),
             LauncherFrontendNavigationService.BuildView(request.Navigation));
     }
@@ -235,6 +318,7 @@ public sealed record LauncherFrontendShellRequest(
 public sealed record LauncherFrontendShellPlan(
     LauncherStartupWorkflowPlan StartupPlan,
     LauncherStartupConsentResult Consent,
+    IReadOnlyList<LauncherFrontendPrompt> Prompts,
     LauncherFrontendNavigationCatalog Catalog,
     LauncherFrontendNavigationView Navigation);
 
@@ -275,10 +359,32 @@ public sealed record LauncherFrontendNavigationViewRequest(
 public sealed record LauncherFrontendNavigationView(
     LauncherFrontendRoute CurrentRoute,
     string CurrentPageTitle,
+    LauncherFrontendPageSurface CurrentPage,
+    IReadOnlyList<LauncherFrontendBreadcrumb> Breadcrumbs,
+    LauncherFrontendBackTarget? BackTarget,
     bool ShowsBackButton,
     IReadOnlyList<LauncherFrontendNavigationEntry> TopLevelEntries,
     IReadOnlyList<LauncherFrontendNavigationEntry> SidebarEntries,
     IReadOnlyList<LauncherFrontendUtilityEntry> UtilityEntries);
+
+public sealed record LauncherFrontendPageSurface(
+    LauncherFrontendRoute Route,
+    LauncherFrontendPageKind Kind,
+    string Title,
+    string Summary,
+    string? SidebarGroupTitle,
+    string? SidebarItemTitle,
+    string? SidebarItemSummary,
+    bool HasSidebar);
+
+public sealed record LauncherFrontendBreadcrumb(
+    string Title,
+    LauncherFrontendRoute? Route);
+
+public sealed record LauncherFrontendBackTarget(
+    LauncherFrontendBackTargetKind Kind,
+    LauncherFrontendRoute? Route,
+    string Label);
 
 public sealed record LauncherFrontendNavigationEntry(
     string Id,
@@ -304,6 +410,12 @@ public enum LauncherFrontendPageKind
     Secondary = 1,
     Detail = 2,
     Utility = 3
+}
+
+public enum LauncherFrontendBackTargetKind
+{
+    History = 0,
+    Route = 1
 }
 
 public enum LauncherFrontendPageKey
