@@ -167,7 +167,8 @@ public static class LauncherFrontendNavigationService
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HelpDetail, "帮助详情", "查看帮助条目详情。", LauncherFrontendPageKind.Detail),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.GameLog, "实时日志", "查看启动日志与输出。", LauncherFrontendPageKind.Utility),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.VersionSaves, "存档管理", "查看单个存档的详细页面。", LauncherFrontendPageKind.Secondary, SidebarGroupPage: LauncherFrontendPageKey.VersionSaves),
-                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HomePageMarket, "主页市场", "主页市场与推荐入口。", LauncherFrontendPageKind.Detail))
+                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HomePageMarket, "主页市场", "主页市场与推荐入口。", LauncherFrontendPageKind.Detail)
+            ]
         );
     }
 

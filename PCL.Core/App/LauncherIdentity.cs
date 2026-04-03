@@ -1,8 +1,7 @@
 using System;
 using System.IO;
+using PCL.Core.App.Essentials;
 using PCL.Core.Logging;
-using PCL.Core.Utils.Exts;
-using PCL.Core.Utils.Hash;
 using PCL.Core.Utils.OS;
 using PCL.Core.Utils.Secret;
 
@@ -17,22 +16,19 @@ public static class LauncherIdentity
 
     private static string ResolveLauncherId()
     {
-        var explicitLauncherId = NormalizeLauncherId(EnvironmentInterop.GetSecret("LAUNCHER_ID", readEnvDebugOnly: true));
-        if (explicitLauncherId is not null)
-        {
-            return explicitLauncherId;
-        }
-
         var persistedPath = GetPersistedLauncherIdPath();
-        var persistedLauncherId = TryReadPersistedLauncherId(persistedPath);
-        if (persistedLauncherId is not null)
+        var plan = LauncherIdentityResolutionService.Resolve(new LauncherIdentityResolutionRequest(
+            ExplicitLauncherId: EnvironmentInterop.GetSecret("LAUNCHER_ID", readEnvDebugOnly: true),
+            PersistedLauncherId: TryReadPersistedLauncherId(persistedPath),
+            DeviceLauncherId: TryGetWindowsLauncherId(),
+            GeneratedLauncherId: Guid.NewGuid().ToString("N")));
+
+        if (plan.ShouldPersist)
         {
-            return persistedLauncherId;
+            PersistLauncherId(persistedPath, plan.LauncherId);
         }
 
-        var launcherId = TryGetWindowsLauncherId() ?? CreateGeneratedLauncherId();
-        PersistLauncherId(persistedPath, launcherId);
-        return launcherId;
+        return plan.LauncherId;
     }
 
     private static string? TryGetWindowsLauncherId()
@@ -44,19 +40,13 @@ public static class LauncherIdentity
 
         try
         {
-            return NormalizeLauncherId(Identify.LauncherId);
+            return LauncherIdentityResolutionService.NormalizeLauncherId(Identify.LauncherId);
         }
         catch (Exception ex)
         {
             LogWrapper.Warn(ex, LogModule, "读取 Windows 设备识别码失败，将使用持久化兜底值");
             return null;
         }
-    }
-
-    private static string CreateGeneratedLauncherId()
-    {
-        var generated = NormalizeLauncherId(Guid.NewGuid().ToString("N"));
-        return generated ?? "PCL2-CECE-GOOD-2025";
     }
 
     private static string? TryReadPersistedLauncherId(string persistedPath)
@@ -68,7 +58,7 @@ public static class LauncherIdentity
                 return null;
             }
 
-            return NormalizeLauncherId(File.ReadAllText(persistedPath));
+            return LauncherIdentityResolutionService.NormalizeLauncherId(File.ReadAllText(persistedPath));
         }
         catch (Exception ex)
         {
@@ -98,26 +88,5 @@ public static class LauncherIdentity
     private static string GetPersistedLauncherIdPath()
     {
         return Path.Combine(Paths.SharedData, LauncherIdFileName);
-    }
-
-    private static string? NormalizeLauncherId(string? launcherId)
-    {
-        if (string.IsNullOrWhiteSpace(launcherId))
-        {
-            return null;
-        }
-
-        var trimmed = launcherId.Trim().ToUpperInvariant();
-        if (trimmed.Length == 19 && trimmed[4] == '-' && trimmed[9] == '-' && trimmed[14] == '-')
-        {
-            return trimmed;
-        }
-
-        var sample = SHA512Provider.Instance.ComputeHash($"PCL-CE|{trimmed}|LauncherId").ToHexString();
-        var token = sample.Substring(64, 16).ToUpperInvariant();
-        return token
-            .Insert(4, "-")
-            .Insert(9, "-")
-            .Insert(14, "-");
     }
 }
