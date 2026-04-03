@@ -345,62 +345,14 @@ Public Class FormMain
     ''' <param name="SendWarning">是否在还有下载任务未完成时发出警告。</param>
     ''' <param name="isUpdating">是否正在更新重启</param>
     Public Sub EndProgram(SendWarning As Boolean, Optional isUpdating As Boolean = False)
-        '发出警告
-        If SendWarning AndAlso HasDownloadingTask() Then
-            If MyMsgBox("还有下载任务尚未完成，是否确定退出？", "提示", "确定", "取消") = 1 Then
-                '强行结束下载任务
-                RunInNewThread(
-                Sub()
-                    Log("[System] 正在强行停止任务")
-                    For Each Task As LoaderBase In LoaderTaskbar.ToList()
-                        Task.Abort()
-                    Next
-                End Sub, "强行停止下载任务")
-            Else
-                Return
-            End If
-        End If
+        If Not ModMainWindowShutdownShell.ConfirmShutdown(SendWarning) Then Return
         '关闭联机大厅
         'Await LobbyController.CloseAsync().ConfigureAwait(False)
         '存储上次使用的档案编号
         SaveProfile()
-        '关闭
-        RunInUiWait(
-        Sub()
-            '清理视频背景
-            VideoBack.Stop()
-            VideoBack.Source = Nothing
-            VideoBack.Close()
-            IsHitTestVisible = False
-            If RenderTransform Is Nothing Then
-                Dim TransformPos As New TranslateTransform(0, 0)
-                Dim TransformRotate As New RotateTransform(0)
-                Dim TransformScale As New ScaleTransform(1, 1)
-                TransformScale.CenterX = Width / 2
-                TransformScale.CenterY = Height / 2
-                RenderTransform = New TransformGroup() With {.Children = New TransformCollection({TransformRotate, TransformPos, TransformScale})}
-                AniStart({
-                    AaOpacity(Me, -Opacity, 140, 40, New AniEaseOutFluent(AniEasePower.Weak)),
-                    AaDouble(
-                    Sub(i)
-                        TransformScale.ScaleX += i
-                        TransformScale.ScaleY += i
-                    End Sub, 0.88 - TransformScale.ScaleX, 180),
-                    AaDouble(Sub(i) TransformPos.Y += i, 20 - TransformPos.Y, 180, 0, New AniEaseOutFluent(AniEasePower.Weak)),
-                    AaDouble(Sub(i) TransformRotate.Angle += i, 0.6 - TransformRotate.Angle, 180, 0, New AniEaseInoutFluent(AniEasePower.Weak)),
-                    AaCode(
-                    Sub()
-                        IsHitTestVisible = False
-                        Visibility = Visibility.Collapsed
-                        ShowInTaskbar = False
-                    End Sub, 210),
-                    AaCode(Sub() EndProgramForce(force:=False, isUpdating:=isUpdating), 230)
-                }, "Form Close")
-            Else
-                EndProgramForce(force:=False, isUpdating:=isUpdating)
-            End If
-            Log("[System] 收到关闭指令")
-        End Sub)
+        ModMainWindowShutdownShell.RunShutdown(
+            Me,
+            Sub() EndProgramForce(force:=False, isUpdating:=isUpdating))
     End Sub
     Private Shared IsLogShown As Boolean = False
     Public Shared Sub EndProgramForce(
