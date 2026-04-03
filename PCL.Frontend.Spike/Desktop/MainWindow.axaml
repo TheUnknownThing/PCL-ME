@@ -3,622 +3,565 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="PCL Frontend Spike"
-    Width="1440"
-    Height="900"
-    MinWidth="1080"
-    MinHeight="700"
+    Width="1220"
+    Height="780"
+    MinWidth="980"
+    MinHeight="620"
     Background="Transparent"
     SystemDecorations="None">
-  <Grid>
-    <Grid RowDefinitions="*" Margin="10">
-      <Border CornerRadius="18"
-              Background="#0E2230">
-        <Grid>
-          <Border Margin="2"
-                  CornerRadius="16"
-                  Background="#F5F3EE" />
-          <Border Margin="2"
-                  CornerRadius="16">
-            <Border.Background>
-              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#F7F3EA" Offset="0" />
-                <GradientStop Color="#ECF5F6" Offset="0.55" />
-                <GradientStop Color="#E6EEF7" Offset="1" />
-              </LinearGradientBrush>
-            </Border.Background>
-          </Border>
+  <Grid Margin="10">
+    <Border CornerRadius="12"
+            Background="#FBFBFB"
+            BorderBrush="#C9D8EA"
+            BorderThickness="1">
+      <Grid RowDefinitions="48,*">
+        <Border Grid.Row="0"
+                Background="#1370F3"
+                CornerRadius="12,12,0,0"
+                PointerPressed="TitleBar_OnPointerPressed">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid Grid.Column="0" Margin="18,0,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <Border Grid.Column="0"
+                      Width="28"
+                      Height="28"
+                      CornerRadius="8"
+                      Background="#FFFFFF"
+                      VerticalAlignment="Center">
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="#1370F3"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           Text="PCL" />
+              </Border>
+              <TextBlock Grid.Column="1"
+                         Margin="10,0,0,0"
+                         VerticalAlignment="Center"
+                         Foreground="White"
+                         FontSize="18"
+                         FontWeight="Bold"
+                         Text="Plain Craft Launcher" />
+              <Border Grid.Column="2"
+                      Margin="10,0,0,0"
+                      VerticalAlignment="Center"
+                      Padding="6,2"
+                      Background="#FFFFFF"
+                      CornerRadius="5">
+                <TextBlock Foreground="#1370F3"
+                           FontSize="11"
+                           FontWeight="Bold"
+                           Text="CE" />
+              </Border>
+            </Grid>
 
-          <Grid RowDefinitions="48,*">
-            <Border Grid.Row="0"
-                    Background="#0D5C63"
-                    CornerRadius="16,16,0,0"
-                    PointerPressed="TitleBar_OnPointerPressed">
-              <Grid ColumnDefinitions="Auto,*,Auto">
-                <StackPanel Orientation="Horizontal" Margin="18,0,0,0" Spacing="10" VerticalAlignment="Center">
-                  <Border Width="30" Height="30" CornerRadius="8" Background="#FFFFFF">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontSize="15"
-                               FontWeight="Bold"
-                               Foreground="#0D5C63"
-                               Text="PCL" />
+            <ItemsControl Grid.Column="1"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          ItemsSource="{Binding TopLevelEntries}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="5,0"
+                          Padding="12,0"
+                          Height="27"
+                          Background="{Binding BackgroundBrush}"
+                          CornerRadius="13.5">
+                    <Button Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Command="{Binding Command}">
+                      <TextBlock VerticalAlignment="Center"
+                                 Foreground="{Binding ForegroundBrush}"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Text="{Binding Title}" />
+                    </Button>
                   </Border>
-                  <TextBlock VerticalAlignment="Center"
-                             FontSize="18"
-                             FontWeight="Bold"
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Grid.Column="2"
+                        Margin="0,0,12,0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+              <Border Padding="8,3"
+                      VerticalAlignment="Center"
+                      Background="#33FFFFFF"
+                      CornerRadius="999">
+                <TextBlock Foreground="#F4F8FF"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Text="{Binding EnvironmentLabel}" />
+              </Border>
+              <Border Width="28"
+                      Height="28"
+                      Background="#33FFFFFF"
+                      CornerRadius="1000">
+                <Button Background="Transparent"
+                        BorderThickness="0"
+                        Click="MinimizeButton_OnClick">
+                  <TextBlock HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
                              Foreground="White"
-                             Text="Plain Craft Launcher" />
-                  <Border VerticalAlignment="Center"
-                          Padding="7,2"
-                          Background="#FFFFFF"
-                          CornerRadius="999">
-                    <TextBlock FontSize="11"
-                               FontWeight="Bold"
-                               Foreground="#0D5C63"
-                               Text="CE" />
+                             FontSize="14"
+                             Text="—" />
+                </Button>
+              </Border>
+              <Border Width="28"
+                      Height="28"
+                      Background="#D84444"
+                      CornerRadius="1000">
+                <Button Background="Transparent"
+                        BorderThickness="0"
+                        Click="CloseButton_OnClick">
+                  <TextBlock HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Foreground="White"
+                             FontSize="16"
+                             Text="×" />
+                </Button>
+              </Border>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="300,*">
+          <Border Grid.Column="0"
+                  Background="#D2FBFBFB"
+                  BorderBrush="#E5EEF8"
+                  BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto,*,Auto,Auto,20">
+              <StackPanel Margin="20,20,20,0" Spacing="10">
+                <TextBlock Foreground="#8F4D23"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Text="{Binding ScenarioLabel}" />
+                <TextBlock Foreground="#343D4A"
+                           FontSize="19"
+                           FontWeight="Bold"
+                           Text="{Binding Title}" />
+                <TextBlock Foreground="#737373"
+                           FontSize="13.5"
+                           TextWrapping="Wrap"
+                           Text="{Binding Description}" />
+              </StackPanel>
+
+              <ScrollViewer Grid.Row="1"
+                            Margin="0,16,0,0"
+                            VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="20,0,20,0" Spacing="10">
+                  <Border Padding="14"
+                          Background="#01EAF2FE"
+                          CornerRadius="7">
+                    <TextBlock Foreground="#404040"
+                               FontSize="12.5"
+                               TextWrapping="Wrap"
+                               Text="{Binding SurfaceMeta}" />
+                  </Border>
+
+                  <ItemsControl ItemsSource="{Binding SidebarEntries}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Height="42"
+                                Background="{Binding BackgroundBrush}"
+                                CornerRadius="3">
+                          <Button Padding="0"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  Command="{Binding Command}"
+                                  HorizontalContentAlignment="Stretch">
+                            <Grid ColumnDefinitions="4,Auto,*" Margin="0,0,8,0">
+                              <Border Background="{Binding AccentBrush}" />
+                              <TextBlock Grid.Column="1"
+                                         Margin="12,0,0,0"
+                                         VerticalAlignment="Center"
+                                         Foreground="{Binding ForegroundBrush}"
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Text="{Binding Title}" />
+                              <TextBlock Grid.Column="2"
+                                         Margin="8,0,0,0"
+                                         VerticalAlignment="Center"
+                                         Foreground="#8C8C8C"
+                                         FontSize="12"
+                                         TextTrimming="CharacterEllipsis"
+                                         Text="{Binding Summary}" />
+                            </Grid>
+                          </Button>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <Border Padding="14"
+                          Background="#01EAF2FE"
+                          CornerRadius="7">
+                    <StackPanel Spacing="6">
+                      <TextBlock Foreground="#1370F3"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Text="启动器状态" />
+                      <TextBlock Foreground="#404040"
+                                 FontSize="12.5"
+                                 TextWrapping="Wrap"
+                                 Text="{Binding Status}" />
+                      <TextBlock Foreground="#737373"
+                                 FontSize="12"
+                                 TextWrapping="Wrap"
+                                 Text="{Binding BreadcrumbTrail}" />
+                    </StackPanel>
                   </Border>
                 </StackPanel>
+              </ScrollViewer>
 
-                <ItemsControl Grid.Column="1"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center"
-                              ItemsSource="{Binding TopLevelEntries}">
+              <Grid Grid.Row="2" Margin="20,10,20,0" ColumnDefinitions="*,Auto,Auto,10">
+                <Border Grid.Column="0"
+                        Height="35"
+                        CornerRadius="5"
+                        BorderBrush="#A6A6A6"
+                        BorderThickness="1">
+                  <Button Background="Transparent"
+                          BorderThickness="0"
+                          Command="{Binding BackCommand}"
+                          IsEnabled="{Binding CanGoBack}">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="#404040"
+                               FontSize="13"
+                               Text="返回" />
+                  </Button>
+                </Border>
+                <Border Grid.Column="1"
+                        Margin="10,0,0,0"
+                        Height="35"
+                        MinWidth="128"
+                        CornerRadius="5"
+                        Background="#1370F3">
+                  <Grid>
+                    <TextBlock HorizontalAlignment="Center"
+                               Margin="18,0,18,12"
+                               VerticalAlignment="Center"
+                               Foreground="White"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Text="{Binding Title}" />
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Bottom"
+                               Margin="18,0,18,7"
+                               Foreground="#CFE0FD"
+                               FontSize="11"
+                               Text="{Binding PromptInboxTitle}" />
+                  </Grid>
+                </Border>
+                <Border Grid.Column="2"
+                        Margin="10,0,0,0"
+                        Height="35"
+                        Padding="12,0"
+                        CornerRadius="5"
+                        BorderBrush="#CCCCCC"
+                        BorderThickness="1"
+                        Background="#FFFFFF">
+                  <TextBlock VerticalAlignment="Center"
+                             Foreground="#737373"
+                             FontSize="12"
+                             Text="{Binding InputLabel}" />
+                </Border>
+              </Grid>
+            </Grid>
+          </Border>
+
+          <Grid Grid.Column="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="25,25,25,10" Spacing="15">
+                <Border Padding="20,14,20,15"
+                        Background="#FFFFFF"
+                        BorderBrush="#D5E6FD"
+                        BorderThickness="1"
+                        CornerRadius="7">
+                  <StackPanel Spacing="8">
+                    <TextBlock Foreground="#1370F3"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Text="{Binding Eyebrow}" />
+                    <TextBlock Foreground="#343D4A"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Text="{Binding Title}" />
+                    <TextBlock Foreground="#404040"
+                               FontSize="13.5"
+                               TextWrapping="Wrap"
+                               Text="{Binding Description}" />
+                  </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding SurfaceFacts}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                      <StackPanel Orientation="Horizontal" />
+                      <WrapPanel Orientation="Horizontal" />
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Border Margin="5,0"
-                              Padding="14,5"
-                              Background="{Binding BackgroundBrush}"
-                              BorderBrush="{Binding BorderBrush}"
+                      <Border Margin="0,0,12,0"
+                              MinWidth="150"
+                              Padding="14,10"
+                              Background="#01EAF2FE"
+                              BorderBrush="#D5E6FD"
                               BorderThickness="1"
-                              CornerRadius="999">
+                              CornerRadius="5">
+                        <StackPanel Spacing="4">
+                          <TextBlock Foreground="#1370F3"
+                                     FontSize="12"
+                                     FontWeight="SemiBold"
+                                     Text="{Binding Label}" />
+                          <TextBlock Foreground="#343D4A"
+                                     FontSize="15"
+                                     FontWeight="Bold"
+                                     Text="{Binding Value}" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl ItemsSource="{Binding SurfaceSections}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#FFFFFF"
+                              BorderBrush="#D5E6FD"
+                              BorderThickness="1"
+                              CornerRadius="7">
+                        <StackPanel>
+                          <Border Height="3"
+                                  Background="#4890F5"
+                                  CornerRadius="7,7,0,0" />
+                          <StackPanel Margin="20,16,20,16" Spacing="8">
+                            <TextBlock Foreground="#1370F3"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding Eyebrow}" />
+                            <TextBlock Foreground="#343D4A"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Text="{Binding Title}" />
+                            <ItemsControl ItemsSource="{Binding Lines}">
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                  <Grid ColumnDefinitions="Auto,*" Margin="0,2,0,2">
+                                    <TextBlock Foreground="#1370F3"
+                                               FontSize="14"
+                                               Text="•" />
+                                    <TextBlock Grid.Column="1"
+                                               Margin="10,0,0,0"
+                                               Foreground="#404040"
+                                               FontSize="13.5"
+                                               TextWrapping="Wrap"
+                                               Text="{Binding Text}" />
+                                  </Grid>
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </StackPanel>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Background="#FFFFFF"
+                        BorderBrush="#D5E6FD"
+                        BorderThickness="1"
+                        CornerRadius="7">
+                  <StackPanel Margin="20,16,20,18" Spacing="8">
+                    <TextBlock Foreground="#1370F3"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Text="启动日志" />
+                    <TextBlock Foreground="#343D4A"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Text="Shell events" />
+                    <ItemsControl ItemsSource="{Binding ActivityEntries}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Margin="0,0,0,8"
+                                  Padding="12"
+                                  Background="#01EAF2FE"
+                                  CornerRadius="5">
+                            <Grid ColumnDefinitions="70,*">
+                              <TextBlock Foreground="#8C8C8C"
+                                         FontSize="12"
+                                         VerticalAlignment="Top"
+                                         Text="{Binding Time}" />
+                              <StackPanel Grid.Column="1" Spacing="3">
+                                <TextBlock Foreground="#343D4A"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Text="{Binding Title}" />
+                                <TextBlock Foreground="#404040"
+                                           FontSize="12.5"
+                                           TextWrapping="Wrap"
+                                           Text="{Binding Body}" />
+                              </StackPanel>
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </ScrollViewer>
+
+            <Border IsVisible="{Binding HasActivePrompts}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,72,0,0"
+                    MaxWidth="520"
+                    Background="#E5FFFFFF"
+                    BorderBrush="#343D4A"
+                    BorderThickness="1"
+                    CornerRadius="7">
+              <StackPanel Margin="18" Spacing="10">
+                <TextBlock Foreground="#1370F3"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Text="{Binding PromptInboxTitle}" />
+                <TextBlock Foreground="#343D4A"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Text="{Binding PromptInboxSummary}" />
+                <ItemsControl ItemsSource="{Binding PromptLanes}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Margin="0,0,8,8"
+                              Padding="10,6"
+                              Background="{Binding BackgroundBrush}"
+                              CornerRadius="13.5">
                         <Button Padding="0"
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Command="{Binding Command}">
-                          <TextBlock FontSize="14"
+                          <TextBlock Foreground="{Binding ForegroundBrush}"
+                                     FontSize="12.5"
                                      FontWeight="SemiBold"
-                                     Foreground="{Binding ForegroundBrush}"
                                      Text="{Binding Title}" />
                         </Button>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-
-                <StackPanel Grid.Column="2"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Margin="0,0,12,0"
-                            Spacing="8">
-                  <Border Padding="10,4" Background="#1D7A7D" CornerRadius="999">
-                    <TextBlock FontSize="11"
-                               FontWeight="SemiBold"
-                               Foreground="#DDF6F7"
-                               Text="{Binding EnvironmentLabel}" />
-                  </Border>
-                  <Button Width="30"
-                          Height="30"
-                          Background="#FFFFFF12"
-                          BorderBrush="#48FFFFFF"
-                          BorderThickness="1"
-                          CornerRadius="999"
-                          Click="MinimizeButton_OnClick">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Foreground="White"
-                               Text="-" />
-                  </Button>
-                  <Button Width="30"
-                          Height="30"
-                          Background="#C84D4D"
-                          BorderThickness="0"
-                          CornerRadius="999"
-                          Click="CloseButton_OnClick">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Foreground="White"
-                               Text="×" />
-                  </Button>
-                </StackPanel>
-              </Grid>
-            </Border>
-
-            <Grid Grid.Row="1" Margin="0" ColumnDefinitions="250,*">
-              <Grid Grid.Column="0">
-                <Border Margin="0,0,1,0" Background="#BAF5F3EE" />
-                <Border Margin="0"
-                        Background="#99FFFFFF">
-                  <Grid RowDefinitions="Auto,Auto,*,Auto">
-                    <Border Margin="18,18,18,14"
-                            Padding="18"
-                            Background="#FDF9F3"
-                            BorderBrush="#E2D6C8"
-                            BorderThickness="1"
-                            CornerRadius="22">
-                      <StackPanel Spacing="10">
-                        <TextBlock FontSize="12"
-                                   FontWeight="SemiBold"
-                                   Foreground="#A15A2E"
-                                   Text="{Binding ScenarioLabel}" />
-                        <TextBlock FontSize="26"
-                                   FontWeight="Bold"
-                                   Foreground="#16323E"
-                                   Text="{Binding Title}" />
-                        <TextBlock Foreground="#5B6A70"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding Description}" />
-                        <Border Padding="10,8"
-                                Background="#ECF6F6"
-                                CornerRadius="16">
-                          <TextBlock Foreground="#2D4A50"
-                                     TextWrapping="Wrap"
-                                     Text="{Binding SurfaceMeta}" />
-                        </Border>
-                      </StackPanel>
-                    </Border>
-
-                    <StackPanel Grid.Row="1" Margin="18,0,18,10" Spacing="10">
-                      <TextBlock FontSize="12"
-                                 FontWeight="SemiBold"
-                                 Foreground="#4D6E71"
-                                 Text="Section Routes" />
-                      <ItemsControl ItemsSource="{Binding SidebarEntries}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <Border Margin="0,0,0,9"
-                                    Padding="12"
-                                    Background="{Binding BackgroundBrush}"
-                                    BorderBrush="{Binding BorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="18">
-                              <Button Padding="0"
-                                      Background="Transparent"
-                                      BorderThickness="0"
-                                      Command="{Binding Command}"
-                                      HorizontalContentAlignment="Stretch">
-                                <Grid ColumnDefinitions="*,Auto">
-                                  <StackPanel Spacing="4">
-                                    <TextBlock FontSize="15"
-                                               FontWeight="SemiBold"
-                                               Foreground="{Binding ForegroundBrush}"
-                                               Text="{Binding Title}" />
-                                    <TextBlock Foreground="{Binding ForegroundBrush}"
-                                               Opacity="0.82"
-                                               TextWrapping="Wrap"
-                                               Text="{Binding Summary}" />
-                                  </StackPanel>
-                                  <Border Grid.Column="1"
-                                          Margin="12,0,0,0"
-                                          Padding="8,4"
-                                          Background="{Binding AccentBrush}"
-                                          CornerRadius="999">
-                                    <TextBlock Foreground="White" Text="{Binding Meta}" />
-                                  </Border>
-                                </Grid>
-                              </Button>
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Margin="18,0,18,18" Spacing="10">
-                      <TextBlock FontSize="12"
-                                 FontWeight="SemiBold"
-                                 Foreground="#4D6E71"
-                                 Text="Shell Status" />
-                      <Border Padding="14"
-                              Background="#EDF3FE"
-                              BorderBrush="#D3DDF8"
+                <ItemsControl ItemsSource="{Binding ActivePrompts}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Margin="0,0,0,10"
+                              Padding="14"
+                              Background="#FBFBFB"
+                              BorderBrush="#D5E6FD"
                               BorderThickness="1"
-                              CornerRadius="20">
+                              CornerRadius="5">
                         <StackPanel Spacing="8">
-                          <TextBlock FontWeight="SemiBold"
-                                     Foreground="#36558E"
-                                     Text="{Binding Eyebrow}" />
-                          <TextBlock Foreground="#324458"
+                          <TextBlock Foreground="#1370F3"
+                                     FontSize="12"
+                                     FontWeight="SemiBold"
+                                     Text="{Binding Source}" />
+                          <TextBlock Foreground="#343D4A"
+                                     FontSize="18"
+                                     FontWeight="Bold"
+                                     Text="{Binding Title}" />
+                          <TextBlock Foreground="#404040"
+                                     FontSize="13.5"
                                      TextWrapping="Wrap"
-                                     Text="{Binding Status}" />
-                          <TextBlock Foreground="#5D6D79"
-                                     TextWrapping="Wrap"
-                                     Text="{Binding BreadcrumbTrail}" />
-                        </StackPanel>
-                      </Border>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="3"
-                                Margin="18,0,18,18"
-                                Orientation="Horizontal"
-                                Spacing="10">
-                      <Button Width="104"
-                              Padding="0,10"
-                              Background="#133F49"
-                              BorderThickness="0"
-                              CornerRadius="16"
-                              Command="{Binding BackCommand}"
-                              IsEnabled="{Binding CanGoBack}">
-                        <TextBlock HorizontalAlignment="Center"
-                                   FontWeight="SemiBold"
-                                   Foreground="White"
-                                   Text="Back" />
-                      </Button>
-                      <Border Padding="12,10"
-                              Background="#FFFFFFA8"
-                              BorderBrush="#D8E4E7"
-                              BorderThickness="1"
-                              CornerRadius="16">
-                        <TextBlock Foreground="#4F6167" Text="{Binding InputLabel}" />
-                      </Border>
-                    </StackPanel>
-                  </Grid>
-                </Border>
-              </Grid>
-
-              <Grid Grid.Column="1" Margin="0">
-                <Border Margin="0,0,0,0"
-                        Background="#46FFFFFF" />
-                <Grid Margin="18">
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                  </Grid.RowDefinitions>
-
-                  <Border Grid.Row="0"
-                          Padding="24"
-                          Background="#FFFDF8"
-                          BorderBrush="#D7E5E8"
-                          BorderThickness="1"
-                          CornerRadius="28">
-                    <Grid ColumnDefinitions="*,Auto">
-                      <StackPanel Spacing="10">
-                        <TextBlock FontSize="13"
-                                   FontWeight="SemiBold"
-                                   Foreground="#1D7C73"
-                                   Text="{Binding Eyebrow}" />
-                        <TextBlock FontSize="40"
-                                   FontWeight="Bold"
-                                   Foreground="#15313A"
-                                   Text="{Binding Title}" />
-                        <TextBlock FontSize="16"
-                                   Foreground="#58686E"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding Description}" />
-                      </StackPanel>
-                      <StackPanel Grid.Column="1" Spacing="10" HorizontalAlignment="Right">
-                        <Border Padding="12,8" Background="#EAF7F4" CornerRadius="16">
-                          <TextBlock FontWeight="SemiBold"
-                                     Foreground="#1B7A6F"
-                                     Text="{Binding ScenarioLabel}" />
-                        </Border>
-                        <Border Padding="12,8" Background="#FFF3EA" CornerRadius="16">
-                          <TextBlock FontWeight="SemiBold"
-                                     Foreground="#B05A2C"
-                                     Text="Main Shell" />
-                        </Border>
-                      </StackPanel>
-                    </Grid>
-                  </Border>
-
-                  <ItemsControl Grid.Row="1"
-                                Margin="0,16,0,0"
-                                ItemsSource="{Binding SurfaceFacts}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Border MinWidth="170"
-                                Margin="0,0,12,12"
-                                Padding="16,14"
-                                Background="{Binding BackgroundBrush}"
-                                BorderBrush="{Binding BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="22">
-                          <StackPanel Spacing="8">
-                            <TextBlock FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding AccentBrush}"
-                                       Text="{Binding Label}" />
-                            <TextBlock FontSize="22"
-                                       FontWeight="Bold"
-                                       Foreground="{Binding ForegroundBrush}"
-                                       Text="{Binding Value}" />
-                          </StackPanel>
-                        </Border>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-
-                  <Grid Grid.Row="2" Margin="0,4,0,0" ColumnDefinitions="*,320">
-                    <ScrollViewer Grid.Column="0" Margin="0,0,16,0" VerticalScrollBarVisibility="Auto">
-                      <StackPanel Spacing="14">
-                        <ItemsControl ItemsSource="{Binding SurfaceSections}">
-                          <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                              <Border Padding="22"
-                                      Background="{Binding BackgroundBrush}"
-                                      BorderBrush="{Binding BorderBrush}"
-                                      BorderThickness="1"
-                                      CornerRadius="26">
-                                <StackPanel Spacing="12">
-                                  <StackPanel Spacing="4">
-                                    <TextBlock FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="{Binding AccentBrush}"
-                                               Text="{Binding Eyebrow}" />
-                                    <TextBlock FontSize="24"
-                                               FontWeight="Bold"
-                                               Foreground="{Binding ForegroundBrush}"
-                                               Text="{Binding Title}" />
-                                  </StackPanel>
-                                  <ItemsControl ItemsSource="{Binding Lines}">
-                                    <ItemsControl.ItemTemplate>
-                                      <DataTemplate>
-                                        <Grid ColumnDefinitions="Auto,*">
-                                          <TextBlock FontSize="18"
-                                                     Foreground="{Binding AccentBrush}"
-                                                     Text="•" />
-                                          <TextBlock Grid.Column="1"
-                                                     Margin="10,0,0,0"
-                                                     Foreground="{Binding ForegroundBrush}"
-                                                     Opacity="0.88"
-                                                     TextWrapping="Wrap"
-                                                     Text="{Binding Text}" />
-                                        </Grid>
-                                      </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                  </ItemsControl>
-                                </StackPanel>
-                              </Border>
-                            </DataTemplate>
-                          </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <Border Padding="22"
-                                Background="#FFFDF8"
-                                BorderBrush="#D7E5E8"
-                                BorderThickness="1"
-                                CornerRadius="26">
-                          <StackPanel Spacing="12">
-                            <TextBlock FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="#375F9C"
-                                       Text="Activity Feed" />
-                            <TextBlock FontSize="24"
-                                       FontWeight="Bold"
-                                       Foreground="#15313A"
-                                       Text="Shell events" />
-                            <ItemsControl ItemsSource="{Binding ActivityEntries}">
-                              <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                  <Border Margin="0,0,0,10"
-                                          Padding="14"
-                                          Background="#F5F7FB"
-                                          CornerRadius="18">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                      <Border Padding="8,4" Background="#DCE8FC" CornerRadius="999">
-                                        <TextBlock Foreground="#36558E" Text="{Binding Time}" />
-                                      </Border>
-                                      <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
-                                        <TextBlock FontSize="15"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#20323C"
-                                                   Text="{Binding Title}" />
-                                        <TextBlock Foreground="#58666C"
-                                                   TextWrapping="Wrap"
-                                                   Text="{Binding Body}" />
-                                      </StackPanel>
-                                    </Grid>
-                                  </Border>
-                                </DataTemplate>
-                              </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                          </StackPanel>
-                        </Border>
-                      </StackPanel>
-                    </ScrollViewer>
-
-                    <Grid Grid.Column="1">
-                      <Border Background="#ECF4F4"
-                              BorderBrush="#D6E3E5"
-                              BorderThickness="1"
-                              CornerRadius="28"
-                              IsVisible="{Binding HasActivePrompts}">
-                        <Grid RowDefinitions="Auto,Auto,*" Margin="18">
-                          <StackPanel Spacing="6">
-                            <TextBlock FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="#D8743C"
-                                       Text="Prompt Center" />
-                            <TextBlock FontSize="28"
-                                       FontWeight="Bold"
-                                       Foreground="#15313A"
-                                       Text="{Binding PromptInboxTitle}" />
-                            <TextBlock Foreground="#5B6A70"
-                                       TextWrapping="Wrap"
-                                       Text="{Binding PromptInboxSummary}" />
-                          </StackPanel>
-
-                          <ItemsControl Grid.Row="1"
-                                        Margin="0,16,0,0"
-                                        ItemsSource="{Binding PromptLanes}">
-                            <ItemsControl.ItemsPanel>
-                              <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" />
-                              </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                                     Text="{Binding Message}" />
+                          <ItemsControl ItemsSource="{Binding Options}">
                             <ItemsControl.ItemTemplate>
                               <DataTemplate>
-                                <Border Margin="0,0,10,10"
-                                        Padding="12,10"
-                                        Background="{Binding BackgroundBrush}"
-                                        BorderBrush="{Binding BorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="18">
+                                <Border Margin="0,0,0,8"
+                                        Padding="10"
+                                        Background="#01EAF2FE"
+                                        CornerRadius="5">
                                   <Button Padding="0"
                                           Background="Transparent"
                                           BorderThickness="0"
-                                          Command="{Binding Command}">
+                                          Command="{Binding Command}"
+                                          HorizontalContentAlignment="Stretch">
                                     <StackPanel Spacing="3">
-                                      <TextBlock FontWeight="SemiBold"
-                                                 Foreground="{Binding ForegroundBrush}"
-                                                 Text="{Binding Title}" />
-                                      <TextBlock Foreground="{Binding ForegroundBrush}"
-                                                 Opacity="0.82"
-                                                 Text="{Binding Count}" />
+                                      <TextBlock Foreground="#343D4A"
+                                                 FontSize="13"
+                                                 FontWeight="SemiBold"
+                                                 Text="{Binding Label}" />
+                                      <TextBlock Foreground="#737373"
+                                                 FontSize="12"
+                                                 TextWrapping="Wrap"
+                                                 Text="{Binding Detail}" />
                                     </StackPanel>
                                   </Button>
                                 </Border>
                               </DataTemplate>
                             </ItemsControl.ItemTemplate>
                           </ItemsControl>
-
-                          <ScrollViewer Grid.Row="2"
-                                        Margin="0,10,0,0"
-                                        VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding ActivePrompts}">
-                              <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                  <Border Margin="0,0,0,12"
-                                          Padding="18"
-                                          Background="{Binding BackgroundBrush}"
-                                          BorderBrush="#FFFFFF"
-                                          BorderThickness="1"
-                                          CornerRadius="22">
-                                    <StackPanel Spacing="12">
-                                      <StackPanel Spacing="6">
-                                        <TextBlock FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{Binding AccentBrush}"
-                                                   Text="{Binding Source}" />
-                                        <TextBlock FontSize="20"
-                                                   FontWeight="Bold"
-                                                   Foreground="#1F3540"
-                                                   Text="{Binding Title}" />
-                                        <TextBlock Foreground="#56666C"
-                                                   TextWrapping="Wrap"
-                                                   Text="{Binding Message}" />
-                                        <TextBlock Foreground="{Binding AccentBrush}"
-                                                   Text="{Binding Severity}" />
-                                      </StackPanel>
-
-                                      <ItemsControl ItemsSource="{Binding Options}">
-                                        <ItemsControl.ItemTemplate>
-                                          <DataTemplate>
-                                            <Border Margin="0,0,0,10"
-                                                    Padding="12"
-                                                    Background="#FFFFFF"
-                                                    BorderBrush="#E1E7EA"
-                                                    BorderThickness="1"
-                                                    CornerRadius="18">
-                                              <Button Padding="0"
-                                                      Background="Transparent"
-                                                      BorderThickness="0"
-                                                      Command="{Binding Command}"
-                                                      HorizontalContentAlignment="Stretch">
-                                                <StackPanel Spacing="4">
-                                                  <TextBlock FontSize="15"
-                                                             FontWeight="SemiBold"
-                                                             Foreground="#20323C"
-                                                             Text="{Binding Label}" />
-                                                  <TextBlock Foreground="#58666C"
-                                                             TextWrapping="Wrap"
-                                                             Text="{Binding Detail}" />
-                                                </StackPanel>
-                                              </Button>
-                                            </Border>
-                                          </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                      </ItemsControl>
-                                    </StackPanel>
-                                  </Border>
-                                </DataTemplate>
-                              </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                          </ScrollViewer>
-                        </Grid>
-                      </Border>
-
-                      <Border Background="#ECF4F4"
-                              BorderBrush="#D6E3E5"
-                              BorderThickness="1"
-                              CornerRadius="28"
-                              IsVisible="{Binding HasNoActivePrompts}">
-                        <StackPanel Margin="22" Spacing="10">
-                          <TextBlock FontSize="12"
-                                     FontWeight="SemiBold"
-                                     Foreground="#D8743C"
-                                     Text="Prompt Center" />
-                          <TextBlock FontSize="28"
-                                     FontWeight="Bold"
-                                     Foreground="#15313A"
-                                     Text="All clear" />
-                          <TextBlock Foreground="#5B6A70"
-                                     TextWrapping="Wrap"
-                                     Text="{Binding PromptEmptyState}" />
                         </StackPanel>
                       </Border>
-                    </Grid>
-                  </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
 
-                  <ItemsControl Grid.Row="3"
-                                Margin="0,16,0,0"
-                                HorizontalAlignment="Right"
-                                ItemsSource="{Binding UtilityEntries}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Border Margin="10,0,0,0"
-                                Background="{Binding BackgroundBrush}"
-                                BorderBrush="{Binding BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="999">
-                          <Button Padding="14,10"
-                                  Background="Transparent"
-                                  BorderThickness="0"
-                                  Command="{Binding Command}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                              <Border Width="24"
-                                      Height="24"
-                                      Background="{Binding AccentBrush}"
-                                      CornerRadius="999">
-                                <TextBlock HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           FontSize="10"
-                                           FontWeight="Bold"
-                                           Foreground="White"
-                                           Text="{Binding Meta}" />
-                              </Border>
-                              <TextBlock VerticalAlignment="Center"
-                                         FontWeight="SemiBold"
-                                         Foreground="{Binding ForegroundBrush}"
-                                         Text="{Binding Title}" />
-                            </StackPanel>
-                          </Button>
-                        </Border>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </Grid>
-              </Grid>
-            </Grid>
+            <ItemsControl HorizontalAlignment="Right"
+                          VerticalAlignment="Bottom"
+                          Margin="0,0,15,15"
+                          ItemsSource="{Binding UtilityEntries}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Margin="8,0,0,0" Spacing="4">
+                    <Border Width="40"
+                            Height="40"
+                            Background="#1370F3"
+                            CornerRadius="1000">
+                      <Button Background="Transparent"
+                              BorderThickness="0"
+                              Command="{Binding Command}">
+                        <TextBlock HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="White"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Text="{Binding Meta}" />
+                      </Button>
+                    </Border>
+                    <TextBlock HorizontalAlignment="Center"
+                               Foreground="#404040"
+                               FontSize="11"
+                               Text="{Binding Title}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
           </Grid>
         </Grid>
-      </Border>
-    </Grid>
+      </Grid>
+    </Border>
   </Grid>
 </Window>

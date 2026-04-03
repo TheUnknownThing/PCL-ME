@@ -230,10 +230,18 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     private NavigationEntryViewModel CreateUtilityEntry(LauncherFrontendUtilityEntry entry)
     {
+        var meta = entry.Id switch
+        {
+            "back" => "返",
+            "task-manager" => "任",
+            "game-log" => "志",
+            _ => entry.Route.Page.ToString()
+        };
+
         return new NavigationEntryViewModel(
             entry.Title,
             entry.IsSelected ? "Utility surface is active in the shell." : "Pinned shell utility surface.",
-            entry.Route.Page.ToString(),
+            meta,
             GetNavigationPalette(entry.IsSelected, NavigationVisualStyle.Utility),
             new ActionCommand(() => NavigateTo(entry.Route, $"Opened utility surface {entry.Title}.")));
     }
@@ -586,35 +594,35 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         return style switch
         {
             NavigationVisualStyle.TopLevel when isSelected => new NavigationPalette(
-                Brush.Parse("#0E4D57"),
-                Brush.Parse("#0E4D57"),
                 Brushes.White,
-                Brush.Parse("#86E4D3")),
+                Brushes.White,
+                Brush.Parse("#1370F3"),
+                Brush.Parse("#1370F3")),
             NavigationVisualStyle.Sidebar when isSelected => new NavigationPalette(
-                Brush.Parse("#EAF6F5"),
-                Brush.Parse("#1D7C73"),
-                Brush.Parse("#144640"),
-                Brush.Parse("#1D7C73")),
+                Brush.Parse("#EAF2FE"),
+                Brush.Parse("#D5E6FD"),
+                Brush.Parse("#343D4A"),
+                Brush.Parse("#1370F3")),
             NavigationVisualStyle.Utility when isSelected => new NavigationPalette(
-                Brush.Parse("#EEF1FE"),
-                Brush.Parse("#375F9C"),
-                Brush.Parse("#1E3563"),
-                Brush.Parse("#375F9C")),
+                Brush.Parse("#1370F3"),
+                Brush.Parse("#1370F3"),
+                Brushes.White,
+                Brush.Parse("#EAF2FE")),
             NavigationVisualStyle.TopLevel => new NavigationPalette(
-                Brush.Parse("#F5FAFA"),
-                Brush.Parse("#D5E7E8"),
-                Brush.Parse("#21454B"),
-                Brush.Parse("#8AB7BC")),
+                Brush.Parse("#01EAF2FE"),
+                Brush.Parse("#01EAF2FE"),
+                Brushes.White,
+                Brush.Parse("#FFFFFF")),
             NavigationVisualStyle.Sidebar => new NavigationPalette(
-                Brush.Parse("#FCF7F0"),
-                Brush.Parse("#E7DAC9"),
-                Brush.Parse("#5B4A33"),
-                Brush.Parse("#D4A46B")),
+                Brush.Parse("#01FFFFFF"),
+                Brush.Parse("#01FFFFFF"),
+                Brush.Parse("#404040"),
+                Brush.Parse("#D5E6FD")),
             _ => new NavigationPalette(
-                Brush.Parse("#F4F4FA"),
-                Brush.Parse("#E1E0F3"),
-                Brush.Parse("#37335A"),
-                Brush.Parse("#8C82C7"))
+                Brush.Parse("#1370F3"),
+                Brush.Parse("#1370F3"),
+                Brushes.White,
+                Brush.Parse("#EAF2FE"))
         };
     }
 
@@ -755,11 +763,11 @@ internal sealed class PromptLaneViewModel(
         }
     }
 
-    public IBrush BackgroundBrush => IsSelected ? Brush.Parse("#133F49") : Brush.Parse("#F4FBFB");
+    public IBrush BackgroundBrush => IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#01EAF2FE");
 
-    public IBrush BorderBrush => IsSelected ? Brush.Parse("#133F49") : Brush.Parse("#CFE3E5");
+    public IBrush BorderBrush => IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#D5E6FD");
 
-    public IBrush ForegroundBrush => IsSelected ? Brushes.White : Brush.Parse("#21454B");
+    public IBrush ForegroundBrush => IsSelected ? Brushes.White : Brush.Parse("#404040");
 }
 
 internal sealed class PromptCardViewModel(
