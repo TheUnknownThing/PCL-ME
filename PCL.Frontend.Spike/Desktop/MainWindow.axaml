@@ -166,7 +166,7 @@
           </StackPanel>
         </Border>
 
-        <ItemsControl ItemsSource="{Binding SurfaceCards}">
+        <ItemsControl ItemsSource="{Binding SurfaceFacts}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <WrapPanel Orientation="Horizontal" />
@@ -174,15 +174,52 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Width="300"
+              <Border MinWidth="150"
                       Margin="0,0,14,14"
-                      Padding="18"
+                      Padding="16,14"
                       Background="{Binding BackgroundBrush}"
+                      BorderBrush="{Binding BorderBrush}"
+                      BorderThickness="1"
                       CornerRadius="24">
                 <StackPanel Spacing="10">
-                  <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{Binding AccentBrush}" Text="{Binding Eyebrow}" />
-                  <TextBlock FontSize="20" FontWeight="Bold" Foreground="#19333B" Text="{Binding Title}" />
-                  <TextBlock Foreground="#44565D" TextWrapping="Wrap" Text="{Binding Body}" />
+                  <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{Binding AccentBrush}" Text="{Binding Label}" />
+                  <TextBlock FontSize="24" FontWeight="Bold" Foreground="{Binding ForegroundBrush}" Text="{Binding Value}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding SurfaceSections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Margin="0,0,0,14"
+                      Padding="22"
+                      Background="{Binding BackgroundBrush}"
+                      BorderBrush="{Binding BorderBrush}"
+                      BorderThickness="1"
+                      CornerRadius="26">
+                <StackPanel Spacing="12">
+                  <StackPanel Spacing="6">
+                    <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{Binding AccentBrush}" Text="{Binding Eyebrow}" />
+                    <TextBlock FontSize="26" FontWeight="Bold" Foreground="{Binding ForegroundBrush}" Text="{Binding Title}" />
+                  </StackPanel>
+
+                  <ItemsControl ItemsSource="{Binding Lines}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Grid ColumnDefinitions="Auto,*">
+                          <TextBlock FontSize="18" Foreground="{Binding AccentBrush}" Text="•" />
+                          <TextBlock Grid.Column="1"
+                                     Margin="10,0,0,0"
+                                     Foreground="{Binding ForegroundBrush}"
+                                     Opacity="0.88"
+                                     TextWrapping="Wrap"
+                                     Text="{Binding Text}" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                 </StackPanel>
               </Border>
             </DataTemplate>

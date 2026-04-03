@@ -57,7 +57,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<NavigationEntryViewModel> UtilityEntries { get; } = [];
 
-    public ObservableCollection<SurfaceCardViewModel> SurfaceCards { get; } = [];
+    public ObservableCollection<SurfaceFactViewModel> SurfaceFacts { get; } = [];
+
+    public ObservableCollection<SurfaceSectionViewModel> SurfaceSections { get; } = [];
 
     public ObservableCollection<ActivityItemViewModel> ActivityEntries { get; } = [];
 
@@ -193,20 +195,13 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     private void RefreshShell(string activityMessage)
     {
-        var request = _shellInputs.NavigationRequest with
-        {
-            CurrentRoute = _currentRoute,
-            BackstackDepth = _routeHistory.Count
-        };
-        var shellPlan = LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
-            _shellInputs.StartupInputs.StartupWorkflowRequest,
-            _shellInputs.StartupInputs.StartupConsentRequest,
-            request));
+        var shellPlan = BuildShellPlan();
+        var pageContent = BuildPageContent(shellPlan);
         _currentNavigation = shellPlan.Navigation;
 
-        Eyebrow = "Contract-first desktop shell";
+        Eyebrow = pageContent.Eyebrow;
         Title = shellPlan.Navigation.CurrentPage.Title;
-        Description = shellPlan.Navigation.CurrentPage.Summary;
+        Description = pageContent.Summary;
         Status = $"Immediate command: {shellPlan.StartupPlan.ImmediateCommand.Kind} | Splash: {(shellPlan.StartupPlan.Visual.ShouldShowSplashScreen ? "on" : "off")} | Backstack depth: {_routeHistory.Count}";
         BreadcrumbTrail = string.Join(" / ", shellPlan.Navigation.Breadcrumbs.Select(crumb => crumb.Title));
         SurfaceMeta = $"{shellPlan.Navigation.CurrentPage.Kind} surface • {(shellPlan.Navigation.CurrentPage.SidebarGroupTitle ?? "No sidebar group")} • {(shellPlan.Navigation.ShowsBackButton ? shellPlan.Navigation.BackTarget?.Label ?? "Back available" : "Top-level route")}";
@@ -215,7 +210,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         ReplaceItems(TopLevelEntries, shellPlan.Navigation.TopLevelEntries.Select(entry => CreateNavigationEntry(entry, NavigationVisualStyle.TopLevel)));
         ReplaceItems(SidebarEntries, shellPlan.Navigation.SidebarEntries.Select(entry => CreateNavigationEntry(entry, NavigationVisualStyle.Sidebar)));
         ReplaceItems(UtilityEntries, shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(CreateUtilityEntry));
-        ReplaceItems(SurfaceCards, BuildSurfaceCards(shellPlan));
+        ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
+        ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
 
         SelectPromptLane(_selectedPromptLane, updateActivity: false);
         AddActivity(activityMessage, $"{shellPlan.Navigation.CurrentPage.Title} • {shellPlan.Navigation.CurrentPage.Route.Page}/{shellPlan.Navigation.CurrentPage.Route.Subpage}");
@@ -242,38 +238,17 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             new ActionCommand(() => NavigateTo(entry.Route, $"Opened utility surface {entry.Title}.")));
     }
 
-    private List<SurfaceCardViewModel> BuildSurfaceCards(LauncherFrontendShellPlan shellPlan)
+    private LauncherFrontendShellPlan BuildShellPlan()
     {
-        var page = shellPlan.Navigation.CurrentPage;
-        var activeLaneCount = _promptCatalog[_selectedPromptLane].Count;
-
-        return
-        [
-            new SurfaceCardViewModel(
-                "Surface",
-                "Route contract",
-                $"Current page key: {page.Route.Page}\nSubpage: {page.Route.Subpage}\nBreadcrumbs: {BreadcrumbTrail}",
-                Brush.Parse("#D8743C"),
-                Brush.Parse("#FFF2E6")),
-            new SurfaceCardViewModel(
-                "Bootstrap",
-                "Startup shell",
-                $"Bootstrap directories: {shellPlan.StartupPlan.Bootstrap.DirectoriesToCreate.Count}\nConfig keys: {shellPlan.StartupPlan.Bootstrap.ConfigKeysToLoad.Count}\nLegacy logs cleaned: {shellPlan.StartupPlan.Bootstrap.LegacyLogFilesToDelete.Count}",
-                Brush.Parse("#1D7C73"),
-                Brush.Parse("#E9F7F5")),
-            new SurfaceCardViewModel(
-                "Prompting",
-                "Prompt coverage",
-                $"Startup: {_promptCatalog[SpikePromptLaneKind.Startup].Count}\nLaunch: {_promptCatalog[SpikePromptLaneKind.Launch].Count}\nCrash: {_promptCatalog[SpikePromptLaneKind.Crash].Count}\nActive lane cards: {activeLaneCount}",
-                Brush.Parse("#375F9C"),
-                Brush.Parse("#EDF3FE")),
-            new SurfaceCardViewModel(
-                "Migration",
-                "Current frontend focus",
-                DescribeRouteFocus(page.Route, page.Kind),
-                Brush.Parse("#7650A8"),
-                Brush.Parse("#F3ECFB"))
-        ];
+        var request = _shellInputs.NavigationRequest with
+        {
+            CurrentRoute = _currentRoute,
+            BackstackDepth = _routeHistory.Count
+        };
+        return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
+            _shellInputs.StartupInputs.StartupWorkflowRequest,
+            _shellInputs.StartupInputs.StartupConsentRequest,
+            request));
     }
 
     private void NavigateTo(LauncherFrontendRoute route, string activityMessage)
@@ -324,10 +299,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         PromptInboxTitle = $"{selectedLane.Title} prompt lane";
         PromptInboxSummary = selectedLane.Summary;
         PromptEmptyState = $"No queued {selectedLane.Title.ToLowerInvariant()} prompts remain in this prototype shell.";
-        ReplaceItems(SurfaceCards, BuildSurfaceCards(LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
-            _shellInputs.StartupInputs.StartupWorkflowRequest,
-            _shellInputs.StartupInputs.StartupConsentRequest,
-            _shellInputs.NavigationRequest with { CurrentRoute = _currentRoute, BackstackDepth = _routeHistory.Count }))));
+        var pageContent = BuildPageContent(BuildShellPlan());
+        ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
+        ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
 
         if (updateActivity)
         {
@@ -458,18 +432,129 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         };
     }
 
-    private static string DescribeRouteFocus(LauncherFrontendRoute route, LauncherFrontendPageKind kind)
+    private LauncherFrontendPageContent BuildPageContent(LauncherFrontendShellPlan shellPlan)
     {
-        return route.Page switch
+        return LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            shellPlan.Navigation,
+            shellPlan.StartupPlan,
+            shellPlan.Consent,
+            BuildPromptLaneSummaries(),
+            BuildLaunchSurfaceData(),
+            BuildCrashSurfaceData()));
+    }
+
+    private LauncherFrontendPromptLaneSummary[] BuildPromptLaneSummaries()
+    {
+        return
+        [
+            new LauncherFrontendPromptLaneSummary(
+                "startup",
+                "Startup",
+                "Consent, environment, and first-run prompts.",
+                _promptCatalog[SpikePromptLaneKind.Startup].Count,
+                _selectedPromptLane == SpikePromptLaneKind.Startup),
+            new LauncherFrontendPromptLaneSummary(
+                "launch",
+                "Launch",
+                "Precheck, support, and Java download prompts.",
+                _promptCatalog[SpikePromptLaneKind.Launch].Count,
+                _selectedPromptLane == SpikePromptLaneKind.Launch),
+            new LauncherFrontendPromptLaneSummary(
+                "crash",
+                "Crash",
+                "Output and export recovery prompts.",
+                _promptCatalog[SpikePromptLaneKind.Crash].Count,
+                _selectedPromptLane == SpikePromptLaneKind.Crash)
+        ];
+    }
+
+    private LauncherFrontendLaunchSurfaceData BuildLaunchSurfaceData()
+    {
+        var playerName = _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
+            ? authPlayerName
+            : "Unknown player";
+        var provider = _launchPlan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft
+            ? "Microsoft account"
+            : "Authlib account";
+
+        return new LauncherFrontendLaunchSurfaceData(
+            _launchPlan.Scenario,
+            provider,
+            playerName,
+            _launchPlan.LoginPlan.Steps.Count,
+            _launchPlan.JavaWorkflow.RecommendedComponent is null
+                ? $"Java {_launchPlan.JavaWorkflow.RecommendedMajorVersion}"
+                : $"{_launchPlan.JavaWorkflow.RecommendedComponent} (Java {_launchPlan.JavaWorkflow.RecommendedMajorVersion})",
+            _launchPlan.JavaWorkflow.MissingJavaPrompt.DownloadTarget,
+            $"{_launchPlan.ResolutionPlan.Width} x {_launchPlan.ResolutionPlan.Height}",
+            _launchPlan.ClasspathPlan.Entries.Count,
+            _launchPlan.ReplacementPlan.Values.Count,
+            _launchPlan.NativesDirectory,
+            _launchPlan.PrerunPlan.Options.TargetFilePath,
+            _launchPlan.PrerunPlan.LauncherProfiles.Workflow.ShouldWrite,
+            _launchPlan.ScriptExportPlan is not null,
+            _launchPlan.ScriptExportPlan?.TargetPath,
+            _launchPlan.CompletionNotification.Message);
+    }
+
+    private LauncherFrontendCrashSurfaceData BuildCrashSurfaceData()
+    {
+        return new LauncherFrontendCrashSurfaceData(
+            _crashPlan.ExportPlan.SuggestedArchiveName,
+            _crashPlan.ExportPlan.ExportRequest.SourceFiles.Count,
+            !string.IsNullOrWhiteSpace(_crashPlan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath),
+            _crashPlan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath);
+    }
+
+    private static SurfaceFactViewModel CreateSurfaceFact(LauncherFrontendPageFact fact, int index)
+    {
+        var palette = GetSurfacePalette(index);
+        return new SurfaceFactViewModel(
+            fact.Label,
+            fact.Value,
+            palette.Accent,
+            palette.Background,
+            palette.Border,
+            palette.Foreground);
+    }
+
+    private static SurfaceSectionViewModel CreateSurfaceSection(LauncherFrontendPageSection section, int index)
+    {
+        var palette = GetSurfacePalette(index);
+        return new SurfaceSectionViewModel(
+            section.Eyebrow,
+            section.Title,
+            section.Lines.Select(line => new SurfaceLineViewModel(line, palette.Accent, palette.Foreground)).ToArray(),
+            palette.Accent,
+            palette.Background,
+            palette.Border,
+            palette.Foreground);
+    }
+
+    private static SurfacePalette GetSurfacePalette(int index)
+    {
+        return (index % 4) switch
         {
-            LauncherFrontendPageKey.Launch => "Keep launch/login/Java policy in the backend.\nThis shell only renders entry points, account surfaces, and prompt decisions.",
-            LauncherFrontendPageKey.Download => "The download shell should stay route-driven.\nSidebar choice defines the surface; backend services should own catalog rules and install planning.",
-            LauncherFrontendPageKey.Setup => "Settings pages should bind to explicit config and validation contracts.\nAvoid pulling WPF-specific state machines into the replacement frontend.",
-            LauncherFrontendPageKey.Tools => "Tool surfaces can stay lightweight adapters.\nOS actions and diagnostics remain intents, not hidden window logic.",
-            LauncherFrontendPageKey.TaskManager => "Task manager remains a utility overlay.\nThe frontend should visualize queued work without reimplementing task policy.",
-            LauncherFrontendPageKey.GameLog => "Live log viewing is a shell surface.\nKeep transport and log collection separate from route rendering.",
-            LauncherFrontendPageKey.InstanceSetup => "Instance detail surfaces need future page-level contracts.\nFor now the shell proves navigation, layout, and prompt wiring around them.",
-            _ => $"This is a {kind} surface.\nThe frontend should mirror page composition only after the backend supplies stable page data contracts."
+            0 => new SurfacePalette(
+                Brush.Parse("#FFF3EA"),
+                Brush.Parse("#F1D2BD"),
+                Brush.Parse("#B05A2C"),
+                Brush.Parse("#3D2C21")),
+            1 => new SurfacePalette(
+                Brush.Parse("#EAF7F4"),
+                Brush.Parse("#C8E6DF"),
+                Brush.Parse("#1B7A6F"),
+                Brush.Parse("#234744")),
+            2 => new SurfacePalette(
+                Brush.Parse("#EEF3FE"),
+                Brush.Parse("#D3DDF8"),
+                Brush.Parse("#3E67B0"),
+                Brush.Parse("#223855")),
+            _ => new SurfacePalette(
+                Brush.Parse("#F6F0FD"),
+                Brush.Parse("#E2D6F6"),
+                Brush.Parse("#6D4AA4"),
+                Brush.Parse("#352645"))
         };
     }
 
@@ -567,22 +652,61 @@ internal sealed class NavigationEntryViewModel(
     public ActionCommand Command { get; } = command;
 }
 
-internal sealed class SurfaceCardViewModel(
+internal sealed class SurfaceFactViewModel(
+    string label,
+    string value,
+    IBrush accentBrush,
+    IBrush backgroundBrush,
+    IBrush borderBrush,
+    IBrush foregroundBrush)
+{
+    public string Label { get; } = label;
+
+    public string Value { get; } = value;
+
+    public IBrush AccentBrush { get; } = accentBrush;
+
+    public IBrush BackgroundBrush { get; } = backgroundBrush;
+
+    public IBrush BorderBrush { get; } = borderBrush;
+
+    public IBrush ForegroundBrush { get; } = foregroundBrush;
+}
+
+internal sealed class SurfaceSectionViewModel(
     string eyebrow,
     string title,
-    string body,
+    IReadOnlyList<SurfaceLineViewModel> lines,
     IBrush accentBrush,
-    IBrush backgroundBrush)
+    IBrush backgroundBrush,
+    IBrush borderBrush,
+    IBrush foregroundBrush)
 {
     public string Eyebrow { get; } = eyebrow;
 
     public string Title { get; } = title;
 
-    public string Body { get; } = body;
+    public IReadOnlyList<SurfaceLineViewModel> Lines { get; } = lines;
 
     public IBrush AccentBrush { get; } = accentBrush;
 
     public IBrush BackgroundBrush { get; } = backgroundBrush;
+
+    public IBrush BorderBrush { get; } = borderBrush;
+
+    public IBrush ForegroundBrush { get; } = foregroundBrush;
+}
+
+internal sealed class SurfaceLineViewModel(
+    string text,
+    IBrush accentBrush,
+    IBrush foregroundBrush)
+{
+    public string Text { get; } = text;
+
+    public IBrush AccentBrush { get; } = accentBrush;
+
+    public IBrush ForegroundBrush { get; } = foregroundBrush;
 }
 
 internal sealed class ActivityItemViewModel(string time, string title, string body)
@@ -685,6 +809,12 @@ internal sealed record NavigationPalette(
     IBrush Border,
     IBrush Foreground,
     IBrush Accent);
+
+internal sealed record SurfacePalette(
+    IBrush Background,
+    IBrush Border,
+    IBrush Accent,
+    IBrush Foreground);
 
 internal enum NavigationVisualStyle
 {
