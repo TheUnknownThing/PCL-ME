@@ -29,6 +29,11 @@ internal sealed partial class MainWindow : Window
         WindowState = WindowState.Minimized;
     }
 
+    private void MaximizeButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        ToggleMaximize();
+    }
+
     private void MinimizeGlyph_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         WindowState = WindowState.Minimized;
@@ -42,5 +47,17 @@ internal sealed partial class MainWindow : Window
     private void CloseGlyph_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         Close();
+    }
+
+    private void TitleBar_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        ToggleMaximize();
+    }
+
+    private void ToggleMaximize()
+    {
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
     }
 }

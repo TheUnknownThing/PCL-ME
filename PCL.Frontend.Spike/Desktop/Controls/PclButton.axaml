@@ -1,0 +1,45 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+  <Border
+      x:Name="PanBack"
+      Background="{DynamicResource ColorBrushSemiTransparent}">
+    <Grid>
+      <Border
+          x:Name="PanFore"
+          Background="{DynamicResource ColorBrushHalfWhite}"
+          BorderBrush="{DynamicResource ColorBrush1}"
+          BorderThickness="1"
+          CornerRadius="3"
+          Padding="{Binding ContentPadding, ElementName=Root}"
+          RenderTransformOrigin="0.5,0.5"
+          RenderTransform="scale(1)">
+        <Border.Transitions>
+          <Transitions>
+            <BrushTransition Property="Background" Duration="0:0:0.12" />
+            <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+          </Transitions>
+        </Border.Transitions>
+        <Grid>
+          <TextBlock
+              x:Name="LabText"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              FontSize="13"
+              Foreground="{DynamicResource ColorBrush1}"
+              Margin="{Binding TextMargin, ElementName=Root}" />
+        </Grid>
+      </Border>
+      <Button
+          x:Name="ButtonHost"
+          Background="Transparent"
+          BorderBrush="Transparent"
+          BorderThickness="0"
+          Command="{Binding Command, ElementName=Root}"
+          Padding="0" />
+    </Grid>
+  </Border>
+</UserControl>
