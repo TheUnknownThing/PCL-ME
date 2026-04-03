@@ -103,6 +103,7 @@ These shell modules already exist and should be treated as the continuation poin
 These areas are already substantially portable or backend-owned:
 
 - startup workflow planning
+- frontend shell planning and navigation catalog generation
 - startup bootstrap and visual planning
 - version transition and milestone policy
 - launch prerun and launch session planning
@@ -111,8 +112,11 @@ These areas are already substantially portable or backend-owned:
 - Authlib login request/step/failure workflow
 - Java selection and transfer planning
 - crash collection/export/prompt planning
+- profile document parsing and serialization in `PCL.Core/Minecraft/Launch/MinecraftLaunchProfileStorageService.cs`
+- launcher identity resolution in `PCL.Core/App/Essentials/LauncherIdentityResolutionService.cs`
 - launcher identity fallback in `PCL.Core/App/LauncherIdentity.cs`
 - encryption-key fallback in `PCL.Core/Utils/Secret/EncryptHelper.cs`
+- Windows device identity extraction in `PCL.Core/Utils/Secret/WindowsDeviceIdentityProvider.cs`
 
 ## Recent Checkpoint Commits
 
@@ -128,6 +132,15 @@ These are the key migration checkpoints leading to the current state:
 - `092a5751` `refactor: finish launch workflow shell extraction`
 - `2fe1c0a7` `refactor: finish launch login shell extraction`
 - `9fe1317d` `refactor: split crash analyzer shells`
+- `671887f0` `refactor: extract profile storage service`
+- `3cf04c43` `refactor: route profile persistence through backend storage`
+- `dedeea7f` `refactor: make legacy secret migration explicit`
+- `f14808ff` `feat: add portable frontend shell contracts`
+- `491ee71d` `feat: add spike shell navigation prototype`
+- `9125cb51` `refactor: extract launcher identity resolution`
+- `b67430a9` `feat: add frontend subpage title lookup`
+- `410563a7` `docs: polish shell spike contract output`
+- `67f2665e` `refactor: isolate windows device identity adapter`
 
 ## What Still Remains Before A Full Frontend Cutover
 
@@ -172,6 +185,9 @@ Progress already made:
 
 - launcher identity has a portable fallback path
 - encryption key storage has a portable fallback path
+- launcher identity resolution now lives in a dedicated service
+- Windows device identity access is now isolated behind `WindowsDeviceIdentityProvider`
+- profile document persistence is now routed through `MinecraftLaunchProfileStorageService`
 
 What still remains:
 
@@ -179,7 +195,7 @@ What still remains:
 - reducing remaining assumptions around device identity and legacy secret handling
 - making profile/config secret access predictable for a future non-Windows frontend
 
-This is the biggest backend-side architectural blocker left.
+This is still one of the biggest backend-side architectural blockers, but it is now more isolated than before.
 
 ### 3. Reduce leftover Windows helper leakage in `PCL.Core`
 
@@ -195,10 +211,10 @@ Needed outcome:
 
 ### 4. Expand backend-consumable frontend seams beyond startup
 
-`PCL.Frontend.Spike` currently proves startup consumption well enough to be useful, but the replacement frontend engineer will still benefit from additional stable seams for:
+`PCL.Frontend.Spike` now proves startup plus a first portable shell/navigation contract, but the replacement frontend engineer will still benefit from additional stable seams for:
 
 - prompt rendering models
-- navigation/page data contracts
+- richer navigation/page data contracts beyond the current catalog/view seam
 - launch/profile/auth flow view models or request/response adapters
 - crash presentation/export interactions
 
@@ -228,11 +244,11 @@ Guardrails:
 
 Recommended first frontend milestones:
 
-1. startup bootstrap and consent flow using backend plans
-2. window/app shell and navigation skeleton
-3. prompt rendering abstractions
-4. low-risk read-only or mostly-read-only pages
-5. controlled integration of launch/profile/auth UI against backend contracts
+1. consume the existing `LauncherFrontendShellService` contract for startup plus navigation shell rendering
+2. build the real window/app shell and route model on top of that contract
+3. add prompt rendering abstractions that align with backend prompt plans
+4. implement low-risk read-only or mostly-read-only pages
+5. request missing launch/profile/auth contracts instead of deriving them from WPF state
 
 ### Engineer 2: remaining backend and shell cleanup
 
@@ -243,6 +259,7 @@ Focus:
 - keep shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
 - tighten `PCL.Core` Windows-only boundaries
 - finish `Utils.Secret` portability
+- keep expanding frontend-consumable shell contracts where the new frontend hits gaps
 - add any missing backend-facing contracts the frontend engineer uncovers
 - keep `Plain Craft Launcher 2` moving toward a pure shell role instead of regressing into policy ownership
 
@@ -258,9 +275,11 @@ The honest assessment is:
 Why the answer is now yes:
 
 - the old major blockers in `ModLaunch.vb`, `ModJava.vb`, and `ModCrash.vb` are no longer the dominant risk
+- the frontend engineer now has an actual portable shell/navigation contract to build against
+- the spike now demonstrates shell-oriented startup and navigation output instead of only backend JSON
 - `PCL.Core.Backend` is already the source of truth for most important portable workflows
 - `PCL.Frontend.Spike` already proves that backend-driven non-WPF startup is viable
-- the remaining work is now concentrated in startup/window shell cleanup and secret portability, which can be handled in parallel with frontend development
+- the remaining work is now concentrated in startup/window shell cleanup, deeper frontend contract coverage, and secret portability, which can be handled in parallel with frontend development
 
 What this means in practice:
 

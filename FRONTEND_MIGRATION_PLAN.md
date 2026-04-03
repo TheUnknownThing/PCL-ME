@@ -35,6 +35,7 @@ What is already in a usable migration state:
 - `PCL.Core.Backend` is the source of truth for most startup, launch, login, Java, and crash policy
 - `PCL.Core.Backend.Test` gives a regression harness for backend behavior
 - `PCL.Frontend.Spike` proves non-WPF backend consumption
+- `LauncherFrontendShellService` and `LauncherFrontendNavigationService` now provide a portable startup plus navigation shell seam
 - `ModLaunch.vb` is now a thin launch coordinator
 - `ModJava.vb` is effectively a thin adapter for this phase
 - `ModCrash.vb` is now just the crash analyzer entry point
@@ -47,6 +48,9 @@ Recent backend/shell milestones:
 - launch execution, prerun, argument, session, profile, precheck, Java workflow, natives, and login logic were extracted from `ModLaunch.vb`
 - Java preference selection and loader-related adapter work were extracted from `ModJava.vb`
 - crash collection, export, prepare, analyze, and result logic were split away from `ModCrash.vb`
+- profile persistence is now routed through `MinecraftLaunchProfileStorageService`
+- launcher identity resolution and Windows device identity access are now more clearly separated
+- the spike can now render a backend-driven shell/navigation transcript and execution artifact set
 
 Recent checkpoint commits:
 
@@ -54,6 +58,14 @@ Recent checkpoint commits:
 - `092a5751` `refactor: finish launch workflow shell extraction`
 - `2fe1c0a7` `refactor: finish launch login shell extraction`
 - `9fe1317d` `refactor: split crash analyzer shells`
+- `671887f0` `refactor: extract profile storage service`
+- `3cf04c43` `refactor: route profile persistence through backend storage`
+- `dedeea7f` `refactor: make legacy secret migration explicit`
+- `f14808ff` `feat: add portable frontend shell contracts`
+- `491ee71d` `feat: add spike shell navigation prototype`
+- `9125cb51` `refactor: extract launcher identity resolution`
+- `b67430a9` `feat: add frontend subpage title lookup`
+- `67f2665e` `refactor: isolate windows device identity adapter`
 
 ## Remaining Work Before Full Frontend Cutover
 
@@ -92,6 +104,11 @@ Needed outcome:
 - a headless secret/auth boundary
 - no hidden Windows-only assumptions for profile/config secret handling
 
+Progress note:
+
+- this track is healthier than before because device identity access and launcher identity resolution are now separated
+- it is still not finished enough to ignore
+
 ### Priority 3: reduce Windows leakage in `PCL.Core`
 
 Why this matters:
@@ -118,6 +135,11 @@ Needed outcome:
 - the new frontend consumes stable request/response or plan/result contracts
 - frontend code does not need to reverse-engineer WPF launcher state
 
+Current starting seam:
+
+- startup plus navigation shell data is already available via `LauncherFrontendShellService`
+- the next contracts should extend that seam into prompts, page-specific data, and profile/auth surfaces
+
 ## Two Parallel Workstreams
 
 ### Workstream A: frontend engineer
@@ -130,11 +152,11 @@ Primary objective:
 
 Recommended order:
 
-1. consume startup/bootstrap/consent flows
-2. build app shell and navigation skeleton
+1. consume the existing startup plus navigation shell contract
+2. build app shell and route rendering on top of that contract
 3. build prompt rendering abstractions
 4. implement low-risk pages first
-5. integrate profile/auth and launch UI after the contracts are stable enough
+5. integrate profile/auth and launch UI after the missing contracts are filled in
 
 Rules:
 
@@ -157,6 +179,7 @@ Recommended order:
 3. finish `Utils.Secret`
 4. tighten Windows-only boundaries in `PCL.Core`
 5. add missing frontend-facing contracts discovered by the frontend engineer
+6. keep expanding the spike only where it helps prove a new seam
 
 Rules:
 
@@ -198,7 +221,7 @@ We are ready for full cutover only when these additional statements are true:
 
 ### Milestone A: frontend kickoff
 
-- frontend engineer builds startup shell, navigation skeleton, and prompt abstractions
+- frontend engineer builds the real startup shell and navigation skeleton from the existing portable shell contract
 - backend engineer supports with any missing startup/prompt contracts
 
 ### Milestone B: contract hardening
