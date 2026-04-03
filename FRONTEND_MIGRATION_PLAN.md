@@ -52,7 +52,7 @@ What is already in a usable migration state:
 - the Avalonia spike now has route-aware shell composition instead of rendering only the launch page
 - the Avalonia spike now copies launcher-style grouped left navigation for non-launch routes
 - the Avalonia spike now uses closer launcher-style chrome for top-level and secondary routes
-- the Avalonia spike now also has copied non-launch right panes for `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助`
+- the Avalonia spike now also has copied non-launch right panes for `设置/关于`, `设置/反馈`, `设置/日志`, `工具/帮助`, `设置/更新`, `设置/游戏联机`, `设置/游戏管理`, `设置/启动器杂项`, `设置/Java`, and `设置/界面`
 - those copied routes now also have page-specific frontend page-content seams instead of only the generic summary contract
 - `ModLaunch.vb` is now a thin launch coordinator
 - `ModJava.vb` is effectively a thin adapter for this phase
@@ -105,6 +105,11 @@ Recent checkpoint commits:
 - `dc20914d` `feat: simplify spike content cards`
 - `9231a0be` `feat: copy setup and help shell surfaces`
 - `7aea529a` `feat: add page-specific frontend content seams`
+- `7b2fb304` `feat: copy setup update surface`
+- `7cfa89db` `feat: copy setup game link surface`
+- `62c32bf7` `feat: copy setup game manage surface`
+- `4c81c806` `feat: copy setup launcher misc surface`
+- `e9f2979d` `feat: copy setup java and ui surfaces`
 
 ## Current Frontend Spike State
 
@@ -114,12 +119,12 @@ The current Avalonia spike now proves more than startup plumbing:
 - non-launch routes now switch through a route-aware shell body
 - non-launch left panes now follow the grouped `MyListItem` navigation pattern from the current launcher
 - top chrome now switches between top tabs and inner-route back-title mode
-- `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助` now render copied page-specific right panes rather than the generic shell summary panel
+- `设置/关于`, `设置/反馈`, `设置/日志`, `工具/帮助`, `设置/更新`, `设置/游戏联机`, `设置/游戏管理`, `设置/启动器杂项`, `设置/Java`, and `设置/界面` now render copied page-specific right panes rather than the generic shell summary panel
 
 What still needs frontend parity work:
 
 - many non-launch right panes are still summary-card approximations, not copied page-specific layouts yet
-- setup still needs copied parity for `启动`, `界面`, `游戏管理`, `联机`, `更新`, `Java`, and `启动器杂项`
+- setup still needs copied parity for `启动` and any denser route sections that still collapse into generic summary cards
 - download still needs a copied `自动安装` route and then the easier resource-list routes
 - tools still needs parity beyond the copied help page, especially `联机大厅` and `测试`
 - page-specific controls such as search boxes, list blocks, person/about rows, and richer settings cards still need direct migration
@@ -220,8 +225,8 @@ Recommended order:
 1. consume the existing startup plus navigation shell contract
 2. consume the portable prompt contract for startup, launch, and crash prompts
 3. build on the existing Avalonia shell spike instead of starting from zero
-4. keep the copied `设置/关于`, `设置/反馈`, `设置/日志`, and `工具/帮助` pages stable as the reference pattern for right-pane migration
-5. replace the next generic route surfaces with copied WPF page structures, starting with `设置/更新` and the simpler settings cards
+4. keep the copied `设置/关于`, `设置/反馈`, `设置/日志`, `工具/帮助`, `设置/更新`, `设置/游戏联机`, `设置/游戏管理`, `设置/启动器杂项`, `设置/Java`, and `设置/界面` pages stable as the reference pattern for right-pane migration
+5. replace the next generic route surfaces with copied WPF page structures, starting with `下载/自动安装`, the easier download resource-list pages, and `工具/联机大厅`
 6. integrate profile/auth and launch UI after the missing contracts are filled in
 
 Rules:
