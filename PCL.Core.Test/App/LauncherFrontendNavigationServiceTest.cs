@@ -37,6 +37,7 @@ public sealed class LauncherFrontendNavigationServiceTest
         Assert.AreEqual("下载", view.CurrentPageTitle);
         Assert.IsFalse(view.ShowsBackButton);
         Assert.AreEqual("光影包", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
+        Assert.AreEqual("光影包", LauncherFrontendNavigationService.GetSubpageTitle(view.CurrentRoute));
         Assert.IsTrue(view.UtilityEntries.Single(entry => entry.Id == "task-manager").IsVisible);
         Assert.IsFalse(view.UtilityEntries.Single(entry => entry.Id == "game-log").IsVisible);
     }

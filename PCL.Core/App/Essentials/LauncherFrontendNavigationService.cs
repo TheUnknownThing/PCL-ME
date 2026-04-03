@@ -64,6 +64,12 @@ public static class LauncherFrontendNavigationService
             ]);
     }
 
+    public static string? GetSubpageTitle(LauncherFrontendRoute route)
+    {
+        var sidebarGroup = Catalog.SidebarGroups.FirstOrDefault(group => group.Page == route.Page);
+        return sidebarGroup?.Items.FirstOrDefault(item => item.Subpage == route.Subpage)?.Title;
+    }
+
     private static LauncherFrontendNavigationCatalog CreateCatalog()
     {
         return new LauncherFrontendNavigationCatalog(
