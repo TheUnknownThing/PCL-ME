@@ -626,32 +626,13 @@ Public Class FormMain
     ''' 获取次级页面的名称。若并非次级页面则返回空字符串，故可以以此判断是否为次级页面。
     ''' </summary>
     Private Function PageNameGet(Stack As PageStackData) As String
-        Select Case Stack.Page
-            Case PageType.InstanceSelect
-                Return "实例选择"
-            Case PageType.TaskManager
-                Return "任务管理"
-            Case PageType.GameLog
-                Return "实时日志"
-            Case PageType.InstanceSetup
-                Return "实例设置 - " & If(PageInstanceLeft.Instance Is Nothing, "未知实例", PageInstanceLeft.Instance.Name)
-            Case PageType.CompDetail
-                Return "资源下载 - " & CType(Stack.Additional(0), CompProject).TranslatedName
-            Case PageType.HelpDetail
-                Return CType(Stack.Additional(0), HelpEntry).Title
-            Case PageType.VersionSaves
-                Return $"存档管理 - {GetFolderNameFromPath(Stack.Additional)}"
-            Case PageType.HomePageMarket
-                Return "主页市场"
-            Case Else
-                Return ""
-        End Select
+        Return ModMainWindowPageNameShell.GetPageName(Stack)
     End Function
     ''' <summary>
     ''' 刷新次级页面的名称。
     ''' </summary>
     Public Sub PageNameRefresh(Type As PageStackData)
-        LabTitleInner.Text = PageNameGet(Type)
+        ModMainWindowPageNameShell.RefreshPageName(Me, Type)
     End Sub
     ''' <summary>
     ''' 刷新次级页面的名称。
@@ -846,7 +827,7 @@ Public Class FormMain
 
     '更新重启
     Private Sub BtnExtraUpdateRestart_Click() Handles BtnExtraUpdateRestart.Click
-        UpdateRestart(True, True)
+        ModMainWindowExtraButtonShell.HandleUpdateRestart()
     End Sub
     Private Function BtnExtraUpdateRestart_ShowCheck() As Boolean
         Return ModMainWindowExtraButtonShell.ShouldShowUpdateRestart()
@@ -854,10 +835,10 @@ Public Class FormMain
     
     '音乐
     Private Sub BtnExtraMusic_Click(sender As Object, e As EventArgs) Handles BtnExtraMusic.Click
-        MusicControlPause()
+        ModMainWindowExtraButtonShell.HandleMusicPause()
     End Sub
     Private Sub BtnExtraMusic_RightClick(sender As Object, e As EventArgs) Handles BtnExtraMusic.RightClick
-        MusicControlNext()
+        ModMainWindowExtraButtonShell.HandleMusicNext()
     End Sub
 
     '任务管理

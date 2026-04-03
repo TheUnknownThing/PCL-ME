@@ -3,9 +3,21 @@ Imports PCL.Core.Logging
 
 Public Module ModMainWindowExtraButtonShell
 
+    Public Sub HandleUpdateRestart()
+        UpdateRestart(True, True)
+    End Sub
+
     Public Function ShouldShowUpdateRestart() As Boolean
         Return IsUpdateWaitingRestart
     End Function
+
+    Public Sub HandleMusicPause()
+        MusicControlPause()
+    End Sub
+
+    Public Sub HandleMusicNext()
+        MusicControlNext()
+    End Sub
 
     Public Function ShouldShowDownloadButton(pageCurrent As FormMain.PageType) As Boolean
         Return HasDownloadingTask() AndAlso pageCurrent <> FormMain.PageType.TaskManager
