@@ -45,14 +45,17 @@ internal static class SpikeRunner
             new("Java Selection", BuildJavaSelectionLines(plan, javaPromptDecision, promptOutcome, postDownloadSelection))
         };
 
-        if (plan.JavaRuntimeManifestPlan is not null && plan.JavaRuntimeDownloadWorkflowPlan is not null)
+        if (plan.JavaRuntimeManifestPlan is not null &&
+            plan.JavaRuntimeDownloadWorkflowPlan is not null &&
+            plan.JavaRuntimeTransferPlan is not null)
         {
             sections.Add(new SpikeTranscriptSection(
                 "Java Download Plan",
                 BuildJavaDownloadLines(
                     plan.JavaRuntimeIndexRequestUrls,
                     plan.JavaRuntimeManifestPlan,
-                    plan.JavaRuntimeDownloadWorkflowPlan)));
+                    plan.JavaRuntimeDownloadWorkflowPlan,
+                    plan.JavaRuntimeTransferPlan)));
         }
 
         if (promptOutcome.ActionKind == MinecraftLaunchJavaPromptActionKind.AbortLaunch)
@@ -202,12 +205,12 @@ internal static class SpikeRunner
     private static IReadOnlyList<string> BuildJavaDownloadLines(
         MinecraftJavaRuntimeRequestUrlPlan indexRequestUrls,
         MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
-        MinecraftJavaRuntimeDownloadWorkflowPlan downloadWorkflowPlan)
+        MinecraftJavaRuntimeDownloadWorkflowPlan downloadWorkflowPlan,
+        MinecraftJavaRuntimeDownloadTransferPlan transferPlan)
     {
         var selection = manifestPlan.Selection;
         var downloadPlan = downloadWorkflowPlan.DownloadPlan;
-        return
-        [
+        return [
             $"Index sources: {string.Join(" | ", indexRequestUrls.AllUrls)}",
             $"Platform: {selection.PlatformKey}",
             $"Requested component: {selection.RequestedComponent}",
@@ -216,8 +219,12 @@ internal static class SpikeRunner
             $"Manifest sources: {string.Join(" | ", manifestPlan.RequestUrls.AllUrls)}",
             $"Runtime directory: {downloadPlan.RuntimeBaseDirectory}",
             $"Planned files: {downloadWorkflowPlan.Files.Count}",
-            ..downloadWorkflowPlan.Files.Take(3).Select(file =>
-                $"File: {file.RelativePath} ({file.Size} bytes) <= {string.Join(" | ", file.RequestUrls.AllUrls)}")
+            $"Files to download: {transferPlan.FilesToDownload.Count} ({transferPlan.DownloadBytes} bytes)",
+            $"Reused files: {transferPlan.ReusedFiles.Count}",
+            ..transferPlan.FilesToDownload.Take(3).Select(file =>
+                $"Download: {file.RelativePath} ({file.Size} bytes) <= {string.Join(" | ", file.RequestUrls.AllUrls)}"),
+            ..transferPlan.ReusedFiles.Take(2).Select(file =>
+                $"Reuse: {file.RelativePath}")
         ];
     }
 

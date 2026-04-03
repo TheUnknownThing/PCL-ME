@@ -165,7 +165,9 @@ internal static class SpikeExecutor
                 new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
         }
 
-        if (plan.JavaRuntimeManifestPlan is not null && plan.JavaRuntimeDownloadWorkflowPlan is not null)
+        if (plan.JavaRuntimeManifestPlan is not null &&
+            plan.JavaRuntimeDownloadWorkflowPlan is not null &&
+            plan.JavaRuntimeTransferPlan is not null)
         {
             var javaDownloadRoot = Path.Combine(workspaceRoot, "_artifacts", "java-download");
             Directory.CreateDirectory(javaDownloadRoot);
@@ -195,15 +197,31 @@ internal static class SpikeExecutor
             Directory.CreateDirectory(runtimeRoot);
             createdDirectories.Add(runtimeRoot);
 
-            var materializedJavaFiles = new List<string>();
-            foreach (var filePlan in plan.JavaRuntimeDownloadWorkflowPlan.Files)
+            var javaTransferPlanPath = Path.Combine(workspaceRoot, "_artifacts", "java-download-transfer.txt");
+            WriteTextFile(javaTransferPlanPath, BuildJavaDownloadTransferText(plan.JavaRuntimeTransferPlan));
+            writtenFiles.Add(javaTransferPlanPath);
+            artifacts.Add(new SpikeExecutionArtifact("Java transfer plan", javaTransferPlanPath));
+
+            var reusedJavaFiles = new List<string>();
+            foreach (var filePlan in plan.JavaRuntimeTransferPlan.ReusedFiles)
+            {
+                var mappedPath = MapSamplePath(filePlan.TargetPath, workspaceRoot);
+                Directory.CreateDirectory(Path.GetDirectoryName(mappedPath)!);
+                createdDirectories.Add(Path.GetDirectoryName(mappedPath)!);
+                WriteTextFile(mappedPath, BuildPreexistingJavaRuntimeFileContent(filePlan));
+                writtenFiles.Add(mappedPath);
+                reusedJavaFiles.Add(mappedPath);
+            }
+
+            var downloadedJavaFiles = new List<string>();
+            foreach (var filePlan in plan.JavaRuntimeTransferPlan.FilesToDownload)
             {
                 var mappedPath = MapSamplePath(filePlan.TargetPath, workspaceRoot);
                 Directory.CreateDirectory(Path.GetDirectoryName(mappedPath)!);
                 createdDirectories.Add(Path.GetDirectoryName(mappedPath)!);
                 WriteTextFile(mappedPath, BuildJavaRuntimeFileContent(filePlan));
                 writtenFiles.Add(mappedPath);
-                materializedJavaFiles.Add(mappedPath);
+                downloadedJavaFiles.Add(mappedPath);
             }
 
             sections.Add(new SpikeTranscriptSection(
@@ -211,10 +229,13 @@ internal static class SpikeExecutor
                 [
                     $"Resolved component: {plan.JavaRuntimeManifestPlan.Selection.ComponentKey}",
                     $"Runtime directory: {runtimeRoot}",
-                    $"Materialized runtime files: {materializedJavaFiles.Count}",
+                    $"Planned files: {plan.JavaRuntimeDownloadWorkflowPlan.Files.Count}",
+                    $"Downloaded runtime files: {downloadedJavaFiles.Count}",
+                    $"Reused runtime files: {reusedJavaFiles.Count}",
                     $"Index request artifact: {javaIndexRequestPath}",
                     $"Manifest request artifact: {javaManifestRequestPath}",
-                    $"Plan artifact: {javaDownloadPlanPath}"
+                    $"Plan artifact: {javaDownloadPlanPath}",
+                    $"Transfer artifact: {javaTransferPlanPath}"
                 ]));
         }
 
@@ -522,8 +543,26 @@ internal static class SpikeExecutor
                 $"Version={selection.VersionName}",
                 $"ManifestSources={string.Join(" | ", manifestPlan.RequestUrls.AllUrls)}",
                 $"RuntimeBaseDirectory={plan.RuntimeBaseDirectory}",
+                $"PlannedFiles={workflowPlan.Files.Count}",
                 ..workflowPlan.Files.Select(file =>
                     $"{file.RelativePath}|{file.TargetPath}|{file.Size}|{file.Sha1}|{string.Join(" | ", file.RequestUrls.AllUrls)}")
+            ]);
+    }
+
+    private static string BuildJavaDownloadTransferText(MinecraftJavaRuntimeDownloadTransferPlan transferPlan)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"RuntimeBaseDirectory={transferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory}",
+                $"PlannedFiles={transferPlan.WorkflowPlan.Files.Count}",
+                $"FilesToDownload={transferPlan.FilesToDownload.Count}",
+                $"ReusedFiles={transferPlan.ReusedFiles.Count}",
+                $"DownloadBytes={transferPlan.DownloadBytes}",
+                ..transferPlan.FilesToDownload.Select(file =>
+                    $"download|{file.RelativePath}|{file.TargetPath}|{file.Size}|{string.Join(" | ", file.RequestUrls.AllUrls)}"),
+                ..transferPlan.ReusedFiles.Select(file =>
+                    $"reuse|{file.RelativePath}|{file.TargetPath}|{file.Size}|{string.Join(" | ", file.RequestUrls.AllUrls)}")
             ]);
     }
 
@@ -533,6 +572,18 @@ internal static class SpikeExecutor
             Environment.NewLine,
             [
                 $"downloaded {filePlan.RelativePath}",
+                $"size={filePlan.Size}",
+                $"sha1={filePlan.Sha1}",
+                $"sources={string.Join(" | ", filePlan.RequestUrls.AllUrls)}"
+            ]);
+    }
+
+    private static string BuildPreexistingJavaRuntimeFileContent(MinecraftJavaRuntimeDownloadRequestFilePlan filePlan)
+    {
+        return string.Join(
+            Environment.NewLine,
+            [
+                $"reused {filePlan.RelativePath}",
                 $"size={filePlan.Size}",
                 $"sha1={filePlan.Sha1}",
                 $"sources={string.Join(" | ", filePlan.RequestUrls.AllUrls)}"

@@ -216,6 +216,12 @@ internal static class SpikeSampleFactory
                     inputs.JavaRuntimeInputs.RuntimeBaseDirectory,
                     inputs.JavaRuntimeInputs.IgnoredSha1Hashes,
                     MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
+        var javaRuntimeTransferPlan = javaRuntimeDownloadWorkflowPlan is null
+            ? null
+            : MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
+                new MinecraftJavaRuntimeDownloadTransferPlanRequest(
+                    javaRuntimeDownloadWorkflowPlan,
+                    inputs.JavaRuntimeInputs.ExistingRelativePaths));
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(inputs.ResolutionRequest);
         var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(inputs.ClasspathRequest);
         var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(inputs.NativesDirectoryRequest);
@@ -236,6 +242,7 @@ internal static class SpikeSampleFactory
             javaRuntimeIndexRequestUrls,
             javaRuntimeManifestPlan,
             javaRuntimeDownloadWorkflowPlan,
+            javaRuntimeTransferPlan,
             javaWorkflow,
             MinecraftLaunchJavaWorkflowService.ResolveInitialSelection(javaWorkflow, hasSelectedJava: false),
             MinecraftLaunchJavaWorkflowService.ResolvePromptDecision(
@@ -543,6 +550,7 @@ internal static class SpikeSampleFactory
               }
             }
             """,
-            IgnoredSha1Hashes: ["skip-license"]);
+            IgnoredSha1Hashes: ["skip-license"],
+            ExistingRelativePaths: ["conf/net.properties"]);
     }
 }

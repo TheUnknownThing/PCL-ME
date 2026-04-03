@@ -28,7 +28,8 @@ internal sealed record JavaRuntimeSpikeInputs(
     string RuntimeBaseDirectory,
     string IndexJson,
     string ManifestJson,
-    IReadOnlyList<string> IgnoredSha1Hashes);
+    IReadOnlyList<string> IgnoredSha1Hashes,
+    IReadOnlyList<string> ExistingRelativePaths);
 
 internal sealed record CrashSpikeInputs(
     MinecraftCrashOutputPromptRequest OutputPromptRequest,

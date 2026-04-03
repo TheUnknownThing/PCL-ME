@@ -121,7 +121,9 @@ internal static class SpikeTextRenderer
                         $"Resolved component: {plan.JavaRuntimeManifestPlan?.Selection.ComponentKey ?? "none"}",
                         $"Manifest sources: {string.Join(" | ", plan.JavaRuntimeManifestPlan?.RequestUrls.AllUrls ?? ["none"])}",
                         $"Runtime directory: {plan.JavaRuntimeDownloadWorkflowPlan?.DownloadPlan.RuntimeBaseDirectory ?? "none"}",
-                        $"Planned files: {plan.JavaRuntimeDownloadWorkflowPlan?.Files.Count ?? 0}"
+                        $"Planned files: {plan.JavaRuntimeDownloadWorkflowPlan?.Files.Count ?? 0}",
+                        $"Files to download: {plan.JavaRuntimeTransferPlan?.FilesToDownload.Count ?? 0}",
+                        $"Reused files: {plan.JavaRuntimeTransferPlan?.ReusedFiles.Count ?? 0}"
                     ]),
                 new SpikeTranscriptSection(
                     "Launch Composition",

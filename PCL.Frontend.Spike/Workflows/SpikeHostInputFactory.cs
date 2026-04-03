@@ -248,12 +248,24 @@ internal static class SpikeHostInputFactory
                 ? $"mac-os-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}"
                 : $"linux-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}";
         var componentKey = scenario == "legacy-forge" ? "jre-8u412" : "jre-legacy";
+        var runtimeBaseDirectory = Path.Combine(minecraftRoot, "runtime", componentKey);
+        var downloadWorkflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+            new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
+                sample.ManifestJson,
+                runtimeBaseDirectory,
+                sample.IgnoredSha1Hashes,
+                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
+        var existingRelativePaths = downloadWorkflowPlan.Files
+            .Where(file => File.Exists(file.TargetPath))
+            .Select(file => file.RelativePath)
+            .ToArray();
 
         return sample with
         {
             PlatformKey = platformKey,
-            RuntimeBaseDirectory = Path.Combine(minecraftRoot, "runtime", componentKey),
-            IndexJson = sample.IndexJson.Replace("windows-x64", platformKey, StringComparison.Ordinal)
+            RuntimeBaseDirectory = runtimeBaseDirectory,
+            IndexJson = sample.IndexJson.Replace("windows-x64", platformKey, StringComparison.Ordinal),
+            ExistingRelativePaths = existingRelativePaths
         };
     }
 }

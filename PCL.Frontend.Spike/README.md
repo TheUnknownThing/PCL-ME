@@ -12,6 +12,7 @@ It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoi
 - launch scenarios can now trace Authlib or Microsoft login request execution with inspectable request/response artifacts
 - launch scenarios now also expose a portable Java runtime download plan, including the resolved runtime component and planned manifest files
 - launch scenarios now also trace the launcher-style Java index and manifest request sources, and `execute` mode can materialize a stub runtime tree from the portable download workflow
+- launch scenarios now also separate reused runtime files from actual download transfers so the shell can model partial-runtime recovery instead of only all-or-nothing downloads
 - the shell can round-trip startup, launch, and crash inputs through `_inputs/*.json` snapshots and replay them later with `--input-root`
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
@@ -61,6 +62,7 @@ Useful reviewer commands:
 - launch execution can materialize `launcher_profiles.json`, `options.txt`, a generated launch batch file, and session summary artifacts
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
 - launch execution now writes Java index/manifest request artifacts under `_artifacts/java-download/`, writes `_artifacts/java-download-plan.txt`, and materializes a stub runtime tree when the backend selects an automatic Java download path
+- launch execution now also writes `_artifacts/java-download-transfer.txt`, seeds reused runtime files, and only materializes transfer files for the remaining Java download queue
 - crash execution can stage sample input files and build a real crash zip archive via `MinecraftCrashExportArchiveService`
 - crash execution records the selected archive destination in `_artifacts/crash-export-target.txt`, and `--export-path` can override the default workspace output path
 - aborting the launch Java prompt in `execute` mode stops before prerun file work, so no launch artifacts are created
@@ -75,7 +77,7 @@ Useful reviewer commands:
 ## Host-backed inputs
 
 - `--host-env true` tells the spike to derive startup, launch, and crash inputs from the current machine when `--input-root` is not provided
-- this currently swaps in host paths, home/config/log locations, OS snapshot data, and portable Java/process defaults so the shell transcript is closer to a real non-Windows environment
+- this currently swaps in host paths, home/config/log locations, OS snapshot data, portable Java/process defaults, and best-effort detection of already-present Java runtime files so the shell transcript is closer to a real non-Windows environment
 - host-backed mode is still best-effort shell prototyping, not a live launcher adapter; account tokens, network responses, Java payload contents, and some launcher-specific shell commands remain modeled inputs
 
 ## Current limitations

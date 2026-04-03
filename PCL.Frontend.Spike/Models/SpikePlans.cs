@@ -14,6 +14,7 @@ internal sealed record LaunchSpikePlan(
     MinecraftJavaRuntimeRequestUrlPlan JavaRuntimeIndexRequestUrls,
     MinecraftJavaRuntimeManifestRequestPlan? JavaRuntimeManifestPlan,
     MinecraftJavaRuntimeDownloadWorkflowPlan? JavaRuntimeDownloadWorkflowPlan,
+    MinecraftJavaRuntimeDownloadTransferPlan? JavaRuntimeTransferPlan,
     MinecraftLaunchJavaWorkflowPlan JavaWorkflow,
     MinecraftLaunchJavaSelectionOutcome InitialSelection,
     MinecraftLaunchJavaPromptOutcome AcceptedPromptOutcome,
