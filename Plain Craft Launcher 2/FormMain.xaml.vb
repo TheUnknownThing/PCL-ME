@@ -192,29 +192,13 @@ Public Class FormMain
         'Timer 启动
         AniStart()
         TimerMainStart()
-        RunInNewThread(
-            Sub()
-                Try
-                    For Each prompt In _startupWorkflowPlan.Consent.Prompts
-                        If Not ModStartupPromptShell.RunStartupPrompt(prompt, Sub() EndProgram(False)) Then Exit For
-                    Next
-                Catch ex As Exception
-                    Log(ex, "初始弹窗提示运行失败", LogLevel.Feedback)
-                End Try
-            End Sub, "Start MsgBox", ThreadPriority.Lowest)
+        ModMainWindowStartupThreadShell.StartConsentPromptThread(
+            _startupWorkflowPlan.Consent,
+            Sub() EndProgram(False))
         '加载池
-        RunInNewThread(
-        Sub()
-            '启动加载器池
-            Try
-                DlClientListMojangLoader.Start(1) 'PCL 会同时根据这里的加载结果决定是否使用官方源进行下载
-                RunCountSub()
-                ServerLoader.Start(1)
-                RunInNewThread(AddressOf TryClearTaskTemp, "TryClearTaskTemp", ThreadPriority.BelowNormal)
-            Catch ex As Exception
-                Log(ex, "初始化加载池运行失败", LogLevel.Feedback)
-            End Try
-        End Sub, "Start Loader", ThreadPriority.BelowNormal)
+        ModMainWindowStartupThreadShell.StartLoaderInitializationThread(
+            AddressOf RunCountSub,
+            AddressOf TryClearTaskTemp)
 
         Log("[Start] 第三阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
     End Sub
