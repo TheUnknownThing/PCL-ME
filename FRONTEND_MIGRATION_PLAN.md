@@ -1,307 +1,150 @@
 # Frontend Migration Plan
 
-## Summary
+## Goal
 
-Wave 2 left the runtime boundary in a good state, and a substantial set of launcher-workflow cleanup slices are now done: shared runtime/platform behavior lives behind explicit `PCL.Core` seams, startup environment warnings live in a core service, and crash-report environment assembly also lives in a core service.
+Replace the WPF frontend only after the remaining launcher shell is thin enough.
 
-That means the next engineer can keep pushing frontend-migration prep work without reopening runtime extraction. The migration should still be compatibility-first: keep the current launcher behavior, reuse the existing core/runtime services, finish the last high-value workflow extractions, and only then replace launcher UI/shell layers incrementally.
+The intended end state is:
 
-## Handoff Status
+- `PCL.Core.Backend` owns portable workflow/policy
+- `PCL.Core` owns Windows compatibility helpers only
+- the current WPF project owns legacy UI until replacement
+- the future frontend owns UI, prompt rendering, and OS shell actions only
 
-This plan is ready to hand to another engineer.
+## Current Status
 
-Decision:
+Good news:
 
-- do **not** describe the repo as a fully working portable backend yet
-- do hand the migration to another engineer now
-- have that engineer continue from the existing backend seams and the shell spike instead of reopening runtime extraction
+- the backend side is already far enough along to hand to another engineer
+- `PCL.Frontend.Spike` exists and proves non-WPF consumption of the backend
+- `FormMain.xaml.vb` has already been heavily split into shell modules
+- login/Java/crash/startup policy is mostly no longer trapped in giant WPF files
 
-Current estimate:
+Important caveat:
 
-- portable runtime/core extraction: `complete`
-- backend readiness for a replacement frontend shell: roughly `95%~96%`
-- reusable portable workflow/policy coverage: roughly `98%`
-- truly portable end-to-end backend readiness: roughly `90%~91%`
+- this is **not** yet the moment to start a full frontend rewrite
+- there is still a meaningful Windows-shell cleanup list first
 
-Current handoff decision:
+## Done Already
 
-- this is ready to pass to another engineer now
-- do not represent it as a finished fully working portable backend yet
-- have the next engineer focus on adapter cleanup and shell migration, not reopening backend-policy extraction that is already green
+The following are already in a usable migration state:
 
-The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
+- portable foundation layer in `PCL.Core.Foundation`
+- portable workflow backend in `PCL.Core.Backend`
+- portable backend tests in `PCL.Core.Backend.Test`
+- shell prototype in `PCL.Frontend.Spike`
+- startup shell extraction
+- Microsoft/Authlib login shell extraction
+- Java transfer/session shell extraction
+- crash prompt shell extraction
+- large `FormMain.xaml.vb` shell split
+- launcher identity fallback in `PCL.Core/App/LauncherIdentity.cs`
+- encryption key fallback in `PCL.Core/Utils/Secret/EncryptHelper.cs`
 
-The project is now also past the point where the extracted backend only exists inside `PCL.Core`'s Windows target:
+## Remaining Work Before A Real Frontend Migration
 
-- `PCL.Core.Backend` now compiles the extracted startup / launch / crash workflow layer as plain `net8.0`
-- `PCL.Core.Backend.Test` now runs portable workflow/service tests on macOS/Linux hosts
-- `PCL.Frontend.Spike` now targets plain `net8.0`, consumes `PCL.Core.Backend`, and gives reviewers a small CLI surface for exercising extracted frontend contracts
-- `PCL.Core` now references `PCL.Core.Backend` for that extracted workflow slice instead of compiling duplicate implementations locally
-- `PCL.Frontend.Spike/README.md` now documents the shell-prototype commands, review workflow, executable workspace mode, and file-backed input replay
+### Priority 1: finish launch and Java adapter cleanup
 
-## Completed Migration Prerequisites
+Files:
 
-These workflow extractions are already done and should be treated as available migration seams:
+- `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
+- `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb`
 
-- GPU preference handling routes through `PCL.Core.Utils.OS.ProcessInterop`
-- system environment summary is exposed through `PCL.Core.Utils.OS.SystemEnvironmentInfo`
-- crash-report environment text is built by `PCL.Core.Minecraft.MinecraftCrashReportBuilder`
-- startup environment warnings are evaluated by `PCL.Core.App.Essentials.LauncherStartupEnvironmentWarningService`
-- launch precheck prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrecheckService`
-- launch account prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAccountWorkflowService`
-- launch Java requirement and missing-Java prompt policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaRequirementService` and `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptService`
-- launch Java selection / missing-Java recovery orchestration is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaWorkflowService`
-- third-party login failure wording and failure-transition policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginWorkflowService`
-- Authlib response planning for profile selection, refresh-session resolution, and profile mutation is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibLoginWorkflowService`
-- login profile mutation / cached-session reuse policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLoginProfileWorkflowService`
-- authlib login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchThirdPartyLoginExecutionService`
-- Microsoft login execution sequencing is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftLoginExecutionService`
-- Microsoft device-code response parsing and popup prompt planning are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftDeviceCodePromptService`
-- startup consent prompt policy is owned by `PCL.Core.App.Essentials.LauncherStartupConsentService`
-- startup command parsing and startup preparation composition are owned by `PCL.Core.App.Essentials.LauncherStartupCommandService` and `LauncherStartupPreparationService`
-- startup version-transition and version-isolation migration policy are owned by `PCL.Core.App.Essentials.LauncherVersionTransitionService` and `LauncherStartupVersionIsolationMigrationService`
-- startup version-transition application planning is owned by `PCL.Core.App.Essentials.LauncherVersionTransitionWorkflowService`
-- crash export packaging is owned by `PCL.Core.Minecraft.MinecraftCrashExportService`
-- crash export request assembly is owned by `PCL.Core.Minecraft.MinecraftCrashExportWorkflowService`
-- crash export archive creation is owned by `PCL.Core.Minecraft.MinecraftCrashExportArchiveService`
-- crash prompt response, export save-dialog defaults, and export-completion shell policy are owned by `PCL.Core.Minecraft.MinecraftCrashResponseWorkflowService`
-- crash result prompt policy and export filename suggestion are owned by `PCL.Core.Minecraft.MinecraftCrashWorkflowService`
-- post-launch launcher shell policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
-- launch-count support prompt policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
-- launch script-export completion log / abort hint / reveal-target policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
-- launch GPU-preference failure / admin-retry policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGpuPreferenceWorkflowService`
-- launch prerun options-file mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
-- launch prerun composition for GPU recovery, `launcher_profiles.json`, and `options.txt` is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrerunWorkflowService`
-- startup bootstrap policy is owned by `PCL.Core.App.Essentials.LauncherStartupBootstrapService`
-- startup immediate-command shell policy and environment-warning prompt contract are owned by `PCL.Core.App.Essentials.LauncherStartupShellService`
-- startup visual defaults are owned by `PCL.Core.App.Essentials.LauncherStartupVisualService`
-- startup shell composition is owned by `PCL.Core.App.Essentials.LauncherStartupWorkflowService`
-- main-window startup composition is owned by `PCL.Core.App.Essentials.LauncherMainWindowStartupWorkflowService`
-- startup open-count milestone policy is owned by `PCL.Core.App.Essentials.LauncherStartupMilestoneService`
-- startup update-log prompt policy is owned by `PCL.Core.App.Essentials.LauncherUpdateLogService`
-- fatal log dialog presentation is routed through `PCL.Core.Logging.LogRuntimeHooks` instead of being hardcoded in `PCL.Core.Logging.LogService`
-- launcher startup prompt rendering/action application is centralized in `Plain Craft Launcher 2/Modules/Base/ModStartupPromptShell.vb`
-- launcher application startup immediate-command / bootstrap / visual shell application is centralized in `Plain Craft Launcher 2/Modules/Base/ModApplicationStartupShell.vb`
-- launcher startup update-log rendering is centralized in `Plain Craft Launcher 2/Modules/Base/ModUpdateLogShell.vb`
-- launcher main-window startup milestone / version-transition shell application is centralized in `Plain Craft Launcher 2/Modules/Base/ModMainWindowStartupShell.vb`
-- launcher launch prompt rendering, account decisions, Java prompts, Authlib role selection, Microsoft device-code popup handling, and third-party login failure dialog rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchPromptShell.vb`
-- launcher launch precheck prompt choreography, Microsoft device-code retry bridging, Microsoft ownership prompt handling, and Authlib authenticate-selection shell behavior are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchInteractionShell.vb`
-- launcher Java download confirmation and post-download failure hint rendering are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaPromptShell.vb`
-- launcher Java runtime index / manifest fetch plus reused-file detection and concrete download file shaping are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb`
-- launcher Java runtime index / manifest / transfer sequencing now routes through `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb` instead of being assembled in `ModJava.vb`
-- launcher Microsoft login step execution bridging is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftLoginShell.vb`
-- launcher Authlib login step execution bridging is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchThirdPartyLoginShell.vb`
-- launcher Microsoft login step request/failure handling is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftStepShell.vb`
-- launcher Authlib validate / refresh / authenticate step handling is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibStepShell.vb`
-- launcher Microsoft login execution now consumes device-code / refresh / step request handling directly from dedicated Microsoft shells instead of thin `ModLaunch.vb` wrappers
-- launcher Authlib login execution now consumes live request / metadata execution directly from dedicated Authlib shells instead of thin `ModLaunch.vb` wrappers
-- launcher Microsoft live HTTP request execution is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchMicrosoftRequestShell.vb`
-- launcher Authlib live HTTP request / metadata execution is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchAuthlibRequestShell.vb`
-- launcher crash-result prompt rendering is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashPromptShell.vb`
-- launcher crash export picker / completion shell flow is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModCrashExportShell.vb`
-- launcher in-game music / video / visibility shell application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunchSessionShell.vb`
-- a thin replacement-shell spike exists in `PCL.Frontend.Spike` and can now expose startup / launch / crash workflows in `plan`, `run`, and `execute` modes, with JSON payloads, text-mode shell transcripts, workspace artifact materialization, and file-backed input replay, without WPF views
-- the spike can now model Authlib / Microsoft login request execution with inspectable request / response artifacts instead of only high-level prompt outcomes
-- the spike can now accept explicit crash-export target paths and record the selected destination as a shell artifact
-- the spike can now derive best-effort host-backed startup / launch / crash inputs with `--host-env true`
-- the spike can now trace launcher-style Java index / manifest request sources and materialize a stub runtime tree from the portable download workflow during `execute` mode
-- the spike can now also model finished / failed / aborted Java download session transitions, including cleanup / refresh artifacts, from the extracted session service
-- a portable extracted-backend assembly exists in `PCL.Core.Backend`, and the spike now consumes that assembly instead of the Windows-only `PCL.Core` project
-- launch-start / watcher-stop music, video-background, visibility, and launch-count shell policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchShellService`
-- launch prerun `options.txt` target selection and write policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchOptionsFileService`
-- launch prerun Microsoft `launcher_profiles.json` mutation policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesService`
-- launcher_profiles default file seeding is owned by `PCL.Core.Minecraft.MinecraftLauncherProfilesFileService`
-- launch prerun `launcher_profiles.json` retry / reset workflow is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchLauncherProfilesWorkflowService`
-- launch prerun GPU recovery, `launcher_profiles.json`, and `options.txt` composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchPrerunWorkflowService`
-- launch custom-command / batch-script planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchCustomCommandService`
-- launch-session startup summary logging is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionLogService`
-- launch process / watcher runtime planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRuntimeService`
-- launch custom-command and game-process `ProcessStartRequest` construction plus priority application are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchProcessExecutionService`
-- launch custom-command / game-process shell execution planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchExecutionWorkflowService`
-- launch watcher startup composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchWatcherWorkflowService`
-- launch-session start/post-launch shell composition is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchSessionWorkflowService`
-- Authlib request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibProtocolService`
-- Microsoft request / response protocol shaping is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftProtocolService`
-- Authlib request URL / header / body planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchAuthlibRequestWorkflowService`
-- Microsoft login request URL / header / body / bearer-token planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftRequestWorkflowService`
-- Microsoft login refresh / XSTS / ownership / profile failure policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchMicrosoftFailureWorkflowService`
-- launch argument window-size planning is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchResolutionService`
-- launch argument final composition, placeholder application, and quick-play/server append policy are owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchArgumentWorkflowService`
-- launch classpath ordering is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchClasspathService`
-- launch placeholder/replacement value assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchReplacementValueService`
-- launch natives-directory selection is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesDirectoryService`
-- launch natives archive sync is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchNativesSyncService`
-- launch RetroWrapper selection is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchRetroWrapperService`
-- launch JSON argument-section extraction is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJsonArgumentService`
-- launch JVM argument assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJvmArgumentService`
-- launch game argument assembly is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchGameArgumentService`
-- Java runtime selection and manifest file planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadService`
-- Java runtime manifest/file request coordination is owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
-- Java runtime transfer selection, reused-file filtering, and remaining download queue shaping are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadWorkflowService`
-- Java runtime default ignored-hash policy, runtime-base-directory selection, and transfer state cleanup/refresh planning are owned by `PCL.Core.Minecraft.Launch.MinecraftJavaRuntimeDownloadSessionService`
-- launcher-side Java runtime download cleanup / refresh application is centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaDownloadSessionShell.vb`
-- launcher-side Java runtime index / manifest fetch, reused-file detection, and concrete `NetFile` shaping are centralized in `Plain Craft Launcher 2/Modules/Minecraft/ModJavaTransferShell.vb`
-- Java launch selection transition/log/hint policy is owned by `PCL.Core.Minecraft.Launch.MinecraftLaunchJavaSelectionWorkflowService`
+Needed outcome:
 
-Do not redo these in the frontend migration branch; build on top of them.
+- these become adapter-first shells
+- they stop being mixed policy/orchestration hubs
+- backend services remain the source of truth
 
-## Remaining Launcher-Only Dependency Tracks
+### Priority 2: finish crash and startup shell cleanup
 
-### 1. WPF-only UI shell and controls
+Files:
 
-These files are fundamentally presentation-layer code and should stay in the launcher until a replacement shell exists:
-
-- `Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj`
-- `Plain Craft Launcher 2/FormMain.xaml.vb`
-- `Plain Craft Launcher 2/Controls/*`
-- `Plain Craft Launcher 2/Pages/*`
-
-Scope in this track:
-
-- XAML pages, custom controls, animations, markup extensions, effects, and dispatcher-driven UI flow
-- window lifetime, splash screen, tooltip metadata, and visual theme application
-- any code whose main job is manipulating WPF elements rather than computing launcher state
-
-### 2. Windows shell / interop / registry glue
-
-These files still bind the launcher directly to Win32 or Windows-only APIs:
-
+- `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
 - `Plain Craft Launcher 2/Application.xaml.vb`
-- `Plain Craft Launcher 2/Modules/ModMain.vb`
-- `Plain Craft Launcher 2/Modules/Base/ModBase.vb`
-- `Plain Craft Launcher 2/Modules/Minecraft/ModWatcher.vb`
-- `Plain Craft Launcher 2/Controls/MyResizer.vb`
-- `Plain Craft Launcher 2/Pages/PageTools/PageToolsTest.xaml.vb`
+- `Plain Craft Launcher 2/FormMain.xaml.vb`
 
-Main responsibilities still in this track:
+Needed outcome:
 
-- window activation and foreground control
-- registry-backed launcher settings helpers
-- memory optimization and privileged `NtInterop` tools
-- window enumeration and title manipulation for launched Minecraft processes
-- monitor / cursor / resize behavior implemented with raw Win32 calls
+- remaining behavior is mostly prompt rendering, page routing, windowing, and OS actions
+- no important launch/startup/crash policy is trapped in WPF files
 
-These should remain Windows adapters until a new frontend shell exists, but they should stop accumulating shared workflow logic.
+### Priority 3: finish the portability story for secrets
 
-### 3. Launcher workflows still mixed with presentation
+Area:
 
-This is the most important migration track because it blocks frontend replacement more than raw WPF controls do.
+- `PCL.Core/Utils/Secret/*`
+- encrypted profile/config call sites
 
-Current mixed areas include:
+Needed outcome:
 
-- launch pre/post workflow in `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb`
-- form startup sequencing in `Plain Craft Launcher 2/FormMain.xaml.vb`
-- remaining startup shell orchestration in `Plain Craft Launcher 2/Application.xaml.vb`
-- crash-report export shell flow in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`
+- a real headless auth/config boundary
+- no hidden dependency on Windows-only secret/device identity assumptions
 
-These flows still combine:
+This is the biggest backend-side blocker left.
 
-- launcher state gathering
-- user-facing prompts and shell actions
-- WPF-specific navigation / dispatcher coordination
-- some launch-specific decision logic
+### Priority 4: reduce leftover Windows leakage in `PCL.Core`
 
-After the latest cleanup slices, the former biggest blocker has changed:
+Needed outcome:
 
-- login execution / orchestration is now mostly expressed through `PCL.Core` services and dedicated launcher login/interaction shells, while `ModLaunch.vb` now mainly owns shell/UI adapter work plus a smaller set of remaining launcher-side effect wiring
-- Microsoft device-code popup text / URL planning is now expressed through `PCL.Core`, while launcher shell modules and `MyMsgLogin.xaml.vb` still own the concrete popup polling loop and launcher shell integration
-- Java runtime manifest selection / download file planning, request source shaping, install path selection, ignored-file policy, transfer completion cleanup, selection transition policy, and transfer sequencing are now expressed through `PCL.Core` plus dedicated Java shell modules, while `ModJava.vb` mainly owns loader composition, polling/cancellation, and refresh application and `ModLaunch.vb` mainly delegates into a dedicated Java shell path for the remaining interactive retry flow
-- Java runtime reused-file detection now feeds a shared core-owned transfer plan, while `ModJava.vb` still owns the remaining concrete download execution loop
-- launch-start / watcher-stop shell policy is now expressed through `PCL.Core`, while `ModLaunch.vb` and `ModWatcher.vb` mainly apply the returned shell actions
-- launch script-export completion behavior is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes the batch file and applies the returned shell reveal
-- launch prerun `options.txt` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned file writes
-- launch prerun `launcher_profiles.json` mutation policy is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly handles file existence, writes, and retry shell behavior
-- launch prerun GPU recovery / file-prep composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned prerun shell and file plans
-- launch custom-command / batch-script planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly writes scripts and executes returned shell commands
-- launch-session startup summary formatting is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly prints the returned lines before watcher startup
-- launch process / watcher runtime planning is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts the returned process plan and constructs the watcher from the returned runtime plan
-- launch custom-command and game-process `ProcessStartInfo` construction are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly starts/kills the returned requests and attaches launcher-specific watcher behavior
-- launch-session start/post-launch composition is now expressed through `PCL.Core`, while `ModLaunch.vb` mainly applies the returned shell plans and watcher adapter inputs
-- Authlib request / response protocol shaping, request coordination, profile-selection / mutation planning, and failure transitions are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
-- Microsoft request / response protocol shaping, request coordination, and failure policy are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly performs HTTP calls and applies prompt/shell-side effects
-- launch argument window-size planning and final argument composition are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher state, JSON/lib inputs, and applies prompt-side effects
-- launch classpath ordering and replacement value assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly gathers launcher path/lib state and applies launcher-specific file extraction
-- launch natives-directory selection and archive sync are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly passes selected native archives and forwards returned log output
-- launch RetroWrapper selection, JSON argument-section extraction, JVM argument assembly, and game argument assembly are now expressed through `PCL.Core`, while `ModLaunch.vb` mainly supplies JSON text, config values, and adapter-owned network/file side effects
-- `ModCrash.vb` no longer decides crash-result dialog titles, button combinations, export archive naming, export-request assembly, export save-dialog defaults, prompt rendering, or export-completion shell policy; picker invocation and Explorer reveal now live in `ModCrashExportShell.vb`
-- `Application.xaml.vb` no longer assembles startup command parsing, warning/bootstrap composition, warning prompt construction, or startup visual defaults, and now routes immediate-command / bootstrap / visual shell application through `ModApplicationStartupShell.vb`; it still owns WPF startup shell work such as splash-screen display, tooltip metadata application, memory optimization execution, and process exit behavior
-- `FormMain.xaml.vb` no longer owns version-transition migration policy, version-isolation migration policy, startup open-count milestone policy, startup consent-thread orchestration, loader-init thread orchestration, startup update-log file loading, or startup update-log prompt policy; milestone / version-transition shell application now route through `ModMainWindowStartupShell.vb`, startup background-thread orchestration now routes through `ModMainWindowStartupThreadShell.vb`, and update-log file loading/rendering now route through `ModUpdateLogShell.vb`, while it still owns WPF startup presentation and shell adapters
-- `FormMain.xaml.vb` now consumes a core-owned version-transition application plan for setup writes, custom-skin migration, and startup log messaging; it still owns WPF prompt/display adapters and shell side effects
-- launcher modules plus app/link telemetry and machine-identity call sites now consume `PCL.Core.App.Secrets` / `LauncherIdentity` instead of reading launcher-facing secret values directly from `Utils.Secret`
-- `Program.vb` now reattaches the current fatal-dialog presentation behavior through a runtime hook instead of that behavior being hardcoded in `PCL.Core`
+- reusable services stop depending on Windows-only helpers by accident
+- backend contracts become easier for a new frontend to consume
 
-A future frontend should only own prompts, view transitions, and shell adapters, not the workflow logic itself.
+## What A Replacement Frontend Should Not Have To Rebuild
 
-## Required Before Frontend Migration
+When the frontend migration actually starts, the new frontend should **not** need to recreate:
 
-The migration is handoff-ready, but these tracks should be finished before starting a real frontend replacement.
+- launch policy
+- login protocol logic
+- Java selection/download policy
+- crash export planning
+- startup workflow planning
+- version-transition policy
+- milestone/update-log policy
 
-1. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.vb` as an adapter-first launch/login shell.
-   - Remaining work is live request execution, device-code popup polling lifecycle bridging, account/prompt application, and launcher-local side effects that still wrap the extracted Authlib / Microsoft services.
-2. Finish `Plain Craft Launcher 2/Modules/Minecraft/ModJava.vb` as an adapter-first Java transfer shell.
-   - Remaining work is the concrete download lifecycle: hashing, loader polling, cancellation, retry, and applying the returned cleanup / post-install refresh actions.
-3. Finish startup adapter cleanup in `Plain Craft Launcher 2/Application.xaml.vb` and `Plain Craft Launcher 2/FormMain.xaml.vb`.
-   - A new frontend should not have to rediscover startup sequencing, prompt timing, or startup-side decision flow from WPF files.
-4. Finish crash shell cleanup in `Plain Craft Launcher 2/Modules/Minecraft/ModCrash.vb`.
-   - Remaining launcher-owned behavior should shrink toward picker invocation, chosen destination plumbing, direct log opening, and Explorer reveal only.
-5. Reduce `PCL.Core` Windows helper dependencies that still block a clean backend contract.
-   - High-value examples remain `PCL.Core/IO/Files.cs`, `PCL.Core/App/Tools/DependencyCheckService.cs`, and dialog / clipboard / system-shell helpers that still mix reusable logic with Windows-only APIs.
-6. Resolve `Utils.Secret` enough for a headless auth/config boundary.
-   - This remains the largest architectural blocker to calling the backend from a truly non-Windows frontend.
-7. Keep `PCL.Frontend.Spike` aligned with those seams.
-   - The spike should keep proving the extracted shell contracts rather than growing into a replacement frontend prematurely.
+If any of those are still frontend-owned at migration time, the cleanup is not done yet.
 
-## Recommended Next Boundary
+## Practical Readiness Checklist
 
-The next implementation phase should finish the remaining adapter cleanup and only then move into a **small shell-replacement / frontend-contract spike on top of the extracted seams**.
+A new frontend migration branch should start only when these statements are true:
 
-Create launcher-facing services in `PCL.Core` for:
+- `ModLaunch.vb` is mostly shell-only
+- `ModJava.vb` is mostly shell-only
+- `ModCrash.vb` is mostly shell-only
+- `Application.xaml.vb` and `FormMain.xaml.vb` are mostly UI/window shells
+- `Utils.Secret` no longer blocks headless backend consumption
+- `PCL.Frontend.Spike` can exercise the key workflows without borrowing WPF behavior
 
-1. any leftover startup shell policy still assembled directly in launcher files
-2. follow-up launch/login adapter cleanup where `ModLaunch.vb` still mixes shell/UI work with reusable decision logic
-3. Java transfer adapter cleanup where `ModJava.vb` still owns workflow-heavy lifecycle behavior
-4. selective reduction of `PCL.Core` Windows-only shell helpers when they still block a future non-Windows frontend
-5. a small shell-replacement spike that consumes the extracted services once the remaining adapter-heavy seams above are under control
+## Suggested Execution Order
 
-Most practical next code targets:
+1. finish `ModLaunch.vb`
+2. finish `ModJava.vb`
+3. finish `ModCrash.vb`
+4. keep shrinking `Application.xaml.vb`
+5. keep shrinking `FormMain.xaml.vb`
+6. finish `Utils.Secret`
+7. tighten remaining Windows-only helpers in `PCL.Core`
+8. expand `PCL.Frontend.Spike` only as needed to prove those seams
+9. create the real replacement frontend only after the above list is materially done
 
-1. finish shrinking `ModLaunch.vb`
-   Focus on popup polling / prompt bridging, launch completion / failure notification application, and the last inline launcher notifications that are not inherently tied to WPF; custom-command/process/watcher session composition already has a reusable `PCL.Core` seam.
-2. finish shrinking `ModJava.vb`
-   Focus on the remaining Java download loader lifecycle and retry/cancellation behavior so the backend owns the policy and the launcher only applies the resulting transfer, cleanup, and refresh actions.
-3. continue shrinking `Application.xaml.vb` and `FormMain.xaml.vb`
-   Keep moving startup decision logic into services while leaving presentation and lifetime wiring in launcher adapters.
-4. trim `ModCrash.vb`
-   Keep only picker / zip / Explorer shell work in the launcher.
-5. reduce `PCL.Core` Windows-helper coupling where it still blocks frontend consumers.
-6. build a tiny replacement shell spike
-   It should exercise extracted startup / launch / crash services without attempting a full UI rewrite.
-   The current spike already proves text-mode startup / launch / crash shell consumption, login request execution transcripts, launcher-style Java request planning, Java runtime file materialization, Java transfer/reuse review, launch-script export handling, crash-export destination handling, host-backed path wiring, and basic workspace/file execution.
-   The best next spike step is feeding more of the remaining real adapter seams into the shell after those adapters are narrowed, rather than letting the spike absorb launcher-only complexity.
+## Validation
 
-Keep the following in the launcher as adapters:
+Use this as the standard validation loop:
 
-- message boxes and hint presentation
-- WPF dispatcher marshaling
-- window activation / shell interop
-- Explorer / browser opening
+```bash
+dotnet build PCL.Core.Backend/PCL.Core.Backend.csproj -c Debug
+dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug
+dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- startup
+dotnet build PCL.Core/PCL.Core.csproj -c Debug
+dotnet build "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" -c Debug
+```
 
-This boundary keeps the current launcher behavior intact while making the eventual frontend swap mostly a matter of replacing views and shell adapters.
+## Short Advice For The Next Engineer
 
-## Execution Order
+Do not treat this as a greenfield frontend project.
 
-1. Finish the remaining adapter-heavy cleanup in `ModLaunch.vb`.
-2. Finish the remaining adapter-heavy cleanup in `ModJava.vb`.
-3. Trim startup shell policy in `Application.xaml.vb` and `FormMain.xaml.vb` until those files are presentation/lifetime adapters.
-4. Trim the remaining `ModCrash.vb` picker / Explorer glue.
-5. Start shrinking `PCL.Core` Windows helpers that still mix reusable logic with Windows shell APIs.
-6. Only then start a small frontend-shell migration spike on top of the extracted contracts.
+Treat it as:
 
-## Acceptance Criteria
-
-- WPF pages and controls remain unchanged in behavior.
-- New launcher workflow services do not introduce `System.Windows` dependencies into `PCL.Core.Foundation`.
-- The launcher becomes a consumer of workflow results plus shell adapters, not the owner of business logic assembly.
-- `ModLaunch.vb`, `ModJava.vb`, `Application.xaml.vb`, `FormMain.xaml.vb`, and `ModCrash.vb` are adapter-dominant rather than workflow-dominant.
-- Frontend migration can proceed without reopening runtime seams or reintroducing launcher-local copies of runtime/system logic.
-- The shell spike can exercise the chosen startup / launch / crash contracts without needing to pull new workflow logic back out of launcher files.
+1. finish shrinking the Windows launcher into adapters
+2. keep proving backend contracts with `PCL.Frontend.Spike`
+3. only then build the new frontend
