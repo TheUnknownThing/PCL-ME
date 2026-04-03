@@ -3,12 +3,15 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using PCL.Core.App;
 using PCL.Core.IO;
 using PCL.Core.Utils.Encryption;
 using PCL.Core.Utils.Exts;
+using PCL.Core.Utils.Hash;
+using PCL.Core.Utils.OS;
 
 namespace PCL.Core.Utils.Secret;
 
@@ -147,14 +150,18 @@ public static class EncryptHelper
 
     private static byte[] _GetKey()
     {
+        var explicitKey = TryGetEnvironmentKeyOverride();
+        if (explicitKey is not null) return explicitKey;
+
         var keyFile = Path.Combine(Paths.SharedData, "UserKey.bin");
         if (File.Exists(keyFile))
         {
             var buf = File.ReadAllBytes(keyFile);
             var data = EncryptionData.FromBytes(buf);
             return data.Version switch
-            {
+                {
                 1 => ProtectedData.Unprotect(data.Data, _IdentifyEntropy, DataProtectionScope.CurrentUser),
+                2 => data.Data,
                 _ => throw new NotSupportedException("Unsupported key version")
             };
         }
@@ -162,11 +169,7 @@ public static class EncryptHelper
         {
             var randomKey = new byte[32];
             RandomNumberGenerator.Fill(randomKey);
-            var storeData = EncryptionData.ToBytes(new EncryptionData
-            {
-                Version = 1,
-                Data = ProtectedData.Protect(randomKey, _IdentifyEntropy, DataProtectionScope.CurrentUser)
-            });
+            var storeData = EncryptionData.ToBytes(CreateStoredKeyData(randomKey));
 
             var tmpFile = $"{keyFile}.tmp{RandomUtils.NextInt(10000, 99999)}";
             using (var fs = new FileStream(tmpFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
@@ -175,9 +178,68 @@ public static class EncryptHelper
                 fs.Flush(true);
             }
 
+            TryApplyPortableKeyFilePermissions(tmpFile);
+
             File.Move(tmpFile, keyFile, true);
+            TryApplyPortableKeyFilePermissions(keyFile);
 
             return randomKey;
+        }
+    }
+
+    private static EncryptionData CreateStoredKeyData(byte[] randomKey)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return new EncryptionData
+            {
+                Version = 1,
+                Data = ProtectedData.Protect(randomKey, _IdentifyEntropy, DataProtectionScope.CurrentUser)
+            };
+        }
+
+        return new EncryptionData
+        {
+            Version = 2,
+            Data = randomKey
+        };
+    }
+
+    private static byte[]? TryGetEnvironmentKeyOverride()
+    {
+        var rawValue = EnvironmentInterop.GetSecret("ENCRYPTION_KEY", readEnvDebugOnly: true);
+        if (rawValue.IsNullOrEmpty()) return null;
+
+        var normalized = rawValue!.Trim();
+        try
+        {
+            if (normalized.Length == 64 && normalized.All(Uri.IsHexDigit))
+            {
+                return Convert.FromHexString(normalized);
+            }
+
+            return SHA256Provider.Instance.ComputeHash(normalized);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("环境变量 PCL_ENCRYPTION_KEY 无法转换为有效密钥。", ex);
+        }
+    }
+
+    private static void TryApplyPortableKeyFilePermissions(string filePath)
+    {
+        if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            return;
+        }
+
+        try
+        {
+            File.SetUnixFileMode(filePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        catch
+        {
+            // Ignore best-effort permission hardening failures on non-Windows hosts.
         }
     }
 
