@@ -33,6 +33,7 @@ Use these boundaries as the current source of truth:
 - `PCL.Frontend.Spike`
   - non-WPF proving ground
   - now includes both CLI shell tooling and an Avalonia desktop shell spike
+  - the desktop shell now has launcher-style top chrome, floating utility buttons, a copied launch surface, and grouped left navigation modeled after the existing WPF pages
   - use it to validate backend contracts and bootstrap flows before or alongside a real replacement frontend
 
 ## What Has Been Finished
@@ -107,6 +108,7 @@ These areas are already substantially portable or backend-owned:
 - frontend shell planning and navigation catalog generation
 - frontend prompt queue and prompt-command mapping
 - frontend shell desktop composition via the Avalonia spike
+- launcher-style sidebar grouping, route-aware shell composition, and copied icon/control reuse inside the Avalonia spike
 - startup bootstrap and visual planning
 - version transition and milestone policy
 - launch prerun and launch session planning
@@ -162,6 +164,38 @@ These are the key migration checkpoints leading to the current state:
 - `408d8a4c` `refactor: route shell secret access through app runtime`
 - `2674a878` `refactor: extract identity and legacy secret runtime services`
 - `3ed64a54` `refactor: move encryption runtime into app layer`
+- `8859224b` `feat: add route-aware frontend shell panels`
+- `b2d7c574` `feat: align spike chrome with launcher routes`
+- `cb7cdab0` `feat: copy launcher-style sidebar navigation`
+- `dc20914d` `feat: simplify spike content cards`
+
+## Current Frontend Spike Status
+
+The frontend migration is no longer just a shell frame.
+
+Current Avalonia spike status:
+
+- launch route now mirrors the current launcher's split left/right structure instead of a generic placeholder page
+- non-launch routes now switch through a route-aware shell body rather than always rendering the launch page
+- top chrome now switches between top-level tabs and inner back-title mode, matching the current launcher more closely
+- non-launch left navigation now uses grouped launcher-style list items with copied labels, logos, and small right-side action buttons
+- non-launch right content now uses a simpler `MyCard`-style stacked surface instead of spike-only dashboard chrome
+
+What is still incomplete on the frontend side:
+
+- many right-side route surfaces are still contract-driven summary cards, not copied page-specific WPF layouts yet
+- setup, download, tools, and instance routes still need deeper page-by-page visual parity work
+- some launcher controls are only approximated in Avalonia and should keep converging toward the WPF originals
+
+## Frontend Migration Rule
+
+This rule should be treated as explicit handoff guidance for the next frontend engineer:
+
+- copy the existing launcher designs and controls whenever practical
+- prefer reusing the current WPF page structure, spacing, grouping, iconography, and control hierarchy over inventing cleaner-looking replacements
+- do not redesign a page because the backend contract is abstract; instead, render the contract inside a surface that still looks like the current launcher
+- when a spike control is needed, model it after an existing control such as `MyCard`, `MyListItem`, `MyButton`, `MyIconButton`, or `MyExtraButton` before creating anything more generic
+- when a page is still too generic, the next step is usually to copy more of the matching WPF layout, not to add new shell-specific chrome
 
 ## What Still Remains Before A Full Frontend Cutover
 
@@ -250,6 +284,7 @@ Needed outcome:
 - richer page data contracts beyond the current catalog/view seam
 - launch/profile/auth flow view models or request/response adapters
 - crash presentation/export interactions
+- page-specific right-pane content so copied WPF layouts do not have to fall back to generic summary text
 
 This does not require re-centralizing WPF logic. It means making the backend and shell seams easier to consume from a new frontend.
 
@@ -258,6 +293,20 @@ This does not require re-centralizing WPF logic. It means making the backend and
 This is the recommended handoff structure.
 
 ### Engineer 1: frontend migration
+
+Start from the current Avalonia spike, not from a blank window.
+
+Priority order for the next frontend pass:
+
+1. keep the copied launch route stable while expanding page-specific parity for download/setup/tools right panes
+2. continue replacing generic non-launch content with copied WPF page structures
+3. keep building Avalonia controls that explicitly mirror existing launcher controls
+4. ask the backend engineer for missing page data seams instead of compensating with frontend-only redesigns
+
+Non-negotiable rule for this engineer:
+
+- copy and reuse as much of the current launcher UI language as possible
+- if forced to choose between "more generic but cleaner" and "closer to the current launcher", choose the latter for this migration phase
 
 This engineer can start now.
 

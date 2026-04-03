@@ -27,6 +27,17 @@ It **does** mean:
 - the backend engineer should continue shell and portability cleanup in parallel
 - both workstreams should meet at explicit contracts, not at copied WPF behavior
 
+## Frontend Rule
+
+For this migration phase, the frontend should copy the existing launcher UI rather than redesign it.
+
+That means:
+
+- reuse current page structure, grouping, iconography, spacing, and control hierarchy wherever possible
+- prefer Avalonia controls that mirror `MyCard`, `MyListItem`, `MyButton`, `MyIconButton`, and `MyExtraButton`
+- do not introduce new shell-specific visual patterns when an existing launcher pattern already exists
+- when the backend seam is too abstract for a page, request a better contract instead of inventing a new layout language
+
 ## Current Status
 
 What is already in a usable migration state:
@@ -38,6 +49,9 @@ What is already in a usable migration state:
 - `LauncherFrontendShellService` and `LauncherFrontendNavigationService` now provide a portable startup plus navigation shell seam
 - `LauncherFrontendPromptService` now provides portable startup, launch, Java-download, and crash prompt contracts
 - `PCL.Frontend.Spike` now also includes an Avalonia desktop shell spike that renders those portable contracts as a real UI
+- the Avalonia spike now has route-aware shell composition instead of rendering only the launch page
+- the Avalonia spike now copies launcher-style grouped left navigation for non-launch routes
+- the Avalonia spike now uses closer launcher-style chrome for top-level and secondary routes
 - `ModLaunch.vb` is now a thin launch coordinator
 - `ModJava.vb` is effectively a thin adapter for this phase
 - `ModCrash.vb` is now just the crash analyzer entry point
@@ -56,6 +70,7 @@ Recent backend/shell milestones:
 - shell/runtime secret access now routes through app-layer runtime services
 - the spike can now render a backend-driven shell/navigation/prompt transcript and execution artifact set
 - the spike can now boot a real Avalonia shell from those same contracts
+- the spike now also mirrors more of the current launcher frame by reusing copied chrome, launch layout, and grouped left-nav patterns
 
 Recent checkpoint commits:
 
@@ -82,6 +97,25 @@ Recent checkpoint commits:
 - `408d8a4c` `refactor: route shell secret access through app runtime`
 - `2674a878` `refactor: extract identity and legacy secret runtime services`
 - `3ed64a54` `refactor: move encryption runtime into app layer`
+- `8859224b` `feat: add route-aware frontend shell panels`
+- `b2d7c574` `feat: align spike chrome with launcher routes`
+- `cb7cdab0` `feat: copy launcher-style sidebar navigation`
+- `dc20914d` `feat: simplify spike content cards`
+
+## Current Frontend Spike State
+
+The current Avalonia spike now proves more than startup plumbing:
+
+- launch route is rendered as a copied left/right launcher surface rather than a generic shell placeholder
+- non-launch routes now switch through a route-aware shell body
+- non-launch left panes now follow the grouped `MyListItem` navigation pattern from the current launcher
+- top chrome now switches between top tabs and inner-route back-title mode
+
+What still needs frontend parity work:
+
+- most non-launch right panes are still summary-card approximations, not copied page-specific layouts yet
+- page-specific controls such as search boxes, list blocks, person/about rows, and richer settings cards still need direct migration
+- some current Avalonia controls are faithful first passes, but should continue to converge toward the original WPF behavior and spacing
 
 ## Remaining Work Before Full Frontend Cutover
 
@@ -147,6 +181,7 @@ Likely areas:
 - profile/auth presentation models
 - crash result/export interactions
 - page-specific surface contracts
+- richer right-pane page models so copied layouts can render real content without falling back to generic summaries
 
 Needed outcome:
 
@@ -175,7 +210,7 @@ Recommended order:
 1. consume the existing startup plus navigation shell contract
 2. consume the portable prompt contract for startup, launch, and crash prompts
 3. build on the existing Avalonia shell spike instead of starting from zero
-4. implement low-risk pages first
+4. replace generic route surfaces with copied WPF page structures, starting with the simplest right panes
 5. integrate profile/auth and launch UI after the missing contracts are filled in
 
 Rules:
@@ -183,6 +218,8 @@ Rules:
 - do not copy WPF event flow as architecture
 - do not rebuild launch/login/Java/crash logic in the frontend
 - when a contract is missing, ask for it from the backend workstream instead of embedding policy locally
+- copy existing designs and controls instead of redesigning pages based on inferred intent
+- if a page still looks generic, treat that as a migration gap and pull it closer to the current launcher
 
 ### Workstream B: backend engineer
 
@@ -241,6 +278,7 @@ We are ready for full cutover only when these additional statements are true:
 ### Milestone A: frontend kickoff
 
 - frontend engineer builds forward from the existing Avalonia shell, startup shell, navigation skeleton, and prompt rendering contracts
+- frontend engineer keeps replacing generic spike scaffolding with copied launcher layouts and controls
 - backend engineer supports with any missing startup/prompt contracts
 
 ### Milestone B: contract hardening
