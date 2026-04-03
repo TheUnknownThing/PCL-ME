@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Management;
 using PCL.Core.App;
+using PCL.Core.App.Essentials;
 using PCL.Core.Logging;
-using PCL.Core.Utils.Hash;
-using PCL.Core.Utils.Exts;
 
 namespace PCL.Core.Utils.Secret;
 
 [Obsolete("Use PCL.Core.Utils.Secret.Identify instead")]
 public static class IdentifyOld
 {
-    private const string DefaultRawCode = "B09675A9351CBD1FD568056781FE3966DD936CC9B94E51AB5CF67EEB7E74C075";
     private static readonly Lazy<string?> _LazyCpuId = new(_GetCpuId);
 
-    private static readonly Lazy<string> _LazyRawCode =
-        new(() => CpuId is null ? DefaultRawCode : SHA256Provider.Instance.ComputeHash(CpuId).ToHexString().ToUpper());
+    private static readonly Lazy<string> _LazyRawCode = new(() => LauncherLegacyIdentityService.DeriveRawCode(CpuId));
 
     private static readonly Lazy<string> _LaunchId = new(_GetLaunchId);
 
-    private static readonly Lazy<string> _LazyEncryptKey =
-        new(() => SHA512Provider.Instance.ComputeHash(RawCode).ToHexString().Substring(4, 32).ToUpper());
+    private static readonly Lazy<string> _LazyEncryptKey = new(() => LauncherLegacyIdentityService.DeriveEncryptionKey(CpuId));
 
     public static string GetGuid() => Guid.NewGuid().ToString();
     [Obsolete]
@@ -79,7 +75,7 @@ public static class IdentifyOld
 
     public static string GetMachineId(string randomId)
     {
-        return SHA512Provider.Instance.ComputeHash($"{randomId}|{CpuId}").ToHexString().ToUpper();
+        return LauncherLegacyIdentityService.DeriveMachineId(randomId, CpuId);
     }
 
     private static string _GetLaunchId()
@@ -87,12 +83,7 @@ public static class IdentifyOld
         try
         {
             if (string.IsNullOrEmpty(States.System.LaunchUuid)) States.System.LaunchUuid = GetGuid();
-            var hashCode = GetMachineId(States.System.LaunchUuid)
-                .Substring(6, 16)
-                .Insert(4, "-")
-                .Insert(9, "-")
-                .Insert(14, "-");
-            return hashCode;
+            return LauncherLegacyIdentityService.DeriveLauncherId(States.System.LaunchUuid, CpuId);
         }
         catch (Exception ex)
         {
