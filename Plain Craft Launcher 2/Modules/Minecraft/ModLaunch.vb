@@ -1312,87 +1312,27 @@ NextInner:
 
         '执行自定义命令
         For Each shellPlan In McLaunchSessionPlan.CustomCommandShellPlans
-            ExecuteCustomCommand(shellPlan, Loader)
+            ModLaunchExecutionShell.ExecuteCustomCommand(shellPlan, Loader, AddressOf McLaunchLog)
         Next
 
-    End Sub
-
-    Private Sub ExecuteCustomCommand(shellPlan As MinecraftLaunchCustomCommandShellPlan, Loader As LoaderTask(Of Integer, Integer))
-        McLaunchLog(shellPlan.StartLogMessage)
-        Dim customProcess As Process = Nothing
-        Try
-            customProcess = SystemProcessManager.Current.Start(
-                MinecraftLaunchProcessExecutionService.BuildCustomCommandStartRequest(shellPlan))
-            If customProcess Is Nothing Then Throw New InvalidOperationException("自定义命令进程启动失败。")
-            If shellPlan.WaitForExit Then
-                Do Until customProcess.HasExited OrElse Loader.IsAborted
-                    Thread.Sleep(10)
-                Loop
-            End If
-        Catch ex As Exception
-            Log(ex, shellPlan.FailureLogMessage, LogLevel.Hint)
-        Finally
-            If customProcess IsNot Nothing AndAlso Not customProcess.HasExited AndAlso Loader.IsAborted Then
-                McLaunchLog(shellPlan.AbortKillLogMessage) '#1183
-                SystemProcessManager.Current.Kill(customProcess)
-            End If
-        End Try
     End Sub
 
     Private Sub McLaunchRun(Loader As LoaderTask(Of Integer, Process))
         If McLaunchSessionPlan Is Nothing Then Throw New InvalidOperationException("缺少启动会话计划。")
-        Dim shellPlan = McLaunchSessionPlan.ProcessShellPlan
-
-        '启动信息
-        Dim GameProcess = SystemProcessManager.Current.Start(
-            MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(shellPlan))
-        If GameProcess Is Nothing Then Throw New InvalidOperationException("游戏进程启动失败。")
-
-        '开始进程
-        McLaunchLog(shellPlan.StartedLogMessage)
-        If Loader.IsAborted Then
-            McLaunchLog(shellPlan.AbortKillLogMessage) '#1631
-            SystemProcessManager.Current.Kill(GameProcess)
-            Return
-        End If
-        Loader.Output = GameProcess
-        McLaunchProcess = GameProcess
-        '进程优先级处理
-        If Not MinecraftLaunchProcessExecutionService.TryApplyPriority(GameProcess, shellPlan.PriorityKind) Then
-            Log("设置进程优先级失败", LogLevel.Feedback)
-        End If
-
+        McLaunchProcess = ModLaunchExecutionShell.StartGameProcess(
+            McLaunchSessionPlan.ProcessShellPlan,
+            Loader,
+            AddressOf McLaunchLog)
     End Sub
     Private Sub McLaunchWait(Loader As LoaderTask(Of Process, Integer))
 
         If McLaunchSessionPlan Is Nothing Then Throw New InvalidOperationException("缺少启动会话计划。")
-        For Each logLine In McLaunchSessionPlan.WatcherWorkflowPlan.StartupSummaryLogLines
-            McLaunchLog(logLine)
-        Next
-
-        '获取窗口标题
-        Dim WindowTitle As String = ArgumentReplace(McLaunchSessionPlan.WatcherWorkflowPlan.RawWindowTitleTemplate, False)
-
-        '初始化等待
-        Dim Watcher As New Watcher(Loader, McInstanceSelected, WindowTitle, McLaunchSessionPlan.WatcherWorkflowPlan.JstackExecutablePath, McLaunchSessionPlan.WatcherWorkflowPlan.ShouldAttachRealtimeLog)
-        McLaunchWatcher = Watcher
-
-        '显示实时日志
-        If McLaunchSessionPlan.WatcherWorkflowPlan.ShouldAttachRealtimeLog Then
-            ModLaunchSessionShell.AttachRealtimeLog(
-                Watcher,
-                McLaunchSessionPlan.WatcherWorkflowPlan.RealtimeLogAttachedMessage,
-                AddressOf McLaunchLog)
-        End If
-
-        '等待
-        Do While Watcher.State = Watcher.MinecraftState.Loading
-            Thread.Sleep(100)
-        Loop
-        If Watcher.State = Watcher.MinecraftState.Crashed Then
-            Throw New Exception("$$")
-        End If
-
+        McLaunchWatcher = ModLaunchExecutionShell.WaitForGameWindow(
+            McLaunchSessionPlan,
+            Loader,
+            McInstanceSelected,
+            Function(rawWindowTitle) ArgumentReplace(rawWindowTitle, False),
+            AddressOf McLaunchLog)
     End Sub
     Private Sub McLaunchEnd()
         McLaunchLog("开始启动结束处理")
