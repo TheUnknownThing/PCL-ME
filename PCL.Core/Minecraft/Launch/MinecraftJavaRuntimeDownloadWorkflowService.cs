@@ -86,6 +86,39 @@ public static class MinecraftJavaRuntimeDownloadWorkflowService
             $"[Java] 需要下载 {filePlans.Length} 个文件，目标文件夹：{downloadPlan.RuntimeBaseDirectory}");
     }
 
+    public static MinecraftJavaRuntimeDownloadTransferPlan BuildTransferPlan(
+        MinecraftJavaRuntimeDownloadTransferPlanRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var existingRelativePaths = request.ExistingRelativePaths?
+            .Select(NormalizeRelativePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase) ??
+                                    [];
+
+        var filesToDownload = new List<MinecraftJavaRuntimeDownloadRequestFilePlan>();
+        var reusedFiles = new List<MinecraftJavaRuntimeDownloadRequestFilePlan>();
+
+        foreach (var file in request.WorkflowPlan.Files)
+        {
+            if (existingRelativePaths.Contains(NormalizeRelativePath(file.RelativePath)))
+            {
+                reusedFiles.Add(file);
+            }
+            else
+            {
+                filesToDownload.Add(file);
+            }
+        }
+
+        return new MinecraftJavaRuntimeDownloadTransferPlan(
+            request.WorkflowPlan,
+            filesToDownload,
+            reusedFiles,
+            $"[Java] 需要下载 {filesToDownload.Count} 个文件，复用 {reusedFiles.Count} 个已存在文件，目标文件夹：{request.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory}");
+    }
+
     private static MinecraftJavaRuntimeRequestUrlPlan BuildRequestUrlPlan(
         string officialUrl,
         IReadOnlyList<MinecraftJavaRuntimeUrlRewrite>? rewrites)
@@ -108,6 +141,13 @@ public static class MinecraftJavaRuntimeDownloadWorkflowService
         return new MinecraftJavaRuntimeRequestUrlPlan(
             [officialUrl],
             mirrorUrls);
+    }
+
+    private static string NormalizeRelativePath(string relativePath)
+    {
+        return string.IsNullOrWhiteSpace(relativePath)
+            ? string.Empty
+            : relativePath.Replace('\\', '/').TrimStart('/');
     }
 }
 
@@ -132,6 +172,19 @@ public sealed record MinecraftJavaRuntimeDownloadWorkflowPlan(
     MinecraftJavaRuntimeDownloadPlan DownloadPlan,
     IReadOnlyList<MinecraftJavaRuntimeDownloadRequestFilePlan> Files,
     string LogMessage);
+
+public sealed record MinecraftJavaRuntimeDownloadTransferPlanRequest(
+    MinecraftJavaRuntimeDownloadWorkflowPlan WorkflowPlan,
+    IReadOnlyList<string>? ExistingRelativePaths = null);
+
+public sealed record MinecraftJavaRuntimeDownloadTransferPlan(
+    MinecraftJavaRuntimeDownloadWorkflowPlan WorkflowPlan,
+    IReadOnlyList<MinecraftJavaRuntimeDownloadRequestFilePlan> FilesToDownload,
+    IReadOnlyList<MinecraftJavaRuntimeDownloadRequestFilePlan> ReusedFiles,
+    string LogMessage)
+{
+    public long DownloadBytes { get; } = FilesToDownload.Sum(file => file.Size);
+}
 
 public sealed record MinecraftJavaRuntimeDownloadRequestFilePlan(
     string RelativePath,

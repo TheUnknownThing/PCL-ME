@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Launch;
 
@@ -90,6 +91,52 @@ public sealed class MinecraftJavaRuntimeDownloadWorkflowServiceTest
             result.Files[0].RequestUrls.MirrorUrls.ToArray());
         Assert.AreEqual(0, result.Files[1].RequestUrls.MirrorUrls.Count);
         StringAssert.Contains(result.LogMessage, "需要下载 2 个文件");
+    }
+
+    [TestMethod]
+    public void BuildTransferPlanSplitsReusedFilesFromDownloadQueue()
+    {
+        var workflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+            new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
+                """
+                {
+                  "files": {
+                    "bin/java": {
+                      "downloads": {
+                        "raw": {
+                          "url": "https://piston-data.mojang.com/v1/bin/java",
+                          "size": 123,
+                          "sha1": "keep-me"
+                        }
+                      }
+                    },
+                    "conf/security/policy.json": {
+                      "downloads": {
+                        "raw": {
+                          "url": "https://downloads.example.invalid/policy.json",
+                          "size": 456,
+                          "sha1": "keep-too"
+                        }
+                      }
+                    }
+                  }
+                }
+                """,
+                "/tmp/pcl-java-runtime",
+                FileUrlRewrites: MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
+
+        var transferPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
+            new MinecraftJavaRuntimeDownloadTransferPlanRequest(
+                workflowPlan,
+                ["conf\\security\\policy.json"]));
+
+        Assert.AreEqual(1, transferPlan.FilesToDownload.Count);
+        Assert.AreEqual("bin/java", transferPlan.FilesToDownload[0].RelativePath);
+        Assert.AreEqual(1, transferPlan.ReusedFiles.Count);
+        Assert.AreEqual("conf/security/policy.json", transferPlan.ReusedFiles[0].RelativePath);
+        Assert.AreEqual(123L, transferPlan.DownloadBytes);
+        StringAssert.Contains(transferPlan.LogMessage, "需要下载 1 个文件");
+        StringAssert.Contains(transferPlan.LogMessage, "复用 1 个已存在文件");
     }
 
     [TestMethod]

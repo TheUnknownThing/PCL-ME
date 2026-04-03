@@ -295,14 +295,24 @@ Public Module ModJava
                 IgnoreHash.ToList(),
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()))
         LastJavaBaseDir = runtimePlan.DownloadPlan.RuntimeBaseDirectory
-        Dim Results As New List(Of NetFile)(runtimePlan.Files.Count)
+        Dim existingRelativePaths As New List(Of String)(runtimePlan.Files.Count)
         For Each filePlan In runtimePlan.Files
             Dim Checker As New FileChecker(ActualSize:=filePlan.Size, Hash:=filePlan.Sha1)
-            If Checker.Check(filePlan.TargetPath) Is Nothing Then Continue For '跳过已存在的文件
+            If Checker.Check(filePlan.TargetPath) Is Nothing Then
+                existingRelativePaths.Add(filePlan.RelativePath)
+            End If
+        Next
+        Dim transferPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
+            New MinecraftJavaRuntimeDownloadTransferPlanRequest(
+                runtimePlan,
+                existingRelativePaths))
+        Dim Results As New List(Of NetFile)(transferPlan.FilesToDownload.Count)
+        For Each filePlan In transferPlan.FilesToDownload
+            Dim Checker As New FileChecker(ActualSize:=filePlan.Size, Hash:=filePlan.Sha1)
             Results.Add(New NetFile(DlSourceOrder(filePlan.RequestUrls.OfficialUrls, filePlan.RequestUrls.MirrorUrls), filePlan.TargetPath, Checker))
         Next
         Loader.Output = Results
-        Log($"[Java] 需要下载 {Results.Count} 个文件，目标文件夹：{LastJavaBaseDir}")
+        Log(transferPlan.LogMessage)
     End Sub
 
 #End Region
