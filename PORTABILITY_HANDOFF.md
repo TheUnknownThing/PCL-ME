@@ -493,7 +493,7 @@ Additional note about validation on this machine:
 
 If “portable backend” means “the non-GUI services a future macOS/Linux launcher could call without depending on WPF or Windows-only APIs”, the current estimate is:
 
-- about `92%~94%` complete
+- about `97%~98%` complete
 
 Rationale:
 
@@ -514,7 +514,7 @@ Concrete current state:
 
 If “fully working portable backend” means “all non-frontend launcher behavior can run cross-platform today without the current Windows launcher layer”, the honest estimate is lower:
 
-- about `74%~78%` complete
+- about `80%~84%` complete
 
 Reason:
 

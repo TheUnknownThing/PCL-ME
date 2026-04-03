@@ -19,7 +19,7 @@ Decision:
 Current estimate:
 
 - portable runtime/core extraction: `complete`
-- backend readiness for a replacement frontend shell: roughly `85%~89%` for a real end-to-end frontend cutover, and roughly `93%~95%` for reusable portable workflow/policy coverage
+- backend readiness for a replacement frontend shell: roughly `92%~93%` for a real end-to-end frontend cutover, and roughly `97%~98%` for reusable portable workflow/policy coverage
 
 The repo is past the “prove portability is possible” stage. The remaining work is mainly about finishing launcher workflow extraction and standing up a thin replacement shell on top of the new contracts.
 

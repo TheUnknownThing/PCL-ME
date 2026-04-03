@@ -1155,12 +1155,7 @@ Retry:
             input.BaseUrl,
             AccessToken,
             ClientToken)
-        NetRequestRetry(
-            Url:=requestPlan.Url,
-            Method:=requestPlan.Method,
-            Data:=requestPlan.Body,
-            Headers:=New Dictionary(Of String, String)(requestPlan.Headers),
-            ContentType:=requestPlan.ContentType) '没有返回值的
+        ExecuteAuthlibRequest(requestPlan) '没有返回值的
         '不更改缓存，直接结束
         ProfileLog("验证登录成功（Validate, Authlib")
         Return New McLoginResult With {
@@ -1179,12 +1174,7 @@ Retry:
             SelectedProfile.AccessToken)
         Dim refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
             New MinecraftLaunchAuthlibRefreshWorkflowRequest(
-                NetRequestRetry(
-               Url:=requestPlan.Url,
-               Method:=requestPlan.Method,
-               Data:=requestPlan.Body,
-               Headers:=New Dictionary(Of String, String)(requestPlan.Headers),
-               ContentType:=requestPlan.ContentType),
+                ExecuteAuthlibRequest(requestPlan),
                 GetSelectedProfileIndex(),
                 SelectedProfile.Server,
                 SelectedProfile.ServerName,
@@ -1212,34 +1202,17 @@ Retry:
                 New MinecraftLaunchAuthlibAuthenticatePlanRequest(
                     input.ForceReselectProfile,
                     If(SelectedProfile IsNot Nothing, SelectedProfile.Uuid, Nothing),
-                    NetRequestRetry(
-                        Url:=authenticateRequestPlan.Url,
-                        Method:=authenticateRequestPlan.Method,
-                        Data:=authenticateRequestPlan.Body,
-                        Headers:=New Dictionary(Of String, String)(authenticateRequestPlan.Headers),
-                        ContentType:=authenticateRequestPlan.ContentType)))
+                    ExecuteAuthlibRequest(authenticateRequestPlan)))
             If Not String.IsNullOrWhiteSpace(authenticatePlan.NoticeMessage) Then Hint(authenticatePlan.NoticeMessage, HintType.Critical)
             If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.Fail Then Throw New Exception(authenticatePlan.FailureMessage)
 
-            Dim selectedId As String = authenticatePlan.SelectedProfileId
-            If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.PromptForSelection Then
-                ProfileLog("要求玩家选择角色")
-                RunInUiWait(
-                    Sub()
-                        Dim selectedProfile = ModLaunchPromptShell.RunAuthProfileSelectionPrompt(authenticatePlan.PromptTitle, authenticatePlan.PromptOptions)
-                        selectedId = selectedProfile.Id
-                    End Sub)
-                Dim promptSelection = authenticatePlan.PromptOptions.First(Function(profile) profile.Id = selectedId)
-                ProfileLog("玩家选择的角色：" & promptSelection.Name)
-            ElseIf authenticatePlan.NeedsRefresh Then
-                ProfileLog("根据缓存选择的角色：" & authenticatePlan.SelectedProfileName)
-            End If
+            Dim selectedId As String = ResolveAuthlibSelectedProfileId(authenticatePlan)
 
             Dim metadataRequestPlan = MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(input.BaseUrl)
             Dim authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
                 New MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
                     authenticatePlan,
-                    NetGetCodeByRequestRetry(metadataRequestPlan.Url, Encoding.UTF8),
+                    ExecuteAuthlibMetadataRequest(metadataRequestPlan.Url),
                     input.IsExist,
                     GetSelectedProfileIndex(),
                     input.BaseUrl,
@@ -1269,6 +1242,45 @@ Retry:
                 Throw New Exception("登录失败：" & ex.Message, ex)
             End If
         End Try
+    End Function
+
+    Private Function ExecuteAuthlibRequest(requestPlan As MinecraftLaunchHttpRequestPlan) As String
+        Return NetRequestRetry(
+            Url:=requestPlan.Url,
+            Method:=requestPlan.Method,
+            Data:=requestPlan.Body,
+            Headers:=BuildRequestHeaders(requestPlan),
+            ContentType:=requestPlan.ContentType)
+    End Function
+
+    Private Function ExecuteAuthlibMetadataRequest(url As String) As String
+        Return NetGetCodeByRequestRetry(url, Encoding.UTF8)
+    End Function
+
+    Private Function BuildRequestHeaders(requestPlan As MinecraftLaunchHttpRequestPlan) As Dictionary(Of String, String)
+        If requestPlan.Headers Is Nothing Then Return New Dictionary(Of String, String)
+        Return New Dictionary(Of String, String)(requestPlan.Headers)
+    End Function
+
+    Private Function ResolveAuthlibSelectedProfileId(authenticatePlan As MinecraftLaunchAuthlibAuthenticatePlan) As String
+        If authenticatePlan.Kind = MinecraftLaunchAuthProfileSelectionKind.PromptForSelection Then
+            ProfileLog("要求玩家选择角色")
+            Dim selectedId As String = Nothing
+            RunInUiWait(
+                Sub()
+                    Dim selectedProfile = ModLaunchPromptShell.RunAuthProfileSelectionPrompt(authenticatePlan.PromptTitle, authenticatePlan.PromptOptions)
+                    selectedId = selectedProfile.Id
+                End Sub)
+            Dim promptSelection = authenticatePlan.PromptOptions.First(Function(profile) profile.Id = selectedId)
+            ProfileLog("玩家选择的角色：" & promptSelection.Name)
+            Return selectedId
+        End If
+
+        If authenticatePlan.NeedsRefresh Then
+            ProfileLog("根据缓存选择的角色：" & authenticatePlan.SelectedProfileName)
+        End If
+
+        Return authenticatePlan.SelectedProfileId
     End Function
 #End Region
 
