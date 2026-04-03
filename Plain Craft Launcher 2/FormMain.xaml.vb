@@ -523,26 +523,7 @@ Public Class FormMain
     '切回窗口
     Private Sub FormMain_Activated() Handles Me.Activated
         Try
-            If Setup.Get("ToolDownloadClipboard") Then CompClipboard.GetClipboardResource()
-            If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.VersionMod Then
-                'Mod 管理自动刷新
-                FrmInstanceMod.ReloadCompFileList()
-            ElseIf PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.VersionResourcePack Then
-                '资源包管理自动刷新
-                If FrmInstanceResourcePack IsNot Nothing Then FrmInstanceResourcePack.ReloadCompFileList()
-            ElseIf PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.VersionShader Then
-                '光影包管理自动刷新
-                If FrmInstanceShader IsNot Nothing Then FrmInstanceShader.ReloadCompFileList()
-            ElseIf PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.VersionSchematic Then
-                '投影原理图管理自动刷新
-                If FrmInstanceSchematic IsNot Nothing Then FrmInstanceSchematic.ReloadCompFileList()
-            ElseIf PageCurrent = PageType.InstanceSelect Then
-                '实例选择自动刷新
-                LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
-            ElseIf TypeOf FrmMain.PageRight Is PageInstanceSavesDatapack AndAlso FrmInstanceSavesDatapack IsNot Nothing Then
-                '数据包管理自动刷新
-                FrmInstanceSavesDatapack.ReloadDatapackFileList()
-            End If
+            ModMainWindowFocusShell.HandleActivated(PageCurrent, PageCurrentSub)
         Catch ex As Exception
             Log(ex, "切回窗口时出错", LogLevel.Feedback)
         End Try
