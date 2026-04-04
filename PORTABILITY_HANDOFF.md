@@ -11,6 +11,8 @@ Status as of 2026-04-04:
 - the tools route family now has a dedicated runtime composition path
 - instance resource/server/export surfaces now perform several real file, clipboard, and archive actions from the replacement shell
 - instance overview actions now perform real rename, description, trash, patch, and artifact-export flows from the replacement shell
+- instance overview launch-adjacent actions now start a real replacement-shell test launch and export the actual generated launch script instead of launch-context placeholders
+- instance overview recovery actions now repair and reset the selected instance by reusing portable manifest downloads for core files, libraries, natives, asset indexes, and missing assets
 - download resource/detail routes no longer fall back to sample primary content for their main lists
 - toolbox test page continues moving from intent-only buttons to real shell/file outputs, and memory optimization now exports explicit diagnostics instead of a pure intent log
 - tools/game-link actions now use real prompt, clipboard, config, FAQ, and exported session/diagnostic behavior instead of synthetic activity-only output
@@ -347,6 +349,13 @@ Likely targets:
 - instance maintenance actions
 - update/packaging flows
 
+Status on 2026-04-04:
+
+- instance overview `测试游戏` now routes into the real replacement-shell launch flow instead of writing a test-context artifact
+- instance overview `导出启动脚本` now writes the real generated launch script content from the portable session plan
+- instance overview `补全文件` and `重置实例` now execute a portable manifest-driven repair path that refreshes the client jar, libraries, natives, asset index, and missing assets without falling back to WPF
+- the main remaining Track 5 gap in the copied instance family is now the richer install-page selection/apply workflow, not overview maintenance/recovery
+
 Done when:
 
 - WPF no longer owns the behavior needed for normal day-to-day launcher use
@@ -441,6 +450,8 @@ Avoid:
 
 ## Latest Frontend Checkpoints
 
+- `1aa6abfb` `feat: repair instance files from portable manifests`
+- `b7e11a0a` `feat: cut over instance launch-side overview actions`
 - `4a065f15` `refactor: isolate frontend platform adapters`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`

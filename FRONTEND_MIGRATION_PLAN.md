@@ -46,6 +46,8 @@ Completed:
 
 Recent checkpoints:
 
+- `1aa6abfb` `feat: repair instance files from portable manifests`
+- `b7e11a0a` `feat: cut over instance launch-side overview actions`
 - `4a065f15` `refactor: isolate frontend platform adapters`
 - `5ac85e61` `feat: cut over frontend launch execution`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
@@ -64,7 +66,7 @@ What that means today:
 - major route families already exist visually
 - the tools route family now has dedicated runtime composition
 - instance resource/server/export pages now perform several real file, clipboard, and archive actions from the replacement shell
-- instance overview/actions now perform real rename, description, trash, patch, and exported verification flows from the replacement shell
+- instance overview/actions now perform real rename, description, trash, patch, test-launch, launch-script export, and manifest-driven repair/reset flows from the replacement shell
 - Track 2 shell-action parity is now effectively complete for the migrated tool/download/instance surfaces
 - Track 1 route parity is effectively complete in the current frontend branch
 - Track 4 adapter implementation is now in place for migrated shell actions, runtime path conventions, shortcut/script materialization, and protected key envelope decoding
@@ -348,6 +350,14 @@ Track 4 status:
 ### Suggested slice size
 
 - one workflow family per commit
+
+Status on 2026-04-04:
+
+- instance overview `测试游戏` now starts the real replacement-shell launch path from the copied overview surface instead of exporting a placeholder report
+- instance overview `导出启动脚本` now writes the actual generated launch script from the portable session plan
+- instance overview `补全文件` and `重置实例` now use a portable manifest-driven repair flow that refreshed the real `1.21.10` instance under `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft`
+- ad hoc verification against that real instance reused 4,477 files and re-downloaded the asset index without invoking WPF code
+- the next remaining Track 5 target is now the richer copied install-page selection/apply workflow and any other install-entry behavior that still depends on legacy install logic
 
 ## Track 6. Multi-Platform Packaging And Validation
 
