@@ -306,6 +306,12 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        if (!_launchComposition.PrecheckResult.IsSuccess)
+        {
+            AddActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
+            return;
+        }
+
         EnsureLaunchPromptLane();
         if (_promptCatalog[SpikePromptLaneKind.Launch].Count > 0)
         {
@@ -360,7 +366,16 @@ internal sealed partial class FrontendShellViewModel
     private void PersistPromptSetting(string? rawValue)
     {
         _shellActionService.DisableNonAsciiGamePathWarning();
-        _isNonAsciiGamePathWarningDisabled = true;
+        var updatedPrecheckRequest = _launchComposition.PrecheckRequest with
+        {
+            IsNonAsciiPathWarningDisabled = true
+        };
+        _launchComposition = _launchComposition with
+        {
+            PrecheckRequest = updatedPrecheckRequest,
+            PrecheckResult = MinecraftLaunchPrecheckService.Evaluate(updatedPrecheckRequest)
+        };
+        RaiseLaunchCompositionProperties();
         AddActivity(
             "已保存提示设置",
             string.IsNullOrWhiteSpace(rawValue)
@@ -407,7 +422,28 @@ internal sealed partial class FrontendShellViewModel
 
     private void DownloadJavaRuntimeFromPrompt()
     {
-        var installResult = _shellActionService.MaterializeJavaRuntime(_launchPlan);
+        if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
+        {
+            AddActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
+            return;
+        }
+
+        var installResult = _shellActionService.MaterializeJavaRuntime(
+            _launchComposition.JavaRuntimeManifestPlan,
+            _launchComposition.JavaRuntimeTransferPlan);
+        _launchComposition = _launchComposition with
+        {
+            SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
+                Path.Combine(
+                    installResult.RuntimeDirectory,
+                    "bin",
+                    OperatingSystem.IsWindows() ? "java.exe" : "java"),
+                $"Java {installResult.VersionName}",
+                _launchComposition.JavaWorkflow.RecommendedMajorVersion,
+                IsEnabled: true,
+                Is64Bit: Environment.Is64BitOperatingSystem)
+        };
+        RaiseLaunchCompositionProperties();
         RegisterMaterializedJavaRuntime(installResult);
         _isLaunchBlockedByPrompt = false;
         NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
@@ -491,9 +527,9 @@ internal sealed partial class FrontendShellViewModel
     private void EnsureLaunchPromptLane()
     {
         var launchPrompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(
-            BuildLaunchPrecheckResult(_launchPlan.Scenario, _isNonAsciiGamePathWarningDisabled),
-            MinecraftLaunchShellService.GetSupportPrompt(10),
-            _launchPlan.JavaWorkflow.MissingJavaPrompt);
+            _launchComposition.PrecheckResult,
+            _launchComposition.SupportPrompt,
+            GetPendingJavaPrompt());
         _promptCatalog[SpikePromptLaneKind.Launch] = launchPrompts
             .Select(prompt => CreatePromptCard(SpikePromptLaneKind.Launch, prompt))
             .ToList();
@@ -518,49 +554,13 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendPageContent BuildPageContent(LauncherFrontendShellPlan shellPlan)
     {
-        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+        return LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
             shellPlan.Navigation,
             shellPlan.StartupPlan,
             shellPlan.Consent,
             BuildPromptLaneSummaries(),
             BuildLaunchSurfaceData(),
             BuildCrashSurfaceData()));
-
-        if (shellPlan.Navigation.CurrentPage.Route.Page != LauncherFrontendPageKey.Launch)
-        {
-            return content;
-        }
-
-        return content with
-        {
-            Eyebrow = "启动主页",
-            Summary = "基于原始启动页结构重建的 Avalonia 主窗口原型。",
-            Facts =
-            [
-                new LauncherFrontendPageFact("账号", LaunchUserName),
-                new LauncherFrontendPageFact("验证方式", LaunchAuthLabel),
-                new LauncherFrontendPageFact("版本", LaunchVersionSubtitle),
-                new LauncherFrontendPageFact("主页", "新闻主页")
-            ],
-            Sections =
-            [
-                new LauncherFrontendPageSection(
-                    "快照版",
-                    "25w20a",
-                    [
-                        "增加了由 Amos Roddy 创作的新音乐唱片《Tears》。",
-                        "鞍具现在可以合成，并且能够用剪刀拆下。",
-                        "刷怪蛋与部分实体的视觉表现获得了进一步统一。"
-                    ]),
-                new LauncherFrontendPageSection(
-                    "迁移",
-                    "新版主页结构",
-                    [
-                        "顶部入口、启动区和右侧内容区按原始比例重新收紧。",
-                        "卡片标题、箭头、阴影和留白改回接近 PCL 的层级关系。"
-                    ])
-            ]
-        };
     }
 
     private LauncherFrontendPromptLaneSummary[] BuildPromptLaneSummaries()
@@ -577,31 +577,51 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendLaunchSurfaceData BuildLaunchSurfaceData()
     {
-        var playerName = _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
-            ? authPlayerName
-            : "Unknown player";
-        var provider = _launchPlan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft
-            ? "Microsoft account"
-            : "Authlib account";
-
         return new LauncherFrontendLaunchSurfaceData(
-            _launchPlan.Scenario,
-            provider,
-            playerName,
-            _launchPlan.LoginPlan.Steps.Count,
-            _launchPlan.JavaWorkflow.RecommendedComponent is null
-                ? $"Java {_launchPlan.JavaWorkflow.RecommendedMajorVersion}"
-                : $"{_launchPlan.JavaWorkflow.RecommendedComponent} (Java {_launchPlan.JavaWorkflow.RecommendedMajorVersion})",
-            _launchPlan.JavaWorkflow.MissingJavaPrompt.DownloadTarget,
-            $"{_launchPlan.ResolutionPlan.Width} x {_launchPlan.ResolutionPlan.Height}",
-            _launchPlan.ClasspathPlan.Entries.Count,
-            _launchPlan.ReplacementPlan.Values.Count,
-            _launchPlan.NativesDirectory,
-            _launchPlan.PrerunPlan.Options.TargetFilePath,
-            _launchPlan.PrerunPlan.LauncherProfiles.Workflow.ShouldWrite,
-            _launchPlan.ScriptExportPlan is not null,
-            _launchPlan.ScriptExportPlan?.TargetPath,
-            _launchPlan.CompletionNotification.Message);
+            _launchComposition.Scenario,
+            LaunchAuthLabel,
+            _launchComposition.SelectedProfile.IdentityLabel,
+            _launchComposition.SelectedProfile.Kind == MinecraftLaunchProfileKind.None ? 0 : 1,
+            GetLaunchJavaRuntimeLabel(),
+            GetPendingJavaPrompt()?.DownloadTarget,
+            $"{_launchComposition.ResolutionPlan.Width} x {_launchComposition.ResolutionPlan.Height}",
+            _launchComposition.ClasspathPlan.Entries.Count,
+            _launchComposition.ReplacementPlan.Values.Count,
+            _launchComposition.NativesDirectory,
+            _launchComposition.PrerunPlan.Options.TargetFilePath,
+            _launchComposition.PrerunPlan.LauncherProfiles.Workflow.ShouldWrite,
+            false,
+            null,
+            _launchComposition.CompletionNotification.Message);
+    }
+
+    private string GetLaunchJavaRuntimeLabel()
+    {
+        if (_launchComposition.SelectedJavaRuntime is not null)
+        {
+            return _launchComposition.SelectedJavaRuntime.DisplayName;
+        }
+
+        return _launchComposition.JavaWorkflow.RecommendedComponent is null
+            ? $"Java {_launchComposition.JavaWorkflow.RecommendedMajorVersion}"
+            : $"{_launchComposition.JavaWorkflow.RecommendedComponent} (Java {_launchComposition.JavaWorkflow.RecommendedMajorVersion})";
+    }
+
+    private MinecraftLaunchJavaPrompt? GetPendingJavaPrompt()
+    {
+        return _launchComposition.SelectedJavaRuntime is null
+            ? _launchComposition.JavaWorkflow.MissingJavaPrompt
+            : null;
+    }
+
+    private void RaiseLaunchCompositionProperties()
+    {
+        RaisePropertyChanged(nameof(LaunchUserName));
+        RaisePropertyChanged(nameof(LaunchAuthLabel));
+        RaisePropertyChanged(nameof(LaunchVersionSubtitle));
+        RaisePropertyChanged(nameof(LaunchWelcomeBanner));
+        RaisePropertyChanged(nameof(LaunchNewsTitle));
+        RaisePropertyChanged(nameof(LaunchMigrationLines));
     }
 
     private LauncherFrontendCrashSurfaceData BuildCrashSurfaceData()

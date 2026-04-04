@@ -23,7 +23,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private StartupSpikePlan _startupPlan;
-    private readonly LaunchSpikePlan _launchPlan;
+    private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
     private readonly IReadOnlyList<HelpTopicViewModel> _allHelpTopics;
@@ -210,7 +210,6 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableHardwareAcceleration;
     private bool _enableTelemetry = true;
     private bool _isLaunchBlockedByPrompt;
-    private bool _isNonAsciiGamePathWarningDisabled;
     private bool _enableDoH = true;
     private int _selectedHttpProxyTypeIndex;
     private string _httpProxyAddress = string.Empty;
@@ -265,7 +264,7 @@ internal sealed partial class FrontendShellViewModel
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
-        _launchPlan = SpikeSampleFactory.BuildLaunchPlan(SpikeInputResolver.ResolveLaunchInputs(options), options.SaveBatchPath);
+        _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
         _crashPlan = SpikeSampleFactory.BuildCrashPlan(SpikeInputResolver.ResolveCrashInputs(options));
         _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;

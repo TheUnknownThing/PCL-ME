@@ -25,36 +25,77 @@ public static class LauncherFrontendRuntimeStateService
 
         try
         {
-            var provider = new JsonFileProvider(sharedConfigPath);
-            if (!provider.Exists("SystemCount"))
-            {
-                return fallback;
-            }
-
-            var encryptedValue = provider.Get<string>("SystemCount");
-            if (string.IsNullOrWhiteSpace(encryptedValue))
-            {
-                return fallback;
-            }
-
-            var encryptionKey = TryResolveEncryptionKey(sharedDataPath);
-            if (encryptionKey is null)
-            {
-                return fallback;
-            }
-
-            var plainText = LauncherDataProtectionService.Unprotect(
-                encryptedValue,
-                encryptionKey,
-                TryResolveLegacyDecryptKey());
-
-            return int.TryParse(plainText, out var startupCount)
-                ? startupCount
-                : fallback;
+            return ReadProtectedInt(sharedDataPath, sharedConfigPath, "SystemCount", fallback);
         }
         catch
         {
             return fallback;
+        }
+    }
+
+    public static int ReadProtectedInt(
+        string sharedDataPath,
+        string sharedConfigPath,
+        string key,
+        int fallback = 0)
+    {
+        var plainText = TryReadProtectedString(sharedDataPath, sharedConfigPath, key);
+        return int.TryParse(plainText, out var value)
+            ? value
+            : fallback;
+    }
+
+    public static string? TryReadProtectedString(
+        string sharedDataPath,
+        string sharedConfigPath,
+        string key)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sharedDataPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sharedConfigPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        try
+        {
+            var provider = new JsonFileProvider(sharedConfigPath);
+            if (!provider.Exists(key))
+            {
+                return null;
+            }
+
+            var encryptedValue = provider.Get<string>(key);
+            return TryUnprotectString(sharedDataPath, encryptedValue);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static string? TryUnprotectString(string sharedDataPath, string? encryptedValue)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sharedDataPath);
+
+        if (string.IsNullOrWhiteSpace(encryptedValue))
+        {
+            return null;
+        }
+
+        try
+        {
+            var encryptionKey = TryResolveEncryptionKey(sharedDataPath);
+            if (encryptionKey is null)
+            {
+                return null;
+            }
+
+            return LauncherDataProtectionService.Unprotect(
+                encryptedValue,
+                encryptionKey,
+                TryResolveLegacyDecryptKey());
+        }
+        catch
+        {
+            return null;
         }
     }
 

@@ -115,14 +115,12 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         return outputPath;
     }
 
-    public FrontendJavaRuntimeInstallResult MaterializeJavaRuntime(LaunchSpikePlan launchPlan)
+    public FrontendJavaRuntimeInstallResult MaterializeJavaRuntime(
+        MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
+        MinecraftJavaRuntimeDownloadTransferPlan transferPlan)
     {
-        ArgumentNullException.ThrowIfNull(launchPlan);
-
-        var manifestPlan = launchPlan.JavaRuntimeManifestPlan
-                           ?? throw new InvalidOperationException("当前启动方案没有可执行的 Java 下载计划。");
-        var transferPlan = launchPlan.JavaRuntimeTransferPlan
-                           ?? throw new InvalidOperationException("当前启动方案没有可执行的 Java 传输计划。");
+        ArgumentNullException.ThrowIfNull(manifestPlan);
+        ArgumentNullException.ThrowIfNull(transferPlan);
 
         var runtimeDirectory = GetUniqueDirectoryPath(Path.Combine(
             RuntimePaths.FrontendArtifactDirectory,
