@@ -197,6 +197,23 @@ internal sealed class FrontendShellActionService(
         return await dialog.ShowDialog<string?>(owner);
     }
 
+    public async Task<string?> PromptForChoiceAsync(
+        string title,
+        string message,
+        IReadOnlyList<PclChoiceDialogOption> options,
+        string? selectedId = null,
+        string confirmText = "确定")
+    {
+        if (options.Count == 0)
+        {
+            return null;
+        }
+
+        var owner = GetDesktopMainWindow();
+        var dialog = new PclChoiceDialog(title, message, options, selectedId, confirmText);
+        return await dialog.ShowDialog<string?>(owner);
+    }
+
     public async Task<bool> ConfirmAsync(
         string title,
         string message,
