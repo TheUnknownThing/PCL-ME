@@ -10,7 +10,9 @@ Status as of 2026-04-04:
 - startup, prompt, launch, setup, instance, download, and version-saves composition are now partially or mostly runtime-backed
 - the tools route family now has a dedicated runtime composition path
 - instance resource/server/export surfaces now perform several real file, clipboard, and archive actions from the replacement shell
-- toolbox test page has started moving from intent-only buttons to real shell/file outputs
+- instance overview actions now perform real rename, description, trash, patch, and artifact-export flows from the replacement shell
+- download resource/detail routes no longer fall back to sample primary content for their main lists
+- toolbox test page continues moving from intent-only buttons to real shell/file outputs, and memory optimization now exports explicit diagnostics instead of a pure intent log
 - the repo is past the “can this work outside WPF?” stage
 - the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
 
@@ -118,9 +120,9 @@ The frontend can compose real launch state, but cutover still needs:
 
 Examples:
 
-- some test/tool buttons still only log intent text even though the route data is now runtime-backed
-- several instance overview and maintenance buttons still stop at activity feed output
-- launch-script export, rename/description editing, delete/restore/patch, and deeper game-link flows still need real adapters
+- game-link action clusters still stop at synthetic activity output
+- download modpack install is still a placeholder action
+- launch execution is still exported as context/report artifacts rather than full replacement-shell process orchestration
 
 ### 3. Cross-platform adapter coverage is incomplete
 
@@ -209,10 +211,10 @@ Done when:
 
 Status on 2026-04-04:
 
-- tools route family: mostly done for Track 1
-- instance resource/server/export surfaces are now runtime-backed and no longer primary Track 1 blockers
-- remaining gap: instance overview/action surfaces still include placeholder-only commands, and some download/detail views still keep sample-driven primary content
-- do not mark Track 1 complete until those instance/detail leftovers are removed or isolated
+- tools route family: done for Track 1
+- instance resource/server/export/overview surfaces are now runtime-backed and no longer Track 1 blockers
+- download resource/detail routes no longer keep sample-driven primary content for their main lists
+- Track 1 route parity is effectively complete in the current frontend branch; the next owner should stay focused on Track 2 and Track 3 work
 
 Manual verification:
 
@@ -233,10 +235,12 @@ Recommended starting point for the next Track 2 engineer:
   - `cc716c73` `feat: compose help and game link tool routes`
   - `af689e45` `feat: wire instance resource and export actions`
   - `f5d2a521` `feat: wire toolbox shell actions`
+  - `ef3c0b92` `feat: wire instance overview runtime actions`
+  - `5b0ac628` `feat: report toolbox memory diagnostics`
 - likely first buttons to convert:
-  - remaining toolbox actions on the test page, especially memory optimization and any buttons that still only emit intent text
   - game-link action cluster on the tools route
-  - instance overview and maintenance actions that still only emit activity text
+  - download modpack install and other remaining install-entry actions
+  - any maintenance buttons that still stop at exported context files instead of real backend execution
 
 Examples:
 
@@ -414,6 +418,9 @@ Avoid:
 
 ## Latest Frontend Checkpoints
 
+- `5b0ac628` `feat: report toolbox memory diagnostics`
+- `ef3c0b92` `feat: wire instance overview runtime actions`
+- `91228f81` `feat: add frontend shell dialog adapters`
 - `fb4c56c5` `refactor: isolate inspection-only spike workflows`
 - `40467f7d` `refactor: add frontend inspection composition boundary`
 - `c32d72b1` `docs: mark frontend phase 5 complete`

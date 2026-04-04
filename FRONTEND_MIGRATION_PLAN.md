@@ -46,6 +46,9 @@ Completed:
 
 Recent checkpoints:
 
+- `5b0ac628` `feat: report toolbox memory diagnostics`
+- `ef3c0b92` `feat: wire instance overview runtime actions`
+- `91228f81` `feat: add frontend shell dialog adapters`
 - `311b88b3` `feat: wire save detail and download surfaces`
 - `e96247f6` `feat: runtime-back toolbox test surface`
 - `cc716c73` `feat: compose help and game link tool routes`
@@ -58,8 +61,9 @@ What that means today:
 - major route families already exist visually
 - the tools route family now has dedicated runtime composition
 - instance resource/server/export pages now perform several real file, clipboard, and archive actions from the replacement shell
-- Track 1 is not fully complete yet because several instance overview/action surfaces still contain placeholder-only actions and some download/detail views still keep sample-only primary content
-- the remaining work is mostly route-parity cleanup, real-behavior parity, and cross-platform cutover
+- instance overview/actions now perform real rename, description, trash, patch, and exported verification flows from the replacement shell
+- Track 1 route parity is effectively complete in the current frontend branch
+- the remaining work is now mostly shell-action parity, launch cutover, and cross-platform adapter isolation
 
 ## Repo Boundaries
 
@@ -140,16 +144,18 @@ Completed in this track:
 - toolbox/test defaults now come from launcher config instead of page-local demo state
 - help content now comes from bundled help data instead of hardcoded sample topics
 - game-link route now starts from config- and instance-backed baseline state instead of fake member/sample state
+- instance overview actions no longer stop at pure activity-feed intent text
+- download resource/detail routes no longer rely on sample entries for their main list content
 
-Still required before Track 1 can be called done:
+Track 1 status:
 
-- remaining instance overview/action commands that still only write activity-feed intent text
-- download/detail subroutes that still rely on sample entries for primary content
+- complete in the current frontend branch
+- next work should stay in Track 2 and Track 3 unless a newly discovered route falls back to placeholder-only primary data
 
 Recommended owner split:
 
-- if staffing Track 2 now, continue with migrated tools actions because the route composition is in place and the first toolbox shell-action slice has landed
-- keep a separate owner on the remaining Track 1 instance overview/detail parity cleanup until placeholder-only route content is removed
+- continue with migrated tools and install-entry actions because the route composition is already in place
+- prioritize game-link and remaining install-entry shell actions before widening scope to broader cutover work
 
 ## Track 2. Shell Action Parity
 
@@ -184,12 +190,14 @@ Recommended owner split:
 Completed in this track:
 
 - toolbox test page now has real shell/file behavior for cleanup, daily-luck output, launch-count output, and shortcut creation
+- memory optimization now exports explicit diagnostics instead of only recording intent text
+- instance overview actions now perform real rename, description, trash, patch, and report-generation flows
 
 Still required before this track can be called healthy:
 
-- remaining toolbox buttons that still only emit intent text, especially memory optimization
 - game-link actions that still stop at synthetic activity output
-- instance overview and maintenance actions that still do not perform real rename/export/delete/restore/patch behavior
+- download modpack install and related install-entry actions still stop short of real execution
+- launch-adjacent overview buttons still export runtime context artifacts instead of full end-to-end execution, which should converge with Track 3
 
 ## Track 3. Launch Cutover
 
