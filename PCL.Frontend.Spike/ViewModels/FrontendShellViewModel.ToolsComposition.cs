@@ -1,3 +1,4 @@
+using System.Text;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
@@ -51,10 +52,10 @@ internal sealed partial class FrontendShellViewModel
         {
             "crash-test" => new ActionCommand(TriggerCrashPromptTest),
             "memory-optimize" => CreateIntentCommand(title, "Would run the launcher memory optimization workflow."),
-            "clear-rubbish" => CreateIntentCommand(title, "Would clear cache, logs, and crash reports."),
-            "daily-luck" => CreateIntentCommand(title, "Would calculate the daily luck value."),
-            "create-shortcut" => CreateIntentCommand(title, "Would create a shortcut to the launcher executable."),
-            "launch-count" => CreateIntentCommand(title, "Would show the launcher start-count dialog."),
+            "clear-rubbish" => new ActionCommand(ClearToolboxRubbish),
+            "daily-luck" => new ActionCommand(ShowDailyLuck),
+            "create-shortcut" => new ActionCommand(CreateLauncherShortcut),
+            "launch-count" => new ActionCommand(ShowLauncherLaunchCount),
             _ => CreateIntentCommand(title, $"Would run the {title} toolbox action.")
         };
     }
@@ -95,5 +96,206 @@ internal sealed partial class FrontendShellViewModel
         }
 
         AddActivity($"查看帮助: {entry.Title}", entry.RawPath);
+    }
+
+    private void ClearToolboxRubbish()
+    {
+        var removedCount = 0;
+        removedCount += DeleteDirectorySafely(_shellActionService.RuntimePaths.FrontendArtifactDirectory);
+        removedCount += DeleteDirectorySafely(_shellActionService.RuntimePaths.FrontendTempDirectory);
+        removedCount += DeleteDirectoryContentsSafely(Path.Combine(_shellActionService.RuntimePaths.LauncherAppDataDirectory, "Log"));
+        if (!string.IsNullOrWhiteSpace(_instanceComposition.Selection.LauncherDirectory))
+        {
+            removedCount += DeleteDirectorySafely(Path.Combine(_instanceComposition.Selection.LauncherDirectory, "crash-reports"));
+            removedCount += DeleteDirectorySafely(Path.Combine(_instanceComposition.Selection.LauncherDirectory, "logs"));
+        }
+
+        AddActivity(
+            "清理游戏垃圾",
+            removedCount == 0
+                ? "没有检测到需要清理的缓存、日志或崩溃报告。"
+                : $"已清理 {removedCount} 个缓存或日志项目。");
+    }
+
+    private void ShowDailyLuck()
+    {
+        var seed = GenerateDailyLuckSeed();
+        var random = new Random(seed);
+        var luckValue = random.Next(0, 101);
+        var reportPath = WriteToolboxReport(
+            "daily-luck",
+            "今日人品.txt",
+            [
+                $"日期: {DateTime.Now:yyyy/MM/dd}",
+                $"种子: {seed}",
+                $"今日人品: {luckValue}",
+                $"评价: {GetDailyLuckRating(luckValue)}"
+            ]);
+        OpenInstanceTarget("今日人品", reportPath, "人品报告不存在。");
+    }
+
+    private void ShowLauncherLaunchCount()
+    {
+        var reportPath = WriteToolboxReport(
+            "launch-count",
+            "启动计数.txt",
+            [
+                $"启动器累计启动次数: {_launchComposition.LaunchCount}",
+                $"当前实例: {_instanceComposition.Selection.InstanceName}"
+            ]);
+        OpenInstanceTarget("查看启动计数", reportPath, "启动计数报告不存在。");
+    }
+
+    private void CreateLauncherShortcut()
+    {
+        var desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        if (string.IsNullOrWhiteSpace(desktopDirectory))
+        {
+            AddActivity("创建快捷方式失败", "当前系统未提供桌面目录。");
+            return;
+        }
+
+        Directory.CreateDirectory(desktopDirectory);
+
+        var executablePath = Environment.ProcessPath ?? Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL.Frontend.Spike");
+        string shortcutPath;
+        string shortcutContent;
+
+        if (OperatingSystem.IsWindows())
+        {
+            shortcutPath = Path.Combine(desktopDirectory, "PCL 社区版.cmd");
+            shortcutContent = $"""
+                @echo off
+                start "" "{executablePath}"
+                """;
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            shortcutPath = Path.Combine(desktopDirectory, "PCL 社区版.command");
+            shortcutContent = $"""
+                #!/bin/sh
+                "{executablePath}" "$@"
+                """;
+        }
+        else
+        {
+            shortcutPath = Path.Combine(desktopDirectory, "PCL 社区版.desktop");
+            shortcutContent = $"""
+                [Desktop Entry]
+                Type=Application
+                Name=PCL 社区版
+                Exec="{executablePath}"
+                Terminal=false
+                """;
+        }
+
+        File.WriteAllText(shortcutPath, shortcutContent, new UTF8Encoding(false));
+        TryMarkShortcutExecutable(shortcutPath);
+        OpenInstanceTarget("创建快捷方式", shortcutPath, "快捷方式文件不存在。");
+    }
+
+    private string WriteToolboxReport(string folderName, string fileName, IReadOnlyList<string> lines)
+    {
+        var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "toolbox", folderName);
+        Directory.CreateDirectory(outputDirectory);
+        var outputPath = Path.Combine(outputDirectory, fileName);
+        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
+        return outputPath;
+    }
+
+    private static int DeleteDirectorySafely(string path)
+    {
+        try
+        {
+            if (!Directory.Exists(path))
+            {
+                return 0;
+            }
+
+            var entryCount = Directory.EnumerateFileSystemEntries(path, "*", SearchOption.AllDirectories).Count();
+            Directory.Delete(path, recursive: true);
+            return Math.Max(1, entryCount);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static int DeleteDirectoryContentsSafely(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return 0;
+        }
+
+        var removedCount = 0;
+        foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly))
+        {
+            try
+            {
+                File.Delete(file);
+                removedCount++;
+            }
+            catch
+            {
+                // Keep clearing other files.
+            }
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly))
+        {
+            removedCount += DeleteDirectorySafely(directory);
+        }
+
+        return removedCount;
+    }
+
+    private static int GenerateDailyLuckSeed()
+    {
+        var hash = 5381L;
+        var datePart = DateTime.Now.ToString("yyyyMMdd");
+        foreach (var character in datePart)
+        {
+            hash = ((hash * 33) + character) & 0x7fffffff;
+        }
+
+        return (int)hash;
+    }
+
+    private static string GetDailyLuckRating(int luckValue)
+    {
+        return luckValue switch
+        {
+            100 => "100！100！",
+            >= 95 => "差一点就到 100 了呢……",
+            >= 90 => "好评如潮！",
+            >= 60 => "还行啦，还行啦",
+            >= 40 => "勉强还行吧……",
+            >= 30 => "呜……",
+            >= 10 => "不会吧！",
+            _ => "（是百分制哦）"
+        };
+    }
+
+    private static void TryMarkShortcutExecutable(string shortcutPath)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        try
+        {
+            File.SetUnixFileMode(
+                shortcutPath,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+        }
+        catch
+        {
+            // Best effort on Unix-like systems.
+        }
     }
 }
