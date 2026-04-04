@@ -65,4 +65,19 @@ public sealed class LauncherFrontendNavigationServiceTest
             new[] { "实例设置 - Demo Instance", "Mod" },
             view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
     }
+
+    [TestMethod]
+    public void BuildViewKeepsTopLevelNavigationVisibleWhenHistoryExists()
+    {
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
+            BackstackDepth: 1));
+
+        Assert.AreEqual("设置", view.CurrentPageTitle);
+        Assert.IsFalse(view.ShowsBackButton);
+        Assert.IsNull(view.BackTarget);
+        Assert.AreEqual(LauncherFrontendPageKind.TopLevel, view.CurrentPage.Kind);
+        Assert.AreEqual("启动", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
+        CollectionAssert.AreEqual(new[] { "设置", "启动" }, view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+    }
 }
