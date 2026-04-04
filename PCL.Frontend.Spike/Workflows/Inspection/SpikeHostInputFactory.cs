@@ -252,11 +252,7 @@ internal static class SpikeHostInputFactory
 
     private static JavaRuntimeSpikeInputs BuildJavaRuntimeInputs(JavaRuntimeSpikeInputs sample, string scenario, string minecraftRoot)
     {
-        var platformKey = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? $"windows-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-                ? $"mac-os-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}"
-                : $"linux-x{(Environment.Is64BitOperatingSystem ? "64" : "86")}";
+        var platformKey = ResolveJavaRuntimePlatformKey();
         var componentKey = scenario == "legacy-forge" ? "jre-8u412" : "jre-legacy";
         var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(minecraftRoot, componentKey);
         var downloadWorkflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
@@ -277,5 +273,29 @@ internal static class SpikeHostInputFactory
             IndexJson = sample.IndexJson.Replace("windows-x64", platformKey, StringComparison.Ordinal),
             ExistingRelativePaths = existingRelativePaths
         };
+    }
+
+    private static string ResolveJavaRuntimePlatformKey()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.Arm64 => "windows-arm64",
+                Architecture.X86 => "windows-x86",
+                _ => "windows-x64"
+            };
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+                ? "mac-os-arm64"
+                : "mac-os";
+        }
+
+        return RuntimeInformation.ProcessArchitecture == Architecture.X86
+            ? "linux-i386"
+            : "linux";
     }
 }

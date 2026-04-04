@@ -20,6 +20,9 @@ internal sealed record FrontendLaunchComposition(
     string NativesDirectory,
     MinecraftLaunchReplacementValuePlan ReplacementPlan,
     MinecraftLaunchPrerunWorkflowPlan PrerunPlan,
+    MinecraftLaunchArgumentPlan ArgumentPlan,
+    MinecraftLaunchSessionStartWorkflowPlan SessionStartPlan,
+    MinecraftGameShellPlan PostLaunchShell,
     MinecraftLaunchNotification CompletionNotification);
 
 internal sealed record FrontendLaunchProfileSummary(

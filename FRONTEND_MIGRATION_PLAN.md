@@ -46,6 +46,8 @@ Completed:
 
 Recent checkpoints:
 
+- `5ac85e61` `feat: cut over frontend launch execution`
+- `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
 - `ef3c0b92` `feat: wire instance overview runtime actions`
 - `91228f81` `feat: add frontend shell dialog adapters`
@@ -62,8 +64,9 @@ What that means today:
 - the tools route family now has dedicated runtime composition
 - instance resource/server/export pages now perform several real file, clipboard, and archive actions from the replacement shell
 - instance overview/actions now perform real rename, description, trash, patch, and exported verification flows from the replacement shell
+- Track 2 shell-action parity is now effectively complete for the migrated tool/download/instance surfaces
 - Track 1 route parity is effectively complete in the current frontend branch
-- the remaining work is now mostly shell-action parity, launch cutover, and cross-platform adapter isolation
+- the remaining work is now mostly launch cutover, cross-platform adapter isolation, and WPF responsibility removal
 
 ## Repo Boundaries
 
@@ -192,12 +195,18 @@ Completed in this track:
 - toolbox test page now has real shell/file behavior for cleanup, daily-luck output, launch-count output, and shortcut creation
 - memory optimization now exports explicit diagnostics instead of only recording intent text
 - instance overview actions now perform real rename, description, trash, patch, and report-generation flows
+- game-link actions now use prompt, clipboard, config, FAQ, and exported session/diagnostic behavior from the replacement shell
+- download modpack install now copies a local pack into the launcher `versions` folder
+- favorites management, toolbox head export, and instance-profile-template actions now create reviewable files instead of pure intent logs
 
-Still required before this track can be called healthy:
+Still required before this track can be called fully closed:
 
-- game-link actions that still stop at synthetic activity output
-- download modpack install and related install-entry actions still stop short of real execution
 - launch-adjacent overview buttons still export runtime context artifacts instead of full end-to-end execution, which should converge with Track 3
+
+Track 2 status:
+
+- effectively complete in the current frontend branch for non-launch migrated surfaces
+- new work should move to Track 3 unless a newly discovered copied button still falls back to intent-only behavior
 
 ## Track 3. Launch Cutover
 
@@ -229,6 +238,30 @@ Still required before this track can be called healthy:
 ### Suggested slice size
 
 - one launch subsystem per commit
+
+### Status on 2026-04-04
+
+Completed in this track:
+
+- launch composition now builds real argument/session/post-launch plans for the selected instance instead of placeholder launch artifacts
+- custom command execution, game process startup, launcher visibility behavior, session summaries, and realtime log capture now run from the replacement shell
+- launch prompt continuation now preserves already-dismissed prompts during the current attempt instead of recreating them
+- Java runtime discovery now rejects the macOS `/usr/bin/java` stub and finds real host runtimes such as Homebrew OpenJDK
+- missing-Java prompt flow can materialize a Mojang runtime and now performs that download work without freezing the frontend UI
+
+Manual verification completed on this track:
+
+1. Opened the Avalonia app against the real launcher folder `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft`.
+2. Selected real instance `1.21.10`.
+3. Confirmed launch and startup prompts render from the copied shell flow and can be advanced.
+4. Confirmed the replacement shell generated a real launch command using `/opt/homebrew/opt/openjdk/bin/java`.
+5. Confirmed the game window opened as `Minecraft 1.21.10`.
+6. Confirmed the replacement shell wrote session output under `~/.config/PCL/Log/session-20260404-233003.log`.
+
+Track 3 status:
+
+- complete on the current frontend branch for the normal launch path
+- next work should move to Track 4 and Track 5 unless a newly discovered launch edge case still falls back to WPF-owned behavior
 
 ## Track 4. Cross-Platform Adapter Isolation
 
@@ -333,32 +366,9 @@ Engineers should usually work in this order:
 
 These are the best next tasks after the current state of the repo.
 
-### Slice 1. Finish remaining tool-page actions
+### Slice 1. Real launch execution cutover
 
 Why first:
-
-- small scope
-- highly visible
-- easy for reviewers to test manually
-
-Expected reviewer test:
-
-- click each remaining intent-only tool action and inspect the resulting file/output/folder behavior
-- verify the already-migrated toolbox actions still create the expected outputs
-
-### Slice 2. Finish remaining instance-action placeholders
-
-Why second:
-
-- keeps instance management usable from the replacement shell
-
-Expected reviewer test:
-
-- perform rename/description/edit/export/delete/restore-style actions and verify the resulting launcher or filesystem state
-
-### Slice 3. Real launch execution cutover
-
-Why third:
 
 - highest value milestone
 - main blocker between “replacement shell” and “real launcher”
@@ -367,15 +377,35 @@ Expected reviewer test:
 
 - launch a real instance from the Avalonia shell and verify end-to-end behavior
 
-### Slice 4. Cross-platform shell adapter pass
+### Slice 2. Cross-platform shell adapter pass
 
-Why fourth:
+Why second:
 
 - necessary before claiming multi-platform launcher support
 
 Expected reviewer test:
 
 - run the same migrated shell actions on multiple OSes and compare outcomes
+
+### Slice 3. Remove remaining WPF workflow ownership
+
+Why third:
+
+- needed to finish normal day-to-day launcher workflows without hidden legacy dependencies
+
+Expected reviewer test:
+
+- complete the target workflow entirely from the replacement shell and confirm no WPF-only path is required
+
+### Slice 4. Packaging and multi-platform validation
+
+Why fourth:
+
+- this is the final confidence gate before claiming a real replacement launcher
+
+Expected reviewer test:
+
+- install the packaged app, validate startup/navigation/persistence, and complete one real launch on the target OS
 
 ## Definition Of Done For Each Slice
 
@@ -404,10 +434,14 @@ The frontend migration is complete when:
 This is the minimum review checklist engineers should keep green while migrating.
 
 1. `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj`
-2. Open the shell and navigate all major route groups.
+2. Open the desktop shell entry and navigate all major route groups.
 3. Validate at least one migrated action from the changed route family.
 4. Confirm real files/config/runtime state are being used.
 5. Confirm no obvious UI redesign slipped in.
+
+Verification note:
+
+- in the current workspace, `dotnet run PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` may enter the inspection/replay host instead of the interactive desktop shell, so route-click verification should be done from the desktop app entry rather than assuming the CLI host is the real UI path
 
 ## Commit Guidance
 

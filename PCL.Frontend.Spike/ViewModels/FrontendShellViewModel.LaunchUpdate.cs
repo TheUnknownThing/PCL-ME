@@ -352,7 +352,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchAuthLabel => _launchComposition.SelectedProfile.AuthLabel;
 
-    public string LaunchButtonTitle => "启动游戏";
+    public string LaunchButtonTitle => _isLaunchInProgress ? "启动中" : "启动游戏";
 
     public string LaunchVersionSubtitle => _launchComposition.InstanceName;
 
@@ -376,9 +376,11 @@ internal sealed partial class FrontendShellViewModel
         private set => SetProperty(ref _showLaunchCommunityHint, value);
     }
 
-    public bool ShowLaunchLog => false;
+    public bool ShowLaunchLog => _showLaunchLog;
 
-    public string LaunchLogText => "正在等待启动日志输出。";
+    public string LaunchLogText => _launchLogBuilder.Length == 0
+        ? "正在等待启动日志输出。"
+        : _launchLogBuilder.ToString();
 
     public bool IsLaunchMigrationExpanded
     {
@@ -397,7 +399,8 @@ internal sealed partial class FrontendShellViewModel
         $"档案：{_launchComposition.SelectedProfile.IdentityLabel}",
         $"Java：{GetLaunchJavaRuntimeLabel()}",
         $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : _launchComposition.PrecheckResult.FailureMessage ?? "未通过")}",
-        $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}"
+        $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}",
+        $"会话状态：{(_isLaunchInProgress ? "游戏启动中" : "待命")}"
     ];
 
     public Bitmap? LaunchAvatarImage => File.Exists(LaunchAvatarImageFilePath)
