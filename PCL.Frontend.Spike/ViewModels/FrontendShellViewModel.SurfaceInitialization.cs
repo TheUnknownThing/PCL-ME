@@ -25,7 +25,7 @@ internal sealed partial class FrontendShellViewModel
                 CreateLinkCommand("打开 PCL Community GitHub", "https://github.com/PCL-Community")),
             new AboutEntryViewModel(
                 "Plain Craft Launcher 社区版",
-                "当前版本: 可移植前端 Spike（合同壳层验证）",
+                _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "Heads", "Logo-CE.png"),
                 "查看源代码",
                 CreateLinkCommand("查看仓库源代码", "https://github.com/PCL-Community/PCL2-CE"))
@@ -94,47 +94,43 @@ internal sealed partial class FrontendShellViewModel
     private void InitializeLogEntries()
     {
         ReplaceItems(LogEntries,
-        [
-            CreateSimpleEntry("latest.log", "最近一次启动会话的汇总日志与提示处理记录。"),
-            CreateSimpleEntry("frontend-shell.log", "Avalonia 壳层路由、提示队列与页面切换的演示记录。"),
-            CreateSimpleEntry("launch-plan.log", "Java、登录与 prerun 计划的便携摘要。"),
-            CreateSimpleEntry("crash-export.log", "崩溃导出意图与归档建议的演示输出。")
-        ]);
+            _setupComposition.Log.Entries.Select(entry =>
+                CreateSimpleEntry(entry.Title, entry.Summary)));
     }
 
     private void InitializeUpdateSurface()
     {
-        _selectedUpdateChannelIndex = Math.Clamp((int)_startupPlan.StartupPlan.Bootstrap.DefaultUpdateChannel, 0, UpdateChannelOptions.Count - 1);
-        _selectedUpdateModeIndex = 0;
-        _mirrorCdk = string.Empty;
+        _selectedUpdateChannelIndex = Math.Clamp(_setupComposition.Update.UpdateChannelIndex, 0, UpdateChannelOptions.Count - 1);
+        _selectedUpdateModeIndex = Math.Clamp(_setupComposition.Update.UpdateModeIndex, 0, UpdateModeOptions.Count - 1);
+        _mirrorCdk = _setupComposition.Update.MirrorCdk;
         _updateSurfaceState = UpdateSurfaceState.Available;
     }
 
     private void InitializeLaunchSettingsSurface()
     {
-        _selectedLaunchIsolationIndex = 1;
-        _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
-        _launchCustomInfo = "PCL";
-        _selectedLaunchVisibilityIndex = 4;
-        _selectedLaunchPriorityIndex = 1;
-        _selectedLaunchWindowTypeIndex = 1;
-        _launchWindowWidth = "854";
-        _launchWindowHeight = "480";
-        _useAutomaticRamAllocation = true;
-        _customRamAllocation = 3;
-        _optimizeMemoryBeforeLaunch = true;
+        _selectedLaunchIsolationIndex = _setupComposition.Launch.IsolationIndex;
+        _launchWindowTitle = _setupComposition.Launch.WindowTitle;
+        _launchCustomInfo = _setupComposition.Launch.CustomInfo;
+        _selectedLaunchVisibilityIndex = _setupComposition.Launch.VisibilityIndex;
+        _selectedLaunchPriorityIndex = _setupComposition.Launch.PriorityIndex;
+        _selectedLaunchWindowTypeIndex = _setupComposition.Launch.WindowTypeIndex;
+        _launchWindowWidth = _setupComposition.Launch.WindowWidth;
+        _launchWindowHeight = _setupComposition.Launch.WindowHeight;
+        _useAutomaticRamAllocation = _setupComposition.Launch.UseAutomaticRamAllocation;
+        _customRamAllocation = _setupComposition.Launch.CustomRamAllocationGb;
+        _optimizeMemoryBeforeLaunch = _setupComposition.Launch.OptimizeMemoryBeforeLaunch;
         _isLaunchAdvancedOptionsExpanded = false;
-        _selectedLaunchRendererIndex = 0;
-        _launchJvmArguments = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
-        _launchGameArguments = string.Empty;
-        _launchBeforeCommand = string.Empty;
-        _waitForLaunchBeforeCommand = false;
-        _disableJavaLaunchWrapper = false;
-        _disableRetroWrapper = false;
-        _requireDedicatedGpu = true;
-        _useJavaExecutable = false;
-        _selectedLaunchMicrosoftAuthIndex = 0;
-        _selectedLaunchPreferredIpStackIndex = 0;
+        _selectedLaunchRendererIndex = _setupComposition.Launch.RendererIndex;
+        _launchJvmArguments = _setupComposition.Launch.JvmArguments;
+        _launchGameArguments = _setupComposition.Launch.GameArguments;
+        _launchBeforeCommand = _setupComposition.Launch.BeforeCommand;
+        _waitForLaunchBeforeCommand = _setupComposition.Launch.WaitForBeforeCommand;
+        _disableJavaLaunchWrapper = _setupComposition.Launch.DisableJavaLaunchWrapper;
+        _disableRetroWrapper = _setupComposition.Launch.DisableRetroWrapper;
+        _requireDedicatedGpu = _setupComposition.Launch.RequireDedicatedGpu;
+        _useJavaExecutable = _setupComposition.Launch.UseJavaExecutable;
+        _selectedLaunchMicrosoftAuthIndex = _setupComposition.Launch.MicrosoftAuthIndex;
+        _selectedLaunchPreferredIpStackIndex = _setupComposition.Launch.PreferredIpStackIndex;
     }
 
     private void InitializeToolsGameLinkSurface()
@@ -434,158 +430,103 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeGameLinkSurface()
     {
-        _linkUsername = "PCL CE 玩家";
-        _selectedProtocolPreferenceIndex = 0;
-        _preferLowestLatencyPath = true;
-        _tryPunchSymmetricNat = true;
-        _allowIpv6Communication = true;
-        _enableLinkCliOutput = false;
+        _linkUsername = _setupComposition.GameLink.Username;
+        _selectedProtocolPreferenceIndex = _setupComposition.GameLink.ProtocolPreferenceIndex;
+        _preferLowestLatencyPath = _setupComposition.GameLink.PreferLowestLatencyPath;
+        _tryPunchSymmetricNat = _setupComposition.GameLink.TryPunchSymmetricNat;
+        _allowIpv6Communication = _setupComposition.GameLink.AllowIpv6Communication;
+        _enableLinkCliOutput = _setupComposition.GameLink.EnableCliOutput;
     }
 
     private void InitializeGameManageSurface()
     {
-        _selectedDownloadSourceIndex = 1;
-        _selectedVersionSourceIndex = 1;
-        _downloadThreadLimit = 63;
-        _downloadSpeedLimit = 42;
-        _autoSelectNewInstance = true;
-        _upgradePartialAuthlib = true;
-        _selectedCommunityDownloadSourceIndex = 1;
-        _selectedFileNameFormatIndex = 1;
-        _selectedModLocalNameStyleIndex = 0;
-        _ignoreQuiltLoader = false;
-        _notifyReleaseUpdates = true;
-        _notifySnapshotUpdates = false;
-        _autoSwitchGameLanguageToChinese = true;
-        _detectClipboardResourceLinks = true;
+        _selectedDownloadSourceIndex = _setupComposition.GameManage.DownloadSourceIndex;
+        _selectedVersionSourceIndex = _setupComposition.GameManage.VersionSourceIndex;
+        _downloadThreadLimit = _setupComposition.GameManage.DownloadThreadLimit;
+        _downloadSpeedLimit = _setupComposition.GameManage.DownloadSpeedLimit;
+        _autoSelectNewInstance = _setupComposition.GameManage.AutoSelectNewInstance;
+        _upgradePartialAuthlib = _setupComposition.GameManage.UpgradePartialAuthlib;
+        _selectedCommunityDownloadSourceIndex = _setupComposition.GameManage.CommunityDownloadSourceIndex;
+        _selectedFileNameFormatIndex = _setupComposition.GameManage.FileNameFormatIndex;
+        _selectedModLocalNameStyleIndex = _setupComposition.GameManage.ModLocalNameStyleIndex;
+        _ignoreQuiltLoader = _setupComposition.GameManage.IgnoreQuiltLoader;
+        _notifyReleaseUpdates = _setupComposition.GameManage.NotifyReleaseUpdates;
+        _notifySnapshotUpdates = _setupComposition.GameManage.NotifySnapshotUpdates;
+        _autoSwitchGameLanguageToChinese = _setupComposition.GameManage.AutoSwitchGameLanguageToChinese;
+        _detectClipboardResourceLinks = _setupComposition.GameManage.DetectClipboardResourceLinks;
     }
 
     private void InitializeLauncherMiscSurface()
     {
-        _selectedSystemActivityIndex = 1;
-        _animationFpsLimit = 59;
-        _maxRealTimeLogValue = 13;
-        _disableHardwareAcceleration = false;
-        _enableTelemetry = true;
-        _enableDoH = true;
-        _selectedHttpProxyTypeIndex = 1;
-        _httpProxyAddress = "http://127.0.0.1:1080/";
-        _httpProxyUsername = string.Empty;
-        _httpProxyPassword = string.Empty;
-        _debugAnimationSpeed = 30;
-        _skipCopyDuringDownload = false;
-        _debugModeEnabled = false;
-        _debugDelayEnabled = false;
+        _selectedSystemActivityIndex = _setupComposition.LauncherMisc.SystemActivityIndex;
+        _animationFpsLimit = _setupComposition.LauncherMisc.AnimationFpsLimit;
+        _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;
+        _disableHardwareAcceleration = _setupComposition.LauncherMisc.DisableHardwareAcceleration;
+        _enableTelemetry = _setupComposition.LauncherMisc.EnableTelemetry;
+        _enableDoH = _setupComposition.LauncherMisc.EnableDoH;
+        _selectedHttpProxyTypeIndex = _setupComposition.LauncherMisc.HttpProxyTypeIndex;
+        _httpProxyAddress = _setupComposition.LauncherMisc.HttpProxyAddress;
+        _httpProxyUsername = _setupComposition.LauncherMisc.HttpProxyUsername;
+        _httpProxyPassword = _setupComposition.LauncherMisc.HttpProxyPassword;
+        _debugAnimationSpeed = _setupComposition.LauncherMisc.DebugAnimationSpeed;
+        _skipCopyDuringDownload = _setupComposition.LauncherMisc.SkipCopyDuringDownload;
+        _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;
+        _debugDelayEnabled = _setupComposition.LauncherMisc.DebugDelayEnabled;
     }
 
     private void InitializeJavaSurface()
     {
-        _selectedJavaRuntimeKey = "auto";
+        _selectedJavaRuntimeKey = _setupComposition.Java.SelectedRuntimeKey;
         ReplaceItems(JavaRuntimeEntries,
-        [
-            CreateJavaRuntimeEntry(
-                "temurin-17",
-                "JDK 17",
-                "/Users/demo/.pcl/java/temurin-17/Contents/Home",
-                ["64 Bit", "Temurin"],
-                isEnabled: true),
-            CreateJavaRuntimeEntry(
-                "zulu-21",
-                "JDK 21",
-                "/Users/demo/.pcl/java/zulu-21/Contents/Home",
-                ["64 Bit", "Zulu"],
-                isEnabled: true),
-            CreateJavaRuntimeEntry(
-                "graalvm-8",
-                "JRE 8",
-                "/Users/demo/.pcl/java/graalvm-8/Contents/Home",
-                ["64 Bit", "GraalVM"],
-                isEnabled: false)
-        ]);
+            _setupComposition.Java.Entries.Select(entry =>
+                CreateJavaRuntimeEntry(
+                    entry.Key,
+                    entry.Title,
+                    entry.Folder,
+                    entry.Tags,
+                    entry.IsEnabled)));
         SyncJavaSelection();
     }
 
     private void InitializeUiSurface()
     {
-        _selectedDarkModeIndex = 2;
-        _selectedLightColorIndex = 0;
-        _selectedDarkColorIndex = 1;
-        _launcherOpacity = 360;
-        _showLauncherLogo = true;
-        _lockWindowSize = false;
-        _showLaunchingHint = true;
-        _enableAdvancedMaterial = false;
-        _blurRadius = 14;
-        _blurSamplingRate = 65;
-        _selectedBlurTypeIndex = 0;
-        _selectedGlobalFontIndex = 0;
-        _selectedMotdFontIndex = 1;
-        _autoPauseVideo = true;
-        _backgroundColorful = true;
-        _musicVolume = 680;
-        _musicRandomPlay = true;
-        _musicAutoStart = false;
-        _musicStartOnGameLaunch = true;
-        _musicStopOnGameLaunch = false;
-        _musicEnableSmtc = true;
-        _selectedLogoTypeIndex = 1;
-        _logoAlignLeft = true;
-        _logoText = "Point Cloud Library";
-        _selectedHomepageTypeIndex = 1;
-        _homepageUrl = "https://example.invalid/homepage.json";
-        _selectedHomepagePresetIndex = Math.Min(12, HomepagePresetOptions.Count - 1);
+        _selectedDarkModeIndex = _setupComposition.Ui.DarkModeIndex;
+        _selectedLightColorIndex = _setupComposition.Ui.LightColorIndex;
+        _selectedDarkColorIndex = _setupComposition.Ui.DarkColorIndex;
+        _launcherOpacity = _setupComposition.Ui.LauncherOpacity;
+        _showLauncherLogo = _setupComposition.Ui.ShowLauncherLogo;
+        _lockWindowSize = _setupComposition.Ui.LockWindowSize;
+        _showLaunchingHint = _setupComposition.Ui.ShowLaunchingHint;
+        _enableAdvancedMaterial = _setupComposition.Ui.EnableAdvancedMaterial;
+        _blurRadius = _setupComposition.Ui.BlurRadius;
+        _blurSamplingRate = _setupComposition.Ui.BlurSamplingRate;
+        _selectedBlurTypeIndex = _setupComposition.Ui.BlurTypeIndex;
+        _selectedGlobalFontIndex = _setupComposition.Ui.GlobalFontIndex;
+        _selectedMotdFontIndex = _setupComposition.Ui.MotdFontIndex;
+        _autoPauseVideo = _setupComposition.Ui.AutoPauseVideo;
+        _backgroundColorful = _setupComposition.Ui.BackgroundColorful;
+        _musicVolume = _setupComposition.Ui.MusicVolume;
+        _musicRandomPlay = _setupComposition.Ui.MusicRandomPlay;
+        _musicAutoStart = _setupComposition.Ui.MusicAutoStart;
+        _musicStartOnGameLaunch = _setupComposition.Ui.MusicStartOnGameLaunch;
+        _musicStopOnGameLaunch = _setupComposition.Ui.MusicStopOnGameLaunch;
+        _musicEnableSmtc = _setupComposition.Ui.MusicEnableSmtc;
+        _selectedLogoTypeIndex = _setupComposition.Ui.LogoTypeIndex;
+        _logoAlignLeft = _setupComposition.Ui.LogoAlignLeft;
+        _logoText = _setupComposition.Ui.LogoText;
+        _selectedHomepageTypeIndex = _setupComposition.Ui.HomepageTypeIndex;
+        _homepageUrl = _setupComposition.Ui.HomepageUrl;
+        _selectedHomepagePresetIndex = Math.Clamp(_setupComposition.Ui.HomepagePresetIndex, 0, HomepagePresetOptions.Count - 1);
 
         ReplaceItems(UiFeatureToggleGroups,
-        [
-            new UiFeatureToggleGroupViewModel(
-                "主页面",
-                [
-                    new UiFeatureToggleItemViewModel("下载", false),
-                    new UiFeatureToggleItemViewModel("设置", false),
-                    new UiFeatureToggleItemViewModel("工具", false)
-                ]),
-            new UiFeatureToggleGroupViewModel(
-                "子页面 设置",
-                [
-                    new UiFeatureToggleItemViewModel("启动", false),
-                    new UiFeatureToggleItemViewModel("Java", false),
-                    new UiFeatureToggleItemViewModel("管理", false),
-                    new UiFeatureToggleItemViewModel("联机", false),
-                    new UiFeatureToggleItemViewModel("个性化", false),
-                    new UiFeatureToggleItemViewModel("杂项", false),
-                    new UiFeatureToggleItemViewModel("软件更新", false),
-                    new UiFeatureToggleItemViewModel("关于", false),
-                    new UiFeatureToggleItemViewModel("反馈", false),
-                    new UiFeatureToggleItemViewModel("查看日志", false)
-                ]),
-            new UiFeatureToggleGroupViewModel(
-                "子页面 工具",
-                [
-                    new UiFeatureToggleItemViewModel("联机", false),
-                    new UiFeatureToggleItemViewModel("百宝箱", false),
-                    new UiFeatureToggleItemViewModel("帮助", false)
-                ]),
-            new UiFeatureToggleGroupViewModel(
-                "子页面 实例设置",
-                [
-                    new UiFeatureToggleItemViewModel("修改", false),
-                    new UiFeatureToggleItemViewModel("导出", false),
-                    new UiFeatureToggleItemViewModel("存档", false),
-                    new UiFeatureToggleItemViewModel("截图", false),
-                    new UiFeatureToggleItemViewModel("Mod", false),
-                    new UiFeatureToggleItemViewModel("资源包", false),
-                    new UiFeatureToggleItemViewModel("光影包", false),
-                    new UiFeatureToggleItemViewModel("投影原理图", false),
-                    new UiFeatureToggleItemViewModel("服务器", false)
-                ]),
-            new UiFeatureToggleGroupViewModel(
-                "特定功能",
-                [
-                    new UiFeatureToggleItemViewModel("实例管理", false),
-                    new UiFeatureToggleItemViewModel("Mod 更新", false),
-                    new UiFeatureToggleItemViewModel("功能隐藏", false)
-                ])
-        ]);
+            _setupComposition.Ui.ToggleGroups.Select(group =>
+                new UiFeatureToggleGroupViewModel(
+                    group.Title,
+                    group.Items.Select(item =>
+                        new UiFeatureToggleItemViewModel(
+                            item.Title,
+                            item.IsChecked,
+                            isChecked => PersistUiToggle(item.ConfigKey, isChecked))).ToArray())));
     }
 
     private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()

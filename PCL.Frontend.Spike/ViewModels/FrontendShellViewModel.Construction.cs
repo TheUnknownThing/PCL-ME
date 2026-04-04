@@ -22,6 +22,7 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
+    private FrontendSetupComposition _setupComposition;
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
@@ -247,6 +248,7 @@ internal sealed partial class FrontendShellViewModel
     private string _homepageUrl = "https://example.invalid/homepage.json";
     private int _selectedHomepagePresetIndex = 14;
     private string _selectedJavaRuntimeKey = "auto";
+    private bool _suppressSetupPersistence;
 
     public static FrontendShellViewModel CreateBootstrap(
         SpikeCommandOptions options,
@@ -261,6 +263,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _shellActionService = shellActionService;
         _shellComposition = FrontendShellCompositionService.Compose(options);
+        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
@@ -369,11 +372,9 @@ internal sealed partial class FrontendShellViewModel
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
         _allHelpTopics = CreateHelpTopics();
+        PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
-        InitializeLogEntries();
-        InitializeUpdateSurface();
-        InitializeLaunchSettingsSurface();
         InitializeToolsGameLinkSurface();
         InitializeToolsTestSurface();
         InitializeDownloadInstallSurface();
@@ -382,11 +383,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeInstanceInstallSurface();
         InitializeInstanceContentSurfaces();
         InitializeInstanceSetupSurface();
-        InitializeGameLinkSurface();
-        InitializeGameManageSurface();
-        InitializeLauncherMiscSurface();
-        InitializeJavaSurface();
-        InitializeUiSurface();
+        ApplySetupComposition(_setupComposition);
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");

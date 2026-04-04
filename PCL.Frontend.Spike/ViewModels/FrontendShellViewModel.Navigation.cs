@@ -131,6 +131,11 @@ internal sealed partial class FrontendShellViewModel
 
         _routeHistory.Add(_currentRoute);
         _currentRoute = route;
+        if (route.Page == LauncherFrontendPageKey.Setup)
+        {
+            ReloadSetupComposition();
+        }
+
         RefreshShell(activityMessage);
     }
 
@@ -146,6 +151,11 @@ internal sealed partial class FrontendShellViewModel
             var previousRoute = _routeHistory[^1];
             _routeHistory.RemoveAt(_routeHistory.Count - 1);
             _currentRoute = previousRoute;
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                ReloadSetupComposition();
+            }
+
             RefreshShell("Returned to the previous shell route.");
             return;
         }
@@ -153,6 +163,11 @@ internal sealed partial class FrontendShellViewModel
         if (_currentNavigation.BackTarget?.Route is { } backRoute)
         {
             _currentRoute = backRoute;
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                ReloadSetupComposition();
+            }
+
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
         }
     }

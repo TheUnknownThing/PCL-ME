@@ -1,3 +1,7 @@
+using System.Text.Json;
+using PCL.Core.App.Configuration.Storage;
+using PCL.Core.Minecraft.Java;
+
 namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
@@ -91,37 +95,10 @@ internal sealed partial class FrontendShellViewModel
 
     private void ResetLaunchSettingsSurface()
     {
-        InitializeLaunchSettingsSurface();
-        RaisePropertyChanged(nameof(SelectedLaunchIsolationIndex));
-        RaisePropertyChanged(nameof(LaunchWindowTitleSetting));
-        RaisePropertyChanged(nameof(LaunchCustomInfoSetting));
-        RaisePropertyChanged(nameof(SelectedLaunchVisibilityIndex));
-        RaisePropertyChanged(nameof(SelectedLaunchPriorityIndex));
-        RaisePropertyChanged(nameof(SelectedLaunchWindowTypeIndex));
-        RaisePropertyChanged(nameof(IsCustomLaunchWindowSizeVisible));
-        RaisePropertyChanged(nameof(LaunchWindowWidth));
-        RaisePropertyChanged(nameof(LaunchWindowHeight));
-        RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
-        RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
-        RaisePropertyChanged(nameof(UseAutomaticRamAllocation));
-        RaisePropertyChanged(nameof(UseCustomRamAllocation));
-        RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
-        RaisePropertyChanged(nameof(CustomRamAllocation));
-        RaisePropertyChanged(nameof(CustomRamAllocationLabel));
-        RaisePropertyChanged(nameof(AllocatedRamLabel));
-        RaisePropertyChanged(nameof(ShowRamAllocationWarning));
-        RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
-        RaisePropertyChanged(nameof(IsLaunchAdvancedOptionsExpanded));
-        RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
-        RaisePropertyChanged(nameof(LaunchJvmArguments));
-        RaisePropertyChanged(nameof(LaunchGameArguments));
-        RaisePropertyChanged(nameof(LaunchBeforeCommand));
-        RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
-        RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
-        RaisePropertyChanged(nameof(DisableRetroWrapper));
-        RaisePropertyChanged(nameof(RequireDedicatedGpu));
-        RaisePropertyChanged(nameof(UseJavaExecutable));
-        AddActivity("重置启动设置", "启动选项、内存与高级启动参数已恢复到默认演示值。");
+        _shellActionService.RemoveLocalValues(LaunchLocalResetKeys);
+        _shellActionService.RemoveSharedValues(LaunchSharedResetKeys);
+        ReloadSetupComposition();
+        AddActivity("重置启动设置", "启动选项、内存与高级启动参数已恢复到当前启动器的默认配置。");
     }
 
     private void RefreshToolsGameLinkSurface()
@@ -292,84 +269,64 @@ internal sealed partial class FrontendShellViewModel
 
     private void ResetGameLinkSurface()
     {
-        InitializeGameLinkSurface();
-        RaisePropertyChanged(nameof(LinkUsername));
-        RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
-        RaisePropertyChanged(nameof(PreferLowestLatencyPath));
-        RaisePropertyChanged(nameof(TryPunchSymmetricNat));
-        RaisePropertyChanged(nameof(AllowIpv6Communication));
-        RaisePropertyChanged(nameof(EnableLinkCliOutput));
-        AddActivity("重置联机设置", "EasyTier 设置已恢复到 Spike 的默认演示值。");
+        _shellActionService.RemoveSharedValues(GameLinkResetKeys);
+        ReloadSetupComposition();
+        AddActivity("重置联机设置", "联机设置已恢复到当前启动器的默认配置。");
     }
 
     private void ResetGameManageSurface()
     {
-        InitializeGameManageSurface();
-        RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
-        RaisePropertyChanged(nameof(SelectedVersionSourceIndex));
-        RaisePropertyChanged(nameof(DownloadThreadLimit));
-        RaisePropertyChanged(nameof(DownloadThreadLimitLabel));
-        RaisePropertyChanged(nameof(DownloadSpeedLimit));
-        RaisePropertyChanged(nameof(DownloadSpeedLimitLabel));
-        RaisePropertyChanged(nameof(AutoSelectNewInstance));
-        RaisePropertyChanged(nameof(UpgradePartialAuthlib));
-        RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
-        RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
-        RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
-        RaisePropertyChanged(nameof(IgnoreQuiltLoader));
-        RaisePropertyChanged(nameof(NotifyReleaseUpdates));
-        RaisePropertyChanged(nameof(NotifySnapshotUpdates));
-        RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
-        RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
-        AddActivity("重置游戏管理设置", "下载、社区资源和辅助功能设置已恢复到默认演示值。");
+        _shellActionService.RemoveSharedValues(GameManageResetKeys);
+        ReloadSetupComposition();
+        AddActivity("重置游戏管理设置", "下载、社区资源和辅助功能设置已恢复到当前启动器的默认配置。");
     }
 
     private void ResetLauncherMiscSurface()
     {
-        InitializeLauncherMiscSurface();
-        RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
-        RaisePropertyChanged(nameof(AnimationFpsLimit));
-        RaisePropertyChanged(nameof(AnimationFpsLabel));
-        RaisePropertyChanged(nameof(MaxRealTimeLogValue));
-        RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
-        RaisePropertyChanged(nameof(DisableHardwareAcceleration));
-        RaisePropertyChanged(nameof(EnableTelemetry));
-        RaisePropertyChanged(nameof(EnableDoH));
-        RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
-        RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
-        RaisePropertyChanged(nameof(IsNoHttpProxySelected));
-        RaisePropertyChanged(nameof(IsSystemHttpProxySelected));
-        RaisePropertyChanged(nameof(IsCustomHttpProxySelected));
-        RaisePropertyChanged(nameof(HttpProxyAddress));
-        RaisePropertyChanged(nameof(HttpProxyUsername));
-        RaisePropertyChanged(nameof(HttpProxyPassword));
-        RaisePropertyChanged(nameof(DebugAnimationSpeed));
-        RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
-        RaisePropertyChanged(nameof(SkipCopyDuringDownload));
-        RaisePropertyChanged(nameof(DebugModeEnabled));
-        RaisePropertyChanged(nameof(DebugDelayEnabled));
-        AddActivity("重置启动器杂项设置", "系统、网络和调试选项已恢复到默认演示值。");
+        _shellActionService.RemoveLocalValues(LauncherMiscLocalResetKeys);
+        _shellActionService.RemoveSharedValues(LauncherMiscSharedResetKeys);
+        _shellActionService.RemoveSharedValues(LauncherMiscProtectedResetKeys);
+        ReloadSetupComposition();
+        AddActivity("重置启动器杂项设置", "系统、网络和调试选项已恢复到当前启动器的默认配置。");
     }
 
     private void RefreshJavaSurface()
     {
-        InitializeJavaSurface();
-        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
-        RaisePropertyChanged(nameof(IsAutoJavaSelected));
-        AddActivity("刷新 Java 列表", "Java 列表已恢复到可移植前端的默认演示数据。");
+        ReloadSetupComposition();
+        AddActivity("刷新 Java 列表", "Java 列表已按当前启动器配置重新载入。");
     }
 
     private void AddJavaRuntime()
     {
-        var newIndex = JavaRuntimeEntries.Count + 1;
-        JavaRuntimeEntries.Add(CreateJavaRuntimeEntry(
-            $"custom-{newIndex}",
-            $"JDK {17 + newIndex}",
-            $"/Users/demo/.pcl/java/custom-{newIndex}/Contents/Home",
-            ["64 Bit", "Custom"],
-            isEnabled: true));
-        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
-        AddActivity("添加 Java", $"已向演示列表追加自定义 Java #{newIndex}。");
+        var candidates = new[]
+        {
+            Path.Combine(Environment.GetEnvironmentVariable("JAVA_HOME") ?? string.Empty, "bin", OperatingSystem.IsWindows() ? "java.exe" : "java"),
+            OperatingSystem.IsWindows() ? "C:\\Program Files\\Java\\bin\\java.exe" : "/usr/bin/java"
+        };
+
+        var javaPath = candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
+        if (string.IsNullOrWhiteSpace(javaPath))
+        {
+            AddActivity("添加 Java", "未找到可自动添加的 Java，可先通过当前启动器扫描或手动写入 Java 列表。");
+            return;
+        }
+
+        var items = LoadStoredJavaItems();
+        if (items.Any(item => string.Equals(item.Path, javaPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            AddActivity("添加 Java", $"Java 已存在于配置列表中：{javaPath}");
+            return;
+        }
+
+        items.Add(new JavaStorageItem
+        {
+            Path = javaPath,
+            IsEnable = true,
+            Source = JavaSource.ManualAdded
+        });
+        SaveStoredJavaItems(items);
+        ReloadSetupComposition();
+        AddActivity("添加 Java", $"已将 {javaPath} 写入启动器 Java 列表。");
     }
 
     private JavaRuntimeEntryViewModel CreateJavaRuntimeEntry(
@@ -394,6 +351,7 @@ internal sealed partial class FrontendShellViewModel
     private void SelectJavaRuntime(string key)
     {
         _selectedJavaRuntimeKey = key;
+        _shellActionService.PersistSharedValue("LaunchArgumentJavaSelect", key == "auto" ? string.Empty : key);
         SyncJavaSelection();
         RaisePropertyChanged(nameof(IsAutoJavaSelected));
         AddActivity("切换默认 Java", key == "auto" ? "自动选择" : key);
@@ -414,6 +372,18 @@ internal sealed partial class FrontendShellViewModel
         }
 
         entry.IsEnabled = !entry.IsEnabled;
+        var items = LoadStoredJavaItems();
+        var updated = items.FindIndex(item => string.Equals(item.Path, key, StringComparison.OrdinalIgnoreCase));
+        if (updated >= 0)
+        {
+            items[updated] = new JavaStorageItem
+            {
+                Path = items[updated].Path,
+                IsEnable = entry.IsEnabled,
+                Source = items[updated].Source
+            };
+            SaveStoredJavaItems(items);
+        }
         AddActivity(
             entry.IsEnabled ? "启用 Java" : "禁用 Java",
             $"{entry.Title} • {(entry.IsEnabled ? "已启用" : "已禁用")}");
@@ -427,54 +397,32 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private List<JavaStorageItem> LoadStoredJavaItems()
+    {
+        try
+        {
+            var provider = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+            var rawJson = provider.Exists("LaunchArgumentJavaUser")
+                ? provider.Get<string>("LaunchArgumentJavaUser")
+                : "[]";
+            return JsonSerializer.Deserialize<List<JavaStorageItem>>(rawJson) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private void SaveStoredJavaItems(IReadOnlyList<JavaStorageItem> items)
+    {
+        _shellActionService.PersistLocalValue("LaunchArgumentJavaUser", JsonSerializer.Serialize(items));
+    }
+
     private void ResetUiSurface()
     {
-        InitializeUiSurface();
-        RaisePropertyChanged(nameof(SelectedDarkModeIndex));
-        RaisePropertyChanged(nameof(SelectedLightColorIndex));
-        RaisePropertyChanged(nameof(SelectedDarkColorIndex));
-        RaisePropertyChanged(nameof(LauncherOpacity));
-        RaisePropertyChanged(nameof(LauncherOpacityLabel));
-        RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
-        RaisePropertyChanged(nameof(LockWindowSizeSetting));
-        RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
-        RaisePropertyChanged(nameof(EnableAdvancedMaterial));
-        RaisePropertyChanged(nameof(BlurRadius));
-        RaisePropertyChanged(nameof(BlurRadiusLabel));
-        RaisePropertyChanged(nameof(BlurSamplingRate));
-        RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-        RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
-        RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
-        RaisePropertyChanged(nameof(SelectedMotdFontIndex));
-        RaisePropertyChanged(nameof(AutoPauseVideo));
-        RaisePropertyChanged(nameof(BackgroundColorful));
-        RaisePropertyChanged(nameof(MusicVolume));
-        RaisePropertyChanged(nameof(MusicVolumeLabel));
-        RaisePropertyChanged(nameof(MusicRandomPlay));
-        RaisePropertyChanged(nameof(MusicAutoStart));
-        RaisePropertyChanged(nameof(MusicStartOnGameLaunch));
-        RaisePropertyChanged(nameof(MusicStopOnGameLaunch));
-        RaisePropertyChanged(nameof(MusicEnableSmtc));
-        RaisePropertyChanged(nameof(SelectedLogoTypeIndex));
-        RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
-        RaisePropertyChanged(nameof(IsLogoTypeDefaultSelected));
-        RaisePropertyChanged(nameof(IsLogoTypeTextSelected));
-        RaisePropertyChanged(nameof(IsLogoTypeImageSelected));
-        RaisePropertyChanged(nameof(IsLogoLeftVisible));
-        RaisePropertyChanged(nameof(LogoAlignLeft));
-        RaisePropertyChanged(nameof(IsLogoTextVisible));
-        RaisePropertyChanged(nameof(LogoTextValue));
-        RaisePropertyChanged(nameof(IsLogoImageActionsVisible));
-        RaisePropertyChanged(nameof(SelectedHomepageTypeIndex));
-        RaisePropertyChanged(nameof(IsHomepageBlankSelected));
-        RaisePropertyChanged(nameof(IsHomepagePresetSelected));
-        RaisePropertyChanged(nameof(IsHomepageLocalSelected));
-        RaisePropertyChanged(nameof(IsHomepageNetSelected));
-        RaisePropertyChanged(nameof(IsHomepageLocalActionsVisible));
-        RaisePropertyChanged(nameof(IsHomepageNetVisible));
-        RaisePropertyChanged(nameof(HomepageUrl));
-        RaisePropertyChanged(nameof(IsHomepagePresetVisible));
-        RaisePropertyChanged(nameof(SelectedHomepagePresetIndex));
-        AddActivity("重置界面设置", "个性化界面页已恢复到默认演示值。");
+        _shellActionService.RemoveLocalValues(UiLocalResetKeys);
+        _shellActionService.RemoveSharedValues(UiSharedResetKeys);
+        ReloadSetupComposition();
+        AddActivity("重置界面设置", "个性化界面页已恢复到当前启动器的默认配置。");
     }
 }

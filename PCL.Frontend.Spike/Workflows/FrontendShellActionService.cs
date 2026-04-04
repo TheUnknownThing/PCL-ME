@@ -1,7 +1,10 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using PCL.Core.App.Configuration.Storage;
+using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
+using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Spike.Models;
 
@@ -19,6 +22,54 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
     public void SetTelemetryEnabled(bool enabled)
     {
         PersistSharedValue("SystemTelemetry", enabled);
+    }
+
+    public void PersistLocalValue<T>(string key, T value)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(RuntimePaths.LocalConfigPath)!);
+        var provider = new YamlFileProvider(RuntimePaths.LocalConfigPath);
+        provider.Set(key, value);
+        provider.Sync();
+    }
+
+    public void PersistSharedValue<T>(string key, T value)
+    {
+        Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
+        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        provider.Set(key, value);
+        provider.Sync();
+    }
+
+    public void PersistProtectedSharedValue(string key, string value)
+    {
+        Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
+        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        provider.Set(key, ProtectSharedValue(value));
+        provider.Sync();
+    }
+
+    public void RemoveLocalValues(IEnumerable<string> keys)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(RuntimePaths.LocalConfigPath)!);
+        var provider = new YamlFileProvider(RuntimePaths.LocalConfigPath);
+        foreach (var key in keys)
+        {
+            provider.Remove(key);
+        }
+
+        provider.Sync();
+    }
+
+    public void RemoveSharedValues(IEnumerable<string> keys)
+    {
+        Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
+        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        foreach (var key in keys)
+        {
+            provider.Remove(key);
+        }
+
+        provider.Sync();
     }
 
     public void DisableNonAsciiGamePathWarning()
@@ -167,14 +218,6 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
             summaryPath);
     }
 
-    private void PersistSharedValue<T>(string key, T value)
-    {
-        Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
-        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
-        provider.Set(key, value);
-        provider.Sync();
-    }
-
     private static void TryDeleteDirectory(string path)
     {
         try
@@ -288,6 +331,43 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         var invalidCharacters = Path.GetInvalidFileNameChars();
         var cleaned = new string(raw.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray());
         return string.IsNullOrWhiteSpace(cleaned) ? "artifact" : cleaned;
+    }
+
+    private string ProtectSharedValue(string plainText)
+    {
+        var encryptionKey = ResolveSharedEncryptionKey();
+        return LauncherDataProtectionService.Protect(plainText, encryptionKey);
+    }
+
+    private byte[] ResolveSharedEncryptionKey()
+    {
+        var explicitKey = LauncherSecretKeyResolutionService.ParseExplicitKeyOverride(
+            Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY"));
+        if (explicitKey is not null)
+        {
+            return explicitKey;
+        }
+
+        var persistedKeyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(RuntimePaths.SharedConfigDirectory);
+        var persistedEnvelope = LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(persistedKeyPath)
+            ?? throw new InvalidOperationException("Launcher encryption key is unavailable.");
+        var storedKey = LauncherVersionedDataService.Parse(persistedEnvelope);
+        return storedKey.Version switch
+        {
+            1 => ReadWindowsProtectedKey(storedKey.Data),
+            2 => storedKey.Data,
+            _ => throw new NotSupportedException("Unsupported launcher key version.")
+        };
+    }
+
+    private static byte[] ReadWindowsProtectedKey(byte[] data)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException("Protected launcher keys are only supported on Windows.");
+        }
+
+        return ProtectedData.Unprotect(data, Encoding.UTF8.GetBytes("PCL CE Encryption Key"), DataProtectionScope.CurrentUser);
     }
 }
 
