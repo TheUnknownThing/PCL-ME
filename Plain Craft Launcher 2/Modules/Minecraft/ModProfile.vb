@@ -4,7 +4,6 @@ Imports System.Security.Cryptography
 Imports System.Text.Json
 Imports PCL.Core.IO.Net
 Imports PCL.Core.Utils
-Imports PCL.Core.Utils.Secret
 
 Public Module ModProfile
 
@@ -97,50 +96,9 @@ Public Module ModProfile
                 File.Create(profilePath).Close()
                 WriteFile(profilePath, "{""lastUsed"":0,""profiles"":[]}", False) '创建档案列表文件
             End If
-            Dim profileJobj As JObject = JObject.Parse(ReadFile(profilePath))
-            LastUsedProfile = profileJobj("lastUsed")
-            Dim profileListJobj As JArray = profileJobj("profiles")
-            For Each Profile In profileListJobj
-                Dim newProfile As McProfile = Nothing
-                If Profile("type") = "microsoft" Then
-                    newProfile = New McProfile With {
-                        .Type = McLoginType.Ms,
-                        .Uuid = Profile("uuid"),
-                        .Username = Profile("username"),
-                        .AccessToken = EncryptHelper.SecretDecrypt(Profile("accessToken")),
-                        .RefreshToken = EncryptHelper.SecretDecrypt(Profile("refreshToken")),
-                        .Expires = Profile("expires"),
-                        .Desc = Profile("desc"),
-                        .RawJson = EncryptHelper.SecretDecrypt(Profile("rawJson")),
-                        .SkinHeadId = Profile("skinHeadId")
-                    }
-                ElseIf Profile("type") = "authlib" Then
-                    newProfile = New McProfile With {
-                        .Type = McLoginType.Auth,
-                        .Uuid = Profile("uuid"),
-                        .Username = Profile("username"),
-                        .AccessToken = EncryptHelper.SecretDecrypt(Profile("accessToken")),
-                        .RefreshToken = EncryptHelper.SecretDecrypt(Profile("refreshToken")),
-                        .Expires = Profile("expires"),
-                        .Server = Profile("server"),
-                        .ServerName = Profile("serverName"),
-                        .Name = EncryptHelper.SecretDecrypt(Profile("name")),
-                        .Password = EncryptHelper.SecretDecrypt(Profile("password")),
-                        .ClientToken = EncryptHelper.SecretDecrypt(Profile("clientToken")),
-                        .Desc = Profile("desc"),
-                        .SkinHeadId = Profile("skinHeadId")
-                    }
-                Else
-                    newProfile = New McProfile With {
-                        .Type = McLoginType.Legacy,
-                        .Uuid = Profile("uuid"),
-                        .Username = Profile("username"),
-                        .Desc = Profile("desc"),
-                        .SkinHeadId = Profile("skinHeadId")
-                    }
-                End If
-                ProfileList.Add(newProfile)
-            Next
+            Dim profileDocument = ReadProfilesDocument(ReadFile(profilePath))
+            LastUsedProfile = profileDocument.LastUsedProfile
+            ProfileList.AddRange(profileDocument.Profiles.Select(AddressOf CreateProfileFromPersisted))
             ProfileLog($"获取到 {ProfileList.Count} 个档案")
         Catch ex As Exception
             Try
@@ -157,65 +115,20 @@ Public Module ModProfile
     ''' </summary>
     Public Sub SaveProfile(Optional listJson As JArray = Nothing)
         Try
-            Dim json As New JObject
+            Dim json As String = Nothing
             If listJson IsNot Nothing Then
                 json = New JObject From {
-                {"lastUsed", LastUsedProfile},
-                {"profiles", listJson}
-            }
+                    {"lastUsed", LastUsedProfile},
+                    {"profiles", listJson}
+                }.ToString(Newtonsoft.Json.Formatting.None)
             Else
-                Dim list As New JArray
-                For Each Profile In ProfileList
-                    Dim profileJobj As JObject = Nothing
-                    If Profile.Type = McLoginType.Ms Then
-                        profileJobj = New JObject From {
-                            {"type", "microsoft"},
-                            {"uuid", Profile.Uuid},
-                            {"username", Profile.Username},
-                            {"accessToken", EncryptHelper.SecretEncrypt(Profile.AccessToken)},
-                            {"refreshToken", EncryptHelper.SecretEncrypt(Profile.RefreshToken)},
-                            {"expires", Profile.Expires},
-                            {"desc", Profile.Desc},
-                            {"rawJson", EncryptHelper.SecretEncrypt(Profile.RawJson)},
-                            {"skinHeadId", Profile.SkinHeadId}
-                        }
-                    ElseIf Profile.Type = McLoginType.Auth Then
-                        profileJobj = New JObject From {
-                            {"type", "authlib"},
-                            {"uuid", Profile.Uuid},
-                            {"username", Profile.Username},
-                            {"accessToken", EncryptHelper.SecretEncrypt(Profile.AccessToken)},
-                            {"refreshToken", EncryptHelper.SecretEncrypt(Profile.RefreshToken)},
-                            {"expires", Profile.Expires},
-                            {"server", Profile.Server},
-                            {"serverName", Profile.ServerName},
-                            {"name", EncryptHelper.SecretEncrypt(Profile.Name)},
-                            {"password", EncryptHelper.SecretEncrypt(Profile.Password)},
-                            {"clientToken", EncryptHelper.SecretEncrypt(Profile.ClientToken)},
-                            {"desc", Profile.Desc},
-                            {"skinHeadId", Profile.SkinHeadId}
-                        }
-                    Else
-                        profileJobj = New JObject From {
-                            {"type", "offline"},
-                            {"uuid", Profile.Uuid},
-                            {"username", Profile.Username},
-                            {"desc", Profile.Desc},
-                            {"skinHeadId", Profile.SkinHeadId}
-                        }
-                    End If
-                    list.Add(profileJobj)
-                Next
-                ProfileLog($"开始保存档案，共 {list.Count} 个")
-                json = New JObject From {
-                {"lastUsed", LastUsedProfile},
-                {"profiles", list}
-            }
+                ProfileLog($"开始保存档案，共 {ProfileList.Count} 个")
+                json = WriteProfilesDocument(LastUsedProfile, ProfileList)
             End If
             Dim actualFile = Path.Combine(PathAppdataConfig, "profiles.json")
             Dim tempFile = actualFile & ".tmp"
             Dim bakFile = actualFile & ".bak"
-            File.WriteAllBytes(tempFile, Encoding.UTF8.GetBytes(json.ToString(Newtonsoft.Json.Formatting.None)))
+            File.WriteAllBytes(tempFile, Encoding.UTF8.GetBytes(json))
             If File.Exists(actualFile) Then
                 File.Replace(tempFile, actualFile, bakFile)
             Else

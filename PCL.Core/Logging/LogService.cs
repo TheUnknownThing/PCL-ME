@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using PCL.Core.App;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.IoC;
@@ -22,7 +21,7 @@ public class LogService : ILifecycleLogService
     private LogService() { _context = Lifecycle.GetContext(this); }
 
     private static Logger? _logger;
-    public static Logger Logger => _logger!;
+    public static Logger Logger => _logger ?? LogWrapper.CurrentLogger;
 
     private static bool _wrapperRegistered = false;
 
@@ -31,6 +30,7 @@ public class LogService : ILifecycleLogService
         Context.Trace("正在初始化 Logger 实例");
         var config = new LoggerConfiguration(Path.Combine(Basics.ExecutableDirectory, "PCL", "Log"));
         _logger = new Logger(config);
+        LogWrapper.AttachLogger(_logger);
         Context.Trace("正在注册日志事件");
         LogWrapper.OnLog += _OnWrapperLog;
         _wrapperRegistered = true;
@@ -84,7 +84,7 @@ public class LogService : ILifecycleLogService
             var message = plain;
             if (ex != null) message += $"\n\n相关异常信息:\n{ex}";
             message += "\n\n如果你认为这是启动器的问题，请提交反馈，否则它可能永远都不会被解决！\n导出日志: 设置 → 查看日志 → 导出全部日志";
-            MessageBox.Show(message, "锟斤拷烫烫烫", MessageBoxButton.OK, MessageBoxImage.Error);
+            LogRuntimeHooks.ShowFatalDialog(message, "锟斤拷烫烫烫");
         }
     }
 

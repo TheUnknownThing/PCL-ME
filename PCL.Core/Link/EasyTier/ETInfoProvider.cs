@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
@@ -10,6 +9,7 @@ using System.Text.Json.Nodes;
 using PCL.Core.App;
 using PCL.Core.IO;
 using PCL.Core.Logging;
+using PCL.Core.Utils.OS;
 
 namespace PCL.Core.Link.EasyTier;
 // ReSharper disable InconsistentNaming, CompareOfFloatsByEqualityOperator
@@ -58,8 +58,7 @@ public static class ETInfoProvider
     public const string ETNetworkNamePrefix = "PCLCELobby";
     public const string ETNetworkSecretPrefix = "PCLCEETLOBBY2025";
     public const string ETVersion = Scaffolding.EasyTier.EasyTierMetadata.CurrentEasyTierVer;
-    public static readonly string ETPath = Path.Combine(Paths.SharedLocalData, "EasyTier", ETVersion,
-        "easytier-windows-" + (RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "x86_64"));
+    public static readonly string ETPath = Scaffolding.EasyTier.EasyTierMetadata.EasyTierFilePath;
 
     private static ETConnectionType _GetConnectionType(string cost)
     {

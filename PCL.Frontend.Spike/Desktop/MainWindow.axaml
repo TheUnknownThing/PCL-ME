@@ -1,0 +1,301 @@
+<Window
+    x:Class="PCL.Frontend.Spike.Desktop.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    Title="Point Cloud Library CE"
+    Width="1158"
+    Height="648"
+    MinWidth="980"
+    MinHeight="620"
+    Background="Transparent"
+    SystemDecorations="None">
+  <Window.Styles>
+    <Style Selector="Button.chrome">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinWidth" Value="28" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+    <Style Selector="Button.flat">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+  </Window.Styles>
+
+  <Grid Margin="10">
+    <Border
+        Background="#FBFBFD"
+        BorderBrush="#9FC0F9"
+        BorderThickness="1"
+        CornerRadius="6"
+        ClipToBounds="True">
+      <Grid RowDefinitions="48,*">
+        <Border
+            Grid.Row="0"
+            Background="#1370F3"
+            PointerPressed="TitleBar_OnPointerPressed"
+            DoubleTapped="TitleBar_OnDoubleTapped">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid Grid.Column="0" Margin="14,0,0,0" ColumnDefinitions="Auto,Auto">
+              <TextBlock
+                  Grid.Column="0"
+                  VerticalAlignment="Center"
+                  Foreground="White"
+                  FontSize="18"
+                  FontWeight="SemiLight"
+                  Text="Point Cloud Library" />
+              <Border
+                  Grid.Column="1"
+                  Margin="10,0,0,0"
+                  Width="20"
+                  Height="18"
+                  VerticalAlignment="Center"
+                  Background="White"
+                  CornerRadius="5">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="#1370F3"
+                    FontSize="10"
+                    FontWeight="Bold"
+                    Text="CE" />
+              </Border>
+            </Grid>
+
+            <Grid Grid.Column="1">
+              <ItemsControl
+                  Margin="130,0,0,0"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowTopLevelNavigation}"
+                  ItemsSource="{Binding TopLevelEntries}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PclTabButton
+                        Margin="5,0"
+                        Command="{Binding Command}"
+                        IconData="{Binding IconPath}"
+                        IconScale="{Binding IconScale}"
+                        IsSelected="{Binding IsSelected}"
+                        Text="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Grid
+                  Margin="130,0,0,0"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Center"
+                  ColumnDefinitions="Auto,*"
+                  IsVisible="{Binding ShowInnerNavigation}">
+                <controls:PclIconButton
+                    VerticalAlignment="Center"
+                    Command="{Binding BackCommand}"
+                    IconData="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z"
+                    ToolTip.Tip="返回" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    FontSize="15"
+                    Text="{Binding TitleBarLabel}" />
+              </Grid>
+            </Grid>
+
+            <StackPanel
+                Grid.Column="2"
+                Margin="0,0,12,0"
+                Orientation="Horizontal"
+                VerticalAlignment="Center"
+                Spacing="4">
+              <controls:PclIconButton
+                  IconData="M0,6 h15 v2 h-15 z"
+                  Click="MinimizeButton_OnClick" />
+              <controls:PclIconButton
+                  IconData="M0,0 v14 h14 v-14 z M2,2 h10 v10 h-10 z"
+                  Click="MaximizeButton_OnClick" />
+              <controls:PclIconButton
+                  IconData="M2,0 L0,2 6,8 0,14 2,16 8,10 14,16 16,14 10,8 16,2 14,0 8,6 z"
+                  Click="CloseButton_OnClick" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+          <Grid IsVisible="{Binding IsLaunchRoute}" ColumnDefinitions="Auto,*">
+            <Border
+                Grid.Column="0"
+                Width="442"
+                Background="#FCFCFD"
+                BorderBrush="#DBE8FA"
+                BorderThickness="0,0,1,0">
+              <controls:PclLaunchLeftPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+            </Border>
+
+            <Border Grid.Column="1" Background="#EAF4FE">
+              <controls:PclLaunchRightPanel />
+            </Border>
+          </Grid>
+
+          <Grid IsVisible="{Binding IsStandardShellRoute}" ColumnDefinitions="236,*">
+            <Border
+                Grid.Column="0"
+                Background="#FCFCFD"
+                BorderBrush="#DBE8FA"
+                BorderThickness="0,0,1,0">
+              <controls:PclShellSidebarPanel />
+            </Border>
+
+            <Border Grid.Column="1" Background="#EAF4FE">
+              <controls:PclShellContentPanel />
+            </Border>
+          </Grid>
+
+          <StackPanel
+              Margin="0,0,12,20"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Bottom"
+              Spacing="10">
+            <ItemsControl ItemsSource="{Binding UtilityEntries}" IsVisible="{Binding HasUtilityEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclExtraButton
+                      Margin="0,0,0,10"
+                      Command="{Binding Command}"
+                      IconData="{Binding IconPath}"
+                      ToolTip.Tip="{Binding Title}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <controls:PclExtraButton
+                Command="{Binding TogglePromptOverlayCommand}"
+                IconData="M1008 704V192c0-53-43-96-96-96H112C59 96 16 139 16 192v512c0 53 43 96 96 96h160v176l176-176h464c53 0 96-43 96-96z M240 384h544v64H240v-64z M240 256h544v64H240V256z M240 512h384v64H240v-64z"
+                ToolTip.Tip="提示队列" />
+          </StackPanel>
+
+          <Border
+              IsVisible="{Binding IsPromptOverlayVisible}"
+              Background="#500E2038" />
+
+          <Border
+              IsVisible="{Binding IsPromptOverlayVisible}"
+              Width="520"
+              MaxHeight="540"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Background="#00000000"
+              BorderBrush="#00000000"
+              BorderThickness="0"
+              CornerRadius="14">
+            <StackPanel Margin="20" Spacing="14">
+              <controls:PclCard ContentMargin="20,20,20,20">
+                <controls:PclCard.CardContent>
+                  <StackPanel Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel Spacing="4">
+                        <TextBlock
+                            Foreground="#1370F3"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Text="{Binding PromptInboxTitle}" />
+                        <TextBlock
+                            Foreground="#343D4A"
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            Text="{Binding PromptInboxSummary}" />
+                      </StackPanel>
+                      <Button
+                          Grid.Column="1"
+                          Classes="chrome"
+                          Command="{Binding DismissPromptOverlayCommand}">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#404040"
+                            FontSize="18"
+                            Text="✕" />
+                      </Button>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding PromptLanes}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclPromptLaneChip
+                              Margin="0,0,10,0"
+                              BackgroundBrush="{Binding BackgroundBrush}"
+                              ChipBorderBrush="{Binding BorderBrush}"
+                              Command="{Binding Command}"
+                              Count="{Binding Count}"
+                              ForegroundBrush="{Binding ForegroundBrush}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <ScrollViewer MaxHeight="410" VerticalScrollBarVisibility="Auto">
+                      <StackPanel Spacing="10">
+                        <ItemsControl ItemsSource="{Binding ActivePrompts}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <controls:PclPromptCard
+                                  AccentBrush="{Binding AccentBrush}"
+                                  BadgeBackgroundBrush="{Binding BackgroundBrush}"
+                                  Message="{Binding Message}"
+                                  Severity="{Binding Severity}"
+                                  Source="{Binding Source}"
+                                  Title="{Binding Title}">
+                                <controls:PclPromptCard.OptionsContent>
+                                  <ItemsControl ItemsSource="{Binding Options}">
+                                    <ItemsControl.ItemTemplate>
+                                      <DataTemplate>
+                                        <controls:PclPromptOption
+                                            Margin="0,0,0,8"
+                                            Command="{Binding Command}"
+                                            Detail="{Binding Detail}"
+                                            Label="{Binding Label}" />
+                                      </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                  </ItemsControl>
+                                </controls:PclPromptCard.OptionsContent>
+                              </controls:PclPromptCard>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Foreground="#7D8897"
+                            FontSize="12"
+                            Text="{Binding PromptEmptyState}"
+                            IsVisible="{Binding HasNoActivePrompts}" />
+                      </StackPanel>
+                    </ScrollViewer>
+                  </StackPanel>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

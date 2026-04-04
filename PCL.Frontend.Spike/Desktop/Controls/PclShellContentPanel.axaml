@@ -1,0 +1,2725 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclShellContentPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Grid>
+      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupLaunchSurface}" Spacing="15">
+        <controls:PclCard Header="启动选项" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28,9,28,9,28,9,28,9,28">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="默认版本隔离" />
+              <ComboBox
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding LaunchIsolationOptions}"
+                  SelectedIndex="{Binding SelectedLaunchIsolationIndex}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="游戏窗口标题" />
+              <TextBox
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Height="28"
+                  Padding="8,4"
+                  Text="{Binding LaunchWindowTitleSetting}" />
+
+              <TextBlock
+                  Grid.Row="4"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="自定义信息" />
+              <TextBox
+                  Grid.Row="4"
+                  Grid.Column="1"
+                  Height="28"
+                  Padding="8,4"
+                  Text="{Binding LaunchCustomInfoSetting}" />
+
+              <TextBlock
+                  Grid.Row="6"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="启动器可见性" />
+              <ComboBox
+                  Grid.Row="6"
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding LaunchVisibilityOptions}"
+                  SelectedIndex="{Binding SelectedLaunchVisibilityIndex}" />
+
+              <TextBlock
+                  Grid.Row="8"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="进程优先级" />
+              <ComboBox
+                  Grid.Row="8"
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding LaunchPriorityOptions}"
+                  SelectedIndex="{Binding SelectedLaunchPriorityIndex}" />
+
+              <TextBlock
+                  Grid.Row="10"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="窗口大小" />
+              <Grid Grid.Row="10" Grid.Column="1" ColumnDefinitions="220,10,70,10,70">
+                <ComboBox
+                    Grid.Column="0"
+                    Height="28"
+                    ItemsSource="{Binding LaunchWindowTypeOptions}"
+                    SelectedIndex="{Binding SelectedLaunchWindowTypeIndex}" />
+                <TextBox
+                    Grid.Column="2"
+                    Height="28"
+                    Padding="8,4"
+                    HorizontalContentAlignment="Center"
+                    IsVisible="{Binding IsCustomLaunchWindowSizeVisible}"
+                    Text="{Binding LaunchWindowWidth}" />
+                <TextBlock
+                    Grid.Column="3"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Foreground="#677789"
+                    FontSize="15"
+                    IsVisible="{Binding IsCustomLaunchWindowSizeVisible}"
+                    Text="×" />
+                <TextBox
+                    Grid.Column="4"
+                    Height="28"
+                    Padding="8,4"
+                    HorizontalContentAlignment="Center"
+                    IsVisible="{Binding IsCustomLaunchWindowSizeVisible}"
+                    Text="{Binding LaunchWindowHeight}" />
+              </Grid>
+
+              <TextBlock
+                  Grid.Row="12"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="正版验证方式" />
+              <ComboBox
+                  Grid.Row="12"
+                  Grid.Column="1"
+                  Height="28"
+                  IsEnabled="False"
+                  ItemsSource="{Binding LaunchMicrosoftAuthOptions}"
+                  SelectedIndex="{Binding SelectedLaunchMicrosoftAuthIndex}" />
+
+              <TextBlock
+                  Grid.Row="14"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="IP 协议偏好" />
+              <ComboBox
+                  Grid.Row="14"
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding LaunchPreferredIpStackOptions}"
+                  SelectedIndex="{Binding SelectedLaunchPreferredIpStackIndex}" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="游戏内存" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <Border
+                  Padding="12,10"
+                  Background="#FFF8DD"
+                  BorderBrush="#F2D777"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="#6E5800"
+                    FontSize="12.5"
+                    Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！"
+                    TextWrapping="Wrap" />
+              </Border>
+
+              <Border
+                  Padding="12,10"
+                  Background="#FFF8DD"
+                  BorderBrush="#F2D777"
+                  BorderThickness="1"
+                  CornerRadius="4"
+                  IsVisible="{Binding ShowRamAllocationWarning}">
+                <TextBlock
+                    Foreground="#6E5800"
+                    FontSize="12.5"
+                    Text="你给游戏分配的内存过多，这可能引发游戏崩溃。建议优先考虑自动分配。"
+                    TextWrapping="Wrap" />
+              </Border>
+
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto">
+                <RadioButton
+                    Content="自动配置"
+                    IsChecked="{Binding UseAutomaticRamAllocation}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="#677789"
+                    FontSize="12.5"
+                    Text="根据安装的 Mod 量与电脑剩余内存，动态调整为游戏分配的内存。"
+                    TextWrapping="Wrap" />
+
+                <RadioButton
+                    Grid.Row="2"
+                    Content="自定义"
+                    IsChecked="{Binding UseCustomRamAllocation}" />
+                <Grid Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" ColumnDefinitions="*,62">
+                  <Slider
+                      IsEnabled="{Binding IsCustomRamAllocationEnabled}"
+                      Minimum="1"
+                      Maximum="16"
+                      Value="{Binding CustomRamAllocation}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Foreground="#677789"
+                      FontSize="12"
+                      Text="{Binding CustomRamAllocationLabel}" />
+                </Grid>
+
+                <CheckBox
+                    Grid.Row="4"
+                    Grid.ColumnSpan="2"
+                    Foreground="#343D4A"
+                    Content="启动游戏前进行内存优化"
+                    IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="4.7*,2.5*,0.7*" RowDefinitions="Auto,4,Auto">
+                <TextBlock
+                    Grid.ColumnSpan="3"
+                    Margin="2,0,0,5"
+                    Foreground="#7D8897"
+                    FontSize="11"
+                    Text="已使用内存 / 已安装内存" />
+                <Border Grid.Row="1" Grid.Column="0" Background="#66A3DC" CornerRadius="2,0,0,2" />
+                <Border Grid.Row="1" Grid.Column="1" Background="#B5D5F8" />
+                <Border Grid.Row="1" Grid.Column="2" Background="#E0E9F5" CornerRadius="0,2,2,0" />
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="2,4,0,0" Orientation="Horizontal">
+                  <TextBlock Foreground="#4083C4" FontSize="16" Text="{Binding UsedRamLabel}" />
+                  <TextBlock Foreground="#4083C4" FontSize="16" Text=" / " />
+                  <TextBlock Foreground="#4083C4" FontSize="16" Text="{Binding TotalRamLabel}" />
+                  <TextBlock Margin="18,0,0,0" Foreground="#4083C4" FontSize="16" Text="游戏分配" />
+                  <TextBlock Margin="8,0,0,0" Foreground="#4083C4" FontSize="16" Text="{Binding AllocatedRamLabel}" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard
+            Header="高级启动选项"
+            ShowChevron="True"
+            IsChevronExpanded="{Binding IsLaunchAdvancedOptionsExpanded}"
+            HeaderCommand="{Binding ToggleLaunchAdvancedOptionsCommand}"
+            ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="渲染器" />
+                <ComboBox
+                    Grid.Column="1"
+                    Height="28"
+                    ItemsSource="{Binding LaunchRendererOptions}"
+                    SelectedIndex="{Binding SelectedLaunchRendererIndex}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto">
+                <TextBlock
+                    VerticalAlignment="Top"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,4,25,0"
+                    Text="JVM 参数头部" />
+                <TextBox
+                    Grid.Column="1"
+                    MinHeight="92"
+                    Padding="8,6"
+                    AcceptsReturn="True"
+                    Text="{Binding LaunchJvmArguments}"
+                    TextWrapping="Wrap"
+                    VerticalContentAlignment="Top" />
+
+                <TextBlock
+                    Grid.Row="2"
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="游戏参数尾部" />
+                <TextBox
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding LaunchGameArguments}" />
+
+                <TextBlock
+                    Grid.Row="4"
+                    VerticalAlignment="Top"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,4,25,0"
+                    Text="启动前执行命令" />
+                <StackPanel Grid.Row="4" Grid.Column="1" Spacing="8">
+                  <TextBox
+                      MinHeight="72"
+                      Padding="8,6"
+                      AcceptsReturn="True"
+                      Text="{Binding LaunchBeforeCommand}"
+                      TextWrapping="Wrap"
+                      VerticalContentAlignment="Top" />
+                  <CheckBox
+                      Foreground="#343D4A"
+                      Content="等待命令执行完成后再继续启动"
+                      IsChecked="{Binding WaitForLaunchBeforeCommand}" />
+                </StackPanel>
+              </Grid>
+
+              <StackPanel Spacing="8">
+                <CheckBox
+                    Foreground="#343D4A"
+                    Content="禁用 Java Launch Wrapper"
+                    IsChecked="{Binding DisableJavaLaunchWrapper}" />
+                <CheckBox
+                    Foreground="#343D4A"
+                    Content="禁用 RetroWrapper"
+                    IsChecked="{Binding DisableRetroWrapper}" />
+                <CheckBox
+                    Foreground="#343D4A"
+                    Content="要求 Java 使用高性能显卡"
+                    IsChecked="{Binding RequireDedicatedGpu}" />
+                <CheckBox
+                    Foreground="#343D4A"
+                    Content="使用 java.exe 而不是 javaw.exe"
+                    IsChecked="{Binding UseJavaExecutable}" />
+              </StackPanel>
+
+              <Border
+                  Padding="12,10"
+                  Background="#EAF2FE"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="#4068A8"
+                    FontSize="12.5"
+                    Text="你还可以在实例独立设置中找到更多高级启动选项。"
+                    TextWrapping="Wrap" />
+              </Border>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <Button
+            Padding="0"
+            HorizontalAlignment="Center"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            Command="{Binding VersionSetupCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock
+                Foreground="#1370F3"
+                FontSize="13.5"
+                Text="实例独立设置" />
+            <Path
+                Width="10"
+                Height="10"
+                VerticalAlignment="Center"
+                Fill="#1370F3"
+                Stretch="Uniform"
+                Data="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadInstallSurface}" Spacing="12">
+        <controls:PclCard ContentMargin="14,13,16,13">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto,*">
+              <Border
+                  Width="26"
+                  Height="26"
+                  VerticalAlignment="Center"
+                  Background="#F0F6FF"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="13">
+                <Path
+                    Width="10"
+                    Height="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Fill="#4B78C2"
+                    Stretch="Uniform"
+                    Data="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z" />
+              </Border>
+              <Border
+                  Grid.Column="1"
+                  Width="32"
+                  Height="32"
+                  Margin="12,0,14,0"
+                  VerticalAlignment="Center"
+                  Background="#EAF2FE"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="6">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="#4B78C2"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Text="包" />
+              </Border>
+              <TextBox
+                  Grid.Column="2"
+                  Height="30"
+                  Padding="8,4"
+                  VerticalAlignment="Center"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  FontSize="15"
+                  Text="{Binding DownloadInstallName}" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallHints}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border
+                  Padding="12,10"
+                  Background="{Binding BackgroundBrush}"
+                  BorderBrush="{Binding BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="{Binding ForegroundBrush}"
+                    FontSize="12.5"
+                    Text="{Binding Text}"
+                    TextWrapping="Wrap" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallOptions}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,40,18,15">
+                <controls:PclCard.CardContent>
+                  <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
+                    <Border
+                        Grid.RowSpan="2"
+                        Width="28"
+                        Height="28"
+                        Margin="0,2,10,0"
+                        Background="#F4F8FF"
+                        BorderBrush="#D5E6FD"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                      <Image Source="{Binding Icon}" Stretch="Uniform" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Foreground="#343D4A"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{Binding Selection}" />
+                    <controls:PclButton
+                        Grid.Column="2"
+                        Width="72"
+                        Margin="12,0,0,0"
+                        Command="{Binding SelectCommand}"
+                        Text="选择" />
+                    <controls:PclButton
+                        Grid.Column="3"
+                        Width="72"
+                        Margin="10,0,0,0"
+                        Command="{Binding ClearCommand}"
+                        Text="清除" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,4,0,0"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="保留原版自动安装页的可选组件卡片层级与当前版本信息展示。"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupAboutSurface}" Spacing="15">
+        <controls:PclCard Header="关于" ContentMargin="21,40,21,16">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding AboutProjectEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,12" ColumnDefinitions="40,*,150">
+                    <Border
+                        Width="34"
+                        Height="34"
+                        Margin="3"
+                        Background="#EAF2FE"
+                        CornerRadius="17"
+                        ClipToBounds="True">
+                      <Image Source="{Binding Avatar}" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="10,0,15,0" VerticalAlignment="Center" Spacing="2">
+                      <TextBlock
+                          Foreground="#343D4A"
+                          FontSize="14"
+                          FontWeight="SemiBold"
+                          Text="{Binding Title}" />
+                      <TextBlock
+                          Foreground="#677789"
+                          FontSize="12"
+                          Text="{Binding Info}"
+                          TextWrapping="Wrap" />
+                    </StackPanel>
+                    <controls:PclButton
+                        Grid.Column="2"
+                        Height="35"
+                        Command="{Binding ActionCommand}"
+                        ContentPadding="13,0"
+                        IsVisible="{Binding HasAction}"
+                        Text="{Binding ActionText}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="特别鸣谢" ContentMargin="21,40,21,16">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding AboutAcknowledgementEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,12" ColumnDefinitions="40,*,150">
+                    <Border
+                        Width="34"
+                        Height="34"
+                        Margin="3"
+                        Background="#EAF2FE"
+                        CornerRadius="17"
+                        ClipToBounds="True">
+                      <Image Source="{Binding Avatar}" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="10,0,15,0" VerticalAlignment="Center" Spacing="2">
+                      <TextBlock
+                          Foreground="#343D4A"
+                          FontSize="14"
+                          FontWeight="SemiBold"
+                          Text="{Binding Title}" />
+                      <TextBlock
+                          Foreground="#677789"
+                          FontSize="12"
+                          Text="{Binding Info}"
+                          TextWrapping="Wrap" />
+                    </StackPanel>
+                    <controls:PclButton
+                        Grid.Column="2"
+                        Height="35"
+                        Command="{Binding ActionCommand}"
+                        ContentPadding="13,0"
+                        IsVisible="{Binding HasAction}"
+                        Text="{Binding ActionText}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsSetupFeedbackSurface}" Spacing="15">
+        <controls:PclCard Header="提交反馈" ContentMargin="20,40,18,22">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="15">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="在提交反馈之前，先查找一下是否存在重复反馈，如果有重复反馈，那么请不要再次提交反馈，这样会加剧维护者的负担…… 注意：此页面未展示所有反馈，如需查看更多反馈，请前往 GitHub。"
+                  TextWrapping="Wrap" />
+              <controls:PclButton
+                  Width="140"
+                  Height="35"
+                  HorizontalAlignment="Left"
+                  Command="{Binding OpenFeedbackCommand}"
+                  ColorType="Highlight"
+                  ContentPadding="13,0"
+                  Text="前往反馈" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding FeedbackSections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard
+                  Header="{Binding Title}"
+                  ShowChevron="True"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  HeaderCommand="{Binding ToggleCommand}"
+                  ContentMargin="20,36,18,18">
+                <controls:PclCard.CardContent>
+                  <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <controls:PclListItem
+                            Margin="0,0,0,8"
+                            Command="{Binding Command}"
+                            Info="{Binding Info}"
+                            Title="{Binding Title}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsSetupLogSurface}" Spacing="10">
+        <controls:PclCard Header="日志操作" ContentMargin="25,40,20,20">
+          <controls:PclCard.CardContent>
+            <WrapPanel>
+              <controls:PclButton
+                  Width="100"
+                  Height="35"
+                  Margin="0,0,15,0"
+                  Command="{Binding ExportLogCommand}"
+                  ColorType="Highlight"
+                  Text="导出日志" />
+              <controls:PclButton
+                  Width="120"
+                  Height="35"
+                  Margin="0,0,15,0"
+                  Command="{Binding ExportAllLogsCommand}"
+                  Text="导出全部日志" />
+              <controls:PclButton
+                  Width="120"
+                  Height="35"
+                  Margin="0,0,15,0"
+                  Command="{Binding OpenLogDirectoryCommand}"
+                  Text="打开日志目录" />
+              <controls:PclButton
+                  Width="120"
+                  Height="35"
+                  Command="{Binding CleanLogsCommand}"
+                  ColorType="Red"
+                  Text="清理历史日志" />
+            </WrapPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="所有日志" ContentMargin="20,36,18,18">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding LogEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclListItem
+                      Margin="0,0,0,8"
+                      Command="{Binding Command}"
+                      Info="{Binding Info}"
+                      Title="{Binding Title}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupUpdateSurface}" Spacing="15">
+        <controls:PclCard ContentMargin="20,15,20,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28,7,28">
+              <TextBlock
+                  Grid.Row="0"
+                  Margin="0,0,25,0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="更新通道" />
+              <ComboBox
+                  Grid.Row="0"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="3"
+                  Height="28"
+                  ItemsSource="{Binding UpdateChannelOptions}"
+                  SelectedIndex="{Binding SelectedUpdateChannelIndex}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  Margin="0,0,25,0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="自动更新设置" />
+              <ComboBox
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="3"
+                  Height="28"
+                  ItemsSource="{Binding UpdateModeOptions}"
+                  SelectedIndex="{Binding SelectedUpdateModeIndex}" />
+
+              <TextBlock
+                  Grid.Row="4"
+                  Margin="0,0,25,0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="Mirror 酱 CDK" />
+              <TextBox
+                  Grid.Row="4"
+                  Grid.Column="1"
+                  Height="28"
+                  Padding="8,4"
+                  Text="{Binding MirrorCdk}"
+                  Watermark="可选的高速下载 CDK" />
+              <controls:PclButton
+                  Grid.Row="4"
+                  Grid.Column="3"
+                  Height="28"
+                  Command="{Binding GetMirrorCdkCommand}"
+                  ColorType="Highlight"
+                  Text="获取 CDK" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding ShowAvailableUpdateCard}" ContentMargin="20,20,20,20">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="50,10,*,85" RowDefinitions="29,1,20,8,Auto,10,Auto">
+              <Border
+                  Grid.Row="0"
+                  Grid.RowSpan="3"
+                  Width="50"
+                  Height="50"
+                  CornerRadius="12"
+                  ClipToBounds="True">
+                <Image Source="{Binding UpdateAvailableIcon}" Stretch="UniformToFill" />
+              </Border>
+              <TextBlock
+                  Grid.Row="0"
+                  Grid.Column="2"
+                  VerticalAlignment="Bottom"
+                  Foreground="#343D4A"
+                  FontSize="20"
+                  FontWeight="Bold"
+                  Text="{Binding AvailableUpdateName}" />
+              <TextBlock
+                  Grid.Row="2"
+                  Grid.Column="2"
+                  VerticalAlignment="Top"
+                  Foreground="#677789"
+                  FontSize="14"
+                  Text="{Binding AvailableUpdatePublisher}" />
+              <controls:PclButton
+                  Grid.Row="0"
+                  Grid.RowSpan="2"
+                  Grid.Column="3"
+                  Width="85"
+                  Height="30"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Command="{Binding DownloadUpdateCommand}"
+                  ColorType="Highlight"
+                  Text="下载并安装" />
+              <TextBlock
+                  Grid.Row="4"
+                  Grid.ColumnSpan="4"
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="{Binding AvailableUpdateSummary}"
+                  TextWrapping="Wrap" />
+              <Button
+                  Grid.Row="6"
+                  Grid.ColumnSpan="4"
+                  Padding="0"
+                  HorizontalAlignment="Left"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  Command="{Binding ShowUpdateDetailCommand}">
+                <TextBlock
+                    Foreground="#1370F3"
+                    FontSize="12.5"
+                    Text="有关此更新的更多信息..." />
+              </Button>
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding ShowCurrentVersionCard}" ContentMargin="20,20,20,20">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="50,10,*,80,10,100" RowDefinitions="29,1,20">
+              <Border
+                  Grid.Row="0"
+                  Grid.RowSpan="3"
+                  Width="50"
+                  Height="50"
+                  CornerRadius="12"
+                  ClipToBounds="True">
+                <Image Source="{Binding UpdateCurrentIcon}" Stretch="UniformToFill" />
+              </Border>
+              <TextBlock
+                  Grid.Row="0"
+                  Grid.Column="2"
+                  VerticalAlignment="Bottom"
+                  Foreground="#343D4A"
+                  FontSize="20"
+                  FontWeight="Bold"
+                  Text="{Binding CurrentVersionName}" />
+              <TextBlock
+                  Grid.Row="2"
+                  Grid.Column="2"
+                  VerticalAlignment="Top"
+                  Foreground="#677789"
+                  FontSize="14"
+                  Text="{Binding CurrentVersionDescription}" />
+              <controls:PclButton
+                  Grid.Row="0"
+                  Grid.RowSpan="2"
+                  Grid.Column="3"
+                  Command="{Binding CheckUpdateAgainCommand}"
+                  ColorType="Highlight"
+                  Text="再次检查" />
+              <controls:PclButton
+                  Grid.Row="0"
+                  Grid.RowSpan="2"
+                  Grid.Column="5"
+                  Command="{Binding OpenFullChangelogCommand}"
+                  Text="查看更新日志" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard
+            Header="其他更新选项 - 升级到 AquaCL"
+            IsVisible="{Binding ShowOptionalUpdateCard}"
+            ShowChevron="True"
+            IsChevronExpanded="False"
+            ContentMargin="20,40,20,20">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="50,10,*,85" RowDefinitions="29,1,20,8,Auto,10,Auto">
+              <Border
+                  Grid.Row="0"
+                  Grid.RowSpan="3"
+                  Width="50"
+                  Height="50"
+                  CornerRadius="12"
+                  ClipToBounds="True">
+                <Image Source="{Binding UpdateOptionalIcon}" Stretch="UniformToFill" />
+              </Border>
+              <TextBlock
+                  Grid.Row="0"
+                  Grid.Column="2"
+                  VerticalAlignment="Bottom"
+                  Foreground="#343D4A"
+                  FontSize="20"
+                  FontWeight="Bold"
+                  Text="{Binding OptionalUpdateName}" />
+              <TextBlock
+                  Grid.Row="2"
+                  Grid.Column="2"
+                  VerticalAlignment="Top"
+                  Foreground="#677789"
+                  FontSize="14"
+                  Text="{Binding OptionalUpdateDescription}" />
+              <controls:PclButton
+                  Grid.Row="0"
+                  Grid.RowSpan="2"
+                  Grid.Column="3"
+                  Command="{Binding DownloadOptionalUpdateCommand}"
+                  ColorType="Highlight"
+                  Text="下载并安装" />
+              <TextBlock
+                  Grid.Row="4"
+                  Grid.ColumnSpan="4"
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="{Binding OptionalUpdateSummary}"
+                  TextWrapping="Wrap" />
+              <Button
+                  Grid.Row="6"
+                  Grid.ColumnSpan="4"
+                  Padding="0"
+                  HorizontalAlignment="Left"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  Command="{Binding ShowOptionalUpdateDetailCommand}">
+                <TextBlock
+                    Foreground="#1370F3"
+                    FontSize="12.5"
+                    Text="有关此更新的更多信息..." />
+              </Button>
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupGameLinkSurface}" Spacing="15">
+        <controls:PclCard Header="EasyTier" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <Border
+                  Padding="12,10"
+                  Background="#FFF8DD"
+                  BorderBrush="#F2D777"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="#6E5800"
+                    FontSize="12.5"
+                    Text="修改此处的设置后，需要重新启动大厅以使设置生效。"
+                    TextWrapping="Wrap" />
+              </Border>
+
+              <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="28,8,28,4,28,28,28,28">
+                <TextBlock
+                    Grid.Row="0"
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Text="用户名"
+                    Margin="0,0,25,0" />
+                <TextBox
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding LinkUsername}"
+                    ToolTip.Tip="PCL CE 会尽可能使用此处的用户名用于大厅信息展示。若留空，则使用 Natayark ID 的用户名。" />
+
+                <TextBlock
+                    Grid.Row="2"
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Text="协议偏好" />
+                <ComboBox
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Height="28"
+                    ItemsSource="{Binding LinkProtocolPreferenceOptions}"
+                    SelectedIndex="{Binding SelectedProtocolPreferenceIndex}" />
+
+                <CheckBox
+                    Grid.Row="4"
+                    Grid.ColumnSpan="3"
+                    Foreground="#343D4A"
+                    Content="选择最低延迟路径而不是最短路径"
+                    IsChecked="{Binding PreferLowestLatencyPath}"
+                    ToolTip.Tip="启用后，EasyTier 将在通信时选择延迟最低的路径，而不是路由跳数最少的路径。" />
+                <CheckBox
+                    Grid.Row="5"
+                    Grid.ColumnSpan="3"
+                    Foreground="#343D4A"
+                    Content="对对称型 NAT 进行端口猜测"
+                    IsChecked="{Binding TryPunchSymmetricNat}"
+                    ToolTip.Tip="让 EasyTier 尝试对对称型 NAT 进行端口猜测（生日悖论）。" />
+                <CheckBox
+                    Grid.Row="6"
+                    Grid.ColumnSpan="3"
+                    Foreground="#343D4A"
+                    Content="允许使用 IPv6 通信"
+                    IsChecked="{Binding AllowIpv6Communication}"
+                    ToolTip.Tip="IPv6 相比于 IPv4 更加容易进行 P2P 通信，除有特殊原因外不建议关闭。" />
+                <CheckBox
+                    Grid.Row="7"
+                    Grid.ColumnSpan="3"
+                    Foreground="#343D4A"
+                    Content="在日志中输出 Cli 信息以用于调试"
+                    IsChecked="{Binding EnableLinkCliOutput}"
+                    ToolTip.Tip="在启动器日志中每 30s 输出一次 EasyTier Cli 信息以便于开发者和社区支持调查。" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupGameManageSurface}" Spacing="15">
+        <controls:PclCard Header="游戏资源获取行为" ContentMargin="25,37,25,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,27,27,Auto,27">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="文件下载源" />
+              <ComboBox
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding DownloadSourceOptions}"
+                  SelectedIndex="{Binding SelectedDownloadSourceIndex}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="版本列表源" />
+              <ComboBox
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding DownloadSourceOptions}"
+                  SelectedIndex="{Binding SelectedVersionSourceIndex}" />
+
+              <TextBlock
+                  Grid.Row="4"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="最大线程数" />
+              <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,48">
+                <Slider
+                    Minimum="1"
+                    Maximum="255"
+                    Value="{Binding DownloadThreadLimit}" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="#677789"
+                    FontSize="12"
+                    Text="{Binding DownloadThreadLimitLabel}" />
+              </Grid>
+
+              <TextBlock
+                  Grid.Row="5"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="速度限制" />
+              <Grid Grid.Row="5" Grid.Column="1" ColumnDefinitions="*,48">
+                <Slider
+                    Minimum="0"
+                    Maximum="42"
+                    Value="{Binding DownloadSpeedLimit}" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="#677789"
+                    FontSize="12"
+                    Text="{Binding DownloadSpeedLimitLabel}" />
+              </Grid>
+
+              <TextBlock
+                  Grid.Row="6"
+                  VerticalAlignment="Top"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,5,25,5"
+                  Text="目标文件夹" />
+              <TextBlock
+                  Grid.Row="6"
+                  Grid.Column="1"
+                  Margin="0,5"
+                  Foreground="#8A93A0"
+                  FontSize="12"
+                  Text="请在 启动 → 实例选择 → 文件夹列表 中更改下载目标文件夹。在某个文件夹或游戏实例上右键，即可选择打开对应文件夹。"
+                  TextWrapping="Wrap" />
+
+              <TextBlock
+                  Grid.Row="7"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="安装行为" />
+              <Grid Grid.Row="7" Grid.Column="1" ColumnDefinitions="*,*">
+                <CheckBox
+                    Grid.Column="0"
+                    Foreground="#343D4A"
+                    Content="安装新实例后自动选定该实例"
+                    IsChecked="{Binding AutoSelectNewInstance}" />
+                <CheckBox
+                    Grid.Column="1"
+                    Foreground="#343D4A"
+                    Content="升级部分版本的 Authlib"
+                    IsChecked="{Binding UpgradePartialAuthlib}" />
+              </Grid>
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="社区资源获取行为" ContentMargin="25,37,25,12">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,28">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="下载源" />
+                <ComboBox
+                    Grid.Column="1"
+                    Height="28"
+                    ItemsSource="{Binding DownloadSourceOptions}"
+                    SelectedIndex="{Binding SelectedCommunityDownloadSourceIndex}" />
+
+                <TextBlock
+                    Grid.Row="2"
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="文件名格式" />
+                <ComboBox
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="28"
+                    ItemsSource="{Binding FileNameFormatOptions}"
+                    SelectedIndex="{Binding SelectedFileNameFormatIndex}" />
+
+                <TextBlock
+                    Grid.Row="4"
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="Mod 管理样式" />
+                <ComboBox
+                    Grid.Row="4"
+                    Grid.Column="1"
+                    Height="28"
+                    ItemsSource="{Binding ModLocalNameStyleOptions}"
+                    SelectedIndex="{Binding SelectedModLocalNameStyleIndex}" />
+              </Grid>
+
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="不显示 Quilt 加载器"
+                  IsChecked="{Binding IgnoreQuiltLoader}" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="辅助功能" ContentMargin="25,40,25,17">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22,8,22">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="游戏更新提示" />
+              <CheckBox
+                  Grid.Column="1"
+                  Foreground="#343D4A"
+                  Content="正式版更新提示"
+                  IsChecked="{Binding NotifyReleaseUpdates}" />
+              <CheckBox
+                  Grid.Column="2"
+                  Foreground="#343D4A"
+                  Content="测试版更新提示"
+                  IsChecked="{Binding NotifySnapshotUpdates}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="游戏语言" />
+              <CheckBox
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="2"
+                  Foreground="#343D4A"
+                  Content="自动设置为中文"
+                  IsChecked="{Binding AutoSwitchGameLanguageToChinese}" />
+
+              <CheckBox
+                  Grid.Row="4"
+                  Grid.ColumnSpan="3"
+                  Foreground="#343D4A"
+                  Content="识别跳转剪贴板中的社区资源链接"
+                  IsChecked="{Binding DetectClipboardResourceLinks}" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupLauncherMiscSurface}" Spacing="15">
+        <controls:PclCard Header="系统" ContentMargin="25,40,25,16">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,5,28,5,20,8,35">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="启动器公告" />
+              <ComboBox
+                  Grid.Column="1"
+                  Height="28"
+                  ItemsSource="{Binding SystemActivityOptions}"
+                  SelectedIndex="{Binding SelectedSystemActivityIndex}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="最高动画帧率" />
+              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,58">
+                <Slider
+                    Minimum="0"
+                    Maximum="59"
+                    Value="{Binding AnimationFpsLimit}" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="#677789"
+                    FontSize="12"
+                    Text="{Binding AnimationFpsLabel}" />
+              </Grid>
+
+              <TextBlock
+                  Grid.Row="4"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="实时日志行数" />
+              <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,58">
+                <Slider
+                    Minimum="0"
+                    Maximum="29"
+                    Value="{Binding MaxRealTimeLogValue}" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="#677789"
+                    FontSize="12"
+                    Text="{Binding MaxRealTimeLogLabel}" />
+              </Grid>
+
+              <Grid Grid.Row="6" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto">
+                <CheckBox
+                    Grid.Column="0"
+                    Margin="0,0,18,0"
+                    Foreground="#343D4A"
+                    Content="禁用硬件加速"
+                    IsChecked="{Binding DisableHardwareAcceleration}" />
+                <CheckBox
+                    Grid.Column="1"
+                    Foreground="#343D4A"
+                    Content="启用遥测数据收集"
+                    IsChecked="{Binding EnableTelemetry}" />
+              </Grid>
+
+              <Grid Grid.Row="8" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding ExportSettingsCommand}"
+                    Text="导出设置" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    MinWidth="140"
+                    Command="{Binding ImportSettingsCommand}"
+                    Text="导入设置" />
+              </Grid>
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="网络" ContentMargin="25,38,25,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,4,28,4,Auto">
+              <CheckBox
+                  Grid.ColumnSpan="2"
+                  Foreground="#343D4A"
+                  Content="使用 DoH 解析地址"
+                  IsChecked="{Binding EnableDoH}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="HTTP 代理" />
+              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,*,*,0.2*">
+                <RadioButton
+                    Grid.Column="0"
+                    GroupName="HttpProxyType"
+                    Content="不使用代理"
+                    IsChecked="{Binding IsNoHttpProxySelected}" />
+                <RadioButton
+                    Grid.Column="1"
+                    GroupName="HttpProxyType"
+                    Content="使用系统代理"
+                    IsChecked="{Binding IsSystemHttpProxySelected}" />
+                <RadioButton
+                    Grid.Column="2"
+                    GroupName="HttpProxyType"
+                    Content="自定义代理"
+                    IsChecked="{Binding IsCustomHttpProxySelected}" />
+              </Grid>
+
+              <StackPanel Grid.Row="4" Grid.Column="1" IsVisible="{Binding IsCustomHttpProxyEnabled}" Spacing="9">
+                <Border
+                    Padding="12,10"
+                    Background="#FFF8DD"
+                    BorderBrush="#F2D777"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                  <TextBlock
+                      Foreground="#6E5800"
+                      FontSize="12.5"
+                      Text="请勿填写不信任的代理地址"
+                      TextWrapping="Wrap" />
+                </Border>
+
+                <TextBox
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding HttpProxyAddress}"
+                    Watermark="比如 http://127.0.0.1:1080/" />
+
+                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto">
+                  <TextBlock
+                      VerticalAlignment="Center"
+                      Margin="0,0,8,0"
+                      Foreground="#343D4A"
+                      FontSize="13"
+                      Text="账号" />
+                  <TextBox
+                      Grid.Column="1"
+                      Height="28"
+                      Margin="0,0,8,0"
+                      Padding="8,4"
+                      Text="{Binding HttpProxyUsername}"
+                      Watermark="如有" />
+                  <TextBlock
+                      Grid.Column="2"
+                      VerticalAlignment="Center"
+                      Margin="0,0,8,0"
+                      Foreground="#343D4A"
+                      FontSize="13"
+                      Text="密码" />
+                  <TextBox
+                      Grid.Column="3"
+                      Height="28"
+                      Margin="0,0,8,0"
+                      Padding="8,4"
+                      Text="{Binding HttpProxyPassword}"
+                      Watermark="如有" />
+                  <controls:PclButton
+                      Grid.Column="4"
+                      MinWidth="120"
+                      Command="{Binding ApplyProxySettingsCommand}"
+                      Text="应用代理信息" />
+                </Grid>
+              </StackPanel>
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard
+            Header="调试选项"
+            ShowChevron="True"
+            IsChevronExpanded="False"
+            ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="动画速度" />
+                <Grid Grid.Column="1" ColumnDefinitions="*,52">
+                  <Slider
+                      Minimum="0"
+                      Maximum="30"
+                      Value="{Binding DebugAnimationSpeed}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Foreground="#677789"
+                      FontSize="12"
+                      Text="{Binding DebugAnimationSpeedLabel}" />
+                </Grid>
+              </Grid>
+
+              <Grid ColumnDefinitions="1.5*,*,*">
+                <CheckBox
+                    Grid.Column="0"
+                    Margin="0,0,14,0"
+                    Foreground="#343D4A"
+                    Content="禁止在下载时从其他文件夹复制文件"
+                    IsChecked="{Binding SkipCopyDuringDownload}" />
+                <CheckBox
+                    Grid.Column="1"
+                    Margin="0,0,14,0"
+                    Foreground="#343D4A"
+                    Content="调试模式"
+                    IsChecked="{Binding DebugModeEnabled}" />
+                <CheckBox
+                    Grid.Column="2"
+                    Foreground="#343D4A"
+                    Content="添加延迟"
+                    IsChecked="{Binding DebugDelayEnabled}" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupJavaSurface}" Spacing="15">
+        <controls:PclCard ContentMargin="12">
+          <controls:PclCard.CardContent>
+            <StackPanel Orientation="Horizontal">
+              <controls:PclButton
+                  Width="110"
+                  Height="35"
+                  Command="{Binding AddJavaRuntimeCommand}"
+                  ColorType="Highlight"
+                  Text="添加" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard ContentMargin="15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <Border
+                  Padding="14,12"
+                  Background="#F8FBFF"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="5">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                  <RadioButton
+                      Margin="0,3,12,0"
+                      VerticalAlignment="Top"
+                      IsChecked="{Binding IsAutoJavaSelected}"
+                      Command="{Binding SelectAutoJavaCommand}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      Foreground="#343D4A"
+                      FontSize="14"
+                      FontWeight="SemiBold"
+                      Text="自动选择" />
+                  <TextBlock
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      Margin="0,3,0,0"
+                      Foreground="#677789"
+                      FontSize="12"
+                      Text="Java 选择自动挡，依据游戏需要自动选择合适的 Java。"
+                      TextWrapping="Wrap" />
+                </Grid>
+              </Border>
+
+              <ItemsControl ItemsSource="{Binding JavaRuntimeEntries}" IsVisible="{Binding HasJavaRuntimeEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border
+                        Margin="0,0,0,10"
+                        Padding="14,12"
+                        Background="#FBFDFF"
+                        BorderBrush="#DCE9FB"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+                        <RadioButton
+                            Grid.RowSpan="3"
+                            Margin="0,3,12,0"
+                            VerticalAlignment="Top"
+                            IsChecked="{Binding IsSelected}"
+                            Command="{Binding SelectCommand}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Foreground="{Binding TitleForeground}"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Opacity="{Binding TitleOpacity}"
+                            Text="{Binding Title}" />
+                        <StackPanel
+                            Grid.Column="2"
+                            Grid.RowSpan="3"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Top"
+                            Spacing="10">
+                          <controls:PclOutlineButton
+                              Width="72"
+                              Command="{Binding OpenCommand}"
+                              Text="打开" />
+                          <controls:PclOutlineButton
+                              Width="92"
+                              Command="{Binding InfoCommand}"
+                              Text="详细信息" />
+                          <controls:PclOutlineButton
+                              Width="72"
+                              Command="{Binding ToggleEnabledCommand}"
+                              Text="{Binding ToggleButtonText}" />
+                        </StackPanel>
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,3,0,0"
+                            Foreground="#677789"
+                            FontSize="12"
+                            Text="{Binding Info}"
+                            TextWrapping="Wrap" />
+                        <ItemsControl Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" ItemsSource="{Binding Tags}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border
+                                  Margin="0,0,8,0"
+                                  Padding="8,3"
+                                  Background="#EAF2FE"
+                                  BorderBrush="#D5E6FD"
+                                  BorderThickness="1"
+                                  CornerRadius="10">
+                                <TextBlock
+                                    Foreground="#4B78C2"
+                                    FontSize="11"
+                                    Text="{Binding .}" />
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupUiSurface}" Spacing="15">
+        <controls:PclCard Header="基础" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,20,0"
+                    Text="不透明度" />
+                <Grid Grid.Column="1" ColumnDefinitions="*,60">
+                  <Slider
+                      Minimum="0"
+                      Maximum="600"
+                      Value="{Binding LauncherOpacity}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Foreground="#677789"
+                      FontSize="12"
+                      Text="{Binding LauncherOpacityLabel}" />
+                </Grid>
+
+                <TextBlock
+                    Grid.Row="2"
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,20,0"
+                    Text="主题" />
+                <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*">
+                  <ComboBox
+                      Grid.Column="0"
+                      Width="120"
+                      ItemsSource="{Binding DarkModeOptions}"
+                      SelectedIndex="{Binding SelectedDarkModeIndex}" />
+                  <TextBlock
+                      Grid.Column="2"
+                      Margin="20,0,10,0"
+                      VerticalAlignment="Center"
+                      Foreground="#343D4A"
+                      FontSize="12.5"
+                      Text="浅色配色" />
+                  <ComboBox
+                      Grid.Column="3"
+                      Width="120"
+                      ItemsSource="{Binding ThemeColorOptions}"
+                      SelectedIndex="{Binding SelectedLightColorIndex}" />
+                  <TextBlock
+                      Grid.Column="4"
+                      Margin="20,0,10,0"
+                      VerticalAlignment="Center"
+                      Foreground="#343D4A"
+                      FontSize="12.5"
+                      Text="深色配色" />
+                  <ComboBox
+                      Grid.Column="5"
+                      Width="120"
+                      ItemsSource="{Binding ThemeColorOptions}"
+                      SelectedIndex="{Binding SelectedDarkColorIndex}" />
+                </Grid>
+              </Grid>
+
+              <Border
+                  Padding="18,16"
+                  Background="#FFF8DD"
+                  BorderBrush="#F2D777"
+                  BorderThickness="1"
+                  CornerRadius="5">
+                <StackPanel Spacing="9">
+                  <TextBlock
+                      Foreground="#6E5800"
+                      FontSize="13"
+                      Text="蓝色，蓝色，还是蓝色！想要逃离蓝色困境？请使用官方快照版！"
+                      TextWrapping="Wrap" />
+                  <controls:PclButton
+                      Width="140"
+                      Height="35"
+                      HorizontalAlignment="Center"
+                      Command="{Binding OpenSnapshotBuildCommand}"
+                      ColorType="Highlight"
+                      Text="获取官方快照版" />
+                </StackPanel>
+              </Border>
+
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="打开启动器时显示 PCL 图标"
+                  IsChecked="{Binding ShowLauncherLogoSetting}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="锁定启动器大小"
+                  IsChecked="{Binding LockWindowSizeSetting}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="在启动游戏时显示“你知道吗”"
+                  IsChecked="{Binding ShowLaunchingHintSetting}" />
+
+              <StackPanel Spacing="10">
+                <CheckBox
+                    Foreground="#343D4A"
+                    Content="高级材质"
+                    IsChecked="{Binding EnableAdvancedMaterial}" />
+                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowDefinitions="Auto,10,Auto">
+                  <TextBlock
+                      VerticalAlignment="Center"
+                      Foreground="#343D4A"
+                      FontSize="13"
+                      Margin="0,0,20,0"
+                      Text="模糊半径" />
+                  <Grid Grid.Column="1" ColumnDefinitions="*,42">
+                    <Slider
+                        Minimum="0"
+                        Maximum="40"
+                        Value="{Binding BlurRadius}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="{Binding BlurRadiusLabel}" />
+                  </Grid>
+                  <TextBlock
+                      Grid.Row="2"
+                      VerticalAlignment="Center"
+                      Foreground="#343D4A"
+                      FontSize="13"
+                      Margin="0,0,20,0"
+                      Text="模糊方法" />
+                  <ComboBox
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      Width="120"
+                      ItemsSource="{Binding BlurTypeOptions}"
+                      SelectedIndex="{Binding SelectedBlurTypeIndex}" />
+                  <TextBlock
+                      Grid.Row="2"
+                      Grid.Column="2"
+                      Margin="20,0,10,0"
+                      VerticalAlignment="Center"
+                      Foreground="#343D4A"
+                      FontSize="13"
+                      Text="采样率" />
+                  <Grid Grid.Row="2" Grid.Column="3" ColumnDefinitions="*,52">
+                    <Slider
+                        Minimum="0"
+                        Maximum="100"
+                        Value="{Binding BlurSamplingRate}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="{Binding BlurSamplingRateLabel}" />
+                  </Grid>
+                </Grid>
+              </StackPanel>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="字体" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,25,*" RowDefinitions="30,10,30">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="全局" />
+              <ComboBox
+                  Grid.Column="2"
+                  ItemsSource="{Binding FontOptions}"
+                  SelectedIndex="{Binding SelectedGlobalFontIndex}" />
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="MOTD" />
+              <ComboBox
+                  Grid.Row="2"
+                  Grid.Column="2"
+                  ItemsSource="{Binding FontOptions}"
+                  SelectedIndex="{Binding SelectedMotdFontIndex}" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="背景内容" ContentMargin="25,40,25,20">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="8">
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="游戏启动后暂停视频背景，游戏退出后重新播放"
+                  IsChecked="{Binding AutoPauseVideo}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="叠加彩色背景"
+                  IsChecked="{Binding BackgroundColorful}" />
+              <Grid ColumnDefinitions="Auto,Auto,Auto">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding BackgroundOpenFolderCommand}"
+                    Text="打开文件夹" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding BackgroundRefreshCommand}"
+                    Text="刷新背景内容" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    MinWidth="140"
+                    Command="{Binding BackgroundClearCommand}"
+                    ColorType="Red"
+                    Text="清空背景内容" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="背景音乐" ContentMargin="25,42,25,20">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="22">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,20,0"
+                    Text="音量" />
+                <Grid Grid.Column="1" ColumnDefinitions="*,56">
+                  <Slider
+                      Minimum="0"
+                      Maximum="1000"
+                      Value="{Binding MusicVolume}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Foreground="#677789"
+                      FontSize="12"
+                      Text="{Binding MusicVolumeLabel}" />
+                </Grid>
+              </Grid>
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="随机播放"
+                  IsChecked="{Binding MusicRandomPlay}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="打开启动器自动开始播放"
+                  IsChecked="{Binding MusicAutoStart}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="游戏启动后自动开始播放，游戏退出后自动暂停播放"
+                  IsChecked="{Binding MusicStartOnGameLaunch}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="游戏启动后自动暂停播放，游戏退出后自动开始播放"
+                  IsChecked="{Binding MusicStopOnGameLaunch}" />
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="接入系统媒体传输控制 (SMTC) 控件"
+                  IsChecked="{Binding MusicEnableSmtc}" />
+              <Grid ColumnDefinitions="Auto,Auto,Auto">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding MusicOpenFolderCommand}"
+                    Text="打开文件夹" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding MusicRefreshCommand}"
+                    Text="刷新背景音乐" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    MinWidth="140"
+                    Command="{Binding MusicClearCommand}"
+                    ColorType="Red"
+                    Text="清空背景音乐" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="标题栏" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,*,*,*,0.2*">
+                <RadioButton
+                    Grid.Column="0"
+                    GroupName="LogoType"
+                    Content="无"
+                    IsChecked="{Binding IsLogoTypeNoneSelected}" />
+                <RadioButton
+                    Grid.Column="1"
+                    GroupName="LogoType"
+                    Content="默认"
+                    IsChecked="{Binding IsLogoTypeDefaultSelected}" />
+                <RadioButton
+                    Grid.Column="2"
+                    GroupName="LogoType"
+                    Content="文本"
+                    IsChecked="{Binding IsLogoTypeTextSelected}" />
+                <RadioButton
+                    Grid.Column="3"
+                    GroupName="LogoType"
+                    Content="图片"
+                    IsChecked="{Binding IsLogoTypeImageSelected}" />
+              </Grid>
+              <CheckBox
+                  Foreground="#343D4A"
+                  Content="标题栏居左"
+                  IsChecked="{Binding LogoAlignLeft}"
+                  IsVisible="{Binding IsLogoLeftVisible}" />
+              <Grid IsVisible="{Binding IsLogoTextVisible}" ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="标题栏文本" />
+                <TextBox
+                    Grid.Column="1"
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding LogoTextValue}" />
+              </Grid>
+              <Grid IsVisible="{Binding IsLogoImageActionsVisible}" ColumnDefinitions="Auto,Auto">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding ChangeLogoImageCommand}"
+                    Text="更改图片" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    MinWidth="140"
+                    Command="{Binding DeleteLogoImageCommand}"
+                    ColorType="Red"
+                    Text="清空图片" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="主页" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,*,*,*,0.2*">
+                <RadioButton
+                    Grid.Column="0"
+                    GroupName="HomepageType"
+                    Content="空白"
+                    IsChecked="{Binding IsHomepageBlankSelected}" />
+                <RadioButton
+                    Grid.Column="1"
+                    GroupName="HomepageType"
+                    Content="预设"
+                    IsChecked="{Binding IsHomepagePresetSelected}" />
+                <RadioButton
+                    Grid.Column="2"
+                    GroupName="HomepageType"
+                    Content="读取本地文件"
+                    IsChecked="{Binding IsHomepageLocalSelected}" />
+                <RadioButton
+                    Grid.Column="3"
+                    GroupName="HomepageType"
+                    Content="联网更新"
+                    IsChecked="{Binding IsHomepageNetSelected}" />
+              </Grid>
+
+              <Border
+                  Padding="12,10"
+                  Background="#EAF2FE"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="#4068A8"
+                    FontSize="12.5"
+                    Text="内容见 ModSetup"
+                    TextWrapping="Wrap" />
+              </Border>
+              <Border
+                  Padding="12,10"
+                  Background="#FFF8DD"
+                  BorderBrush="#F2D777"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="#6E5800"
+                    FontSize="12.5"
+                    Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！"
+                    TextWrapping="Wrap" />
+              </Border>
+
+              <Grid IsVisible="{Binding IsHomepageLocalActionsVisible}" ColumnDefinitions="Auto,Auto,Auto">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding RefreshHomepageCommand}"
+                    ColorType="Highlight"
+                    Text="刷新主页" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Margin="0,0,20,0"
+                    MinWidth="140"
+                    Command="{Binding GenerateHomepageTutorialFileCommand}"
+                    Text="生成教学文件" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    MinWidth="140"
+                    Command="{Binding ViewHomepageTutorialCommand}"
+                    Text="查看教程" />
+              </Grid>
+
+              <Grid IsVisible="{Binding IsHomepageNetVisible}" ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="下载地址" />
+                <TextBox
+                    Grid.Column="1"
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding HomepageUrl}" />
+              </Grid>
+
+              <Grid IsVisible="{Binding IsHomepagePresetVisible}" ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="主页预设" />
+                <ComboBox
+                    Grid.Column="1"
+                    ItemsSource="{Binding HomepagePresetOptions}"
+                    SelectedIndex="{Binding SelectedHomepagePresetIndex}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="Auto,Auto">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#343D4A"
+                    FontSize="13.5"
+                    Margin="0,10,0,0"
+                    Text="获取更多主页" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Margin="10,10,0,0"
+                    MinWidth="140"
+                    Command="{Binding OpenHomepageMarketCommand}"
+                    Text="前往主页市场" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="功能隐藏" ContentMargin="25,38,20,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="你可以隐藏不需要的页面或关闭特定功能。在任意界面按 F12 可以暂时显示被隐藏的功能。"
+                  TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding UiFeatureToggleGroups}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel Margin="0,0,0,12" Spacing="8">
+                      <TextBlock
+                          Foreground="#343D4A"
+                          FontSize="13.5"
+                          FontWeight="SemiBold"
+                          Text="{Binding Title}" />
+                      <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <WrapPanel />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <CheckBox
+                                Margin="0,0,18,8"
+                                Foreground="#343D4A"
+                                Content="{Binding Title}"
+                                IsChecked="{Binding IsChecked}" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsToolsGameLinkSurface}" Spacing="15">
+        <Border
+            Padding="14,10"
+            Background="#EAF2FE"
+            BorderBrush="#D5E6FD"
+            BorderThickness="1"
+            CornerRadius="5">
+          <TextBlock
+              Foreground="#4068A8"
+              FontSize="12.5"
+              Text="{Binding GameLinkAnnouncement}"
+              TextWrapping="Wrap" />
+        </Border>
+
+        <controls:PclCard Header="PCL CE 联机大厅说明与条款" ContentMargin="20,40,18,18">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="此处列出了 PCL CE 大厅使用的相关服务文档及介绍。使用大厅功能即代表你同意相关条款，并理解联机功能的风险与隐私边界。"
+                  TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding GameLinkPolicyEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PclListItem
+                        Margin="0,0,0,8"
+                        Command="{Binding Command}"
+                        Info="{Binding Info}"
+                        Title="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <controls:PclButton
+                  Width="160"
+                  Height="35"
+                  HorizontalAlignment="Center"
+                  Command="{Binding AcceptGameLinkTermsCommand}"
+                  ColorType="Highlight"
+                  Text="我已阅读并同意" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="12">
+          <Border
+              Padding="12,8"
+              Background="#F8FBFF"
+              BorderBrush="#D5E6FD"
+              BorderThickness="1"
+              CornerRadius="5">
+            <Button
+                Padding="0"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Command="{Binding TestLobbyNatCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Foreground="#677789" FontSize="12.5" Text="NAT 类型" />
+                <TextBlock Foreground="#343D4A" FontSize="12.5" Text="{Binding GameLinkNatStatus}" />
+              </StackPanel>
+            </Button>
+          </Border>
+
+          <Border
+              Padding="12,8"
+              Background="#F8FBFF"
+              BorderBrush="#D5E6FD"
+              BorderThickness="1"
+              CornerRadius="5">
+            <Button
+                Padding="0"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Command="{Binding LoginNatayarkAccountCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Foreground="#677789" FontSize="12.5" Text="Natayark 账户" />
+                <TextBlock Foreground="#343D4A" FontSize="12.5" Text="{Binding GameLinkAccountStatus}" />
+              </StackPanel>
+            </Button>
+          </Border>
+        </StackPanel>
+
+        <controls:PclCard Header="加入大厅" ContentMargin="20,40,18,18">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="1、在下方输入朋友发送给你的大厅编号，单击【加入】。2、启动游戏，选择【多人游戏】，在局域网游戏中加入大厅。"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                <TextBox
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding GameLinkLobbyId}"
+                    Watermark="编号应该长得像这样：U/NNNN-AAAA-SSSS-EEEE" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Width="70"
+                    Margin="10,0,0,0"
+                    Command="{Binding ClearLobbyIdCommand}"
+                    Text="清除" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    Width="70"
+                    Margin="10,0,0,0"
+                    Command="{Binding PasteLobbyIdCommand}"
+                    Text="粘贴" />
+                <controls:PclButton
+                    Grid.Column="3"
+                    Width="70"
+                    Margin="10,0,0,0"
+                    Command="{Binding JoinLobbyCommand}"
+                    ColorType="Highlight"
+                    Text="加入" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="创建大厅" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,40,18,18">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="1、进入世界后，在游戏菜单中选择【对局域网开放】。2、在下方选择此游戏实例，单击【创建】。3、成功创建大厅后，复制大厅编号并发送给你的朋友。"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                <ComboBox
+                    Height="28"
+                    ItemsSource="{Binding GameLinkWorldOptions}"
+                    SelectedIndex="{Binding SelectedGameLinkWorldIndex}" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Width="90"
+                    Margin="10,0,0,0"
+                    Command="{Binding InputLobbyPortCommand}"
+                    Text="手动输入" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    Width="70"
+                    Margin="10,0,0,0"
+                    Command="{Binding RefreshLobbyWorldsCommand}"
+                    Text="刷新" />
+                <controls:PclButton
+                    Grid.Column="3"
+                    Width="70"
+                    Margin="10,0,0,0"
+                    Command="{Binding CreateLobbyCommand}"
+                    ColorType="Highlight"
+                    Text="创建" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <WrapPanel HorizontalAlignment="Center">
+          <Button
+              Margin="0,0,8,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding OpenLobbyReportCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="违法违规举报" />
+          </Button>
+          <TextBlock Margin="0,0,8,8" Foreground="#A0A9B5" FontSize="12" Text="|" />
+          <Button
+              Margin="0,0,8,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding OpenNatayarkPolicyCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="Natayark Network 用户协议与隐私政策" />
+          </Button>
+          <TextBlock Margin="0,0,8,8" Foreground="#A0A9B5" FontSize="12" Text="|" />
+          <Button
+              Margin="0,0,8,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding OpenLobbyPrivacyPolicyCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="大厅隐私协议" />
+          </Button>
+          <TextBlock Margin="0,0,8,8" Foreground="#A0A9B5" FontSize="12" Text="|" />
+          <Button
+              Margin="0,0,8,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding DisableGameLinkFeatureCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="停用联机功能" />
+          </Button>
+          <TextBlock Margin="0,0,8,8" Foreground="#A0A9B5" FontSize="12" Text="|" />
+          <Button
+              Margin="0,0,0,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding OpenGameLinkFaqCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="常见问题解答" />
+          </Button>
+        </WrapPanel>
+
+        <WrapPanel HorizontalAlignment="Center">
+          <TextBlock Margin="0,0,8,8" Foreground="#7D8897" FontSize="12" Text="友情链接：" />
+          <Button
+              Margin="0,0,8,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding OpenEasyTierWebsiteCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="EasyTier 工具官网" />
+          </Button>
+          <TextBlock Margin="0,0,8,8" Foreground="#A0A9B5" FontSize="12" Text="|" />
+          <Button
+              Margin="0,0,0,8"
+              Padding="0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Command="{Binding OpenPysioWebsiteCommand}">
+            <TextBlock Foreground="#7D8897" FontSize="12" Text="Pysio's Home" />
+          </Button>
+        </WrapPanel>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsToolsTestSurface}" Spacing="15">
+        <controls:PclCard Header="百宝箱" ContentMargin="25,40,21,10">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding ToolboxActions}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclButton
+                      Margin="0,0,15,15"
+                      MinWidth="{Binding MinWidth}"
+                      Command="{Binding Command}"
+                      ColorType="{Binding ColorType}"
+                      Text="{Binding Title}"
+                      ToolTip.Tip="{Binding ToolTip}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="下载自定义文件" ContentMargin="25,40,25,20">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="使用 PCL 的高速多线程下载引擎下载任意文件。请注意，部分网站可能会报错或无法正常下载。"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28,10,28,10,28">
+                <TextBlock VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="下载地址" />
+                <TextBox Grid.Column="1" Height="28" Padding="8,4" Text="{Binding ToolDownloadUrl}" />
+
+                <TextBlock Grid.Row="2" VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="User-Agent" />
+                <TextBox Grid.Row="2" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding ToolDownloadUserAgent}" />
+
+                <TextBlock Grid.Row="4" VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="保存到" />
+                <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto">
+                  <TextBox Height="28" Padding="8,4" Text="{Binding ToolDownloadFolder}" />
+                  <controls:PclButton
+                      Grid.Column="1"
+                      Width="70"
+                      Margin="10,0,0,0"
+                      Command="{Binding SelectDownloadFolderCommand}"
+                      Text="选择" />
+                </Grid>
+
+                <TextBlock Grid.Row="6" VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="文件名" />
+                <TextBox Grid.Row="6" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding ToolDownloadName}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="*,*" Margin="0,5,0,0">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Width="140"
+                    HorizontalAlignment="Right"
+                    Margin="0,0,15,0"
+                    Command="{Binding StartCustomDownloadCommand}"
+                    ColorType="Highlight"
+                    Text="开始下载" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Width="140"
+                    HorizontalAlignment="Left"
+                    Command="{Binding OpenCustomDownloadFolderCommand}"
+                    Text="打开文件夹" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="下载正版玩家的皮肤" ContentMargin="25,40,25,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,14,35">
+              <TextBlock VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="正版玩家名" />
+              <TextBox Grid.Column="1" Height="28" Padding="8,4" Text="{Binding OfficialSkinPlayerName}" />
+              <controls:PclButton
+                  Grid.Row="2"
+                  Grid.ColumnSpan="2"
+                  Width="140"
+                  Command="{Binding SaveOfficialSkinCommand}"
+                  Text="保存皮肤" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="瞅眼服务器" ContentMargin="25,40,25,20">
+          <controls:PclCard.CardContent>
+            <Border
+                Padding="14,12"
+                Background="#F8FBFF"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="5">
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="服务端查询控件还没有在 Avalonia Spike 中迁移，这里先保留原页面卡位与容器尺寸，后续继续按原版组件复制。"
+                  TextWrapping="Wrap" />
+            </Border>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="自定义成就图片生成器（仅支持英文）" ShowChevron="True" IsChevronExpanded="True" ContentMargin="25,36,25,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28,10,28,10,28">
+                <TextBlock VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="物品名（ID）" />
+                <TextBox Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementBlockId}" />
+                <TextBlock Grid.Row="2" VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="成就名" />
+                <TextBox Grid.Row="2" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementTitle}" />
+                <TextBlock Grid.Row="4" VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="第一行" />
+                <TextBox Grid.Row="4" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementFirstLine}" />
+                <TextBlock Grid.Row="6" VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="第二行" />
+                <TextBox Grid.Row="6" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementSecondLine}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="*,*">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Width="140"
+                    HorizontalAlignment="Right"
+                    Margin="0,0,15,0"
+                    Command="{Binding PreviewAchievementCommand}"
+                    ColorType="Highlight"
+                    Text="预览成就图像" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    Width="140"
+                    HorizontalAlignment="Left"
+                    Command="{Binding SaveAchievementCommand}"
+                    Text="保存图片" />
+              </Grid>
+
+              <Border
+                  Padding="14,10"
+                  Background="#F8FBFF"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="5"
+                  IsVisible="{Binding ShowAchievementPreview}">
+                <StackPanel Spacing="3">
+                  <TextBlock Foreground="#7D8897" FontSize="11.5" Text="{Binding AchievementTitle}" />
+                  <TextBlock Foreground="#343D4A" FontSize="14" FontWeight="SemiBold" Text="{Binding AchievementFirstLine}" />
+                  <TextBlock Foreground="#677789" FontSize="12.5" Text="{Binding AchievementSecondLine}" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="True" ContentMargin="25,40,25,20">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,20,0" Text="头像大小" />
+                <ComboBox
+                    Grid.Column="1"
+                    Width="120"
+                    ItemsSource="{Binding HeadSizeOptions}"
+                    SelectedIndex="{Binding SelectedHeadSizeIndex}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="*,Auto,Auto,*">
+                <controls:PclButton
+                    Grid.Column="1"
+                    Width="140"
+                    Margin="0,0,10,0"
+                    Command="{Binding SelectHeadSkinCommand}"
+                    Text="选择皮肤" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    Width="140"
+                    Command="{Binding SaveHeadCommand}"
+                    Text="保存头像" />
+              </Grid>
+
+              <Border
+                  Padding="14,12"
+                  Background="#F8FBFF"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center" Spacing="10">
+                  <Border
+                      Width="80"
+                      Height="80"
+                      Background="#EAF2FE"
+                      BorderBrush="#D5E6FD"
+                      BorderThickness="1"
+                      CornerRadius="8">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="#4B78C2"
+                        FontSize="12"
+                        Text="预览" />
+                  </Border>
+                  <TextBlock
+                      Foreground="#677789"
+                      FontSize="12.5"
+                      Text="{Binding SelectedHeadSkinPath}" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsToolsHelpSurface}" Spacing="15">
+        <Border
+            Height="36"
+            Padding="12,0"
+            Background="#F8FBFF"
+            BorderBrush="#D5E6FD"
+            BorderThickness="1"
+            CornerRadius="5">
+          <TextBox
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              FontSize="13.5"
+              Text="{Binding HelpSearchQuery}"
+              VerticalContentAlignment="Center"
+              Watermark="搜索帮助" />
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding HelpTopicGroups}" IsVisible="{Binding HasHelpTopicGroups}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Header="{Binding Title}" ContentMargin="20,40,18,18">
+                <controls:PclCard.CardContent>
+                  <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <controls:PclListItem
+                            Margin="0,0,0,8"
+                            Command="{Binding Command}"
+                            Info="{Binding Summary}"
+                            Title="{Binding Title}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <controls:PclCard Header="搜索结果" IsVisible="{Binding HasNoHelpTopicGroups}" ContentMargin="20,40,18,18">
+          <controls:PclCard.CardContent>
+            <TextBlock
+                Foreground="#677789"
+                FontSize="13"
+                Text="没有找到匹配的帮助条目。"
+                TextWrapping="Wrap" />
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
+        <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  Foreground="#1370F3"
+                  FontSize="12"
+                  FontWeight="Bold"
+                  Text="{Binding Eyebrow}" />
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="{Binding Description}"
+                  TextWrapping="Wrap" />
+              <Border
+                  Padding="12,10"
+                  Background="#F7FAFE"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <StackPanel Spacing="6">
+                  <TextBlock
+                      Foreground="#404040"
+                      FontSize="11.5"
+                      Text="{Binding BreadcrumbTrail}"
+                      TextWrapping="Wrap" />
+                  <TextBlock
+                      Foreground="#7D8897"
+                      FontSize="11"
+                      Text="{Binding SurfaceMeta}"
+                      TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="页面概览" IsVisible="{Binding HasSurfaceFacts}" ContentMargin="20,38,20,18">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding SurfaceFacts}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,12" ColumnDefinitions="140,*">
+                    <TextBlock
+                        Margin="0,2,12,0"
+                        Foreground="#7D8897"
+                        FontSize="11.5"
+                        Text="{Binding Label}"
+                        TextWrapping="Wrap" />
+                    <Border
+                        Grid.Column="1"
+                        Padding="12,9"
+                        Background="{Binding BackgroundBrush}"
+                        BorderBrush="{Binding BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                      <TextBlock
+                          Foreground="{Binding ForegroundBrush}"
+                          FontSize="13.5"
+                          FontWeight="SemiBold"
+                          Text="{Binding Value}"
+                          TextWrapping="Wrap" />
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding SurfaceSections}" IsVisible="{Binding HasSurfaceSections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Header="{Binding Title}" ContentMargin="20,16,20,18">
+                <controls:PclCard.CardContent>
+                  <StackPanel Spacing="10">
+                    <TextBlock
+                        Foreground="{Binding AccentBrush}"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Text="{Binding Eyebrow}" />
+                    <ItemsControl ItemsSource="{Binding Lines}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                VerticalAlignment="Top"
+                                Foreground="{Binding AccentBrush}"
+                                FontSize="16"
+                                Text="•" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                Foreground="{Binding ForegroundBrush}"
+                                FontSize="13.5"
+                                Text="{Binding Text}"
+                                TextWrapping="Wrap" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <controls:PclCard Header="活动记录" IsVisible="{Binding HasActivityEntries}" ContentMargin="18,38,18,18">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding ActivityEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border
+                      Margin="0,0,0,10"
+                      Padding="12,10"
+                      Background="#F7FAFE"
+                      BorderBrush="#D5E6FD"
+                      BorderThickness="1"
+                      CornerRadius="4">
+                    <Grid ColumnDefinitions="Auto,*">
+                      <TextBlock
+                          Foreground="#7D8897"
+                          FontSize="11.5"
+                          Text="{Binding Time}" />
+                      <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="3">
+                        <TextBlock
+                            Foreground="#343D4A"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Text="{Binding Title}" />
+                        <TextBlock
+                            Foreground="#677789"
+                            FontSize="12"
+                            Text="{Binding Body}"
+                            TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

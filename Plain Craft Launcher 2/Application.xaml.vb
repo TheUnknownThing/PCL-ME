@@ -1,5 +1,6 @@
 Imports System.IO
 Imports PCL.Core.App
+Imports PCL.Core.App.Essentials
 Imports PCL.Core.App.IoC
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.OS
@@ -27,44 +28,22 @@ Public Class Application
     '开始
     Private Sub Application_Startup() '(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)
-            '创建自定义跟踪监听器，用于检测是否存在 Binding 失败
-            PresentationTraceSources.DataBindingSource.Listeners.Add(New BindingErrorTraceListener())
-            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error
-            SecretOnApplicationStart()
+            ModApplicationRuntimeShell.PrepareRuntime()
             '检查参数调用
-            Dim args = Basics.CommandLineArguments
-            If args.Length > 0 Then
-                If args(0) = "--gpu" Then
-                    '调整显卡设置
-                    Try
-                        SetGPUPreference(args(1).Trim(""""))
-                        Environment.Exit(ProcessReturnValues.TaskDone)
-                    Catch ex As Exception
-                        Environment.Exit(ProcessReturnValues.Fail)
-                    End Try
-                ElseIf args(0).StartsWithF("--memory") Then
-                    '内存优化
-                    Dim Ram = KernelInterop.GetAvailablePhysicalMemoryBytes()
-                    Try
-                        PageToolsTest.MemoryOptimizeInternal(False)
-                    Catch ex As Exception
-                        MsgBox(ex.Message, MsgBoxStyle.Critical, "内存优化失败")
-                        Environment.Exit(-1)
-                    End Try
-                    If KernelInterop.GetAvailablePhysicalMemoryBytes() < Ram Then '避免 ULong 相减出现负数
-                        Environment.Exit(0)
-                    Else
-                        Environment.Exit((KernelInterop.GetAvailablePhysicalMemoryBytes() - Ram) / 1024) '返回清理的内存量（K）
-                    End If
-                End If
-            End If
+            Dim startupPlan = LauncherStartupWorkflowService.BuildPlan(
+                New LauncherStartupWorkflowRequest(
+                    Basics.CommandLineArguments,
+                    ExePath,
+                    PathTemp,
+                    PathAppdata,
+                    VersionBaseName.Contains("beta"),
+                    NtInterop.GetCurrentOsVersion(),
+                    Not Is32BitSystem,
+                    Setup.Get("UiLauncherLogo")))
+            ModApplicationStartupShell.ExecuteImmediateCommand(startupPlan.ImmediateCommand)
             '初始化文件结构
-            Directory.CreateDirectory(ExePath & "PCL\Pictures")
-            Directory.CreateDirectory(ExePath & "PCL\Musics")
-            Directory.CreateDirectory(PathTemp & "Cache")
-            Directory.CreateDirectory(PathTemp & "Download")
-            Directory.CreateDirectory(PathAppdata)
+            Dim bootstrapResult = startupPlan.Bootstrap
+            ModApplicationStartupShell.ApplyBootstrap(bootstrapResult)
 #If False Then
             '检测单例
             Dim ShouldWaitForExit As Boolean = args.Length > 0 AndAlso args(0) = "--wait" '要求等待已有的 PCL 退出
@@ -85,48 +64,8 @@ WaitRetry:
                 Environment.[Exit](ProcessReturnValues.Cancel)
             End If
 #End If
-            '设置 ToolTipService 默认值
-            ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(300))
-            ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(400))
-            ToolTipService.ShowDurationProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(9999999))
-            ToolTipService.PlacementProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(Primitives.PlacementMode.Bottom))
-            ToolTipService.HorizontalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(8.0))
-            ToolTipService.VerticalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(4.0))
-            '设置初始窗口
-            If Setup.Get("UiLauncherLogo") Then
-                FrmStart = New SplashScreen("Images\icon.ico")
-                FrmStart.Show(False, True)
-            End If
-            '检测异常环境
-            Dim problemList As New List(Of String)
-            Dim currentOSVersion = NtInterop.GetCurrentOsVersion()
-            If currentOSVersion.Build < 17763 Then problemList.Add("- Windows 版本不满足推荐要求，推荐至少 Windows 10 1809，建议考虑升级 Windows 系统")
-            If Is32BitSystem then problemList.Add("- 当前系统为 32 位，不受 PCL 和新版 Minecraft 支持，非常建议重装为 64 位系统后再进行游戏")
-            If ExePath.Contains(IO.Path.GetTempPath()) OrElse ExePath.Contains("AppData\Local\Temp\") Then problemList.Add("- PCL 正在临时目录运行，请将 PCL 从压缩包中解压之后再使用，否则可能导致游戏存档或设置丢失")
-            If ExePath.ContainsF("wechat_files", True) OrElse ExePath.ContainsF("WeChat Files", True) OrElse ExePath.ContainsF("Tencent Files", True) Then problemList.Add("- PCL 正在 QQ、微信、TIM 等社交软件的下载目录运行，请考虑移动到其他位置，否则可能导致游戏存档或设置丢失")
-            If problemList.Count <> 0 Then
-                MyMsgBox("PCL CE 在启动时检测到环境问题：" & vbCrLf & vbCrLf &
-                         problemList.Join(vbCrLf) & vbCrLf & vbCrLf &
-                         "不解决这些问题可能会导致部分功能无法正常工作……", "环境警告", "我知道了", IsWarn:=True)
-            End If
-            '设置初始化
-            Setup.Load("SystemDebugMode")
-            Setup.Load("SystemDebugAnim")
-            Setup.Load("SystemHttpProxy")
-            Setup.Load("SystemHttpProxyCustomUsername")
-            Setup.Load("SystemHttpProxyType")
-            Setup.Load("ToolDownloadThread")
-            Setup.Load("ToolDownloadSpeed")
-            Setup.Load("UiFont")
-            Dim updateBranchCfg = Config.Update.UpdateChannelConfig
-            If updateBranchCfg.IsDefault() Then
-                updateBranchCfg.SetValue(If(VersionBaseName.Contains("beta"), 1, 0))
-            End If
-            '删除旧日志
-            For i = 1 To 5
-                Dim oldLogFile = $"{ExePath}PCL\Log-CE{i}.log"
-                If File.Exists(oldLogFile) Then File.Delete(oldLogFile)
-            Next
+            ModApplicationStartupShell.ApplyVisualPlan(startupPlan.Visual)
+            ModApplicationStartupShell.ApplyEnvironmentWarning(startupPlan.EnvironmentWarningPrompt)
             '计时
             Log("[Start] 第一阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
             ApplicationStartTick = TimeUtils.GetTimeTick()
@@ -136,13 +75,7 @@ WaitRetry:
 #End If
             AniControlEnabled += 1
         Catch ex As Exception
-            Dim FilePath As String = Nothing
-            Try
-                FilePath = ExePathWithName
-            Catch
-            End Try
-            MsgBox(ex.ToString() & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
-            FormMain.EndProgramForce(ProcessReturnValues.Exception)
+            ModApplicationRuntimeShell.HandleInitializationFailure(ex)
         End Try
     End Sub
 
@@ -185,18 +118,5 @@ WaitRetry:
     Private Sub TooltipUnloaded(sender As Object, e As RoutedEventArgs)
         ShowingTooltips.Remove(CType(sender, Border))
     End Sub
-
-    ' 自定义监听器类
-    Public Class BindingErrorTraceListener
-        Inherits TraceListener
-
-        Public Overrides Sub Write(message As String)
-            Log($"警告，检测到 Binding 失败：{message}")
-        End Sub
-
-        Public Overrides Sub WriteLine(message As String)
-            Log($"警告，检测到 Binding 失败：{message}")
-        End Sub
-    End Class
 
 End Class

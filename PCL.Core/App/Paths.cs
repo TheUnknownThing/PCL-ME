@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using PCL.Core.Utils.OS;
 using Special = System.Environment.SpecialFolder;
 
 namespace PCL.Core.App;
@@ -13,41 +11,38 @@ namespace PCL.Core.App;
 /// </summary>
 public static class Paths
 {
+    private static readonly AppPathLayout _layout;
+
     /// <summary>
     /// The default directory used for relative path combining.
     /// </summary>
-    public static string DefaultDirectory => Basics.ExecutableDirectory;
-
-    private static string _data;
-    private static string _sharedData;
-    private static string _sharedLocalData;
-    private static string _temp;
+    public static string DefaultDirectory => _layout.DefaultDirectory;
     
     /// <summary>
     /// Per-instance data directory.
     /// </summary>
-    public static string Data { get => _data; set => _data = value; }
+    public static string Data { get => _layout.Data; set => _layout.Data = value; }
 
     /// <summary>
     /// Shared synchronized data directory.
     /// </summary>
-    public static string SharedData { get => _sharedData; set => _sharedData = value; }
+    public static string SharedData { get => _layout.SharedData; set => _layout.SharedData = value; }
     
     /// <summary>
     /// Shared synchronized data directory of old versions.<br/>
     /// Keep the value just for migration, DO NOT USE IT.
     /// </summary>
-    public static string OldSharedData { get; set; }
+    public static string OldSharedData { get => _layout.OldSharedData; set => _layout.OldSharedData = value; }
 
     /// <summary>
     /// Shared local data directory, used to put some large files that can be released or downloaded back anytime.
     /// </summary>
-    public static string SharedLocalData { get => _sharedLocalData; set => _sharedLocalData = value; }
+    public static string SharedLocalData { get => _layout.SharedLocalData; set => _layout.SharedLocalData = value; }
     
     /// <summary>
     /// Temporary files directory (can be deleted anytime, except when the program is running).
     /// </summary>
-    public static string Temp { get => _temp; set => _temp = value; }
+    public static string Temp { get => _layout.Temp; set => _layout.Temp = value; }
 
     /// <summary>
     /// Get path string relative to a special folder.
@@ -55,38 +50,19 @@ public static class Paths
     /// <param name="folder">the special folder</param>
     /// <param name="relative">the relative path</param>
     /// <returns>the path string relative to the special folder</returns>
-    public static string GetSpecialPath(Special folder, string relative)
-    {
-        var folderPath = Environment.GetFolderPath(folder);
-        return Path.Combine(folderPath, relative);
-    }
+    public static string GetSpecialPath(Special folder, string relative) => _layout.GetSpecialPath(folder, relative);
 
     static Paths()
     {
 #if DEBUG
         const string name = "PCLCE_Debug";
         const string oldName = ".PCLCEDebug";
+        const bool enableDebugOverrides = true;
 #else
         const string name = "PCLCE";
         const string oldName = ".PCLCE";
+        const bool enableDebugOverrides = false;
 #endif
-        // fill paths
-        _data = Path.Combine(DefaultDirectory, "PCL");
-        _sharedData = GetSpecialPath(Special.ApplicationData, name);
-        _sharedLocalData = GetSpecialPath(Special.LocalApplicationData, name);
-        _temp = Path.Combine(Path.GetTempPath(), name);
-        OldSharedData = GetSpecialPath(Special.ApplicationData, oldName);
-#if DEBUG
-        // read environment variables
-        EnvironmentInterop.ReadVariable("PCL_PATH", ref _data);
-        EnvironmentInterop.ReadVariable("PCL_PATH_SHARED", ref _sharedData);
-        EnvironmentInterop.ReadVariable("PCL_PATH_LOCAL", ref _sharedLocalData);
-        EnvironmentInterop.ReadVariable("PCL_PATH_TEMP", ref _temp);
-#endif
-        // create directories
-        Directory.CreateDirectory(_data);
-        Directory.CreateDirectory(_sharedData);
-        Directory.CreateDirectory(_sharedLocalData);
-        Directory.CreateDirectory(_temp);
+        _layout = new AppPathLayout(SystemAppEnvironment.Current, name, oldName, enableDebugOverrides);
     }
 }

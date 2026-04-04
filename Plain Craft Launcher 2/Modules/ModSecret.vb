@@ -1,13 +1,10 @@
 Imports System.ComponentModel
-Imports System.Management
 Imports System.Net.Http
-Imports System.Runtime.InteropServices
 Imports PCL.Core.App
 Imports PCL.Core.UI.Theme
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.Exts
 Imports PCL.Core.Utils.OS
-Imports PCL.Core.Utils.Secret
 
 Friend Module ModSecret
 
@@ -19,17 +16,17 @@ Friend Module ModSecret
     Public Const RegFolder As String = "PCLCE" 'PCL 社区版的注册表与 PCL 的注册表隔离，以防数据冲突
 #End If
     '用于微软登录的 ClientId
-    Public ReadOnly OAuthClientId As String = EnvironmentInterop.GetSecret("MS_CLIENT_ID", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly OAuthClientId As String = Secrets.MSOAuthClientId
     'CurseForge API Key
-    Public ReadOnly CurseForgeAPIKey As String = EnvironmentInterop.GetSecret("CURSEFORGE_API_KEY", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly CurseForgeAPIKey As String = Secrets.CurseForgeAPIKey
     '遥测鉴权密钥
-    Public ReadOnly TelemetryKey As String = EnvironmentInterop.GetSecret("TELEMETRY_KEY", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly TelemetryKey As String = Secrets.TelemetryKey
     'Natayark ID Client Id
-    Public ReadOnly NatayarkClientId As String = EnvironmentInterop.GetSecret("NAID_CLIENT_ID", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly NatayarkClientId As String = Secrets.NatayarkClientId
     'Natayark ID Client Secret，需要经过 PASSWORD HASH 处理（https://uutool.cn/php-password/）
-    Public ReadOnly NatayarkClientSecret As String = EnvironmentInterop.GetSecret("NAID_CLIENT_SECRET", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly NatayarkClientSecret As String = Secrets.NatayarkClientSecret
     '联机服务根地址
-    Public ReadOnly LinkServers As String() = EnvironmentInterop.GetSecret("LINK_SERVER_ROOT", readEnvDebugOnly:=True).ReplaceNullOrEmpty().Split("|")
+    Public ReadOnly LinkServers As String() = Secrets.LinkServers
 
     Friend Sub SecretOnApplicationStart()
         '提升 UI 线程优先级
@@ -85,25 +82,8 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
     ''' 获取设备的短标识码
     ''' </summary>
     Friend Function SecretGetUniqueAddress() As String
-        Return Identify.LauncherId
+        Return LauncherIdentity.LauncherId
     End Function
-
-    Friend Sub SecretLaunchJvmArgs(ByRef DataList As List(Of String))
-        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", instance:=McInstanceSelected)
-        DataList.Insert(0, If(DataJvmCustom = "", Setup.Get("LaunchAdvanceJvm"), DataJvmCustom)) '可变 JVM 参数
-        Select Case Setup.Get("LaunchPreferredIpStack")
-            Case 0
-                DataList.Add("-Djava.net.preferIPv4Stack=true")
-                DataList.Add("-Djava.net.preferIPv4Addresses=true")
-            Case 2
-                DataList.Add("-Djava.net.preferIPv6Stack=true")
-                DataList.Add("-Djava.net.preferIPv6Addresses=true")
-        End Select
-        McLaunchLog("当前剩余内存：" & Math.Round(KernelInterop.GetAvailablePhysicalMemoryBytes() / 1024 / 1024 / 1024 * 10) / 10 & "G")
-        DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15) & "m")
-        DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & "m")
-        If Not DataList.Any(Function(d) d.Contains("-Dlog4j2.formatMsgNoLookups=true")) Then DataList.Add("-Dlog4j2.formatMsgNoLookups=true")
-    End Sub
 
 #End Region
 
@@ -511,72 +491,6 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
         End If
     End Sub
 
-#End Region
-
-#Region "系统信息"
-    Friend CPUName As String = Nothing
-    ''' <summary>
-    ''' 系统 GPU 信息
-    ''' </summary>
-    Friend GPUs As New List(Of GPUInfo)
-    ''' <summary>
-    ''' 已安装物理内存大小，单位 MB
-    ''' </summary>
-    Friend SystemMemorySize As Long = KernelInterop.GetPhysicalMemoryBytes().Total / 1024 / 1024
-    ''' <summary>
-    ''' 系统信息描述，例如 Microsoft Windows 11 专业工作站版 10.0.22635.0
-    ''' </summary>
-    Public OSInfo As String = RuntimeInformation.OSDescription & " " & Environment.OSVersion.Version.ToString()
-    Class GPUInfo
-        Friend Name As String
-        ''' <summary>
-        ''' 显存大小，单位 MB
-        ''' </summary>
-        Friend Memory As Long
-        Friend DriverVersion As String
-    End Class
-    ''' <summary>
-    ''' 获取系统信息，例如 CPU 与 GPU，并存储到 CPUName 和 GPUs
-    ''' </summary>
-    Friend Sub GetSystemInfo()
-        'CPU
-        Try
-            Dim searcher As New ManagementObjectSearcher("root\CIMV2", "SELECT * FROM Win32_Processor")
-
-            For Each queryObj As ManagementObject In searcher.Get()
-                CPUName = queryObj("Name").ToString().Trim()
-                Exit For '通常只需要第一个CPU的信息
-            Next
-        Catch ex As Exception
-            Log(ex, "获取 CPU 信息时出错", LogLevel.Normal)
-        End Try
-
-        'GPU
-        Try
-            Dim searcher As New ManagementObjectSearcher("root\CIMV2", "SELECT * FROM Win32_VideoController")
-
-            For Each queryObj As ManagementObject In searcher.Get()
-                Dim gpuInfo As New GPUInfo
-
-                If queryObj("Name") IsNot Nothing Then
-                    gpuInfo.Name = queryObj("Name")
-                End If
-                If queryObj("AdapterRAM") IsNot Nothing Then
-                    Dim ramMB As Long = CLng(queryObj("AdapterRAM")) \ (1024 * 1024)
-                    gpuInfo.Memory = ramMB
-                End If
-                If queryObj("DriverVersion") IsNot Nothing Then
-                    gpuInfo.DriverVersion = queryObj("DriverVersion")
-                End If
-
-                GPUs.Add(gpuInfo)
-            Next
-
-            Log("已获取系统环境信息")
-        Catch ex As Exception
-            Log(ex, "获取 GPU 信息时出错", LogLevel.Normal)
-        End Try
-    End Sub
 #End Region
 
 #Region "主题"

@@ -1,0 +1,173 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclLaunchRightPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="15">
+      <Border
+          Height="48"
+          Background="#BFD6FB"
+          BorderBrush="#4890F5"
+          BorderThickness="1"
+          CornerRadius="5"
+          BoxShadow="0 2 10 0 #10000000">
+        <Grid Margin="18,0" ColumnDefinitions="Auto,*">
+          <TextBlock
+              VerticalAlignment="Center"
+              Foreground="#4A4A4A"
+              FontSize="16"
+              Text="▣" />
+          <TextBlock
+              Grid.Column="1"
+              Margin="10,0,0,0"
+              VerticalAlignment="Center"
+              Foreground="#404040"
+              FontSize="16"
+              FontWeight="SemiBold"
+              Text="{Binding LaunchWelcomeBanner}" />
+        </Grid>
+      </Border>
+
+      <controls:PclCard
+          IsVisible="{Binding ShowLaunchCommunityHint}"
+          Header="社区版提示"
+          ContentMargin="25,38,23,15">
+        <controls:PclCard.CardContent>
+          <Grid>
+            <controls:PclIconButton
+                Margin="0,-28,-8,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Command="{Binding DismissLaunchCommunityHintCommand}"
+                IconData="M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z" />
+            <StackPanel Spacing="2">
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchCommunityHintPrimaryText}" />
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchCommunityHintSecondaryText}" />
+            </StackPanel>
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard
+          Header="{Binding LaunchMigrationHeadline}"
+          HeaderCommand="{Binding ToggleLaunchMigrationCommand}"
+          ShowChevron="True"
+          IsChevronExpanded="{Binding IsLaunchMigrationExpanded}"
+          ContentMargin="20,16,20,18">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding LaunchMigrationLines}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*">
+                  <TextBlock
+                      VerticalAlignment="Top"
+                      Foreground="#1370F3"
+                      FontSize="15"
+                      Text="•" />
+                  <TextBlock
+                      Grid.Column="1"
+                      Margin="10,0,0,0"
+                      Foreground="#4B5968"
+                      FontSize="13.5"
+                      TextWrapping="Wrap"
+                      Text="{Binding}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard
+          Header="{Binding LaunchNewsTitle}"
+          HeaderCommand="{Binding ToggleLaunchNewsCommand}"
+          ShowChevron="True"
+          IsChevronExpanded="{Binding IsLaunchNewsExpanded}"
+          ContentMargin="20,38,20,24">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="14">
+            <Border
+                HorizontalAlignment="Stretch"
+                BorderBrush="#1370F3"
+                BorderThickness="5"
+                CornerRadius="12">
+              <Grid>
+                <Image
+                    Height="198"
+                    Source="{Binding LaunchNewsImage}"
+                    Stretch="Fill"
+                    RenderOptions.BitmapInterpolationMode="None" />
+                <Border
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,0,-18"
+                    Padding="46,7"
+                    Background="#1370F3"
+                    CornerRadius="10">
+                  <TextBlock
+                      Foreground="White"
+                      FontSize="24"
+                      Text="25w20a" />
+                </Border>
+              </Grid>
+            </Border>
+
+            <TextBlock
+                Margin="0,18,0,0"
+                Foreground="#1370F3"
+                FontSize="28"
+                FontWeight="Bold"
+                Text="新特性" />
+
+            <ItemsControl ItemsSource="{Binding SurfaceSections}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Margin="0,0,0,10" Spacing="6">
+                    <ItemsControl ItemsSource="{Binding Lines}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                VerticalAlignment="Top"
+                                Foreground="#1370F3"
+                                FontSize="16"
+                                Text="•" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                Foreground="#343D4A"
+                                FontSize="14.5"
+                                TextWrapping="Wrap"
+                                Text="{Binding Text}" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard
+          IsVisible="{Binding ShowLaunchLog}"
+          Header="启动日志"
+          ContentMargin="20,38,20,18">
+        <controls:PclCard.CardContent>
+          <TextBlock
+              TextWrapping="Wrap"
+              Text="{Binding LaunchLogText}" />
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

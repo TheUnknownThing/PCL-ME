@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using PCL.Core.App.Cli;
 using PCL.Core.App.IoC;
 using PCL.Core.Utils.OS;
-using PCL.Core.Utils.Secret;
 
 namespace PCL.Core.App.Essentials;
 
@@ -84,21 +83,21 @@ public sealed partial class StartupService
     [LifecycleStart]
     private static void _LogBasicInfo()
     {
+        var runtime = SystemRuntimeInfoSourceProvider.Current.GetSnapshot();
         var info = new StringBuilder();
         info.Append("\n版本: ").Append(Basics.Metadata.Version).Append(" (").Append(GetArchitectureName(RuntimeInformation.ProcessArchitecture)).Append(')');
         info.Append("\n路径: ").Append(Basics.ExecutablePath);
         info.Append("\n命令行参数:");
         if (Basics.CommandLineArguments.Length == 0) info.Append(" []");
         else foreach (var x in Basics.CommandLineArguments) info.Append("\n - ").Append(x);
-        info.Append("\n系统版本: ").Append(Environment.OSVersion.Version).Append(" (").Append(GetArchitectureName(RuntimeInformation.OSArchitecture)).Append(')');
-        var memory = KernelInterop.GetPhysicalMemoryBytes();
+        info.Append("\n系统版本: ").Append(runtime.OsVersion).Append(" (").Append(GetArchitectureName(runtime.OsArchitecture)).Append(')');
         const int memoryDiv = 1024 * 1024;
-        info.Append("\n可用内存: ").Append(memory.Available / memoryDiv).Append('/').Append(memory.Total / memoryDiv).Append(" MB");
+        info.Append("\n可用内存: ").Append(runtime.AvailablePhysicalMemoryBytes / memoryDiv).Append('/').Append(runtime.TotalPhysicalMemoryBytes / memoryDiv).Append(" MB");
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var cp = Encoding.GetEncoding(0);
         info.Append("\n默认代码页: ").Append(cp.EncodingName).Append(" (").Append(cp.CodePage).Append(')');
         info.Append("\n管理员身份: ").Append(ProcessInterop.IsAdmin());
-        info.Append("\n识别码: ").Append(Identify.LauncherId);
+        info.Append("\n识别码: ").Append(LauncherIdentity.LauncherId);
         Context.Info(info.ToString());
         return;
         string GetArchitectureName(Architecture arch) => arch switch
