@@ -631,9 +631,52 @@ public static class LauncherFrontendPageContentService
     {
         return request.Navigation.CurrentRoute.Subpage switch
         {
+            LauncherFrontendSubpageKey.ToolsGameLink => BuildToolsGameLinkContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => BuildToolsHelpContent(request, promptTotal, visibleUtilityCount),
             _ => BuildGenericToolsContent(request, promptTotal, visibleUtilityCount)
         };
+    }
+
+    private static LauncherFrontendPageContent BuildToolsGameLinkContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return new LauncherFrontendPageContent(
+            "联机大厅页面",
+            "工具页的联机大厅已经可以按原版的说明卡、加入大厅卡和创建大厅卡结构进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "联机大厅"),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "入口",
+                    "大厅说明与条款",
+                    [
+                        "保留了顶部状态提示、联机大厅说明卡和条款确认按钮。",
+                        "隐私政策与 Natayark 条款继续作为可点击列表项存在，而不是被压缩成纯文本说明。",
+                        "登录、同意条款和打开外部网页都应保持为显式前端意图。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "操作",
+                    "加入与创建大厅",
+                    [
+                        "加入大厅卡继续保留输入框与加入 / 粘贴 / 清除按钮组合。",
+                        "创建大厅卡继续保留世界选择、刷新和手动输入端口的操作排布。",
+                        "NAT 类型与 Natayark 账户状态块也继续停留在右上角工具位。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "迁移规则",
+                    [
+                        "联机页面复制的是旧版结构与操作层级，不是旧版网络事件流。",
+                        "真实大厅创建、状态同步和 EasyTier 运行时仍应停留在后端或外部组件边界。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
     }
 
     private static LauncherFrontendPageContent BuildGenericToolsContent(

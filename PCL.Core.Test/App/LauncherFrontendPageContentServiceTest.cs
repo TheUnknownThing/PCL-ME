@@ -159,6 +159,23 @@ public sealed class LauncherFrontendPageContentServiceTest
             section.Lines.Any(line => line.Contains("搜索结果区", StringComparison.Ordinal))));
     }
 
+    [TestMethod]
+    public void BuildToolsGameLinkContentDescribesLobbyCardsAndTerms()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsGameLink))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes()));
+
+        Assert.AreEqual("联机大厅页面", content.Eyebrow);
+        Assert.AreEqual("联机大厅", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "加入与创建大厅" &&
+            section.Lines.Any(line => line.Contains("加入大厅卡", StringComparison.Ordinal))));
+    }
+
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
     {
         return LauncherStartupWorkflowService.BuildPlan(new LauncherStartupWorkflowRequest(

@@ -76,6 +76,22 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _viewHomepageTutorialCommand;
     private readonly ActionCommand _openHomepageMarketCommand;
     private readonly ActionCommand _toggleLaunchAdvancedOptionsCommand;
+    private readonly ActionCommand _acceptGameLinkTermsCommand;
+    private readonly ActionCommand _testLobbyNatCommand;
+    private readonly ActionCommand _loginNatayarkAccountCommand;
+    private readonly ActionCommand _joinLobbyCommand;
+    private readonly ActionCommand _pasteLobbyIdCommand;
+    private readonly ActionCommand _clearLobbyIdCommand;
+    private readonly ActionCommand _createLobbyCommand;
+    private readonly ActionCommand _refreshLobbyWorldsCommand;
+    private readonly ActionCommand _inputLobbyPortCommand;
+    private readonly ActionCommand _openLobbyReportCommand;
+    private readonly ActionCommand _openNatayarkPolicyCommand;
+    private readonly ActionCommand _openLobbyPrivacyPolicyCommand;
+    private readonly ActionCommand _disableGameLinkFeatureCommand;
+    private readonly ActionCommand _openGameLinkFaqCommand;
+    private readonly ActionCommand _openEasyTierWebsiteCommand;
+    private readonly ActionCommand _openPysioWebsiteCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -104,6 +120,11 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _tryPunchSymmetricNat = true;
     private bool _allowIpv6Communication = true;
     private bool _enableLinkCliOutput;
+    private string _gameLinkAnnouncement = "正在连接到大厅服务器...";
+    private string _gameLinkNatStatus = "点击测试";
+    private string _gameLinkAccountStatus = "点击登录 Natayark 账户";
+    private string _gameLinkLobbyId = string.Empty;
+    private int _selectedGameLinkWorldIndex;
     private int _selectedLaunchIsolationIndex = 1;
     private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
     private string _launchCustomInfo = "PCL";
@@ -236,6 +257,22 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _viewHomepageTutorialCommand = CreateIntentCommand("查看主页教程", "Would open the homepage customization tutorial.");
         _openHomepageMarketCommand = CreateIntentCommand("前往主页市场", "Would open the launcher homepage market.");
         _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
+        _acceptGameLinkTermsCommand = new ActionCommand(AcceptGameLinkTerms);
+        _testLobbyNatCommand = new ActionCommand(TestLobbyNat);
+        _loginNatayarkAccountCommand = new ActionCommand(LoginNatayarkAccount);
+        _joinLobbyCommand = new ActionCommand(JoinLobby);
+        _pasteLobbyIdCommand = new ActionCommand(PasteLobbyId);
+        _clearLobbyIdCommand = new ActionCommand(ClearLobbyId);
+        _createLobbyCommand = new ActionCommand(CreateLobby);
+        _refreshLobbyWorldsCommand = new ActionCommand(RefreshLobbyWorlds);
+        _inputLobbyPortCommand = CreateIntentCommand("手动输入联机端口", "Would allow manual LAN port entry before creating the lobby.");
+        _openLobbyReportCommand = CreateLinkCommand("违法违规举报", "https://qm.qq.com/q/yaubjC6C5y");
+        _openNatayarkPolicyCommand = CreateLinkCommand("Natayark Network 用户协议与隐私政策", "https://account.naids.com/policy");
+        _openLobbyPrivacyPolicyCommand = CreateLinkCommand("大厅隐私协议", "https://www.pclc.cc/privacy/personal-info-brief.html");
+        _disableGameLinkFeatureCommand = CreateIntentCommand("停用联机功能", "Would disable the PCL CE lobby feature for this launcher profile.");
+        _openGameLinkFaqCommand = CreateIntentCommand("常见问题解答", "Would open the P2P 联机常见问题帮助条目.");
+        _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
+        _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -248,6 +285,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeLogEntries();
         InitializeUpdateSurface();
         InitializeLaunchSettingsSurface();
+        InitializeToolsGameLinkSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();
@@ -283,6 +321,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ObservableCollection<FeedbackSectionViewModel> FeedbackSections { get; } = [];
 
     public ObservableCollection<SimpleListEntryViewModel> LogEntries { get; } = [];
+
+    public ObservableCollection<SimpleListEntryViewModel> GameLinkPolicyEntries { get; } = [];
 
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
@@ -798,6 +838,43 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         get => _useJavaExecutable;
         set => SetProperty(ref _useJavaExecutable, value);
+    }
+
+    public string GameLinkAnnouncement
+    {
+        get => _gameLinkAnnouncement;
+        set => SetProperty(ref _gameLinkAnnouncement, value);
+    }
+
+    public string GameLinkNatStatus
+    {
+        get => _gameLinkNatStatus;
+        set => SetProperty(ref _gameLinkNatStatus, value);
+    }
+
+    public string GameLinkAccountStatus
+    {
+        get => _gameLinkAccountStatus;
+        set => SetProperty(ref _gameLinkAccountStatus, value);
+    }
+
+    public string GameLinkLobbyId
+    {
+        get => _gameLinkLobbyId;
+        set => SetProperty(ref _gameLinkLobbyId, value);
+    }
+
+    public IReadOnlyList<string> GameLinkWorldOptions { get; } =
+    [
+        "Modern Fabric Demo - 25565",
+        "Legacy Forge Demo - 25566",
+        "Quilt Snapshot Demo - 25567"
+    ];
+
+    public int SelectedGameLinkWorldIndex
+    {
+        get => _selectedGameLinkWorldIndex;
+        set => SetProperty(ref _selectedGameLinkWorldIndex, Math.Clamp(value, 0, GameLinkWorldOptions.Count - 1));
     }
 
     public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
@@ -1623,6 +1700,38 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     public ActionCommand ToggleLaunchAdvancedOptionsCommand => _toggleLaunchAdvancedOptionsCommand;
 
+    public ActionCommand AcceptGameLinkTermsCommand => _acceptGameLinkTermsCommand;
+
+    public ActionCommand TestLobbyNatCommand => _testLobbyNatCommand;
+
+    public ActionCommand LoginNatayarkAccountCommand => _loginNatayarkAccountCommand;
+
+    public ActionCommand JoinLobbyCommand => _joinLobbyCommand;
+
+    public ActionCommand PasteLobbyIdCommand => _pasteLobbyIdCommand;
+
+    public ActionCommand ClearLobbyIdCommand => _clearLobbyIdCommand;
+
+    public ActionCommand CreateLobbyCommand => _createLobbyCommand;
+
+    public ActionCommand RefreshLobbyWorldsCommand => _refreshLobbyWorldsCommand;
+
+    public ActionCommand InputLobbyPortCommand => _inputLobbyPortCommand;
+
+    public ActionCommand OpenLobbyReportCommand => _openLobbyReportCommand;
+
+    public ActionCommand OpenNatayarkPolicyCommand => _openNatayarkPolicyCommand;
+
+    public ActionCommand OpenLobbyPrivacyPolicyCommand => _openLobbyPrivacyPolicyCommand;
+
+    public ActionCommand DisableGameLinkFeatureCommand => _disableGameLinkFeatureCommand;
+
+    public ActionCommand OpenGameLinkFaqCommand => _openGameLinkFaqCommand;
+
+    public ActionCommand OpenEasyTierWebsiteCommand => _openEasyTierWebsiteCommand;
+
+    public ActionCommand OpenPysioWebsiteCommand => _openPysioWebsiteCommand;
+
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
         return new FrontendShellViewModel(options);
@@ -1980,6 +2089,27 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _selectedLaunchPreferredIpStackIndex = 0;
     }
 
+    private void InitializeToolsGameLinkSurface()
+    {
+        _gameLinkAnnouncement = "正在连接到大厅服务器...";
+        _gameLinkNatStatus = "点击测试";
+        _gameLinkAccountStatus = "点击登录 Natayark 账户";
+        _gameLinkLobbyId = string.Empty;
+        _selectedGameLinkWorldIndex = 0;
+
+        ReplaceItems(GameLinkPolicyEntries,
+        [
+            new SimpleListEntryViewModel(
+                "PCL CE 大厅相关隐私政策",
+                "了解 PCL CE 如何处理您的个人信息",
+                _openLobbyPrivacyPolicyCommand),
+            new SimpleListEntryViewModel(
+                "Natayark Network 用户协议与隐私政策",
+                "查看 Natayark OpenID 服务条款",
+                _openNatayarkPolicyCommand)
+        ]);
+    }
+
     private void InitializeGameLinkSurface()
     {
         _linkUsername = "PCL CE 玩家";
@@ -2313,6 +2443,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             return;
         }
 
+        if (IsToolsGameLinkSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            RefreshToolsGameLinkSurface();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -2391,6 +2527,66 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(RequireDedicatedGpu));
         RaisePropertyChanged(nameof(UseJavaExecutable));
         AddActivity("重置启动设置", "启动选项、内存与高级启动参数已恢复到默认演示值。");
+    }
+
+    private void RefreshToolsGameLinkSurface()
+    {
+        InitializeToolsGameLinkSurface();
+        RaisePropertyChanged(nameof(GameLinkAnnouncement));
+        RaisePropertyChanged(nameof(GameLinkNatStatus));
+        RaisePropertyChanged(nameof(GameLinkAccountStatus));
+        RaisePropertyChanged(nameof(GameLinkLobbyId));
+        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
+        AddActivity("刷新联机大厅", "联机大厅页面已恢复到初始演示状态。");
+    }
+
+    private void AcceptGameLinkTerms()
+    {
+        GameLinkAnnouncement = "已同意说明与条款，可以继续加入或创建大厅。";
+        AddActivity("同意联机大厅条款", "大厅说明与条款已确认。");
+    }
+
+    private void TestLobbyNat()
+    {
+        GameLinkNatStatus = GameLinkNatStatus == "点击测试" ? "Port Restricted Cone NAT" : "点击测试";
+        AddActivity("测试 NAT 类型", GameLinkNatStatus);
+    }
+
+    private void LoginNatayarkAccount()
+    {
+        GameLinkAccountStatus = GameLinkAccountStatus == "点击登录 Natayark 账户"
+            ? "PCL-Community"
+            : "点击登录 Natayark 账户";
+        AddActivity("Natayark 账户", GameLinkAccountStatus);
+    }
+
+    private void JoinLobby()
+    {
+        var lobbyId = string.IsNullOrWhiteSpace(GameLinkLobbyId) ? "U/2398-AX4A-SSSS-EEEE" : GameLinkLobbyId;
+        AddActivity("加入大厅", $"Would join lobby {lobbyId}.");
+    }
+
+    private void PasteLobbyId()
+    {
+        GameLinkLobbyId = "U/2398-AX4A-SSSS-EEEE";
+        AddActivity("粘贴大厅编号", GameLinkLobbyId);
+    }
+
+    private void ClearLobbyId()
+    {
+        GameLinkLobbyId = string.Empty;
+        AddActivity("清除大厅编号", "Lobby code input cleared.");
+    }
+
+    private void CreateLobby()
+    {
+        AddActivity("创建大厅", $"Would create a lobby from {GameLinkWorldOptions[SelectedGameLinkWorldIndex]}.");
+    }
+
+    private void RefreshLobbyWorlds()
+    {
+        SelectedGameLinkWorldIndex = (SelectedGameLinkWorldIndex + 1) % GameLinkWorldOptions.Count;
+        AddActivity("刷新世界列表", GameLinkWorldOptions[SelectedGameLinkWorldIndex]);
     }
 
     private void ResetGameLinkSurface()
