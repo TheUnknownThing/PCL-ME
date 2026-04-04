@@ -13,6 +13,8 @@ Status as of 2026-04-04:
 - instance overview actions now perform real rename, description, trash, patch, and artifact-export flows from the replacement shell
 - download resource/detail routes no longer fall back to sample primary content for their main lists
 - toolbox test page continues moving from intent-only buttons to real shell/file outputs, and memory optimization now exports explicit diagnostics instead of a pure intent log
+- tools/game-link actions now use real prompt, clipboard, config, FAQ, and exported session/diagnostic behavior instead of synthetic activity-only output
+- download modpack install now copies a local pack into the launcher `versions` folder from the replacement shell
 - the repo is past the “can this work outside WPF?” stage
 - the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
 
@@ -118,10 +120,10 @@ The frontend can compose real launch state, but cutover still needs:
 
 ### 2. Several tool and utility actions are still placeholders
 
-Examples:
+The visible Track 2 buttons on migrated tool/download/instance surfaces are now mostly backed by real shell actions.
 
-- game-link action clusters still stop at synthetic activity output
-- download modpack install is still a placeholder action
+The main remaining gap in this area is now:
+
 - launch execution is still exported as context/report artifacts rather than full replacement-shell process orchestration
 
 ### 3. Cross-platform adapter coverage is incomplete
@@ -227,20 +229,16 @@ Goal:
 
 - replace remaining activity-feed-only actions with real shell behavior where practical
 
-Recommended starting point for the next Track 2 engineer:
+Track 2 status on 2026-04-04:
 
-- continue from the migrated tools pages because their route-local composition is now in place
+- the current frontend branch now has a dedicated shell-action pass for the previously missing game-link, toolbox/head export, favorites management, instance-profile-template, and download modpack install buttons
 - recent frontend checkpoints for this handoff:
-  - `e96247f6` `feat: runtime-back toolbox test surface`
-  - `cc716c73` `feat: compose help and game link tool routes`
-  - `af689e45` `feat: wire instance resource and export actions`
-  - `f5d2a521` `feat: wire toolbox shell actions`
-  - `ef3c0b92` `feat: wire instance overview runtime actions`
+  - `7fad5b40` `feat: wire frontend track2 shell actions`
   - `5b0ac628` `feat: report toolbox memory diagnostics`
-- likely first buttons to convert:
-  - game-link action cluster on the tools route
-  - download modpack install and other remaining install-entry actions
-  - any maintenance buttons that still stop at exported context files instead of real backend execution
+  - `ef3c0b92` `feat: wire instance overview runtime actions`
+  - `f5d2a521` `feat: wire toolbox shell actions`
+- the next owner should only return to Track 2 if a newly discovered copied button still falls back to pure intent logging
+- otherwise the recommended next step is Step 3: launch-path cutover
 
 Examples:
 
@@ -344,32 +342,7 @@ Manual verification:
 
 The next engineers should not take “finish the launcher” as one task. They should take one of these.
 
-### Slice A. Replace remaining tool-page placeholders
-
-Scope:
-
-- `工具/测试`
-- any tool controls that still only emit intent text after `f5d2a521`
-- game-link controls that still stop at synthetic activity output
-
-Reviewer can verify by:
-
-- clicking each migrated tool button
-- inspecting generated files, downloaded files, or visible shell outputs
-
-### Slice B. Replace remaining instance-action placeholders
-
-Scope:
-
-- instance overview/setup actions that still stop at activity text
-- maintenance buttons such as rename, description edit, launch-script export, test launch, restore, delete, and patch core
-
-Reviewer can verify by:
-
-- renaming, exporting, checking, or maintaining a real instance
-- inspecting resulting files or config changes
-
-### Slice C. Launch execution cutover spike-to-real pass
+### Slice A. Launch execution cutover spike-to-real pass
 
 Scope:
 
@@ -380,7 +353,7 @@ Reviewer can verify by:
 - launching a real instance from the replacement shell
 - checking game process, logs, and shell state
 
-### Slice D. Cross-platform adapter matrix
+### Slice B. Cross-platform adapter matrix
 
 Scope:
 
@@ -389,6 +362,18 @@ Scope:
 Reviewer can verify by:
 
 - running the same shell actions on at least two platforms and comparing outcomes
+
+### Slice C. Remove remaining WPF workflow ownership
+
+Scope:
+
+- launch-adjacent shell glue
+- download/install execution glue that still depends on legacy codepaths
+- remaining WPF-owned day-to-day workflows
+
+Reviewer can verify by:
+
+- completing the target workflow entirely from the replacement shell without falling back to WPF-only behavior
 
 ## Current Recommended Definition Of “Frontend Done”
 
@@ -418,6 +403,7 @@ Avoid:
 
 ## Latest Frontend Checkpoints
 
+- `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
 - `ef3c0b92` `feat: wire instance overview runtime actions`
 - `91228f81` `feat: add frontend shell dialog adapters`
@@ -434,8 +420,7 @@ The correct continuation point is no longer “prove another frontend slice can 
 
 The correct continuation point is:
 
-- make each copied route family truly usable
-- replace remaining placeholder actions with real shell behavior
+- keep each copied route family truly usable
 - cut over real launcher workflows
 - isolate cross-platform adapters
 - remove the remaining WPF dependency for normal use
