@@ -50,6 +50,12 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<DownloadInstallOptionViewModel> DownloadInstallOptions { get; } = [];
 
+    public ObservableCollection<DownloadCatalogActionViewModel> DownloadCatalogIntroActions { get; } = [];
+
+    public ObservableCollection<DownloadCatalogSectionViewModel> DownloadCatalogSections { get; } = [];
+
+    public ObservableCollection<DownloadCatalogSectionViewModel> DownloadFavoriteSections { get; } = [];
+
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
     public ObservableCollection<JavaRuntimeEntryViewModel> JavaRuntimeEntries { get; } = [];
@@ -189,6 +195,21 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool IsDownloadInstallSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadInstall;
 
+    public bool IsDownloadCatalogSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
+        && _currentRoute.Subpage is LauncherFrontendSubpageKey.DownloadClient
+            or LauncherFrontendSubpageKey.DownloadOptiFine
+            or LauncherFrontendSubpageKey.DownloadForge
+            or LauncherFrontendSubpageKey.DownloadNeoForge
+            or LauncherFrontendSubpageKey.DownloadCleanroom
+            or LauncherFrontendSubpageKey.DownloadFabric
+            or LauncherFrontendSubpageKey.DownloadQuilt
+            or LauncherFrontendSubpageKey.DownloadLiteLoader
+            or LauncherFrontendSubpageKey.DownloadLabyMod
+            or LauncherFrontendSubpageKey.DownloadLegacyFabric;
+
+    public bool IsDownloadFavoritesSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadCompFavorites;
+
     public bool IsToolsGameLinkSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsGameLink;
 
@@ -210,6 +231,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsSetupJavaSurface
         && !IsSetupUiSurface
         && !IsDownloadInstallSurface
+        && !IsDownloadCatalogSurface
+        && !IsDownloadFavoritesSurface
         && !IsToolsGameLinkSurface
         && !IsToolsHelpSurface
         && !IsToolsTestSurface;
@@ -743,6 +766,74 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         get => _downloadInstallName;
         set => SetProperty(ref _downloadInstallName, value);
     }
+
+    public string DownloadCatalogIntroTitle
+    {
+        get => _downloadCatalogIntroTitle;
+        private set
+        {
+            if (SetProperty(ref _downloadCatalogIntroTitle, value))
+            {
+                RaisePropertyChanged(nameof(HasDownloadCatalogIntro));
+            }
+        }
+    }
+
+    public string DownloadCatalogIntroBody
+    {
+        get => _downloadCatalogIntroBody;
+        private set => SetProperty(ref _downloadCatalogIntroBody, value);
+    }
+
+    public bool HasDownloadCatalogIntro => !string.IsNullOrWhiteSpace(DownloadCatalogIntroTitle);
+
+    public string DownloadFavoriteSearchQuery
+    {
+        get => _downloadFavoriteSearchQuery;
+        set
+        {
+            if (SetProperty(ref _downloadFavoriteSearchQuery, value) && IsDownloadFavoritesSurface)
+            {
+                RefreshDownloadFavoriteSurface();
+            }
+        }
+    }
+
+    public IReadOnlyList<string> DownloadFavoriteTargetOptions { get; } =
+    [
+        "默认收藏夹",
+        "整合包收藏",
+        "建筑与材质"
+    ];
+
+    public int SelectedDownloadFavoriteTargetIndex
+    {
+        get => _selectedDownloadFavoriteTargetIndex;
+        set
+        {
+            var nextValue = Math.Clamp(value, 0, DownloadFavoriteTargetOptions.Count - 1);
+            if (SetProperty(ref _selectedDownloadFavoriteTargetIndex, nextValue) && IsDownloadFavoritesSurface)
+            {
+                RefreshDownloadFavoriteSurface();
+            }
+        }
+    }
+
+    public string DownloadFavoriteWarningText
+    {
+        get => _downloadFavoriteWarningText;
+        private set => SetProperty(ref _downloadFavoriteWarningText, value);
+    }
+
+    public bool ShowDownloadFavoriteWarning
+    {
+        get => _showDownloadFavoriteWarning;
+        private set => SetProperty(ref _showDownloadFavoriteWarning, value);
+    }
+
+    public bool HasDownloadFavoriteSections => DownloadFavoriteSections.Count > 0;
+
+    public bool HasNoDownloadFavoriteSections => !HasDownloadFavoriteSections;
 
     public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
     [
@@ -1621,6 +1712,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ActionCommand SaveHeadCommand => _saveHeadCommand;
 
+    public ActionCommand ManageDownloadFavoriteTargetCommand => _manageDownloadFavoriteTargetCommand;
+
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
         return new FrontendShellViewModel(options);
@@ -1687,6 +1780,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         ReplaceItems(SidebarEntries, shellPlan.Navigation.SidebarEntries.Select(entry => CreateNavigationEntry(entry, NavigationVisualStyle.Sidebar)));
         ReplaceItems(SidebarSections, BuildSidebarSections(shellPlan.Navigation));
         ReplaceItems(UtilityEntries, shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(CreateUtilityEntry));
+        RefreshDownloadCatalogSurface();
+        RefreshDownloadFavoriteSurface();
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
         RaiseCollectionStateProperties();
@@ -1981,6 +2076,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupJavaSurface));
         RaisePropertyChanged(nameof(IsSetupUiSurface));
         RaisePropertyChanged(nameof(IsDownloadInstallSurface));
+        RaisePropertyChanged(nameof(IsDownloadCatalogSurface));
+        RaisePropertyChanged(nameof(IsDownloadFavoritesSurface));
         RaisePropertyChanged(nameof(IsToolsGameLinkSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsToolsTestSurface));
@@ -2007,6 +2104,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(HasAboutProjectEntries));
         RaisePropertyChanged(nameof(HasAboutAcknowledgementEntries));
         RaisePropertyChanged(nameof(HasFeedbackSections));
+        RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
+        RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasHelpTopicGroups));
         RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
         RaisePropertyChanged(nameof(HasJavaRuntimeEntries));

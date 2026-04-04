@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -228,6 +229,209 @@ internal sealed partial class FrontendShellViewModel
         ]);
     }
 
+    private void RefreshDownloadCatalogSurface()
+    {
+        DownloadCatalogIntroTitle = string.Empty;
+        DownloadCatalogIntroBody = string.Empty;
+        ReplaceItems(DownloadCatalogIntroActions, []);
+        ReplaceItems(DownloadCatalogSections, []);
+
+        if (!IsDownloadCatalogSurface)
+        {
+            return;
+        }
+
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.DownloadClient:
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("Minecraft 1.21.1", "正式版客户端与版本描述文件。", "正式版 • 推荐", "下载客户端"),
+                        CreateDownloadCatalogEntry("Minecraft 1.20.6", "正式版客户端，适合与旧版加载器配合。", "正式版", "下载客户端"),
+                        CreateDownloadCatalogEntry("25w20a", "快照版客户端，仅适合测试用途。", "快照", "下载客户端")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadForge:
+                SetDownloadCatalogIntro(
+                    "Forge 简介",
+                    "Forge 是一个 Mod 加载器，你需要先安装 Forge 才能安装各种 Forge 模组。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 Forge 官网", "Would open the Forge website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("Forge 47.3.12", "适用于 Minecraft 1.20.1 的稳定构建。", "1.20.1 • 稳定版", "下载"),
+                        CreateDownloadCatalogEntry("Forge 43.4.0", "适用于 Minecraft 1.19.2 的兼容构建。", "1.19.2", "下载"),
+                        CreateDownloadCatalogEntry("Forge 40.2.21", "适用于 Minecraft 1.18.2 的长期常用版本。", "1.18.2", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadNeoForge:
+                SetDownloadCatalogIntro(
+                    "NeoForge 简介",
+                    "NeoForge 是 Forge 分支后的新加载器，本页保留原版的简介卡与版本列表结构。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 NeoForge 官网", "Would open the NeoForge website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("NeoForge 21.1.2", "适用于 Minecraft 1.21.1 的推荐版本。", "1.21.1 • 推荐", "下载"),
+                        CreateDownloadCatalogEntry("NeoForge 20.6.117", "适用于 Minecraft 1.20.6 的稳定构建。", "1.20.6", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadCleanroom:
+                SetDownloadCatalogIntro(
+                    "Cleanroom 简介",
+                    "Cleanroom 为旧版环境提供新的加载与兼容支持，这里继续沿用原版的简介卡与下载列表层级。",
+                    [
+                        new DownloadCatalogActionViewModel("打开项目页", PclButtonColorState.Highlight, CreateIntentCommand("打开 Cleanroom 项目页", "Would open the Cleanroom project page."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("Cleanroom 0.2.4-alpha", "适用于 Minecraft 1.12.2 的实验性构建。", "1.12.2 • 实验版", "下载"),
+                        CreateDownloadCatalogEntry("Cleanroom 0.2.3-alpha", "上一版演示构建。", "1.12.2", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadFabric:
+                SetDownloadCatalogIntro(
+                    "Fabric 简介",
+                    "Fabric Loader 是新版 Minecraft 下的轻量化 Mod 加载器，你需要先安装它才能安装各种 Fabric 模组。\n本页面提供 Fabric 安装器下载，在下载后你需要手动打开安装器进行安装。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 Fabric 官网", "Would open the Fabric website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("Fabric Loader 0.16.9", "当前演示中的推荐 Fabric 安装器。", "推荐版本", "下载"),
+                        CreateDownloadCatalogEntry("Fabric Loader 0.15.11", "与较旧模组整合包更常见的版本。", "兼容版本", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadQuilt:
+                SetDownloadCatalogIntro(
+                    "Quilt 简介",
+                    "Quilt 是基于 Fabric 生态继续演进的加载器，本页继续保留原版简介卡与版本卡堆叠。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 Quilt 官网", "Would open the Quilt website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("Quilt Loader 0.27.1", "推荐用于 1.21.1 演示实例。", "推荐版本", "下载"),
+                        CreateDownloadCatalogEntry("Quilt Loader 0.26.4", "上一组稳定演示构建。", "稳定版", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadLiteLoader:
+                SetDownloadCatalogIntro(
+                    "LiteLoader 简介",
+                    "LiteLoader 是旧版本 Minecraft 的轻量扩展加载器，布局继续贴近原版的简介卡与列表卡结构。",
+                    [
+                        new DownloadCatalogActionViewModel("查看说明", PclButtonColorState.Highlight, CreateIntentCommand("查看 LiteLoader 说明", "Would open LiteLoader documentation."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("LiteLoader 1.12.2-SNAPSHOT", "适用于 1.12.2 的快照构建。", "快照版", "下载"),
+                        CreateDownloadCatalogEntry("LiteLoader 1.8.9", "旧版常用构建。", "兼容版本", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadLabyMod:
+                SetDownloadCatalogIntro(
+                    "LabyMod 简介",
+                    "LabyMod 提供整合过的客户端体验，这里保持原版下载页的简介卡 + 列表卡层级。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 LabyMod 官网", "Would open the LabyMod website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("LabyMod 4.1.23", "适用于现代版本的推荐安装包。", "4.x • 推荐", "下载"),
+                        CreateDownloadCatalogEntry("LabyMod 3 Legacy", "旧版兼容安装包。", "旧版", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadLegacyFabric:
+                SetDownloadCatalogIntro(
+                    "Legacy Fabric 简介",
+                    "Legacy Fabric 面向旧版 Minecraft 环境，这里同样沿用原版的简介卡与版本列表布局。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 Legacy Fabric 官网", "Would open the Legacy Fabric website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("Legacy Fabric 1.8.9", "适用于 1.8.9 的推荐构建。", "推荐版本", "下载"),
+                        CreateDownloadCatalogEntry("Legacy Fabric 1.7.10", "旧版兼容构建。", "兼容版本", "下载")
+                    ])
+                ]);
+                break;
+            case LauncherFrontendSubpageKey.DownloadOptiFine:
+                SetDownloadCatalogIntro(
+                    "OptiFine 简介",
+                    "OptiFine 可以改善渲染效果与性能表现，本页继续保留原版的介绍卡与下载卡结构。",
+                    [
+                        new DownloadCatalogActionViewModel("打开官网", PclButtonColorState.Highlight, CreateIntentCommand("打开 OptiFine 官网", "Would open the OptiFine website."))
+                    ]);
+                ReplaceItems(DownloadCatalogSections,
+                [
+                    CreateDownloadCatalogSection("版本列表",
+                    [
+                        CreateDownloadCatalogEntry("OptiFine HD_U_I6", "适用于 1.20.1 的常用版本。", "1.20.1 • 推荐", "下载"),
+                        CreateDownloadCatalogEntry("OptiFine HD_U_H9", "适用于 1.19.2 的兼容版本。", "1.19.2", "下载")
+                    ])
+                ]);
+                break;
+        }
+    }
+
+    private void RefreshDownloadFavoriteSurface()
+    {
+        ReplaceItems(DownloadFavoriteSections, []);
+
+        if (!IsDownloadFavoritesSurface)
+        {
+            return;
+        }
+
+        ShowDownloadFavoriteWarning = SelectedDownloadFavoriteTargetIndex == 2;
+        DownloadFavoriteWarningText = "部分资源在线信息获取失败，点此查看详情";
+
+        var sections = BuildDownloadFavoriteSections()
+            .Select(section => new DownloadCatalogSectionViewModel(
+                section.Title,
+                section.Items
+                    .Where(item =>
+                        string.IsNullOrWhiteSpace(DownloadFavoriteSearchQuery)
+                        || item.Title.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase)
+                        || item.Info.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase)
+                        || item.Meta.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase))
+                    .ToArray()))
+            .Where(section => section.Items.Count > 0)
+            .ToArray();
+
+        ReplaceItems(DownloadFavoriteSections, sections);
+        RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
+        RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
+    }
+
     private void InitializeGameLinkSurface()
     {
         _linkUsername = "PCL CE 玩家";
@@ -445,6 +649,49 @@ internal sealed partial class FrontendShellViewModel
             icon,
             new ActionCommand(() => AddActivity($"选择安装项: {title}", selection)),
             new ActionCommand(() => AddActivity($"清除安装项: {title}", $"Would clear the selected {title} version.")));
+    }
+
+    private void SetDownloadCatalogIntro(string title, string body, IReadOnlyList<DownloadCatalogActionViewModel> actions)
+    {
+        DownloadCatalogIntroTitle = title;
+        DownloadCatalogIntroBody = body;
+        ReplaceItems(DownloadCatalogIntroActions, actions);
+    }
+
+    private DownloadCatalogSectionViewModel CreateDownloadCatalogSection(string title, IReadOnlyList<DownloadCatalogEntryViewModel> items)
+    {
+        return new DownloadCatalogSectionViewModel(title, items);
+    }
+
+    private DownloadCatalogEntryViewModel CreateDownloadCatalogEntry(string title, string info, string meta, string actionText)
+    {
+        return new DownloadCatalogEntryViewModel(
+            title,
+            info,
+            meta,
+            actionText,
+            new ActionCommand(() => AddActivity($"下载页操作: {title}", $"{meta} • {info}")));
+    }
+
+    private IReadOnlyList<DownloadCatalogSectionViewModel> BuildDownloadFavoriteSections()
+    {
+        return
+        [
+            CreateDownloadCatalogSection("Mod",
+            [
+                CreateDownloadCatalogEntry("Sodium", "现代性能优化模组。", "Fabric • 已收藏", "查看详情"),
+                CreateDownloadCatalogEntry("Mod Menu", "管理 Fabric 模组菜单。", "Fabric • 已收藏", "查看详情")
+            ]),
+            CreateDownloadCatalogSection("整合包",
+            [
+                CreateDownloadCatalogEntry("All The Mods 9", "大型整合包演示条目。", "整合包 • 已收藏", "查看详情")
+            ]),
+            CreateDownloadCatalogSection("资源包",
+            [
+                CreateDownloadCatalogEntry("Faithful 32x", "经典风格资源包。", "资源包 • 已收藏", "查看详情"),
+                CreateDownloadCatalogEntry("Complementary Shaders", "常用光影收藏条目。", "光影包 • 已收藏", "查看详情")
+            ])
+        ];
     }
 
     private ActionCommand CreateLinkCommand(string title, string url)

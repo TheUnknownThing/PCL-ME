@@ -225,6 +225,47 @@ internal sealed class DownloadInstallOptionViewModel(
     public ActionCommand ClearCommand { get; } = clearCommand;
 }
 
+internal sealed class DownloadCatalogActionViewModel(
+    string text,
+    PclButtonColorState colorType,
+    ActionCommand command)
+{
+    public string Text { get; } = text;
+
+    public PclButtonColorState ColorType { get; } = colorType;
+
+    public ActionCommand Command { get; } = command;
+}
+
+internal sealed class DownloadCatalogSectionViewModel(
+    string title,
+    IReadOnlyList<DownloadCatalogEntryViewModel> items)
+{
+    public string Title { get; } = title;
+
+    public IReadOnlyList<DownloadCatalogEntryViewModel> Items { get; } = items;
+}
+
+internal sealed class DownloadCatalogEntryViewModel(
+    string title,
+    string info,
+    string meta,
+    string actionText,
+    ActionCommand command)
+{
+    public string Title { get; } = title;
+
+    public string Info { get; } = info;
+
+    public string Meta { get; } = meta;
+
+    public string ActionText { get; } = actionText;
+
+    public ActionCommand Command { get; } = command;
+
+    public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
+}
+
 internal sealed class HelpTopicViewModel(
     string groupTitle,
     string title,

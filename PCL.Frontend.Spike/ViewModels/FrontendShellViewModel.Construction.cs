@@ -99,6 +99,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _selectHeadSkinCommand;
     private readonly ActionCommand _saveHeadCommand;
     private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
+    private readonly ActionCommand _manageDownloadFavoriteTargetCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -150,6 +151,12 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedHeadSizeIndex;
     private string _selectedHeadSkinPath = "尚未选择皮肤";
     private string _downloadInstallName = "新的安装方案";
+    private string _downloadCatalogIntroTitle = string.Empty;
+    private string _downloadCatalogIntroBody = string.Empty;
+    private string _downloadFavoriteSearchQuery = string.Empty;
+    private int _selectedDownloadFavoriteTargetIndex;
+    private string _downloadFavoriteWarningText = string.Empty;
+    private bool _showDownloadFavoriteWarning;
     private int _selectedLaunchIsolationIndex = 1;
     private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
     private string _launchCustomInfo = "PCL";
@@ -310,6 +317,7 @@ internal sealed partial class FrontendShellViewModel
         _selectHeadSkinCommand = new ActionCommand(SelectHeadSkin);
         _saveHeadCommand = CreateIntentCommand("保存头像", "Would export the generated avatar head image.");
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
+        _manageDownloadFavoriteTargetCommand = CreateIntentCommand("管理收藏夹", "Would open the favorite-target management dialog.");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
