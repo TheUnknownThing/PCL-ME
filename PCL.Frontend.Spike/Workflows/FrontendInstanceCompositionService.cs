@@ -156,7 +156,10 @@ internal static class FrontendInstanceCompositionService
     {
         var isStarred = ReadValue(instanceConfig, "IsStar", false);
         var categoryIndex = MapInstanceCategoryIndex(ReadValue(instanceConfig, "DisplayType", 0));
-        var customInfo = ReadValue(instanceConfig, "CustomInfo", string.Empty);
+        var customInfo = ReadValue(
+            instanceConfig,
+            "VersionArgumentInfo",
+            ReadValue(instanceConfig, "CustomInfo", string.Empty));
         var launchCount = ReadValue(instanceConfig, "VersionLaunchCount", 0);
         var modpackVersion = ReadValue(instanceConfig, "VersionModpackVersion", string.Empty);
         var infoEntries = new List<FrontendInstanceInfoEntry>();
