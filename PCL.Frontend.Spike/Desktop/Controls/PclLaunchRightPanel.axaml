@@ -2,9 +2,15 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclLaunchRightPanel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,25,25,10" Spacing="15">
+    <StackPanel
+        Margin="25,25,25,10"
+        motion:Motion.AnimateOnVisible="True"
+        motion:Motion.StaggerChildren="True"
+        motion:Motion.OffsetY="14"
+        Spacing="15">
       <controls:PclCard
           IsVisible="{Binding ShowLaunchCommunityHint}"
           Header="社区版提示"

@@ -7,13 +7,27 @@
       x:Name="CardShadow"
       Background="#00000000"
       BoxShadow="0 2 10 0 #12000000"
-      CornerRadius="5">
+      CornerRadius="5"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="translate(0,0)">
+    <Border.Transitions>
+      <Transitions>
+        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18" />
+      </Transitions>
+    </Border.Transitions>
     <Border
         x:Name="CardBorder"
         Background="{DynamicResource ColorBrushTransparentBackground}"
         BorderBrush="#30D5E6FD"
         BorderThickness="1"
         CornerRadius="5">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+          <BrushTransition Property="Background" Duration="0:0:0.18" />
+        </Transitions>
+      </Border.Transitions>
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />

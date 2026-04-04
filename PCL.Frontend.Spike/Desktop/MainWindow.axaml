@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Spike.Desktop.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     Title="Plain Craft Launcher ME"
     Width="1158"
@@ -74,6 +75,8 @@
                   Margin="130,0,0,0"
                   HorizontalAlignment="Left"
                   VerticalAlignment="Center"
+                  motion:Motion.AnimateOnVisible="True"
+                  motion:Motion.OffsetY="8"
                   IsVisible="{Binding ShowTopLevelNavigation}"
                   ItemsSource="{Binding TopLevelEntries}">
                 <ItemsControl.ItemsPanel>
@@ -98,6 +101,8 @@
                   Margin="130,0,0,0"
                   HorizontalAlignment="Left"
                   VerticalAlignment="Center"
+                  motion:Motion.AnimateOnVisible="True"
+                  motion:Motion.OffsetX="-12"
                   ColumnDefinitions="Auto,*"
                   IsVisible="{Binding ShowInnerNavigation}">
                 <controls:PclIconButton
@@ -135,7 +140,12 @@
         </Border>
 
         <Grid Grid.Row="1">
-          <Grid IsVisible="{Binding IsLaunchRoute}" ColumnDefinitions="Auto,*">
+          <Grid
+              IsVisible="{Binding IsLaunchRoute}"
+              motion:Motion.AnimateOnVisible="True"
+              motion:Motion.StaggerChildren="True"
+              motion:Motion.OffsetY="12"
+              ColumnDefinitions="Auto,*">
             <Border
                 Grid.Column="0"
                 Width="300"
@@ -150,7 +160,12 @@
             </Border>
           </Grid>
 
-          <Grid IsVisible="{Binding IsStandardShellRoute}" ColumnDefinitions="236,*">
+          <Grid
+              IsVisible="{Binding IsStandardShellRoute}"
+              motion:Motion.AnimateOnVisible="True"
+              motion:Motion.StaggerChildren="True"
+              motion:Motion.OffsetY="12"
+              ColumnDefinitions="236,*">
             <Border
                 Grid.Column="0"
                 Background="#FCFCFD"
@@ -168,6 +183,9 @@
               Margin="0,0,12,20"
               HorizontalAlignment="Right"
               VerticalAlignment="Bottom"
+              motion:Motion.AnimateOnVisible="True"
+              motion:Motion.StaggerChildren="True"
+              motion:Motion.OffsetY="10"
               Spacing="10">
             <ItemsControl ItemsSource="{Binding UtilityEntries}" IsVisible="{Binding HasUtilityEntries}">
               <ItemsControl.ItemTemplate>
@@ -189,6 +207,8 @@
 
           <Border
               IsVisible="{Binding IsPromptOverlayVisible}"
+              motion:Motion.AnimateOnVisible="True"
+              motion:Motion.OffsetY="8"
               Background="#500E2038" />
 
           <Border
@@ -201,7 +221,12 @@
               BorderBrush="#00000000"
               BorderThickness="0"
               CornerRadius="14">
-            <StackPanel Margin="20" Spacing="14">
+            <StackPanel
+                Margin="20"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.StaggerChildren="True"
+                motion:Motion.OffsetY="18"
+                Spacing="14">
               <controls:PclCard ContentMargin="20,20,20,20">
                 <controls:PclCard.CardContent>
                   <StackPanel Spacing="14">

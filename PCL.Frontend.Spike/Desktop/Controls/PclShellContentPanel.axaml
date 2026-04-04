@@ -2,10 +2,11 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclShellContentPanel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid>
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupLaunchSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLaunchSurface}" Spacing="15">
         <controls:PclCard Header="启动选项" ContentMargin="25,40,25,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28,9,28,9,28,9,28,9,28">
@@ -370,7 +371,7 @@
         </Button>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadInstallSurface}" Spacing="12">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadInstallSurface}" Spacing="12">
         <controls:PclCard ContentMargin="13,13,16,13">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto,*">
@@ -500,7 +501,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadCatalogSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadCatalogSurface}" Spacing="15">
         <controls:PclCard Header="{Binding DownloadCatalogIntroTitle}" IsVisible="{Binding HasDownloadCatalogIntro}" ContentMargin="25,40,15,20">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
@@ -582,7 +583,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadResourceSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadResourceSurface}" Spacing="15">
         <Border
             Height="40"
             Padding="12,0"
@@ -849,7 +850,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsDownloadFavoritesSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadFavoritesSurface}" Spacing="15">
         <Grid ColumnDefinitions="*,Auto">
           <Border
               Height="40"
@@ -961,7 +962,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupAboutSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupAboutSurface}" Spacing="15">
         <controls:PclCard Header="关于" ContentMargin="21,40,21,16">
           <controls:PclCard.CardContent>
             <ItemsControl ItemsSource="{Binding AboutProjectEntries}">
@@ -1045,7 +1046,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsSetupFeedbackSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupFeedbackSurface}" Spacing="15">
         <controls:PclCard Header="提交反馈" ContentMargin="20,40,18,22">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="15">
@@ -1094,7 +1095,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsSetupLogSurface}" Spacing="10">
+      <StackPanel Margin="25,25,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLogSurface}" Spacing="10">
         <controls:PclCard Header="日志操作" ContentMargin="25,40,20,20">
           <controls:PclCard.CardContent>
             <WrapPanel>
@@ -1144,7 +1145,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupUpdateSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupUpdateSurface}" Spacing="15">
         <controls:PclCard ContentMargin="20,15,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28,7,28">
@@ -1375,7 +1376,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupGameLinkSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupGameLinkSurface}" Spacing="15">
         <controls:PclCard Header="EasyTier" ContentMargin="25,40,25,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
@@ -1455,7 +1456,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupGameManageSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupGameManageSurface}" Spacing="15">
         <controls:PclCard Header="游戏资源获取行为" ContentMargin="25,37,25,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,27,27,Auto,27">
@@ -1665,7 +1666,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupLauncherMiscSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLauncherMiscSurface}" Spacing="15">
         <controls:PclCard Header="系统" ContentMargin="25,40,25,16">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,5,28,5,20,8,35">
@@ -1900,7 +1901,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupJavaSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupJavaSurface}" Spacing="15">
         <controls:PclCard ContentMargin="12">
           <controls:PclCard.CardContent>
             <StackPanel Orientation="Horizontal">
@@ -2030,7 +2031,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupUiSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupUiSurface}" Spacing="15">
         <controls:PclCard Header="基础" ContentMargin="25,40,25,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
@@ -2545,7 +2546,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsToolsGameLinkSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsToolsGameLinkSurface}" Spacing="15">
         <Border
             Padding="14,10"
             Background="#EAF2FE"
@@ -2861,7 +2862,7 @@
         </WrapPanel>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsToolsTestSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsToolsTestSurface}" Spacing="15">
         <controls:PclCard Header="百宝箱" ContentMargin="25,40,21,10">
           <controls:PclCard.CardContent>
             <ItemsControl ItemsSource="{Binding ToolboxActions}">
@@ -3119,7 +3120,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsToolsHelpSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsToolsHelpSurface}" Spacing="15">
         <Border
             Height="36"
             Padding="12,0"
@@ -3170,7 +3171,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,15" IsVisible="{Binding IsInstanceOverviewSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,15" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceOverviewSurface}" Spacing="15">
         <controls:PclCard ContentMargin="18,18,18,18">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*">
@@ -3385,7 +3386,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsInstanceSetupSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceSetupSurface}" Spacing="15">
         <Border
             Padding="12,10"
             Background="#EAF2FE"
@@ -3761,7 +3762,7 @@
             Text="全局设置" />
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsInstanceExportSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceExportSurface}" Spacing="15">
         <Border
             Padding="12,10"
             Background="#FFF8DD"
@@ -3930,7 +3931,7 @@
             Text="开始导出" />
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsInstanceInstallSurface}" Spacing="12">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceInstallSurface}" Spacing="12">
         <ItemsControl ItemsSource="{Binding InstanceInstallHints}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -4073,7 +4074,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceWorldSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceWorldSurface}" Spacing="15">
         <Border
             Height="40"
             Padding="12,0"
@@ -4182,7 +4183,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceScreenshotSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceScreenshotSurface}" Spacing="15">
         <controls:PclCard Header="快捷操作" ContentMargin="25,40,15,20">
           <controls:PclCard.CardContent>
             <controls:PclButton
@@ -4259,7 +4260,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceServerSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceServerSurface}" Spacing="15">
         <controls:PclCard Header="快捷操作" ContentMargin="25,40,23,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto">
@@ -4350,7 +4351,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceResourceSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceResourceSurface}" Spacing="15">
         <Border
             Height="40"
             Padding="12,0"
@@ -4530,7 +4531,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
         <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">

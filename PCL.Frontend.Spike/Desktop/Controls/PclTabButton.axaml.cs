@@ -152,7 +152,11 @@ internal sealed partial class PclTabButton : UserControl
         PanBack.Background = background;
         ShapeLogo.Fill = foreground;
         LabText.Foreground = foreground;
-        PanBack.Opacity = 1.0;
-        PanBack.RenderTransform = TransformOperations.Parse("scale(1)");
+        PanBack.Opacity = _isPressed ? 0.92 : 1.0;
+        PanBack.RenderTransform = _isPressed
+            ? TransformOperations.Parse("scale(0.965)")
+            : _isHovered
+                ? TransformOperations.Parse("scale(1.03)")
+                : TransformOperations.Parse("scale(1)");
     }
 }

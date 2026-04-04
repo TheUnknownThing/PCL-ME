@@ -2,10 +2,16 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclShellSidebarPanel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid>
-      <StackPanel Margin="0,12,0,0" IsVisible="{Binding HasSidebarSections}">
+      <StackPanel
+          Margin="0,12,0,0"
+          motion:Motion.AnimateOnVisible="True"
+          motion:Motion.StaggerChildren="True"
+          motion:Motion.OffsetX="-14"
+          IsVisible="{Binding HasSidebarSections}">
         <ItemsControl ItemsSource="{Binding SidebarSections}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -37,7 +43,13 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="18,20,18,18" Spacing="15" IsVisible="{Binding HasNoSidebarSections}">
+      <StackPanel
+          Margin="18,20,18,18"
+          motion:Motion.AnimateOnVisible="True"
+          motion:Motion.StaggerChildren="True"
+          motion:Motion.OffsetX="-14"
+          Spacing="15"
+          IsVisible="{Binding HasNoSidebarSections}">
         <controls:PclCard Header="当前页面" ContentMargin="18,14,18,18">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
