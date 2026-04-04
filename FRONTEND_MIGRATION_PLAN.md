@@ -21,7 +21,8 @@ Status as of 2026-04-04:
 - Phase 2 is complete
 - Phase 3 is complete
 - Phase 4A is complete
-- Phase 4B is now the active frontend task
+- Phase 4B is complete
+- Phase 5 can now start
 
 Phase 1 completion means:
 
@@ -370,13 +371,32 @@ Needed outcome:
 
 Status:
 
-- active next slice
+- complete as of 2026-04-04
+
+Delivered checkpoints:
+
+- `127dac06` `feat: add runtime instance composition layer`
+- `e6753070` `feat: wire runtime-backed instance shell surfaces`
+- `b079434d` `fix: honor labymod instance resource folders`
+
+Delivered scope:
+
+- copied instance routes now compose real state from launcher folder selection, selected instance name, instance-local config, version manifests, saves, screenshots, `servers.dat`, and resource directories
+- copied instance setup controls now persist back to `versions/<instance>/PCL/config.v1.yml` instead of reusing global launch settings
+- copied instance overview controls now persist favorite/category/icon metadata and the content pages now enumerate real worlds, screenshots, servers, mods, disabled mods, resource packs, shaders, and schematics
+- legacy `versions/<instance>/PCL/Setup.ini` fallback and migration is handled inside the instance composition/action layer
+- LabyMod-specific resource-folder routing is honored when opening resource directories
+
+Explicit 4B boundary:
+
+- this slice completes page-model migration, not every instance-side action flow
+- several buttons still intentionally dispatch placeholder adapter intents, including rename, description edit, launch-script export, dry-run/test launch, reset/delete flows, export config import/save, server creation, local file-picker installs, and profile creation
+- those remaining gaps belong to later adapter/action work and should not be solved by reintroducing fixture page state
 
 Recommended starting point:
 
-- preserve the now-completed setup family as-is
-- move the same route-local composition pattern into instance routes
-- prioritize overview, settings, export, install, world, screenshot, server, and resource pages in that order if a narrower 4B split is needed
+- preserve the now-completed setup and instance families as-is
+- use 4B as the reference implementation for route-local page composition from runtime files
 
 #### 4C. Download pages
 
@@ -426,21 +446,21 @@ Deliverable:
 | Prompt queue | portable rendering and command execution exist | `LauncherFrontendPromptService` | durable side effects and non-launch route state still need broader page-model integration |
 | Launch page | copied shell layout and runtime-backed composition | launch workflow services under `PCL.Core/Minecraft/Launch` plus `FrontendLaunchCompositionService` | broader launch cutover and keeping replay mode scoped to inspection |
 | Setup pages | many copied layouts | real setup composition and update-status adapters now exist | 4A complete; only dormant optional update copy remains outside scope |
+| Instance pages | many copied layouts | `FrontendInstanceCompositionService` plus runtime file/config composition now exist | live action adapters for some instance buttons are still placeholder-only |
 | Download pages | copied install and resource layouts | navigation + page-content summary seam exists | real catalog/search/install contracts |
 | Tools pages | copied help/lobby/test layouts | shell contracts exist | real tool data sources and widget actions |
-| Instance pages | many copied layouts | profile storage and launch profile services exist | real instance/page models |
 | Version saves | still relatively weak | navigation seam exists | dedicated real page contracts and adapters |
 
 ## Immediate Next Work
 
 This is the recommended concrete order for the next frontend passes.
 
-1. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
-2. Treat settings/setup routes as the completed reference implementation for route-local composition and persistence.
-3. Fill the `VersionSaves` and denser tool-route gaps with real contracts instead of summary-only placeholders.
-4. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
+1. Start Phase 5 by separating reusable frontend adapters from spike-only sample/replay helpers in `PCL.Frontend.Spike/Workflows` and `PCL.Frontend.Spike/ViewModels`.
+2. Treat setup and instance routes as the completed reference implementations for route-local composition and persistence.
+3. Finish download-page and `VersionSaves` data contracts without changing the copied Avalonia layouts.
+4. Replace remaining placeholder instance/tool/download actions with real adapter-style shell actions where practical.
 5. Preserve the runtime-backed launch route and avoid reintroducing fixture state into the normal `app` path.
-6. Separate reusable frontend adapters from spike-only sample generation once more page families stop depending on fixtures.
+6. Keep replay/inspection helpers explicit and scoped so they do not leak into production-facing composition paths.
 
 ## Backend Support Needed
 
@@ -448,11 +468,10 @@ The frontend workstream should ask for backend-facing contracts when any page st
 
 The most likely contract additions are:
 
-- richer setup page models
-- richer instance page models
 - download catalog and install-state models
 - save management models for `VersionSaves`
 - prompt command execution seams that return durable state updates
+- live adapter/action seams for remaining instance, tool, and download buttons
 
 ## What Success Looks Like
 
@@ -466,4 +485,6 @@ Phase 2 is now in that state.
 
 Phase 3 is now also in that state for runtime-backed launch-page composition on the normal `app` path.
 
-The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the remaining Phase 4B/4C/4D data work is done.
+Phase 4B is now in that state for runtime-backed instance-page composition and persistence, with remaining non-live button flows explicitly outside its scope.
+
+The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the remaining Phase 4C/4D page-model work and Phase 5 adapter cleanup are done.

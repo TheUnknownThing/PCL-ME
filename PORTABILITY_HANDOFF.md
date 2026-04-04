@@ -10,7 +10,8 @@ The portability phase has crossed an important boundary:
 - frontend migration Phase 2 prompt-command execution is complete as of 2026-04-04
 - frontend migration Phase 3 launch-state integration is complete as of 2026-04-04
 - frontend migration Phase 4A setup-page model migration is complete as of 2026-04-04
-- the next major frontend task is Phase 4B instance-page model migration
+- frontend migration Phase 4B instance-page model migration is complete as of 2026-04-04
+- the next major frontend task is Phase 5 frontend-adapter cleanup and spike separation
 
 The repo is therefore in this state:
 
@@ -265,7 +266,7 @@ The frontend shell bootstrap and launch route are no longer mostly fixture-drive
 The remaining spike-heavy areas are now:
 
 - crash/launch replay plan injection used by inspection flows
-- route-local page fixtures outside the launch route
+- route-local page fixtures outside the completed launch/setup/instance families
 - spike-only tooling that still sits beside reusable frontend adapters
 
 ## What Still Isn’t Done
@@ -276,8 +277,6 @@ Many copied pages still use hard-coded view-model state even when their visuals 
 
 The main remaining data gaps are:
 
-- setup page data binding to real config/runtime state
-- instance page binding to real profile and file state
 - download route binding to real search/catalog/install planning state
 - `VersionSaves` subpages
 - richer tool widgets
@@ -368,9 +367,9 @@ Important caveat:
 Current state:
 
 1. setup pages are complete as Phase 4A
-2. instance pages are the next recommended Phase 4B slice
-3. download pages follow after instance pages
-4. version-saves pages and denser tool widgets still remain later in Phase 4
+2. instance pages are complete as Phase 4B
+3. download pages and version-saves pages remain unfinished Phase 4 slices
+4. adapter cleanup and spike separation can now proceed as Phase 5 in parallel with remaining page-family work
 
 Phase 4A delivered:
 
@@ -397,6 +396,36 @@ Important caveat for the next engineer:
 - the hidden optional AquaCL card remains dormant copied UI and is not part of the completed 4A setup slice
 - the WPF-style in-place self-update patch-and-restart installer flow has not been ported into the Avalonia shell; 4A stops at real status, changelog, and download-target composition
 
+Phase 4B delivered:
+
+- real instance-page composition through:
+  - `PCL.Frontend.Spike/Models/FrontendInstanceComposition.cs`
+  - `PCL.Frontend.Spike/Workflows/FrontendInstanceCompositionService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceComposition.cs`
+- runtime-backed instance page state and persistence through:
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceSetup.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceExport.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceInstall.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceContent.cs`
+  - `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
+- instance persistence and config migration through:
+  - `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+
+What this means in practice:
+
+- copied `实例/概览`, `实例/设置`, `实例/导出`, `实例/安装`, `实例/世界`, `实例/截图`, `实例/服务器`, `实例/Mod`, `实例/已禁用 Mod`, `实例/资源包`, `实例/光影包`, and `实例/投影原理图` now compose their state from real launcher files and instance config
+- the instance setup page now persists per-instance values to `versions/<instance>/PCL/config.v1.yml` instead of reusing global launch settings
+- the overview favorite/category/icon selectors now persist instance metadata and the content pages now enumerate real saves, screenshots, servers, and resource folders
+- legacy `versions/<instance>/PCL/Setup.ini` is migrated forward when instance config is missing
+- LabyMod-specific resource folders are respected when opening resource directories
+
+Important caveat for the next engineer:
+
+- 4B is complete as a page-model migration milestone, not as a full production action cutover
+- several instance-page buttons still intentionally route to placeholder activity/intention handlers, such as rename, description edit, script export, dry-run/test launch, delete/reset flows, export config import/save, add-server, file-picker installs, and profile creation
+- treat those remaining gaps as adapter/action follow-up work, not as a reason to reintroduce fixture page state
+
 Recommended order:
 
 1. setup pages
@@ -404,6 +433,13 @@ Recommended order:
 3. download pages
 4. version-saves pages
 5. denser tool widgets
+
+Recommended next order from this checkpoint:
+
+1. Phase 5 adapter cleanup and spike/helper separation
+2. download pages
+3. version-saves pages
+4. denser tool widgets
 
 ### Step 5: preserve the copied UI work
 
@@ -457,6 +493,9 @@ These are the most relevant recent frontend checkpoints:
 - `cdb115de` `feat: wire setup validation commands`
 - `3dc19bcf` `feat: wire setup file management actions`
 - `f4387d21` `feat: compose real setup update status`
+- `127dac06` `feat: add runtime instance composition layer`
+- `e6753070` `feat: wire runtime-backed instance shell surfaces`
+- `b079434d` `fix: honor labymod instance resource folders`
 
 ## Files To Read First
 
@@ -475,6 +514,7 @@ If you are picking this up cold, read these first:
 - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
 - `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
 - `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendInstanceCompositionService.cs`
 - `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
 
 ### Real UI reference
