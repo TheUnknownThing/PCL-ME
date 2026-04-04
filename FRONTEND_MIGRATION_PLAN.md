@@ -49,13 +49,16 @@ Recent checkpoints:
 - `311b88b3` `feat: wire save detail and download surfaces`
 - `e96247f6` `feat: runtime-back toolbox test surface`
 - `cc716c73` `feat: compose help and game link tool routes`
+- `af689e45` `feat: wire instance resource and export actions`
+- `f5d2a521` `feat: wire toolbox shell actions`
 
 What that means today:
 
 - the replacement shell is no longer mostly fixture-driven
 - major route families already exist visually
 - the tools route family now has dedicated runtime composition
-- Track 1 is not fully complete yet because several instance detail/action surfaces still contain placeholder-only actions or sample-only detail content
+- instance resource/server/export pages now perform several real file, clipboard, and archive actions from the replacement shell
+- Track 1 is not fully complete yet because several instance overview/action surfaces still contain placeholder-only actions and some download/detail views still keep sample-only primary content
 - the remaining work is mostly route-parity cleanup, real-behavior parity, and cross-platform cutover
 
 ## Repo Boundaries
@@ -141,13 +144,12 @@ Completed in this track:
 Still required before Track 1 can be called done:
 
 - remaining instance overview/action commands that still only write activity-feed intent text
-- instance resource/server actions that still stop at placeholder activity output
 - download/detail subroutes that still rely on sample entries for primary content
 
 Recommended owner split:
 
-- if staffing Track 2 now, start with migrated tools actions because the route composition is in place
-- keep a separate owner on the remaining Track 1 instance/detail parity cleanup until placeholder-only route content is removed
+- if staffing Track 2 now, continue with migrated tools actions because the route composition is in place and the first toolbox shell-action slice has landed
+- keep a separate owner on the remaining Track 1 instance overview/detail parity cleanup until placeholder-only route content is removed
 
 ## Track 2. Shell Action Parity
 
@@ -176,6 +178,18 @@ Recommended owner split:
 ### Suggested slice size
 
 - one button group or one page action cluster per commit
+
+### Status on 2026-04-04
+
+Completed in this track:
+
+- toolbox test page now has real shell/file behavior for cleanup, daily-luck output, launch-count output, and shortcut creation
+
+Still required before this track can be called healthy:
+
+- remaining toolbox buttons that still only emit intent text, especially memory optimization
+- game-link actions that still stop at synthetic activity output
+- instance overview and maintenance actions that still do not perform real rename/export/delete/restore/patch behavior
 
 ## Track 3. Launch Cutover
 
@@ -321,7 +335,8 @@ Why first:
 
 Expected reviewer test:
 
-- click each migrated tool action and inspect the resulting file/output/folder behavior
+- click each remaining intent-only tool action and inspect the resulting file/output/folder behavior
+- verify the already-migrated toolbox actions still create the expected outputs
 
 ### Slice 2. Finish remaining instance-action placeholders
 
@@ -331,7 +346,7 @@ Why second:
 
 Expected reviewer test:
 
-- perform the migrated instance action and verify the resulting launcher or filesystem state
+- perform rename/description/edit/export/delete/restore-style actions and verify the resulting launcher or filesystem state
 
 ### Slice 3. Real launch execution cutover
 
@@ -394,6 +409,7 @@ Good examples:
 
 - `feat: wire tool test downloads to real shell actions`
 - `feat: migrate instance maintenance actions`
+- `feat: wire instance overview shell actions`
 - `refactor: isolate launcher shell adapters`
 - `docs: refresh frontend cutover checklist`
 

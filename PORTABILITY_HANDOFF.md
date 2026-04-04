@@ -9,6 +9,8 @@ Status as of 2026-04-04:
 - copied launcher UI exists for most major routes in `PCL.Frontend.Spike`
 - startup, prompt, launch, setup, instance, download, and version-saves composition are now partially or mostly runtime-backed
 - the tools route family now has a dedicated runtime composition path
+- instance resource/server/export surfaces now perform several real file, clipboard, and archive actions from the replacement shell
+- toolbox test page has started moving from intent-only buttons to real shell/file outputs
 - the repo is past the “can this work outside WPF?” stage
 - the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
 
@@ -117,8 +119,8 @@ The frontend can compose real launch state, but cutover still needs:
 Examples:
 
 - some test/tool buttons still only log intent text even though the route data is now runtime-backed
-- some instance actions still stop at activity feed output
-- some export and maintenance flows still need real adapters
+- several instance overview and maintenance buttons still stop at activity feed output
+- launch-script export, rename/description editing, delete/restore/patch, and deeper game-link flows still need real adapters
 
 ### 3. Cross-platform adapter coverage is incomplete
 
@@ -208,7 +210,8 @@ Done when:
 Status on 2026-04-04:
 
 - tools route family: mostly done for Track 1
-- remaining gap: instance detail/action surfaces still include placeholder-only commands and some sample-only detail content
+- instance resource/server/export surfaces are now runtime-backed and no longer primary Track 1 blockers
+- remaining gap: instance overview/action surfaces still include placeholder-only commands, and some download/detail views still keep sample-driven primary content
 - do not mark Track 1 complete until those instance/detail leftovers are removed or isolated
 
 Manual verification:
@@ -224,14 +227,16 @@ Goal:
 
 Recommended starting point for the next Track 2 engineer:
 
-- begin with the migrated tools pages because their route-local composition is now in place
+- continue from the migrated tools pages because their route-local composition is now in place
 - recent frontend checkpoints for this handoff:
   - `e96247f6` `feat: runtime-back toolbox test surface`
   - `cc716c73` `feat: compose help and game link tool routes`
+  - `af689e45` `feat: wire instance resource and export actions`
+  - `f5d2a521` `feat: wire toolbox shell actions`
 - likely first buttons to convert:
-  - toolbox actions on the test page
+  - remaining toolbox actions on the test page, especially memory optimization and any buttons that still only emit intent text
   - game-link action cluster on the tools route
-  - instance-side actions that still only emit activity text
+  - instance overview and maintenance actions that still only emit activity text
 
 Examples:
 
@@ -340,7 +345,8 @@ The next engineers should not take “finish the launcher” as one task. They s
 Scope:
 
 - `工具/测试`
-- any tool controls that still only emit intent text
+- any tool controls that still only emit intent text after `f5d2a521`
+- game-link controls that still stop at synthetic activity output
 
 Reviewer can verify by:
 
@@ -351,7 +357,8 @@ Reviewer can verify by:
 
 Scope:
 
-- instance overview/setup/export actions that still stop at activity text
+- instance overview/setup actions that still stop at activity text
+- maintenance buttons such as rename, description edit, launch-script export, test launch, restore, delete, and patch core
 
 Reviewer can verify by:
 
@@ -411,6 +418,8 @@ Avoid:
 - `40467f7d` `refactor: add frontend inspection composition boundary`
 - `c32d72b1` `docs: mark frontend phase 5 complete`
 - `311b88b3` `feat: wire save detail and download surfaces`
+- `af689e45` `feat: wire instance resource and export actions`
+- `f5d2a521` `feat: wire toolbox shell actions`
 
 ## Bottom Line
 
