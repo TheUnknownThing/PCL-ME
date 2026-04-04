@@ -143,6 +143,8 @@ Public Class FormMain
             AddressOf RunCountSub,
             AddressOf TryClearTaskTemp)
 
+        RefreshTopBarSelectionVisualState()
+
         Log("[Start] 第三阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
     End Sub
 
@@ -155,6 +157,15 @@ Public Class FormMain
         RenderTransform = Nothing
         IsWindowLoadFinished = True
         Log($"[System] DPI：{DPI}，系统版本：{Environment.OSVersion.VersionString}，PCL 位置：{ExePathWithName}")
+    End Sub
+
+    Private Sub RefreshTopBarSelectionVisualState()
+        If PanTitleSelect Is Nothing Then Return
+        For Each control In PanTitleSelect.Children
+            If TypeOf control Is MyRadioButton Then
+                CType(control, MyRadioButton).RefreshMyRadioButtonColor()
+            End If
+        Next
     End Sub
 
     Private Shared Function GetStartupSpecialBuildKind() As LauncherStartupSpecialBuildKind
@@ -779,6 +790,7 @@ Public Class FormMain
             Log(ex, "切换主要页面失败（ID " & PageCurrent.Page & "）", LogLevel.Feedback)
         Finally
             AniControlEnabled -= 1
+            RefreshTopBarSelectionVisualState()
         End Try
     End Sub
     Private Sub PageChangeAnim(TargetLeft As FrameworkElement, TargetRight As FrameworkElement)

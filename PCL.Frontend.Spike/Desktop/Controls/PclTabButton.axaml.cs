@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
+using Avalonia.Threading;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
 
@@ -38,6 +39,9 @@ internal sealed partial class PclTabButton : UserControl
     {
         InitializeComponent();
 
+        DataContextChanged += (_, _) => RefreshVisualState();
+        AttachedToVisualTree += (_, _) => RefreshVisualState();
+
         ButtonHost.PointerEntered += (_, _) =>
         {
             _isHovered = true;
@@ -62,6 +66,7 @@ internal sealed partial class PclTabButton : UserControl
             _isPressed = false;
             RefreshVisualState();
         };
+        ButtonHost.Click += (_, _) => Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Background);
 
         RefreshVisualState();
         LabText.Text = Text;
