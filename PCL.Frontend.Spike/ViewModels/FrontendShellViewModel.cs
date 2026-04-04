@@ -6,6 +6,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Spike.Cli;
+using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
 
@@ -92,6 +93,14 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _openGameLinkFaqCommand;
     private readonly ActionCommand _openEasyTierWebsiteCommand;
     private readonly ActionCommand _openPysioWebsiteCommand;
+    private readonly ActionCommand _selectDownloadFolderCommand;
+    private readonly ActionCommand _startCustomDownloadCommand;
+    private readonly ActionCommand _openCustomDownloadFolderCommand;
+    private readonly ActionCommand _saveOfficialSkinCommand;
+    private readonly ActionCommand _previewAchievementCommand;
+    private readonly ActionCommand _saveAchievementCommand;
+    private readonly ActionCommand _selectHeadSkinCommand;
+    private readonly ActionCommand _saveHeadCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -125,6 +134,18 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private string _gameLinkAccountStatus = "点击登录 Natayark 账户";
     private string _gameLinkLobbyId = string.Empty;
     private int _selectedGameLinkWorldIndex;
+    private string _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
+    private string _toolDownloadUserAgent = "PCL-CE-Spike/1.0";
+    private string _toolDownloadFolder = "/Users/demo/Downloads/PCL";
+    private string _toolDownloadName = "demo-pack.zip";
+    private string _officialSkinPlayerName = "Steve";
+    private string _achievementBlockId = "diamond_sword";
+    private string _achievementTitle = "Achievement Get!";
+    private string _achievementFirstLine = "Time to Strike!";
+    private string _achievementSecondLine = "PCL Frontend Spike";
+    private bool _showAchievementPreview;
+    private int _selectedHeadSizeIndex;
+    private string _selectedHeadSkinPath = "尚未选择皮肤";
     private int _selectedLaunchIsolationIndex = 1;
     private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
     private string _launchCustomInfo = "PCL";
@@ -273,6 +294,14 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _openGameLinkFaqCommand = CreateIntentCommand("常见问题解答", "Would open the P2P 联机常见问题帮助条目.");
         _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
         _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
+        _selectDownloadFolderCommand = new ActionCommand(SelectDownloadFolder);
+        _startCustomDownloadCommand = new ActionCommand(StartCustomDownload);
+        _openCustomDownloadFolderCommand = CreateIntentCommand("打开下载文件夹", "Would reveal the selected custom download directory.");
+        _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
+        _previewAchievementCommand = new ActionCommand(PreviewAchievement);
+        _saveAchievementCommand = CreateIntentCommand("保存成就图片", "Would save the generated achievement preview as an image.");
+        _selectHeadSkinCommand = new ActionCommand(SelectHeadSkin);
+        _saveHeadCommand = CreateIntentCommand("保存头像", "Would export the generated avatar head image.");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -286,6 +315,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeUpdateSurface();
         InitializeLaunchSettingsSurface();
         InitializeToolsGameLinkSurface();
+        InitializeToolsTestSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();
@@ -323,6 +353,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ObservableCollection<SimpleListEntryViewModel> LogEntries { get; } = [];
 
     public ObservableCollection<SimpleListEntryViewModel> GameLinkPolicyEntries { get; } = [];
+
+    public ObservableCollection<ToolboxActionViewModel> ToolboxActions { get; } = [];
 
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
@@ -875,6 +907,85 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         get => _selectedGameLinkWorldIndex;
         set => SetProperty(ref _selectedGameLinkWorldIndex, Math.Clamp(value, 0, GameLinkWorldOptions.Count - 1));
+    }
+
+    public string ToolDownloadUrl
+    {
+        get => _toolDownloadUrl;
+        set => SetProperty(ref _toolDownloadUrl, value);
+    }
+
+    public string ToolDownloadUserAgent
+    {
+        get => _toolDownloadUserAgent;
+        set => SetProperty(ref _toolDownloadUserAgent, value);
+    }
+
+    public string ToolDownloadFolder
+    {
+        get => _toolDownloadFolder;
+        set => SetProperty(ref _toolDownloadFolder, value);
+    }
+
+    public string ToolDownloadName
+    {
+        get => _toolDownloadName;
+        set => SetProperty(ref _toolDownloadName, value);
+    }
+
+    public string OfficialSkinPlayerName
+    {
+        get => _officialSkinPlayerName;
+        set => SetProperty(ref _officialSkinPlayerName, value);
+    }
+
+    public string AchievementBlockId
+    {
+        get => _achievementBlockId;
+        set => SetProperty(ref _achievementBlockId, value);
+    }
+
+    public string AchievementTitle
+    {
+        get => _achievementTitle;
+        set => SetProperty(ref _achievementTitle, value);
+    }
+
+    public string AchievementFirstLine
+    {
+        get => _achievementFirstLine;
+        set => SetProperty(ref _achievementFirstLine, value);
+    }
+
+    public string AchievementSecondLine
+    {
+        get => _achievementSecondLine;
+        set => SetProperty(ref _achievementSecondLine, value);
+    }
+
+    public bool ShowAchievementPreview
+    {
+        get => _showAchievementPreview;
+        private set => SetProperty(ref _showAchievementPreview, value);
+    }
+
+    public IReadOnlyList<string> HeadSizeOptions { get; } =
+    [
+        "64x64",
+        "96x96",
+        "128x128"
+    ];
+
+    public int SelectedHeadSizeIndex
+    {
+        get => _selectedHeadSizeIndex;
+        set => SetProperty(ref _selectedHeadSizeIndex, Math.Clamp(value, 0, HeadSizeOptions.Count - 1));
+    }
+
+    public string SelectedHeadSkinPath
+    {
+        get => _selectedHeadSkinPath;
+        set => SetProperty(ref _selectedHeadSkinPath, value);
     }
 
     public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
@@ -1732,6 +1843,22 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     public ActionCommand OpenPysioWebsiteCommand => _openPysioWebsiteCommand;
 
+    public ActionCommand SelectDownloadFolderCommand => _selectDownloadFolderCommand;
+
+    public ActionCommand StartCustomDownloadCommand => _startCustomDownloadCommand;
+
+    public ActionCommand OpenCustomDownloadFolderCommand => _openCustomDownloadFolderCommand;
+
+    public ActionCommand SaveOfficialSkinCommand => _saveOfficialSkinCommand;
+
+    public ActionCommand PreviewAchievementCommand => _previewAchievementCommand;
+
+    public ActionCommand SaveAchievementCommand => _saveAchievementCommand;
+
+    public ActionCommand SelectHeadSkinCommand => _selectHeadSkinCommand;
+
+    public ActionCommand SaveHeadCommand => _saveHeadCommand;
+
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
         return new FrontendShellViewModel(options);
@@ -2110,6 +2237,32 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         ]);
     }
 
+    private void InitializeToolsTestSurface()
+    {
+        _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
+        _toolDownloadUserAgent = "PCL-CE-Spike/1.0";
+        _toolDownloadFolder = "/Users/demo/Downloads/PCL";
+        _toolDownloadName = "demo-pack.zip";
+        _officialSkinPlayerName = "Steve";
+        _achievementBlockId = "diamond_sword";
+        _achievementTitle = "Achievement Get!";
+        _achievementFirstLine = "Time to Strike!";
+        _achievementSecondLine = "PCL Frontend Spike";
+        _showAchievementPreview = false;
+        _selectedHeadSizeIndex = 0;
+        _selectedHeadSkinPath = "尚未选择皮肤";
+
+        ReplaceItems(ToolboxActions,
+        [
+            CreateToolboxAction("内存优化", "内存优化为 PCL CE 特供版演示按钮。", 110, PclButtonColorState.Normal, CreateIntentCommand("内存优化", "Would run the launcher memory optimization workflow.")),
+            CreateToolboxAction("清理游戏垃圾", "清理 PCL 缓存与日志等垃圾文件。", 130, PclButtonColorState.Normal, CreateIntentCommand("清理游戏垃圾", "Would clear cache, logs, and crash reports.")),
+            CreateToolboxAction("今日人品", "演示工具按钮。", 110, PclButtonColorState.Normal, CreateIntentCommand("今日人品", "Would calculate the daily luck value.")),
+            CreateToolboxAction("崩溃测试", "危险操作，仅用于测试。", 110, PclButtonColorState.Red, CreateIntentCommand("崩溃测试", "Would trigger the launcher crash-test path.")),
+            CreateToolboxAction("创建快捷方式", "创建一个指向启动器的快捷方式。", 130, PclButtonColorState.Normal, CreateIntentCommand("创建快捷方式", "Would create a shortcut to the launcher executable.")),
+            CreateToolboxAction("查看启动计数", "查看启动器的累计启动次数。", 130, PclButtonColorState.Normal, CreateIntentCommand("查看启动计数", "Would show the launcher start-count dialog."))
+        ]);
+    }
+
     private void InitializeGameLinkSurface()
     {
         _linkUsername = "PCL CE 玩家";
@@ -2309,6 +2462,11 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         return new SimpleListEntryViewModel(title, info, new ActionCommand(() => AddActivity($"查看条目: {title}", info)));
     }
 
+    private ToolboxActionViewModel CreateToolboxAction(string title, string toolTip, double minWidth, PclButtonColorState colorType, ActionCommand command)
+    {
+        return new ToolboxActionViewModel(title, toolTip, minWidth, colorType, command);
+    }
+
     private ActionCommand CreateLinkCommand(string title, string url)
     {
         return new ActionCommand(() => AddActivity(title, url));
@@ -2449,6 +2607,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             return;
         }
 
+        if (IsToolsTestSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            RefreshToolsTestSurface();
+            return;
+        }
+
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
@@ -2540,6 +2704,24 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         AddActivity("刷新联机大厅", "联机大厅页面已恢复到初始演示状态。");
     }
 
+    private void RefreshToolsTestSurface()
+    {
+        InitializeToolsTestSurface();
+        RaisePropertyChanged(nameof(ToolDownloadUrl));
+        RaisePropertyChanged(nameof(ToolDownloadUserAgent));
+        RaisePropertyChanged(nameof(ToolDownloadFolder));
+        RaisePropertyChanged(nameof(ToolDownloadName));
+        RaisePropertyChanged(nameof(OfficialSkinPlayerName));
+        RaisePropertyChanged(nameof(AchievementBlockId));
+        RaisePropertyChanged(nameof(AchievementTitle));
+        RaisePropertyChanged(nameof(AchievementFirstLine));
+        RaisePropertyChanged(nameof(AchievementSecondLine));
+        RaisePropertyChanged(nameof(ShowAchievementPreview));
+        RaisePropertyChanged(nameof(SelectedHeadSizeIndex));
+        RaisePropertyChanged(nameof(SelectedHeadSkinPath));
+        AddActivity("刷新测试工具页", "测试页表单与工具按钮已恢复到默认演示状态。");
+    }
+
     private void AcceptGameLinkTerms()
     {
         GameLinkAnnouncement = "已同意说明与条款，可以继续加入或创建大厅。";
@@ -2587,6 +2769,34 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         SelectedGameLinkWorldIndex = (SelectedGameLinkWorldIndex + 1) % GameLinkWorldOptions.Count;
         AddActivity("刷新世界列表", GameLinkWorldOptions[SelectedGameLinkWorldIndex]);
+    }
+
+    private void SelectDownloadFolder()
+    {
+        ToolDownloadFolder = "/Users/demo/Downloads/PCL/custom";
+        AddActivity("选择下载目录", ToolDownloadFolder);
+    }
+
+    private void StartCustomDownload()
+    {
+        AddActivity("开始下载自定义文件", $"{ToolDownloadUrl} -> {ToolDownloadFolder}/{ToolDownloadName}");
+    }
+
+    private void SaveOfficialSkin()
+    {
+        AddActivity("保存正版皮肤", $"Would save the skin for {OfficialSkinPlayerName}.");
+    }
+
+    private void PreviewAchievement()
+    {
+        ShowAchievementPreview = !ShowAchievementPreview;
+        AddActivity("预览成就图片", ShowAchievementPreview ? AchievementTitle : "Achievement preview hidden.");
+    }
+
+    private void SelectHeadSkin()
+    {
+        SelectedHeadSkinPath = "/Users/demo/Downloads/skin.png";
+        AddActivity("选择皮肤", SelectedHeadSkinPath);
     }
 
     private void ResetGameLinkSurface()
@@ -3439,6 +3649,24 @@ internal sealed class SimpleListEntryViewModel(string title, string info, Action
     public string Title { get; } = title;
 
     public string Info { get; } = info;
+
+    public ActionCommand Command { get; } = command;
+}
+
+internal sealed class ToolboxActionViewModel(
+    string title,
+    string toolTip,
+    double minWidth,
+    PclButtonColorState colorType,
+    ActionCommand command)
+{
+    public string Title { get; } = title;
+
+    public string ToolTip { get; } = toolTip;
+
+    public double MinWidth { get; } = minWidth;
+
+    public PclButtonColorState ColorType { get; } = colorType;
 
     public ActionCommand Command { get; } = command;
 }

@@ -633,6 +633,7 @@ public static class LauncherFrontendPageContentService
         {
             LauncherFrontendSubpageKey.ToolsGameLink => BuildToolsGameLinkContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => BuildToolsHelpContent(request, promptTotal, visibleUtilityCount),
+            LauncherFrontendSubpageKey.ToolsTest => BuildToolsTestContent(request, promptTotal, visibleUtilityCount),
             _ => BuildGenericToolsContent(request, promptTotal, visibleUtilityCount)
         };
     }
@@ -763,6 +764,48 @@ public static class LauncherFrontendPageContentService
                     [
                         "真实帮助条目、分类与详情正文仍需要更细的后端输入合同。",
                         "在合同到位前，前端可以先验证页面结构与搜索交互。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildToolsTestContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return new LauncherFrontendPageContent(
+            "测试页面",
+            "百宝箱、下载自定义文件、皮肤工具和成就生成器已经可以按原版 PageToolsTest 的卡片顺序进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "测试"),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "工具",
+                    "百宝箱",
+                    [
+                        "保留了顶部 WrapPanel 按钮区，包括内存优化、清理垃圾、崩溃测试和创建快捷方式这些入口。",
+                        "危险操作继续保留为红色按钮，而不是和普通工具混成统一样式。",
+                        "这些按钮仍然只代表显式意图，不应把旧版执行逻辑直接带回前端。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "表单",
+                    "下载与皮肤工具",
+                    [
+                        "下载自定义文件卡继续保留下载地址、User-Agent、保存目录和文件名四行表单。",
+                        "正版皮肤下载与头像生成器也继续按原页面顺序保留在后续卡片中。",
+                        "瞅眼服务器控件可以先保留卡位，等专属组件迁移时再替换成真正内容。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "生成器",
+                    "成就图片与头像",
+                    [
+                        "自定义成就图片生成器继续保留四个输入项和预览 / 保存按钮组合。",
+                        "头像生成器也继续保留尺寸选择、选皮肤按钮和预览容器。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);

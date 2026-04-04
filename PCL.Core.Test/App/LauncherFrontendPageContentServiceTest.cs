@@ -176,6 +176,23 @@ public sealed class LauncherFrontendPageContentServiceTest
             section.Lines.Any(line => line.Contains("加入大厅卡", StringComparison.Ordinal))));
     }
 
+    [TestMethod]
+    public void BuildToolsTestContentDescribesUtilityCards()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes()));
+
+        Assert.AreEqual("测试页面", content.Eyebrow);
+        Assert.AreEqual("测试", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "下载与皮肤工具" &&
+            section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal))));
+    }
+
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
     {
         return LauncherStartupWorkflowService.BuildPlan(new LauncherStartupWorkflowRequest(
