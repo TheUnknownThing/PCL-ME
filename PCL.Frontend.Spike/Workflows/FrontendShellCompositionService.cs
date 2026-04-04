@@ -28,7 +28,7 @@ internal static class FrontendShellCompositionService
         var localConfig = new YamlFileProvider(paths.LocalConfigPath);
 
         var startupWorkflowRequest = BuildStartupWorkflowRequest(paths, localConfig);
-        var mainWindowRequest = BuildMainWindowRequest(sharedConfig, localConfig);
+        var mainWindowRequest = BuildMainWindowRequest(paths, sharedConfig, localConfig);
         var mainWindowPlan = LauncherMainWindowStartupWorkflowService.BuildPlan(mainWindowRequest);
         ApplyVersionIsolationMigration(localConfig, mainWindowPlan.VersionIsolationMigration);
 
@@ -61,6 +61,7 @@ internal static class FrontendShellCompositionService
     }
 
     private static LauncherMainWindowStartupWorkflowRequest BuildMainWindowRequest(
+        FrontendRuntimePathSet paths,
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
@@ -75,7 +76,9 @@ internal static class FrontendShellCompositionService
             IsSpecialBuildHintDisabled: !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT")),
             HasAcceptedEula: ReadValue(sharedConfig, "SystemEula", false),
             IsTelemetryDefault: !sharedConfig.Exists("SystemTelemetry"),
-            CurrentStartupCount: 0);
+            CurrentStartupCount: LauncherFrontendRuntimeStateService.ReadStartupCount(
+                paths.SharedConfigDirectory,
+                paths.SharedConfigPath));
     }
 
     private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(FrontendRuntimePathSet paths)
@@ -85,7 +88,7 @@ internal static class FrontendShellCompositionService
 
         return new LauncherFrontendNavigationViewRequest(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-            HasRunningTasks: false,
+            HasRunningTasks: LauncherFrontendRuntimeStateService.HasRunningTasks(),
             HasGameLogs: hasGameLogs);
     }
 
@@ -150,6 +153,7 @@ internal static class FrontendShellCompositionService
         string ExecutableDirectory,
         string TempDirectory,
         string LauncherAppDataDirectory,
+        string SharedConfigDirectory,
         string SharedConfigPath,
         string LocalConfigPath)
     {
@@ -160,6 +164,7 @@ internal static class FrontendShellCompositionService
                 Path.GetDirectoryName(Environment.ProcessPath!) ?? Environment.CurrentDirectory,
                 layout.Temp,
                 GetLauncherAppDataDirectory(),
+                layout.SharedData,
                 Path.Combine(layout.SharedData, "config.v1.json"),
                 Path.Combine(layout.Data, "config.v1.yml"));
         }
