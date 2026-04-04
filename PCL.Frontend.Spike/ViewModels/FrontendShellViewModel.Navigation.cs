@@ -30,6 +30,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceSetupSurface();
         RefreshInstanceExportSurface();
         RefreshInstanceInstallSurface();
+        RefreshInstanceContentSurfaces();
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
         RaiseCollectionStateProperties();
@@ -181,6 +182,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsInstanceSetupSurface));
         RaisePropertyChanged(nameof(IsInstanceExportSurface));
         RaisePropertyChanged(nameof(IsInstanceInstallSurface));
+        RaisePropertyChanged(nameof(IsInstanceWorldSurface));
+        RaisePropertyChanged(nameof(IsInstanceScreenshotSurface));
+        RaisePropertyChanged(nameof(IsInstanceServerSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
@@ -213,6 +217,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
         RaisePropertyChanged(nameof(HasInstanceOverviewInfoEntries));
         RaisePropertyChanged(nameof(HasInstanceExportOptionGroups));
+        RaisePropertyChanged(nameof(HasInstanceWorldEntries));
+        RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
+        RaisePropertyChanged(nameof(HasInstanceScreenshotEntries));
+        RaisePropertyChanged(nameof(HasNoInstanceScreenshotEntries));
+        RaisePropertyChanged(nameof(HasInstanceServerEntries));
+        RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
     }
 
     private void RaiseUpdateSurfaceProperties()

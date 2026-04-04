@@ -4073,6 +4073,283 @@
         </ItemsControl>
       </StackPanel>
 
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceWorldSurface}" Spacing="15">
+        <Border
+            Height="40"
+            Padding="12,0"
+            Background="#F8FBFF"
+            BorderBrush="#D5E6FD"
+            BorderThickness="1"
+            CornerRadius="5">
+          <TextBox
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              FontSize="13.5"
+              Text="{Binding InstanceWorldSearchQuery}"
+              VerticalContentAlignment="Center"
+              Watermark="搜索存档名称" />
+        </Border>
+
+        <controls:PclCard Header="快捷操作" ContentMargin="25,40,15,20">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto">
+              <controls:PclButton
+                  Grid.Column="0"
+                  MinWidth="140"
+                  Margin="0,0,20,0"
+                  Command="{Binding OpenInstanceWorldFolderCommand}"
+                  ColorType="Highlight"
+                  Text="打开存档文件夹" />
+              <controls:PclButton
+                  Grid.Column="1"
+                  MinWidth="140"
+                  Command="{Binding PasteInstanceWorldClipboardCommand}"
+                  Text="粘贴剪贴板文件" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="存档列表" ContentMargin="20,48,18,22" IsVisible="{Binding HasInstanceWorldEntries}">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <controls:PclButton
+                  Width="110"
+                  HorizontalAlignment="Right"
+                  Text="排序：文件名" />
+              <ItemsControl ItemsSource="{Binding InstanceWorldEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+                      <StackPanel Margin="0,0,18,0" Spacing="3">
+                        <TextBlock
+                            Foreground="#343D4A"
+                            FontSize="13.5"
+                            FontWeight="SemiBold"
+                            Text="{Binding Title}" />
+                        <TextBlock
+                            Foreground="#677789"
+                            FontSize="12.5"
+                            Text="{Binding Info}"
+                            TextWrapping="Wrap" />
+                      </StackPanel>
+                      <controls:PclButton
+                          Grid.Column="1"
+                          Width="96"
+                          Height="35"
+                          VerticalAlignment="Center"
+                          Command="{Binding Command}"
+                          Text="查看" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding HasNoInstanceWorldEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="暂时没有存档文件" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="可以在此处查看当前实例的存档。"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="Auto,Auto" HorizontalAlignment="Center">
+                <controls:PclButton
+                    Grid.Column="0"
+                    MinWidth="140"
+                    Margin="0,0,20,0"
+                    Command="{Binding OpenInstanceWorldFolderCommand}"
+                    ColorType="Highlight"
+                    Text="打开存档文件夹" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    MinWidth="140"
+                    Command="{Binding PasteInstanceWorldClipboardCommand}"
+                    Text="粘贴剪贴板文件" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceScreenshotSurface}" Spacing="15">
+        <controls:PclCard Header="快捷操作" ContentMargin="25,40,15,20">
+          <controls:PclCard.CardContent>
+            <controls:PclButton
+                MinWidth="140"
+                HorizontalAlignment="Left"
+                Command="{Binding OpenInstanceScreenshotFolderCommand}"
+                ColorType="Highlight"
+                Text="打开截图文件夹" />
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding InstanceScreenshotEntries}" IsVisible="{Binding HasInstanceScreenshotEntries}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Width="180" Height="230" Margin="0,0,15,15" ContentMargin="0,0,0,0">
+                <controls:PclCard.CardContent>
+                  <Grid RowDefinitions="160,*">
+                    <Border Grid.Row="0" Background="#EAF2FE" ClipToBounds="True">
+                      <Image Source="{Binding Image}" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Row="1" Margin="12,10,12,12" Spacing="6">
+                      <TextBlock
+                          Foreground="#343D4A"
+                          FontSize="12.5"
+                          FontWeight="SemiBold"
+                          Text="{Binding Title}"
+                          TextTrimming="CharacterEllipsis" />
+                      <TextBlock
+                          Foreground="#677789"
+                          FontSize="11.5"
+                          Text="{Binding Info}"
+                          TextWrapping="Wrap" />
+                      <controls:PclButton
+                          Width="72"
+                          HorizontalAlignment="Left"
+                          Command="{Binding OpenCommand}"
+                          Text="打开" />
+                    </StackPanel>
+                  </Grid>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <controls:PclCard IsVisible="{Binding HasNoInstanceScreenshotEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="暂时没有截图文件" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="在游戏内按下截图键后，可在此处查看保存的截图。"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+              <controls:PclButton
+                  MinWidth="140"
+                  HorizontalAlignment="Center"
+                  Command="{Binding OpenInstanceScreenshotFolderCommand}"
+                  ColorType="Highlight"
+                  Text="打开截图文件夹" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceServerSurface}" Spacing="15">
+        <controls:PclCard Header="快捷操作" ContentMargin="25,40,23,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto">
+              <controls:PclButton
+                  Grid.Column="0"
+                  MinWidth="140"
+                  Margin="0,0,20,0"
+                  Command="{Binding RefreshInstanceServerCommand}"
+                  ColorType="Highlight"
+                  Text="刷新所有服务器" />
+              <controls:PclButton
+                  Grid.Column="1"
+                  MinWidth="140"
+                  Command="{Binding AddInstanceServerCommand}"
+                  Text="添加新服务器" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding InstanceServerEntries}" IsVisible="{Binding HasInstanceServerEntries}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
+                <controls:PclCard.CardContent>
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Margin="0,0,18,0" Spacing="4">
+                      <TextBlock
+                          Foreground="#677789"
+                          FontSize="12.5"
+                          Text="{Binding Info}" />
+                      <Border
+                          Padding="8,4"
+                          Background="#F7FAFE"
+                          BorderBrush="#D5E6FD"
+                          BorderThickness="1"
+                          CornerRadius="4">
+                        <TextBlock
+                            Foreground="#4B78C2"
+                            FontSize="11.5"
+                            Text="{Binding Status}" />
+                      </Border>
+                    </StackPanel>
+                    <controls:PclButton
+                        Grid.Column="1"
+                        Width="96"
+                        Height="35"
+                        VerticalAlignment="Center"
+                        Command="{Binding ActionCommand}"
+                        Text="查看" />
+                  </Grid>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <controls:PclCard IsVisible="{Binding HasNoInstanceServerEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="暂时没有服务器" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="暂时没有找到服务器，在游戏内添加服务器或点击下方按钮添加新服务器。"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="Auto,Auto" HorizontalAlignment="Center">
+                <controls:PclButton
+                    Grid.Column="0"
+                    MinWidth="140"
+                    Margin="0,0,20,0"
+                    Command="{Binding RefreshInstanceServerCommand}"
+                    ColorType="Highlight"
+                    Text="刷新服务器信息" />
+                <controls:PclButton
+                    Grid.Column="1"
+                    MinWidth="140"
+                    Command="{Binding AddInstanceServerCommand}"
+                    Text="添加新服务器" />
+              </Grid>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
       <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
         <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
           <controls:PclCard.CardContent>

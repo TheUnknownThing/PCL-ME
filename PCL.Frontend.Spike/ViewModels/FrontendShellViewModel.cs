@@ -51,6 +51,12 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<DownloadInstallOptionViewModel> InstanceInstallOptions { get; } = [];
 
+    public ObservableCollection<SimpleListEntryViewModel> InstanceWorldEntries { get; } = [];
+
+    public ObservableCollection<InstanceScreenshotEntryViewModel> InstanceScreenshotEntries { get; } = [];
+
+    public ObservableCollection<InstanceServerEntryViewModel> InstanceServerEntries { get; } = [];
+
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
     public ObservableCollection<JavaRuntimeEntryViewModel> JavaRuntimeEntries { get; } = [];
@@ -234,6 +240,15 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool IsInstanceInstallSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionInstall;
 
+    public bool IsInstanceWorldSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionWorld;
+
+    public bool IsInstanceScreenshotSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionScreenshot;
+
+    public bool IsInstanceServerSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionServer;
+
     public bool IsGenericShellSurface => IsStandardShellRoute
         && !IsSetupLaunchSurface
         && !IsSetupAboutSurface
@@ -255,7 +270,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsInstanceOverviewSurface
         && !IsInstanceSetupSurface
         && !IsInstanceExportSurface
-        && !IsInstanceInstallSurface;
+        && !IsInstanceInstallSurface
+        && !IsInstanceWorldSurface
+        && !IsInstanceScreenshotSurface
+        && !IsInstanceServerSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 

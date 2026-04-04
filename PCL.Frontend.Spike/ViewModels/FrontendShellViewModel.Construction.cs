@@ -371,6 +371,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeInstanceOverviewSurface();
         InitializeInstanceExportSurface();
         InitializeInstanceInstallSurface();
+        InitializeInstanceContentSurfaces();
         InitializeInstanceSetupSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();

@@ -391,6 +391,36 @@ internal sealed class DownloadResourceEntryViewModel(
     });
 }
 
+internal sealed class InstanceScreenshotEntryViewModel(
+    Bitmap? image,
+    string title,
+    string info,
+    ActionCommand openCommand)
+{
+    public Bitmap? Image { get; } = image;
+
+    public string Title { get; } = title;
+
+    public string Info { get; } = info;
+
+    public ActionCommand OpenCommand { get; } = openCommand;
+}
+
+internal sealed class InstanceServerEntryViewModel(
+    string title,
+    string info,
+    string status,
+    ActionCommand actionCommand)
+{
+    public string Title { get; } = title;
+
+    public string Info { get; } = info;
+
+    public string Status { get; } = status;
+
+    public ActionCommand ActionCommand { get; } = actionCommand;
+}
+
 internal sealed class HelpTopicViewModel(
     string groupTitle,
     string title,
