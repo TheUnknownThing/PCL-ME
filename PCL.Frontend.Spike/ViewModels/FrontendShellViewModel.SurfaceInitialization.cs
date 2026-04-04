@@ -2,6 +2,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -190,7 +191,12 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeDownloadInstallSurface()
     {
+        EnsureDownloadInstallEditableState();
         _downloadInstallName = _downloadComposition.Install.Name;
+        DownloadInstallMinecraftVersion = _downloadInstallMinecraftChoice is null
+            ? _downloadComposition.Install.MinecraftVersion
+            : $"Minecraft {_downloadInstallMinecraftChoice.Version}";
+        DownloadInstallMinecraftIcon = LoadLauncherBitmap("Images", "Blocks", _downloadComposition.Install.MinecraftIconName ?? "Grass.png");
 
         ReplaceItems(
             DownloadInstallHints,
@@ -202,10 +208,18 @@ internal sealed partial class FrontendShellViewModel
             _downloadComposition.Install.Options.Select(option =>
                 CreateDownloadInstallOption(
                     option.Title,
-                    option.Selection,
+                    GetEffectiveSelectionText(isExistingInstance: false, option.Title),
                     string.IsNullOrWhiteSpace(option.IconName)
                         ? null
-                        : LoadLauncherBitmap("Images", "Blocks", option.IconName))));
+                        : LoadLauncherBitmap("Images", "Blocks", option.IconName),
+                    FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title)
+                        ? "继续沿用原版安装页的卡片选择结构，并直接从当前可用候选中选定版本。"
+                        : "这一项仍保留原卡片与按钮位置，但当前迁移切片还没有接管旧安装器的真实执行路径。",
+                    FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title) ? "选择版本" : "暂未接管",
+                    FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title),
+                    new ActionCommand(() => _ = EditInstallOptionAsync(isExistingInstance: false, option.Title)),
+                    !string.Equals(GetEffectiveSelectionText(isExistingInstance: false, option.Title), "未安装", StringComparison.Ordinal),
+                    new ActionCommand(() => ClearInstallOption(isExistingInstance: false, option.Title)))));
     }
 
     private void RefreshDownloadCatalogSurface()
@@ -440,14 +454,27 @@ internal sealed partial class FrontendShellViewModel
         return new SurfaceNoticeViewModel(text, Brush.Parse(background), Brush.Parse(border), Brush.Parse(foreground));
     }
 
-    private DownloadInstallOptionViewModel CreateDownloadInstallOption(string title, string selection, Bitmap? icon)
+    private DownloadInstallOptionViewModel CreateDownloadInstallOption(
+        string title,
+        string selection,
+        Bitmap? icon,
+        string detailText,
+        string selectText,
+        bool canSelect,
+        ActionCommand selectCommand,
+        bool canClear,
+        ActionCommand clearCommand)
     {
         return new DownloadInstallOptionViewModel(
             title,
             selection,
             icon,
-            new ActionCommand(() => AddActivity($"选择安装项: {title}", selection)),
-            new ActionCommand(() => AddActivity($"清除安装项: {title}", $"Would clear the selected {title} version.")));
+            detailText,
+            selectText,
+            canSelect,
+            selectCommand,
+            canClear,
+            clearCommand);
     }
 
     private void SetDownloadCatalogIntro(string title, string body, IReadOnlyList<DownloadCatalogActionViewModel> actions)

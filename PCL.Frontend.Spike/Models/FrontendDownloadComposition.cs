@@ -10,6 +10,8 @@ internal sealed record FrontendDownloadComposition(
 
 internal sealed record FrontendDownloadInstallState(
     string Name,
+    string MinecraftVersion,
+    string? MinecraftIconName,
     IReadOnlyList<string> Hints,
     IReadOnlyList<FrontendDownloadInstallOption> Options);
 
