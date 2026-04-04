@@ -13,6 +13,27 @@ The new goal is:
 
 The practical target is a frontend that looks like the current launcher, but gets its state from portable services instead of WPF page logic or spike-only sample factories.
 
+## Status Update
+
+Status as of 2026-04-04:
+
+- Phase 1 is complete
+- Phase 2 is now the active frontend task
+
+Phase 1 completion means:
+
+- shell bootstrap inputs are now composed from real runtime/config state instead of default spike shell fixtures
+- the frontend has a dedicated composition layer in `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `FrontendShellViewModel` now consumes real startup, consent, navigation, startup-count, and task/runtime shell inputs
+- `PCL.Core.Backend` now exposes the portable runtime pieces needed for encrypted startup count and task visibility
+
+Phase 1 did not attempt to:
+
+- redesign any copied Avalonia surface
+- replace launch-page fixture plans
+- replace crash-page fixture plans
+- implement prompt action execution
+
 ## Current Repo Map
 
 - `PCL.Core.Foundation`
@@ -77,22 +98,22 @@ That means the next frontend step should be integration, not more speculative fr
 
 The frontend shell is visually far ahead of its data wiring.
 
-### Bootstrap is still fixture-driven
+### Bootstrap is no longer the main prototype-only gap
 
 The Avalonia app currently starts here:
 
 - `PCL.Frontend.Spike/Desktop/App.axaml.cs`
 - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
 
-Today that bootstrap path still goes through:
+Today shell bootstrap is composed through:
 
-- `PCL.Frontend.Spike/Workflows/SpikeInputResolver.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeSampleFactory.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeHostInputFactory.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendShellComposition.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
 
-That means the shell contract services are real, but the requests fed into them are still mostly spike-owned fixture data.
+That means the shell contract services are real and the shell bootstrap requests are now built from real runtime/config state.
 
-### Many right panes are copied visually but not backed by real page data
+### Many right panes are still copied visually but not backed by real page data
 
 The Avalonia shell now has copied surfaces for:
 
@@ -116,16 +137,15 @@ Prompt rendering is already portable, but command handling is still mostly spike
 - prompt options map to `LauncherFrontendPromptCommandKind`
 - the desktop shell currently records those actions in the activity list instead of driving real workflows, persistence, or OS actions
 
-### No real frontend composition layer exists yet
+### The next missing middle is prompt and page-state composition
 
-There is no frontend-side adapter/service layer that:
+The shell-level composition layer now exists.
 
-- reads current launcher state from configuration, profile storage, or runtime services
-- constructs the right backend requests from real state
-- dispatches prompt commands into backend or platform actions
-- keeps backend results alive as frontend state over time
+The missing frontend layers are now:
 
-That adapter layer is now the missing middle.
+- prompt command dispatch into backend or platform actions
+- launch-state construction from real runtime/profile/config state
+- route-local page models derived from backend/state sources instead of fixtures
 
 ## Frontend Rule
 
@@ -142,6 +162,10 @@ The visual migration rule remains unchanged:
 The migration should now move in this order.
 
 ### Phase 1: replace spike bootstrap inputs with real shell inputs
+
+Status:
+
+- complete
 
 Target:
 
@@ -166,7 +190,20 @@ Important constraint:
 - do not move planning logic into the frontend
 - only replace fixture request construction with real request construction
 
+Delivered files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendShellComposition.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
+- `PCL.Core.Backend/PCL.Core.Backend.csproj`
+
 ### Phase 2: wire prompt commands to real actions
+
+Status:
+
+- active
 
 Target:
 
@@ -307,8 +344,8 @@ Deliverable:
 
 This is the recommended concrete order for the next frontend passes.
 
-1. Add a frontend composition layer that builds real `LauncherFrontendShellRequest` inputs and remove that responsibility from `SpikeSampleFactory`.
-2. Replace prompt activity-log stubs with real handlers for consent, navigation, crash export, launch abort, and Java download actions.
+1. Replace prompt activity-log stubs with real handlers for consent, navigation, crash export, launch abort, and Java download actions.
+2. Persist prompt-driven setting changes through the same config keys the WPF shell uses.
 3. Feed the launch page from real launch workflow planning requests built from current runtime/config/profile state.
 4. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
 5. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.

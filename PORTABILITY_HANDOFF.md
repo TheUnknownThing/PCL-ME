@@ -6,8 +6,8 @@ The portability phase has crossed an important boundary:
 
 - the portable backend is real
 - the replacement frontend shell is real
-- the next major task is no longer extraction alone
-- the next major task is wiring real backend logic into the frontend and removing spike-owned fixture state from the critical path
+- frontend migration Phase 1 is complete as of 2026-04-04
+- the next major frontend task is Phase 2 prompt-command execution
 
 The repo is therefore in this state:
 
@@ -184,54 +184,67 @@ The main UI work lives in:
 - `PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
 - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.*.cs`
 
-## The Biggest Current Truth: The Frontend Is Still Mostly Fed By Spike Inputs
+## Frontend Migration Status
 
-This is the key handoff point.
+### Phase 1 is done
 
-The frontend shell contracts are real, but the shell bootstrap is still mostly driven by spike-owned inputs and sample factories.
+The original Phase 1 target was:
 
-Current bootstrap path:
+- replace spike bootstrap inputs with real shell inputs
+- stop creating most shell state from `SpikeSampleFactory`
+- start building `LauncherFrontendShellRequest` and related requests from real runtime state
 
-- `PCL.Frontend.Spike/Desktop/App.axaml.cs`
+That work is now implemented.
+
+Important files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendShellComposition.cs`
 - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
+- `PCL.Core.Backend/PCL.Core.Backend.csproj`
 
-Current request/input providers:
+Important commits:
 
-- `PCL.Frontend.Spike/Workflows/SpikeInputResolver.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeSampleFactory.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeHostInputFactory.cs`
+- `4ef0a3f9` `Add runtime shell composition layer`
+- `0447d15d` `Use runtime shell composition in frontend bootstrap`
+- `aff946ea` `Expose frontend runtime state in backend slice`
+- `e23deb6c` `Use backend runtime state in shell composition`
 
-Current problem:
+What this means in practice:
 
-- the shell calls real portable services
-- but many of the requests and page values are still created by fixture code instead of by real runtime adapters
+- shell startup requests now come from real launcher paths and persisted config files
+- consent and version-isolation migration inputs now mirror the WPF startup construction path
+- shell utility visibility now has real runtime state for game logs and running tasks
+- encrypted startup count is now read through a backend-facing runtime service instead of being hard-coded
+- replay inputs via `InputRoot` still work for inspection scenarios
 
-That means the next frontend engineer should not spend the next phase primarily making more fixture data.
+### The biggest current truth
 
-They should replace fixture state with real request construction and real backend-driven page state.
+The frontend shell bootstrap is no longer mostly fixture-driven.
+
+The remaining spike-heavy areas are now:
+
+- prompt command execution
+- launch-page runtime state
+- crash/launch/sample plan injection used by non-shell surfaces
+- route-local page fixtures
 
 ## What Still Isn’t Done
 
-### 1. Real frontend composition layer
+### 1. Prompt command execution
 
-Missing today:
-
-- a frontend-side adapter layer that reads real launcher state
-- real construction of shell, prompt, startup, launch, and page requests
-- durable frontend state derived from backend results rather than sample factories
-
-This is the most important missing layer for the frontend workstream.
-
-### 2. Prompt command execution
-
-Prompt rendering is portable.
+Prompt rendering is portable and Phase 1 shell composition is real.
 
 Prompt action handling is still mostly spike behavior:
 
 - command clicks often only write to the activity feed
 - they do not yet consistently trigger real persistence, launch continuation, abort, export, or route logic
 
-### 3. Page-specific production data
+This is now the active Phase 2 frontend task.
+
+### 2. Page-specific production data
 
 Many copied pages still use hard-coded view-model state even when their visuals are already good.
 
@@ -243,7 +256,7 @@ The main remaining data gaps are:
 - `VersionSaves` subpages
 - richer tool widgets
 
-### 4. Secret/auth portability boundary
+### 3. Secret/auth portability boundary
 
 This area is improved, but still deserves caution:
 
@@ -252,7 +265,7 @@ This area is improved, but still deserves caution:
 
 This remains one of the main backend-side risks for cutover.
 
-### 5. WPF shell glue reduction
+### 4. WPF shell glue reduction
 
 The WPF shell is much thinner than before, but the final cutover still depends on continuing to reduce and isolate:
 
@@ -270,16 +283,14 @@ Important files:
 
 This is the recommended order for the next frontend engineer.
 
-### Step 1: stop relying on `SpikeSampleFactory` for the shell bootstrap
+### Step 1: Phase 1 is complete, use the existing shell composition layer
 
-Build a real composition layer that:
+Start from:
 
-- gathers startup inputs
-- gathers shell visibility inputs
-- constructs `LauncherFrontendShellRequest`
-- constructs real page-content and prompt inputs
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
 
-Do not move workflow policy into the frontend.
+Do not replace this with new fixtures.
 
 ### Step 2: wire prompt commands to real backend and shell actions
 
@@ -343,8 +354,10 @@ The backend engineer should focus on making the frontend integration easier and 
 
 These are the most relevant recent frontend checkpoints:
 
-- `9007b72a` `refactor: Simplify the logic of FrontendShellViewModel and seperating it into multiple files`
-- `0c92fedf` `feat: copy download resource list surfaces`
+- `4ef0a3f9` `Add runtime shell composition layer`
+- `0447d15d` `Use runtime shell composition in frontend bootstrap`
+- `aff946ea` `Expose frontend runtime state in backend slice`
+- `e23deb6c` `Use backend runtime state in shell composition`
 - `b1f23fdc` `feat: copy instance overview spike surface`
 - `570f9ae0` `feat: copy instance export spike surface`
 - `552b7de9` `feat: copy instance settings spike surface`
