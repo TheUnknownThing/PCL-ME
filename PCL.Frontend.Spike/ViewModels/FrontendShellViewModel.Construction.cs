@@ -274,7 +274,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
-        _crashPlan = SpikeSampleFactory.BuildCrashPlan(SpikeInputResolver.ResolveCrashInputs(options));
+        _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
         _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);

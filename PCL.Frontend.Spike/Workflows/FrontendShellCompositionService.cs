@@ -10,17 +10,10 @@ internal static class FrontendShellCompositionService
 {
     public static FrontendShellComposition Compose(SpikeCommandOptions options)
     {
-        var replayInputs = SpikeInputStore.LoadShellInputs(options.InputRoot);
-        if (replayInputs is not null)
+        var replayComposition = FrontendInspectionShellCompositionService.TryComposeReplay(options);
+        if (replayComposition is not null)
         {
-            var startupConsentRequest = replayInputs.StartupInputs.StartupConsentRequest;
-            return new FrontendShellComposition(
-                replayInputs.StartupInputs.StartupWorkflowRequest,
-                startupConsentRequest,
-                LauncherStartupConsentService.Evaluate(startupConsentRequest),
-                replayInputs.NavigationRequest,
-                "Replay-backed shell inputs",
-                $"Input root: {options.InputRoot}");
+            return replayComposition;
         }
 
         var paths = FrontendRuntimePaths.Resolve();

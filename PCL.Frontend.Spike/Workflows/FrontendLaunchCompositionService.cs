@@ -15,16 +15,19 @@ internal static class FrontendLaunchCompositionService
         SpikeCommandOptions options,
         FrontendRuntimePaths runtimePaths)
     {
-        var replayInputs = SpikeInputStore.LoadLaunchInputs(options.InputRoot);
-        if (replayInputs is not null)
+        var replayComposition = FrontendInspectionLaunchCompositionService.TryComposeReplay(
+            options,
+            options.SaveBatchPath);
+        if (replayComposition is not null)
         {
-            return FromSpikePlan(SpikeSampleFactory.BuildLaunchPlan(replayInputs, options.SaveBatchPath));
+            return replayComposition;
         }
 
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
-        var scenarioDefaults = SpikeSampleFactory.CreateDefaultLaunchInputs(options.Scenario);
-        var hostJavaInputs = SpikeHostInputFactory.CreateLaunchInputs(options.Scenario).JavaRuntimeInputs;
+        var inspectionDefaults = FrontendInspectionLaunchCompositionService.CreateRuntimeDefaults(options.Scenario);
+        var scenarioDefaults = inspectionDefaults.ScenarioDefaults;
+        var hostJavaInputs = inspectionDefaults.HostJavaInputs;
 
         var launcherFolder = ResolveLauncherFolder(ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"), runtimePaths);
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
