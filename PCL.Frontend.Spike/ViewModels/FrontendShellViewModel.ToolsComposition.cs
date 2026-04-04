@@ -12,7 +12,9 @@ internal sealed partial class FrontendShellViewModel
         _suppressToolsPersistence = true;
         try
         {
+            InitializeToolsGameLinkSurface();
             InitializeToolsTestSurface();
+            RefreshHelpTopics();
         }
         finally
         {
@@ -22,7 +24,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadToolsComposition()
     {
-        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths));
+        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _instanceComposition));
     }
 
     private void PersistToolsSetting(string? propertyName)
@@ -65,5 +67,33 @@ internal sealed partial class FrontendShellViewModel
             action.MinWidth,
             action.IsDanger ? PclButtonColorState.Red : PclButtonColorState.Normal,
             ResolveToolboxActionCommand(action.ActionKey, action.Title));
+    }
+
+    private HelpTopicViewModel CreateHelpTopic(FrontendToolsHelpEntry entry)
+    {
+        return new HelpTopicViewModel(
+            entry.GroupTitle,
+            entry.Title,
+            entry.Summary,
+            new ActionCommand(() => OpenHelpTopic(entry)));
+    }
+
+    private void OpenHelpTopic(FrontendToolsHelpEntry entry)
+    {
+        if (entry.IsEvent && Uri.TryCreate(entry.EventData, UriKind.Absolute, out var target))
+        {
+            if (_shellActionService.TryOpenExternalTarget(target.ToString(), out var error))
+            {
+                AddActivity($"打开帮助: {entry.Title}", target.ToString());
+            }
+            else
+            {
+                AddActivity($"打开帮助失败: {entry.Title}", error ?? target.ToString());
+            }
+
+            return;
+        }
+
+        AddActivity($"查看帮助: {entry.Title}", entry.RawPath);
     }
 }

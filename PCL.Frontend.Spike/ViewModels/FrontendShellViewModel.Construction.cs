@@ -25,13 +25,15 @@ internal sealed partial class FrontendShellViewModel
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
     private FrontendInstanceComposition _instanceComposition;
-    private FrontendToolsComposition _toolsComposition = new(new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
+    private FrontendToolsComposition _toolsComposition = new(
+        new FrontendToolsGameLinkState(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, [], 0, [], []),
+        new FrontendToolsHelpState([]),
+        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
     private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
-    private readonly IReadOnlyList<HelpTopicViewModel> _allHelpTopics;
     private readonly List<LauncherFrontendRoute> _routeHistory = [];
     private readonly ActionCommand _backCommand;
     private readonly ActionCommand _togglePromptOverlayCommand;
@@ -273,7 +275,7 @@ internal sealed partial class FrontendShellViewModel
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
-        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _instanceComposition);
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         _startupPlan = new StartupSpikePlan(
@@ -383,13 +385,11 @@ internal sealed partial class FrontendShellViewModel
         InputLabel = _shellComposition.InputLabel;
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
-        _allHelpTopics = CreateHelpTopics();
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
-        InitializeToolsGameLinkSurface();
         ApplyToolsComposition(_toolsComposition);
         InitializeDownloadInstallSurface();
         ApplySetupComposition(_setupComposition);

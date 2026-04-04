@@ -204,7 +204,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshToolsGameLinkSurface()
     {
-        InitializeToolsGameLinkSurface();
+        ReloadToolsComposition();
         RaisePropertyChanged(nameof(GameLinkAnnouncement));
         RaisePropertyChanged(nameof(GameLinkNatStatus));
         RaisePropertyChanged(nameof(GameLinkAccountStatus));
@@ -217,7 +217,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
         RaisePropertyChanged(nameof(GameLinkWorldOptions));
         RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
-        AddActivity("刷新联机大厅", "联机大厅页面已恢复到初始演示状态。");
+        AddActivity("刷新联机大厅", "联机大厅页面已从当前实例与配置重新加载。");
     }
 
     private void RefreshToolsTestSurface()
@@ -242,8 +242,9 @@ internal sealed partial class FrontendShellViewModel
 
     private void AcceptGameLinkTerms()
     {
-        GameLinkAnnouncement = "已同意说明与条款，可以继续加入或创建大厅。";
-        AddActivity("同意联机大厅条款", "大厅说明与条款已确认。");
+        _shellActionService.PersistSharedValue("LinkEula", true);
+        RefreshToolsGameLinkSurface();
+        AddActivity("同意联机大厅条款", "大厅说明与条款已写入当前启动器配置。");
     }
 
     private void TestLobbyNat()
@@ -319,15 +320,15 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshLobbyWorlds()
     {
-        RefreshGameLinkWorldOptions();
+        ReloadToolsComposition();
         RaisePropertyChanged(nameof(GameLinkWorldOptions));
-        SelectedGameLinkWorldIndex = (SelectedGameLinkWorldIndex + 1) % GameLinkWorldOptions.Count;
+        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
         AddActivity("刷新世界列表", GameLinkWorldOptions[SelectedGameLinkWorldIndex]);
     }
 
     private void ExitLobby()
     {
-        InitializeToolsGameLinkSurface();
+        ReloadToolsComposition();
         RaisePropertyChanged(nameof(GameLinkAnnouncement));
         RaisePropertyChanged(nameof(GameLinkNatStatus));
         RaisePropertyChanged(nameof(GameLinkAccountStatus));
@@ -340,7 +341,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
         RaisePropertyChanged(nameof(GameLinkWorldOptions));
         RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
-        AddActivity("退出大厅", "大厅状态已重置为未连接。");
+        AddActivity("退出大厅", "大厅状态已恢复到当前配置基线。");
     }
 
     private async Task SelectDownloadFolderAsync()

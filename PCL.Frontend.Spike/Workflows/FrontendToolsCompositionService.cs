@@ -1,3 +1,6 @@
+using System.IO.Compression;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Spike.Models;
 
@@ -5,11 +8,53 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendToolsCompositionService
 {
-    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths)
+    private static readonly string LauncherRootDirectory = Path.GetFullPath(Path.Combine(
+        AppContext.BaseDirectory,
+        "..",
+        "..",
+        "..",
+        "..",
+        "Plain Craft Launcher 2"));
+
+    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths, FrontendInstanceComposition instanceComposition)
     {
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         return new FrontendToolsComposition(
+            BuildGameLinkState(sharedConfig, instanceComposition),
+            BuildHelpState(runtimePaths),
             BuildTestState(sharedConfig, runtimePaths));
+    }
+
+    private static FrontendToolsGameLinkState BuildGameLinkState(JsonFileProvider sharedConfig, FrontendInstanceComposition instanceComposition)
+    {
+        var configuredUserName = ReadValue(sharedConfig, "LinkUsername", string.Empty).Trim();
+        var hasAcceptedTerms = ReadValue(sharedConfig, "LinkEula", false);
+        var worldOptions = BuildWorldOptions(instanceComposition);
+
+        var announcement = hasAcceptedTerms
+            ? worldOptions.Count == 0
+                ? "尚未检测到可用于创建大厅的世界，请先确认当前实例中存在可分享的存档。"
+                : $"已检测到 {worldOptions.Count} 个可用于创建大厅的世界。"
+            : "请先阅读并同意联机大厅说明与条款。";
+
+        return new FrontendToolsGameLinkState(
+            Announcement: announcement,
+            NatStatus: "点击测试",
+            AccountStatus: string.IsNullOrWhiteSpace(configuredUserName) ? "点击登录 Natayark 账户" : configuredUserName,
+            LobbyId: string.Empty,
+            SessionPing: "-ms",
+            SessionId: "尚未创建大厅",
+            ConnectionType: hasAcceptedTerms ? "未连接" : "等待授权",
+            ConnectedUserName: string.IsNullOrWhiteSpace(configuredUserName) ? "未登录" : configuredUserName,
+            ConnectedUserType: string.IsNullOrWhiteSpace(configuredUserName) ? "大厅访客" : "已配置用户名",
+            WorldOptions: worldOptions.Count == 0 ? ["未检测到可用存档"] : worldOptions,
+            SelectedWorldIndex: 0,
+            PolicyEntries:
+            [
+                new FrontendToolsSimpleEntry("PCL CE 大厅相关隐私政策", "了解 PCL CE 如何处理您的个人信息"),
+                new FrontendToolsSimpleEntry("Natayark Network 用户协议与隐私政策", "查看 Natayark OpenID 服务条款")
+            ],
+            PlayerEntries: []);
     }
 
     private static FrontendToolsTestState BuildTestState(JsonFileProvider sharedConfig, FrontendRuntimePaths runtimePaths)
@@ -71,6 +116,161 @@ internal static class FrontendToolsCompositionService
             ShowAchievementPreview: false,
             SelectedHeadSizeIndex: 0,
             SelectedHeadSkinPath: "尚未选择皮肤");
+    }
+
+    private static FrontendToolsHelpState BuildHelpState(FrontendRuntimePaths runtimePaths)
+    {
+        var entries = new List<FrontendToolsHelpEntry>();
+        var ignorePatterns = ReadHelpIgnorePatterns(runtimePaths);
+        var overrideRoot = Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Help");
+
+        if (Directory.Exists(overrideRoot))
+        {
+            foreach (var filePath in Directory.EnumerateFiles(overrideRoot, "*.json", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    entries.Add(ReadHelpEntry(File.ReadAllText(filePath), filePath));
+                }
+                catch
+                {
+                    // Ignore malformed override entries and keep loading the rest.
+                }
+            }
+        }
+
+        var bundledZipPath = Path.Combine(LauncherRootDirectory, "Resources", "Help.zip");
+        if (File.Exists(bundledZipPath))
+        {
+            try
+            {
+                using var archive = ZipFile.OpenRead(bundledZipPath);
+                foreach (var entry in archive.Entries.Where(item => item.FullName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+                {
+                    if (MatchesIgnorePattern(entry.FullName, ignorePatterns))
+                    {
+                        continue;
+                    }
+
+                    using var stream = entry.Open();
+                    using var reader = new StreamReader(stream);
+                    entries.Add(ReadHelpEntry(reader.ReadToEnd(), $"{bundledZipPath}::{entry.FullName}"));
+                }
+            }
+            catch
+            {
+                // Fall back to the hard-coded emergency topics below.
+            }
+        }
+
+        if (entries.Count == 0)
+        {
+            entries.AddRange(
+            [
+                new FrontendToolsHelpEntry("启动与版本", "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "fallback://launch/select-instance", false, null, null),
+                new FrontendToolsHelpEntry("启动与版本", "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", "fallback://launch/java-runtime", false, null, null),
+                new FrontendToolsHelpEntry("诊断与恢复", "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "fallback://diagnostics/log-export", false, null, null),
+                new FrontendToolsHelpEntry("诊断与恢复", "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", "fallback://diagnostics/crash-recovery", false, null, null),
+                new FrontendToolsHelpEntry("迁移说明", "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", "fallback://migration/copy-original", false, null, null),
+                new FrontendToolsHelpEntry("迁移说明", "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", "fallback://migration/backend-boundary", false, null, null)
+            ]);
+        }
+
+        return new FrontendToolsHelpState(entries);
+    }
+
+    private static IReadOnlyList<string> BuildWorldOptions(FrontendInstanceComposition instanceComposition)
+    {
+        return instanceComposition.World.Entries
+            .Select((entry, index) => $"{entry.Title} - {25565 + index}")
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> ReadHelpIgnorePatterns(FrontendRuntimePaths runtimePaths)
+    {
+        var overrideRoot = Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Help");
+        if (!Directory.Exists(overrideRoot))
+        {
+            return [];
+        }
+
+        var patterns = new List<string>();
+        foreach (var filePath in Directory.EnumerateFiles(overrideRoot, ".helpignore", SearchOption.AllDirectories))
+        {
+            foreach (var line in File.ReadLines(filePath))
+            {
+                var content = line.Split('#', 2)[0].Trim();
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    patterns.Add(content);
+                }
+            }
+        }
+
+        return patterns;
+    }
+
+    private static bool MatchesIgnorePattern(string relativePath, IReadOnlyList<string> ignorePatterns)
+    {
+        foreach (var pattern in ignorePatterns)
+        {
+            try
+            {
+                if (Regex.IsMatch(relativePath, pattern, RegexOptions.IgnoreCase))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                // Ignore invalid patterns copied from user override folders.
+            }
+        }
+
+        return false;
+    }
+
+    private static FrontendToolsHelpEntry ReadHelpEntry(string json, string rawPath)
+    {
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        var title = ReadString(root, "Title");
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new InvalidDataException($"Help entry is missing a title: {rawPath}");
+        }
+
+        var types = root.TryGetProperty("Types", out var typesElement) && typesElement.ValueKind == JsonValueKind.Array
+            ? typesElement.EnumerateArray()
+                .Select(item => item.GetString())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Cast<string>()
+                .ToArray()
+            : [];
+
+        return new FrontendToolsHelpEntry(
+            GroupTitle: types.FirstOrDefault() ?? "帮助",
+            Title: title,
+            Summary: ReadString(root, "Description"),
+            RawPath: rawPath,
+            IsEvent: ReadBool(root, "IsEvent"),
+            EventType: ReadString(root, "EventType"),
+            EventData: ReadString(root, "EventData"));
+    }
+
+    private static string ReadString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property)
+            ? property.GetString() ?? string.Empty
+            : string.Empty;
+    }
+
+    private static bool ReadBool(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property)
+            && property.ValueKind is JsonValueKind.True or JsonValueKind.False
+            && property.GetBoolean();
     }
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)

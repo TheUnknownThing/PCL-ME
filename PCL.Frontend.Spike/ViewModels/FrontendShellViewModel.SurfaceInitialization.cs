@@ -137,35 +137,36 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeToolsGameLinkSurface()
     {
-        RefreshGameLinkWorldOptions();
-        _gameLinkAnnouncement = "正在连接到大厅服务器...";
-        _gameLinkNatStatus = "点击测试";
-        _gameLinkAccountStatus = "点击登录 Natayark 账户";
-        _gameLinkLobbyId = string.Empty;
-        _gameLinkSessionPing = "-ms";
-        _gameLinkSessionId = "尚未创建大厅";
-        _gameLinkConnectionType = "连接中";
-        _gameLinkConnectedUserName = "未登录";
-        _gameLinkConnectedUserType = "大厅访客";
-        _selectedGameLinkWorldIndex = Math.Clamp(_selectedGameLinkWorldIndex, 0, GameLinkWorldOptions.Count - 1);
+        var gameLinkState = _toolsComposition.GameLink;
+        _gameLinkWorldOptions = gameLinkState.WorldOptions;
+        _gameLinkAnnouncement = gameLinkState.Announcement;
+        _gameLinkNatStatus = gameLinkState.NatStatus;
+        _gameLinkAccountStatus = gameLinkState.AccountStatus;
+        _gameLinkLobbyId = gameLinkState.LobbyId;
+        _gameLinkSessionPing = gameLinkState.SessionPing;
+        _gameLinkSessionId = gameLinkState.SessionId;
+        _gameLinkConnectionType = gameLinkState.ConnectionType;
+        _gameLinkConnectedUserName = gameLinkState.ConnectedUserName;
+        _gameLinkConnectedUserType = gameLinkState.ConnectedUserType;
+        _selectedGameLinkWorldIndex = Math.Clamp(gameLinkState.SelectedWorldIndex, 0, GameLinkWorldOptions.Count - 1);
 
-        ReplaceItems(GameLinkPolicyEntries,
-        [
-            new SimpleListEntryViewModel(
-                "PCL CE 大厅相关隐私政策",
-                "了解 PCL CE 如何处理您的个人信息",
-                _openLobbyPrivacyPolicyCommand),
-            new SimpleListEntryViewModel(
-                "Natayark Network 用户协议与隐私政策",
-                "查看 Natayark OpenID 服务条款",
-                _openNatayarkPolicyCommand)
-        ]);
+        ReplaceItems(
+            GameLinkPolicyEntries,
+            gameLinkState.PolicyEntries.Select(entry =>
+                new SimpleListEntryViewModel(
+                    entry.Title,
+                    entry.Summary,
+                    string.Equals(entry.Title, "PCL CE 大厅相关隐私政策", StringComparison.Ordinal)
+                        ? _openLobbyPrivacyPolicyCommand
+                        : _openNatayarkPolicyCommand)));
 
-        ReplaceItems(GameLinkPlayerEntries,
-        [
-            new SimpleListEntryViewModel("PCL-Community", "大厅创建者 • 等待加入", new ActionCommand(() => AddActivity("查看大厅成员", "PCL-Community"))),
-            new SimpleListEntryViewModel("EasyTier Bridge", "联机模块服务 • 在线", new ActionCommand(() => AddActivity("查看大厅成员", "EasyTier Bridge")))
-        ]);
+        ReplaceItems(
+            GameLinkPlayerEntries,
+            gameLinkState.PlayerEntries.Select(entry =>
+                new SimpleListEntryViewModel(
+                    entry.Title,
+                    entry.Summary,
+                    new ActionCommand(() => AddActivity("查看大厅成员", entry.Title)))));
     }
 
     private void InitializeToolsTestSurface()
@@ -390,29 +391,20 @@ internal sealed partial class FrontendShellViewModel
                             isChecked => PersistUiToggle(item.ConfigKey, isChecked))).ToArray())));
     }
 
-    private IReadOnlyList<HelpTopicViewModel> CreateHelpTopics()
-    {
-        return
-        [
-            new HelpTopicViewModel("启动与版本", "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", CreateIntentCommand("查看帮助: 如何选择实例", "Would open the launch and instance-selection help topic.")),
-            new HelpTopicViewModel("启动与版本", "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", CreateIntentCommand("查看帮助: Java 下载提示", "Would open the Java runtime help topic.")),
-            new HelpTopicViewModel("诊断与恢复", "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", CreateIntentCommand("查看帮助: 导出日志", "Would open the log export help topic.")),
-            new HelpTopicViewModel("诊断与恢复", "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", CreateIntentCommand("查看帮助: 崩溃恢复提示", "Would open the crash recovery help topic.")),
-            new HelpTopicViewModel("迁移说明", "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", CreateIntentCommand("查看帮助: 为什么先复制原页面", "Would open the frontend migration guidance topic.")),
-            new HelpTopicViewModel("迁移说明", "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", CreateIntentCommand("查看帮助: 哪些逻辑不应放回前端", "Would open the portability boundary topic."))
-        ];
-    }
-
     private void RefreshHelpTopics()
     {
         var query = HelpSearchQuery.Trim();
-        var topics = string.IsNullOrWhiteSpace(query)
-            ? _allHelpTopics
-            : _allHelpTopics
-                .Where(topic => topic.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
-                    || topic.Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
-                    || topic.GroupTitle.Contains(query, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
+        var topics = _toolsComposition.Help.Entries
+            .Select(CreateHelpTopic)
+            .Where(topic =>
+                string.IsNullOrWhiteSpace(query)
+                || topic.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || topic.Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || topic.GroupTitle.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(topic => string.Equals(topic.GroupTitle, "指南", StringComparison.Ordinal) ? 0 : 1)
+            .ThenBy(topic => topic.GroupTitle, StringComparer.Ordinal)
+            .ThenBy(topic => topic.Title, StringComparer.Ordinal)
+            .ToArray();
 
         ReplaceItems(
             HelpTopicGroups,

@@ -49,7 +49,7 @@ internal sealed partial class FrontendShellViewModel
     private void ReloadInstanceComposition()
     {
         ApplyInstanceComposition(FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths));
-        RefreshGameLinkWorldOptions();
+        ReloadToolsComposition();
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         RaisePropertyChanged(nameof(GameLinkWorldOptions));
