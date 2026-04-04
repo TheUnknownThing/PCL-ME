@@ -48,6 +48,7 @@
 
     <Button
         x:Name="MainButton"
+        Classes="nochrome"
         Grid.Column="3"
         Grid.ColumnSpan="2"
         Padding="0"
@@ -74,6 +75,7 @@
 
     <Button
         x:Name="AccessoryButton"
+        Classes="nochrome"
         Grid.Column="5"
         Width="25"
         Height="25"

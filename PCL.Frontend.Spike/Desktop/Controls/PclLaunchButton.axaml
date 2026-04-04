@@ -6,6 +6,7 @@
   <Grid Height="54">
     <Button
         x:Name="ButtonHost"
+        Classes="nochrome"
         Background="Transparent"
         BorderBrush="Transparent"
         BorderThickness="0"

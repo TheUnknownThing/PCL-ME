@@ -19,6 +19,7 @@
     </Border.Transitions>
     <Button
         x:Name="ButtonHost"
+        Classes="nochrome"
         Width="28"
         Height="28"
         Background="Transparent"
