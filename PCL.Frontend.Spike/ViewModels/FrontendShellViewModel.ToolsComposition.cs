@@ -51,7 +51,7 @@ internal sealed partial class FrontendShellViewModel
         return actionKey switch
         {
             "crash-test" => new ActionCommand(TriggerCrashPromptTest),
-            "memory-optimize" => CreateIntentCommand(title, "Would run the launcher memory optimization workflow."),
+            "memory-optimize" => new ActionCommand(ExportMemoryOptimizeReport),
             "clear-rubbish" => new ActionCommand(ClearToolboxRubbish),
             "daily-luck" => new ActionCommand(ShowDailyLuck),
             "create-shortcut" => new ActionCommand(CreateLauncherShortcut),
@@ -144,6 +144,26 @@ internal sealed partial class FrontendShellViewModel
                 $"当前实例: {_instanceComposition.Selection.InstanceName}"
             ]);
         OpenInstanceTarget("查看启动计数", reportPath, "启动计数报告不存在。");
+    }
+
+    private void ExportMemoryOptimizeReport()
+    {
+        var gcInfo = GC.GetGCMemoryInfo();
+        var reportPath = WriteToolboxReport(
+            "memory-optimize",
+            "内存优化诊断.txt",
+            [
+                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                $"系统: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}",
+                $"当前进程: {Environment.ProcessPath ?? "未知"}",
+                $"当前工作集: {FormatBytes(Environment.WorkingSet)}",
+                $"GC 可用内存上限: {FormatBytes(gcInfo.TotalAvailableMemoryBytes)}",
+                $"GC 已提交字节: {FormatBytes(gcInfo.TotalCommittedBytes)}",
+                string.Empty,
+                "当前 replacement shell 已不再把“内存优化”按钮留作纯意图日志。",
+                "但跨平台的内存优化执行器尚未迁入前端壳层，因此这里会先导出诊断信息，明确提示当前缺口。"
+            ]);
+        OpenInstanceTarget("内存优化", reportPath, "内存优化诊断报告不存在。");
     }
 
     private void CreateLauncherShortcut()
@@ -261,6 +281,25 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return (int)hash;
+    }
+
+    private static string FormatBytes(long value)
+    {
+        if (value <= 0)
+        {
+            return "未知";
+        }
+
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        var size = (double)value;
+        var unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.Length - 1)
+        {
+            size /= 1024;
+            unitIndex++;
+        }
+
+        return $"{size:0.##} {units[unitIndex]}";
     }
 
     private static string GetDailyLuckRating(int luckValue)
