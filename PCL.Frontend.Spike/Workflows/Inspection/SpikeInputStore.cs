@@ -2,7 +2,7 @@ using System.Text.Json;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Serialization;
 
-namespace PCL.Frontend.Spike.Workflows;
+namespace PCL.Frontend.Spike.Workflows.Inspection;
 
 internal static class SpikeInputStore
 {

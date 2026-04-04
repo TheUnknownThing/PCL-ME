@@ -5,6 +5,7 @@ using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Rendering;
 using PCL.Frontend.Spike.Serialization;
 using PCL.Frontend.Spike.Workflows;
+using PCL.Frontend.Spike.Workflows.Inspection;
 
 var parseResult = SpikeCommandParser.Parse(args);
 if (parseResult.ShowHelp)

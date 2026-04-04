@@ -5,6 +5,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.Workflows.Inspection;
 
 namespace PCL.Frontend.Spike.Workflows;
 
