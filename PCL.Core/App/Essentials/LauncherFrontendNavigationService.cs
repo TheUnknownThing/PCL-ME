@@ -23,7 +23,7 @@ public static class LauncherFrontendNavigationService
             : request.CurrentPageTitleOverride!;
         var sidebarGroupPage = currentPage.SidebarGroupPage ?? request.CurrentRoute.Page;
         var sidebarGroup = Catalog.SidebarGroups.FirstOrDefault(group => group.Page == sidebarGroupPage);
-        var showsBackButton = currentPage.Kind != LauncherFrontendPageKind.TopLevel || request.BackstackDepth > 0;
+        var showsBackButton = currentPage.Kind != LauncherFrontendPageKind.TopLevel;
         var topLevelEntries = Catalog.TopLevelPages.Select(page => new LauncherFrontendNavigationEntry(
             page.Page.ToString(),
             page.Title,
