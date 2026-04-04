@@ -185,6 +185,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsInstanceWorldSurface));
         RaisePropertyChanged(nameof(IsInstanceScreenshotSurface));
         RaisePropertyChanged(nameof(IsInstanceServerSurface));
+        RaisePropertyChanged(nameof(IsInstanceResourceSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
@@ -223,6 +224,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoInstanceScreenshotEntries));
         RaisePropertyChanged(nameof(HasInstanceServerEntries));
         RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
+        RaisePropertyChanged(nameof(HasInstanceResourceEntries));
+        RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
+        RaisePropertyChanged(nameof(ShowInstanceResourceUnsupportedState));
+        RaisePropertyChanged(nameof(ShowInstanceResourceEmptyInstallActions));
+        RaisePropertyChanged(nameof(ShowInstanceResourceInstanceSelectAction));
     }
 
     private void RaiseUpdateSurfaceProperties()

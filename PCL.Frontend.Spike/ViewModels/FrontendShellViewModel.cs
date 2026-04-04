@@ -57,6 +57,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<InstanceServerEntryViewModel> InstanceServerEntries { get; } = [];
 
+    public ObservableCollection<InstanceResourceEntryViewModel> InstanceResourceEntries { get; } = [];
+
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
     public ObservableCollection<JavaRuntimeEntryViewModel> JavaRuntimeEntries { get; } = [];
@@ -249,6 +251,13 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool IsInstanceServerSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionServer;
 
+    public bool IsInstanceResourceSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+        && _currentRoute.Subpage is LauncherFrontendSubpageKey.VersionMod
+            or LauncherFrontendSubpageKey.VersionModDisabled
+            or LauncherFrontendSubpageKey.VersionResourcePack
+            or LauncherFrontendSubpageKey.VersionShader
+            or LauncherFrontendSubpageKey.VersionSchematic;
+
     public bool IsGenericShellSurface => IsStandardShellRoute
         && !IsSetupLaunchSurface
         && !IsSetupAboutSurface
@@ -273,7 +282,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsInstanceInstallSurface
         && !IsInstanceWorldSurface
         && !IsInstanceScreenshotSurface
-        && !IsInstanceServerSurface;
+        && !IsInstanceServerSurface
+        && !IsInstanceResourceSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 

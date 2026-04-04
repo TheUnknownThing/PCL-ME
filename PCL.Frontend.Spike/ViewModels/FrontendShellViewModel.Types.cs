@@ -421,6 +421,24 @@ internal sealed class InstanceServerEntryViewModel(
     public ActionCommand ActionCommand { get; } = actionCommand;
 }
 
+internal sealed class InstanceResourceEntryViewModel(
+    Bitmap? icon,
+    string title,
+    string info,
+    string meta,
+    ActionCommand actionCommand)
+{
+    public Bitmap? Icon { get; } = icon;
+
+    public string Title { get; } = title;
+
+    public string Info { get; } = info;
+
+    public string Meta { get; } = meta;
+
+    public ActionCommand ActionCommand { get; } = actionCommand;
+}
+
 internal sealed class HelpTopicViewModel(
     string groupTitle,
     string title,
