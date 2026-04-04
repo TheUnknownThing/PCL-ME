@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Application.Resources>
-    <FontFamily x:Key="LaunchFontFamily">avares://PCL.Frontend.Spike/Assets/Fonts#PCL English</FontFamily>
+    <FontFamily x:Key="LaunchFontFamily">Segoe UI, Microsoft YaHei UI, Meiryo UI, Noto Sans CJK SC, sans-serif</FontFamily>
     <SolidColorBrush x:Key="ColorBrush1">#343D4A</SolidColorBrush>
     <SolidColorBrush x:Key="ColorBrush2">#0B5BCB</SolidColorBrush>
     <SolidColorBrush x:Key="ColorBrush3">#1370F3</SolidColorBrush>

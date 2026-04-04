@@ -138,7 +138,7 @@
           <Grid IsVisible="{Binding IsLaunchRoute}" ColumnDefinitions="Auto,*">
             <Border
                 Grid.Column="0"
-                Width="442"
+                Width="300"
                 Background="#FCFCFD"
                 BorderBrush="#DBE8FA"
                 BorderThickness="0,0,1,0">
