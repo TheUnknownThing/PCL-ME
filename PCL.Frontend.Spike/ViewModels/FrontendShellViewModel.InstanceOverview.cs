@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Essentials;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -128,7 +129,7 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ExportInstanceScriptCommand => new(ExportInstanceScript);
 
-    public ActionCommand TestInstanceCommand => new(TestInstance);
+    public ActionCommand TestInstanceCommand => new(() => _ = TestInstanceAsync());
 
     public ActionCommand CheckInstanceFilesCommand => new(CheckInstanceFiles);
 
@@ -353,16 +354,18 @@ internal sealed partial class FrontendShellViewModel
         var scriptPath = Path.Combine(
             GetInstanceOverviewArtifactDirectory("launch-scripts"),
             $"启动 {_instanceComposition.Selection.InstanceName}{extension}");
-        var classpathEntries = _launchComposition.ClasspathPlan.Entries.Count;
-        var lines = OperatingSystem.IsWindows()
-            ? BuildWindowsLaunchExportLines(classpathEntries)
-            : BuildUnixLaunchExportLines(classpathEntries);
-        File.WriteAllText(scriptPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
+        var encoding = _launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding
+            ? new UTF8Encoding(false)
+            : Encoding.Default;
+        File.WriteAllText(
+            scriptPath,
+            _launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
+            encoding);
         _shellActionService.EnsureFileExecutable(scriptPath);
         OpenInstanceTarget("导出启动脚本", scriptPath, "启动脚本不存在。");
     }
 
-    private void TestInstance()
+    private async Task TestInstanceAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
@@ -370,23 +373,10 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var reportPath = WriteInstanceOverviewArtifact(
-            "test-launch",
-            $"{_instanceComposition.Selection.InstanceName}-test-launch.txt",
-            [
-                $"实例: {_instanceComposition.Selection.InstanceName}",
-                $"档案: {_launchComposition.SelectedProfile.IdentityLabel}",
-                $"Java: {_launchComposition.SelectedJavaRuntime?.DisplayName ?? "未找到可用 Java"}",
-                $"Java 可执行文件: {_launchComposition.SelectedJavaRuntime?.ExecutablePath ?? "未设置"}",
-                $"游戏目录: {_launchComposition.InstancePath}",
-                $"Natives 目录: {_launchComposition.NativesDirectory}",
-                $"分辨率: {_launchComposition.ResolutionPlan.Width} x {_launchComposition.ResolutionPlan.Height}",
-                $"类路径条目数: {_launchComposition.ClasspathPlan.Entries.Count}",
-                string.Empty,
-                "当前 replacement shell 仍在推进真实启动切换。",
-                "这个测试输出记录的是当前运行时的启动上下文，便于在不改动页面布局的情况下核对实例、Java 与路径绑定。"
-            ]);
-        OpenInstanceTarget("测试游戏", reportPath, "测试输出不存在。");
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            $"已切换到启动页并准备测试实例 {_instanceComposition.Selection.InstanceName}。");
+        await HandleLaunchRequestedAsync();
     }
 
     private void CheckInstanceFiles()
@@ -603,45 +593,6 @@ internal sealed partial class FrontendShellViewModel
             "instance-overview",
             folderName,
             SanitizePathSegment(_instanceComposition.Selection.InstanceName));
-    }
-
-    private IReadOnlyList<string> BuildWindowsLaunchExportLines(int classpathEntries)
-    {
-        return
-        [
-            "@echo off",
-            "echo PCL CE Frontend Script Export",
-            $"echo Instance: {_instanceComposition.Selection.InstanceName}",
-            $"echo Profile: {_launchComposition.SelectedProfile.IdentityLabel}",
-            $"echo Java: {_launchComposition.SelectedJavaRuntime?.ExecutablePath ?? "Not configured"}",
-            $"echo Game directory: {_launchComposition.InstancePath}",
-            $"echo Natives directory: {_launchComposition.NativesDirectory}",
-            $"echo Resolution: {_launchComposition.ResolutionPlan.Width}x{_launchComposition.ResolutionPlan.Height}",
-            $"echo Classpath entries: {classpathEntries}",
-            "echo.",
-            "echo The replacement shell now exports the runtime launch context here.",
-            "echo Full end-to-end launch cutover is still being migrated.",
-            "pause"
-        ];
-    }
-
-    private IReadOnlyList<string> BuildUnixLaunchExportLines(int classpathEntries)
-    {
-        return
-        [
-            "#!/bin/sh",
-            "echo \"PCL CE Frontend Script Export\"",
-            $"echo \"Instance: {_instanceComposition.Selection.InstanceName}\"",
-            $"echo \"Profile: {_launchComposition.SelectedProfile.IdentityLabel}\"",
-            $"echo \"Java: {_launchComposition.SelectedJavaRuntime?.ExecutablePath ?? "Not configured"}\"",
-            $"echo \"Game directory: {_launchComposition.InstancePath}\"",
-            $"echo \"Natives directory: {_launchComposition.NativesDirectory}\"",
-            $"echo \"Resolution: {_launchComposition.ResolutionPlan.Width}x{_launchComposition.ResolutionPlan.Height}\"",
-            $"echo \"Classpath entries: {classpathEntries}\"",
-            "echo",
-            "echo \"The replacement shell now exports the runtime launch context here.\"",
-            "echo \"Full end-to-end launch cutover is still being migrated.\""
-        ];
     }
 
     private static void ReplacePathText(string path, string oldValue, string newValue)
