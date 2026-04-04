@@ -28,14 +28,14 @@
         Command="{Binding Command, ElementName=Root}"
         Padding="0">
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <Path
+        <Border
             x:Name="ShapeLogo"
-            Width="15"
-            Height="15"
-            Margin="12,0,0,0"
-            Stretch="Uniform"
+            Width="10"
+            Height="10"
+            Margin="15,0,0,0"
             VerticalAlignment="Center"
-            Fill="White" />
+            Background="White"
+            CornerRadius="5" />
         <TextBlock
             x:Name="LabText"
             Margin="8,0,12,0"

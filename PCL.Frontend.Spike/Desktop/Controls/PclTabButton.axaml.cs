@@ -101,9 +101,7 @@ internal sealed partial class PclTabButton : UserControl
 
     private void UpdateIcon(string data)
     {
-        ShapeLogo.Data = string.IsNullOrWhiteSpace(data)
-            ? null
-            : Geometry.Parse(data);
+        ShapeLogo.IsVisible = !string.IsNullOrWhiteSpace(data);
     }
 
     private void ApplyIconScale(double scale)
@@ -145,7 +143,7 @@ internal sealed partial class PclTabButton : UserControl
                     : IdleBackground;
 
         PanBack.Background = background;
-        ShapeLogo.Fill = foreground;
+        ShapeLogo.Background = foreground;
         LabText.Foreground = foreground;
         PanBack.Opacity = 1.0;
         PanBack.RenderTransform = TransformOperations.Parse("scale(1)");

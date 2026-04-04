@@ -26,14 +26,14 @@
         BorderThickness="0"
         Command="{Binding Command, ElementName=Root}"
         Padding="0">
-      <Path
+      <Border
           x:Name="ShapeIcon"
-          Width="15"
-          Height="15"
+          Width="9"
+          Height="9"
           HorizontalAlignment="Center"
           VerticalAlignment="Center"
-          Stretch="Uniform"
-          Fill="#EAF2FE" />
+          Background="#EAF2FE"
+          CornerRadius="4.5" />
     </Button>
   </Border>
 </UserControl>
