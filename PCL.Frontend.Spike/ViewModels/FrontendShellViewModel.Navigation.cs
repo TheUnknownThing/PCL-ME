@@ -24,6 +24,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(SidebarSections, BuildSidebarSections(shellPlan.Navigation));
         ReplaceItems(UtilityEntries, shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(CreateUtilityEntry));
         RefreshDownloadCatalogSurface();
+        RefreshDownloadResourceSurface();
         RefreshDownloadFavoriteSurface();
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
@@ -167,6 +168,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsSetupUiSurface));
         RaisePropertyChanged(nameof(IsDownloadInstallSurface));
         RaisePropertyChanged(nameof(IsDownloadCatalogSurface));
+        RaisePropertyChanged(nameof(IsDownloadResourceSurface));
         RaisePropertyChanged(nameof(IsDownloadFavoritesSurface));
         RaisePropertyChanged(nameof(IsToolsGameLinkSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
@@ -194,6 +196,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasAboutProjectEntries));
         RaisePropertyChanged(nameof(HasAboutAcknowledgementEntries));
         RaisePropertyChanged(nameof(HasFeedbackSections));
+        RaisePropertyChanged(nameof(HasDownloadResourceEntries));
+        RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
         RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasHelpTopicGroups));

@@ -322,6 +322,11 @@ internal sealed partial class FrontendShellViewModel
         _selectHeadSkinCommand = new ActionCommand(SelectHeadSkin);
         _saveHeadCommand = CreateIntentCommand("保存头像", "Would export the generated avatar head image.");
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
+        _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
+        _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
+        _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 0);
+        _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
+        _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1);
         _manageDownloadFavoriteTargetCommand = CreateIntentCommand("管理收藏夹", "Would open the favorite-target management dialog.");
 
         ScenarioLabel = $"Scenario: {options.Scenario}";

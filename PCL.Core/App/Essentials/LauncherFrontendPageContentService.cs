@@ -99,6 +99,12 @@ public static class LauncherFrontendPageContentService
         return request.Navigation.CurrentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.DownloadInstall => BuildDownloadInstallContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle),
+            LauncherFrontendSubpageKey.DownloadMod
+                or LauncherFrontendSubpageKey.DownloadPack
+                or LauncherFrontendSubpageKey.DownloadDataPack
+                or LauncherFrontendSubpageKey.DownloadResourcePack
+                or LauncherFrontendSubpageKey.DownloadShader
+                or LauncherFrontendSubpageKey.DownloadWorld => BuildDownloadResourceContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle),
             _ => BuildGenericDownloadContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle)
         };
     }
@@ -144,6 +150,52 @@ public static class LauncherFrontendPageContentService
                         "更细的加载器版本、兼容性提示和自动推荐结果仍需要后端合同输入。",
                         "前端已经准备好承载这些数据，并保持原版控件层级。",
                         "安装规划与冲突判断仍应继续停留在壳层之外。"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildDownloadResourceContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount,
+        string? selectedLaneTitle)
+    {
+        var surface = request.Navigation.CurrentPage;
+        var routeTitle = surface.SidebarItemTitle ?? surface.Title;
+
+        return new LauncherFrontendPageContent(
+            $"{routeTitle} 页面",
+            "社区资源页已经切换为更接近原版 PageComp 的搜索框、筛选卡、结果列表与分页卡结构，而不是继续停留在下载摘要卡上。",
+            [
+                new LauncherFrontendPageFact("当前分区", routeTitle),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
+                new LauncherFrontendPageFact("Sidebar routes", request.Navigation.SidebarEntries.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "筛选",
+                    "搜索与条件卡",
+                    [
+                        "顶部保留了原版资源搜索框，以及来源、标签、排序方式、版本、加载器这组两行筛选布局。",
+                        "Mod、整合包、数据包、资源包、光影包和世界页都继续共享这一套 PageComp 风格结构。",
+                        $"Focused prompt lane: {selectedLaneTitle ?? "None"}"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "列表",
+                    "资源结果卡",
+                    [
+                        "结果区继续使用独立资源列表卡和底部分页卡，而不是退回到概览摘要块。",
+                        "整合包页也继续保留了额外的安装入口，而不是把它和普通资源页合并。",
+                        "资源行中的图标、说明与详情按钮继续按旧版下载页层级摆放。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "前端与后端的分工",
+                    [
+                        "前端负责复制原版筛选与列表层级，后端仍应提供真实资源数据与安装规划合同。",
+                        "筛选交互已经可以在新壳层中验证，而不需要把旧的 WPF 页面逻辑重新搬回来。",
+                        "后续可以继续把真实搜索结果直接填进这套已复制的外壳。"
                     ])
             ]);
     }

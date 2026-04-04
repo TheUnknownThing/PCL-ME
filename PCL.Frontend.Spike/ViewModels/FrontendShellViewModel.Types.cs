@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -264,6 +265,92 @@ internal sealed class DownloadCatalogEntryViewModel(
     public ActionCommand Command { get; } = command;
 
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
+}
+
+internal sealed class DownloadResourceFilterOptionViewModel(
+    string label,
+    string filterValue,
+    bool isHeader = false)
+{
+    public string Label { get; } = label;
+
+    public string FilterValue { get; } = filterValue;
+
+    public bool IsHeader { get; } = isHeader;
+}
+
+internal sealed class DownloadResourceEntryViewModel(
+    Bitmap? icon,
+    string title,
+    string info,
+    string source,
+    string version,
+    string loader,
+    IReadOnlyList<string> tags,
+    int downloadCount,
+    int followCount,
+    int releaseRank,
+    int updateRank,
+    string actionText,
+    ActionCommand command)
+{
+    public Bitmap? Icon { get; } = icon;
+
+    public string Title { get; } = title;
+
+    public string Info { get; } = info;
+
+    public string Source { get; } = source;
+
+    public string Version { get; } = version;
+
+    public string Loader { get; } = loader;
+
+    public IReadOnlyList<string> Tags { get; } = tags;
+
+    public int DownloadCount { get; } = downloadCount;
+
+    public int FollowCount { get; } = followCount;
+
+    public int ReleaseRank { get; } = releaseRank;
+
+    public int UpdateRank { get; } = updateRank;
+
+    public string ActionText { get; } = actionText;
+
+    public ActionCommand Command { get; } = command;
+
+    public bool HasIcon => Icon is not null;
+
+    public string Meta
+    {
+        get
+        {
+            var parts = new List<string> { Source };
+
+            if (!string.IsNullOrWhiteSpace(Loader))
+            {
+                parts.Add(Loader);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Version))
+            {
+                parts.Add(Version);
+            }
+
+            return string.Join(" • ", parts);
+        }
+    }
+
+    public string SearchText => string.Join(" ", new[]
+    {
+        Title,
+        Info,
+        Source,
+        Version,
+        Loader,
+        string.Join(" ", Tags)
+    });
 }
 
 internal sealed class HelpTopicViewModel(

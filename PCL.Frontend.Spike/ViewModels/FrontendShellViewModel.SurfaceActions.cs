@@ -10,6 +10,12 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        if (IsDownloadResourceSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            ResetDownloadResourceFilters();
+            return;
+        }
+
         if (IsSetupLaunchSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetLaunchSettingsSurface();

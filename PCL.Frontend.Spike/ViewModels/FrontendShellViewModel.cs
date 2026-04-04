@@ -198,6 +198,14 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
             or LauncherFrontendSubpageKey.DownloadLabyMod
             or LauncherFrontendSubpageKey.DownloadLegacyFabric;
 
+    public bool IsDownloadResourceSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
+        && _currentRoute.Subpage is LauncherFrontendSubpageKey.DownloadMod
+            or LauncherFrontendSubpageKey.DownloadPack
+            or LauncherFrontendSubpageKey.DownloadDataPack
+            or LauncherFrontendSubpageKey.DownloadResourcePack
+            or LauncherFrontendSubpageKey.DownloadShader
+            or LauncherFrontendSubpageKey.DownloadWorld;
+
     public bool IsDownloadFavoritesSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadCompFavorites;
 
@@ -223,6 +231,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsSetupUiSurface
         && !IsDownloadInstallSurface
         && !IsDownloadCatalogSurface
+        && !IsDownloadResourceSurface
         && !IsDownloadFavoritesSurface
         && !IsToolsGameLinkSurface
         && !IsToolsHelpSurface
