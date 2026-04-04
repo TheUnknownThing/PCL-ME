@@ -6,7 +6,17 @@
   <Border
       x:Name="PanBack"
       Background="{DynamicResource ColorBrushSemiTransparent}">
-    <Grid>
+    <Button
+        x:Name="ButtonHost"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        VerticalContentAlignment="Stretch"
+        Padding="0">
       <Border
           x:Name="PanFore"
           Background="{DynamicResource ColorBrushHalfWhite}"
@@ -33,13 +43,6 @@
               Margin="{Binding TextMargin, ElementName=Root}" />
         </Grid>
       </Border>
-      <Button
-          x:Name="ButtonHost"
-          Background="Transparent"
-          BorderBrush="Transparent"
-          BorderThickness="0"
-          Command="{Binding Command, ElementName=Root}"
-          Padding="0" />
-    </Grid>
+    </Button>
   </Border>
 </UserControl>

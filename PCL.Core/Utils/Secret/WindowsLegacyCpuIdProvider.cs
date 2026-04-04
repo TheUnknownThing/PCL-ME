@@ -1,9 +1,11 @@
 using System;
 using System.Management;
+using System.Runtime.Versioning;
 using PCL.Core.Logging;
 
 namespace PCL.Core.Utils.Secret;
 
+[SupportedOSPlatform("windows")]
 internal static class WindowsLegacyCpuIdProvider
 {
     private const string LogModule = "Identify";

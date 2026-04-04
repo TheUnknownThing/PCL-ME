@@ -62,7 +62,9 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static MinecraftLaunchPrecheckResult BuildLaunchPrecheckResult(string scenario)
+    private static MinecraftLaunchPrecheckResult BuildLaunchPrecheckResult(
+        string scenario,
+        bool isNonAsciiGamePathWarningDisabled)
     {
         var requiresAuth = string.Equals(scenario, "legacy-forge", StringComparison.OrdinalIgnoreCase);
         return MinecraftLaunchPrecheckService.Evaluate(new MinecraftLaunchPrecheckRequest(
@@ -73,7 +75,7 @@ internal sealed partial class FrontendShellViewModel
             IsInstanceError: false,
             InstanceErrorDescription: null,
             IsUtf8CodePage: true,
-            IsNonAsciiPathWarningDisabled: false,
+            IsNonAsciiPathWarningDisabled: isNonAsciiGamePathWarningDisabled,
             IsInstancePathAscii: false,
             ProfileValidationMessage: string.Empty,
             SelectedProfileKind: requiresAuth ? MinecraftLaunchProfileKind.Auth : MinecraftLaunchProfileKind.Microsoft,

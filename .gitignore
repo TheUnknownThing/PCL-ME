@@ -346,3 +346,7 @@ MaskFiles/
 # macOS
 
 **/.DS_Store
+
+# Temp test files
+
+.spike-mc/

@@ -518,7 +518,10 @@ internal sealed class UiFeatureToggleGroupViewModel(string title, IReadOnlyList<
     public IReadOnlyList<UiFeatureToggleItemViewModel> Items { get; } = items;
 }
 
-internal sealed class UiFeatureToggleItemViewModel(string title, bool isChecked) : ViewModelBase
+internal sealed class UiFeatureToggleItemViewModel(
+    string title,
+    bool isChecked,
+    Action<bool>? changed = null) : ViewModelBase
 {
     private bool _isChecked = isChecked;
 
@@ -527,7 +530,13 @@ internal sealed class UiFeatureToggleItemViewModel(string title, bool isChecked)
     public bool IsChecked
     {
         get => _isChecked;
-        set => SetProperty(ref _isChecked, value);
+        set
+        {
+            if (SetProperty(ref _isChecked, value))
+            {
+                changed?.Invoke(value);
+            }
+        }
     }
 }
 
@@ -672,6 +681,8 @@ internal enum SpikePromptLaneKind
 
 internal enum UpdateSurfaceState
 {
-    Available = 0,
-    Latest = 1
+    Checking = 0,
+    Available = 1,
+    Latest = 2,
+    Error = 3
 }

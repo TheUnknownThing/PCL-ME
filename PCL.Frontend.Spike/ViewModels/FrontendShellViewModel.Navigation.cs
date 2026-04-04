@@ -110,14 +110,14 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendShellPlan BuildShellPlan()
     {
-        var request = _shellInputs.NavigationRequest with
+        var request = _shellComposition.NavigationRequest with
         {
             CurrentRoute = _currentRoute,
             BackstackDepth = _routeHistory.Count
         };
         return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
-            _shellInputs.StartupInputs.StartupWorkflowRequest,
-            _shellInputs.StartupInputs.StartupConsentRequest,
+            _shellComposition.StartupWorkflowRequest,
+            _shellComposition.StartupConsentRequest,
             request));
     }
 
@@ -131,7 +131,16 @@ internal sealed partial class FrontendShellViewModel
 
         _routeHistory.Add(_currentRoute);
         _currentRoute = route;
+        if (route.Page == LauncherFrontendPageKey.Setup)
+        {
+            ReloadSetupComposition();
+        }
+
         RefreshShell(activityMessage);
+        if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
     }
 
     private void NavigateBack()
@@ -146,14 +155,32 @@ internal sealed partial class FrontendShellViewModel
             var previousRoute = _routeHistory[^1];
             _routeHistory.RemoveAt(_routeHistory.Count - 1);
             _currentRoute = previousRoute;
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                ReloadSetupComposition();
+            }
+
             RefreshShell("Returned to the previous shell route.");
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+            {
+                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+            }
             return;
         }
 
         if (_currentNavigation.BackTarget?.Route is { } backRoute)
         {
             _currentRoute = backRoute;
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                ReloadSetupComposition();
+            }
+
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+            {
+                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+            }
         }
     }
 
@@ -236,6 +263,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowAvailableUpdateCard));
         RaisePropertyChanged(nameof(ShowCurrentVersionCard));
         RaisePropertyChanged(nameof(ShowOptionalUpdateCard));
+        RaisePropertyChanged(nameof(AvailableUpdateName));
+        RaisePropertyChanged(nameof(AvailableUpdatePublisher));
+        RaisePropertyChanged(nameof(AvailableUpdateSummary));
+        RaisePropertyChanged(nameof(CurrentVersionName));
         RaisePropertyChanged(nameof(CurrentVersionDescription));
     }
 }
