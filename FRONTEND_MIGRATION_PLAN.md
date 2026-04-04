@@ -46,6 +46,8 @@ Completed:
 
 Recent checkpoints:
 
+- `74be91e1` `feat: wire frontend install selection flow`
+- `5e51a2be` `feat: add frontend install workflow primitives`
 - `1aa6abfb` `feat: repair instance files from portable manifests`
 - `b7e11a0a` `feat: cut over instance launch-side overview actions`
 - `4a065f15` `refactor: isolate frontend platform adapters`
@@ -357,7 +359,12 @@ Status on 2026-04-04:
 - instance overview `导出启动脚本` now writes the actual generated launch script from the portable session plan
 - instance overview `补全文件` and `重置实例` now use a portable manifest-driven repair flow that refreshed the real `1.21.10` instance under `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft`
 - ad hoc verification against that real instance reused 4,477 files and re-downloaded the asset index without invoking WPF code
-- the next remaining Track 5 target is now the richer copied install-page selection/apply workflow and any other install-entry behavior that still depends on legacy install logic
+- the copied download and instance install surfaces now own managed selection/apply behavior for Minecraft, Fabric, Legacy Fabric, Quilt, LabyMod, Fabric API, Legacy Fabric API, and QFAPI / QSL through `FrontendInstallWorkflowService`
+- ad hoc verification on 2026-04-05 created a temporary `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft/versions/codex-track5-verify`, applied Fabric plus Fabric API on top of Minecraft `1.21.10`, then reapplied the same instance as Quilt plus QFAPI / QSL and observed the managed addon jar switch from `fabric-api-0.138.4+1.21.10.jar` to `quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
+- that managed install verification reused 4,397 files on the first apply and 4,478 files on the second apply while writing the migrated manifest and instance config without invoking WPF code
+- the temporary verification instance was removed after inspection so the real launcher folder returned to its prior state
+- direct clickable desktop-shell verification for this slice is still blocked on this macOS host because Avalonia Native currently aborts with `RenderTimer` error `-6661` when starting the app entry
+- the remaining Track 5 target is now the unmanaged installer family and any other install-entry behavior still tied to legacy installer logic, especially Forge, NeoForge, Cleanroom, LiteLoader, and OptiFine
 
 ## Track 6. Multi-Platform Packaging And Validation
 

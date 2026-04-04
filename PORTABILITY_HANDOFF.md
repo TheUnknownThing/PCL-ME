@@ -354,7 +354,19 @@ Status on 2026-04-04:
 - instance overview `测试游戏` now routes into the real replacement-shell launch flow instead of writing a test-context artifact
 - instance overview `导出启动脚本` now writes the real generated launch script content from the portable session plan
 - instance overview `补全文件` and `重置实例` now execute a portable manifest-driven repair path that refreshes the client jar, libraries, natives, asset index, and missing assets without falling back to WPF
-- the main remaining Track 5 gap in the copied instance family is now the richer install-page selection/apply workflow, not overview maintenance/recovery
+- recent Track 5 checkpoints for the managed install workflow slice:
+  - `5e51a2be` `feat: add frontend install workflow primitives`
+  - `74be91e1` `feat: wire frontend install selection flow`
+
+Verified on 2026-04-05:
+
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after wiring the copied install cards to the new workflow
+- the frontend now owns the copied download/instance install selection flow for Minecraft, Fabric, Legacy Fabric, Quilt, LabyMod, Fabric API, Legacy Fabric API, and QFAPI / QSL through `FrontendInstallWorkflowService` and the shell dialog adapters
+- a real verification pass against `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft` created a temporary `versions/codex-track5-verify/codex-track5-verify.json`, first as Fabric with `mods/fabric-api-0.138.4+1.21.10.jar`, then reapplied the same instance as Quilt with `mods/quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
+- the managed install workflow reused 4,397 existing files on the first apply and 4,478 existing files on the second apply while switching the loader manifest and managed addon jar without falling back to WPF code
+- the temporary verification instance was removed after inspection so the real launcher folder was not left with extra test clutter
+- direct clickable desktop-app verification for this slice is still blocked on this macOS host because `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app --host-env true` currently aborts in Avalonia Native with `RenderTimer` error `-6661`
+- the next remaining Track 5 gap in the copied install family is now the unmanaged installer set that the new workflow still leaves in legacy/not-yet-owned state: Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and related installer-specific behavior
 
 Done when:
 
