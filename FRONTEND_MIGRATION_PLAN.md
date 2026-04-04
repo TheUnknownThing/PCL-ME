@@ -18,7 +18,8 @@ The practical target is a frontend that looks like the current launcher, but get
 Status as of 2026-04-04:
 
 - Phase 1 is complete
-- Phase 2 is now the active frontend task
+- Phase 2 is complete
+- Phase 3 is now the active frontend task
 
 Phase 1 completion means:
 
@@ -130,12 +131,18 @@ But most of those surfaces are still fed by:
 - summary contracts in `LauncherFrontendPageContentService`
 - spike-only commands that only write to the activity feed
 
-### Prompt actions are not yet real frontend-to-backend operations
+### Prompt actions are now real shell actions, but launch-state data is still prototype-backed
 
-Prompt rendering is already portable, but command handling is still mostly spike behavior:
+Prompt rendering and prompt-command execution now both exist:
 
 - prompt options map to `LauncherFrontendPromptCommandKind`
-- the desktop shell currently records those actions in the activity list instead of driving real workflows, persistence, or OS actions
+- prompt commands now drive config persistence, route changes, launch abort/continue state, crash export/log actions, Java materialization, and shell exit behavior
+- prompt lanes now follow runtime lifecycle instead of appearing as a static always-on inbox
+
+What is still missing is the state source behind many prompts and surfaces:
+
+- launch prompts are still composed from sample-backed launch plans
+- crash and Java actions still materialize frontend-side artifacts rather than fully live launcher integrations
 
 ### The next missing middle is prompt and page-state composition
 
@@ -203,7 +210,7 @@ Delivered files:
 
 Status:
 
-- active
+- complete
 
 Target:
 
@@ -229,6 +236,30 @@ Important constraint:
 
 - the frontend should execute commands or delegate to adapters
 - it should not reinterpret backend prompt policy
+
+Delivered files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendRuntimePaths.cs`
+- `PCL.Frontend.Spike/Desktop/App.axaml.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.StaticMaps.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SurfaceInitialization.cs`
+
+What this means in practice:
+
+- startup prompt choices now persist `SystemEula`, `SystemTelemetry`, and prompt-driven hint settings through the same config files the runtime shell reads
+- launch prompt choices now affect launch continuation/abort state and can materialize a prompt-driven Java runtime into frontend artifact directories
+- crash prompt choices now route to the copied shell surfaces and can materialize/export crash artifacts through portable export services
+- prompt lanes now appear only when their lifecycle actually exists:
+  - startup at boot
+  - launch after a launch attempt
+  - crash after an explicit crash event trigger
+
+Important caveat:
+
+- Phase 2 is complete for prompt-command execution inside the replacement frontend boundary, but it does not make launch networking, Java transfer, or crash save-picker behavior fully live
 
 ### Phase 3: wire launch readiness and launch flow to real backend state
 
@@ -332,7 +363,7 @@ Deliverable:
 | Area | Current visual status | Real backend source now | Main missing piece |
 | --- | --- | --- | --- |
 | Startup shell | portable and route-aware | `LauncherStartupWorkflowService`, `LauncherFrontendShellService` | real request construction and runtime refresh |
-| Prompt queue | portable rendering exists | `LauncherFrontendPromptService` | real command dispatch and persistence |
+| Prompt queue | portable rendering and command execution exist | `LauncherFrontendPromptService` | launch-state source still uses sample-backed plans |
 | Launch page | copied shell layout | launch workflow services under `PCL.Core/Minecraft/Launch` | live state source instead of sample plan injection |
 | Setup pages | many copied layouts | config and app services exist | route-specific real settings adapters |
 | Download pages | copied install and resource layouts | navigation + page-content summary seam exists | real catalog/search/install contracts |
@@ -344,11 +375,11 @@ Deliverable:
 
 This is the recommended concrete order for the next frontend passes.
 
-1. Replace prompt activity-log stubs with real handlers for consent, navigation, crash export, launch abort, and Java download actions.
-2. Persist prompt-driven setting changes through the same config keys the WPF shell uses.
-3. Feed the launch page from real launch workflow planning requests built from current runtime/config/profile state.
-4. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
-5. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
+1. Feed the launch page from real launch workflow planning requests built from current runtime/config/profile state.
+2. Replace sample-backed launch prompt composition with runtime-built launch requests and profile-aware launch readiness state.
+3. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
+4. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
+5. Separate reusable frontend adapters from spike-only sample generation once the launch page stops depending on sample plans.
 
 ## Backend Support Needed
 
@@ -366,10 +397,10 @@ The most likely contract additions are:
 
 This phase is complete when:
 
-- the desktop shell no longer depends mainly on `SpikeSampleFactory` for its day-to-day state
-- copied Avalonia pages are driven by real backend-owned request/response models
 - prompt choices cause real launcher actions or persisted state changes
-- frontend code is mostly about state binding, navigation, dialogs, and OS actions
-- policy remains in `PCL.Core` / `PCL.Core.Backend`
+- the prompt inbox lifecycle matches the actual shell lifecycle instead of showing static sample lanes
+- frontend prompt execution stays inside adapter-style shell code without moving policy into the frontend
 
-At that point the migration will have moved from “portable spike shell” to “real replacement frontend backed by portable services.”
+Phase 2 is now in that state.
+
+The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the Phase 3 and Phase 4 data work is done.

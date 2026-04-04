@@ -7,7 +7,8 @@ The portability phase has crossed an important boundary:
 - the portable backend is real
 - the replacement frontend shell is real
 - frontend migration Phase 1 is complete as of 2026-04-04
-- the next major frontend task is Phase 2 prompt-command execution
+- frontend migration Phase 2 prompt-command execution is complete as of 2026-04-04
+- the next major frontend task is Phase 3 launch-state integration
 
 The repo is therefore in this state:
 
@@ -226,23 +227,21 @@ The frontend shell bootstrap is no longer mostly fixture-driven.
 
 The remaining spike-heavy areas are now:
 
-- prompt command execution
 - launch-page runtime state
 - crash/launch/sample plan injection used by non-shell surfaces
 - route-local page fixtures
 
 ## What Still Isn’t Done
 
-### 1. Prompt command execution
+### 1. Launch-page runtime state
 
-Prompt rendering is portable and Phase 1 shell composition is real.
+Prompt rendering is portable and Phase 2 prompt-command execution is now real.
 
-Prompt action handling is still mostly spike behavior:
+The next remaining frontend gap is the launch surface itself:
 
-- command clicks often only write to the activity feed
-- they do not yet consistently trigger real persistence, launch continuation, abort, export, or route logic
-
-This is now the active Phase 2 frontend task.
+- launch prompts still come from sample-backed launch plans instead of runtime-built launch requests
+- launch summaries, login labels, and Java summaries are still largely fixture-driven
+- the frontend still does not source live launch readiness from current profile/config/runtime state
 
 ### 2. Page-specific production data
 
@@ -292,15 +291,24 @@ Start from:
 
 Do not replace this with new fixtures.
 
-### Step 2: wire prompt commands to real backend and shell actions
+### Step 2: Phase 2 is complete, preserve the new prompt lifecycle and command adapters
 
-Use the existing `LauncherFrontendPromptCommandKind` contract and turn it into:
+The prompt system now does the Phase 2 job:
 
-- route changes
-- persisted consent/settings changes
-- launch continue/abort decisions
-- crash export/log actions
-- Java download decisions
+- startup prompts persist consent and telemetry decisions
+- launch prompts are created only from a launch attempt
+- crash prompts are created only from an explicit crash event trigger
+- crash export/log actions and Java materialization actions execute through frontend adapters
+
+Important files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendRuntimePaths.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+
+Important caveat:
+
+- Phase 2 does not make launch or crash workflows fully live; it makes prompt-command execution real inside the replacement shell boundary
 
 ### Step 3: feed the launch page from real launch workflow services
 
@@ -365,6 +373,10 @@ These are the most relevant recent frontend checkpoints:
 - `36784278` `feat: copy instance content spike surfaces`
 - `8c58b28b` `feat: copy instance resource spike surfaces`
 - `f2754dc2` `docs: refresh frontend migration status`
+- `805b0a62` `refactor: add frontend shell action adapters`
+- `6624be02` `feat: execute frontend prompt commands`
+- `c2c139ed` `fix: auto-open startup prompt inbox`
+- `5caaa14e` `fix: scope prompt lanes to runtime events`
 
 ## Files To Read First
 
@@ -410,7 +422,7 @@ The repo is already past the “portability spike” stage.
 The next milestone is:
 
 - real backend-driven frontend state
-- real prompt action execution
+- real launch-page runtime integration
 - real page models behind the copied Avalonia UI
 
 That is the correct continuation point for both the frontend migration plan and the broader portability effort.
