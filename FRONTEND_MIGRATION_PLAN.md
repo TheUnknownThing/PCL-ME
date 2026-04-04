@@ -54,6 +54,8 @@ What is already in a usable migration state:
 - the Avalonia spike now uses closer launcher-style chrome for top-level and secondary routes
 - the Avalonia spike now also has copied non-launch right panes for `设置/关于`, `设置/反馈`, `设置/日志`, `工具/帮助`, `设置/更新`, `设置/游戏联机`, `设置/游戏管理`, `设置/启动器杂项`, `设置/Java`, and `设置/界面`
 - the Avalonia spike now also has a copied `下载/自动安装` surface instead of the old generic summary card layout
+- the Avalonia spike now also has copied instance surfaces for `实例/概览`, `实例/设置`, `实例/导出`, `实例/安装`, `实例/世界`, `实例/截图`, and `实例/服务器`
+- the Avalonia spike now also has a shared copied instance resource-management surface for `实例/Mod`, `实例/已禁用 Mod`, `实例/资源包`, `实例/光影包`, and `实例/投影原理图`
 - the Avalonia spike now also has a copied `工具/联机大厅` two-column detail surface instead of the earlier simplified single-column summary
 - the Avalonia spike now also pushes `工具/测试` closer to the original WPF page structure, wording, preview panels, and tool button behavior
 - those copied routes now also have page-specific frontend page-content seams instead of only the generic summary contract
@@ -113,6 +115,12 @@ Recent checkpoint commits:
 - `62c32bf7` `feat: copy setup game manage surface`
 - `4c81c806` `feat: copy setup launcher misc surface`
 - `e9f2979d` `feat: copy setup java and ui surfaces`
+- `0c92fedf` `feat: copy download resource list surfaces`
+- `b1f23fdc` `feat: copy instance overview spike surface`
+- `570f9ae0` `feat: copy instance export spike surface`
+- `552b7de9` `feat: copy instance settings spike surface`
+- `a50d5388` `feat: copy instance install spike surface`
+- `36784278` `feat: copy instance content spike surfaces`
 - `9baa892a` `feat: align download install spike surface`
 - `9a0ab0e5` `feat: copy tools game link detail surface`
 
@@ -126,6 +134,8 @@ The current Avalonia spike now proves more than startup plumbing:
 - top chrome now switches between top tabs and inner-route back-title mode
 - `设置/关于`, `设置/反馈`, `设置/日志`, `工具/帮助`, `设置/更新`, `设置/游戏联机`, `设置/游戏管理`, `设置/启动器杂项`, `设置/Java`, and `设置/界面` now render copied page-specific right panes rather than the generic shell summary panel
 - `下载/自动安装` now renders a copied card stack with original warning strips and loader-selection hierarchy instead of the previous placeholder summary
+- `实例/概览`, `实例/设置`, `实例/导出`, `实例/安装`, `实例/世界`, `实例/截图`, and `实例/服务器` now render copied page-specific panels instead of falling back to the generic shell summary
+- `实例/Mod`, `实例/已禁用 Mod`, `实例/资源包`, `实例/光影包`, and `实例/投影原理图` now share a copied resource-management surface instead of the old generic summary card
 - `工具/联机大厅` now renders copied join/create/detail/member areas instead of the earlier simplified summary-only panel
 - `工具/测试` now follows the original card order and more of the original wording, form layout, and preview behavior
 
@@ -133,8 +143,8 @@ What still needs frontend parity work:
 
 - many non-launch right panes are still summary-card approximations, not copied page-specific layouts yet
 - setup still needs copied parity for `启动` and any denser route sections that still collapse into generic summary cards
-- download now has a copied `自动安装` route, but still needs the easier resource-list routes after it
 - tools still needs parity beyond the copied help, lobby, and test pages, especially the embedded server-query widget and any denser follow-up tool surfaces
+- instance still needs the deeper `VersionSaves` secondary pages and any richer detail widgets that currently remain fixture-only
 - page-specific controls such as search boxes, list blocks, person/about rows, richer settings cards, and embedded custom widgets still need direct migration
 - some current Avalonia controls are faithful first passes, but should continue to converge toward the original WPF behavior and spacing
 
