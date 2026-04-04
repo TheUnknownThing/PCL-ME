@@ -20,6 +20,7 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
+    private readonly FrontendShellActionService _shellActionService;
     private readonly FrontendShellComposition _shellComposition;
     private readonly StartupSpikePlan _startupPlan;
     private readonly LaunchSpikePlan _launchPlan;
@@ -246,13 +247,18 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedHomepagePresetIndex = 14;
     private string _selectedJavaRuntimeKey = "auto";
 
-    public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
+    public static FrontendShellViewModel CreateBootstrap(
+        SpikeCommandOptions options,
+        FrontendShellActionService shellActionService)
     {
-        return new FrontendShellViewModel(options);
+        return new FrontendShellViewModel(options, shellActionService);
     }
 
-    private FrontendShellViewModel(SpikeCommandOptions options)
+    private FrontendShellViewModel(
+        SpikeCommandOptions options,
+        FrontendShellActionService shellActionService)
     {
+        _shellActionService = shellActionService;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
