@@ -18,8 +18,10 @@ internal sealed class App(SpikeCommandOptions options) : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var platformAdapter = new FrontendPlatformAdapter();
             var shellActionService = new FrontendShellActionService(
-                FrontendRuntimePaths.Resolve(),
+                FrontendRuntimePaths.Resolve(platformAdapter),
+                platformAdapter,
                 () => desktop.Shutdown());
             desktop.MainWindow = new MainWindow
             {

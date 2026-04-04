@@ -349,7 +349,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var extension = OperatingSystem.IsWindows() ? ".cmd" : OperatingSystem.IsMacOS() ? ".command" : ".sh";
+        var extension = _shellActionService.GetCommandScriptExtension();
         var scriptPath = Path.Combine(
             GetInstanceOverviewArtifactDirectory("launch-scripts"),
             $"启动 {_instanceComposition.Selection.InstanceName}{extension}");
@@ -358,7 +358,7 @@ internal sealed partial class FrontendShellViewModel
             ? BuildWindowsLaunchExportLines(classpathEntries)
             : BuildUnixLaunchExportLines(classpathEntries);
         File.WriteAllText(scriptPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        TryMarkFileExecutable(scriptPath);
+        _shellActionService.EnsureFileExecutable(scriptPath);
         OpenInstanceTarget("导出启动脚本", scriptPath, "启动脚本不存在。");
     }
 
@@ -793,28 +793,6 @@ internal sealed partial class FrontendShellViewModel
 
         return builder.Length == 0 ? "instance" : builder.ToString();
     }
-
-    private static void TryMarkFileExecutable(string path)
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
-        try
-        {
-            File.SetUnixFileMode(
-                path,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
-        }
-        catch
-        {
-            // Best effort on Unix-like systems.
-        }
-    }
-
     private static void PatchCoreArchive(string corePath, string patchArchivePath)
     {
         if (!File.Exists(corePath))

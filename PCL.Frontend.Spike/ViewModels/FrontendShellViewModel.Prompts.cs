@@ -468,10 +468,7 @@ internal sealed partial class FrontendShellViewModel
                 _launchComposition = _launchComposition with
                 {
                     SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
-                        Path.Combine(
-                            installResult.RuntimeDirectory,
-                            "bin",
-                            OperatingSystem.IsWindows() ? "java.exe" : "java"),
+                        _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
                         $"Java {installResult.VersionName}",
                         _launchComposition.JavaWorkflow.RecommendedMajorVersion,
                         IsEnabled: true,

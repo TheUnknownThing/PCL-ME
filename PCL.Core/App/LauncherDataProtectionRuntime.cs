@@ -1,6 +1,4 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
 using PCL.Core.App.Essentials;
 using PCL.Core.Utils.Encryption;
 using PCL.Core.Utils.OS;
@@ -10,7 +8,6 @@ namespace PCL.Core.App;
 
 public static class LauncherDataProtectionRuntime
 {
-    private static readonly byte[] IdentifyEntropy = Encoding.UTF8.GetBytes("PCL CE Encryption Key");
     private static readonly Lazy<byte[]> _encryptionKey = new(ResolveEncryptionKey);
 
     public static (IEncryptionProvider Provider, uint Version) DefaultProvider => LauncherDataProtectionService.DefaultProvider;
@@ -32,8 +29,8 @@ public static class LauncherDataProtectionRuntime
         var resolution = LauncherSecretKeyResolutionService.Resolve(new LauncherSecretKeyResolutionRequest(
             ExplicitKeyOverride: EnvironmentInterop.GetSecret("ENCRYPTION_KEY", readEnvDebugOnly: true),
             PersistedKeyEnvelope: LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(keyFile),
-            ReadPersistedKey: ReadStoredKey,
-            ProtectGeneratedKey: CreateStoredKeyEnvelope));
+            ReadPersistedKey: LauncherStoredKeyEnvelopeService.ReadKey,
+            ProtectGeneratedKey: LauncherStoredKeyEnvelopeService.CreateStoredKeyEnvelope));
 
         if (resolution.ShouldPersist && resolution.PersistedKeyEnvelope is not null)
         {
@@ -41,29 +38,5 @@ public static class LauncherDataProtectionRuntime
         }
 
         return resolution.Key;
-    }
-
-    private static LauncherVersionedData CreateStoredKeyEnvelope(byte[] randomKey)
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return new LauncherVersionedData(
-                Version: 1,
-                Data: ProtectedData.Protect(randomKey, IdentifyEntropy, DataProtectionScope.CurrentUser));
-        }
-
-        return new LauncherVersionedData(
-            Version: 2,
-            Data: randomKey);
-    }
-
-    private static byte[] ReadStoredKey(LauncherVersionedData data)
-    {
-        return data.Version switch
-        {
-            1 => ProtectedData.Unprotect(data.Data, IdentifyEntropy, DataProtectionScope.CurrentUser),
-            2 => data.Data,
-            _ => throw new NotSupportedException("Unsupported key version")
-        };
     }
 }
