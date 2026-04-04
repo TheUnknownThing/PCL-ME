@@ -51,6 +51,11 @@ internal sealed partial class FrontendShellViewModel
 
         SyncPromptLaneState();
         SelectPromptLane(_selectedPromptLane);
+
+        if (_promptCatalog[SpikePromptLaneKind.Startup].Count > 0)
+        {
+            SetPromptOverlayOpen(true);
+        }
     }
 
     private void SelectPromptLane(SpikePromptLaneKind lane, bool updateActivity = true)
