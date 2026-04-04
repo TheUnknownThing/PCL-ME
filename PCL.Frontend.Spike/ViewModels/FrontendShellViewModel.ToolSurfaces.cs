@@ -2,6 +2,8 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    public IReadOnlyList<string> GameLinkWorldOptions => _gameLinkWorldOptions;
+
     public string GameLinkAnnouncement
     {
         get => _gameLinkAnnouncement;
@@ -59,13 +61,6 @@ internal sealed partial class FrontendShellViewModel
     public string GameLinkPlayerListTitle => GameLinkPlayerEntries.Count > 0
         ? $"大厅成员列表（{GameLinkPlayerEntries.Count} 人）"
         : "大厅成员列表（正在获取信息）";
-
-    public IReadOnlyList<string> GameLinkWorldOptions { get; } =
-    [
-        "Modern Fabric Demo - 25565",
-        "Legacy Forge Demo - 25566",
-        "Quilt Snapshot Demo - 25567"
-    ];
 
     public int SelectedGameLinkWorldIndex
     {

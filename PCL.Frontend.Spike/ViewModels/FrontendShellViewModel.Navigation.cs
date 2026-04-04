@@ -26,6 +26,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshDownloadCatalogSurface();
         RefreshDownloadResourceSurface();
         RefreshDownloadFavoriteSurface();
+        RefreshVersionSaveSurfaces();
         RefreshInstanceOverviewSurface();
         RefreshInstanceSetupSurface();
         RefreshInstanceExportSurface();
@@ -139,6 +140,11 @@ internal sealed partial class FrontendShellViewModel
         {
             ReloadInstanceComposition();
         }
+        else if (route.Page == LauncherFrontendPageKey.VersionSaves)
+        {
+            ReloadVersionSavesComposition();
+            ReloadDownloadComposition();
+        }
 
         RefreshShell(activityMessage);
         if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
@@ -167,6 +173,11 @@ internal sealed partial class FrontendShellViewModel
             {
                 ReloadInstanceComposition();
             }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.VersionSaves)
+            {
+                ReloadVersionSavesComposition();
+                ReloadDownloadComposition();
+            }
 
             RefreshShell("Returned to the previous shell route.");
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
@@ -186,6 +197,11 @@ internal sealed partial class FrontendShellViewModel
             else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
             {
                 ReloadInstanceComposition();
+            }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.VersionSaves)
+            {
+                ReloadVersionSavesComposition();
+                ReloadDownloadComposition();
             }
 
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
@@ -217,6 +233,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsToolsGameLinkSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsToolsTestSurface));
+        RaisePropertyChanged(nameof(IsVersionSaveInfoSurface));
+        RaisePropertyChanged(nameof(IsVersionSaveBackupSurface));
+        RaisePropertyChanged(nameof(IsVersionSaveDatapackSurface));
         RaisePropertyChanged(nameof(IsInstanceOverviewSurface));
         RaisePropertyChanged(nameof(IsInstanceSetupSurface));
         RaisePropertyChanged(nameof(IsInstanceExportSurface));
@@ -252,6 +271,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
         RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
+        RaisePropertyChanged(nameof(HasVersionSaveInfoEntries));
+        RaisePropertyChanged(nameof(HasVersionSaveSettingEntries));
+        RaisePropertyChanged(nameof(HasVersionSaveBackupEntries));
+        RaisePropertyChanged(nameof(HasNoVersionSaveBackupEntries));
+        RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
+        RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
         RaisePropertyChanged(nameof(HasHelpTopicGroups));
         RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
         RaisePropertyChanged(nameof(HasJavaRuntimeEntries));

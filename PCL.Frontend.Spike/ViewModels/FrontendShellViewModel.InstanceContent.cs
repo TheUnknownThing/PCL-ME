@@ -248,7 +248,7 @@ internal sealed partial class FrontendShellViewModel
                 .Select(entry => new SimpleListEntryViewModel(
                     entry.Title,
                     entry.Summary,
-                    new ActionCommand(() => OpenInstanceTarget("查看存档", entry.Path, "当前存档目录不存在。")))));
+                    new ActionCommand(() => OpenVersionSaveDetails(entry.Path)))));
     }
 
     private void RefreshInstanceScreenshotEntries()

@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
@@ -214,6 +215,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLinkConnectedUserName));
         RaisePropertyChanged(nameof(GameLinkConnectedUserType));
         RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
+        RaisePropertyChanged(nameof(GameLinkWorldOptions));
         RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
         AddActivity("刷新联机大厅", "联机大厅页面已恢复到初始演示状态。");
     }
@@ -293,6 +295,12 @@ internal sealed partial class FrontendShellViewModel
 
     private void CreateLobby()
     {
+        if (GameLinkWorldOptions.Count == 0)
+        {
+            AddActivity("创建大厅", "当前没有可用于创建大厅的存档。");
+            return;
+        }
+
         GameLinkSessionId = $"U/2398-AX4A-SSSS-{SelectedGameLinkWorldIndex + 1:0000}";
         GameLinkLobbyId = GameLinkSessionId;
         GameLinkAnnouncement = "大厅创建完成，可以复制大厅编号发给朋友。";
@@ -311,6 +319,8 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshLobbyWorlds()
     {
+        RefreshGameLinkWorldOptions();
+        RaisePropertyChanged(nameof(GameLinkWorldOptions));
         SelectedGameLinkWorldIndex = (SelectedGameLinkWorldIndex + 1) % GameLinkWorldOptions.Count;
         AddActivity("刷新世界列表", GameLinkWorldOptions[SelectedGameLinkWorldIndex]);
     }
@@ -328,24 +338,74 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLinkConnectedUserName));
         RaisePropertyChanged(nameof(GameLinkConnectedUserType));
         RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
+        RaisePropertyChanged(nameof(GameLinkWorldOptions));
         RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
         AddActivity("退出大厅", "大厅状态已重置为未连接。");
     }
 
-    private void SelectDownloadFolder()
+    private async Task SelectDownloadFolderAsync()
     {
-        ToolDownloadFolder = "/Users/demo/Downloads/PCL/custom";
+        string? selectedFolder;
+        try
+        {
+            selectedFolder = await _shellActionService.PickFolderAsync("选择下载目录");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("选择下载目录失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedFolder))
+        {
+            AddActivity("选择下载目录", "已取消选择下载目录。");
+            return;
+        }
+
+        ToolDownloadFolder = selectedFolder;
         AddActivity("选择下载目录", ToolDownloadFolder);
     }
 
-    private void StartCustomDownload()
+    private async Task StartCustomDownloadAsync()
     {
-        AddActivity("开始下载自定义文件", $"{ToolDownloadUrl} -> {ToolDownloadFolder}/{ToolDownloadName}");
+        if (!Uri.TryCreate(ToolDownloadUrl, UriKind.Absolute, out var uri))
+        {
+            AddActivity("开始下载自定义文件失败", "下载地址无效。");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
+        {
+            AddActivity("开始下载自定义文件失败", "请先选择保存目录。");
+            return;
+        }
+
+        var fileName = string.IsNullOrWhiteSpace(ToolDownloadName)
+            ? Path.GetFileName(uri.LocalPath)
+            : ToolDownloadName.Trim();
+        fileName = string.IsNullOrWhiteSpace(fileName) ? "download.bin" : SanitizeFileSegment(fileName);
+
+        var targetDirectory = Path.GetFullPath(ToolDownloadFolder);
+        Directory.CreateDirectory(targetDirectory);
+        var targetPath = Path.Combine(targetDirectory, fileName);
+
+        try
+        {
+            using var client = CreateToolHttpClient();
+            await using var source = await client.GetStreamAsync(uri);
+            await using var output = File.Create(targetPath);
+            await source.CopyToAsync(output);
+            AddActivity("开始下载自定义文件", $"{uri} -> {targetPath}");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("开始下载自定义文件失败", ex.Message);
+        }
     }
 
     private void SaveOfficialSkin()
     {
-        AddActivity("保存正版皮肤", $"Would save the skin for {OfficialSkinPlayerName}.");
+        _ = SaveOfficialSkinAsync();
     }
 
     private void ExportLauncherLogs(bool includeAllLogs)
@@ -660,9 +720,31 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("预览成就图片", ShowAchievementPreview ? AchievementTitle : "Achievement preview hidden.");
     }
 
-    private void SelectHeadSkin()
+    private async Task SelectHeadSkinAsync()
     {
-        SelectedHeadSkinPath = "/Users/demo/Downloads/skin.png";
+        string? sourcePath;
+        try
+        {
+            sourcePath = await _shellActionService.PickOpenFileAsync(
+                "选择皮肤文件",
+                "图像文件",
+                "*.png",
+                "*.jpg",
+                "*.jpeg");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("选择皮肤失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            AddActivity("选择皮肤", "已取消选择皮肤文件。");
+            return;
+        }
+
+        SelectedHeadSkinPath = sourcePath;
         AddActivity("选择皮肤", SelectedHeadSkinPath);
     }
 
@@ -931,5 +1013,141 @@ internal sealed partial class FrontendShellViewModel
         var invalidCharacters = Path.GetInvalidFileNameChars();
         var cleaned = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray());
         return string.IsNullOrWhiteSpace(cleaned) ? "update" : cleaned;
+    }
+
+    private void OpenCustomDownloadFolder()
+    {
+        var folder = string.IsNullOrWhiteSpace(ToolDownloadFolder)
+            ? Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "tool-downloads")
+            : Path.GetFullPath(ToolDownloadFolder);
+        Directory.CreateDirectory(folder);
+        if (_shellActionService.TryOpenExternalTarget(folder, out var error))
+        {
+            AddActivity("打开下载文件夹", folder);
+        }
+        else
+        {
+            AddActivity("打开下载文件夹失败", error ?? folder);
+        }
+    }
+
+    private async Task SaveOfficialSkinAsync()
+    {
+        if (string.IsNullOrWhiteSpace(OfficialSkinPlayerName))
+        {
+            AddActivity("保存正版皮肤失败", "请先填写正版玩家名。");
+            return;
+        }
+
+        try
+        {
+            using var client = CreateToolHttpClient();
+            var profileJson = await client.GetStringAsync($"https://api.mojang.com/users/profiles/minecraft/{Uri.EscapeDataString(OfficialSkinPlayerName.Trim())}");
+            using var profileDocument = JsonDocument.Parse(profileJson);
+            var uuid = profileDocument.RootElement.TryGetProperty("id", out var idElement)
+                ? idElement.GetString()
+                : null;
+            if (string.IsNullOrWhiteSpace(uuid))
+            {
+                AddActivity("保存正版皮肤失败", "未找到对应的正版玩家。");
+                return;
+            }
+
+            var sessionJson = await client.GetStringAsync($"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}");
+            using var sessionDocument = JsonDocument.Parse(sessionJson);
+            var texturePayload = sessionDocument.RootElement
+                .GetProperty("properties")
+                .EnumerateArray()
+                .FirstOrDefault(item => item.TryGetProperty("name", out var nameElement)
+                    && string.Equals(nameElement.GetString(), "textures", StringComparison.Ordinal));
+            if (!texturePayload.TryGetProperty("value", out var valueElement))
+            {
+                AddActivity("保存正版皮肤失败", "正版档案中未包含皮肤信息。");
+                return;
+            }
+
+            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(valueElement.GetString() ?? string.Empty));
+            using var textureDocument = JsonDocument.Parse(decoded);
+            var textureUrl = textureDocument.RootElement
+                .GetProperty("textures")
+                .GetProperty("SKIN")
+                .GetProperty("url")
+                .GetString();
+            if (string.IsNullOrWhiteSpace(textureUrl))
+            {
+                AddActivity("保存正版皮肤失败", "正版档案中未包含皮肤下载地址。");
+                return;
+            }
+
+            var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "skins");
+            Directory.CreateDirectory(outputDirectory);
+            var outputPath = Path.Combine(outputDirectory, $"{SanitizeFileSegment(OfficialSkinPlayerName.Trim())}.png");
+            var bytes = await client.GetByteArrayAsync(textureUrl);
+            await File.WriteAllBytesAsync(outputPath, bytes);
+            OpenInstanceTarget("保存正版皮肤", outputPath, "导出的皮肤文件不存在。");
+        }
+        catch (HttpRequestException ex)
+        {
+            AddActivity("保存正版皮肤失败", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("保存正版皮肤失败", ex.Message);
+        }
+    }
+
+    private async Task SaveAchievementAsync()
+    {
+        var url = GetAchievementUrl();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            AddActivity("保存成就图片失败", "请先填写有效的成就内容。");
+            return;
+        }
+
+        try
+        {
+            using var client = CreateToolHttpClient();
+            var bytes = await client.GetByteArrayAsync(url);
+            var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "achievements");
+            Directory.CreateDirectory(outputDirectory);
+            var outputPath = Path.Combine(outputDirectory, $"{SanitizeFileSegment(AchievementTitle)}.png");
+            await File.WriteAllBytesAsync(outputPath, bytes);
+            OpenInstanceTarget("保存成就图片", outputPath, "导出的成就图片不存在。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("保存成就图片失败", ex.Message);
+        }
+    }
+
+    private string GetAchievementUrl()
+    {
+        var block = AchievementBlockId.Trim();
+        var title = AchievementTitle.Trim().Replace(" ", "..", StringComparison.Ordinal);
+        var firstLine = AchievementFirstLine.Trim().Replace(" ", "..", StringComparison.Ordinal);
+        var secondLine = AchievementSecondLine.Trim().Replace(" ", "..", StringComparison.Ordinal);
+        if (string.IsNullOrWhiteSpace(block) || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(firstLine))
+        {
+            return string.Empty;
+        }
+
+        var url = $"https://minecraft-api.com/api/achivements/{Uri.EscapeDataString(block)}/{Uri.EscapeDataString(title)}/{Uri.EscapeDataString(firstLine)}";
+        if (!string.IsNullOrWhiteSpace(secondLine))
+        {
+            url += $"/{Uri.EscapeDataString(secondLine)}";
+        }
+
+        return url;
+    }
+
+    private HttpClient CreateToolHttpClient()
+    {
+        var client = new HttpClient();
+        var userAgent = string.IsNullOrWhiteSpace(ToolDownloadUserAgent)
+            ? "PCL-CE-Spike/1.0"
+            : ToolDownloadUserAgent.Trim();
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        return client;
     }
 }

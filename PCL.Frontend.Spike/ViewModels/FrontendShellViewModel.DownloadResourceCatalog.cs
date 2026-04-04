@@ -245,6 +245,74 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        if (_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var runtimeState))
+        {
+            DownloadResourceSurfaceTitle = runtimeState.SurfaceTitle;
+            DownloadResourceLoadingText = runtimeState.HintText;
+            DownloadResourceEmptyStateText = $"没有找到符合条件的{runtimeState.SurfaceTitle.Replace(" 列表", string.Empty)}条目。";
+            DownloadResourceHintText = runtimeState.HintText;
+            ShowDownloadResourceInstallModPackAction = runtimeState.ShowInstallModPackAction;
+            _downloadResourceSupportsModrinth = runtimeState.SupportsSecondarySource;
+            _downloadResourceSourceOptions = runtimeState.SupportsSecondarySource
+                ? [
+                    new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("当前实例", "当前实例"),
+                    new DownloadResourceFilterOptionViewModel("当前启动器", "当前启动器")
+                ]
+                : [
+                    new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("当前实例", "当前实例"),
+                    new DownloadResourceFilterOptionViewModel("当前启动器", "当前启动器")
+                ];
+            _downloadResourceTagOptions = runtimeState.TagOptions
+                .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
+                .ToArray();
+            _downloadResourceLoaderOptions = runtimeState.UseShaderLoaderOptions
+                ? [
+                    new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine"),
+                    new DownloadResourceFilterOptionViewModel("Iris", "Iris")
+                ]
+                : [
+                    new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
+                    new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
+                    new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
+                    new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
+                ];
+            _allDownloadResourceEntries = runtimeState.Entries
+                .Select(entry =>
+                {
+                    Bitmap? icon = null;
+                    if (!string.IsNullOrWhiteSpace(entry.IconName))
+                    {
+                        icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
+                    }
+
+                    return new DownloadResourceEntryViewModel(
+                        icon,
+                        entry.Title,
+                        entry.Info,
+                        entry.Source,
+                        entry.Version,
+                        entry.Loader,
+                        entry.Tags,
+                        entry.DownloadCount,
+                        entry.FollowCount,
+                        entry.ReleaseRank,
+                        entry.UpdateRank,
+                        entry.ActionText,
+                        string.IsNullOrWhiteSpace(entry.TargetPath)
+                            ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
+                            : new ActionCommand(() => OpenInstanceTarget($"查看资源: {entry.Title}", entry.TargetPath, "目标文件不存在。")));
+                })
+                .ToArray();
+            ResetDownloadResourceFilterState();
+            RaiseDownloadResourceFilterState();
+            ApplyDownloadResourceFilters(resetPage: true);
+            return;
+        }
+
         switch (_currentRoute.Subpage)
         {
             case LauncherFrontendSubpageKey.DownloadMod:

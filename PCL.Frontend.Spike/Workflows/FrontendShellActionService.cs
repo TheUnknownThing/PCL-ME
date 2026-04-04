@@ -156,6 +156,18 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
+    public async Task<string?> PickFolderAsync(string title)
+    {
+        var storageProvider = TryGetStorageProvider(out var error)
+            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件夹选择器。");
+        var result = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+        return result.Count == 0 ? null : result[0].TryGetLocalPath();
+    }
+
     public FrontendCrashExportResult ExportCrashReport(CrashSpikePlan crashPlan)
     {
         ArgumentNullException.ThrowIfNull(crashPlan);

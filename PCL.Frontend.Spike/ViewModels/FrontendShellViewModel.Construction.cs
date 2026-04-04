@@ -152,6 +152,7 @@ internal sealed partial class FrontendShellViewModel
     private string _gameLinkConnectionType = "连接中";
     private string _gameLinkConnectedUserName = "未登录";
     private string _gameLinkConnectedUserType = "大厅访客";
+    private IReadOnlyList<string> _gameLinkWorldOptions = ["未检测到可用存档"];
     private int _selectedGameLinkWorldIndex;
     private string _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
     private string _toolDownloadUserAgent = "PCL-CE-Spike/1.0";
@@ -270,6 +271,8 @@ internal sealed partial class FrontendShellViewModel
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
+        ReloadVersionSavesComposition();
+        ReloadDownloadComposition();
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
@@ -340,13 +343,13 @@ internal sealed partial class FrontendShellViewModel
         _openGameLinkFaqCommand = CreateIntentCommand("常见问题解答", "Would open the P2P 联机常见问题帮助条目.");
         _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
         _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
-        _selectDownloadFolderCommand = new ActionCommand(SelectDownloadFolder);
-        _startCustomDownloadCommand = new ActionCommand(StartCustomDownload);
-        _openCustomDownloadFolderCommand = CreateIntentCommand("打开下载文件夹", "Would reveal the selected custom download directory.");
+        _selectDownloadFolderCommand = new ActionCommand(() => _ = SelectDownloadFolderAsync());
+        _startCustomDownloadCommand = new ActionCommand(() => _ = StartCustomDownloadAsync());
+        _openCustomDownloadFolderCommand = new ActionCommand(OpenCustomDownloadFolder);
         _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
         _previewAchievementCommand = new ActionCommand(PreviewAchievement);
-        _saveAchievementCommand = CreateIntentCommand("保存成就图片", "Would save the generated achievement preview as an image.");
-        _selectHeadSkinCommand = new ActionCommand(SelectHeadSkin);
+        _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
+        _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());
         _saveHeadCommand = CreateIntentCommand("保存头像", "Would export the generated avatar head image.");
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
         _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
