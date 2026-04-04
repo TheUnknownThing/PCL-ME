@@ -137,6 +137,10 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshShell(activityMessage);
+        if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
     }
 
     private void NavigateBack()
@@ -157,6 +161,10 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshShell("Returned to the previous shell route.");
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+            {
+                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+            }
             return;
         }
 
@@ -169,6 +177,10 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+            {
+                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+            }
         }
     }
 
@@ -251,6 +263,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowAvailableUpdateCard));
         RaisePropertyChanged(nameof(ShowCurrentVersionCard));
         RaisePropertyChanged(nameof(ShowOptionalUpdateCard));
+        RaisePropertyChanged(nameof(AvailableUpdateName));
+        RaisePropertyChanged(nameof(AvailableUpdatePublisher));
+        RaisePropertyChanged(nameof(AvailableUpdateSummary));
+        RaisePropertyChanged(nameof(CurrentVersionName));
         RaisePropertyChanged(nameof(CurrentVersionDescription));
     }
 }

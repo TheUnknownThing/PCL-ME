@@ -85,6 +85,10 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedUpdateChannelIndex, clampedValue))
             {
                 AddActivity("切换更新通道", UpdateChannelOptions[clampedValue]);
+                if (IsSetupUpdateSurface)
+                {
+                    _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
+                }
             }
         }
     }
@@ -120,21 +124,21 @@ internal sealed partial class FrontendShellViewModel
         ? new Bitmap(UpdateOptionalIconFilePath)
         : null;
 
-    public bool ShowAvailableUpdateCard => _updateSurfaceState == UpdateSurfaceState.Available;
+    public bool ShowAvailableUpdateCard => _updateStatus.SurfaceState == UpdateSurfaceState.Available;
 
-    public bool ShowCurrentVersionCard => _updateSurfaceState == UpdateSurfaceState.Latest;
+    public bool ShowCurrentVersionCard => _updateStatus.SurfaceState != UpdateSurfaceState.Available;
 
     public bool ShowOptionalUpdateCard => false;
 
-    public string AvailableUpdateName => "PCL CE 2.14.0";
+    public string AvailableUpdateName => _updateStatus.AvailableUpdateName;
 
-    public string AvailableUpdatePublisher => "by PCL-Community";
+    public string AvailableUpdatePublisher => _updateStatus.AvailableUpdatePublisher;
 
-    public string AvailableUpdateSummary => "PCL CE 2.14.0 带来了让人眼前一亮的新设计和 Pigeon 智能的多项功能，同时还带来了令人愉快的跨实例工作方式，助你提高工作效率。";
+    public string AvailableUpdateSummary => _updateStatus.AvailableUpdateSummary;
 
-    public string CurrentVersionName => "PCL CE 2.13.4";
+    public string CurrentVersionName => _updateStatus.CurrentVersionName;
 
-    public string CurrentVersionDescription => ShowCurrentVersionCard ? "已是最新版本" : "正在检查更新...";
+    public string CurrentVersionDescription => _updateStatus.CurrentVersionDescription;
 
     public string OptionalUpdateName => "AquaCL 3.0.0";
 

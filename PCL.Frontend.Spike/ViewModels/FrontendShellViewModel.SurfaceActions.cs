@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.Minecraft.Java;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -30,7 +31,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (IsSetupUpdateSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
-            CycleUpdateSurfaceState();
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
             return;
         }
 
@@ -79,36 +80,117 @@ internal sealed partial class FrontendShellViewModel
         AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
     }
 
-    private void CycleUpdateSurfaceState()
+    private async Task CheckForLauncherUpdatesAsync(bool forceRefresh)
     {
-        _updateSurfaceState = _updateSurfaceState switch
+        var signature = $"{SelectedUpdateChannelIndex}|{MirrorCdk}";
+        if (_isCheckingUpdate)
         {
-            UpdateSurfaceState.Available => UpdateSurfaceState.Latest,
-            _ => UpdateSurfaceState.Available
-        };
+            return;
+        }
 
+        if (!forceRefresh
+            && string.Equals(_lastUpdateCheckSignature, signature, StringComparison.Ordinal)
+            && _updateStatus.SurfaceState is not UpdateSurfaceState.Checking)
+        {
+            return;
+        }
+
+        _isCheckingUpdate = true;
+        _updateStatus = FrontendSetupUpdateStatusService.CreateChecking();
         RaiseUpdateSurfaceProperties();
-        AddActivity(
-            "刷新更新页",
-            _updateSurfaceState == UpdateSurfaceState.Available
-                ? "检测到可用的新版本，右侧面板切换为更新摘要卡。"
-                : "当前已是最新版本，右侧面板切换为本地版本状态卡。");
-    }
 
-    private Task CheckForLauncherUpdatesAsync(bool forceRefresh)
-    {
-        CycleUpdateSurfaceState();
-        return Task.CompletedTask;
+        try
+        {
+            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex, MirrorCdk);
+            _lastUpdateCheckSignature = signature;
+            RaiseUpdateSurfaceProperties();
+
+            AddActivity(
+                "刷新更新页",
+                _updateStatus.SurfaceState switch
+                {
+                    UpdateSurfaceState.Available => $"检测到可用更新：{_updateStatus.AvailableUpdateName}",
+                    UpdateSurfaceState.Latest => $"{_updateStatus.CurrentVersionName} 已是最新版本",
+                    UpdateSurfaceState.Error => _updateStatus.CurrentVersionDescription,
+                    _ => "正在检查更新..."
+                });
+        }
+        finally
+        {
+            _isCheckingUpdate = false;
+        }
     }
 
     private void DownloadAvailableUpdate()
     {
-        AddActivity("下载并安装更新", "更新页已切换为占位检查状态，下一检查点会接入真实更新源。");
+        if (_updateStatus.SurfaceState != UpdateSurfaceState.Available)
+        {
+            AddActivity("下载并安装更新", "当前没有待下载的更新。");
+            return;
+        }
+
+        var target = _updateStatus.AvailableUpdateDownloadUrl ?? _updateStatus.AvailableUpdateReleaseUrl;
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            AddActivity("下载并安装更新", "当前更新源没有提供可用下载地址。");
+            return;
+        }
+
+        var outputPath = Path.Combine(
+            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+            "update-downloads",
+            $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(outputPath, $"""
+            Update: {_updateStatus.AvailableUpdateName}
+            Source: {_updateStatus.AvailableUpdateSource}
+            SHA256: {_updateStatus.AvailableUpdateSha256}
+            Download: {target}
+            Release: {_updateStatus.AvailableUpdateReleaseUrl}
+            """, new UTF8Encoding(false));
+
+        if (_shellActionService.TryOpenExternalTarget(target, out var error))
+        {
+            AddActivity("下载并安装更新", $"{_updateStatus.AvailableUpdateName} • 已打开下载地址，并写入下载计划：{outputPath}");
+        }
+        else
+        {
+            AddActivity("下载并安装更新失败", error ?? outputPath);
+        }
     }
 
     private void ShowAvailableUpdateDetail()
     {
-        AddActivity("查看更新详情", "更新详情仍使用占位信息，下一检查点会改为真实更新日志。");
+        if (!string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateChangelog))
+        {
+            var outputPath = Path.Combine(
+                _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+                "update-details",
+                $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.md");
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, _updateStatus.AvailableUpdateChangelog, new UTF8Encoding(false));
+
+            if (_shellActionService.TryOpenExternalTarget(outputPath, out var error))
+            {
+                AddActivity("查看更新详情", outputPath);
+            }
+            else
+            {
+                AddActivity("查看更新详情失败", error ?? outputPath);
+            }
+
+            return;
+        }
+
+        string? openError = null;
+        if (!string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateReleaseUrl)
+            && _shellActionService.TryOpenExternalTarget(_updateStatus.AvailableUpdateReleaseUrl, out openError))
+        {
+            AddActivity("查看更新详情", _updateStatus.AvailableUpdateReleaseUrl);
+            return;
+        }
+
+        AddActivity("查看更新详情失败", openError ?? "当前没有可用的更新详情。");
     }
 
     private void ResetLaunchSettingsSurface()
@@ -388,6 +470,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        Directory.CreateDirectory(_shellActionService.RuntimePaths.SharedConfigDirectory);
         File.Copy(sourcePath, _shellActionService.RuntimePaths.SharedConfigPath, true);
         ReloadSetupComposition();
         AddActivity("导入设置", $"已导入共享配置：{sourcePath}。部分系统项仍建议重启后再验证。");
@@ -841,5 +924,12 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return removedCount;
+    }
+
+    private static string SanitizeFileSegment(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var cleaned = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray());
+        return string.IsNullOrWhiteSpace(cleaned) ? "update" : cleaned;
     }
 }

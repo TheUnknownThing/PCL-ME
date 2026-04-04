@@ -106,7 +106,6 @@ internal sealed partial class FrontendShellViewModel
         _selectedUpdateChannelIndex = Math.Clamp(_setupComposition.Update.UpdateChannelIndex, 0, UpdateChannelOptions.Count - 1);
         _selectedUpdateModeIndex = Math.Clamp(_setupComposition.Update.UpdateModeIndex, 0, UpdateModeOptions.Count - 1);
         _mirrorCdk = _setupComposition.Update.MirrorCdk;
-        _updateSurfaceState = UpdateSurfaceState.Available;
     }
 
     private void InitializeLaunchSettingsSurface()

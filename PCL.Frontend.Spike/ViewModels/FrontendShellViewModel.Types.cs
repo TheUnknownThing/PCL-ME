@@ -681,6 +681,8 @@ internal enum SpikePromptLaneKind
 
 internal enum UpdateSurfaceState
 {
-    Available = 0,
-    Latest = 1
+    Checking = 0,
+    Available = 1,
+    Latest = 2,
+    Error = 3
 }

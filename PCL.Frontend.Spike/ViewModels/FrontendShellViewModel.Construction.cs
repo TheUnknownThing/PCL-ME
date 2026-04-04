@@ -23,6 +23,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
+    private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
@@ -132,7 +133,8 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
     private string _mirrorCdk = string.Empty;
-    private UpdateSurfaceState _updateSurfaceState = UpdateSurfaceState.Available;
+    private bool _isCheckingUpdate;
+    private string _lastUpdateCheckSignature = string.Empty;
     private string _linkUsername = string.Empty;
     private int _selectedProtocolPreferenceIndex;
     private bool _preferLowestLatencyPath = true;
@@ -387,6 +389,10 @@ internal sealed partial class FrontendShellViewModel
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
+        if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
     }
 
 }
