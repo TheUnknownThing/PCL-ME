@@ -11,7 +11,8 @@ The portability phase has crossed an important boundary:
 - frontend migration Phase 3 launch-state integration is complete as of 2026-04-04
 - frontend migration Phase 4A setup-page model migration is complete as of 2026-04-04
 - frontend migration Phase 4B instance-page model migration is complete as of 2026-04-04
-- the next major frontend task is Phase 5 frontend-adapter cleanup and spike separation
+- frontend migration Phase 5 frontend-adapter cleanup and spike separation is complete as of 2026-04-04
+- the next major frontend task is Phase 4C download-page model migration
 
 The repo is therefore in this state:
 
@@ -369,7 +370,7 @@ Current state:
 1. setup pages are complete as Phase 4A
 2. instance pages are complete as Phase 4B
 3. download pages and version-saves pages remain unfinished Phase 4 slices
-4. adapter cleanup and spike separation can now proceed as Phase 5 in parallel with remaining page-family work
+4. adapter cleanup and spike separation is complete as Phase 5
 
 Phase 4A delivered:
 
@@ -434,12 +435,28 @@ Recommended order:
 4. version-saves pages
 5. denser tool widgets
 
+Phase 5 delivered:
+
+- inspection-only sample, replay, and execution helpers now live under:
+  - `PCL.Frontend.Spike/Workflows/Inspection/*`
+- runtime-facing frontend composition now reaches inspection behavior through dedicated inspection composition services:
+  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionShellCompositionService.cs`
+  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionLaunchCompositionService.cs`
+  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionCrashCompositionService.cs`
+- reusable frontend composition and view-model construction no longer call raw spike factories or input resolvers directly on the normal app path
+
+What this means in practice:
+
+- replay and host-environment inspection flows remain available, but are explicitly scoped to the inspection workflow area
+- runtime shell, launch, and crash composition now depend on a narrower frontend-side adapter boundary instead of sample/replay helper internals
+- setup and instance page-model migration work can continue without re-entangling inspection tooling with the main frontend architecture
+
 Recommended next order from this checkpoint:
 
-1. Phase 5 adapter cleanup and spike/helper separation
-2. download pages
-3. version-saves pages
-4. denser tool widgets
+1. download pages
+2. version-saves pages
+3. denser tool widgets
+4. remaining adapter/action follow-up on placeholder instance/tool/download buttons
 
 ### Step 5: preserve the copied UI work
 
@@ -496,6 +513,8 @@ These are the most relevant recent frontend checkpoints:
 - `127dac06` `feat: add runtime instance composition layer`
 - `e6753070` `feat: wire runtime-backed instance shell surfaces`
 - `b079434d` `fix: honor labymod instance resource folders`
+- `fb4c56c5` `refactor: isolate inspection-only spike workflows`
+- `40467f7d` `refactor: add frontend inspection composition boundary`
 
 ## Files To Read First
 

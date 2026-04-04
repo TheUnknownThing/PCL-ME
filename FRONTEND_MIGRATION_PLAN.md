@@ -22,7 +22,7 @@ Status as of 2026-04-04:
 - Phase 3 is complete
 - Phase 4A is complete
 - Phase 4B is complete
-- Phase 5 can now start
+- Phase 5 is complete as of 2026-04-04
 
 Phase 1 completion means:
 
@@ -422,6 +422,10 @@ Needed outcome:
 
 ### Phase 5: separate reusable frontend adapters from spike-only tooling
 
+Status:
+
+- complete as of 2026-04-04
+
 Target:
 
 - keep the spike useful as an inspection tool
@@ -437,6 +441,27 @@ Deliverable:
 - a clearer split between:
   - reusable frontend composition and adapter logic
   - spike-only sample generation, replay, and inspection helpers
+
+Delivered checkpoints:
+
+- `fb4c56c5` `refactor: isolate inspection-only spike workflows`
+- `40467f7d` `refactor: add frontend inspection composition boundary`
+
+Delivered files:
+
+- `PCL.Frontend.Spike/Workflows/Inspection/Spike*.cs`
+- `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionShellCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionCrashCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+
+What this means in practice:
+
+- the frontend keeps replay/sample inspection support, but those paths are now explicitly contained inside `Workflows/Inspection`
+- runtime shell and launch composition plus crash prompt bootstrap no longer call raw spike sample/input helpers directly
+- the copied Avalonia UI remains unchanged while the adapter boundary becomes clearer for upcoming Phase 4C/4D work
 
 ## Route Status Matrix
 
@@ -455,12 +480,11 @@ Deliverable:
 
 This is the recommended concrete order for the next frontend passes.
 
-1. Start Phase 5 by separating reusable frontend adapters from spike-only sample/replay helpers in `PCL.Frontend.Spike/Workflows` and `PCL.Frontend.Spike/ViewModels`.
-2. Treat setup and instance routes as the completed reference implementations for route-local composition and persistence.
-3. Finish download-page and `VersionSaves` data contracts without changing the copied Avalonia layouts.
-4. Replace remaining placeholder instance/tool/download actions with real adapter-style shell actions where practical.
-5. Preserve the runtime-backed launch route and avoid reintroducing fixture state into the normal `app` path.
-6. Keep replay/inspection helpers explicit and scoped so they do not leak into production-facing composition paths.
+1. Treat setup and instance routes as the completed reference implementations for route-local composition and persistence.
+2. Finish download-page and `VersionSaves` data contracts without changing the copied Avalonia layouts.
+3. Replace remaining placeholder instance/tool/download actions with real adapter-style shell actions where practical.
+4. Preserve the runtime-backed launch route and avoid reintroducing fixture state into the normal `app` path.
+5. Keep replay/inspection helpers explicit and scoped so they do not leak back into production-facing composition paths.
 
 ## Backend Support Needed
 
@@ -487,4 +511,6 @@ Phase 3 is now also in that state for runtime-backed launch-page composition on 
 
 Phase 4B is now in that state for runtime-backed instance-page composition and persistence, with remaining non-live button flows explicitly outside its scope.
 
-The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the remaining Phase 4C/4D page-model work and Phase 5 adapter cleanup are done.
+Phase 5 is now also in that state for frontend-adapter cleanup and inspection helper separation.
+
+The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the remaining Phase 4C/4D page-model work is done.
