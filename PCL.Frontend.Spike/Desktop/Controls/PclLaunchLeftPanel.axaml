@@ -68,21 +68,23 @@
           Title="{Binding LaunchButtonTitle}" />
     </Grid>
 
-    <controls:PclButton
+    <Grid
         Grid.Row="3"
         Grid.Column="2"
-        Height="35"
+        Grid.ColumnSpan="2"
         Margin="0,10,10,0"
-        Command="{Binding VersionSelectCommand}"
-        Text="版本选择" />
+        ColumnDefinitions="*,10,*">
+      <controls:PclButton
+          Grid.Column="0"
+          Height="35"
+          Command="{Binding VersionSelectCommand}"
+          Text="版本选择" />
 
-    <controls:PclButton
-        Grid.Row="3"
-        Grid.Column="3"
-      Width="92"
-        Height="35"
-        Margin="0,10,10,0"
-        Command="{Binding VersionSetupCommand}"
-        Text="版本设置" />
+      <controls:PclButton
+          Grid.Column="2"
+          Height="35"
+          Command="{Binding VersionSetupCommand}"
+          Text="版本设置" />
+    </Grid>
   </Grid>
 </UserControl>

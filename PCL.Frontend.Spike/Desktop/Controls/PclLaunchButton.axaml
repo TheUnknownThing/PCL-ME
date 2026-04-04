@@ -32,7 +32,7 @@
             <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
           </Transitions>
         </Border.Transitions>
-        <Grid Margin="0,3,0,0">
+        <Grid Margin="0,4,0,4">
           <TextBlock
               x:Name="TitleBlock"
               HorizontalAlignment="Center"
@@ -42,7 +42,7 @@
               Foreground="{DynamicResource ColorBrush3}" />
           <TextBlock
               x:Name="SubtitleBlock"
-              Margin="26,0,26,4"
+              Margin="26,0,26,2"
               HorizontalAlignment="Center"
               VerticalAlignment="Bottom"
               FontSize="10"
