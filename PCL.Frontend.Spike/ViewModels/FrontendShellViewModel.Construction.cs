@@ -370,6 +370,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeDownloadInstallSurface();
         InitializeInstanceOverviewSurface();
         InitializeInstanceExportSurface();
+        InitializeInstanceInstallSurface();
         InitializeInstanceSetupSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();

@@ -47,6 +47,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<DownloadCatalogSectionViewModel> DownloadFavoriteSections { get; } = [];
 
+    public ObservableCollection<SurfaceNoticeViewModel> InstanceInstallHints { get; } = [];
+
+    public ObservableCollection<DownloadInstallOptionViewModel> InstanceInstallOptions { get; } = [];
+
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
     public ObservableCollection<JavaRuntimeEntryViewModel> JavaRuntimeEntries { get; } = [];
@@ -227,6 +231,9 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool IsInstanceExportSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionExport;
 
+    public bool IsInstanceInstallSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionInstall;
+
     public bool IsGenericShellSurface => IsStandardShellRoute
         && !IsSetupLaunchSurface
         && !IsSetupAboutSurface
@@ -247,7 +254,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsToolsTestSurface
         && !IsInstanceOverviewSurface
         && !IsInstanceSetupSurface
-        && !IsInstanceExportSurface;
+        && !IsInstanceExportSurface
+        && !IsInstanceInstallSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 
