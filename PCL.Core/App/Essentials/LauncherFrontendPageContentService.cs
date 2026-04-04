@@ -142,6 +142,7 @@ public static class LauncherFrontendPageContentService
     {
         return request.Navigation.CurrentRoute.Subpage switch
         {
+            LauncherFrontendSubpageKey.SetupLaunch => BuildSetupLaunchContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupAbout => BuildSetupAboutContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameManage => BuildSetupGameManageContent(request, promptTotal),
@@ -153,6 +154,49 @@ public static class LauncherFrontendPageContentService
             LauncherFrontendSubpageKey.SetupUpdate => BuildSetupUpdateContent(request, promptTotal),
             _ => BuildGenericSetupContent(request, promptTotal)
         };
+    }
+
+    private static LauncherFrontendPageContent BuildSetupLaunchContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        var launch = request.Launch;
+
+        return new LauncherFrontendPageContent(
+            "启动页面",
+            "启动参数、内存和高级启动选项已经可以按原版 PageSetupLaunch 的三段结构进入新前端。",
+            [
+                new LauncherFrontendPageFact("当前分区", "启动"),
+                new LauncherFrontendPageFact("Recommended runtime", launch?.JavaRuntimeLabel ?? "No Java summary"),
+                new LauncherFrontendPageFact("Resolution baseline", launch?.ResolutionLabel ?? "No resolution summary"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "启动选项",
+                    "基础启动参数",
+                    [
+                        "保留了默认版本隔离、窗口标题、自定义信息、启动器可见性、进程优先级和窗口大小这些原始表单行。",
+                        "正版验证方式和 IP 协议偏好也继续停留在同一张卡里，而不是被拆成新的抽象设置页。",
+                        "这页适合继续复用组合框、文本框和紧凑表单栅格。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "内存",
+                    "游戏内存",
+                    [
+                        "保留了自动配置 / 自定义 的切换、内存优化复选项和底部内存分配展示条。",
+                        "Java 位数告警和过高内存提示继续作为独立提示块存在，而不是退回通用说明文本。",
+                        "真正的内存建议策略仍然应来自后端或运行时边界。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "高级",
+                    "高级启动选项",
+                    [
+                        "渲染器、JVM 参数头部、游戏参数尾部和启动前执行命令继续按原版高级卡片组织。",
+                        "Java Launch Wrapper、RetroWrapper 和显卡偏好也继续保持原始复选框语义。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
     }
 
     private static LauncherFrontendPageContent BuildGenericSetupContent(

@@ -55,7 +55,7 @@ public sealed class LauncherFrontendPageContentServiceTest
     {
         var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
             LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava))),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup))),
             BuildStartupPlan(),
             BuildConsent(),
             BuildPromptLanes(),
@@ -90,6 +90,39 @@ public sealed class LauncherFrontendPageContentServiceTest
         Assert.IsTrue(content.Sections.Any(section =>
             section.Title == "Java-facing settings seam" &&
             section.Lines.Any(line => line.Contains("Java 21", StringComparison.Ordinal))));
+    }
+
+    [TestMethod]
+    public void BuildSetupLaunchContentDescribesCopiedLaunchSettingsSurface()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes(),
+            new LauncherFrontendLaunchSurfaceData(
+                "modern-fabric",
+                "Microsoft account",
+                "DemoPlayer",
+                5,
+                "Java 21",
+                "java-21-runtime",
+                "1280 x 720",
+                84,
+                21,
+                "/Users/demo/.minecraft/natives",
+                "/Users/demo/.minecraft/options.txt",
+                true,
+                true,
+                "/Users/demo/exports/Launch.bat",
+                "Modern Fabric Demo launched successfully.")));
+
+        Assert.AreEqual("启动页面", content.Eyebrow);
+        Assert.AreEqual("启动", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "基础启动参数" &&
+            section.Lines.Any(line => line.Contains("默认版本隔离", StringComparison.Ordinal))));
     }
 
     [TestMethod]

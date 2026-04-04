@@ -75,6 +75,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _generateHomepageTutorialFileCommand;
     private readonly ActionCommand _viewHomepageTutorialCommand;
     private readonly ActionCommand _openHomepageMarketCommand;
+    private readonly ActionCommand _toggleLaunchAdvancedOptionsCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -103,6 +104,29 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _tryPunchSymmetricNat = true;
     private bool _allowIpv6Communication = true;
     private bool _enableLinkCliOutput;
+    private int _selectedLaunchIsolationIndex = 1;
+    private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
+    private string _launchCustomInfo = "PCL";
+    private int _selectedLaunchVisibilityIndex = 4;
+    private int _selectedLaunchPriorityIndex = 1;
+    private int _selectedLaunchWindowTypeIndex = 1;
+    private string _launchWindowWidth = "854";
+    private string _launchWindowHeight = "480";
+    private bool _useAutomaticRamAllocation = true;
+    private double _customRamAllocation = 3;
+    private bool _optimizeMemoryBeforeLaunch = true;
+    private bool _isLaunchAdvancedOptionsExpanded;
+    private int _selectedLaunchRendererIndex;
+    private string _launchJvmArguments = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
+    private string _launchGameArguments = string.Empty;
+    private string _launchBeforeCommand = string.Empty;
+    private bool _waitForLaunchBeforeCommand;
+    private bool _disableJavaLaunchWrapper;
+    private bool _disableRetroWrapper;
+    private bool _requireDedicatedGpu = true;
+    private bool _useJavaExecutable;
+    private int _selectedLaunchMicrosoftAuthIndex;
+    private int _selectedLaunchPreferredIpStackIndex;
     private int _selectedDownloadSourceIndex;
     private int _selectedVersionSourceIndex;
     private double _downloadThreadLimit = 63;
@@ -211,6 +235,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _generateHomepageTutorialFileCommand = CreateIntentCommand("生成教学文件", "Would create a sample homepage tutorial file.");
         _viewHomepageTutorialCommand = CreateIntentCommand("查看主页教程", "Would open the homepage customization tutorial.");
         _openHomepageMarketCommand = CreateIntentCommand("前往主页市场", "Would open the launcher homepage market.");
+        _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -222,6 +247,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeFeedbackSections();
         InitializeLogEntries();
         InitializeUpdateSurface();
+        InitializeLaunchSettingsSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();
@@ -367,6 +393,9 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupAboutSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupAbout;
 
+    public bool IsSetupLaunchSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLaunch;
+
     public bool IsSetupFeedbackSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupFeedback;
 
@@ -391,10 +420,20 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public bool IsSetupUiSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUI;
 
+    public bool IsDownloadInstallSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadInstall;
+
+    public bool IsToolsGameLinkSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsGameLink;
+
     public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
 
+    public bool IsToolsTestSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsTest;
+
     public bool IsGenericShellSurface => IsStandardShellRoute
+        && !IsSetupLaunchSurface
         && !IsSetupAboutSurface
         && !IsSetupFeedbackSurface
         && !IsSetupLogSurface
@@ -404,7 +443,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         && !IsSetupLauncherMiscSurface
         && !IsSetupJavaSurface
         && !IsSetupUiSurface
-        && !IsToolsHelpSurface;
+        && !IsDownloadInstallSurface
+        && !IsToolsGameLinkSurface
+        && !IsToolsHelpSurface
+        && !IsToolsTestSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 
@@ -419,6 +461,61 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
         ?? _currentNavigation?.CurrentPage.Title
         ?? Title;
+
+    public IReadOnlyList<string> LaunchIsolationOptions { get; } =
+    [
+        "关闭",
+        "隔离可安装 Mod 的实例",
+        "隔离非正式版",
+        "隔离可安装 Mod 的实例与非正式版",
+        "隔离所有实例"
+    ];
+
+    public IReadOnlyList<string> LaunchVisibilityOptions { get; } =
+    [
+        "游戏启动后立即关闭",
+        "游戏启动后隐藏，游戏退出后自动关闭",
+        "游戏启动后隐藏，游戏退出后重新打开",
+        "游戏启动后最小化",
+        "游戏启动后仍保持不变"
+    ];
+
+    public IReadOnlyList<string> LaunchPriorityOptions { get; } =
+    [
+        "高（优先保证游戏运行）",
+        "中（平衡）",
+        "低（优先保证其他程序运行）"
+    ];
+
+    public IReadOnlyList<string> LaunchWindowTypeOptions { get; } =
+    [
+        "全屏",
+        "默认",
+        "与启动器尺寸一致",
+        "自定义尺寸",
+        "最大化"
+    ];
+
+    public IReadOnlyList<string> LaunchMicrosoftAuthOptions { get; } =
+    [
+        "Web 账户管理器（暂时强制设备代码流）",
+        "设备代码流"
+    ];
+
+    public IReadOnlyList<string> LaunchPreferredIpStackOptions { get; } =
+    [
+        "IPv4 优先",
+        "Java 默认",
+        "IPv6 优先"
+    ];
+
+    public IReadOnlyList<string> LaunchRendererOptions { get; } =
+    [
+        "游戏默认",
+        "软渲染（llvmpipe）",
+        "DirectX12（d3d12）",
+        "Vulkan（zink）"
+    ];
 
     public IReadOnlyList<string> UpdateChannelOptions { get; } =
     [
@@ -500,6 +597,208 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public string OptionalUpdateDescription => "20.0 MB";
 
     public string OptionalUpdateSummary => "AquaCL 3 是 PCL CE 的第一个主要更新，带来了让人眼前一亮的新设计，使用了最新开发技术，完全重构了基础体验，并更支持 macOS、Linux 等其他平台。";
+
+    public int SelectedLaunchIsolationIndex
+    {
+        get => _selectedLaunchIsolationIndex;
+        set => SetProperty(ref _selectedLaunchIsolationIndex, Math.Clamp(value, 0, LaunchIsolationOptions.Count - 1));
+    }
+
+    public string LaunchWindowTitleSetting
+    {
+        get => _launchWindowTitle;
+        set => SetProperty(ref _launchWindowTitle, value);
+    }
+
+    public string LaunchCustomInfoSetting
+    {
+        get => _launchCustomInfo;
+        set => SetProperty(ref _launchCustomInfo, value);
+    }
+
+    public int SelectedLaunchVisibilityIndex
+    {
+        get => _selectedLaunchVisibilityIndex;
+        set => SetProperty(ref _selectedLaunchVisibilityIndex, Math.Clamp(value, 0, LaunchVisibilityOptions.Count - 1));
+    }
+
+    public int SelectedLaunchPriorityIndex
+    {
+        get => _selectedLaunchPriorityIndex;
+        set => SetProperty(ref _selectedLaunchPriorityIndex, Math.Clamp(value, 0, LaunchPriorityOptions.Count - 1));
+    }
+
+    public int SelectedLaunchWindowTypeIndex
+    {
+        get => _selectedLaunchWindowTypeIndex;
+        set
+        {
+            if (SetProperty(ref _selectedLaunchWindowTypeIndex, Math.Clamp(value, 0, LaunchWindowTypeOptions.Count - 1)))
+            {
+                RaisePropertyChanged(nameof(IsCustomLaunchWindowSizeVisible));
+            }
+        }
+    }
+
+    public bool IsCustomLaunchWindowSizeVisible => SelectedLaunchWindowTypeIndex == 3;
+
+    public string LaunchWindowWidth
+    {
+        get => _launchWindowWidth;
+        set => SetProperty(ref _launchWindowWidth, value);
+    }
+
+    public string LaunchWindowHeight
+    {
+        get => _launchWindowHeight;
+        set => SetProperty(ref _launchWindowHeight, value);
+    }
+
+    public int SelectedLaunchMicrosoftAuthIndex
+    {
+        get => _selectedLaunchMicrosoftAuthIndex;
+        set => SetProperty(ref _selectedLaunchMicrosoftAuthIndex, Math.Clamp(value, 0, LaunchMicrosoftAuthOptions.Count - 1));
+    }
+
+    public int SelectedLaunchPreferredIpStackIndex
+    {
+        get => _selectedLaunchPreferredIpStackIndex;
+        set => SetProperty(ref _selectedLaunchPreferredIpStackIndex, Math.Clamp(value, 0, LaunchPreferredIpStackOptions.Count - 1));
+    }
+
+    public bool UseAutomaticRamAllocation
+    {
+        get => _useAutomaticRamAllocation;
+        set
+        {
+            if (!value)
+            {
+                return;
+            }
+
+            if (SetProperty(ref _useAutomaticRamAllocation, true))
+            {
+                RaisePropertyChanged(nameof(UseCustomRamAllocation));
+                RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
+                RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+            }
+        }
+    }
+
+    public bool UseCustomRamAllocation
+    {
+        get => !_useAutomaticRamAllocation;
+        set
+        {
+            if (!value)
+            {
+                return;
+            }
+
+            if (SetProperty(ref _useAutomaticRamAllocation, false))
+            {
+                RaisePropertyChanged(nameof(UseAutomaticRamAllocation));
+                RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
+                RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+            }
+        }
+    }
+
+    public bool IsCustomRamAllocationEnabled => UseCustomRamAllocation;
+
+    public double CustomRamAllocation
+    {
+        get => _customRamAllocation;
+        set
+        {
+            if (SetProperty(ref _customRamAllocation, value))
+            {
+                RaisePropertyChanged(nameof(CustomRamAllocationLabel));
+                RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+            }
+        }
+    }
+
+    public string CustomRamAllocationLabel => $"{Math.Round(CustomRamAllocation):0} GB";
+
+    public string UsedRamLabel => "4.7 GB";
+
+    public string TotalRamLabel => "7.9 GB";
+
+    public string AllocatedRamLabel => UseAutomaticRamAllocation
+        ? "2.5 GB"
+        : $"{Math.Round(CustomRamAllocation):0.0} GB";
+
+    public bool ShowRamAllocationWarning => UseCustomRamAllocation && CustomRamAllocation >= 8;
+
+    public bool OptimizeMemoryBeforeLaunch
+    {
+        get => _optimizeMemoryBeforeLaunch;
+        set => SetProperty(ref _optimizeMemoryBeforeLaunch, value);
+    }
+
+    public bool IsLaunchAdvancedOptionsExpanded
+    {
+        get => _isLaunchAdvancedOptionsExpanded;
+        private set => SetProperty(ref _isLaunchAdvancedOptionsExpanded, value);
+    }
+
+    public int SelectedLaunchRendererIndex
+    {
+        get => _selectedLaunchRendererIndex;
+        set => SetProperty(ref _selectedLaunchRendererIndex, Math.Clamp(value, 0, LaunchRendererOptions.Count - 1));
+    }
+
+    public string LaunchJvmArguments
+    {
+        get => _launchJvmArguments;
+        set => SetProperty(ref _launchJvmArguments, value);
+    }
+
+    public string LaunchGameArguments
+    {
+        get => _launchGameArguments;
+        set => SetProperty(ref _launchGameArguments, value);
+    }
+
+    public string LaunchBeforeCommand
+    {
+        get => _launchBeforeCommand;
+        set => SetProperty(ref _launchBeforeCommand, value);
+    }
+
+    public bool WaitForLaunchBeforeCommand
+    {
+        get => _waitForLaunchBeforeCommand;
+        set => SetProperty(ref _waitForLaunchBeforeCommand, value);
+    }
+
+    public bool DisableJavaLaunchWrapper
+    {
+        get => _disableJavaLaunchWrapper;
+        set => SetProperty(ref _disableJavaLaunchWrapper, value);
+    }
+
+    public bool DisableRetroWrapper
+    {
+        get => _disableRetroWrapper;
+        set => SetProperty(ref _disableRetroWrapper, value);
+    }
+
+    public bool RequireDedicatedGpu
+    {
+        get => _requireDedicatedGpu;
+        set => SetProperty(ref _requireDedicatedGpu, value);
+    }
+
+    public bool UseJavaExecutable
+    {
+        get => _useJavaExecutable;
+        set => SetProperty(ref _useJavaExecutable, value);
+    }
 
     public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
     [
@@ -1322,6 +1621,8 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     public ActionCommand OpenHomepageMarketCommand => _openHomepageMarketCommand;
 
+    public ActionCommand ToggleLaunchAdvancedOptionsCommand => _toggleLaunchAdvancedOptionsCommand;
+
     public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
     {
         return new FrontendShellViewModel(options);
@@ -1652,6 +1953,33 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _updateSurfaceState = UpdateSurfaceState.Available;
     }
 
+    private void InitializeLaunchSettingsSurface()
+    {
+        _selectedLaunchIsolationIndex = 1;
+        _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
+        _launchCustomInfo = "PCL";
+        _selectedLaunchVisibilityIndex = 4;
+        _selectedLaunchPriorityIndex = 1;
+        _selectedLaunchWindowTypeIndex = 1;
+        _launchWindowWidth = "854";
+        _launchWindowHeight = "480";
+        _useAutomaticRamAllocation = true;
+        _customRamAllocation = 3;
+        _optimizeMemoryBeforeLaunch = true;
+        _isLaunchAdvancedOptionsExpanded = false;
+        _selectedLaunchRendererIndex = 0;
+        _launchJvmArguments = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
+        _launchGameArguments = string.Empty;
+        _launchBeforeCommand = string.Empty;
+        _waitForLaunchBeforeCommand = false;
+        _disableJavaLaunchWrapper = false;
+        _disableRetroWrapper = false;
+        _requireDedicatedGpu = true;
+        _useJavaExecutable = false;
+        _selectedLaunchMicrosoftAuthIndex = 0;
+        _selectedLaunchPreferredIpStackIndex = 0;
+    }
+
     private void InitializeGameLinkSurface()
     {
         _linkUsername = "PCL CE 玩家";
@@ -1943,6 +2271,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
+        if (IsSetupLaunchSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetLaunchSettingsSurface();
+            return;
+        }
+
         if (IsSetupUpdateSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             CycleUpdateSurfaceState();
@@ -2022,6 +2356,41 @@ internal sealed class FrontendShellViewModel : ViewModelBase
             _updateSurfaceState == UpdateSurfaceState.Available
                 ? "检测到可用的新版本，右侧面板切换为更新摘要卡。"
                 : "当前已是最新版本，右侧面板切换为本地版本状态卡。");
+    }
+
+    private void ResetLaunchSettingsSurface()
+    {
+        InitializeLaunchSettingsSurface();
+        RaisePropertyChanged(nameof(SelectedLaunchIsolationIndex));
+        RaisePropertyChanged(nameof(LaunchWindowTitleSetting));
+        RaisePropertyChanged(nameof(LaunchCustomInfoSetting));
+        RaisePropertyChanged(nameof(SelectedLaunchVisibilityIndex));
+        RaisePropertyChanged(nameof(SelectedLaunchPriorityIndex));
+        RaisePropertyChanged(nameof(SelectedLaunchWindowTypeIndex));
+        RaisePropertyChanged(nameof(IsCustomLaunchWindowSizeVisible));
+        RaisePropertyChanged(nameof(LaunchWindowWidth));
+        RaisePropertyChanged(nameof(LaunchWindowHeight));
+        RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
+        RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
+        RaisePropertyChanged(nameof(UseAutomaticRamAllocation));
+        RaisePropertyChanged(nameof(UseCustomRamAllocation));
+        RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
+        RaisePropertyChanged(nameof(CustomRamAllocation));
+        RaisePropertyChanged(nameof(CustomRamAllocationLabel));
+        RaisePropertyChanged(nameof(AllocatedRamLabel));
+        RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+        RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
+        RaisePropertyChanged(nameof(IsLaunchAdvancedOptionsExpanded));
+        RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
+        RaisePropertyChanged(nameof(LaunchJvmArguments));
+        RaisePropertyChanged(nameof(LaunchGameArguments));
+        RaisePropertyChanged(nameof(LaunchBeforeCommand));
+        RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
+        RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
+        RaisePropertyChanged(nameof(DisableRetroWrapper));
+        RaisePropertyChanged(nameof(RequireDedicatedGpu));
+        RaisePropertyChanged(nameof(UseJavaExecutable));
+        AddActivity("重置启动设置", "启动选项、内存与高级启动参数已恢复到默认演示值。");
     }
 
     private void ResetGameLinkSurface()
@@ -2228,6 +2597,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         RaisePropertyChanged(nameof(IsLaunchRoute));
         RaisePropertyChanged(nameof(IsStandardShellRoute));
+        RaisePropertyChanged(nameof(IsSetupLaunchSurface));
         RaisePropertyChanged(nameof(IsSetupAboutSurface));
         RaisePropertyChanged(nameof(IsSetupFeedbackSurface));
         RaisePropertyChanged(nameof(IsSetupLogSurface));
@@ -2237,7 +2607,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsSetupLauncherMiscSurface));
         RaisePropertyChanged(nameof(IsSetupJavaSurface));
         RaisePropertyChanged(nameof(IsSetupUiSurface));
+        RaisePropertyChanged(nameof(IsDownloadInstallSurface));
+        RaisePropertyChanged(nameof(IsToolsGameLinkSurface));
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
+        RaisePropertyChanged(nameof(IsToolsTestSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
