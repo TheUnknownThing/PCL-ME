@@ -240,7 +240,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _musicEnableSmtc = true;
     private int _selectedLogoTypeIndex = 1;
     private bool _logoAlignLeft = true;
-    private string _logoText = "Point Cloud Library";
+    private string _logoText = "Plain Craft Launcher";
     private int _selectedHomepageTypeIndex = 1;
     private string _homepageUrl = "https://example.invalid/homepage.json";
     private int _selectedHomepagePresetIndex = 14;
