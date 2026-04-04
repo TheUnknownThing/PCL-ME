@@ -707,14 +707,36 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public int SelectedHeadSizeIndex
     {
         get => _selectedHeadSizeIndex;
-        set => SetProperty(ref _selectedHeadSizeIndex, Math.Clamp(value, 0, HeadSizeOptions.Count - 1));
+        set
+        {
+            var nextValue = Math.Clamp(value, 0, HeadSizeOptions.Count - 1);
+            if (SetProperty(ref _selectedHeadSizeIndex, nextValue))
+            {
+                RaisePropertyChanged(nameof(HeadPreviewSize));
+            }
+        }
     }
 
     public string SelectedHeadSkinPath
     {
         get => _selectedHeadSkinPath;
-        set => SetProperty(ref _selectedHeadSkinPath, value);
+        set
+        {
+            if (SetProperty(ref _selectedHeadSkinPath, value))
+            {
+                RaisePropertyChanged(nameof(HasSelectedHeadSkin));
+            }
+        }
     }
+
+    public bool HasSelectedHeadSkin => !string.Equals(SelectedHeadSkinPath, "尚未选择皮肤", StringComparison.Ordinal);
+
+    public double HeadPreviewSize => SelectedHeadSizeIndex switch
+    {
+        0 => 80,
+        1 => 96,
+        _ => 112
+    };
 
     public string DownloadInstallName
     {

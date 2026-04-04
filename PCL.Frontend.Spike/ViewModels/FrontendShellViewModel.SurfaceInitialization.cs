@@ -185,11 +185,11 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(ToolboxActions,
         [
-            CreateToolboxAction("内存优化", "内存优化为 PCL CE 特供版演示按钮。", 110, PclButtonColorState.Normal, CreateIntentCommand("内存优化", "Would run the launcher memory optimization workflow.")),
-            CreateToolboxAction("清理游戏垃圾", "清理 PCL 缓存与日志等垃圾文件。", 130, PclButtonColorState.Normal, CreateIntentCommand("清理游戏垃圾", "Would clear cache, logs, and crash reports.")),
+            CreateToolboxAction("内存优化", "内存优化为 PCL CE 特供版，效果加强！\n\n将物理内存占用降低约 1/3，不仅限于 MC！\n如果使用机械硬盘，这可能会导致一小段时间的严重卡顿。", 110, PclButtonColorState.Normal, CreateIntentCommand("内存优化", "Would run the launcher memory optimization workflow.")),
+            CreateToolboxAction("清理游戏垃圾", "清理 PCL 的缓存与 MC 的日志、崩溃报告等垃圾文件", 130, PclButtonColorState.Normal, CreateIntentCommand("清理游戏垃圾", "Would clear cache, logs, and crash reports.")),
             CreateToolboxAction("今日人品", "演示工具按钮。", 110, PclButtonColorState.Normal, CreateIntentCommand("今日人品", "Would calculate the daily luck value.")),
-            CreateToolboxAction("崩溃测试", "危险操作，仅用于测试。", 110, PclButtonColorState.Red, CreateIntentCommand("崩溃测试", "Would trigger the launcher crash-test path.")),
-            CreateToolboxAction("创建快捷方式", "创建一个指向启动器的快捷方式。", 130, PclButtonColorState.Normal, CreateIntentCommand("创建快捷方式", "Would create a shortcut to the launcher executable.")),
+            CreateToolboxAction("崩溃测试", "点这个按钮会让启动器直接崩掉，没事别点，造成的一切问题均不受理，相关 issue 会被直接关闭", 110, PclButtonColorState.Red, CreateIntentCommand("崩溃测试", "Would trigger the launcher crash-test path.")),
+            CreateToolboxAction("创建快捷方式", "创建一个指向 PCL 社区版可执行文件的快捷方式", 130, PclButtonColorState.Normal, CreateIntentCommand("创建快捷方式", "Would create a shortcut to the launcher executable.")),
             CreateToolboxAction("查看启动计数", "查看启动器的累计启动次数。", 130, PclButtonColorState.Normal, CreateIntentCommand("查看启动计数", "Would show the launcher start-count dialog."))
         ]);
     }

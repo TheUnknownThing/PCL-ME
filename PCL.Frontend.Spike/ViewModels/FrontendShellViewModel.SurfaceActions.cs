@@ -150,6 +150,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowAchievementPreview));
         RaisePropertyChanged(nameof(SelectedHeadSizeIndex));
         RaisePropertyChanged(nameof(SelectedHeadSkinPath));
+        RaisePropertyChanged(nameof(HasSelectedHeadSkin));
+        RaisePropertyChanged(nameof(HeadPreviewSize));
         AddActivity("刷新测试工具页", "测试页表单与工具按钮已恢复到默认演示状态。");
     }
 
