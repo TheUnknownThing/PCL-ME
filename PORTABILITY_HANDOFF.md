@@ -9,7 +9,8 @@ The portability phase has crossed an important boundary:
 - frontend migration Phase 1 is complete as of 2026-04-04
 - frontend migration Phase 2 prompt-command execution is complete as of 2026-04-04
 - frontend migration Phase 3 launch-state integration is complete as of 2026-04-04
-- the next major frontend task is Phase 4 route-local page model migration
+- frontend migration Phase 4A setup-page model migration is complete as of 2026-04-04
+- the next major frontend task is Phase 4B instance-page model migration
 
 The repo is therefore in this state:
 
@@ -364,6 +365,38 @@ Important caveat:
 - replay mode through `InputRoot` is still intentionally sample-backed
 ### Step 4: replace route-local fixture values page family by page family
 
+Current state:
+
+1. setup pages are complete as Phase 4A
+2. instance pages are the next recommended Phase 4B slice
+3. download pages follow after instance pages
+4. version-saves pages and denser tool widgets still remain later in Phase 4
+
+Phase 4A delivered:
+
+- real setup-page composition through:
+  - `PCL.Frontend.Spike/Models/FrontendSetupComposition.cs`
+  - `PCL.Frontend.Spike/Workflows/FrontendSetupCompositionService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SetupComposition.cs`
+- real setup-page persistence and shell-side actions through:
+  - `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
+- runtime-backed setup/update status through:
+  - `PCL.Frontend.Spike/Models/FrontendSetupUpdateStatus.cs`
+  - `PCL.Frontend.Spike/Workflows/FrontendSetupUpdateStatusService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+
+What this means in practice:
+
+- copied setup surfaces now read and persist real shared, local, and protected launcher configuration
+- copied setup commands for logs, config export/import, proxy apply, background/music asset folders, title-bar image, homepage tutorial file, and update detail/download targets now perform real shell/file actions
+- copied `设置/更新` cards now resolve current-version metadata and live latest-version status from the existing update-source family instead of fixture toggles
+
+Important caveat for the next engineer:
+
+- the hidden optional AquaCL card remains dormant copied UI and is not part of the completed 4A setup slice
+- the WPF-style in-place self-update patch-and-restart installer flow has not been ported into the Avalonia shell; 4A stops at real status, changelog, and download-target composition
+
 Recommended order:
 
 1. setup pages
@@ -420,6 +453,10 @@ These are the most relevant recent frontend checkpoints:
 - `568df5d1` `Compose runtime launch state for frontend phase 3`
 - `5ab8497e` `Bind copied launch pane text to runtime state`
 - `b009b0f7` `Fix copied launch controls hit testing`
+- `5f2daad3` `feat: compose runtime-backed setup surfaces`
+- `cdb115de` `feat: wire setup validation commands`
+- `3dc19bcf` `feat: wire setup file management actions`
+- `f4387d21` `feat: compose real setup update status`
 
 ## Files To Read First
 
@@ -467,6 +504,6 @@ The next milestone is:
 
 - real backend-driven frontend state
 - real page models behind the copied Avalonia UI
-- continued removal of route-local fixtures outside the already-migrated launch route
+- continued removal of route-local fixtures outside the already-migrated launch route and completed setup family
 
 That is the correct continuation point for both the frontend migration plan and the broader portability effort.

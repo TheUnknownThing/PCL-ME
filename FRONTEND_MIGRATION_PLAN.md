@@ -20,7 +20,8 @@ Status as of 2026-04-04:
 - Phase 1 is complete
 - Phase 2 is complete
 - Phase 3 is complete
-- Phase 4 is now the active frontend task
+- Phase 4A is complete
+- Phase 4B is now the active frontend task
 
 Phase 1 completion means:
 
@@ -332,6 +333,29 @@ Needed outcome:
 - setup pages stop using only `FrontendShellViewModel` fixture values
 - actual saved settings and runtime state become the frontend source of truth
 
+Status:
+
+- complete as of 2026-04-04
+
+Delivered checkpoints:
+
+- `5f2daad3` `feat: compose runtime-backed setup surfaces`
+- `cdb115de` `feat: wire setup validation commands`
+- `3dc19bcf` `feat: wire setup file management actions`
+- `f4387d21` `feat: compose real setup update status`
+
+Delivered scope:
+
+- copied setup routes now compose real state from shared JSON config, local YAML config, protected values, launcher log/runtime folders, Java storage, and launcher metadata/update sources
+- copied setup controls now persist back to the real launcher config store instead of local spike-only fields
+- copied setup commands for logs, config export/import, proxy apply, Java selection, background/music assets, title-bar image, homepage tutorial generation, and update detail/download targets now execute real shell/file actions
+- copied `设置/更新` cards now show real current-version and latest-version status instead of the old demo card toggle
+
+Explicit 4A boundary:
+
+- this slice does not port the old WPF in-place self-update patch-and-restart installer flow
+- the hidden optional AquaCL card remains dormant copied UI and is not part of the completed 4A scope
+
 #### 4B. Instance and profile pages
 
 Use or extend:
@@ -343,6 +367,16 @@ Use or extend:
 Needed outcome:
 
 - overview, settings, export, install, world, screenshot, server, and resource pages show real instance data
+
+Status:
+
+- active next slice
+
+Recommended starting point:
+
+- preserve the now-completed setup family as-is
+- move the same route-local composition pattern into instance routes
+- prioritize overview, settings, export, install, world, screenshot, server, and resource pages in that order if a narrower 4B split is needed
 
 #### 4C. Download pages
 
@@ -391,7 +425,7 @@ Deliverable:
 | Startup shell | portable and route-aware | `LauncherStartupWorkflowService`, `LauncherFrontendShellService` | real request construction and runtime refresh |
 | Prompt queue | portable rendering and command execution exist | `LauncherFrontendPromptService` | durable side effects and non-launch route state still need broader page-model integration |
 | Launch page | copied shell layout and runtime-backed composition | launch workflow services under `PCL.Core/Minecraft/Launch` plus `FrontendLaunchCompositionService` | broader launch cutover and keeping replay mode scoped to inspection |
-| Setup pages | many copied layouts | config and app services exist | route-specific real settings adapters |
+| Setup pages | many copied layouts | real setup composition and update-status adapters now exist | 4A complete; only dormant optional update copy remains outside scope |
 | Download pages | copied install and resource layouts | navigation + page-content summary seam exists | real catalog/search/install contracts |
 | Tools pages | copied help/lobby/test layouts | shell contracts exist | real tool data sources and widget actions |
 | Instance pages | many copied layouts | profile storage and launch profile services exist | real instance/page models |
@@ -402,10 +436,11 @@ Deliverable:
 This is the recommended concrete order for the next frontend passes.
 
 1. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
-2. Fill the `VersionSaves` and denser tool-route gaps with real contracts instead of summary-only placeholders.
-3. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
-4. Preserve the runtime-backed launch route and avoid reintroducing fixture state into the normal `app` path.
-5. Separate reusable frontend adapters from spike-only sample generation once more page families stop depending on fixtures.
+2. Treat settings/setup routes as the completed reference implementation for route-local composition and persistence.
+3. Fill the `VersionSaves` and denser tool-route gaps with real contracts instead of summary-only placeholders.
+4. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
+5. Preserve the runtime-backed launch route and avoid reintroducing fixture state into the normal `app` path.
+6. Separate reusable frontend adapters from spike-only sample generation once more page families stop depending on fixtures.
 
 ## Backend Support Needed
 
@@ -431,4 +466,4 @@ Phase 2 is now in that state.
 
 Phase 3 is now also in that state for runtime-backed launch-page composition on the normal `app` path.
 
-The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the Phase 4 data work is done.
+The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the remaining Phase 4B/4C/4D data work is done.
