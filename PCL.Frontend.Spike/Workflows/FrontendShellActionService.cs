@@ -9,6 +9,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Spike.Desktop.Dialogs;
 using PCL.Frontend.Spike.Models;
 
 namespace PCL.Frontend.Spike.Workflows;
@@ -190,6 +191,29 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         await desktop.MainWindow.Clipboard.SetTextAsync(text ?? string.Empty);
     }
 
+    public async Task<string?> PromptForTextAsync(
+        string title,
+        string message,
+        string initialText = "",
+        string confirmText = "确定",
+        string? placeholderText = null)
+    {
+        var owner = GetDesktopMainWindow();
+        var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText);
+        return await dialog.ShowDialog<string?>(owner);
+    }
+
+    public async Task<bool> ConfirmAsync(
+        string title,
+        string message,
+        string confirmText = "确定",
+        bool isDanger = false)
+    {
+        var owner = GetDesktopMainWindow();
+        var dialog = new PclConfirmDialog(title, message, confirmText, isDanger);
+        return await dialog.ShowDialog<bool>(owner);
+    }
+
     public FrontendCrashExportResult ExportCrashReport(CrashSpikePlan crashPlan)
     {
         ArgumentNullException.ThrowIfNull(crashPlan);
@@ -327,6 +351,17 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         }
 
         return desktop.MainWindow.StorageProvider;
+    }
+
+    private static Avalonia.Controls.Window GetDesktopMainWindow()
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
+            || desktop.MainWindow is null)
+        {
+            throw new InvalidOperationException("当前壳层未提供桌面主窗口。");
+        }
+
+        return desktop.MainWindow;
     }
 
     private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)

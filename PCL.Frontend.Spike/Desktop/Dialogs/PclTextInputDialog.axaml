@@ -1,0 +1,58 @@
+<Window
+    x:Class="PCL.Frontend.Spike.Desktop.Dialogs.PclTextInputDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    Width="456"
+    Height="244"
+    MinWidth="456"
+    MinHeight="244"
+    MaxWidth="456"
+    MaxHeight="244"
+    CanResize="False"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner"
+    Title="输入">
+  <Grid Background="#EAF4FE">
+    <controls:PclCard Margin="20" ContentMargin="20">
+      <controls:PclCard.CardContent>
+        <StackPanel Spacing="16">
+          <StackPanel Spacing="6">
+            <TextBlock
+                x:Name="TitleTextBlock"
+                Foreground="#343D4A"
+                FontSize="18"
+                FontWeight="SemiBold" />
+            <TextBlock
+                x:Name="MessageTextBlock"
+                Foreground="#4C5664"
+                FontSize="13"
+                TextWrapping="Wrap" />
+          </StackPanel>
+
+          <TextBox
+              x:Name="InputTextBox"
+              Height="34"
+              Padding="10,6"
+              HorizontalAlignment="Stretch" />
+
+          <Grid ColumnDefinitions="*,Auto,Auto">
+            <controls:PclOutlineButton
+                Grid.Column="1"
+                Margin="0,0,12,0"
+                Width="108"
+                Text="取消"
+                Command="{Binding CancelCommand}" />
+            <controls:PclButton
+                Grid.Column="2"
+                Width="128"
+                Text="{Binding ConfirmText}"
+                ContentPadding="14,7"
+                ColorType="Highlight"
+                Command="{Binding ConfirmCommand}" />
+          </Grid>
+        </StackPanel>
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
+  </Grid>
+</Window>
