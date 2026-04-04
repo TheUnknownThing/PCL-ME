@@ -365,7 +365,6 @@ Verified on 2026-04-05:
 - a real verification pass against `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft` created a temporary `versions/codex-track5-verify/codex-track5-verify.json`, first as Fabric with `mods/fabric-api-0.138.4+1.21.10.jar`, then reapplied the same instance as Quilt with `mods/quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
 - the managed install workflow reused 4,397 existing files on the first apply and 4,478 existing files on the second apply while switching the loader manifest and managed addon jar without falling back to WPF code
 - the temporary verification instance was removed after inspection so the real launcher folder was not left with extra test clutter
-- direct clickable desktop-app verification for this slice is still blocked on this macOS host because `dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app --host-env true` currently aborts in Avalonia Native with `RenderTimer` error `-6661`
 - the next remaining Track 5 gap in the copied install family is now the unmanaged installer set that the new workflow still leaves in legacy/not-yet-owned state: Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and related installer-specific behavior
 
 Done when:
