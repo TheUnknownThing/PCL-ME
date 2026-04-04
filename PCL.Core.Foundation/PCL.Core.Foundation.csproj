@@ -15,7 +15,7 @@
         <Configurations>Debug;CI;Release;Beta</Configurations>
         <Platforms>AnyCPU;x64;ARM64</Platforms>
         <RootNamespace>PCL.Core</RootNamespace>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>14.0</LangVersion>
         <Nullable>enable</Nullable>
@@ -44,7 +44,6 @@
         <PackageReference Include="LiteDB" Version="5.0.21" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" />
         <PackageReference Include="SharpZipLib" Version="1.4.2" />
-        <PackageReference Include="System.Text.Json" Version="10.0.3" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>
     <PropertyGroup>
