@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
@@ -106,6 +109,29 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
             error = ex.Message;
             return false;
         }
+    }
+
+    public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
+    {
+        var storageProvider = TryGetStorageProvider(out var error)
+            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件选择器。");
+        var fileTypes = patterns.Length == 0
+            ? null
+            : new List<FilePickerFileType>
+            {
+                new(typeName)
+                {
+                    Patterns = patterns
+                }
+            };
+
+        var result = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false,
+            FileTypeFilter = fileTypes
+        });
+        return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
     public FrontendCrashExportResult ExportCrashReport(CrashSpikePlan crashPlan)
@@ -231,6 +257,20 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         {
             // Best-effort cleanup for temporary frontend artifacts.
         }
+    }
+
+    private static IStorageProvider? TryGetStorageProvider(out string? error)
+    {
+        error = null;
+
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
+            || desktop.MainWindow?.StorageProvider is null)
+        {
+            error = "当前壳层未提供文件选择器。";
+            return null;
+        }
+
+        return desktop.MainWindow.StorageProvider;
     }
 
     private static string GetUniqueDirectoryPath(string directoryPath)

@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.Minecraft.Java;
@@ -92,6 +93,22 @@ internal sealed partial class FrontendShellViewModel
             _updateSurfaceState == UpdateSurfaceState.Available
                 ? "检测到可用的新版本，右侧面板切换为更新摘要卡。"
                 : "当前已是最新版本，右侧面板切换为本地版本状态卡。");
+    }
+
+    private Task CheckForLauncherUpdatesAsync(bool forceRefresh)
+    {
+        CycleUpdateSurfaceState();
+        return Task.CompletedTask;
+    }
+
+    private void DownloadAvailableUpdate()
+    {
+        AddActivity("下载并安装更新", "更新页已切换为占位检查状态，下一检查点会接入真实更新源。");
+    }
+
+    private void ShowAvailableUpdateDetail()
+    {
+        AddActivity("查看更新详情", "更新详情仍使用占位信息，下一检查点会改为真实更新日志。");
     }
 
     private void ResetLaunchSettingsSurface()
@@ -299,6 +316,42 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private void CleanLauncherLogs()
+    {
+        var logDirectory = Path.Combine(_shellActionService.RuntimePaths.LauncherAppDataDirectory, "Log");
+        if (!Directory.Exists(logDirectory))
+        {
+            AddActivity("清理历史日志", "当前日志目录不存在，无需清理。");
+            return;
+        }
+
+        var logFiles = Directory.EnumerateFiles(logDirectory, "*", SearchOption.TopDirectoryOnly)
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .ToArray();
+        if (logFiles.Length <= 1)
+        {
+            AddActivity("清理历史日志", "没有可清理的历史日志，已保留当前日志文件。");
+            return;
+        }
+
+        var removedCount = 0;
+        foreach (var file in logFiles.Skip(1))
+        {
+            try
+            {
+                File.Delete(file);
+                removedCount++;
+            }
+            catch
+            {
+                // Ignore individual failures and continue clearing other archived logs.
+            }
+        }
+
+        ReloadSetupComposition();
+        AddActivity("清理历史日志", removedCount == 0 ? "未能删除任何历史日志文件。" : $"已清理 {removedCount} 个历史日志文件。");
+    }
+
     private void ExportSettingsSnapshot()
     {
         var exportDirectory = Path.Combine(
@@ -313,6 +366,31 @@ internal sealed partial class FrontendShellViewModel
         File.Copy(_shellActionService.RuntimePaths.LocalConfigPath, localTarget, true);
 
         AddActivity("导出设置", exportDirectory);
+    }
+
+    private async Task ImportSettingsAsync()
+    {
+        string? sourcePath;
+
+        try
+        {
+            sourcePath = await _shellActionService.PickOpenFileAsync("选择配置文件", "PCL 配置文件", "*.json");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("导入设置失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            AddActivity("导入设置", "已取消选择配置文件。");
+            return;
+        }
+
+        File.Copy(sourcePath, _shellActionService.RuntimePaths.SharedConfigPath, true);
+        ReloadSetupComposition();
+        AddActivity("导入设置", $"已导入共享配置：{sourcePath}。部分系统项仍建议重启后再验证。");
     }
 
     private void ApplyProxySettings()
@@ -338,6 +416,23 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private void RefreshBackgroundAssets()
+    {
+        var assets = EnumerateMediaFiles(GetBackgroundFolderPath(), BackgroundMediaExtensions).ToArray();
+        AddActivity(
+            "刷新背景内容",
+            assets.Length == 0
+                ? "未检测到可用背景内容。"
+                : $"已重新扫描背景内容目录，共找到 {assets.Length} 个文件。");
+    }
+
+    private void ClearBackgroundAssets()
+    {
+        var folder = GetBackgroundFolderPath();
+        var removedCount = DeleteDirectoryContents(folder, BackgroundMediaExtensions);
+        AddActivity("清空背景内容", removedCount == 0 ? "背景目录中没有可删除的背景内容。" : $"已清空 {removedCount} 个背景内容文件。");
+    }
+
     private void OpenMusicFolder()
     {
         var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
@@ -349,6 +444,130 @@ internal sealed partial class FrontendShellViewModel
         else
         {
             AddActivity("打开音乐文件夹失败", error ?? folder);
+        }
+    }
+
+    private void RefreshMusicAssets()
+    {
+        var assets = EnumerateMediaFiles(GetMusicFolderPath(), MusicMediaExtensions).ToArray();
+        AddActivity(
+            "刷新背景音乐",
+            assets.Length == 0
+                ? "未检测到可用背景音乐。"
+                : $"已重新扫描背景音乐目录，共找到 {assets.Length} 个文件。");
+    }
+
+    private void ClearMusicAssets()
+    {
+        var folder = GetMusicFolderPath();
+        var removedCount = DeleteDirectoryContents(folder, MusicMediaExtensions);
+        AddActivity("清空背景音乐", removedCount == 0 ? "音乐目录中没有可删除的背景音乐文件。" : $"已清空 {removedCount} 个背景音乐文件。");
+    }
+
+    private async Task ChangeLogoImageAsync()
+    {
+        string? sourcePath;
+
+        try
+        {
+            sourcePath = await _shellActionService.PickOpenFileAsync(
+                "选择标题栏图片",
+                "常用图片文件",
+                "*.png",
+                "*.jpg",
+                "*.jpeg",
+                "*.gif",
+                "*.webp");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("更改标题栏图片失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            AddActivity("更改标题栏图片", "已取消选择标题栏图片。");
+            return;
+        }
+
+        var targetPath = GetLogoImagePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        File.Copy(sourcePath, targetPath, true);
+        if (SelectedLogoTypeIndex != 3)
+        {
+            SelectedLogoTypeIndex = 3;
+        }
+
+        AddActivity("更改标题栏图片", $"{sourcePath} -> {targetPath}");
+    }
+
+    private void DeleteLogoImage()
+    {
+        var targetPath = GetLogoImagePath();
+        if (!File.Exists(targetPath))
+        {
+            AddActivity("清空标题栏图片", "当前没有自定义标题栏图片。");
+            return;
+        }
+
+        File.Delete(targetPath);
+        if (SelectedLogoTypeIndex == 3)
+        {
+            SelectedLogoTypeIndex = 1;
+        }
+
+        AddActivity("清空标题栏图片", targetPath);
+    }
+
+    private void RefreshHomepageContent()
+    {
+        var currentTarget = SelectedHomepageTypeIndex switch
+        {
+            0 => "空白主页",
+            1 => $"预设主页: {HomepagePresetOptions[SelectedHomepagePresetIndex]}",
+            2 => GetHomepageTutorialPath(),
+            _ => string.IsNullOrWhiteSpace(HomepageUrl) ? "未填写联网主页地址" : HomepageUrl
+        };
+        AddActivity("刷新主页", $"主页配置已重新读取：{currentTarget}");
+    }
+
+    private void GenerateHomepageTutorialFile()
+    {
+        var sourcePath = Path.Combine(LauncherRootDirectory, "Resources", "Custom.xml");
+        if (!File.Exists(sourcePath))
+        {
+            AddActivity("生成教学文件失败", $"未找到主页教学模板：{sourcePath}");
+            return;
+        }
+
+        var targetPath = GetHomepageTutorialPath();
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        File.Copy(sourcePath, targetPath, true);
+        AddActivity("生成教学文件", targetPath);
+    }
+
+    private void ViewHomepageTutorial()
+    {
+        const string tutorialText = """
+1. 点击“生成教学文件”，会在运行目录下生成 PCL/Custom.xaml。
+2. 使用文本编辑器修改这个文件，保存后可再次点击“刷新主页”。
+3. 若使用联网主页，请确认下载地址指向可信的主页内容。
+""";
+        var outputPath = Path.Combine(
+            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+            "homepage",
+            "homepage-tutorial.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(outputPath, tutorialText, new UTF8Encoding(false));
+
+        if (_shellActionService.TryOpenExternalTarget(outputPath, out var error))
+        {
+            AddActivity("查看主页教程", outputPath);
+        }
+        else
+        {
+            AddActivity("查看主页教程失败", error ?? outputPath);
         }
     }
 
@@ -549,5 +768,78 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.RemoveSharedValues(UiSharedResetKeys);
         ReloadSetupComposition();
         AddActivity("重置界面设置", "个性化界面页已恢复到当前启动器的默认配置。");
+    }
+
+    private static readonly string[] BackgroundMediaExtensions =
+    [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp",
+        ".bmp",
+        ".mp4",
+        ".webm",
+        ".avi",
+        ".mkv",
+        ".mov"
+    ];
+
+    private static readonly string[] MusicMediaExtensions =
+    [
+        ".mp3",
+        ".flac",
+        ".wav",
+        ".ogg",
+        ".m4a",
+        ".aac"
+    ];
+
+    private string GetBackgroundFolderPath()
+    {
+        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Pictures");
+    }
+
+    private string GetMusicFolderPath()
+    {
+        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
+    }
+
+    private string GetLogoImagePath()
+    {
+        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Logo.png");
+    }
+
+    private string GetHomepageTutorialPath()
+    {
+        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Custom.xaml");
+    }
+
+    private static IEnumerable<string> EnumerateMediaFiles(string folder, IEnumerable<string> allowedExtensions)
+    {
+        Directory.CreateDirectory(folder);
+        var extensionSet = new HashSet<string>(allowedExtensions, StringComparer.OrdinalIgnoreCase);
+        return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
+            .Where(path => extensionSet.Contains(Path.GetExtension(path)));
+    }
+
+    private static int DeleteDirectoryContents(string folder, IEnumerable<string> allowedExtensions)
+    {
+        Directory.CreateDirectory(folder);
+        var removedCount = 0;
+        foreach (var file in EnumerateMediaFiles(folder, allowedExtensions))
+        {
+            try
+            {
+                File.Delete(file);
+                removedCount++;
+            }
+            catch
+            {
+                // Ignore deletion failures for individual files and keep going.
+            }
+        }
+
+        return removedCount;
     }
 }
