@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.Minecraft.Java;
@@ -248,6 +249,109 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("保存正版皮肤", $"Would save the skin for {OfficialSkinPlayerName}.");
     }
 
+    private void ExportLauncherLogs(bool includeAllLogs)
+    {
+        var logDirectory = Path.Combine(_shellActionService.RuntimePaths.LauncherAppDataDirectory, "Log");
+        if (!Directory.Exists(logDirectory))
+        {
+            AddActivity("导出日志", "当前日志目录不存在，暂无可导出的日志。");
+            return;
+        }
+
+        var logFiles = Directory.EnumerateFiles(logDirectory, "*", SearchOption.TopDirectoryOnly)
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .ToArray();
+        if (logFiles.Length == 0)
+        {
+            AddActivity("导出日志", "日志目录为空，暂无可导出的日志。");
+            return;
+        }
+
+        var selectedFiles = includeAllLogs ? logFiles : logFiles.Take(1).ToArray();
+        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "log-exports");
+        Directory.CreateDirectory(exportDirectory);
+
+        var archiveName = includeAllLogs ? "launcher-logs-all.zip" : "launcher-log-latest.zip";
+        var archivePath = GetUniqueArchivePath(Path.Combine(exportDirectory, archiveName));
+
+        using (var archive = ZipFile.Open(archivePath, ZipArchiveMode.Create))
+        {
+            foreach (var file in selectedFiles)
+            {
+                archive.CreateEntryFromFile(file, Path.GetFileName(file));
+            }
+        }
+
+        AddActivity(includeAllLogs ? "导出全部日志" : "导出日志", archivePath);
+    }
+
+    private void OpenLauncherLogDirectory()
+    {
+        var logDirectory = Path.Combine(_shellActionService.RuntimePaths.LauncherAppDataDirectory, "Log");
+        Directory.CreateDirectory(logDirectory);
+        if (_shellActionService.TryOpenExternalTarget(logDirectory, out var error))
+        {
+            AddActivity("打开日志目录", logDirectory);
+        }
+        else
+        {
+            AddActivity("打开日志目录失败", error ?? logDirectory);
+        }
+    }
+
+    private void ExportSettingsSnapshot()
+    {
+        var exportDirectory = Path.Combine(
+            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+            "config-exports",
+            DateTime.Now.ToString("yyyyMMdd-HHmmss"));
+        Directory.CreateDirectory(exportDirectory);
+
+        var sharedTarget = Path.Combine(exportDirectory, Path.GetFileName(_shellActionService.RuntimePaths.SharedConfigPath));
+        var localTarget = Path.Combine(exportDirectory, Path.GetFileName(_shellActionService.RuntimePaths.LocalConfigPath));
+        File.Copy(_shellActionService.RuntimePaths.SharedConfigPath, sharedTarget, true);
+        File.Copy(_shellActionService.RuntimePaths.LocalConfigPath, localTarget, true);
+
+        AddActivity("导出设置", exportDirectory);
+    }
+
+    private void ApplyProxySettings()
+    {
+        _shellActionService.PersistProtectedSharedValue("SystemHttpProxy", HttpProxyAddress);
+        _shellActionService.PersistSharedValue("SystemHttpProxyCustomUsername", HttpProxyUsername);
+        _shellActionService.PersistSharedValue("SystemHttpProxyCustomPassword", HttpProxyPassword);
+        ReloadSetupComposition();
+        AddActivity("应用代理信息", string.IsNullOrWhiteSpace(HttpProxyAddress) ? "已清空自定义 HTTP 代理。" : HttpProxyAddress);
+    }
+
+    private void OpenBackgroundFolder()
+    {
+        var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Pictures");
+        Directory.CreateDirectory(folder);
+        if (_shellActionService.TryOpenExternalTarget(folder, out var error))
+        {
+            AddActivity("打开背景文件夹", folder);
+        }
+        else
+        {
+            AddActivity("打开背景文件夹失败", error ?? folder);
+        }
+    }
+
+    private void OpenMusicFolder()
+    {
+        var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
+        Directory.CreateDirectory(folder);
+        if (_shellActionService.TryOpenExternalTarget(folder, out var error))
+        {
+            AddActivity("打开音乐文件夹", folder);
+        }
+        else
+        {
+            AddActivity("打开音乐文件夹失败", error ?? folder);
+        }
+    }
+
     private void PreviewAchievement()
     {
         ShowAchievementPreview = !ShowAchievementPreview;
@@ -416,6 +520,27 @@ internal sealed partial class FrontendShellViewModel
     private void SaveStoredJavaItems(IReadOnlyList<JavaStorageItem> items)
     {
         _shellActionService.PersistLocalValue("LaunchArgumentJavaUser", JsonSerializer.Serialize(items));
+    }
+
+    private static string GetUniqueArchivePath(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            return filePath;
+        }
+
+        var directory = Path.GetDirectoryName(filePath)!;
+        var fileName = Path.GetFileNameWithoutExtension(filePath);
+        var extension = Path.GetExtension(filePath);
+
+        for (var suffix = 1; ; suffix++)
+        {
+            var candidate = Path.Combine(directory, $"{fileName}-{suffix}{extension}");
+            if (!File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
     }
 
     private void ResetUiSurface()

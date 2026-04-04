@@ -95,7 +95,10 @@ internal sealed partial class FrontendShellViewModel
     {
         ReplaceItems(LogEntries,
             _setupComposition.Log.Entries.Select(entry =>
-                CreateSimpleEntry(entry.Title, entry.Summary)));
+                CreateSimpleEntry(
+                    entry.Title,
+                    entry.Summary,
+                    CreateOpenTargetCommand($"打开日志: {entry.Title}", entry.Path, entry.Summary))));
     }
 
     private void InitializeUpdateSurface()
@@ -572,6 +575,11 @@ internal sealed partial class FrontendShellViewModel
         return new SimpleListEntryViewModel(title, info, new ActionCommand(() => AddActivity($"查看条目: {title}", info)));
     }
 
+    private SimpleListEntryViewModel CreateSimpleEntry(string title, string info, ActionCommand command)
+    {
+        return new SimpleListEntryViewModel(title, info, command);
+    }
+
     private ToolboxActionViewModel CreateToolboxAction(string title, string toolTip, double minWidth, PclButtonColorState colorType, ActionCommand command)
     {
         return new ToolboxActionViewModel(title, toolTip, minWidth, colorType, command);
@@ -637,11 +645,26 @@ internal sealed partial class FrontendShellViewModel
 
     private ActionCommand CreateLinkCommand(string title, string url)
     {
-        return new ActionCommand(() => AddActivity(title, url));
+        return CreateOpenTargetCommand(title, url, url);
     }
 
     private ActionCommand CreateIntentCommand(string title, string detail)
     {
         return new ActionCommand(() => AddActivity(title, detail));
+    }
+
+    private ActionCommand CreateOpenTargetCommand(string title, string target, string detail)
+    {
+        return new ActionCommand(() =>
+        {
+            if (_shellActionService.TryOpenExternalTarget(target, out var error))
+            {
+                AddActivity(title, detail);
+            }
+            else
+            {
+                AddActivity($"{title} 失败", error ?? detail);
+            }
+        });
     }
 }
