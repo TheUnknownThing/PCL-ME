@@ -25,6 +25,7 @@ internal sealed partial class FrontendShellViewModel
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
     private FrontendInstanceComposition _instanceComposition;
+    private FrontendToolsComposition _toolsComposition = new(new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
     private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
@@ -255,6 +256,7 @@ internal sealed partial class FrontendShellViewModel
     private string _selectedJavaRuntimeKey = "auto";
     private bool _suppressSetupPersistence;
     private bool _suppressInstancePersistence;
+    private bool _suppressToolsPersistence;
 
     public static FrontendShellViewModel CreateBootstrap(
         SpikeCommandOptions options,
@@ -271,6 +273,7 @@ internal sealed partial class FrontendShellViewModel
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths);
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         _startupPlan = new StartupSpikePlan(
@@ -383,10 +386,11 @@ internal sealed partial class FrontendShellViewModel
         _allHelpTopics = CreateHelpTopics();
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
+        PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
         InitializeToolsGameLinkSurface();
-        InitializeToolsTestSurface();
+        ApplyToolsComposition(_toolsComposition);
         InitializeDownloadInstallSurface();
         ApplySetupComposition(_setupComposition);
         ApplyInstanceComposition(_instanceComposition);

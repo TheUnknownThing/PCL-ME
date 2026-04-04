@@ -222,7 +222,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshToolsTestSurface()
     {
-        InitializeToolsTestSurface();
+        ReloadToolsComposition();
         RaisePropertyChanged(nameof(ToolDownloadUrl));
         RaisePropertyChanged(nameof(ToolDownloadUserAgent));
         RaisePropertyChanged(nameof(ToolDownloadFolder));
@@ -237,7 +237,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedHeadSkinPath));
         RaisePropertyChanged(nameof(HasSelectedHeadSkin));
         RaisePropertyChanged(nameof(HeadPreviewSize));
-        AddActivity("刷新测试工具页", "测试页表单与工具按钮已恢复到默认演示状态。");
+        AddActivity("刷新测试工具页", "测试页表单与工具按钮已从当前启动器配置重新加载。");
     }
 
     private void AcceptGameLinkTerms()

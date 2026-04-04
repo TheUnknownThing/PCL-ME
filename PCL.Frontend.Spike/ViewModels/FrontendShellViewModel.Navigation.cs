@@ -136,6 +136,10 @@ internal sealed partial class FrontendShellViewModel
         {
             ReloadSetupComposition();
         }
+        else if (route.Page == LauncherFrontendPageKey.Tools)
+        {
+            ReloadToolsComposition();
+        }
         else if (route.Page == LauncherFrontendPageKey.InstanceSetup)
         {
             ReloadInstanceComposition();
@@ -169,6 +173,10 @@ internal sealed partial class FrontendShellViewModel
             {
                 ReloadSetupComposition();
             }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.Tools)
+            {
+                ReloadToolsComposition();
+            }
             else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
             {
                 ReloadInstanceComposition();
@@ -193,6 +201,10 @@ internal sealed partial class FrontendShellViewModel
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
             {
                 ReloadSetupComposition();
+            }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.Tools)
+            {
+                ReloadToolsComposition();
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
             {

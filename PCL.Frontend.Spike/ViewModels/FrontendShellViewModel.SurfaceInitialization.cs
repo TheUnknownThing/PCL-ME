@@ -170,28 +170,21 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeToolsTestSurface()
     {
-        _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
-        _toolDownloadUserAgent = "PCL-CE-Spike/1.0";
-        _toolDownloadFolder = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "tool-downloads");
-        _toolDownloadName = "demo-pack.zip";
-        _officialSkinPlayerName = "Steve";
-        _achievementBlockId = "diamond_sword";
-        _achievementTitle = "Achievement Get!";
-        _achievementFirstLine = "Time to Strike!";
-        _achievementSecondLine = "PCL Frontend Spike";
-        _showAchievementPreview = false;
-        _selectedHeadSizeIndex = 0;
-        _selectedHeadSkinPath = "尚未选择皮肤";
+        var testState = _toolsComposition.Test;
+        _toolDownloadUrl = testState.DownloadUrl;
+        _toolDownloadUserAgent = testState.DownloadUserAgent;
+        _toolDownloadFolder = testState.DownloadFolder;
+        _toolDownloadName = testState.DownloadName;
+        _officialSkinPlayerName = testState.OfficialSkinPlayerName;
+        _achievementBlockId = testState.AchievementBlockId;
+        _achievementTitle = testState.AchievementTitle;
+        _achievementFirstLine = testState.AchievementFirstLine;
+        _achievementSecondLine = testState.AchievementSecondLine;
+        _showAchievementPreview = testState.ShowAchievementPreview;
+        _selectedHeadSizeIndex = testState.SelectedHeadSizeIndex;
+        _selectedHeadSkinPath = testState.SelectedHeadSkinPath;
 
-        ReplaceItems(ToolboxActions,
-        [
-            CreateToolboxAction("内存优化", "内存优化为 PCL CE 特供版，效果加强！\n\n将物理内存占用降低约 1/3，不仅限于 MC！\n如果使用机械硬盘，这可能会导致一小段时间的严重卡顿。", 110, PclButtonColorState.Normal, CreateIntentCommand("内存优化", "Would run the launcher memory optimization workflow.")),
-            CreateToolboxAction("清理游戏垃圾", "清理 PCL 的缓存与 MC 的日志、崩溃报告等垃圾文件", 130, PclButtonColorState.Normal, CreateIntentCommand("清理游戏垃圾", "Would clear cache, logs, and crash reports.")),
-            CreateToolboxAction("今日人品", "演示工具按钮。", 110, PclButtonColorState.Normal, CreateIntentCommand("今日人品", "Would calculate the daily luck value.")),
-            CreateToolboxAction("崩溃测试", "点这个按钮会让启动器直接崩掉，没事别点，造成的一切问题均不受理，相关 issue 会被直接关闭", 110, PclButtonColorState.Red, new ActionCommand(TriggerCrashPromptTest)),
-            CreateToolboxAction("创建快捷方式", "创建一个指向 PCL 社区版可执行文件的快捷方式", 130, PclButtonColorState.Normal, CreateIntentCommand("创建快捷方式", "Would create a shortcut to the launcher executable.")),
-            CreateToolboxAction("查看启动计数", "查看启动器的累计启动次数。", 130, PclButtonColorState.Normal, CreateIntentCommand("查看启动计数", "Would show the launcher start-count dialog."))
-        ]);
+        ReplaceItems(ToolboxActions, testState.ToolboxActions.Select(CreateToolboxAction));
     }
 
     private void InitializeDownloadInstallSurface()
