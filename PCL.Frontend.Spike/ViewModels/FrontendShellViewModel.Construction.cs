@@ -343,6 +343,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeToolsGameLinkSurface();
         InitializeToolsTestSurface();
         InitializeDownloadInstallSurface();
+        InitializeInstanceOverviewSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();

@@ -175,6 +175,13 @@ internal sealed class SimpleListEntryViewModel(string title, string info, Action
     public ActionCommand Command { get; } = command;
 }
 
+internal sealed class KeyValueEntryViewModel(string label, string value)
+{
+    public string Label { get; } = label;
+
+    public string Value { get; } = value;
+}
+
 internal sealed class ToolboxActionViewModel(
     string title,
     string toolTip,

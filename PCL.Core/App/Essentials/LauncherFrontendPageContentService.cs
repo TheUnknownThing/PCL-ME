@@ -1019,6 +1019,11 @@ public static class LauncherFrontendPageContentService
         LauncherFrontendPageContentRequest request,
         int promptTotal)
     {
+        if (request.Navigation.CurrentRoute.Subpage == LauncherFrontendSubpageKey.VersionOverall)
+        {
+            return BuildInstanceOverviewContent(request, promptTotal);
+        }
+
         var launch = request.Launch;
         var surface = request.Navigation.CurrentPage;
 
@@ -1057,6 +1062,49 @@ public static class LauncherFrontendPageContentService
                         "Per-page instance data still needs dedicated backend-facing presentation contracts.",
                         "The shell already proves subpage routing, prompts, and utility navigation around that data.",
                         "This is a safe place to add detail pages without borrowing WPF behavior."
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildInstanceOverviewContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        var launch = request.Launch;
+
+        return new LauncherFrontendPageContent(
+            "实例概览页面",
+            "实例概览页已经切换到更接近原版的展示卡、实例信息、个性化、快捷方式和高级管理五段结构，而不是继续停留在概览摘要卡上。",
+            [
+                new LauncherFrontendPageFact("当前分区", "概览"),
+                new LauncherFrontendPageFact("Identity surface", launch?.SelectedIdentityLabel ?? "No identity summary"),
+                new LauncherFrontendPageFact("Java", launch?.JavaRuntimeLabel ?? "No Java summary"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "展示",
+                    "实例主卡与信息卡",
+                    [
+                        "顶部继续保留实例展示卡和实例信息卡，而不是把概览页压缩成一组事实清单。",
+                        "个性化区也继续保留图标、分类和三枚主操作按钮的原始层级。",
+                        "这页适合继续复用 MyCard、MyComboBox 和 MyButton 的布局关系。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "操作",
+                    "快捷方式与高级管理",
+                    [
+                        "快捷方式继续保留实例文件夹、存档文件夹、Mod 文件夹三枚按钮。",
+                        "高级管理区也继续保持导出脚本、测试游戏、补全文件、重置、删除实例和修补核心的按钮顺序。",
+                        "危险操作仍然保持独立的强调按钮，而不是和普通工具混成一套新样式。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "迁移规则",
+                    [
+                        "概览页复制的是旧版实例管理外壳，不是旧版实例修改逻辑。",
+                        "真实实例元数据、文件检查和脚本导出仍应通过后端合同或显式壳层意图提供。",
+                        $"当前可见提示数：{promptTotal}"
                     ])
             ]);
     }
