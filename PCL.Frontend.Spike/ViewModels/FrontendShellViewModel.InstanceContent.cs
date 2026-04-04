@@ -303,11 +303,6 @@ internal sealed partial class FrontendShellViewModel
 
     private string GetCurrentInstanceResourceDirectory()
     {
-        if (!_instanceComposition.Selection.HasSelection)
-        {
-            return string.Empty;
-        }
-
         var folderName = _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.VersionResourcePack => "resourcepacks",
@@ -316,7 +311,7 @@ internal sealed partial class FrontendShellViewModel
             _ => "mods"
         };
 
-        return Path.Combine(_instanceComposition.Selection.IndieDirectory, folderName);
+        return ResolveCurrentInstanceResourceDirectory(folderName);
     }
 
     private static bool MatchesSearch(params string[] values)

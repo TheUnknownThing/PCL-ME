@@ -250,4 +250,20 @@ internal sealed partial class FrontendShellViewModel
             ? null
             : LoadLauncherBitmap(fallbackSegments);
     }
+
+    private string ResolveCurrentInstanceResourceDirectory(string folderName)
+    {
+        if (!_instanceComposition.Selection.HasSelection || string.IsNullOrWhiteSpace(folderName))
+        {
+            return string.Empty;
+        }
+
+        var selection = _instanceComposition.Selection;
+        if (!selection.HasLabyMod || string.IsNullOrWhiteSpace(selection.VanillaVersion))
+        {
+            return Path.Combine(selection.IndieDirectory, folderName);
+        }
+
+        return Path.Combine(selection.IndieDirectory, "labymod-neo", "fabric", selection.VanillaVersion, folderName);
+    }
 }

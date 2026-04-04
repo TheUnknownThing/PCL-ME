@@ -118,7 +118,7 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand OpenInstanceModsFolderCommand => new(() =>
         OpenInstanceTarget(
             "Mod 文件夹",
-            _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "mods") : string.Empty,
+            ResolveCurrentInstanceResourceDirectory("mods"),
             "当前实例没有 Mod 目录。"));
 
     public ActionCommand ExportInstanceScriptCommand => new(() => AddActivity("导出启动脚本", "Would export a launcher script for the current instance."));
