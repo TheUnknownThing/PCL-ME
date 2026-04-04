@@ -182,6 +182,37 @@ internal sealed class KeyValueEntryViewModel(string label, string value)
     public string Value { get; } = value;
 }
 
+internal sealed class ExportOptionEntryViewModel(
+    string title,
+    string description,
+    bool isChecked) : ViewModelBase
+{
+    private bool _isChecked = isChecked;
+
+    public string Title { get; } = title;
+
+    public string Description { get; } = description;
+
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set => SetProperty(ref _isChecked, value);
+    }
+
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+}
+
+internal sealed class ExportOptionGroupViewModel(
+    ExportOptionEntryViewModel header,
+    IReadOnlyList<ExportOptionEntryViewModel> children)
+{
+    public ExportOptionEntryViewModel Header { get; } = header;
+
+    public IReadOnlyList<ExportOptionEntryViewModel> Children { get; } = children;
+
+    public bool HasChildren => Children.Count > 0;
+}
+
 internal sealed class ToolboxActionViewModel(
     string title,
     string toolTip,

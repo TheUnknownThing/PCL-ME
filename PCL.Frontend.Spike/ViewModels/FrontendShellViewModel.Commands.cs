@@ -147,4 +147,14 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand SaveHeadCommand => _saveHeadCommand;
 
     public ActionCommand ManageDownloadFavoriteTargetCommand => _manageDownloadFavoriteTargetCommand;
+
+    public ActionCommand ResetInstanceExportOptionsCommand => _resetInstanceExportOptionsCommand;
+
+    public ActionCommand ImportInstanceExportConfigCommand => _importInstanceExportConfigCommand;
+
+    public ActionCommand SaveInstanceExportConfigCommand => _saveInstanceExportConfigCommand;
+
+    public ActionCommand OpenInstanceExportGuideCommand => _openInstanceExportGuideCommand;
+
+    public ActionCommand StartInstanceExportCommand => _startInstanceExportCommand;
 }

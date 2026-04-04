@@ -221,6 +221,9 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool IsInstanceOverviewSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionOverall;
 
+    public bool IsInstanceExportSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionExport;
+
     public bool IsGenericShellSurface => IsStandardShellRoute
         && !IsSetupLaunchSurface
         && !IsSetupAboutSurface
@@ -239,7 +242,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsToolsGameLinkSurface
         && !IsToolsHelpSurface
         && !IsToolsTestSurface
-        && !IsInstanceOverviewSurface;
+        && !IsInstanceOverviewSurface
+        && !IsInstanceExportSurface;
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 

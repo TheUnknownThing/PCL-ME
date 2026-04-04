@@ -27,6 +27,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshDownloadResourceSurface();
         RefreshDownloadFavoriteSurface();
         RefreshInstanceOverviewSurface();
+        RefreshInstanceExportSurface();
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
         RaiseCollectionStateProperties();
@@ -175,6 +176,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsToolsTestSurface));
         RaisePropertyChanged(nameof(IsInstanceOverviewSurface));
+        RaisePropertyChanged(nameof(IsInstanceExportSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
@@ -206,6 +208,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
         RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
         RaisePropertyChanged(nameof(HasInstanceOverviewInfoEntries));
+        RaisePropertyChanged(nameof(HasInstanceExportOptionGroups));
     }
 
     private void RaiseUpdateSurfaceProperties()

@@ -100,6 +100,11 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _saveHeadCommand;
     private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
     private readonly ActionCommand _manageDownloadFavoriteTargetCommand;
+    private readonly ActionCommand _resetInstanceExportOptionsCommand;
+    private readonly ActionCommand _importInstanceExportConfigCommand;
+    private readonly ActionCommand _saveInstanceExportConfigCommand;
+    private readonly ActionCommand _openInstanceExportGuideCommand;
+    private readonly ActionCommand _startInstanceExportCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -328,6 +333,11 @@ internal sealed partial class FrontendShellViewModel
         _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1);
         _manageDownloadFavoriteTargetCommand = CreateIntentCommand("管理收藏夹", "Would open the favorite-target management dialog.");
+        _resetInstanceExportOptionsCommand = new ActionCommand(ResetInstanceExportOptions);
+        _importInstanceExportConfigCommand = CreateIntentCommand("读取配置", "Would import an instance export configuration file.");
+        _saveInstanceExportConfigCommand = CreateIntentCommand("保存配置", "Would save the current instance export configuration to disk.");
+        _openInstanceExportGuideCommand = CreateIntentCommand("整合包制作指南", "Would open the instance export guide.");
+        _startInstanceExportCommand = new ActionCommand(StartInstanceExport);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -344,6 +354,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeToolsTestSurface();
         InitializeDownloadInstallSurface();
         InitializeInstanceOverviewSurface();
+        InitializeInstanceExportSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();

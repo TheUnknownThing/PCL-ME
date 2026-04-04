@@ -1024,6 +1024,11 @@ public static class LauncherFrontendPageContentService
             return BuildInstanceOverviewContent(request, promptTotal);
         }
 
+        if (request.Navigation.CurrentRoute.Subpage == LauncherFrontendSubpageKey.VersionExport)
+        {
+            return BuildInstanceExportContent(request, promptTotal);
+        }
+
         var launch = request.Launch;
         var surface = request.Navigation.CurrentPage;
 
@@ -1062,6 +1067,47 @@ public static class LauncherFrontendPageContentService
                         "Per-page instance data still needs dedicated backend-facing presentation contracts.",
                         "The shell already proves subpage routing, prompts, and utility navigation around that data.",
                         "This is a safe place to add detail pages without borrowing WPF behavior."
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildInstanceExportContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "实例导出页面",
+            "实例导出页已经切换到更接近原版的命名卡、导出内容清单、高级选项和底部导出动作结构，而不是继续停留在实例摘要卡上。",
+            [
+                new LauncherFrontendPageFact("当前分区", "导出"),
+                new LauncherFrontendPageFact("Page kind", request.Navigation.CurrentPage.Kind.ToString()),
+                new LauncherFrontendPageFact("Sidebar routes", request.Navigation.SidebarEntries.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "命名",
+                    "整合包基础信息",
+                    [
+                        "顶部继续保留整合包名称与整合包版本这组双输入布局。",
+                        "Modrinth 相关的 OptiFine 提示也继续作为独立提示条出现，而不是被折叠成普通说明文字。",
+                        "这页优先复制的是原版导出流程外壳，不是导出实现本身。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "清单",
+                    "导出内容与高级选项",
+                    [
+                        "主体继续保留大量复选框组成的导出内容清单，包括 Mod、资源包、光影包、存档和 PCL 程序等分组。",
+                        "高级选项区也继续保留打包资源文件、Modrinth 上传模式和配置导入导出按钮。",
+                        "底部导出按钮继续作为独立的大动作入口，而不是改造成普通卡片内按钮。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "迁移规则",
+                    [
+                        "前端负责复制原版表单层级和勾选流程，真实文件匹配和打包策略仍应留在后端或运行时边界。",
+                        "配置导入导出也应继续作为显式壳层意图，而不是把旧页面代码直接搬回来。",
+                        $"当前可见提示数：{promptTotal}"
                     ])
             ]);
     }
