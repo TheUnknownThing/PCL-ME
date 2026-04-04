@@ -132,3 +132,31 @@ The desktop shell is intentionally still a migration scaffold, not a full launch
 - the new desktop shell now has a portable page-content seam, but many page-specific production contracts are still incomplete
 - live launch request execution, real Java transfer networking, and crash save-picker or Explorer behavior still live in the real launcher
 - the spike can now derive best-effort host-backed inputs, but it still does not source full live launcher state or perform real login/network execution against the current machine
+
+## Troubleshooting
+
+### Fonts are extremely small on `niri` + Wayland
+
+The desktop shell currently relies on Avalonia's default Linux screen-scaling detection:
+
+- [SpikeDesktopHost.cs](./Desktop/SpikeDesktopHost.cs) only calls `UsePlatformDetect()` and does not override Linux scale handling
+- [App.axaml](./Desktop/App.axaml) and the desktop views use many fixed font sizes such as `11`, `12`, `13`, and `14`
+
+That combination is usually fine on macOS because Retina displays report a comfortable logical scale automatically, but on Linux the effective scale can depend on what Avalonia receives from the compositor. Avalonia still has open upstream Linux scaling issues, so on `niri` + Wayland it may end up rendering at scale `1.0`, which makes the fixed font sizes look tiny on HiDPI displays.
+
+Mitigation:
+
+1. Find the output name with `niri msg outputs`. Typical names look like `eDP-1`, `DP-1`, or `HDMI-A-1`.
+2. Start the spike with an explicit Avalonia scale override:
+
+```bash
+AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5' dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app
+```
+
+If you use multiple monitors, set each one explicitly:
+
+```bash
+AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app
+```
+
+You can persist the same override in your shell profile or launcher script if you always run the frontend on the same display layout.

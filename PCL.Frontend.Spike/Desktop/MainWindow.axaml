@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
-    Title="Point Cloud Library CE"
+    Title="Plain Craft Launcher ME"
     Width="1158"
     Height="648"
     MinWidth="980"
@@ -50,7 +50,7 @@
                   Foreground="White"
                   FontSize="18"
                   FontWeight="SemiLight"
-                  Text="Point Cloud Library" />
+                  Text="Plain Craft Launcher" />
               <Border
                   Grid.Column="1"
                   Margin="10,0,0,0"
