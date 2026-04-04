@@ -268,12 +268,28 @@ Done when:
 - the normal app path launches real instances using replacement-shell orchestration
 - prompt flow, Java flow, and launch session flow behave as expected from the new shell
 
+Status on 2026-04-04:
+
+- complete in `codex/frontend-track3-launch-cutover`
+- the normal Avalonia app path now launches the real macOS instance at `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft/versions/1.21.10`
+- launch prompts now continue correctly without recreating the same prompt in the same attempt
+- Java discovery now prefers real installed runtimes such as `/opt/homebrew/opt/openjdk/bin/java` instead of the macOS `/usr/bin/java` stub
+- missing-Java prompt flow still works when no executable runtime is selected, and prompt-triggered download now runs without freezing the UI thread
+- replacement-shell launch artifacts now record the real launch command and session summary under `~/.config/PCL`
+
 Manual verification:
 
 - select a real instance
 - satisfy prompts
 - launch the game
 - verify logs, process state, and post-launch shell behavior
+
+Verified on 2026-04-04:
+
+- launched `Minecraft 1.21.10` from the Avalonia shell
+- confirmed `~/.config/PCL/LatestLaunch.bat` used `/opt/homebrew/opt/openjdk/bin/java`
+- confirmed prompt flow advanced through startup and launch prompts and opened the real game window
+- confirmed session log creation at `~/.config/PCL/Log/session-20260404-233003.log`
 
 ### Step 4. Isolate cross-platform adapters
 

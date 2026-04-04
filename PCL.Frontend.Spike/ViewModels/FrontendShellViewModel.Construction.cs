@@ -140,6 +140,8 @@ internal sealed partial class FrontendShellViewModel
     private bool _pendingLaunchAfterPrompt;
     private bool _showLaunchLog;
     private readonly StringBuilder _launchLogBuilder = new();
+    private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
+    private string _launchPromptContextKey = string.Empty;
     private string _helpSearchQuery = string.Empty;
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
@@ -291,6 +293,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
+        _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
         _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;

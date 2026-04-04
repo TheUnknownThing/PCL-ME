@@ -46,6 +46,7 @@ Completed:
 
 Recent checkpoints:
 
+- `5ac85e61` `feat: cut over frontend launch execution`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
 - `ef3c0b92` `feat: wire instance overview runtime actions`
@@ -237,6 +238,30 @@ Track 2 status:
 ### Suggested slice size
 
 - one launch subsystem per commit
+
+### Status on 2026-04-04
+
+Completed in this track:
+
+- launch composition now builds real argument/session/post-launch plans for the selected instance instead of placeholder launch artifacts
+- custom command execution, game process startup, launcher visibility behavior, session summaries, and realtime log capture now run from the replacement shell
+- launch prompt continuation now preserves already-dismissed prompts during the current attempt instead of recreating them
+- Java runtime discovery now rejects the macOS `/usr/bin/java` stub and finds real host runtimes such as Homebrew OpenJDK
+- missing-Java prompt flow can materialize a Mojang runtime and now performs that download work without freezing the frontend UI
+
+Manual verification completed on this track:
+
+1. Opened the Avalonia app against the real launcher folder `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft`.
+2. Selected real instance `1.21.10`.
+3. Confirmed launch and startup prompts render from the copied shell flow and can be advanced.
+4. Confirmed the replacement shell generated a real launch command using `/opt/homebrew/opt/openjdk/bin/java`.
+5. Confirmed the game window opened as `Minecraft 1.21.10`.
+6. Confirmed the replacement shell wrote session output under `~/.config/PCL/Log/session-20260404-233003.log`.
+
+Track 3 status:
+
+- complete on the current frontend branch for the normal launch path
+- next work should move to Track 4 and Track 5 unless a newly discovered launch edge case still falls back to WPF-owned behavior
 
 ## Track 4. Cross-Platform Adapter Isolation
 

@@ -164,6 +164,11 @@ internal sealed partial class FrontendShellViewModel
 
         if (option.ClosesPrompt)
         {
+            if (lane == SpikePromptLaneKind.Launch)
+            {
+                _dismissedLaunchPromptIds.Add(promptId);
+            }
+
             _promptCatalog[lane].RemoveAll(prompt => prompt.Id == promptId);
             RebuildPromptLanes();
             SyncPromptLaneState();
@@ -202,7 +207,7 @@ internal sealed partial class FrontendShellViewModel
                 ExportCrashReportFromPrompt();
                 break;
             case LauncherFrontendPromptCommandKind.DownloadJavaRuntime:
-                DownloadJavaRuntimeFromPrompt();
+                _ = DownloadJavaRuntimeFromPromptAsync();
                 break;
             case LauncherFrontendPromptCommandKind.OpenUrl:
                 OpenExternalTarget(command.Value, "已根据提示打开外部链接。");
@@ -442,7 +447,7 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("崩溃报告已导出", $"{exportResult.ArchivePath} • {exportResult.ArchivedFileCount} 个文件已归档。");
     }
 
-    private void DownloadJavaRuntimeFromPrompt()
+    private async Task DownloadJavaRuntimeFromPromptAsync()
     {
         if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
         {
@@ -450,29 +455,45 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var installResult = _shellActionService.MaterializeJavaRuntime(
-            _launchComposition.JavaRuntimeManifestPlan,
-            _launchComposition.JavaRuntimeTransferPlan);
-        _launchComposition = _launchComposition with
+        AddActivity("Java 运行时准备中", "正在后台下载并注册 Java 运行时。");
+
+        try
         {
-            SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
-                Path.Combine(
-                    installResult.RuntimeDirectory,
-                    "bin",
-                    OperatingSystem.IsWindows() ? "java.exe" : "java"),
-                $"Java {installResult.VersionName}",
-                _launchComposition.JavaWorkflow.RecommendedMajorVersion,
-                IsEnabled: true,
-                Is64Bit: Environment.Is64BitOperatingSystem)
-        };
-        RaiseLaunchCompositionProperties();
-        RegisterMaterializedJavaRuntime(installResult);
-        _isLaunchBlockedByPrompt = false;
-        _pendingLaunchAfterPrompt = false;
-        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
-        AddActivity(
-            "Java 运行时已准备",
-            $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+            var installResult = await Task.Run(() => _shellActionService.MaterializeJavaRuntime(
+                _launchComposition.JavaRuntimeManifestPlan,
+                _launchComposition.JavaRuntimeTransferPlan));
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _launchComposition = _launchComposition with
+                {
+                    SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
+                        Path.Combine(
+                            installResult.RuntimeDirectory,
+                            "bin",
+                            OperatingSystem.IsWindows() ? "java.exe" : "java"),
+                        $"Java {installResult.VersionName}",
+                        _launchComposition.JavaWorkflow.RecommendedMajorVersion,
+                        IsEnabled: true,
+                        Is64Bit: Environment.Is64BitOperatingSystem)
+                };
+                RaiseLaunchCompositionProperties();
+                RegisterMaterializedJavaRuntime(installResult);
+                _isLaunchBlockedByPrompt = false;
+                _pendingLaunchAfterPrompt = false;
+                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
+                AddActivity(
+                    "Java 运行时已准备",
+                    $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+            });
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                AddActivity("Java 运行时准备失败", ex.Message);
+            });
+        }
     }
 
     private void RegisterMaterializedJavaRuntime(FrontendJavaRuntimeInstallResult installResult)
@@ -636,6 +657,13 @@ internal sealed partial class FrontendShellViewModel
         ReloadSetupComposition();
         ReloadInstanceComposition();
         _launchComposition = FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
+        var launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
+        if (!string.Equals(_launchPromptContextKey, launchPromptContextKey, StringComparison.Ordinal))
+        {
+            _dismissedLaunchPromptIds.Clear();
+            _launchPromptContextKey = launchPromptContextKey;
+        }
+
         RaiseLaunchCompositionProperties();
     }
 
@@ -674,8 +702,21 @@ internal sealed partial class FrontendShellViewModel
             _launchComposition.SupportPrompt,
             GetPendingJavaPrompt());
         _promptCatalog[SpikePromptLaneKind.Launch] = launchPrompts
+            .Where(prompt => !_dismissedLaunchPromptIds.Contains(prompt.Id))
             .Select(prompt => CreatePromptCard(SpikePromptLaneKind.Launch, prompt))
             .ToList();
+    }
+
+    private static string BuildLaunchPromptContextKey(
+        FrontendLaunchComposition launchComposition,
+        string? instanceDirectory)
+    {
+        return string.Join(
+            "|",
+            instanceDirectory ?? string.Empty,
+            launchComposition.InstanceName,
+            launchComposition.SelectedProfile.Kind,
+            launchComposition.SelectedProfile.UserName);
     }
 
     private void EnsureCrashPromptLane()

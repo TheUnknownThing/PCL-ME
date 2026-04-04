@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
 using PCL.Core.App;
@@ -13,6 +14,8 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendLaunchCompositionService
 {
+    private static readonly HttpClient JavaRuntimeHttpClient = new();
+
     public static FrontendLaunchComposition Compose(
         SpikeCommandOptions options,
         FrontendRuntimePaths runtimePaths)
@@ -342,7 +345,16 @@ internal static class FrontendLaunchCompositionService
         var javaExecutablePath = selectedJavaRuntime?.ExecutablePath;
         if (string.IsNullOrWhiteSpace(javaExecutablePath))
         {
-            throw new InvalidOperationException("缺少可执行的 Java 运行时。");
+            return BuildPendingJavaSessionStartPlan(
+                launcherFolder,
+                selectedInstanceName,
+                instanceDirectory,
+                indieDirectory,
+                manifestSummary,
+                selectedProfile,
+                selectedJavaRuntime,
+                instanceConfig,
+                localConfig);
         }
 
         var javaFolder = Path.GetDirectoryName(javaExecutablePath) ?? launcherFolder;
@@ -404,6 +416,50 @@ internal static class FrontendLaunchCompositionService
                     argumentPlan.FinalArguments,
                     ReadValue(sharedConfig, "LaunchArgumentPriority", 1)),
                 watcherWorkflowRequest));
+    }
+
+    private static MinecraftLaunchSessionStartWorkflowPlan BuildPendingJavaSessionStartPlan(
+        string launcherFolder,
+        string selectedInstanceName,
+        string instanceDirectory,
+        string indieDirectory,
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendLaunchProfileSummary selectedProfile,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime,
+        YamlFileProvider? instanceConfig,
+        YamlFileProvider localConfig)
+    {
+        var watcherWorkflowRequest = BuildWatcherWorkflowRequest(
+            launcherFolder,
+            selectedInstanceName,
+            instanceDirectory,
+            indieDirectory,
+            manifestSummary,
+            selectedProfile,
+            selectedJavaRuntime,
+            instanceConfig,
+            localConfig);
+
+        return new MinecraftLaunchSessionStartWorkflowPlan(
+            new MinecraftLaunchCustomCommandPlan(
+                BatchScriptContent: string.Empty,
+                UseUtf8Encoding: true,
+                CommandExecutions: []),
+            [],
+            new MinecraftLaunchProcessShellPlan(
+                FileName: OperatingSystem.IsWindows() ? "cmd.exe" : "/usr/bin/env",
+                Arguments: OperatingSystem.IsWindows() ? "/c exit /b 1" : "false",
+                WorkingDirectory: indieDirectory,
+                CreateNoWindow: true,
+                UseShellExecute: false,
+                RedirectStandardOutput: true,
+                RedirectStandardError: true,
+                PathEnvironmentValue: string.Empty,
+                AppDataEnvironmentValue: string.Empty,
+                PriorityKind: MinecraftLaunchProcessPriorityKind.Normal,
+                StartedLogMessage: "缺少 Java 运行时，尚未生成可执行的启动命令。",
+                AbortKillLogMessage: "缺少 Java 运行时，无需终止游戏进程。"),
+            MinecraftLaunchWatcherWorkflowService.BuildPlan(watcherWorkflowRequest));
     }
 
     private static MinecraftLaunchResolutionRequest BuildResolutionRequest(
@@ -576,7 +632,7 @@ internal static class FrontendLaunchCompositionService
                 Is64Bit: Environment.Is64BitOperatingSystem);
         }
 
-        return ProbeHostJavaRuntime(javaWorkflow.RecommendedMajorVersion);
+        return ProbeHostJavaRuntime();
     }
 
     private static List<FrontendJavaRuntimeSummary> ParseJavaEntries(string rawJson)
@@ -729,12 +785,27 @@ internal static class FrontendLaunchCompositionService
             return null;
         }
 
-        return MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
-            new MinecraftJavaRuntimeManifestRequestPlanRequest(
-                hostJavaInputs.IndexJson,
-                hostJavaInputs.PlatformKey,
-                javaWorkflow.MissingJavaPrompt.DownloadTarget,
-                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
+        try
+        {
+            return MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
+                new MinecraftJavaRuntimeManifestRequestPlanRequest(
+                    hostJavaInputs.IndexJson,
+                    hostJavaInputs.PlatformKey,
+                    javaWorkflow.MissingJavaPrompt.DownloadTarget,
+                    MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
+        }
+        catch
+        {
+            var liveIndexJson = TryDownloadUtf8String(MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().AllUrls);
+            return string.IsNullOrWhiteSpace(liveIndexJson)
+                ? null
+                : MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
+                    new MinecraftJavaRuntimeManifestRequestPlanRequest(
+                        liveIndexJson,
+                        hostJavaInputs.PlatformKey,
+                        javaWorkflow.MissingJavaPrompt.DownloadTarget,
+                        MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
+        }
     }
 
     private static MinecraftJavaRuntimeDownloadTransferPlan? BuildJavaRuntimeTransferPlan(
@@ -750,9 +821,17 @@ internal static class FrontendLaunchCompositionService
         var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
             launcherFolder,
             manifestPlan.Selection.ComponentKey);
+        var manifestJson = manifestPlan.RequestUrls.AllUrls.Any(url => url.Contains("example.invalid", StringComparison.OrdinalIgnoreCase))
+            ? TryDownloadUtf8String(manifestPlan.RequestUrls.AllUrls)
+            : TryDownloadUtf8String(manifestPlan.RequestUrls.AllUrls) ?? hostJavaInputs.ManifestJson;
+        if (string.IsNullOrWhiteSpace(manifestJson))
+        {
+            return null;
+        }
+
         var workflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
             new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
-                hostJavaInputs.ManifestJson,
+                manifestJson,
                 runtimeBaseDirectory,
                 hostJavaInputs.IgnoredSha1Hashes,
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
@@ -765,6 +844,23 @@ internal static class FrontendLaunchCompositionService
             new MinecraftJavaRuntimeDownloadTransferPlanRequest(
                 workflowPlan,
                 existingRelativePaths));
+    }
+
+    private static string? TryDownloadUtf8String(IReadOnlyList<string> urls)
+    {
+        foreach (var url in urls)
+        {
+            try
+            {
+                return JavaRuntimeHttpClient.GetStringAsync(url).GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // Try the next mirror.
+            }
+        }
+
+        return null;
     }
 
     private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
@@ -827,13 +923,11 @@ internal static class FrontendLaunchCompositionService
         }
     }
 
-    private static FrontendJavaRuntimeSummary? ProbeHostJavaRuntime(int fallbackMajorVersion)
+    private static FrontendJavaRuntimeSummary? ProbeHostJavaRuntime()
     {
-        foreach (var candidate in OperatingSystem.IsWindows()
-                     ? new[] { "java.exe" }
-                     : new[] { "/usr/bin/java", "java" })
+        foreach (var candidate in EnumerateHostJavaRuntimeCandidates())
         {
-            var runtime = TryProbeJavaRuntime(candidate, fallbackMajorVersion);
+            var runtime = TryProbeJavaRuntime(candidate);
             if (runtime is not null)
             {
                 return runtime;
@@ -843,7 +937,115 @@ internal static class FrontendLaunchCompositionService
         return null;
     }
 
-    private static FrontendJavaRuntimeSummary? TryProbeJavaRuntime(string executablePath, int fallbackMajorVersion)
+    private static IReadOnlyList<string> EnumerateHostJavaRuntimeCandidates()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return ["java.exe"];
+        }
+
+        var candidates = new List<string>();
+        void AddCandidate(string? candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                return;
+            }
+
+            if (candidates.Contains(candidate, StringComparer.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            candidates.Add(candidate);
+        }
+
+        AddCandidate("/opt/homebrew/opt/openjdk/bin/java");
+        AddCandidate("/usr/local/opt/openjdk/bin/java");
+
+        foreach (var directory in EnumerateJavaHomeDirectories("/Library/Java/JavaVirtualMachines"))
+        {
+            AddCandidate(Path.Combine(directory, "Contents", "Home", "bin", "java"));
+        }
+
+        foreach (var directory in EnumerateJavaHomeDirectories(Path.Combine(
+                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                     "Library",
+                     "Java",
+                     "JavaVirtualMachines")))
+        {
+            AddCandidate(Path.Combine(directory, "Contents", "Home", "bin", "java"));
+        }
+
+        foreach (var candidate in ResolveWhichJavaCandidates())
+        {
+            AddCandidate(candidate);
+        }
+
+        AddCandidate("java");
+        AddCandidate("/usr/bin/java");
+        return candidates;
+    }
+
+    private static IEnumerable<string> EnumerateJavaHomeDirectories(string rootPath)
+    {
+        try
+        {
+            return Directory.Exists(rootPath)
+                ? Directory.EnumerateDirectories(rootPath)
+                : [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static IEnumerable<string> ResolveWhichJavaCandidates()
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "/bin/sh",
+                Arguments = "-lc \"which -a java 2>/dev/null\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            if (process is null)
+            {
+                return [];
+            }
+
+            if (!process.WaitForExit(3000))
+            {
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch
+                {
+                    // Ignore best-effort probe cleanup.
+                }
+
+                return [];
+            }
+
+            return process.StandardOutput
+                .ReadToEnd()
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .ToArray();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static FrontendJavaRuntimeSummary? TryProbeJavaRuntime(string executablePath)
     {
         try
         {
@@ -876,10 +1078,19 @@ internal static class FrontendLaunchCompositionService
             }
 
             var output = process.StandardError.ReadToEnd() + process.StandardOutput.ReadToEnd();
+            var majorVersion = TryParseJavaMajorVersion(output);
+            if (process.ExitCode != 0 ||
+                majorVersion is null ||
+                output.Contains("Unable to locate a Java Runtime", StringComparison.OrdinalIgnoreCase) ||
+                output.Contains("No Java runtime present", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             return new FrontendJavaRuntimeSummary(
                 executablePath,
-                $"Java {TryParseJavaMajorVersion(output) ?? fallbackMajorVersion}",
-                TryParseJavaMajorVersion(output) ?? fallbackMajorVersion,
+                $"Java {majorVersion.Value}",
+                majorVersion.Value,
                 IsEnabled: true,
                 Is64Bit: Environment.Is64BitOperatingSystem);
         }
