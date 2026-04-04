@@ -312,10 +312,27 @@ Done when:
 - platform differences are isolated behind explicit services
 - frontend view-model code no longer assumes Windows-only behavior
 
+Status on 2026-04-04:
+
+- complete in `codex/frontend-track4-adapters` at the implementation level
+- launcher app-data path selection, external target opening, shortcut creation, command script extension selection, Unix executable marking, and default Java path hints now route through `PCL.Frontend.Spike/Workflows/FrontendPlatformAdapter.cs`
+- open-file/open-folder picker and clipboard behavior continue to route through `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- stored launcher key envelope decoding now routes through `PCL.Core/App/Essentials/LauncherStoredKeyEnvelopeService.cs` instead of frontend-local Windows-only decode branches
+- migrated frontend view-model code no longer carries inline platform branches for shortcut creation, exported launch script naming, or default Java path selection
+
 Manual verification:
 
 - run the same shell actions on Windows, macOS, and Linux
 - confirm equivalent user-visible behavior
+
+Verified on 2026-04-04:
+
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS
+- an ad hoc verification harness against the built frontend assembly resolved launcher app data to `~/.config/PCL`
+- the same harness created a real `.command` shortcut file and confirmed executable Unix mode bits
+- the same harness marked an exported script file executable on macOS
+- the same harness successfully opened a real local folder through the explicit external-target adapter path
+- Windows and Linux runtime verification are still needed before the full adapter matrix can be called closed
 
 ### Step 5. Replace WPF-owned launcher behaviors
 
@@ -379,6 +396,11 @@ Reviewer can verify by:
 
 - running the same shell actions on at least two platforms and comparing outcomes
 
+Status on 2026-04-04:
+
+- implementation landed in `4a065f15` `refactor: isolate frontend platform adapters`
+- the next owner should treat remaining work here as validation on additional hosts, not another large frontend adapter rewrite
+
 ### Slice C. Remove remaining WPF workflow ownership
 
 Scope:
@@ -419,6 +441,7 @@ Avoid:
 
 ## Latest Frontend Checkpoints
 
+- `4a065f15` `refactor: isolate frontend platform adapters`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
 - `ef3c0b92` `feat: wire instance overview runtime actions`

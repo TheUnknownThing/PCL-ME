@@ -46,6 +46,7 @@ Completed:
 
 Recent checkpoints:
 
+- `4a065f15` `refactor: isolate frontend platform adapters`
 - `5ac85e61` `feat: cut over frontend launch execution`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
@@ -66,7 +67,8 @@ What that means today:
 - instance overview/actions now perform real rename, description, trash, patch, and exported verification flows from the replacement shell
 - Track 2 shell-action parity is now effectively complete for the migrated tool/download/instance surfaces
 - Track 1 route parity is effectively complete in the current frontend branch
-- the remaining work is now mostly launch cutover, cross-platform adapter isolation, and WPF responsibility removal
+- Track 4 adapter implementation is now in place for migrated shell actions, runtime path conventions, shortcut/script materialization, and protected key envelope decoding
+- the remaining work is now mostly Track 5 WPF responsibility removal plus Track 6 packaging and multi-platform validation
 
 ## Repo Boundaries
 
@@ -295,6 +297,31 @@ Track 3 status:
 
 - one adapter family per commit
 
+### Status on 2026-04-04
+
+Completed in this track:
+
+- open-file and open-folder picker behavior already routes through the explicit Avalonia shell action service
+- clipboard reads and writes already route through the explicit Avalonia shell action service
+- launcher app-data path selection, external target opening, shortcut creation, Unix executable marking, command script extension selection, and default Java path hints now route through `FrontendPlatformAdapter`
+- stored launcher key envelope decoding is now shared through `LauncherStoredKeyEnvelopeService` instead of being duplicated in frontend-local Windows DPAPI branches
+- migrated frontend view-model code no longer carries inline OS branches for shortcut creation, command script export, or default Java path selection
+
+Manual verification completed on this track:
+
+1. Built `PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` successfully on macOS.
+2. Ran an ad hoc verification harness against the built frontend assembly.
+3. Confirmed the adapter resolves launcher app data to `~/.config/PCL` on macOS.
+4. Confirmed shortcut creation emits a real `.command` file with executable Unix mode bits.
+5. Confirmed exported command scripts receive executable Unix mode bits.
+6. Confirmed explicit external-target open succeeds on macOS for a real local folder.
+
+Track 4 status:
+
+- implementation is effectively complete in the current frontend branch
+- Windows and Linux runtime validation is still required before the cross-platform matrix can be called fully closed
+- next code work should move to Track 5 unless a newly discovered copied surface still embeds OS-specific UI logic
+
 ## Track 5. WPF Responsibility Removal
 
 ### Goal
@@ -386,6 +413,10 @@ Why second:
 Expected reviewer test:
 
 - run the same migrated shell actions on multiple OSes and compare outcomes
+
+Status on 2026-04-04:
+
+- implementation landed in `4a065f15`; the remaining work here is host-matrix validation rather than another frontend adapter refactor
 
 ### Slice 3. Remove remaining WPF workflow ownership
 
