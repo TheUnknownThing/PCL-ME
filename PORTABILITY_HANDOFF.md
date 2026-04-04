@@ -8,7 +8,8 @@ The portability phase has crossed an important boundary:
 - the replacement frontend shell is real
 - frontend migration Phase 1 is complete as of 2026-04-04
 - frontend migration Phase 2 prompt-command execution is complete as of 2026-04-04
-- the next major frontend task is Phase 3 launch-state integration
+- frontend migration Phase 3 launch-state integration is complete as of 2026-04-04
+- the next major frontend task is Phase 4 route-local page model migration
 
 The repo is therefore in this state:
 
@@ -221,29 +222,54 @@ What this means in practice:
 - encrypted startup count is now read through a backend-facing runtime service instead of being hard-coded
 - replay inputs via `InputRoot` still work for inspection scenarios
 
+### Phase 3 is done
+
+The original Phase 3 target was:
+
+- replace launch-page sample labels, Java summaries, login summaries, and prompt lanes with real launch planning results
+- source launch readiness from runtime profile/config/instance state
+- keep the copied launch page layouts intact while swapping the state source underneath them
+
+That work is now implemented for the `app` path when the frontend is not running from replay inputs.
+
+Important files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
+- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
+- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchButton.axaml`
+- `PCL.Frontend.Spike/Desktop/Controls/PclButton.axaml`
+
+What this means in practice:
+
+- the launch page now reads selected instance, launcher folder, selected profile, Java state, and launch count from real runtime files
+- launch precheck prompts are now built from runtime-backed launch requests instead of the old launch fixture path
+- launch summary data now includes real resolution, classpath, replacement-value, and prerun planning state
+- copied launch-pane labels now reflect runtime-composed state instead of placeholder snapshot strings
+- the copied left launch controls are interactive again after the custom-control hit-testing fix
+
+Important caveat:
+
+- `app --input-root ...` still intentionally uses replay-backed launch inputs for inspection scenarios
+
 ### The biggest current truth
 
-The frontend shell bootstrap is no longer mostly fixture-driven.
+The frontend shell bootstrap and launch route are no longer mostly fixture-driven.
 
 The remaining spike-heavy areas are now:
 
-- launch-page runtime state
-- crash/launch/sample plan injection used by non-shell surfaces
-- route-local page fixtures
+- crash/launch replay plan injection used by inspection flows
+- route-local page fixtures outside the launch route
+- spike-only tooling that still sits beside reusable frontend adapters
 
 ## What Still Isn’t Done
 
-### 1. Launch-page runtime state
-
-Prompt rendering is portable and Phase 2 prompt-command execution is now real.
-
-The next remaining frontend gap is the launch surface itself:
-
-- launch prompts still come from sample-backed launch plans instead of runtime-built launch requests
-- launch summaries, login labels, and Java summaries are still largely fixture-driven
-- the frontend still does not source live launch readiness from current profile/config/runtime state
-
-### 2. Page-specific production data
+### 1. Page-specific production data
 
 Many copied pages still use hard-coded view-model state even when their visuals are already good.
 
@@ -254,6 +280,16 @@ The main remaining data gaps are:
 - download route binding to real search/catalog/install planning state
 - `VersionSaves` subpages
 - richer tool widgets
+
+### 2. Launch cutover beyond composition
+
+Phase 3 made the launch route runtime-backed inside the replacement frontend boundary.
+
+The remaining launch-side work is now outside that composition step:
+
+- full launcher cutover beyond frontend-side composition and prompt handling
+- replacing replay/sample launch execution paths where the spike still uses them intentionally
+- continuing to separate reusable launch adapters from inspection-only helpers
 
 ### 3. Secret/auth portability boundary
 
@@ -310,18 +346,22 @@ Important caveat:
 
 - Phase 2 does not make launch or crash workflows fully live; it makes prompt-command execution real inside the replacement shell boundary
 
-### Step 3: feed the launch page from real launch workflow services
+### Step 3: Phase 3 is complete, preserve the runtime launch composition path
 
-The launch route should become the first page where the shell is backed by real runtime planning, not fixture summaries.
+The launch route now reads runtime-backed launch state through the dedicated composition layer.
 
-That means wiring:
+Start from:
 
-- login state
-- precheck prompts
-- Java requirement state
-- Java download prompts
-- launch readiness summaries
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
 
+Do not regress this by reintroducing launch-route fixtures for the normal `app` path.
+
+Important caveat:
+
+- replay mode through `InputRoot` is still intentionally sample-backed
 ### Step 4: replace route-local fixture values page family by page family
 
 Recommended order:
@@ -377,6 +417,9 @@ These are the most relevant recent frontend checkpoints:
 - `6624be02` `feat: execute frontend prompt commands`
 - `c2c139ed` `fix: auto-open startup prompt inbox`
 - `5caaa14e` `fix: scope prompt lanes to runtime events`
+- `568df5d1` `Compose runtime launch state for frontend phase 3`
+- `5ab8497e` `Bind copied launch pane text to runtime state`
+- `b009b0f7` `Fix copied launch controls hit testing`
 
 ## Files To Read First
 
@@ -393,8 +436,9 @@ If you are picking this up cold, read these first:
 
 - `PCL.Frontend.Spike/Desktop/App.axaml.cs`
 - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeInputResolver.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeSampleFactory.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
 
 ### Real UI reference
 
@@ -422,7 +466,7 @@ The repo is already past the “portability spike” stage.
 The next milestone is:
 
 - real backend-driven frontend state
-- real launch-page runtime integration
 - real page models behind the copied Avalonia UI
+- continued removal of route-local fixtures outside the already-migrated launch route
 
 That is the correct continuation point for both the frontend migration plan and the broader portability effort.

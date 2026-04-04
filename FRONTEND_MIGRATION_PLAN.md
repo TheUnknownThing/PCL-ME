@@ -19,7 +19,8 @@ Status as of 2026-04-04:
 
 - Phase 1 is complete
 - Phase 2 is complete
-- Phase 3 is now the active frontend task
+- Phase 3 is complete
+- Phase 4 is now the active frontend task
 
 Phase 1 completion means:
 
@@ -131,7 +132,7 @@ But most of those surfaces are still fed by:
 - summary contracts in `LauncherFrontendPageContentService`
 - spike-only commands that only write to the activity feed
 
-### Prompt actions are now real shell actions, but launch-state data is still prototype-backed
+### Prompt actions are now real shell actions, and the launch route is runtime-backed on the normal app path
 
 Prompt rendering and prompt-command execution now both exist:
 
@@ -141,18 +142,21 @@ Prompt rendering and prompt-command execution now both exist:
 
 What is still missing is the state source behind many prompts and surfaces:
 
-- launch prompts are still composed from sample-backed launch plans
 - crash and Java actions still materialize frontend-side artifacts rather than fully live launcher integrations
+- many non-launch routes still rely on hard-coded page-local view-model state
 
-### The next missing middle is prompt and page-state composition
+Important caveat:
+
+- `app --input-root ...` still intentionally uses replay-backed launch inputs for inspection scenarios
+
+### The next missing middle is route-local page-state composition
 
 The shell-level composition layer now exists.
 
 The missing frontend layers are now:
 
-- prompt command dispatch into backend or platform actions
-- launch-state construction from real runtime/profile/config state
 - route-local page models derived from backend/state sources instead of fixtures
+- continued separation of reusable frontend adapters from spike-only inspection helpers
 
 ## Frontend Rule
 
@@ -263,6 +267,10 @@ Important caveat:
 
 ### Phase 3: wire launch readiness and launch flow to real backend state
 
+Status:
+
+- complete
+
 Target:
 
 - replace launch-page sample labels, Java summaries, login summaries, and prompt lanes with real launch planning results
@@ -283,6 +291,24 @@ Deliverable:
   - launch precheck prompts
   - Java selection and download prompts
   - resolution, classpath, and prerun summaries
+
+Delivered files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
+- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
+
+What this means in practice:
+
+- the normal `app` path now composes launch state from real config, profile, instance-manifest, and protected runtime files
+- copied launch labels and summaries no longer depend on the old `_launchPlan` fixture path
+- launch prompt lanes are now built from runtime-backed precheck and Java workflow state
+- replay mode through `InputRoot` still exists for inspection and comparison
 
 ### Phase 4: replace route-local fixtures with backend-backed page models
 
@@ -363,8 +389,8 @@ Deliverable:
 | Area | Current visual status | Real backend source now | Main missing piece |
 | --- | --- | --- | --- |
 | Startup shell | portable and route-aware | `LauncherStartupWorkflowService`, `LauncherFrontendShellService` | real request construction and runtime refresh |
-| Prompt queue | portable rendering and command execution exist | `LauncherFrontendPromptService` | launch-state source still uses sample-backed plans |
-| Launch page | copied shell layout | launch workflow services under `PCL.Core/Minecraft/Launch` | live state source instead of sample plan injection |
+| Prompt queue | portable rendering and command execution exist | `LauncherFrontendPromptService` | durable side effects and non-launch route state still need broader page-model integration |
+| Launch page | copied shell layout and runtime-backed composition | launch workflow services under `PCL.Core/Minecraft/Launch` plus `FrontendLaunchCompositionService` | broader launch cutover and keeping replay mode scoped to inspection |
 | Setup pages | many copied layouts | config and app services exist | route-specific real settings adapters |
 | Download pages | copied install and resource layouts | navigation + page-content summary seam exists | real catalog/search/install contracts |
 | Tools pages | copied help/lobby/test layouts | shell contracts exist | real tool data sources and widget actions |
@@ -375,11 +401,11 @@ Deliverable:
 
 This is the recommended concrete order for the next frontend passes.
 
-1. Feed the launch page from real launch workflow planning requests built from current runtime/config/profile state.
-2. Replace sample-backed launch prompt composition with runtime-built launch requests and profile-aware launch readiness state.
-3. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
-4. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
-5. Separate reusable frontend adapters from spike-only sample generation once the launch page stops depending on sample plans.
+1. Introduce explicit backend-facing page models for settings, instance, and download routes that still rely on hard-coded view-model fixtures.
+2. Fill the `VersionSaves` and denser tool-route gaps with real contracts instead of summary-only placeholders.
+3. Keep the copied Avalonia layouts stable while swapping only the data source underneath them.
+4. Preserve the runtime-backed launch route and avoid reintroducing fixture state into the normal `app` path.
+5. Separate reusable frontend adapters from spike-only sample generation once more page families stop depending on fixtures.
 
 ## Backend Support Needed
 
@@ -403,4 +429,6 @@ This phase is complete when:
 
 Phase 2 is now in that state.
 
-The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the Phase 3 and Phase 4 data work is done.
+Phase 3 is now also in that state for runtime-backed launch-page composition on the normal `app` path.
+
+The broader migration will move from “portable spike shell” to “real replacement frontend backed by portable services” when the Phase 4 data work is done.
