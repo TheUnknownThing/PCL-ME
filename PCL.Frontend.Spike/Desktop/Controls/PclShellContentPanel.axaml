@@ -370,6 +370,129 @@
         </Button>
       </StackPanel>
 
+      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadInstallSurface}" Spacing="12">
+        <controls:PclCard ContentMargin="14,13,16,13">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto,*">
+              <Border
+                  Width="26"
+                  Height="26"
+                  VerticalAlignment="Center"
+                  Background="#F0F6FF"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="13">
+                <Path
+                    Width="10"
+                    Height="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Fill="#4B78C2"
+                    Stretch="Uniform"
+                    Data="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z" />
+              </Border>
+              <Border
+                  Grid.Column="1"
+                  Width="32"
+                  Height="32"
+                  Margin="12,0,14,0"
+                  VerticalAlignment="Center"
+                  Background="#EAF2FE"
+                  BorderBrush="#D5E6FD"
+                  BorderThickness="1"
+                  CornerRadius="6">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="#4B78C2"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Text="包" />
+              </Border>
+              <TextBox
+                  Grid.Column="2"
+                  Height="30"
+                  Padding="8,4"
+                  VerticalAlignment="Center"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  FontSize="15"
+                  Text="{Binding DownloadInstallName}" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallHints}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border
+                  Padding="12,10"
+                  Background="{Binding BackgroundBrush}"
+                  BorderBrush="{Binding BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="{Binding ForegroundBrush}"
+                    FontSize="12.5"
+                    Text="{Binding Text}"
+                    TextWrapping="Wrap" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallOptions}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,40,18,15">
+                <controls:PclCard.CardContent>
+                  <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
+                    <Border
+                        Grid.RowSpan="2"
+                        Width="28"
+                        Height="28"
+                        Margin="0,2,10,0"
+                        Background="#F4F8FF"
+                        BorderBrush="#D5E6FD"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                      <Image Source="{Binding Icon}" Stretch="Uniform" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Foreground="#343D4A"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{Binding Selection}" />
+                    <controls:PclButton
+                        Grid.Column="2"
+                        Width="72"
+                        Margin="12,0,0,0"
+                        Command="{Binding SelectCommand}"
+                        Text="选择" />
+                    <controls:PclButton
+                        Grid.Column="3"
+                        Width="72"
+                        Margin="10,0,0,0"
+                        Command="{Binding ClearCommand}"
+                        Text="清除" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,4,0,0"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="保留原版自动安装页的可选组件卡片层级与当前版本信息展示。"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
       <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupAboutSurface}" Spacing="15">
         <controls:PclCard Header="关于" ContentMargin="21,40,21,16">
           <controls:PclCard.CardContent>

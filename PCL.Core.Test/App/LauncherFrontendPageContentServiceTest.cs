@@ -193,6 +193,23 @@ public sealed class LauncherFrontendPageContentServiceTest
             section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal))));
     }
 
+    [TestMethod]
+    public void BuildDownloadInstallContentDescribesSelectionStateCards()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes()));
+
+        Assert.AreEqual("自动安装页面", content.Eyebrow);
+        Assert.AreEqual("自动安装", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "安装器选项卡" &&
+            section.Lines.Any(line => line.Contains("Forge", StringComparison.Ordinal))));
+    }
+
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
     {
         return LauncherStartupWorkflowService.BuildPlan(new LauncherStartupWorkflowRequest(

@@ -101,6 +101,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private readonly ActionCommand _saveAchievementCommand;
     private readonly ActionCommand _selectHeadSkinCommand;
     private readonly ActionCommand _saveHeadCommand;
+    private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -146,6 +147,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     private bool _showAchievementPreview;
     private int _selectedHeadSizeIndex;
     private string _selectedHeadSkinPath = "尚未选择皮肤";
+    private string _downloadInstallName = "新的安装方案";
     private int _selectedLaunchIsolationIndex = 1;
     private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
     private string _launchCustomInfo = "PCL";
@@ -302,6 +304,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         _saveAchievementCommand = CreateIntentCommand("保存成就图片", "Would save the generated achievement preview as an image.");
         _selectHeadSkinCommand = new ActionCommand(SelectHeadSkin);
         _saveHeadCommand = CreateIntentCommand("保存头像", "Would export the generated avatar head image.");
+        _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -316,6 +319,7 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         InitializeLaunchSettingsSurface();
         InitializeToolsGameLinkSurface();
         InitializeToolsTestSurface();
+        InitializeDownloadInstallSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();
@@ -355,6 +359,10 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     public ObservableCollection<SimpleListEntryViewModel> GameLinkPolicyEntries { get; } = [];
 
     public ObservableCollection<ToolboxActionViewModel> ToolboxActions { get; } = [];
+
+    public ObservableCollection<SurfaceNoticeViewModel> DownloadInstallHints { get; } = [];
+
+    public ObservableCollection<DownloadInstallOptionViewModel> DownloadInstallOptions { get; } = [];
 
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
@@ -986,6 +994,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         get => _selectedHeadSkinPath;
         set => SetProperty(ref _selectedHeadSkinPath, value);
+    }
+
+    public string DownloadInstallName
+    {
+        get => _downloadInstallName;
+        set => SetProperty(ref _downloadInstallName, value);
     }
 
     public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
@@ -2263,6 +2277,36 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         ]);
     }
 
+    private void InitializeDownloadInstallSurface()
+    {
+        _downloadInstallName = "新的安装方案";
+
+        ReplaceItems(DownloadInstallHints,
+        [
+            CreateNoticeStrip("如果不安装 Fabric API，大多数 Mod 都会无法使用！", "#FFF1EA", "#F1C8B6", "#A94F2B"),
+            CreateNoticeStrip("如果不安装 Legacy Fabric API，大多数 Mod 都会无法使用！", "#FFF1EA", "#F1C8B6", "#A94F2B"),
+            CreateNoticeStrip("必须安装 OptiFabric 才能正常使用 OptiFine！", "#FFF1EA", "#F1C8B6", "#A94F2B"),
+            CreateNoticeStrip("OptiFine 与一部分 Mod 的兼容性不佳，请谨慎安装。", "#FFF8DD", "#F2D777", "#6E5800"),
+            CreateNoticeStrip("如果不安装 QFAPI / QSL，大多数 Mod 都会无法使用！", "#FFF1EA", "#F1C8B6", "#A94F2B")
+        ]);
+
+        ReplaceItems(DownloadInstallOptions,
+        [
+            CreateDownloadInstallOption("Forge", "1.20.1 recommended", LoadLauncherBitmap("Images", "Blocks", "Anvil.png")),
+            CreateDownloadInstallOption("Cleanroom", "1.12.2 experimental", LoadLauncherBitmap("Images", "Blocks", "Cleanroom.png")),
+            CreateDownloadInstallOption("NeoForge", "21.1.2", LoadLauncherBitmap("Images", "Blocks", "NeoForge.png")),
+            CreateDownloadInstallOption("Fabric", "0.16.9", LoadLauncherBitmap("Images", "Blocks", "Fabric.png")),
+            CreateDownloadInstallOption("Legacy Fabric", "1.8.9 backport", LoadLauncherBitmap("Images", "Blocks", "Fabric.png")),
+            CreateDownloadInstallOption("Fabric API", "0.118.0+1.21.1", LoadLauncherBitmap("Images", "Blocks", "Fabric.png")),
+            CreateDownloadInstallOption("Legacy Fabric API", "1.7.4+1.8.9", LoadLauncherBitmap("Images", "Blocks", "Fabric.png")),
+            CreateDownloadInstallOption("Quilt", "0.27.1", LoadLauncherBitmap("Images", "Blocks", "Quilt.png")),
+            CreateDownloadInstallOption("QFAPI / QSL", "11.0.0-beta", LoadLauncherBitmap("Images", "Blocks", "Quilt.png")),
+            CreateDownloadInstallOption("LabyMod", "4.1.23", LoadLauncherBitmap("Images", "Blocks", "LabyMod.png")),
+            CreateDownloadInstallOption("OptiFine", "HD_U_I6", LoadLauncherBitmap("Images", "Blocks", "GrassPath.png")),
+            CreateDownloadInstallOption("OptiFabric", "1.14.3", LoadLauncherBitmap("Images", "Blocks", "Fabric.png"))
+        ]);
+    }
+
     private void InitializeGameLinkSurface()
     {
         _linkUsername = "PCL CE 玩家";
@@ -2467,6 +2511,21 @@ internal sealed class FrontendShellViewModel : ViewModelBase
         return new ToolboxActionViewModel(title, toolTip, minWidth, colorType, command);
     }
 
+    private SurfaceNoticeViewModel CreateNoticeStrip(string text, string background, string border, string foreground)
+    {
+        return new SurfaceNoticeViewModel(text, Brush.Parse(background), Brush.Parse(border), Brush.Parse(foreground));
+    }
+
+    private DownloadInstallOptionViewModel CreateDownloadInstallOption(string title, string selection, Bitmap? icon)
+    {
+        return new DownloadInstallOptionViewModel(
+            title,
+            selection,
+            icon,
+            new ActionCommand(() => AddActivity($"选择安装项: {title}", selection)),
+            new ActionCommand(() => AddActivity($"清除安装项: {title}", $"Would clear the selected {title} version.")));
+    }
+
     private ActionCommand CreateLinkCommand(string title, string url)
     {
         return new ActionCommand(() => AddActivity(title, url));
@@ -2559,6 +2618,12 @@ internal sealed class FrontendShellViewModel : ViewModelBase
 
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
+        if (IsDownloadInstallSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            ResetDownloadInstallSurface();
+            return;
+        }
+
         if (IsSetupLaunchSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetLaunchSettingsSurface();
@@ -2797,6 +2862,13 @@ internal sealed class FrontendShellViewModel : ViewModelBase
     {
         SelectedHeadSkinPath = "/Users/demo/Downloads/skin.png";
         AddActivity("选择皮肤", SelectedHeadSkinPath);
+    }
+
+    private void ResetDownloadInstallSurface()
+    {
+        InitializeDownloadInstallSurface();
+        RaisePropertyChanged(nameof(DownloadInstallName));
+        AddActivity("刷新自动安装页", "自动安装选择面板已恢复到默认演示状态。");
     }
 
     private void ResetGameLinkSurface()
@@ -3669,6 +3741,39 @@ internal sealed class ToolboxActionViewModel(
     public PclButtonColorState ColorType { get; } = colorType;
 
     public ActionCommand Command { get; } = command;
+}
+
+internal sealed class SurfaceNoticeViewModel(
+    string text,
+    IBrush backgroundBrush,
+    IBrush borderBrush,
+    IBrush foregroundBrush)
+{
+    public string Text { get; } = text;
+
+    public IBrush BackgroundBrush { get; } = backgroundBrush;
+
+    public IBrush BorderBrush { get; } = borderBrush;
+
+    public IBrush ForegroundBrush { get; } = foregroundBrush;
+}
+
+internal sealed class DownloadInstallOptionViewModel(
+    string title,
+    string selection,
+    Bitmap? icon,
+    ActionCommand selectCommand,
+    ActionCommand clearCommand)
+{
+    public string Title { get; } = title;
+
+    public string Selection { get; } = selection;
+
+    public Bitmap? Icon { get; } = icon;
+
+    public ActionCommand SelectCommand { get; } = selectCommand;
+
+    public ActionCommand ClearCommand { get; } = clearCommand;
 }
 
 internal sealed class HelpTopicViewModel(

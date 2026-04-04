@@ -96,6 +96,64 @@ public static class LauncherFrontendPageContentService
         int visibleUtilityCount,
         string? selectedLaneTitle)
     {
+        return request.Navigation.CurrentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadInstall => BuildDownloadInstallContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle),
+            _ => BuildGenericDownloadContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle)
+        };
+    }
+
+    private static LauncherFrontendPageContent BuildDownloadInstallContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount,
+        string? selectedLaneTitle)
+    {
+        var surface = request.Navigation.CurrentPage;
+
+        return new LauncherFrontendPageContent(
+            "自动安装页面",
+            "自动安装页已经切换到更接近原版选择态的顶部命名卡、告警提示和组件选择卡结构。",
+            [
+                new LauncherFrontendPageFact("当前分区", surface.SidebarItemTitle ?? surface.Title),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
+                new LauncherFrontendPageFact("Sidebar routes", request.Navigation.SidebarEntries.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "顶部",
+                    "安装方案命名",
+                    [
+                        "保留了顶部返回按钮、图标与名称输入框组合，而不是退回普通标题栏。",
+                        "红色和黄色提示条继续作为独立块出现在名称卡后方。",
+                        $"Focused prompt lane: {selectedLaneTitle ?? "None"}"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "组件",
+                    "安装器选项卡",
+                    [
+                        "Forge、Fabric、Quilt、OptiFine 等组件继续按原页面一张张卡片排列。",
+                        "每张卡继续保留右上角清除操作和当前版本信息区，而不是合并成单一资源列表。",
+                        "这页优先复制的是旧版选择面结构，不是旧版安装策略实现。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "后续所需合同",
+                    [
+                        "更细的加载器版本、兼容性提示和自动推荐结果仍需要后端合同输入。",
+                        "前端已经准备好承载这些数据，并保持原版控件层级。",
+                        "安装规划与冲突判断仍应继续停留在壳层之外。"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildGenericDownloadContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount,
+        string? selectedLaneTitle)
+    {
         var surface = request.Navigation.CurrentPage;
 
         return new LauncherFrontendPageContent(
