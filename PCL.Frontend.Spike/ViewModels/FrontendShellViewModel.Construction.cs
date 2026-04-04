@@ -237,6 +237,11 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedHomepagePresetIndex = 14;
     private string _selectedJavaRuntimeKey = "auto";
 
+    public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
+    {
+        return new FrontendShellViewModel(options);
+    }
+
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
         _shellInputs = SpikeInputResolver.ResolveShellInputs(options);
