@@ -42,6 +42,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<SimpleListEntryViewModel> GameLinkPolicyEntries { get; } = [];
 
+    public ObservableCollection<SimpleListEntryViewModel> GameLinkPlayerEntries { get; } = [];
+
     public ObservableCollection<ToolboxActionViewModel> ToolboxActions { get; } = [];
 
     public ObservableCollection<SurfaceNoticeViewModel> DownloadInstallHints { get; } = [];
@@ -587,6 +589,40 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         get => _gameLinkLobbyId;
         set => SetProperty(ref _gameLinkLobbyId, value);
     }
+
+    public string GameLinkSessionPing
+    {
+        get => _gameLinkSessionPing;
+        set => SetProperty(ref _gameLinkSessionPing, value);
+    }
+
+    public string GameLinkSessionId
+    {
+        get => _gameLinkSessionId;
+        set => SetProperty(ref _gameLinkSessionId, value);
+    }
+
+    public string GameLinkConnectionType
+    {
+        get => _gameLinkConnectionType;
+        set => SetProperty(ref _gameLinkConnectionType, value);
+    }
+
+    public string GameLinkConnectedUserName
+    {
+        get => _gameLinkConnectedUserName;
+        set => SetProperty(ref _gameLinkConnectedUserName, value);
+    }
+
+    public string GameLinkConnectedUserType
+    {
+        get => _gameLinkConnectedUserType;
+        set => SetProperty(ref _gameLinkConnectedUserType, value);
+    }
+
+    public string GameLinkPlayerListTitle => GameLinkPlayerEntries.Count > 0
+        ? $"大厅成员列表（{GameLinkPlayerEntries.Count} 人）"
+        : "大厅成员列表（正在获取信息）";
 
     public IReadOnlyList<string> GameLinkWorldOptions { get; } =
     [
@@ -1526,6 +1562,12 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public ActionCommand RefreshLobbyWorldsCommand => _refreshLobbyWorldsCommand;
 
     public ActionCommand InputLobbyPortCommand => _inputLobbyPortCommand;
+
+    public ActionCommand CopyLobbyVirtualIpCommand => _copyLobbyVirtualIpCommand;
+
+    public ActionCommand CopyActiveLobbyIdCommand => _copyActiveLobbyIdCommand;
+
+    public ActionCommand ExitLobbyCommand => _exitLobbyCommand;
 
     public ActionCommand OpenLobbyReportCommand => _openLobbyReportCommand;
 

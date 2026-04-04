@@ -125,6 +125,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLinkNatStatus));
         RaisePropertyChanged(nameof(GameLinkAccountStatus));
         RaisePropertyChanged(nameof(GameLinkLobbyId));
+        RaisePropertyChanged(nameof(GameLinkSessionPing));
+        RaisePropertyChanged(nameof(GameLinkSessionId));
+        RaisePropertyChanged(nameof(GameLinkConnectionType));
+        RaisePropertyChanged(nameof(GameLinkConnectedUserName));
+        RaisePropertyChanged(nameof(GameLinkConnectedUserType));
+        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
         RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
         AddActivity("刷新联机大厅", "联机大厅页面已恢复到初始演示状态。");
     }
@@ -164,12 +170,27 @@ internal sealed partial class FrontendShellViewModel
         GameLinkAccountStatus = GameLinkAccountStatus == "点击登录 Natayark 账户"
             ? "PCL-Community"
             : "点击登录 Natayark 账户";
+        GameLinkConnectedUserName = GameLinkAccountStatus == "点击登录 Natayark 账户" ? "未登录" : "PCL-Community";
+        GameLinkConnectedUserType = GameLinkAccountStatus == "点击登录 Natayark 账户" ? "大厅访客" : "大厅房主";
         AddActivity("Natayark 账户", GameLinkAccountStatus);
     }
 
     private void JoinLobby()
     {
         var lobbyId = string.IsNullOrWhiteSpace(GameLinkLobbyId) ? "U/2398-AX4A-SSSS-EEEE" : GameLinkLobbyId;
+        GameLinkLobbyId = lobbyId;
+        GameLinkAnnouncement = $"正在准备加入大厅 {lobbyId}……";
+        GameLinkSessionId = lobbyId;
+        GameLinkSessionPing = "28ms";
+        GameLinkConnectionType = "P2P 直连";
+        GameLinkConnectedUserName = GameLinkAccountStatus == "点击登录 Natayark 账户" ? "PCL-Community" : GameLinkAccountStatus;
+        GameLinkConnectedUserType = "大厅访客";
+        ReplaceItems(GameLinkPlayerEntries,
+        [
+            new SimpleListEntryViewModel("PCL-Community", "大厅房主 • 在线", new ActionCommand(() => AddActivity("查看大厅成员", "PCL-Community"))),
+            new SimpleListEntryViewModel("当前设备", "已加入大厅 • 延迟 28ms", new ActionCommand(() => AddActivity("查看大厅成员", "当前设备")))
+        ]);
+        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
         AddActivity("加入大厅", $"Would join lobby {lobbyId}.");
     }
 
@@ -187,6 +208,19 @@ internal sealed partial class FrontendShellViewModel
 
     private void CreateLobby()
     {
+        GameLinkSessionId = $"U/2398-AX4A-SSSS-{SelectedGameLinkWorldIndex + 1:0000}";
+        GameLinkLobbyId = GameLinkSessionId;
+        GameLinkAnnouncement = "大厅创建完成，可以复制大厅编号发给朋友。";
+        GameLinkSessionPing = "24ms";
+        GameLinkConnectionType = "EasyTier 中继";
+        GameLinkConnectedUserName = GameLinkAccountStatus == "点击登录 Natayark 账户" ? "PCL-Community" : GameLinkAccountStatus;
+        GameLinkConnectedUserType = "大厅房主";
+        ReplaceItems(GameLinkPlayerEntries,
+        [
+            new SimpleListEntryViewModel(GameLinkConnectedUserName, "大厅房主 • 已准备就绪", new ActionCommand(() => AddActivity("查看大厅成员", GameLinkConnectedUserName))),
+            new SimpleListEntryViewModel("等待好友加入", "大厅成员槽位 • 空闲", new ActionCommand(() => AddActivity("查看大厅成员", "等待好友加入")))
+        ]);
+        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
         AddActivity("创建大厅", $"Would create a lobby from {GameLinkWorldOptions[SelectedGameLinkWorldIndex]}.");
     }
 
@@ -194,6 +228,23 @@ internal sealed partial class FrontendShellViewModel
     {
         SelectedGameLinkWorldIndex = (SelectedGameLinkWorldIndex + 1) % GameLinkWorldOptions.Count;
         AddActivity("刷新世界列表", GameLinkWorldOptions[SelectedGameLinkWorldIndex]);
+    }
+
+    private void ExitLobby()
+    {
+        InitializeToolsGameLinkSurface();
+        RaisePropertyChanged(nameof(GameLinkAnnouncement));
+        RaisePropertyChanged(nameof(GameLinkNatStatus));
+        RaisePropertyChanged(nameof(GameLinkAccountStatus));
+        RaisePropertyChanged(nameof(GameLinkLobbyId));
+        RaisePropertyChanged(nameof(GameLinkSessionPing));
+        RaisePropertyChanged(nameof(GameLinkSessionId));
+        RaisePropertyChanged(nameof(GameLinkConnectionType));
+        RaisePropertyChanged(nameof(GameLinkConnectedUserName));
+        RaisePropertyChanged(nameof(GameLinkConnectedUserType));
+        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
+        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
+        AddActivity("退出大厅", "大厅状态已重置为未连接。");
     }
 
     private void SelectDownloadFolder()

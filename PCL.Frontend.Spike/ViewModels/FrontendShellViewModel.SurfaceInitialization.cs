@@ -142,6 +142,11 @@ internal sealed partial class FrontendShellViewModel
         _gameLinkNatStatus = "点击测试";
         _gameLinkAccountStatus = "点击登录 Natayark 账户";
         _gameLinkLobbyId = string.Empty;
+        _gameLinkSessionPing = "-ms";
+        _gameLinkSessionId = "尚未创建大厅";
+        _gameLinkConnectionType = "连接中";
+        _gameLinkConnectedUserName = "未登录";
+        _gameLinkConnectedUserType = "大厅访客";
         _selectedGameLinkWorldIndex = 0;
 
         ReplaceItems(GameLinkPolicyEntries,
@@ -154,6 +159,12 @@ internal sealed partial class FrontendShellViewModel
                 "Natayark Network 用户协议与隐私政策",
                 "查看 Natayark OpenID 服务条款",
                 _openNatayarkPolicyCommand)
+        ]);
+
+        ReplaceItems(GameLinkPlayerEntries,
+        [
+            new SimpleListEntryViewModel("PCL-Community", "大厅创建者 • 等待加入", new ActionCommand(() => AddActivity("查看大厅成员", "PCL-Community"))),
+            new SimpleListEntryViewModel("EasyTier Bridge", "联机模块服务 • 在线", new ActionCommand(() => AddActivity("查看大厅成员", "EasyTier Bridge")))
         ]);
     }
 

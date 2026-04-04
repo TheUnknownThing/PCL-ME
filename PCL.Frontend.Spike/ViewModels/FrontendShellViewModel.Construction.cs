@@ -80,6 +80,9 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _createLobbyCommand;
     private readonly ActionCommand _refreshLobbyWorldsCommand;
     private readonly ActionCommand _inputLobbyPortCommand;
+    private readonly ActionCommand _copyLobbyVirtualIpCommand;
+    private readonly ActionCommand _copyActiveLobbyIdCommand;
+    private readonly ActionCommand _exitLobbyCommand;
     private readonly ActionCommand _openLobbyReportCommand;
     private readonly ActionCommand _openNatayarkPolicyCommand;
     private readonly ActionCommand _openLobbyPrivacyPolicyCommand;
@@ -128,6 +131,11 @@ internal sealed partial class FrontendShellViewModel
     private string _gameLinkNatStatus = "点击测试";
     private string _gameLinkAccountStatus = "点击登录 Natayark 账户";
     private string _gameLinkLobbyId = string.Empty;
+    private string _gameLinkSessionPing = "-ms";
+    private string _gameLinkSessionId = "尚未创建大厅";
+    private string _gameLinkConnectionType = "连接中";
+    private string _gameLinkConnectedUserName = "未登录";
+    private string _gameLinkConnectedUserType = "大厅访客";
     private int _selectedGameLinkWorldIndex;
     private string _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
     private string _toolDownloadUserAgent = "PCL-CE-Spike/1.0";
@@ -283,6 +291,9 @@ internal sealed partial class FrontendShellViewModel
         _createLobbyCommand = new ActionCommand(CreateLobby);
         _refreshLobbyWorldsCommand = new ActionCommand(RefreshLobbyWorlds);
         _inputLobbyPortCommand = CreateIntentCommand("手动输入联机端口", "Would allow manual LAN port entry before creating the lobby.");
+        _copyLobbyVirtualIpCommand = CreateIntentCommand("复制虚拟 IP", "Would copy the current EasyTier virtual IP for the active lobby.");
+        _copyActiveLobbyIdCommand = new ActionCommand(() => AddActivity("复制大厅编号", string.IsNullOrWhiteSpace(GameLinkSessionId) ? "尚未生成大厅编号。" : GameLinkSessionId));
+        _exitLobbyCommand = new ActionCommand(ExitLobby);
         _openLobbyReportCommand = CreateLinkCommand("违法违规举报", "https://qm.qq.com/q/yaubjC6C5y");
         _openNatayarkPolicyCommand = CreateLinkCommand("Natayark Network 用户协议与隐私政策", "https://account.naids.com/policy");
         _openLobbyPrivacyPolicyCommand = CreateLinkCommand("大厅隐私协议", "https://www.pclc.cc/privacy/personal-info-brief.html");
