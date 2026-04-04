@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -383,7 +385,74 @@ internal sealed partial class FrontendShellViewModel
 
     private void InstallDownloadResourceModPack()
     {
-        AddActivity("安装整合包", "Would install the selected modpack into the current Minecraft folder.");
+        if (!IsDownloadResourceSurface || _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack)
+        {
+            AddActivity("安装整合包", "当前页面没有可安装的整合包。");
+            return;
+        }
+
+        var visibleEntry = DownloadResourceEntries.FirstOrDefault();
+        if (visibleEntry is null)
+        {
+            AddActivity("安装整合包", "当前筛选结果中没有可安装的整合包。");
+            return;
+        }
+
+        if (!_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var resourceState))
+        {
+            AddActivity("安装整合包", "当前整合包列表尚未完成运行时组合。");
+            return;
+        }
+
+        var sourceEntry = resourceState.Entries.FirstOrDefault(entry =>
+            string.Equals(entry.Title, visibleEntry.Title, StringComparison.Ordinal)
+            && string.Equals(entry.Source, visibleEntry.Source, StringComparison.Ordinal));
+        if (sourceEntry is null || string.IsNullOrWhiteSpace(sourceEntry.TargetPath) || !Directory.Exists(sourceEntry.TargetPath))
+        {
+            AddActivity("安装整合包", "当前置顶整合包缺少可复制的本地实例目录。");
+            return;
+        }
+
+        try
+        {
+            var launcherFolder = ResolveDownloadLauncherFolder();
+            var versionsDirectory = Path.Combine(launcherFolder, "versions");
+            Directory.CreateDirectory(versionsDirectory);
+
+            var targetName = string.IsNullOrWhiteSpace(DownloadInstallName)
+                ? visibleEntry.Title
+                : DownloadInstallName.Trim();
+            var targetDirectory = GetUniqueInstallDirectoryPath(Path.Combine(
+                versionsDirectory,
+                SanitizeInstallDirectoryName(targetName)));
+
+            CopyDirectory(sourceEntry.TargetPath, targetDirectory);
+
+            var summaryDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "download-installs");
+            Directory.CreateDirectory(summaryDirectory);
+            var summaryPath = Path.Combine(summaryDirectory, $"{Path.GetFileName(targetDirectory)}.txt");
+            File.WriteAllText(
+                summaryPath,
+                string.Join(Environment.NewLine,
+                [
+                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                    $"来源整合包: {visibleEntry.Title}",
+                    $"源目录: {sourceEntry.TargetPath}",
+                    $"目标目录: {targetDirectory}",
+                    $"当前下载安装名: {DownloadInstallName}"
+                ]),
+                new UTF8Encoding(false));
+
+            ReloadDownloadComposition();
+            InitializeDownloadInstallSurface();
+            RefreshDownloadResourceSurface();
+            RaisePropertyChanged(nameof(DownloadInstallName));
+            OpenInstanceTarget("安装整合包", targetDirectory, "新安装的整合包目录不存在。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("安装整合包失败", ex.Message);
+        }
     }
 
     private void GoToFirstDownloadResourcePage()
@@ -731,4 +800,63 @@ internal sealed partial class FrontendShellViewModel
             actionText,
             new ActionCommand(() => AddActivity($"下载资源操作: {title}", $"{source} • {version} • {string.Join(" / ", tags)}")));
     }
+
+    private string ResolveDownloadLauncherFolder()
+    {
+        var provider = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+        var rawValue = "$.minecraft\\";
+
+        if (provider.Exists("LaunchFolderSelect"))
+        {
+            try
+            {
+                rawValue = provider.Get<string>("LaunchFolderSelect");
+            }
+            catch
+            {
+                rawValue = "$.minecraft\\";
+            }
+        }
+
+        var normalized = string.IsNullOrWhiteSpace(rawValue)
+            ? "$.minecraft\\"
+            : rawValue.Trim();
+        normalized = normalized.Replace(
+            "$",
+            EnsureTrailingSeparator(_shellActionService.RuntimePaths.ExecutableDirectory),
+            StringComparison.Ordinal);
+        return Path.GetFullPath(normalized);
+    }
+
+    private static string EnsureTrailingSeparator(string path)
+    {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static string SanitizeInstallDirectoryName(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var cleaned = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? "ImportedModPack" : cleaned;
+    }
+
+    private static string GetUniqueInstallDirectoryPath(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath))
+        {
+            return directoryPath;
+        }
+
+        for (var suffix = 1; ; suffix++)
+        {
+            var candidate = $"{directoryPath}-{suffix}";
+            if (!Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+    }
+
 }
