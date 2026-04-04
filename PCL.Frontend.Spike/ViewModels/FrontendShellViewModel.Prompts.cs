@@ -2,6 +2,7 @@ using Avalonia.Media;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Spike.Workflows;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.Models;
 
@@ -111,7 +112,7 @@ internal sealed partial class FrontendShellViewModel
 
         foreach (var command in option.Commands)
         {
-            ExecutePromptCommand(command);
+            ExecutePromptCommand(lane, command);
         }
 
         if (option.ClosesPrompt)
@@ -128,37 +129,54 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void ExecutePromptCommand(LauncherFrontendPromptCommand command)
+    private void ExecutePromptCommand(
+        SpikePromptLaneKind lane,
+        LauncherFrontendPromptCommand command)
     {
         switch (command.Kind)
         {
             case LauncherFrontendPromptCommandKind.ViewGameLog:
-                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
+                OpenCrashLogFromPrompt();
                 break;
             case LauncherFrontendPromptCommandKind.OpenInstanceSettings:
                 NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Prompt routed the shell to instance settings.");
                 break;
             case LauncherFrontendPromptCommandKind.ExportCrashReport:
-                AddActivity("Crash export intent issued.", _crashPlan.ExportPlan.SuggestedArchiveName);
+                ExportCrashReportFromPrompt();
                 break;
             case LauncherFrontendPromptCommandKind.DownloadJavaRuntime:
-                AddActivity("Java download intent issued.", command.Value ?? _launchPlan.JavaWorkflow.MissingJavaPrompt.DownloadTarget ?? "No download target");
+                DownloadJavaRuntimeFromPrompt();
                 break;
             case LauncherFrontendPromptCommandKind.OpenUrl:
-                AddActivity("External URL intent issued.", command.Value ?? "No URL supplied");
+                OpenExternalTarget(command.Value, "已根据提示打开外部链接。");
                 break;
             case LauncherFrontendPromptCommandKind.AppendLaunchArgument:
-                AddActivity("Launch argument intent issued.", command.Value ?? "No argument supplied");
+                AppendPromptLaunchArgument(command.Value);
                 break;
             case LauncherFrontendPromptCommandKind.SetTelemetryEnabled:
+                SetTelemetryPreference(command.Value);
+                break;
             case LauncherFrontendPromptCommandKind.AcceptConsent:
+                AcceptPromptConsent();
+                break;
             case LauncherFrontendPromptCommandKind.RejectConsent:
+                AddActivity("已拒绝协议授权", "当前提示未写入同意状态。");
+                break;
             case LauncherFrontendPromptCommandKind.ContinueFlow:
+                ContinuePromptFlow(lane);
+                break;
             case LauncherFrontendPromptCommandKind.AbortLaunch:
+                AbortLaunchFromPrompt();
+                break;
             case LauncherFrontendPromptCommandKind.PersistSetting:
+                PersistPromptSetting(command.Value);
+                break;
             case LauncherFrontendPromptCommandKind.ClosePrompt:
+                AddActivity("关闭提示", "当前提示已标记为完成。");
+                break;
             case LauncherFrontendPromptCommandKind.ExitLauncher:
-                AddActivity("Shell intent recorded.", DescribePromptCommand(command));
+                AddActivity("退出启动器", "已根据提示请求关闭前端壳层。");
+                _shellActionService.ExitLauncher();
                 break;
             default:
                 AddActivity("Unhandled prompt command encountered.", command.Kind.ToString());
@@ -230,6 +248,187 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPromptCommandKind.OpenInstanceSettings => "Open instance settings",
             LauncherFrontendPromptCommandKind.ExportCrashReport => "Export crash report",
             _ => command.Kind.ToString()
+        };
+    }
+
+    private void HandleLaunchRequested()
+    {
+        if (_isLaunchBlockedByPrompt)
+        {
+            AddActivity("启动已被提示中止", "请先重新确认启动前提示或调整当前实例设置。");
+            return;
+        }
+
+        AddActivity("Launch requested.", $"Would start {LaunchVersionSubtitle}.");
+    }
+
+    private void AcceptPromptConsent()
+    {
+        _shellActionService.AcceptLauncherEula();
+        UpdateStartupConsentRequest(request => request with { HasAcceptedEula = true });
+        AddActivity("已同意协议授权", "协议授权状态已写入共享配置。");
+    }
+
+    private void SetTelemetryPreference(string? rawValue)
+    {
+        if (!bool.TryParse(rawValue, out var enabled))
+        {
+            AddActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
+            return;
+        }
+
+        _shellActionService.SetTelemetryEnabled(enabled);
+        EnableTelemetry = enabled;
+        UpdateStartupConsentRequest(request => request with { IsTelemetryDefault = false });
+        RaisePropertyChanged(nameof(EnableTelemetry));
+        AddActivity("已更新遥测设置", enabled ? "已启用遥测数据收集。" : "已禁用遥测数据收集。");
+    }
+
+    private void ContinuePromptFlow(SpikePromptLaneKind lane)
+    {
+        if (lane == SpikePromptLaneKind.Launch)
+        {
+            _isLaunchBlockedByPrompt = false;
+            AddActivity("继续启动流程", "启动前提示已放行，启动按钮恢复可用。");
+            return;
+        }
+
+        AddActivity("继续当前流程", "提示要求的继续操作已完成。");
+    }
+
+    private void AbortLaunchFromPrompt()
+    {
+        _isLaunchBlockedByPrompt = true;
+        AddActivity("已中止启动流程", "启动提示要求返回处理，当前启动动作已被阻止。");
+    }
+
+    private void PersistPromptSetting(string? rawValue)
+    {
+        _shellActionService.DisableNonAsciiGamePathWarning();
+        AddActivity(
+            "已保存提示设置",
+            string.IsNullOrWhiteSpace(rawValue)
+                ? "已关闭非 ASCII 游戏路径提示。"
+                : $"已保存设置: {rawValue}");
+    }
+
+    private void AppendPromptLaunchArgument(string? argument)
+    {
+        if (string.IsNullOrWhiteSpace(argument))
+        {
+            AddActivity("追加启动参数失败", "提示中未提供可写入的参数。");
+            return;
+        }
+
+        var currentArguments = LaunchGameArguments.Trim();
+        var argumentTokens = currentArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (argumentTokens.Contains(argument, StringComparer.Ordinal))
+        {
+            AddActivity("启动参数已存在", argument);
+            return;
+        }
+
+        LaunchGameArguments = string.IsNullOrWhiteSpace(currentArguments)
+            ? argument
+            : $"{currentArguments} {argument}";
+        AddActivity("已追加启动参数", LaunchGameArguments);
+    }
+
+    private void OpenCrashLogFromPrompt()
+    {
+        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
+
+        var logPath = _shellActionService.MaterializeCrashLog(_crashPlan);
+        OpenExternalTarget(logPath, "已生成并打开崩溃日志副本。");
+    }
+
+    private void ExportCrashReportFromPrompt()
+    {
+        var exportResult = _shellActionService.ExportCrashReport(_crashPlan);
+        OpenExternalTarget(exportResult.ArchivePath, "已导出并打开崩溃报告压缩包。");
+        AddActivity("崩溃报告已导出", $"{exportResult.ArchivePath} • {exportResult.ArchivedFileCount} 个文件已归档。");
+    }
+
+    private void DownloadJavaRuntimeFromPrompt()
+    {
+        var installResult = _shellActionService.MaterializeJavaRuntime(_launchPlan);
+        RegisterMaterializedJavaRuntime(installResult);
+        _isLaunchBlockedByPrompt = false;
+        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
+        AddActivity(
+            "Java 运行时已准备",
+            $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+    }
+
+    private void RegisterMaterializedJavaRuntime(FrontendJavaRuntimeInstallResult installResult)
+    {
+        var key = $"downloaded-{Path.GetFileName(installResult.RuntimeDirectory)}";
+        var tags = new List<string> { "64 Bit", "Prompt Download" };
+        if (installResult.ReusedFileCount > 0)
+        {
+            tags.Add($"复用 {installResult.ReusedFileCount}");
+        }
+
+        var newEntry = CreateJavaRuntimeEntry(
+            key,
+            $"Java {installResult.VersionName}",
+            installResult.RuntimeDirectory,
+            tags,
+            isEnabled: true);
+
+        var existingIndex = -1;
+        for (var index = 0; index < JavaRuntimeEntries.Count; index++)
+        {
+            if (JavaRuntimeEntries[index].Key == key)
+            {
+                existingIndex = index;
+                break;
+            }
+        }
+
+        if (existingIndex >= 0)
+        {
+            JavaRuntimeEntries[existingIndex] = newEntry;
+        }
+        else
+        {
+            JavaRuntimeEntries.Add(newEntry);
+        }
+
+        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
+        SelectJavaRuntime(key);
+    }
+
+    private void OpenExternalTarget(string? target, string successMessage)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            AddActivity("外部打开失败", "缺少可打开的目标。");
+            return;
+        }
+
+        if (_shellActionService.TryOpenExternalTarget(target, out var error))
+        {
+            AddActivity("已打开外部目标", $"{successMessage} {target}");
+            return;
+        }
+
+        AddActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
+    }
+
+    private void UpdateStartupConsentRequest(Func<LauncherStartupConsentRequest, LauncherStartupConsentRequest> updater)
+    {
+        var updatedRequest = updater(_shellComposition.StartupConsentRequest);
+        var updatedConsent = LauncherStartupConsentService.Evaluate(updatedRequest);
+
+        _shellComposition = _shellComposition with
+        {
+            StartupConsentRequest = updatedRequest,
+            StartupConsentResult = updatedConsent
+        };
+        _startupPlan = _startupPlan with
+        {
+            Consent = updatedConsent
         };
     }
 

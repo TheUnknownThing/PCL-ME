@@ -21,8 +21,8 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private readonly FrontendShellActionService _shellActionService;
-    private readonly FrontendShellComposition _shellComposition;
-    private readonly StartupSpikePlan _startupPlan;
+    private FrontendShellComposition _shellComposition;
+    private StartupSpikePlan _startupPlan;
     private readonly LaunchSpikePlan _launchPlan;
     private readonly CrashSpikePlan _crashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
@@ -209,6 +209,7 @@ internal sealed partial class FrontendShellViewModel
     private double _maxRealTimeLogValue = 13;
     private bool _disableHardwareAcceleration;
     private bool _enableTelemetry = true;
+    private bool _isLaunchBlockedByPrompt;
     private bool _enableDoH = true;
     private int _selectedHttpProxyTypeIndex;
     private string _httpProxyAddress = string.Empty;
@@ -270,7 +271,7 @@ internal sealed partial class FrontendShellViewModel
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
-        _launchCommand = new ActionCommand(() => AddActivity("Launch requested.", $"Would start {LaunchVersionSubtitle}."));
+        _launchCommand = new ActionCommand(HandleLaunchRequested);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
