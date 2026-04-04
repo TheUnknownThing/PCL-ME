@@ -168,6 +168,28 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
+    public async Task<string?> ReadClipboardTextAsync()
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
+            || desktop.MainWindow?.Clipboard is null)
+        {
+            throw new InvalidOperationException("当前壳层未提供剪贴板。");
+        }
+
+        return await desktop.MainWindow.Clipboard.GetTextAsync();
+    }
+
+    public async Task SetClipboardTextAsync(string text)
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
+            || desktop.MainWindow?.Clipboard is null)
+        {
+            throw new InvalidOperationException("当前壳层未提供剪贴板。");
+        }
+
+        await desktop.MainWindow.Clipboard.SetTextAsync(text ?? string.Empty);
+    }
+
     public FrontendCrashExportResult ExportCrashReport(CrashSpikePlan crashPlan)
     {
         ArgumentNullException.ThrowIfNull(crashPlan);
