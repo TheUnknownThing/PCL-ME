@@ -110,14 +110,14 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendShellPlan BuildShellPlan()
     {
-        var request = _shellInputs.NavigationRequest with
+        var request = _shellComposition.NavigationRequest with
         {
             CurrentRoute = _currentRoute,
             BackstackDepth = _routeHistory.Count
         };
         return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
-            _shellInputs.StartupInputs.StartupWorkflowRequest,
-            _shellInputs.StartupInputs.StartupConsentRequest,
+            _shellComposition.StartupWorkflowRequest,
+            _shellComposition.StartupConsentRequest,
             request));
     }
 

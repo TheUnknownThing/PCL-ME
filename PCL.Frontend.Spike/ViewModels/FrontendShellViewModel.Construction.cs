@@ -20,7 +20,7 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
-    private readonly ShellSpikeInputs _shellInputs;
+    private readonly FrontendShellComposition _shellComposition;
     private readonly StartupSpikePlan _startupPlan;
     private readonly LaunchSpikePlan _launchPlan;
     private readonly CrashSpikePlan _crashPlan;
@@ -253,11 +253,13 @@ internal sealed partial class FrontendShellViewModel
 
     private FrontendShellViewModel(SpikeCommandOptions options)
     {
-        _shellInputs = SpikeInputResolver.ResolveShellInputs(options);
-        _startupPlan = SpikeSampleFactory.BuildStartupPlan(_shellInputs.StartupInputs);
+        _shellComposition = FrontendShellCompositionService.Compose(options);
+        _startupPlan = new StartupSpikePlan(
+            LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
+            _shellComposition.StartupConsentResult);
         _launchPlan = SpikeSampleFactory.BuildLaunchPlan(SpikeInputResolver.ResolveLaunchInputs(options), options.SaveBatchPath);
         _crashPlan = SpikeSampleFactory.BuildCrashPlan(SpikeInputResolver.ResolveCrashInputs(options));
-        _currentRoute = _shellInputs.NavigationRequest.CurrentRoute;
+        _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
@@ -355,8 +357,8 @@ internal sealed partial class FrontendShellViewModel
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
-        EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
-        InputLabel = string.IsNullOrWhiteSpace(options.InputRoot) ? "Using built-in frontend fixtures" : $"Input root: {options.InputRoot}";
+        EnvironmentLabel = _shellComposition.EnvironmentLabel;
+        InputLabel = _shellComposition.InputLabel;
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
         _allHelpTopics = CreateHelpTopics();
