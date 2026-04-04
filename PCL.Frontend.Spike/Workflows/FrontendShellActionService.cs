@@ -4,11 +4,13 @@ using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils.Processes;
 using PCL.Frontend.Spike.Desktop.Dialogs;
 using PCL.Frontend.Spike.Models;
 
@@ -324,6 +326,83 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
             summaryPath);
     }
 
+    public FrontendLaunchStartResult StartLaunchSession(
+        FrontendLaunchComposition launchComposition,
+        string? instanceDirectory)
+    {
+        ArgumentNullException.ThrowIfNull(launchComposition);
+
+        var launcherDataDirectory = RuntimePaths.LauncherAppDataDirectory;
+        var logDirectory = Path.Combine(launcherDataDirectory, "Log");
+        Directory.CreateDirectory(launcherDataDirectory);
+        Directory.CreateDirectory(logDirectory);
+
+        ApplyPrerunPlan(launchComposition.PrerunPlan);
+
+        var launchScriptPath = Path.Combine(launcherDataDirectory, "LatestLaunch.bat");
+        File.WriteAllText(
+            launchScriptPath,
+            launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
+            launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding ? new UTF8Encoding(false) : Encoding.Default);
+
+        var sessionSummaryPath = GetUniqueFilePath(Path.Combine(logDirectory, $"session-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
+        File.WriteAllLines(
+            sessionSummaryPath,
+            launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines,
+            new UTF8Encoding(false));
+
+        var rawOutputLogPath = Path.Combine(logDirectory, "RawOutput.log");
+        if (File.Exists(rawOutputLogPath))
+        {
+            File.Delete(rawOutputLogPath);
+        }
+
+        foreach (var shellPlan in launchComposition.SessionStartPlan.CustomCommandShellPlans)
+        {
+            var customProcess = SystemProcessManager.Current.Start(
+                MinecraftLaunchProcessExecutionService.BuildCustomCommandStartRequest(shellPlan))
+                ?? throw new InvalidOperationException(shellPlan.FailureLogMessage);
+            if (shellPlan.WaitForExit)
+            {
+                customProcess.WaitForExit();
+                if (customProcess.ExitCode != 0)
+                {
+                    throw new InvalidOperationException($"{shellPlan.FailureLogMessage} (ExitCode: {customProcess.ExitCode})");
+                }
+            }
+        }
+
+        var process = SystemProcessManager.Current.Start(
+            MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(
+                launchComposition.SessionStartPlan.ProcessShellPlan))
+            ?? throw new InvalidOperationException("游戏进程启动失败。");
+        MinecraftLaunchProcessExecutionService.TryApplyPriority(
+            process,
+            launchComposition.SessionStartPlan.ProcessShellPlan.PriorityKind);
+
+        ApplyPostLaunchShellPlan(launchComposition.PostLaunchShell);
+        IncrementLaunchCounts(instanceDirectory, launchComposition.PostLaunchShell);
+
+        return new FrontendLaunchStartResult(
+            process,
+            launchScriptPath,
+            sessionSummaryPath,
+            rawOutputLogPath);
+    }
+
+    public void ApplyWatcherStopShellPlan(FrontendLaunchComposition launchComposition)
+    {
+        ArgumentNullException.ThrowIfNull(launchComposition);
+
+        var watcherStopPlan = MinecraftLaunchShellService.GetWatcherStopShellPlan(
+            new MinecraftLaunchWatcherStopShellRequest(
+                ReadSharedValue("LaunchArgumentVisible", LauncherVisibility.DoNothing),
+                ReadLocalValue("UiMusicStop", false),
+                ReadLocalValue("UiMusicStart", false),
+                TriggerLauncherShutdown: false));
+        ApplyLauncherShellAction(watcherStopPlan.LauncherAction);
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         try
@@ -337,6 +416,103 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         {
             // Best-effort cleanup for temporary frontend artifacts.
         }
+    }
+
+    private void ApplyPrerunPlan(MinecraftLaunchPrerunWorkflowPlan prerunPlan)
+    {
+        if (prerunPlan.LauncherProfiles.ShouldEnsureFileExists &&
+            !string.IsNullOrWhiteSpace(prerunPlan.LauncherProfiles.Path))
+        {
+            var launcherProfilesPath = prerunPlan.LauncherProfiles.Path!;
+            Directory.CreateDirectory(Path.GetDirectoryName(launcherProfilesPath)!);
+
+            try
+            {
+                File.WriteAllText(
+                    launcherProfilesPath,
+                    prerunPlan.LauncherProfiles.Workflow.InitialAttempt?.UpdatedProfilesJson ?? "{}",
+                    new UTF8Encoding(false));
+            }
+            catch
+            {
+                File.WriteAllText(
+                    launcherProfilesPath,
+                    prerunPlan.LauncherProfiles.Workflow.RetryAttempt?.UpdatedProfilesJson ?? "{}",
+                    new UTF8Encoding(false));
+            }
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(prerunPlan.Options.TargetFilePath)!);
+        ApplyOptionsWrites(prerunPlan.Options.TargetFilePath, prerunPlan.Options.SyncPlan.Writes);
+    }
+
+    private void ApplyPostLaunchShellPlan(MinecraftGameShellPlan shellPlan)
+    {
+        ApplyLauncherShellAction(shellPlan.LauncherAction);
+    }
+
+    private void ApplyLauncherShellAction(MinecraftLaunchShellAction action)
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+            desktop.MainWindow is null)
+        {
+            return;
+        }
+
+        switch (action.Kind)
+        {
+            case MinecraftLaunchShellActionKind.ExitLauncher:
+                exitLauncher();
+                break;
+            case MinecraftLaunchShellActionKind.HideLauncher:
+                desktop.MainWindow.Hide();
+                break;
+            case MinecraftLaunchShellActionKind.MinimizeLauncher:
+                desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+                break;
+            case MinecraftLaunchShellActionKind.ShowLauncher:
+                desktop.MainWindow.Show();
+                desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Normal;
+                desktop.MainWindow.Activate();
+                break;
+        }
+    }
+
+    private void IncrementLaunchCounts(string? instanceDirectory, MinecraftGameShellPlan shellPlan)
+    {
+        var currentLaunchCount = LauncherFrontendRuntimeStateService.ReadProtectedInt(
+            RuntimePaths.SharedConfigDirectory,
+            RuntimePaths.SharedConfigPath,
+            "SystemLaunchCount");
+        PersistProtectedSharedValue(
+            "SystemLaunchCount",
+            (currentLaunchCount + shellPlan.GlobalLaunchCountIncrement).ToString());
+
+        if (!string.IsNullOrWhiteSpace(instanceDirectory))
+        {
+            var provider = OpenInstanceConfigProvider(instanceDirectory);
+            var currentInstanceLaunchCount = provider.Exists("VersionLaunchCount")
+                ? provider.Get<int>("VersionLaunchCount")
+                : 0;
+            provider.Set("VersionLaunchCount", currentInstanceLaunchCount + shellPlan.InstanceLaunchCountIncrement);
+            provider.Sync();
+        }
+    }
+
+    private T ReadLocalValue<T>(string key, T fallback)
+    {
+        var provider = new YamlFileProvider(RuntimePaths.LocalConfigPath);
+        return provider.Exists(key)
+            ? provider.Get<T>(key)
+            : fallback;
+    }
+
+    private T ReadSharedValue<T>(string key, T fallback)
+    {
+        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        return provider.Exists(key)
+            ? provider.Get<T>(key)
+            : fallback;
     }
 
     private static IStorageProvider? TryGetStorageProvider(out string? error)
@@ -482,6 +658,31 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         return fallbackPath;
     }
 
+    private static void ApplyOptionsWrites(string optionsPath, IReadOnlyList<MinecraftLaunchOptionWrite> writes)
+    {
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (File.Exists(optionsPath))
+        {
+            foreach (var line in File.ReadAllLines(optionsPath))
+            {
+                var separatorIndex = line.IndexOf(':');
+                if (separatorIndex <= 0)
+                {
+                    continue;
+                }
+
+                values[line[..separatorIndex]] = line[(separatorIndex + 1)..];
+            }
+        }
+
+        foreach (var write in writes)
+        {
+            values[write.Key] = write.Value;
+        }
+
+        File.WriteAllLines(optionsPath, values.Select(pair => $"{pair.Key}:{pair.Value}"), new UTF8Encoding(false));
+    }
+
     private static void WriteJavaRuntimeFile(string runtimeDirectory, string relativePath, string content)
     {
         var segments = relativePath
@@ -546,3 +747,9 @@ internal sealed record FrontendJavaRuntimeInstallResult(
     int DownloadedFileCount,
     int ReusedFileCount,
     string SummaryPath);
+
+internal sealed record FrontendLaunchStartResult(
+    Process Process,
+    string LaunchScriptPath,
+    string SessionSummaryPath,
+    string RawOutputLogPath);

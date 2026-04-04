@@ -77,6 +77,7 @@ internal static class FrontendShellCompositionService
     private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(FrontendRuntimePaths paths)
     {
         var hasGameLogs = File.Exists(Path.Combine(paths.ExecutableDirectory, "PCL", "LatestLaunch.bat")) ||
+                          File.Exists(Path.Combine(paths.LauncherAppDataDirectory, "LatestLaunch.bat")) ||
                           Directory.Exists(Path.Combine(paths.LauncherAppDataDirectory, "Log"));
 
         return new LauncherFrontendNavigationViewRequest(

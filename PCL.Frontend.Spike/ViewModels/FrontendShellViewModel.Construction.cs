@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
@@ -21,6 +22,7 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
+    private readonly SpikeCommandOptions _options;
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
@@ -134,6 +136,10 @@ internal sealed partial class FrontendShellViewModel
     private bool _isLaunchMigrationExpanded = true;
     private bool _isLaunchNewsExpanded = true;
     private bool _showLaunchCommunityHint = true;
+    private bool _isLaunchInProgress;
+    private bool _pendingLaunchAfterPrompt;
+    private bool _showLaunchLog;
+    private readonly StringBuilder _launchLogBuilder = new();
     private string _helpSearchQuery = string.Empty;
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
@@ -273,6 +279,7 @@ internal sealed partial class FrontendShellViewModel
         SpikeCommandOptions options,
         FrontendShellActionService shellActionService)
     {
+        _options = options;
         _shellActionService = shellActionService;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
@@ -290,7 +297,7 @@ internal sealed partial class FrontendShellViewModel
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
-        _launchCommand = new ActionCommand(HandleLaunchRequested);
+        _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
