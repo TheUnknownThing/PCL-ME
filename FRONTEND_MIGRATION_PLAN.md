@@ -44,15 +44,19 @@ Completed:
 - Phase 4C: download-page and version-saves runtime composition
 - Phase 5: frontend adapter cleanup and inspection separation
 
-Recent checkpoint:
+Recent checkpoints:
 
 - `311b88b3` `feat: wire save detail and download surfaces`
+- `e96247f6` `feat: runtime-back toolbox test surface`
+- `cc716c73` `feat: compose help and game link tool routes`
 
 What that means today:
 
 - the replacement shell is no longer mostly fixture-driven
 - major route families already exist visually
-- the remaining work is mostly real-behavior parity and cross-platform cutover
+- the tools route family now has dedicated runtime composition
+- Track 1 is not fully complete yet because several instance detail/action surfaces still contain placeholder-only actions or sample-only detail content
+- the remaining work is mostly route-parity cleanup, real-behavior parity, and cross-platform cutover
 
 ## Repo Boundaries
 
@@ -124,6 +128,26 @@ The work is now organized into six small tracks.
 ### Suggested slice size
 
 - one route family per commit
+
+### Status on 2026-04-04
+
+Completed in this track:
+
+- tools pages now use `FrontendToolsCompositionService`
+- toolbox/test defaults now come from launcher config instead of page-local demo state
+- help content now comes from bundled help data instead of hardcoded sample topics
+- game-link route now starts from config- and instance-backed baseline state instead of fake member/sample state
+
+Still required before Track 1 can be called done:
+
+- remaining instance overview/action commands that still only write activity-feed intent text
+- instance resource/server actions that still stop at placeholder activity output
+- download/detail subroutes that still rely on sample entries for primary content
+
+Recommended owner split:
+
+- if staffing Track 2 now, start with migrated tools actions because the route composition is in place
+- keep a separate owner on the remaining Track 1 instance/detail parity cleanup until placeholder-only route content is removed
 
 ## Track 2. Shell Action Parity
 
