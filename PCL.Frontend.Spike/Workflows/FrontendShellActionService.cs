@@ -75,6 +75,28 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         provider.Sync();
     }
 
+    public void PersistInstanceValue<T>(string instanceDirectory, string key, T value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
+
+        var provider = OpenInstanceConfigProvider(instanceDirectory);
+        provider.Set(key, value);
+        provider.Sync();
+    }
+
+    public void RemoveInstanceValues(string instanceDirectory, IEnumerable<string> keys)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
+
+        var provider = OpenInstanceConfigProvider(instanceDirectory);
+        foreach (var key in keys)
+        {
+            provider.Remove(key);
+        }
+
+        provider.Sync();
+    }
+
     public void DisableNonAsciiGamePathWarning()
     {
         PersistSharedValue("HintDisableGamePathCheckTip", true);
@@ -271,6 +293,40 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         }
 
         return desktop.MainWindow.StorageProvider;
+    }
+
+    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
+    {
+        var pclDirectory = Path.Combine(instanceDirectory, "PCL");
+        var configPath = Path.Combine(pclDirectory, "config.v1.yml");
+        if (!File.Exists(configPath))
+        {
+            var legacyPath = Path.Combine(pclDirectory, "Setup.ini");
+            if (File.Exists(legacyPath))
+            {
+                Directory.CreateDirectory(pclDirectory);
+                var provider = new YamlFileProvider(configPath);
+                foreach (var line in File.ReadLines(legacyPath))
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    var splitIndex = line.IndexOf(':');
+                    if (splitIndex <= 0)
+                    {
+                        continue;
+                    }
+
+                    provider.Set(line[..splitIndex], line[(splitIndex + 1)..]);
+                }
+
+                provider.Sync();
+            }
+        }
+
+        return new YamlFileProvider(configPath);
     }
 
     private static string GetUniqueDirectoryPath(string directoryPath)

@@ -23,6 +23,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
+    private FrontendInstanceComposition _instanceComposition;
     private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
@@ -251,6 +252,7 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedHomepagePresetIndex = 14;
     private string _selectedJavaRuntimeKey = "auto";
     private bool _suppressSetupPersistence;
+    private bool _suppressInstancePersistence;
 
     public static FrontendShellViewModel CreateBootstrap(
         SpikeCommandOptions options,
@@ -266,6 +268,7 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService = shellActionService;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
+        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
@@ -364,7 +367,7 @@ internal sealed partial class FrontendShellViewModel
             InstanceServerAuthName = "LittleSkin";
             AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
         });
-        _lockInstanceLoginCommand = CreateIntentCommand("锁定验证方式", "Would lock the instance login requirement.");
+        _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = CreateIntentCommand("新建档案", "Would create a new instance-specific login profile.");
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
 
@@ -375,17 +378,14 @@ internal sealed partial class FrontendShellViewModel
         _promptCatalog = BuildPromptCatalog(options.Scenario);
         _allHelpTopics = CreateHelpTopics();
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
+        PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
         InitializeToolsGameLinkSurface();
         InitializeToolsTestSurface();
         InitializeDownloadInstallSurface();
-        InitializeInstanceOverviewSurface();
-        InitializeInstanceExportSurface();
-        InitializeInstanceInstallSurface();
-        InitializeInstanceContentSurfaces();
-        InitializeInstanceSetupSurface();
         ApplySetupComposition(_setupComposition);
+        ApplyInstanceComposition(_instanceComposition);
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");

@@ -135,6 +135,10 @@ internal sealed partial class FrontendShellViewModel
         {
             ReloadSetupComposition();
         }
+        else if (route.Page == LauncherFrontendPageKey.InstanceSetup)
+        {
+            ReloadInstanceComposition();
+        }
 
         RefreshShell(activityMessage);
         if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
@@ -159,6 +163,10 @@ internal sealed partial class FrontendShellViewModel
             {
                 ReloadSetupComposition();
             }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
+            {
+                ReloadInstanceComposition();
+            }
 
             RefreshShell("Returned to the previous shell route.");
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
@@ -174,6 +182,10 @@ internal sealed partial class FrontendShellViewModel
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
             {
                 ReloadSetupComposition();
+            }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
+            {
+                ReloadInstanceComposition();
             }
 
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
