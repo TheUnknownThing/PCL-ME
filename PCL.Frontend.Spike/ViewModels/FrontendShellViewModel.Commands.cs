@@ -157,4 +157,12 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand OpenInstanceExportGuideCommand => _openInstanceExportGuideCommand;
 
     public ActionCommand StartInstanceExportCommand => _startInstanceExportCommand;
+
+    public ActionCommand SetLittleSkinCommand => _setLittleSkinCommand;
+
+    public ActionCommand LockInstanceLoginCommand => _lockInstanceLoginCommand;
+
+    public ActionCommand CreateInstanceProfileCommand => _createInstanceProfileCommand;
+
+    public ActionCommand OpenGlobalLaunchSettingsCommand => _openGlobalLaunchSettingsCommand;
 }

@@ -27,6 +27,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshDownloadResourceSurface();
         RefreshDownloadFavoriteSurface();
         RefreshInstanceOverviewSurface();
+        RefreshInstanceSetupSurface();
         RefreshInstanceExportSurface();
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
@@ -176,6 +177,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsToolsTestSurface));
         RaisePropertyChanged(nameof(IsInstanceOverviewSurface));
+        RaisePropertyChanged(nameof(IsInstanceSetupSurface));
         RaisePropertyChanged(nameof(IsInstanceExportSurface));
         RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));

@@ -105,6 +105,10 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _saveInstanceExportConfigCommand;
     private readonly ActionCommand _openInstanceExportGuideCommand;
     private readonly ActionCommand _startInstanceExportCommand;
+    private readonly ActionCommand _setLittleSkinCommand;
+    private readonly ActionCommand _lockInstanceLoginCommand;
+    private readonly ActionCommand _createInstanceProfileCommand;
+    private readonly ActionCommand _openGlobalLaunchSettingsCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -338,6 +342,17 @@ internal sealed partial class FrontendShellViewModel
         _saveInstanceExportConfigCommand = CreateIntentCommand("保存配置", "Would save the current instance export configuration to disk.");
         _openInstanceExportGuideCommand = CreateIntentCommand("整合包制作指南", "Would open the instance export guide.");
         _startInstanceExportCommand = new ActionCommand(StartInstanceExport);
+        _setLittleSkinCommand = new ActionCommand(() =>
+        {
+            SelectedInstanceServerLoginRequireIndex = 2;
+            InstanceServerAuthServer = "https://littleskin.cn/api/yggdrasil";
+            InstanceServerAuthRegister = "https://littleskin.cn/auth/register";
+            InstanceServerAuthName = "LittleSkin";
+            AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
+        });
+        _lockInstanceLoginCommand = CreateIntentCommand("锁定验证方式", "Would lock the instance login requirement.");
+        _createInstanceProfileCommand = CreateIntentCommand("新建档案", "Would create a new instance-specific login profile.");
+        _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = options.UseHostEnvironment ? "Host-backed shell inputs" : "Fixture-driven shell inputs";
@@ -355,6 +370,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeDownloadInstallSurface();
         InitializeInstanceOverviewSurface();
         InitializeInstanceExportSurface();
+        InitializeInstanceSetupSurface();
         InitializeGameLinkSurface();
         InitializeGameManageSurface();
         InitializeLauncherMiscSurface();

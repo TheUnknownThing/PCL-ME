@@ -1024,6 +1024,11 @@ public static class LauncherFrontendPageContentService
             return BuildInstanceOverviewContent(request, promptTotal);
         }
 
+        if (request.Navigation.CurrentRoute.Subpage == LauncherFrontendSubpageKey.VersionSetup)
+        {
+            return BuildInstanceSetupContent(request, promptTotal);
+        }
+
         if (request.Navigation.CurrentRoute.Subpage == LauncherFrontendSubpageKey.VersionExport)
         {
             return BuildInstanceExportContent(request, promptTotal);
@@ -1107,6 +1112,47 @@ public static class LauncherFrontendPageContentService
                     [
                         "前端负责复制原版表单层级和勾选流程，真实文件匹配和打包策略仍应留在后端或运行时边界。",
                         "配置导入导出也应继续作为显式壳层意图，而不是把旧页面代码直接搬回来。",
+                        $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildInstanceSetupContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal)
+    {
+        return new LauncherFrontendPageContent(
+            "实例设置页面",
+            "实例设置页已经切换到更接近原版的蓝色提示、启动选项、游戏内存、服务器、高级启动选项和底部跳转按钮结构，而不是继续停留在实例摘要卡上。",
+            [
+                new LauncherFrontendPageFact("当前分区", "设置"),
+                new LauncherFrontendPageFact("Page kind", request.Navigation.CurrentPage.Kind.ToString()),
+                new LauncherFrontendPageFact("Sidebar routes", request.Navigation.SidebarEntries.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "基础",
+                    "实例专属启动设置",
+                    [
+                        "顶部继续保留实例专属设置的蓝色提示条，以及启动选项和游戏内存两张主要设置卡。",
+                        "版本隔离、窗口标题、自定义信息、实例 Java 和内存分配继续按原版表单顺序排列。",
+                        "内存区也继续保留提示条、单选切换和底部内存展示条，而不是退回普通摘要文本。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "扩展",
+                    "服务器与高级启动选项",
+                    [
+                        "服务器卡继续保留限制验证方式、第三方验证信息、自动进入服务器和底部三枚动作按钮。",
+                        "高级启动选项卡也继续保留渲染器、JVM 参数、游戏参数、Classpath、启动前执行命令和复选框列表。",
+                        "底部“全局设置”按钮继续作为独立跳转动作存在，而不是隐藏到卡片内。"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "边界",
+                    "迁移规则",
+                    [
+                        "前端负责复制原版实例设置表单层级，真实实例覆盖、验证方式和启动策略仍应由后端或运行时边界负责。",
+                        "这些输入项最终应绑定到明确的实例级合同，而不是回到旧的 WPF 事件流。",
                         $"当前可见提示数：{promptTotal}"
                     ])
             ]);
