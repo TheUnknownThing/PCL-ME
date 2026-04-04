@@ -210,6 +210,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableHardwareAcceleration;
     private bool _enableTelemetry = true;
     private bool _isLaunchBlockedByPrompt;
+    private bool _isNonAsciiGamePathWarningDisabled;
     private bool _enableDoH = true;
     private int _selectedHttpProxyTypeIndex;
     private string _httpProxyAddress = string.Empty;

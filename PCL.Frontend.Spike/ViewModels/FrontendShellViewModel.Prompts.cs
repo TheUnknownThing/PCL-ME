@@ -12,43 +12,19 @@ internal sealed partial class FrontendShellViewModel
 {
     private Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> BuildPromptCatalog(string scenario)
     {
-        var startupPrompts = _startupPlan.StartupPlan.EnvironmentWarningPrompt is null
-            ? LauncherFrontendPromptService.BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
-            : LauncherFrontendPromptService.BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent);
-
-        var launchPrompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(
-            BuildLaunchPrecheckResult(scenario),
-            MinecraftLaunchShellService.GetSupportPrompt(10),
-            _launchPlan.JavaWorkflow.MissingJavaPrompt);
-        var crashPrompts = LauncherFrontendPromptService.BuildCrashPromptQueue(_crashPlan.OutputPrompt);
+        var startupPrompts = LauncherFrontendPromptService.BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent);
 
         return new Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>>
         {
             [SpikePromptLaneKind.Startup] = startupPrompts.Select(prompt => CreatePromptCard(SpikePromptLaneKind.Startup, prompt)).ToList(),
-            [SpikePromptLaneKind.Launch] = launchPrompts.Select(prompt => CreatePromptCard(SpikePromptLaneKind.Launch, prompt)).ToList(),
-            [SpikePromptLaneKind.Crash] = crashPrompts.Select(prompt => CreatePromptCard(SpikePromptLaneKind.Crash, prompt)).ToList()
+            [SpikePromptLaneKind.Launch] = [],
+            [SpikePromptLaneKind.Crash] = []
         };
     }
 
     private void InitializePromptLanes()
     {
-        PromptLanes.Clear();
-        PromptLanes.Add(new PromptLaneViewModel(
-            SpikePromptLaneKind.Startup,
-            "启动前",
-            "许可、环境与首次启动提示。",
-            new ActionCommand(() => SelectPromptLane(SpikePromptLaneKind.Startup))));
-        PromptLanes.Add(new PromptLaneViewModel(
-            SpikePromptLaneKind.Launch,
-            "启动中",
-            "启动前检查、赞助与 Java 下载提示。",
-            new ActionCommand(() => SelectPromptLane(SpikePromptLaneKind.Launch))));
-        PromptLanes.Add(new PromptLaneViewModel(
-            SpikePromptLaneKind.Crash,
-            "崩溃恢复",
-            "崩溃输出与导出恢复提示。",
-            new ActionCommand(() => SelectPromptLane(SpikePromptLaneKind.Crash))));
-
+        RebuildPromptLanes();
         SyncPromptLaneState();
         SelectPromptLane(_selectedPromptLane);
 
@@ -60,6 +36,22 @@ internal sealed partial class FrontendShellViewModel
 
     private void SelectPromptLane(SpikePromptLaneKind lane, bool updateActivity = true)
     {
+        if (_promptCatalog[lane].Count == 0)
+        {
+            var firstAvailableLane = GetFirstAvailablePromptLane();
+            if (firstAvailableLane is null)
+            {
+                _selectedPromptLane = lane;
+                ReplaceItems(ActivePrompts, []);
+                RaisePropertyChanged(nameof(HasActivePrompts));
+                RaisePropertyChanged(nameof(HasNoActivePrompts));
+                RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+                return;
+            }
+
+            lane = firstAvailableLane.Value;
+        }
+
         _selectedPromptLane = lane;
         SyncPromptLaneState();
         ReplaceItems(ActivePrompts, _promptCatalog[lane]);
@@ -89,6 +81,55 @@ internal sealed partial class FrontendShellViewModel
             lane.Count = _promptCatalog[lane.Kind].Count;
             lane.IsSelected = lane.Kind == _selectedPromptLane;
         }
+    }
+
+    private void RebuildPromptLanes()
+    {
+        var visibleLanes = new[]
+            {
+                SpikePromptLaneKind.Startup,
+                SpikePromptLaneKind.Launch,
+                SpikePromptLaneKind.Crash
+            }
+            .Where(kind => _promptCatalog[kind].Count > 0)
+            .Select(CreatePromptLane)
+            .ToArray();
+
+        ReplaceItems(PromptLanes, visibleLanes);
+    }
+
+    private PromptLaneViewModel CreatePromptLane(SpikePromptLaneKind lane)
+    {
+        var (title, summary) = GetPromptLaneMetadata(lane);
+        return new PromptLaneViewModel(
+            lane,
+            title,
+            summary,
+            new ActionCommand(() => SelectPromptLane(lane)));
+    }
+
+    private static (string Title, string Summary) GetPromptLaneMetadata(SpikePromptLaneKind lane)
+    {
+        return lane switch
+        {
+            SpikePromptLaneKind.Startup => ("启动前", "许可、环境与首次启动提示。"),
+            SpikePromptLaneKind.Launch => ("启动中", "启动前检查、赞助与 Java 下载提示。"),
+            SpikePromptLaneKind.Crash => ("崩溃恢复", "崩溃输出与导出恢复提示。"),
+            _ => throw new ArgumentOutOfRangeException(nameof(lane), lane, "Unknown prompt lane.")
+        };
+    }
+
+    private SpikePromptLaneKind? GetFirstAvailablePromptLane()
+    {
+        foreach (var lane in new[] { SpikePromptLaneKind.Startup, SpikePromptLaneKind.Launch, SpikePromptLaneKind.Crash })
+        {
+            if (_promptCatalog[lane].Count > 0)
+            {
+                return lane;
+            }
+        }
+
+        return null;
     }
 
     private PromptCardViewModel CreatePromptCard(SpikePromptLaneKind lane, LauncherFrontendPrompt prompt)
@@ -123,6 +164,7 @@ internal sealed partial class FrontendShellViewModel
         if (option.ClosesPrompt)
         {
             _promptCatalog[lane].RemoveAll(prompt => prompt.Id == promptId);
+            RebuildPromptLanes();
             SyncPromptLaneState();
             SelectPromptLane(_selectedPromptLane, updateActivity: false);
             if (!HasActivePrompts)
@@ -264,6 +306,14 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        EnsureLaunchPromptLane();
+        if (_promptCatalog[SpikePromptLaneKind.Launch].Count > 0)
+        {
+            RebuildPromptLanes();
+            SetPromptOverlayOpen(true);
+            SelectPromptLane(SpikePromptLaneKind.Launch, updateActivity: false);
+        }
+
         AddActivity("Launch requested.", $"Would start {LaunchVersionSubtitle}.");
     }
 
@@ -310,6 +360,7 @@ internal sealed partial class FrontendShellViewModel
     private void PersistPromptSetting(string? rawValue)
     {
         _shellActionService.DisableNonAsciiGamePathWarning();
+        _isNonAsciiGamePathWarningDisabled = true;
         AddActivity(
             "已保存提示设置",
             string.IsNullOrWhiteSpace(rawValue)
@@ -437,6 +488,34 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
+    private void EnsureLaunchPromptLane()
+    {
+        var launchPrompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(
+            BuildLaunchPrecheckResult(_launchPlan.Scenario, _isNonAsciiGamePathWarningDisabled),
+            MinecraftLaunchShellService.GetSupportPrompt(10),
+            _launchPlan.JavaWorkflow.MissingJavaPrompt);
+        _promptCatalog[SpikePromptLaneKind.Launch] = launchPrompts
+            .Select(prompt => CreatePromptCard(SpikePromptLaneKind.Launch, prompt))
+            .ToList();
+    }
+
+    private void EnsureCrashPromptLane()
+    {
+        var crashPrompts = LauncherFrontendPromptService.BuildCrashPromptQueue(_crashPlan.OutputPrompt);
+        _promptCatalog[SpikePromptLaneKind.Crash] = crashPrompts
+            .Select(prompt => CreatePromptCard(SpikePromptLaneKind.Crash, prompt))
+            .ToList();
+    }
+
+    private void TriggerCrashPromptTest()
+    {
+        EnsureCrashPromptLane();
+        RebuildPromptLanes();
+        SetPromptOverlayOpen(true);
+        SelectPromptLane(SpikePromptLaneKind.Crash, updateActivity: false);
+        AddActivity("崩溃测试已触发", "崩溃恢复提示现已加入提示队列。");
+    }
+
     private LauncherFrontendPageContent BuildPageContent(LauncherFrontendShellPlan shellPlan)
     {
         var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
@@ -486,27 +565,14 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendPromptLaneSummary[] BuildPromptLaneSummaries()
     {
-        return
-        [
-            new LauncherFrontendPromptLaneSummary(
-                "startup",
-                "启动前",
-                "许可、环境与首次启动提示。",
-                _promptCatalog[SpikePromptLaneKind.Startup].Count,
-                _selectedPromptLane == SpikePromptLaneKind.Startup),
-            new LauncherFrontendPromptLaneSummary(
-                "launch",
-                "启动中",
-                "启动前检查、赞助与 Java 下载提示。",
-                _promptCatalog[SpikePromptLaneKind.Launch].Count,
-                _selectedPromptLane == SpikePromptLaneKind.Launch),
-            new LauncherFrontendPromptLaneSummary(
-                "crash",
-                "崩溃恢复",
-                "崩溃输出与导出恢复提示。",
-                _promptCatalog[SpikePromptLaneKind.Crash].Count,
-                _selectedPromptLane == SpikePromptLaneKind.Crash)
-        ];
+        return PromptLanes
+            .Select(lane => new LauncherFrontendPromptLaneSummary(
+                lane.Kind.ToString().ToLowerInvariant(),
+                lane.Title,
+                lane.Summary,
+                lane.Count,
+                lane.IsSelected))
+            .ToArray();
     }
 
     private LauncherFrontendLaunchSurfaceData BuildLaunchSurfaceData()
