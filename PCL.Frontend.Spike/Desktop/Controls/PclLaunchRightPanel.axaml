@@ -114,7 +114,7 @@
                   <TextBlock
                       Foreground="White"
                       FontSize="24"
-                      Text="25w20a" />
+                      Text="{Binding LaunchNewsBadgeText}" />
                 </Border>
               </Grid>
             </Border>
@@ -124,7 +124,7 @@
                 Foreground="#1370F3"
                 FontSize="28"
                 FontWeight="Bold"
-                Text="新特性" />
+                Text="{Binding LaunchNewsSectionTitle}" />
 
             <ItemsControl ItemsSource="{Binding SurfaceSections}">
               <ItemsControl.ItemTemplate>

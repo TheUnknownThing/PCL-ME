@@ -621,6 +621,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));
         RaisePropertyChanged(nameof(LaunchWelcomeBanner));
         RaisePropertyChanged(nameof(LaunchNewsTitle));
+        RaisePropertyChanged(nameof(LaunchNewsBadgeText));
+        RaisePropertyChanged(nameof(LaunchNewsSectionTitle));
         RaisePropertyChanged(nameof(LaunchMigrationLines));
     }
 
