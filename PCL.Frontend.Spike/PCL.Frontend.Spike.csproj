@@ -14,6 +14,7 @@
     <PackageReference Include="Avalonia" Version="11.2.6" />
     <PackageReference Include="Avalonia.Desktop" Version="11.2.6" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.6" />
+    <PackageReference Include="fNbt" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
