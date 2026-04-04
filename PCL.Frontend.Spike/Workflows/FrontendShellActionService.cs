@@ -118,6 +118,11 @@ internal sealed class FrontendShellActionService(
         exitLauncher();
     }
 
+    public FrontendInstanceRepairResult RepairInstance(FrontendInstanceRepairRequest request)
+    {
+        return FrontendInstanceRepairService.Repair(request);
+    }
+
     public bool TryOpenExternalTarget(string target, out string? error)
     {
         return PlatformAdapter.TryOpenExternalTarget(target, out error);
