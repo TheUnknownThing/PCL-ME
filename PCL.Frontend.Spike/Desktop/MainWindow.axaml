@@ -29,12 +29,12 @@
     </Style>
   </Window.Styles>
 
-  <Grid Margin="10">
+  <Grid>
     <Border
         Background="#FBFBFD"
-        BorderBrush="#9FC0F9"
-        BorderThickness="1"
-        CornerRadius="6"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        CornerRadius="0"
         ClipToBounds="True">
       <Grid RowDefinitions="48,*">
         <Border
