@@ -28,12 +28,12 @@
         BorderThickness="0"
         Command="{Binding Command, ElementName=Root}"
         Padding="0">
-      <Border
+      <Path
           x:Name="IconPathElement"
-          Width="10"
-          Height="10"
-          Background="{DynamicResource ColorBrush8}"
-          CornerRadius="5" />
+          Width="16"
+          Height="16"
+          Fill="{DynamicResource ColorBrush8}"
+          Stretch="Uniform" />
     </Button>
   </Border>
 </UserControl>

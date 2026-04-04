@@ -82,12 +82,14 @@ internal sealed partial class PclIconButton : UserControl
 
     private void UpdateIcon(string data)
     {
-        ShapeIcon.IsVisible = !string.IsNullOrWhiteSpace(data);
+        var hasIcon = !string.IsNullOrWhiteSpace(data);
+        ShapeIcon.IsVisible = hasIcon;
+        ShapeIcon.Data = hasIcon ? Geometry.Parse(data) : null;
     }
 
     private void RefreshVisualState()
     {
-        ShapeIcon.Background = IdleFill;
+        ShapeIcon.Fill = IdleFill;
         PanBack.Background = _isHovered ? HoverBack : IdleBack;
         PanBack.Opacity = 1.0;
         PanBack.RenderTransform = _isPressed ? new ScaleTransform(0.8, 0.8) : new ScaleTransform(1, 1);
