@@ -192,8 +192,11 @@ internal sealed partial class FrontendShellViewModel
             CreateNoticeStrip("如果不安装 Fabric API，大多数 Mod 都会无法使用！", "#FFF1EA", "#F1C8B6", "#A94F2B"),
             CreateNoticeStrip("如果不安装 Legacy Fabric API，大多数 Mod 都会无法使用！", "#FFF1EA", "#F1C8B6", "#A94F2B"),
             CreateNoticeStrip("必须安装 OptiFabric 才能正常使用 OptiFine！", "#FFF1EA", "#F1C8B6", "#A94F2B"),
+            CreateNoticeStrip("安装结束后，请在 Mod 下载中搜索 OptiFabric Origins 并下载，否则 OptiFine 会无法使用！", "#FFF8DD", "#F2D777", "#6E5800"),
+            CreateNoticeStrip("安装结束后，请在 Mod 下载中搜索 LegacyOptiFabric 并下载，否则 OptiFine 会无法使用！", "#FFF8DD", "#F2D777", "#6E5800"),
             CreateNoticeStrip("OptiFine 与一部分 Mod 的兼容性不佳，请谨慎安装。", "#FFF8DD", "#F2D777", "#6E5800"),
-            CreateNoticeStrip("如果不安装 QFAPI / QSL，大多数 Mod 都会无法使用！", "#FFF1EA", "#F1C8B6", "#A94F2B")
+            CreateNoticeStrip("如果不安装 QFAPI / QSL，大多数 Mod 都会无法使用！如果 QFAPI / QSL 无可用版本，你可以选择安装 Fabric API。", "#FFF1EA", "#F1C8B6", "#A94F2B"),
+            CreateNoticeStrip("你选择了在 Quilt 中安装 Fabric API，而当前存在适配的 QFAPI / QSL 可供安装。请优先考虑安装 QFAPI / QSL。", "#FFF8DD", "#F2D777", "#6E5800")
         ]);
 
         ReplaceItems(DownloadInstallOptions,
@@ -209,7 +212,8 @@ internal sealed partial class FrontendShellViewModel
             CreateDownloadInstallOption("QFAPI / QSL", "11.0.0-beta", LoadLauncherBitmap("Images", "Blocks", "Quilt.png")),
             CreateDownloadInstallOption("LabyMod", "4.1.23", LoadLauncherBitmap("Images", "Blocks", "LabyMod.png")),
             CreateDownloadInstallOption("OptiFine", "HD_U_I6", LoadLauncherBitmap("Images", "Blocks", "GrassPath.png")),
-            CreateDownloadInstallOption("OptiFabric", "1.14.3", LoadLauncherBitmap("Images", "Blocks", "Fabric.png"))
+            CreateDownloadInstallOption("OptiFabric", "1.14.3", LoadLauncherBitmap("Images", "Blocks", "OptiFabric.png")),
+            CreateDownloadInstallOption("LiteLoader", "1.12.2-SNAPSHOT", LoadLauncherBitmap("Images", "Blocks", "LiteLoader.png"))
         ]);
     }
 
