@@ -7,8 +7,8 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private static readonly string[] ManagedPrimaryInstallTitles = ["Fabric", "Legacy Fabric", "Quilt", "LabyMod"];
-    private static readonly string[] ManagedAddonInstallTitles = ["Fabric API", "Legacy Fabric API", "QFAPI / QSL"];
+    private static readonly string[] ManagedPrimaryInstallTitles = ["Forge", "Cleanroom", "NeoForge", "Fabric", "Legacy Fabric", "Quilt", "LabyMod"];
+    private static readonly string[] ManagedAddonInstallTitles = ["LiteLoader", "OptiFine", "Fabric API", "Legacy Fabric API", "QFAPI / QSL", "OptiFabric"];
 
     private string _downloadInstallMinecraftVersion = "Minecraft";
     private Bitmap? _downloadInstallMinecraftIcon;
@@ -289,19 +289,31 @@ internal sealed partial class FrontendShellViewModel
             var minecraftChoice = ResolveEffectiveMinecraftChoice(isExistingInstance);
             var minecraftVersion = minecraftChoice.Version;
             var primaryChoice = ResolveEffectivePrimaryChoice(isExistingInstance, minecraftVersion);
+            var liteLoaderChoice = ResolveEffectiveAddonChoice(isExistingInstance, "LiteLoader", minecraftVersion);
+            var optiFineChoice = ResolveEffectiveAddonChoice(isExistingInstance, "OptiFine", minecraftVersion);
             var fabricApiChoice = ResolveEffectiveAddonChoice(isExistingInstance, "Fabric API", minecraftVersion);
             var legacyFabricApiChoice = ResolveEffectiveAddonChoice(isExistingInstance, "Legacy Fabric API", minecraftVersion);
             var qslChoice = ResolveEffectiveAddonChoice(isExistingInstance, "QFAPI / QSL", minecraftVersion);
-            var useIsolation = primaryChoice is not null || fabricApiChoice is not null || legacyFabricApiChoice is not null || qslChoice is not null;
+            var optiFabricChoice = ResolveEffectiveAddonChoice(isExistingInstance, "OptiFabric", minecraftVersion);
+            var useIsolation = primaryChoice is not null
+                               || liteLoaderChoice is not null
+                               || optiFineChoice is not null
+                               || fabricApiChoice is not null
+                               || legacyFabricApiChoice is not null
+                               || qslChoice is not null
+                               || optiFabricChoice is not null;
 
             var result = FrontendInstallWorkflowService.Apply(new FrontendInstallApplyRequest(
                 _instanceComposition.Selection.LauncherDirectory,
                 targetInstanceName,
                 minecraftChoice,
                 primaryChoice,
+                liteLoaderChoice,
+                optiFineChoice,
                 fabricApiChoice,
                 legacyFabricApiChoice,
                 qslChoice,
+                optiFabricChoice,
                 UseInstanceIsolation: useIsolation,
                 RunRepair: true,
                 ForceCoreRefresh: !isExistingInstance || !string.Equals(
