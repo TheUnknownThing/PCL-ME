@@ -302,6 +302,13 @@ Owner:
 
 - Engineer D
 
+Status:
+
+- Completed on April 6, 2026.
+- Reduced the route-host files for instance setup, overview, resource, export, install, and version-save datapack panes to thin shell hosts backed by focused section controls under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/Sections/`.
+- Extracted a shared `ResourceEntryCardView` for the duplicated resource/datapack entry rows, while keeping route-specific headers, empty states, and option groups in focused section controls.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the decomposition.
+
 Goal:
 
 - Split the largest already-migrated dedicated panes into smaller section controls where this reduces live tree size or binding scope.
