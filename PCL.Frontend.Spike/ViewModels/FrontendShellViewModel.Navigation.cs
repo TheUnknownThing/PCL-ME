@@ -24,21 +24,13 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(SidebarEntries, shellPlan.Navigation.SidebarEntries.Select(entry => CreateNavigationEntry(entry, NavigationVisualStyle.Sidebar)));
         ReplaceItems(SidebarSections, BuildSidebarSections(shellPlan.Navigation));
         ReplaceItems(UtilityEntries, shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(CreateUtilityEntry));
-        RefreshDownloadCatalogSurface();
-        RefreshDownloadResourceSurface();
-        RefreshDownloadFavoriteSurface();
-        RefreshVersionSaveSurfaces();
-        RefreshInstanceOverviewSurface();
-        RefreshInstanceSetupSurface();
-        RefreshInstanceExportSurface();
-        RefreshInstanceInstallSurface();
-        RefreshInstanceContentSurfaces();
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
         RaiseCollectionStateProperties();
 
         SelectPromptLane(_selectedPromptLane, updateActivity: false);
         RefreshStandardShellPanes();
+        RefreshActiveRightPaneSurface();
         AddActivity(activityMessage, $"{shellPlan.Navigation.CurrentPage.Title} • {shellPlan.Navigation.CurrentPage.Route.Page}/{shellPlan.Navigation.CurrentPage.Route.Subpage}");
         RaiseShellStateProperties();
     }
@@ -267,6 +259,45 @@ internal sealed partial class FrontendShellViewModel
         NavigationTransitionRequested?.Invoke(
             this,
             new ShellNavigationTransitionEventArgs(direction, IsLaunchRoute, animateLeftPane, animateRightPane));
+    }
+
+    private void RefreshActiveRightPaneSurface()
+    {
+        switch (CurrentStandardRightPaneDescriptor?.Kind)
+        {
+            case StandardShellRightPaneKind.DownloadCatalog:
+                RefreshDownloadCatalogSurface();
+                break;
+            case StandardShellRightPaneKind.DownloadResource:
+                RefreshDownloadResourceSurface();
+                break;
+            case StandardShellRightPaneKind.DownloadFavorites:
+                RefreshDownloadFavoriteSurface();
+                break;
+            case StandardShellRightPaneKind.VersionSaveInfo:
+            case StandardShellRightPaneKind.VersionSaveBackup:
+            case StandardShellRightPaneKind.VersionSaveDatapack:
+                RefreshVersionSaveSurfaces();
+                break;
+            case StandardShellRightPaneKind.InstanceOverview:
+                RefreshInstanceOverviewSurface();
+                break;
+            case StandardShellRightPaneKind.InstanceSetup:
+                RefreshInstanceSetupSurface();
+                break;
+            case StandardShellRightPaneKind.InstanceExport:
+                RefreshInstanceExportSurface();
+                break;
+            case StandardShellRightPaneKind.InstanceInstall:
+                RefreshInstanceInstallSurface();
+                break;
+            case StandardShellRightPaneKind.InstanceWorld:
+            case StandardShellRightPaneKind.InstanceScreenshot:
+            case StandardShellRightPaneKind.InstanceServer:
+            case StandardShellRightPaneKind.InstanceResource:
+                RefreshInstanceContentSurfaces();
+                break;
+        }
     }
 
     private void RaiseShellStateProperties()
