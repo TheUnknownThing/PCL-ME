@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Status as of 2026-04-04:
+Status as of 2026-04-05:
 
 - the portable backend is real
 - the Avalonia replacement shell is real
@@ -17,6 +17,7 @@ Status as of 2026-04-04:
 - toolbox test page continues moving from intent-only buttons to real shell/file outputs, and memory optimization now exports explicit diagnostics instead of a pure intent log
 - tools/game-link actions now use real prompt, clipboard, config, FAQ, and exported session/diagnostic behavior instead of synthetic activity-only output
 - download modpack install now copies a local pack into the launcher `versions` folder from the replacement shell
+- packaged frontend builds now exist for `osx-arm64`, `linux-x64`, and `win-x64`, and the packaged macOS app now starts the real Avalonia shell path instead of falling back to the CLI default
 - the repo is past the “can this work outside WPF?” stage
 - the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
 
@@ -372,7 +373,7 @@ Verified on 2026-04-05:
 - the Forge-family manifest cleanup now strips missing local-only artifacts, OptiFabric choices now resolve from the live OptiFabric file feed instead of the dead Modrinth slug, and instance repair now reuses valid installer-local libraries instead of force-redownloading the wrong remote artifact
 - the temporary unmanaged-installer verification instances were removed after inspection so the real launcher folder was not left with extra test clutter
 - a forced Cleanroom `RunRepair + ForceCoreRefresh` pass progressed past the earlier local-library failure and into the broader core refresh workload; that long-running asset-heavy pass was not waited through to final completion during this checkpoint
-- the copied install family no longer has a known WPF-owned Track 5 gap; next work should move to Track 6 packaging and broader platform validation unless a new fallback surface is discovered
+- the copied install family no longer has a known WPF-owned Track 5 gap, and Track 6 packaging is now in place; next work should focus on broader packaged-platform validation unless a new fallback surface is discovered
 
 Done when:
 
@@ -392,6 +393,22 @@ Done when:
 
 - Windows, macOS, and Linux builds are produced
 - basic launcher workflows pass on all three
+
+Status on 2026-04-05:
+
+- frontend packaging landed in `c21e1e7d` `feat: package frontend launcher builds`
+- `PCL.Frontend.Spike/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` frontend builds under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`
+- the packaged frontend now carries `LauncherAssets/metadata.json`, the copied `Images` tree, and the copied `Resources/Help.zip` plus `Resources/Custom.xml`, so packaged startup no longer depends on source-tree-relative `Plain Craft Launcher 2/...` paths
+- the macOS package now emits `Plain Craft Launcher Community Edition.app` with a `Contents/MacOS/PCLLauncher` stub that starts the replacement shell through `app --host-env true`
+- the Linux package now emits `launch-pcl-ce.sh` plus `Plain Craft Launcher Community Edition.desktop`, and the Windows package now emits `Launch Plain Craft Launcher Community Edition.vbs`
+
+Verified on 2026-04-05:
+
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after the Track 6 packaging patch
+- `./PCL.Frontend.Spike/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts
+- launching `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Spike app --host-env true`
+- that packaged macOS startup smoke test produced no error output after the copied launcher assets were included in publish output
+- Windows and Linux package entry-point files are present in the produced artifacts, but runtime validation on real Windows and Linux hosts is still pending
 
 Manual verification:
 
