@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using PCL.Core.App.Essentials;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -175,137 +176,63 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool HasUtilityEntries => UtilityEntries.Count > 0;
 
-    public bool IsSetupAboutSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupAbout;
+    public bool IsSetupAboutSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupAbout);
 
-    public bool IsSetupLaunchSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLaunch;
+    public bool IsSetupLaunchSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLaunch);
 
-    public bool IsSetupFeedbackSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupFeedback;
+    public bool IsSetupFeedbackSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupFeedback);
 
-    public bool IsSetupLogSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLog;
+    public bool IsSetupLogSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLog);
 
-    public bool IsSetupUpdateSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate;
+    public bool IsSetupUpdateSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate);
 
-    public bool IsSetupGameLinkSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupGameLink;
+    public bool IsSetupGameLinkSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameLink);
 
-    public bool IsSetupGameManageSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupGameManage;
+    public bool IsSetupGameManageSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage);
 
-    public bool IsSetupLauncherMiscSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLauncherMisc;
+    public bool IsSetupLauncherMiscSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLauncherMisc);
 
-    public bool IsSetupJavaSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupJava;
+    public bool IsSetupJavaSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupJava);
 
-    public bool IsSetupUiSurface => _currentRoute.Page == LauncherFrontendPageKey.Setup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUI;
+    public bool IsSetupUiSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUi);
 
-    public bool IsDownloadInstallSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadInstall;
+    public bool IsDownloadInstallSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall);
 
-    public bool IsDownloadCatalogSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
-        && _currentRoute.Subpage is LauncherFrontendSubpageKey.DownloadClient
-            or LauncherFrontendSubpageKey.DownloadOptiFine
-            or LauncherFrontendSubpageKey.DownloadForge
-            or LauncherFrontendSubpageKey.DownloadNeoForge
-            or LauncherFrontendSubpageKey.DownloadCleanroom
-            or LauncherFrontendSubpageKey.DownloadFabric
-            or LauncherFrontendSubpageKey.DownloadQuilt
-            or LauncherFrontendSubpageKey.DownloadLiteLoader
-            or LauncherFrontendSubpageKey.DownloadLabyMod
-            or LauncherFrontendSubpageKey.DownloadLegacyFabric;
+    public bool IsDownloadCatalogSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadCatalog);
 
-    public bool IsDownloadResourceSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
-        && _currentRoute.Subpage is LauncherFrontendSubpageKey.DownloadMod
-            or LauncherFrontendSubpageKey.DownloadPack
-            or LauncherFrontendSubpageKey.DownloadDataPack
-            or LauncherFrontendSubpageKey.DownloadResourcePack
-            or LauncherFrontendSubpageKey.DownloadShader
-            or LauncherFrontendSubpageKey.DownloadWorld;
+    public bool IsDownloadResourceSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource);
 
-    public bool IsDownloadFavoritesSurface => _currentRoute.Page == LauncherFrontendPageKey.Download
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadCompFavorites;
+    public bool IsDownloadFavoritesSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites);
 
-    public bool IsToolsGameLinkSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsGameLink;
+    public bool IsToolsGameLinkSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsGameLink);
 
-    public bool IsToolsHelpSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsLauncherHelp;
+    public bool IsToolsHelpSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsHelp);
 
-    public bool IsToolsTestSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsTest;
+    public bool IsToolsTestSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest);
 
-    public bool IsVersionSaveInfoSurface => _currentRoute.Page == LauncherFrontendPageKey.VersionSaves
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSavesInfo;
+    public bool IsVersionSaveInfoSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.VersionSaveInfo);
 
-    public bool IsVersionSaveBackupSurface => _currentRoute.Page == LauncherFrontendPageKey.VersionSaves
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSavesBackup;
+    public bool IsVersionSaveBackupSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.VersionSaveBackup);
 
-    public bool IsVersionSaveDatapackSurface => _currentRoute.Page == LauncherFrontendPageKey.VersionSaves
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSavesDatapack;
+    public bool IsVersionSaveDatapackSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.VersionSaveDatapack);
 
-    public bool IsInstanceOverviewSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionOverall;
+    public bool IsInstanceOverviewSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceOverview);
 
-    public bool IsInstanceSetupSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSetup;
+    public bool IsInstanceSetupSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceSetup);
 
-    public bool IsInstanceExportSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionExport;
+    public bool IsInstanceExportSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceExport);
 
-    public bool IsInstanceInstallSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionInstall;
+    public bool IsInstanceInstallSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceInstall);
 
-    public bool IsInstanceWorldSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionWorld;
+    public bool IsInstanceWorldSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceWorld);
 
-    public bool IsInstanceScreenshotSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionScreenshot;
+    public bool IsInstanceScreenshotSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceScreenshot);
 
-    public bool IsInstanceServerSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionServer;
+    public bool IsInstanceServerSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceServer);
 
-    public bool IsInstanceResourceSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-        && _currentRoute.Subpage is LauncherFrontendSubpageKey.VersionMod
-            or LauncherFrontendSubpageKey.VersionModDisabled
-            or LauncherFrontendSubpageKey.VersionResourcePack
-            or LauncherFrontendSubpageKey.VersionShader
-            or LauncherFrontendSubpageKey.VersionSchematic;
+    public bool IsInstanceResourceSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource);
 
-    public bool IsGenericShellSurface => IsStandardShellRoute
-        && !IsSetupLaunchSurface
-        && !IsSetupAboutSurface
-        && !IsSetupFeedbackSurface
-        && !IsSetupLogSurface
-        && !IsSetupUpdateSurface
-        && !IsSetupGameLinkSurface
-        && !IsSetupGameManageSurface
-        && !IsSetupLauncherMiscSurface
-        && !IsSetupJavaSurface
-        && !IsSetupUiSurface
-        && !IsDownloadInstallSurface
-        && !IsDownloadCatalogSurface
-        && !IsDownloadResourceSurface
-        && !IsDownloadFavoritesSurface
-        && !IsToolsGameLinkSurface
-        && !IsToolsHelpSurface
-        && !IsToolsTestSurface
-        && !IsVersionSaveInfoSurface
-        && !IsVersionSaveBackupSurface
-        && !IsVersionSaveDatapackSurface
-        && !IsInstanceOverviewSurface
-        && !IsInstanceSetupSurface
-        && !IsInstanceExportSurface
-        && !IsInstanceInstallSurface
-        && !IsInstanceWorldSurface
-        && !IsInstanceScreenshotSurface
-        && !IsInstanceServerSurface
-        && !IsInstanceResourceSurface;
+    public bool IsGenericShellSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.Generic);
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 
@@ -333,5 +260,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
                 RaisePropertyChanged(nameof(ShowInnerNavigation));
             }
         }
+    }
+
+    private bool IsCurrentStandardRightPane(StandardShellRightPaneKind kind)
+    {
+        return CurrentStandardRightPaneDescriptor?.Kind == kind;
     }
 }

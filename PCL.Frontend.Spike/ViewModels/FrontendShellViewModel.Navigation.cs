@@ -1,5 +1,6 @@
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -37,6 +38,7 @@ internal sealed partial class FrontendShellViewModel
         RaiseCollectionStateProperties();
 
         SelectPromptLane(_selectedPromptLane, updateActivity: false);
+        RefreshStandardShellPanes();
         AddActivity(activityMessage, $"{shellPlan.Navigation.CurrentPage.Title} • {shellPlan.Navigation.CurrentPage.Route.Page}/{shellPlan.Navigation.CurrentPage.Route.Subpage}");
         RaiseShellStateProperties();
     }
