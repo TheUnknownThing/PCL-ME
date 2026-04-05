@@ -43,11 +43,6 @@ internal sealed class StandardShellEmptyPaneViewModel(
     StandardShellLeftPaneDescriptor descriptor)
     : ShellLeftPaneViewModel(shell, descriptor);
 
-internal sealed class LegacyStandardShellRightPaneViewModel(
-    FrontendShellViewModel shell,
-    StandardShellRightPaneDescriptor descriptor)
-    : ShellRightPaneViewModel(shell, descriptor);
-
 internal sealed class DownloadInstallShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)

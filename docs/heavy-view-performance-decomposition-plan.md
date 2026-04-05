@@ -158,6 +158,12 @@ Owner:
 
 - Engineer A
 
+Status:
+
+- Completed on April 6, 2026.
+- Standard-shell generic and fallback routes now resolve through `GenericStandardShellRightPaneViewModel`.
+- `LegacyStandardShellRightPaneView` and `PclShellContentPanel` are no longer part of the active standard-shell path.
+
 Goal:
 
 - Remove `PclShellContentPanel` from the active standard-shell path completely.

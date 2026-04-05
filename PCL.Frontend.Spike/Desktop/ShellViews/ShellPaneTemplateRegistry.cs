@@ -15,7 +15,6 @@ internal static class ShellPaneTemplateRegistry
         application.DataTemplates.Add(CreateTemplate<StandardShellSummaryPaneViewModel, StandardShellSummaryPaneView>());
         application.DataTemplates.Add(CreateTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>());
         application.DataTemplates.Add(CreateTemplate<GenericStandardShellRightPaneViewModel, GenericStandardShellRightPaneView>());
-        application.DataTemplates.Add(CreateTemplate<LegacyStandardShellRightPaneViewModel, LegacyStandardShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<DownloadInstallShellRightPaneViewModel, DownloadInstallShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<DownloadCatalogShellRightPaneViewModel, DownloadCatalogShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<DownloadResourceShellRightPaneViewModel, DownloadResourceShellRightPaneView>());
