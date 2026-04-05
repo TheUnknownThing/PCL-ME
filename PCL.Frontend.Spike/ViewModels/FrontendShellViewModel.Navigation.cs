@@ -132,7 +132,7 @@ internal sealed partial class FrontendShellViewModel
         _currentRoute = route;
         if (route.Page == LauncherFrontendPageKey.Setup)
         {
-            ReloadSetupComposition();
+            ReloadSetupComposition(initializeAllSurfaces: false);
         }
         else if (route.Page == LauncherFrontendPageKey.Tools)
         {
@@ -140,7 +140,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else if (route.Page == LauncherFrontendPageKey.InstanceSetup)
         {
-            ReloadInstanceComposition();
+            ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
         }
         else if (route.Page == LauncherFrontendPageKey.VersionSaves)
         {
@@ -178,7 +178,7 @@ internal sealed partial class FrontendShellViewModel
             _currentRoute = previousRoute;
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
             {
-                ReloadSetupComposition();
+                ReloadSetupComposition(initializeAllSurfaces: false);
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.Tools)
             {
@@ -186,7 +186,7 @@ internal sealed partial class FrontendShellViewModel
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
             {
-                ReloadInstanceComposition();
+                ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.VersionSaves)
             {
@@ -216,7 +216,7 @@ internal sealed partial class FrontendShellViewModel
             _currentRoute = backRoute;
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
             {
-                ReloadSetupComposition();
+                ReloadSetupComposition(initializeAllSurfaces: false);
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.Tools)
             {
@@ -224,7 +224,7 @@ internal sealed partial class FrontendShellViewModel
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
             {
-                ReloadInstanceComposition();
+                ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
             }
             else if (_currentRoute.Page == LauncherFrontendPageKey.VersionSaves)
             {

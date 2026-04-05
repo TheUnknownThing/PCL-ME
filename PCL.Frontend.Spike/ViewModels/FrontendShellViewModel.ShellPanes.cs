@@ -56,12 +56,22 @@ internal sealed partial class FrontendShellViewModel
 
         var leftPaneDescriptor = ResolveStandardLeftPaneDescriptor();
         var rightPaneDescriptor = ResolveStandardRightPaneDescriptor();
+        var currentLeftKey = CurrentStandardLeftPaneDescriptor?.Key;
+        var currentRightKey = CurrentStandardRightPaneDescriptor?.Key;
 
-        CurrentStandardLeftPaneDescriptor = leftPaneDescriptor;
-        CurrentStandardRightPaneDescriptor = rightPaneDescriptor;
+        if (!string.Equals(currentLeftKey, leftPaneDescriptor.Key, StringComparison.Ordinal))
+        {
+            CurrentStandardLeftPaneDescriptor = leftPaneDescriptor;
+            CurrentStandardLeftPane = ResolveStandardLeftPane(leftPaneDescriptor);
+        }
+
+        if (!string.Equals(currentRightKey, rightPaneDescriptor.Key, StringComparison.Ordinal))
+        {
+            CurrentStandardRightPaneDescriptor = rightPaneDescriptor;
+            CurrentStandardRightPane = ResolveStandardRightPane(rightPaneDescriptor);
+        }
+
         CurrentStandardPaneResolution = new StandardShellPaneResolution(_currentRoute, leftPaneDescriptor, rightPaneDescriptor);
-        CurrentStandardLeftPane = ResolveStandardLeftPane(leftPaneDescriptor);
-        CurrentStandardRightPane = ResolveStandardRightPane(rightPaneDescriptor);
     }
 
     private StandardShellLeftPaneDescriptor ResolveStandardLeftPaneDescriptor()
