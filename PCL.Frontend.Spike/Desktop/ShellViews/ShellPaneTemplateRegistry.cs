@@ -1,0 +1,25 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using PCL.Frontend.Spike.Desktop.ShellViews.Left;
+using PCL.Frontend.Spike.Desktop.ShellViews.Right;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
+
+namespace PCL.Frontend.Spike.Desktop.ShellViews;
+
+internal static class ShellPaneTemplateRegistry
+{
+    public static void Register(Application application)
+    {
+        application.DataTemplates.Add(CreateTemplate<StandardShellSidebarPaneViewModel, StandardShellSidebarPaneView>());
+        application.DataTemplates.Add(CreateTemplate<LegacyStandardShellRightPaneViewModel, LegacyStandardShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<ToolsHelpShellRightPaneViewModel, ToolsHelpShellRightPaneView>());
+    }
+
+    private static FuncDataTemplate<TViewModel> CreateTemplate<TViewModel, TView>()
+        where TViewModel : class
+        where TView : Control, new()
+    {
+        return new FuncDataTemplate<TViewModel>((_, _) => new TView());
+    }
+}
