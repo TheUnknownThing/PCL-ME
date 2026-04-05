@@ -100,6 +100,11 @@ internal sealed partial class FrontendShellViewModel
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)
     {
+        if (descriptor.Kind == StandardShellRightPaneKind.Generic)
+        {
+            return new GenericStandardShellRightPaneViewModel(this, descriptor);
+        }
+
         if (descriptor.Kind == StandardShellRightPaneKind.DownloadInstall)
         {
             return new DownloadInstallShellRightPaneViewModel(this, descriptor);
@@ -240,7 +245,7 @@ internal sealed partial class FrontendShellViewModel
             return new ToolsTestShellRightPaneViewModel(this, descriptor);
         }
 
-        return new LegacyStandardShellRightPaneViewModel(this, descriptor);
+        return new GenericStandardShellRightPaneViewModel(this, descriptor);
     }
 
     private StandardShellRightPaneDescriptor ResolveStandardRightPaneDescriptor()
@@ -252,7 +257,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPageKey.Tools => ResolveToolsRightPaneDescriptor(),
             LauncherFrontendPageKey.VersionSaves => ResolveVersionSavesRightPaneDescriptor(),
             LauncherFrontendPageKey.InstanceSetup => ResolveInstanceRightPaneDescriptor(),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "generic-shell")
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "generic-shell", usesCompatibilityView: false)
         };
     }
 
@@ -270,7 +275,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.SetupLauncherMisc => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLauncherMisc, StandardShellRightPaneGroup.SetupFamily, "setup-launcher-misc", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupJava => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupJava, StandardShellRightPaneGroup.SetupFamily, "setup-java", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupUI => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupUi, StandardShellRightPaneGroup.SetupFamily, "setup-ui", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "setup-generic")
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "setup-generic", usesCompatibilityView: false)
         };
     }
 
@@ -296,7 +301,7 @@ internal sealed partial class FrontendShellViewModel
                 or LauncherFrontendSubpageKey.DownloadShader
                 or LauncherFrontendSubpageKey.DownloadWorld => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadResource, StandardShellRightPaneGroup.DownloadResource, "download-resource", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.DownloadCompFavorites => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadFavorites, StandardShellRightPaneGroup.DownloadFavorites, "download-favorites", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "download-generic")
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "download-generic", usesCompatibilityView: false)
         };
     }
 
@@ -307,7 +312,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.ToolsGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsHelp, StandardShellRightPaneGroup.ToolsFamily, "tools-help", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsTest => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsTest, StandardShellRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "tools-generic")
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "tools-generic", usesCompatibilityView: false)
         };
     }
 
@@ -318,7 +323,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.VersionSavesInfo => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveInfo, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-info", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.VersionSavesBackup => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveBackup, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-backup", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.VersionSavesDatapack => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveDatapack, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-datapack", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "version-saves-generic")
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "version-saves-generic", usesCompatibilityView: false)
         };
     }
 
@@ -338,7 +343,7 @@ internal sealed partial class FrontendShellViewModel
                 or LauncherFrontendSubpageKey.VersionResourcePack
                 or LauncherFrontendSubpageKey.VersionShader
                 or LauncherFrontendSubpageKey.VersionSchematic => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceResource, StandardShellRightPaneGroup.InstanceContentFamily, "instance-resource", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "instance-generic")
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "instance-generic", usesCompatibilityView: false)
         };
     }
 

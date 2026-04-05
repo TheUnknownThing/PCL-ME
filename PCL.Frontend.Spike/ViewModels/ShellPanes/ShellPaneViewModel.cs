@@ -23,6 +23,11 @@ internal abstract class ShellRightPaneViewModel(
     public StandardShellRightPaneDescriptor Descriptor { get; } = descriptor;
 }
 
+internal sealed class GenericStandardShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
 internal sealed class StandardShellNavigationListPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellLeftPaneDescriptor descriptor)
