@@ -11,7 +11,9 @@ internal static class ShellPaneTemplateRegistry
 {
     public static void Register(Application application)
     {
-        application.DataTemplates.Add(CreateTemplate<StandardShellSidebarPaneViewModel, StandardShellSidebarPaneView>());
+        application.DataTemplates.Add(CreateTemplate<StandardShellNavigationListPaneViewModel, StandardShellNavigationListPaneView>());
+        application.DataTemplates.Add(CreateTemplate<StandardShellSummaryPaneViewModel, StandardShellSummaryPaneView>());
+        application.DataTemplates.Add(CreateTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>());
         application.DataTemplates.Add(CreateTemplate<LegacyStandardShellRightPaneViewModel, LegacyStandardShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<ToolsHelpShellRightPaneViewModel, ToolsHelpShellRightPaneView>());
     }

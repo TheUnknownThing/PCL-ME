@@ -1,0 +1,41 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Left.StandardShellNavigationListPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="0,12,0,0">
+      <ItemsControl ItemsSource="{Binding SidebarSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <StackPanel>
+              <TextBlock
+                  Margin="13,5,5,3"
+                  Opacity="0.6"
+                  FontSize="12"
+                  Text="{Binding Title}"
+                  IsVisible="{Binding HasTitle}" />
+              <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PclListItem
+                        Margin="10,0,12,0"
+                        AccessoryCommand="{Binding AccessoryCommand}"
+                        AccessoryIconData="{Binding AccessoryIconPath}"
+                        AccessoryToolTip="{Binding AccessoryToolTip}"
+                        Command="{Binding Command}"
+                        IconData="{Binding IconPath}"
+                        IconScale="{Binding IconScale}"
+                        IsSelected="{Binding IsSelected}"
+                        Title="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

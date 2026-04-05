@@ -88,8 +88,14 @@
   </Application.Resources>
 
   <Application.DataTemplates>
-    <DataTemplate DataType="shellPanes:StandardShellSidebarPaneViewModel">
-      <leftViews:StandardShellSidebarPaneView />
+    <DataTemplate DataType="shellPanes:StandardShellNavigationListPaneViewModel">
+      <leftViews:StandardShellNavigationListPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:StandardShellSummaryPaneViewModel">
+      <leftViews:StandardShellSummaryPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:StandardShellEmptyPaneViewModel">
+      <leftViews:StandardShellEmptyPaneView />
     </DataTemplate>
     <DataTemplate DataType="shellPanes:LegacyStandardShellRightPaneViewModel">
       <rightViews:LegacyStandardShellRightPaneView />

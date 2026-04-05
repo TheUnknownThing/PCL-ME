@@ -59,13 +59,43 @@ internal sealed partial class FrontendShellViewModel
         CurrentStandardLeftPaneDescriptor = leftPaneDescriptor;
         CurrentStandardRightPaneDescriptor = rightPaneDescriptor;
         CurrentStandardPaneResolution = new StandardShellPaneResolution(_currentRoute, leftPaneDescriptor, rightPaneDescriptor);
-        CurrentStandardLeftPane = new StandardShellSidebarPaneViewModel(this, leftPaneDescriptor);
+        CurrentStandardLeftPane = ResolveStandardLeftPane(leftPaneDescriptor);
         CurrentStandardRightPane = ResolveStandardRightPane(rightPaneDescriptor);
     }
 
     private StandardShellLeftPaneDescriptor ResolveStandardLeftPaneDescriptor()
     {
-        return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Sidebar, "standard-sidebar");
+        if (HasSidebarSections)
+        {
+            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Sidebar, "standard-sidebar");
+        }
+
+        if (HasStandardShellSummaryPaneContent())
+        {
+            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Summary, "standard-summary");
+        }
+
+        return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Empty, "standard-empty");
+    }
+
+    private ShellLeftPaneViewModel ResolveStandardLeftPane(StandardShellLeftPaneDescriptor descriptor)
+    {
+        return descriptor.Kind switch
+        {
+            StandardShellLeftPaneKind.Sidebar => new StandardShellNavigationListPaneViewModel(this, descriptor),
+            StandardShellLeftPaneKind.Summary => new StandardShellSummaryPaneViewModel(this, descriptor),
+            _ => new StandardShellEmptyPaneViewModel(this, descriptor)
+        };
+    }
+
+    private bool HasStandardShellSummaryPaneContent()
+    {
+        return !string.IsNullOrWhiteSpace(Eyebrow)
+            || !string.IsNullOrWhiteSpace(Title)
+            || !string.IsNullOrWhiteSpace(Description)
+            || !string.IsNullOrWhiteSpace(BreadcrumbTrail)
+            || !string.IsNullOrWhiteSpace(SurfaceMeta)
+            || HasSurfaceFacts;
     }
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)
