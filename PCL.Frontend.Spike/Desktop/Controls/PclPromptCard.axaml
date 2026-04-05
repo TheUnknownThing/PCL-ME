@@ -2,8 +2,11 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclPromptCard"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
-    x:Name="Root">
+    x:Name="Root"
+    motion:Motion.AnimateOnVisible="True"
+    motion:Motion.OffsetY="12">
   <controls:PclCard ContentMargin="14,14,14,14">
     <controls:PclCard.CardContent>
       <StackPanel Spacing="10">

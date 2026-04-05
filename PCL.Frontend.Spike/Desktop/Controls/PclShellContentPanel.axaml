@@ -2,11 +2,12 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclShellContentPanel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid>
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupLaunchSurface}" Spacing="15">
-        <controls:PclCard Header="启动选项" ContentMargin="25,40,25,15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLaunchSurface}" Spacing="15">
+        <controls:PclCard Header="启动选项" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28,9,28,9,28,9,28,9,28">
               <TextBlock
@@ -146,7 +147,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="游戏内存" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="游戏内存" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Border
@@ -243,7 +244,7 @@
             ShowChevron="True"
             IsChevronExpanded="{Binding IsLaunchAdvancedOptionsExpanded}"
             HeaderCommand="{Binding ToggleLaunchAdvancedOptionsCommand}"
-            ContentMargin="25,40,25,15">
+            ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="Auto,*">
@@ -370,7 +371,7 @@
         </Button>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadInstallSurface}" Spacing="12">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadInstallSurface}" Spacing="12">
         <controls:PclCard ContentMargin="13,13,16,13">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto,*">
@@ -500,7 +501,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadCatalogSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadCatalogSurface}" Spacing="15">
         <controls:PclCard Header="{Binding DownloadCatalogIntroTitle}" IsVisible="{Binding HasDownloadCatalogIntro}" ContentMargin="25,40,15,20">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
@@ -582,7 +583,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadResourceSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadResourceSurface}" Spacing="15">
         <Border
             Height="40"
             Padding="12,0"
@@ -849,7 +850,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsDownloadFavoritesSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadFavoritesSurface}" Spacing="15">
         <Grid ColumnDefinitions="*,Auto">
           <Border
               Height="40"
@@ -961,7 +962,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupAboutSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupAboutSurface}" Spacing="15">
         <controls:PclCard Header="关于" ContentMargin="21,40,21,16">
           <controls:PclCard.CardContent>
             <ItemsControl ItemsSource="{Binding AboutProjectEntries}">
@@ -1045,7 +1046,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsSetupFeedbackSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupFeedbackSurface}" Spacing="15">
         <controls:PclCard Header="提交反馈" ContentMargin="20,40,18,22">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="15">
@@ -1094,7 +1095,7 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsSetupLogSurface}" Spacing="10">
+      <StackPanel Margin="25,25,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLogSurface}" Spacing="10">
         <controls:PclCard Header="日志操作" ContentMargin="25,40,20,20">
           <controls:PclCard.CardContent>
             <WrapPanel>
@@ -1144,7 +1145,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupUpdateSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupUpdateSurface}" Spacing="15">
         <controls:PclCard ContentMargin="20,15,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28,7,28">
@@ -1375,8 +1376,8 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupGameLinkSurface}" Spacing="15">
-        <controls:PclCard Header="EasyTier" ContentMargin="25,40,25,15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupGameLinkSurface}" Spacing="15">
+        <controls:PclCard Header="EasyTier" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Border
@@ -1455,7 +1456,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupGameManageSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupGameManageSurface}" Spacing="15">
         <controls:PclCard Header="游戏资源获取行为" ContentMargin="25,37,25,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,27,27,Auto,27">
@@ -1619,7 +1620,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="辅助功能" ContentMargin="25,40,25,17">
+        <controls:PclCard Header="辅助功能" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22,8,22">
               <TextBlock
@@ -1665,8 +1666,8 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupLauncherMiscSurface}" Spacing="15">
-        <controls:PclCard Header="系统" ContentMargin="25,40,25,16">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLauncherMiscSurface}" Spacing="15">
+        <controls:PclCard Header="系统" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,5,28,5,20,8,35">
               <TextBlock
@@ -1851,7 +1852,7 @@
             Header="调试选项"
             ShowChevron="True"
             IsChevronExpanded="False"
-            ContentMargin="25,40,25,15">
+            ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="Auto,*">
@@ -1900,7 +1901,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsSetupJavaSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupJavaSurface}" Spacing="15">
         <controls:PclCard ContentMargin="12">
           <controls:PclCard.CardContent>
             <StackPanel Orientation="Horizontal">
@@ -2030,8 +2031,8 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsSetupUiSurface}" Spacing="15">
-        <controls:PclCard Header="基础" ContentMargin="25,40,25,15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupUiSurface}" Spacing="15">
+        <controls:PclCard Header="基础" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28">
@@ -2195,7 +2196,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="字体" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="字体" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,25,*" RowDefinitions="30,10,30">
               <TextBlock
@@ -2222,7 +2223,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="背景内容" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="背景内容" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="8">
               <CheckBox
@@ -2325,7 +2326,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="标题栏" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="标题栏" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="*,*,*,*,0.2*">
@@ -2386,7 +2387,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="主页" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="主页" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="*,*,*,*,0.2*">
@@ -2545,7 +2546,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsToolsGameLinkSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsToolsGameLinkSurface}" Spacing="15">
         <Border
             Padding="14,10"
             Background="#EAF2FE"
@@ -2861,7 +2862,7 @@
         </WrapPanel>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsToolsTestSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsToolsTestSurface}" Spacing="15">
         <controls:PclCard Header="百宝箱" ContentMargin="25,40,21,10">
           <controls:PclCard.CardContent>
             <ItemsControl ItemsSource="{Binding ToolboxActions}">
@@ -2885,7 +2886,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="下载自定义文件" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="下载自定义文件" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <TextBlock
@@ -2935,7 +2936,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="下载正版玩家的皮肤" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="下载正版玩家的皮肤" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,14,35">
               <TextBlock VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="正版玩家名" />
@@ -2950,7 +2951,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="瞅眼服务器" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="瞅眼服务器" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Border
                 MinHeight="168"
@@ -3043,7 +3044,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="True" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="Auto,*">
@@ -3119,7 +3120,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsToolsHelpSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsToolsHelpSurface}" Spacing="15">
         <Border
             Height="36"
             Padding="12,0"
@@ -3170,7 +3171,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,15" IsVisible="{Binding IsInstanceOverviewSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,15" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceOverviewSurface}" Spacing="15">
         <controls:PclCard ContentMargin="18,18,18,18">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*">
@@ -3385,7 +3386,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,25" IsVisible="{Binding IsInstanceSetupSurface}" Spacing="15">
+      <StackPanel Margin="25,25,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceSetupSurface}" Spacing="15">
         <Border
             Padding="12,10"
             Background="#EAF2FE"
@@ -3796,7 +3797,7 @@
             Text="全局设置" />
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsInstanceExportSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceExportSurface}" Spacing="15">
         <Border
             Padding="12,10"
             Background="#FFF8DD"
@@ -3893,7 +3894,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="高级选项" ContentMargin="20,38,20,18">
+        <controls:PclCard Header="高级选项" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Border
@@ -3965,7 +3966,7 @@
             Text="开始导出" />
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsInstanceInstallSurface}" Spacing="12">
+      <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceInstallSurface}" Spacing="12">
         <ItemsControl ItemsSource="{Binding InstanceInstallHints}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -4384,7 +4385,283 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceWorldSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsVersionSaveInfoSurface}" Spacing="15">
+        <controls:PclCard Header="存档详细信息" ContentMargin="18,40,18,16">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding VersionSaveInfoEntries}" IsVisible="{Binding HasVersionSaveInfoEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
+                    <TextBlock
+                        Foreground="#7D8897"
+                        FontSize="12.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Foreground="#343D4A"
+                        FontSize="13"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="存档设置" ContentMargin="18,40,18,16" IsVisible="{Binding HasVersionSaveSettingEntries}">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding VersionSaveSettingEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
+                    <TextBlock
+                        Foreground="#7D8897"
+                        FontSize="12.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Foreground="#343D4A"
+                        FontSize="13"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsVersionSaveBackupSurface}" Spacing="15">
+        <controls:PclCard ContentMargin="15,8,0,15">
+          <controls:PclCard.CardContent>
+            <WrapPanel>
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding OpenVersionSaveFolderCommand}"
+                  ColorType="Highlight"
+                  Text="打开存档文件夹" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding CreateVersionSaveBackupCommand}"
+                  Text="创建" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding CleanVersionSaveBackupCommand}"
+                  Text="清理无用记录" />
+            </WrapPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="备份列表" ContentMargin="20,40,18,20" IsVisible="{Binding HasVersionSaveBackupEntries}">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding VersionSaveBackupEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+                    <StackPanel Margin="0,0,18,0" Spacing="3">
+                      <TextBlock
+                          Foreground="#343D4A"
+                          FontSize="13.5"
+                          FontWeight="SemiBold"
+                          Text="{Binding Title}" />
+                      <TextBlock
+                          Foreground="#677789"
+                          FontSize="12.5"
+                          Text="{Binding Info}"
+                          TextWrapping="Wrap" />
+                    </StackPanel>
+                    <controls:PclButton
+                        Grid.Column="1"
+                        Width="96"
+                        Height="35"
+                        VerticalAlignment="Center"
+                        Command="{Binding Command}"
+                        Text="查看" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding HasNoVersionSaveBackupEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="暂时没有备份" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="存档备份和存档是绑定的，删除存档备份也会没有 :("
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsVersionSaveDatapackSurface}" Spacing="15">
+        <Border
+            Height="40"
+            Padding="12,0"
+            Background="#F8FBFF"
+            BorderBrush="#D5E6FD"
+            BorderThickness="1"
+            CornerRadius="5">
+          <TextBox
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              FontSize="13.5"
+              Text="{Binding VersionSaveDatapackSearchQuery}"
+              VerticalContentAlignment="Center"
+              Watermark="搜索数据包 名称 / 描述 / 标签" />
+        </Border>
+
+        <controls:PclCard ContentMargin="15,8,0,15">
+          <controls:PclCard.CardContent>
+            <WrapPanel>
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+                  ColorType="Highlight"
+                  Text="打开文件夹" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+                  Text="从文件安装" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding DownloadVersionSaveDatapackCommand}"
+                  Text="下载新资源" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding ExportVersionSaveDatapackInfoCommand}"
+                  Text="导出信息" />
+            </WrapPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding HasVersionSaveDatapackEntries}">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <controls:PclButton
+                  Width="110"
+                  HorizontalAlignment="Right"
+                  Text="排序：资源名称" />
+
+              <ItemsControl ItemsSource="{Binding VersionSaveDatapackEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Grid Margin="0,0,0,12" ColumnDefinitions="Auto,*,Auto">
+                      <Border
+                          Width="42"
+                          Height="42"
+                          Margin="0,0,12,0"
+                          Background="#F7FAFE"
+                          BorderBrush="#D5E6FD"
+                          BorderThickness="1"
+                          CornerRadius="6">
+                        <Image
+                            Width="28"
+                            Height="28"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Source="{Binding Icon}"
+                            Stretch="Uniform" />
+                      </Border>
+
+                      <StackPanel Grid.Column="1" Margin="0,0,12,0" Spacing="3">
+                        <TextBlock
+                            Foreground="#343D4A"
+                            FontSize="13.5"
+                            FontWeight="SemiBold"
+                            Text="{Binding Title}" />
+                        <TextBlock
+                            Foreground="#677789"
+                            FontSize="12.5"
+                            Text="{Binding Info}"
+                            TextWrapping="Wrap" />
+                        <Border
+                            Padding="8,4"
+                            Background="#F7FAFE"
+                            BorderBrush="#D5E6FD"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                          <TextBlock
+                              Foreground="#4B78C2"
+                              FontSize="11.5"
+                              Text="{Binding Meta}" />
+                        </Border>
+                      </StackPanel>
+
+                      <controls:PclButton
+                          Grid.Column="2"
+                          Width="96"
+                          Height="35"
+                          VerticalAlignment="Center"
+                          Command="{Binding ActionCommand}"
+                          Text="查看" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding HasNoVersionSaveDatapackEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="尚未安装数据包" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="你可以从已经下载好的文件安装数据包。数据包需要放置在存档的 datapacks 文件夹中才能生效。"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+              <WrapPanel HorizontalAlignment="Center">
+                <controls:PclButton
+                    MinWidth="130"
+                    Margin="5,0"
+                    Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+                    ColorType="Highlight"
+                    Text="从文件安装" />
+                <controls:PclButton
+                    MinWidth="130"
+                    Margin="5,0"
+                    Command="{Binding DownloadVersionSaveDatapackCommand}"
+                    Text="下载新数据包" />
+                <controls:PclButton
+                    MinWidth="130"
+                    Margin="5,0"
+                    Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+                    Text="打开文件夹" />
+              </WrapPanel>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceWorldSurface}" Spacing="15">
         <Border
             Height="40"
             Padding="12,0"
@@ -4493,7 +4770,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceScreenshotSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceScreenshotSurface}" Spacing="15">
         <controls:PclCard Header="快捷操作" ContentMargin="25,40,15,20">
           <controls:PclCard.CardContent>
             <controls:PclButton
@@ -4570,7 +4847,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceServerSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceServerSurface}" Spacing="15">
         <controls:PclCard Header="快捷操作" ContentMargin="25,40,23,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto">
@@ -4593,7 +4870,7 @@
         <ItemsControl ItemsSource="{Binding InstanceServerEntries}" IsVisible="{Binding HasInstanceServerEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
+              <controls:PclCard Header="{Binding Title}" ContentMargin="20,12,20,15">
                 <controls:PclCard.CardContent>
                   <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Margin="0,0,18,0" Spacing="4">
@@ -4661,7 +4938,7 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceResourceSurface}" Spacing="15">
+      <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsInstanceResourceSurface}" Spacing="15">
         <Border
             Height="40"
             Padding="12,0"
@@ -4841,8 +5118,8 @@
         </controls:PclCard>
       </StackPanel>
 
-      <StackPanel Margin="25,25,25,10" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
-        <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
+      <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
+        <controls:PclCard Header="{Binding Title}" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <TextBlock
@@ -4878,7 +5155,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="页面概览" IsVisible="{Binding HasSurfaceFacts}" ContentMargin="20,38,20,18">
+        <controls:PclCard Header="页面概览" IsVisible="{Binding HasSurfaceFacts}" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <ItemsControl ItemsSource="{Binding SurfaceFacts}">
               <ItemsControl.ItemTemplate>

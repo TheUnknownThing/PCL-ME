@@ -2,11 +2,15 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclExtraButton"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    x:Name="Root">
+    x:Name="Root"
+    Width="40"
+    Height="40">
   <Border
       x:Name="PanColor"
       Width="40"
       Height="40"
+      HorizontalAlignment="Center"
+      VerticalAlignment="Center"
       CornerRadius="20"
       RenderTransformOrigin="0.5,0.5"
       RenderTransform="scale(1)"
@@ -23,15 +27,22 @@
     </Border.Transitions>
     <Button
         x:Name="ButtonHost"
+        Classes="nochrome"
         Background="Transparent"
         BorderBrush="Transparent"
         BorderThickness="0"
         Command="{Binding Command, ElementName=Root}"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
         Padding="0">
       <Path
           x:Name="IconPathElement"
           Width="16"
           Height="16"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
           Fill="{DynamicResource ColorBrush8}"
           Stretch="Uniform" />
     </Button>

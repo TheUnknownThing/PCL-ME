@@ -8,7 +8,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
     public PclLaunchRightPanel()
     {
         InitializeComponent();
-        LaunchBannerIcon.Text = FrontendIconCatalog.LaunchBanner.Data;
+        // LaunchBannerIcon.Text = FrontendIconCatalog.LaunchBanner.Data;
         DismissLaunchCommunityHintButton.IconData = FrontendIconCatalog.Close.Data;
     }
 }

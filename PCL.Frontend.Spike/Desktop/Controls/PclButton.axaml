@@ -8,6 +8,7 @@
       Background="{DynamicResource ColorBrushSemiTransparent}">
     <Button
         x:Name="ButtonHost"
+        Classes="nochrome"
         Background="Transparent"
         BorderBrush="Transparent"
         BorderThickness="0"
@@ -38,7 +39,7 @@
               x:Name="LabText"
               HorizontalAlignment="Center"
               VerticalAlignment="Center"
-              FontSize="13"
+              FontSize="12"
               Foreground="{DynamicResource ColorBrush1}"
               Margin="{Binding TextMargin, ElementName=Root}" />
         </Grid>

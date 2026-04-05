@@ -22,6 +22,7 @@
     </Border.Transitions>
     <Button
         x:Name="ButtonHost"
+        Classes="nochrome"
         Background="Transparent"
         BorderBrush="Transparent"
         BorderThickness="0"

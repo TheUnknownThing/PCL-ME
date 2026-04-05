@@ -80,6 +80,15 @@ internal sealed partial class PclCard : UserControl
 
     public bool IsContentVisible => !ShowChevron || IsChevronExpanded;
 
+    public Thickness EffectiveContentMargin
+    {
+        get
+        {
+            // TODO: May require special margin where header is present.
+            return ContentMargin;
+        }
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -88,6 +97,7 @@ internal sealed partial class PclCard : UserControl
         {
             HeaderTextBlock.Text = change.GetNewValue<string>() ?? string.Empty;
             RaisePropertyChanged(HasHeaderProperty, false, HasHeader);
+            RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
         }
         else if (change.Property == IsChevronExpandedProperty)
         {
@@ -100,6 +110,10 @@ internal sealed partial class PclCard : UserControl
         {
             RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
         }
+        else if (change.Property == ContentMarginProperty)
+        {
+            RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
+        }
     }
 
     private static readonly DirectProperty<PclCard, bool> HasHeaderProperty =
@@ -107,6 +121,9 @@ internal sealed partial class PclCard : UserControl
 
     private static readonly DirectProperty<PclCard, bool> IsContentVisibleProperty =
         AvaloniaProperty.RegisterDirect<PclCard, bool>(nameof(IsContentVisible), x => x.IsContentVisible);
+
+    private static readonly DirectProperty<PclCard, Thickness> EffectiveContentMarginProperty =
+        AvaloniaProperty.RegisterDirect<PclCard, Thickness>(nameof(EffectiveContentMargin), x => x.EffectiveContentMargin);
 
     private void OnPointerEntered(object? sender, PointerEventArgs e)
     {
@@ -123,6 +140,12 @@ internal sealed partial class PclCard : UserControl
     private void RefreshState()
     {
         CardShadow.BoxShadow = _isHovered ? HoverShadow : IdleShadow;
+        CardBorder.BorderBrush = _isHovered
+            ? Brush.Parse("#66D5E6FD")
+            : Brush.Parse("#30D5E6FD");
+        CardBorder.Background = _isHovered
+            ? Brush.Parse("#D8FBFBFD")
+            : Brush.Parse("#D2FBFBFB");
         HeaderTextBlock.Foreground = _isHovered
             ? Brush.Parse("#0B5BCB")
             : Brush.Parse("#343D4A");

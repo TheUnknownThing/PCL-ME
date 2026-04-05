@@ -1,6 +1,8 @@
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
 
@@ -15,9 +17,39 @@ internal sealed partial class PclPromptOption : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclPromptOption, ICommand?>(nameof(Command));
 
+    private bool _isHovered;
+    private bool _isPressed;
+
     public PclPromptOption()
     {
         InitializeComponent();
+
+        ButtonHost.PointerEntered += (_, _) =>
+        {
+            _isHovered = true;
+            RefreshState();
+        };
+        ButtonHost.PointerExited += (_, _) =>
+        {
+            _isHovered = false;
+            _isPressed = false;
+            RefreshState();
+        };
+        ButtonHost.PointerPressed += (_, args) =>
+        {
+            if (args.GetCurrentPoint(ButtonHost).Properties.IsLeftButtonPressed)
+            {
+                _isPressed = true;
+                RefreshState();
+            }
+        };
+        ButtonHost.PointerReleased += (_, _) =>
+        {
+            _isPressed = false;
+            RefreshState();
+        };
+
+        RefreshState();
     }
 
     public string Label
@@ -36,5 +68,19 @@ internal sealed partial class PclPromptOption : UserControl
     {
         get => GetValue(CommandProperty);
         set => SetValue(CommandProperty, value);
+    }
+
+    private void RefreshState()
+    {
+        OptionBorder.Background = _isHovered ? Brush.Parse("#EAF3FF") : Brush.Parse("#F3F8FF");
+        OptionBorder.BorderBrush = _isHovered ? Brush.Parse("#BFD7FB") : Brush.Parse("#D5E6FD");
+        OptionBorder.Opacity = _isPressed ? 0.9 : 1.0;
+        OptionBorder.RenderTransform = _isPressed
+            ? new ScaleTransform(0.985, 0.985)
+            : _isHovered
+                ? new ScaleTransform(1.01, 1.01)
+                : new ScaleTransform(1, 1);
+        LabelBlock.Foreground = _isHovered ? Brush.Parse("#0B5BCB") : Brush.Parse("#343D4A");
+        DetailBlock.Foreground = _isHovered ? Brush.Parse("#5D6D80") : Brush.Parse("#728091");
     }
 }
