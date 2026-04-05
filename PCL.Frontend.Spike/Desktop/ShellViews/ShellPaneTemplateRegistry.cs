@@ -24,6 +24,11 @@ internal static class ShellPaneTemplateRegistry
         application.DataTemplates.Add(CreateTemplate<SetupFeedbackShellRightPaneViewModel, SetupFeedbackShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<SetupLogShellRightPaneViewModel, SetupLogShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<SetupUpdateShellRightPaneViewModel, SetupUpdateShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupGameLinkShellRightPaneViewModel, SetupGameLinkShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupGameManageShellRightPaneViewModel, SetupGameManageShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupLauncherMiscShellRightPaneViewModel, SetupLauncherMiscShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupJavaShellRightPaneViewModel, SetupJavaShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupUiShellRightPaneViewModel, SetupUiShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<ToolsGameLinkShellRightPaneViewModel, ToolsGameLinkShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<ToolsHelpShellRightPaneViewModel, ToolsHelpShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<ToolsTestShellRightPaneViewModel, ToolsTestShellRightPaneView>());

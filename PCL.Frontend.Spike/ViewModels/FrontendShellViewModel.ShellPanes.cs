@@ -145,6 +145,31 @@ internal sealed partial class FrontendShellViewModel
             return new SetupUpdateShellRightPaneViewModel(this, descriptor);
         }
 
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupGameLink)
+        {
+            return new SetupGameLinkShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupGameManage)
+        {
+            return new SetupGameManageShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupLauncherMisc)
+        {
+            return new SetupLauncherMiscShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupJava)
+        {
+            return new SetupJavaShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupUi)
+        {
+            return new SetupUiShellRightPaneViewModel(this, descriptor);
+        }
+
         if (descriptor.Kind == StandardShellRightPaneKind.ToolsGameLink)
         {
             return new ToolsGameLinkShellRightPaneViewModel(this, descriptor);
@@ -235,16 +260,16 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.SetupLaunch => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLaunch, StandardShellRightPaneGroup.SetupFamily, "setup-launch"),
-            LauncherFrontendSubpageKey.SetupAbout => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupAbout, StandardShellRightPaneGroup.SetupFamily, "setup-about"),
-            LauncherFrontendSubpageKey.SetupFeedback => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupFeedback, StandardShellRightPaneGroup.SetupFamily, "setup-feedback"),
-            LauncherFrontendSubpageKey.SetupLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLog, StandardShellRightPaneGroup.SetupFamily, "setup-log"),
-            LauncherFrontendSubpageKey.SetupUpdate => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupUpdate, StandardShellRightPaneGroup.SetupFamily, "setup-update"),
-            LauncherFrontendSubpageKey.SetupGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupGameLink, StandardShellRightPaneGroup.SetupFamily, "setup-game-link"),
-            LauncherFrontendSubpageKey.SetupGameManage => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupGameManage, StandardShellRightPaneGroup.SetupFamily, "setup-game-manage"),
-            LauncherFrontendSubpageKey.SetupLauncherMisc => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLauncherMisc, StandardShellRightPaneGroup.SetupFamily, "setup-launcher-misc"),
-            LauncherFrontendSubpageKey.SetupJava => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupJava, StandardShellRightPaneGroup.SetupFamily, "setup-java"),
-            LauncherFrontendSubpageKey.SetupUI => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupUi, StandardShellRightPaneGroup.SetupFamily, "setup-ui"),
+            LauncherFrontendSubpageKey.SetupLaunch => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLaunch, StandardShellRightPaneGroup.SetupFamily, "setup-launch", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupAbout => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupAbout, StandardShellRightPaneGroup.SetupFamily, "setup-about", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupFeedback => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupFeedback, StandardShellRightPaneGroup.SetupFamily, "setup-feedback", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLog, StandardShellRightPaneGroup.SetupFamily, "setup-log", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupUpdate => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupUpdate, StandardShellRightPaneGroup.SetupFamily, "setup-update", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupGameLink, StandardShellRightPaneGroup.SetupFamily, "setup-game-link", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupGameManage => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupGameManage, StandardShellRightPaneGroup.SetupFamily, "setup-game-manage", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupLauncherMisc => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLauncherMisc, StandardShellRightPaneGroup.SetupFamily, "setup-launcher-misc", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupJava => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupJava, StandardShellRightPaneGroup.SetupFamily, "setup-java", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupUI => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupUi, StandardShellRightPaneGroup.SetupFamily, "setup-ui", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "setup-generic")
         };
     }

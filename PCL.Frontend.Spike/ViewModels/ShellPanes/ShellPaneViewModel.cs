@@ -88,6 +88,31 @@ internal sealed class SetupUpdateShellRightPaneViewModel(
     StandardShellRightPaneDescriptor descriptor)
     : ShellRightPaneViewModel(shell, descriptor);
 
+internal sealed class SetupGameLinkShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class SetupGameManageShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class SetupLauncherMiscShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class SetupJavaShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class SetupUiShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
 internal sealed class ToolsGameLinkShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)

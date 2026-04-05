@@ -195,6 +195,12 @@ Owner:
 
 - Engineer B
 
+Status:
+
+- Completed on April 6, 2026.
+- Setup launch, about, feedback, log, update, game link, game manage, launcher misc, java, and UI routes now render through dedicated right-pane views.
+- `PclShellContentPanel.axaml` no longer carries setup-family sections, so the remaining compatibility panel only keeps non-setup content for other workstreams.
+
 Goal:
 
 - Replace setup-family content inside `PclShellContentPanel` with focused right-pane views.
