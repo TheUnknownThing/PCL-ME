@@ -12,6 +12,36 @@ The end state should be:
 - The current all-surfaces-live approach in `PclShellContentPanel.axaml` is no longer on the active rendering path.
 - Visual style remains aligned with `PCL.Neo`.
 
+## Status Update
+
+Last updated: 2026-04-05
+
+Completed in the current slice:
+
+- `MainWindow` standard-shell region now renders through swappable host content via `ContentControl`.
+- `FrontendShellViewModel` now publishes a standard-shell pane contract:
+  - `CurrentStandardLeftPane`
+  - `CurrentStandardRightPane`
+- `FrontendShellViewModel` now resolves every standard-shell route through a shared pane descriptor map:
+  - exact right-pane kind
+  - route-family group
+  - compatibility-host flag for unmigrated views
+- Pane VM contract files were added under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/ShellPanes/`.
+- Pane-to-view registration now lives centrally in `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/App.axaml`.
+- The old monolithic left sidebar is no longer on the active standard-shell rendering path.
+- The first dedicated right-pane extraction landed for `Tools > Help`.
+- Legacy `IsXxxSurface` properties now read from the resolved pane identity as temporary compatibility shims instead of duplicating route matching logic.
+- Remaining standard-shell right routes still use a temporary compatibility pane that hosts `PclShellContentPanel`.
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes after the host-contract changes.
+
+Current migration state:
+
+- Workstream A: substantially landed for standard-shell hosts.
+- Workstream B: route-to-pane-resolution contract landed for all standard-shell routes; legacy surface flags are now compatibility shims over the resolved pane descriptor.
+- Workstream C: initial template mapping landed.
+- Workstream F: initial left-pane host migration landed.
+- Workstream D/E/G: still in progress.
+
 ## Reference Files
 
 These are the primary implementation references from `PCL.Neo`:
@@ -334,6 +364,10 @@ Success criteria:
 - One route family renders through the new host path.
 - Existing animation still works.
 
+Status:
+- Completed on 2026-04-05.
+- Landed with a compatibility fallback for non-migrated right-pane routes.
+
 ### Milestone 2: Standard Shell Swapped Hosts
 
 Success criteria:
@@ -396,10 +430,9 @@ The refactor is complete when:
 
 ## Recommended Next Step
 
-Land Workstream A and B first in a small integration PR:
+Continue the migration by replacing the temporary right-pane compatibility path family-by-family:
 
-- add pane host contract
-- render one standard-shell route through the new path
-- leave all other routes on compatibility path temporarily
-
-Once that base is merged, D, E, and F can proceed concurrently with low conflict.
+- extract setup/download/tools routes from `PclShellContentPanel.axaml` into `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+- extract instance/version-saves routes into the same host system
+- introduce additional dedicated left-pane variants only where the shared sidebar/overview pane becomes too conditional
+- remove compatibility shims and obsolete `IsXxxSurface` booleans only after all active standard-shell routes are off the monolith
