@@ -32,7 +32,7 @@ Each slice should end with:
 - a manual test list
 - visible real behavior in the running launcher
 
-## Current Status As Of 2026-04-04
+## Current Status As Of 2026-04-05
 
 Completed:
 
@@ -46,6 +46,12 @@ Completed:
 
 Recent checkpoints:
 
+- `c21e1e7d` `feat: package frontend launcher builds`
+- `74be91e1` `feat: wire frontend install selection flow`
+- `5e51a2be` `feat: add frontend install workflow primitives`
+- `1aa6abfb` `feat: repair instance files from portable manifests`
+- `b7e11a0a` `feat: cut over instance launch-side overview actions`
+- `4a065f15` `refactor: isolate frontend platform adapters`
 - `5ac85e61` `feat: cut over frontend launch execution`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
@@ -63,10 +69,13 @@ What that means today:
 - major route families already exist visually
 - the tools route family now has dedicated runtime composition
 - instance resource/server/export pages now perform several real file, clipboard, and archive actions from the replacement shell
-- instance overview/actions now perform real rename, description, trash, patch, and exported verification flows from the replacement shell
+- instance overview/actions now perform real rename, description, trash, patch, test-launch, launch-script export, and manifest-driven repair/reset flows from the replacement shell
 - Track 2 shell-action parity is now effectively complete for the migrated tool/download/instance surfaces
 - Track 1 route parity is effectively complete in the current frontend branch
-- the remaining work is now mostly launch cutover, cross-platform adapter isolation, and WPF responsibility removal
+- Track 4 adapter implementation is now in place for migrated shell actions, runtime path conventions, shortcut/script materialization, and protected key envelope decoding
+- Track 5 WPF workflow removal is effectively complete for the copied install and launch-adjacent surfaces
+- Track 6 packaging infrastructure now exists for `osx-arm64`, `linux-x64`, and `win-x64`, with packaged launcher entry points instead of raw publish-folder-only output
+- the remaining Track 6 gap is now real host-matrix validation for Windows and Linux packaged runs, plus wider packaged-workflow verification beyond the macOS startup smoke pass
 
 ## Repo Boundaries
 
@@ -295,6 +304,31 @@ Track 3 status:
 
 - one adapter family per commit
 
+### Status on 2026-04-04
+
+Completed in this track:
+
+- open-file and open-folder picker behavior already routes through the explicit Avalonia shell action service
+- clipboard reads and writes already route through the explicit Avalonia shell action service
+- launcher app-data path selection, external target opening, shortcut creation, Unix executable marking, command script extension selection, and default Java path hints now route through `FrontendPlatformAdapter`
+- stored launcher key envelope decoding is now shared through `LauncherStoredKeyEnvelopeService` instead of being duplicated in frontend-local Windows DPAPI branches
+- migrated frontend view-model code no longer carries inline OS branches for shortcut creation, command script export, or default Java path selection
+
+Manual verification completed on this track:
+
+1. Built `PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` successfully on macOS.
+2. Ran an ad hoc verification harness against the built frontend assembly.
+3. Confirmed the adapter resolves launcher app data to `~/.config/PCL` on macOS.
+4. Confirmed shortcut creation emits a real `.command` file with executable Unix mode bits.
+5. Confirmed exported command scripts receive executable Unix mode bits.
+6. Confirmed explicit external-target open succeeds on macOS for a real local folder.
+
+Track 4 status:
+
+- implementation is effectively complete in the current frontend branch
+- Windows and Linux runtime validation is still required before the cross-platform matrix can be called fully closed
+- next code work should move to Track 5 unless a newly discovered copied surface still embeds OS-specific UI logic
+
 ## Track 5. WPF Responsibility Removal
 
 ### Goal
@@ -321,6 +355,24 @@ Track 3 status:
 ### Suggested slice size
 
 - one workflow family per commit
+
+Status on 2026-04-04:
+
+- instance overview `测试游戏` now starts the real replacement-shell launch path from the copied overview surface instead of exporting a placeholder report
+- instance overview `导出启动脚本` now writes the actual generated launch script from the portable session plan
+- instance overview `补全文件` and `重置实例` now use a portable manifest-driven repair flow that refreshed the real `1.21.10` instance under `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft`
+- ad hoc verification against that real instance reused 4,477 files and re-downloaded the asset index without invoking WPF code
+- the copied download and instance install surfaces now own managed selection/apply behavior for Minecraft, Fabric, Legacy Fabric, Quilt, LabyMod, Fabric API, Legacy Fabric API, and QFAPI / QSL through `FrontendInstallWorkflowService`
+- ad hoc verification on 2026-04-05 created a temporary `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft/versions/codex-track5-verify`, applied Fabric plus Fabric API on top of Minecraft `1.21.10`, then reapplied the same instance as Quilt plus QFAPI / QSL and observed the managed addon jar switch from `fabric-api-0.138.4+1.21.10.jar` to `quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
+- that managed install verification reused 4,397 files on the first apply and 4,478 files on the second apply while writing the migrated manifest and instance config without invoking WPF code
+- the temporary verification instance was removed after inspection so the real launcher folder returned to its prior state
+- the copied download and instance install surfaces now also own the unmanaged installer family for Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and OptiFabric, while preserving the copied compatibility rules from `PageDownloadInstall.xaml.vb`
+- ad hoc verification on 2026-04-05 created temporary instances under `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft/versions` for `Forge 1.21.1`, `NeoForge 1.21.1`, `Cleanroom 1.12.2`, `LiteLoader 1.12.2`, and `Fabric 1.20.1 + OptiFine + OptiFabric`, and each apply wrote the migrated manifest without invoking WPF code
+- that unmanaged-install verification observed the expected loader libraries for Forge, NeoForge, Cleanroom, and LiteLoader, and wrote `mods/optifabric-1.14.3.jar` plus `mods/OptiFine_1.20.1_HD_U_I5.jar` for the Fabric + OptiFine case
+- the migrated repair flow now reuses valid installer-local libraries during forced refreshes instead of trying to redownload mismatched remote artifacts, which removes the Cleanroom failure hit during the first real-instance pass
+- the temporary verification instances were removed after inspection so the real launcher folder returned to its prior state
+- a forced Cleanroom `RunRepair + ForceCoreRefresh` pass moved past the earlier local-library error and into the wider core-refresh workload; that long-running asset-heavy pass was not waited through to final completion during this checkpoint
+- Track 5 no longer has a known WPF-owned install-family gap, and Track 6 packaging is now in place, so next work should focus on broader packaged-platform validation unless a new fallback path is discovered
 
 ## Track 6. Multi-Platform Packaging And Validation
 
@@ -350,6 +402,31 @@ Track 3 status:
 ### Suggested slice size
 
 - one platform or one packaging subsystem per commit
+
+### Status on 2026-04-05
+
+Completed in this track:
+
+- `PCL.Frontend.Spike` now carries packaging metadata, the copied launcher icon, and published launcher assets so packaged builds keep using the real copied images, help archive, homepage template, and `metadata.json`
+- `PCL.Frontend.Spike/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` outputs under `artifacts/frontend-packages/`
+- macOS packaging now emits `Plain Craft Launcher Community Edition.app` with an internal `PCLLauncher` stub that starts the Avalonia shell through `app --host-env true`
+- Linux packaging now emits a tarball with the published frontend, copied launcher icon, `launch-pcl-ce.sh`, and a `.desktop` launcher entry
+- Windows packaging now emits a zip archive with the published frontend plus `Launch Plain Craft Launcher Community Edition.vbs` as a launcher entry point that preserves the CLI binary behavior
+- packaged startup no longer depends on repo-relative `Plain Craft Launcher 2/...` paths because the frontend now resolves copied launcher assets from `LauncherAssets/` in publish output
+
+Manual verification completed on this track:
+
+1. `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS on 2026-04-05 after the packaging changes landed.
+2. `./PCL.Frontend.Spike/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`.
+3. The packaged macOS launcher stub at `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started the packaged frontend process as `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Spike app --host-env true`.
+4. That macOS packaged startup smoke test exited without the earlier `metadata.json` startup failure once the copied launcher assets were included in publish output.
+5. The packaged Linux output contains `launch-pcl-ce.sh` plus `Plain Craft Launcher Community Edition.desktop`, and the packaged Windows output contains `Launch Plain Craft Launcher Community Edition.vbs`.
+
+Track 6 status:
+
+- packaging implementation is now in place in the current frontend branch
+- macOS packaged startup has been smoke-verified locally on 2026-04-05
+- Windows and Linux packaged runtime validation is still required before this track can be called fully closed
 
 ## Recommended Order
 
@@ -387,6 +464,10 @@ Expected reviewer test:
 
 - run the same migrated shell actions on multiple OSes and compare outcomes
 
+Status on 2026-04-04:
+
+- implementation landed in `4a065f15`; the remaining work here is host-matrix validation rather than another frontend adapter refactor
+
 ### Slice 3. Remove remaining WPF workflow ownership
 
 Why third:
@@ -406,6 +487,10 @@ Why fourth:
 Expected reviewer test:
 
 - install the packaged app, validate startup/navigation/persistence, and complete one real launch on the target OS
+
+Status on 2026-04-05:
+
+- packaging implementation landed in `c21e1e7d`; the next owner should focus on Windows and Linux packaged-host validation rather than another packaging-structure rewrite
 
 ## Definition Of Done For Each Slice
 

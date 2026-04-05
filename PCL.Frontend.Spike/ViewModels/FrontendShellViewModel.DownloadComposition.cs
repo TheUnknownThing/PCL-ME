@@ -7,7 +7,7 @@ namespace PCL.Frontend.Spike.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private FrontendDownloadComposition _downloadComposition = new(
-        new FrontendDownloadInstallState("新的安装方案", [], []),
+        new FrontendDownloadInstallState("新的安装方案", "Minecraft", "Grass.png", [], []),
         new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
         new FrontendDownloadFavoritesState(["默认收藏夹"], string.Empty, false, []),
         new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());

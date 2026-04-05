@@ -8,13 +8,7 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendToolsCompositionService
 {
-    private static readonly string LauncherRootDirectory = Path.GetFullPath(Path.Combine(
-        AppContext.BaseDirectory,
-        "..",
-        "..",
-        "..",
-        "..",
-        "Plain Craft Launcher 2"));
+    private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
 
     public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths, FrontendInstanceComposition instanceComposition)
     {

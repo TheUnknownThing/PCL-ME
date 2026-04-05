@@ -31,6 +31,8 @@ internal static class FrontendDownloadCompositionService
             : instanceComposition.Selection.InstanceName;
         return new FrontendDownloadInstallState(
             selectionName,
+            instanceComposition.Install.MinecraftVersion,
+            instanceComposition.Install.MinecraftIconName,
             instanceComposition.Install.Hints,
             instanceComposition.Install.Options
                 .Select(option => new FrontendDownloadInstallOption(option.Title, option.Selection, option.IconName))

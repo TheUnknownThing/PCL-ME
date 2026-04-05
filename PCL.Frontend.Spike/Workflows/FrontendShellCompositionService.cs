@@ -10,13 +10,14 @@ internal static class FrontendShellCompositionService
 {
     public static FrontendShellComposition Compose(SpikeCommandOptions options)
     {
+        var platformAdapter = new FrontendPlatformAdapter();
         var replayComposition = FrontendInspectionShellCompositionService.TryComposeReplay(options);
         if (replayComposition is not null)
         {
             return replayComposition;
         }
 
-        var paths = FrontendRuntimePaths.Resolve();
+        var paths = FrontendRuntimePaths.Resolve(platformAdapter);
         var sharedConfig = new JsonFileProvider(paths.SharedConfigPath);
         var localConfig = new YamlFileProvider(paths.LocalConfigPath);
 

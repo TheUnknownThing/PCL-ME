@@ -1430,13 +1430,8 @@ internal sealed partial class FrontendShellViewModel
 
     private void AddJavaRuntime()
     {
-        var candidates = new[]
-        {
-            Path.Combine(Environment.GetEnvironmentVariable("JAVA_HOME") ?? string.Empty, "bin", OperatingSystem.IsWindows() ? "java.exe" : "java"),
-            OperatingSystem.IsWindows() ? "C:\\Program Files\\Java\\bin\\java.exe" : "/usr/bin/java"
-        };
-
-        var javaPath = candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
+        var javaPath = _shellActionService.GetDefaultJavaDetectionCandidates()
+            .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
         if (string.IsNullOrWhiteSpace(javaPath))
         {
             AddActivity("添加 Java", "未找到可自动添加的 Java，可先通过当前启动器扫描或手动写入 Java 列表。");

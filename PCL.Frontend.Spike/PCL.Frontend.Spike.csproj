@@ -7,6 +7,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>PCL.Frontend.Spike</AssemblyName>
     <RootNamespace>PCL.Frontend.Spike</RootNamespace>
+    <AssemblyTitle>Plain Craft Launcher Community Edition</AssemblyTitle>
+    <Company>PCL Community</Company>
+    <Product>Plain Craft Launcher Community Edition</Product>
+    <Description>Avalonia replacement frontend for Plain Craft Launcher Community Edition.</Description>
+    <ApplicationIcon>..\Plain Craft Launcher 2\Images\icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
@@ -23,5 +28,12 @@
 
   <ItemGroup>
     <AvaloniaResource Include="..\Plain Craft Launcher 2\Resources\Font.ttf" Link="Assets/Fonts/Font.ttf" />
+    <AvaloniaResource Include="..\Plain Craft Launcher 2\Images\icon.ico" Link="Assets/icon.ico" />
+    <AvaloniaResource Include="..\Plain Craft Launcher 2\Images\icon.png" Link="Assets/icon.png" />
+    <None Include="..\Plain Craft Launcher 2\Resources\forge-installer.jar" Link="forge-installer.jar" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Plain Craft Launcher 2\metadata.json" Link="LauncherAssets/metadata.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Plain Craft Launcher 2\Resources\Help.zip" Link="LauncherAssets/Resources/Help.zip" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Plain Craft Launcher 2\Resources\Custom.xml" Link="LauncherAssets/Resources/Custom.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Plain Craft Launcher 2\Images\**\*" Link="LauncherAssets/Images/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

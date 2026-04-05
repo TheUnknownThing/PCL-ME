@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Status as of 2026-04-04:
+Status as of 2026-04-05:
 
 - the portable backend is real
 - the Avalonia replacement shell is real
@@ -11,10 +11,13 @@ Status as of 2026-04-04:
 - the tools route family now has a dedicated runtime composition path
 - instance resource/server/export surfaces now perform several real file, clipboard, and archive actions from the replacement shell
 - instance overview actions now perform real rename, description, trash, patch, and artifact-export flows from the replacement shell
+- instance overview launch-adjacent actions now start a real replacement-shell test launch and export the actual generated launch script instead of launch-context placeholders
+- instance overview recovery actions now repair and reset the selected instance by reusing portable manifest downloads for core files, libraries, natives, asset indexes, and missing assets
 - download resource/detail routes no longer fall back to sample primary content for their main lists
 - toolbox test page continues moving from intent-only buttons to real shell/file outputs, and memory optimization now exports explicit diagnostics instead of a pure intent log
 - tools/game-link actions now use real prompt, clipboard, config, FAQ, and exported session/diagnostic behavior instead of synthetic activity-only output
 - download modpack install now copies a local pack into the launcher `versions` folder from the replacement shell
+- packaged frontend builds now exist for `osx-arm64`, `linux-x64`, and `win-x64`, and the packaged macOS app now starts the real Avalonia shell path instead of falling back to the CLI default
 - the repo is past the “can this work outside WPF?” stage
 - the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
 
@@ -312,10 +315,27 @@ Done when:
 - platform differences are isolated behind explicit services
 - frontend view-model code no longer assumes Windows-only behavior
 
+Status on 2026-04-04:
+
+- complete in `codex/frontend-track4-adapters` at the implementation level
+- launcher app-data path selection, external target opening, shortcut creation, command script extension selection, Unix executable marking, and default Java path hints now route through `PCL.Frontend.Spike/Workflows/FrontendPlatformAdapter.cs`
+- open-file/open-folder picker and clipboard behavior continue to route through `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- stored launcher key envelope decoding now routes through `PCL.Core/App/Essentials/LauncherStoredKeyEnvelopeService.cs` instead of frontend-local Windows-only decode branches
+- migrated frontend view-model code no longer carries inline platform branches for shortcut creation, exported launch script naming, or default Java path selection
+
 Manual verification:
 
 - run the same shell actions on Windows, macOS, and Linux
 - confirm equivalent user-visible behavior
+
+Verified on 2026-04-04:
+
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS
+- an ad hoc verification harness against the built frontend assembly resolved launcher app data to `~/.config/PCL`
+- the same harness created a real `.command` shortcut file and confirmed executable Unix mode bits
+- the same harness marked an exported script file executable on macOS
+- the same harness successfully opened a real local folder through the explicit external-target adapter path
+- Windows and Linux runtime verification are still needed before the full adapter matrix can be called closed
 
 ### Step 5. Replace WPF-owned launcher behaviors
 
@@ -329,6 +349,31 @@ Likely targets:
 - download/install execution glue
 - instance maintenance actions
 - update/packaging flows
+
+Status on 2026-04-04:
+
+- instance overview `测试游戏` now routes into the real replacement-shell launch flow instead of writing a test-context artifact
+- instance overview `导出启动脚本` now writes the real generated launch script content from the portable session plan
+- instance overview `补全文件` and `重置实例` now execute a portable manifest-driven repair path that refreshes the client jar, libraries, natives, asset index, and missing assets without falling back to WPF
+- recent Track 5 checkpoints for the managed install workflow slice:
+  - `5e51a2be` `feat: add frontend install workflow primitives`
+  - `74be91e1` `feat: wire frontend install selection flow`
+  - `2a9b74a0` `feat: add frontend unmanaged install workflow`
+  - `99c6f076` `fix: finish track 5 installer migration`
+
+Verified on 2026-04-05:
+
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after wiring the copied install cards to the new workflow
+- the frontend now owns the copied download/instance install selection flow for Minecraft, Fabric, Legacy Fabric, Quilt, LabyMod, Fabric API, Legacy Fabric API, and QFAPI / QSL through `FrontendInstallWorkflowService` and the shell dialog adapters
+- a real verification pass against `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft` created a temporary `versions/codex-track5-verify/codex-track5-verify.json`, first as Fabric with `mods/fabric-api-0.138.4+1.21.10.jar`, then reapplied the same instance as Quilt with `mods/quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
+- the managed install workflow reused 4,397 existing files on the first apply and 4,478 existing files on the second apply while switching the loader manifest and managed addon jar without falling back to WPF code
+- the temporary verification instance was removed after inspection so the real launcher folder was not left with extra test clutter
+- the frontend now also owns the copied unmanaged installer family for Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and OptiFabric, including the legacy compatibility rules copied from `PageDownloadInstall.xaml.vb`
+- a second real verification pass against the same launcher directory created temporary instances for `Forge 1.21.1`, `NeoForge 1.21.1`, `Cleanroom 1.12.2`, `LiteLoader 1.12.2`, and `Fabric 1.20.1 + OptiFine + OptiFabric`; those instances wrote the migrated manifests, produced the expected loader libraries, and in the Fabric case wrote `mods/optifabric-1.14.3.jar` plus `mods/OptiFine_1.20.1_HD_U_I5.jar`
+- the Forge-family manifest cleanup now strips missing local-only artifacts, OptiFabric choices now resolve from the live OptiFabric file feed instead of the dead Modrinth slug, and instance repair now reuses valid installer-local libraries instead of force-redownloading the wrong remote artifact
+- the temporary unmanaged-installer verification instances were removed after inspection so the real launcher folder was not left with extra test clutter
+- a forced Cleanroom `RunRepair + ForceCoreRefresh` pass progressed past the earlier local-library failure and into the broader core refresh workload; that long-running asset-heavy pass was not waited through to final completion during this checkpoint
+- the copied install family no longer has a known WPF-owned Track 5 gap, and Track 6 packaging is now in place; next work should focus on broader packaged-platform validation unless a new fallback surface is discovered
 
 Done when:
 
@@ -348,6 +393,22 @@ Done when:
 
 - Windows, macOS, and Linux builds are produced
 - basic launcher workflows pass on all three
+
+Status on 2026-04-05:
+
+- frontend packaging landed in `c21e1e7d` `feat: package frontend launcher builds`
+- `PCL.Frontend.Spike/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` frontend builds under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`
+- the packaged frontend now carries `LauncherAssets/metadata.json`, the copied `Images` tree, and the copied `Resources/Help.zip` plus `Resources/Custom.xml`, so packaged startup no longer depends on source-tree-relative `Plain Craft Launcher 2/...` paths
+- the macOS package now emits `Plain Craft Launcher Community Edition.app` with a `Contents/MacOS/PCLLauncher` stub that starts the replacement shell through `app --host-env true`
+- the Linux package now emits `launch-pcl-ce.sh` plus `Plain Craft Launcher Community Edition.desktop`, and the Windows package now emits `Launch Plain Craft Launcher Community Edition.vbs`
+
+Verified on 2026-04-05:
+
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after the Track 6 packaging patch
+- `./PCL.Frontend.Spike/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts
+- launching `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Spike app --host-env true`
+- that packaged macOS startup smoke test produced no error output after the copied launcher assets were included in publish output
+- Windows and Linux package entry-point files are present in the produced artifacts, but runtime validation on real Windows and Linux hosts is still pending
 
 Manual verification:
 
@@ -378,6 +439,11 @@ Scope:
 Reviewer can verify by:
 
 - running the same shell actions on at least two platforms and comparing outcomes
+
+Status on 2026-04-04:
+
+- implementation landed in `4a065f15` `refactor: isolate frontend platform adapters`
+- the next owner should treat remaining work here as validation on additional hosts, not another large frontend adapter rewrite
 
 ### Slice C. Remove remaining WPF workflow ownership
 
@@ -419,6 +485,9 @@ Avoid:
 
 ## Latest Frontend Checkpoints
 
+- `1aa6abfb` `feat: repair instance files from portable manifests`
+- `b7e11a0a` `feat: cut over instance launch-side overview actions`
+- `4a065f15` `refactor: isolate frontend platform adapters`
 - `7fad5b40` `feat: wire frontend track2 shell actions`
 - `5b0ac628` `feat: report toolbox memory diagnostics`
 - `ef3c0b92` `feat: wire instance overview runtime actions`

@@ -168,50 +168,15 @@ internal sealed partial class FrontendShellViewModel
 
     private void CreateLauncherShortcut()
     {
-        var desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-        if (string.IsNullOrWhiteSpace(desktopDirectory))
+        try
         {
-            AddActivity("创建快捷方式失败", "当前系统未提供桌面目录。");
-            return;
+            var shortcutPath = _shellActionService.CreateLauncherShortcut("PCL 社区版");
+            OpenInstanceTarget("创建快捷方式", shortcutPath, "快捷方式文件不存在。");
         }
-
-        Directory.CreateDirectory(desktopDirectory);
-
-        var executablePath = Environment.ProcessPath ?? Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL.Frontend.Spike");
-        string shortcutPath;
-        string shortcutContent;
-
-        if (OperatingSystem.IsWindows())
+        catch (Exception ex)
         {
-            shortcutPath = Path.Combine(desktopDirectory, "PCL 社区版.cmd");
-            shortcutContent = $"""
-                @echo off
-                start "" "{executablePath}"
-                """;
+            AddActivity("创建快捷方式失败", ex.Message);
         }
-        else if (OperatingSystem.IsMacOS())
-        {
-            shortcutPath = Path.Combine(desktopDirectory, "PCL 社区版.command");
-            shortcutContent = $"""
-                #!/bin/sh
-                "{executablePath}" "$@"
-                """;
-        }
-        else
-        {
-            shortcutPath = Path.Combine(desktopDirectory, "PCL 社区版.desktop");
-            shortcutContent = $"""
-                [Desktop Entry]
-                Type=Application
-                Name=PCL 社区版
-                Exec="{executablePath}"
-                Terminal=false
-                """;
-        }
-
-        File.WriteAllText(shortcutPath, shortcutContent, new UTF8Encoding(false));
-        TryMarkShortcutExecutable(shortcutPath);
-        OpenInstanceTarget("创建快捷方式", shortcutPath, "快捷方式文件不存在。");
     }
 
     private string WriteToolboxReport(string folderName, string fileName, IReadOnlyList<string> lines)
@@ -315,26 +280,5 @@ internal sealed partial class FrontendShellViewModel
             >= 10 => "不会吧！",
             _ => "（是百分制哦）"
         };
-    }
-
-    private static void TryMarkShortcutExecutable(string shortcutPath)
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
-        try
-        {
-            File.SetUnixFileMode(
-                shortcutPath,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
-        }
-        catch
-        {
-            // Best effort on Unix-like systems.
-        }
     }
 }

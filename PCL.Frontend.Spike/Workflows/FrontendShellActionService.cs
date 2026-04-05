@@ -17,11 +17,16 @@ using PCL.Frontend.Spike.Models;
 
 namespace PCL.Frontend.Spike.Workflows;
 
-internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePaths, Action exitLauncher)
+internal sealed class FrontendShellActionService(
+    FrontendRuntimePaths runtimePaths,
+    FrontendPlatformAdapter platformAdapter,
+    Action exitLauncher)
 {
     private static readonly HttpClient JavaRuntimeHttpClient = new();
 
     public FrontendRuntimePaths RuntimePaths { get; } = runtimePaths;
+
+    public FrontendPlatformAdapter PlatformAdapter { get; } = platformAdapter;
 
     public void AcceptLauncherEula()
     {
@@ -113,30 +118,14 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         exitLauncher();
     }
 
+    public FrontendInstanceRepairResult RepairInstance(FrontendInstanceRepairRequest request)
+    {
+        return FrontendInstanceRepairService.Repair(request);
+    }
+
     public bool TryOpenExternalTarget(string target, out string? error)
     {
-        error = null;
-
-        if (string.IsNullOrWhiteSpace(target))
-        {
-            error = "缺少可打开的目标。";
-            return false;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = target,
-                UseShellExecute = true
-            });
-            return true;
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-            return false;
-        }
+        return PlatformAdapter.TryOpenExternalTarget(target, out error);
     }
 
     public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
@@ -205,6 +194,23 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
     {
         var owner = GetDesktopMainWindow();
         var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText);
+        return await dialog.ShowDialog<string?>(owner);
+    }
+
+    public async Task<string?> PromptForChoiceAsync(
+        string title,
+        string message,
+        IReadOnlyList<PclChoiceDialogOption> options,
+        string? selectedId = null,
+        string confirmText = "确定")
+    {
+        if (options.Count == 0)
+        {
+            return null;
+        }
+
+        var owner = GetDesktopMainWindow();
+        var dialog = new PclChoiceDialog(title, message, options, selectedId, confirmText);
         return await dialog.ShowDialog<string?>(owner);
     }
 
@@ -389,6 +395,22 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
                 ReadLocalValue("UiMusicStart", false),
                 TriggerLauncherShutdown: false));
         ApplyLauncherShellAction(watcherStopPlan.LauncherAction);
+    }
+
+    public string GetCommandScriptExtension() => PlatformAdapter.GetCommandScriptExtension();
+
+    public string GetJavaExecutablePath(string runtimeDirectory) => PlatformAdapter.GetJavaExecutablePath(runtimeDirectory);
+
+    public IReadOnlyList<string> GetDefaultJavaDetectionCandidates() => PlatformAdapter.GetDefaultJavaDetectionCandidates();
+
+    public void EnsureFileExecutable(string path) => PlatformAdapter.EnsureFileExecutable(path);
+
+    public string CreateLauncherShortcut(string displayName)
+    {
+        var desktopDirectory = PlatformAdapter.TryGetDesktopDirectory()
+            ?? throw new InvalidOperationException("当前系统未提供桌面目录。");
+        var executablePath = Environment.ProcessPath ?? Path.Combine(RuntimePaths.ExecutableDirectory, "PCL.Frontend.Spike");
+        return PlatformAdapter.CreateLauncherShortcut(desktopDirectory, executablePath, displayName).ShortcutPath;
     }
 
     private static void TryDeleteDirectory(string path)
@@ -823,22 +845,7 @@ internal sealed class FrontendShellActionService(FrontendRuntimePaths runtimePat
         var persistedEnvelope = LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(persistedKeyPath)
             ?? throw new InvalidOperationException("Launcher encryption key is unavailable.");
         var storedKey = LauncherVersionedDataService.Parse(persistedEnvelope);
-        return storedKey.Version switch
-        {
-            1 => ReadWindowsProtectedKey(storedKey.Data),
-            2 => storedKey.Data,
-            _ => throw new NotSupportedException("Unsupported launcher key version.")
-        };
-    }
-
-    private static byte[] ReadWindowsProtectedKey(byte[] data)
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            throw new PlatformNotSupportedException("Protected launcher keys are only supported on Windows.");
-        }
-
-        return ProtectedData.Unprotect(data, Encoding.UTF8.GetBytes("PCL CE Encryption Key"), DataProtectionScope.CurrentUser);
+        return LauncherStoredKeyEnvelopeService.ReadKey(storedKey);
     }
 }
 

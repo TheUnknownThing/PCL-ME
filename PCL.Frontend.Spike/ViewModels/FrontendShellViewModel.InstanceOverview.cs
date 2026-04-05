@@ -8,6 +8,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Essentials;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -128,9 +130,9 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ExportInstanceScriptCommand => new(ExportInstanceScript);
 
-    public ActionCommand TestInstanceCommand => new(TestInstance);
+    public ActionCommand TestInstanceCommand => new(() => _ = TestInstanceAsync());
 
-    public ActionCommand CheckInstanceFilesCommand => new(CheckInstanceFiles);
+    public ActionCommand CheckInstanceFilesCommand => new(() => _ = CheckInstanceFilesAsync());
 
     public ActionCommand RestoreInstanceCommand => new(() => _ = ResetInstanceAsync());
 
@@ -349,20 +351,22 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var extension = OperatingSystem.IsWindows() ? ".cmd" : OperatingSystem.IsMacOS() ? ".command" : ".sh";
+        var extension = _shellActionService.GetCommandScriptExtension();
         var scriptPath = Path.Combine(
             GetInstanceOverviewArtifactDirectory("launch-scripts"),
             $"启动 {_instanceComposition.Selection.InstanceName}{extension}");
-        var classpathEntries = _launchComposition.ClasspathPlan.Entries.Count;
-        var lines = OperatingSystem.IsWindows()
-            ? BuildWindowsLaunchExportLines(classpathEntries)
-            : BuildUnixLaunchExportLines(classpathEntries);
-        File.WriteAllText(scriptPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        TryMarkFileExecutable(scriptPath);
+        var encoding = _launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding
+            ? new UTF8Encoding(false)
+            : Encoding.Default;
+        File.WriteAllText(
+            scriptPath,
+            _launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
+            encoding);
+        _shellActionService.EnsureFileExecutable(scriptPath);
         OpenInstanceTarget("导出启动脚本", scriptPath, "启动脚本不存在。");
     }
 
-    private void TestInstance()
+    private async Task TestInstanceAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
@@ -370,26 +374,13 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var reportPath = WriteInstanceOverviewArtifact(
-            "test-launch",
-            $"{_instanceComposition.Selection.InstanceName}-test-launch.txt",
-            [
-                $"实例: {_instanceComposition.Selection.InstanceName}",
-                $"档案: {_launchComposition.SelectedProfile.IdentityLabel}",
-                $"Java: {_launchComposition.SelectedJavaRuntime?.DisplayName ?? "未找到可用 Java"}",
-                $"Java 可执行文件: {_launchComposition.SelectedJavaRuntime?.ExecutablePath ?? "未设置"}",
-                $"游戏目录: {_launchComposition.InstancePath}",
-                $"Natives 目录: {_launchComposition.NativesDirectory}",
-                $"分辨率: {_launchComposition.ResolutionPlan.Width} x {_launchComposition.ResolutionPlan.Height}",
-                $"类路径条目数: {_launchComposition.ClasspathPlan.Entries.Count}",
-                string.Empty,
-                "当前 replacement shell 仍在推进真实启动切换。",
-                "这个测试输出记录的是当前运行时的启动上下文，便于在不改动页面布局的情况下核对实例、Java 与路径绑定。"
-            ]);
-        OpenInstanceTarget("测试游戏", reportPath, "测试输出不存在。");
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            $"已切换到启动页并准备测试实例 {_instanceComposition.Selection.InstanceName}。");
+        await HandleLaunchRequestedAsync();
     }
 
-    private void CheckInstanceFiles()
+    private async Task CheckInstanceFilesAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
@@ -397,31 +388,21 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var instanceDirectory = _instanceComposition.Selection.InstanceDirectory;
-        var manifestPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.json");
-        var jarPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.jar");
-        var reportPath = WriteInstanceOverviewArtifact(
-            "file-checks",
-            $"{_instanceComposition.Selection.InstanceName}-file-check.txt",
-            [
-                $"实例: {_instanceComposition.Selection.InstanceName}",
-                $"实例目录: {instanceDirectory}",
-                $"核心 Json: {(File.Exists(manifestPath) ? "已检测到" : "缺失")} • {manifestPath}",
-                $"核心 Jar: {(File.Exists(jarPath) ? "已检测到" : "缺失")} • {jarPath}",
-                $"存档数量: {_instanceComposition.World.Entries.Count}",
-                $"截图数量: {_instanceComposition.Screenshot.Entries.Count}",
-                $"服务器条目: {_instanceComposition.Server.Entries.Count}",
-                $"启用 Mod: {_instanceComposition.Mods.Entries.Count}",
-                $"禁用 Mod: {_instanceComposition.DisabledMods.Entries.Count}",
-                $"资源包: {_instanceComposition.ResourcePacks.Entries.Count}",
-                $"光影包: {_instanceComposition.Shaders.Entries.Count}",
-                $"投影结构: {_instanceComposition.Schematics.Entries.Count}",
-                $"关闭文件校验: {(DisableInstanceFileValidation ? "是" : "否")}",
-                string.Empty,
-                "此报告用于核对 replacement shell 当前能读到的实例文件状态。",
-                "真实的下载补全执行仍属于后续启动/安装切换工作。"
-            ]);
-        OpenInstanceTarget("补全文件", reportPath, "检查报告不存在。");
+        if (DisableInstanceFileValidation)
+        {
+            AddActivity("补全文件", "请先关闭 [实例设置 -> 设置 -> 高级启动选项 -> 关闭文件校验]，然后再尝试补全文件！");
+            return;
+        }
+
+        try
+        {
+            var result = await RunInstanceRepairAsync("补全文件", "file-checks", forceCoreRefresh: false);
+            AddActivity("补全文件", $"已补全 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("补全文件失败", ex.Message);
+        }
     }
 
     private async Task ResetInstanceAsync()
@@ -434,30 +415,19 @@ internal sealed partial class FrontendShellViewModel
 
         var confirmed = await _shellActionService.ConfirmAsync(
             "实例重置确认",
-            $"确定要为 {_instanceComposition.Selection.InstanceName} 生成重置备份与执行计划吗？当前实现会先保存核心快照，方便后续继续推进真实安装切换。",
-            "生成计划");
+            $"确定要重置实例 {_instanceComposition.Selection.InstanceName} 吗？replacement shell 会先保存核心备份，然后重新下载当前实例的核心文件、依赖库与资源索引，并尽量复用已通过校验的资源文件。",
+            "开始重置");
         if (!confirmed)
         {
-            AddActivity("重置实例", "已取消重置计划生成。");
+            AddActivity("重置实例", "已取消重置。");
             return;
         }
 
         try
         {
             var backupDirectory = BackupInstanceCoreFiles("reset-backups");
-            var reportPath = WriteInstanceOverviewArtifact(
-                "reset-plans",
-                $"{_instanceComposition.Selection.InstanceName}-reset-plan.txt",
-                [
-                    $"实例: {_instanceComposition.Selection.InstanceName}",
-                    $"备份目录: {backupDirectory}",
-                    $"Minecraft: {_instanceComposition.Selection.VanillaVersion}",
-                    .. InstanceOverviewInfoEntries.Select(entry => $"{entry.Label}: {entry.Value}"),
-                    string.Empty,
-                    "已完成当前核心文件备份。",
-                    "真实的联网重置安装流仍在后续 launch/install cutover 范围内。"
-                ]);
-            OpenInstanceTarget("重置实例", reportPath, "重置计划不存在。");
+            var result = await RunInstanceRepairAsync("重置实例", "reset-plans", forceCoreRefresh: true, backupDirectory);
+            AddActivity("重置实例", $"已重置核心文件并下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
         }
         catch (Exception ex)
         {
@@ -605,43 +575,43 @@ internal sealed partial class FrontendShellViewModel
             SanitizePathSegment(_instanceComposition.Selection.InstanceName));
     }
 
-    private IReadOnlyList<string> BuildWindowsLaunchExportLines(int classpathEntries)
+    private async Task<FrontendInstanceRepairResult> RunInstanceRepairAsync(
+        string actionTitle,
+        string artifactFolderName,
+        bool forceCoreRefresh,
+        string? backupDirectory = null)
     {
-        return
-        [
-            "@echo off",
-            "echo PCL CE Frontend Script Export",
-            $"echo Instance: {_instanceComposition.Selection.InstanceName}",
-            $"echo Profile: {_launchComposition.SelectedProfile.IdentityLabel}",
-            $"echo Java: {_launchComposition.SelectedJavaRuntime?.ExecutablePath ?? "Not configured"}",
-            $"echo Game directory: {_launchComposition.InstancePath}",
-            $"echo Natives directory: {_launchComposition.NativesDirectory}",
-            $"echo Resolution: {_launchComposition.ResolutionPlan.Width}x{_launchComposition.ResolutionPlan.Height}",
-            $"echo Classpath entries: {classpathEntries}",
-            "echo.",
-            "echo The replacement shell now exports the runtime launch context here.",
-            "echo Full end-to-end launch cutover is still being migrated.",
-            "pause"
-        ];
-    }
+        var instanceDirectory = _instanceComposition.Selection.InstanceDirectory;
+        var manifestPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.json");
+        var jarPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.jar");
 
-    private IReadOnlyList<string> BuildUnixLaunchExportLines(int classpathEntries)
-    {
-        return
-        [
-            "#!/bin/sh",
-            "echo \"PCL CE Frontend Script Export\"",
-            $"echo \"Instance: {_instanceComposition.Selection.InstanceName}\"",
-            $"echo \"Profile: {_launchComposition.SelectedProfile.IdentityLabel}\"",
-            $"echo \"Java: {_launchComposition.SelectedJavaRuntime?.ExecutablePath ?? "Not configured"}\"",
-            $"echo \"Game directory: {_launchComposition.InstancePath}\"",
-            $"echo \"Natives directory: {_launchComposition.NativesDirectory}\"",
-            $"echo \"Resolution: {_launchComposition.ResolutionPlan.Width}x{_launchComposition.ResolutionPlan.Height}\"",
-            $"echo \"Classpath entries: {classpathEntries}\"",
-            "echo",
-            "echo \"The replacement shell now exports the runtime launch context here.\"",
-            "echo \"Full end-to-end launch cutover is still being migrated.\""
-        ];
+        var result = await Task.Run(() => _shellActionService.RepairInstance(new FrontendInstanceRepairRequest(
+            _instanceComposition.Selection.LauncherDirectory,
+            _instanceComposition.Selection.InstanceDirectory,
+            _instanceComposition.Selection.InstanceName,
+            forceCoreRefresh)));
+
+        var summaryLines = new List<string?>
+        {
+            $"实例: {_instanceComposition.Selection.InstanceName}",
+            $"实例目录: {instanceDirectory}",
+            $"核心 Json: {(File.Exists(manifestPath) ? "已检测到" : "缺失")} • {manifestPath}",
+            $"核心 Jar: {(File.Exists(jarPath) ? "已检测到" : "缺失")} • {jarPath}",
+            backupDirectory is null ? null : $"备份目录: {backupDirectory}",
+            $"下载文件数: {result.DownloadedFiles.Count}",
+            $"复用文件数: {result.ReusedFiles.Count}",
+            string.Empty,
+            "已写入 replacement shell 的实例修复结果。"
+        };
+        summaryLines.AddRange(result.DownloadedFiles.Take(20).Select(path => $"downloaded: {path}"));
+        summaryLines.AddRange(result.ReusedFiles.Take(20).Select(path => $"reused: {path}"));
+
+        var summaryPath = WriteInstanceOverviewArtifact(
+            artifactFolderName,
+            $"{_instanceComposition.Selection.InstanceName}-{(forceCoreRefresh ? "reset" : "file-check")}.txt",
+            summaryLines.Where(line => !string.IsNullOrWhiteSpace(line)).Cast<string>().ToArray());
+        OpenInstanceTarget(actionTitle, summaryPath, "实例修复结果不存在。");
+        return result;
     }
 
     private static void ReplacePathText(string path, string oldValue, string newValue)
@@ -793,28 +763,6 @@ internal sealed partial class FrontendShellViewModel
 
         return builder.Length == 0 ? "instance" : builder.ToString();
     }
-
-    private static void TryMarkFileExecutable(string path)
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
-        try
-        {
-            File.SetUnixFileMode(
-                path,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
-        }
-        catch
-        {
-            // Best effort on Unix-like systems.
-        }
-    }
-
     private static void PatchCoreArchive(string corePath, string patchArchivePath)
     {
         if (!File.Exists(corePath))

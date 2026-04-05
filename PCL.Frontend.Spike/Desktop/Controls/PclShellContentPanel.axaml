@@ -445,6 +445,33 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
+        <controls:PclCard Header="Minecraft" ContentMargin="20,40,18,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Border
+                  Width="18"
+                  Height="18"
+                  Margin="0,0,7,0"
+                  VerticalAlignment="Center">
+                <Image Source="{Binding DownloadInstallMinecraftIcon}" Stretch="Uniform" />
+              </Border>
+              <TextBlock
+                  Grid.Column="1"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="{Binding DownloadInstallMinecraftVersion}"
+                  TextTrimming="CharacterEllipsis" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  Width="72"
+                  Margin="10,0,0,0"
+                  Command="{Binding EditDownloadInstallMinecraftCommand}"
+                  Text="修改" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
         <ItemsControl ItemsSource="{Binding DownloadInstallOptions}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -470,6 +497,7 @@
                           Grid.Column="2"
                           Width="72"
                           Margin="10,0,0,0"
+                          IsEnabled="{Binding CanClear}"
                           Command="{Binding ClearCommand}"
                           Text="清除" />
                     </Grid>
@@ -477,19 +505,21 @@
                     <TextBlock
                         Foreground="#677789"
                         FontSize="12"
-                        Text="保留原版自动安装页的版本列表层级与当前选择信息展示，后续继续把安装器明细填回这个区块。"
+                        Text="{Binding DetailText}"
                         TextWrapping="Wrap" />
 
                     <Grid ColumnDefinitions="Auto,Auto">
                       <controls:PclButton
                           Grid.Column="0"
                           Width="88"
+                          IsEnabled="{Binding CanSelect}"
                           Command="{Binding SelectCommand}"
-                          Text="选择版本" />
+                          Text="{Binding SelectText}" />
                       <controls:PclButton
                           Grid.Column="1"
                           Width="88"
                           Margin="10,0,0,0"
+                          IsEnabled="{Binding CanClear}"
                           Command="{Binding ClearCommand}"
                           Text="清除选择" />
                     </Grid>
@@ -499,6 +529,21 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock
+              VerticalAlignment="Center"
+              Foreground="#6B7C8E"
+              FontSize="12.5"
+              Text="继续沿用原版自动安装页的命名卡与组件卡结构，并在当前壳层直接写入真实安装清单。"
+              TextWrapping="Wrap" />
+          <controls:PclButton
+              Grid.Column="1"
+              Width="120"
+              Margin="16,0,0,0"
+              Command="{Binding StartDownloadInstallCommand}"
+              Text="开始安装" />
+        </Grid>
       </StackPanel>
 
       <StackPanel Margin="25,10,25,25" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsDownloadCatalogSurface}" Spacing="15">
@@ -4085,19 +4130,21 @@
                     <TextBlock
                         Foreground="#677789"
                         FontSize="12"
-                        Text="继续沿用原版实例安装页的单卡片版本选择结构，后续可以直接把更细的安装合同填进这一层。"
+                        Text="{Binding DetailText}"
                         TextWrapping="Wrap" />
 
                     <Grid ColumnDefinitions="Auto,Auto">
                       <controls:PclButton
                           Grid.Column="0"
                           Width="88"
+                          IsEnabled="{Binding CanSelect}"
                           Command="{Binding SelectCommand}"
-                          Text="选择版本" />
+                          Text="{Binding SelectText}" />
                       <controls:PclButton
                           Grid.Column="1"
                           Width="88"
                           Margin="10,0,0,0"
+                          IsEnabled="{Binding CanClear}"
                           Command="{Binding ClearCommand}"
                           Text="清除选择" />
                     </Grid>
@@ -4107,6 +4154,21 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock
+              VerticalAlignment="Center"
+              Foreground="#6B7C8E"
+              FontSize="12.5"
+              Text="继续沿用原版实例安装页的操作位置，并在当前壳层直接写入实例安装清单与补全结果。"
+              TextWrapping="Wrap" />
+          <controls:PclButton
+              Grid.Column="1"
+              Width="120"
+              Margin="16,0,0,0"
+              Command="{Binding ApplyInstanceInstallCommand}"
+              Text="{Binding InstanceInstallApplyButtonText}" />
+        </Grid>
       </StackPanel>
 
       <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsVersionSaveInfoSurface}" Spacing="15">
