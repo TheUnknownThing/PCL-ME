@@ -136,6 +136,11 @@ internal sealed partial class PclButton : UserControl
 
     private IBrush ResolveBackgroundBrush()
     {
+        if (!IsEnabled)
+        {
+            return Brush.Parse("#40FFFFFF");
+        }
+
         if (_isHovered)
         {
             return ColorType == PclButtonColorState.Red

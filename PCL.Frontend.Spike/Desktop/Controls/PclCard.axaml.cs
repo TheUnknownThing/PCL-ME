@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Media.Transformation;
 using System.Windows.Input;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -27,8 +26,6 @@ internal sealed partial class PclCard : UserControl
     public static readonly StyledProperty<ICommand?> HeaderCommandProperty =
         AvaloniaProperty.Register<PclCard, ICommand?>(nameof(HeaderCommand));
 
-    private static readonly BoxShadows IdleShadow = BoxShadows.Parse("0 2 10 0 #12000000");
-    private static readonly BoxShadows HoverShadow = BoxShadows.Parse("0 4 14 0 #19000000");
     private bool _isHovered;
 
     public PclCard()
@@ -139,13 +136,16 @@ internal sealed partial class PclCard : UserControl
 
     private void RefreshState()
     {
-        CardShadow.BoxShadow = _isHovered ? HoverShadow : IdleShadow;
+        CardShadow.Background = _isHovered
+            ? Brush.Parse("#0B5BCB")
+            : Brush.Parse("#343D4A");
+        CardShadow.Opacity = _isHovered ? 0.3 : 0.1;
         CardBorder.BorderBrush = _isHovered
-            ? Brush.Parse("#66D5E6FD")
-            : Brush.Parse("#30D5E6FD");
+            ? Brush.Parse("#28D5E6FD")
+            : Brush.Parse("#00FFFFFF");
         CardBorder.Background = _isHovered
-            ? Brush.Parse("#D8FBFBFD")
-            : Brush.Parse("#D2FBFBFB");
+            ? Brush.Parse("#E6FFFFFF")
+            : Brush.Parse("#CDFFFFFF");
         HeaderTextBlock.Foreground = _isHovered
             ? Brush.Parse("#0B5BCB")
             : Brush.Parse("#343D4A");

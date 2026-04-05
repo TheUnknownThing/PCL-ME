@@ -151,6 +151,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshShell(activityMessage);
+        RequestNavigationTransition(ShellNavigationTransitionDirection.Forward);
         if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
@@ -188,6 +189,7 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshShell("Returned to the previous shell route.");
+            RequestNavigationTransition(ShellNavigationTransitionDirection.Backward);
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
             {
                 _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
@@ -217,11 +219,17 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
+            RequestNavigationTransition(ShellNavigationTransitionDirection.Backward);
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
             {
                 _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
             }
         }
+    }
+
+    private void RequestNavigationTransition(ShellNavigationTransitionDirection direction)
+    {
+        NavigationTransitionRequested?.Invoke(this, new ShellNavigationTransitionEventArgs(direction, IsLaunchRoute));
     }
 
     private void RaiseShellStateProperties()

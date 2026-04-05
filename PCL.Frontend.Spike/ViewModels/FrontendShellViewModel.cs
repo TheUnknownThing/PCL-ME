@@ -5,6 +5,8 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel : ViewModelBase
 {
+    public event EventHandler<ShellNavigationTransitionEventArgs>? NavigationTransitionRequested;
+
     public ObservableCollection<NavigationEntryViewModel> TopLevelEntries { get; } = [];
 
     public ObservableCollection<NavigationEntryViewModel> SidebarEntries { get; } = [];
