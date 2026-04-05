@@ -2,10 +2,7 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclListItem"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
-    x:Name="Root"
-    motion:Motion.AnimateOnVisible="True"
-    motion:Motion.OffsetX="-12">
+    x:Name="Root">
   <Grid
       x:Name="LayoutRoot"
       MinHeight="36"

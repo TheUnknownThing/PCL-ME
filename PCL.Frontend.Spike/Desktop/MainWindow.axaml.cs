@@ -196,15 +196,18 @@ internal sealed partial class MainWindow : Window
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
 
         leftHost.Opacity = 1;
-        leftHost.RenderTransform = new TranslateTransform(0, 0);
+        leftHost.RenderTransform = TransformOperations.Parse("translateX(0px)");
 
         rightHost.Opacity = 1;
-        rightHost.RenderTransform = new TranslateTransform(0, 0);
+        rightHost.RenderTransform = TransformOperations.Parse("translateX(0px)");
     }
 
     private static void PrepareRouteAnimation(Control control, double offsetX)
     {
         control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+        control.Transitions = null;
+        control.Opacity = 0;
+        control.RenderTransform = TransformOperations.Parse($"translateX({offsetX}px)");
         control.Transitions =
         [
             new DoubleTransition
@@ -220,8 +223,5 @@ internal sealed partial class MainWindow : Window
                 Easing = RouteTransitionEasing
             }
         ];
-
-        control.Opacity = 0;
-        control.RenderTransform = new TranslateTransform(offsetX, 0);
     }
 }

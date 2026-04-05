@@ -265,9 +265,6 @@
             <Grid
                 x:Name="LaunchRouteGrid"
                 IsVisible="{Binding IsLaunchRoute}"
-                motion:Motion.AnimateOnVisible="True"
-                motion:Motion.StaggerChildren="True"
-                motion:Motion.OffsetY="12"
                 ColumnDefinitions="Auto,*">
               <Border
                   x:Name="LaunchLeftHost"
@@ -285,9 +282,6 @@
             <Grid
                 x:Name="StandardRouteGrid"
                 IsVisible="{Binding IsStandardShellRoute}"
-                motion:Motion.AnimateOnVisible="True"
-                motion:Motion.StaggerChildren="True"
-                motion:Motion.OffsetY="12"
                 ColumnDefinitions="236,*">
               <Border
                   x:Name="StandardLeftHost"
