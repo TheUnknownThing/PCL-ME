@@ -100,6 +100,26 @@ internal sealed partial class FrontendShellViewModel
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)
     {
+        if (descriptor.Kind == StandardShellRightPaneKind.DownloadInstall)
+        {
+            return new DownloadInstallShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.DownloadCatalog)
+        {
+            return new DownloadCatalogShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.DownloadResource)
+        {
+            return new DownloadResourceShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.DownloadFavorites)
+        {
+            return new DownloadFavoritesShellRightPaneViewModel(this, descriptor);
+        }
+
         if (descriptor.Kind == StandardShellRightPaneKind.SetupLaunch)
         {
             return new SetupLaunchShellRightPaneViewModel(this, descriptor);
@@ -123,6 +143,11 @@ internal sealed partial class FrontendShellViewModel
         if (descriptor.Kind == StandardShellRightPaneKind.SetupUpdate)
         {
             return new SetupUpdateShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.ToolsGameLink)
+        {
+            return new ToolsGameLinkShellRightPaneViewModel(this, descriptor);
         }
 
         if (descriptor.Kind == StandardShellRightPaneKind.VersionSaveInfo)
@@ -185,6 +210,11 @@ internal sealed partial class FrontendShellViewModel
             return new ToolsHelpShellRightPaneViewModel(this, descriptor);
         }
 
+        if (descriptor.Kind == StandardShellRightPaneKind.ToolsTest)
+        {
+            return new ToolsTestShellRightPaneViewModel(this, descriptor);
+        }
+
         return new LegacyStandardShellRightPaneViewModel(this, descriptor);
     }
 
@@ -223,7 +253,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.DownloadInstall => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadInstall, StandardShellRightPaneGroup.DownloadInstall, "download-install"),
+            LauncherFrontendSubpageKey.DownloadInstall => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadInstall, StandardShellRightPaneGroup.DownloadInstall, "download-install", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.DownloadClient
                 or LauncherFrontendSubpageKey.DownloadOptiFine
                 or LauncherFrontendSubpageKey.DownloadForge
@@ -233,14 +263,14 @@ internal sealed partial class FrontendShellViewModel
                 or LauncherFrontendSubpageKey.DownloadQuilt
                 or LauncherFrontendSubpageKey.DownloadLiteLoader
                 or LauncherFrontendSubpageKey.DownloadLabyMod
-                or LauncherFrontendSubpageKey.DownloadLegacyFabric => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadCatalog, StandardShellRightPaneGroup.DownloadCatalog, "download-catalog"),
+                or LauncherFrontendSubpageKey.DownloadLegacyFabric => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadCatalog, StandardShellRightPaneGroup.DownloadCatalog, "download-catalog", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.DownloadMod
                 or LauncherFrontendSubpageKey.DownloadPack
                 or LauncherFrontendSubpageKey.DownloadDataPack
                 or LauncherFrontendSubpageKey.DownloadResourcePack
                 or LauncherFrontendSubpageKey.DownloadShader
-                or LauncherFrontendSubpageKey.DownloadWorld => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadResource, StandardShellRightPaneGroup.DownloadResource, "download-resource"),
-            LauncherFrontendSubpageKey.DownloadCompFavorites => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadFavorites, StandardShellRightPaneGroup.DownloadFavorites, "download-favorites"),
+                or LauncherFrontendSubpageKey.DownloadWorld => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadResource, StandardShellRightPaneGroup.DownloadResource, "download-resource", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.DownloadCompFavorites => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadFavorites, StandardShellRightPaneGroup.DownloadFavorites, "download-favorites", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "download-generic")
         };
     }
@@ -249,9 +279,9 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.ToolsGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link"),
+            LauncherFrontendSubpageKey.ToolsGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsHelp, StandardShellRightPaneGroup.ToolsFamily, "tools-help", usesCompatibilityView: false),
-            LauncherFrontendSubpageKey.ToolsTest => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsTest, StandardShellRightPaneGroup.ToolsFamily, "tools-test"),
+            LauncherFrontendSubpageKey.ToolsTest => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsTest, StandardShellRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "tools-generic")
         };
     }

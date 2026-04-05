@@ -43,6 +43,26 @@ internal sealed class LegacyStandardShellRightPaneViewModel(
     StandardShellRightPaneDescriptor descriptor)
     : ShellRightPaneViewModel(shell, descriptor);
 
+internal sealed class DownloadInstallShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class DownloadCatalogShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class DownloadResourceShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class DownloadFavoritesShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
 internal sealed class SetupLaunchShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)
@@ -68,7 +88,17 @@ internal sealed class SetupUpdateShellRightPaneViewModel(
     StandardShellRightPaneDescriptor descriptor)
     : ShellRightPaneViewModel(shell, descriptor);
 
+internal sealed class ToolsGameLinkShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
 internal sealed class ToolsHelpShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class ToolsTestShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)
     : ShellRightPaneViewModel(shell, descriptor);
