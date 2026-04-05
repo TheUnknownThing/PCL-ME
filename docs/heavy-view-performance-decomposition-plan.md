@@ -396,6 +396,13 @@ Owner:
 
 - Engineer F
 
+Status:
+
+- Completed on April 6, 2026.
+- Centralized standard-shell right-pane construction in `ShellPaneTemplateRegistry`, so new pane types now land through one shared registration/factory path instead of duplicating template and VM-resolution edits.
+- Added a reusable `PclActionSummaryRow` control for the repeated catalog/favorites action rows to keep shared right-pane list sections visually aligned without growing route hosts again.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the cleanup.
+
 Goal:
 
 - Prevent repeated layout chunks from drifting while keeping views small and composable.
