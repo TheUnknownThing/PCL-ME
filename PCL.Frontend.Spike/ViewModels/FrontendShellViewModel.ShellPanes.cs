@@ -115,6 +115,46 @@ internal sealed partial class FrontendShellViewModel
             return new VersionSaveDatapackShellRightPaneViewModel(this, descriptor);
         }
 
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceOverview)
+        {
+            return new InstanceOverviewShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceSetup)
+        {
+            return new InstanceSetupShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceExport)
+        {
+            return new InstanceExportShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceInstall)
+        {
+            return new InstanceInstallShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceWorld)
+        {
+            return new InstanceWorldShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceScreenshot)
+        {
+            return new InstanceScreenshotShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceServer)
+        {
+            return new InstanceServerShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.InstanceResource)
+        {
+            return new InstanceResourceShellRightPaneViewModel(this, descriptor);
+        }
+
         if (descriptor.Kind == StandardShellRightPaneKind.ToolsHelp)
         {
             return new ToolsHelpShellRightPaneViewModel(this, descriptor);
@@ -195,9 +235,9 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.VersionSavesInfo => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveInfo, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-info"),
-            LauncherFrontendSubpageKey.VersionSavesBackup => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveBackup, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-backup"),
-            LauncherFrontendSubpageKey.VersionSavesDatapack => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveDatapack, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-datapack"),
+            LauncherFrontendSubpageKey.VersionSavesInfo => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveInfo, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-info", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionSavesBackup => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveBackup, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-backup", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionSavesDatapack => CreateRightPaneDescriptor(StandardShellRightPaneKind.VersionSaveDatapack, StandardShellRightPaneGroup.VersionSavesFamily, "version-save-datapack", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "version-saves-generic")
         };
     }
@@ -206,18 +246,18 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.VersionOverall => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceOverview, StandardShellRightPaneGroup.InstanceOverviewFamily, "instance-overview"),
-            LauncherFrontendSubpageKey.VersionSetup => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceSetup, StandardShellRightPaneGroup.InstanceSetupFamily, "instance-setup"),
-            LauncherFrontendSubpageKey.VersionExport => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceExport, StandardShellRightPaneGroup.InstanceSetupFamily, "instance-export"),
-            LauncherFrontendSubpageKey.VersionInstall => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceInstall, StandardShellRightPaneGroup.InstanceSetupFamily, "instance-install"),
-            LauncherFrontendSubpageKey.VersionWorld => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceWorld, StandardShellRightPaneGroup.InstanceContentFamily, "instance-world"),
-            LauncherFrontendSubpageKey.VersionScreenshot => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceScreenshot, StandardShellRightPaneGroup.InstanceContentFamily, "instance-screenshot"),
-            LauncherFrontendSubpageKey.VersionServer => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceServer, StandardShellRightPaneGroup.InstanceContentFamily, "instance-server"),
+            LauncherFrontendSubpageKey.VersionOverall => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceOverview, StandardShellRightPaneGroup.InstanceOverviewFamily, "instance-overview", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionSetup => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceSetup, StandardShellRightPaneGroup.InstanceSetupFamily, "instance-setup", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionExport => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceExport, StandardShellRightPaneGroup.InstanceSetupFamily, "instance-export", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionInstall => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceInstall, StandardShellRightPaneGroup.InstanceSetupFamily, "instance-install", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionWorld => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceWorld, StandardShellRightPaneGroup.InstanceContentFamily, "instance-world", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionScreenshot => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceScreenshot, StandardShellRightPaneGroup.InstanceContentFamily, "instance-screenshot", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.VersionServer => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceServer, StandardShellRightPaneGroup.InstanceContentFamily, "instance-server", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.VersionMod
                 or LauncherFrontendSubpageKey.VersionModDisabled
                 or LauncherFrontendSubpageKey.VersionResourcePack
                 or LauncherFrontendSubpageKey.VersionShader
-                or LauncherFrontendSubpageKey.VersionSchematic => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceResource, StandardShellRightPaneGroup.InstanceContentFamily, "instance-resource"),
+                or LauncherFrontendSubpageKey.VersionSchematic => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceResource, StandardShellRightPaneGroup.InstanceContentFamily, "instance-resource", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "instance-generic")
         };
     }

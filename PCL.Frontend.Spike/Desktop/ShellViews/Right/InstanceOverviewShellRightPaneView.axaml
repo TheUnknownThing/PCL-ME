@@ -1,0 +1,223 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.InstanceOverviewShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,15" Spacing="15">
+      <controls:PclCard ContentMargin="18,18,18,18">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="Auto,*">
+            <Border
+                Width="72"
+                Height="72"
+                Margin="0,0,16,0"
+                Background="#F7FAFE"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="12">
+              <Image
+                  Width="46"
+                  Height="46"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Source="{Binding InstanceOverviewSelectedIcon}"
+                  Stretch="Uniform" />
+            </Border>
+
+            <StackPanel Grid.Column="1" Spacing="6">
+              <TextBlock
+                  Foreground="#343D4A"
+                  FontSize="20"
+                  FontWeight="SemiBold"
+                  Text="{Binding InstanceOverviewName}" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="13"
+                  Text="{Binding InstanceOverviewSubtitle}"
+                  TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding InstanceOverviewDisplayTags}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border
+                        Margin="0,2,8,0"
+                        Padding="8,4"
+                        Background="#F7FAFE"
+                        BorderBrush="#D5E6FD"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                      <TextBlock
+                          Foreground="#4B78C2"
+                          FontSize="11.5"
+                          Text="{Binding .}" />
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="实例信息" ContentMargin="18,40,18,16">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding InstanceOverviewInfoEntries}" IsVisible="{Binding HasInstanceOverviewInfoEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,*">
+                  <TextBlock
+                      Grid.Column="0"
+                      Width="86"
+                      Margin="0,0,18,0"
+                      Foreground="#7D8897"
+                      FontSize="12.5"
+                      Text="{Binding Label}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      Foreground="#343D4A"
+                      FontSize="13"
+                      Text="{Binding Value}"
+                      TextWrapping="Wrap" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="个性化" ContentMargin="20,40,20,18">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="15">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28">
+              <TextBlock
+                  Grid.Row="0"
+                  Margin="0,0,25,0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13"
+                  Text="图标" />
+              <ComboBox
+                  Grid.Row="0"
+                  Grid.Column="1"
+                  SelectedIndex="{Binding SelectedInstanceOverviewIconIndex}"
+                  ItemsSource="{Binding InstanceOverviewIconOptions}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+
+              <TextBlock
+                  Grid.Row="2"
+                  Margin="0,0,25,0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13"
+                  Text="分类" />
+              <ComboBox
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  SelectedIndex="{Binding SelectedInstanceOverviewCategoryIndex}"
+                  ItemsSource="{Binding InstanceOverviewCategoryOptions}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,Auto,Auto">
+              <controls:PclButton
+                  Grid.Column="0"
+                  MinWidth="140"
+                  Margin="0,0,20,0"
+                  Command="{Binding RenameInstanceCommand}"
+                  Text="修改实例名" />
+              <controls:PclButton
+                  Grid.Column="1"
+                  MinWidth="140"
+                  Margin="0,0,20,0"
+                  Command="{Binding EditInstanceDescriptionCommand}"
+                  Text="修改实例描述" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  MinWidth="140"
+                  Command="{Binding ToggleInstanceFavoriteCommand}"
+                  Text="{Binding InstanceOverviewFavoriteButtonText}" />
+            </Grid>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="快捷方式" ContentMargin="20,40,20,18">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="Auto,Auto,Auto">
+            <controls:PclButton
+                Grid.Column="0"
+                MinWidth="140"
+                Margin="0,0,20,0"
+                Command="{Binding OpenInstanceFolderCommand}"
+                Text="实例文件夹" />
+            <controls:PclButton
+                Grid.Column="1"
+                MinWidth="140"
+                Margin="0,0,20,0"
+                Command="{Binding OpenInstanceSavesFolderCommand}"
+                Text="存档文件夹" />
+            <controls:PclButton
+                Grid.Column="2"
+                MinWidth="140"
+                Command="{Binding OpenInstanceModsFolderCommand}"
+                Text="Mod 文件夹" />
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="高级管理" ContentMargin="20,40,20,18">
+        <controls:PclCard.CardContent>
+          <WrapPanel ItemHeight="35" ItemWidth="150">
+            <controls:PclButton
+                Width="140"
+                Margin="0,0,20,10"
+                Command="{Binding ExportInstanceScriptCommand}"
+                Text="导出启动脚本" />
+            <controls:PclButton
+                Width="140"
+                Margin="0,0,20,10"
+                Command="{Binding TestInstanceCommand}"
+                Text="测试游戏" />
+            <controls:PclButton
+                Width="140"
+                Margin="0,0,20,10"
+                Command="{Binding CheckInstanceFilesCommand}"
+                Text="补全文件" />
+            <controls:PclButton
+                Width="140"
+                Margin="0,0,20,10"
+                Command="{Binding RestoreInstanceCommand}"
+                Text="重置" />
+            <controls:PclButton
+                Width="140"
+                Margin="0,0,20,10"
+                Command="{Binding DeleteInstanceCommand}"
+                ColorType="Red"
+                Text="删除实例" />
+            <controls:PclButton
+                Width="140"
+                Margin="0,0,20,10"
+                Command="{Binding PatchInstanceCoreCommand}"
+                Text="修补核心" />
+          </WrapPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

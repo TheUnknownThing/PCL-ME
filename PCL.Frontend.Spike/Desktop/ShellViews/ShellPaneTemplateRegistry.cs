@@ -16,6 +16,17 @@ internal static class ShellPaneTemplateRegistry
         application.DataTemplates.Add(CreateTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>());
         application.DataTemplates.Add(CreateTemplate<LegacyStandardShellRightPaneViewModel, LegacyStandardShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<ToolsHelpShellRightPaneViewModel, ToolsHelpShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<VersionSaveInfoShellRightPaneViewModel, VersionSaveInfoShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<VersionSaveBackupShellRightPaneViewModel, VersionSaveBackupShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<VersionSaveDatapackShellRightPaneViewModel, VersionSaveDatapackShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceOverviewShellRightPaneViewModel, InstanceOverviewShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceSetupShellRightPaneViewModel, InstanceSetupShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceExportShellRightPaneViewModel, InstanceExportShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceInstallShellRightPaneViewModel, InstanceInstallShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceWorldShellRightPaneViewModel, InstanceWorldShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceScreenshotShellRightPaneViewModel, InstanceScreenshotShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceServerShellRightPaneViewModel, InstanceServerShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<InstanceResourceShellRightPaneViewModel, InstanceResourceShellRightPaneView>());
     }
 
     private static FuncDataTemplate<TViewModel> CreateTemplate<TViewModel, TView>()

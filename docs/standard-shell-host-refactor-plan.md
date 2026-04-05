@@ -29,8 +29,13 @@ Completed in the current slice:
 - Pane VM contract files were added under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/ShellPanes/`.
 - Pane-to-view registration now lives centrally in `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/ShellPaneTemplateRegistry.cs`.
 - `App` now registers shell pane templates through that dedicated registry instead of accumulating inline `Application.DataTemplates` entries in `App.axaml`.
+- The standard-shell left host now resolves into dedicated pane variants:
+  - navigation list pane
+  - overview / facts pane
+  - empty fallback pane
 - The old monolithic left sidebar is no longer on the active standard-shell rendering path.
 - The first dedicated right-pane extraction landed for `Tools > Help`.
+- Dedicated right-pane extractions now cover the full instance family and the full version-saves family.
 - Legacy `IsXxxSurface` properties now read from the resolved pane identity as temporary compatibility shims instead of duplicating route matching logic.
 - Remaining standard-shell right routes still use a temporary compatibility pane that hosts `PclShellContentPanel`.
 - `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes after the host-contract changes.
@@ -40,8 +45,9 @@ Current migration state:
 - Workstream A: substantially landed for standard-shell hosts.
 - Workstream B: route-to-pane-resolution contract landed for all standard-shell routes; legacy surface flags are now compatibility shims over the resolved pane descriptor.
 - Workstream C: centralized pane template registry landed; downstream pane extractions can add mappings in one file without touching `App.axaml`.
-- Workstream F: initial left-pane host migration landed.
-- Workstream D/E/G: still in progress.
+- Workstream D: instance/version-saves right-pane extraction landed.
+- Workstream F: completed for standard-shell left-pane decomposition.
+- Workstream E/G: still in progress.
 
 ## Reference Files
 
@@ -195,10 +201,40 @@ Dependencies:
 - Depends on Workstream B pane contract.
 - Can proceed in parallel with D and E once pane base types exist.
 
-### Workstream D: Setup / Download / Tools Pane Extraction
+### Workstream D: Instance / VersionSaves Pane Extraction
 
 Owner:
-- Engineer 1
+- Engineer D
+
+Scope:
+- Extract instance and version-saves routes from `PclShellContentPanel`.
+- Preserve existing behavior and commands.
+
+Suggested families:
+- instance overview/setup/export/install
+- instance world/screenshot/server/resource
+- version saves info/backup/datapack
+
+Files:
+- Source:
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Instance*.cs`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.VersionSaves.cs`
+- Target:
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+
+Deliverables:
+- Dedicated right-pane views for instance and version-saves routes.
+- Existing behavior preserved.
+
+Dependencies:
+- Depends on Workstream B pane contract.
+- Can proceed in parallel with Workstream E.
+
+### Workstream E: Setup / Download / Tools Pane Extraction
+
+Owner:
+- Engineer C
 
 Scope:
 - Extract setup, download, and tools views out of the current giant `PclShellContentPanel`.
@@ -226,36 +262,6 @@ Deliverables:
 - Dedicated right-pane views for setup/download/tools.
 - No visual redesign.
 - Existing logic reused, not rewritten unnecessarily.
-
-Dependencies:
-- Depends on Workstream B pane contract.
-- Can proceed in parallel with Workstream E.
-
-### Workstream E: Instance / VersionSaves Pane Extraction
-
-Owner:
-- Engineer 2
-
-Scope:
-- Extract instance and version-saves routes from `PclShellContentPanel`.
-- Preserve existing behavior and commands.
-
-Suggested families:
-- instance overview/setup/export/install
-- instance world/screenshot/server/resource
-- version saves info/backup/datapack
-
-Files:
-- Source:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Instance*.cs`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.VersionSaves.cs`
-- Target:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
-
-Deliverables:
-- Dedicated right-pane views for instance and version-saves routes.
-- Existing behavior preserved.
 
 Dependencies:
 - Depends on Workstream B pane contract.
