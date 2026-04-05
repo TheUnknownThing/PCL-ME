@@ -1,6 +1,9 @@
 <Application
     x:Class="PCL.Frontend.Spike.Desktop.App"
     xmlns="https://github.com/avaloniaui"
+    xmlns:leftViews="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Left"
+    xmlns:rightViews="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right"
+    xmlns:shellPanes="clr-namespace:PCL.Frontend.Spike.ViewModels.ShellPanes"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     RequestedThemeVariant="Light">
   <Application.Resources>
@@ -83,6 +86,27 @@
       <SolidColorBrush x:Key="TextFieldSelectionBrush">#FF1370F3</SolidColorBrush>
     </ResourceDictionary>
   </Application.Resources>
+
+  <Application.DataTemplates>
+    <DataTemplate DataType="shellPanes:StandardShellSidebarPaneViewModel">
+      <leftViews:StandardShellSidebarPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:LegacyStandardShellRightPaneViewModel">
+      <rightViews:LegacyStandardShellRightPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:ToolsHelpShellRightPaneViewModel">
+      <rightViews:ToolsHelpShellRightPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:VersionSaveInfoShellRightPaneViewModel">
+      <rightViews:VersionSaveInfoShellRightPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:VersionSaveBackupShellRightPaneViewModel">
+      <rightViews:VersionSaveBackupShellRightPaneView />
+    </DataTemplate>
+    <DataTemplate DataType="shellPanes:VersionSaveDatapackShellRightPaneViewModel">
+      <rightViews:VersionSaveDatapackShellRightPaneView />
+    </DataTemplate>
+  </Application.DataTemplates>
 
   <Application.Styles>
     <FluentTheme />

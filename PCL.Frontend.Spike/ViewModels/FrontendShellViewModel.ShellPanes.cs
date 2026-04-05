@@ -70,6 +70,21 @@ internal sealed partial class FrontendShellViewModel
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)
     {
+        if (descriptor.Kind == StandardShellRightPaneKind.VersionSaveInfo)
+        {
+            return new VersionSaveInfoShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.VersionSaveBackup)
+        {
+            return new VersionSaveBackupShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.VersionSaveDatapack)
+        {
+            return new VersionSaveDatapackShellRightPaneViewModel(this, descriptor);
+        }
+
         if (descriptor.Kind == StandardShellRightPaneKind.ToolsHelp)
         {
             return new ToolsHelpShellRightPaneViewModel(this, descriptor);
