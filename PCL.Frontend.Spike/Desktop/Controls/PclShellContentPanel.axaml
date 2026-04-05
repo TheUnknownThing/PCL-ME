@@ -7,7 +7,7 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid>
       <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLaunchSurface}" Spacing="15">
-        <controls:PclCard Header="启动选项" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="启动选项" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28,9,28,9,28,9,28,9,28">
               <TextBlock
@@ -147,7 +147,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="游戏内存" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="游戏内存" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Border
@@ -244,7 +244,7 @@
             ShowChevron="True"
             IsChevronExpanded="{Binding IsLaunchAdvancedOptionsExpanded}"
             HeaderCommand="{Binding ToggleLaunchAdvancedOptionsCommand}"
-            ContentMargin="25,40,25,15">
+            ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="Auto,*">
@@ -1377,7 +1377,7 @@
       </StackPanel>
 
       <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupGameLinkSurface}" Spacing="15">
-        <controls:PclCard Header="EasyTier" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="EasyTier" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Border
@@ -1620,7 +1620,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="辅助功能" ContentMargin="25,40,25,17">
+        <controls:PclCard Header="辅助功能" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22,8,22">
               <TextBlock
@@ -1667,7 +1667,7 @@
       </StackPanel>
 
       <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupLauncherMiscSurface}" Spacing="15">
-        <controls:PclCard Header="系统" ContentMargin="25,40,25,16">
+        <controls:PclCard Header="系统" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,5,28,5,20,8,35">
               <TextBlock
@@ -1852,7 +1852,7 @@
             Header="调试选项"
             ShowChevron="True"
             IsChevronExpanded="False"
-            ContentMargin="25,40,25,15">
+            ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="Auto,*">
@@ -2032,7 +2032,7 @@
       </StackPanel>
 
       <StackPanel Margin="25,10,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsSetupUiSurface}" Spacing="15">
-        <controls:PclCard Header="基础" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="基础" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28">
@@ -2196,7 +2196,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="字体" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="字体" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,25,*" RowDefinitions="30,10,30">
               <TextBlock
@@ -2223,7 +2223,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="背景内容" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="背景内容" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="8">
               <CheckBox
@@ -2326,7 +2326,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="标题栏" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="标题栏" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="*,*,*,*,0.2*">
@@ -2387,7 +2387,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="主页" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="主页" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="*,*,*,*,0.2*">
@@ -2886,7 +2886,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="下载自定义文件" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="下载自定义文件" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <TextBlock
@@ -2936,7 +2936,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="下载正版玩家的皮肤" ContentMargin="25,40,25,15">
+        <controls:PclCard Header="下载正版玩家的皮肤" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,14,35">
               <TextBlock VerticalAlignment="Center" Foreground="#343D4A" FontSize="13.5" Margin="0,0,25,0" Text="正版玩家名" />
@@ -2951,7 +2951,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="瞅眼服务器" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="瞅眼服务器" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <Border
                 MinHeight="168"
@@ -3044,7 +3044,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="True" ContentMargin="25,40,25,20">
+        <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="Auto,*">
@@ -3859,7 +3859,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="高级选项" ContentMargin="20,38,20,18">
+        <controls:PclCard Header="高级选项" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
               <Border
@@ -4283,7 +4283,7 @@
         <ItemsControl ItemsSource="{Binding InstanceServerEntries}" IsVisible="{Binding HasInstanceServerEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
+              <controls:PclCard Header="{Binding Title}" ContentMargin="20,12,20,15">
                 <controls:PclCard.CardContent>
                   <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Margin="0,0,18,0" Spacing="4">
@@ -4532,7 +4532,7 @@
       </StackPanel>
 
       <StackPanel Margin="25,25,25,10" motion:Motion.AnimateOnVisible="True" motion:Motion.StaggerChildren="True" motion:Motion.OffsetY="14" IsVisible="{Binding IsGenericShellSurface}" Spacing="15">
-        <controls:PclCard Header="{Binding Title}" ContentMargin="20,38,20,18">
+        <controls:PclCard Header="{Binding Title}" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="10">
               <TextBlock
@@ -4568,7 +4568,7 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="页面概览" IsVisible="{Binding HasSurfaceFacts}" ContentMargin="20,38,20,18">
+        <controls:PclCard Header="页面概览" IsVisible="{Binding HasSurfaceFacts}" ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
             <ItemsControl ItemsSource="{Binding SurfaceFacts}">
               <ItemsControl.ItemTemplate>

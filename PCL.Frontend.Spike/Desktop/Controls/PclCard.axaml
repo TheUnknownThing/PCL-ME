@@ -7,13 +7,10 @@
       x:Name="CardShadow"
       Background="#00000000"
       BoxShadow="0 2 10 0 #12000000"
-      CornerRadius="5"
-      RenderTransformOrigin="0.5,0.5"
-      RenderTransform="translate(0,0)">
+      CornerRadius="5">
     <Border.Transitions>
       <Transitions>
         <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.18" />
-        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18" />
       </Transitions>
     </Border.Transitions>
     <Border
@@ -36,6 +33,7 @@
 
         <Button
             x:Name="HeaderButton"
+            Classes="nochrome"
             Margin="0"
             Padding="0"
             Background="Transparent"
