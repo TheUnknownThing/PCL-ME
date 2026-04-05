@@ -27,7 +27,8 @@ Completed in the current slice:
   - route-family group
   - compatibility-host flag for unmigrated views
 - Pane VM contract files were added under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/ShellPanes/`.
-- Pane-to-view registration now lives centrally in `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/App.axaml`.
+- Pane-to-view registration now lives centrally in `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/ShellPaneTemplateRegistry.cs`.
+- `App` now registers shell pane templates through that dedicated registry instead of accumulating inline `Application.DataTemplates` entries in `App.axaml`.
 - The old monolithic left sidebar is no longer on the active standard-shell rendering path.
 - The first dedicated right-pane extraction landed for `Tools > Help`.
 - Legacy `IsXxxSurface` properties now read from the resolved pane identity as temporary compatibility shims instead of duplicating route matching logic.
@@ -38,7 +39,7 @@ Current migration state:
 
 - Workstream A: substantially landed for standard-shell hosts.
 - Workstream B: route-to-pane-resolution contract landed for all standard-shell routes; legacy surface flags are now compatibility shims over the resolved pane descriptor.
-- Workstream C: initial template mapping landed.
+- Workstream C: centralized pane template registry landed; downstream pane extractions can add mappings in one file without touching `App.axaml`.
 - Workstream F: initial left-pane host migration landed.
 - Workstream D/E/G: still in progress.
 
