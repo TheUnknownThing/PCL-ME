@@ -15,6 +15,11 @@ internal static class ShellPaneTemplateRegistry
         application.DataTemplates.Add(CreateTemplate<StandardShellSummaryPaneViewModel, StandardShellSummaryPaneView>());
         application.DataTemplates.Add(CreateTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>());
         application.DataTemplates.Add(CreateTemplate<LegacyStandardShellRightPaneViewModel, LegacyStandardShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupLaunchShellRightPaneViewModel, SetupLaunchShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupAboutShellRightPaneViewModel, SetupAboutShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupFeedbackShellRightPaneViewModel, SetupFeedbackShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupLogShellRightPaneViewModel, SetupLogShellRightPaneView>());
+        application.DataTemplates.Add(CreateTemplate<SetupUpdateShellRightPaneViewModel, SetupUpdateShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<ToolsHelpShellRightPaneViewModel, ToolsHelpShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<VersionSaveInfoShellRightPaneViewModel, VersionSaveInfoShellRightPaneView>());
         application.DataTemplates.Add(CreateTemplate<VersionSaveBackupShellRightPaneViewModel, VersionSaveBackupShellRightPaneView>());

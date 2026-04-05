@@ -100,6 +100,31 @@ internal sealed partial class FrontendShellViewModel
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)
     {
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupLaunch)
+        {
+            return new SetupLaunchShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupAbout)
+        {
+            return new SetupAboutShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupFeedback)
+        {
+            return new SetupFeedbackShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupLog)
+        {
+            return new SetupLogShellRightPaneViewModel(this, descriptor);
+        }
+
+        if (descriptor.Kind == StandardShellRightPaneKind.SetupUpdate)
+        {
+            return new SetupUpdateShellRightPaneViewModel(this, descriptor);
+        }
+
         if (descriptor.Kind == StandardShellRightPaneKind.VersionSaveInfo)
         {
             return new VersionSaveInfoShellRightPaneViewModel(this, descriptor);
