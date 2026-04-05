@@ -1,23 +1,28 @@
 using System;
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media;
-using Avalonia.Media.Transformation;
+using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using PCL.Frontend.Spike.Icons;
 using PCL.Frontend.Spike.ViewModels;
+using System.Numerics;
+using System.Threading.Tasks;
 
 namespace PCL.Frontend.Spike.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
     private static readonly TimeSpan RouteTransitionDuration = TimeSpan.FromMilliseconds(300);
-    private static readonly CubicEaseOut RouteTransitionEasing = new();
     private FrontendShellViewModel? _shellViewModel;
+    private CompositionVisual? _gridRootVisual;
+    private CompositionVisual? _launchLeftContentHostVisual;
+    private CompositionVisual? _launchRightContentHostVisual;
+    private CompositionVisual? _standardLeftContentHostVisual;
+    private CompositionVisual? _standardRightContentHostVisual;
+    private Compositor? _compositor;
 
     public MainWindow()
     {
@@ -42,10 +47,12 @@ internal sealed partial class MainWindow : Window
         }
 
         GridRoot.Opacity = 0;
-        GridRoot.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-        GridRoot.RenderTransform = TransformOperations.Parse("translateY(60px) rotate(-3deg)");
 
-        Opened += (_, _) => RunEntranceAnimation();
+        Opened += (_, _) =>
+        {
+            InitializeCompositionVisuals();
+            RunEntranceAnimation();
+        };
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
         UpdateWindowChromeState();
@@ -112,29 +119,58 @@ internal sealed partial class MainWindow : Window
         };
     }
 
-    private void RunEntranceAnimation()
+    private void InitializeCompositionVisuals()
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            GridRoot.Transitions =
-            [
-                new Avalonia.Animation.DoubleTransition
-                {
-                    Property = OpacityProperty,
-                    Duration = TimeSpan.FromMilliseconds(250),
-                    Easing = new Avalonia.Animation.Easings.CubicEaseOut()
-                },
-                new Avalonia.Animation.TransformOperationsTransition
-                {
-                    Property = RenderTransformProperty,
-                    Duration = TimeSpan.FromMilliseconds(600),
-                    Easing = new Avalonia.Animation.Easings.CubicEaseOut()
-                }
-            ];
+        _gridRootVisual ??= ElementComposition.GetElementVisual(GridRoot);
+        _launchLeftContentHostVisual ??= ElementComposition.GetElementVisual(LaunchLeftContentHost);
+        _launchRightContentHostVisual ??= ElementComposition.GetElementVisual(LaunchRightContentHost);
+        _standardLeftContentHostVisual ??= ElementComposition.GetElementVisual(StandardLeftContentHost);
+        _standardRightContentHostVisual ??= ElementComposition.GetElementVisual(StandardRightContentHost);
+        _compositor ??= _gridRootVisual?.Compositor
+            ?? _launchLeftContentHostVisual?.Compositor
+            ?? _standardLeftContentHostVisual?.Compositor;
+    }
 
+    private async void RunEntranceAnimation()
+    {
+        await Task.Delay(100);
+
+        InitializeCompositionVisuals();
+        if (_gridRootVisual is null || _compositor is null)
+        {
             GridRoot.Opacity = 1;
-            GridRoot.RenderTransform = TransformOperations.Parse("translateY(0px) rotate(0deg)");
-        }, DispatcherPriority.Loaded);
+            return;
+        }
+
+        var opacityAnimation = _compositor.CreateScalarKeyFrameAnimation();
+        opacityAnimation.Duration = TimeSpan.FromMilliseconds(250);
+        opacityAnimation.InsertKeyFrame(0f, 0f, new CubicEaseOut());
+        opacityAnimation.InsertKeyFrame(1f, 1f, new CubicEaseOut());
+        opacityAnimation.Target = "Opacity";
+
+        var rotationAnimation = _compositor.CreateScalarKeyFrameAnimation();
+        rotationAnimation.Duration = TimeSpan.FromMilliseconds(500);
+        rotationAnimation.InsertKeyFrame(0f, -0.06f, new CubicEaseOut());
+        rotationAnimation.InsertKeyFrame(1f, 0f, new CubicEaseOut());
+        rotationAnimation.Target = "RotationAngle";
+
+        var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
+        offsetAnimation.Duration = TimeSpan.FromMilliseconds(600);
+        offsetAnimation.InsertKeyFrame(0f, new Vector3(0f, 60f, 0f), new CubicEaseOut());
+        offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), new CubicEaseOut());
+        offsetAnimation.Target = "Offset";
+
+        var group = _compositor.CreateAnimationGroup();
+        group.Add(opacityAnimation);
+        group.Add(rotationAnimation);
+        group.Add(offsetAnimation);
+
+        var size = _gridRootVisual.Size;
+        _gridRootVisual.CenterPoint = new Vector3D(
+            (float)size.X / 2,
+            (float)size.Y / 2,
+            (float)_gridRootVisual.CenterPoint.Z);
+        _gridRootVisual.StartAnimationGroup(group);
     }
 
     private void OnWindowPropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
@@ -163,8 +199,8 @@ internal sealed partial class MainWindow : Window
     private void OnNavigationTransitionRequested(object? sender, ShellNavigationTransitionEventArgs e)
     {
         Dispatcher.UIThread.Post(
-            () => _ = PlayRouteTransitionAsync(e),
-            DispatcherPriority.Loaded);
+            () => PlayRouteTransition(e),
+            DispatcherPriority.Render);
     }
 
     private void UpdateWindowChromeState()
@@ -176,52 +212,55 @@ internal sealed partial class MainWindow : Window
         MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
     }
 
-    private async Task PlayRouteTransitionAsync(ShellNavigationTransitionEventArgs transition)
+    private void PlayRouteTransition(ShellNavigationTransitionEventArgs transition)
     {
-        var (leftHost, rightHost) = transition.IsLaunchRoute
-            ? (LaunchLeftHost as Control, LaunchRightHost as Control)
-            : (StandardLeftHost as Control, StandardRightHost as Control);
-
-        if (leftHost is null || rightHost is null || !leftHost.IsVisible || !rightHost.IsVisible)
+        InitializeCompositionVisuals();
+        if (_compositor is null)
         {
             return;
         }
 
-        var leftOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? -50d : 50d;
-        var rightOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? 50d : -50d;
+        var (leftVisual, rightVisual) = transition.IsLaunchRoute
+            ? (_launchLeftContentHostVisual, _launchRightContentHostVisual)
+            : (_standardLeftContentHostVisual, _standardRightContentHostVisual);
 
-        PrepareRouteAnimation(leftHost, leftOffset);
-        PrepareRouteAnimation(rightHost, rightOffset);
+        if (leftVisual is null || rightVisual is null)
+        {
+            return;
+        }
 
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        var leftOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? -50f : 50f;
+        var rightOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? 50f : -50f;
 
-        leftHost.Opacity = 1;
-        leftHost.RenderTransform = TransformOperations.Parse("translateX(0px)");
-
-        rightHost.Opacity = 1;
-        rightHost.RenderTransform = TransformOperations.Parse("translateX(0px)");
+        StartRouteAnimation(leftVisual, leftOffset);
+        StartRouteAnimation(rightVisual, rightOffset);
     }
 
-    private static void PrepareRouteAnimation(Control control, double offsetX)
+    private void StartRouteAnimation(CompositionVisual visual, float offsetX)
     {
-        control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-        control.Transitions = null;
-        control.Opacity = 0;
-        control.RenderTransform = TransformOperations.Parse($"translateX({offsetX}px)");
-        control.Transitions =
-        [
-            new DoubleTransition
-            {
-                Property = Visual.OpacityProperty,
-                Duration = RouteTransitionDuration,
-                Easing = RouteTransitionEasing
-            },
-            new TransformOperationsTransition
-            {
-                Property = Visual.RenderTransformProperty,
-                Duration = RouteTransitionDuration,
-                Easing = RouteTransitionEasing
-            }
-        ];
+        if (_compositor is null)
+        {
+            return;
+        }
+
+        var easing = new CubicEaseOut();
+
+        var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
+        offsetAnimation.Duration = RouteTransitionDuration;
+        offsetAnimation.InsertKeyFrame(0f, new Vector3(offsetX, 0f, 0f), easing);
+        offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), easing);
+        offsetAnimation.Target = "Offset";
+
+        var opacityAnimation = _compositor.CreateScalarKeyFrameAnimation();
+        opacityAnimation.Duration = RouteTransitionDuration;
+        opacityAnimation.InsertKeyFrame(0f, 0f, easing);
+        opacityAnimation.InsertKeyFrame(1f, 1f, easing);
+        opacityAnimation.Target = "Opacity";
+
+        var group = _compositor.CreateAnimationGroup();
+        group.Add(offsetAnimation);
+        group.Add(opacityAnimation);
+
+        visual.StartAnimationGroup(group);
     }
 }

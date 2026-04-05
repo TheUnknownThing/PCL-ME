@@ -270,12 +270,17 @@
                   x:Name="LaunchLeftHost"
                   Grid.Column="0"
                   Width="300"
+                  ClipToBounds="True"
                   Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">
-                <controls:PclLaunchLeftPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+                <Grid x:Name="LaunchLeftContentHost">
+                  <controls:PclLaunchLeftPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+                </Grid>
               </Border>
 
-              <Border x:Name="LaunchRightHost" Grid.Column="1" Background="#08FFFFFF">
-                <controls:PclLaunchRightPanel />
+              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
+                <Grid x:Name="LaunchRightContentHost">
+                  <controls:PclLaunchRightPanel />
+                </Grid>
               </Border>
             </Grid>
 
@@ -286,12 +291,17 @@
               <Border
                   x:Name="StandardLeftHost"
                   Grid.Column="0"
+                  ClipToBounds="True"
                   Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">
-                <controls:PclShellSidebarPanel />
+                <Grid x:Name="StandardLeftContentHost">
+                  <controls:PclShellSidebarPanel />
+                </Grid>
               </Border>
 
-              <Border x:Name="StandardRightHost" Grid.Column="1" Background="#08FFFFFF">
-                <controls:PclShellContentPanel />
+              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
+                <Grid x:Name="StandardRightContentHost">
+                  <controls:PclShellContentPanel />
+                </Grid>
               </Border>
             </Grid>
 
