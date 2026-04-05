@@ -55,22 +55,11 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(
             InstanceInstallHints,
-            installState.Hints.Select(hint => CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
+            GetEffectiveInstallHints(isExistingInstance: true).Select(hint => CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
 
         ReplaceItems(
             InstanceInstallOptions,
-            installState.Options.Select(option => CreateDownloadInstallOption(
-                option.Title,
-                GetEffectiveSelectionText(isExistingInstance: true, option.Title),
-                LoadLauncherBitmap("Images", "Blocks", option.IconName),
-                FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title)
-                    ? "继续沿用原版实例安装页的卡片选择结构，并直接对当前实例的安装清单执行修改。"
-                    : "这一项仍保留原位卡片，但旧安装器对它的真实执行路径尚未在当前迁移切片中接管。",
-                FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title) ? "选择版本" : "暂未接管",
-                FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title),
-                new ActionCommand(() => _ = EditInstallOptionAsync(isExistingInstance: true, option.Title)),
-                !string.Equals(GetEffectiveSelectionText(isExistingInstance: true, option.Title), "未安装", StringComparison.Ordinal),
-                new ActionCommand(() => ClearInstallOption(isExistingInstance: true, option.Title)))));
+            installState.Options.Select(option => CreateInstallOptionViewModel(isExistingInstance: true, option.Title, option.IconName)));
     }
 
     private void RefreshInstanceInstallSurface()

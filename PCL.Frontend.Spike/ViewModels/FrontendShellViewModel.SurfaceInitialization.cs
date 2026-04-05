@@ -200,26 +200,13 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(
             DownloadInstallHints,
-            _downloadComposition.Install.Hints.Select(hint =>
+            GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
                 CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
 
         ReplaceItems(
             DownloadInstallOptions,
             _downloadComposition.Install.Options.Select(option =>
-                CreateDownloadInstallOption(
-                    option.Title,
-                    GetEffectiveSelectionText(isExistingInstance: false, option.Title),
-                    string.IsNullOrWhiteSpace(option.IconName)
-                        ? null
-                        : LoadLauncherBitmap("Images", "Blocks", option.IconName),
-                    FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title)
-                        ? "继续沿用原版安装页的卡片选择结构，并直接从当前可用候选中选定版本。"
-                        : "这一项仍保留原卡片与按钮位置，但当前迁移切片还没有接管旧安装器的真实执行路径。",
-                    FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title) ? "选择版本" : "暂未接管",
-                    FrontendInstallWorkflowService.IsFrontendManagedOption(option.Title),
-                    new ActionCommand(() => _ = EditInstallOptionAsync(isExistingInstance: false, option.Title)),
-                    !string.Equals(GetEffectiveSelectionText(isExistingInstance: false, option.Title), "未安装", StringComparison.Ordinal),
-                    new ActionCommand(() => ClearInstallOption(isExistingInstance: false, option.Title)))));
+                CreateInstallOptionViewModel(isExistingInstance: false, option.Title, option.IconName)));
     }
 
     private void RefreshDownloadCatalogSurface()

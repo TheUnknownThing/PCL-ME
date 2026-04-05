@@ -149,7 +149,8 @@ internal static class FrontendInstanceRepairService
             return;
         }
 
-        AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = forceDownload || filePlan.ForceDownload });
+        var shouldForceDownload = (forceDownload || filePlan.ForceDownload) && filePlan.Urls.Count > 0;
+        AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = shouldForceDownload });
     }
 
     private static void AddNativeDownload(
@@ -200,7 +201,8 @@ internal static class FrontendInstanceRepairService
             }
         }
 
-        AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = forceDownload || filePlan.ForceDownload });
+        var shouldForceDownload = (forceDownload || filePlan.ForceDownload) && filePlan.Urls.Count > 0;
+        AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = shouldForceDownload });
     }
 
     private static bool TryGetLibraryDownload(
@@ -246,7 +248,22 @@ internal static class FrontendInstanceRepairService
             path = DeriveLibraryPathFromName(libraryName, string.Equals(entryName, "artifact", StringComparison.Ordinal) ? null : entryName);
         }
 
-        var url = GetString(downloadEntry, "url");
+        var localPath = Path.Combine(launcherDirectory, "libraries", path.Replace('/', Path.DirectorySeparatorChar));
+        var hasExplicitUrl = downloadEntry.TryGetProperty("url", out var urlElement);
+        var url = hasExplicitUrl && urlElement.ValueKind == JsonValueKind.String
+            ? urlElement.GetString()
+            : GetString(downloadEntry, "url");
+        if (hasExplicitUrl && string.IsNullOrWhiteSpace(url))
+        {
+            filePlan = new FrontendInstanceRepairFilePlan(
+                localPath,
+                [],
+                GetString(downloadEntry, "sha1"),
+                GetLong(downloadEntry, "size"),
+                false);
+            return true;
+        }
+
         if (string.IsNullOrWhiteSpace(url))
         {
             url = BuildLibraryUrl(library, path);
@@ -258,7 +275,7 @@ internal static class FrontendInstanceRepairService
         }
 
         filePlan = new FrontendInstanceRepairFilePlan(
-            Path.Combine(launcherDirectory, "libraries", path.Replace('/', Path.DirectorySeparatorChar)),
+            localPath,
             [url],
             GetString(downloadEntry, "sha1"),
             GetLong(downloadEntry, "size"),
@@ -428,10 +445,22 @@ internal static class FrontendInstanceRepairService
         ICollection<string> downloadedFiles,
         ICollection<string> reusedFiles)
     {
-        if (!filePlan.ForceDownload && IsFileValid(filePlan))
+        var isFileValid = IsFileValid(filePlan);
+        if (!filePlan.ForceDownload && isFileValid)
         {
             reusedFiles.Add(filePlan.LocalPath);
             return;
+        }
+
+        if (filePlan.Urls.Count == 0)
+        {
+            if (isFileValid)
+            {
+                reusedFiles.Add(filePlan.LocalPath);
+                return;
+            }
+
+            throw new InvalidOperationException($"实例修复文件缺少可用下载源：{filePlan.LocalPath}");
         }
 
         DownloadFile(filePlan);

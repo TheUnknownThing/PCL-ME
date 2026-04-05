@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -97,7 +98,7 @@ internal static class FrontendInstallWorkflowService
             "Fabric API" => GetModrinthFileChoices("fabric-api", minecraftVersion, ["fabric"]),
             "Legacy Fabric API" => GetModrinthFileChoices("9CJED7xi", minecraftVersion, null),
             "QFAPI / QSL" => GetModrinthFileChoices("qvIfYCYJ", minecraftVersion, ["quilt"], allowVersionFallback: true),
-            "OptiFabric" => GetModrinthFileChoices("optifabric", minecraftVersion, ["fabric"], allowVersionFallback: true),
+            "OptiFabric" => GetOptiFabricChoices(minecraftVersion),
             _ => []
         };
     }
@@ -128,6 +129,7 @@ internal static class FrontendInstallWorkflowService
         Directory.CreateDirectory(targetDirectory);
 
         var manifestNode = BuildTargetManifest(request);
+        RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
         var manifestPath = Path.Combine(targetDirectory, $"{request.TargetInstanceName}.json");
         File.WriteAllText(manifestPath, manifestNode.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
@@ -532,7 +534,9 @@ internal static class FrontendInstallWorkflowService
 
     private static void RunForgeInstallerHelper(string installerPath, string launcherDirectory)
     {
-        var helperPath = Path.Combine(AppContext.BaseDirectory, ForgeInstallerHelperFileName);
+        var helperBaseDirectory = Path.GetDirectoryName(typeof(FrontendInstallWorkflowService).Assembly.Location)
+                                  ?? AppContext.BaseDirectory;
+        var helperPath = Path.Combine(helperBaseDirectory, ForgeInstallerHelperFileName);
         if (!File.Exists(helperPath))
         {
             throw new InvalidOperationException($"缺少 {ForgeInstallerHelperFileName}。");
@@ -1132,6 +1136,51 @@ internal static class FrontendInstallWorkflowService
         ];
     }
 
+    private static IReadOnlyList<FrontendInstallChoice> GetOptiFabricChoices(string minecraftVersion)
+    {
+        if (minecraftVersion.StartsWith("1.14", StringComparison.OrdinalIgnoreCase)
+            || minecraftVersion.StartsWith("1.15", StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        var root = ReadJsonObject("https://api.cfwidget.com/minecraft/mc-mods/optifabric");
+        if (root["files"] is not JsonArray files)
+        {
+            return [];
+        }
+
+        return files
+            .Select(node => node as JsonObject)
+            .Where(node => node is not null)
+            .Where(node => CfWidgetFileMatchesVersion(node!, minecraftVersion))
+            .OrderByDescending(node => node!["uploaded_at"]?.GetValue<string>() ?? string.Empty)
+            .Take(18)
+            .Select(node =>
+            {
+                var fileId = node!["id"]?.GetValue<int>() ?? 0;
+                var fileName = node["name"]?.GetValue<string>() ?? string.Empty;
+                var displayName = node["display"]?.GetValue<string>() ?? fileName;
+                var type = node["type"]?.GetValue<string>() ?? string.Empty;
+                var uploadedAt = node["uploaded_at"]?.GetValue<string>() ?? string.Empty;
+
+                return new FrontendInstallChoice(
+                    Id: $"optifabric:{fileId}",
+                    Title: displayName.Replace("OptiFabric-v", string.Empty, StringComparison.OrdinalIgnoreCase).Trim(),
+                    Summary: $"{NormalizeVersionType(type)} • {FormatReleaseTime(uploadedAt)}",
+                    Version: displayName,
+                    Kind: FrontendInstallChoiceKind.ModFile,
+                    DownloadUrl: BuildCurseForgeMediaUrl(fileId, fileName),
+                    FileName: fileName,
+                    Metadata: new JsonObject
+                    {
+                        ["minecraftVersion"] = minecraftVersion,
+                        ["fileId"] = fileId
+                    });
+            })
+            .ToArray();
+    }
+
     private static IReadOnlyList<FrontendInstallChoice> GetModrinthFileChoices(
         string projectId,
         string minecraftVersion,
@@ -1141,7 +1190,16 @@ internal static class FrontendInstallWorkflowService
         foreach (var candidateVersion in GetVersionCandidates(minecraftVersion, allowVersionFallback))
         {
             var url = BuildModrinthVersionUrl(projectId, candidateVersion, loaders);
-            var root = ReadJsonArray(url);
+            JsonArray root;
+            try
+            {
+                root = ReadJsonArray(url);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                continue;
+            }
+
             var choices = root
                 .Select(node => node as JsonObject)
                 .Where(node => node is not null)
@@ -1274,6 +1332,52 @@ internal static class FrontendInstallWorkflowService
         File.WriteAllBytes(outputPath, HttpClient.GetByteArrayAsync(selectedChoice.DownloadUrl).GetAwaiter().GetResult());
     }
 
+    private static void RemoveMissingLocalOnlyLibraries(JsonObject manifest, string launcherDirectory)
+    {
+        if (manifest["libraries"] is not JsonArray libraries)
+        {
+            return;
+        }
+
+        var filtered = new JsonArray();
+        foreach (var node in libraries)
+        {
+            if (node is not JsonObject library)
+            {
+                filtered.Add(node?.DeepClone());
+                continue;
+            }
+
+            var artifact = library["downloads"]?["artifact"] as JsonObject;
+            var url = artifact?["url"]?.GetValue<string>();
+            if (artifact is not null && string.IsNullOrWhiteSpace(url))
+            {
+                var path = artifact["path"]?.GetValue<string>();
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    var name = library["name"]?.GetValue<string>();
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        path = DeriveLibraryPathFromName(name);
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(path))
+                {
+                    var localPath = Path.Combine(launcherDirectory, "libraries", path.Replace('/', Path.DirectorySeparatorChar));
+                    if (!File.Exists(localPath))
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            filtered.Add(library.DeepClone());
+        }
+
+        manifest["libraries"] = filtered;
+    }
+
     private static void EnsureResourceFolders(string instanceDirectory, string runtimeDirectory)
     {
         Directory.CreateDirectory(Path.Combine(runtimeDirectory, "resourcepacks"));
@@ -1350,6 +1454,26 @@ internal static class FrontendInstallWorkflowService
 
         builder.Query = string.Join("&", query);
         return builder.ToString();
+    }
+
+    private static string BuildCurseForgeMediaUrl(int fileId, string fileName)
+    {
+        return $"https://mediafiles.forgecdn.net/files/{fileId / 1000}/{fileId % 1000:D3}/{Uri.EscapeDataString(fileName)}";
+    }
+
+    private static bool CfWidgetFileMatchesVersion(JsonObject file, string minecraftVersion)
+    {
+        if (file["versions"] is not JsonArray versions)
+        {
+            return false;
+        }
+
+        var tokens = versions
+            .Select(node => node?.GetValue<string>())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return tokens.Contains("Fabric") && tokens.Contains(minecraftVersion);
     }
 
     private static string FormatReleaseTime(string? rawValue)

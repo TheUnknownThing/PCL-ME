@@ -9,6 +9,8 @@ internal sealed partial class FrontendShellViewModel
 {
     private static readonly string[] ManagedPrimaryInstallTitles = ["Forge", "Cleanroom", "NeoForge", "Fabric", "Legacy Fabric", "Quilt", "LabyMod"];
     private static readonly string[] ManagedAddonInstallTitles = ["LiteLoader", "OptiFine", "Fabric API", "Legacy Fabric API", "QFAPI / QSL", "OptiFabric"];
+    private static readonly string[] ManagedApiInstallTitles = ["Fabric API", "Legacy Fabric API", "QFAPI / QSL"];
+    private static readonly string[] ManagedPrimaryDependentInstallTitles = ["Fabric API", "Legacy Fabric API", "QFAPI / QSL", "OptiFabric"];
 
     private string _downloadInstallMinecraftVersion = "Minecraft";
     private Bitmap? _downloadInstallMinecraftIcon;
@@ -156,10 +158,11 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", "", StringComparison.Ordinal);
-            var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion);
-            if (choices.Count == 0)
+            var choices = GetSelectableInstallChoices(isExistingInstance, optionTitle, minecraftVersion);
+            var unavailableReason = GetInstallOptionUnavailableReason(isExistingInstance, optionTitle, minecraftVersion, choices);
+            if (unavailableReason is not null)
             {
-                AddActivity($"选择安装项: {optionTitle}", $"{minecraftVersion} 当前没有可用的 {optionTitle} 安装候选。");
+                AddActivity($"选择安装项: {optionTitle}", unavailableReason);
                 return;
             }
 
@@ -199,7 +202,25 @@ internal sealed partial class FrontendShellViewModel
                 if (!string.Equals(optionTitle, "Fabric", StringComparison.Ordinal))
                 {
                     selections["Fabric API"] = FrontendEditableInstallSelection.Cleared;
+                    selections["OptiFabric"] = FrontendEditableInstallSelection.Cleared;
                 }
+
+                if (!string.Equals(optionTitle, "Legacy Fabric", StringComparison.Ordinal))
+                {
+                    selections["Legacy Fabric API"] = FrontendEditableInstallSelection.Cleared;
+                }
+            }
+            else if (ManagedApiInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
+            {
+                foreach (var title in ManagedApiInstallTitles.Where(title => !string.Equals(title, optionTitle, StringComparison.Ordinal)))
+                {
+                    selections[title] = FrontendEditableInstallSelection.Cleared;
+                }
+            }
+            else if (string.Equals(optionTitle, "OptiFine", StringComparison.Ordinal)
+                     && !string.Equals(GetCurrentPrimaryInstallTitle(isExistingInstance), "Fabric", StringComparison.Ordinal))
+            {
+                selections["OptiFabric"] = FrontendEditableInstallSelection.Cleared;
             }
 
             if (isExistingInstance)
@@ -225,7 +246,18 @@ internal sealed partial class FrontendShellViewModel
         selections[optionTitle] = FrontendEditableInstallSelection.Cleared;
         if (ManagedPrimaryInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
         {
-            foreach (var title in ManagedAddonInstallTitles)
+            foreach (var title in ManagedPrimaryDependentInstallTitles)
+            {
+                selections[title] = FrontendEditableInstallSelection.Cleared;
+            }
+        }
+        else if (string.Equals(optionTitle, "OptiFine", StringComparison.Ordinal))
+        {
+            selections["OptiFabric"] = FrontendEditableInstallSelection.Cleared;
+        }
+        else if (ManagedApiInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
+        {
+            foreach (var title in ManagedApiInstallTitles.Where(title => !string.Equals(title, optionTitle, StringComparison.Ordinal)))
             {
                 selections[title] = FrontendEditableInstallSelection.Cleared;
             }

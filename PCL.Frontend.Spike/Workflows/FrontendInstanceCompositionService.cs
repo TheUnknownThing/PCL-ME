@@ -413,7 +413,7 @@ internal static class FrontendInstanceCompositionService
                 new FrontendInstanceInstallOption("LabyMod", DisplayVersion(manifestSummary.LabyModVersion), "LabyMod.png"),
                 new FrontendInstanceInstallOption("OptiFine", DisplayVersion(manifestSummary.OptiFineVersion), "GrassPath.png"),
                 new FrontendInstanceInstallOption("OptiFabric", DisplayInstalled(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion), "OptiFabric.png"),
-                new FrontendInstanceInstallOption("LiteLoader", manifestSummary.HasLiteLoader ? "已安装" : "未安装", "Egg.png")
+                new FrontendInstanceInstallOption("LiteLoader", DisplayInstalled(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion), "Egg.png")
             ]);
     }
 
@@ -1109,6 +1109,7 @@ internal static class FrontendInstanceCompositionService
             QuiltVersion: parentSummary.QuiltVersion ?? ExtractLibraryVersion(allLibraries, "org.quiltmc:quilt-loader"),
             OptiFineVersion: parentSummary.OptiFineVersion ?? ExtractOptiFineVersion(allLibraries),
             HasLiteLoader: parentSummary.HasLiteLoader || ContainsLibrary(allLibraries, "liteloader"),
+            LiteLoaderVersion: parentSummary.LiteLoaderVersion ?? ExtractLibraryVersion(allLibraries, "com.mumfrey:liteloader"),
             LabyModVersion: parentSummary.LabyModVersion ?? ExtractLibraryVersion(allLibraries, "net.labymod"),
             HasLabyMod: parentSummary.HasLabyMod || ContainsLibrary(allLibraries, "labymod"),
             HasFabricApi: parentSummary.HasFabricApi || ContainsLibrary(allLibraries, "fabric-api"),
@@ -1293,6 +1294,7 @@ internal static class FrontendInstanceCompositionService
         string? QuiltVersion,
         string? OptiFineVersion,
         bool HasLiteLoader,
+        string? LiteLoaderVersion,
         string? LabyModVersion,
         bool HasLabyMod,
         bool HasFabricApi,
@@ -1314,6 +1316,7 @@ internal static class FrontendInstanceCompositionService
             QuiltVersion: null,
             OptiFineVersion: null,
             HasLiteLoader: false,
+            LiteLoaderVersion: null,
             LabyModVersion: null,
             HasLabyMod: false,
             HasFabricApi: false,
