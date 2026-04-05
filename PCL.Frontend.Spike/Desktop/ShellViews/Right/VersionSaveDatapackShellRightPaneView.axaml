@@ -4,11 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sections="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,10,25,10" Spacing="15">
-      <sections:VersionSaveDatapackHeaderSection />
-      <sections:VersionSaveDatapackEntriesSection />
-      <sections:VersionSaveDatapackEmptyStateSection />
-    </StackPanel>
-  </ScrollViewer>
+  <Grid Margin="25,10,25,10" RowDefinitions="Auto,15,*,15,Auto">
+    <sections:VersionSaveDatapackHeaderSection Grid.Row="0" />
+    <sections:VersionSaveDatapackEntriesSection Grid.Row="2" />
+    <sections:VersionSaveDatapackEmptyStateSection Grid.Row="4" />
+  </Grid>
 </UserControl>

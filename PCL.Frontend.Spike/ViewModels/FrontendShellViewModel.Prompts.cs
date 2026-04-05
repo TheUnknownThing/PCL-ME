@@ -62,11 +62,11 @@ internal sealed partial class FrontendShellViewModel
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);
         PromptInboxTitle = $"{selectedLane.Title}提示";
-        PromptInboxSummary = selectedLane.Summary;
+       PromptInboxSummary = selectedLane.Summary;
         PromptEmptyState = $"当前没有待处理的{selectedLane.Title}提示。";
         var pageContent = BuildPageContent(BuildShellPlan());
-        ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
-        ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
+        ReplaceSurfaceFactsIfChanged(pageContent.Facts);
+        ReplaceSurfaceSectionsIfChanged(pageContent.Sections);
         if (raiseCollectionState)
         {
             RaiseCollectionStateProperties();
