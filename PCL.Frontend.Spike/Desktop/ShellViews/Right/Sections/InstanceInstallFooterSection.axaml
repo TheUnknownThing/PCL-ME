@@ -1,0 +1,20 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections.InstanceInstallFooterSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
+  <Grid ColumnDefinitions="*,Auto">
+    <TextBlock
+        VerticalAlignment="Center"
+        Foreground="#6B7C8E"
+        FontSize="12.5"
+        Text="继续沿用原版实例安装页的操作位置，并在当前壳层直接写入实例安装清单与补全结果。"
+        TextWrapping="Wrap" />
+    <controls:PclButton
+        Grid.Column="1"
+        Width="120"
+        Margin="16,0,0,0"
+        Command="{Binding ApplyInstanceInstallCommand}"
+        Text="{Binding InstanceInstallApplyButtonText}" />
+  </Grid>
+</UserControl>

@@ -1,0 +1,34 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections.InstanceResourceEntriesSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections">
+  <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding HasInstanceResourceEntries}">
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="12">
+        <WrapPanel HorizontalAlignment="Left">
+          <controls:PclButton MinWidth="72" Margin="0,0,8,8" ColorType="Highlight" Text="全部" />
+          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="已启用" />
+          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="已禁用" />
+          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="可更新" />
+          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="错误" />
+          <controls:PclButton MinWidth="72" Margin="0,0,8,8" IsVisible="{Binding ShowInstanceResourceCheckButton}" Text="重复" />
+        </WrapPanel>
+
+        <controls:PclButton
+            Width="110"
+            HorizontalAlignment="Right"
+            Text="排序：文件名" />
+
+        <ItemsControl ItemsSource="{Binding InstanceResourceEntries}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <sections:ResourceEntryCardView />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>
