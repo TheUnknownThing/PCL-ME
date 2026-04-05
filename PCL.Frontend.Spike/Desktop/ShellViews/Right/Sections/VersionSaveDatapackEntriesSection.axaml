@@ -1,0 +1,49 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections.VersionSaveDatapackEntriesSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections">
+  <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding HasVersionSaveDatapackEntries}">
+    <controls:PclCard.CardContent>
+      <Grid RowDefinitions="Auto,12,*">
+        <controls:PclButton
+            Grid.Row="0"
+            Width="110"
+            HorizontalAlignment="Right"
+            Text="排序：资源名称" />
+
+        <ListBox
+            Grid.Row="2"
+            MinHeight="0"
+            Background="Transparent"
+            BorderThickness="0"
+            ItemsSource="{Binding VersionSaveDatapackEntries}"
+            Padding="0">
+          <ListBox.Styles>
+            <Style Selector="ListBoxItem">
+              <Setter Property="Padding" Value="0" />
+              <Setter Property="Margin" Value="0,0,0,12" />
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="BorderThickness" Value="0" />
+              <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+            <Style Selector="ListBoxItem:selected">
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="BorderBrush" Value="Transparent" />
+            </Style>
+            <Style Selector="ListBoxItem:pointerover">
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="BorderBrush" Value="Transparent" />
+            </Style>
+          </ListBox.Styles>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <sections:ResourceEntryCardView />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

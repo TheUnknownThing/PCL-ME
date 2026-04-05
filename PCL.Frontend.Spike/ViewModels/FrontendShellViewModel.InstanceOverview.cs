@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -163,7 +164,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceOverviewSurface()
     {
-        if (!IsInstanceOverviewSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceOverview))
         {
             return;
         }

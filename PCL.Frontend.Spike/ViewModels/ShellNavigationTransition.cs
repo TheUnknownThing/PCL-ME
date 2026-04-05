@@ -8,9 +8,15 @@ internal enum ShellNavigationTransitionDirection
 
 internal sealed class ShellNavigationTransitionEventArgs(
     ShellNavigationTransitionDirection direction,
-    bool isLaunchRoute) : EventArgs
+    bool isLaunchRoute,
+    bool animateLeftPane,
+    bool animateRightPane) : EventArgs
 {
     public ShellNavigationTransitionDirection Direction { get; } = direction;
 
     public bool IsLaunchRoute { get; } = isLaunchRoute;
+
+    public bool AnimateLeftPane { get; } = animateLeftPane;
+
+    public bool AnimateRightPane { get; } = animateRightPane;
 }

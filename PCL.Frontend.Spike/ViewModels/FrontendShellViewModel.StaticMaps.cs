@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using Avalonia.Media;
@@ -11,6 +12,9 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private static readonly Dictionary<string, Bitmap?> LauncherBitmapCache = new(StringComparer.Ordinal);
+    private static readonly Lock LauncherBitmapCacheLock = new();
+
     private static SurfaceFactViewModel CreateSurfaceFact(LauncherFrontendPageFact fact, int index)
     {
         var palette = GetSurfacePalette(index);
@@ -225,6 +229,16 @@ internal sealed partial class FrontendShellViewModel
     private static Bitmap? LoadLauncherBitmap(params string[] segments)
     {
         var filePath = GetLauncherAssetPath(segments);
-        return File.Exists(filePath) ? new Bitmap(filePath) : null;
+        lock (LauncherBitmapCacheLock)
+        {
+            if (LauncherBitmapCache.TryGetValue(filePath, out var bitmap))
+            {
+                return bitmap;
+            }
+
+            bitmap = File.Exists(filePath) ? new Bitmap(filePath) : null;
+            LauncherBitmapCache[filePath] = bitmap;
+            return bitmap;
+        }
     }
 }

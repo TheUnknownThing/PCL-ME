@@ -1,0 +1,59 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.ToolsHelpShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="15">
+      <Border
+          Height="36"
+          Padding="12,0"
+          Background="#F8FBFF"
+          BorderBrush="#D5E6FD"
+          BorderThickness="1"
+          CornerRadius="5">
+        <TextBox
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            FontSize="13.5"
+            Text="{Binding HelpSearchQuery}"
+            VerticalContentAlignment="Center"
+            Watermark="搜索帮助" />
+      </Border>
+
+      <ItemsControl ItemsSource="{Binding HelpTopicGroups}" IsVisible="{Binding HasHelpTopicGroups}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <controls:PclCard Header="{Binding Title}" ContentMargin="20,40,18,18">
+              <controls:PclCard.CardContent>
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclListItem
+                          Margin="0,0,0,8"
+                          Command="{Binding Command}"
+                          Info="{Binding Summary}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <controls:PclCard Header="搜索结果" IsVisible="{Binding HasNoHelpTopicGroups}" ContentMargin="20,40,18,18">
+        <controls:PclCard.CardContent>
+          <TextBlock
+              Foreground="#677789"
+              FontSize="13"
+              Text="没有找到匹配的帮助条目。"
+              TextWrapping="Wrap" />
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

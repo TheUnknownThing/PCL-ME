@@ -1,0 +1,88 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.SetupGameLinkShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,10" Spacing="15">
+      <controls:PclCard Header="EasyTier" ContentMargin="20,12,20,15">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="10">
+            <Border
+                Padding="12,10"
+                Background="#FFF8DD"
+                BorderBrush="#F2D777"
+                BorderThickness="1"
+                CornerRadius="4">
+              <TextBlock
+                  Foreground="#6E5800"
+                  FontSize="12.5"
+                  Text="修改此处的设置后，需要重新启动大厅以使设置生效。"
+                  TextWrapping="Wrap" />
+            </Border>
+
+            <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="28,8,28,4,28,28,28,28">
+              <TextBlock
+                  Grid.Row="0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="用户名"
+                  Margin="0,0,25,0" />
+              <TextBox
+                  Grid.Row="0"
+                  Grid.Column="2"
+                  Height="28"
+                  Padding="8,4"
+                  Text="{Binding LinkUsername}"
+                  ToolTip.Tip="PCL CE 会尽可能使用此处的用户名用于大厅信息展示。若留空，则使用 Natayark ID 的用户名。" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="协议偏好" />
+              <ComboBox
+                  Grid.Row="2"
+                  Grid.Column="2"
+                  Height="28"
+                  ItemsSource="{Binding LinkProtocolPreferenceOptions}"
+                  SelectedIndex="{Binding SelectedProtocolPreferenceIndex}" />
+
+              <CheckBox
+                  Grid.Row="4"
+                  Grid.ColumnSpan="3"
+                  Foreground="#343D4A"
+                  Content="选择最低延迟路径而不是最短路径"
+                  IsChecked="{Binding PreferLowestLatencyPath}"
+                  ToolTip.Tip="启用后，EasyTier 将在通信时选择延迟最低的路径，而不是路由跳数最少的路径。" />
+              <CheckBox
+                  Grid.Row="5"
+                  Grid.ColumnSpan="3"
+                  Foreground="#343D4A"
+                  Content="对对称型 NAT 进行端口猜测"
+                  IsChecked="{Binding TryPunchSymmetricNat}"
+                  ToolTip.Tip="让 EasyTier 尝试对对称型 NAT 进行端口猜测（生日悖论）。" />
+              <CheckBox
+                  Grid.Row="6"
+                  Grid.ColumnSpan="3"
+                  Foreground="#343D4A"
+                  Content="允许使用 IPv6 通信"
+                  IsChecked="{Binding AllowIpv6Communication}"
+                  ToolTip.Tip="IPv6 相比于 IPv4 更加容易进行 P2P 通信，除有特殊原因外不建议关闭。" />
+              <CheckBox
+                  Grid.Row="7"
+                  Grid.ColumnSpan="3"
+                  Foreground="#343D4A"
+                  Content="在日志中输出 Cli 信息以用于调试"
+                  IsChecked="{Binding EnableLinkCliOutput}"
+                  ToolTip.Tip="在启动器日志中每 30s 输出一次 EasyTier Cli 信息以便于开发者和社区支持调查。" />
+            </Grid>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

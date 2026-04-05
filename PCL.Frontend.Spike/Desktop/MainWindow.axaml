@@ -146,7 +146,7 @@
             <Border
                 Width="32"
                 Height="20"
-                Margin="10,0,0,0"
+                Margin="0,0,0,0"
                 Background="White"
                 CornerRadius="5"
                 IsHitTestVisible="False"
@@ -294,13 +294,19 @@
                   ClipToBounds="True"
                   Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">
                 <Grid x:Name="StandardLeftContentHost">
-                  <controls:PclShellSidebarPanel />
+                  <ContentControl
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Content="{Binding CurrentStandardLeftPane}" />
                 </Grid>
               </Border>
 
               <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
                 <Grid x:Name="StandardRightContentHost">
-                  <controls:PclShellContentPanel />
+                  <ContentControl
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Content="{Binding CurrentStandardRightPane}" />
                 </Grid>
               </Border>
             </Grid>

@@ -1,0 +1,35 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.InstanceSetupShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,25" Spacing="15">
+      <Border
+          Padding="12,10"
+          Background="#EAF2FE"
+          BorderBrush="#D5E6FD"
+          BorderThickness="1"
+          CornerRadius="4">
+        <TextBlock
+            Foreground="#4068A8"
+            FontSize="12.5"
+            Text="这些设置只对该游戏实例生效，不影响其他实例。"
+            TextWrapping="Wrap" />
+      </Border>
+
+      <sections:InstanceSetupLaunchOptionsSection />
+      <sections:InstanceSetupMemorySection />
+      <sections:InstanceSetupServerSection />
+      <sections:InstanceSetupAdvancedLaunchSection />
+
+      <controls:PclButton
+          Width="140"
+          HorizontalAlignment="Center"
+          Command="{Binding OpenGlobalLaunchSettingsCommand}"
+          Text="全局设置" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

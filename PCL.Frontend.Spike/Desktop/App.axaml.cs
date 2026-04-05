@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using PCL.Frontend.Spike.Cli;
+using PCL.Frontend.Spike.Desktop.ShellViews;
 using PCL.Frontend.Spike.ViewModels;
 using PCL.Frontend.Spike.Workflows;
 
@@ -12,6 +13,7 @@ internal sealed class App(SpikeCommandOptions options) : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        ShellPaneTemplateRegistry.Register(this);
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -1,0 +1,64 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.DownloadCatalogShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,25" Spacing="15">
+      <controls:PclCard Header="{Binding DownloadCatalogIntroTitle}" IsVisible="{Binding HasDownloadCatalogIntro}" ContentMargin="25,40,15,20">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="12">
+            <TextBlock
+                Foreground="#4B5968"
+                FontSize="13"
+                Text="{Binding DownloadCatalogIntroBody}"
+                TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding DownloadCatalogIntroActions}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclButton
+                      Margin="0,0,20,0"
+                      MinWidth="140"
+                      Command="{Binding Command}"
+                      ColorType="{Binding ColorType}"
+                      ContentPadding="13,0"
+                      Text="{Binding Text}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <ItemsControl ItemsSource="{Binding DownloadCatalogSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <controls:PclCard Header="{Binding Title}" ContentMargin="20,40,18,20">
+              <controls:PclCard.CardContent>
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclActionSummaryRow
+                          ActionText="{Binding ActionText}"
+                          Command="{Binding Command}"
+                          Info="{Binding Info}"
+                          Meta="{Binding Meta}"
+                          ShowMeta="{Binding HasMeta}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

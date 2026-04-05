@@ -1,0 +1,16 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.InstanceInstallShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sections="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,25" Spacing="12">
+      <sections:InstanceInstallHintsSection />
+      <sections:InstanceInstallSelectionSummarySection />
+      <sections:InstanceInstallMinecraftSection />
+      <sections:InstanceInstallOptionsSection />
+      <sections:InstanceInstallFooterSection />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
