@@ -132,6 +132,10 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        var previousIsLaunchRoute = IsLaunchRoute;
+        var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
+        var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
+
         _routeHistory.Add(_currentRoute);
         _currentRoute = route;
         if (route.Page == LauncherFrontendPageKey.Setup)
@@ -153,7 +157,11 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshShell(activityMessage);
-        RequestNavigationTransition(ShellNavigationTransitionDirection.Forward);
+        RequestNavigationTransition(
+            ShellNavigationTransitionDirection.Forward,
+            previousIsLaunchRoute,
+            previousLeftPaneKey,
+            previousRightPaneKey);
         if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
@@ -169,6 +177,10 @@ internal sealed partial class FrontendShellViewModel
 
         if (_routeHistory.Count > 0)
         {
+            var previousIsLaunchRoute = IsLaunchRoute;
+            var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
+            var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
+
             var previousRoute = _routeHistory[^1];
             _routeHistory.RemoveAt(_routeHistory.Count - 1);
             _currentRoute = previousRoute;
@@ -191,7 +203,11 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshShell("Returned to the previous shell route.");
-            RequestNavigationTransition(ShellNavigationTransitionDirection.Backward);
+            RequestNavigationTransition(
+                ShellNavigationTransitionDirection.Backward,
+                previousIsLaunchRoute,
+                previousLeftPaneKey,
+                previousRightPaneKey);
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
             {
                 _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
@@ -201,6 +217,10 @@ internal sealed partial class FrontendShellViewModel
 
         if (_currentNavigation.BackTarget?.Route is { } backRoute)
         {
+            var previousIsLaunchRoute = IsLaunchRoute;
+            var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
+            var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
+
             _currentRoute = backRoute;
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
             {
@@ -221,7 +241,11 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
-            RequestNavigationTransition(ShellNavigationTransitionDirection.Backward);
+            RequestNavigationTransition(
+                ShellNavigationTransitionDirection.Backward,
+                previousIsLaunchRoute,
+                previousLeftPaneKey,
+                previousRightPaneKey);
             if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
             {
                 _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
@@ -229,9 +253,20 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void RequestNavigationTransition(ShellNavigationTransitionDirection direction)
+    private void RequestNavigationTransition(
+        ShellNavigationTransitionDirection direction,
+        bool previousIsLaunchRoute,
+        string? previousLeftPaneKey,
+        string? previousRightPaneKey)
     {
-        NavigationTransitionRequested?.Invoke(this, new ShellNavigationTransitionEventArgs(direction, IsLaunchRoute));
+        var animateLeftPane = previousIsLaunchRoute != IsLaunchRoute
+            || !string.Equals(previousLeftPaneKey, CurrentStandardLeftPaneDescriptor?.Key, StringComparison.Ordinal);
+        var animateRightPane = previousIsLaunchRoute != IsLaunchRoute
+            || !string.Equals(previousRightPaneKey, CurrentStandardRightPaneDescriptor?.Key, StringComparison.Ordinal);
+
+        NavigationTransitionRequested?.Invoke(
+            this,
+            new ShellNavigationTransitionEventArgs(direction, IsLaunchRoute, animateLeftPane, animateRightPane));
     }
 
     private void RaiseShellStateProperties()

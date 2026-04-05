@@ -232,8 +232,15 @@ internal sealed partial class MainWindow : Window
         var leftOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? -50f : 50f;
         var rightOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? 50f : -50f;
 
-        StartRouteAnimation(leftVisual, leftOffset);
-        StartRouteAnimation(rightVisual, rightOffset);
+        if (transition.AnimateLeftPane)
+        {
+            StartRouteAnimation(leftVisual, leftOffset);
+        }
+
+        if (transition.AnimateRightPane)
+        {
+            StartRouteAnimation(rightVisual, rightOffset);
+        }
     }
 
     private void StartRouteAnimation(CompositionVisual visual, float offsetX)
