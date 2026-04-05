@@ -357,6 +357,8 @@ Status on 2026-04-04:
 - recent Track 5 checkpoints for the managed install workflow slice:
   - `5e51a2be` `feat: add frontend install workflow primitives`
   - `74be91e1` `feat: wire frontend install selection flow`
+  - `2a9b74a0` `feat: add frontend unmanaged install workflow`
+  - `99c6f076` `fix: finish track 5 installer migration`
 
 Verified on 2026-04-05:
 
@@ -365,7 +367,12 @@ Verified on 2026-04-05:
 - a real verification pass against `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft` created a temporary `versions/codex-track5-verify/codex-track5-verify.json`, first as Fabric with `mods/fabric-api-0.138.4+1.21.10.jar`, then reapplied the same instance as Quilt with `mods/quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
 - the managed install workflow reused 4,397 existing files on the first apply and 4,478 existing files on the second apply while switching the loader manifest and managed addon jar without falling back to WPF code
 - the temporary verification instance was removed after inspection so the real launcher folder was not left with extra test clutter
-- the next remaining Track 5 gap in the copied install family is now the unmanaged installer set that the new workflow still leaves in legacy/not-yet-owned state: Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and related installer-specific behavior
+- the frontend now also owns the copied unmanaged installer family for Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and OptiFabric, including the legacy compatibility rules copied from `PageDownloadInstall.xaml.vb`
+- a second real verification pass against the same launcher directory created temporary instances for `Forge 1.21.1`, `NeoForge 1.21.1`, `Cleanroom 1.12.2`, `LiteLoader 1.12.2`, and `Fabric 1.20.1 + OptiFine + OptiFabric`; those instances wrote the migrated manifests, produced the expected loader libraries, and in the Fabric case wrote `mods/optifabric-1.14.3.jar` plus `mods/OptiFine_1.20.1_HD_U_I5.jar`
+- the Forge-family manifest cleanup now strips missing local-only artifacts, OptiFabric choices now resolve from the live OptiFabric file feed instead of the dead Modrinth slug, and instance repair now reuses valid installer-local libraries instead of force-redownloading the wrong remote artifact
+- the temporary unmanaged-installer verification instances were removed after inspection so the real launcher folder was not left with extra test clutter
+- a forced Cleanroom `RunRepair + ForceCoreRefresh` pass progressed past the earlier local-library failure and into the broader core refresh workload; that long-running asset-heavy pass was not waited through to final completion during this checkpoint
+- the copied install family no longer has a known WPF-owned Track 5 gap; next work should move to Track 6 packaging and broader platform validation unless a new fallback surface is discovered
 
 Done when:
 
