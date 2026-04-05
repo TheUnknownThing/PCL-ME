@@ -10,13 +10,7 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private static readonly string LauncherRootDirectory = Path.GetFullPath(Path.Combine(
-        AppContext.BaseDirectory,
-        "..",
-        "..",
-        "..",
-        "..",
-        "Plain Craft Launcher 2"));
+    private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
     private static readonly string LaunchAvatarImageFilePath = GetLauncherAssetPath("Images", "Heads", "PCL-Community.png");
     private static readonly string LaunchNewsImageFilePath = GetLauncherAssetPath("Images", "Backgrounds", "server_bg.png");
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");

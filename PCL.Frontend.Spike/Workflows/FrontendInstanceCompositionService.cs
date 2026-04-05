@@ -8,13 +8,7 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendInstanceCompositionService
 {
-    private static readonly string LauncherRootDirectory = Path.GetFullPath(Path.Combine(
-        AppContext.BaseDirectory,
-        "..",
-        "..",
-        "..",
-        "..",
-        "Plain Craft Launcher 2"));
+    private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
     private static readonly string[] ScreenshotPatterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp", "*.tiff"];
     private static readonly string[] EnabledModExtensions = [".jar", ".litemod"];
     private static readonly string[] DisabledModExtensions = [".disabled", ".old"];
@@ -885,7 +879,7 @@ internal static class FrontendInstanceCompositionService
 
         return Path.Combine(
             LauncherRootDirectory,
-            "images",
+            "Images",
             "Blocks",
             DetermineInstallIconName(manifestSummary));
     }
@@ -942,7 +936,7 @@ internal static class FrontendInstanceCompositionService
             return null;
         }
 
-        return Path.Combine(LauncherRootDirectory, "images", "Blocks", fileName);
+        return Path.Combine(LauncherRootDirectory, "Images", "Blocks", fileName);
     }
 
     private static int MapInstanceCategoryIndex(int storedValue)
