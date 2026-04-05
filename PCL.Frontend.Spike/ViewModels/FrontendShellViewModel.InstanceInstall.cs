@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media.Imaging;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -64,7 +65,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceInstallSurface()
     {
-        if (!IsInstanceInstallSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceInstall))
         {
             return;
         }

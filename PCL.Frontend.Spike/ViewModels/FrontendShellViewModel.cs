@@ -208,22 +208,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool IsToolsTestSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest);
 
-    public bool IsInstanceOverviewSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceOverview);
-
-    public bool IsInstanceSetupSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceSetup);
-
-    public bool IsInstanceExportSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceExport);
-
-    public bool IsInstanceInstallSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceInstall);
-
-    public bool IsInstanceWorldSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceWorld);
-
-    public bool IsInstanceScreenshotSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceScreenshot);
-
-    public bool IsInstanceServerSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceServer);
-
-    public bool IsInstanceResourceSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource);
-
     public bool IsGenericShellSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.Generic);
 
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;

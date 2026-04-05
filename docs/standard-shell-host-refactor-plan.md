@@ -33,11 +33,16 @@ Completed in the current slice:
   - navigation list pane
   - overview / facts pane
   - empty fallback pane
-- The old monolithic left sidebar is no longer on the active standard-shell rendering path.
+- The old monolithic left sidebar is no longer on the active standard-shell rendering path and the legacy `PclShellSidebarPanel` files were removed.
 - The first dedicated right-pane extraction landed for `Tools > Help`.
 - Dedicated right-pane extractions now cover the full instance family and the full version-saves family.
 - Legacy `IsXxxSurface` properties now read from the resolved pane identity as temporary compatibility shims instead of duplicating route matching logic.
-- Remaining standard-shell right routes still use a temporary compatibility pane that hosts `PclShellContentPanel`.
+- Workstream G cleanup removed dead compatibility sections for:
+  - `Tools > Help`
+  - the full version-saves family
+  - the full instance family
+- Workstream G cleanup also removed the corresponding migrated-family `IsXxxSurface` properties and `RaisePropertyChanged(nameof(IsXxxSurface))` calls.
+- Remaining standard-shell right routes still use a temporary compatibility pane that hosts a reduced `PclShellContentPanel` for the not-yet-extracted setup/download/tools routes.
 - `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes after the host-contract changes.
 
 Current migration state:
@@ -48,7 +53,7 @@ Current migration state:
 - Workstream D: still in progress.
 - Workstream F: completed for standard-shell left-pane decomposition.
 - Workstream E: instance/version-saves right-pane extraction landed.
-- Workstream G: still in progress.
+- Workstream G: in progress; migrated-family compatibility cleanup landed, remaining removal work is blocked on the unfinished setup/download/tools extractions from Workstream D.
 
 ## Reference Files
 
@@ -62,7 +67,6 @@ These are the primary CE files to refactor:
 - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml`
 - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml.cs`
 - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellSidebarPanel.axaml`
 - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclLaunchLeftPanel.axaml`
 - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
 - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.cs`
