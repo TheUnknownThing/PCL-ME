@@ -341,6 +341,13 @@ Owner:
 
 - Engineer E
 
+Status:
+
+- Completed on April 6, 2026.
+- Route changes now resolve the standard-shell pane descriptors before route-family refresh logic runs, and only the active right-pane family is refreshed during navigation.
+- Removed the shell-level setup/download/tools compatibility booleans in favor of descriptor-kind checks, and narrowed collection-state notifications to the active right pane instead of broadcasting every pane-family flag on each route change.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the cleanup.
+
 Goal:
 
 - Reduce broad shell-level UI state and property churn that still feeds heavy panes.

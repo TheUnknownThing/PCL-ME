@@ -176,40 +176,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool HasUtilityEntries => UtilityEntries.Count > 0;
 
-    public bool IsSetupAboutSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupAbout);
-
-    public bool IsSetupLaunchSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLaunch);
-
-    public bool IsSetupFeedbackSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupFeedback);
-
-    public bool IsSetupLogSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLog);
-
-    public bool IsSetupUpdateSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate);
-
-    public bool IsSetupGameLinkSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameLink);
-
-    public bool IsSetupGameManageSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage);
-
-    public bool IsSetupLauncherMiscSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLauncherMisc);
-
-    public bool IsSetupJavaSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupJava);
-
-    public bool IsSetupUiSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUi);
-
-    public bool IsDownloadInstallSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall);
-
-    public bool IsDownloadCatalogSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadCatalog);
-
-    public bool IsDownloadResourceSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource);
-
-    public bool IsDownloadFavoritesSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites);
-
-    public bool IsToolsGameLinkSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsGameLink);
-
-    public bool IsToolsTestSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest);
-
-    public bool IsGenericShellSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.Generic);
-
     public bool HasAboutProjectEntries => AboutProjectEntries.Count > 0;
 
     public bool HasAboutAcknowledgementEntries => AboutAcknowledgementEntries.Count > 0;

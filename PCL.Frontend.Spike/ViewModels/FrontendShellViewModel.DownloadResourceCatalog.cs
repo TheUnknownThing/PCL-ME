@@ -6,6 +6,7 @@ using System.Text;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -76,7 +77,7 @@ internal sealed partial class FrontendShellViewModel
         get => _downloadResourceSearchQuery;
         set
         {
-            if (SetProperty(ref _downloadResourceSearchQuery, value) && IsDownloadResourceSurface)
+            if (SetProperty(ref _downloadResourceSearchQuery, value) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 ApplyDownloadResourceFilters(resetPage: true);
             }
@@ -135,7 +136,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceSourceOptions);
-            if (SetProperty(ref _selectedDownloadResourceSourceIndex, nextValue) && IsDownloadResourceSurface)
+            if (SetProperty(ref _selectedDownloadResourceSourceIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 UpdateDownloadResourceHint();
                 ApplyDownloadResourceFilters(resetPage: true);
@@ -149,7 +150,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceTagOptions);
-            if (SetProperty(ref _selectedDownloadResourceTagIndex, nextValue) && IsDownloadResourceSurface)
+            if (SetProperty(ref _selectedDownloadResourceTagIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 ApplyDownloadResourceFilters(resetPage: true);
             }
@@ -162,7 +163,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceSortOptions);
-            if (SetProperty(ref _selectedDownloadResourceSortIndex, nextValue) && IsDownloadResourceSurface)
+            if (SetProperty(ref _selectedDownloadResourceSortIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 ApplyDownloadResourceFilters(resetPage: true);
             }
@@ -175,7 +176,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceVersionOptions);
-            if (SetProperty(ref _selectedDownloadResourceVersionIndex, nextValue) && IsDownloadResourceSurface)
+            if (SetProperty(ref _selectedDownloadResourceVersionIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 ApplyDownloadResourceFilters(resetPage: true);
             }
@@ -188,7 +189,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceLoaderOptions);
-            if (SetProperty(ref _selectedDownloadResourceLoaderIndex, nextValue) && IsDownloadResourceSurface)
+            if (SetProperty(ref _selectedDownloadResourceLoaderIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 ApplyDownloadResourceFilters(resetPage: true);
             }
@@ -235,7 +236,7 @@ internal sealed partial class FrontendShellViewModel
         _allDownloadResourceEntries = [];
         ReplaceItems(DownloadResourceEntries, []);
 
-        if (!IsDownloadResourceSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
             RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
             RaisePropertyChanged(nameof(DownloadResourceTagOptions));
@@ -385,7 +386,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void InstallDownloadResourceModPack()
     {
-        if (!IsDownloadResourceSurface || _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource) || _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack)
         {
             AddActivity("安装整合包", "当前页面没有可安装的整合包。");
             return;
@@ -490,7 +491,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyDownloadResourceFilters(bool resetPage)
     {
-        if (!IsDownloadResourceSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
             return;
         }

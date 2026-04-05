@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.Minecraft.Java;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -13,67 +14,67 @@ internal sealed partial class FrontendShellViewModel
 {
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
-        if (IsDownloadInstallSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             ResetDownloadInstallSurface();
             return;
         }
 
-        if (IsDownloadResourceSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             ResetDownloadResourceFilters();
             return;
         }
 
-        if (IsSetupLaunchSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLaunch) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetLaunchSettingsSurface();
             return;
         }
 
-        if (IsSetupUpdateSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
             return;
         }
 
-        if (IsSetupGameLinkSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameLink) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetGameLinkSurface();
             return;
         }
 
-        if (IsSetupGameManageSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetGameManageSurface();
             return;
         }
 
-        if (IsSetupLauncherMiscSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLauncherMisc) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetLauncherMiscSurface();
             return;
         }
 
-        if (IsSetupJavaSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupJava) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshJavaSurface();
             return;
         }
 
-        if (IsSetupUiSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUi) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetUiSurface();
             return;
         }
 
-        if (IsToolsGameLinkSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsGameLink) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshToolsGameLinkSurface();
             return;
         }
 
-        if (IsToolsTestSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshToolsTestSurface();
             return;

@@ -1,6 +1,7 @@
 using System.IO;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -85,7 +86,7 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedUpdateChannelIndex, clampedValue))
             {
                 AddActivity("切换更新通道", UpdateChannelOptions[clampedValue]);
-                if (IsSetupUpdateSurface)
+                if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate))
                 {
                     _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
                 }

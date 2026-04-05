@@ -2,6 +2,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -216,7 +217,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(DownloadCatalogIntroActions, []);
         ReplaceItems(DownloadCatalogSections, []);
 
-        if (!IsDownloadCatalogSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadCatalog))
         {
             return;
         }
@@ -254,7 +255,7 @@ internal sealed partial class FrontendShellViewModel
     {
         ReplaceItems(DownloadFavoriteSections, []);
 
-        if (!IsDownloadFavoritesSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
         {
             return;
         }

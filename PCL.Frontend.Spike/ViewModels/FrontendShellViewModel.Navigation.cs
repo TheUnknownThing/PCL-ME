@@ -26,11 +26,11 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(UtilityEntries, shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).Select(CreateUtilityEntry));
         ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
         ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
-        RaiseCollectionStateProperties();
 
-        SelectPromptLane(_selectedPromptLane, updateActivity: false);
+        SelectPromptLane(_selectedPromptLane, updateActivity: false, raiseCollectionState: false);
         RefreshStandardShellPanes();
         RefreshActiveRightPaneSurface();
+        RaiseCollectionStateProperties();
         AddActivity(activityMessage, $"{shellPlan.Navigation.CurrentPage.Title} • {shellPlan.Navigation.CurrentPage.Route.Page}/{shellPlan.Navigation.CurrentPage.Route.Subpage}");
         RaiseShellStateProperties();
     }
@@ -304,23 +304,6 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(IsLaunchRoute));
         RaisePropertyChanged(nameof(IsStandardShellRoute));
-        RaisePropertyChanged(nameof(IsSetupLaunchSurface));
-        RaisePropertyChanged(nameof(IsSetupAboutSurface));
-        RaisePropertyChanged(nameof(IsSetupFeedbackSurface));
-        RaisePropertyChanged(nameof(IsSetupLogSurface));
-        RaisePropertyChanged(nameof(IsSetupUpdateSurface));
-        RaisePropertyChanged(nameof(IsSetupGameLinkSurface));
-        RaisePropertyChanged(nameof(IsSetupGameManageSurface));
-        RaisePropertyChanged(nameof(IsSetupLauncherMiscSurface));
-        RaisePropertyChanged(nameof(IsSetupJavaSurface));
-        RaisePropertyChanged(nameof(IsSetupUiSurface));
-        RaisePropertyChanged(nameof(IsDownloadInstallSurface));
-        RaisePropertyChanged(nameof(IsDownloadCatalogSurface));
-        RaisePropertyChanged(nameof(IsDownloadResourceSurface));
-        RaisePropertyChanged(nameof(IsDownloadFavoritesSurface));
-        RaisePropertyChanged(nameof(IsToolsGameLinkSurface));
-        RaisePropertyChanged(nameof(IsToolsTestSurface));
-        RaisePropertyChanged(nameof(IsGenericShellSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
         RaisePropertyChanged(nameof(TitleBarLabel));
@@ -328,7 +311,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchAuthLabel));
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
-        RaiseUpdateSurfaceProperties();
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate))
+        {
+            RaiseUpdateSurfaceProperties();
+        }
     }
 
     private void RaiseCollectionStateProperties()
@@ -340,35 +327,69 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasSurfaceSections));
         RaisePropertyChanged(nameof(HasUtilityEntries));
         RaisePropertyChanged(nameof(HasActivityEntries));
-        RaisePropertyChanged(nameof(HasAboutProjectEntries));
-        RaisePropertyChanged(nameof(HasAboutAcknowledgementEntries));
-        RaisePropertyChanged(nameof(HasFeedbackSections));
-        RaisePropertyChanged(nameof(HasDownloadResourceEntries));
-        RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
-        RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
-        RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
-        RaisePropertyChanged(nameof(HasVersionSaveInfoEntries));
-        RaisePropertyChanged(nameof(HasVersionSaveSettingEntries));
-        RaisePropertyChanged(nameof(HasVersionSaveBackupEntries));
-        RaisePropertyChanged(nameof(HasNoVersionSaveBackupEntries));
-        RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
-        RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
-        RaisePropertyChanged(nameof(HasHelpTopicGroups));
-        RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
-        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
-        RaisePropertyChanged(nameof(HasInstanceOverviewInfoEntries));
-        RaisePropertyChanged(nameof(HasInstanceExportOptionGroups));
-        RaisePropertyChanged(nameof(HasInstanceWorldEntries));
-        RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
-        RaisePropertyChanged(nameof(HasInstanceScreenshotEntries));
-        RaisePropertyChanged(nameof(HasNoInstanceScreenshotEntries));
-        RaisePropertyChanged(nameof(HasInstanceServerEntries));
-        RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
-        RaisePropertyChanged(nameof(HasInstanceResourceEntries));
-        RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
-        RaisePropertyChanged(nameof(ShowInstanceResourceUnsupportedState));
-        RaisePropertyChanged(nameof(ShowInstanceResourceEmptyInstallActions));
-        RaisePropertyChanged(nameof(ShowInstanceResourceInstanceSelectAction));
+
+        switch (CurrentStandardRightPaneDescriptor?.Kind)
+        {
+            case StandardShellRightPaneKind.SetupAbout:
+                RaisePropertyChanged(nameof(HasAboutProjectEntries));
+                RaisePropertyChanged(nameof(HasAboutAcknowledgementEntries));
+                break;
+            case StandardShellRightPaneKind.SetupFeedback:
+                RaisePropertyChanged(nameof(HasFeedbackSections));
+                break;
+            case StandardShellRightPaneKind.SetupJava:
+                RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
+                break;
+            case StandardShellRightPaneKind.DownloadResource:
+                RaisePropertyChanged(nameof(HasDownloadResourceEntries));
+                RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
+                break;
+            case StandardShellRightPaneKind.DownloadFavorites:
+                RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
+                RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
+                break;
+            case StandardShellRightPaneKind.VersionSaveInfo:
+                RaisePropertyChanged(nameof(HasVersionSaveInfoEntries));
+                RaisePropertyChanged(nameof(HasVersionSaveSettingEntries));
+                break;
+            case StandardShellRightPaneKind.VersionSaveBackup:
+                RaisePropertyChanged(nameof(HasVersionSaveBackupEntries));
+                RaisePropertyChanged(nameof(HasNoVersionSaveBackupEntries));
+                break;
+            case StandardShellRightPaneKind.VersionSaveDatapack:
+                RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
+                RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
+                break;
+            case StandardShellRightPaneKind.ToolsHelp:
+                RaisePropertyChanged(nameof(HasHelpTopicGroups));
+                RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
+                break;
+            case StandardShellRightPaneKind.InstanceOverview:
+                RaisePropertyChanged(nameof(HasInstanceOverviewInfoEntries));
+                break;
+            case StandardShellRightPaneKind.InstanceExport:
+                RaisePropertyChanged(nameof(HasInstanceExportOptionGroups));
+                break;
+            case StandardShellRightPaneKind.InstanceWorld:
+                RaisePropertyChanged(nameof(HasInstanceWorldEntries));
+                RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
+                break;
+            case StandardShellRightPaneKind.InstanceScreenshot:
+                RaisePropertyChanged(nameof(HasInstanceScreenshotEntries));
+                RaisePropertyChanged(nameof(HasNoInstanceScreenshotEntries));
+                break;
+            case StandardShellRightPaneKind.InstanceServer:
+                RaisePropertyChanged(nameof(HasInstanceServerEntries));
+                RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
+                break;
+            case StandardShellRightPaneKind.InstanceResource:
+                RaisePropertyChanged(nameof(HasInstanceResourceEntries));
+                RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
+                RaisePropertyChanged(nameof(ShowInstanceResourceUnsupportedState));
+                RaisePropertyChanged(nameof(ShowInstanceResourceEmptyInstallActions));
+                RaisePropertyChanged(nameof(ShowInstanceResourceInstanceSelectAction));
+                break;
+        }
     }
 
     private void RaiseUpdateSurfaceProperties()
