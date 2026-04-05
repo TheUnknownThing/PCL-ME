@@ -277,6 +277,13 @@ Write boundary:
 
 - Engineer C owns download/tools right-pane views and related pane VM additions
 
+Status update:
+
+- Completed on 2026-04-06.
+- Added dedicated right-pane views for download install, download catalog, download resource, download favorites, tools game link, and tools test.
+- Removed the download/tools surface blocks from `PclShellContentPanel.axaml`, so the compatibility panel no longer carries Engineer C routes.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the extraction.
+
 ### Workstream D: Second-Pass Decomposition of Large Dedicated Panes
 
 Owner:
@@ -477,4 +484,3 @@ Success criteria:
 - no active rendering path depends on hidden legacy sections for that slice
 - no change alters the visual style away from the current `PCL.Neo`-aligned shell
 - `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes
-
