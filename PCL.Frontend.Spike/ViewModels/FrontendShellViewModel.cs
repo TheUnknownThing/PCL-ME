@@ -206,15 +206,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool IsToolsGameLinkSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsGameLink);
 
-    public bool IsToolsHelpSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsHelp);
-
     public bool IsToolsTestSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest);
-
-    public bool IsVersionSaveInfoSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.VersionSaveInfo);
-
-    public bool IsVersionSaveBackupSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.VersionSaveBackup);
-
-    public bool IsVersionSaveDatapackSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.VersionSaveDatapack);
 
     public bool IsInstanceOverviewSurface => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceOverview);
 

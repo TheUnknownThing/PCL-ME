@@ -253,11 +253,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsDownloadResourceSurface));
         RaisePropertyChanged(nameof(IsDownloadFavoritesSurface));
         RaisePropertyChanged(nameof(IsToolsGameLinkSurface));
-        RaisePropertyChanged(nameof(IsToolsHelpSurface));
         RaisePropertyChanged(nameof(IsToolsTestSurface));
-        RaisePropertyChanged(nameof(IsVersionSaveInfoSurface));
-        RaisePropertyChanged(nameof(IsVersionSaveBackupSurface));
-        RaisePropertyChanged(nameof(IsVersionSaveDatapackSurface));
         RaisePropertyChanged(nameof(IsInstanceOverviewSurface));
         RaisePropertyChanged(nameof(IsInstanceSetupSurface));
         RaisePropertyChanged(nameof(IsInstanceExportSurface));
