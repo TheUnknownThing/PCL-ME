@@ -13,6 +13,43 @@ I treated a page as incomplete when at least one of these was true:
 - the page substitutes local fixtures, local files, or review artifacts for the real backend data source
 - the page keeps the layout but still records an intent or writes a report file instead of invoking the real runtime/backend path
 
+## Concurrent Dispatch Plan
+
+Use the incomplete-page list below as the source inventory, but dispatch implementation through the following non-overlapping work packages.
+
+To keep concurrent engineers from colliding:
+
+- each worker should own only the route family listed in their step
+- workers should avoid editing shared route-registration files during parallel work
+- one final integrator should update shared route-registration and shell-switch files after the route-family fixes are ready
+
+Shared integration files that should be reserved for the final integrator step:
+
+- `PCL.Core/App/Essentials/LauncherFrontendPageContentService.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.ShellPanes.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendNavigationService.cs`
+
+### Step List
+
+| Step | Exclusive route scope | What the assigned engineer should finish | Verification gate |
+| --- | --- | --- | --- |
+| `Step 1` | `Launch`, `InstanceSelect`, `TaskManager`, `GameLog` | Replace sample-backed or generic migration surfaces with route-specific runtime data and actions for launch-state, instance selection, active tasks, and game logs. | `Launch` no longer depends on sample launch inputs; `InstanceSelect` renders a real route-specific surface; `TaskManager` shows live task state; `GameLog` shows live log data instead of migration-only handoff text. |
+| `Step 2` | `DownloadInstall`, `VersionInstall` | Finish the installer workflow so the shell no longer falls back to the old installer for unmanaged cases, and replace placeholder install recommendations/compatibility inputs with real data. | Both routes complete install flows end to end inside the new shell for the supported install matrix, with no old-installer fallback in the exercised scenarios. |
+| `Step 3` | `DownloadClient`, `DownloadOptiFine`, `DownloadForge`, `DownloadNeoForge`, `DownloadCleanroom`, `DownloadFabric`, `DownloadLegacyFabric`, `DownloadQuilt`, `DownloadLiteLoader`, `DownloadLabyMod` | Replace local-manifest catalog composition with the real backend/remote catalog pipeline for version and loader downloads. | Each loader/version page loads real catalog entries from the intended backend source, and the displayed list changes when the backend catalog changes. |
+| `Step 4` | `DownloadMod`, `DownloadPack`, `DownloadDataPack`, `DownloadResourcePack`, `DownloadShader`, `DownloadWorld` | Replace local-instance/local-save resource lists with real backend/community search and browse results for downloadable content. | Each resource page shows backend/community results instead of only local files from the selected instance/save. |
+| `Step 5` | `DownloadCompFavorites`, `CompDetail`, `HomePageMarket` | Finish project/favorites/detail surfaces so favorites resolve live metadata, detail pages become real route implementations, and market/home content is route-specific rather than generic. | Favorites resolve project names/details from the real source; `CompDetail` has a dedicated detail surface; `HomePageMarket` renders dedicated market data instead of the generic download page. |
+| `Step 6` | `SetupLink`, `SetupFeedback`, `SetupJava`, `SetupUpdate` | Implement the missing setup routes and remove remaining intent-only or hardcoded setup behaviors. | `SetupLink` renders a dedicated route; `SetupFeedback` is backed by a real source; `SetupJava` row actions execute real behaviors; `SetupUpdate` no longer ships the disabled placeholder optional-update card. |
+| `Step 7` | `ToolsGameLink`, `ToolsLauncherHelp`, `HelpDetail`, `ToolsTest` | Replace replacement-shell/tool-intent behavior with real runtime/help/detail implementations for the tools/help family. | `ToolsGameLink` uses the intended runtime path, `HelpDetail` becomes a real page, and toolbox/help actions no longer degrade to raw intent logging for the audited routes. |
+| `Step 8` | Shared integration only | Update shared route registration and shell-switch wiring after Steps 1-7 are individually ready. This step should be the only one that edits the reserved shared integration files. | All completed route-family fixes are reachable through normal navigation, and the reserved shared files show only integration glue rather than feature logic. |
+
+### Recommended Verification Order
+
+Verify steps in numeric order even if engineers implement them concurrently. That keeps each review focused on one route family and leaves the shared routing sweep for the end.
+
+### Step Progress
+
+- 2026-04-06: `Step 2` completed. `DownloadInstall` and `VersionInstall` now keep the supported install matrix inside the new shell, surface route-local compatibility and recommendation data on the install cards, clear stale loader selections when the Minecraft version changes, and block apply/reset when an existing selection cannot be mapped to a supported install source.
+
 ## Confirmed Incomplete Pages
 
 ### Launch And Utility Routes
