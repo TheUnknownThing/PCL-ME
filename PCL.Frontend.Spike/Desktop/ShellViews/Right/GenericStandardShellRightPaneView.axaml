@@ -160,7 +160,7 @@
                     Text="清理已结束" />
               </WrapPanel>
 
-              <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+              <Grid ColumnDefinitions="*,*,*,*">
                 <Border
                     Padding="12,10"
                     Background="#F7FAFE"
@@ -174,6 +174,7 @@
                 </Border>
                 <Border
                     Grid.Column="1"
+                    Margin="10,0,0,0"
                     Padding="12,10"
                     Background="#EEF9F2"
                     BorderBrush="#C7E8D1"
@@ -186,6 +187,7 @@
                 </Border>
                 <Border
                     Grid.Column="2"
+                    Margin="10,0,0,0"
                     Padding="12,10"
                     Background="#FFF8E6"
                     BorderBrush="#F2DCA1"
@@ -198,6 +200,7 @@
                 </Border>
                 <Border
                     Grid.Column="3"
+                    Margin="10,0,0,0"
                     Padding="12,10"
                     Background="#FFF0EF"
                     BorderBrush="#F2CBC7"
@@ -229,7 +232,7 @@
                     <controls:PclCard Header="{Binding Title}" ContentMargin="18,18,18,16">
                       <controls:PclCard.CardContent>
                         <StackPanel Spacing="12">
-                          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                          <Grid ColumnDefinitions="Auto,*">
                             <Border
                                 Padding="10,4"
                                 Background="#EDF5FF"
@@ -242,7 +245,7 @@
                                   FontWeight="SemiBold"
                                   Text="{Binding State}" />
                             </Border>
-                            <StackPanel Grid.Column="1" Spacing="4">
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
                               <TextBlock
                                   Foreground="#45586A"
                                   FontSize="13"
@@ -326,7 +329,7 @@
                     Text="清空缓存" />
               </WrapPanel>
 
-              <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+              <Grid ColumnDefinitions="*,*">
                 <Border
                     Padding="12,10"
                     Background="#F7FAFE"
@@ -340,6 +343,7 @@
                 </Border>
                 <Border
                     Grid.Column="1"
+                    Margin="10,0,0,0"
                     Padding="12,10"
                     Background="#F7FAFE"
                     BorderBrush="#D5E6FD"

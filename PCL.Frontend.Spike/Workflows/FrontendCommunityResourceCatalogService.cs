@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using PCL.Core.App;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Models;
 
@@ -11,6 +10,7 @@ namespace PCL.Frontend.Spike.Workflows;
 internal static class FrontendCommunityResourceCatalogService
 {
     private const int SearchPageSize = 12;
+    private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry> Cache = new(StringComparer.Ordinal);
     private static readonly IReadOnlyList<RouteConfig> RouteConfigs =
@@ -305,7 +305,7 @@ internal static class FrontendCommunityResourceCatalogService
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 if (candidate.UseCurseForgeApiKey)
                 {
-                    request.Headers.TryAddWithoutValidation("x-api-key", Secrets.CurseForgeAPIKey);
+                    request.Headers.TryAddWithoutValidation("x-api-key", CurseForgeApiKey);
                 }
 
                 using var response = HttpClient.Send(request);
@@ -330,7 +330,7 @@ internal static class FrontendCommunityResourceCatalogService
         bool officialRequiresApiKey)
     {
         var candidates = new List<RequestCandidate>();
-        var canUseOfficial = !officialRequiresApiKey || !string.IsNullOrWhiteSpace(Secrets.CurseForgeAPIKey);
+        var canUseOfficial = !officialRequiresApiKey || !string.IsNullOrWhiteSpace(CurseForgeApiKey);
 
         switch (communitySourcePreference)
         {
