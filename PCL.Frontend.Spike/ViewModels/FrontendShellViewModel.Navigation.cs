@@ -681,7 +681,6 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(ShowAvailableUpdateCard));
         RaisePropertyChanged(nameof(ShowCurrentVersionCard));
-        RaisePropertyChanged(nameof(ShowOptionalUpdateCard));
         RaisePropertyChanged(nameof(AvailableUpdateName));
         RaisePropertyChanged(nameof(AvailableUpdatePublisher));
         RaisePropertyChanged(nameof(AvailableUpdateSummary));

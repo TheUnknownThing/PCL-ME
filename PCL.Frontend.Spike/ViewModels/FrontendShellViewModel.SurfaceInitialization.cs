@@ -50,50 +50,6 @@ internal sealed partial class FrontendShellViewModel
         ]);
     }
 
-    private void InitializeFeedbackSections()
-    {
-        ReplaceItems(FeedbackSections,
-        [
-            CreateFeedbackSection("正在处理", false,
-            [
-                CreateSimpleEntry("前端迁移右侧页面复制", "继续将设置与工具页从通用摘要卡片替换成原始页面结构。"),
-                CreateSimpleEntry("路由感知壳层对齐", "让 Avalonia 右侧内容区按当前子页面切换而不是统一模板。")
-            ]),
-            CreateFeedbackSection("等待处理", false,
-            [
-                CreateSimpleEntry("下载页自动安装面板", "等待更细的安装器展示合同后继续贴近 PageDownloadInstall。")
-            ]),
-            CreateFeedbackSection("等待", false,
-            [
-                CreateSimpleEntry("实例页资源面板", "等实例详情数据面完成后再复制资源包、光影包与服务器区块。")
-            ]),
-            CreateFeedbackSection("暂停", false,
-            [
-                CreateSimpleEntry("主题与动画设置细节", "当前先保留为后续界面页深入复制任务。")
-            ]),
-            CreateFeedbackSection("在即", false,
-            [
-                CreateSimpleEntry("帮助页搜索交互", "优先补齐搜索框、结果区与帮助列表卡片布局。")
-            ]),
-            CreateFeedbackSection("已完成", true,
-            [
-                CreateSimpleEntry("主壳顶栏对齐", "已切换为更接近原版的顶栏标签与返回标题模式。")
-            ]),
-            CreateFeedbackSection("已拒绝", true,
-            [
-                CreateSimpleEntry("重新设计迁移视觉语言", "当前迁移阶段不接受脱离原版控件语义的重新设计。")
-            ]),
-            CreateFeedbackSection("已忽略", true,
-            [
-                CreateSimpleEntry("把后端工作流搬回前端", "保持策略在后端，前端只负责组合与意图收集。")
-            ]),
-            CreateFeedbackSection("重复", true,
-            [
-                CreateSimpleEntry("用更多通用卡片替代原页面", "这和当前迁移规则冲突，继续复制原布局会更合适。")
-            ])
-        ]);
-    }
-
     private void InitializeLogEntries()
     {
         ReplaceItems(LogEntries,
