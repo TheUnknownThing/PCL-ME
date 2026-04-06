@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Spike.Cli;
@@ -186,10 +187,14 @@ internal sealed partial class FrontendShellViewModel
     private string _downloadInstallName = "新的安装方案";
     private string _downloadCatalogIntroTitle = string.Empty;
     private string _downloadCatalogIntroBody = string.Empty;
+    private string _downloadCatalogLoadingText = "正在获取版本列表";
     private string _downloadFavoriteSearchQuery = string.Empty;
     private int _selectedDownloadFavoriteTargetIndex;
     private string _downloadFavoriteWarningText = string.Empty;
     private bool _showDownloadFavoriteWarning;
+    private CancellationTokenSource? _downloadCatalogRefreshCts;
+    private int _downloadCatalogRefreshVersion;
+    private bool _isDownloadCatalogLoading;
     private bool _isDownloadResourceLoading;
     private readonly Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> _downloadResourceRuntimeStates = new();
     private int _communityProjectRefreshVersion;

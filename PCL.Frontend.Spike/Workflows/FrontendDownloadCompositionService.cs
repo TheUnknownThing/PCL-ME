@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Models;
@@ -32,6 +34,22 @@ internal static class FrontendDownloadCompositionService
             BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion),
             BuildFavoritesState(sharedConfig, communitySourcePreference),
             BuildResourceStates(instanceComposition, communitySourcePreference));
+    }
+
+    public static Task<FrontendDownloadCatalogState> LoadCatalogStateAsync(
+        FrontendRuntimePaths runtimePaths,
+        FrontendInstanceComposition instanceComposition,
+        LauncherFrontendSubpageKey route,
+        CancellationToken cancellationToken = default)
+    {
+        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
+        var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
+        return FrontendDownloadRemoteCatalogService.LoadCatalogStateAsync(
+            route,
+            versionSourceIndex,
+            preferredMinecraftVersion,
+            cancellationToken);
     }
 
     private static FrontendDownloadInstallState BuildInstallState(FrontendInstanceComposition instanceComposition)

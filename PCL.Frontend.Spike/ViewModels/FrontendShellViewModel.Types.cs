@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -290,13 +291,68 @@ internal sealed class DownloadCatalogActionViewModel(
     public ActionCommand Command { get; } = command;
 }
 
-internal sealed class DownloadCatalogSectionViewModel(
-    string title,
-    IReadOnlyList<DownloadCatalogEntryViewModel> items)
+internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
 {
-    public string Title { get; } = title;
+    private const int PageSize = 20;
+    private readonly IReadOnlyList<DownloadCatalogEntryViewModel> _allItems;
+    private readonly ActionCommand _previousPageCommand;
+    private readonly ActionCommand _nextPageCommand;
+    private int _pageIndex;
 
-    public IReadOnlyList<DownloadCatalogEntryViewModel> Items { get; } = items;
+    public DownloadCatalogSectionViewModel(
+        string title,
+        IReadOnlyList<DownloadCatalogEntryViewModel> items)
+    {
+        Title = title;
+        _allItems = items;
+        _previousPageCommand = new ActionCommand(
+            () => ChangePage(-1),
+            () => _pageIndex > 0);
+        _nextPageCommand = new ActionCommand(
+            () => ChangePage(1),
+            () => _pageIndex + 1 < TotalPages);
+        RefreshItems();
+    }
+
+    public string Title { get; }
+
+    public ObservableCollection<DownloadCatalogEntryViewModel> Items { get; } = [];
+
+    public bool ShowPagination => TotalPages > 1;
+
+    public string PageLabel => $"{_pageIndex + 1} / {TotalPages}";
+
+    public ActionCommand PreviousPageCommand => _previousPageCommand;
+
+    public ActionCommand NextPageCommand => _nextPageCommand;
+
+    private int TotalPages => Math.Max(1, (_allItems.Count + PageSize - 1) / PageSize);
+
+    private void ChangePage(int delta)
+    {
+        var nextPage = Math.Clamp(_pageIndex + delta, 0, TotalPages - 1);
+        if (nextPage == _pageIndex)
+        {
+            return;
+        }
+
+        _pageIndex = nextPage;
+        RefreshItems();
+    }
+
+    private void RefreshItems()
+    {
+        Items.Clear();
+        foreach (var item in _allItems.Skip(_pageIndex * PageSize).Take(PageSize))
+        {
+            Items.Add(item);
+        }
+
+        RaisePropertyChanged(nameof(ShowPagination));
+        RaisePropertyChanged(nameof(PageLabel));
+        _previousPageCommand.NotifyCanExecuteChanged();
+        _nextPageCommand.NotifyCanExecuteChanged();
+    }
 }
 
 internal sealed class DownloadCatalogEntryViewModel(

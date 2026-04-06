@@ -28,7 +28,17 @@ internal sealed partial class FrontendShellViewModel
         private set => SetProperty(ref _downloadCatalogIntroBody, value);
     }
 
+    public string DownloadCatalogLoadingText
+    {
+        get => _downloadCatalogLoadingText;
+        private set => SetProperty(ref _downloadCatalogLoadingText, value);
+    }
+
     public bool HasDownloadCatalogIntro => !string.IsNullOrWhiteSpace(DownloadCatalogIntroTitle);
+
+    public bool ShowDownloadCatalogLoadingCard => _isDownloadCatalogLoading;
+
+    public bool ShowDownloadCatalogContent => !_isDownloadCatalogLoading;
 
     public string DownloadFavoriteSearchQuery
     {

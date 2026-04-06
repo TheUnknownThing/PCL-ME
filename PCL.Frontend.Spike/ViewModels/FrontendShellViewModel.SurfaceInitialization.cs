@@ -1,5 +1,8 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+using System.Threading;
+using System.Threading.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.Models;
@@ -184,44 +187,129 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshDownloadCatalogSurface()
     {
+        _downloadCatalogRefreshCts?.Cancel();
         DownloadCatalogIntroTitle = string.Empty;
         DownloadCatalogIntroBody = string.Empty;
+        DownloadCatalogLoadingText = FrontendDownloadRemoteCatalogService.GetLoadingText(_currentRoute.Subpage);
         ReplaceItems(DownloadCatalogIntroActions, []);
         ReplaceItems(DownloadCatalogSections, []);
+        SetDownloadCatalogLoading(false);
 
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadCatalog))
         {
             return;
         }
 
-        EnsureDownloadCompositionRemoteStateLoaded();
-        if (_downloadComposition.CatalogStates.TryGetValue(_currentRoute.Subpage, out var state))
+        var refreshVersion = ++_downloadCatalogRefreshVersion;
+        var route = _currentRoute.Subpage;
+        var cts = new CancellationTokenSource();
+        _downloadCatalogRefreshCts = cts;
+        SetDownloadCatalogLoading(true);
+        _ = LoadDownloadCatalogSurfaceAsync(route, refreshVersion, cts.Token);
+    }
+
+    private async Task LoadDownloadCatalogSurfaceAsync(
+        LauncherFrontendSubpageKey route,
+        int refreshVersion,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            SetDownloadCatalogIntro(
-                state.IntroTitle,
-                state.IntroBody,
-                state.Actions.Select(action =>
-                    new DownloadCatalogActionViewModel(
-                        action.Text,
-                        action.IsHighlight ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
-                        string.IsNullOrWhiteSpace(action.Target)
-                            ? CreateIntentCommand(action.Text, state.IntroTitle)
-                            : CreateOpenTargetCommand(action.Text, action.Target, action.Target))).ToArray());
-            ReplaceItems(
-                DownloadCatalogSections,
-                state.Sections.Select(section =>
-                    CreateDownloadCatalogSection(
-                        section.Title,
-                        section.Entries.Select(entry =>
-                            new DownloadCatalogEntryViewModel(
-                                entry.Title,
-                                entry.Info,
-                                entry.Meta,
-                                entry.ActionText,
-                                string.IsNullOrWhiteSpace(entry.Target)
-                                    ? CreateIntentCommand($"下载页操作: {entry.Title}", $"{entry.Info} • {entry.Meta}")
-                                    : CreateOpenTargetCommand($"打开条目: {entry.Title}", entry.Target, entry.Target))).ToArray())));
+            var state = await FrontendDownloadCompositionService.LoadCatalogStateAsync(
+                _shellActionService.RuntimePaths,
+                _instanceComposition,
+                route,
+                cancellationToken);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (cancellationToken.IsCancellationRequested
+                    || refreshVersion != _downloadCatalogRefreshVersion
+                    || _currentRoute.Subpage != route
+                    || !IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadCatalog))
+                {
+                    return;
+                }
+
+                ApplyDownloadCatalogState(state);
+                SetDownloadCatalogLoading(false);
+            });
         }
+        catch (OperationCanceledException)
+        {
+            // A newer route refresh superseded this load.
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (refreshVersion != _downloadCatalogRefreshVersion)
+                {
+                    return;
+                }
+
+                DownloadCatalogIntroTitle = "远程目录加载失败";
+                DownloadCatalogIntroBody = ex.Message;
+                DownloadCatalogLoadingText = "请稍后重试。";
+                ReplaceItems(DownloadCatalogIntroActions, []);
+                ReplaceItems(
+                    DownloadCatalogSections,
+                    [
+                        CreateDownloadCatalogSection(
+                            "远程目录",
+                            [
+                                new DownloadCatalogEntryViewModel(
+                                    "暂无可显示数据",
+                                    "当前无法读取远程目录，请稍后重试。",
+                                    string.Empty,
+                                    "查看详情",
+                                    CreateIntentCommand("下载页加载失败", ex.Message))
+                            ])
+                    ]);
+                SetDownloadCatalogLoading(false);
+            });
+        }
+    }
+
+    private void ApplyDownloadCatalogState(FrontendDownloadCatalogState state)
+    {
+        DownloadCatalogLoadingText = state.LoadingText;
+        SetDownloadCatalogIntro(
+            state.IntroTitle,
+            state.IntroBody,
+            state.Actions.Select(action =>
+                new DownloadCatalogActionViewModel(
+                    action.Text,
+                    action.IsHighlight ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
+                    string.IsNullOrWhiteSpace(action.Target)
+                        ? CreateIntentCommand(action.Text, state.IntroTitle)
+                        : CreateOpenTargetCommand(action.Text, action.Target, action.Target))).ToArray());
+        ReplaceItems(
+            DownloadCatalogSections,
+            state.Sections.Select(section =>
+                CreateDownloadCatalogSection(
+                    section.Title,
+                    section.Entries.Select(entry =>
+                        new DownloadCatalogEntryViewModel(
+                            entry.Title,
+                            entry.Info,
+                            entry.Meta,
+                            entry.ActionText,
+                            string.IsNullOrWhiteSpace(entry.Target)
+                                ? CreateIntentCommand($"下载页操作: {entry.Title}", $"{entry.Info} • {entry.Meta}")
+                                : CreateOpenTargetCommand($"打开条目: {entry.Title}", entry.Target, entry.Target))).ToArray())));
+    }
+
+    private void SetDownloadCatalogLoading(bool isLoading)
+    {
+        if (_isDownloadCatalogLoading == isLoading)
+        {
+            return;
+        }
+
+        _isDownloadCatalogLoading = isLoading;
+        RaisePropertyChanged(nameof(ShowDownloadCatalogLoadingCard));
+        RaisePropertyChanged(nameof(ShowDownloadCatalogContent));
     }
 
     private void RefreshDownloadFavoriteSurface()
