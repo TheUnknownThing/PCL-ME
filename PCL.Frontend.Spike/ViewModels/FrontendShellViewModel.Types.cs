@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -317,6 +319,18 @@ internal sealed class DownloadCatalogEntryViewModel(
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
 }
 
+internal sealed class CommunityProjectReleaseGroupViewModel(
+    string title,
+    bool isExpanded,
+    IReadOnlyList<DownloadCatalogEntryViewModel> items)
+{
+    public string Title { get; } = title;
+
+    public bool IsExpanded { get; } = isExpanded;
+
+    public IReadOnlyList<DownloadCatalogEntryViewModel> Items { get; } = items;
+}
+
 internal sealed class DownloadResourceFilterOptionViewModel(
     string label,
     string filterValue,
@@ -372,6 +386,41 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public bool HasIcon => Icon is not null;
 
+    public bool HasInfo => !string.IsNullOrWhiteSpace(Info);
+
+    public IReadOnlyList<string> VisibleTags => Tags
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Take(4)
+        .ToArray();
+
+    public bool HasVisibleTags => VisibleTags.Count > 0;
+
+    public string VersionLabel => string.IsNullOrWhiteSpace(Version) ? "未标注版本" : Version;
+
+    public string DownloadCountLabel => DownloadCount <= 0 ? "暂无下载" : $"{FormatCompactCount(DownloadCount)} 下载";
+
+    public string UpdatedLabel
+    {
+        get
+        {
+            var rank = UpdateRank > 0 ? UpdateRank : ReleaseRank;
+            if (rank <= 0)
+            {
+                return "时间未知";
+            }
+
+            try
+            {
+                return DateTimeOffset.FromUnixTimeSeconds(rank).LocalDateTime.ToString("yyyy/MM/dd");
+            }
+            catch
+            {
+                return "时间未知";
+            }
+        }
+    }
+
     public string Meta
     {
         get
@@ -401,6 +450,16 @@ internal sealed class DownloadResourceEntryViewModel(
         Loader,
         string.Join(" ", Tags)
     });
+
+    private static string FormatCompactCount(int value)
+    {
+        return value switch
+        {
+            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
+            >= 10_000 => $"{value / 10_000d:0.#}万",
+            _ => value.ToString()
+        };
+    }
 }
 
 internal sealed class InstanceScreenshotEntryViewModel(

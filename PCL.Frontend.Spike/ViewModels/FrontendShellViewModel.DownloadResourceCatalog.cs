@@ -17,7 +17,7 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private const int DownloadResourcePageSize = 3;
+    private const int DownloadResourcePageSize = 40;
     private readonly ActionCommand _resetDownloadResourceFiltersCommand;
     private readonly ActionCommand _installDownloadResourceModPackCommand;
     private readonly ActionCommand _firstDownloadResourcePageCommand;
@@ -98,6 +98,17 @@ internal sealed partial class FrontendShellViewModel
         get => _downloadResourceSurfaceTitle;
         private set => SetProperty(ref _downloadResourceSurfaceTitle, value);
     }
+
+    public string DownloadResourceSearchWatermark => _currentRoute.Subpage switch
+    {
+        LauncherFrontendSubpageKey.DownloadMod => "搜索 Mod",
+        LauncherFrontendSubpageKey.DownloadPack => "搜索整合包",
+        LauncherFrontendSubpageKey.DownloadDataPack => "搜索数据包",
+        LauncherFrontendSubpageKey.DownloadResourcePack => "搜索资源包",
+        LauncherFrontendSubpageKey.DownloadShader => "搜索光影包",
+        LauncherFrontendSubpageKey.DownloadWorld => "搜索存档",
+        _ => "搜索资源"
+    };
 
     public string DownloadResourceLoadingText
     {
@@ -209,6 +220,8 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoDownloadResourceEntries => !HasDownloadResourceEntries;
 
+    public bool ShowDownloadResourcePagination => _downloadResourceTotalPages > 1;
+
     public string DownloadResourcePageLabel => _downloadResourceTotalPages <= 0
         ? "0"
         : $"{_downloadResourcePageIndex + 1} / {_downloadResourceTotalPages}";
@@ -247,12 +260,14 @@ internal sealed partial class FrontendShellViewModel
 
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
+            RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
             RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
             RaisePropertyChanged(nameof(DownloadResourceTagOptions));
             RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
             RaisePropertyChanged(nameof(HasDownloadResourceEntries));
             RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
             RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+            RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
             NotifyDownloadResourcePageCommandState();
             return;
         }
@@ -528,6 +543,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasDownloadResourceEntries));
         RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
         RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+        RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
         NotifyDownloadResourcePageCommandState();
     }
 
@@ -541,6 +557,7 @@ internal sealed partial class FrontendShellViewModel
     private void RaiseDownloadResourceFilterState()
     {
         RaisePropertyChanged(nameof(DownloadResourceSearchQuery));
+        RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
         RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
         RaisePropertyChanged(nameof(DownloadResourceTagOptions));
         RaisePropertyChanged(nameof(DownloadResourceSortOptions));
@@ -553,6 +570,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedDownloadResourceLoaderIndex));
         RaisePropertyChanged(nameof(ShowDownloadResourceInstallModPackAction));
         RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+        RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
     }
 
     private void UpdateDownloadResourceHint()
@@ -581,6 +599,7 @@ internal sealed partial class FrontendShellViewModel
         {
             _downloadResourcePageIndex = 0;
             RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+            RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
             NotifyDownloadResourcePageCommandState();
         }
 
@@ -781,7 +800,9 @@ internal sealed partial class FrontendShellViewModel
                     entry.ActionText,
                     string.IsNullOrWhiteSpace(entry.TargetPath)
                         ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
-                        : CreateOpenTargetCommand($"打开资源页面: {entry.Title}", entry.TargetPath, entry.TargetPath));
+                        : FrontendCommunityProjectService.TryParseCompDetailTarget(entry.TargetPath, out var projectId)
+                            ? new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title, entry.Version, entry.Loader))
+                            : CreateOpenTargetCommand($"打开资源页面: {entry.Title}", entry.TargetPath, entry.TargetPath));
             })
             .ToArray();
     }

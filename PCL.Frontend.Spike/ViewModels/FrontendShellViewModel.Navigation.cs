@@ -379,6 +379,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void NavigateTo(LauncherFrontendRoute route, string activityMessage)
     {
+        route = NormalizeRoute(route);
         if (route == _currentRoute)
         {
             AddActivity("Stayed on the current route.", $"{route.Page}/{route.Subpage}");

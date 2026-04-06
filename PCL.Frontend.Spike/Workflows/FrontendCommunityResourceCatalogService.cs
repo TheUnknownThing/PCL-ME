@@ -237,7 +237,8 @@ internal static class FrontendCommunityResourceCatalogService
     {
         var title = GetString(hit, "title");
         var slug = GetString(hit, "slug");
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(slug))
+        var projectId = GetString(hit, "project_id") ?? slug;
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(projectId))
         {
             return null;
         }
@@ -257,7 +258,6 @@ internal static class FrontendCommunityResourceCatalogService
             .Cast<string>()
             .ToArray();
 
-        var website = $"https://modrinth.com/{projectType}/{slug}";
         var downloads = GetInt(hit, "downloads");
         var follows = GetInt(hit, "follows");
         var createdAt = ParseDateTimeOffset(hit["date_created"]);
@@ -275,9 +275,9 @@ internal static class FrontendCommunityResourceCatalogService
             ResolvePrimaryVersion(versions, preferredVersion),
             ResolvePrimaryLoader(rawCategories, config.UseShaderLoaderOptions),
             translatedTags.Length == 0 ? [config.Title] : translatedTags,
-            "打开页面",
+            "查看详情",
             config.IconName,
-            website,
+            FrontendCommunityProjectService.CreateCompDetailTarget(projectId),
             downloads,
             follows,
             ToRank(createdAt),
@@ -290,7 +290,8 @@ internal static class FrontendCommunityResourceCatalogService
         string? preferredVersion)
     {
         var title = GetString(item, "name");
-        if (string.IsNullOrWhiteSpace(title))
+        var projectId = GetInt(item, "id");
+        if (string.IsNullOrWhiteSpace(title) || projectId <= 0)
         {
             return null;
         }
@@ -332,9 +333,9 @@ internal static class FrontendCommunityResourceCatalogService
             primaryFile is null ? string.Empty : GetString(primaryFile, "gameVersion"),
             primaryFile is null ? ResolveShaderLoaderFromTags(translatedTags) : ResolveCurseForgeLoader(primaryFile, config.UseShaderLoaderOptions, translatedTags),
             translatedTags.Length == 0 ? [config.Title] : translatedTags,
-            "打开页面",
+            "查看详情",
             config.IconName,
-            website,
+            FrontendCommunityProjectService.CreateCompDetailTarget(projectId.ToString()),
             downloads,
             0,
             ToRank(releasedAt),

@@ -125,12 +125,14 @@ internal static class FrontendCommunityProjectService
                 "先从收藏夹或市场条目进入，才能查看对应工程详情。",
                 string.Empty,
                 "未指定来源",
+                string.Empty,
                 "等待选择",
                 "尚未加载",
                 0,
                 0,
                 "未提供兼容信息",
                 "未提供标签信息",
+                [],
                 [],
                 "当前详情页没有携带工程标识。",
                 true);
@@ -157,12 +159,14 @@ internal static class FrontendCommunityProjectService
                 "无法从实时来源加载该工程。",
                 string.Empty,
                 IsCurseForgeId(normalizedId) ? "CurseForge" : "Modrinth",
+                string.Empty,
                 "加载失败",
                 "未知",
                 0,
                 0,
                 "未提供兼容信息",
                 "未提供标签信息",
+                [],
                 [],
                 ex.Message,
                 true);
@@ -334,7 +338,7 @@ internal static class FrontendCommunityProjectService
         var summary = NormalizeWhitespace(GetString(project, "description"));
         var body = TruncateText(CleanProjectDescription(GetString(project, "body")), 520);
         var website = BuildModrinthWebsite(project);
-        var loaders = DistinctValues(project["loaders"] as JsonArray);
+        var loaders = NormalizeProjectLoaders(DistinctValues(project["loaders"] as JsonArray));
         var categories = TranslateModrinthCategories(DistinctValues(project["categories"] as JsonArray)
             .Concat(DistinctValues(project["additional_categories"] as JsonArray)));
         var gameVersions = DistinctValues(project["game_versions"] as JsonArray)
@@ -347,10 +351,9 @@ internal static class FrontendCommunityProjectService
             .Where(node => node is not null)
             .OrderByDescending(version => MatchesPreferredVersion(version!, normalizedVersion))
             .ThenByDescending(version => ParseDateTimeOffset(version!["date_published"]))
-            .Take(8)
             .Select(version => BuildModrinthReleaseEntry(version!, website))
             .Where(entry => entry is not null)
-            .Cast<FrontendDownloadCatalogEntry>()
+            .Cast<FrontendCommunityProjectReleaseEntry>()
             .ToArray();
         var links = BuildModrinthLinkEntries(project, website);
 
@@ -360,13 +363,15 @@ internal static class FrontendCommunityProjectService
             string.IsNullOrWhiteSpace(summary) ? "该项目没有提供额外摘要。" : summary,
             body,
             "Modrinth",
+            website,
             TranslateProjectStatus(GetString(project, "status")),
             FormatDateLabel(ParseDateTimeOffset(project["updated"])),
             GetInt(project, "downloads"),
             GetInt(project, "followers"),
             BuildCompatibilitySummary(gameVersions, loaders),
             BuildCategorySummary(categories),
-            BuildProjectSections(releases, links),
+            releases,
+            links,
             string.Empty,
             false);
     }
@@ -387,15 +392,21 @@ internal static class FrontendCommunityProjectService
         var data = project["data"]?.AsObject() ?? throw new InvalidOperationException("CurseForge 返回了空的工程数据。");
         var website = GetString(data["links"] as JsonObject, "websiteUrl")
                       ?? BuildCurseForgeWebsite(data);
-        var releases = (data["latestFiles"] as JsonArray ?? [])
+        var filesResponse = ReadJsonObject(
+            "CurseForge",
+            $"https://api.curseforge.com/v1/mods/{projectId}/files?pageSize=10000",
+            $"https://mod.mcimirror.top/curseforge/v1/mods/{projectId}/files?pageSize=10000",
+            communitySourcePreference,
+            officialRequiresApiKey: true,
+            postBody: null);
+        var releases = (filesResponse["data"] as JsonArray ?? [])
             .Select(node => node as JsonObject)
             .Where(node => node is not null)
             .OrderByDescending(file => MatchesPreferredVersionInFile(file!, normalizedVersion))
             .ThenByDescending(file => ParseDateTimeOffset(file!["fileDate"]))
-            .Take(8)
             .Select(file => BuildCurseForgeReleaseEntry(file!, website))
             .Where(entry => entry is not null)
-            .Cast<FrontendDownloadCatalogEntry>()
+            .Cast<FrontendCommunityProjectReleaseEntry>()
             .ToArray();
         var categories = (data["categories"] as JsonArray ?? [])
             .Select(node => TranslateCurseForgeCategory(GetInt(node as JsonObject, "id")))
@@ -429,13 +440,15 @@ internal static class FrontendCommunityProjectService
                 : "该项目没有提供额外摘要。",
             string.Empty,
             "CurseForge",
+            website,
             TranslateCurseForgeStatus(GetInt(data, "status")),
             FormatDateLabel(ParseDateTimeOffset(data["dateModified"]) ?? ParseDateTimeOffset(data["dateReleased"])),
             GetInt(data, "downloadCount"),
             GetInt(data, "thumbsUpCount"),
             BuildCompatibilitySummary(gameVersions, loaders),
             BuildCategorySummary(categories),
-            BuildProjectSections(releases, links),
+            releases,
+            links,
             string.Empty,
             false);
     }
@@ -490,7 +503,7 @@ internal static class FrontendCommunityProjectService
             GetInt(project, "thumbsUpCount"));
     }
 
-    private static FrontendDownloadCatalogEntry? BuildModrinthReleaseEntry(JsonObject version, string? website)
+    private static FrontendCommunityProjectReleaseEntry? BuildModrinthReleaseEntry(JsonObject version, string? website)
     {
         var title = GetString(version, "name") ?? GetString(version, "version_number");
         if (string.IsNullOrWhiteSpace(title))
@@ -498,26 +511,37 @@ internal static class FrontendCommunityProjectService
             return null;
         }
 
+        var gameVersions = DistinctValues(version["game_versions"] as JsonArray)
+            .Select(value => NormalizeMinecraftVersion(value) ?? value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(ParseVersion)
+            .ToArray();
+        var loaders = NormalizeProjectLoaders(DistinctValues(version["loaders"] as JsonArray));
         var info = BuildReleaseInfo(
-            DistinctValues(version["game_versions"] as JsonArray),
-            DistinctValues(version["loaders"] as JsonArray));
+            gameVersions,
+            loaders);
         var file = (version["files"] as JsonArray ?? [])
             .Select(node => node as JsonObject)
             .FirstOrDefault(node => node is not null && GetBool(node, "primary"));
         var target = GetString(file, "url") ?? website;
         var downloads = GetInt(version, "downloads");
-        var meta = $"发布 {FormatDateLabel(ParseDateTimeOffset(version["date_published"]))}"
+        var publishedAt = ParseDateTimeOffset(version["date_published"]);
+        var meta = $"发布 {FormatDateLabel(publishedAt)}"
                    + (downloads > 0 ? $" • {FormatCompactCount(downloads)} 下载" : string.Empty);
 
-        return new FrontendDownloadCatalogEntry(
+        return new FrontendCommunityProjectReleaseEntry(
             title,
             info,
             meta,
             string.IsNullOrWhiteSpace(target) ? "查看详情" : "打开下载",
-            target);
+            target,
+            gameVersions,
+            loaders,
+            publishedAt?.ToUnixTimeSeconds() ?? 0);
     }
 
-    private static FrontendDownloadCatalogEntry? BuildCurseForgeReleaseEntry(JsonObject file, string? website)
+    private static FrontendCommunityProjectReleaseEntry? BuildCurseForgeReleaseEntry(JsonObject file, string? website)
     {
         var title = GetString(file, "displayName") ?? GetString(file, "fileName");
         if (string.IsNullOrWhiteSpace(title))
@@ -525,22 +549,34 @@ internal static class FrontendCommunityProjectService
             return null;
         }
 
+        var gameVersions = DistinctValues(file["gameVersions"] as JsonArray)
+            .Select(value => NormalizeMinecraftVersion(value) ?? value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(ParseVersion)
+            .ToArray();
+        var loaders = DistinctValues(file["gameVersions"] as JsonArray)
+            .Select(NormalizeLoaderToken)
+            .Where(loader => !string.IsNullOrWhiteSpace(loader))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         var info = BuildReleaseInfo(
-            DistinctValues(file["gameVersions"] as JsonArray),
-            DistinctValues(file["gameVersions"] as JsonArray)
-                .Select(NormalizeLoaderToken)
-                .Where(loader => !string.IsNullOrWhiteSpace(loader))
-                .Cast<string>()
-                .ToArray());
+            gameVersions,
+            loaders);
         var downloads = GetInt(file, "downloadCount");
-        var meta = $"发布 {FormatDateLabel(ParseDateTimeOffset(file["fileDate"]))}"
+        var publishedAt = ParseDateTimeOffset(file["fileDate"]);
+        var downloadUrl = GetString(file, "downloadUrl");
+        var meta = $"发布 {FormatDateLabel(publishedAt)}"
                    + (downloads > 0 ? $" • {FormatCompactCount(downloads)} 下载" : string.Empty);
-        return new FrontendDownloadCatalogEntry(
+        return new FrontendCommunityProjectReleaseEntry(
             title,
             info,
             meta,
-            string.IsNullOrWhiteSpace(website) ? "查看详情" : "打开项目页",
-            website);
+            string.IsNullOrWhiteSpace(downloadUrl) ? (string.IsNullOrWhiteSpace(website) ? "查看详情" : "打开项目页") : "打开下载",
+            downloadUrl ?? website,
+            gameVersions,
+            loaders,
+            publishedAt?.ToUnixTimeSeconds() ?? 0);
     }
 
     private static IReadOnlyList<FrontendDownloadCatalogEntry> BuildModrinthLinkEntries(JsonObject project, string? website)
@@ -575,24 +611,6 @@ internal static class FrontendCommunityProjectService
         AddLinkEntry(entries, "源码仓库", GetString(links, "sourceUrl"), "打开源码");
         AddLinkEntry(entries, "Wiki", GetString(links, "wikiUrl"), "打开 Wiki");
         return entries;
-    }
-
-    private static IReadOnlyList<FrontendDownloadCatalogSection> BuildProjectSections(
-        IReadOnlyList<FrontendDownloadCatalogEntry> releases,
-        IReadOnlyList<FrontendDownloadCatalogEntry> links)
-    {
-        var sections = new List<FrontendDownloadCatalogSection>();
-        if (releases.Count > 0)
-        {
-            sections.Add(new FrontendDownloadCatalogSection("最近版本", releases));
-        }
-
-        if (links.Count > 0)
-        {
-            sections.Add(new FrontendDownloadCatalogSection("相关链接", links));
-        }
-
-        return sections;
     }
 
     private static JsonArray ReadJsonArray(
@@ -940,6 +958,29 @@ internal static class FrontendCommunityProjectService
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
+    }
+
+    private static IReadOnlyList<string> NormalizeProjectLoaders(IEnumerable<string> rawValues)
+    {
+        return rawValues
+            .Select(NormalizeProjectLoader)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static string NormalizeProjectLoader(string rawValue)
+    {
+        return rawValue.Trim().ToLowerInvariant() switch
+        {
+            "forge" => "Forge",
+            "neoforge" => "NeoForge",
+            "fabric" => "Fabric",
+            "quilt" => "Quilt",
+            "optifine" => "OptiFine",
+            "iris" => "Iris",
+            _ => rawValue.Trim()
+        };
     }
 
     private static string NormalizeLoaderToken(string rawValue)

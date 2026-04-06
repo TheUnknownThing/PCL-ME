@@ -630,12 +630,17 @@ internal sealed partial class FrontendShellViewModel
                 .GetValue(null);
         }
 
-        private static object? ReadObject(object owner, string propertyName)
+        private static object? ReadObject(object? owner, string propertyName)
         {
+            if (owner is null)
+            {
+                return null;
+            }
+
             return owner.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)?.GetValue(owner);
         }
 
-        private static string ReadString(object owner, string propertyName)
+        private static string ReadString(object? owner, string propertyName)
         {
             return ReadObject(owner, propertyName)?.ToString() ?? string.Empty;
         }

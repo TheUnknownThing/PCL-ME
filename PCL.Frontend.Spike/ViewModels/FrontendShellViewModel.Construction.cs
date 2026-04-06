@@ -299,7 +299,7 @@ internal sealed partial class FrontendShellViewModel
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
-        _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
+        _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
