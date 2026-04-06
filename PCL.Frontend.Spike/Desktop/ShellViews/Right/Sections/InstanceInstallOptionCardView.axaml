@@ -25,6 +25,7 @@
               Grid.Column="2"
               Width="72"
               Margin="10,0,0,0"
+              IsEnabled="{Binding CanClear}"
               Command="{Binding ClearCommand}"
               Text="清除" />
         </Grid>

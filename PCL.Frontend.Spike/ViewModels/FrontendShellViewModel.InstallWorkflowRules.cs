@@ -44,23 +44,44 @@ internal sealed partial class FrontendShellViewModel
     {
         var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
         var selectableChoices = GetSelectableInstallChoices(isExistingInstance, optionTitle, minecraftVersion);
+        if (IsManagedSelectionUnresolved(isExistingInstance, optionTitle, minecraftVersion))
+        {
+            var canSelect = selectableChoices.Count > 0;
+            return new InstallOptionPresentation(
+                BuildInstallOptionUnresolvedDetail(isExistingInstance, optionTitle, minecraftVersion, selectableChoices),
+                canSelect ? "重新选择" : "当前不可用",
+                canSelect);
+        }
+
         var unavailableReason = GetInstallOptionUnavailableReason(isExistingInstance, optionTitle, minecraftVersion, selectableChoices);
         if (unavailableReason is not null)
         {
-            return new InstallOptionPresentation(unavailableReason, "当前不可用", false);
+            return new InstallOptionPresentation(
+                BuildInstallOptionUnavailableDetail(optionTitle, minecraftVersion, unavailableReason),
+                "当前不可用",
+                false);
         }
 
         return new InstallOptionPresentation(
-            isExistingInstance
-                ? "继续沿用原版实例安装页的卡片选择结构，并直接对当前实例的安装清单执行修改。"
-                : "继续沿用原版安装页的卡片选择结构，并直接从当前可用候选中选定版本。",
-            "选择版本",
+            BuildInstallOptionAvailableDetail(isExistingInstance, optionTitle, minecraftVersion, selectableChoices),
+            ResolveInstallOptionSelectText(isExistingInstance, optionTitle, minecraftVersion, selectableChoices),
             true);
     }
 
     private IReadOnlyList<string> GetEffectiveInstallHints(bool isExistingInstance)
     {
         var hints = new List<string>();
+        if (HasInstallMinecraftVersionChanged(isExistingInstance))
+        {
+            hints.Add($"当前已切换到 {GetEffectiveMinecraftVersion(isExistingInstance)}，旧版本的加载器组合不会被自动沿用，请重新确认兼容项。");
+        }
+
+        var unresolvedSelections = GetUnresolvedManagedSelections(isExistingInstance);
+        if (unresolvedSelections.Count > 0)
+        {
+            hints.Add($"以下安装项需要重新确认：{string.Join("、", unresolvedSelections)}。当前壳层不会默默回退到旧安装器。");
+        }
+
         if (HasInstallSelection(isExistingInstance, "Fabric")
             && !HasInstallSelection(isExistingInstance, "Fabric API"))
         {
@@ -100,6 +121,117 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return hints;
+    }
+
+    private string BuildInstallOptionAvailableDetail(
+        bool isExistingInstance,
+        string optionTitle,
+        string minecraftVersion,
+        IReadOnlyList<FrontendInstallChoice> selectableChoices)
+    {
+        var effectiveChoice = ResolveEffectiveChoice(isExistingInstance, optionTitle, minecraftVersion);
+        var recommendedChoice = selectableChoices[0];
+        var parts = new List<string>();
+
+        if (effectiveChoice is null)
+        {
+            parts.Add($"推荐 {recommendedChoice.Title}。");
+        }
+        else if (string.Equals(effectiveChoice.Id, recommendedChoice.Id, StringComparison.Ordinal))
+        {
+            parts.Add($"当前已选推荐版本 {effectiveChoice.Title}。");
+        }
+        else
+        {
+            parts.Add($"当前已选 {effectiveChoice.Title}，推荐版本为 {recommendedChoice.Title}。");
+        }
+
+        if (!string.IsNullOrWhiteSpace(recommendedChoice.Summary))
+        {
+            parts.Add(recommendedChoice.Summary);
+        }
+
+        parts.Add($"当前共有 {selectableChoices.Count} 个可用候选。");
+        parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private string ResolveInstallOptionSelectText(
+        bool isExistingInstance,
+        string optionTitle,
+        string minecraftVersion,
+        IReadOnlyList<FrontendInstallChoice> selectableChoices)
+    {
+        var effectiveChoice = ResolveEffectiveChoice(isExistingInstance, optionTitle, minecraftVersion);
+        if (effectiveChoice is null)
+        {
+            return selectableChoices.Count > 0 ? "安装推荐" : "当前不可用";
+        }
+
+        return "更换版本";
+    }
+
+    private string BuildInstallOptionUnresolvedDetail(
+        bool isExistingInstance,
+        string optionTitle,
+        string minecraftVersion,
+        IReadOnlyList<FrontendInstallChoice> selectableChoices)
+    {
+        var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
+        var parts = new List<string>
+        {
+            $"当前记录的是 {baselineText}，但它无法映射到 {minecraftVersion} 的受支持安装源。"
+        };
+
+        if (selectableChoices.Count > 0)
+        {
+            parts.Add($"请重新选择一个可用版本；当前可选 {selectableChoices.Count} 项。");
+            parts.Add($"推荐 {selectableChoices[0].Title}。");
+        }
+        else
+        {
+            parts.Add("这个版本组合当前没有可直接选择的候选，建议清除该项或改用兼容的 Minecraft 版本。");
+        }
+
+        parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private string BuildInstallOptionUnavailableDetail(string optionTitle, string minecraftVersion, string unavailableReason)
+    {
+        var parts = new List<string>
+        {
+            $"当前 Minecraft {minecraftVersion} 下 {unavailableReason}。"
+        };
+
+        parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private string GetInstallOptionRuleHint(string optionTitle, string minecraftVersion)
+    {
+        return optionTitle switch
+        {
+            "Forge" or "NeoForge" or "Cleanroom" or "Fabric" or "Legacy Fabric" or "Quilt" or "LabyMod" =>
+                "这会占用主加载器槽位，选择后会自动清除其他主加载器。",
+            "Fabric API" =>
+                "需要先安装 Fabric，或在 Quilt 兼容场景下作为共享 API 使用。",
+            "Legacy Fabric API" =>
+                "需要先安装 Legacy Fabric。",
+            "QFAPI / QSL" =>
+                "需要先安装 Quilt。",
+            "OptiFine" when IsVersionGreaterThan(minecraftVersion, "1.20.4") =>
+                "高于 1.20.4 时不再兼容 Fabric 组合，请优先确认当前加载器矩阵。",
+            "OptiFine" =>
+                "与部分 Forge / Fabric 版本组合存在额外兼容限制，保存前请确认提示条。",
+            "OptiFabric" when IsOptiFabricOriginsOnlyVersion(minecraftVersion) =>
+                "1.14-1.15 需要改用 OptiFabric Origins，当前不会自动代装旧分支。",
+            "OptiFabric" =>
+                "需要同时安装 Fabric 与 OptiFine。",
+            "LiteLoader" =>
+                "仅旧版 Minecraft 提供候选，通常不建议与现代加载器混用。",
+            _ => string.Empty
+        };
     }
 
     private IReadOnlyList<FrontendInstallChoice> GetSelectableInstallChoices(bool isExistingInstance, string optionTitle, string minecraftVersion)
