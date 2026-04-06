@@ -54,6 +54,8 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceVersionOptions =
     [
         new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+        new DownloadResourceFilterOptionViewModel("26.1.1", "26.1.1"),
+        new DownloadResourceFilterOptionViewModel("26.1", "26.1"),
         new DownloadResourceFilterOptionViewModel("1.21.11", "1.21.11"),
         new DownloadResourceFilterOptionViewModel("1.21.10", "1.21.10"),
         new DownloadResourceFilterOptionViewModel("1.21.9", "1.21.9"),
@@ -79,10 +81,65 @@ internal sealed partial class FrontendShellViewModel
         new DownloadResourceFilterOptionViewModel("1.18.2", "1.18.2"),
         new DownloadResourceFilterOptionViewModel("1.17.1", "1.17.1"),
         new DownloadResourceFilterOptionViewModel("1.16.5", "1.16.5"),
+        new DownloadResourceFilterOptionViewModel("1.15.2", "1.15.2"),
+        new DownloadResourceFilterOptionViewModel("1.15.1", "1.15.1"),
+        new DownloadResourceFilterOptionViewModel("1.15", "1.15"),
+        new DownloadResourceFilterOptionViewModel("1.14.4", "1.14.4"),
+        new DownloadResourceFilterOptionViewModel("1.14.3", "1.14.3"),
+        new DownloadResourceFilterOptionViewModel("1.14.2", "1.14.2"),
+        new DownloadResourceFilterOptionViewModel("1.14.1", "1.14.1"),
+        new DownloadResourceFilterOptionViewModel("1.14", "1.14"),
+        new DownloadResourceFilterOptionViewModel("1.13.2", "1.13.2"),
+        new DownloadResourceFilterOptionViewModel("1.13.1", "1.13.1"),
+        new DownloadResourceFilterOptionViewModel("1.13", "1.13"),
         new DownloadResourceFilterOptionViewModel("1.12.2", "1.12.2"),
+        new DownloadResourceFilterOptionViewModel("1.12.1", "1.12.1"),
+        new DownloadResourceFilterOptionViewModel("1.12", "1.12"),
+        new DownloadResourceFilterOptionViewModel("1.11.2", "1.11.2"),
+        new DownloadResourceFilterOptionViewModel("1.11.1", "1.11.1"),
+        new DownloadResourceFilterOptionViewModel("1.11", "1.11"),
         new DownloadResourceFilterOptionViewModel("1.10.2", "1.10.2"),
+        new DownloadResourceFilterOptionViewModel("1.10.1", "1.10.1"),
+        new DownloadResourceFilterOptionViewModel("1.10", "1.10"),
+        new DownloadResourceFilterOptionViewModel("1.9.4", "1.9.4"),
+        new DownloadResourceFilterOptionViewModel("1.9.2", "1.9.2"),
+        new DownloadResourceFilterOptionViewModel("1.9.1", "1.9.1"),
+        new DownloadResourceFilterOptionViewModel("1.9", "1.9"),
         new DownloadResourceFilterOptionViewModel("1.8.9", "1.8.9"),
-        new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10")
+        new DownloadResourceFilterOptionViewModel("1.8.8", "1.8.8"),
+        new DownloadResourceFilterOptionViewModel("1.8.7", "1.8.7"),
+        new DownloadResourceFilterOptionViewModel("1.8.4", "1.8.4"),
+        new DownloadResourceFilterOptionViewModel("1.8.3", "1.8.3"),
+        new DownloadResourceFilterOptionViewModel("1.8.2", "1.8.2"),
+        new DownloadResourceFilterOptionViewModel("1.8.1", "1.8.1"),
+        new DownloadResourceFilterOptionViewModel("1.8", "1.8"),
+        new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10"),
+        new DownloadResourceFilterOptionViewModel("1.7.9", "1.7.9"),
+        new DownloadResourceFilterOptionViewModel("1.7.8", "1.7.8"),
+        new DownloadResourceFilterOptionViewModel("1.7.7", "1.7.7"),
+        new DownloadResourceFilterOptionViewModel("1.7.6", "1.7.6"),
+        new DownloadResourceFilterOptionViewModel("1.7.5", "1.7.5"),
+        new DownloadResourceFilterOptionViewModel("1.7.4", "1.7.4"),
+        new DownloadResourceFilterOptionViewModel("1.7.2", "1.7.2"),
+        new DownloadResourceFilterOptionViewModel("1.6.4", "1.6.4"),
+        new DownloadResourceFilterOptionViewModel("1.6.2", "1.6.2"),
+        new DownloadResourceFilterOptionViewModel("1.6.1", "1.6.1"),
+        new DownloadResourceFilterOptionViewModel("1.5.2", "1.5.2"),
+        new DownloadResourceFilterOptionViewModel("1.5.1", "1.5.1"),
+        new DownloadResourceFilterOptionViewModel("1.4.7", "1.4.7"),
+        new DownloadResourceFilterOptionViewModel("1.4.6", "1.4.6"),
+        new DownloadResourceFilterOptionViewModel("1.4.5", "1.4.5"),
+        new DownloadResourceFilterOptionViewModel("1.4.4", "1.4.4"),
+        new DownloadResourceFilterOptionViewModel("1.4.2", "1.4.2"),
+        new DownloadResourceFilterOptionViewModel("1.3.2", "1.3.2"),
+        new DownloadResourceFilterOptionViewModel("1.3.1", "1.3.1"),
+        new DownloadResourceFilterOptionViewModel("1.2.5", "1.2.5"),
+        new DownloadResourceFilterOptionViewModel("1.2.4", "1.2.4"),
+        new DownloadResourceFilterOptionViewModel("1.2.3", "1.2.3"),
+        new DownloadResourceFilterOptionViewModel("1.2.2", "1.2.2"),
+        new DownloadResourceFilterOptionViewModel("1.2.1", "1.2.1"),
+        new DownloadResourceFilterOptionViewModel("1.1", "1.1"),
+        new DownloadResourceFilterOptionViewModel("1.0", "1.0")
     ];
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions =
     [
@@ -493,11 +550,6 @@ internal sealed partial class FrontendShellViewModel
 
         IEnumerable<DownloadResourceEntryViewModel> entries = _allDownloadResourceEntries;
 
-        if (!string.IsNullOrWhiteSpace(DownloadResourceSearchQuery))
-        {
-            entries = entries.Where(entry => entry.SearchText.Contains(DownloadResourceSearchQuery, StringComparison.OrdinalIgnoreCase));
-        }
-
         var sourceFilter = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
         if (!string.IsNullOrWhiteSpace(sourceFilter))
         {
@@ -683,6 +735,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyDownloadResourceQueryResult(FrontendCommunityResourceQueryResult result, bool resetPage)
     {
+        var selectedSource = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
+        var selectedTag = GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex);
+        var selectedVersion = GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex);
+        var selectedLoader = GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex);
+
         DownloadResourceHintText = result.State.HintText;
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(result.State.HintText);
         DownloadResourceLoadingText = string.IsNullOrWhiteSpace(result.State.HintText)
@@ -705,14 +762,32 @@ internal sealed partial class FrontendShellViewModel
             .. result.VersionOptions.Select(version => new DownloadResourceFilterOptionViewModel(version, version))
         ];
 
-        _selectedDownloadResourceSourceIndex = ClampFilterIndex(_selectedDownloadResourceSourceIndex, DownloadResourceSourceOptions);
-        _selectedDownloadResourceTagIndex = ClampFilterIndex(_selectedDownloadResourceTagIndex, DownloadResourceTagOptions);
-        _selectedDownloadResourceVersionIndex = ClampFilterIndex(_selectedDownloadResourceVersionIndex, DownloadResourceVersionOptions);
-        _selectedDownloadResourceLoaderIndex = ClampFilterIndex(_selectedDownloadResourceLoaderIndex, DownloadResourceLoaderOptions);
+        _selectedDownloadResourceSourceIndex = FindFilterOptionIndex(DownloadResourceSourceOptions, selectedSource);
+        _selectedDownloadResourceTagIndex = FindFilterOptionIndex(DownloadResourceTagOptions, selectedTag);
+        _selectedDownloadResourceVersionIndex = FindFilterOptionIndex(DownloadResourceVersionOptions, selectedVersion);
+        _selectedDownloadResourceLoaderIndex = FindFilterOptionIndex(DownloadResourceLoaderOptions, selectedLoader);
         _allDownloadResourceEntries = CreateDownloadResourceEntries(result.State.Entries);
 
         RaiseDownloadResourceFilterState();
         ApplyDownloadResourceFilters(resetPage);
+    }
+
+    private static int FindFilterOptionIndex(IReadOnlyList<DownloadResourceFilterOptionViewModel> options, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return 0;
+        }
+
+        for (var index = 0; index < options.Count; index++)
+        {
+            if (string.Equals(options[index].FilterValue, value, StringComparison.OrdinalIgnoreCase))
+            {
+                return index;
+            }
+        }
+
+        return 0;
     }
 
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDownloadResourceSourceOptions(FrontendDownloadResourceState runtimeState)

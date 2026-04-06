@@ -591,14 +591,6 @@ internal static class FrontendCommunityResourceCatalogService
     {
         var filtered = entries;
 
-        if (!string.IsNullOrWhiteSpace(query.SearchText))
-        {
-            filtered = filtered.Where(entry =>
-                entry.Title.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)
-                || entry.Info.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)
-                || entry.Tags.Any(tag => tag.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)));
-        }
-
         if (!string.IsNullOrWhiteSpace(query.Tag))
         {
             filtered = filtered.Where(entry => entry.Tags.Any(tag => string.Equals(tag, query.Tag, StringComparison.OrdinalIgnoreCase)));
@@ -1052,10 +1044,11 @@ internal static class FrontendCommunityResourceCatalogService
                 var versions = root?["versions"]?.AsArray()
                     .Select(node => node as JsonObject)
                     .Where(node => node is not null && string.Equals(GetString(node, "type"), "release", StringComparison.OrdinalIgnoreCase))
-                    .Select(node => GetString(node, "id"))
+                    .Select(node => NormalizeMinecraftVersion(GetString(node, "id")))
                     .Where(version => !string.IsNullOrWhiteSpace(version))
+                    .Cast<string>()
                     .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .Take(40)
+                    .OrderByDescending(ParseVersion)
                     .ToArray();
                 if (versions is { Length: > 0 })
                 {
@@ -1070,6 +1063,8 @@ internal static class FrontendCommunityResourceCatalogService
 
         return
         [
+            "26.1.1",
+            "26.1",
             "1.21.11",
             "1.21.10",
             "1.21.9",
@@ -1095,9 +1090,65 @@ internal static class FrontendCommunityResourceCatalogService
             "1.18.2",
             "1.17.1",
             "1.16.5",
+            "1.15.2",
+            "1.15.1",
+            "1.15",
+            "1.14.4",
+            "1.14.3",
+            "1.14.2",
+            "1.14.1",
+            "1.14",
+            "1.13.2",
+            "1.13.1",
+            "1.13",
             "1.12.2",
+            "1.12.1",
+            "1.12",
+            "1.11.2",
+            "1.11.1",
+            "1.11",
+            "1.10.2",
+            "1.10.1",
+            "1.10",
+            "1.9.4",
+            "1.9.2",
+            "1.9.1",
+            "1.9",
             "1.8.9",
-            "1.7.10"
+            "1.8.8",
+            "1.8.7",
+            "1.8.4",
+            "1.8.3",
+            "1.8.2",
+            "1.8.1",
+            "1.8",
+            "1.7.10",
+            "1.7.9",
+            "1.7.8",
+            "1.7.7",
+            "1.7.6",
+            "1.7.5",
+            "1.7.4",
+            "1.7.2",
+            "1.6.4",
+            "1.6.2",
+            "1.6.1",
+            "1.5.2",
+            "1.5.1",
+            "1.4.7",
+            "1.4.6",
+            "1.4.5",
+            "1.4.4",
+            "1.4.2",
+            "1.3.2",
+            "1.3.1",
+            "1.2.5",
+            "1.2.4",
+            "1.2.3",
+            "1.2.2",
+            "1.2.1",
+            "1.1",
+            "1.0"
         ];
     }
 
