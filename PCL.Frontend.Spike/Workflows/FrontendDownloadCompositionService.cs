@@ -15,12 +15,13 @@ internal static class FrontendDownloadCompositionService
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
         var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
+        var communitySourcePreference = ReadValue(sharedConfig, "ToolDownloadMod", 1);
 
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
             BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion),
-            BuildFavoritesState(sharedConfig),
-            BuildResourceStates(instanceComposition, sharedConfig));
+            BuildFavoritesState(sharedConfig, communitySourcePreference),
+            BuildResourceStates(instanceComposition, communitySourcePreference));
     }
 
     private static FrontendDownloadInstallState BuildInstallState(FrontendInstanceComposition instanceComposition)
@@ -45,33 +46,42 @@ internal static class FrontendDownloadCompositionService
         return FrontendDownloadRemoteCatalogService.BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion);
     }
 
-    private static FrontendDownloadFavoritesState BuildFavoritesState(JsonFileProvider sharedConfig)
+    private static FrontendDownloadFavoritesState BuildFavoritesState(
+        JsonFileProvider sharedConfig,
+        int communitySourcePreference)
     {
         var raw = ReadValue(sharedConfig, "CompFavorites", "[]");
         var targets = ParseFavoriteTargets(raw, out var migratedOldFormat);
+        var lookup = FrontendCommunityProjectService.LookupProjects(
+            targets.SelectMany(target => target.Favorites),
+            communitySourcePreference);
         var targetNames = targets.Select(target => target.Name).ToArray();
         var sections = targets
             .Select(target => new FrontendDownloadCatalogSection(
                 target.Name,
                 EnsureCatalogEntries(
                     target.Favorites
-                        .OrderBy(favorite => favorite, StringComparer.OrdinalIgnoreCase)
-                        .Select(favorite => new FrontendDownloadCatalogEntry(
-                            target.Notes.TryGetValue(favorite, out var note) && !string.IsNullOrWhiteSpace(note)
-                                ? note
-                                : $"项目 {favorite}",
-                            $"工程 ID：{favorite}",
-                            $"{target.Name} • 已收藏",
-                            "查看详情",
-                            null))
+                        .Select(favorite => CreateFavoriteEntry(target, favorite, lookup.Projects))
+                        .OrderBy(entry => entry.Title, StringComparer.CurrentCultureIgnoreCase)
                         .ToArray(),
                     "当前收藏夹中还没有任何项目。")))
             .ToArray();
 
-        var showWarning = migratedOldFormat || sections.Any(section => section.Entries.Any(item => item.Target is null));
-        var warningText = migratedOldFormat
-            ? "检测到旧格式收藏夹数据，已按默认收藏夹方式读取。"
-            : "当前收藏项缺少在线工程元数据，因此这里只显示本地保存的收藏编号与备注。";
+        var unresolvedCount = targets.Sum(target => target.Favorites.Count(favorite => !lookup.Projects.ContainsKey(favorite)));
+        var warnings = new List<string>();
+        if (migratedOldFormat)
+        {
+            warnings.Add("检测到旧格式收藏夹数据，已按默认收藏夹方式读取。");
+        }
+
+        if (unresolvedCount > 0)
+        {
+            warnings.Add($"有 {unresolvedCount} 个收藏项暂时无法解析在线元数据，因此保留了本地保存的工程编号。");
+        }
+
+        warnings.AddRange(lookup.Errors);
+        var warningText = string.Join(" ", warnings.Distinct(StringComparer.Ordinal));
+        var showWarning = warnings.Count > 0 && sections.Length > 0;
 
         return new FrontendDownloadFavoritesState(
             targetNames.Length == 0 ? ["默认收藏夹"] : targetNames,
@@ -84,11 +94,69 @@ internal static class FrontendDownloadCompositionService
 
     private static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> BuildResourceStates(
         FrontendInstanceComposition instanceComposition,
-        JsonFileProvider sharedConfig)
+        int communitySourcePreference)
     {
         return FrontendCommunityResourceCatalogService.BuildResourceStates(
             instanceComposition,
-            ReadValue(sharedConfig, "ToolDownloadMod", 1));
+            communitySourcePreference);
+    }
+
+    private static FrontendDownloadCatalogEntry CreateFavoriteEntry(
+        FavoriteTarget target,
+        string favorite,
+        IReadOnlyDictionary<string, FrontendCommunityProjectSummary> projects)
+    {
+        var note = target.Notes.TryGetValue(favorite, out var storedNote) && !string.IsNullOrWhiteSpace(storedNote)
+            ? storedNote.Trim()
+            : null;
+        if (projects.TryGetValue(favorite, out var project))
+        {
+            var infoParts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(note))
+            {
+                infoParts.Add(note);
+            }
+
+            if (!string.IsNullOrWhiteSpace(project.Summary))
+            {
+                infoParts.Add(project.Summary);
+            }
+
+            var metaParts = new List<string> { target.Name, project.Source };
+            if (!string.IsNullOrWhiteSpace(project.ProjectType))
+            {
+                metaParts.Add(project.ProjectType!);
+            }
+
+            if (!string.IsNullOrWhiteSpace(project.Author))
+            {
+                metaParts.Add(project.Author!);
+            }
+
+            if (!string.IsNullOrWhiteSpace(project.UpdatedLabel) && project.UpdatedLabel != "未知")
+            {
+                metaParts.Add($"更新 {project.UpdatedLabel}");
+            }
+
+            if (project.DownloadCount > 0)
+            {
+                metaParts.Add($"{FormatCompactCount(project.DownloadCount)} 下载");
+            }
+
+            return new FrontendDownloadCatalogEntry(
+                project.Title,
+                string.Join(" • ", infoParts.Where(part => !string.IsNullOrWhiteSpace(part))),
+                string.Join(" • ", metaParts),
+                "查看详情",
+                FrontendCommunityProjectService.CreateCompDetailTarget(project.ProjectId));
+        }
+
+        return new FrontendDownloadCatalogEntry(
+            note ?? $"项目 {favorite}",
+            $"工程 ID：{favorite}",
+            $"{target.Name} • 收藏元数据未解析",
+            "查看详情",
+            FrontendCommunityProjectService.CreateCompDetailTarget(favorite));
     }
 
     private static IReadOnlyList<LocalManifestEntry> ReadLocalManifestEntries(string launcherFolder)
@@ -292,6 +360,16 @@ internal static class FrontendDownloadCompositionService
         return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+    }
+
+    private static string FormatCompactCount(int value)
+    {
+        return value switch
+        {
+            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
+            >= 10_000 => $"{value / 10_000d:0.#}万",
+            _ => value.ToString()
+        };
     }
 
     private static FavoriteTarget ParseFavoriteTarget(JsonElement element)

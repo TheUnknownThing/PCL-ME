@@ -573,6 +573,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowInstanceSelectSurface));
         RaisePropertyChanged(nameof(ShowTaskManagerSurface));
         RaisePropertyChanged(nameof(ShowGameLogSurface));
+        RaisePropertyChanged(nameof(ShowCompDetailSurface));
+        RaisePropertyChanged(nameof(ShowHomePageMarketSurface));
         RaisePropertyChanged(nameof(ShowHelpDetailSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
@@ -602,9 +604,14 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasTaskManagerEntries));
         RaisePropertyChanged(nameof(HasNoTaskManagerEntries));
         RaisePropertyChanged(nameof(HasGameLogFiles));
+        RaisePropertyChanged(nameof(HasNoGameLogFiles));
         RaisePropertyChanged(nameof(HasHelpDetailSections));
         RaisePropertyChanged(nameof(HasNoHelpDetailSections));
-        RaisePropertyChanged(nameof(HasNoGameLogFiles));
+        RaisePropertyChanged(nameof(HasCommunityProjectDescription));
+        RaisePropertyChanged(nameof(HasCommunityProjectSections));
+        RaisePropertyChanged(nameof(HasNoCommunityProjectSections));
+        RaisePropertyChanged(nameof(HasHomePageMarketSections));
+        RaisePropertyChanged(nameof(HasNoHomePageMarketSections));
 
         switch (CurrentStandardRightPaneDescriptor?.Kind)
         {

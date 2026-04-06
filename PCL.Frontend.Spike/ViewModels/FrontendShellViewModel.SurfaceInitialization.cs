@@ -2,6 +2,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
+using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
@@ -282,7 +283,7 @@ internal sealed partial class FrontendShellViewModel
                         item.ActionText,
                         string.IsNullOrWhiteSpace(item.Target)
                             ? CreateIntentCommand($"收藏夹条目: {item.Title}", item.Info)
-                            : CreateOpenTargetCommand($"打开收藏夹条目: {item.Title}", item.Target, item.Target)))
+                            : CreateDownloadFavoriteCommand(item)))
                     .ToArray()))
             .Where(section => section.Items.Count > 0)
             .ToArray();
@@ -517,6 +518,16 @@ internal sealed partial class FrontendShellViewModel
     private ActionCommand CreateIntentCommand(string title, string detail)
     {
         return new ActionCommand(() => AddActivity(title, detail));
+    }
+
+    private ActionCommand CreateDownloadFavoriteCommand(FrontendDownloadCatalogEntry entry)
+    {
+        if (FrontendCommunityProjectService.TryParseCompDetailTarget(entry.Target, out var projectId))
+        {
+            return new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title));
+        }
+
+        return CreateOpenTargetCommand($"打开收藏夹条目: {entry.Title}", entry.Target!, entry.Target!);
     }
 
     private ActionCommand CreateOpenTargetCommand(string title, string target, string detail)

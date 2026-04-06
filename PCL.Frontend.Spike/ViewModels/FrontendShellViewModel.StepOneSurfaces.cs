@@ -54,7 +54,13 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool HasDedicatedGenericRouteSurface => ShowInstanceSelectSurface || ShowTaskManagerSurface || ShowGameLogSurface || ShowHelpDetailSurface;
+    public bool HasDedicatedGenericRouteSurface =>
+        ShowInstanceSelectSurface
+        || ShowTaskManagerSurface
+        || ShowGameLogSurface
+        || ShowCompDetailSurface
+        || ShowHomePageMarketSurface
+        || ShowHelpDetailSurface;
 
     public bool ShowGenericCompatibilitySurface => !HasDedicatedGenericRouteSurface;
 
@@ -118,6 +124,8 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceSelectionSurface();
         RefreshTaskManagerSurface();
         RefreshGameLogSurface();
+        RefreshCompDetailSurface();
+        RefreshHomePageMarketSurface();
         RefreshHelpDetailSurface();
     }
 
@@ -133,6 +141,12 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case LauncherFrontendPageKey.GameLog:
                 RefreshGameLogSurface();
+                break;
+            case LauncherFrontendPageKey.CompDetail:
+                RefreshCompDetailSurface();
+                break;
+            case LauncherFrontendPageKey.HomePageMarket:
+                RefreshHomePageMarketSurface();
                 break;
             case LauncherFrontendPageKey.HelpDetail:
                 RefreshHelpDetailSurface();
@@ -173,6 +187,28 @@ internal sealed partial class FrontendShellViewModel
                         new LauncherFrontendPageFact("实时行数", GameLogLiveLineCount.ToString()),
                         new LauncherFrontendPageFact("最近文件", GameLogRecentFileCount.ToString()),
                         new LauncherFrontendPageFact("最新更新", GameLogLatestUpdateLabel)
+                    ]);
+                return true;
+            case LauncherFrontendPageKey.CompDetail:
+                metadata = new DedicatedGenericRouteMetadata(
+                    "工程详情",
+                    "资源工程详情页现在会直接请求实时社区元数据与最近版本，而不是落回通用下载迁移面板。",
+                    [
+                        new LauncherFrontendPageFact("来源", CommunityProjectSource),
+                        new LauncherFrontendPageFact("状态", CommunityProjectStatus),
+                        new LauncherFrontendPageFact("最近更新", CommunityProjectUpdatedLabel),
+                        new LauncherFrontendPageFact("下载量", CommunityProjectDownloadCountLabel)
+                    ]);
+                return true;
+            case LauncherFrontendPageKey.HomePageMarket:
+                metadata = new DedicatedGenericRouteMetadata(
+                    "主页市场",
+                    "主页市场会聚合热门社区资源分区，直接展示当前可访问来源的实时榜单，而不是继续复用普通下载概览。",
+                    [
+                        new LauncherFrontendPageFact("聚合分区", HomePageMarketSections.Count.ToString()),
+                        new LauncherFrontendPageFact("首选来源", _selectedCommunityDownloadSourceIndex == 0 ? "镜像优先" : "官方优先"),
+                        new LauncherFrontendPageFact("当前实例", _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : "未选择实例"),
+                        new LauncherFrontendPageFact("兼容版本", string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion) ? "未指定" : _instanceComposition.Selection.VanillaVersion)
                     ]);
                 return true;
             case LauncherFrontendPageKey.HelpDetail:
