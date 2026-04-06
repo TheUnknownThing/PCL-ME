@@ -9,7 +9,7 @@
       <controls:PclCard Header="基础" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,28">
               <TextBlock
                   VerticalAlignment="Center"
                   Foreground="#343D4A"
@@ -235,7 +235,7 @@
       <controls:PclCard Header="背景音乐" ContentMargin="25,42,25,20">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="22">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
               <TextBlock
                   VerticalAlignment="Center"
                   Foreground="#343D4A"
