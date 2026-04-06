@@ -53,7 +53,9 @@ internal sealed record FrontendToolsHelpEntry(
     string GroupTitle,
     string Title,
     string Summary,
+    string Keywords,
     string RawPath,
     bool IsEvent,
     string? EventType,
-    string? EventData);
+    string? EventData,
+    string? DetailContent);

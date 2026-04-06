@@ -54,7 +54,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool HasDedicatedGenericRouteSurface => ShowInstanceSelectSurface || ShowTaskManagerSurface || ShowGameLogSurface;
+    public bool HasDedicatedGenericRouteSurface => ShowInstanceSelectSurface || ShowTaskManagerSurface || ShowGameLogSurface || ShowHelpDetailSurface;
 
     public bool ShowGenericCompatibilitySurface => !HasDedicatedGenericRouteSurface;
 
@@ -118,6 +118,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceSelectionSurface();
         RefreshTaskManagerSurface();
         RefreshGameLogSurface();
+        RefreshHelpDetailSurface();
     }
 
     private void RefreshCurrentDedicatedGenericRouteSurface()
@@ -132,6 +133,9 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case LauncherFrontendPageKey.GameLog:
                 RefreshGameLogSurface();
+                break;
+            case LauncherFrontendPageKey.HelpDetail:
+                RefreshHelpDetailSurface();
                 break;
         }
     }
@@ -169,6 +173,16 @@ internal sealed partial class FrontendShellViewModel
                         new LauncherFrontendPageFact("实时行数", GameLogLiveLineCount.ToString()),
                         new LauncherFrontendPageFact("最近文件", GameLogRecentFileCount.ToString()),
                         new LauncherFrontendPageFact("最新更新", GameLogLatestUpdateLabel)
+                    ]);
+                return true;
+            case LauncherFrontendPageKey.HelpDetail:
+                metadata = new DedicatedGenericRouteMetadata(
+                    HelpDetailTitle,
+                    "帮助详情会直接展示条目正文、内嵌动作和可追溯的来源信息，而不是只记录原始路径。",
+                    [
+                        new LauncherFrontendPageFact("来源", HelpDetailSource),
+                        new LauncherFrontendPageFact("段落数", HelpDetailSections.Sum(section => section.Lines.Count).ToString()),
+                        new LauncherFrontendPageFact("动作数", HelpDetailSections.Sum(section => section.Actions.Count).ToString())
                     ]);
                 return true;
             default:

@@ -573,6 +573,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowInstanceSelectSurface));
         RaisePropertyChanged(nameof(ShowTaskManagerSurface));
         RaisePropertyChanged(nameof(ShowGameLogSurface));
+        RaisePropertyChanged(nameof(ShowHelpDetailSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
         RaisePropertyChanged(nameof(TitleBarLabel));
@@ -601,6 +602,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasTaskManagerEntries));
         RaisePropertyChanged(nameof(HasNoTaskManagerEntries));
         RaisePropertyChanged(nameof(HasGameLogFiles));
+        RaisePropertyChanged(nameof(HasHelpDetailSections));
+        RaisePropertyChanged(nameof(HasNoHelpDetailSections));
         RaisePropertyChanged(nameof(HasNoGameLogFiles));
 
         switch (CurrentStandardRightPaneDescriptor?.Kind)
