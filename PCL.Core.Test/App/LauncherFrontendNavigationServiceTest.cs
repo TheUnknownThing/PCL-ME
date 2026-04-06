@@ -80,4 +80,46 @@ public sealed class LauncherFrontendNavigationServiceTest
         Assert.AreEqual("启动", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
         CollectionAssert.AreEqual(new[] { "设置", "启动" }, view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
     }
+
+    [TestMethod]
+    public void BuildViewAttachesCompDetailToDownloadNavigationFamily()
+    {
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.CompDetail),
+            BackstackDepth: 0));
+
+        Assert.AreEqual(LauncherFrontendPageKind.Detail, view.CurrentPage.Kind);
+        Assert.AreEqual("下载分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
+        Assert.AreEqual(LauncherFrontendPageKey.Download, view.BackTarget?.Route?.Page);
+        Assert.IsTrue(view.SidebarEntries.Any());
+    }
+
+    [TestMethod]
+    public void BuildViewAttachesHelpDetailToToolsNavigationFamily()
+    {
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.HelpDetail),
+            BackstackDepth: 0));
+
+        Assert.AreEqual(LauncherFrontendPageKind.Detail, view.CurrentPage.Kind);
+        Assert.AreEqual("工具分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
+        Assert.AreEqual(LauncherFrontendPageKey.Tools, view.BackTarget?.Route?.Page);
+        Assert.IsTrue(view.SidebarEntries.Any());
+    }
+
+    [TestMethod]
+    public void BuildViewAttachesHomePageMarketToDownloadNavigationFamily()
+    {
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.HomePageMarket),
+            BackstackDepth: 0));
+
+        Assert.AreEqual(LauncherFrontendPageKind.Detail, view.CurrentPage.Kind);
+        Assert.AreEqual("下载分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
+        Assert.AreEqual(LauncherFrontendPageKey.Download, view.BackTarget?.Route?.Page);
+        Assert.IsTrue(view.SidebarEntries.Any());
+    }
 }

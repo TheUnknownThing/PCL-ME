@@ -22,14 +22,22 @@ public static class LauncherFrontendPageContentService
 
         return request.Navigation.CurrentRoute.Page switch
         {
-            LauncherFrontendPageKey.Launch or LauncherFrontendPageKey.InstanceSelect =>
+            LauncherFrontendPageKey.Launch =>
                 BuildLaunchContent(request, promptTotal, selectedLane?.Title),
-            LauncherFrontendPageKey.Download or LauncherFrontendPageKey.CompDetail or LauncherFrontendPageKey.HomePageMarket =>
+            LauncherFrontendPageKey.InstanceSelect =>
+                BuildInstanceSelectContent(request, promptTotal, selectedLane?.Title),
+            LauncherFrontendPageKey.Download =>
                 BuildDownloadContent(request, promptTotal, visibleUtilityCount, selectedLane?.Title),
+            LauncherFrontendPageKey.CompDetail =>
+                BuildCompDetailContent(request, promptTotal, visibleUtilityCount),
+            LauncherFrontendPageKey.HomePageMarket =>
+                BuildHomePageMarketContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendPageKey.Setup =>
                 BuildSetupContent(request, promptTotal),
-            LauncherFrontendPageKey.Tools or LauncherFrontendPageKey.HelpDetail =>
+            LauncherFrontendPageKey.Tools =>
                 BuildToolsContent(request, promptTotal, visibleUtilityCount),
+            LauncherFrontendPageKey.HelpDetail =>
+                BuildHelpDetailContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendPageKey.TaskManager =>
                 BuildTaskManagerContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendPageKey.GameLog =>
@@ -40,6 +48,34 @@ public static class LauncherFrontendPageContentService
                 BuildSavesContent(request, promptTotal),
             _ => BuildGenericContent(request, promptTotal, visibleUtilityCount)
         };
+    }
+
+    private static LauncherFrontendPageContent BuildInstanceSelectContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        string? selectedLaneTitle)
+    {
+        var surface = request.Navigation.CurrentPage;
+
+        return new LauncherFrontendPageContent(
+            "Launch secondary integration",
+            "Instance selection now lives on its own launch-secondary route while still reusing the launch-family prompt and readiness context.",
+            [
+                new LauncherFrontendPageFact("Surface", surface.Title),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString()),
+                new LauncherFrontendPageFact("Focused prompt lane", selectedLaneTitle ?? "None")
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "Navigation",
+                    "Launch-family route glue",
+                    [
+                        "The shell can enter instance selection directly without falling back to the generic compatibility surface.",
+                        "Back navigation still resolves through the launch flow when no explicit history is available.",
+                        "Prompt inbox state remains shared with the launch family instead of being rebuilt in the detail page."
+                    ])
+            ]);
     }
 
     private static LauncherFrontendPageContent BuildLaunchContent(
@@ -242,6 +278,58 @@ public static class LauncherFrontendPageContentService
                         "Search, category filters, and resource cards should come from backend-facing contracts.",
                         "Install planning should stay outside the desktop shell.",
                         "Selection state should eventually bind to real download/auth surfaces, not fixture-only summaries."
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildCompDetailContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return new LauncherFrontendPageContent(
+            "Download detail integration",
+            "Project detail now resolves as an explicit download-family detail route, so the shell keeps download navigation and route-local metadata instead of falling back to the generic download summary.",
+            [
+                new LauncherFrontendPageFact("Surface", request.Navigation.CurrentPage.Title),
+                new LauncherFrontendPageFact("Sidebar group", request.Navigation.CurrentPage.SidebarGroupTitle ?? "None"),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "Integration",
+                    "Download-family routing",
+                    [
+                        "Detail routes now stay attached to the download family for shell navigation and back-target resolution.",
+                        "The shared contract remains responsible only for route identity and surrounding shell chrome.",
+                        $"Queued prompts: {promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildHomePageMarketContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return new LauncherFrontendPageContent(
+            "Market integration surface",
+            "Home page market now resolves through a dedicated detail route while staying attached to the download family for surrounding shell navigation.",
+            [
+                new LauncherFrontendPageFact("Surface", request.Navigation.CurrentPage.Title),
+                new LauncherFrontendPageFact("Sidebar group", request.Navigation.CurrentPage.SidebarGroupTitle ?? "None"),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "Integration",
+                    "Market route glue",
+                    [
+                        "The shell can now enter the market route without reusing the generic download migration content.",
+                        "Normal download navigation stays available around the dedicated market surface.",
+                        $"Queued prompts: {promptTotal}"
                     ])
             ]);
     }
@@ -865,16 +953,42 @@ public static class LauncherFrontendPageContentService
                     "帮助卡片",
                     [
                         "帮助条目继续使用卡片和列表项结构，而不是退回通用摘要面板。",
-                        "详情页路由应保持显式，这样后续可以平滑接入 HelpDetail。",
+                        "帮助详情已经通过独立 HelpDetail 路由接入，所以列表和详情可以在同一工具家族内来回切换。",
                         "这也是复制 MySearchBox / MyCard 风格的低风险入口。"
                     ]),
                 new LauncherFrontendPageSection(
                     "边界",
                     "后续所需合同",
                     [
-                        "真实帮助条目、分类与详情正文仍需要更细的后端输入合同。",
-                        "在合同到位前，前端可以先验证页面结构与搜索交互。",
+                        "真实帮助条目、分类与详情正文继续通过各自的帮助内容合同输入。",
+                        "共享壳层只负责列表路由、详情切换和工具页外层导航。",
                         $"当前可见提示数：{promptTotal}"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildHelpDetailContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount)
+    {
+        return new LauncherFrontendPageContent(
+            "Help detail integration",
+            "Help detail now resolves as an explicit tools-family detail route, so normal tools navigation and back-target behavior stay intact around the dedicated detail surface.",
+            [
+                new LauncherFrontendPageFact("Surface", request.Navigation.CurrentPage.Title),
+                new LauncherFrontendPageFact("Sidebar group", request.Navigation.CurrentPage.SidebarGroupTitle ?? "None"),
+                new LauncherFrontendPageFact("Back target", request.Navigation.BackTarget?.Label ?? "None"),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "Integration",
+                    "Tools-family routing",
+                    [
+                        "The shell keeps the help detail route separate from the generic tools compatibility view.",
+                        "That preserves normal tools navigation while the dedicated detail surface renders the parsed help content.",
+                        $"Queued prompts: {promptTotal}"
                     ])
             ]);
     }
@@ -930,8 +1044,8 @@ public static class LauncherFrontendPageContentService
         var crash = request.Crash;
 
         return new LauncherFrontendPageContent(
-            "Task manager migration surface",
-            "Background work can now be visualized as explicit launch and recovery summaries rather than hidden window-thread state.",
+            "Task manager integration surface",
+            "Task manager now resolves as a dedicated utility route for live task-state shell wiring instead of a generic migration placeholder.",
             [
                 new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
                 new LauncherFrontendPageFact("Login steps", launch?.LoginStepCount.ToString() ?? "n/a"),
@@ -958,11 +1072,11 @@ public static class LauncherFrontendPageContentService
                         $"options.txt target: {FormatPath(launch?.OptionsTargetFilePath)}"
                     ]),
                 new LauncherFrontendPageSection(
-                    "Review",
-                    "Shell review artifacts",
+                    "Integration",
+                    "Utility-route glue",
                     [
-                        "This utility page should eventually bind to live task collections.",
-                        "For now it can already review portable workflow summaries and artifact destinations.",
+                        "The shared contract now only carries utility-route chrome and surrounding workflow context.",
+                        "Live task collection rendering stays inside the dedicated task-manager surface implementation.",
                         $"Crash archive suggestion: {crash?.SuggestedArchiveName ?? "No crash archive summary"}"
                     ])
             ]);
@@ -977,8 +1091,8 @@ public static class LauncherFrontendPageContentService
         var launch = request.Launch;
 
         return new LauncherFrontendPageContent(
-            "Game log migration surface",
-            "Live log viewing is a frontend utility surface. Collection, crash preparation, and export policy remain backend responsibilities.",
+            "Game log integration surface",
+            "Game log now resolves as a dedicated utility route, while collection and crash export policy remain backend responsibilities.",
             [
                 new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
                 new LauncherFrontendPageFact("Crash archive", crash?.SuggestedArchiveName ?? "Not provided"),
@@ -1005,11 +1119,11 @@ public static class LauncherFrontendPageContentService
                         "Export remains an explicit shell intent instead of a hidden side effect."
                     ]),
                 new LauncherFrontendPageSection(
-                    "Boundary",
-                    "What remains portable",
+                    "Integration",
+                    "Utility-route glue",
                     [
-                        "The frontend owns display, filters, and reveal actions.",
-                        "The backend owns collection, crash classification, and export planning.",
+                        "The shared contract keeps only the route shell and surrounding recovery context.",
+                        "Live output and recent-file rendering stay inside the dedicated game-log surface implementation.",
                         "That boundary keeps the log surface replaceable across shells."
                     ])
             ]);

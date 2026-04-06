@@ -188,11 +188,11 @@ public static class LauncherFrontendNavigationService
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.InstanceSelect, "实例选择", "在启动前选择实例。", LauncherFrontendPageKind.Secondary),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.TaskManager, "任务管理", "查看下载与后台任务。", LauncherFrontendPageKind.Utility),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.InstanceSetup, "实例设置", "查看实例详情与资源管理。", LauncherFrontendPageKind.Secondary, SidebarGroupPage: LauncherFrontendPageKey.InstanceSetup),
-                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.CompDetail, "资源下载", "查看资源工程详情。", LauncherFrontendPageKind.Detail),
-                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HelpDetail, "帮助详情", "查看帮助条目详情。", LauncherFrontendPageKind.Detail),
+                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.CompDetail, "资源下载", "查看资源工程详情。", LauncherFrontendPageKind.Detail, SidebarGroupPage: LauncherFrontendPageKey.Download),
+                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HelpDetail, "帮助详情", "查看帮助条目详情。", LauncherFrontendPageKind.Detail, SidebarGroupPage: LauncherFrontendPageKey.Tools),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.GameLog, "实时日志", "查看启动日志与输出。", LauncherFrontendPageKind.Utility),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.VersionSaves, "存档管理", "查看单个存档的详细页面。", LauncherFrontendPageKind.Secondary, SidebarGroupPage: LauncherFrontendPageKey.VersionSaves),
-                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HomePageMarket, "主页市场", "主页市场与推荐入口。", LauncherFrontendPageKind.Detail)
+                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HomePageMarket, "主页市场", "主页市场与推荐入口。", LauncherFrontendPageKind.Detail, SidebarGroupPage: LauncherFrontendPageKey.Download)
             ]
         );
     }
