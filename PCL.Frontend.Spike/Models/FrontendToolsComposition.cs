@@ -50,11 +50,14 @@ internal sealed record FrontendToolsHelpState(
     IReadOnlyList<FrontendToolsHelpEntry> Entries);
 
 internal sealed record FrontendToolsHelpEntry(
-    string GroupTitle,
+    IReadOnlyList<string> GroupTitles,
     string Title,
     string Summary,
     string Keywords,
     string RawPath,
+    bool ShowInSearch,
+    bool ShowInPublic,
+    bool ShowInSnapshot,
     bool IsEvent,
     string? EventType,
     string? EventData,

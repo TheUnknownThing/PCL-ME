@@ -421,6 +421,17 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private static LauncherFrontendRoute NormalizeRoute(LauncherFrontendRoute route)
+    {
+        return route switch
+        {
+            { Page: LauncherFrontendPageKey.Download, Subpage: LauncherFrontendSubpageKey.Default } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+            { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.Default } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsGameLink),
+            _ => route
+        };
+    }
     private void NavigateBack()
     {
         if (_currentNavigation is null)
@@ -657,6 +668,8 @@ internal sealed partial class FrontendShellViewModel
             case StandardShellRightPaneKind.ToolsHelp:
                 RaisePropertyChanged(nameof(HasHelpTopicGroups));
                 RaisePropertyChanged(nameof(HasNoHelpTopicGroups));
+                RaisePropertyChanged(nameof(HasHelpSearchResults));
+                RaisePropertyChanged(nameof(HasNoHelpSearchResults));
                 break;
             case StandardShellRightPaneKind.InstanceOverview:
                 RaisePropertyChanged(nameof(HasInstanceOverviewInfoEntries));

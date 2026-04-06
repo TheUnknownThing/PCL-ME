@@ -191,7 +191,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.ToolsGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsHelp, StandardShellRightPaneGroup.ToolsFamily, "tools-help", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsTest => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsTest, StandardShellRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "tools-generic", usesCompatibilityView: false)
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link", usesCompatibilityView: false)
         };
     }
 

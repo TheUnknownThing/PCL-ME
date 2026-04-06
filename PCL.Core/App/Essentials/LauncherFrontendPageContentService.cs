@@ -832,7 +832,7 @@ public static class LauncherFrontendPageContentService
             LauncherFrontendSubpageKey.ToolsGameLink => BuildToolsGameLinkContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => BuildToolsHelpContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendSubpageKey.ToolsTest => BuildToolsTestContent(request, promptTotal, visibleUtilityCount),
-            _ => BuildGenericToolsContent(request, promptTotal, visibleUtilityCount)
+            _ => BuildToolsGameLinkContent(request, promptTotal, visibleUtilityCount)
         };
     }
 
@@ -932,7 +932,7 @@ public static class LauncherFrontendPageContentService
     {
         return new LauncherFrontendPageContent(
             "帮助页面",
-            "帮助页已经适合直接复制搜索框、结果卡片与帮助列表结构，后续再接更细的帮助条目合同。",
+            "帮助页现在直接沿用原版帮助库的搜索框、分组卡片与帮助详情切换结构，而不是退回到通用工具壳层。",
             [
                 new LauncherFrontendPageFact("当前分区", "帮助"),
                 new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
@@ -952,14 +952,15 @@ public static class LauncherFrontendPageContentService
                     "列表",
                     "帮助卡片",
                     [
-                        "帮助条目继续使用卡片和列表项结构，而不是退回通用摘要面板。",
-                        "帮助详情已经通过独立 HelpDetail 路由接入，所以列表和详情可以在同一工具家族内来回切换。",
-                        "这也是复制 MySearchBox / MyCard 风格的低风险入口。"
+                        "帮助条目继续按原版分组生成独立卡片，默认保留“指南”置顶且展开。",
+                        "同一帮助条目会按它声明的多个分类重复出现在对应分组中，而不是只保留一个扁平分组。",
+                        "帮助详情已经通过独立 HelpDetail 路由接入，所以列表和详情可以在同一工具家族内来回切换。"
                     ]),
                 new LauncherFrontendPageSection(
                     "边界",
                     "后续所需合同",
                     [
+                        "搜索时会切换到独立搜索结果卡，而不是继续展示默认分组列表。",
                         "真实帮助条目、分类与详情正文继续通过各自的帮助内容合同输入。",
                         "共享壳层只负责列表路由、详情切换和工具页外层导航。",
                         $"当前可见提示数：{promptTotal}"

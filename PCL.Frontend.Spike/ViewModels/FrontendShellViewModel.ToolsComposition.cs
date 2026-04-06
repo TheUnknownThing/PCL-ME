@@ -70,16 +70,6 @@ internal sealed partial class FrontendShellViewModel
             ResolveToolboxActionCommand(action.ActionKey, action.Title));
     }
 
-    private HelpTopicViewModel CreateHelpTopic(FrontendToolsHelpEntry entry)
-    {
-        return new HelpTopicViewModel(
-            entry.GroupTitle,
-            entry.Title,
-            entry.Summary,
-            entry.Keywords,
-            new ActionCommand(() => OpenHelpTopic(entry)));
-    }
-
     private void ClearToolboxRubbish()
     {
         var removedCount = 0;

@@ -555,11 +555,24 @@ internal sealed class UiFeatureToggleItemViewModel(
     }
 }
 
-internal sealed class HelpTopicGroupViewModel(string title, IReadOnlyList<HelpTopicViewModel> items)
+internal sealed class HelpTopicGroupViewModel(
+    string title,
+    IReadOnlyList<HelpTopicViewModel> items,
+    bool isExpanded) : ViewModelBase
 {
+    private bool _isExpanded = isExpanded;
+
     public string Title { get; } = title;
 
     public IReadOnlyList<HelpTopicViewModel> Items { get; } = items;
+
+    public ActionCommand ToggleCommand => new(() => IsExpanded = !IsExpanded);
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => SetProperty(ref _isExpanded, value);
+    }
 }
 
 internal sealed class FeedbackSectionViewModel(

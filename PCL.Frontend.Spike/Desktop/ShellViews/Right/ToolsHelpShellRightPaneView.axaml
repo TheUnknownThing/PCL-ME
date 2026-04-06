@@ -23,10 +23,15 @@
             Watermark="搜索帮助" />
       </Border>
 
-      <ItemsControl ItemsSource="{Binding HelpTopicGroups}" IsVisible="{Binding HasHelpTopicGroups}">
+      <ItemsControl ItemsSource="{Binding HelpTopicGroups}" IsVisible="{Binding ShowHelpTopicLibrary}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <controls:PclCard Header="{Binding Title}" ContentMargin="20,40,18,18">
+            <controls:PclCard
+                Header="{Binding Title}"
+                ContentMargin="20,40,18,18"
+                HeaderCommand="{Binding ToggleCommand}"
+                IsChevronExpanded="{Binding IsExpanded}"
+                ShowChevron="True">
               <controls:PclCard.CardContent>
                 <ItemsControl ItemsSource="{Binding Items}">
                   <ItemsControl.ItemTemplate>
@@ -45,13 +50,28 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-      <controls:PclCard Header="搜索结果" IsVisible="{Binding HasNoHelpTopicGroups}" ContentMargin="20,40,18,18">
+      <controls:PclCard Header="{Binding HelpSearchResultsHeader}" IsVisible="{Binding IsHelpSearchActive}" ContentMargin="20,40,18,18">
         <controls:PclCard.CardContent>
-          <TextBlock
-              Foreground="#677789"
-              FontSize="13"
-              Text="没有找到匹配的帮助条目。"
-              TextWrapping="Wrap" />
+          <StackPanel Spacing="10">
+            <ItemsControl ItemsSource="{Binding HelpSearchResults}" IsVisible="{Binding HasHelpSearchResults}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclListItem
+                      Margin="0,0,0,8"
+                      Command="{Binding Command}"
+                      Info="{Binding Summary}"
+                      Title="{Binding Title}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock
+                Foreground="#677789"
+                FontSize="13"
+                IsVisible="{Binding HasNoHelpSearchResults}"
+                Text="没有找到匹配的帮助条目。"
+                TextWrapping="Wrap" />
+          </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
     </StackPanel>

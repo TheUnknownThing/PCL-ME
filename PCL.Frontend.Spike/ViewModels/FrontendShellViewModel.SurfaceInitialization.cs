@@ -358,26 +358,95 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshHelpTopics()
     {
         var query = HelpSearchQuery.Trim();
-        var topics = _toolsComposition.Help.Entries
-            .Select(CreateHelpTopic)
-            .Where(topic =>
-                string.IsNullOrWhiteSpace(query)
-                || topic.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || topic.Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || topic.GroupTitle.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || topic.Keywords.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(topic => string.Equals(topic.GroupTitle, "指南", StringComparison.Ordinal) ? 0 : 1)
-            .ThenBy(topic => topic.GroupTitle, StringComparer.Ordinal)
-            .ThenBy(topic => topic.Title, StringComparer.Ordinal)
-            .ToArray();
+        var entries = _toolsComposition.Help.Entries;
+        var hasSearchQuery = !string.IsNullOrWhiteSpace(query);
 
-        ReplaceItems(
-            HelpTopicGroups,
-            topics
-                .GroupBy(topic => topic.GroupTitle)
-                .Select(group => new HelpTopicGroupViewModel(group.Key, group.ToArray())));
+        if (hasSearchQuery)
+        {
+            var results = entries
+                .Where(entry => entry.ShowInSearch && HelpEntryMatchesQuery(entry, query))
+                .Select(entry => CreateHelpTopic(entry, entry.GroupTitles.FirstOrDefault() ?? "帮助"))
+                .OrderByDescending(topic => GetHelpSearchScore(topic, query))
+                .ThenBy(topic => topic.Title, StringComparer.Ordinal)
+                .ToArray();
 
+            ReplaceItems(HelpSearchResults, results);
+            ReplaceItems(HelpTopicGroups, []);
+        }
+        else
+        {
+            ReplaceItems(HelpSearchResults, []);
+
+            var orderedGroupTitles = entries
+                .SelectMany((entry, entryIndex) => entry.GroupTitles.Select(groupTitle => new { GroupTitle = groupTitle, EntryIndex = entryIndex }))
+                .Where(item => !string.IsNullOrWhiteSpace(item.GroupTitle))
+                .GroupBy(item => item.GroupTitle, StringComparer.Ordinal)
+                .Select(group => new { GroupTitle = group.Key, FirstEntryIndex = group.Min(item => item.EntryIndex) })
+                .OrderBy(title => string.Equals(title.GroupTitle, "指南", StringComparison.Ordinal) ? 0 : 1)
+                .ThenBy(title => title.FirstEntryIndex)
+                .Select(title => title.GroupTitle)
+                .ToArray();
+
+            var groups = orderedGroupTitles
+                .Select(groupTitle =>
+                {
+                    var items = entries
+                        .Where(entry => entry.GroupTitles.Contains(groupTitle, StringComparer.Ordinal))
+                        .Select(entry => CreateHelpTopic(entry, groupTitle))
+                        .ToArray();
+                    return new HelpTopicGroupViewModel(
+                        groupTitle,
+                        items,
+                        isExpanded: string.Equals(groupTitle, "指南", StringComparison.Ordinal));
+                })
+                .Where(group => group.Items.Count > 0)
+                .ToArray();
+
+            ReplaceItems(HelpTopicGroups, groups);
+        }
+
+        RaisePropertyChanged(nameof(IsHelpSearchActive));
+        RaisePropertyChanged(nameof(ShowHelpTopicLibrary));
+        RaisePropertyChanged(nameof(HelpSearchResultsHeader));
         RaiseCollectionStateProperties();
+    }
+
+    private HelpTopicViewModel CreateHelpTopic(FrontendToolsHelpEntry entry, string groupTitle)
+    {
+        return new HelpTopicViewModel(
+            groupTitle,
+            entry.Title,
+            entry.Summary,
+            entry.Keywords,
+            new ActionCommand(() => OpenHelpTopic(entry)));
+    }
+
+    private static bool HelpEntryMatchesQuery(FrontendToolsHelpEntry entry, string query)
+    {
+        return entry.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || entry.Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || entry.Keywords.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || entry.GroupTitles.Any(groupTitle => groupTitle.Contains(query, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static int GetHelpSearchScore(HelpTopicViewModel topic, string query)
+    {
+        if (topic.Title.Contains(query, StringComparison.OrdinalIgnoreCase))
+        {
+            return 4;
+        }
+
+        if (topic.Keywords.Contains(query, StringComparison.OrdinalIgnoreCase))
+        {
+            return 3;
+        }
+
+        if (topic.Summary.Contains(query, StringComparison.OrdinalIgnoreCase))
+        {
+            return 2;
+        }
+
+        return topic.GroupTitle.Contains(query, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
     }
 
     private FeedbackSectionViewModel CreateFeedbackSection(string title, bool isExpanded, IReadOnlyList<SimpleListEntryViewModel> items)

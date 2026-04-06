@@ -161,12 +161,12 @@ internal static class FrontendToolsCompositionService
         {
             entries.AddRange(
             [
-                new FrontendToolsHelpEntry("启动与版本", "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "实例, 启动, 版本", "fallback://launch/select-instance", false, null, null, null),
-                new FrontendToolsHelpEntry("启动与版本", "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", "Java, 运行时, 下载", "fallback://launch/java-runtime", false, null, null, null),
-                new FrontendToolsHelpEntry("诊断与恢复", "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "日志, 导出, 诊断", "fallback://diagnostics/log-export", false, null, null, null),
-                new FrontendToolsHelpEntry("诊断与恢复", "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", "崩溃, 恢复, 日志", "fallback://diagnostics/crash-recovery", false, null, null, null),
-                new FrontendToolsHelpEntry("迁移说明", "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", "迁移, 页面, 结构", "fallback://migration/copy-original", false, null, null, null),
-                new FrontendToolsHelpEntry("迁移说明", "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", "迁移, 后端, 边界", "fallback://migration/backend-boundary", false, null, null, null)
+                new FrontendToolsHelpEntry(["指南"], "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "实例, 启动, 版本", "fallback://launch/select-instance", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["指南"], "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", "Java, 运行时, 下载", "fallback://launch/java-runtime", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["启动器"], "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "日志, 导出, 诊断", "fallback://diagnostics/log-export", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["启动器"], "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", "崩溃, 恢复, 日志", "fallback://diagnostics/crash-recovery", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["帮助"], "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", "迁移, 页面, 结构", "fallback://migration/copy-original", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["帮助"], "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", "迁移, 后端, 边界", "fallback://migration/backend-boundary", true, true, true, false, null, null, null)
             ]);
         }
 
@@ -244,11 +244,14 @@ internal static class FrontendToolsCompositionService
             : [];
 
         return new FrontendToolsHelpEntry(
-            GroupTitle: types.FirstOrDefault() ?? "帮助",
+            GroupTitles: types,
             Title: title,
             Summary: ReadString(root, "Description"),
             Keywords: ReadString(root, "Keywords"),
             RawPath: rawPath,
+            ShowInSearch: ReadBool(root, "ShowInSearch", defaultValue: true),
+            ShowInPublic: ReadBool(root, "ShowInPublic", defaultValue: true),
+            ShowInSnapshot: ReadBool(root, "ShowInSnapshot", defaultValue: true),
             IsEvent: ReadBool(root, "IsEvent"),
             EventType: ReadString(root, "EventType"),
             EventData: ReadString(root, "EventData"),
@@ -301,11 +304,15 @@ internal static class FrontendToolsCompositionService
             : string.Empty;
     }
 
-    private static bool ReadBool(JsonElement element, string propertyName)
+    private static bool ReadBool(JsonElement element, string propertyName, bool defaultValue = false)
     {
-        return element.TryGetProperty(propertyName, out var property)
-            && property.ValueKind is JsonValueKind.True or JsonValueKind.False
-            && property.GetBoolean();
+        if (!element.TryGetProperty(propertyName, out var property)
+            || property.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            return defaultValue;
+        }
+
+        return property.GetBoolean();
     }
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)

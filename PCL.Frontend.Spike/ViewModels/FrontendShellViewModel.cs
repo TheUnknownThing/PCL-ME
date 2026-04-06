@@ -72,6 +72,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 
+    public ObservableCollection<HelpTopicViewModel> HelpSearchResults { get; } = [];
+
     public ObservableCollection<JavaRuntimeEntryViewModel> JavaRuntimeEntries { get; } = [];
 
     public ObservableCollection<UiFeatureToggleGroupViewModel> UiFeatureToggleGroups { get; } = [];
@@ -193,6 +195,16 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool HasHelpTopicGroups => HelpTopicGroups.Count > 0;
 
     public bool HasNoHelpTopicGroups => !HasHelpTopicGroups;
+
+    public bool IsHelpSearchActive => !string.IsNullOrWhiteSpace(HelpSearchQuery);
+
+    public bool ShowHelpTopicLibrary => !IsHelpSearchActive;
+
+    public bool HasHelpSearchResults => HelpSearchResults.Count > 0;
+
+    public bool HasNoHelpSearchResults => !HasHelpSearchResults;
+
+    public string HelpSearchResultsHeader => HasHelpSearchResults ? "搜索结果" : "无搜索结果";
 
     public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
         ?? _currentNavigation?.CurrentPage.Title
