@@ -81,8 +81,18 @@ internal sealed partial class PclCard : UserControl
     {
         get
         {
-            // TODO: May require special margin where header is present.
-            return ContentMargin;
+            if (!HasHeader || ContentMargin.Top < 30)
+            {
+                return ContentMargin;
+            }
+
+            // Most migrated cards copied the original absolute top inset,
+            // so in Avalonia they end up counting both the header row and the old inset.
+            return new Thickness(
+                ContentMargin.Left,
+                Math.Max(10, ContentMargin.Top - 28),
+                ContentMargin.Right,
+                ContentMargin.Bottom);
         }
     }
 

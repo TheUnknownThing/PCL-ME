@@ -57,7 +57,7 @@
 
         <ContentPresenter
             Grid.Row="1"
-            Margin="{Binding ContentMargin, ElementName=Root}"
+            Margin="{Binding EffectiveContentMargin, ElementName=Root}"
             IsVisible="{Binding IsContentVisible, ElementName=Root}"
             Content="{Binding CardContent, ElementName=Root}" />
       </Grid>
