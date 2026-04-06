@@ -12,14 +12,13 @@ internal static class FrontendDownloadCompositionService
         FrontendInstanceComposition instanceComposition,
         FrontendVersionSavesComposition versionSavesComposition)
     {
-        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
-        var launcherFolder = ResolveLauncherFolder(ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"), runtimePaths);
-        var manifests = ReadLocalManifestEntries(launcherFolder);
+        var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
+        var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
 
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
-            BuildCatalogStates(manifests),
+            BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion),
             BuildFavoritesState(sharedConfig),
             BuildResourceStates(instanceComposition, sharedConfig));
     }
@@ -40,69 +39,10 @@ internal static class FrontendDownloadCompositionService
     }
 
     private static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState> BuildCatalogStates(
-        IReadOnlyList<LocalManifestEntry> manifests)
+        int versionSourceIndex,
+        string preferredMinecraftVersion)
     {
-        return new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>
-        {
-            [LauncherFrontendSubpageKey.DownloadClient] = BuildClientCatalogState(manifests),
-            [LauncherFrontendSubpageKey.DownloadForge] = BuildLoaderCatalogState(manifests, "forge", "Forge 简介", "https://files.minecraftforge.net/"),
-            [LauncherFrontendSubpageKey.DownloadNeoForge] = BuildLoaderCatalogState(manifests, "neoforge", "NeoForge 简介", "https://neoforged.net/"),
-            [LauncherFrontendSubpageKey.DownloadCleanroom] = BuildLoaderCatalogState(manifests, "cleanroom", "Cleanroom 简介", "https://github.com/CleanroomMC/Cleanroom"),
-            [LauncherFrontendSubpageKey.DownloadFabric] = BuildLoaderCatalogState(manifests, "fabric", "Fabric 简介", "https://fabricmc.net/"),
-            [LauncherFrontendSubpageKey.DownloadQuilt] = BuildLoaderCatalogState(manifests, "quilt", "Quilt 简介", "https://quiltmc.org/"),
-            [LauncherFrontendSubpageKey.DownloadLiteLoader] = BuildLoaderCatalogState(manifests, "liteloader", "LiteLoader 简介", string.Empty),
-            [LauncherFrontendSubpageKey.DownloadLabyMod] = BuildLoaderCatalogState(manifests, "labymod", "LabyMod 简介", "https://www.labymod.net/"),
-            [LauncherFrontendSubpageKey.DownloadLegacyFabric] = BuildLoaderCatalogState(manifests, "legacyfabric", "Legacy Fabric 简介", "https://legacyfabric.net/"),
-            [LauncherFrontendSubpageKey.DownloadOptiFine] = BuildLoaderCatalogState(manifests, "optifine", "OptiFine 简介", "https://optifine.net/")
-        };
-    }
-
-    private static FrontendDownloadCatalogState BuildClientCatalogState(IReadOnlyList<LocalManifestEntry> manifests)
-    {
-        var entries = manifests
-            .OrderByDescending(entry => entry.ReleaseTime ?? DateTime.MinValue)
-            .Take(12)
-            .Select(entry => new FrontendDownloadCatalogEntry(
-                entry.Id,
-                entry.ReleaseTime?.ToString("yyyy/MM/dd HH:mm") ?? "未记录发布时间",
-                $"{(string.IsNullOrWhiteSpace(entry.Type) ? "本地版本" : entry.Type)} • {entry.SourcePath}",
-                "查看文件",
-                entry.SourcePath))
-            .ToArray();
-
-        return new FrontendDownloadCatalogState(
-            "版本列表",
-            "这里现在优先显示当前启动器目录下已经识别到的本地版本清单，便于在不改变页面结构的前提下验证真实版本数据绑定。",
-            [],
-            [new FrontendDownloadCatalogSection("本地版本", EnsureCatalogEntries(entries, "当前没有检测到任何本地版本。"))]);
-    }
-
-    private static FrontendDownloadCatalogState BuildLoaderCatalogState(
-        IReadOnlyList<LocalManifestEntry> manifests,
-        string loaderKey,
-        string introTitle,
-        string projectUrl)
-    {
-        var entries = manifests
-            .Where(entry => entry.Loaders.TryGetValue(loaderKey, out _))
-            .Select(entry => new FrontendDownloadCatalogEntry(
-                $"{GetDisplayLoaderName(loaderKey)} {entry.Loaders[loaderKey]}",
-                $"来自本地版本 {entry.Id}",
-                $"{(entry.VanillaVersion ?? entry.Id)} • {entry.SourcePath}",
-                "查看文件",
-                entry.SourcePath))
-            .DistinctBy(entry => entry.Title + "|" + entry.Meta)
-            .Take(12)
-            .ToArray();
-
-        var actions = string.IsNullOrWhiteSpace(projectUrl)
-            ? Array.Empty<FrontendDownloadCatalogAction>()
-            : [new FrontendDownloadCatalogAction("打开官网", projectUrl, true)];
-        return new FrontendDownloadCatalogState(
-            introTitle,
-            $"这里现在优先列出当前启动器已识别到的本地 {GetDisplayLoaderName(loaderKey)} 版本记录，以便在复制后的下载页中验证真实版本数据来源。",
-            actions,
-            [new FrontendDownloadCatalogSection("本地已识别版本", EnsureCatalogEntries(entries, $"当前没有检测到任何 {GetDisplayLoaderName(loaderKey)} 本地版本记录。"))]);
+        return FrontendDownloadRemoteCatalogService.BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion);
     }
 
     private static FrontendDownloadFavoritesState BuildFavoritesState(JsonFileProvider sharedConfig)
@@ -290,6 +230,20 @@ internal static class FrontendDownloadCompositionService
             : rawValue.Trim();
         normalized = normalized.Replace("$", EnsureTrailingSeparator(runtimePaths.ExecutableDirectory), StringComparison.Ordinal);
         return Path.GetFullPath(normalized);
+    }
+
+    private static string ResolvePreferredMinecraftVersion(FrontendInstanceComposition instanceComposition)
+    {
+        var installVersion = instanceComposition.Install.MinecraftVersion;
+        if (!string.IsNullOrWhiteSpace(installVersion) && installVersion.Any(char.IsDigit))
+        {
+            return installVersion.Trim();
+        }
+
+        var selectionVersion = instanceComposition.Selection.VanillaVersion;
+        return !string.IsNullOrWhiteSpace(selectionVersion) && selectionVersion.Any(char.IsDigit)
+            ? selectionVersion.Trim()
+            : string.Empty;
     }
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
