@@ -1,6 +1,8 @@
 using System.IO.Compression;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
@@ -1652,10 +1654,105 @@ internal sealed partial class FrontendShellViewModel
 
     private static JavaInstallation? ParseJavaInstallation(string javaExecutablePath)
     {
-        var parser = new CompositeJavaParser(
-            new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner()),
-            new PeHeaderParser());
+        var parsers = new List<IJavaParser>
+        {
+            new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner())
+        };
+        if (TryCreatePeHeaderParser() is { } peHeaderParser)
+        {
+            parsers.Add(peHeaderParser);
+        }
+
+        var parser = new CompositeJavaParser([.. parsers]);
         return parser.Parse(javaExecutablePath);
+    }
+
+    private static IJavaParser? TryCreatePeHeaderParser()
+    {
+        const string assemblyName = "PCL.Core";
+        const string typeName = "PCL.Core.Minecraft.Java.Parser.PeHeaderParser";
+
+        try
+        {
+            var assembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(candidate => string.Equals(candidate.GetName().Name, assemblyName, StringComparison.Ordinal))
+                ?? TryLoadPclCoreAssembly();
+            var parserType = assembly?.GetType(typeName, throwOnError: false);
+            if (parserType is null || !typeof(IJavaParser).IsAssignableFrom(parserType))
+            {
+                return null;
+            }
+
+            return Activator.CreateInstance(parserType) as IJavaParser;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Assembly? TryLoadPclCoreAssembly()
+    {
+        var candidateRoots = new[]
+        {
+            AppContext.BaseDirectory,
+            Environment.CurrentDirectory
+        };
+        var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var root in candidateRoots.Where(path => !string.IsNullOrWhiteSpace(path)))
+        {
+            foreach (var directory in EnumerateParentDirectories(root))
+            {
+                var directPath = Path.Combine(directory, "PCL.Core.dll");
+                if (seenPaths.Add(directPath) && File.Exists(directPath))
+                {
+                    try
+                    {
+                        return AssemblyLoadContext.Default.LoadFromAssemblyPath(directPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                var binDirectory = Path.Combine(directory, "PCL.Core", "bin");
+                if (!Directory.Exists(binDirectory))
+                {
+                    continue;
+                }
+
+                foreach (var buildPath in Directory.EnumerateFiles(binDirectory, "PCL.Core.dll", SearchOption.AllDirectories)
+                             .OrderByDescending(path => File.GetLastWriteTimeUtc(path))
+                             .Take(8))
+                {
+                    if (!seenPaths.Add(buildPath))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        return AssemblyLoadContext.Default.LoadFromAssemblyPath(buildPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string> EnumerateParentDirectories(string startPath)
+    {
+        var current = new DirectoryInfo(Path.GetFullPath(startPath));
+        while (current is not null)
+        {
+            yield return current.FullName;
+            current = current.Parent;
+        }
     }
 
     private string ResolveJavaSourceLabel(string key)
