@@ -57,89 +57,17 @@ internal sealed partial class FrontendShellViewModel
         new DownloadResourceFilterOptionViewModel("26.1.1", "26.1.1"),
         new DownloadResourceFilterOptionViewModel("26.1", "26.1"),
         new DownloadResourceFilterOptionViewModel("1.21.11", "1.21.11"),
-        new DownloadResourceFilterOptionViewModel("1.21.10", "1.21.10"),
-        new DownloadResourceFilterOptionViewModel("1.21.9", "1.21.9"),
-        new DownloadResourceFilterOptionViewModel("1.21.8", "1.21.8"),
-        new DownloadResourceFilterOptionViewModel("1.21.7", "1.21.7"),
-        new DownloadResourceFilterOptionViewModel("1.21.6", "1.21.6"),
-        new DownloadResourceFilterOptionViewModel("1.21.5", "1.21.5"),
-        new DownloadResourceFilterOptionViewModel("1.21.4", "1.21.4"),
-        new DownloadResourceFilterOptionViewModel("1.21.3", "1.21.3"),
-        new DownloadResourceFilterOptionViewModel("1.21.2", "1.21.2"),
         new DownloadResourceFilterOptionViewModel("1.21.1", "1.21.1"),
-        new DownloadResourceFilterOptionViewModel("1.21", "1.21"),
         new DownloadResourceFilterOptionViewModel("1.20.6", "1.20.6"),
-        new DownloadResourceFilterOptionViewModel("1.20.5", "1.20.5"),
-        new DownloadResourceFilterOptionViewModel("1.20.4", "1.20.4"),
-        new DownloadResourceFilterOptionViewModel("1.20.3", "1.20.3"),
-        new DownloadResourceFilterOptionViewModel("1.20.2", "1.20.2"),
         new DownloadResourceFilterOptionViewModel("1.20.1", "1.20.1"),
-        new DownloadResourceFilterOptionViewModel("1.20", "1.20"),
         new DownloadResourceFilterOptionViewModel("1.19.4", "1.19.4"),
-        new DownloadResourceFilterOptionViewModel("1.19.3", "1.19.3"),
         new DownloadResourceFilterOptionViewModel("1.19.2", "1.19.2"),
         new DownloadResourceFilterOptionViewModel("1.18.2", "1.18.2"),
-        new DownloadResourceFilterOptionViewModel("1.17.1", "1.17.1"),
         new DownloadResourceFilterOptionViewModel("1.16.5", "1.16.5"),
-        new DownloadResourceFilterOptionViewModel("1.15.2", "1.15.2"),
-        new DownloadResourceFilterOptionViewModel("1.15.1", "1.15.1"),
-        new DownloadResourceFilterOptionViewModel("1.15", "1.15"),
-        new DownloadResourceFilterOptionViewModel("1.14.4", "1.14.4"),
-        new DownloadResourceFilterOptionViewModel("1.14.3", "1.14.3"),
-        new DownloadResourceFilterOptionViewModel("1.14.2", "1.14.2"),
-        new DownloadResourceFilterOptionViewModel("1.14.1", "1.14.1"),
-        new DownloadResourceFilterOptionViewModel("1.14", "1.14"),
-        new DownloadResourceFilterOptionViewModel("1.13.2", "1.13.2"),
-        new DownloadResourceFilterOptionViewModel("1.13.1", "1.13.1"),
-        new DownloadResourceFilterOptionViewModel("1.13", "1.13"),
         new DownloadResourceFilterOptionViewModel("1.12.2", "1.12.2"),
-        new DownloadResourceFilterOptionViewModel("1.12.1", "1.12.1"),
-        new DownloadResourceFilterOptionViewModel("1.12", "1.12"),
-        new DownloadResourceFilterOptionViewModel("1.11.2", "1.11.2"),
-        new DownloadResourceFilterOptionViewModel("1.11.1", "1.11.1"),
-        new DownloadResourceFilterOptionViewModel("1.11", "1.11"),
         new DownloadResourceFilterOptionViewModel("1.10.2", "1.10.2"),
-        new DownloadResourceFilterOptionViewModel("1.10.1", "1.10.1"),
-        new DownloadResourceFilterOptionViewModel("1.10", "1.10"),
-        new DownloadResourceFilterOptionViewModel("1.9.4", "1.9.4"),
-        new DownloadResourceFilterOptionViewModel("1.9.2", "1.9.2"),
-        new DownloadResourceFilterOptionViewModel("1.9.1", "1.9.1"),
-        new DownloadResourceFilterOptionViewModel("1.9", "1.9"),
         new DownloadResourceFilterOptionViewModel("1.8.9", "1.8.9"),
-        new DownloadResourceFilterOptionViewModel("1.8.8", "1.8.8"),
-        new DownloadResourceFilterOptionViewModel("1.8.7", "1.8.7"),
-        new DownloadResourceFilterOptionViewModel("1.8.4", "1.8.4"),
-        new DownloadResourceFilterOptionViewModel("1.8.3", "1.8.3"),
-        new DownloadResourceFilterOptionViewModel("1.8.2", "1.8.2"),
-        new DownloadResourceFilterOptionViewModel("1.8.1", "1.8.1"),
-        new DownloadResourceFilterOptionViewModel("1.8", "1.8"),
-        new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10"),
-        new DownloadResourceFilterOptionViewModel("1.7.9", "1.7.9"),
-        new DownloadResourceFilterOptionViewModel("1.7.8", "1.7.8"),
-        new DownloadResourceFilterOptionViewModel("1.7.7", "1.7.7"),
-        new DownloadResourceFilterOptionViewModel("1.7.6", "1.7.6"),
-        new DownloadResourceFilterOptionViewModel("1.7.5", "1.7.5"),
-        new DownloadResourceFilterOptionViewModel("1.7.4", "1.7.4"),
-        new DownloadResourceFilterOptionViewModel("1.7.2", "1.7.2"),
-        new DownloadResourceFilterOptionViewModel("1.6.4", "1.6.4"),
-        new DownloadResourceFilterOptionViewModel("1.6.2", "1.6.2"),
-        new DownloadResourceFilterOptionViewModel("1.6.1", "1.6.1"),
-        new DownloadResourceFilterOptionViewModel("1.5.2", "1.5.2"),
-        new DownloadResourceFilterOptionViewModel("1.5.1", "1.5.1"),
-        new DownloadResourceFilterOptionViewModel("1.4.7", "1.4.7"),
-        new DownloadResourceFilterOptionViewModel("1.4.6", "1.4.6"),
-        new DownloadResourceFilterOptionViewModel("1.4.5", "1.4.5"),
-        new DownloadResourceFilterOptionViewModel("1.4.4", "1.4.4"),
-        new DownloadResourceFilterOptionViewModel("1.4.2", "1.4.2"),
-        new DownloadResourceFilterOptionViewModel("1.3.2", "1.3.2"),
-        new DownloadResourceFilterOptionViewModel("1.3.1", "1.3.1"),
-        new DownloadResourceFilterOptionViewModel("1.2.5", "1.2.5"),
-        new DownloadResourceFilterOptionViewModel("1.2.4", "1.2.4"),
-        new DownloadResourceFilterOptionViewModel("1.2.3", "1.2.3"),
-        new DownloadResourceFilterOptionViewModel("1.2.2", "1.2.2"),
-        new DownloadResourceFilterOptionViewModel("1.2.1", "1.2.1"),
-        new DownloadResourceFilterOptionViewModel("1.1", "1.1"),
-        new DownloadResourceFilterOptionViewModel("1.0", "1.0")
+        new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10")
     ];
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions =
     [
@@ -339,9 +267,9 @@ internal sealed partial class FrontendShellViewModel
             ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(runtimeState.HintText);
             _downloadResourceSupportsModrinth = runtimeState.SupportsSecondarySource;
             _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(runtimeState);
-            _downloadResourceTagOptions = runtimeState.TagOptions
-                .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
-                .ToArray();
+            _downloadResourceTagOptions = MergeFilterOptions(
+                BuildFallbackDownloadResourceTagOptions(),
+                runtimeState.TagOptions.Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue)));
             _downloadResourceLoaderOptions = runtimeState.UseShaderLoaderOptions
                 ? [
                     new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
@@ -746,16 +674,10 @@ internal sealed partial class FrontendShellViewModel
             ? "结果来自实时社区目录，尝试调整搜索与筛选条件。"
             : result.State.HintText;
 
-        _downloadResourceSourceOptions =
-        [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            .. result.SourceOptions.Select(source => new DownloadResourceFilterOptionViewModel(source, source))
-        ];
-        _downloadResourceTagOptions = result.State.TagOptions.Count > 1
-            ? result.State.TagOptions
-                .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
-                .ToArray()
-            : BuildFallbackDownloadResourceTagOptions();
+        _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(result.State);
+        _downloadResourceTagOptions = MergeFilterOptions(
+            BuildFallbackDownloadResourceTagOptions(),
+            result.State.TagOptions.Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue)));
         _downloadResourceVersionOptions =
         [
             new DownloadResourceFilterOptionViewModel("任意", string.Empty),
@@ -788,6 +710,25 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return 0;
+    }
+
+    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> MergeFilterOptions(
+        IReadOnlyList<DownloadResourceFilterOptionViewModel> baseOptions,
+        IEnumerable<DownloadResourceFilterOptionViewModel> additionalOptions)
+    {
+        var merged = new List<DownloadResourceFilterOptionViewModel>(baseOptions.Count);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var option in baseOptions.Concat(additionalOptions))
+        {
+            var key = string.IsNullOrWhiteSpace(option.FilterValue) ? option.Label : option.FilterValue;
+            if (seen.Add(key))
+            {
+                merged.Add(option);
+            }
+        }
+
+        return merged;
     }
 
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDownloadResourceSourceOptions(FrontendDownloadResourceState runtimeState)
