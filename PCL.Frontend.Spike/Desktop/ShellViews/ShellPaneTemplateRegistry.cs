@@ -15,7 +15,9 @@ internal static class ShellPaneTemplateRegistry
         RegisterTemplate<StandardShellNavigationListPaneViewModel, StandardShellNavigationListPaneView>,
         RegisterTemplate<StandardShellSummaryPaneViewModel, StandardShellSummaryPaneView>,
         RegisterTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>,
+        RegisterTemplate<InstanceSelectShellLeftPaneViewModel, InstanceSelectShellLeftPaneView>,
         RegisterTemplate<GenericStandardShellRightPaneViewModel, GenericStandardShellRightPaneView>,
+        RegisterTemplate<InstanceSelectShellRightPaneViewModel, InstanceSelectShellRightPaneView>,
         RegisterTemplate<DownloadInstallShellRightPaneViewModel, DownloadInstallShellRightPaneView>,
         RegisterTemplate<DownloadCatalogShellRightPaneViewModel, DownloadCatalogShellRightPaneView>,
         RegisterTemplate<DownloadResourceShellRightPaneViewModel, DownloadResourceShellRightPaneView>,
@@ -79,7 +81,8 @@ internal static class ShellPaneTemplateRegistry
             [StandardShellRightPaneKind.InstanceWorld] = static (shell, descriptor) => new InstanceWorldShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.InstanceScreenshot] = static (shell, descriptor) => new InstanceScreenshotShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.InstanceServer] = static (shell, descriptor) => new InstanceServerShellRightPaneViewModel(shell, descriptor),
-            [StandardShellRightPaneKind.InstanceResource] = static (shell, descriptor) => new InstanceResourceShellRightPaneViewModel(shell, descriptor)
+            [StandardShellRightPaneKind.InstanceResource] = static (shell, descriptor) => new InstanceResourceShellRightPaneViewModel(shell, descriptor),
+            [StandardShellRightPaneKind.InstanceSelection] = static (shell, descriptor) => new InstanceSelectShellRightPaneViewModel(shell, descriptor)
         };
 
     public static void Register(Application application)

@@ -6,7 +6,8 @@ internal enum StandardShellLeftPaneKind
 {
     Sidebar = 0,
     Summary = 1,
-    Empty = 2
+    Empty = 2,
+    InstanceSelection = 3
 }
 
 internal enum StandardShellRightPaneKind
@@ -40,7 +41,8 @@ internal enum StandardShellRightPaneKind
     InstanceScreenshot = 26,
     InstanceServer = 27,
     InstanceResource = 28,
-    Generic = 29
+    InstanceSelection = 29,
+    Generic = 30
 }
 
 internal enum StandardShellRightPaneGroup

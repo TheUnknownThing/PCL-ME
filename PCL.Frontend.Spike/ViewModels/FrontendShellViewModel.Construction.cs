@@ -114,6 +114,9 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _openGlobalLaunchSettingsCommand;
     private readonly ActionCommand _refreshInstanceSelectionCommand;
     private readonly ActionCommand _clearInstanceSelectionSearchCommand;
+    private readonly ActionCommand _addInstanceSelectionFolderCommand;
+    private readonly ActionCommand _importInstanceSelectionPackCommand;
+    private readonly ActionCommand _openInstanceSelectionDownloadCommand;
     private readonly ActionCommand _refreshTaskManagerCommand;
     private readonly ActionCommand _clearFinishedTasksCommand;
     private readonly ActionCommand _refreshGameLogCommand;
@@ -394,6 +397,11 @@ internal sealed partial class FrontendShellViewModel
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
         _refreshInstanceSelectionCommand = new ActionCommand(RefreshInstanceSelectionSurface);
         _clearInstanceSelectionSearchCommand = new ActionCommand(() => InstanceSelectionSearchQuery = string.Empty);
+        _addInstanceSelectionFolderCommand = new ActionCommand(() => _ = AddInstanceSelectionFolderAsync());
+        _importInstanceSelectionPackCommand = new ActionCommand(() => _ = ImportInstanceSelectionPackAsync());
+        _openInstanceSelectionDownloadCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+            "已从实例选择页打开下载页面。"));
         _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
         _clearFinishedTasksCommand = new ActionCommand(() =>
         {

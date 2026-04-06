@@ -156,6 +156,14 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowInnerNavigation => CanGoBack;
 
+    public bool IsInstanceSelectionContextRoute => ShowInstanceSelectSurface;
+
+    public bool ShowWindowBranding => !IsInstanceSelectionContextRoute;
+
+    public bool ShowWindowUtilityButtons => !IsInstanceSelectionContextRoute;
+
+    public bool ShowMaximizeButton => false;
+
     public bool HasActivePrompts => ActivePrompts.Count > 0;
 
     public bool HasNoActivePrompts => !HasActivePrompts;
@@ -189,6 +197,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
         ?? _currentNavigation?.CurrentPage.Title
         ?? Title;
+
+    public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.InstanceSelection
+        ? 276
+        : 236;
 
     public bool CanGoBack
     {

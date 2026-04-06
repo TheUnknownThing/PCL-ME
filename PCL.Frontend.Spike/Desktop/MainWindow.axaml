@@ -128,6 +128,7 @@
         <Grid RowDefinitions="Auto,*">
           <StackPanel
               Margin="19,0,0,0"
+              IsVisible="{Binding ShowWindowBranding}"
               Orientation="Horizontal"
               VerticalAlignment="Center"
               ZIndex="3">
@@ -178,6 +179,7 @@
                 x:Name="MaximizeButton"
                 Width="28"
                 Height="28"
+                IsVisible="{Binding ShowMaximizeButton}"
                 IconBrush="#F4FAFF"
                 HoverBackgroundBrush="#32FFFFFF"
                 Click="MaximizeButton_OnClick" />
@@ -287,10 +289,11 @@
             <Grid
                 x:Name="StandardRouteGrid"
                 IsVisible="{Binding IsStandardShellRoute}"
-                ColumnDefinitions="236,*">
+                ColumnDefinitions="Auto,*">
               <Border
                   x:Name="StandardLeftHost"
                   Grid.Column="0"
+                  Width="{Binding StandardShellLeftPaneWidth}"
                   ClipToBounds="True"
                   Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">
                 <Grid x:Name="StandardLeftContentHost">
@@ -315,6 +318,7 @@
                 Margin="0,0,12,20"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
+                IsVisible="{Binding ShowWindowUtilityButtons}"
                 motion:Motion.AnimateOnVisible="True"
                 motion:Motion.StaggerChildren="True"
                 motion:Motion.OffsetY="10"

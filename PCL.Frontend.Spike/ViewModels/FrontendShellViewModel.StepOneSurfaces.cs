@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
+using PCL.Frontend.Spike.Icons;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -26,6 +27,10 @@ internal sealed partial class FrontendShellViewModel
 
     public ObservableCollection<InstanceSelectEntryViewModel> InstanceSelectionEntries { get; } = [];
 
+    public ObservableCollection<InstanceSelectionFolderEntryViewModel> InstanceSelectionFolderEntries { get; } = [];
+
+    public ObservableCollection<InstanceSelectionShortcutEntryViewModel> InstanceSelectionShortcutEntries { get; } = [];
+
     public ObservableCollection<TaskManagerEntryViewModel> TaskManagerEntries { get; } = [];
 
     public ObservableCollection<SimpleListEntryViewModel> GameLogFileEntries { get; } = [];
@@ -33,6 +38,12 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand RefreshInstanceSelectionCommand => _refreshInstanceSelectionCommand;
 
     public ActionCommand ClearInstanceSelectionSearchCommand => _clearInstanceSelectionSearchCommand;
+
+    public ActionCommand AddInstanceSelectionFolderCommand => _addInstanceSelectionFolderCommand;
+
+    public ActionCommand ImportInstanceSelectionPackCommand => _importInstanceSelectionPackCommand;
+
+    public ActionCommand OpenInstanceSelectionDownloadCommand => _openInstanceSelectionDownloadCommand;
 
     public ActionCommand RefreshTaskManagerCommand => _refreshTaskManagerCommand;
 
@@ -69,6 +80,26 @@ internal sealed partial class FrontendShellViewModel
     public bool HasInstanceSelectionEntries => InstanceSelectionEntries.Count > 0;
 
     public bool HasNoInstanceSelectionEntries => !HasInstanceSelectionEntries;
+
+    public bool HasInstanceSelectionFolders => InstanceSelectionFolderEntries.Count > 0;
+
+    public bool HasInstanceSelectionSearchBox => _instanceSelectionTotalCount > 0 || !string.IsNullOrWhiteSpace(InstanceSelectionSearchQuery);
+
+    public bool ShowInstanceSelectionEmptyDownloadAction => _instanceSelectionTotalCount == 0;
+
+    public bool ShowInstanceSelectionEmptyClearAction => _instanceSelectionTotalCount > 0 && !HasInstanceSelectionEntries;
+
+    public string InstanceSelectionEmptyTitle => _instanceSelectionTotalCount == 0
+        ? "无可用实例"
+        : "无匹配实例";
+
+    public string InstanceSelectionEmptyDescription => _instanceSelectionTotalCount == 0
+        ? "未找到任何游戏实例，请先下载一个游戏实例。\n若有已存在的实例，请在左边的列表中选择文件夹，或通过添加已有文件夹将其导入。"
+        : $"没有找到与“{InstanceSelectionSearchQuery.Trim()}”匹配的实例，请尝试更换关键词或清空搜索。";
+
+    public string InstanceSelectionLauncherDirectoryLabel => GetInstanceSelectionDirectoryLabel(_instanceSelectionLauncherDirectory);
+
+    public string InstanceSelectionLauncherDirectoryPath => _instanceSelectionLauncherDirectory;
 
     public string InstanceSelectionLauncherDirectory => _instanceSelectionLauncherDirectory;
 
@@ -238,6 +269,27 @@ internal sealed partial class FrontendShellViewModel
         var versionsDirectory = Path.Combine(launcherDirectory, "versions");
         _instanceSelectionLauncherDirectory = launcherDirectory;
 
+        ReplaceItems(
+            InstanceSelectionFolderEntries,
+            [
+                CreateInstanceSelectionFolderEntry(launcherDirectory)
+            ]);
+
+        ReplaceItems(
+            InstanceSelectionShortcutEntries,
+            [
+                CreateInstanceSelectionShortcutEntry(
+                    "添加已有文件夹",
+                    "选择一个包含 versions 目录的 .minecraft 或启动目录",
+                    FrontendIconCatalog.FolderAdd.Data,
+                    _addInstanceSelectionFolderCommand),
+                CreateInstanceSelectionShortcutEntry(
+                    "导入整合包",
+                    "选择 CurseForge、Modrinth 或普通压缩整合包文件",
+                    FrontendIconCatalog.PackageImport.Data,
+                    _importInstanceSelectionPackCommand)
+            ]);
+
         var allEntries = Directory.Exists(versionsDirectory)
             ? Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly)
                 .Select(directory => BuildInstanceSelectionSnapshot(directory, selectedInstance))
@@ -261,9 +313,17 @@ internal sealed partial class FrontendShellViewModel
             filteredEntries.Select(entry => CreateInstanceSelectionEntry(entry)));
 
         RaisePropertyChanged(nameof(InstanceSelectionLauncherDirectory));
+        RaisePropertyChanged(nameof(InstanceSelectionLauncherDirectoryLabel));
+        RaisePropertyChanged(nameof(InstanceSelectionLauncherDirectoryPath));
+        RaisePropertyChanged(nameof(HasInstanceSelectionFolders));
+        RaisePropertyChanged(nameof(HasInstanceSelectionSearchBox));
         RaisePropertyChanged(nameof(HasInstanceSelectionEntries));
         RaisePropertyChanged(nameof(HasNoInstanceSelectionEntries));
         RaisePropertyChanged(nameof(InstanceSelectionResultSummary));
+        RaisePropertyChanged(nameof(InstanceSelectionEmptyTitle));
+        RaisePropertyChanged(nameof(InstanceSelectionEmptyDescription));
+        RaisePropertyChanged(nameof(ShowInstanceSelectionEmptyDownloadAction));
+        RaisePropertyChanged(nameof(ShowInstanceSelectionEmptyClearAction));
     }
 
     private void RefreshTaskManagerSurface()
@@ -345,6 +405,55 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.PersistLocalValue("LaunchInstanceSelect", instanceName);
         RefreshLaunchState();
         RefreshShell($"已将启动实例切换为 {instanceName}。");
+    }
+
+    private async Task AddInstanceSelectionFolderAsync()
+    {
+        try
+        {
+            var folderPath = await _shellActionService.PickFolderAsync("选择已有 Minecraft 文件夹");
+            if (string.IsNullOrWhiteSpace(folderPath))
+            {
+                AddActivity("添加已有文件夹", "未选择任何文件夹。");
+                return;
+            }
+
+            _shellActionService.PersistLocalValue("LaunchFolderSelect", Path.GetFullPath(folderPath));
+            RefreshLaunchState();
+            RefreshShell($"已切换启动目录到 {folderPath}。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("添加已有文件夹失败", ex.Message);
+        }
+    }
+
+    private async Task ImportInstanceSelectionPackAsync()
+    {
+        try
+        {
+            var sourcePath = await _shellActionService.PickOpenFileAsync(
+                "选择整合包文件",
+                "整合包文件",
+                "*.zip",
+                "*.mrpack",
+                "*.rar",
+                "*.7z");
+            if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+                AddActivity("导入整合包", "未选择任何整合包文件。");
+                return;
+            }
+
+            AddActivity("导入整合包", $"已选择 {Path.GetFileName(sourcePath)}，后续可在下载页面继续安装流程。");
+            NavigateTo(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+                $"已准备导入整合包 {Path.GetFileName(sourcePath)}。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("导入整合包失败", ex.Message);
+        }
     }
 
     private void OpenInstanceSelectionEntry(InstanceSelectionSnapshot entry)
@@ -524,6 +633,36 @@ internal sealed partial class FrontendShellViewModel
                     AddActivity("打开实例目录失败", error ?? entry.Directory);
                 }
             }));
+    }
+
+    private InstanceSelectionFolderEntryViewModel CreateInstanceSelectionFolderEntry(string directory)
+    {
+        return new InstanceSelectionFolderEntryViewModel(
+            GetInstanceSelectionDirectoryLabel(directory),
+            directory,
+            true,
+            FrontendIconCatalog.Folder.Data,
+            new ActionCommand(() => AddActivity("当前文件夹", directory)),
+            new ActionCommand(() =>
+            {
+                if (_shellActionService.TryOpenExternalTarget(directory, out var error))
+                {
+                    AddActivity("打开实例根目录", directory);
+                }
+                else
+                {
+                    AddActivity("打开实例根目录失败", error ?? directory);
+                }
+            }));
+    }
+
+    private static InstanceSelectionShortcutEntryViewModel CreateInstanceSelectionShortcutEntry(
+        string title,
+        string description,
+        string iconPath,
+        ActionCommand command)
+    {
+        return new InstanceSelectionShortcutEntryViewModel(title, description, iconPath, command);
     }
 
     private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task)
@@ -729,6 +868,18 @@ internal sealed partial class FrontendShellViewModel
             return fallback;
         }
     }
+
+    private static string GetInstanceSelectionDirectoryLabel(string directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return "未选择文件夹";
+        }
+
+        var trimmed = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var name = Path.GetFileName(trimmed);
+        return string.IsNullOrWhiteSpace(name) ? trimmed : name;
+    }
 }
 
 internal sealed class InstanceSelectEntryViewModel(
@@ -760,6 +911,42 @@ internal sealed class InstanceSelectEntryViewModel(
     public ActionCommand OpenCommand { get; } = openCommand;
 
     public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
+}
+
+internal sealed class InstanceSelectionFolderEntryViewModel(
+    string title,
+    string path,
+    bool isSelected,
+    string iconPath,
+    ActionCommand command,
+    ActionCommand openFolderCommand)
+{
+    public string Title { get; } = title;
+
+    public string Path { get; } = path;
+
+    public bool IsSelected { get; } = isSelected;
+
+    public string IconPath { get; } = iconPath;
+
+    public ActionCommand Command { get; } = command;
+
+    public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
+}
+
+internal sealed class InstanceSelectionShortcutEntryViewModel(
+    string title,
+    string description,
+    string iconPath,
+    ActionCommand command)
+{
+    public string Title { get; } = title;
+
+    public string Description { get; } = description;
+
+    public string IconPath { get; } = iconPath;
+
+    public ActionCommand Command { get; } = command;
 }
 
 internal sealed class TaskManagerEntryViewModel(

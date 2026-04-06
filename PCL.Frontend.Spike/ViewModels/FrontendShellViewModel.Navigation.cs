@@ -538,6 +538,9 @@ internal sealed partial class FrontendShellViewModel
             case StandardShellRightPaneKind.DownloadFavorites:
                 RefreshDownloadFavoriteSurface();
                 break;
+            case StandardShellRightPaneKind.InstanceSelection:
+                RefreshInstanceSelectionSurface();
+                break;
             case StandardShellRightPaneKind.VersionSaveInfo:
             case StandardShellRightPaneKind.VersionSaveBackup:
             case StandardShellRightPaneKind.VersionSaveDatapack:
@@ -578,6 +581,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowHelpDetailSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
+        RaisePropertyChanged(nameof(ShowWindowBranding));
+        RaisePropertyChanged(nameof(ShowWindowUtilityButtons));
+        RaisePropertyChanged(nameof(ShowMaximizeButton));
+        RaisePropertyChanged(nameof(StandardShellLeftPaneWidth));
         RaisePropertyChanged(nameof(TitleBarLabel));
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
@@ -599,6 +606,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasSurfaceSections));
         RaisePropertyChanged(nameof(HasUtilityEntries));
         RaisePropertyChanged(nameof(HasActivityEntries));
+        RaisePropertyChanged(nameof(HasInstanceSelectionFolders));
+        RaisePropertyChanged(nameof(HasInstanceSelectionSearchBox));
         RaisePropertyChanged(nameof(HasInstanceSelectionEntries));
         RaisePropertyChanged(nameof(HasNoInstanceSelectionEntries));
         RaisePropertyChanged(nameof(HasTaskManagerEntries));

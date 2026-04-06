@@ -1,0 +1,58 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Left.InstanceSelectShellLeftPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <Border Background="#F4F5F8">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="12,14,12,18" Spacing="18">
+        <StackPanel Spacing="8">
+          <TextBlock
+              Margin="2,0,0,0"
+              Foreground="#A7AFBA"
+              FontSize="12.5"
+              FontWeight="SemiBold"
+              Text="文件夹列表" />
+          <ItemsControl ItemsSource="{Binding InstanceSelectionFolderEntries}" IsVisible="{Binding HasInstanceSelectionFolders}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:PclListItem
+                    Margin="0,0,0,4"
+                    AccessoryCommand="{Binding OpenFolderCommand}"
+                    AccessoryIconData="M896 256H512l-96-96H128c-35.3 0-64 28.7-64 64v576c0 35.3 28.7 64 64 64h640c35.3 0 64-28.7 64-64V416h128c35.3 0 64-28.7 64-64V320c0-35.3-28.7-64-64-64h-64z"
+                    AccessoryToolTip="打开文件夹"
+                    Command="{Binding Command}"
+                    IconData="{Binding IconPath}"
+                    Info="{Binding Path}"
+                    IsSelected="{Binding IsSelected}"
+                    Title="{Binding Title}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <StackPanel Spacing="8">
+          <TextBlock
+              Margin="2,0,0,0"
+              Foreground="#A7AFBA"
+              FontSize="12.5"
+              FontWeight="SemiBold"
+              Text="添加导入" />
+          <ItemsControl ItemsSource="{Binding InstanceSelectionShortcutEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:PclListItem
+                    Margin="0,0,0,4"
+                    Command="{Binding Command}"
+                    IconData="{Binding IconPath}"
+                    Info="{Binding Description}"
+                    Title="{Binding Title}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </Border>
+</UserControl>
