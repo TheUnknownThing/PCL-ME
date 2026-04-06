@@ -161,12 +161,12 @@ internal static class FrontendToolsCompositionService
         {
             entries.AddRange(
             [
-                new FrontendToolsHelpEntry("启动与版本", "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "fallback://launch/select-instance", false, null, null),
-                new FrontendToolsHelpEntry("启动与版本", "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", "fallback://launch/java-runtime", false, null, null),
-                new FrontendToolsHelpEntry("诊断与恢复", "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "fallback://diagnostics/log-export", false, null, null),
-                new FrontendToolsHelpEntry("诊断与恢复", "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", "fallback://diagnostics/crash-recovery", false, null, null),
-                new FrontendToolsHelpEntry("迁移说明", "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", "fallback://migration/copy-original", false, null, null),
-                new FrontendToolsHelpEntry("迁移说明", "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", "fallback://migration/backend-boundary", false, null, null)
+                new FrontendToolsHelpEntry("启动与版本", "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "实例, 启动, 版本", "fallback://launch/select-instance", false, null, null, null),
+                new FrontendToolsHelpEntry("启动与版本", "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", "Java, 运行时, 下载", "fallback://launch/java-runtime", false, null, null, null),
+                new FrontendToolsHelpEntry("诊断与恢复", "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "日志, 导出, 诊断", "fallback://diagnostics/log-export", false, null, null, null),
+                new FrontendToolsHelpEntry("诊断与恢复", "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", "崩溃, 恢复, 日志", "fallback://diagnostics/crash-recovery", false, null, null, null),
+                new FrontendToolsHelpEntry("迁移说明", "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", "迁移, 页面, 结构", "fallback://migration/copy-original", false, null, null, null),
+                new FrontendToolsHelpEntry("迁移说明", "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", "迁移, 后端, 边界", "fallback://migration/backend-boundary", false, null, null, null)
             ]);
         }
 
@@ -247,10 +247,51 @@ internal static class FrontendToolsCompositionService
             GroupTitle: types.FirstOrDefault() ?? "帮助",
             Title: title,
             Summary: ReadString(root, "Description"),
+            Keywords: ReadString(root, "Keywords"),
             RawPath: rawPath,
             IsEvent: ReadBool(root, "IsEvent"),
             EventType: ReadString(root, "EventType"),
-            EventData: ReadString(root, "EventData"));
+            EventData: ReadString(root, "EventData"),
+            DetailContent: ReadDetailContent(rawPath));
+    }
+
+    private static string? ReadDetailContent(string rawPath)
+    {
+        try
+        {
+            var zipMarkerIndex = rawPath.IndexOf("::", StringComparison.Ordinal);
+            if (zipMarkerIndex >= 0)
+            {
+                var zipPath = rawPath[..zipMarkerIndex];
+                var entryPath = rawPath[(zipMarkerIndex + 2)..];
+                var xamlEntryPath = Path.ChangeExtension(entryPath, ".xaml")?.Replace('\\', '/');
+                if (string.IsNullOrWhiteSpace(xamlEntryPath) || !File.Exists(zipPath))
+                {
+                    return null;
+                }
+
+                using var archive = ZipFile.OpenRead(zipPath);
+                var xamlEntry = archive.Entries.FirstOrDefault(item =>
+                    string.Equals(item.FullName, xamlEntryPath, StringComparison.OrdinalIgnoreCase));
+                if (xamlEntry is null)
+                {
+                    return null;
+                }
+
+                using var stream = xamlEntry.Open();
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            }
+
+            var xamlPath = Path.ChangeExtension(rawPath, ".xaml");
+            return !string.IsNullOrWhiteSpace(xamlPath) && File.Exists(xamlPath)
+                ? File.ReadAllText(xamlPath)
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string ReadString(JsonElement element, string propertyName)

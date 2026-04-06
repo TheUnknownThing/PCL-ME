@@ -584,6 +584,7 @@ internal sealed partial class FrontendShellViewModel
             _showLaunchLog = true;
             _launchLogBuilder.Clear();
             RaiseLaunchSessionProperties();
+            RefreshGameLogSurface();
 
             foreach (var line in _launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines)
             {
@@ -648,6 +649,7 @@ internal sealed partial class FrontendShellViewModel
                 _isLaunchInProgress = false;
                 RaiseLaunchSessionProperties();
                 RefreshLaunchState();
+                RefreshGameLogSurface();
             });
         }
     }
@@ -678,6 +680,7 @@ internal sealed partial class FrontendShellViewModel
 
             _launchLogBuilder.Append(line);
             RaisePropertyChanged(nameof(LaunchLogText));
+            RaiseGameLogSurfaceProperties();
             if (!_showLaunchLog)
             {
                 _showLaunchLog = true;

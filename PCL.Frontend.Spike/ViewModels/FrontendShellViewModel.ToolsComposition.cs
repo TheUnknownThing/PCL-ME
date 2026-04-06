@@ -56,7 +56,7 @@ internal sealed partial class FrontendShellViewModel
             "daily-luck" => new ActionCommand(ShowDailyLuck),
             "create-shortcut" => new ActionCommand(CreateLauncherShortcut),
             "launch-count" => new ActionCommand(ShowLauncherLaunchCount),
-            _ => CreateIntentCommand(title, $"Would run the {title} toolbox action.")
+            _ => CreateUnsupportedToolboxActionCommand(title)
         };
     }
 
@@ -76,26 +76,8 @@ internal sealed partial class FrontendShellViewModel
             entry.GroupTitle,
             entry.Title,
             entry.Summary,
+            entry.Keywords,
             new ActionCommand(() => OpenHelpTopic(entry)));
-    }
-
-    private void OpenHelpTopic(FrontendToolsHelpEntry entry)
-    {
-        if (entry.IsEvent && Uri.TryCreate(entry.EventData, UriKind.Absolute, out var target))
-        {
-            if (_shellActionService.TryOpenExternalTarget(target.ToString(), out var error))
-            {
-                AddActivity($"打开帮助: {entry.Title}", target.ToString());
-            }
-            else
-            {
-                AddActivity($"打开帮助失败: {entry.Title}", error ?? target.ToString());
-            }
-
-            return;
-        }
-
-        AddActivity($"查看帮助: {entry.Title}", entry.RawPath);
     }
 
     private void ClearToolboxRubbish()
@@ -177,6 +159,27 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity("创建快捷方式失败", ex.Message);
         }
+    }
+
+    private ActionCommand CreateUnsupportedToolboxActionCommand(string title)
+    {
+        return new ActionCommand(() =>
+        {
+            var reportPath = WriteToolboxReport(
+                "unsupported-actions",
+                $"{SanitizeFileSegment(title)}.md",
+                [
+                    $"# {title}",
+                    string.Empty,
+                    "这个百宝箱动作已经从纯活动日志升级为可追踪的诊断报告输出。",
+                    "当前前端没有找到它的专属执行器，因此先导出这份说明文件，避免静默退回到意图占位。",
+                    string.Empty,
+                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                    $"动作: {title}",
+                    $"当前实例: {_instanceComposition.Selection.InstanceName}"
+                ]);
+            OpenInstanceTarget(title, reportPath, "百宝箱诊断文件不存在。");
+        });
     }
 
     private string WriteToolboxReport(string folderName, string fileName, IReadOnlyList<string> lines)

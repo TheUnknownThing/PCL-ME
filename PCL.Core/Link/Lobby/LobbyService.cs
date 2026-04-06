@@ -28,6 +28,7 @@ public class LobbyService() : GeneralService("lobby", "LobbyService")
 {
     private static readonly LobbyController _LobbyController = new();
     private static CancellationTokenSource _lobbyCts = new();
+    private static SynchronizationContext? _uiContext;
 
     private static Task? _discoveringTask;
     private static CancellationTokenSource _discoveringCts = new();
@@ -130,6 +131,8 @@ public class LobbyService() : GeneralService("lobby", "LobbyService")
 
     public static async Task InitializeAsync()
     {
+        _uiContext ??= SynchronizationContext.Current;
+
         if (CurrentState is not LobbyState.Idle && CurrentState is not LobbyState.Error)
         {
             return;
@@ -462,7 +465,7 @@ public class LobbyService() : GeneralService("lobby", "LobbyService")
         {
             await _lobbyCts.CancelAsync().ConfigureAwait(false);
 
-            Players.Clear();
+            await _RunInUiAsync(() => Players.Clear()).ConfigureAwait(false);
             CurrentLobbyCode = null;
             CurrentUserName = null;
 
@@ -537,7 +540,38 @@ public class LobbyService() : GeneralService("lobby", "LobbyService")
 
     private static async Task _RunInUiAsync(Action action)
     {
-        await Application.Current.Dispatcher.InvokeAsync(action);
+        if (_uiContext is not null)
+        {
+            if (SynchronizationContext.Current == _uiContext)
+            {
+                action();
+                return;
+            }
+
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _uiContext.Post(_ =>
+            {
+                try
+                {
+                    action();
+                    completion.SetResult();
+                }
+                catch (Exception ex)
+                {
+                    completion.SetException(ex);
+                }
+            }, null);
+            await completion.Task.ConfigureAwait(false);
+            return;
+        }
+
+        if (Application.Current?.Dispatcher is { } dispatcher)
+        {
+            await dispatcher.InvokeAsync(action);
+            return;
+        }
+
+        action();
     }
 }
 

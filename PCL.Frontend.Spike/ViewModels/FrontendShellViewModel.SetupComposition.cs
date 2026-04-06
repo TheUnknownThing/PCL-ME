@@ -223,6 +223,7 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendSubpageKey.SetupUpdate:
                 InitializeUpdateSurface();
                 break;
+            case LauncherFrontendSubpageKey.SetupLink:
             case LauncherFrontendSubpageKey.SetupGameLink:
                 InitializeGameLinkSurface();
                 break;
@@ -264,6 +265,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(MirrorCdk));
                 RaiseUpdateSurfaceProperties();
                 break;
+            case LauncherFrontendSubpageKey.SetupLink:
             case LauncherFrontendSubpageKey.SetupGameLink:
                 RaisePropertyChanged(nameof(LinkUsername));
                 RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));

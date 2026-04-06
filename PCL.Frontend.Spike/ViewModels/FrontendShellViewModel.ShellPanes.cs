@@ -123,6 +123,12 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPageKey.Tools => ResolveToolsRightPaneDescriptor(),
             LauncherFrontendPageKey.VersionSaves => ResolveVersionSavesRightPaneDescriptor(),
             LauncherFrontendPageKey.InstanceSetup => ResolveInstanceRightPaneDescriptor(),
+            LauncherFrontendPageKey.InstanceSelect => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "instance-select-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.TaskManager => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "task-manager-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.GameLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "game-log-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.CompDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "comp-detail-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.HelpDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "help-detail-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.HomePageMarket => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "home-page-market-shell", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "generic-shell", usesCompatibilityView: false)
         };
     }
@@ -132,6 +138,7 @@ internal sealed partial class FrontendShellViewModel
         return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.SetupLaunch => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLaunch, StandardShellRightPaneGroup.SetupFamily, "setup-launch", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLink, StandardShellRightPaneGroup.SetupFamily, "setup-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupAbout => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupAbout, StandardShellRightPaneGroup.SetupFamily, "setup-about", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupFeedback => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupFeedback, StandardShellRightPaneGroup.SetupFamily, "setup-feedback", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLog, StandardShellRightPaneGroup.SetupFamily, "setup-log", usesCompatibilityView: false),

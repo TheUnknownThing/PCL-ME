@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
@@ -15,7 +16,6 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string LaunchNewsImageFilePath = GetLauncherAssetPath("Images", "Backgrounds", "server_bg.png");
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
-    private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private readonly SpikeCommandOptions _options;
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
@@ -26,6 +26,7 @@ internal sealed partial class FrontendShellViewModel
         new FrontendToolsHelpState([]),
         new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
     private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
+    private FrontendSetupFeedbackSnapshot? _feedbackSnapshot;
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
@@ -50,8 +51,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _showUpdateDetailCommand;
     private readonly ActionCommand _checkUpdateAgainCommand;
     private readonly ActionCommand _openFullChangelogCommand;
-    private readonly ActionCommand _downloadOptionalUpdateCommand;
-    private readonly ActionCommand _showOptionalUpdateDetailCommand;
     private readonly ActionCommand _resetGameLinkSettingsCommand;
     private readonly ActionCommand _resetGameManageSettingsCommand;
     private readonly ActionCommand _resetLauncherMiscSettingsCommand;
@@ -113,6 +112,12 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _lockInstanceLoginCommand;
     private readonly ActionCommand _createInstanceProfileCommand;
     private readonly ActionCommand _openGlobalLaunchSettingsCommand;
+    private readonly ActionCommand _refreshInstanceSelectionCommand;
+    private readonly ActionCommand _clearInstanceSelectionSearchCommand;
+    private readonly ActionCommand _refreshTaskManagerCommand;
+    private readonly ActionCommand _clearFinishedTasksCommand;
+    private readonly ActionCommand _refreshGameLogCommand;
+    private readonly ActionCommand _clearGameLogCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -142,6 +147,8 @@ internal sealed partial class FrontendShellViewModel
     private string _mirrorCdk = string.Empty;
     private bool _isCheckingUpdate;
     private string _lastUpdateCheckSignature = string.Empty;
+    private bool _isRefreshingFeedback;
+    private DateTimeOffset _lastFeedbackRefreshUtc;
     private string _linkUsername = string.Empty;
     private int _selectedProtocolPreferenceIndex;
     private bool _preferLowestLatencyPath = true;
@@ -310,8 +317,6 @@ internal sealed partial class FrontendShellViewModel
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
         _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/PCL-Community/PCL2-CE/releases");
-        _downloadOptionalUpdateCommand = CreateIntentCommand("下载可选更新", "Would start the optional AquaCL upgrade flow.");
-        _showOptionalUpdateDetailCommand = CreateIntentCommand("查看 AquaCL 更新详情", "Would open the optional upgrade changelog surface.");
         _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
@@ -333,7 +338,9 @@ internal sealed partial class FrontendShellViewModel
         _refreshHomepageCommand = new ActionCommand(RefreshHomepageContent);
         _generateHomepageTutorialFileCommand = new ActionCommand(GenerateHomepageTutorialFile);
         _viewHomepageTutorialCommand = new ActionCommand(ViewHomepageTutorial);
-        _openHomepageMarketCommand = CreateLinkCommand("前往主页市场", "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Homepage.Market/Custom.xaml");
+        _openHomepageMarketCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.HomePageMarket),
+            "已打开主页市场。"));
         _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
         _acceptGameLinkTermsCommand = new ActionCommand(AcceptGameLinkTerms);
         _testLobbyNatCommand = new ActionCommand(() => _ = TestLobbyNatAsync());
@@ -385,6 +392,17 @@ internal sealed partial class FrontendShellViewModel
         _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
+        _refreshInstanceSelectionCommand = new ActionCommand(RefreshInstanceSelectionSurface);
+        _clearInstanceSelectionSearchCommand = new ActionCommand(() => InstanceSelectionSearchQuery = string.Empty);
+        _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
+        _clearFinishedTasksCommand = new ActionCommand(() =>
+        {
+            TaskCenter.RemoveFinished();
+            RefreshTaskManagerSurface();
+            RefreshShell("已清理所有已结束任务。");
+        });
+        _refreshGameLogCommand = new ActionCommand(RefreshGameLogSurface);
+        _clearGameLogCommand = new ActionCommand(ClearGameLogSurface);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = _shellComposition.EnvironmentLabel;
@@ -400,6 +418,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeDownloadInstallSurface();
         ApplySetupComposition(_setupComposition);
         ApplyInstanceComposition(_instanceComposition);
+        InitializeStepOneSurfaces();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");

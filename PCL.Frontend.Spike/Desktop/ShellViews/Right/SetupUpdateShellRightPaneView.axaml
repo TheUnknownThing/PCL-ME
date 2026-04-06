@@ -171,69 +171,6 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard
-          Header="其他更新选项 - 升级到 AquaCL"
-          IsVisible="{Binding ShowOptionalUpdateCard}"
-          ShowChevron="True"
-          IsChevronExpanded="False"
-          ContentMargin="20,40,20,20">
-        <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="50,10,*,85" RowDefinitions="29,1,20,8,Auto,10,Auto">
-            <Border
-                Grid.Row="0"
-                Grid.RowSpan="3"
-                Width="50"
-                Height="50"
-                CornerRadius="12"
-                ClipToBounds="True">
-              <Image Source="{Binding UpdateOptionalIcon}" Stretch="UniformToFill" />
-            </Border>
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="2"
-                VerticalAlignment="Bottom"
-                Foreground="#343D4A"
-                FontSize="20"
-                FontWeight="Bold"
-                Text="{Binding OptionalUpdateName}" />
-            <TextBlock
-                Grid.Row="2"
-                Grid.Column="2"
-                VerticalAlignment="Top"
-                Foreground="#677789"
-                FontSize="14"
-                Text="{Binding OptionalUpdateDescription}" />
-            <controls:PclButton
-                Grid.Row="0"
-                Grid.RowSpan="2"
-                Grid.Column="3"
-                Command="{Binding DownloadOptionalUpdateCommand}"
-                ColorType="Highlight"
-                Text="下载并安装" />
-            <TextBlock
-                Grid.Row="4"
-                Grid.ColumnSpan="4"
-                Foreground="#4B5968"
-                FontSize="13"
-                Text="{Binding OptionalUpdateSummary}"
-                TextWrapping="Wrap" />
-            <Button
-                Grid.Row="6"
-                Grid.ColumnSpan="4"
-                Padding="0"
-                HorizontalAlignment="Left"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                BorderThickness="0"
-                Command="{Binding ShowOptionalUpdateDetailCommand}">
-              <TextBlock
-                  Foreground="#1370F3"
-                  FontSize="12.5"
-                  Text="有关此更新的更多信息..." />
-            </Button>
-          </Grid>
-        </controls:PclCard.CardContent>
-      </controls:PclCard>
     </StackPanel>
   </ScrollViewer>
 </UserControl>
