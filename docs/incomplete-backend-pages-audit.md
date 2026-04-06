@@ -49,6 +49,7 @@ Verify steps in numeric order even if engineers implement them concurrently. Tha
 ### Step Progress
 
 - 2026-04-06: `Step 2` completed. `DownloadInstall` and `VersionInstall` now keep the supported install matrix inside the new shell, surface route-local compatibility and recommendation data on the install cards, clear stale loader selections when the Minecraft version changes, and block apply/reset when an existing selection cannot be mapped to a supported install source.
+- 2026-04-06: `Step 4` completed. `DownloadMod`, `DownloadPack`, `DownloadDataPack`, `DownloadResourcePack`, `DownloadShader`, and `DownloadWorld` now compose live community browse results from Modrinth and/or CurseForge-compatible endpoints (using the launcher's existing community-source preference), route row actions to the real project pages, and expose source/tag filtering against backend/community data instead of local instance/save folders. Verification confirmed live results for all six route families via the wired endpoints; full frontend build validation is currently blocked by unrelated in-progress Step 1 compilation errors in `FrontendShellViewModel.StepOneSurfaces.cs`.
 
 ## Confirmed Incomplete Pages
 
