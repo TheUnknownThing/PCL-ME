@@ -14,3 +14,7 @@ Defined primarily in `PCL.Frontend.Spike/Desktop/MainWindow.axaml`
 
 Have not been implemented yet, see image for reference:<br>
 ![Instance Selection](img/instance-selection.png)
+![Instance Selection (Instance Available)](img/instance-selection-available.png)
+
+[ ] Empty minecraft dir should provide a dialog telling user about the current state, see image 1.<br>
+[ ] Filled minecraft dir should provide a list of instances, see image 2.<br>
