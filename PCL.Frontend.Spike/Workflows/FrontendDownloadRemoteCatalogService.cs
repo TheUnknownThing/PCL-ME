@@ -452,7 +452,7 @@ internal static class FrontendDownloadRemoteCatalogService
 
             var version = latest["version"]?.GetValue<string>() ?? property.Key;
             var isPreview = string.Equals(latest["stream"]?.GetValue<string>(), "SNAPSHOT", StringComparison.OrdinalIgnoreCase);
-            var timestamp = latest["timestamp"]?.GetValue<long>() ?? 0;
+            var timestamp = ReadInt64(latest["timestamp"]);
             entries.Add(new LiteLoaderCatalogEntry(
                 property.Key,
                 version,
@@ -529,7 +529,7 @@ internal static class FrontendDownloadRemoteCatalogService
             .Select(node => node as JsonObject)
             .Any(node => string.Equals(node?["version"]?.GetValue<string>(), preferredMinecraftVersion, StringComparison.OrdinalIgnoreCase))
             == true;
-        var releaseTime = manifest["releaseTime"]?.GetValue<long>() ?? 0;
+        var releaseTime = ReadInt64(manifest["releaseTime"]);
 
         return new FrontendDownloadCatalogEntry(
             $"{version} {channelLabel}",
@@ -1180,6 +1180,35 @@ internal static class FrontendDownloadRemoteCatalogService
         }
 
         return DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).LocalDateTime.ToString("yyyy/MM/dd HH:mm");
+    }
+
+    private static long ReadInt64(JsonNode? node)
+    {
+        if (node is null)
+        {
+            return 0;
+        }
+
+        if (node is JsonValue value)
+        {
+            if (value.TryGetValue<long>(out var longValue))
+            {
+                return longValue;
+            }
+
+            if (value.TryGetValue<int>(out var intValue))
+            {
+                return intValue;
+            }
+
+            if (value.TryGetValue<string>(out var stringValue)
+                && long.TryParse(stringValue, out var parsedValue))
+            {
+                return parsedValue;
+            }
+        }
+
+        return 0;
     }
 
     private static string GetRouteTitle(LauncherFrontendSubpageKey route)
