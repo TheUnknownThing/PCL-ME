@@ -501,135 +501,155 @@
                 </StackPanel>
               </Border>
 
-              <Border
-                  Padding="12,10"
-                  Background="#FFF8DD"
-                  BorderBrush="#F2D777"
-                  BorderThickness="1"
-                  CornerRadius="4"
-                  IsVisible="{Binding ShowCommunityProjectWarning}">
-                <TextBlock
-                    Foreground="#6E5800"
-                    FontSize="12.5"
-                    Text="{Binding CommunityProjectWarningText}"
-                    TextWrapping="Wrap" />
-              </Border>
-
-              <controls:PclCard IsVisible="{Binding ShowCommunityProjectFilterCard}" ContentMargin="14,14,14,14">
+              <controls:PclCard
+                  Margin="0,0,0,8"
+                  ContentMargin="20,20,20,17"
+                  HorizontalAlignment="Center"
+                  IsVisible="{Binding ShowCommunityProjectLoadingCard}"
+                  VerticalAlignment="Center">
                 <controls:PclCard.CardContent>
-                  <StackPanel Spacing="10">
-                    <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCommunityProjectVersionFilters}">
-                      <TextBlock
-                          Margin="4,6,10,0"
-                          Foreground="#343D4A"
-                          FontSize="13"
-                          Text="实例筛选：" />
-                      <ItemsControl Grid.Column="1" ItemsSource="{Binding CommunityProjectVersionFilterButtons}">
-                        <ItemsControl.ItemsPanel>
-                          <ItemsPanelTemplate>
-                            <WrapPanel />
-                          </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <controls:PclButton
-                                Margin="0,0,8,8"
-                                MinWidth="72"
-                                Command="{Binding Command}"
-                                ColorType="{Binding ColorType}"
-                                ContentPadding="10,4"
-                                Text="{Binding Text}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </Grid>
-
-                    <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCommunityProjectLoaderFilters}">
-                      <TextBlock
-                          Margin="4,6,10,0"
-                          Foreground="#343D4A"
-                          FontSize="13"
-                          Text="模组加载器筛选：" />
-                      <ItemsControl Grid.Column="1" ItemsSource="{Binding CommunityProjectLoaderFilterButtons}">
-                        <ItemsControl.ItemsPanel>
-                          <ItemsPanelTemplate>
-                            <WrapPanel />
-                          </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <controls:PclButton
-                                Margin="0,0,8,8"
-                                MinWidth="72"
-                                Command="{Binding Command}"
-                                ColorType="{Binding ColorType}"
-                                ContentPadding="10,4"
-                                Text="{Binding Text}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </Grid>
+                  <StackPanel HorizontalAlignment="Center" Spacing="10">
+                    <ProgressBar Width="180" Height="4" IsIndeterminate="True" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        Foreground="#4B5968"
+                        FontSize="13"
+                        Text="{Binding CommunityProjectLoadingText}" />
                   </StackPanel>
                 </controls:PclCard.CardContent>
               </controls:PclCard>
 
-              <ItemsControl ItemsSource="{Binding CommunityProjectReleaseGroups}" IsVisible="{Binding HasCommunityProjectReleaseGroups}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <controls:PclCard Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="{Binding IsExpanded}" ContentMargin="14,38,14,14">
-                      <controls:PclCard.CardContent>
-                        <ItemsControl ItemsSource="{Binding Items}">
-                          <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                              <controls:PclActionSummaryRow
-                                  ActionText="{Binding ActionText}"
-                                  Command="{Binding Command}"
-                                  Info="{Binding Info}"
-                                  Meta="{Binding Meta}"
-                                  ShowMeta="{Binding HasMeta}"
-                                  Title="{Binding Title}" />
-                            </DataTemplate>
-                          </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                      </controls:PclCard.CardContent>
-                    </controls:PclCard>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-
-              <controls:PclCard Header="还没有可展示的版本" IsVisible="{Binding HasNoCommunityProjectReleaseGroups}" ContentMargin="20,18,20,18">
-                <controls:PclCard.CardContent>
+              <StackPanel IsVisible="{Binding ShowCommunityProjectContent}" Spacing="14">
+                <Border
+                    Padding="12,10"
+                    Background="#FFF8DD"
+                    BorderBrush="#F2D777"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    IsVisible="{Binding ShowCommunityProjectWarning}">
                   <TextBlock
-                      Foreground="#4B5968"
-                      FontSize="13"
-                      Text="该工程暂时没有返回可展示的版本文件信息。"
+                      Foreground="#6E5800"
+                      FontSize="12.5"
+                      Text="{Binding CommunityProjectWarningText}"
                       TextWrapping="Wrap" />
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
+                </Border>
 
-              <ItemsControl ItemsSource="{Binding CommunityProjectSections}" IsVisible="{Binding HasCommunityProjectSections}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <controls:PclCard Header="{Binding Title}" ContentMargin="18,18,18,16">
-                      <controls:PclCard.CardContent>
-                        <ItemsControl ItemsSource="{Binding Items}">
+                <controls:PclCard IsVisible="{Binding ShowCommunityProjectFilterCard}" ContentMargin="14,14,14,14">
+                  <controls:PclCard.CardContent>
+                    <StackPanel Spacing="10">
+                      <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCommunityProjectVersionFilters}">
+                        <TextBlock
+                            Margin="4,6,10,0"
+                            Foreground="#343D4A"
+                            FontSize="13"
+                            Text="实例筛选：" />
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding CommunityProjectVersionFilterButtons}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <WrapPanel />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
                           <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                              <controls:PclActionSummaryRow
-                                  ActionText="{Binding ActionText}"
+                              <controls:PclButton
+                                  Margin="0,0,8,8"
+                                  MinWidth="72"
                                   Command="{Binding Command}"
-                                  Info="{Binding Info}"
-                                  Meta="{Binding Meta}"
-                                  ShowMeta="{Binding HasMeta}"
-                                  Title="{Binding Title}" />
+                                  ColorType="{Binding ColorType}"
+                                  ContentPadding="10,4"
+                                  Text="{Binding Text}" />
                             </DataTemplate>
                           </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                      </controls:PclCard.CardContent>
-                    </controls:PclCard>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+                      </Grid>
+
+                      <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCommunityProjectLoaderFilters}">
+                        <TextBlock
+                            Margin="4,6,10,0"
+                            Foreground="#343D4A"
+                            FontSize="13"
+                            Text="模组加载器筛选：" />
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding CommunityProjectLoaderFilterButtons}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <WrapPanel />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <controls:PclButton
+                                  Margin="0,0,8,8"
+                                  MinWidth="72"
+                                  Command="{Binding Command}"
+                                  ColorType="{Binding ColorType}"
+                                  ContentPadding="10,4"
+                                  Text="{Binding Text}" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </Grid>
+                    </StackPanel>
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
+
+                <ItemsControl ItemsSource="{Binding CommunityProjectReleaseGroups}" IsVisible="{Binding HasCommunityProjectReleaseGroups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclCard Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="{Binding IsExpanded}" ContentMargin="14,38,14,14">
+                        <controls:PclCard.CardContent>
+                          <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <controls:PclActionSummaryRow
+                                    ActionText="{Binding ActionText}"
+                                    Command="{Binding Command}"
+                                    Info="{Binding Info}"
+                                    Meta="{Binding Meta}"
+                                    ShowMeta="{Binding HasMeta}"
+                                    Title="{Binding Title}" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </controls:PclCard.CardContent>
+                      </controls:PclCard>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <controls:PclCard Header="还没有可展示的版本" IsVisible="{Binding HasNoCommunityProjectReleaseGroups}" ContentMargin="20,18,20,18">
+                  <controls:PclCard.CardContent>
+                    <TextBlock
+                        Foreground="#4B5968"
+                        FontSize="13"
+                        Text="该工程暂时没有返回可展示的版本文件信息。"
+                        TextWrapping="Wrap" />
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
+
+                <ItemsControl ItemsSource="{Binding CommunityProjectSections}" IsVisible="{Binding HasCommunityProjectSections}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclCard Header="{Binding Title}" ContentMargin="18,18,18,16">
+                        <controls:PclCard.CardContent>
+                          <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <controls:PclActionSummaryRow
+                                    ActionText="{Binding ActionText}"
+                                    Command="{Binding Command}"
+                                    Info="{Binding Info}"
+                                    Meta="{Binding Meta}"
+                                    ShowMeta="{Binding HasMeta}"
+                                    Title="{Binding Title}" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </controls:PclCard.CardContent>
+                      </controls:PclCard>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
             </StackPanel>
           </controls:PclCard.CardContent>
         </controls:PclCard>

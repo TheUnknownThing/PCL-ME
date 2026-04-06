@@ -220,6 +220,10 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoDownloadResourceEntries => !HasDownloadResourceEntries;
 
+    public bool ShowDownloadResourceLoadingCard => _isDownloadResourceLoading;
+
+    public bool ShowDownloadResourceContent => !_isDownloadResourceLoading;
+
     public bool ShowDownloadResourcePagination => _downloadResourceTotalPages > 1;
 
     public string DownloadResourcePageLabel => _downloadResourceTotalPages <= 0
@@ -257,6 +261,7 @@ internal sealed partial class FrontendShellViewModel
         ];
         _allDownloadResourceEntries = [];
         ReplaceItems(DownloadResourceEntries, []);
+        SetDownloadResourceLoading(false);
 
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
@@ -266,49 +271,40 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
             RaisePropertyChanged(nameof(HasDownloadResourceEntries));
             RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
+            RaisePropertyChanged(nameof(ShowDownloadResourceLoadingCard));
+            RaisePropertyChanged(nameof(ShowDownloadResourceContent));
             RaisePropertyChanged(nameof(DownloadResourcePageLabel));
             RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
             NotifyDownloadResourcePageCommandState();
             return;
         }
 
-        EnsureDownloadCompositionRemoteStateLoaded();
-        if (_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var runtimeState))
-        {
-            DownloadResourceSurfaceTitle = runtimeState.SurfaceTitle;
-            DownloadResourceLoadingText = "正在从社区目录获取结果...";
-            DownloadResourceEmptyStateText = $"没有找到符合条件的{runtimeState.SurfaceTitle.Replace(" 列表", string.Empty)}条目。";
-            DownloadResourceHintText = runtimeState.HintText;
-            ShowDownloadResourceInstallModPackAction = runtimeState.ShowInstallModPackAction;
-            ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(runtimeState.HintText);
-            _downloadResourceSupportsModrinth = runtimeState.SupportsSecondarySource;
-            _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(runtimeState);
-            _downloadResourceTagOptions = MergeFilterOptions(
-                BuildFallbackDownloadResourceTagOptions(),
-                runtimeState.TagOptions.Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue)));
-            _downloadResourceLoaderOptions = runtimeState.UseShaderLoaderOptions
-                ? [
-                    new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
-                    new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine"),
-                    new DownloadResourceFilterOptionViewModel("Iris", "Iris")
-                ]
-                : [
-                    new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-                    new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
-                    new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
-                    new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
-                    new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
-                ];
-            _allDownloadResourceEntries = CreateDownloadResourceEntries(runtimeState.Entries);
-            ResetDownloadResourceFilterState();
-            RaiseDownloadResourceFilterState();
-            ApplyDownloadResourceFilters(resetPage: true);
-            ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
-            return;
-        }
-
+        var (surfaceTitle, showInstallModPackAction, useShaderLoaderOptions) = GetDownloadResourceSurfaceDescriptor(_currentRoute.Subpage);
+        DownloadResourceSurfaceTitle = $"{surfaceTitle} 列表";
+        DownloadResourceLoadingText = $"正在获取{surfaceTitle}列表";
+        DownloadResourceEmptyStateText = $"没有找到符合条件的{surfaceTitle}条目。";
+        DownloadResourceHintText = string.Empty;
+        ShowDownloadResourceHint = false;
+        ShowDownloadResourceInstallModPackAction = showInstallModPackAction;
+        _downloadResourceSupportsModrinth = true;
+        _downloadResourceSourceOptions =
+        [
+            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+            new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
+            new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
+        ];
+        _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
+        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions();
+        _downloadResourceLoaderOptions = useShaderLoaderOptions
+            ? BuildDefaultShaderLoaderOptions()
+            : BuildDefaultResourceLoaderOptions();
+        _downloadResourceRuntimeStates.Remove(_currentRoute.Subpage);
+        ResetDownloadResourceFilterState();
         RaiseDownloadResourceFilterState();
-        ApplyDownloadResourceFilters(resetPage: true);
+        SetDownloadResourceLoading(true);
+        RaisePropertyChanged(nameof(HasDownloadResourceEntries));
+        RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
+        ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
     }
 
     private void ConfigureDownloadResourceSurface(
@@ -390,7 +386,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (!_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var resourceState))
+        if (!_downloadResourceRuntimeStates.TryGetValue(_currentRoute.Subpage, out var resourceState))
         {
             AddActivity("安装整合包", "当前整合包列表尚未完成运行时组合。");
             return;
@@ -594,7 +590,8 @@ internal sealed partial class FrontendShellViewModel
         var communitySourcePreference = SelectedCommunityDownloadSourceIndex;
         var instanceComposition = _instanceComposition;
 
-        DownloadResourceLoadingText = "正在从社区目录获取结果...";
+        SetDownloadResourceLoading(true);
+        DownloadResourceLoadingText = $"正在获取{DownloadResourceSurfaceTitle.Replace(" 列表", string.Empty)}列表";
         if (resetPage)
         {
             _downloadResourcePageIndex = 0;
@@ -602,6 +599,10 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
             NotifyDownloadResourcePageCommandState();
         }
+
+        ReplaceItems(DownloadResourceEntries, []);
+        RaisePropertyChanged(nameof(HasDownloadResourceEntries));
+        RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
 
         _ = RefreshDownloadResourceResultsAsync(
             route,
@@ -661,9 +662,13 @@ internal sealed partial class FrontendShellViewModel
                     return;
                 }
 
+                _downloadResourceRuntimeStates.Remove(route);
+                _allDownloadResourceEntries = [];
+                ReplaceItems(DownloadResourceEntries, []);
                 DownloadResourceHintText = $"实时社区搜索失败：{ex.Message}";
                 ShowDownloadResourceHint = true;
                 DownloadResourceLoadingText = "请稍后重试，或调整来源筛选。";
+                SetDownloadResourceLoading(false);
                 RaisePropertyChanged(nameof(HasDownloadResourceEntries));
                 RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
             });
@@ -688,6 +693,7 @@ internal sealed partial class FrontendShellViewModel
         var selectedVersion = GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex);
         var selectedLoader = GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex);
 
+        _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         DownloadResourceHintText = result.State.HintText;
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(result.State.HintText);
         DownloadResourceLoadingText = string.IsNullOrWhiteSpace(result.State.HintText)
@@ -712,6 +718,78 @@ internal sealed partial class FrontendShellViewModel
 
         RaiseDownloadResourceFilterState();
         ApplyDownloadResourceFilters(resetPage);
+        SetDownloadResourceLoading(false);
+    }
+
+    private void SetDownloadResourceLoading(bool isLoading)
+    {
+        if (_isDownloadResourceLoading == isLoading)
+        {
+            return;
+        }
+
+        _isDownloadResourceLoading = isLoading;
+        RaisePropertyChanged(nameof(ShowDownloadResourceLoadingCard));
+        RaisePropertyChanged(nameof(ShowDownloadResourceContent));
+    }
+
+    private static (string SurfaceTitle, bool ShowInstallModPackAction, bool UseShaderLoaderOptions) GetDownloadResourceSurfaceDescriptor(
+        LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => ("Mod", false, false),
+            LauncherFrontendSubpageKey.DownloadPack => ("整合包", true, false),
+            LauncherFrontendSubpageKey.DownloadDataPack => ("数据包", false, false),
+            LauncherFrontendSubpageKey.DownloadResourcePack => ("资源包", false, false),
+            LauncherFrontendSubpageKey.DownloadShader => ("光影包", false, true),
+            LauncherFrontendSubpageKey.DownloadWorld => ("世界", false, false),
+            _ => ("资源", false, false)
+        };
+    }
+
+    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultDownloadResourceVersionOptions()
+    {
+        return
+        [
+            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+            new DownloadResourceFilterOptionViewModel("26.1.1", "26.1.1"),
+            new DownloadResourceFilterOptionViewModel("26.1", "26.1"),
+            new DownloadResourceFilterOptionViewModel("1.21.11", "1.21.11"),
+            new DownloadResourceFilterOptionViewModel("1.21.1", "1.21.1"),
+            new DownloadResourceFilterOptionViewModel("1.20.6", "1.20.6"),
+            new DownloadResourceFilterOptionViewModel("1.20.1", "1.20.1"),
+            new DownloadResourceFilterOptionViewModel("1.19.4", "1.19.4"),
+            new DownloadResourceFilterOptionViewModel("1.19.2", "1.19.2"),
+            new DownloadResourceFilterOptionViewModel("1.18.2", "1.18.2"),
+            new DownloadResourceFilterOptionViewModel("1.16.5", "1.16.5"),
+            new DownloadResourceFilterOptionViewModel("1.12.2", "1.12.2"),
+            new DownloadResourceFilterOptionViewModel("1.10.2", "1.10.2"),
+            new DownloadResourceFilterOptionViewModel("1.8.9", "1.8.9"),
+            new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10")
+        ];
+    }
+
+    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions()
+    {
+        return
+        [
+            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+            new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
+            new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
+            new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
+            new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
+        ];
+    }
+
+    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultShaderLoaderOptions()
+    {
+        return
+        [
+            new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
+            new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine"),
+            new DownloadResourceFilterOptionViewModel("Iris", "Iris")
+        ];
     }
 
     private static int FindFilterOptionIndex(IReadOnlyList<DownloadResourceFilterOptionViewModel> options, string value)

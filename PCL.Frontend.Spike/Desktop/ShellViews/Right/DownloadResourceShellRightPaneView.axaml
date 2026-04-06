@@ -173,178 +173,198 @@
             TextWrapping="Wrap" />
       </Border>
 
-      <controls:PclCard ContentMargin="12,12,12,12">
-        <controls:PclCard.CardContent>
-          <StackPanel Spacing="0">
-            <ItemsControl ItemsSource="{Binding DownloadResourceEntries}" IsVisible="{Binding HasDownloadResourceEntries}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Button
-                      Classes="nochrome"
-                      Margin="0,0,0,2"
-                      Padding="0"
-                      Background="Transparent"
-                      BorderBrush="Transparent"
-                      BorderThickness="0"
-                      Command="{Binding Command}">
-                    <Border
-                        Padding="10,7"
-                        Background="#12FFFFFF"
-                        BorderBrush="#1F000000"
-                        BorderThickness="1"
-                        CornerRadius="4">
-                      <Grid ColumnDefinitions="50,10,*,18" MinHeight="64">
-                        <Border
-                            Grid.Column="0"
-                            Width="50"
-                            Height="50"
-                            VerticalAlignment="Center"
-                            Background="#F7FAFE"
-                            BorderBrush="#D5E6FD"
-                            BorderThickness="1"
-                            CornerRadius="6">
-                          <Image
-                              Width="38"
-                              Height="38"
-                              HorizontalAlignment="Center"
+      <StackPanel IsVisible="{Binding ShowDownloadResourceContent}" Spacing="15">
+        <controls:PclCard ContentMargin="12,12,12,12">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="0">
+              <ItemsControl ItemsSource="{Binding DownloadResourceEntries}" IsVisible="{Binding HasDownloadResourceEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Button
+                        Classes="nochrome"
+                        Margin="0,0,0,2"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding Command}">
+                      <Border
+                          Padding="10,7"
+                          Background="#12FFFFFF"
+                          BorderBrush="#1F000000"
+                          BorderThickness="1"
+                          CornerRadius="4">
+                        <Grid ColumnDefinitions="50,10,*,18" MinHeight="64">
+                          <Border
+                              Grid.Column="0"
+                              Width="50"
+                              Height="50"
                               VerticalAlignment="Center"
-                              IsVisible="{Binding HasIcon}"
-                              Source="{Binding Icon}"
-                              Stretch="Uniform" />
-                        </Border>
-
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                          <TextBlock
-                              Foreground="#343D4A"
-                              FontSize="14"
-                              FontWeight="SemiBold"
-                              Text="{Binding Title}"
-                              TextTrimming="CharacterEllipsis" />
-
-                          <Grid ColumnDefinitions="Auto,*">
-                            <ItemsControl Grid.Column="0" IsVisible="{Binding HasVisibleTags}" ItemsSource="{Binding VisibleTags}">
-                              <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                  <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                              </ItemsControl.ItemsPanel>
-                              <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                  <Border
-                                      Margin="0,0,4,0"
-                                      Padding="4,1"
-                                      Background="#13000000"
-                                      CornerRadius="3">
-                                    <TextBlock
-                                        Foreground="#858585"
-                                        FontSize="11"
-                                        Text="{Binding}" />
-                                  </Border>
-                                </DataTemplate>
-                              </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <TextBlock
-                                Grid.Column="1"
-                                Margin="2,0,0,0"
+                              Background="#F7FAFE"
+                              BorderBrush="#D5E6FD"
+                              BorderThickness="1"
+                              CornerRadius="6">
+                            <Image
+                                Width="38"
+                                Height="38"
+                                HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Foreground="#6D7B89"
-                                FontSize="12"
-                                IsVisible="{Binding HasInfo}"
-                                Text="{Binding Info}"
-                                TextTrimming="CharacterEllipsis" />
-                          </Grid>
+                                IsVisible="{Binding HasIcon}"
+                                Source="{Binding Icon}"
+                                Stretch="Uniform" />
+                          </Border>
 
-                          <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto">
+                          <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
                             <TextBlock
-                                Grid.Column="0"
-                                Foreground="#7D8A98"
-                                FontSize="11.5"
-                                Text="{Binding VersionLabel}"
+                                Foreground="#343D4A"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Text="{Binding Title}"
                                 TextTrimming="CharacterEllipsis" />
-                            <TextBlock
-                                Grid.Column="2"
-                                Margin="6,0,0,0"
-                                Foreground="#7D8A98"
-                                FontSize="11.5"
-                                Text="{Binding DownloadCountLabel}"
-                                TextTrimming="CharacterEllipsis" />
-                            <TextBlock
-                                Grid.Column="4"
-                                Margin="6,0,0,0"
-                                Foreground="#7D8A98"
-                                FontSize="11.5"
-                                Text="{Binding UpdatedLabel}"
-                                TextTrimming="CharacterEllipsis" />
-                            <TextBlock
-                                Grid.Column="6"
-                                Margin="6,0,0,0"
-                                Foreground="#7D8A98"
-                                FontSize="11.5"
-                                Text="{Binding Source}"
-                                TextTrimming="CharacterEllipsis" />
-                          </Grid>
-                        </StackPanel>
 
-                        <Path
-                            Grid.Column="3"
-                            Width="10"
-                            Height="10"
-                            VerticalAlignment="Center"
-                            Fill="#97A6B5"
-                            Stretch="Uniform"
-                            Data="M6.4,0L4.98,1.4L8.58,5L4.98,8.6L6.4,10L11.4,5L6.4,0Z" />
-                      </Grid>
-                    </Border>
-                  </Button>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                            <Grid ColumnDefinitions="Auto,*">
+                              <ItemsControl Grid.Column="0" IsVisible="{Binding HasVisibleTags}" ItemsSource="{Binding VisibleTags}">
+                                <ItemsControl.ItemsPanel>
+                                  <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                  </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate>
+                                    <Border
+                                        Margin="0,0,4,0"
+                                        Padding="4,1"
+                                        Background="#13000000"
+                                        CornerRadius="3">
+                                      <TextBlock
+                                          Foreground="#858585"
+                                          FontSize="11"
+                                          Text="{Binding}" />
+                                    </Border>
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+                              <TextBlock
+                                  Grid.Column="1"
+                                  Margin="2,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Foreground="#6D7B89"
+                                  FontSize="12"
+                                  IsVisible="{Binding HasInfo}"
+                                  Text="{Binding Info}"
+                                  TextTrimming="CharacterEllipsis" />
+                            </Grid>
 
-            <StackPanel IsVisible="{Binding HasNoDownloadResourceEntries}" Spacing="6">
-              <TextBlock
-                  Foreground="#677789"
-                  FontSize="13"
-                  Text="{Binding DownloadResourceEmptyStateText}"
-                  TextWrapping="Wrap" />
-              <TextBlock
-                  Foreground="#96A2B1"
-                  FontSize="12"
-                  Text="{Binding DownloadResourceLoadingText}"
-                  TextWrapping="Wrap" />
+                            <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto">
+                              <TextBlock
+                                  Grid.Column="0"
+                                  Foreground="#7D8A98"
+                                  FontSize="11.5"
+                                  Text="{Binding VersionLabel}"
+                                  TextTrimming="CharacterEllipsis" />
+                              <TextBlock
+                                  Grid.Column="2"
+                                  Margin="6,0,0,0"
+                                  Foreground="#7D8A98"
+                                  FontSize="11.5"
+                                  Text="{Binding DownloadCountLabel}"
+                                  TextTrimming="CharacterEllipsis" />
+                              <TextBlock
+                                  Grid.Column="4"
+                                  Margin="6,0,0,0"
+                                  Foreground="#7D8A98"
+                                  FontSize="11.5"
+                                  Text="{Binding UpdatedLabel}"
+                                  TextTrimming="CharacterEllipsis" />
+                              <TextBlock
+                                  Grid.Column="6"
+                                  Margin="6,0,0,0"
+                                  Foreground="#7D8A98"
+                                  FontSize="11.5"
+                                  Text="{Binding Source}"
+                                  TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                          </StackPanel>
+
+                          <Path
+                              Grid.Column="3"
+                              Width="10"
+                              Height="10"
+                              VerticalAlignment="Center"
+                              Fill="#97A6B5"
+                              Stretch="Uniform"
+                              Data="M6.4,0L4.98,1.4L8.58,5L4.98,8.6L6.4,10L11.4,5L6.4,0Z" />
+                        </Grid>
+                      </Border>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <StackPanel IsVisible="{Binding HasNoDownloadResourceEntries}" Spacing="6">
+                <TextBlock
+                    Foreground="#677789"
+                    FontSize="13"
+                    Text="{Binding DownloadResourceEmptyStateText}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Foreground="#96A2B1"
+                    FontSize="12"
+                    Text="{Binding DownloadResourceLoadingText}"
+                    TextWrapping="Wrap" />
+              </StackPanel>
             </StackPanel>
-          </StackPanel>
-        </controls:PclCard.CardContent>
-      </controls:PclCard>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
 
-      <controls:PclCard ContentMargin="10,10,10,10" IsVisible="{Binding ShowDownloadResourcePagination}">
+        <controls:PclCard ContentMargin="10,10,10,10" IsVisible="{Binding ShowDownloadResourcePagination}">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+              <controls:PclButton
+                  Grid.Column="0"
+                  Width="72"
+                  Command="{Binding FirstDownloadResourcePageCommand}"
+                  Text="首页" />
+              <controls:PclButton
+                  Grid.Column="1"
+                  Width="72"
+                  Margin="8,0,0,0"
+                  Command="{Binding PreviousDownloadResourcePageCommand}"
+                  Text="上一页" />
+              <TextBlock
+                  Grid.Column="2"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="13.5"
+                  FontWeight="SemiBold"
+                  Text="{Binding DownloadResourcePageLabel}" />
+              <controls:PclButton
+                  Grid.Column="3"
+                  Width="72"
+                  HorizontalAlignment="Right"
+                  Command="{Binding NextDownloadResourcePageCommand}"
+                  Text="下一页" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <controls:PclCard
+          Margin="40,50"
+          ContentMargin="20,20,20,17"
+          HorizontalAlignment="Center"
+          IsVisible="{Binding ShowDownloadResourceLoadingCard}"
+          VerticalAlignment="Center">
         <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="Auto,Auto,*,Auto">
-            <controls:PclButton
-                Grid.Column="0"
-                Width="72"
-                Command="{Binding FirstDownloadResourcePageCommand}"
-                Text="首页" />
-            <controls:PclButton
-                Grid.Column="1"
-                Width="72"
-                Margin="8,0,0,0"
-                Command="{Binding PreviousDownloadResourcePageCommand}"
-                Text="上一页" />
+          <StackPanel HorizontalAlignment="Center" Spacing="10">
+            <ProgressBar Width="180" Height="4" IsIndeterminate="True" />
             <TextBlock
-                Grid.Column="2"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Center"
                 Foreground="#4B5968"
-                FontSize="13.5"
-                FontWeight="SemiBold"
-                Text="{Binding DownloadResourcePageLabel}" />
-            <controls:PclButton
-                Grid.Column="3"
-                Width="72"
-                HorizontalAlignment="Right"
-                Command="{Binding NextDownloadResourcePageCommand}"
-                Text="下一页" />
-          </Grid>
+                FontSize="13"
+                Text="{Binding DownloadResourceLoadingText}" />
+          </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
     </StackPanel>

@@ -190,6 +190,12 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedDownloadFavoriteTargetIndex;
     private string _downloadFavoriteWarningText = string.Empty;
     private bool _showDownloadFavoriteWarning;
+    private bool _isDownloadResourceLoading;
+    private readonly Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> _downloadResourceRuntimeStates = new();
+    private int _communityProjectRefreshVersion;
+    private bool _isCommunityProjectLoading;
+    private string _communityProjectLoadingText = "正在获取版本列表";
+    private string _selectedCommunityProjectTitleHint = string.Empty;
     private int _selectedLaunchIsolationIndex = 1;
     private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
     private string _launchCustomInfo = "PCL";

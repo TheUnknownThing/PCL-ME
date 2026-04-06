@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -90,6 +91,16 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasCommunityProjectActionButtons => CommunityProjectActionButtons.Count > 0;
 
+    public bool ShowCommunityProjectLoadingCard => _isCommunityProjectLoading;
+
+    public bool ShowCommunityProjectContent => !_isCommunityProjectLoading;
+
+    public string CommunityProjectLoadingText
+    {
+        get => _communityProjectLoadingText;
+        private set => SetProperty(ref _communityProjectLoadingText, value);
+    }
+
     public bool ShowCommunityProjectFilterCard => ShowCommunityProjectVersionFilters || ShowCommunityProjectLoaderFilters;
 
     public bool ShowCommunityProjectVersionFilters => CommunityProjectVersionFilterButtons.Count > 2;
@@ -125,25 +136,108 @@ internal sealed partial class FrontendShellViewModel
         string? initialLoaderFilter = null)
     {
         _selectedCommunityProjectId = projectId.Trim();
+        _selectedCommunityProjectTitleHint = projectTitle?.Trim() ?? string.Empty;
         _selectedCommunityProjectVersionFilter = NormalizeMinecraftVersion(initialVersionFilter) ?? initialVersionFilter?.Trim() ?? string.Empty;
         _selectedCommunityProjectLoaderFilter = initialLoaderFilter?.Trim() ?? string.Empty;
-        RefreshCompDetailSurface();
-        NavigateTo(
-            new LauncherFrontendRoute(LauncherFrontendPageKey.CompDetail),
-            string.IsNullOrWhiteSpace(projectTitle)
-                ? "已打开资源工程详情。"
-                : $"已打开 {projectTitle} 的资源详情。");
+        var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
+            ? "已打开资源工程详情。"
+            : $"已打开 {projectTitle} 的资源详情。";
+        if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail)
+        {
+            RefreshShell(activityMessage);
+            return;
+        }
+
+        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.CompDetail), activityMessage);
     }
 
     private void RefreshCompDetailSurface()
     {
-        _communityProjectState = FrontendCommunityProjectService.GetProjectState(
-            _selectedCommunityProjectId,
-            _instanceComposition.Selection.VanillaVersion,
-            _selectedCommunityDownloadSourceIndex);
+        CommunityProjectLoadingText = "正在获取版本列表";
+        if (string.IsNullOrWhiteSpace(_selectedCommunityProjectId))
+        {
+            _communityProjectState = new FrontendCommunityProjectState(
+                string.Empty,
+                "未选择工程",
+                "先从收藏夹或市场条目进入，才能查看对应工程详情。",
+                string.Empty,
+                "未指定来源",
+                string.Empty,
+                "等待选择",
+                "尚未加载",
+                0,
+                0,
+                "未提供兼容信息",
+                "未提供标签信息",
+                [],
+                [],
+                "当前详情页没有携带工程标识。",
+                true);
+            SetCommunityProjectLoading(false);
+            RebuildCommunityProjectSurfaceCollections();
+            RaiseCommunityProjectProperties();
+            return;
+        }
 
-        RebuildCommunityProjectSurfaceCollections();
+        var projectId = _selectedCommunityProjectId;
+        var title = string.IsNullOrWhiteSpace(_selectedCommunityProjectTitleHint)
+            ? $"项目 {projectId}"
+            : _selectedCommunityProjectTitleHint;
+        _communityProjectState = new FrontendCommunityProjectState(
+            projectId,
+            title,
+            title,
+            string.Empty,
+            "正在加载",
+            string.Empty,
+            "正在加载",
+            "尚未加载",
+            0,
+            0,
+            "未提供兼容信息",
+            "未提供标签信息",
+            [],
+            [],
+            string.Empty,
+            false);
+        ReplaceItems(CommunityProjectActionButtons, []);
+        ReplaceItems(CommunityProjectVersionFilterButtons, []);
+        ReplaceItems(CommunityProjectLoaderFilterButtons, []);
+        ReplaceItems(CommunityProjectReleaseGroups, []);
+        ReplaceItems(CommunityProjectSections, []);
+        SetCommunityProjectLoading(true);
         RaiseCommunityProjectProperties();
+
+        var refreshVersion = ++_communityProjectRefreshVersion;
+        var preferredMinecraftVersion = _instanceComposition.Selection.VanillaVersion;
+        var communitySourcePreference = _selectedCommunityDownloadSourceIndex;
+        _ = LoadCommunityProjectStateAsync(projectId, preferredMinecraftVersion, communitySourcePreference, refreshVersion);
+    }
+
+    private async Task LoadCommunityProjectStateAsync(
+        string projectId,
+        string preferredMinecraftVersion,
+        int communitySourcePreference,
+        int refreshVersion)
+    {
+        var state = await Task.Run(() => FrontendCommunityProjectService.GetProjectState(
+            projectId,
+            preferredMinecraftVersion,
+            communitySourcePreference));
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (refreshVersion != _communityProjectRefreshVersion
+                || !string.Equals(projectId, _selectedCommunityProjectId, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _communityProjectState = state;
+            SetCommunityProjectLoading(false);
+            RebuildCommunityProjectSurfaceCollections();
+            RaiseCommunityProjectProperties();
+        });
     }
 
     private void RebuildCommunityProjectSurfaceCollections()
@@ -873,6 +967,21 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoCommunityProjectSections));
         RaisePropertyChanged(nameof(ShowCommunityProjectWarning));
         RaisePropertyChanged(nameof(CommunityProjectWarningText));
+        RaisePropertyChanged(nameof(ShowCommunityProjectLoadingCard));
+        RaisePropertyChanged(nameof(ShowCommunityProjectContent));
+        RaisePropertyChanged(nameof(CommunityProjectLoadingText));
+    }
+
+    private void SetCommunityProjectLoading(bool isLoading)
+    {
+        if (_isCommunityProjectLoading == isLoading)
+        {
+            return;
+        }
+
+        _isCommunityProjectLoading = isLoading;
+        RaisePropertyChanged(nameof(ShowCommunityProjectLoadingCard));
+        RaisePropertyChanged(nameof(ShowCommunityProjectContent));
     }
 
     private void RaiseHomePageMarketProperties()
