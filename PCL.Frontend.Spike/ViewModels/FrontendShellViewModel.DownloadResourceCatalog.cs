@@ -257,6 +257,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        EnsureDownloadCompositionRemoteStateLoaded();
         if (_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var runtimeState))
         {
             DownloadResourceSurfaceTitle = runtimeState.SurfaceTitle;

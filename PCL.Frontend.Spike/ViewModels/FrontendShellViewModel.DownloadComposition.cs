@@ -11,17 +11,31 @@ internal sealed partial class FrontendShellViewModel
         new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
         new FrontendDownloadFavoritesState(["默认收藏夹"], string.Empty, false, []),
         new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
+    private bool _downloadCompositionHasRemoteState;
     private IReadOnlyList<string> _downloadFavoriteTargetOptions = ["默认收藏夹"];
 
-    private void ReloadDownloadComposition()
+    private void ReloadDownloadComposition(bool includeRemoteState = false)
     {
-        _downloadComposition = FrontendDownloadCompositionService.Compose(
-            _shellActionService.RuntimePaths,
-            _instanceComposition,
-            _versionSavesComposition);
+        _downloadComposition = includeRemoteState
+            ? FrontendDownloadCompositionService.Compose(
+                _shellActionService.RuntimePaths,
+                _instanceComposition,
+                _versionSavesComposition)
+            : FrontendDownloadCompositionService.ComposeBootstrap(_instanceComposition);
+        _downloadCompositionHasRemoteState = includeRemoteState;
         _downloadFavoriteTargetOptions = _downloadComposition.Favorites.Targets.Count == 0
             ? ["默认收藏夹"]
             : _downloadComposition.Favorites.Targets;
         _selectedDownloadFavoriteTargetIndex = Math.Clamp(_selectedDownloadFavoriteTargetIndex, 0, _downloadFavoriteTargetOptions.Count - 1);
+    }
+
+    private void EnsureDownloadCompositionRemoteStateLoaded()
+    {
+        if (_downloadCompositionHasRemoteState)
+        {
+            return;
+        }
+
+        ReloadDownloadComposition(includeRemoteState: true);
     }
 }

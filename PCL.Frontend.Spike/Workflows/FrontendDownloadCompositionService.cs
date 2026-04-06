@@ -7,6 +7,16 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendDownloadCompositionService
 {
+    public static FrontendDownloadComposition ComposeBootstrap(
+        FrontendInstanceComposition instanceComposition)
+    {
+        return new FrontendDownloadComposition(
+            BuildInstallState(instanceComposition),
+            new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
+            new FrontendDownloadFavoritesState(["默认收藏夹"], string.Empty, false, []),
+            new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
+    }
+
     public static FrontendDownloadComposition Compose(
         FrontendRuntimePaths runtimePaths,
         FrontendInstanceComposition instanceComposition,

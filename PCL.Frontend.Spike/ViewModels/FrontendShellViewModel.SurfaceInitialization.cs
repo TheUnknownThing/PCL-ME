@@ -182,6 +182,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        EnsureDownloadCompositionRemoteStateLoaded();
         if (_downloadComposition.CatalogStates.TryGetValue(_currentRoute.Subpage, out var state))
         {
             SetDownloadCatalogIntro(
@@ -220,6 +221,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        EnsureDownloadCompositionRemoteStateLoaded();
         ShowDownloadFavoriteWarning = _downloadComposition.Favorites.ShowWarning;
         DownloadFavoriteWarningText = _downloadComposition.Favorites.WarningText;
         var selectedTarget = SelectedDownloadFavoriteTargetIndex >= 0 && SelectedDownloadFavoriteTargetIndex < DownloadFavoriteTargetOptions.Count

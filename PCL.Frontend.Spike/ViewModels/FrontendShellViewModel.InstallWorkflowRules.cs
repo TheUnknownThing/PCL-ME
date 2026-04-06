@@ -43,17 +43,15 @@ internal sealed partial class FrontendShellViewModel
     private InstallOptionPresentation GetInstallOptionPresentation(bool isExistingInstance, string optionTitle)
     {
         var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
-        var selectableChoices = GetSelectableInstallChoices(isExistingInstance, optionTitle, minecraftVersion);
-        if (IsManagedSelectionUnresolved(isExistingInstance, optionTitle, minecraftVersion))
+        if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
         {
-            var canSelect = selectableChoices.Count > 0;
             return new InstallOptionPresentation(
-                BuildInstallOptionUnresolvedDetail(isExistingInstance, optionTitle, minecraftVersion, selectableChoices),
-                canSelect ? "重新选择" : "当前不可用",
-                canSelect);
+                "当前壳层尚未接入这一安装项的自动安装实现。",
+                "当前不可用",
+                false);
         }
 
-        var unavailableReason = GetInstallOptionUnavailableReason(isExistingInstance, optionTitle, minecraftVersion, selectableChoices);
+        var unavailableReason = GetInstallOptionStaticUnavailableReason(isExistingInstance, optionTitle, minecraftVersion);
         if (unavailableReason is not null)
         {
             return new InstallOptionPresentation(
@@ -63,8 +61,8 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return new InstallOptionPresentation(
-            BuildInstallOptionAvailableDetail(isExistingInstance, optionTitle, minecraftVersion, selectableChoices),
-            ResolveInstallOptionSelectText(isExistingInstance, optionTitle, minecraftVersion, selectableChoices),
+            BuildInstallOptionPreviewDetail(isExistingInstance, optionTitle, minecraftVersion),
+            ResolveInstallOptionPreviewSelectText(isExistingInstance, optionTitle),
             true);
     }
 
@@ -74,12 +72,6 @@ internal sealed partial class FrontendShellViewModel
         if (HasInstallMinecraftVersionChanged(isExistingInstance))
         {
             hints.Add($"当前已切换到 {GetEffectiveMinecraftVersion(isExistingInstance)}，旧版本的加载器组合不会被自动沿用，请重新确认兼容项。");
-        }
-
-        var unresolvedSelections = GetUnresolvedManagedSelections(isExistingInstance);
-        if (unresolvedSelections.Count > 0)
-        {
-            hints.Add($"以下安装项需要重新确认：{string.Join("、", unresolvedSelections)}。当前壳层不会默默回退到旧安装器。");
         }
 
         if (HasInstallSelection(isExistingInstance, "Fabric")
@@ -123,6 +115,29 @@ internal sealed partial class FrontendShellViewModel
         return hints;
     }
 
+    private string BuildInstallOptionPreviewDetail(
+        bool isExistingInstance,
+        string optionTitle,
+        string minecraftVersion)
+    {
+        var selectionText = GetEffectiveSelectionText(isExistingInstance, optionTitle);
+        var parts = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(selectionText)
+            || string.Equals(selectionText, "未安装", StringComparison.Ordinal)
+            || string.Equals(selectionText, "可以添加", StringComparison.Ordinal))
+        {
+            parts.Add($"点击后会加载 {minecraftVersion} 的可用候选。");
+        }
+        else
+        {
+            parts.Add($"当前记录为 {selectionText}。点击后会加载 {minecraftVersion} 的兼容候选。");
+        }
+
+        parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
     private string BuildInstallOptionAvailableDetail(
         bool isExistingInstance,
         string optionTitle,
@@ -154,6 +169,11 @@ internal sealed partial class FrontendShellViewModel
         parts.Add($"当前共有 {selectableChoices.Count} 个可用候选。");
         parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
         return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private string ResolveInstallOptionPreviewSelectText(bool isExistingInstance, string optionTitle)
+    {
+        return HasInstallSelection(isExistingInstance, optionTitle) ? "更换版本" : "选择版本";
     }
 
     private string ResolveInstallOptionSelectText(
@@ -277,17 +297,15 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
     }
 
-    private string? GetInstallOptionUnavailableReason(
+    private string? GetInstallOptionStaticUnavailableReason(
         bool isExistingInstance,
         string optionTitle,
-        string minecraftVersion,
-        IReadOnlyList<FrontendInstallChoice> selectableChoices)
+        string minecraftVersion)
     {
         var currentPrimary = GetCurrentPrimaryInstallTitle(isExistingInstance);
         var currentApi = GetCurrentApiInstallTitle(isExistingInstance);
         var hasOptiFine = HasInstallSelection(isExistingInstance, "OptiFine");
         var hasForge = HasInstallSelection(isExistingInstance, "Forge");
-        var hasNeoForge = HasInstallSelection(isExistingInstance, "NeoForge");
         var hasCleanroom = HasInstallSelection(isExistingInstance, "Cleanroom");
         var hasFabric = HasInstallSelection(isExistingInstance, "Fabric");
         var hasLegacyFabric = HasInstallSelection(isExistingInstance, "Legacy Fabric");
@@ -295,29 +313,73 @@ internal sealed partial class FrontendShellViewModel
         var hasLabyMod = HasInstallSelection(isExistingInstance, "LabyMod");
         var hasLiteLoader = HasInstallSelection(isExistingInstance, "LiteLoader");
 
+        return optionTitle switch
+        {
+            "OptiFine" when currentPrimary is "NeoForge" or "Quilt" or "LabyMod" => $"与 {currentPrimary} 不兼容",
+            "OptiFine" when hasCleanroom => "与 Cleanroom 不兼容",
+            "OptiFine" when hasForge && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3") => "与 Forge 不兼容",
+            "OptiFine" when hasFabric && IsVersionGreaterThan(minecraftVersion, "1.20.4") => "与 Fabric 不兼容",
+
+            "Forge" when IsVersionAtLeast("1.5.1", minecraftVersion) && IsVersionAtLeast(minecraftVersion, "1.1") => "无可用版本",
+            "Forge" when currentPrimary is not null && !string.Equals(currentPrimary, "Forge", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+            "Forge" when hasOptiFine && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3") => "与 OptiFine 不兼容",
+
+            "NeoForge" when hasOptiFine => "与 OptiFine 不兼容",
+            "NeoForge" when currentPrimary is not null && !string.Equals(currentPrimary, "NeoForge", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+
+            "Cleanroom" when !minecraftVersion.StartsWith("1.", StringComparison.Ordinal) => "没有可用版本",
+            "Cleanroom" when hasOptiFine => "与 OptiFine 不兼容",
+            "Cleanroom" when currentPrimary is not null && !string.Equals(currentPrimary, "Cleanroom", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+
+            "Fabric" when hasOptiFine && IsVersionGreaterThan(minecraftVersion, "1.20.4") => "与 OptiFine 不兼容",
+            "Fabric" when currentPrimary is not null && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+
+            "Legacy Fabric" when hasLiteLoader => "与 LiteLoader 不兼容",
+            "Legacy Fabric" when currentPrimary is not null && !string.Equals(currentPrimary, "Legacy Fabric", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+
+            "Quilt" when hasOptiFine => "与 OptiFine 不兼容",
+            "Quilt" when currentPrimary is not null
+                            && !string.Equals(currentPrimary, "Quilt", StringComparison.Ordinal)
+                            && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+
+            "LabyMod" when hasOptiFine => "与 OptiFine 不兼容",
+            "LabyMod" when currentPrimary is not null && !string.Equals(currentPrimary, "LabyMod", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+
+            "Fabric API" when currentApi is not null && !string.Equals(currentApi, "Fabric API", StringComparison.Ordinal) => $"与 {currentApi} 不兼容",
+            "Fabric API" when !hasFabric && !hasQuilt => "需要安装 Fabric",
+
+            "Legacy Fabric API" when currentApi is not null && !string.Equals(currentApi, "Legacy Fabric API", StringComparison.Ordinal) => $"与 {currentApi} 不兼容",
+            "Legacy Fabric API" when !hasLegacyFabric => "需要安装 LegacyFabric",
+
+            "QFAPI / QSL" when currentApi is not null && !string.Equals(currentApi, "QFAPI / QSL", StringComparison.Ordinal) => $"与 {currentApi} 不兼容",
+            "QFAPI / QSL" when !hasQuilt => "需要安装 Quilt",
+
+            "OptiFabric" when IsOptiFabricOriginsOnlyVersion(minecraftVersion) => "不兼容老版本 Fabric，请手动下载 OptiFabric Origins",
+            "OptiFabric" when !hasFabric && !hasOptiFine => "需要安装 OptiFine 与 Fabric",
+            "OptiFabric" when !hasFabric => "需要安装 Fabric",
+            "OptiFabric" when !hasOptiFine => "需要安装 OptiFine",
+            _ => null
+        };
+    }
+
+    private string? GetInstallOptionUnavailableReason(
+        bool isExistingInstance,
+        string optionTitle,
+        string minecraftVersion,
+        IReadOnlyList<FrontendInstallChoice> selectableChoices)
+    {
+        var staticUnavailableReason = GetInstallOptionStaticUnavailableReason(isExistingInstance, optionTitle, minecraftVersion);
+        if (staticUnavailableReason is not null)
+        {
+            return staticUnavailableReason;
+        }
+
+        var hasOptiFine = HasInstallSelection(isExistingInstance, "OptiFine");
+        var hasForge = HasInstallSelection(isExistingInstance, "Forge");
+
         switch (optionTitle)
         {
             case "OptiFine":
-                if (currentPrimary is "NeoForge" or "Quilt" or "LabyMod")
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                if (hasCleanroom)
-                {
-                    return "与 Cleanroom 不兼容";
-                }
-
-                if (hasForge && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3"))
-                {
-                    return "与 Forge 不兼容";
-                }
-
-                if (hasFabric && IsVersionGreaterThan(minecraftVersion, "1.20.4"))
-                {
-                    return "与 Fabric 不兼容";
-                }
-
                 if (selectableChoices.Count == 0 && hasForge)
                 {
                     return "仅兼容特定版本的 Forge";
@@ -329,174 +391,12 @@ internal sealed partial class FrontendShellViewModel
                 return selectableChoices.Count == 0 ? "无可用版本" : null;
 
             case "Forge":
-                if (IsVersionAtLeast("1.5.1", minecraftVersion) && IsVersionAtLeast(minecraftVersion, "1.1"))
-                {
-                    return "无可用版本";
-                }
-
-                if (currentPrimary is not null && !string.Equals(currentPrimary, "Forge", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                if (hasOptiFine && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3"))
-                {
-                    return "与 OptiFine 不兼容";
-                }
-
                 return selectableChoices.Count == 0
                     ? hasOptiFine ? "与 OptiFine 不兼容" : "无可用版本"
                     : null;
 
-            case "NeoForge":
-                if (hasOptiFine)
-                {
-                    return "与 OptiFine 不兼容";
-                }
-
-                if (currentPrimary is not null && !string.Equals(currentPrimary, "NeoForge", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "Cleanroom":
-                if (!minecraftVersion.StartsWith("1.", StringComparison.Ordinal))
-                {
-                    return "没有可用版本";
-                }
-
-                if (hasOptiFine)
-                {
-                    return "与 OptiFine 不兼容";
-                }
-
-                if (currentPrimary is not null && !string.Equals(currentPrimary, "Cleanroom", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "Fabric":
-                if (hasOptiFine && IsVersionGreaterThan(minecraftVersion, "1.20.4"))
-                {
-                    return "与 OptiFine 不兼容";
-                }
-
-                if (currentPrimary is not null && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "Legacy Fabric":
-                if (hasLiteLoader)
-                {
-                    return "与 LiteLoader 不兼容";
-                }
-
-                if (currentPrimary is not null && !string.Equals(currentPrimary, "Legacy Fabric", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "Quilt":
-                if (hasOptiFine)
-                {
-                    return "与 OptiFine 不兼容";
-                }
-
-                if (currentPrimary is not null
-                    && !string.Equals(currentPrimary, "Quilt", StringComparison.Ordinal)
-                    && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "LabyMod":
-                if (hasOptiFine)
-                {
-                    return "与 OptiFine 不兼容";
-                }
-
-                if (currentPrimary is not null && !string.Equals(currentPrimary, "LabyMod", StringComparison.Ordinal))
-                {
-                    return $"与 {currentPrimary} 不兼容";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "Fabric API":
-                if (currentApi is not null && !string.Equals(currentApi, "Fabric API", StringComparison.Ordinal))
-                {
-                    return $"与 {currentApi} 不兼容";
-                }
-
-                if (!hasFabric && !hasQuilt)
-                {
-                    return "需要安装 Fabric";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "Legacy Fabric API":
-                if (currentApi is not null && !string.Equals(currentApi, "Legacy Fabric API", StringComparison.Ordinal))
-                {
-                    return $"与 {currentApi} 不兼容";
-                }
-
-                if (!hasLegacyFabric)
-                {
-                    return "需要安装 LegacyFabric";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
-            case "QFAPI / QSL":
-                if (currentApi is not null && !string.Equals(currentApi, "QFAPI / QSL", StringComparison.Ordinal))
-                {
-                    return $"与 {currentApi} 不兼容";
-                }
-
-                if (!hasQuilt)
-                {
-                    return "需要安装 Quilt";
-                }
-
-                return selectableChoices.Count == 0 ? "没有可用版本" : null;
-
-            case "OptiFabric":
-                if (IsOptiFabricOriginsOnlyVersion(minecraftVersion))
-                {
-                    return "不兼容老版本 Fabric，请手动下载 OptiFabric Origins";
-                }
-
-                if (!hasFabric && !hasOptiFine)
-                {
-                    return "需要安装 OptiFine 与 Fabric";
-                }
-
-                if (!hasFabric)
-                {
-                    return "需要安装 Fabric";
-                }
-
-                if (!hasOptiFine)
-                {
-                    return "需要安装 OptiFine";
-                }
-
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
-
             default:
-                return null;
+                return selectableChoices.Count == 0 ? "无可用版本" : null;
         }
     }
 

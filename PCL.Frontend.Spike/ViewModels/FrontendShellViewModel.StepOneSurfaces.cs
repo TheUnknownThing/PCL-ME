@@ -147,7 +147,6 @@ internal sealed partial class FrontendShellViewModel
     {
         TaskCenter.Tasks.CollectionChanged += OnTaskCenterCollectionChanged;
         SyncTaskSubscriptions();
-        RefreshDedicatedGenericRouteSurface();
     }
 
     private void RefreshDedicatedGenericRouteSurface()

@@ -167,6 +167,13 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", "", StringComparison.Ordinal);
+            var staticUnavailableReason = GetInstallOptionStaticUnavailableReason(isExistingInstance, optionTitle, minecraftVersion);
+            if (staticUnavailableReason is not null)
+            {
+                AddActivity($"选择安装项: {optionTitle}", staticUnavailableReason);
+                return;
+            }
+
             var choices = GetSelectableInstallChoices(isExistingInstance, optionTitle, minecraftVersion);
             var unavailableReason = GetInstallOptionUnavailableReason(isExistingInstance, optionTitle, minecraftVersion, choices);
             if (unavailableReason is not null)

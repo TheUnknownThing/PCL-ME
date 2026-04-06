@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -86,80 +85,76 @@ public class LifecycleScopeGenerator : IIncrementalGenerator
                 });
             }
         ).Where(static i => i != null).Select(static (i, _) => i.GetValueOrDefault());
-        var collected = candidates.Collect();
-        context.RegisterSourceOutput(collected, _CollectSources);
+        context.RegisterSourceOutput(candidates, static (spc, candidate) => _CollectSource(spc, candidate.Item1, candidate.Item2));
     }
 
-    private static void _CollectSources(SourceProductionContext spc, ImmutableArray<(INamedTypeSymbol TypeSymbol, ScopeModel Model)> models)
+    private static void _CollectSource(SourceProductionContext spc, INamedTypeSymbol symbol, ScopeModel model)
     {
-        foreach (var (symbol, model) in models)
+        model.Methods.Clear();
+        foreach (var member in symbol.GetMembers())
         {
-            model.Methods.Clear();
-            foreach (var member in symbol.GetMembers())
+            if (member is not IMethodSymbol method) continue;
+            var attrTypeName = string.Empty;
+            var attr = method.GetAttributes().FirstOrDefault(data =>
             {
-                if (member is not IMethodSymbol method) continue;
-                var attrTypeName = string.Empty;
-                var attr = method.GetAttributes().FirstOrDefault(data =>
+                attrTypeName = data.AttributeClass?.GetSimplifiedTypeName();
+                return attrTypeName != null && _MethodAttributeTypes.Contains(attrTypeName);
+            });
+            if (attr == null) continue;
+            var methodName = method.Name;
+            var awaitable = method.ReturnType.GetSimplifiedTypeName() == "System.Threading.Tasks.Task";
+            ScopeMethodModel? methodModel = attrTypeName switch
+            {
+                StartMethodAttributeType => new StartMethodModel { MethodName = methodName, Awaitable = awaitable },
+                StopMethodAttributeType => new StopMethodModel { MethodName = methodName, Awaitable = awaitable },
+                CommandHandlerMethodAttributeType => GetCommandHandlerMethodModel(),
+                DependencyInjectionMethodAttributeType => GetDependencyInjectionMethodModel(),
+                _ => null
+            };
+            if (methodModel != null) model.Methods.Add(methodModel);
+            continue;
+            CommandHandlerMethodModel? GetCommandHandlerMethodModel()
+            {
+                if (awaitable) return null;
+                var command = attr.ConstructorArguments[0].Value!.ToString();
+                var paraArray = method.Parameters;
+                var skip = 0;
+                var hasCommandModelArg = paraArray.Length > 0
+                    && paraArray[0].Type.GetSimplifiedTypeName() == "PCL.Core.App.Cli.CommandLine";
+                if (hasCommandModelArg) skip++;
+                var hasIsCallbackArgIndex = hasCommandModelArg ? 1 : 0;
+                var hasIsCallbackArg = paraArray.Length > hasIsCallbackArgIndex
+                    && paraArray[hasIsCallbackArgIndex].Type.SpecialType == SpecialType.System_Boolean
+                    && paraArray[hasIsCallbackArgIndex].Name == "isCallback";
+                if (hasIsCallbackArg) skip++;
+                var splitArgs = (
+                    from para in paraArray.Skip(skip)
+                    let name = para.Name
+                    let typeName = para.Type.GetFullyQualifiedName()
+                    let hasDefaultValue = para.HasExplicitDefaultValue
+                    select (name, typeName, hasDefaultValue, hasDefaultValue ? para.ExplicitDefaultValue : null)
+                ).ToArray();
+                return new CommandHandlerMethodModel(command, hasCommandModelArg, hasIsCallbackArg, splitArgs)
                 {
-                    attrTypeName = data.AttributeClass?.GetSimplifiedTypeName();
-                    return attrTypeName != null && _MethodAttributeTypes.Contains(attrTypeName);
-                });
-                if (attr == null) continue;
-                var methodName = method.Name;
-                var awaitable = method.ReturnType.GetSimplifiedTypeName() == "System.Threading.Tasks.Task";
-                ScopeMethodModel? methodModel = attrTypeName switch
-                {
-                    StartMethodAttributeType => new StartMethodModel { MethodName = methodName, Awaitable = awaitable },
-                    StopMethodAttributeType => new StopMethodModel { MethodName = methodName, Awaitable = awaitable },
-                    CommandHandlerMethodAttributeType => GetCommandHandlerMethodModel(),
-                    DependencyInjectionMethodAttributeType => GetDependencyInjectionMethodModel(),
-                    _ => null
+                    MethodName = methodName,
+                    Awaitable = false
                 };
-                if (methodModel != null) model.Methods.Add(methodModel);
-                continue;
-                CommandHandlerMethodModel? GetCommandHandlerMethodModel()
-                {
-                    if (awaitable) return null;
-                    var command = attr.ConstructorArguments[0].Value!.ToString();
-                    var paraArray = method.Parameters;
-                    var skip = 0;
-                    var hasCommandModelArg = paraArray.Length > 0
-                        && paraArray[0].Type.GetSimplifiedTypeName() == "PCL.Core.App.Cli.CommandLine";
-                    if (hasCommandModelArg) skip++;
-                    var hasIsCallbackArgIndex = hasCommandModelArg ? 1 : 0;
-                    var hasIsCallbackArg = paraArray.Length > hasIsCallbackArgIndex
-                        && paraArray[hasIsCallbackArgIndex].Type.SpecialType == SpecialType.System_Boolean
-                        && paraArray[hasIsCallbackArgIndex].Name == "isCallback";
-                    if (hasIsCallbackArg) skip++;
-                    var splitArgs = (
-                        from para in paraArray.Skip(skip)
-                        let name = para.Name
-                        let typeName = para.Type.GetFullyQualifiedName()
-                        let hasDefaultValue = para.HasExplicitDefaultValue
-                        select (name, typeName, hasDefaultValue, hasDefaultValue ? para.ExplicitDefaultValue : null)
-                    ).ToArray();
-                    return new CommandHandlerMethodModel(command, hasCommandModelArg, hasIsCallbackArg, splitArgs)
-                    {
-                        MethodName = methodName,
-                        Awaitable = false
-                    };
-                }
-                DependencyInjectionMethodModel? GetDependencyInjectionMethodModel()
-                {
-                    var args = attr.ConstructorArguments;
-                    var identifier = args[0].Value!.ToString();
-                    var targets = (int)args[1].Value!;
-                    if (method.Parameters.FirstOrDefault() is not { } param) return null;
-                    var paramType = param.Type.GetFullyQualifiedName();
-                    return new DependencyInjectionMethodModel(identifier, targets, paramType)
-                    {
-                        MethodName = methodName,
-                        Awaitable = awaitable
-                    };
-                }
             }
-            spc.AddSource($"{model.QualifiedTypeName}.g.cs", _GenerateScopeSource(model));
+            DependencyInjectionMethodModel? GetDependencyInjectionMethodModel()
+            {
+                var args = attr.ConstructorArguments;
+                var identifier = args[0].Value!.ToString();
+                var targets = (int)args[1].Value!;
+                if (method.Parameters.FirstOrDefault() is not { } param) return null;
+                var paramType = param.Type.GetFullyQualifiedName();
+                return new DependencyInjectionMethodModel(identifier, targets, paramType)
+                {
+                    MethodName = methodName,
+                    Awaitable = awaitable
+                };
+            }
         }
+        spc.AddSource($"{model.QualifiedTypeName}.g.cs", _GenerateScopeSource(model));
     }
 
     private static readonly HashSet<Type> _TypesIncludingInStartMethod = [

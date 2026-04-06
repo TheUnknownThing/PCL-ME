@@ -84,23 +84,30 @@ internal static class FrontendInstallWorkflowService
         string optionTitle,
         string minecraftVersion)
     {
-        return optionTitle switch
+        try
         {
-            "Forge" => GetForgeChoices(minecraftVersion),
-            "NeoForge" => GetNeoForgeChoices(minecraftVersion),
-            "Cleanroom" => GetCleanroomChoices(minecraftVersion),
-            "Fabric" => GetFabricLoaderChoices(minecraftVersion),
-            "Legacy Fabric" => GetLegacyFabricLoaderChoices(minecraftVersion),
-            "Quilt" => GetQuiltLoaderChoices(minecraftVersion),
-            "LabyMod" => GetLabyModChoices(minecraftVersion),
-            "OptiFine" => GetOptiFineChoices(minecraftVersion),
-            "LiteLoader" => GetLiteLoaderChoices(minecraftVersion),
-            "Fabric API" => GetModrinthFileChoices("fabric-api", minecraftVersion, ["fabric"]),
-            "Legacy Fabric API" => GetModrinthFileChoices("9CJED7xi", minecraftVersion, null),
-            "QFAPI / QSL" => GetModrinthFileChoices("qvIfYCYJ", minecraftVersion, ["quilt"], allowVersionFallback: true),
-            "OptiFabric" => GetOptiFabricChoices(minecraftVersion),
-            _ => []
-        };
+            return optionTitle switch
+            {
+                "Forge" => GetForgeChoices(minecraftVersion),
+                "NeoForge" => GetNeoForgeChoices(minecraftVersion),
+                "Cleanroom" => GetCleanroomChoices(minecraftVersion),
+                "Fabric" => GetFabricLoaderChoices(minecraftVersion),
+                "Legacy Fabric" => GetLegacyFabricLoaderChoices(minecraftVersion),
+                "Quilt" => GetQuiltLoaderChoices(minecraftVersion),
+                "LabyMod" => GetLabyModChoices(minecraftVersion),
+                "OptiFine" => GetOptiFineChoices(minecraftVersion),
+                "LiteLoader" => GetLiteLoaderChoices(minecraftVersion),
+                "Fabric API" => GetModrinthFileChoices("fabric-api", minecraftVersion, ["fabric"]),
+                "Legacy Fabric API" => GetModrinthFileChoices("9CJED7xi", minecraftVersion, null),
+                "QFAPI / QSL" => GetModrinthFileChoices("qvIfYCYJ", minecraftVersion, ["quilt"], allowVersionFallback: true),
+                "OptiFabric" => GetOptiFabricChoices(minecraftVersion),
+                _ => []
+            };
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
+        {
+            return [];
+        }
     }
 
     public static bool IsFrontendManagedOption(string optionTitle)
