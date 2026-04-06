@@ -170,6 +170,9 @@ internal sealed partial class FrontendShellViewModel
                     entry.Title,
                     entry.Summary,
                     new ActionCommand(() => AddActivity("查看大厅成员", entry.Title)))));
+
+        InitializeLobbyRuntimeBridge();
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
     }
 
     private void InitializeToolsTestSurface()
