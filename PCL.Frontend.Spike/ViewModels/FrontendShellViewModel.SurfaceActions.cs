@@ -4,7 +4,10 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
+using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft.Java;
+using PCL.Core.Minecraft.Java.Parser;
+using PCL.Core.Minecraft.Java.Runtime;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
@@ -14,6 +17,14 @@ internal sealed partial class FrontendShellViewModel
 {
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
+        if (_currentRoute.Page == LauncherFrontendPageKey.Setup
+            && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLink
+            && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetGameLinkSurface();
+            return;
+        }
+
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             ResetDownloadInstallSurface();
@@ -35,6 +46,12 @@ internal sealed partial class FrontendShellViewModel
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupFeedback) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            _ = RefreshFeedbackSectionsAsync(forceRefresh: true);
             return;
         }
 
@@ -1429,6 +1446,52 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("刷新 Java 列表", "Java 列表已按当前启动器配置重新载入。");
     }
 
+    private async Task RefreshFeedbackSectionsAsync(bool forceRefresh)
+    {
+        if (_isRefreshingFeedback)
+        {
+            return;
+        }
+
+        if (!forceRefresh
+            && _feedbackSnapshot is not null
+            && DateTimeOffset.UtcNow - _lastFeedbackRefreshUtc < TimeSpan.FromMinutes(5))
+        {
+            return;
+        }
+
+        _isRefreshingFeedback = true;
+        try
+        {
+            var snapshot = await FrontendSetupFeedbackService.QueryAsync();
+            _feedbackSnapshot = snapshot;
+            _lastFeedbackRefreshUtc = snapshot.FetchedAtUtc;
+            ApplyFeedbackSnapshot(snapshot);
+            RaisePropertyChanged(nameof(HasFeedbackSections));
+            AddActivity("刷新反馈页", $"已同步 {snapshot.Sections.Sum(section => section.Entries.Count)} 条 GitHub 反馈。");
+        }
+        catch (Exception ex)
+        {
+            if (_feedbackSnapshot is null)
+            {
+                ReplaceItems(FeedbackSections,
+                [
+                    CreateFeedbackSection("加载失败", true,
+                    [
+                        CreateSimpleEntry("无法获取反馈列表", ex.Message)
+                    ])
+                ]);
+                RaisePropertyChanged(nameof(HasFeedbackSections));
+            }
+
+            AddActivity("刷新反馈页失败", ex.Message);
+        }
+        finally
+        {
+            _isRefreshingFeedback = false;
+        }
+    }
+
     private void AddJavaRuntime()
     {
         var javaPath = _shellActionService.GetDefaultJavaDetectionCandidates()
@@ -1471,9 +1534,78 @@ internal sealed partial class FrontendShellViewModel
             tags,
             isEnabled,
             new ActionCommand(() => SelectJavaRuntime(key)),
-            CreateIntentCommand($"打开 Java 文件夹: {title}", folder),
-            CreateIntentCommand($"查看 Java 详情: {title}", $"{title} • {folder} • {string.Join(" / ", tags)}"),
+            new ActionCommand(() => OpenJavaRuntimeFolder(title, folder)),
+            new ActionCommand(() => OpenJavaRuntimeDetail(key, title, folder, tags)),
             new ActionCommand(() => ToggleJavaEnabled(key)));
+    }
+
+    private void OpenJavaRuntimeFolder(string title, string folder)
+    {
+        OpenInstanceTarget($"打开 Java 文件夹: {title}", folder, "当前 Java 目录不存在。");
+    }
+
+    private void OpenJavaRuntimeDetail(string key, string title, string folder, IReadOnlyList<string> tags)
+    {
+        if (string.IsNullOrWhiteSpace(key) || !File.Exists(key))
+        {
+            AddActivity($"查看 Java 详情: {title}", "此 Java 不可用，请刷新列表。");
+            return;
+        }
+
+        var installation = ParseJavaInstallation(key);
+        var detailDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "java-details");
+        Directory.CreateDirectory(detailDirectory);
+        var detailPath = Path.Combine(detailDirectory, $"{SanitizeFileSegment(title)}.md");
+        var sourceLabel = ResolveJavaSourceLabel(key);
+        var detail = installation is null
+            ? $$"""
+                # {{title}}
+
+                - 路径: `{{key}}`
+                - 目录: `{{folder}}`
+                - 来源: {{sourceLabel}}
+                - 当前标签: {{string.Join(" / ", tags)}}
+                - 默认 Java: {{(_selectedJavaRuntimeKey == key ? "是" : "否")}}
+
+                无法进一步解析该 Java 的详细元数据，请确认文件仍然可执行。
+                """
+            : $$"""
+                # {{title}}
+
+                - 类型: {{(installation.IsJre ? "JRE" : "JDK")}}
+                - 版本: {{installation.Version}}
+                - 主版本: {{installation.MajorVersion}}
+                - 架构: {{installation.Architecture}} ({{(installation.Is64Bit ? "64 Bit" : "32 Bit")}})
+                - 品牌: {{installation.Brand}}
+                - 来源: {{sourceLabel}}
+                - 默认 Java: {{(_selectedJavaRuntimeKey == key ? "是" : "否")}}
+                - 已启用: {{(JavaRuntimeEntries.FirstOrDefault(item => item.Key == key)?.IsEnabled == true ? "是" : "否")}}
+                - 可用性: {{(installation.IsStillAvailable ? "可用" : "不可用")}}
+                - 可执行文件: `{{installation.JavaExePath}}`
+                - 目录: `{{installation.JavaFolder}}`
+                """;
+        File.WriteAllText(detailPath, detail, new UTF8Encoding(false));
+        OpenInstanceTarget($"查看 Java 详情: {title}", detailPath, "Java 详情文件不存在。");
+    }
+
+    private static JavaInstallation? ParseJavaInstallation(string javaExecutablePath)
+    {
+        var parser = new CompositeJavaParser(
+            new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner()),
+            new PeHeaderParser());
+        return parser.Parse(javaExecutablePath);
+    }
+
+    private string ResolveJavaSourceLabel(string key)
+    {
+        var item = LoadStoredJavaItems().FirstOrDefault(candidate =>
+            string.Equals(candidate.Path, key, StringComparison.OrdinalIgnoreCase));
+        return item?.Source switch
+        {
+            JavaSource.AutoInstalled => "自动安装",
+            JavaSource.ManualAdded => "手动添加",
+            _ => "自动扫描"
+        };
     }
 
     private void SelectJavaRuntime(string key)

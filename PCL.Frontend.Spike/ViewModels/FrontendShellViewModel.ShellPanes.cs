@@ -132,6 +132,7 @@ internal sealed partial class FrontendShellViewModel
         return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.SetupLaunch => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLaunch, StandardShellRightPaneGroup.SetupFamily, "setup-launch", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.SetupLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLink, StandardShellRightPaneGroup.SetupFamily, "setup-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupAbout => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupAbout, StandardShellRightPaneGroup.SetupFamily, "setup-about", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupFeedback => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupFeedback, StandardShellRightPaneGroup.SetupFamily, "setup-feedback", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLog, StandardShellRightPaneGroup.SetupFamily, "setup-log", usesCompatibilityView: false),

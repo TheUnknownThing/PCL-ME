@@ -68,6 +68,11 @@ internal sealed class SetupLaunchShellRightPaneViewModel(
     StandardShellRightPaneDescriptor descriptor)
     : ShellRightPaneViewModel(shell, descriptor);
 
+internal sealed class SetupLinkShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
 internal sealed class SetupAboutShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)

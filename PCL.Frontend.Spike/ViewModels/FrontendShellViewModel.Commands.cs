@@ -42,10 +42,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand OpenFullChangelogCommand => _openFullChangelogCommand;
 
-    public ActionCommand DownloadOptionalUpdateCommand => _downloadOptionalUpdateCommand;
-
-    public ActionCommand ShowOptionalUpdateDetailCommand => _showOptionalUpdateDetailCommand;
-
     public ActionCommand ResetGameLinkSettingsCommand => _resetGameLinkSettingsCommand;
 
     public ActionCommand ResetGameManageSettingsCommand => _resetGameManageSettingsCommand;

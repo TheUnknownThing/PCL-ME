@@ -121,15 +121,9 @@ internal sealed partial class FrontendShellViewModel
         ? new Bitmap(UpdateCurrentIconFilePath)
         : null;
 
-    public Bitmap? UpdateOptionalIcon => File.Exists(UpdateOptionalIconFilePath)
-        ? new Bitmap(UpdateOptionalIconFilePath)
-        : null;
-
     public bool ShowAvailableUpdateCard => _updateStatus.SurfaceState == UpdateSurfaceState.Available;
 
     public bool ShowCurrentVersionCard => _updateStatus.SurfaceState != UpdateSurfaceState.Available;
-
-    public bool ShowOptionalUpdateCard => false;
 
     public string AvailableUpdateName => _updateStatus.AvailableUpdateName;
 
@@ -140,12 +134,6 @@ internal sealed partial class FrontendShellViewModel
     public string CurrentVersionName => _updateStatus.CurrentVersionName;
 
     public string CurrentVersionDescription => _updateStatus.CurrentVersionDescription;
-
-    public string OptionalUpdateName => "AquaCL 3.0.0";
-
-    public string OptionalUpdateDescription => "20.0 MB";
-
-    public string OptionalUpdateSummary => "AquaCL 3 是 PCL CE 的第一个主要更新，带来了让人眼前一亮的新设计，使用了最新开发技术，完全重构了基础体验，并更支持 macOS、Linux 等其他平台。";
 
     public int SelectedLaunchIsolationIndex
     {
