@@ -9,10 +9,11 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendCommunityResourceCatalogService
 {
-    private const int SearchPageSize = 12;
+    private const int SearchPageSize = 40;
     private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry> Cache = new(StringComparer.Ordinal);
+    private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
     private static readonly IReadOnlyList<RouteConfig> RouteConfigs =
     [
         new RouteConfig(LauncherFrontendSubpageKey.DownloadMod, "Mod", "CommandBlock.png", false, "mod", null, 6, "mc-mods"),
@@ -27,53 +28,101 @@ internal static class FrontendCommunityResourceCatalogService
         FrontendInstanceComposition instanceComposition,
         int communitySourcePreference)
     {
-        var preferredVersion = ResolvePreferredMinecraftVersion(instanceComposition);
         var routeStates = new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>();
 
         foreach (var config in RouteConfigs)
         {
-            routeStates[config.Route] = GetOrCreateState(config, preferredVersion, communitySourcePreference);
+            routeStates[config.Route] = QueryResources(
+                config.Route,
+                new FrontendCommunityResourceQuery(
+                    SearchText: string.Empty,
+                    Source: string.Empty,
+                    Tag: string.Empty,
+                    Sort: string.Empty,
+                    Version: string.Empty,
+                    Loader: string.Empty),
+                instanceComposition,
+                communitySourcePreference).State;
         }
 
         return routeStates;
     }
 
-    private static FrontendDownloadResourceState GetOrCreateState(
-        RouteConfig config,
-        string? preferredVersion,
+    public static FrontendCommunityResourceQueryResult QueryResources(
+        LauncherFrontendSubpageKey route,
+        FrontendCommunityResourceQuery query,
+        FrontendInstanceComposition instanceComposition,
         int communitySourcePreference)
     {
-        var cacheKey = $"{config.Route}|{preferredVersion ?? "*"}|{communitySourcePreference}";
+        var config = GetRouteConfig(route);
+        var preferredVersion = ResolvePreferredMinecraftVersion(instanceComposition);
+        var normalizedVersion = NormalizeMinecraftVersion(query.Version);
+        var normalizedSearchText = query.SearchText.Trim();
+        var normalizedSource = query.Source.Trim();
+        var normalizedTag = query.Tag.Trim();
+        var normalizedSort = query.Sort.Trim();
+        var normalizedLoader = query.Loader.Trim();
+        var cacheKey = string.Join("|",
+            config.Route,
+            preferredVersion ?? "*",
+            communitySourcePreference,
+            normalizedSearchText,
+            normalizedSource,
+            normalizedTag,
+            normalizedSort,
+            normalizedVersion ?? "*",
+            normalizedLoader);
         if (Cache.TryGetValue(cacheKey, out var cacheEntry)
             && DateTimeOffset.UtcNow - cacheEntry.CreatedAt < TimeSpan.FromMinutes(10))
         {
-            return cacheEntry.State;
+            return new FrontendCommunityResourceQueryResult(
+                cacheEntry.State,
+                GetMinecraftVersionOptions(preferredVersion, normalizedVersion, cacheEntry.State.Entries.Select(entry => entry.Version)),
+                GetSourceOptions(config));
         }
 
-        var state = BuildState(config, preferredVersion, communitySourcePreference);
+        var effectiveQuery = query with
+        {
+            SearchText = normalizedSearchText,
+            Source = normalizedSource,
+            Tag = normalizedTag,
+            Sort = normalizedSort,
+            Version = normalizedVersion ?? string.Empty,
+            Loader = normalizedLoader
+        };
+        var state = BuildState(config, preferredVersion, communitySourcePreference, effectiveQuery);
         Cache[cacheKey] = new CacheEntry(state, DateTimeOffset.UtcNow);
-        return state;
+        return new FrontendCommunityResourceQueryResult(
+            state,
+            GetMinecraftVersionOptions(preferredVersion, normalizedVersion, state.Entries.Select(entry => entry.Version)),
+            GetSourceOptions(config));
     }
 
     private static FrontendDownloadResourceState BuildState(
         RouteConfig config,
         string? preferredVersion,
-        int communitySourcePreference)
+        int communitySourcePreference,
+        FrontendCommunityResourceQuery query)
     {
-        var versionAwareResult = FetchEntries(config, preferredVersion, communitySourcePreference);
+        var effectiveVersion = string.IsNullOrWhiteSpace(query.Version)
+            ? preferredVersion
+            : query.Version;
+        var versionAwareResult = FetchEntries(config, effectiveVersion, communitySourcePreference, query);
         var usedVersionFallback = false;
 
-        if (versionAwareResult.Entries.Count == 0 && !string.IsNullOrWhiteSpace(preferredVersion))
+        if (versionAwareResult.Entries.Count == 0
+            && !string.IsNullOrWhiteSpace(effectiveVersion)
+            && string.IsNullOrWhiteSpace(query.Version))
         {
-            versionAwareResult = FetchEntries(config, null, communitySourcePreference);
+            versionAwareResult = FetchEntries(
+                config,
+                null,
+                communitySourcePreference,
+                query with { Version = string.Empty });
             usedVersionFallback = true;
         }
 
-        var entries = versionAwareResult.Entries
-            .OrderByDescending(entry => entry.DownloadCount)
-            .ThenByDescending(entry => entry.FollowCount)
-            .ThenByDescending(entry => entry.UpdateRank)
-            .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+        var entries = ApplyFinalClientSideFilters(versionAwareResult.Entries, query)
             .Take(SearchPageSize * 2)
             .ToArray();
 
@@ -82,7 +131,7 @@ internal static class FrontendCommunityResourceCatalogService
             config.ModrinthProjectType is not null && config.CurseForgeClassId is not null,
             false,
             config.UseShaderLoaderOptions,
-            BuildHintText(config, preferredVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback),
+            BuildHintText(config, effectiveVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback),
             BuildTagOptions(entries),
             entries);
     }
@@ -90,18 +139,21 @@ internal static class FrontendCommunityResourceCatalogService
     private static FetchResult FetchEntries(
         RouteConfig config,
         string? preferredVersion,
-        int communitySourcePreference)
+        int communitySourcePreference,
+        FrontendCommunityResourceQuery query)
     {
         var tasks = new List<Task<SourceFetchResult>>(2);
+        var wantsCurseForge = !string.Equals(query.Source, "Modrinth", StringComparison.OrdinalIgnoreCase);
+        var wantsModrinth = !string.Equals(query.Source, "CurseForge", StringComparison.OrdinalIgnoreCase);
 
-        if (!string.IsNullOrWhiteSpace(config.ModrinthProjectType))
+        if (wantsModrinth && !string.IsNullOrWhiteSpace(config.ModrinthProjectType))
         {
-            tasks.Add(Task.Run(() => FetchModrinthEntries(config, preferredVersion, communitySourcePreference)));
+            tasks.Add(Task.Run(() => FetchModrinthEntries(config, preferredVersion, communitySourcePreference, query)));
         }
 
-        if (config.CurseForgeClassId is not null)
+        if (wantsCurseForge && config.CurseForgeClassId is not null)
         {
-            tasks.Add(Task.Run(() => FetchCurseForgeEntries(config, preferredVersion, communitySourcePreference)));
+            tasks.Add(Task.Run(() => FetchCurseForgeEntries(config, preferredVersion, communitySourcePreference, query)));
         }
 
         Task.WaitAll(tasks.ToArray());
@@ -123,12 +175,13 @@ internal static class FrontendCommunityResourceCatalogService
     private static SourceFetchResult FetchModrinthEntries(
         RouteConfig config,
         string? preferredVersion,
-        int communitySourcePreference)
+        int communitySourcePreference,
+        FrontendCommunityResourceQuery query)
     {
         try
         {
-            var officialUrl = BuildModrinthSearchUrl(config, preferredVersion, useMirror: false);
-            var mirrorUrl = BuildModrinthSearchUrl(config, preferredVersion, useMirror: true);
+            var officialUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: false);
+            var mirrorUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: true);
             var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: false);
             var hits = response["hits"]?.AsArray() ?? [];
 
@@ -151,12 +204,13 @@ internal static class FrontendCommunityResourceCatalogService
     private static SourceFetchResult FetchCurseForgeEntries(
         RouteConfig config,
         string? preferredVersion,
-        int communitySourcePreference)
+        int communitySourcePreference,
+        FrontendCommunityResourceQuery query)
     {
         try
         {
-            var officialUrl = BuildCurseForgeSearchUrl(config, preferredVersion, useMirror: false);
-            var mirrorUrl = BuildCurseForgeSearchUrl(config, preferredVersion, useMirror: true);
+            var officialUrl = BuildCurseForgeSearchUrl(config, preferredVersion, query, useMirror: false);
+            var mirrorUrl = BuildCurseForgeSearchUrl(config, preferredVersion, query, useMirror: true);
             var response = ReadJsonObject("CurseForge", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: true);
             var data = response["data"]?.AsArray() ?? [];
 
@@ -372,6 +426,19 @@ internal static class FrontendCommunityResourceCatalogService
 
     private static string BuildModrinthSearchUrl(RouteConfig config, string? preferredVersion, bool useMirror)
     {
+        return BuildModrinthSearchUrl(
+            config,
+            preferredVersion,
+            new FrontendCommunityResourceQuery(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
+            useMirror);
+    }
+
+    private static string BuildModrinthSearchUrl(
+        RouteConfig config,
+        string? preferredVersion,
+        FrontendCommunityResourceQuery query,
+        bool useMirror)
+    {
         var baseUrl = useMirror
             ? "https://mod.mcimirror.top/modrinth/v2/search"
             : "https://api.modrinth.com/v2/search";
@@ -387,10 +454,46 @@ internal static class FrontendCommunityResourceCatalogService
             facets.Add($"[\"versions:{preferredVersion}\"]");
         }
 
-        return $"{baseUrl}?limit={SearchPageSize}&index=downloads&facets={Uri.EscapeDataString($"[{string.Join(",", facets)}]")}";
+        var mappedTag = MapTagToModrinthCategory(config.Route, query.Tag);
+        if (!string.IsNullOrWhiteSpace(mappedTag))
+        {
+            facets.Add($"[\"categories:{mappedTag}\"]");
+        }
+
+        var mappedLoader = MapLoaderToModrinthCategory(config.Route, query.Loader);
+        if (!string.IsNullOrWhiteSpace(mappedLoader))
+        {
+            facets.Add($"[\"categories:{mappedLoader}\"]");
+        }
+
+        var index = query.Sort switch
+        {
+            "relevance" => "relevance",
+            "downloads" => "downloads",
+            "follows" => "follows",
+            "release" => "newest",
+            "update" => "updated",
+            _ => string.IsNullOrWhiteSpace(query.SearchText) ? "downloads" : "relevance"
+        };
+        var parameters = new List<string>
+        {
+            $"limit={SearchPageSize}",
+            $"index={Uri.EscapeDataString(index)}",
+            $"facets={Uri.EscapeDataString($"[{string.Join(",", facets)}]")}"
+        };
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            parameters.Add($"query={Uri.EscapeDataString(query.SearchText)}");
+        }
+
+        return $"{baseUrl}?{string.Join("&", parameters)}";
     }
 
-    private static string BuildCurseForgeSearchUrl(RouteConfig config, string? preferredVersion, bool useMirror)
+    private static string BuildCurseForgeSearchUrl(
+        RouteConfig config,
+        string? preferredVersion,
+        FrontendCommunityResourceQuery query,
+        bool useMirror)
     {
         var baseUrl = useMirror
             ? "https://mod.mcimirror.top/curseforge/v1/mods/search"
@@ -400,13 +503,38 @@ internal static class FrontendCommunityResourceCatalogService
             "gameId=432",
             $"classId={config.CurseForgeClassId}",
             $"pageSize={SearchPageSize}",
-            "sortField=6",
             "sortOrder=desc"
         };
+        parameters.Add(query.Sort switch
+        {
+            "relevance" => "sortField=4",
+            "downloads" => "sortField=6",
+            "follows" => "sortField=2",
+            "release" => "sortField=11",
+            "update" => "sortField=3",
+            _ => string.IsNullOrWhiteSpace(query.SearchText) ? "sortField=6" : "sortField=4"
+        });
 
         if (!string.IsNullOrWhiteSpace(preferredVersion))
         {
             parameters.Add($"gameVersion={Uri.EscapeDataString(preferredVersion)}");
+        }
+
+        var categoryId = MapTagToCurseForgeCategory(config.Route, query.Tag);
+        if (categoryId is not null)
+        {
+            parameters.Add($"categoryId={categoryId.Value}");
+        }
+
+        var modLoaderType = MapLoaderToCurseForgeLoaderType(config.Route, query.Loader);
+        if (modLoaderType is not null)
+        {
+            parameters.Add($"modLoaderType={modLoaderType.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            parameters.Add($"searchFilter={Uri.EscapeDataString(query.SearchText)}");
         }
 
         return $"{baseUrl}?{string.Join("&", parameters)}";
@@ -455,6 +583,52 @@ internal static class FrontendCommunityResourceCatalogService
                 .Take(18)
                 .Select(group => new FrontendDownloadResourceFilterOption(group.First(), group.First()))
         ];
+    }
+
+    private static IEnumerable<FrontendDownloadResourceEntry> ApplyFinalClientSideFilters(
+        IEnumerable<FrontendDownloadResourceEntry> entries,
+        FrontendCommunityResourceQuery query)
+    {
+        var filtered = entries;
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            filtered = filtered.Where(entry =>
+                entry.Title.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)
+                || entry.Info.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)
+                || entry.Tags.Any(tag => tag.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Tag))
+        {
+            filtered = filtered.Where(entry => entry.Tags.Any(tag => string.Equals(tag, query.Tag, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Version))
+        {
+            filtered = filtered.Where(entry => string.Equals(entry.Version, query.Version, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Loader))
+        {
+            filtered = filtered.Where(entry => string.Equals(entry.Loader, query.Loader, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query.Sort switch
+        {
+            "downloads" => filtered.OrderByDescending(entry => entry.DownloadCount).ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            "follows" => filtered.OrderByDescending(entry => entry.FollowCount).ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            "release" => filtered.OrderByDescending(entry => entry.ReleaseRank).ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            "update" => filtered.OrderByDescending(entry => entry.UpdateRank).ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            "relevance" => filtered.OrderByDescending(entry => entry.Title.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(entry => entry.DownloadCount)
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            _ => string.IsNullOrWhiteSpace(query.SearchText)
+                ? filtered.OrderByDescending(entry => entry.DownloadCount).ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+                : filtered.OrderByDescending(entry => entry.Title.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase))
+                    .ThenByDescending(entry => entry.DownloadCount)
+                    .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+        };
     }
 
     private static string ResolvePreferredMinecraftVersion(FrontendInstanceComposition instanceComposition)
@@ -807,6 +981,360 @@ internal static class FrontendCommunityResourceCatalogService
         return client;
     }
 
+    private static RouteConfig GetRouteConfig(LauncherFrontendSubpageKey route)
+    {
+        return RouteConfigs.First(config => config.Route == route);
+    }
+
+    private static IReadOnlyList<string> GetSourceOptions(RouteConfig config)
+    {
+        var options = new List<string>();
+        if (config.CurseForgeClassId is not null)
+        {
+            options.Add("CurseForge");
+        }
+
+        if (!string.IsNullOrWhiteSpace(config.ModrinthProjectType))
+        {
+            options.Add("Modrinth");
+        }
+
+        return options;
+    }
+
+    private static IReadOnlyList<string> GetMinecraftVersionOptions(
+        string? preferredVersion,
+        string? selectedVersion,
+        IEnumerable<string> resultVersions)
+    {
+        if (MinecraftVersionOptionsCache is null
+            || DateTimeOffset.UtcNow - MinecraftVersionOptionsCache.CreatedAt > TimeSpan.FromHours(6))
+        {
+            MinecraftVersionOptionsCache = new CacheEntry<IReadOnlyList<string>>(FetchMinecraftVersionOptions(), DateTimeOffset.UtcNow);
+        }
+
+        var versions = new List<string>();
+        AddIfVersionMissing(versions, preferredVersion);
+        AddIfVersionMissing(versions, selectedVersion);
+
+        foreach (var version in MinecraftVersionOptionsCache.State)
+        {
+            AddIfVersionMissing(versions, version);
+        }
+
+        foreach (var version in resultVersions)
+        {
+            AddIfVersionMissing(versions, version);
+        }
+
+        return versions
+            .OrderByDescending(ParseVersion)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> FetchMinecraftVersionOptions()
+    {
+        var sources = new[]
+        {
+            "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
+            "https://bmclapi2.bangbang93.com/mc/game/version_manifest_v2.json"
+        };
+        foreach (var source in sources)
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, source);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                using var response = HttpClient.Send(request);
+                response.EnsureSuccessStatusCode();
+                var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var root = JsonNode.Parse(content)?.AsObject();
+                var versions = root?["versions"]?.AsArray()
+                    .Select(node => node as JsonObject)
+                    .Where(node => node is not null && string.Equals(GetString(node, "type"), "release", StringComparison.OrdinalIgnoreCase))
+                    .Select(node => GetString(node, "id"))
+                    .Where(version => !string.IsNullOrWhiteSpace(version))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(40)
+                    .ToArray();
+                if (versions is { Length: > 0 })
+                {
+                    return versions;
+                }
+            }
+            catch
+            {
+                // Fall back to the static list below.
+            }
+        }
+
+        return
+        [
+            "1.21.11",
+            "1.21.10",
+            "1.21.9",
+            "1.21.8",
+            "1.21.7",
+            "1.21.6",
+            "1.21.5",
+            "1.21.4",
+            "1.21.3",
+            "1.21.2",
+            "1.21.1",
+            "1.21",
+            "1.20.6",
+            "1.20.5",
+            "1.20.4",
+            "1.20.3",
+            "1.20.2",
+            "1.20.1",
+            "1.20",
+            "1.19.4",
+            "1.19.3",
+            "1.19.2",
+            "1.18.2",
+            "1.17.1",
+            "1.16.5",
+            "1.12.2",
+            "1.8.9",
+            "1.7.10"
+        ];
+    }
+
+    private static void AddIfVersionMissing(ICollection<string> versions, string? version)
+    {
+        var normalized = NormalizeMinecraftVersion(version);
+        if (!string.IsNullOrWhiteSpace(normalized) && !versions.Contains(normalized))
+        {
+            versions.Add(normalized);
+        }
+    }
+
+    private static string? MapTagToModrinthCategory(LauncherFrontendSubpageKey route, string tag)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => tag switch
+            {
+                "世界元素" => "worldgen",
+                "科技" => "technology",
+                "游戏机制" => "game-mechanics",
+                "运输" => "transportation",
+                "仓储" => "storage",
+                "魔法" => "magic",
+                "冒险" => "adventure",
+                "装饰" => "decoration",
+                "生物" => "mobs",
+                "实用" => "utility",
+                "装备与工具" => "equipment",
+                "性能优化" => "optimization",
+                "服务器" => "social",
+                "支持库" => "library",
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadPack => tag switch
+            {
+                "多人" => "multiplayer",
+                "性能优化" => "optimization",
+                "硬核" => "challenging",
+                "战斗" => "combat",
+                "任务" => "quests",
+                "科技" => "technology",
+                "魔法" => "magic",
+                "冒险" => "adventure",
+                "水槽包" => "kitchen-sink",
+                "轻量整合" => "lightweight",
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadDataPack => tag switch
+            {
+                "世界元素" => "worldgen",
+                "科技" => "technology",
+                "游戏机制" => "game-mechanics",
+                "运输" => "transportation",
+                "仓储" => "storage",
+                "魔法" => "magic",
+                "冒险" => "adventure",
+                "装饰" => "decoration",
+                "生物" => "mobs",
+                "实用" => "utility",
+                "性能优化" => "optimization",
+                "服务器" => "social",
+                "支持库" => "library",
+                "Mod 相关" => "modded",
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadResourcePack => tag switch
+            {
+                "原版风" => "vanilla-like",
+                "写实风" => "realistic",
+                "简洁" => "simplistic",
+                "战斗" => "combat",
+                "改良" => "tweaks",
+                "含声音" => "audio",
+                "含字体" => "fonts",
+                "含模型" => "models",
+                "含语言" => "locale",
+                "含 UI" => "gui",
+                "核心着色器" => "core-shaders",
+                "兼容 Mod" => "modded",
+                "16x" => "16x",
+                "32x" => "32x",
+                "48x" => "48x",
+                "64x" => "64x",
+                "128x" => "128x",
+                "256x" => "256x",
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadShader => tag switch
+            {
+                "原版风" => "vanilla-like",
+                "幻想风" => "fantasy",
+                "写实风" => "realistic",
+                "半写实风" => "semi-realistic",
+                "卡通风" => "cartoon",
+                "彩色光照" => "colored-lighting",
+                "路径追踪" => "path-tracing",
+                "PBR" => "pbr",
+                "反射" => "reflections",
+                _ => null
+            },
+            _ => null
+        };
+    }
+
+    private static int? MapTagToCurseForgeCategory(LauncherFrontendSubpageKey route, string tag)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => tag switch
+            {
+                "世界元素" => 406,
+                "科技" => 412,
+                "游戏机制" => 423,
+                "运输" => 414,
+                "仓储" => 420,
+                "魔法" => 419,
+                "冒险" => 422,
+                "装饰" => 424,
+                "生物" => 411,
+                "性能优化" => 6814,
+                "服务器" => 435,
+                "支持库" => 421,
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadPack => tag switch
+            {
+                "多人" => 4484,
+                "硬核" => 4479,
+                "战斗" => 4483,
+                "任务" => 4478,
+                "科技" => 4472,
+                "魔法" => 4473,
+                "冒险" => 4475,
+                "探索" => 4476,
+                "小游戏" => 4477,
+                "空岛" => 4736,
+                "原版改良" => 5128,
+                "FTB" => 4487,
+                "基于地图" => 4480,
+                "轻量整合" => 4481,
+                "大型整合" => 4482,
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadDataPack => tag switch
+            {
+                "冒险" => 6948,
+                "幻想" => 6949,
+                "支持库" => 6950,
+                "魔法" => 6952,
+                "Mod 相关" => 6946,
+                "科技" => 6951,
+                "实用" => 6953,
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadResourcePack => tag switch
+            {
+                "原版风" => 403,
+                "写实风" => 400,
+                "现代风" => 401,
+                "中世纪" => 402,
+                "蒸汽朋克" => 399,
+                "含字体" => 5244,
+                "动态效果" => 404,
+                "兼容 Mod" => 4465,
+                "16x" => 393,
+                "32x" => 394,
+                "64x" => 395,
+                "128x" => 396,
+                "256x" => 397,
+                "512x 或更高" => 398,
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadShader => tag switch
+            {
+                "写实风" => 6553,
+                "幻想风" => 6554,
+                "原版风" => 6555,
+                _ => null
+            },
+            LauncherFrontendSubpageKey.DownloadWorld => tag switch
+            {
+                "冒险" => 248,
+                "创造" => 249,
+                "小游戏" => 250,
+                "跑酷" => 251,
+                "解谜" => 252,
+                "生存" => 253,
+                "Mod 世界" => 4464,
+                _ => null
+            },
+            _ => null
+        };
+    }
+
+    private static string? MapLoaderToModrinthCategory(LauncherFrontendSubpageKey route, string loader)
+    {
+        if (string.IsNullOrWhiteSpace(loader))
+        {
+            return null;
+        }
+
+        return route == LauncherFrontendSubpageKey.DownloadShader
+            ? loader switch
+            {
+                "Iris" => "iris",
+                "OptiFine" => "optifine",
+                "原版可用" => "vanilla",
+                _ => null
+            }
+            : loader switch
+            {
+                "Forge" => "forge",
+                "NeoForge" => "neoforge",
+                "Fabric" => "fabric",
+                "Quilt" => "quilt",
+                _ => null
+            };
+    }
+
+    private static int? MapLoaderToCurseForgeLoaderType(LauncherFrontendSubpageKey route, string loader)
+    {
+        if (route == LauncherFrontendSubpageKey.DownloadShader || string.IsNullOrWhiteSpace(loader))
+        {
+            return null;
+        }
+
+        return loader switch
+        {
+            "Forge" => 1,
+            "Fabric" => 4,
+            "Quilt" => 5,
+            "NeoForge" => 6,
+            _ => null
+        };
+    }
+
     private sealed record RouteConfig(
         LauncherFrontendSubpageKey Route,
         string Title,
@@ -819,6 +1347,8 @@ internal static class FrontendCommunityResourceCatalogService
 
     private sealed record CacheEntry(FrontendDownloadResourceState State, DateTimeOffset CreatedAt);
 
+    private sealed record CacheEntry<TState>(TState State, DateTimeOffset CreatedAt);
+
     private sealed record FetchResult(
         IReadOnlyList<FrontendDownloadResourceEntry> Entries,
         IReadOnlyList<string> SourceErrors);
@@ -829,3 +1359,16 @@ internal static class FrontendCommunityResourceCatalogService
 
     private sealed record RequestCandidate(string Url, bool UseCurseForgeApiKey);
 }
+
+internal sealed record FrontendCommunityResourceQuery(
+    string SearchText,
+    string Source,
+    string Tag,
+    string Sort,
+    string Version,
+    string Loader);
+
+internal sealed record FrontendCommunityResourceQueryResult(
+    FrontendDownloadResourceState State,
+    IReadOnlyList<string> VersionOptions,
+    IReadOnlyList<string> SourceOptions);

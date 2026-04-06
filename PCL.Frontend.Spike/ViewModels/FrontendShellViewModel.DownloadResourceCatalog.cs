@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -18,6 +23,8 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _firstDownloadResourcePageCommand;
     private readonly ActionCommand _previousDownloadResourcePageCommand;
     private readonly ActionCommand _nextDownloadResourcePageCommand;
+    private CancellationTokenSource? _downloadResourceRefreshCts;
+    private int _downloadResourceRefreshVersion;
     private string _downloadResourceSearchQuery = string.Empty;
     private string _downloadResourceSurfaceTitle = string.Empty;
     private string _downloadResourceLoadingText = string.Empty;
@@ -48,12 +55,29 @@ internal sealed partial class FrontendShellViewModel
     [
         new DownloadResourceFilterOptionViewModel("任意", string.Empty),
         new DownloadResourceFilterOptionViewModel("1.21.11", "1.21.11"),
+        new DownloadResourceFilterOptionViewModel("1.21.10", "1.21.10"),
+        new DownloadResourceFilterOptionViewModel("1.21.9", "1.21.9"),
+        new DownloadResourceFilterOptionViewModel("1.21.8", "1.21.8"),
+        new DownloadResourceFilterOptionViewModel("1.21.7", "1.21.7"),
+        new DownloadResourceFilterOptionViewModel("1.21.6", "1.21.6"),
+        new DownloadResourceFilterOptionViewModel("1.21.5", "1.21.5"),
+        new DownloadResourceFilterOptionViewModel("1.21.4", "1.21.4"),
+        new DownloadResourceFilterOptionViewModel("1.21.3", "1.21.3"),
+        new DownloadResourceFilterOptionViewModel("1.21.2", "1.21.2"),
         new DownloadResourceFilterOptionViewModel("1.21.1", "1.21.1"),
+        new DownloadResourceFilterOptionViewModel("1.21", "1.21"),
         new DownloadResourceFilterOptionViewModel("1.20.6", "1.20.6"),
+        new DownloadResourceFilterOptionViewModel("1.20.5", "1.20.5"),
+        new DownloadResourceFilterOptionViewModel("1.20.4", "1.20.4"),
+        new DownloadResourceFilterOptionViewModel("1.20.3", "1.20.3"),
+        new DownloadResourceFilterOptionViewModel("1.20.2", "1.20.2"),
         new DownloadResourceFilterOptionViewModel("1.20.1", "1.20.1"),
+        new DownloadResourceFilterOptionViewModel("1.20", "1.20"),
         new DownloadResourceFilterOptionViewModel("1.19.4", "1.19.4"),
+        new DownloadResourceFilterOptionViewModel("1.19.3", "1.19.3"),
         new DownloadResourceFilterOptionViewModel("1.19.2", "1.19.2"),
         new DownloadResourceFilterOptionViewModel("1.18.2", "1.18.2"),
+        new DownloadResourceFilterOptionViewModel("1.17.1", "1.17.1"),
         new DownloadResourceFilterOptionViewModel("1.16.5", "1.16.5"),
         new DownloadResourceFilterOptionViewModel("1.12.2", "1.12.2"),
         new DownloadResourceFilterOptionViewModel("1.10.2", "1.10.2"),
@@ -79,7 +103,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (SetProperty(ref _downloadResourceSearchQuery, value) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
-                ApplyDownloadResourceFilters(resetPage: true);
+                ScheduleDownloadResourceRefresh(immediate: false, resetPage: true);
             }
         }
     }
@@ -139,7 +163,7 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedDownloadResourceSourceIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 UpdateDownloadResourceHint();
-                ApplyDownloadResourceFilters(resetPage: true);
+                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             }
         }
     }
@@ -152,7 +176,7 @@ internal sealed partial class FrontendShellViewModel
             var nextValue = ClampFilterIndex(value, DownloadResourceTagOptions);
             if (SetProperty(ref _selectedDownloadResourceTagIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
-                ApplyDownloadResourceFilters(resetPage: true);
+                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             }
         }
     }
@@ -165,7 +189,7 @@ internal sealed partial class FrontendShellViewModel
             var nextValue = ClampFilterIndex(value, DownloadResourceSortOptions);
             if (SetProperty(ref _selectedDownloadResourceSortIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
-                ApplyDownloadResourceFilters(resetPage: true);
+                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             }
         }
     }
@@ -178,7 +202,7 @@ internal sealed partial class FrontendShellViewModel
             var nextValue = ClampFilterIndex(value, DownloadResourceVersionOptions);
             if (SetProperty(ref _selectedDownloadResourceVersionIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
-                ApplyDownloadResourceFilters(resetPage: true);
+                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             }
         }
     }
@@ -191,7 +215,7 @@ internal sealed partial class FrontendShellViewModel
             var nextValue = ClampFilterIndex(value, DownloadResourceLoaderOptions);
             if (SetProperty(ref _selectedDownloadResourceLoaderIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
-                ApplyDownloadResourceFilters(resetPage: true);
+                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             }
         }
     }
@@ -224,7 +248,7 @@ internal sealed partial class FrontendShellViewModel
         ShowDownloadResourceInstallModPackAction = false;
         _downloadResourceSupportsModrinth = true;
         _downloadResourceSourceOptions = [];
-        _downloadResourceTagOptions = [];
+        _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
         _downloadResourceLoaderOptions =
         [
             new DownloadResourceFilterOptionViewModel("任意", string.Empty),
@@ -251,26 +275,13 @@ internal sealed partial class FrontendShellViewModel
         if (_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var runtimeState))
         {
             DownloadResourceSurfaceTitle = runtimeState.SurfaceTitle;
-            DownloadResourceLoadingText = string.IsNullOrWhiteSpace(runtimeState.HintText)
-                ? "结果来自实时社区目录，尝试调整搜索与筛选条件。"
-                : runtimeState.HintText;
+            DownloadResourceLoadingText = "正在从社区目录获取结果...";
             DownloadResourceEmptyStateText = $"没有找到符合条件的{runtimeState.SurfaceTitle.Replace(" 列表", string.Empty)}条目。";
             DownloadResourceHintText = runtimeState.HintText;
             ShowDownloadResourceInstallModPackAction = runtimeState.ShowInstallModPackAction;
             ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(runtimeState.HintText);
-            _downloadResourceSupportsModrinth = runtimeState.Entries.Any(entry => string.Equals(entry.Source, "Modrinth", StringComparison.OrdinalIgnoreCase));
-            var availableSources = runtimeState.Entries
-                .Select(entry => entry.Source)
-                .Where(source => !string.IsNullOrWhiteSpace(source))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(source => string.Equals(source, "CurseForge", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-                .ThenBy(source => source, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-            _downloadResourceSourceOptions =
-            [
-                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                .. availableSources.Select(source => new DownloadResourceFilterOptionViewModel(source, source))
-            ];
+            _downloadResourceSupportsModrinth = runtimeState.SupportsSecondarySource;
+            _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(runtimeState);
             _downloadResourceTagOptions = runtimeState.TagOptions
                 .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
                 .ToArray();
@@ -287,36 +298,11 @@ internal sealed partial class FrontendShellViewModel
                     new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
                     new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
                 ];
-            _allDownloadResourceEntries = runtimeState.Entries
-                .Select(entry =>
-                {
-                    Bitmap? icon = null;
-                    if (!string.IsNullOrWhiteSpace(entry.IconName))
-                    {
-                        icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
-                    }
-
-                    return new DownloadResourceEntryViewModel(
-                        icon,
-                        entry.Title,
-                        entry.Info,
-                        entry.Source,
-                        entry.Version,
-                        entry.Loader,
-                        entry.Tags,
-                        entry.DownloadCount,
-                        entry.FollowCount,
-                        entry.ReleaseRank,
-                        entry.UpdateRank,
-                        entry.ActionText,
-                        string.IsNullOrWhiteSpace(entry.TargetPath)
-                            ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
-                            : new ActionCommand(() => OpenInstanceTarget($"查看资源: {entry.Title}", entry.TargetPath, "目标文件不存在。")));
-                })
-                .ToArray();
+            _allDownloadResourceEntries = CreateDownloadResourceEntries(runtimeState.Entries);
             ResetDownloadResourceFilterState();
             RaiseDownloadResourceFilterState();
             ApplyDownloadResourceFilters(resetPage: true);
+            ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             return;
         }
 
@@ -384,7 +370,7 @@ internal sealed partial class FrontendShellViewModel
     {
         ResetDownloadResourceFilterState();
         RaiseDownloadResourceFilterState();
-        ApplyDownloadResourceFilters(resetPage: true);
+        ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
         AddActivity("重置资源筛选", $"{DownloadResourceSurfaceTitle} 已恢复到默认筛选条件。");
     }
 
@@ -593,6 +579,196 @@ internal sealed partial class FrontendShellViewModel
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(DownloadResourceHintText);
     }
 
+    private void ScheduleDownloadResourceRefresh(bool immediate, bool resetPage)
+    {
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+        {
+            return;
+        }
+
+        _downloadResourceRefreshCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _downloadResourceRefreshCts = cts;
+        var refreshVersion = ++_downloadResourceRefreshVersion;
+        var route = _currentRoute.Subpage;
+        var query = BuildCurrentDownloadResourceQuery();
+        var communitySourcePreference = SelectedCommunityDownloadSourceIndex;
+        var instanceComposition = _instanceComposition;
+
+        DownloadResourceLoadingText = "正在从社区目录获取结果...";
+        if (resetPage)
+        {
+            _downloadResourcePageIndex = 0;
+            RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+            NotifyDownloadResourcePageCommandState();
+        }
+
+        _ = RefreshDownloadResourceResultsAsync(
+            route,
+            query,
+            instanceComposition,
+            communitySourcePreference,
+            refreshVersion,
+            cts.Token,
+            immediate ? 0 : 300,
+            resetPage);
+    }
+
+    private async Task RefreshDownloadResourceResultsAsync(
+        LauncherFrontendSubpageKey route,
+        FrontendCommunityResourceQuery query,
+        FrontendInstanceComposition instanceComposition,
+        int communitySourcePreference,
+        int refreshVersion,
+        CancellationToken cancellationToken,
+        int delayMilliseconds,
+        bool resetPage)
+    {
+        try
+        {
+            if (delayMilliseconds > 0)
+            {
+                await Task.Delay(delayMilliseconds, cancellationToken);
+            }
+
+            var result = await Task.Run(
+                () => FrontendCommunityResourceCatalogService.QueryResources(route, query, instanceComposition, communitySourcePreference),
+                cancellationToken);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (cancellationToken.IsCancellationRequested
+                    || refreshVersion != _downloadResourceRefreshVersion
+                    || _currentRoute.Subpage != route
+                    || !IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+                {
+                    return;
+                }
+
+                ApplyDownloadResourceQueryResult(result, resetPage);
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when a newer query supersedes this one.
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (refreshVersion != _downloadResourceRefreshVersion)
+                {
+                    return;
+                }
+
+                DownloadResourceHintText = $"实时社区搜索失败：{ex.Message}";
+                ShowDownloadResourceHint = true;
+                DownloadResourceLoadingText = "请稍后重试，或调整来源筛选。";
+                RaisePropertyChanged(nameof(HasDownloadResourceEntries));
+                RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
+            });
+        }
+    }
+
+    private FrontendCommunityResourceQuery BuildCurrentDownloadResourceQuery()
+    {
+        return new FrontendCommunityResourceQuery(
+            DownloadResourceSearchQuery.Trim(),
+            GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex),
+            GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex),
+            GetSelectedFilterValue(DownloadResourceSortOptions, SelectedDownloadResourceSortIndex),
+            GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex),
+            GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex));
+    }
+
+    private void ApplyDownloadResourceQueryResult(FrontendCommunityResourceQueryResult result, bool resetPage)
+    {
+        DownloadResourceHintText = result.State.HintText;
+        ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(result.State.HintText);
+        DownloadResourceLoadingText = string.IsNullOrWhiteSpace(result.State.HintText)
+            ? "结果来自实时社区目录，尝试调整搜索与筛选条件。"
+            : result.State.HintText;
+
+        _downloadResourceSourceOptions =
+        [
+            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+            .. result.SourceOptions.Select(source => new DownloadResourceFilterOptionViewModel(source, source))
+        ];
+        _downloadResourceTagOptions = result.State.TagOptions.Count > 1
+            ? result.State.TagOptions
+                .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
+                .ToArray()
+            : BuildFallbackDownloadResourceTagOptions();
+        _downloadResourceVersionOptions =
+        [
+            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+            .. result.VersionOptions.Select(version => new DownloadResourceFilterOptionViewModel(version, version))
+        ];
+
+        _selectedDownloadResourceSourceIndex = ClampFilterIndex(_selectedDownloadResourceSourceIndex, DownloadResourceSourceOptions);
+        _selectedDownloadResourceTagIndex = ClampFilterIndex(_selectedDownloadResourceTagIndex, DownloadResourceTagOptions);
+        _selectedDownloadResourceVersionIndex = ClampFilterIndex(_selectedDownloadResourceVersionIndex, DownloadResourceVersionOptions);
+        _selectedDownloadResourceLoaderIndex = ClampFilterIndex(_selectedDownloadResourceLoaderIndex, DownloadResourceLoaderOptions);
+        _allDownloadResourceEntries = CreateDownloadResourceEntries(result.State.Entries);
+
+        RaiseDownloadResourceFilterState();
+        ApplyDownloadResourceFilters(resetPage);
+    }
+
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDownloadResourceSourceOptions(FrontendDownloadResourceState runtimeState)
+    {
+        if (runtimeState.SupportsSecondarySource)
+        {
+            return
+            [
+                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
+                new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
+            ];
+        }
+
+        var source = runtimeState.Entries
+            .Select(entry => entry.Source)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))
+            ?? "CurseForge";
+        return
+        [
+            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+            new DownloadResourceFilterOptionViewModel(source, source)
+        ];
+    }
+
+    private IReadOnlyList<DownloadResourceEntryViewModel> CreateDownloadResourceEntries(IReadOnlyList<FrontendDownloadResourceEntry> entries)
+    {
+        return entries
+            .Select(entry =>
+            {
+                Bitmap? icon = null;
+                if (!string.IsNullOrWhiteSpace(entry.IconName))
+                {
+                    icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
+                }
+
+                return new DownloadResourceEntryViewModel(
+                    icon,
+                    entry.Title,
+                    entry.Info,
+                    entry.Source,
+                    entry.Version,
+                    entry.Loader,
+                    entry.Tags,
+                    entry.DownloadCount,
+                    entry.FollowCount,
+                    entry.ReleaseRank,
+                    entry.UpdateRank,
+                    entry.ActionText,
+                    string.IsNullOrWhiteSpace(entry.TargetPath)
+                        ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
+                        : CreateOpenTargetCommand($"打开资源页面: {entry.Title}", entry.TargetPath, entry.TargetPath));
+            })
+            .ToArray();
+    }
+
     private static int ClampFilterIndex(int value, IReadOnlyList<DownloadResourceFilterOptionViewModel> options)
     {
         return options.Count == 0 ? 0 : Math.Clamp(value, 0, options.Count - 1);
@@ -601,6 +777,20 @@ internal sealed partial class FrontendShellViewModel
     private static string GetSelectedFilterValue(IReadOnlyList<DownloadResourceFilterOptionViewModel> options, int index)
     {
         return index >= 0 && index < options.Count ? options[index].FilterValue : string.Empty;
+    }
+
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildFallbackDownloadResourceTagOptions()
+    {
+        return _currentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => BuildModTagOptions(),
+            LauncherFrontendSubpageKey.DownloadPack => BuildPackTagOptions(),
+            LauncherFrontendSubpageKey.DownloadDataPack => BuildDataPackTagOptions(),
+            LauncherFrontendSubpageKey.DownloadResourcePack => BuildResourcePackTagOptions(),
+            LauncherFrontendSubpageKey.DownloadShader => BuildShaderTagOptions(),
+            LauncherFrontendSubpageKey.DownloadWorld => BuildWorldTagOptions(),
+            _ => [new DownloadResourceFilterOptionViewModel("全部", string.Empty)]
+        };
     }
 
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildModTagOptions()
