@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
@@ -113,6 +114,12 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _lockInstanceLoginCommand;
     private readonly ActionCommand _createInstanceProfileCommand;
     private readonly ActionCommand _openGlobalLaunchSettingsCommand;
+    private readonly ActionCommand _refreshInstanceSelectionCommand;
+    private readonly ActionCommand _clearInstanceSelectionSearchCommand;
+    private readonly ActionCommand _refreshTaskManagerCommand;
+    private readonly ActionCommand _clearFinishedTasksCommand;
+    private readonly ActionCommand _refreshGameLogCommand;
+    private readonly ActionCommand _clearGameLogCommand;
     private LauncherFrontendRoute _currentRoute;
     private LauncherFrontendNavigationView? _currentNavigation;
     private SpikePromptLaneKind _selectedPromptLane;
@@ -385,6 +392,17 @@ internal sealed partial class FrontendShellViewModel
         _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
+        _refreshInstanceSelectionCommand = new ActionCommand(RefreshInstanceSelectionSurface);
+        _clearInstanceSelectionSearchCommand = new ActionCommand(() => InstanceSelectionSearchQuery = string.Empty);
+        _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
+        _clearFinishedTasksCommand = new ActionCommand(() =>
+        {
+            TaskCenter.RemoveFinished();
+            RefreshTaskManagerSurface();
+            RefreshShell("已清理所有已结束任务。");
+        });
+        _refreshGameLogCommand = new ActionCommand(RefreshGameLogSurface);
+        _clearGameLogCommand = new ActionCommand(ClearGameLogSurface);
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
         EnvironmentLabel = _shellComposition.EnvironmentLabel;
@@ -400,6 +418,7 @@ internal sealed partial class FrontendShellViewModel
         InitializeDownloadInstallSurface();
         ApplySetupComposition(_setupComposition);
         ApplyInstanceComposition(_instanceComposition);
+        InitializeStepOneSurfaces();
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");

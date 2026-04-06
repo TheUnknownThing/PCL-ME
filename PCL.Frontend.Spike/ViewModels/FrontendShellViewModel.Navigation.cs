@@ -11,11 +11,24 @@ internal sealed partial class FrontendShellViewModel
     {
         var shellPlan = BuildShellPlan();
         var pageContent = BuildPageContent(shellPlan);
+        RefreshCurrentDedicatedGenericRouteSurface();
+        var surfaceFacts = pageContent.Facts;
+        var surfaceSections = pageContent.Sections;
+        var eyebrow = pageContent.Eyebrow;
+        var description = pageContent.Summary;
         _currentNavigation = shellPlan.Navigation;
 
-        Eyebrow = pageContent.Eyebrow;
+        if (TryBuildDedicatedGenericRouteMetadata(out var dedicatedMetadata))
+        {
+            eyebrow = dedicatedMetadata.Eyebrow;
+            description = dedicatedMetadata.Description;
+            surfaceFacts = dedicatedMetadata.Facts;
+            surfaceSections = [];
+        }
+
+        Eyebrow = eyebrow;
         Title = shellPlan.Navigation.CurrentPage.Title;
-        Description = pageContent.Summary;
+        Description = description;
         Status = $"Immediate command: {shellPlan.StartupPlan.ImmediateCommand.Kind} | Splash: {(shellPlan.StartupPlan.Visual.ShouldShowSplashScreen ? "on" : "off")} | Backstack depth: {_routeHistory.Count}";
         BreadcrumbTrail = string.Join(" / ", shellPlan.Navigation.Breadcrumbs.Select(crumb => crumb.Title));
         SurfaceMeta = $"{shellPlan.Navigation.CurrentPage.Kind} surface • {(shellPlan.Navigation.CurrentPage.SidebarGroupTitle ?? "No sidebar group")} • {(shellPlan.Navigation.ShowsBackButton ? shellPlan.Navigation.BackTarget?.Label ?? "Back available" : "Top-level route")}";
@@ -25,8 +38,8 @@ internal sealed partial class FrontendShellViewModel
         ReplaceNavigationEntriesIfChanged(SidebarEntries, shellPlan.Navigation.SidebarEntries, NavigationVisualStyle.Sidebar);
         ReplaceSidebarSectionsIfChanged(shellPlan.Navigation);
         ReplaceUtilityEntriesIfChanged(shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).ToArray());
-        ReplaceSurfaceFactsIfChanged(pageContent.Facts);
-        ReplaceSurfaceSectionsIfChanged(pageContent.Sections);
+        ReplaceSurfaceFactsIfChanged(surfaceFacts);
+        ReplaceSurfaceSectionsIfChanged(surfaceSections);
 
         SelectPromptLane(_selectedPromptLane, updateActivity: false, raiseCollectionState: false);
         RefreshStandardShellPanes();
@@ -513,6 +526,9 @@ internal sealed partial class FrontendShellViewModel
     {
         switch (CurrentStandardRightPaneDescriptor?.Kind)
         {
+            case StandardShellRightPaneKind.Generic:
+                RefreshCurrentDedicatedGenericRouteSurface();
+                break;
             case StandardShellRightPaneKind.DownloadCatalog:
                 RefreshDownloadCatalogSurface();
                 break;
@@ -552,6 +568,11 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(IsLaunchRoute));
         RaisePropertyChanged(nameof(IsStandardShellRoute));
+        RaisePropertyChanged(nameof(HasDedicatedGenericRouteSurface));
+        RaisePropertyChanged(nameof(ShowGenericCompatibilitySurface));
+        RaisePropertyChanged(nameof(ShowInstanceSelectSurface));
+        RaisePropertyChanged(nameof(ShowTaskManagerSurface));
+        RaisePropertyChanged(nameof(ShowGameLogSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
         RaisePropertyChanged(nameof(TitleBarLabel));
@@ -575,6 +596,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasSurfaceSections));
         RaisePropertyChanged(nameof(HasUtilityEntries));
         RaisePropertyChanged(nameof(HasActivityEntries));
+        RaisePropertyChanged(nameof(HasInstanceSelectionEntries));
+        RaisePropertyChanged(nameof(HasNoInstanceSelectionEntries));
+        RaisePropertyChanged(nameof(HasTaskManagerEntries));
+        RaisePropertyChanged(nameof(HasNoTaskManagerEntries));
+        RaisePropertyChanged(nameof(HasGameLogFiles));
+        RaisePropertyChanged(nameof(HasNoGameLogFiles));
 
         switch (CurrentStandardRightPaneDescriptor?.Kind)
         {
