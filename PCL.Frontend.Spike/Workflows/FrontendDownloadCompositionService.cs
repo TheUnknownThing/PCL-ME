@@ -21,7 +21,7 @@ internal static class FrontendDownloadCompositionService
             BuildInstallState(instanceComposition),
             BuildCatalogStates(manifests),
             BuildFavoritesState(sharedConfig),
-            BuildResourceStates(instanceComposition, versionSavesComposition, launcherFolder));
+            BuildResourceStates(instanceComposition, sharedConfig));
     }
 
     private static FrontendDownloadInstallState BuildInstallState(FrontendInstanceComposition instanceComposition)
@@ -144,177 +144,11 @@ internal static class FrontendDownloadCompositionService
 
     private static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> BuildResourceStates(
         FrontendInstanceComposition instanceComposition,
-        FrontendVersionSavesComposition versionSavesComposition,
-        string launcherFolder)
+        JsonFileProvider sharedConfig)
     {
-        return new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>
-        {
-            [LauncherFrontendSubpageKey.DownloadMod] = BuildResourceState(
-                "Mod",
-                true,
-                false,
-                false,
-                "当前列表来自所选实例内已安装的 Mod 文件，可用于验证复制后的搜索、筛选与分页控件。",
-                BuildDefaultTagOptions("已启用", "已禁用"),
-                instanceComposition.Mods.Entries.Select(entry => ToResourceEntry(entry, "当前实例", instanceComposition.Selection.VanillaVersion, ExtractLoader(entry.Meta))).ToArray()),
-            [LauncherFrontendSubpageKey.DownloadPack] = BuildResourceState(
-                "整合包",
-                false,
-                true,
-                false,
-                "当前列表来自启动器目录下已存在的实例版本，用于在不改变页面结构的前提下验证真实整合包列表。",
-                BuildDefaultTagOptions("本地实例"),
-                BuildInstancePackEntries(launcherFolder)),
-            [LauncherFrontendSubpageKey.DownloadDataPack] = BuildResourceState(
-                "数据包",
-                false,
-                false,
-                false,
-                "当前列表来自所选存档的 datapacks 文件夹。",
-                BuildDefaultTagOptions("数据包"),
-                versionSavesComposition.Datapacks.Select(entry => new FrontendDownloadResourceEntry(
-                    entry.Title,
-                    entry.Summary,
-                    "当前存档",
-                    instanceComposition.Selection.VanillaVersion,
-                    string.Empty,
-                    ["数据包"],
-                    "查看详情",
-                    entry.IconName,
-                    entry.Path,
-                    0,
-                    0,
-                    0,
-                    0)).ToArray()),
-            [LauncherFrontendSubpageKey.DownloadResourcePack] = BuildResourceState(
-                "资源包",
-                false,
-                false,
-                false,
-                "当前列表来自所选实例的 resourcepacks 文件夹。",
-                BuildDefaultTagOptions("资源包"),
-                instanceComposition.ResourcePacks.Entries.Select(entry => ToResourceEntry(entry, "当前实例", instanceComposition.Selection.VanillaVersion, ExtractLoader(entry.Meta))).ToArray()),
-            [LauncherFrontendSubpageKey.DownloadShader] = BuildResourceState(
-                "光影包",
-                false,
-                false,
-                true,
-                "当前列表来自所选实例的 shaderpacks 文件夹。",
-                BuildDefaultTagOptions("光影包"),
-                instanceComposition.Shaders.Entries.Select(entry => ToResourceEntry(entry, "当前实例", instanceComposition.Selection.VanillaVersion, ExtractLoader(entry.Meta))).ToArray()),
-            [LauncherFrontendSubpageKey.DownloadWorld] = BuildResourceState(
-                "世界",
-                false,
-                false,
-                false,
-                "当前列表来自所选实例的 saves 文件夹。",
-                BuildDefaultTagOptions("世界"),
-                instanceComposition.World.Entries.Select(entry => new FrontendDownloadResourceEntry(
-                    entry.Title,
-                    entry.Summary,
-                    "当前实例",
-                    instanceComposition.Selection.VanillaVersion,
-                    string.Empty,
-                    ["世界"],
-                    "查看详情",
-                    "GrassPath.png",
-                    entry.Path,
-                    0,
-                    0,
-                    0,
-                    0)).ToArray())
-        };
-    }
-
-    private static FrontendDownloadResourceState BuildResourceState(
-        string title,
-        bool supportsSecondarySource,
-        bool showInstallModPackAction,
-        bool useShaderLoaderOptions,
-        string hintText,
-        IReadOnlyList<FrontendDownloadResourceFilterOption> tagOptions,
-        IReadOnlyList<FrontendDownloadResourceEntry> entries)
-    {
-        return new FrontendDownloadResourceState(
-            $"{title} 列表",
-            supportsSecondarySource,
-            showInstallModPackAction,
-            useShaderLoaderOptions,
-            hintText,
-            tagOptions,
-            entries);
-    }
-
-    private static IReadOnlyList<FrontendDownloadResourceEntry> BuildInstancePackEntries(string launcherFolder)
-    {
-        var versionsDirectory = Path.Combine(launcherFolder, "versions");
-        if (!Directory.Exists(versionsDirectory))
-        {
-            return [];
-        }
-
-        return Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly)
-            .Select(path => new DirectoryInfo(path))
-            .OrderByDescending(directory => directory.LastWriteTimeUtc)
-            .Select(directory => new FrontendDownloadResourceEntry(
-                directory.Name,
-                $"{directory.LastWriteTime:yyyy/MM/dd HH:mm} • 本地实例目录",
-                "当前启动器",
-                string.Empty,
-                string.Empty,
-                ["本地实例"],
-                "查看详情",
-                "CommandBlock.png",
-                directory.FullName,
-                0,
-                0,
-                0,
-                0))
-            .ToArray();
-    }
-
-    private static FrontendDownloadResourceEntry ToResourceEntry(
-        FrontendInstanceResourceEntry entry,
-        string source,
-        string version,
-        string loader)
-    {
-        var tags = entry.Meta.Split('•', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        return new FrontendDownloadResourceEntry(
-            entry.Title,
-            entry.Summary,
-            source,
-            version,
-            loader,
-            tags.Length == 0 ? ["本地内容"] : tags,
-            "查看详情",
-            entry.IconName,
-            entry.Path,
-            0,
-            0,
-            0,
-            0);
-    }
-
-    private static string ExtractLoader(string meta)
-    {
-        return meta.Contains("Forge", StringComparison.OrdinalIgnoreCase) ? "Forge"
-            : meta.Contains("NeoForge", StringComparison.OrdinalIgnoreCase) ? "NeoForge"
-            : meta.Contains("Fabric", StringComparison.OrdinalIgnoreCase) ? "Fabric"
-            : meta.Contains("Quilt", StringComparison.OrdinalIgnoreCase) ? "Quilt"
-            : meta.Contains("OptiFine", StringComparison.OrdinalIgnoreCase) ? "OptiFine"
-            : string.Empty;
-    }
-
-    private static IReadOnlyList<FrontendDownloadResourceFilterOption> BuildDefaultTagOptions(params string[] tags)
-    {
-        return
-        [
-            new FrontendDownloadResourceFilterOption("全部", string.Empty),
-            .. tags
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Select(tag => new FrontendDownloadResourceFilterOption(tag, tag))
-        ];
+        return FrontendCommunityResourceCatalogService.BuildResourceStates(
+            instanceComposition,
+            ReadValue(sharedConfig, "ToolDownloadMod", 1));
     }
 
     private static IReadOnlyList<LocalManifestEntry> ReadLocalManifestEntries(string launcherFolder)

@@ -251,22 +251,26 @@ internal sealed partial class FrontendShellViewModel
         if (_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var runtimeState))
         {
             DownloadResourceSurfaceTitle = runtimeState.SurfaceTitle;
-            DownloadResourceLoadingText = runtimeState.HintText;
+            DownloadResourceLoadingText = string.IsNullOrWhiteSpace(runtimeState.HintText)
+                ? "结果来自实时社区目录，尝试调整搜索与筛选条件。"
+                : runtimeState.HintText;
             DownloadResourceEmptyStateText = $"没有找到符合条件的{runtimeState.SurfaceTitle.Replace(" 列表", string.Empty)}条目。";
             DownloadResourceHintText = runtimeState.HintText;
             ShowDownloadResourceInstallModPackAction = runtimeState.ShowInstallModPackAction;
-            _downloadResourceSupportsModrinth = runtimeState.SupportsSecondarySource;
-            _downloadResourceSourceOptions = runtimeState.SupportsSecondarySource
-                ? [
-                    new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                    new DownloadResourceFilterOptionViewModel("当前实例", "当前实例"),
-                    new DownloadResourceFilterOptionViewModel("当前启动器", "当前启动器")
-                ]
-                : [
-                    new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                    new DownloadResourceFilterOptionViewModel("当前实例", "当前实例"),
-                    new DownloadResourceFilterOptionViewModel("当前启动器", "当前启动器")
-                ];
+            ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(runtimeState.HintText);
+            _downloadResourceSupportsModrinth = runtimeState.Entries.Any(entry => string.Equals(entry.Source, "Modrinth", StringComparison.OrdinalIgnoreCase));
+            var availableSources = runtimeState.Entries
+                .Select(entry => entry.Source)
+                .Where(source => !string.IsNullOrWhiteSpace(source))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(source => string.Equals(source, "CurseForge", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(source => source, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            _downloadResourceSourceOptions =
+            [
+                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                .. availableSources.Select(source => new DownloadResourceFilterOptionViewModel(source, source))
+            ];
             _downloadResourceTagOptions = runtimeState.TagOptions
                 .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
                 .ToArray();
@@ -511,9 +515,7 @@ internal sealed partial class FrontendShellViewModel
         var sourceFilter = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
         if (!string.IsNullOrWhiteSpace(sourceFilter))
         {
-            entries = ShowDownloadResourceHint && string.Equals(sourceFilter, "Modrinth", StringComparison.OrdinalIgnoreCase)
-                ? []
-                : entries.Where(entry => string.Equals(entry.Source, sourceFilter, StringComparison.OrdinalIgnoreCase));
+            entries = entries.Where(entry => string.Equals(entry.Source, sourceFilter, StringComparison.OrdinalIgnoreCase));
         }
 
         var tagFilter = GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex);
@@ -588,9 +590,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void UpdateDownloadResourceHint()
     {
-        var selectedSource = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
-        ShowDownloadResourceHint = _downloadResourceSupportsModrinth
-            && string.Equals(selectedSource, "Modrinth", StringComparison.OrdinalIgnoreCase);
+        ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(DownloadResourceHintText);
     }
 
     private static int ClampFilterIndex(int value, IReadOnlyList<DownloadResourceFilterOptionViewModel> options)
