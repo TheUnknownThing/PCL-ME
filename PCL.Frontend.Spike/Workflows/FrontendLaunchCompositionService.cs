@@ -1383,23 +1383,20 @@ internal static class FrontendLaunchCompositionService
 
     private static double ResolveAllocatedMemoryGigabytes(string indieDirectory, FrontendJavaRuntimeSummary? selectedJavaRuntime)
     {
-        var gcInfo = GC.GetGCMemoryInfo();
-        var totalMemoryBytes = gcInfo.TotalAvailableMemoryBytes > 0
-            ? gcInfo.TotalAvailableMemoryBytes
-            : 8L * 1024L * 1024L * 1024L;
-        var totalMemoryGb = totalMemoryBytes / 1024d / 1024d / 1024d;
-        var availableMemoryGb = Math.Max(totalMemoryBytes - GC.GetTotalMemory(forceFullCollection: false), 0L) / 1024d / 1024d / 1024d;
+        var (totalMemoryGb, availableMemoryGb) = FrontendSystemMemoryService.GetPhysicalMemoryState();
         var modsDirectory = Path.Combine(indieDirectory, "mods");
         var modCount = Directory.Exists(modsDirectory)
             ? Directory.EnumerateFiles(modsDirectory, "*", SearchOption.TopDirectoryOnly).Count()
             : 0;
-        var allocatedMemoryGb = Math.Min(Math.Max(1.5 + modCount / 90.0, 0.5), Math.Max(availableMemoryGb, 1.0));
-        if (selectedJavaRuntime?.Is64Bit == false)
-        {
-            allocatedMemoryGb = Math.Min(1.0, allocatedMemoryGb);
-        }
-
-        return Math.Round(Math.Min(allocatedMemoryGb, Math.Max(totalMemoryGb, 1.0)), 1);
+        return FrontendSystemMemoryService.CalculateAllocatedMemoryGb(
+            0,
+            customMemoryGb: 0,
+            isModable: modCount > 0,
+            hasOptiFine: false,
+            modCount,
+            selectedJavaRuntime?.Is64Bit,
+            totalMemoryGb,
+            availableMemoryGb);
     }
 
     private static string GetClasspathSeparator()

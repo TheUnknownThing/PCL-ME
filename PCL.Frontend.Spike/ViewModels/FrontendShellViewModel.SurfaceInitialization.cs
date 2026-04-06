@@ -79,6 +79,18 @@ internal sealed partial class FrontendShellViewModel
         _launchWindowHeight = _setupComposition.Launch.WindowHeight;
         _useAutomaticRamAllocation = _setupComposition.Launch.UseAutomaticRamAllocation;
         _customRamAllocation = _setupComposition.Launch.CustomRamAllocationGb;
+        var (totalMemoryGb, availableMemoryGb) = FrontendSystemMemoryService.GetPhysicalMemoryState();
+        _launchTotalRamGb = totalMemoryGb;
+        _launchUsedRamGb = Math.Max(totalMemoryGb - availableMemoryGb, 0);
+        _launchAutomaticAllocatedRamGb = FrontendSystemMemoryService.CalculateAllocatedMemoryGb(
+            0,
+            _customRamAllocation,
+            isModable: false,
+            hasOptiFine: false,
+            modCount: 0,
+            is64BitJava: null,
+            totalMemoryGb,
+            availableMemoryGb);
         _optimizeMemoryBeforeLaunch = _setupComposition.Launch.OptimizeMemoryBeforeLaunch;
         _isLaunchAdvancedOptionsExpanded = false;
         _selectedLaunchRendererIndex = _setupComposition.Launch.RendererIndex;

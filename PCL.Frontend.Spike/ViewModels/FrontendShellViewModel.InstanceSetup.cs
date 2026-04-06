@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
@@ -13,9 +14,12 @@ internal sealed partial class FrontendShellViewModel
     private int _instanceMemoryModeIndex = 2;
     private double _instanceCustomRamAllocation = 2.5;
     private int _selectedInstanceMemoryOptimizeIndex;
+    private double _instanceUsedRamGb;
+    private double _instanceTotalRamGb;
+    private double _instanceAutomaticAllocatedRamGb;
+    private double _instanceGlobalAllocatedRamGb;
     private string _instanceUsedRamLabel = "0.0 GB";
     private string _instanceTotalRamLabel = " / 0.0 GB";
-    private string _instanceAllocatedRamLabel = "0.0 GB";
     private bool _showInstanceRamAllocationWarning;
     private bool _showInstance32BitJavaWarning;
     private int _selectedInstanceServerLoginRequireIndex;
@@ -131,6 +135,8 @@ internal sealed partial class FrontendShellViewModel
             {
                 RaisePropertyChanged(nameof(InstanceCustomRamAllocationLabel));
                 RaisePropertyChanged(nameof(InstanceAllocatedRamLabel));
+                RaisePropertyChanged(nameof(InstanceAllocatedRamBarWidth));
+                RaisePropertyChanged(nameof(InstanceFreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowInstanceRamAllocationWarning));
             }
         }
@@ -148,9 +154,15 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceTotalRamLabel => _instanceTotalRamLabel;
 
-    public string InstanceAllocatedRamLabel => UseCustomInstanceRamAllocation
-        ? $"{Math.Round(InstanceCustomRamAllocation, 1):0.0} GB"
-        : _instanceAllocatedRamLabel;
+    public string InstanceAllocatedRamLabel => $"{ResolveInstanceAllocatedRamGb():0.0} GB";
+
+    public GridLength InstanceUsedRamBarWidth => CreateMemoryBarWidth(_instanceUsedRamGb);
+
+    public GridLength InstanceAllocatedRamBarWidth => CreateMemoryBarWidth(ResolveInstanceAllocatedRamGb());
+
+    public GridLength InstanceFreeRamBarWidth => CreateMemoryBarWidth(Math.Max(
+        _instanceTotalRamGb - _instanceUsedRamGb - ResolveInstanceAllocatedRamGb(),
+        0));
 
     public bool ShowInstanceRamAllocationWarning => UseCustomInstanceRamAllocation
         && (_showInstanceRamAllocationWarning || InstanceCustomRamAllocation >= 8);
@@ -299,9 +311,12 @@ internal sealed partial class FrontendShellViewModel
         _instanceMemoryModeIndex = Math.Clamp(setup.MemoryModeIndex, 0, 2);
         _instanceCustomRamAllocation = setup.CustomMemoryAllocationGb;
         _selectedInstanceMemoryOptimizeIndex = Math.Clamp(setup.OptimizeMemoryIndex, 0, InstanceMemoryOptimizeOptions.Count - 1);
+        _instanceUsedRamGb = setup.UsedMemoryGb;
+        _instanceTotalRamGb = setup.TotalMemoryGb;
+        _instanceAutomaticAllocatedRamGb = setup.AutomaticAllocatedMemoryGb;
+        _instanceGlobalAllocatedRamGb = setup.GlobalAllocatedMemoryGb;
         _instanceUsedRamLabel = setup.UsedMemoryLabel;
         _instanceTotalRamLabel = setup.TotalMemoryLabel;
-        _instanceAllocatedRamLabel = setup.AllocatedMemoryLabel;
         _showInstanceRamAllocationWarning = setup.ShowMemoryWarning;
         _showInstance32BitJavaWarning = setup.Show32BitJavaWarning;
         _selectedInstanceServerLoginRequireIndex = Math.Clamp(setup.ServerLoginRequirementIndex, 0, InstanceServerLoginRequireOptions.Count - 1);
@@ -348,6 +363,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceUsedRamLabel));
         RaisePropertyChanged(nameof(InstanceTotalRamLabel));
         RaisePropertyChanged(nameof(InstanceAllocatedRamLabel));
+        RaisePropertyChanged(nameof(InstanceUsedRamBarWidth));
+        RaisePropertyChanged(nameof(InstanceAllocatedRamBarWidth));
+        RaisePropertyChanged(nameof(InstanceFreeRamBarWidth));
         RaisePropertyChanged(nameof(ShowInstanceRamAllocationWarning));
         RaisePropertyChanged(nameof(ShowInstance32BitJavaWarning));
         RaisePropertyChanged(nameof(SelectedInstanceServerLoginRequireIndex));
@@ -397,6 +415,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(UseCustomInstanceRamAllocation));
         RaisePropertyChanged(nameof(IsInstanceCustomRamAllocationEnabled));
         RaisePropertyChanged(nameof(InstanceAllocatedRamLabel));
+        RaisePropertyChanged(nameof(InstanceAllocatedRamBarWidth));
+        RaisePropertyChanged(nameof(InstanceFreeRamBarWidth));
         RaisePropertyChanged(nameof(ShowInstanceRamAllocationWarning));
         RaisePropertyChanged(nameof(ShowInstance32BitJavaWarning));
         RaisePropertyChanged(nameof(SelectedInstanceMemoryOptimizeIndex));
@@ -408,5 +428,20 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(UseGlobalInstanceRamAllocation));
         RaisePropertyChanged(nameof(UseAutomaticInstanceRamAllocation));
         RaisePropertyChanged(nameof(UseCustomInstanceRamAllocation));
+    }
+
+    private static GridLength CreateMemoryBarWidth(double memoryGb)
+    {
+        return new GridLength(Math.Max(memoryGb, 0.05), GridUnitType.Star);
+    }
+
+    private double ResolveInstanceAllocatedRamGb()
+    {
+        return _instanceMemoryModeIndex switch
+        {
+            1 => Math.Round(InstanceCustomRamAllocation, 1),
+            2 => _instanceGlobalAllocatedRamGb,
+            _ => _instanceAutomaticAllocatedRamGb
+        };
     }
 }

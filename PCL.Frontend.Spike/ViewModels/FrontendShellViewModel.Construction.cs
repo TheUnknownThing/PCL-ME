@@ -206,6 +206,9 @@ internal sealed partial class FrontendShellViewModel
     private string _launchWindowHeight = "480";
     private bool _useAutomaticRamAllocation = true;
     private double _customRamAllocation = 3;
+    private double _launchUsedRamGb;
+    private double _launchTotalRamGb;
+    private double _launchAutomaticAllocatedRamGb;
     private bool _optimizeMemoryBeforeLaunch = true;
     private bool _isLaunchAdvancedOptionsExpanded;
     private int _selectedLaunchRendererIndex;

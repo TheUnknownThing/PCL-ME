@@ -136,16 +136,15 @@ internal sealed partial class PclCard : UserControl
 
     private void RefreshState()
     {
-        CardShadow.Background = _isHovered
-            ? Brush.Parse("#0B5BCB")
-            : Brush.Parse("#343D4A");
-        CardShadow.Opacity = _isHovered ? 0.3 : 0.1;
         CardBorder.BorderBrush = _isHovered
             ? Brush.Parse("#28D5E6FD")
             : Brush.Parse("#00FFFFFF");
         CardBorder.Background = _isHovered
             ? Brush.Parse("#E6FFFFFF")
             : Brush.Parse("#CDFFFFFF");
+        CardBorder.BoxShadow = BoxShadows.Parse(_isHovered
+            ? "0 10 24 0 #200B5BCB"
+            : "0 6 18 0 #14343D4A");
         HeaderTextBlock.Foreground = _isHovered
             ? Brush.Parse("#0B5BCB")
             : Brush.Parse("#343D4A");

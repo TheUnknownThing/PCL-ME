@@ -1,7 +1,9 @@
 using System.IO;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -218,6 +220,8 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(UseCustomRamAllocation));
                 RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
                 RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(AllocatedRamBarWidth));
+                RaisePropertyChanged(nameof(FreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowRamAllocationWarning));
             }
         }
@@ -238,6 +242,8 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(UseAutomaticRamAllocation));
                 RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
                 RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(AllocatedRamBarWidth));
+                RaisePropertyChanged(nameof(FreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowRamAllocationWarning));
             }
         }
@@ -254,6 +260,9 @@ internal sealed partial class FrontendShellViewModel
             {
                 RaisePropertyChanged(nameof(CustomRamAllocationLabel));
                 RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(UsedRamBarWidth));
+                RaisePropertyChanged(nameof(AllocatedRamBarWidth));
+                RaisePropertyChanged(nameof(FreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowRamAllocationWarning));
             }
         }
@@ -261,15 +270,28 @@ internal sealed partial class FrontendShellViewModel
 
     public string CustomRamAllocationLabel => $"{Math.Round(CustomRamAllocation):0} GB";
 
-    public string UsedRamLabel => "4.7 GB";
+    public string UsedRamLabel => $"{_launchUsedRamGb:0.0} GB";
 
-    public string TotalRamLabel => "7.9 GB";
+    public string TotalRamLabel => $"{_launchTotalRamGb:0.0} GB";
 
     public string AllocatedRamLabel => UseAutomaticRamAllocation
-        ? "2.5 GB"
-        : $"{Math.Round(CustomRamAllocation):0.0} GB";
+        ? $"{_launchAutomaticAllocatedRamGb:0.0} GB"
+        : $"{Math.Round(CustomRamAllocation, 1):0.0} GB";
 
-    public bool ShowRamAllocationWarning => UseCustomRamAllocation && CustomRamAllocation >= 8;
+    public GridLength UsedRamBarWidth => CreateMemoryBarWidth(_launchUsedRamGb);
+
+    public GridLength AllocatedRamBarWidth => CreateMemoryBarWidth(UseAutomaticRamAllocation
+        ? _launchAutomaticAllocatedRamGb
+        : Math.Round(CustomRamAllocation, 1));
+
+    public GridLength FreeRamBarWidth => CreateMemoryBarWidth(Math.Max(
+        _launchTotalRamGb - _launchUsedRamGb - (UseAutomaticRamAllocation ? _launchAutomaticAllocatedRamGb : Math.Round(CustomRamAllocation, 1)),
+        0));
+
+    public bool ShowRamAllocationWarning => UseCustomRamAllocation &&
+                                            (_launchTotalRamGb > 0
+                                                ? CustomRamAllocation / _launchTotalRamGb > 0.75
+                                                : CustomRamAllocation >= 8);
 
     public bool OptimizeMemoryBeforeLaunch
     {
