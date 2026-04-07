@@ -59,7 +59,7 @@
                             <Border
                               Background="Transparent"
                               CornerRadius="6"
-                              MinHeight="42">
+                              MinHeight="36">
                               <Grid
                                 HorizontalAlignment="Stretch"
                                 ColumnDefinitions="4,4,34,*"
@@ -278,12 +278,12 @@
                                 BorderBrush="{Binding BorderBrush}"
                                 BorderThickness="0"
                                 CornerRadius="6"
-                                MinHeight="42">
+                                MinHeight="36">
                               <Grid HorizontalAlignment="Stretch" ColumnDefinitions="4,*,Auto" RowDefinitions="*,Auto,Auto,*">
                               <Border
                                   Grid.RowSpan="4"
                                   Width="4"
-                                  Margin="0,4,8,4"
+                                  Margin="0,2,8,2"
                                   Background="{Binding ForegroundBrush}"
                                   CornerRadius="0,3,3,0"
                                   IsVisible="{Binding IsSelected}" />
