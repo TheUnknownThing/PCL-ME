@@ -336,11 +336,13 @@ internal sealed class FrontendShellActionService(
 
         ApplyPrerunPlan(launchComposition.PrerunPlan);
 
-        var launchScriptPath = Path.Combine(launcherDataDirectory, "LatestLaunch.bat");
+        var launchScriptPath = FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
+        CleanupLegacyLaunchScripts(launcherDataDirectory, launchScriptPath);
         File.WriteAllText(
             launchScriptPath,
             launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
             launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding ? new UTF8Encoding(false) : Encoding.Default);
+        EnsureFileExecutable(launchScriptPath);
 
         var sessionSummaryPath = GetUniqueFilePath(Path.Combine(logDirectory, $"session-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
         File.WriteAllLines(
@@ -428,6 +430,8 @@ internal sealed class FrontendShellActionService(
 
     public string GetCommandScriptExtension() => PlatformAdapter.GetCommandScriptExtension();
 
+    public string GetLatestLaunchScriptPath() => FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
+
     public string GetJavaExecutablePath(string runtimeDirectory) => PlatformAdapter.GetJavaExecutablePath(runtimeDirectory);
 
     public IReadOnlyList<string> GetDefaultJavaDetectionCandidates() => PlatformAdapter.GetDefaultJavaDetectionCandidates();
@@ -440,6 +444,21 @@ internal sealed class FrontendShellActionService(
             ?? throw new InvalidOperationException("当前系统未提供桌面目录。");
         var executablePath = Environment.ProcessPath ?? Path.Combine(RuntimePaths.ExecutableDirectory, "PCL.Frontend.Spike");
         return PlatformAdapter.CreateLauncherShortcut(desktopDirectory, executablePath, displayName).ShortcutPath;
+    }
+
+    private void CleanupLegacyLaunchScripts(string launcherDataDirectory, string retainedPath)
+    {
+        foreach (var candidatePath in FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                     launcherDataDirectory,
+                     PlatformAdapter))
+        {
+            if (PathsEqual(candidatePath, retainedPath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            TryDeleteFile(candidatePath);
+        }
     }
 
     private static void TryDeleteDirectory(string path)
@@ -455,6 +474,29 @@ internal sealed class FrontendShellActionService(
         {
             // Best-effort cleanup for temporary frontend artifacts.
         }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup for stale launch scripts.
+        }
+    }
+
+    private static bool PathsEqual(string left, string right)
+    {
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return string.Equals(left, right, comparison);
     }
 
     private static MinecraftJavaRuntimeDownloadTransferPlan ResolveEffectiveJavaTransferPlan(

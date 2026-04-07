@@ -2,8 +2,47 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendLauncherPathService
 {
+    private static readonly string[] KnownCommandScriptExtensions = [".bat", ".cmd", ".command", ".sh"];
+
     public static string DefaultLauncherFolderRaw =>
         OperatingSystem.IsWindows() ? "$.minecraft\\" : "$.minecraft/";
+
+    public static string GetLatestLaunchScriptFileName(FrontendPlatformAdapter platformAdapter)
+    {
+        ArgumentNullException.ThrowIfNull(platformAdapter);
+        return $"LatestLaunch{platformAdapter.GetCommandScriptExtension()}";
+    }
+
+    public static string GetLatestLaunchScriptPath(
+        FrontendRuntimePaths runtimePaths,
+        FrontendPlatformAdapter platformAdapter)
+    {
+        ArgumentNullException.ThrowIfNull(runtimePaths);
+        return Path.Combine(
+            runtimePaths.LauncherAppDataDirectory,
+            GetLatestLaunchScriptFileName(platformAdapter));
+    }
+
+    public static IEnumerable<string> EnumerateLatestLaunchScriptPaths(
+        string directory,
+        FrontendPlatformAdapter platformAdapter)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        ArgumentNullException.ThrowIfNull(platformAdapter);
+
+        var currentExtension = platformAdapter.GetCommandScriptExtension();
+        yield return Path.Combine(directory, $"LatestLaunch{currentExtension}");
+
+        foreach (var extension in KnownCommandScriptExtensions)
+        {
+            if (string.Equals(extension, currentExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            yield return Path.Combine(directory, $"LatestLaunch{extension}");
+        }
+    }
 
     public static string ResolveLauncherFolder(string? rawValue, FrontendRuntimePaths runtimePaths)
     {

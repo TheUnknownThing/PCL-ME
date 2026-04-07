@@ -407,17 +407,22 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshGameLogSurface()
     {
         var runtimePaths = _shellActionService.RuntimePaths;
-        var candidateFiles = new[]
-        {
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "LatestLaunch.bat"),
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "RawOutput.log"),
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "latest.log"),
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "LatestLaunch.bat"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "RawOutput.log"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "latest.log"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "PCL.log")
-        };
+        var candidateFiles = FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                runtimePaths.LauncherAppDataDirectory,
+                _shellActionService.PlatformAdapter)
+            .Concat(
+                FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                    Path.Combine(runtimePaths.ExecutableDirectory, "PCL"),
+                    _shellActionService.PlatformAdapter))
+            .Concat(
+            [
+                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "RawOutput.log"),
+                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "latest.log"),
+                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "RawOutput.log"),
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "latest.log"),
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "PCL.log")
+            ]);
         var recentFiles = candidateFiles
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log")))
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log")))
@@ -562,7 +567,10 @@ internal sealed partial class FrontendShellViewModel
         return Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
             .Where(path => path.EndsWith(".log", StringComparison.OrdinalIgnoreCase)
                            || path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-                           || path.EndsWith(".bat", StringComparison.OrdinalIgnoreCase));
+                           || path.EndsWith(".bat", StringComparison.OrdinalIgnoreCase)
+                           || path.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase)
+                           || path.EndsWith(".command", StringComparison.OrdinalIgnoreCase)
+                           || path.EndsWith(".sh", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)

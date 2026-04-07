@@ -34,7 +34,7 @@ internal static class FrontendShellCompositionService
                 mainWindowRequest.HasAcceptedEula,
                 mainWindowRequest.IsTelemetryDefault),
             mainWindowPlan.Consent,
-            BuildNavigationRequest(paths),
+            BuildNavigationRequest(paths, platformAdapter),
             "Runtime-composed shell inputs",
             $"Config: {paths.SharedConfigPath}");
     }
@@ -75,16 +75,31 @@ internal static class FrontendShellCompositionService
                 paths.SharedConfigPath));
     }
 
-    private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(FrontendRuntimePaths paths)
+    private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(
+        FrontendRuntimePaths paths,
+        FrontendPlatformAdapter platformAdapter)
     {
-        var hasGameLogs = File.Exists(Path.Combine(paths.ExecutableDirectory, "PCL", "LatestLaunch.bat")) ||
-                          File.Exists(Path.Combine(paths.LauncherAppDataDirectory, "LatestLaunch.bat")) ||
+        var hasGameLogs = HasLatestLaunchScript(paths.LauncherAppDataDirectory, platformAdapter) ||
+                          HasLatestLaunchScript(Path.Combine(paths.ExecutableDirectory, "PCL"), platformAdapter) ||
                           Directory.Exists(Path.Combine(paths.LauncherAppDataDirectory, "Log"));
 
         return new LauncherFrontendNavigationViewRequest(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
             HasRunningTasks: LauncherFrontendRuntimeStateService.HasRunningTasks(),
             HasGameLogs: hasGameLogs);
+    }
+
+    private static bool HasLatestLaunchScript(string directory, FrontendPlatformAdapter platformAdapter)
+    {
+        foreach (var path in FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(directory, platformAdapter))
+        {
+            if (File.Exists(path))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void ApplyVersionIsolationMigration(
