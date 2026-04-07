@@ -143,5 +143,6 @@ Those pages still contain some migration-language or shell-only affordances in p
 
 ## Notes
 
+- 2026-04-07: `DownloadMod` and the shared community resource catalog now continue fetching remote pages beyond the initial 80-item preload. The fix follows the classic `ModComp` offset-based behavior from `~/PCL-CE-Gold`, adds per-source continuation state for Modrinth and CurseForge, and lets the shared download-resource pagination request additional batches on demand so related pages such as packs, datapacks, resource packs, shaders, and worlds no longer stop at two UI pages.
 - The README still sets the overall expectation: the desktop shell is a migration scaffold, not a full launcher, and many page-specific production contracts remain incomplete.
 - I used the route catalog from `LauncherFrontendNavigationService` so the audit covered the known page inventory instead of only the pages that are easy to click to manually.

@@ -345,7 +345,7 @@ internal static class SpikeExecutor
                 plan.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
                 plan.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding);
             writtenFiles.Add(resolvedScriptExportPath);
-            artifacts.Add(new SpikeExecutionArtifact("Exported launch batch script", resolvedScriptExportPath));
+            artifacts.Add(new SpikeExecutionArtifact("Exported launch script", resolvedScriptExportPath));
 
             var scriptExportRecordPath = Path.Combine(workspaceRoot, "_artifacts", "launch-script-export.txt");
             WriteTextFile(
@@ -367,8 +367,8 @@ internal static class SpikeExecutor
             sections.Add(new SpikeTranscriptSection(
                 "Outcome",
                 [
-                    "Launch stopped after exporting the batch script.",
-                    $"Exported batch script: {resolvedScriptExportPath}",
+                    "Launch stopped after exporting the launch script.",
+                    $"Exported launch script: {resolvedScriptExportPath}",
                     $"Reveal target: {scriptExportPlan.RevealInShellPath}"
                 ]));
 
@@ -378,13 +378,16 @@ internal static class SpikeExecutor
                 new SpikeTranscript($"Launch Shell Execution ({plan.Scenario})", sections));
         }
 
-        var launchScriptPath = Path.Combine(workspaceRoot, "_artifacts", "Launch.bat");
+        var launchScriptPath = Path.Combine(
+            workspaceRoot,
+            "_artifacts",
+            $"Launch{GetCommandScriptExtension()}");
         WriteTextFile(
             launchScriptPath,
             plan.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
             plan.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding);
         writtenFiles.Add(launchScriptPath);
-        artifacts.Add(new SpikeExecutionArtifact("Launch batch script", launchScriptPath));
+        artifacts.Add(new SpikeExecutionArtifact("Launch script", launchScriptPath));
 
         var startupSummaryPath = Path.Combine(workspaceRoot, "_artifacts", "startup-summary.log");
         WriteTextFile(startupSummaryPath, string.Join(Environment.NewLine, plan.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines));
@@ -689,10 +692,20 @@ internal static class SpikeExecutor
     {
         return fileName switch
         {
-            "LatestLaunch.bat" => $"echo launching with accessToken {request.CurrentAccessToken} and user profile {request.UserProfilePath}",
+            _ when fileName.StartsWith("LatestLaunch", StringComparison.OrdinalIgnoreCase)
+                => $"echo launching with accessToken {request.CurrentAccessToken} and user profile {request.UserProfilePath}",
             "RawOutput.log" => $"Raw output with token {request.CurrentAccessToken} and uuid {request.CurrentUserUuid}",
             _ => $"Crash sidecar file from {fileName} for {request.UniqueAddress}"
         };
+    }
+
+    private static string GetCommandScriptExtension()
+    {
+        return OperatingSystem.IsWindows()
+            ? ".bat"
+            : OperatingSystem.IsMacOS()
+                ? ".command"
+                : ".sh";
     }
 
     private static void WriteTextFile(string path, string content, bool useUtf8Bom = false)

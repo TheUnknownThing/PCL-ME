@@ -125,6 +125,8 @@ internal static class FrontendCommunityProjectService
                 "先从收藏夹或市场条目进入，才能查看对应工程详情。",
                 string.Empty,
                 "未指定来源",
+                null,
+                null,
                 string.Empty,
                 "等待选择",
                 "尚未加载",
@@ -159,6 +161,8 @@ internal static class FrontendCommunityProjectService
                 "无法从实时来源加载该工程。",
                 string.Empty,
                 IsCurseForgeId(normalizedId) ? "CurseForge" : "Modrinth",
+                null,
+                null,
                 string.Empty,
                 "加载失败",
                 "未知",
@@ -338,6 +342,8 @@ internal static class FrontendCommunityProjectService
         var summary = NormalizeWhitespace(GetString(project, "description"));
         var body = TruncateText(CleanProjectDescription(GetString(project, "body")), 520);
         var website = BuildModrinthWebsite(project);
+        var iconUrl = GetString(project, "icon_url");
+        var iconPath = FrontendCommunityIconCache.TryGetCachedIconPath(iconUrl);
         var loaders = NormalizeProjectLoaders(DistinctValues(project["loaders"] as JsonArray));
         var categories = TranslateModrinthCategories(DistinctValues(project["categories"] as JsonArray)
             .Concat(DistinctValues(project["additional_categories"] as JsonArray)));
@@ -363,6 +369,8 @@ internal static class FrontendCommunityProjectService
             string.IsNullOrWhiteSpace(summary) ? "该项目没有提供额外摘要。" : summary,
             body,
             "Modrinth",
+            iconUrl,
+            iconPath,
             website,
             TranslateProjectStatus(GetString(project, "status")),
             FormatDateLabel(ParseDateTimeOffset(project["updated"])),
@@ -392,6 +400,9 @@ internal static class FrontendCommunityProjectService
         var data = project["data"]?.AsObject() ?? throw new InvalidOperationException("CurseForge 返回了空的工程数据。");
         var website = GetString(data["links"] as JsonObject, "websiteUrl")
                       ?? BuildCurseForgeWebsite(data);
+        var logo = data["logo"] as JsonObject;
+        var iconUrl = GetString(logo, "thumbnailUrl") ?? GetString(logo, "url");
+        var iconPath = FrontendCommunityIconCache.TryGetCachedIconPath(iconUrl);
         var filesResponse = ReadJsonObject(
             "CurseForge",
             $"https://api.curseforge.com/v1/mods/{projectId}/files?pageSize=10000",
@@ -440,6 +451,8 @@ internal static class FrontendCommunityProjectService
                 : "该项目没有提供额外摘要。",
             string.Empty,
             "CurseForge",
+            iconUrl,
+            iconPath,
             website,
             TranslateCurseForgeStatus(GetInt(data, "status")),
             FormatDateLabel(ParseDateTimeOffset(data["dateModified"]) ?? ParseDateTimeOffset(data["dateReleased"])),
@@ -536,6 +549,8 @@ internal static class FrontendCommunityProjectService
             meta,
             string.IsNullOrWhiteSpace(target) ? "查看详情" : "打开下载",
             target,
+            GetString(file, "filename"),
+            !string.IsNullOrWhiteSpace(GetString(file, "url")),
             gameVersions,
             loaders,
             publishedAt?.ToUnixTimeSeconds() ?? 0);
@@ -574,6 +589,8 @@ internal static class FrontendCommunityProjectService
             meta,
             string.IsNullOrWhiteSpace(downloadUrl) ? (string.IsNullOrWhiteSpace(website) ? "查看详情" : "打开项目页") : "打开下载",
             downloadUrl ?? website,
+            GetString(file, "fileName"),
+            !string.IsNullOrWhiteSpace(downloadUrl),
             gameVersions,
             loaders,
             publishedAt?.ToUnixTimeSeconds() ?? 0);

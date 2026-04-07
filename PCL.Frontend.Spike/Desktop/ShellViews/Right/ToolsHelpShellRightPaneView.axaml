@@ -27,6 +27,7 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <controls:PclCard
+                Margin="0,0,0,15"
                 Header="{Binding Title}"
                 ContentMargin="20,40,18,18"
                 HeaderCommand="{Binding ToggleCommand}"
@@ -50,7 +51,7 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-      <controls:PclCard Header="{Binding HelpSearchResultsHeader}" IsVisible="{Binding IsHelpSearchActive}" ContentMargin="20,40,18,18">
+      <controls:PclCard Margin="0,0,0,15" Header="{Binding HelpSearchResultsHeader}" IsVisible="{Binding IsHelpSearchActive}" ContentMargin="20,40,18,18">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <ItemsControl ItemsSource="{Binding HelpSearchResults}" IsVisible="{Binding HasHelpSearchResults}">

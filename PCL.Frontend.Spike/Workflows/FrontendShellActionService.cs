@@ -163,6 +163,40 @@ internal sealed class FrontendShellActionService(
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
+    public async Task<string?> PickSaveFileAsync(
+        string title,
+        string suggestedFileName,
+        string typeName,
+        string? suggestedStartFolder = null,
+        params string[] patterns)
+    {
+        var storageProvider = TryGetStorageProvider(out var error)
+            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件选择器。");
+        var fileTypes = patterns.Length == 0
+            ? null
+            : new List<FilePickerFileType>
+            {
+                new(typeName)
+                {
+                    Patterns = patterns
+                }
+            };
+        var startLocation = string.IsNullOrWhiteSpace(suggestedStartFolder)
+            ? null
+            : await storageProvider.TryGetFolderFromPathAsync(suggestedStartFolder);
+
+        var result = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedFileName,
+            DefaultExtension = Path.GetExtension(suggestedFileName),
+            FileTypeChoices = fileTypes,
+            SuggestedStartLocation = startLocation,
+            ShowOverwritePrompt = true
+        });
+        return result?.TryGetLocalPath();
+    }
+
     public async Task<string?> ReadClipboardTextAsync()
     {
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
@@ -190,10 +224,11 @@ internal sealed class FrontendShellActionService(
         string message,
         string initialText = "",
         string confirmText = "确定",
-        string? placeholderText = null)
+        string? placeholderText = null,
+        bool isPassword = false)
     {
         var owner = GetDesktopMainWindow();
-        var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText);
+        var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText, isPassword);
         return await dialog.ShowDialog<string?>(owner);
     }
 
@@ -326,6 +361,8 @@ internal sealed class FrontendShellActionService(
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
 
+        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts);
+
         var launcherDataDirectory = RuntimePaths.LauncherAppDataDirectory;
         var logDirectory = Path.Combine(launcherDataDirectory, "Log");
         Directory.CreateDirectory(launcherDataDirectory);
@@ -333,11 +370,13 @@ internal sealed class FrontendShellActionService(
 
         ApplyPrerunPlan(launchComposition.PrerunPlan);
 
-        var launchScriptPath = Path.Combine(launcherDataDirectory, "LatestLaunch.bat");
+        var launchScriptPath = FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
+        CleanupLegacyLaunchScripts(launcherDataDirectory, launchScriptPath);
         File.WriteAllText(
             launchScriptPath,
             launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
             launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding ? new UTF8Encoding(false) : Encoding.Default);
+        EnsureFileExecutable(launchScriptPath);
 
         var sessionSummaryPath = GetUniqueFilePath(Path.Combine(logDirectory, $"session-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
         File.WriteAllLines(
@@ -384,6 +423,32 @@ internal sealed class FrontendShellActionService(
             rawOutputLogPath);
     }
 
+    private static void EnsureRequiredArtifacts(IReadOnlyList<FrontendLaunchArtifactRequirement> requirements)
+    {
+        ArgumentNullException.ThrowIfNull(requirements);
+
+        foreach (var requirement in requirements)
+        {
+            if (File.Exists(requirement.TargetPath))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(requirement.TargetPath)!);
+            try
+            {
+                var payload = JavaRuntimeHttpClient.GetByteArrayAsync(requirement.DownloadUrl).GetAwaiter().GetResult();
+                File.WriteAllBytes(requirement.TargetPath, payload);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"缺少启动所需文件且自动下载失败：{requirement.TargetPath}",
+                    ex);
+            }
+        }
+    }
+
     public void ApplyWatcherStopShellPlan(FrontendLaunchComposition launchComposition)
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
@@ -399,6 +464,8 @@ internal sealed class FrontendShellActionService(
 
     public string GetCommandScriptExtension() => PlatformAdapter.GetCommandScriptExtension();
 
+    public string GetLatestLaunchScriptPath() => FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
+
     public string GetJavaExecutablePath(string runtimeDirectory) => PlatformAdapter.GetJavaExecutablePath(runtimeDirectory);
 
     public IReadOnlyList<string> GetDefaultJavaDetectionCandidates() => PlatformAdapter.GetDefaultJavaDetectionCandidates();
@@ -411,6 +478,21 @@ internal sealed class FrontendShellActionService(
             ?? throw new InvalidOperationException("当前系统未提供桌面目录。");
         var executablePath = Environment.ProcessPath ?? Path.Combine(RuntimePaths.ExecutableDirectory, "PCL.Frontend.Spike");
         return PlatformAdapter.CreateLauncherShortcut(desktopDirectory, executablePath, displayName).ShortcutPath;
+    }
+
+    private void CleanupLegacyLaunchScripts(string launcherDataDirectory, string retainedPath)
+    {
+        foreach (var candidatePath in FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                     launcherDataDirectory,
+                     PlatformAdapter))
+        {
+            if (PathsEqual(candidatePath, retainedPath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            TryDeleteFile(candidatePath);
+        }
     }
 
     private static void TryDeleteDirectory(string path)
@@ -426,6 +508,29 @@ internal sealed class FrontendShellActionService(
         {
             // Best-effort cleanup for temporary frontend artifacts.
         }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup for stale launch scripts.
+        }
+    }
+
+    private static bool PathsEqual(string left, string right)
+    {
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return string.Equals(left, right, comparison);
     }
 
     private static MinecraftJavaRuntimeDownloadTransferPlan ResolveEffectiveJavaTransferPlan(
@@ -834,18 +939,9 @@ internal sealed class FrontendShellActionService(
 
     private byte[] ResolveSharedEncryptionKey()
     {
-        var explicitKey = LauncherSecretKeyResolutionService.ParseExplicitKeyOverride(
+        return LauncherSharedEncryptionKeyService.ResolveOrCreate(
+            RuntimePaths.SharedConfigDirectory,
             Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY"));
-        if (explicitKey is not null)
-        {
-            return explicitKey;
-        }
-
-        var persistedKeyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(RuntimePaths.SharedConfigDirectory);
-        var persistedEnvelope = LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(persistedKeyPath)
-            ?? throw new InvalidOperationException("Launcher encryption key is unavailable.");
-        var storedKey = LauncherVersionedDataService.Parse(persistedEnvelope);
-        return LauncherStoredKeyEnvelopeService.ReadKey(storedKey);
     }
 }
 

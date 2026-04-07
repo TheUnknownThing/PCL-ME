@@ -1565,20 +1565,44 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void AddJavaRuntime()
+    private async Task AddJavaRuntimeAsync()
     {
-        var javaPath = _shellActionService.GetDefaultJavaDetectionCandidates()
-            .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
-        if (string.IsNullOrWhiteSpace(javaPath))
+        string? selectedPath;
+        try
         {
-            AddActivity("添加 Java", "未找到可自动添加的 Java，可先通过当前启动器扫描或手动写入 Java 列表。");
+            selectedPath = await _shellActionService.PickOpenFileAsync(
+                "选择 Java 程序",
+                OperatingSystem.IsWindows() ? "Java 程序" : "Java 可执行文件",
+                OperatingSystem.IsWindows() ? "*.exe" : "java",
+                OperatingSystem.IsWindows() ? "java.exe" : "java.exe",
+                OperatingSystem.IsWindows() ? "javaw.exe" : "javaw");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("添加 Java 失败", ex.Message);
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(selectedPath))
+        {
+            AddActivity("添加 Java", "已取消选择 Java 程序。");
+            return;
+        }
+
+        var installation = ParseJavaInstallation(selectedPath);
+        if (installation is null)
+        {
+            AddActivity("添加 Java 失败", $"无法识别所选文件为可用的 Java：{selectedPath}");
+            return;
+        }
+
+        var javaPath = Path.GetFullPath(installation.JavaExePath);
         var items = LoadStoredJavaItems();
         if (items.Any(item => string.Equals(item.Path, javaPath, StringComparison.OrdinalIgnoreCase)))
         {
             AddActivity("添加 Java", $"Java 已存在于配置列表中：{javaPath}");
+            SelectJavaRuntime(javaPath);
+            ReloadSetupComposition();
             return;
         }
 
@@ -1589,8 +1613,9 @@ internal sealed partial class FrontendShellViewModel
             Source = JavaSource.ManualAdded
         });
         SaveStoredJavaItems(items);
+        SelectJavaRuntime(javaPath);
         ReloadSetupComposition();
-        AddActivity("添加 Java", $"已将 {javaPath} 写入启动器 Java 列表。");
+        AddActivity("添加 Java", $"已添加并选中 {javaPath}");
     }
 
     private JavaRuntimeEntryViewModel CreateJavaRuntimeEntry(

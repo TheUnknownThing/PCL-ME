@@ -404,19 +404,37 @@
                         Grid.RowSpan="3"
                         Width="50"
                         Height="50"
+                        ClipToBounds="True"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Background="#F7FAFE"
                         BorderBrush="#D5E6FD"
                         BorderThickness="1"
                         CornerRadius="6">
-                      <TextBlock
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Foreground="#4B78C2"
-                          FontSize="16"
-                          FontWeight="Bold"
-                          Text="{Binding CommunityProjectSourceBadgeText}" />
+                      <Grid>
+                        <Image
+                            Width="50"
+                            Height="50"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            ClipToBounds="True"
+                            IsVisible="{Binding HasCommunityProjectIcon}"
+                            Source="{Binding CommunityProjectIcon}"
+                            Stretch="UniformToFill" />
+                        <Border
+                            Margin="0,0,4,4"
+                            Padding="4,1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Background="#D90B5BCB"
+                            CornerRadius="3">
+                          <TextBlock
+                              Foreground="White"
+                              FontSize="9.5"
+                              FontWeight="SemiBold"
+                              Text="{Binding CommunityProjectSourceBadgeText}" />
+                        </Border>
+                      </Grid>
                     </Border>
 
                     <TextBlock

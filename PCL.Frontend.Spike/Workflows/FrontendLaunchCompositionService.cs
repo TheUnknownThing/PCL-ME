@@ -32,7 +32,9 @@ internal static class FrontendLaunchCompositionService
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
 
-        var launcherFolder = ResolveLauncherFolder(ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"), runtimePaths);
+        var launcherFolder = FrontendLauncherPathService.ResolveLauncherFolder(
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+            runtimePaths);
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
         var instancePath = string.IsNullOrWhiteSpace(selectedInstanceName)
             ? Path.Combine(launcherFolder, "versions")
@@ -47,6 +49,7 @@ internal static class FrontendLaunchCompositionService
         var selectedProfile = ReadSelectedProfile(runtimePaths);
         var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
+        var requiredArtifacts = BuildRequiredArtifacts(launcherFolder, selectedInstanceName);
         var selectedJavaRuntime = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, javaWorkflow);
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
             localConfig,
@@ -160,6 +163,7 @@ internal static class FrontendLaunchCompositionService
             options.Scenario,
             string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName,
             instancePath,
+            requiredArtifacts,
             selectedProfile,
             selectedJavaRuntime,
             launchCount,
@@ -220,11 +224,13 @@ internal static class FrontendLaunchCompositionService
             plan.ReplacementPlan.Values.TryGetValue("${game_directory}", out var gameDirectory)
                 ? gameDirectory
                 : string.Empty,
+            Array.Empty<FrontendLaunchArtifactRequirement>(),
             new FrontendLaunchProfileSummary(
                 selectedProfileKind,
                 playerName,
                 plan.ReplacementPlan.Values.TryGetValue("${auth_uuid}", out var uuid) ? uuid : null,
                 plan.ReplacementPlan.Values.TryGetValue("${auth_access_token}", out var accessToken) ? accessToken : null,
+                null,
                 null,
                 null,
                 plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft),
@@ -497,6 +503,96 @@ internal static class FrontendLaunchCompositionService
             ClasspathSeparator: GetClasspathSeparator());
     }
 
+    private static IReadOnlyList<FrontendLaunchArtifactRequirement> BuildRequiredArtifacts(
+        string launcherFolder,
+        string selectedInstanceName)
+    {
+        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        {
+            return [];
+        }
+
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var requirements = new Dictionary<string, FrontendLaunchArtifactRequirement>(StringComparer.OrdinalIgnoreCase);
+        CollectRequiredArtifactsRecursive(launcherFolder, selectedInstanceName, visited, requirements);
+        return requirements.Values.ToArray();
+    }
+
+    private static void CollectRequiredArtifactsRecursive(
+        string launcherFolder,
+        string versionName,
+        ISet<string> visited,
+        IDictionary<string, FrontendLaunchArtifactRequirement> requirements)
+    {
+        if (!visited.Add(versionName))
+        {
+            return;
+        }
+
+        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
+        if (!File.Exists(manifestPath))
+        {
+            return;
+        }
+
+        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        var root = document.RootElement;
+        var parentVersion = GetString(root, "inheritsFrom");
+        if (!string.IsNullOrWhiteSpace(parentVersion))
+        {
+            CollectRequiredArtifactsRecursive(launcherFolder, parentVersion, visited, requirements);
+        }
+
+        var clientDownloadUrl = GetNestedString(root, "downloads", "client", "url");
+        if (!string.IsNullOrWhiteSpace(clientDownloadUrl))
+        {
+            var clientJarPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.jar");
+            requirements[clientJarPath] = new FrontendLaunchArtifactRequirement(
+                clientJarPath,
+                clientDownloadUrl,
+                GetNestedString(root, "downloads", "client", "sha1"));
+        }
+
+        if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (var library in libraries.EnumerateArray())
+        {
+            if (!IsLibraryAllowedOnCurrentPlatform(library))
+            {
+                continue;
+            }
+
+            var artifactPath = GetNestedString(library, "downloads", "artifact", "path");
+            var artifactUrl = GetNestedString(library, "downloads", "artifact", "url");
+            var artifactSha1 = GetNestedString(library, "downloads", "artifact", "sha1");
+            var name = GetString(library, "name");
+            var rootUrl = GetString(library, "url");
+
+            if (string.IsNullOrWhiteSpace(artifactPath) && !string.IsNullOrWhiteSpace(name))
+            {
+                artifactPath = DeriveLibraryPathFromName(name);
+            }
+
+            if (string.IsNullOrWhiteSpace(artifactUrl) &&
+                !string.IsNullOrWhiteSpace(rootUrl) &&
+                !string.IsNullOrWhiteSpace(artifactPath))
+            {
+                artifactUrl = rootUrl.TrimEnd('/') + "/" + artifactPath.Replace('\\', '/');
+            }
+
+            if (string.IsNullOrWhiteSpace(artifactPath) || string.IsNullOrWhiteSpace(artifactUrl))
+            {
+                continue;
+            }
+
+            var targetPath = Path.Combine(launcherFolder, "libraries", artifactPath.Replace('/', Path.DirectorySeparatorChar));
+            requirements[targetPath] = new FrontendLaunchArtifactRequirement(targetPath, artifactUrl, artifactSha1);
+        }
+    }
+
     private static MinecraftLaunchJavaWorkflowRequest BuildJavaWorkflowRequest(
         MinecraftLaunchJavaWorkflowRequest fallback,
         FrontendVersionManifestSummary manifestSummary)
@@ -557,19 +653,10 @@ internal static class FrontendLaunchCompositionService
 
     private static FrontendLaunchProfileSummary ReadSelectedProfile(FrontendRuntimePaths runtimePaths)
     {
-        var profilesPath = Path.Combine(runtimePaths.LauncherAppDataDirectory, "profiles.json");
-        if (!File.Exists(profilesPath))
-        {
-            return BuildFallbackProfile(runtimePaths);
-        }
-
         try
         {
-            var document = MinecraftLaunchProfileStorageService.ParseDocument(
-                File.ReadAllText(profilesPath),
-                value => LauncherFrontendRuntimeStateService.TryUnprotectString(
-                    runtimePaths.SharedConfigDirectory,
-                    value) ?? value ?? string.Empty);
+            var profileDocument = FrontendProfileStorageService.Load(runtimePaths).Document;
+            var document = profileDocument;
             var selectedProfile = document.LastUsedProfile >= 0 && document.LastUsedProfile < document.Profiles.Count
                 ? document.Profiles[document.LastUsedProfile]
                 : document.Profiles.FirstOrDefault();
@@ -592,6 +679,7 @@ internal static class FrontendLaunchCompositionService
                 selectedProfile.AccessToken,
                 selectedProfile.ClientToken,
                 selectedProfile.Server,
+                selectedProfile.ServerName,
                 document.Profiles.Any(profile => profile.Kind == MinecraftLaunchStoredProfileKind.Microsoft));
         }
         catch
@@ -609,6 +697,7 @@ internal static class FrontendLaunchCompositionService
         return new FrontendLaunchProfileSummary(
             string.IsNullOrWhiteSpace(legacyName) ? MinecraftLaunchProfileKind.None : MinecraftLaunchProfileKind.Legacy,
             string.IsNullOrWhiteSpace(legacyName) ? "未选择档案" : legacyName,
+            null,
             null,
             null,
             null,
@@ -790,6 +879,11 @@ internal static class FrontendLaunchCompositionService
         var result = new List<MinecraftLaunchClasspathLibrary>();
         foreach (var library in libraries.EnumerateArray())
         {
+            if (!IsLibraryAllowedOnCurrentPlatform(library))
+            {
+                continue;
+            }
+
             var name = GetString(library, "name");
             var artifactPath = GetNestedString(library, "downloads", "artifact", "path");
             if (string.IsNullOrWhiteSpace(artifactPath) && !string.IsNullOrWhiteSpace(name))
@@ -809,6 +903,71 @@ internal static class FrontendLaunchCompositionService
         }
 
         return result.ToArray();
+    }
+
+    private static bool IsLibraryAllowedOnCurrentPlatform(JsonElement library)
+    {
+        if (!library.TryGetProperty("rules", out var rules) || rules.ValueKind != JsonValueKind.Array)
+        {
+            return true;
+        }
+
+        var allowed = false;
+        foreach (var rule in rules.EnumerateArray())
+        {
+            if (!RuleMatchesCurrentPlatform(rule))
+            {
+                continue;
+            }
+
+            allowed = !string.Equals(GetString(rule, "action"), "disallow", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return allowed;
+    }
+
+    private static bool RuleMatchesCurrentPlatform(JsonElement rule)
+    {
+        if (!rule.TryGetProperty("os", out var os) || os.ValueKind != JsonValueKind.Object)
+        {
+            return true;
+        }
+
+        var osName = GetString(os, "name");
+        if (!string.IsNullOrWhiteSpace(osName) && !IsCurrentOs(osName))
+        {
+            return false;
+        }
+
+        var osArch = GetString(os, "arch");
+        if (!string.IsNullOrWhiteSpace(osArch) && !IsCurrentArchitecture(osArch))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsCurrentOs(string osName)
+    {
+        return osName.ToLowerInvariant() switch
+        {
+            "windows" => OperatingSystem.IsWindows(),
+            "osx" or "macos" => OperatingSystem.IsMacOS(),
+            "linux" => OperatingSystem.IsLinux(),
+            _ => true
+        };
+    }
+
+    private static bool IsCurrentArchitecture(string osArch)
+    {
+        return osArch.ToLowerInvariant() switch
+        {
+            "x86" => RuntimeInformation.ProcessArchitecture == Architecture.X86,
+            "x86_64" or "amd64" => RuntimeInformation.ProcessArchitecture == Architecture.X64,
+            "arm64" or "aarch64" => RuntimeInformation.ProcessArchitecture == Architecture.Arm64,
+            _ => true
+        };
     }
 
     private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
@@ -914,15 +1073,6 @@ internal static class FrontendLaunchCompositionService
         return RuntimeInformation.ProcessArchitecture == Architecture.X86
             ? "linux-i386"
             : "linux";
-    }
-
-    private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
-    {
-        var normalized = string.IsNullOrWhiteSpace(rawValue)
-            ? "$.minecraft\\"
-            : rawValue.Trim();
-        normalized = normalized.Replace("$", EnsureTrailingSeparator(runtimePaths.ExecutableDirectory), StringComparison.Ordinal);
-        return Path.GetFullPath(normalized);
     }
 
     private static string NormalizeSelectedJavaPath(string rawValue)

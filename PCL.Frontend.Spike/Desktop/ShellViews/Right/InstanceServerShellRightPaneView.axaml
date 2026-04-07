@@ -28,7 +28,7 @@
       <ItemsControl ItemsSource="{Binding InstanceServerEntries}" IsVisible="{Binding HasInstanceServerEntries}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <controls:PclCard Header="{Binding Title}" ContentMargin="20,12,20,15">
+            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="20,12,20,15">
               <controls:PclCard.CardContent>
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Margin="0,0,18,0" Spacing="4">

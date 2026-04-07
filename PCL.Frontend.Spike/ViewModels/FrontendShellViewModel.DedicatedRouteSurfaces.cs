@@ -283,7 +283,7 @@ internal sealed partial class FrontendShellViewModel
         var runtimePaths = _shellActionService.RuntimePaths;
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
         var launcherDirectory = ResolveLauncherFolder(
-            ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"),
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
         var selectedInstance = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
         var versionsDirectory = Path.Combine(launcherDirectory, "versions");
@@ -407,17 +407,22 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshGameLogSurface()
     {
         var runtimePaths = _shellActionService.RuntimePaths;
-        var candidateFiles = new[]
-        {
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "LatestLaunch.bat"),
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "RawOutput.log"),
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "latest.log"),
-            Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "LatestLaunch.bat"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "RawOutput.log"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "latest.log"),
-            Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "PCL.log")
-        };
+        var candidateFiles = FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                runtimePaths.LauncherAppDataDirectory,
+                _shellActionService.PlatformAdapter)
+            .Concat(
+                FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                    Path.Combine(runtimePaths.ExecutableDirectory, "PCL"),
+                    _shellActionService.PlatformAdapter))
+            .Concat(
+            [
+                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "RawOutput.log"),
+                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "latest.log"),
+                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "RawOutput.log"),
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "latest.log"),
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "PCL.log")
+            ]);
         var recentFiles = candidateFiles
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log")))
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log")))
@@ -562,23 +567,15 @@ internal sealed partial class FrontendShellViewModel
         return Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
             .Where(path => path.EndsWith(".log", StringComparison.OrdinalIgnoreCase)
                            || path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-                           || path.EndsWith(".bat", StringComparison.OrdinalIgnoreCase));
+                           || path.EndsWith(".bat", StringComparison.OrdinalIgnoreCase)
+                           || path.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase)
+                           || path.EndsWith(".command", StringComparison.OrdinalIgnoreCase)
+                           || path.EndsWith(".sh", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
     {
-        var normalized = string.IsNullOrWhiteSpace(rawValue)
-            ? "$.minecraft\\"
-            : rawValue.Trim();
-        normalized = normalized.Replace("$", EnsureStepSurfaceTrailingSeparator(runtimePaths.ExecutableDirectory), StringComparison.Ordinal);
-        return Path.GetFullPath(normalized);
-    }
-
-    private static string EnsureStepSurfaceTrailingSeparator(string path)
-    {
-        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
-            ? path
-            : path + Path.DirectorySeparatorChar;
+        return FrontendLauncherPathService.ResolveLauncherFolder(rawValue, runtimePaths);
     }
 
     private static InstanceSelectionSnapshot? BuildInstanceSelectionSnapshot(string directory, string selectedInstance)

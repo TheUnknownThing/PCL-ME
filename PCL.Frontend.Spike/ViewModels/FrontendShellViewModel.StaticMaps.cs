@@ -290,19 +290,29 @@ internal sealed partial class FrontendShellViewModel
         return Path.GetFullPath(Path.Combine([LauncherRootDirectory, .. segments]));
     }
 
-    private static Bitmap? LoadLauncherBitmap(params string[] segments)
+    private static Bitmap? LoadCachedBitmapFromPath(string? filePath)
     {
-        var filePath = GetLauncherAssetPath(segments);
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return null;
+        }
+
+        var normalizedPath = Path.GetFullPath(filePath);
         lock (LauncherBitmapCacheLock)
         {
-            if (LauncherBitmapCache.TryGetValue(filePath, out var bitmap))
+            if (LauncherBitmapCache.TryGetValue(normalizedPath, out var bitmap))
             {
                 return bitmap;
             }
 
-            bitmap = File.Exists(filePath) ? new Bitmap(filePath) : null;
-            LauncherBitmapCache[filePath] = bitmap;
+            bitmap = File.Exists(normalizedPath) ? new Bitmap(normalizedPath) : null;
+            LauncherBitmapCache[normalizedPath] = bitmap;
             return bitmap;
         }
+    }
+
+    private static Bitmap? LoadLauncherBitmap(params string[] segments)
+    {
+        return LoadCachedBitmapFromPath(GetLauncherAssetPath(segments));
     }
 }

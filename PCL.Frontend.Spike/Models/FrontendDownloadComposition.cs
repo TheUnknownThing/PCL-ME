@@ -56,6 +56,7 @@ internal sealed record FrontendDownloadResourceState(
     bool UseShaderLoaderOptions,
     string HintText,
     IReadOnlyList<FrontendDownloadResourceFilterOption> TagOptions,
+    bool HasMoreEntries,
     IReadOnlyList<FrontendDownloadResourceEntry> Entries);
 
 internal sealed record FrontendDownloadResourceFilterOption(
@@ -69,7 +70,11 @@ internal sealed record FrontendDownloadResourceEntry(
     string Version,
     string Loader,
     IReadOnlyList<string> Tags,
+    IReadOnlyList<string> SupportedVersions,
+    IReadOnlyList<string> SupportedLoaders,
     string ActionText,
+    string? IconUrl,
+    string? IconPath,
     string? IconName,
     string? TargetPath,
     int DownloadCount,

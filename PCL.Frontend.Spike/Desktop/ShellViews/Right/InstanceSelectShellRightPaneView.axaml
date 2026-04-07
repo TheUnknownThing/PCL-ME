@@ -9,7 +9,7 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
+      <Setter Property="Padding" Value="10,8" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
     <Style Selector="Button.instance-entry:pointerover">
@@ -62,7 +62,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <controls:PclCard
-                  Margin="0,0,0,15"
+                  Margin="4,4,4,18"
                   Header="{Binding HeaderText}"
                   HeaderCommand="{Binding ToggleExpandCommand}"
                   ShowChevron="True"
@@ -75,7 +75,7 @@
                         <Button
                             Classes="instance-entry"
                             Command="{Binding SelectCommand}">
-                          <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*,Auto">
+                          <Grid Margin="0,0,0,6" ColumnDefinitions="Auto,*,Auto">
                             <Image
                                 Width="32"
                                 Height="32"

@@ -25,18 +25,8 @@ public static class LauncherDataProtectionRuntime
 
     private static byte[] ResolveEncryptionKey()
     {
-        var keyFile = LauncherSecretKeyStorageService.GetPersistedKeyPath(Paths.SharedData);
-        var resolution = LauncherSecretKeyResolutionService.Resolve(new LauncherSecretKeyResolutionRequest(
-            ExplicitKeyOverride: EnvironmentInterop.GetSecret("ENCRYPTION_KEY", readEnvDebugOnly: true),
-            PersistedKeyEnvelope: LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(keyFile),
-            ReadPersistedKey: LauncherStoredKeyEnvelopeService.ReadKey,
-            ProtectGeneratedKey: LauncherStoredKeyEnvelopeService.CreateStoredKeyEnvelope));
-
-        if (resolution.ShouldPersist && resolution.PersistedKeyEnvelope is not null)
-        {
-            LauncherSecretKeyStorageService.PersistKeyEnvelope(keyFile, resolution.PersistedKeyEnvelope);
-        }
-
-        return resolution.Key;
+        return LauncherSharedEncryptionKeyService.ResolveOrCreate(
+            Paths.SharedData,
+            EnvironmentInterop.GetSecret("ENCRYPTION_KEY", readEnvDebugOnly: true));
     }
 }

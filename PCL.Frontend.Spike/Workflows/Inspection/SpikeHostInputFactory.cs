@@ -169,7 +169,7 @@ internal static class SpikeHostInputFactory
                 ReportDirectory = Path.Combine(Path.GetTempPath(), "PCL", "CrashReport", DateTime.Now.ToString("yyyy-MM-dd")),
                 SourceFilePaths =
                 [
-                    Path.Combine(GetLauncherAppDataDirectory(), "LatestLaunch.bat"),
+                    Path.Combine(GetLauncherAppDataDirectory(), $"LatestLaunch{GetCommandScriptExtension()}"),
                     Path.Combine(logDirectory, "RawOutput.log")
                 ],
                 AdditionalSourceFilePaths =
@@ -206,6 +206,15 @@ internal static class SpikeHostInputFactory
         }
 
         return Path.Combine(homeDirectory, ".minecraft");
+    }
+
+    private static string GetCommandScriptExtension()
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? ".bat"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? ".command"
+                : ".sh";
     }
 
     private static Version GetHostVersionForStartupChecks()

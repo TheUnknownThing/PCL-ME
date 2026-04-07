@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Threading;
 using Avalonia.Animation;
 using Avalonia;
 using Avalonia.Animation.Easings;
@@ -7,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using PCL.Frontend.Spike.Desktop.Animation;
@@ -30,6 +33,7 @@ internal sealed partial class MainWindow : Window
     private Compositor? _compositor;
     private int _promptOverlayAnimationVersion;
     private bool _isPromptOverlayRenderedOpen;
+    private readonly Dictionary<string, HintPopupState> _activeHints = new(StringComparer.Ordinal);
 
     public MainWindow()
     {
@@ -59,12 +63,14 @@ internal sealed partial class MainWindow : Window
         }
 
         GridRoot.Opacity = 0;
+        SpikeHintBus.OnShow += OnHintWrapperShow;
 
         Opened += (_, _) =>
         {
             InitializeCompositionVisuals();
             RunEntranceAnimation();
         };
+        Closed += OnWindowClosed;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
         UpdateWindowChromeState();
@@ -212,6 +218,20 @@ internal sealed partial class MainWindow : Window
         }
     }
 
+    private void OnWindowClosed(object? sender, EventArgs e)
+    {
+        SpikeHintBus.OnShow -= OnHintWrapperShow;
+        Closed -= OnWindowClosed;
+
+        foreach (var state in _activeHints.Values)
+        {
+            state.LifetimeCancellation.Cancel();
+            state.LifetimeCancellation.Dispose();
+        }
+
+        _activeHints.Clear();
+    }
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         if (_shellViewModel is not null)
@@ -299,6 +319,184 @@ internal sealed partial class MainWindow : Window
         MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
     }
 
+    private void OnHintWrapperShow(string message, SpikeHintTheme theme)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(
+            () => _ = ShowHintAsync(NormalizeHintMessage(message), theme),
+            DispatcherPriority.Background);
+    }
+
+    private async Task ShowHintAsync(string message, SpikeHintTheme theme)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        if (_activeHints.TryGetValue(message, out var existingState))
+        {
+            existingState.ApplyTheme(theme);
+            ResetHintLifetime(existingState);
+            await NudgeHintAsync(existingState);
+            return;
+        }
+
+        if (PanHint.Children.Count >= 20)
+        {
+            return;
+        }
+
+        var border = CreateHintBorder(message, theme);
+        var state = new HintPopupState(message, border);
+        _activeHints[message] = state;
+        PanHint.Children.Add(border);
+
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        border.Opacity = 1;
+        border.RenderTransform = new TranslateTransform(0, 0);
+        ResetHintLifetime(state);
+    }
+
+    private void ResetHintLifetime(HintPopupState state)
+    {
+        state.LifetimeCancellation.Cancel();
+        state.LifetimeCancellation.Dispose();
+        state.LifetimeCancellation = new CancellationTokenSource();
+        _ = HideHintLaterAsync(state, state.LifetimeCancellation.Token);
+    }
+
+    private async Task HideHintLaterAsync(HintPopupState state, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var visibleDuration = TimeSpan.FromMilliseconds(800 + Math.Clamp(state.Message.Length, 5, 23) * 180);
+            await Task.Delay(visibleDuration, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested || state.IsClosing)
+        {
+            return;
+        }
+
+        state.IsClosing = true;
+        state.Border.Opacity = 0;
+        state.Border.RenderTransform = new TranslateTransform(48, 0);
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            state.IsClosing = false;
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            state.IsClosing = false;
+            return;
+        }
+
+        PanHint.Children.Remove(state.Border);
+        _activeHints.Remove(state.Message);
+        state.LifetimeCancellation.Dispose();
+    }
+
+    private async Task NudgeHintAsync(HintPopupState state)
+    {
+        if (state.IsClosing)
+        {
+            return;
+        }
+
+        state.Border.RenderTransform = new TranslateTransform(12, 0);
+        await Task.Delay(70);
+        if (!state.IsClosing)
+        {
+            state.Border.RenderTransform = new TranslateTransform(0, 0);
+        }
+    }
+
+    private static string NormalizeHintMessage(string message)
+    {
+        return message
+            .Replace("\r\n", " ", StringComparison.Ordinal)
+            .Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Trim();
+    }
+
+    private static Border CreateHintBorder(string message, SpikeHintTheme theme)
+    {
+        var border = new Border
+        {
+            MaxWidth = 360,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            CornerRadius = new CornerRadius(6, 0, 0, 6),
+            Padding = new Thickness(14, 6, 14, 6),
+            Opacity = 0,
+            RenderTransform = new TranslateTransform(48, 0),
+            BoxShadow = BoxShadows.Parse("0 6 18 0 #28000000")
+        };
+        border.Transitions = new Transitions
+        {
+            new DoubleTransition
+            {
+                Property = Visual.OpacityProperty,
+                Duration = TimeSpan.FromMilliseconds(100),
+                Easing = new CubicEaseOut()
+            },
+            new TransformOperationsTransition
+            {
+                Property = Visual.RenderTransformProperty,
+                Duration = TimeSpan.FromMilliseconds(220),
+                Easing = new CubicEaseOut()
+            }
+        };
+        border.Child = new TextBlock
+        {
+            Text = message,
+            FontSize = 13,
+            Foreground = Brushes.White,
+            TextWrapping = TextWrapping.NoWrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxWidth = 332
+        };
+
+        ApplyHintTheme(border, theme);
+        return border;
+    }
+
+    private static void ApplyHintTheme(Border border, SpikeHintTheme theme)
+    {
+        var (start, end) = theme switch
+        {
+            SpikeHintTheme.Success => (Color.Parse("#D721B121"), Color.Parse("#D71DA01D")),
+            SpikeHintTheme.Error => (Color.Parse("#D7FF350B"), Color.Parse("#D7FF2B00")),
+            _ => (Color.Parse("#D7259BFC"), Color.Parse("#D70A8EFC"))
+        };
+        border.Background = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
+            GradientStops =
+            [
+                new GradientStop(start, 0),
+                new GradientStop(end, 1)
+            ]
+        };
+    }
+
     private void PlayRouteTransition(ShellNavigationTransitionEventArgs transition)
     {
         InitializeCompositionVisuals();
@@ -356,5 +554,21 @@ internal sealed partial class MainWindow : Window
         group.Add(opacityAnimation);
 
         visual.StartAnimationGroup(group);
+    }
+
+    private sealed class HintPopupState(string message, Border border)
+    {
+        public string Message { get; } = message;
+
+        public Border Border { get; } = border;
+
+        public CancellationTokenSource LifetimeCancellation { get; set; } = new();
+
+        public bool IsClosing { get; set; }
+
+        public void ApplyTheme(SpikeHintTheme currentTheme)
+        {
+            ApplyHintTheme(Border, currentTheme);
+        }
     }
 }

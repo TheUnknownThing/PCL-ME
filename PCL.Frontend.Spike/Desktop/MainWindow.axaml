@@ -364,6 +364,15 @@
                   ToolTip.Tip="提示队列" />
             </StackPanel>
 
+            <StackPanel
+                x:Name="PanHint"
+                Margin="0,0,28,24"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                IsHitTestVisible="False"
+                Spacing="6"
+                ZIndex="20" />
+
             <Border
                 x:Name="PromptOverlayBackdrop"
                 IsVisible="False"

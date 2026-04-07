@@ -319,15 +319,6 @@ internal static class FrontendDownloadCompositionService
         }
     }
 
-    private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
-    {
-        var normalized = string.IsNullOrWhiteSpace(rawValue)
-            ? "$.minecraft\\"
-            : rawValue.Trim();
-        normalized = normalized.Replace("$", EnsureTrailingSeparator(runtimePaths.ExecutableDirectory), StringComparison.Ordinal);
-        return Path.GetFullPath(normalized);
-    }
-
     private static string ResolvePreferredMinecraftVersion(FrontendInstanceComposition instanceComposition)
     {
         var installVersion = instanceComposition.Install.MinecraftVersion;

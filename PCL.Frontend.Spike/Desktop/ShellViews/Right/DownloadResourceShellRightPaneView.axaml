@@ -6,35 +6,44 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
-      <Border
-          Height="40"
-          Padding="12,0,10,0"
-          Background="#F8FBFF"
-          BorderBrush="#D5E6FD"
-          BorderThickness="1"
-          CornerRadius="5">
-        <Grid ColumnDefinitions="*,Auto">
-          <TextBox
-              Background="Transparent"
-              BorderBrush="Transparent"
-              BorderThickness="0"
-              FontSize="13.5"
-              Text="{Binding DownloadResourceSearchQuery}"
-              VerticalContentAlignment="Center"
-              Watermark="{Binding DownloadResourceSearchWatermark}" />
-          <Path
-              Grid.Column="1"
-              Width="14"
-              Height="14"
-              Margin="10,0,0,0"
-              VerticalAlignment="Center"
-              Fill="#7B8EA5"
-              Stretch="Uniform"
-              Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
-        </Grid>
-      </Border>
+      <controls:PclCard ContentMargin="8,7,8,7">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="*,Auto">
+            <Grid
+                ColumnDefinitions="Auto,*"
+                Height="40"
+                VerticalAlignment="Center">
+              <Path
+                  Width="14"
+                  Height="14"
+                  Margin="10,0,10,0"
+                  VerticalAlignment="Center"
+                  Fill="#7B8EA5"
+                  Stretch="Uniform"
+                  Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
+              <TextBox
+                  Grid.Column="1"
+                  x:Name="DownloadResourceSearchTextBox"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  FontSize="13.5"
+                  Text="{Binding DownloadResourceSearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                  VerticalContentAlignment="Center"
+                  Watermark="{Binding DownloadResourceSearchWatermark}" />
+            </Grid>
+            <controls:PclButton
+                Grid.Column="1"
+                Width="72"
+                Height="40"
+                Margin="12,0,0,0"
+                Command="{Binding SearchDownloadResourceCommand}"
+                Text="搜索" />
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
 
-      <controls:PclCard ContentMargin="16,14,16,14">
+      <controls:PclCard ContentMargin="7,7,7,7">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*,Auto,1.3*,Auto,*,Auto" RowDefinitions="28,8,28">
             <TextBlock
@@ -201,20 +210,18 @@
                               Grid.RowSpan="3"
                               Width="50"
                               Height="50"
+                              ClipToBounds="True"
                               HorizontalAlignment="Right"
                               VerticalAlignment="Center"
-                              Background="#F7FAFE"
-                              BorderBrush="#D5E6FD"
-                              BorderThickness="1"
                               CornerRadius="6">
                             <Image
-                                Width="38"
-                                Height="38"
+                                Width="50"
+                                Height="50"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding HasIcon}"
                                 Source="{Binding Icon}"
-                              Stretch="Uniform" />
+                                Stretch="UniformToFill" />
                           </Border>
 
                           <TextBlock
@@ -371,33 +378,31 @@
 
         <controls:PclCard ContentMargin="10,10,10,10" IsVisible="{Binding ShowDownloadResourcePagination}">
           <controls:PclCard.CardContent>
-            <Grid ColumnDefinitions="Auto,Auto,*,Auto">
-              <controls:PclButton
-                  Grid.Column="0"
-                  Width="72"
+            <StackPanel Orientation="Horizontal" Height="23" HorizontalAlignment="Center">
+              <controls:PclIconButton
                   Command="{Binding FirstDownloadResourcePageCommand}"
-                  Text="首页" />
-              <controls:PclButton
-                  Grid.Column="1"
-                  Width="72"
-                  Margin="8,0,0,0"
+                  IconBrush="#63758B"
+                  HoverBackgroundBrush="#2A0B5BCB"
+                  IconData="M496.213333 329.856L315.306667 510.848l180.992 181.077333a42.666667 42.666667 0 1 1-60.330667 60.330667l-211.2-211.2a42.453333 42.453333 0 0 1-11.818667-22.613333l-0.597333-5.034667v-5.034667a42.496 42.496 0 0 1 12.373333-27.648l211.2-211.2a42.666667 42.666667 0 0 1 60.373334 60.330667z m298.666667 0l-180.949333 180.992 180.992 181.077333a42.666667 42.666667 0 1 1-60.330667 60.330667l-211.2-211.2a42.453333 42.453333 0 0 1-11.818667-22.613333l-0.597333-5.034667v-5.034667a42.496 42.496 0 0 1 12.373333-27.648l211.2-211.2a42.666667 42.666667 0 0 1 60.373334 60.330667z" />
+              <controls:PclIconButton
+                  Margin="5,0,5,0"
                   Command="{Binding PreviousDownloadResourcePageCommand}"
-                  Text="上一页" />
+                  IconBrush="#63758B"
+                  HoverBackgroundBrush="#2A0B5BCB"
+                  IconData="M650.752 278.357333l-241.322667 241.365334 241.322667 241.365333a42.666667 42.666667 0 1 1-60.330667 60.330667l-271.530666-271.530667a42.453333 42.453333 0 0 1-11.818667-22.613333l-0.597333-5.034667v-5.034667a42.496 42.496 0 0 1 12.416-27.648l271.530666-271.530666a42.666667 42.666667 0 0 1 60.330667 60.330666z" />
               <TextBlock
-                  Grid.Column="2"
-                  HorizontalAlignment="Center"
+                  Margin="8,0,13,0"
                   VerticalAlignment="Center"
                   Foreground="#4B5968"
                   FontSize="13.5"
                   FontWeight="SemiBold"
                   Text="{Binding DownloadResourcePageLabel}" />
-              <controls:PclButton
-                  Grid.Column="3"
-                  Width="72"
-                  HorizontalAlignment="Right"
+              <controls:PclIconButton
                   Command="{Binding NextDownloadResourcePageCommand}"
-                  Text="下一页" />
-            </Grid>
+                  IconBrush="#63758B"
+                  HoverBackgroundBrush="#2A0B5BCB"
+                  IconData="M404.309333 278.357333l241.322667 241.365334-241.322667 241.365333a42.666667 42.666667 0 1 0 60.330667 60.330667l271.530667-271.530667a42.453333 42.453333 0 0 0 11.818666-22.613333l0.597334-5.034667v-5.034667a42.496 42.496 0 0 0-12.416-27.648L464.64 218.026667a42.666667 42.666667 0 0 0-60.330667 60.330666z" />
+            </StackPanel>
           </controls:PclCard.CardContent>
         </controls:PclCard>
       </StackPanel>

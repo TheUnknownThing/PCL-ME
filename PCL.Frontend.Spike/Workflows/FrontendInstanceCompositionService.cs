@@ -19,7 +19,9 @@ internal static class FrontendInstanceCompositionService
     {
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
-        var launcherDirectory = ResolveLauncherFolder(ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"), runtimePaths);
+        var launcherDirectory = FrontendLauncherPathService.ResolveLauncherFolder(
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+            runtimePaths);
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
 
         if (string.IsNullOrWhiteSpace(selectedInstanceName))
@@ -1114,22 +1116,6 @@ internal static class FrontendInstanceCompositionService
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .Cast<string>()
             .ToArray();
-    }
-
-    private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
-    {
-        var normalized = string.IsNullOrWhiteSpace(rawValue)
-            ? "$.minecraft\\"
-            : rawValue.Trim();
-        normalized = normalized.Replace("$", EnsureTrailingSeparator(runtimePaths.ExecutableDirectory), StringComparison.Ordinal);
-        return Path.GetFullPath(normalized);
-    }
-
-    private static string EnsureTrailingSeparator(string path)
-    {
-        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
-            ? path
-            : path + Path.DirectorySeparatorChar;
     }
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
