@@ -3,6 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using System.Linq;
 using System.Windows.Input;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -147,6 +150,7 @@ internal sealed partial class PclCard : UserControl
         {
             RefreshChevronState();
             RaisePropertyChanged(IsContentVisibleProperty, !change.GetNewValue<bool>(), IsContentVisible);
+            ScheduleScrollViewerOffsetClamp();
         }
         else if (change.Property == ShowChevronProperty)
         {
@@ -252,5 +256,30 @@ internal sealed partial class PclCard : UserControl
         {
             SetCurrentValue(IsChevronExpandedProperty, !IsChevronExpanded);
         }
+    }
+
+    private void ScheduleScrollViewerOffsetClamp()
+    {
+        if (!ShowChevron)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            var scrollViewer = this.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
+            if (scrollViewer is null)
+            {
+                return;
+            }
+
+            var maxVerticalOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+            if (scrollViewer.Offset.Y <= maxVerticalOffset + 0.5)
+            {
+                return;
+            }
+
+            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, maxVerticalOffset);
+        }, DispatcherPriority.Background);
     }
 }
