@@ -173,6 +173,12 @@ internal sealed partial class FrontendShellViewModel
         var snapshots = BuildSidebarSectionSnapshots(navigation);
         if (SidebarSections.Count == snapshots.Length)
         {
+            if (CanUpdateSidebarSectionsSelectionInPlace(SidebarSections, snapshots))
+            {
+                UpdateSidebarSectionSelection(SidebarSections, snapshots);
+                return;
+            }
+
             var matches = true;
             for (var index = 0; index < snapshots.Length; index++)
             {
@@ -190,6 +196,61 @@ internal sealed partial class FrontendShellViewModel
         }
 
         ReplaceItems(SidebarSections, BuildSidebarSections(navigation));
+    }
+
+    private static bool CanUpdateSidebarSectionsSelectionInPlace(
+        ObservableCollection<SidebarSectionViewModel> currentSections,
+        SidebarSectionSnapshot[] snapshots)
+    {
+        if (currentSections.Count != snapshots.Length)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < snapshots.Length; index++)
+        {
+            var currentSection = currentSections[index];
+            var snapshot = snapshots[index];
+            if (currentSection.Title != snapshot.Title
+                || currentSection.HasTitle != snapshot.HasTitle
+                || currentSection.Items.Count != snapshot.Items.Length)
+            {
+                return false;
+            }
+
+            for (var itemIndex = 0; itemIndex < snapshot.Items.Length; itemIndex++)
+            {
+                var currentItem = currentSection.Items[itemIndex];
+                var snapshotItem = snapshot.Items[itemIndex];
+                if (currentItem.Title != snapshotItem.Title
+                    || currentItem.Summary != snapshotItem.Summary
+                    || currentItem.IconPath != snapshotItem.IconPath
+                    || !currentItem.IconScale.Equals(snapshotItem.IconScale)
+                    || currentItem.AccessoryToolTip != snapshotItem.AccessoryToolTip
+                    || currentItem.AccessoryIconPath != snapshotItem.AccessoryIconPath
+                    || (currentItem.AccessoryCommand is not null) != snapshotItem.HasAccessoryCommand)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static void UpdateSidebarSectionSelection(
+        ObservableCollection<SidebarSectionViewModel> currentSections,
+        SidebarSectionSnapshot[] snapshots)
+    {
+        for (var index = 0; index < snapshots.Length; index++)
+        {
+            var currentSection = currentSections[index];
+            var snapshot = snapshots[index];
+            for (var itemIndex = 0; itemIndex < snapshot.Items.Length; itemIndex++)
+            {
+                currentSection.Items[itemIndex].IsSelected = snapshot.Items[itemIndex].IsSelected;
+            }
+        }
     }
 
     private void ReplaceSurfaceFactsIfChanged(IReadOnlyList<LauncherFrontendPageFact> facts)

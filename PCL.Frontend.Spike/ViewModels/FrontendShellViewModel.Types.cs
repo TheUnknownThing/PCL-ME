@@ -63,13 +63,19 @@ internal sealed class SidebarListItemViewModel(
     ActionCommand command,
     string accessoryToolTip,
     string accessoryIconPath,
-    ActionCommand? accessoryCommand)
+    ActionCommand? accessoryCommand) : ViewModelBase
 {
+    private bool _isSelected = isSelected;
+
     public string Title { get; } = title;
 
     public string Summary { get; } = summary;
 
-    public bool IsSelected { get; } = isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
 
     public string IconPath { get; } = iconPath;
 
