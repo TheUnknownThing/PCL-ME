@@ -34,7 +34,7 @@
       <Grid>
         <StackPanel
             HorizontalAlignment="Center"
-            IsVisible="{Binding HasSelectedLaunchProfile}"
+            IsVisible="{Binding ShowLaunchProfileSummaryCard}"
             Spacing="10">
           <Border
               Width="82"
@@ -92,7 +92,7 @@
 
         <StackPanel
             HorizontalAlignment="Stretch"
-            IsVisible="{Binding ShowLaunchProfileSetupActions}"
+            IsVisible="{Binding ShowLaunchProfileChooser}"
             Spacing="10">
           <TextBlock
               Margin="0,2,0,0"
@@ -122,7 +122,234 @@
               Height="34"
               Command="{Binding LoginAuthlibLaunchProfileCommand}"
               Text="外置登录" />
+          <controls:PclButton
+              Height="34"
+              Command="{Binding SelectLaunchProfileCommand}"
+              IsVisible="{Binding HasLaunchProfileEntries}"
+              Text="选择已有档案" />
+          <controls:PclButton
+              Height="32"
+              Command="{Binding BackLaunchProfileCommand}"
+              IsVisible="{Binding ShowLaunchProfileBackButton}"
+              Text="返回" />
         </StackPanel>
+
+        <StackPanel
+            HorizontalAlignment="Stretch"
+            IsVisible="{Binding ShowLaunchProfileSelection}"
+            Spacing="10">
+          <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="17"
+              FontWeight="SemiBold"
+              Foreground="#343D4A"
+              Text="选择已有档案" />
+          <ScrollViewer
+              MaxHeight="220"
+              VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding LaunchProfileEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclListItem
+                      Margin="0,0,0,6"
+                      Command="{Binding Command}"
+                      Info="{Binding Info}"
+                      IsSelected="{Binding IsSelected}"
+                      Title="{Binding Title}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <TextBlock
+              HorizontalAlignment="Center"
+              FontSize="12.5"
+              Foreground="#7D8792"
+              IsVisible="{Binding HasNoLaunchProfileEntries}"
+              Text="当前还没有可用档案。"
+              TextAlignment="Center" />
+          <Grid ColumnDefinitions="*,10,*">
+            <controls:PclButton
+                Grid.Column="0"
+                Height="34"
+                ColorType="Highlight"
+                Command="{Binding AddLaunchProfileCommand}"
+                Text="新建 / 登录" />
+            <controls:PclButton
+                Grid.Column="2"
+                Height="34"
+                Command="{Binding BackLaunchProfileCommand}"
+                Text="返回" />
+          </Grid>
+        </StackPanel>
+
+        <Grid
+            IsVisible="{Binding ShowLaunchOfflineEditor}"
+            RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+          <TextBlock
+              HorizontalAlignment="Center"
+              FontSize="17"
+              FontWeight="SemiBold"
+              Foreground="#343D4A"
+              Text="离线创建" />
+          <TextBox
+              Grid.Row="1"
+              Margin="0,8,0,0"
+              Text="{Binding LaunchOfflineUserName}"
+              Watermark="玩家 ID（3 - 16 位）" />
+          <ComboBox
+              Grid.Row="2"
+              Margin="0,8,0,0"
+              ItemsSource="{Binding LaunchOfflineUuidModeOptions}"
+              SelectedIndex="{Binding SelectedLaunchOfflineUuidModeIndex}" />
+          <TextBox
+              Grid.Row="3"
+              Margin="0,8,0,0"
+              IsVisible="{Binding IsLaunchOfflineCustomUuidVisible}"
+              Text="{Binding LaunchOfflineCustomUuid}"
+              Watermark="32 位 UUID（不含连字符）" />
+          <StackPanel
+              Grid.Row="4"
+              Margin="0,8,0,0"
+              Spacing="8">
+            <TextBlock
+                FontSize="12.5"
+                Foreground="#C25B46"
+                IsVisible="{Binding HasLaunchOfflineStatus}"
+                Text="{Binding LaunchOfflineStatusText}"
+                TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="*,10,*">
+              <controls:PclButton
+                  Grid.Column="0"
+                  Height="34"
+                  Command="{Binding BackLaunchProfileCommand}"
+                  Text="返回" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  Height="34"
+                  ColorType="Highlight"
+                  Command="{Binding SubmitOfflineLaunchProfileCommand}"
+                  Text="创建" />
+            </Grid>
+          </StackPanel>
+        </Grid>
+
+        <StackPanel
+            HorizontalAlignment="Stretch"
+            IsVisible="{Binding ShowLaunchMicrosoftEditor}"
+            Spacing="9">
+          <TextBlock
+              HorizontalAlignment="Center"
+              FontSize="17"
+              FontWeight="SemiBold"
+              Foreground="#343D4A"
+              Text="微软登录" />
+          <TextBlock
+              FontSize="12.5"
+              Foreground="#5E6875"
+              Text="{Binding LaunchMicrosoftStatusText}"
+              TextAlignment="Center"
+              TextWrapping="Wrap" />
+          <Border
+              Padding="12,10"
+              Background="#F4F7FB"
+              CornerRadius="10"
+              IsVisible="{Binding HasLaunchMicrosoftDeviceCode}">
+            <StackPanel Spacing="4">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  FontSize="12"
+                  Foreground="#728092"
+                  Text="授权码" />
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  FontFamily="Menlo, Monaco, Consolas"
+                  FontSize="20"
+                  FontWeight="Bold"
+                  Foreground="#0B5BCB"
+                  Text="{Binding LaunchMicrosoftDeviceCode}" />
+            </StackPanel>
+          </Border>
+          <controls:PclButton
+              Height="32"
+              Command="{Binding OpenMicrosoftDeviceLinkCommand}"
+              IsVisible="{Binding HasLaunchMicrosoftVerificationUrl}"
+              Text="重新打开登录网页" />
+          <Grid ColumnDefinitions="*,10,*">
+            <controls:PclButton
+                Grid.Column="0"
+                Height="34"
+                Command="{Binding BackLaunchProfileCommand}"
+                Text="返回" />
+            <controls:PclButton
+                Grid.Column="2"
+                Height="34"
+                ColorType="Highlight"
+                Command="{Binding SubmitMicrosoftLaunchProfileCommand}"
+                Text="{Binding LaunchMicrosoftPrimaryButtonText}" />
+          </Grid>
+        </StackPanel>
+
+        <Grid
+            IsVisible="{Binding ShowLaunchAuthlibEditor}"
+            RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+          <TextBlock
+              HorizontalAlignment="Center"
+              FontSize="17"
+              FontWeight="SemiBold"
+              Foreground="#343D4A"
+              Text="外置登录" />
+          <TextBox
+              Grid.Row="1"
+              Margin="0,8,0,0"
+              Text="{Binding LaunchAuthlibServer}"
+              Watermark="验证服务器地址" />
+          <Grid
+              Grid.Row="2"
+              Margin="0,8,0,0"
+              ColumnDefinitions="*,10,Auto">
+            <TextBox
+                Grid.Column="0"
+                Text="{Binding LaunchAuthlibLoginName}"
+                Watermark="用户名或邮箱" />
+            <controls:PclButton
+                Grid.Column="2"
+                Width="88"
+                Height="32"
+                Command="{Binding UseLittleSkinLaunchProfileCommand}"
+                Text="LittleSkin" />
+          </Grid>
+          <TextBox
+              Grid.Row="3"
+              Margin="0,8,0,0"
+              PasswordChar="●"
+              Text="{Binding LaunchAuthlibPassword}"
+              Watermark="密码" />
+          <StackPanel
+              Grid.Row="4"
+              Margin="0,8,0,0"
+              Spacing="8">
+            <TextBlock
+                FontSize="12.5"
+                Foreground="#C25B46"
+                IsVisible="{Binding HasLaunchAuthlibStatus}"
+                Text="{Binding LaunchAuthlibStatusText}"
+                TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="*,10,*">
+              <controls:PclButton
+                  Grid.Column="0"
+                  Height="34"
+                  Command="{Binding BackLaunchProfileCommand}"
+                  Text="返回" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  Height="34"
+                  ColorType="Highlight"
+                  Command="{Binding SubmitAuthlibLaunchProfileCommand}"
+                  Text="登录" />
+            </Grid>
+          </StackPanel>
+        </Grid>
       </Grid>
     </Border>
 

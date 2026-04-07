@@ -696,6 +696,7 @@ internal sealed partial class FrontendShellViewModel
         ReloadSetupComposition();
         ReloadInstanceComposition();
         _launchComposition = FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
+        NormalizeLaunchProfileSurface();
         var launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         if (!string.Equals(_launchPromptContextKey, launchPromptContextKey, StringComparison.Ordinal))
         {
@@ -846,6 +847,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowLaunchProfileSetupActions));
         RaisePropertyChanged(nameof(LaunchProfileHint));
         RaisePropertyChanged(nameof(LaunchProfileDescription));
+        RaiseLaunchProfileSurfaceProperties();
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));
         RaisePropertyChanged(nameof(LaunchWelcomeBanner));
         RaisePropertyChanged(nameof(LaunchNewsTitle));

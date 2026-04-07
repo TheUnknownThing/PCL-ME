@@ -32,6 +32,18 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand LoginAuthlibLaunchProfileCommand => _loginAuthlibLaunchProfileCommand;
 
+    public ActionCommand BackLaunchProfileCommand => _backLaunchProfileCommand;
+
+    public ActionCommand SubmitOfflineLaunchProfileCommand => _submitOfflineLaunchProfileCommand;
+
+    public ActionCommand SubmitMicrosoftLaunchProfileCommand => _submitMicrosoftLaunchProfileCommand;
+
+    public ActionCommand OpenMicrosoftDeviceLinkCommand => _openMicrosoftDeviceLinkCommand;
+
+    public ActionCommand SubmitAuthlibLaunchProfileCommand => _submitAuthlibLaunchProfileCommand;
+
+    public ActionCommand UseLittleSkinLaunchProfileCommand => _useLittleSkinLaunchProfileCommand;
+
     public ActionCommand OpenFeedbackCommand => _openFeedbackCommand;
 
     public ActionCommand ExportLogCommand => _exportLogCommand;

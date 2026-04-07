@@ -26,6 +26,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<PromptCardViewModel> ActivePrompts { get; } = [];
 
+    public ObservableCollection<LaunchProfileEntryViewModel> LaunchProfileEntries { get; } = [];
+
     public ObservableCollection<AboutEntryViewModel> AboutProjectEntries { get; } = [];
 
     public ObservableCollection<AboutEntryViewModel> AboutAcknowledgementEntries { get; } = [];
