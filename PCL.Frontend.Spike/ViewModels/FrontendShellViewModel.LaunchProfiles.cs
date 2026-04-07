@@ -41,12 +41,17 @@ internal sealed partial class FrontendShellViewModel
     {
         LaunchProfileSurfaceKind.Summary => false,
         LaunchProfileSurfaceKind.Chooser => HasSelectedLaunchProfile,
+        LaunchProfileSurfaceKind.Selection => HasSelectedLaunchProfile,
         _ => true
     };
 
     public bool HasLaunchProfileEntries => LaunchProfileEntries.Count > 0;
 
     public bool HasNoLaunchProfileEntries => !HasLaunchProfileEntries;
+
+    public string LaunchProfileSelectionHint => HasLaunchProfileEntries
+        ? "选择一个档案以启动游戏"
+        : "新建并选择一个档案以启动游戏";
 
     public string LaunchOfflineUserName
     {
@@ -141,7 +146,7 @@ internal sealed partial class FrontendShellViewModel
         if (!HasLaunchProfileEntries)
         {
             AddActivity("切换档案", "当前还没有可用档案。");
-            SetLaunchProfileSurface(HasSelectedLaunchProfile ? LaunchProfileSurfaceKind.Summary : LaunchProfileSurfaceKind.Chooser);
+            SetLaunchProfileSurface(LaunchProfileSurfaceKind.Selection);
             return Task.CompletedTask;
         }
 
@@ -192,7 +197,7 @@ internal sealed partial class FrontendShellViewModel
 
         LaunchOfflineStatusText = string.Empty;
         LaunchAuthlibStatusText = string.Empty;
-        SetLaunchProfileSurface(HasSelectedLaunchProfile ? LaunchProfileSurfaceKind.Summary : LaunchProfileSurfaceKind.Chooser);
+        SetLaunchProfileSurface(LaunchProfileSurfaceKind.Auto);
     }
 
     private async Task SubmitOfflineLaunchProfileAsync()
@@ -233,9 +238,10 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task SubmitMicrosoftLaunchProfileAsync()
     {
+        var microsoftClientId = ResolveMicrosoftClientId();
         if (_launchMicrosoftPromptPlan is null)
         {
-            await BeginMicrosoftDeviceLoginAsync();
+            await BeginMicrosoftDeviceLoginAsync(microsoftClientId);
             return;
         }
 
@@ -247,7 +253,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             LaunchMicrosoftStatusText = "正在等待微软完成授权。";
-            var oauthTokens = await PollMicrosoftOAuthTokensAsync(_launchMicrosoftPromptPlan);
+            var oauthTokens = await PollMicrosoftOAuthTokensAsync(_launchMicrosoftPromptPlan, microsoftClientId);
             var xboxLiveResponseJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(oauthTokens.AccessToken));
 
@@ -427,7 +433,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private async Task BeginMicrosoftDeviceLoginAsync()
+    private async Task BeginMicrosoftDeviceLoginAsync(string microsoftClientId)
     {
         if (!TryBeginLaunchProfileAction("微软登录"))
         {
@@ -438,7 +444,7 @@ internal sealed partial class FrontendShellViewModel
         {
             LaunchMicrosoftStatusText = "正在请求设备代码。";
             var deviceCodeJson = await SendLaunchProfileRequestAsync(
-                MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest());
+                MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(microsoftClientId));
             var promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(deviceCodeJson);
             _launchMicrosoftPromptPlan = promptPlan;
             LaunchMicrosoftDeviceCode = promptPlan.UserCode;
@@ -565,13 +571,13 @@ internal sealed partial class FrontendShellViewModel
         {
             if (!HasLaunchProfileEntries)
             {
-                _launchProfileSurface = HasSelectedLaunchProfile ? LaunchProfileSurfaceKind.Summary : LaunchProfileSurfaceKind.Chooser;
+                _launchProfileSurface = HasSelectedLaunchProfile ? LaunchProfileSurfaceKind.Summary : LaunchProfileSurfaceKind.Selection;
             }
         }
         else if (!HasSelectedLaunchProfile &&
                  effectiveSurface == LaunchProfileSurfaceKind.Summary)
         {
-            _launchProfileSurface = LaunchProfileSurfaceKind.Chooser;
+            _launchProfileSurface = LaunchProfileSurfaceKind.Selection;
         }
 
         RaiseLaunchProfileSurfaceProperties();
@@ -586,7 +592,7 @@ internal sealed partial class FrontendShellViewModel
 
         return HasSelectedLaunchProfile
             ? LaunchProfileSurfaceKind.Summary
-            : LaunchProfileSurfaceKind.Chooser;
+            : LaunchProfileSurfaceKind.Selection;
     }
 
     private void RaiseLaunchProfileSurfaceProperties()
@@ -600,6 +606,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowLaunchProfileBackButton));
         RaisePropertyChanged(nameof(HasLaunchProfileEntries));
         RaisePropertyChanged(nameof(HasNoLaunchProfileEntries));
+        RaisePropertyChanged(nameof(LaunchProfileSelectionHint));
         RaisePropertyChanged(nameof(IsLaunchOfflineCustomUuidVisible));
         RaisePropertyChanged(nameof(HasLaunchOfflineStatus));
         RaisePropertyChanged(nameof(LaunchMicrosoftPrimaryButtonText));
@@ -680,7 +687,8 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private async Task<MinecraftLaunchOAuthRefreshResponse> PollMicrosoftOAuthTokensAsync(
-        MinecraftLaunchMicrosoftDeviceCodePromptPlan promptPlan)
+        MinecraftLaunchMicrosoftDeviceCodePromptPlan promptPlan,
+        string clientId)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(Math.Max(promptPlan.ExpiresInSeconds, 1));
         var pollDelay = Math.Max(promptPlan.PollIntervalSeconds, 1);
@@ -689,7 +697,8 @@ internal sealed partial class FrontendShellViewModel
         {
             try
             {
-                var responseJson = await SendLaunchProfileRequestAsync(BuildMicrosoftDeviceTokenPollRequest(promptPlan.DeviceCode));
+                var responseJson = await SendLaunchProfileRequestAsync(
+                    BuildMicrosoftDeviceTokenPollRequest(promptPlan.DeviceCode, clientId));
                 return MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(responseJson);
             }
             catch (LaunchProfileRequestException ex) when (ex.StatusCode == (int)HttpStatusCode.BadRequest)
@@ -767,7 +776,7 @@ internal sealed partial class FrontendShellViewModel
         return client;
     }
 
-    private static MinecraftLaunchHttpRequestPlan BuildMicrosoftDeviceTokenPollRequest(string deviceCode)
+    private static MinecraftLaunchHttpRequestPlan BuildMicrosoftDeviceTokenPollRequest(string deviceCode, string clientId)
     {
         return new MinecraftLaunchHttpRequestPlan(
             "POST",
@@ -778,9 +787,18 @@ internal sealed partial class FrontendShellViewModel
                 new Dictionary<string, string>
                 {
                     ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code",
-                    ["client_id"] = MinecraftLaunchMicrosoftRequestWorkflowService.DefaultMicrosoftClientId,
-                    ["device_code"] = deviceCode
+                    ["client_id"] = clientId,
+                    ["device_code"] = deviceCode,
+                    ["scope"] = "XboxLive.signin offline_access"
                 }.Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}")));
+    }
+
+    private static string ResolveMicrosoftClientId()
+    {
+        var clientId = Environment.GetEnvironmentVariable("MS_CLIENT_ID");
+        return string.IsNullOrWhiteSpace(clientId)
+            ? MinecraftLaunchMicrosoftRequestWorkflowService.DefaultMicrosoftClientId
+            : clientId;
     }
 
     private static string NormalizeAuthlibServerBaseUrl(string serverInput)

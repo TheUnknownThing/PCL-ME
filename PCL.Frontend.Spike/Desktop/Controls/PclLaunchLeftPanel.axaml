@@ -35,24 +35,23 @@
         <StackPanel
             HorizontalAlignment="Center"
             IsVisible="{Binding ShowLaunchProfileSummaryCard}"
-            Spacing="10">
+            Spacing="8">
           <Border
-              Width="82"
-              Height="82"
+              Width="84"
+              Height="84"
               CornerRadius="8"
               Background="#F7EFD7"
               BoxShadow="0 6 18 0 #10000000">
             <Image
-                Width="82"
-                Height="82"
+                Width="84"
+                Height="84"
                 Source="{Binding LaunchAvatarImage}"
                 Stretch="Uniform"
                 RenderOptions.BitmapInterpolationMode="None" />
           </Border>
           <TextBlock
               HorizontalAlignment="Center"
-              FontSize="18"
-              FontWeight="Light"
+              FontSize="16"
               Foreground="#343D4A"
               Text="{Binding LaunchUserName}" />
           <Border
@@ -61,54 +60,37 @@
               Background="#F2F4F7"
               CornerRadius="999">
             <TextBlock
-                FontSize="12.5"
+                FontSize="12"
                 Foreground="#727C88"
                 Text="{Binding LaunchProfileDescription}" />
           </Border>
-          <TextBlock
-              Margin="8,2,8,0"
+          <Border
+              Margin="0,4,0,0"
+              Padding="10,4"
               HorizontalAlignment="Center"
-              FontSize="12"
-              Foreground="#9AA3AE"
-              Text="{Binding LaunchProfileHint}"
-              TextAlignment="Center"
-              TextWrapping="Wrap" />
-          <Grid
-              Margin="0,2,0,0"
-              ColumnDefinitions="*,10,*">
-            <controls:PclButton
-                Grid.Column="0"
-                Height="34"
-                Command="{Binding SelectLaunchProfileCommand}"
-                Text="选择档案" />
-            <controls:PclButton
-                Grid.Column="2"
-                Height="34"
-                ColorType="Highlight"
-                Command="{Binding AddLaunchProfileCommand}"
-                Text="新建 / 登录" />
-          </Grid>
+              Background="#FDFDFD"
+              BorderBrush="#14000000"
+              BorderThickness="1"
+              CornerRadius="6">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <controls:PclIconButton
+                  Command="{Binding AddLaunchProfileCommand}"
+                  IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
+                  IconBrush="#404B5A"
+                  ToolTip.Tip="新建 / 登录" />
+              <controls:PclIconButton
+                  Command="{Binding SelectLaunchProfileCommand}"
+                  IconData="M512 0A512 512 0 1 0 1024 512 512 512 0 0 0 512 0z m0 941.407086A429.407086 429.407086 0 1 1 941.407086 512 429.407086 429.407086 0 0 1 512 941.407086z m235.139657-368.64H264.045714a43.505371 43.505371 0 0 0-31.246628 72.060343l159.305143 166.765714a41.281829 41.281829 0 1 0 59.626057-56.788114l-94.997943-99.474286H747.227429a41.311086 41.311086 0 1 0 0-82.622172zM262.670629 450.940343H745.764571a43.505371 43.505371 0 0 0 31.246629-72.352914l-159.305143-166.765715a41.281829 41.281829 0 1 0-59.713828 57.022172l94.968685 99.474285H262.670629a41.281829 41.281829 0 0 0 0 82.563658z"
+                  IconBrush="#404B5A"
+                  ToolTip.Tip="选择档案" />
+            </StackPanel>
+          </Border>
         </StackPanel>
 
         <StackPanel
             HorizontalAlignment="Stretch"
             IsVisible="{Binding ShowLaunchProfileChooser}"
             Spacing="10">
-          <TextBlock
-              Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="17"
-              FontWeight="SemiBold"
-              Foreground="#343D4A"
-              Text="{Binding LaunchProfileHint}" />
-          <TextBlock
-              Margin="4,0,4,2"
-              HorizontalAlignment="Center"
-              FontSize="12.5"
-              Foreground="#7D8792"
-              Text="标准实现会先建立或选中档案，然后再进入启动流程。"
-              TextAlignment="Center"
-              TextWrapping="Wrap" />
           <controls:PclButton
               Height="34"
               ColorType="Highlight"
@@ -138,21 +120,29 @@
             HorizontalAlignment="Stretch"
             IsVisible="{Binding ShowLaunchProfileSelection}"
             Spacing="10">
-          <TextBlock
+          <Border
               Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="17"
-              FontWeight="SemiBold"
-              Foreground="#343D4A"
-              Text="选择已有档案" />
+              Padding="10,6"
+              Background="#EAF2FE"
+              BorderBrush="#260B5BCB"
+              BorderThickness="1"
+              CornerRadius="5">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="12.5"
+                Foreground="#0B5BCB"
+                Text="{Binding LaunchProfileSelectionHint}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+          </Border>
           <ScrollViewer
-              MaxHeight="220"
+              MaxHeight="300"
               VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding LaunchProfileEntries}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <controls:PclListItem
-                      Margin="0,0,0,6"
+                      Margin="8,2,10,2"
                       Command="{Binding Command}"
                       Info="{Binding Info}"
                       IsSelected="{Binding IsSelected}"
@@ -168,19 +158,28 @@
               IsVisible="{Binding HasNoLaunchProfileEntries}"
               Text="当前还没有可用档案。"
               TextAlignment="Center" />
-          <Grid ColumnDefinitions="*,10,*">
-            <controls:PclButton
-                Grid.Column="0"
-                Height="34"
-                ColorType="Highlight"
-                Command="{Binding AddLaunchProfileCommand}"
-                Text="新建 / 登录" />
-            <controls:PclButton
-                Grid.Column="2"
-                Height="34"
-                Command="{Binding BackLaunchProfileCommand}"
-                Text="返回" />
-          </Grid>
+          <Border
+              Padding="10,4"
+              HorizontalAlignment="Center"
+              Background="#FDFDFD"
+              BorderBrush="#14000000"
+              BorderThickness="1"
+              CornerRadius="6">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <controls:PclIconButton
+                  Command="{Binding AddLaunchProfileCommand}"
+                  IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
+                  IconBrush="#404B5A"
+                  ToolTip.Tip="新建 / 登录" />
+            </StackPanel>
+          </Border>
+          <controls:PclButton
+              Width="72"
+              Height="32"
+              HorizontalAlignment="Center"
+              Command="{Binding BackLaunchProfileCommand}"
+              IsVisible="{Binding ShowLaunchProfileBackButton}"
+              Text="返回" />
         </StackPanel>
 
         <Grid
