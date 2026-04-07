@@ -144,157 +144,152 @@
 
         <controls:PclCard Header="任务管理" IsVisible="{Binding ShowTaskManagerSurface}" ContentMargin="20,18,20,18">
           <controls:PclCard.CardContent>
-            <StackPanel Spacing="14">
-              <WrapPanel>
-                <controls:PclButton
-                    Width="92"
-                    Height="35"
-                    Margin="0,0,10,0"
-                    ColorType="Highlight"
-                    Command="{Binding RefreshTaskManagerCommand}"
-                    Text="刷新" />
-                <controls:PclButton
-                    Width="120"
-                    Height="35"
-                    Command="{Binding ClearFinishedTasksCommand}"
-                    Text="清理已结束" />
-              </WrapPanel>
+            <Border
+                Background="#EAF3FF"
+                BorderBrush="#D6E7FF"
+                BorderThickness="1"
+                CornerRadius="6">
+              <Grid ColumnDefinitions="195,*">
+                <Border
+                    Padding="26,24"
+                    Background="#FAFCFF"
+                    BorderBrush="#DDE9FA"
+                    BorderThickness="0,0,1,0">
+                  <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                    <TextBlock Grid.Row="0" HorizontalAlignment="Center" FontSize="14" Foreground="#7EA7EB" Text="总进度" />
+                    <Border Grid.Row="1" Height="2" Margin="8,8,8,10" Background="#3E7AE7" />
+                    <TextBlock Grid.Row="2" HorizontalAlignment="Center" FontSize="20" Foreground="#4A5160" Text="{Binding TaskManagerOverallProgressText}" />
 
-              <Grid ColumnDefinitions="*,*,*,*">
-                <Border
-                    Padding="12,10"
-                    Background="#F7FAFE"
-                    BorderBrush="#D5E6FD"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <StackPanel Spacing="4">
-                    <TextBlock Foreground="#7D8897" FontSize="11.5" Text="等待中" />
-                    <TextBlock Foreground="#2B4260" FontSize="18" FontWeight="Bold" Text="{Binding TaskManagerWaitingCount}" />
-                  </StackPanel>
+                    <TextBlock Grid.Row="4" HorizontalAlignment="Center" FontSize="14" Foreground="#7EA7EB" Text="下载速度" />
+                    <Border Grid.Row="5" Height="2" Margin="8,8,8,10" Background="#3E7AE7" />
+                    <TextBlock Grid.Row="6" HorizontalAlignment="Center" FontSize="20" Foreground="#4A5160" Text="{Binding TaskManagerDownloadSpeedText}" />
+
+                    <TextBlock Grid.Row="8" HorizontalAlignment="Center" FontSize="14" Foreground="#7EA7EB" Text="剩余文件" />
+                    <Border Grid.Row="9" Height="2" Margin="8,8,8,10" Background="#3E7AE7" />
+                    <TextBlock Grid.Row="10" HorizontalAlignment="Center" FontSize="20" Foreground="#4A5160" Text="{Binding TaskManagerRemainingFilesText}" />
+                  </Grid>
                 </Border>
-                <Border
-                    Grid.Column="1"
-                    Margin="10,0,0,0"
-                    Padding="12,10"
-                    Background="#EEF9F2"
-                    BorderBrush="#C7E8D1"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <StackPanel Spacing="4">
-                    <TextBlock Foreground="#6E8A73" FontSize="11.5" Text="运行中" />
-                    <TextBlock Foreground="#1B6B3A" FontSize="18" FontWeight="Bold" Text="{Binding TaskManagerRunningCount}" />
-                  </StackPanel>
-                </Border>
-                <Border
-                    Grid.Column="2"
-                    Margin="10,0,0,0"
-                    Padding="12,10"
-                    Background="#FFF8E6"
-                    BorderBrush="#F2DCA1"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <StackPanel Spacing="4">
-                    <TextBlock Foreground="#8D7641" FontSize="11.5" Text="已结束" />
-                    <TextBlock Foreground="#8A5A00" FontSize="18" FontWeight="Bold" Text="{Binding TaskManagerFinishedCount}" />
-                  </StackPanel>
-                </Border>
-                <Border
-                    Grid.Column="3"
-                    Margin="10,0,0,0"
-                    Padding="12,10"
-                    Background="#FFF0EF"
-                    BorderBrush="#F2CBC7"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <StackPanel Spacing="4">
-                    <TextBlock Foreground="#8D6C69" FontSize="11.5" Text="失败" />
-                    <TextBlock Foreground="#B23A2B" FontSize="18" FontWeight="Bold" Text="{Binding TaskManagerFailedCount}" />
-                  </StackPanel>
+
+                <Border Grid.Column="1" Padding="22,18,22,20" Background="#EAF3FF">
+                  <Grid RowDefinitions="Auto,*">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                      <StackPanel Spacing="4">
+                        <TextBlock Foreground="#415671" FontSize="13.5" FontWeight="SemiBold" Text="{Binding TaskManagerActiveTaskTitle}" />
+                        <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="{Binding TaskManagerSummary}" />
+                      </StackPanel>
+                      <controls:PclIconButton
+                          Grid.Column="1"
+                          Margin="12,0,0,0"
+                          Command="{Binding RefreshTaskManagerCommand}"
+                          IconBrush="#5F8DE8"
+                          HoverBackgroundBrush="#324E88E8"
+                          IconData="M10.2,1.2 C5.6,1.2 1.8,4.9 1.8,9.5 L0,9.5 2.9,12.4 5.8,9.5 4,9.5 C4,6.2 6.8,3.5 10.2,3.5 C12.1,3.5 13.8,4.3 15,5.7 L16.7,4.1 C15,2.2 12.7,1.2 10.2,1.2 z M17.5,6.5 14.6,9.4 16.4,9.4 C16.4,12.8 13.6,15.5 10.2,15.5 C8.3,15.5 6.6,14.7 5.4,13.3 L3.7,14.9 C5.4,16.8 7.7,17.8 10.2,17.8 C14.8,17.8 18.6,14.1 18.6,9.5 L20.4,9.5 17.5,6.5 z" />
+                      <controls:PclIconButton
+                          Grid.Column="2"
+                          Margin="8,0,0,0"
+                          Command="{Binding ClearFinishedTasksCommand}"
+                          IconBrush="#5F8DE8"
+                          HoverBackgroundBrush="#324E88E8"
+                          IconData="M3,5 L17,5 17,7 16,7 16,18 4,18 4,7 3,7 z M7,2 L13,2 14,3 18,3 18,5 2,5 2,3 6,3 z M6,7 6,16 14,16 14,7 z" />
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" Margin="0,18,0,0" VerticalScrollBarVisibility="Auto">
+                      <StackPanel Spacing="14">
+                        <ItemsControl ItemsSource="{Binding TaskManagerEntries}" IsVisible="{Binding HasTaskManagerEntries}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border
+                                  Padding="16,14,16,14"
+                                  Background="#FFFFFF"
+                                  BorderBrush="#D5E4FB"
+                                  BorderThickness="1"
+                                  BoxShadow="0 8 22 0 #162E5373"
+                                  CornerRadius="6">
+                                <StackPanel Spacing="10">
+                                  <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <StackPanel Spacing="3">
+                                      <TextBlock Foreground="#47586D" FontSize="13.5" FontWeight="SemiBold" Text="{Binding Title}" />
+                                      <TextBlock Foreground="#75869C" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Border
+                                        Grid.Column="1"
+                                        Margin="12,0,0,0"
+                                        Padding="10,3"
+                                        Background="#F3F8FF"
+                                        BorderBrush="#CFE0FA"
+                                        BorderThickness="1"
+                                        CornerRadius="999">
+                                      <TextBlock Foreground="#5B87DA" FontSize="11.5" FontWeight="SemiBold" Text="{Binding State}" />
+                                    </Border>
+                                    <controls:PclIconButton
+                                        Grid.Column="2"
+                                        Margin="10,0,0,0"
+                                        Command="{Binding CancelCommand}"
+                                        HoverBackgroundBrush="#1E5F8DE8"
+                                        IconBrush="#7FA4E8"
+                                        IsVisible="{Binding CanCancel}"
+                                        IconData="M3,3 L17,17 M17,3 L3,17" />
+                                  </Grid>
+
+                                  <StackPanel IsVisible="{Binding HasProgress}" Spacing="4">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                      <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="安装进度" />
+                                      <TextBlock Grid.Column="1" Foreground="#5B87DA" FontSize="11.5" FontWeight="SemiBold" Text="{Binding ProgressText}" />
+                                    </Grid>
+                                    <ProgressBar Height="6" Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
+                                  </StackPanel>
+
+                                  <ItemsControl ItemsSource="{Binding StageEntries}" IsVisible="{Binding HasStageEntries}">
+                                    <ItemsControl.ItemTemplate>
+                                      <DataTemplate>
+                                        <Grid Margin="0,2,0,0" ColumnDefinitions="44,*">
+                                          <TextBlock
+                                              HorizontalAlignment="Center"
+                                              Foreground="#4F86E9"
+                                              FontSize="16"
+                                              FontWeight="SemiBold"
+                                              Text="{Binding Indicator}" />
+                                          <StackPanel Grid.Column="1" Spacing="2">
+                                            <TextBlock Foreground="#66788F" FontSize="12" Text="{Binding Title}" />
+                                            <TextBlock Foreground="#9AA8B8" FontSize="10.5" Text="{Binding Message}" TextWrapping="Wrap" />
+                                          </StackPanel>
+                                        </Grid>
+                                      </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                  </ItemsControl>
+
+                                  <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasProgress}">
+                                    <TextBlock Foreground="#8B9AAF" FontSize="10.5" Text="{Binding SpeedText, StringFormat=当前速度 {0}}" />
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#8B9AAF" FontSize="10.5" Text="{Binding RemainingFilesText, StringFormat=剩余文件 {0}}" />
+                                  </Grid>
+                                </StackPanel>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border
+                            Padding="18,18,18,18"
+                            Background="#FFFFFF"
+                            BorderBrush="#D5E4FB"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            IsVisible="{Binding HasNoTaskManagerEntries}">
+                          <StackPanel Spacing="8">
+                            <TextBlock Foreground="#47586D" FontSize="13.5" FontWeight="SemiBold" Text="当前没有活动任务" />
+                            <TextBlock
+                                Foreground="#7E8FA5"
+                                FontSize="12"
+                                Text="下载、安装或其他后台流程开始后，这里会自动显示实时进度、速度和剩余文件数量。"
+                                TextWrapping="Wrap" />
+                          </StackPanel>
+                        </Border>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Grid>
                 </Border>
               </Grid>
-
-              <Border
-                  Padding="12,10"
-                  Background="#F7FAFE"
-                  BorderBrush="#D5E6FD"
-                  BorderThickness="1"
-                  CornerRadius="4">
-                <TextBlock
-                    Foreground="#45586A"
-                    FontSize="12.5"
-                    Text="{Binding TaskManagerSummary}"
-                    TextWrapping="Wrap" />
-              </Border>
-
-              <ItemsControl ItemsSource="{Binding TaskManagerEntries}" IsVisible="{Binding HasTaskManagerEntries}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <controls:PclCard Header="{Binding Title}" ContentMargin="18,18,18,16">
-                      <controls:PclCard.CardContent>
-                        <StackPanel Spacing="12">
-                          <Grid ColumnDefinitions="Auto,*">
-                            <Border
-                                Padding="10,4"
-                                Background="#EDF5FF"
-                                BorderBrush="#C8DEFB"
-                                BorderThickness="1"
-                                CornerRadius="999">
-                              <TextBlock
-                                  Foreground="#215EA9"
-                                  FontSize="11.5"
-                                  FontWeight="SemiBold"
-                                  Text="{Binding State}" />
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
-                              <TextBlock
-                                  Foreground="#45586A"
-                                  FontSize="13"
-                                  Text="{Binding Summary}"
-                                  TextWrapping="Wrap" />
-                              <TextBlock
-                                  Foreground="#7A8794"
-                                  FontSize="11.5"
-                                  Text="{Binding ProgressText}" />
-                              <TextBlock
-                                  Foreground="#7A8794"
-                                  FontSize="11.5"
-                                  IsVisible="{Binding HasChildren}"
-                                  Text="{Binding ChildrenText}" />
-                            </StackPanel>
-                          </Grid>
-                          <WrapPanel>
-                            <controls:PclButton
-                                Width="84"
-                                Height="35"
-                                Margin="0,0,10,0"
-                                Command="{Binding PauseCommand}"
-                                IsEnabled="{Binding CanPause}"
-                                Text="暂停" />
-                            <controls:PclButton
-                                Width="84"
-                                Height="35"
-                                Command="{Binding CancelCommand}"
-                                ColorType="Red"
-                                IsEnabled="{Binding CanCancel}"
-                                Text="取消" />
-                          </WrapPanel>
-                        </StackPanel>
-                      </controls:PclCard.CardContent>
-                    </controls:PclCard>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-
-              <controls:PclCard Header="当前没有活动任务" IsVisible="{Binding HasNoTaskManagerEntries}" ContentMargin="20,18,20,18">
-                <controls:PclCard.CardContent>
-                  <TextBlock
-                      Foreground="#4B5968"
-                      FontSize="13"
-                      Text="TaskCenter 中还没有需要展示的任务。下载、安装或其他后台流程开始后，这里会自动出现实时状态。"
-                      TextWrapping="Wrap" />
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
-            </StackPanel>
+            </Border>
           </controls:PclCard.CardContent>
         </controls:PclCard>
 

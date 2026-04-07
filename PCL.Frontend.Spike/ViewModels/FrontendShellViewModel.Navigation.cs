@@ -596,6 +596,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowWindowBranding));
         RaisePropertyChanged(nameof(ShowWindowUtilityButtons));
         RaisePropertyChanged(nameof(ShowMaximizeButton));
+        RaisePropertyChanged(nameof(ShowStandardShellLeftPane));
         RaisePropertyChanged(nameof(StandardShellLeftPaneWidth));
         RaisePropertyChanged(nameof(CurrentShellLeftPaneWidth));
         RaisePropertyChanged(nameof(TitleBarLabel));

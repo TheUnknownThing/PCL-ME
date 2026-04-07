@@ -7,7 +7,13 @@ internal sealed partial class FrontendShellViewModel
     public string DownloadInstallName
     {
         get => _downloadInstallName;
-        set => SetProperty(ref _downloadInstallName, value);
+        set
+        {
+            if (SetProperty(ref _downloadInstallName, value))
+            {
+                OnDownloadInstallNameChanged();
+            }
+        }
     }
 
     public string DownloadCatalogIntroTitle

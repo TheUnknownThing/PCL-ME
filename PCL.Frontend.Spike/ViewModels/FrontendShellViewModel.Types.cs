@@ -249,6 +249,116 @@ internal sealed class SurfaceNoticeViewModel(
     public IBrush ForegroundBrush { get; } = foregroundBrush;
 }
 
+internal sealed class DownloadInstallMinecraftSectionViewModel(
+    string title,
+    IReadOnlyList<DownloadInstallMinecraftChoiceViewModel> choices,
+    bool isExpanded,
+    bool canCollapse,
+    ActionCommand toggleCommand)
+{
+    public string Title { get; } = title;
+
+    public IReadOnlyList<DownloadInstallMinecraftChoiceViewModel> Choices { get; } = choices;
+
+    public bool IsExpanded { get; } = isExpanded;
+
+    public bool CanCollapse { get; } = canCollapse;
+
+    public double ChevronAngle { get; } = isExpanded ? 180 : 0;
+
+    public ActionCommand ToggleCommand { get; } = toggleCommand;
+}
+
+internal sealed class DownloadInstallMinecraftChoiceViewModel(
+    string title,
+    string summary,
+    Bitmap? icon,
+    ActionCommand selectCommand)
+{
+    public string Title { get; } = title;
+
+    public string Summary { get; } = summary;
+
+    public Bitmap? Icon { get; } = icon;
+
+    public ActionCommand SelectCommand { get; } = selectCommand;
+}
+
+internal sealed class DownloadInstallChoiceItemViewModel(
+    string title,
+    string summary,
+    bool isSelected,
+    ActionCommand selectCommand)
+{
+    public string Title { get; } = title;
+
+    public string Summary { get; } = summary;
+
+    public bool IsSelected { get; } = isSelected;
+
+    public IBrush BackgroundBrush { get; } = isSelected ? Brush.Parse("#EAF2FE") : Brush.Parse("#F7F9FC");
+
+    public IBrush BorderBrush { get; } = isSelected ? Brush.Parse("#BFD9FF") : Brush.Parse("#E1E7EF");
+
+    public IBrush ForegroundBrush { get; } = isSelected ? Brush.Parse("#1370F3") : Brush.Parse("#343D4A");
+
+    public IBrush SummaryBrush { get; } = isSelected ? Brush.Parse("#4B78C2") : Brush.Parse("#7D8897");
+
+    public ActionCommand SelectCommand { get; } = selectCommand;
+}
+
+internal sealed class DownloadInstallOptionCardViewModel(
+    string title,
+    string selectionText,
+    Bitmap? icon,
+    bool showIcon,
+    bool useMutedSelectionStyle,
+    bool canExpand,
+    bool isExpanded,
+    bool isLoading,
+    string loadingText,
+    bool showEmptyState,
+    string emptyStateText,
+    IReadOnlyList<DownloadInstallChoiceItemViewModel> choices,
+    bool canClear,
+    ActionCommand toggleCommand,
+    ActionCommand clearCommand)
+{
+    public string Title { get; } = title;
+
+    public string SelectionText { get; } = selectionText;
+
+    public Bitmap? Icon { get; } = icon;
+
+    public bool ShowIcon { get; } = showIcon;
+
+    public bool UseMutedSelectionStyle { get; } = useMutedSelectionStyle;
+
+    public IBrush SelectionForegroundBrush { get; } = useMutedSelectionStyle ? Brush.Parse("#8C99A8") : Brush.Parse("#343D4A");
+
+    public bool CanExpand { get; } = canExpand;
+
+    public bool IsExpanded { get; } = isExpanded;
+
+    public double ChevronAngle { get; } = isExpanded ? 180 : 0;
+
+    public bool IsLoading { get; } = isLoading;
+
+    public string LoadingText { get; } = loadingText;
+
+    public bool ShowEmptyState { get; } = showEmptyState;
+
+    public string EmptyStateText { get; } = emptyStateText;
+
+    public IReadOnlyList<DownloadInstallChoiceItemViewModel> Choices { get; } = choices;
+
+    public bool CanClear { get; } = canClear;
+
+    public ActionCommand ToggleCommand { get; } = toggleCommand;
+
+    public ActionCommand ClearCommand { get; } = clearCommand;
+}
+
 internal sealed class DownloadInstallOptionViewModel(
     string title,
     string selection,

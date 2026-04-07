@@ -42,6 +42,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<SurfaceNoticeViewModel> DownloadInstallHints { get; } = [];
 
+    public ObservableCollection<DownloadInstallMinecraftSectionViewModel> DownloadInstallMinecraftSections { get; } = [];
+
+    public ObservableCollection<DownloadInstallOptionCardViewModel> DownloadInstallOptionCards { get; } = [];
+
     public ObservableCollection<DownloadInstallOptionViewModel> DownloadInstallOptions { get; } = [];
 
     public ObservableCollection<DownloadCatalogActionViewModel> DownloadCatalogIntroActions { get; } = [];
@@ -216,7 +220,11 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.InstanceSelection
         ? 276
+        : CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.None
+            ? 0
         : 236;
+
+    public bool ShowStandardShellLeftPane => CurrentStandardLeftPaneDescriptor?.Kind != StandardShellLeftPaneKind.None;
 
     public double CurrentShellLeftPaneWidth => IsLaunchRoute
         ? 300
