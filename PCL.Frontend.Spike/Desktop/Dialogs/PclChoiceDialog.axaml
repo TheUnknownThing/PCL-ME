@@ -3,63 +3,109 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
-    Width="560"
-    Height="420"
-    MinWidth="560"
-    MinHeight="420"
-    MaxWidth="560"
-    MaxHeight="420"
+    Background="Transparent"
     CanResize="False"
     ShowInTaskbar="False"
+    SystemDecorations="None"
+    TransparencyLevelHint="Transparent"
     WindowStartupLocation="CenterOwner"
     Title="选择">
-  <Grid Background="#EAF4FE">
-    <controls:PclCard Margin="20" ContentMargin="20">
-      <controls:PclCard.CardContent>
-        <Grid RowDefinitions="Auto,Auto,*,Auto">
-          <StackPanel Spacing="6">
-            <TextBlock
-                x:Name="TitleTextBlock"
-                Foreground="#343D4A"
-                FontSize="18"
-                FontWeight="SemiBold" />
-            <TextBlock
-                x:Name="MessageTextBlock"
-                Foreground="#4C5664"
-                FontSize="13"
-                TextWrapping="Wrap" />
-          </StackPanel>
+  <Window.Styles>
+    <Style Selector="ListBox#ChoiceListBox">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBox#ChoiceListBox ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="ListBox#ChoiceListBox ListBoxItem:pointerover">
+      <Setter Property="Background" Value="#E2EEFE" />
+      <Setter Property="BorderBrush" Value="#D5E6FD" />
+    </Style>
+    <Style Selector="ListBox#ChoiceListBox ListBoxItem:selected">
+      <Setter Property="Background" Value="#EAF2FE" />
+      <Setter Property="BorderBrush" Value="#96C0F9" />
+    </Style>
+    </Window.Styles>
 
-          <Border
-              Grid.Row="1"
-              Margin="0,14,0,14"
-              Padding="10,8"
-              Background="#F7FBFF"
-              BorderBrush="#D9E7F5"
-              BorderThickness="1"
-              CornerRadius="8">
-            <TextBlock
-                x:Name="SelectionSummaryTextBlock"
-                Foreground="#617284"
-                FontSize="12.5"
-                TextWrapping="Wrap" />
-          </Border>
+  <Grid Background="Transparent">
+    <Border
+        x:Name="OverlayBorder"
+        Background="#5A000000" />
 
-          <Border
-              Grid.Row="2"
-              Background="#FFFFFF"
-              BorderBrush="#D9E7F5"
-              BorderThickness="1"
-              CornerRadius="8">
-            <ListBox
-                x:Name="ChoiceListBox"
-                Background="Transparent"
-                BorderThickness="0">
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <StackPanel Margin="10,8" Spacing="4">
+    <Border
+        x:Name="MessagePanel"
+        MinWidth="400"
+        MaxWidth="620"
+        Margin="25"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Background="{DynamicResource ColorBrushMsgBox}"
+        BoxShadow="0 2 20 0 #CC3C3C3C"
+        CornerRadius="7">
+      <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,Auto,*,Auto">
+        <TextBlock
+            x:Name="TitleTextBlock"
+            Margin="7,-1,70,9"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            FontSize="23"
+            Foreground="{DynamicResource ColorBrush2}"
+            TextTrimming="None" />
+
+        <Rectangle
+            Grid.Row="1"
+            Height="2"
+            Fill="{Binding Foreground, ElementName=TitleTextBlock}" />
+
+        <ScrollViewer
+            x:Name="MessageHost"
+            Grid.Row="3"
+            Margin="0,0,0,7"
+            Padding="7,0,15,0"
+            MaxHeight="120"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+          <TextBlock
+              x:Name="MessageTextBlock"
+              Padding="1"
+              FontSize="15"
+              FontWeight="Normal"
+              Foreground="{DynamicResource ColorBrush1}"
+              LineHeight="18"
+              TextTrimming="None"
+              TextWrapping="Wrap" />
+        </ScrollViewer>
+
+        <ScrollViewer
+            Grid.Row="4"
+            Margin="0,0,0,17"
+            Padding="7,0,15,0"
+            MaxHeight="280"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+          <ListBox
+              x:Name="ChoiceListBox"
+              Background="Transparent"
+              BorderThickness="0">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Border
+                    Padding="10,8"
+                    Background="Transparent"
+                    BorderBrush="#00000000"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                  <StackPanel Spacing="4">
                     <TextBlock
-                        Foreground="#343D4A"
+                        Foreground="{DynamicResource ColorBrush1}"
                         FontSize="14"
                         FontWeight="SemiBold"
                         Text="{Binding Title}" />
@@ -69,31 +115,34 @@
                         Text="{Binding Summary}"
                         TextWrapping="Wrap" />
                   </StackPanel>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </Border>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </ScrollViewer>
 
-          <Grid
-              Grid.Row="3"
-              Margin="0,16,0,0"
-              ColumnDefinitions="*,Auto,Auto">
-            <controls:PclOutlineButton
-                Grid.Column="1"
-                Margin="0,0,12,0"
-                Width="108"
-                Text="取消"
-                Command="{Binding CancelCommand}" />
-            <controls:PclButton
-                Grid.Column="2"
-                Width="128"
-                Text="{Binding ConfirmText}"
-                ContentPadding="14,7"
-                ColorType="Highlight"
-                Command="{Binding ConfirmCommand}" />
-          </Grid>
-        </Grid>
-      </controls:PclCard.CardContent>
-    </controls:PclCard>
+        <StackPanel
+            Grid.Row="5"
+            Margin="150,0,8,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+          <controls:PclButton
+              Width="96"
+              Margin="12,0,0,0"
+              Text="取消"
+              ContentPadding="8,5"
+              TextMargin="0,-1,0,0"
+              Command="{Binding CancelCommand}" />
+          <controls:PclButton
+              Width="108"
+              Margin="12,0,0,0"
+              Text="{Binding ConfirmText}"
+              ContentPadding="8,5"
+              TextMargin="0,-1,0,0"
+              ColorType="Highlight"
+              Command="{Binding ConfirmCommand}" />
+        </StackPanel>
+      </Grid>
+    </Border>
   </Grid>
 </Window>

@@ -24,6 +24,7 @@ internal sealed partial class PclTextInputDialog : Window
         ConfirmCommand = new ActionCommand(Confirm);
         CancelCommand = new ActionCommand(Cancel);
         DataContext = this;
+        MessageHost.IsVisible = !string.IsNullOrWhiteSpace(message);
 
         _inputTextBox = this.FindControl<TextBox>("InputTextBox")
             ?? throw new InvalidOperationException("输入对话框未找到文本框。");
@@ -32,6 +33,7 @@ internal sealed partial class PclTextInputDialog : Window
         _inputTextBox.KeyDown += InputTextBoxOnKeyDown;
         Opened += (_, _) =>
         {
+            AlignToOwnerBounds();
             _inputTextBox.Focus();
             _inputTextBox.SelectionStart = 0;
             _inputTextBox.SelectionEnd = _inputTextBox.Text?.Length ?? 0;
@@ -58,6 +60,18 @@ internal sealed partial class PclTextInputDialog : Window
     private void Confirm()
     {
         Close(_inputTextBox.Text);
+    }
+
+    private void AlignToOwnerBounds()
+    {
+        if (Owner is not Window owner)
+        {
+            return;
+        }
+
+        Position = owner.Position;
+        Width = Math.Max(owner.Bounds.Width, 320);
+        Height = Math.Max(owner.Bounds.Height, 240);
     }
 
     private void Cancel()
