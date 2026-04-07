@@ -26,35 +26,40 @@
         <Button
             x:Name="HeaderButton"
             Classes="nochrome"
+            Grid.Row="0"
             Margin="0"
             Padding="0"
             Background="Transparent"
             BorderBrush="Transparent"
             BorderThickness="0"
-            HorizontalContentAlignment="Stretch"
-            IsVisible="{Binding HasHeader, ElementName=Root}">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock
-                x:Name="HeaderTextBlock"
-                Margin="15,12,0,0"
-                VerticalAlignment="Top"
-                FontSize="13"
-                FontWeight="Bold"
-                Foreground="{DynamicResource ColorBrush1}" />
-            <Path
-                x:Name="ChevronPath"
-                Grid.Column="1"
-                Width="10"
-                Height="6"
-                Margin="0,17,16,0"
-                VerticalAlignment="Top"
-                Data="M2,4 l-2,2 10,10 10,-10 -2,-2 -8,8 -8,-8 z"
-                Fill="{DynamicResource ColorBrush1}"
-                RenderTransformOrigin="0.5,0.5"
-                Stretch="Uniform"
-                IsVisible="{Binding ShowChevron, ElementName=Root}" />
-          </Grid>
-        </Button>
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            IsVisible="{Binding HasHeader, ElementName=Root}" />
+
+        <TextBlock
+            x:Name="HeaderTextBlock"
+            Grid.Row="0"
+            Margin="15,12,40,0"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            FontSize="13"
+            FontWeight="Bold"
+            Foreground="{DynamicResource ColorBrush1}" />
+
+        <Path
+            x:Name="ChevronPath"
+            Grid.Row="0"
+            Width="10"
+            Height="6"
+            Margin="0,17,16,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            Data="M2,4 l-2,2 10,10 10,-10 -2,-2 -8,8 -8,-8 z"
+            Fill="{DynamicResource ColorBrush1}"
+            RenderTransformOrigin="0.5,0.5"
+            Stretch="Uniform"
+            IsVisible="{Binding ShowChevron, ElementName=Root}" />
 
         <ContentPresenter
             x:Name="HeaderOverlayContentPresenter"
