@@ -13,6 +13,7 @@
     <Description>Avalonia replacement frontend for Plain Craft Launcher Community Edition.</Description>
     <ApplicationIcon>..\Plain Craft Launcher 2\Images\icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <BuildInParallel>false</BuildInParallel>
   </PropertyGroup>
 
   <ItemGroup>

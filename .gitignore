@@ -350,3 +350,6 @@ MaskFiles/
 # Temp test files
 
 .spike-mc/
+
+# IDE
+.vscode/

@@ -10,7 +10,7 @@ internal static class SpikeDesktopHost
         BuildAvaloniaApp(options).StartWithClassicDesktopLifetime([]);
     }
 
-    private static AppBuilder BuildAvaloniaApp(SpikeCommandOptions options)
+    internal static AppBuilder BuildAvaloniaApp(SpikeCommandOptions options)
     {
         return AppBuilder.Configure(() => new App(options))
             .UsePlatformDetect()
