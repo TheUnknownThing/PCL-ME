@@ -14,7 +14,8 @@ internal sealed partial class PclTextInputDialog : PclAnimatedDialog<string?>
         string message,
         string initialText,
         string confirmText,
-        string? placeholderText)
+        string? placeholderText,
+        bool isPassword)
     {
         InitializeComponent();
         InitializeDialogAnimation();
@@ -31,6 +32,10 @@ internal sealed partial class PclTextInputDialog : PclAnimatedDialog<string?>
             ?? throw new InvalidOperationException("输入对话框未找到文本框。");
         _inputTextBox.Text = initialText ?? string.Empty;
         _inputTextBox.Watermark = placeholderText ?? string.Empty;
+        if (isPassword)
+        {
+            _inputTextBox.PasswordChar = '●';
+        }
         _inputTextBox.KeyDown += InputTextBoxOnKeyDown;
         Opened += (_, _) =>
         {

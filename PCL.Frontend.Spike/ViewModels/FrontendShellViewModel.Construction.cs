@@ -42,6 +42,11 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _toggleLaunchMigrationCommand;
     private readonly ActionCommand _toggleLaunchNewsCommand;
     private readonly ActionCommand _dismissLaunchCommunityHintCommand;
+    private readonly ActionCommand _selectLaunchProfileCommand;
+    private readonly ActionCommand _addLaunchProfileCommand;
+    private readonly ActionCommand _createOfflineLaunchProfileCommand;
+    private readonly ActionCommand _loginMicrosoftLaunchProfileCommand;
+    private readonly ActionCommand _loginAuthlibLaunchProfileCommand;
     private readonly ActionCommand _openFeedbackCommand;
     private readonly ActionCommand _exportLogCommand;
     private readonly ActionCommand _exportAllLogsCommand;
@@ -140,6 +145,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _isLaunchNewsExpanded = true;
     private bool _showLaunchCommunityHint = true;
     private bool _isLaunchInProgress;
+    private bool _isLaunchProfileActionInProgress;
     private bool _pendingLaunchAfterPrompt;
     private bool _showLaunchLog;
     private readonly StringBuilder _launchLogBuilder = new();
@@ -324,6 +330,11 @@ internal sealed partial class FrontendShellViewModel
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
         _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
         _dismissLaunchCommunityHintCommand = new ActionCommand(() => ShowLaunchCommunityHint = false);
+        _selectLaunchProfileCommand = new ActionCommand(() => _ = SelectLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _addLaunchProfileCommand = new ActionCommand(() => _ = AddLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _createOfflineLaunchProfileCommand = new ActionCommand(() => _ = CreateOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _loginMicrosoftLaunchProfileCommand = new ActionCommand(() => _ = LoginMicrosoftLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _loginAuthlibLaunchProfileCommand = new ActionCommand(() => _ = LoginAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/PCL-Community/PCL2-CE/issues");
         _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
         _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));

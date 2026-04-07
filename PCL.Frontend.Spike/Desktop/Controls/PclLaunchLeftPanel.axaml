@@ -20,38 +20,111 @@
       <ColumnDefinition Width="10" />
     </Grid.ColumnDefinitions>
 
-    <Grid
+    <Border
         Grid.Row="1"
         Grid.ColumnSpan="5"
         Margin="20,0"
-        VerticalAlignment="Center">
-      <StackPanel HorizontalAlignment="Center" Spacing="10">
-        <Border
-            Width="82"
-            Height="82"
-            CornerRadius="8"
-            Background="#F7EFD7"
-            BoxShadow="0 6 18 0 #10000000">
-          <Image
+        Padding="18,16,18,14"
+        VerticalAlignment="Center"
+        Background="#FDFDFD"
+        BorderBrush="#14000000"
+        BorderThickness="1"
+        BoxShadow="0 16 34 0 #10000000"
+        CornerRadius="14">
+      <Grid>
+        <StackPanel
+            HorizontalAlignment="Center"
+            IsVisible="{Binding HasSelectedLaunchProfile}"
+            Spacing="10">
+          <Border
               Width="82"
               Height="82"
-              Source="{Binding LaunchAvatarImage}"
-              Stretch="Uniform"
-              RenderOptions.BitmapInterpolationMode="None" />
-        </Border>
-        <TextBlock
-            HorizontalAlignment="Center"
-            Foreground="#343D4A"
-          FontSize="18"
-            FontWeight="Light"
-            Text="{Binding LaunchUserName}" />
-        <TextBlock
-            HorizontalAlignment="Center"
-            Foreground="#B3B3B3"
-          FontSize="12.5"
-            Text="{Binding LaunchAuthLabel}" />
-      </StackPanel>
-    </Grid>
+              CornerRadius="8"
+              Background="#F7EFD7"
+              BoxShadow="0 6 18 0 #10000000">
+            <Image
+                Width="82"
+                Height="82"
+                Source="{Binding LaunchAvatarImage}"
+                Stretch="Uniform"
+                RenderOptions.BitmapInterpolationMode="None" />
+          </Border>
+          <TextBlock
+              HorizontalAlignment="Center"
+              FontSize="18"
+              FontWeight="Light"
+              Foreground="#343D4A"
+              Text="{Binding LaunchUserName}" />
+          <Border
+              Padding="10,4"
+              HorizontalAlignment="Center"
+              Background="#F2F4F7"
+              CornerRadius="999">
+            <TextBlock
+                FontSize="12.5"
+                Foreground="#727C88"
+                Text="{Binding LaunchProfileDescription}" />
+          </Border>
+          <TextBlock
+              Margin="8,2,8,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Foreground="#9AA3AE"
+              Text="{Binding LaunchProfileHint}"
+              TextAlignment="Center"
+              TextWrapping="Wrap" />
+          <Grid
+              Margin="0,2,0,0"
+              ColumnDefinitions="*,10,*">
+            <controls:PclButton
+                Grid.Column="0"
+                Height="34"
+                Command="{Binding SelectLaunchProfileCommand}"
+                Text="选择档案" />
+            <controls:PclButton
+                Grid.Column="2"
+                Height="34"
+                ColorType="Highlight"
+                Command="{Binding AddLaunchProfileCommand}"
+                Text="新建 / 登录" />
+          </Grid>
+        </StackPanel>
+
+        <StackPanel
+            HorizontalAlignment="Stretch"
+            IsVisible="{Binding ShowLaunchProfileSetupActions}"
+            Spacing="10">
+          <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="17"
+              FontWeight="SemiBold"
+              Foreground="#343D4A"
+              Text="{Binding LaunchProfileHint}" />
+          <TextBlock
+              Margin="4,0,4,2"
+              HorizontalAlignment="Center"
+              FontSize="12.5"
+              Foreground="#7D8792"
+              Text="标准实现会先建立或选中档案，然后再进入启动流程。"
+              TextAlignment="Center"
+              TextWrapping="Wrap" />
+          <controls:PclButton
+              Height="34"
+              ColorType="Highlight"
+              Command="{Binding CreateOfflineLaunchProfileCommand}"
+              Text="离线创建" />
+          <controls:PclButton
+              Height="34"
+              Command="{Binding LoginMicrosoftLaunchProfileCommand}"
+              Text="微软登录" />
+          <controls:PclButton
+              Height="34"
+              Command="{Binding LoginAuthlibLaunchProfileCommand}"
+              Text="外置登录" />
+        </StackPanel>
+      </Grid>
+    </Border>
 
     <Grid Grid.Row="2" Grid.ColumnSpan="5">
       <controls:PclLaunchButton

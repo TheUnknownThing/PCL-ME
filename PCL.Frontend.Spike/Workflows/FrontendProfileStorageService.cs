@@ -134,6 +134,21 @@ internal static class FrontendProfileStorageService
         return new MinecraftLaunchProfileDocument(profiles.Count - 1, profiles);
     }
 
+    public static MinecraftLaunchProfileDocument SelectProfile(
+        MinecraftLaunchProfileDocument document,
+        int profileIndex)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        if (document.Profiles.Count == 0)
+        {
+            return document;
+        }
+
+        var selectedIndex = Math.Clamp(profileIndex, 0, document.Profiles.Count - 1);
+        return new MinecraftLaunchProfileDocument(selectedIndex, document.Profiles);
+    }
+
     public static MinecraftLaunchProfileDocument DeleteProfile(
         MinecraftLaunchProfileDocument document,
         int profileIndex)

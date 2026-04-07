@@ -842,6 +842,10 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
+        RaisePropertyChanged(nameof(HasSelectedLaunchProfile));
+        RaisePropertyChanged(nameof(ShowLaunchProfileSetupActions));
+        RaisePropertyChanged(nameof(LaunchProfileHint));
+        RaisePropertyChanged(nameof(LaunchProfileDescription));
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));
         RaisePropertyChanged(nameof(LaunchWelcomeBanner));
         RaisePropertyChanged(nameof(LaunchNewsTitle));

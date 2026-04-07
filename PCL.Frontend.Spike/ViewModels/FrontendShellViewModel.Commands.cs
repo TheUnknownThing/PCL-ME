@@ -22,6 +22,16 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand DismissLaunchCommunityHintCommand => _dismissLaunchCommunityHintCommand;
 
+    public ActionCommand SelectLaunchProfileCommand => _selectLaunchProfileCommand;
+
+    public ActionCommand AddLaunchProfileCommand => _addLaunchProfileCommand;
+
+    public ActionCommand CreateOfflineLaunchProfileCommand => _createOfflineLaunchProfileCommand;
+
+    public ActionCommand LoginMicrosoftLaunchProfileCommand => _loginMicrosoftLaunchProfileCommand;
+
+    public ActionCommand LoginAuthlibLaunchProfileCommand => _loginAuthlibLaunchProfileCommand;
+
     public ActionCommand OpenFeedbackCommand => _openFeedbackCommand;
 
     public ActionCommand ExportLogCommand => _exportLogCommand;

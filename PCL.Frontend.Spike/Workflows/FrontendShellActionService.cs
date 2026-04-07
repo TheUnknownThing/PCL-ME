@@ -190,10 +190,11 @@ internal sealed class FrontendShellActionService(
         string message,
         string initialText = "",
         string confirmText = "确定",
-        string? placeholderText = null)
+        string? placeholderText = null,
+        bool isPassword = false)
     {
         var owner = GetDesktopMainWindow();
-        var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText);
+        var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText, isPassword);
         return await dialog.ShowDialog<string?>(owner);
     }
 

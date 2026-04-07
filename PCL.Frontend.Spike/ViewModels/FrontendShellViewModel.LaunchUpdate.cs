@@ -1,6 +1,7 @@
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
@@ -363,6 +364,23 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchAuthLabel => _launchComposition.SelectedProfile.AuthLabel;
 
+    public bool HasSelectedLaunchProfile => _launchComposition.SelectedProfile.Kind != MinecraftLaunchProfileKind.None;
+
+    public bool ShowLaunchProfileSetupActions => !HasSelectedLaunchProfile;
+
+    public string LaunchProfileHint => HasSelectedLaunchProfile
+        ? "已选择档案，可直接启动或切换到其他档案。"
+        : "选择一个档案以启动游戏";
+
+    public string LaunchProfileDescription => _launchComposition.SelectedProfile.Kind switch
+    {
+        MinecraftLaunchProfileKind.Auth when !string.IsNullOrWhiteSpace(_launchComposition.SelectedProfile.AuthServer)
+            => $"外置验证 / {GetLaunchAuthServerDisplayName(_launchComposition.SelectedProfile.AuthServer!)}",
+        MinecraftLaunchProfileKind.Microsoft => "正版验证",
+        MinecraftLaunchProfileKind.Legacy => "离线验证",
+        _ => "新建并选择一个档案以启动游戏"
+    };
+
     public string LaunchButtonTitle => _isLaunchInProgress ? "启动中" : "启动游戏";
 
     public string LaunchVersionSubtitle => _launchComposition.InstanceName;
@@ -421,4 +439,15 @@ internal sealed partial class FrontendShellViewModel
     public Bitmap? LaunchNewsImage => File.Exists(LaunchNewsImageFilePath)
         ? new Bitmap(LaunchNewsImageFilePath)
         : null;
+
+    private static string GetLaunchAuthServerDisplayName(string authServer)
+    {
+        if (Uri.TryCreate(authServer, UriKind.Absolute, out var uri) &&
+            !string.IsNullOrWhiteSpace(uri.Host))
+        {
+            return uri.Host;
+        }
+
+        return authServer;
+    }
 }
