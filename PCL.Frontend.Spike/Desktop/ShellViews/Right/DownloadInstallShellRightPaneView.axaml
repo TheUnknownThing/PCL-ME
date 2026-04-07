@@ -131,7 +131,7 @@
                     Stretch="Uniform"
                     Data="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z" />
               </Button>
-              <Border
+                <Border
                   Grid.Column="1"
                   Width="32"
                   Height="32"
@@ -139,7 +139,7 @@
                   VerticalAlignment="Center"
                   Background="#EAF2FE"
                   BorderBrush="#D5E6FD"
-                  BorderThickness="1"
+                  BorderThickness="0"
                   CornerRadius="6">
                 <Image Source="{Binding DownloadInstallMinecraftIcon}" Stretch="Uniform" Margin="5" />
               </Border>
@@ -213,7 +213,7 @@
                         VerticalAlignment="Center"
                         Background="#EAF2FE"
                         BorderBrush="#D5E6FD"
-                        BorderThickness="1"
+                        BorderThickness="0"
                         CornerRadius="5"
                         IsHitTestVisible="False"
                         IsVisible="{Binding ShowIcon}">

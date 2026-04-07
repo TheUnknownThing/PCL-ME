@@ -406,7 +406,7 @@
                         VerticalAlignment="Center"
                         Background="#F7FAFE"
                         BorderBrush="#D5E6FD"
-                        BorderThickness="1"
+                        BorderThickness="0"
                         CornerRadius="6">
                       <Grid>
                         <Image
