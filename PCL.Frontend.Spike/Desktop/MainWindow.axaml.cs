@@ -71,6 +71,7 @@ internal sealed partial class MainWindow : Window
             RunEntranceAnimation();
         };
         Closed += OnWindowClosed;
+        KeyDown += OnWindowKeyDown;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
         UpdateWindowChromeState();
@@ -222,6 +223,7 @@ internal sealed partial class MainWindow : Window
     {
         SpikeHintBus.OnShow -= OnHintWrapperShow;
         Closed -= OnWindowClosed;
+        KeyDown -= OnWindowKeyDown;
 
         foreach (var state in _activeHints.Values)
         {
@@ -230,6 +232,20 @@ internal sealed partial class MainWindow : Window
         }
 
         _activeHints.Clear();
+    }
+
+    private void OnWindowKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || e.Key != Key.Escape || _shellViewModel is null)
+        {
+            return;
+        }
+
+        if (_shellViewModel.BackCommand.CanExecute(null))
+        {
+            _shellViewModel.BackCommand.Execute(null);
+            e.Handled = true;
+        }
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
