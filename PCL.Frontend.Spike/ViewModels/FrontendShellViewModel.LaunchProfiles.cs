@@ -795,10 +795,19 @@ internal sealed partial class FrontendShellViewModel
 
     private static string ResolveMicrosoftClientId()
     {
-        var clientId = Environment.GetEnvironmentVariable("MS_CLIENT_ID");
-        return string.IsNullOrWhiteSpace(clientId)
-            ? MinecraftLaunchMicrosoftRequestWorkflowService.DefaultMicrosoftClientId
-            : clientId;
+        var clientId = Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID");
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            // Compatibility fallback for local tooling that still exports the unprefixed name.
+            clientId = Environment.GetEnvironmentVariable("MS_CLIENT_ID");
+        }
+
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            throw new ArgumentException("缺少微软 OAuth Client ID。请先配置 PCL_MS_CLIENT_ID。", "MS_CLIENT_ID");
+        }
+
+        return clientId;
     }
 
     private static string NormalizeAuthlibServerBaseUrl(string serverInput)
