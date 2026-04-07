@@ -20,18 +20,12 @@
       <ColumnDefinition Width="10" />
     </Grid.ColumnDefinitions>
 
-    <Border
+    <Grid
         Grid.Row="1"
         Grid.ColumnSpan="5"
         Margin="20,0"
-        Padding="18,16,18,14"
-        VerticalAlignment="Center"
-        Background="#FDFDFD"
-        BorderBrush="#14000000"
-        BorderThickness="1"
-        BoxShadow="0 16 34 0 #10000000"
-        CornerRadius="14">
-      <Grid>
+        VerticalAlignment="Center">
+      <Grid Margin="18,16,18,14">
         <StackPanel
             HorizontalAlignment="Center"
             IsVisible="{Binding ShowLaunchProfileSummaryCard}"
@@ -350,7 +344,7 @@
           </StackPanel>
         </Grid>
       </Grid>
-    </Border>
+    </Grid>
 
     <Grid Grid.Row="2" Grid.ColumnSpan="5">
       <controls:PclLaunchButton
