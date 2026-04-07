@@ -4,6 +4,19 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="Button.instance-entry">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.instance-entry:pointerover">
+      <Setter Property="Background" Value="#E8F2FF" />
+    </Style>
+  </UserControl.Styles>
+
   <Grid>
     <Border>
       <Border.Background>
@@ -15,190 +28,230 @@
       </Border.Background>
     </Border>
 
-    <Grid RowDefinitions="Auto,*">
-      <StackPanel Margin="30,24,30,10" Spacing="12" IsVisible="{Binding HasInstanceSelectionSearchBox}">
-        <Grid ColumnDefinitions="*,Auto">
-          <Border
-              Height="40"
-              Padding="12,0"
-              Background="#F9FBFF"
-              BorderBrush="#CFDDF5"
-              BorderThickness="1"
-              CornerRadius="5">
-            <TextBox
-                Background="Transparent"
-                BorderBrush="Transparent"
-                BorderThickness="0"
-                FontSize="13.5"
-                Text="{Binding InstanceSelectionSearchQuery}"
-                Watermark="搜索游戏实例" />
-          </Border>
-          <controls:PclButton
-              Grid.Column="1"
-              Width="76"
-              Height="40"
-              Margin="10,0,0,0"
-              Command="{Binding RefreshInstanceSelectionCommand}"
-              Text="刷新" />
-        </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="22,18,22,14" Spacing="14">
+        <StackPanel Spacing="12" IsVisible="{Binding HasInstanceSelectionSearchBox}">
+          <Grid ColumnDefinitions="*,Auto">
+            <Border
+                Height="40"
+                Padding="12,0"
+                Background="#F8FBFF"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="5">
+              <Grid ColumnDefinitions="Auto,*">
+                <Path
+                    Width="14"
+                    Height="14"
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    Data="M440.533333 106.666667a333.866667 333.866667 0 1 1 0 667.733333 333.866667 333.866667 0 0 1 0-667.733333z m0 85.333333a248.533333 248.533333 0 1 0 0 497.066667 248.533333 248.533333 0 0 0 0-497.066667z m271.445334 459.093333 241.493333 241.493334-60.330667 60.330666-241.493333-241.493333z"
+                    Fill="#7D8EA3"
+                    Stretch="Uniform" />
+                <TextBox
+                    Grid.Column="1"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    FontSize="13.5"
+                    Text="{Binding InstanceSelectionSearchQuery}"
+                    Watermark="搜索游戏实例" />
+              </Grid>
+            </Border>
+            <controls:PclButton
+                Grid.Column="1"
+                Width="72"
+                Height="40"
+                Margin="10,0,0,0"
+                Command="{Binding RefreshInstanceSelectionCommand}"
+                Text="刷新" />
+          </Grid>
 
-        <TextBlock
-            Foreground="#6D7A89"
-            FontSize="12"
-            Text="{Binding InstanceSelectionResultSummary}" />
-      </StackPanel>
+          <controls:PclCard ContentMargin="14,14,14,14">
+            <controls:PclCard.CardContent>
+              <StackPanel Spacing="4">
+                <TextBlock
+                    Foreground="#344352"
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Text="{Binding InstanceSelectionResultSummary}" />
+                <TextBlock
+                    Foreground="#8A98A8"
+                    FontSize="11.5"
+                    Text="{Binding InstanceSelectionLauncherDirectory}"
+                    TextWrapping="Wrap" />
+              </StackPanel>
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+        </StackPanel>
 
-      <ScrollViewer
-          Grid.Row="1"
-          Margin="22,8,22,14"
-          VerticalScrollBarVisibility="Auto"
-          IsVisible="{Binding HasInstanceSelectionEntries}">
-        <ItemsControl ItemsSource="{Binding InstanceSelectionEntries}">
+        <ItemsControl ItemsSource="{Binding InstanceSelectionGroups}" IsVisible="{Binding HasInstanceSelectionEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border
-                  Margin="0,0,0,14"
-                  Padding="18,16,18,16"
-                  Background="#F9FBFF"
-                  BorderBrush="#C8D8F2"
-                  BorderThickness="1"
-                  CornerRadius="7">
-                <StackPanel Spacing="10">
-                  <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3">
-                      <TextBlock
-                          Foreground="#2D3D4E"
-                          FontSize="18"
-                          FontWeight="SemiBold"
-                          Text="{Binding Title}" />
-                      <TextBlock
-                          Foreground="#667586"
-                          FontSize="12.5"
-                          Text="{Binding Subtitle}"
-                          TextWrapping="Wrap" />
-                    </StackPanel>
-                    <Border
-                        Grid.Column="1"
-                        Padding="10,4"
-                        Background="#EAF2FE"
-                        BorderBrush="#BFD3F7"
-                        BorderThickness="1"
-                        CornerRadius="999"
-                        IsVisible="{Binding IsSelected}">
-                      <TextBlock
-                          Foreground="#1E69D2"
-                          FontSize="11.5"
-                          FontWeight="SemiBold"
-                          Text="当前实例" />
-                    </Border>
-                  </Grid>
-
-                  <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
+              <controls:PclCard
+                  Header="{Binding HeaderText}"
+                  HeaderCommand="{Binding ToggleExpandCommand}"
+                  ShowChevron="True"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  ContentMargin="10,36,10,10">
+                <controls:PclCard.CardContent>
+                  <ItemsControl ItemsSource="{Binding Entries}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <Border
-                            Margin="0,0,8,8"
-                            Padding="10,4"
-                            Background="#EDF5FF"
-                            BorderBrush="#CADCF7"
-                            BorderThickness="1"
-                            CornerRadius="999">
-                          <TextBlock
-                              Foreground="#2965B0"
-                              FontSize="11.5"
-                              FontWeight="SemiBold"
-                              Text="{Binding}" />
-                        </Border>
+                        <Button
+                            Classes="instance-entry"
+                            Command="{Binding SelectCommand}">
+                          <Grid Margin="8,0,8,8" ColumnDefinitions="Auto,*,Auto">
+                            <Image
+                                Width="32"
+                                Height="32"
+                                VerticalAlignment="Top"
+                                Source="{Binding Icon}"
+                                Stretch="UniformToFill" />
+
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="3">
+                              <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock
+                                    Foreground="#343D4A"
+                                    FontSize="13.5"
+                                    FontWeight="SemiBold"
+                                    Text="{Binding Title}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <Border
+                                    Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    Padding="8,2"
+                                    Background="#EAF3FF"
+                                    BorderBrush="#BED6F8"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    IsVisible="{Binding IsSelected}">
+                                  <TextBlock
+                                      Foreground="#1B73E8"
+                                      FontSize="10.5"
+                                      FontWeight="SemiBold"
+                                      Text="当前实例" />
+                                </Border>
+                              </Grid>
+
+                              <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
+                                <ItemsControl.ItemsPanel>
+                                  <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                  </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate>
+                                    <Border
+                                        Margin="0,0,6,0"
+                                        Padding="7,2"
+                                        Background="#EFF1F4"
+                                        CornerRadius="4">
+                                      <TextBlock
+                                          Foreground="#8C98A7"
+                                          FontSize="10.8"
+                                          Text="{Binding}" />
+                                    </Border>
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+
+                              <TextBlock
+                                  Foreground="#738293"
+                                  FontSize="11.5"
+                                  Text="{Binding Subtitle}"
+                                  TextTrimming="CharacterEllipsis"
+                                  IsVisible="{Binding HasSubtitle}" />
+                              <TextBlock
+                                  Foreground="#A0A9B5"
+                                  FontSize="10.8"
+                                  Text="{Binding Detail}"
+                                  TextTrimming="CharacterEllipsis"
+                                  IsVisible="{Binding HasDetail}" />
+                            </StackPanel>
+
+                            <StackPanel
+                                Grid.Column="2"
+                                Margin="12,0,0,0"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                VerticalAlignment="Top">
+                              <controls:PclIconButton
+                                  Width="28"
+                                  Height="28"
+                                  Command="{Binding OpenFolderCommand}"
+                                  HoverBackgroundBrush="#32D5E6FD"
+                                  IconBrush="#6A8FD8"
+                                  IconData="M112 224c0-35.3 28.7-64 64-64h176l64 64h432c35.3 0 64 28.7 64 64v64H112v-128zM112 416h800v352c0 35.3-28.7 64-64 64H176c-35.3 0-64-28.7-64-64V416z"
+                                  ToolTip.Tip="打开目录" />
+                              <controls:PclIconButton
+                                  Width="28"
+                                  Height="28"
+                                  Command="{Binding OpenCommand}"
+                                  HoverBackgroundBrush="#32D5E6FD"
+                                  IconBrush="#6A8FD8"
+                                  IconData="M192 128h384v64H301.3L704 594.7 658.7 640 256 237.3V512h-64V128zm128 256h512v512H320V384zm64 64v384h384V448H384z"
+                                  ToolTip.Tip="打开详情" />
+                            </StackPanel>
+                          </Grid>
+                        </Button>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-
-                  <TextBlock
-                      Foreground="#7B8592"
-                      FontSize="11.5"
-                      Text="{Binding Detail}"
-                      TextWrapping="Wrap" />
-
-                  <WrapPanel>
-                    <controls:PclButton
-                        Width="134"
-                        Height="35"
-                        Margin="0,0,10,0"
-                        ColorType="Highlight"
-                        Command="{Binding SelectCommand}"
-                        Text="{Binding SelectText}" />
-                    <controls:PclButton
-                        Width="98"
-                        Height="35"
-                        Margin="0,0,10,0"
-                        Command="{Binding OpenCommand}"
-                        Text="打开详情" />
-                    <controls:PclButton
-                        Width="108"
-                        Height="35"
-                        Command="{Binding OpenFolderCommand}"
-                        Text="打开目录" />
-                  </WrapPanel>
-                </StackPanel>
-              </Border>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-      </ScrollViewer>
 
-      <Border
-          Grid.RowSpan="2"
-          Width="580"
-          MaxWidth="640"
-          Padding="26,18,26,18"
-          HorizontalAlignment="Center"
-          VerticalAlignment="Center"
-          Background="#F9FBFF"
-          BorderBrush="#C9D7F0"
-          BorderThickness="1"
-          CornerRadius="7"
-          IsVisible="{Binding HasNoInstanceSelectionEntries}">
-        <StackPanel Spacing="12">
-          <TextBlock
-              HorizontalAlignment="Center"
-              Foreground="#3892FF"
-              FontSize="19"
-              FontWeight="SemiBold"
-              Text="{Binding InstanceSelectionEmptyTitle}" />
-          <Border Height="2" Background="#4A92F2" />
-          <TextBlock
-              Margin="2,10,2,0"
-              Foreground="#697687"
-              FontSize="12.5"
-              Text="{Binding InstanceSelectionEmptyDescription}"
-              TextAlignment="Left"
-              TextWrapping="Wrap" />
-          <StackPanel
-              Margin="0,4,0,0"
-              HorizontalAlignment="Center"
-              Orientation="Horizontal"
-              Spacing="10">
-            <controls:PclButton
-                Width="126"
-                Height="35"
-                ColorType="Highlight"
-                Command="{Binding OpenInstanceSelectionDownloadCommand}"
-                IsVisible="{Binding ShowInstanceSelectionEmptyDownloadAction}"
-                Text="下载游戏" />
-            <controls:PclButton
-                Width="126"
-                Height="35"
-                Command="{Binding ClearInstanceSelectionSearchCommand}"
-                IsVisible="{Binding ShowInstanceSelectionEmptyClearAction}"
-                Text="清空搜索" />
+        <Border
+            Width="580"
+            MaxWidth="640"
+            Padding="26,18,26,18"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="#F9FBFF"
+            BorderBrush="#C9D7F0"
+            BorderThickness="1"
+            CornerRadius="7"
+            IsVisible="{Binding HasNoInstanceSelectionEntries}">
+          <StackPanel Spacing="12">
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="#3892FF"
+                FontSize="19"
+                FontWeight="SemiBold"
+                Text="{Binding InstanceSelectionEmptyTitle}" />
+            <Border Height="2" Background="#4A92F2" />
+            <TextBlock
+                Margin="2,10,2,0"
+                Foreground="#697687"
+                FontSize="12.5"
+                Text="{Binding InstanceSelectionEmptyDescription}"
+                TextAlignment="Left"
+                TextWrapping="Wrap" />
+            <StackPanel
+                Margin="0,4,0,0"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="10">
+              <controls:PclButton
+                  Width="126"
+                  Height="35"
+                  ColorType="Highlight"
+                  Command="{Binding OpenInstanceSelectionDownloadCommand}"
+                  IsVisible="{Binding ShowInstanceSelectionEmptyDownloadAction}"
+                  Text="下载游戏" />
+              <controls:PclButton
+                  Width="126"
+                  Height="35"
+                  Command="{Binding ClearInstanceSelectionSearchCommand}"
+                  IsVisible="{Binding ShowInstanceSelectionEmptyClearAction}"
+                  Text="清空搜索" />
+            </StackPanel>
           </StackPanel>
-        </StackPanel>
-      </Border>
-    </Grid>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
   </Grid>
 </UserControl>

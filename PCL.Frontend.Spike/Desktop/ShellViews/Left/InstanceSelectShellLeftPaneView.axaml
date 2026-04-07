@@ -4,26 +4,41 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="Button.shortcut-entry">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.shortcut-entry:pointerover Border.shortcut-back">
+      <Setter Property="Background" Value="#ECF4FF" />
+    </Style>
+    <Style Selector="Button.shortcut-entry:pointerover Path.shortcut-icon">
+      <Setter Property="Fill" Value="#1370F3" />
+    </Style>
+    <Style Selector="Button.shortcut-entry:pointerover TextBlock.shortcut-text">
+      <Setter Property="Foreground" Value="#1370F3" />
+    </Style>
+  </UserControl.Styles>
   <Border Background="#F4F5F8">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-      <StackPanel Margin="12,14,12,18" Spacing="18">
-        <StackPanel Spacing="8">
+      <StackPanel Margin="0,12,0,0">
+        <StackPanel>
           <TextBlock
-              Margin="2,0,0,0"
+              Margin="13,5,5,3"
               Foreground="#A7AFBA"
-              FontSize="12.5"
+              FontSize="12"
               FontWeight="SemiBold"
               Text="文件夹列表" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionFolderEntries}" IsVisible="{Binding HasInstanceSelectionFolders}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <controls:PclListItem
-                    Margin="0,0,0,4"
-                    AccessoryCommand="{Binding OpenFolderCommand}"
-                    AccessoryIconData="M896 256H512l-96-96H128c-35.3 0-64 28.7-64 64v576c0 35.3 28.7 64 64 64h640c35.3 0 64-28.7 64-64V416h128c35.3 0 64-28.7 64-64V320c0-35.3-28.7-64-64-64h-64z"
-                    AccessoryToolTip="打开文件夹"
+                    Margin="0,0,12,0"
                     Command="{Binding Command}"
-                    IconData="{Binding IconPath}"
                     Info="{Binding Path}"
                     IsSelected="{Binding IsSelected}"
                     Title="{Binding Title}" />
@@ -32,22 +47,44 @@
           </ItemsControl>
         </StackPanel>
 
-        <StackPanel Spacing="8">
+        <StackPanel Margin="0,12,0,0">
           <TextBlock
-              Margin="2,0,0,0"
+              Margin="13,5,5,3"
               Foreground="#A7AFBA"
-              FontSize="12.5"
+              FontSize="12"
               FontWeight="SemiBold"
               Text="添加导入" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionShortcutEntries}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <controls:PclListItem
-                    Margin="0,0,0,4"
-                    Command="{Binding Command}"
-                    IconData="{Binding IconPath}"
-                    Info="{Binding Description}"
-                    Title="{Binding Title}" />
+                <Button
+                    Classes="shortcut-entry"
+                    Margin="6,0,12,0"
+                    Command="{Binding Command}">
+                  <Border
+                      Classes="shortcut-back"
+                      Background="#00000000"
+                      CornerRadius="4">
+                    <Grid Margin="10,0,10,0" ColumnDefinitions="18,16,*" MinHeight="36">
+                      <Path
+                          Classes="shortcut-icon"
+                          Grid.Column="0"
+                          Width="18"
+                          Height="18"
+                          VerticalAlignment="Center"
+                          Data="{Binding IconPath}"
+                          Fill="#737373"
+                          Stretch="Uniform" />
+                      <TextBlock
+                          Classes="shortcut-text"
+                          Grid.Column="2"
+                          VerticalAlignment="Center"
+                          Foreground="#404040"
+                          FontSize="13.5"
+                          Text="{Binding Title}" />
+                    </Grid>
+                  </Border>
+                </Button>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>

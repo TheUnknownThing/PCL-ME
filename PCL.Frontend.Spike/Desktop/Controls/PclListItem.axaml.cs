@@ -169,6 +169,8 @@ internal sealed partial class PclListItem : UserControl
         var hasIcon = !string.IsNullOrWhiteSpace(data);
         LogoPath.IsVisible = hasIcon;
         LogoPath.Data = hasIcon ? Geometry.Parse(data) : null;
+        LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
+        LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(18) : new GridLength(6);
     }
 
     private void UpdateInfo(string info)

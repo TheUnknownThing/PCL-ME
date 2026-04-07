@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
@@ -26,6 +27,8 @@ internal sealed partial class FrontendShellViewModel
     private string _gameLogLatestUpdateLabel = "尚未发现日志文件";
 
     public ObservableCollection<InstanceSelectEntryViewModel> InstanceSelectionEntries { get; } = [];
+
+    public ObservableCollection<InstanceSelectionGroupViewModel> InstanceSelectionGroups { get; } = [];
 
     public ObservableCollection<InstanceSelectionFolderEntryViewModel> InstanceSelectionFolderEntries { get; } = [];
 
@@ -104,7 +107,7 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceSelectionLauncherDirectory => _instanceSelectionLauncherDirectory;
 
     public string InstanceSelectionResultSummary => HasInstanceSelectionEntries
-        ? $"已显示 {InstanceSelectionEntries.Count} / {_instanceSelectionTotalCount} 个实例"
+        ? $"已显示 {InstanceSelectionEntries.Count} 个实例"
         : _instanceSelectionTotalCount == 0
             ? "当前启动目录下还没有可用实例"
             : "当前筛选条件没有匹配到任何实例";
@@ -280,12 +283,12 @@ internal sealed partial class FrontendShellViewModel
                 CreateInstanceSelectionShortcutEntry(
                     "添加已有文件夹",
                     "选择一个包含 versions 目录的 .minecraft 或启动目录",
-                    FrontendIconCatalog.FolderAdd.Data,
+                    "F1 m 12 7 a 1 1 0 0 0 -1 1 v 8 a 1 1 0 0 0 1 1 a 1 1 0 0 0 1 -1 V 8 A 1 1 0 0 0 12 7 Z m -4 4 a 1 1 0 0 0 -1 1 a 1 1 0 0 0 1 1 h 8 a 1 1 0 0 0 1 -1 a 1 1 0 0 0 -1 -1 z M 12 1 C 5.93671 1 1 5.93671 1 12 C 1 18.0633 5.93671 23 12 23 C 18.0633 23 23 18.0633 23 12 C 23 5.93671 18.0633 1 12 1 Z m 0 2 c 4.98241 0 9 4.01759 9 9 c 0 4.98241 -4.01759 9 -9 9 C 7.01759 21 3 16.9824 3 12 C 3 7.01759 7.01759 3 12 3 Z",
                     _addInstanceSelectionFolderCommand),
                 CreateInstanceSelectionShortcutEntry(
                     "导入整合包",
                     "选择 CurseForge、Modrinth 或普通压缩整合包文件",
-                    FrontendIconCatalog.PackageImport.Data,
+                    "F1 m 11.293 11.293 l -3 3 a 1 1 0 0 0 0 1.41406 a 1 1 0 0 0 1.41406 0 L 12 13.4141 l 2.29297 2.29297 a 1 1 0 0 0 1.41406 0 a 1 1 0 0 0 0 -1.41406 l -3 -3 a 1.0001 1.0001 0 0 0 -1.41406 0 z M 12 11 a 1 1 0 0 0 -1 1 v 6 a 1 1 0 0 0 1 1 a 1 1 0 0 0 1 -1 V 12 A 1 1 0 0 0 12 11 Z M 14 1 a 1 1 0 0 0 -1 1 v 5 c 0 1.09272 0.907275 2 2 2 h 5 A 1 1 0 0 0 21 8 A 1 1 0 0 0 20 7 H 15 V 2 A 1 1 0 0 0 14 1 Z M 6 1 C 4.35499 1 3 2.35499 3 4 v 16 c 0 1.64501 1.35499 3 3 3 h 12 c 1.64501 0 3 -1.35499 3 -3 V 8.00195 V 8 C 21.001 7.09394 20.6387 6.22279 19.9961 5.58398 L 16.4121 2 L 16.4101 1.99805 C 15.7718 1.35838 14.9038 0.999054 14 1 Z m 0 2 h 8 a 1.0001 1.0001 0 0 0 0.002 0 c 0.373356 -0.0006051 0.730614 0.147632 0.994141 0.412109 a 1.0001 1.0001 0 0 0 0 0.00195 l 3.58789 3.58789 a 1.0001 1.0001 0 0 0 0.0039 0.00195 C 18.8531 7.26753 19.0006 7.62412 19 7.99805 A 1.0001 1.0001 0 0 0 19 8 v 12 c 0 0.564129 -0.435871 1 -1 1 H 6 C 5.43587 21 5 20.5641 5 20 V 4 C 5 3.43587 5.43587 3 6 3 Z",
                     _importInstanceSelectionPackCommand)
             ]);
 
@@ -307,9 +310,18 @@ internal sealed partial class FrontendShellViewModel
             ? allEntries
             : allEntries.Where(entry => MatchesInstanceSelectionQuery(entry, query)).ToArray();
 
+        var groupExpansionStates = InstanceSelectionGroups.ToDictionary(
+            group => group.Title,
+            group => group.IsExpanded,
+            StringComparer.CurrentCultureIgnoreCase);
+
         ReplaceItems(
             InstanceSelectionEntries,
             filteredEntries.Select(entry => CreateInstanceSelectionEntry(entry)));
+
+        ReplaceItems(
+            InstanceSelectionGroups,
+            BuildInstanceSelectionGroups(filteredEntries, groupExpansionStates));
 
         RaisePropertyChanged(nameof(InstanceSelectionLauncherDirectory));
         RaisePropertyChanged(nameof(InstanceSelectionLauncherDirectoryLabel));
@@ -595,7 +607,13 @@ internal sealed partial class FrontendShellViewModel
             string.Equals(name, selectedInstance, StringComparison.OrdinalIgnoreCase),
             ReadValue(instanceConfig, "IsStar", false),
             manifest.IsBroken,
-            directory);
+            directory,
+            ReadValue(instanceConfig, "DisplayType", 0),
+            manifest.VersionLabel,
+            manifest.LoaderLabel,
+            string.IsNullOrWhiteSpace(customInfo) ? null : customInfo.Trim(),
+            ReadValue(instanceConfig, "LogoCustom", false),
+            ReadValue(instanceConfig, "Logo", string.Empty));
     }
 
     private static bool MatchesInstanceSelectionQuery(InstanceSelectionSnapshot entry, string query)
@@ -613,12 +631,19 @@ internal sealed partial class FrontendShellViewModel
 
     private InstanceSelectEntryViewModel CreateInstanceSelectionEntry(InstanceSelectionSnapshot entry)
     {
+        var icon = ResolveInstanceSelectionBitmap(entry);
+        var displayTags = BuildInstanceSelectionDisplayTags(entry);
+        var subtitle = string.IsNullOrWhiteSpace(entry.CustomInfo)
+            ? entry.Subtitle
+            : entry.CustomInfo;
+
         return new InstanceSelectEntryViewModel(
             entry.Name,
-            entry.Subtitle,
+            subtitle,
             entry.Detail,
-            entry.Tags,
+            displayTags,
             entry.IsSelected,
+            icon,
             new ActionCommand(() => SelectInstanceForLaunch(entry.Name)),
             new ActionCommand(() => OpenInstanceSelectionEntry(entry)),
             new ActionCommand(() =>
@@ -632,6 +657,218 @@ internal sealed partial class FrontendShellViewModel
                     AddActivity("打开实例目录失败", error ?? entry.Directory);
                 }
             }));
+    }
+
+    private IReadOnlyList<InstanceSelectionGroupViewModel> BuildInstanceSelectionGroups(
+        IReadOnlyList<InstanceSelectionSnapshot> entries,
+        IReadOnlyDictionary<string, bool> groupExpansionStates)
+    {
+        if (entries.Count == 0)
+        {
+            return [];
+        }
+
+        var groups = new List<InstanceSelectionGroupViewModel>();
+        var favorites = entries.Where(entry => entry.IsStarred).ToArray();
+        if (favorites.Length > 0)
+        {
+            groups.Add(CreateInstanceSelectionGroup("收藏夹", favorites, groupExpansionStates, isExpandedByDefault: true));
+        }
+
+        foreach (var bucket in entries.GroupBy(GetInstanceSelectionBaseGroupKey))
+        {
+            var orderedEntries = bucket
+                .OrderByDescending(entry => entry.IsSelected)
+                .ThenByDescending(entry => entry.IsStarred)
+                .ThenBy(entry => entry.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToArray();
+
+            groups.Add(CreateInstanceSelectionGroup(
+                ResolveInstanceSelectionGroupTitle(bucket.Key, orderedEntries),
+                orderedEntries,
+                groupExpansionStates,
+                isExpandedByDefault: bucket.Key is not "error" and not "rarely-used" and not "hidden"));
+        }
+
+        return groups
+            .OrderBy(group => GetInstanceSelectionGroupPriority(group.Title))
+            .ThenBy(group => group.Title, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+    }
+
+    private InstanceSelectionGroupViewModel CreateInstanceSelectionGroup(
+        string title,
+        IReadOnlyList<InstanceSelectionSnapshot> entries,
+        IReadOnlyDictionary<string, bool> groupExpansionStates,
+        bool isExpandedByDefault)
+    {
+        return new InstanceSelectionGroupViewModel(
+            title,
+            entries.Select(CreateInstanceSelectionEntry).ToArray(),
+            groupExpansionStates.TryGetValue(title, out var isExpanded)
+                ? isExpanded
+                : isExpandedByDefault);
+    }
+
+    private static IReadOnlyList<string> BuildInstanceSelectionDisplayTags(InstanceSelectionSnapshot entry)
+    {
+        var tags = new List<string>();
+        if (!string.IsNullOrWhiteSpace(entry.VersionLabel))
+        {
+            tags.Add(entry.VersionLabel);
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.LoaderLabel))
+        {
+            tags.Add(entry.LoaderLabel);
+        }
+
+        if (entry.IsBroken)
+        {
+            tags.Add("配置缺失");
+        }
+        else if (entry.DisplayType == 4)
+        {
+            tags.Add("较少使用");
+        }
+
+        return tags;
+    }
+
+    private static Bitmap? ResolveInstanceSelectionBitmap(InstanceSelectionSnapshot entry)
+    {
+        if (entry.IsCustomLogo)
+        {
+            var customPath = Path.Combine(entry.Directory, "PCL", "Logo.png");
+            if (File.Exists(customPath))
+            {
+                return new Bitmap(customPath);
+            }
+        }
+
+        var mappedLogo = MapStoredLogoPath(entry.RawLogoPath);
+        if (!string.IsNullOrWhiteSpace(mappedLogo) && File.Exists(mappedLogo))
+        {
+            return new Bitmap(mappedLogo);
+        }
+
+        return LoadLauncherBitmap("Images", "Blocks", DetermineInstanceSelectionIconName(entry));
+    }
+
+    private static string? MapStoredLogoPath(string rawLogoPath)
+    {
+        if (string.IsNullOrWhiteSpace(rawLogoPath))
+        {
+            return null;
+        }
+
+        var fileName = Path.GetFileName(rawLogoPath.Replace("pack://application:,,,/images/Blocks/", string.Empty, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return null;
+        }
+
+        return Path.Combine(LauncherRootDirectory, "Images", "Blocks", fileName);
+    }
+
+    private static string DetermineInstanceSelectionIconName(InstanceSelectionSnapshot entry)
+    {
+        if (entry.IsBroken)
+        {
+            return "RedstoneBlock.png";
+        }
+
+        return entry.LoaderLabel switch
+        {
+            "Forge" => "Anvil.png",
+            "NeoForge" => "NeoForge.png",
+            "Cleanroom" => "Cleanroom.png",
+            "Fabric" or "Legacy Fabric" => "Fabric.png",
+            "Quilt" => "Quilt.png",
+            "LiteLoader" => "GrassPath.png",
+            "LabyMod" => "LabyMod.png",
+            _ => "Grass.png"
+        };
+    }
+
+    private static string GetInstanceSelectionBaseGroupKey(InstanceSelectionSnapshot entry)
+    {
+        if (entry.IsBroken)
+        {
+            return "error";
+        }
+
+        return entry.DisplayType switch
+        {
+            2 => "api",
+            3 => "hidden",
+            4 => "rarely-used",
+            _ => "normal"
+        };
+    }
+
+    private static string ResolveInstanceSelectionGroupTitle(string key, IReadOnlyList<InstanceSelectionSnapshot> entries)
+    {
+        return key switch
+        {
+            "api" => ResolveApiInstanceGroupTitle(entries),
+            "error" => "错误的实例",
+            "hidden" => "隐藏的实例",
+            "rarely-used" => "不常用实例",
+            _ => "常规实例"
+        };
+    }
+
+    private static string ResolveApiInstanceGroupTitle(IReadOnlyList<InstanceSelectionSnapshot> entries)
+    {
+        var loaderLabels = entries
+            .Select(entry => entry.LoaderLabel)
+            .Where(label => !string.IsNullOrWhiteSpace(label))
+            .Select(label => label!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (loaderLabels.Length > 1)
+        {
+            return "可安装 Mod";
+        }
+
+        if (loaderLabels.Length == 1)
+        {
+            return loaderLabels[0] switch
+            {
+                "Forge" => "Forge 实例",
+                "NeoForge" => "NeoForge 实例",
+                "Cleanroom" => "Cleanroom 实例",
+                "LabyMod" => "LabyMod 实例",
+                "LiteLoader" => "LiteLoader 实例",
+                "Quilt" => "Quilt 实例",
+                _ => "Fabric 实例"
+            };
+        }
+
+        return "可安装 Mod";
+    }
+
+    private static int GetInstanceSelectionGroupPriority(string title)
+    {
+        return title switch
+        {
+            "收藏夹" => 0,
+            "常规实例" => 1,
+            "Fabric 实例" => 2,
+            "Forge 实例" => 3,
+            "NeoForge 实例" => 4,
+            "Quilt 实例" => 5,
+            "LiteLoader 实例" => 6,
+            "Cleanroom 实例" => 7,
+            "LabyMod 实例" => 8,
+            "可安装 Mod" => 9,
+            "不常用实例" => 10,
+            "错误的实例" => 11,
+            "隐藏的实例" => 12,
+            _ => 99
+        };
     }
 
     private InstanceSelectionFolderEntryViewModel CreateInstanceSelectionFolderEntry(string directory)
@@ -887,6 +1124,7 @@ internal sealed class InstanceSelectEntryViewModel(
     string detail,
     IReadOnlyList<string> tags,
     bool isSelected,
+    Bitmap? icon,
     ActionCommand selectCommand,
     ActionCommand openCommand,
     ActionCommand openFolderCommand)
@@ -901,7 +1139,13 @@ internal sealed class InstanceSelectEntryViewModel(
 
     public bool HasTags => Tags.Count > 0;
 
+    public bool HasSubtitle => !string.IsNullOrWhiteSpace(Subtitle);
+
+    public bool HasDetail => !string.IsNullOrWhiteSpace(Detail);
+
     public bool IsSelected { get; } = isSelected;
+
+    public Bitmap? Icon { get; } = icon;
 
     public string SelectText => IsSelected ? "当前实例" : "设为启动实例";
 
@@ -910,6 +1154,45 @@ internal sealed class InstanceSelectEntryViewModel(
     public ActionCommand OpenCommand { get; } = openCommand;
 
     public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
+}
+
+internal sealed class InstanceSelectionGroupViewModel : ViewModelBase
+{
+    private bool _isExpanded;
+
+    public InstanceSelectionGroupViewModel(string title, IReadOnlyList<InstanceSelectEntryViewModel> entries, bool isExpanded)
+    {
+        Title = title;
+        Entries = entries;
+        _isExpanded = isExpanded;
+        ToggleExpandCommand = new ActionCommand(() => IsExpanded = !IsExpanded);
+    }
+
+    public string Title { get; }
+
+    public IReadOnlyList<InstanceSelectEntryViewModel> Entries { get; }
+
+    public int EntryCount => Entries.Count;
+
+    public string HeaderText => Title == "收藏夹" ? Title : $"{Title} ({EntryCount})";
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        private set
+        {
+            if (SetProperty(ref _isExpanded, value))
+            {
+                RaisePropertyChanged(nameof(ChevronIconPath));
+            }
+        }
+    }
+
+    public string ChevronIconPath => IsExpanded
+        ? "M256 640L512 384 768 640 704 704 512 512 320 704Z"
+        : "M320 384L512 576 704 384 768 448 512 704 256 448Z";
+
+    public ActionCommand ToggleExpandCommand { get; }
 }
 
 internal sealed class InstanceSelectionFolderEntryViewModel(
@@ -995,7 +1278,13 @@ internal sealed record InstanceSelectionSnapshot(
     bool IsSelected,
     bool IsStarred,
     bool IsBroken,
-    string Directory);
+    string Directory,
+    int DisplayType,
+    string VersionLabel,
+    string? LoaderLabel,
+    string? CustomInfo,
+    bool IsCustomLogo,
+    string RawLogoPath);
 
 internal sealed record InstanceManifestSnapshot(
     string VersionLabel,

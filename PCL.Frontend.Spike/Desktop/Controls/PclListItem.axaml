@@ -7,9 +7,17 @@
       x:Name="LayoutRoot"
       MinHeight="36"
       Background="{DynamicResource ColorBrushSemiTransparent}"
-      ColumnDefinitions="4,14,18,Auto,*,Auto,12"
       RenderTransformOrigin="0.5,0.5"
       RenderTransform="scale(1)">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="4" />
+      <ColumnDefinition Width="14" />
+      <ColumnDefinition Width="18" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="12" />
+    </Grid.ColumnDefinitions>
     <Grid.Transitions>
       <Transitions>
         <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
