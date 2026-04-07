@@ -708,158 +708,134 @@
           </StackPanel>
         </StackPanel>
 
-        <controls:PclCard Header="主页市场" IsVisible="{Binding ShowHomePageMarketSurface}" ContentMargin="20,18,20,18">
-          <controls:PclCard.CardContent>
-            <StackPanel Spacing="14">
-              <Border
-                  Padding="12,10"
-                  Background="#F7FAFE"
-                  BorderBrush="#D5E6FD"
-                  BorderThickness="1"
-                  CornerRadius="4">
-                <TextBlock
-                    Foreground="#45586A"
-                    FontSize="12.5"
-                    Text="{Binding HomePageMarketSummary}"
-                    TextWrapping="Wrap" />
-              </Border>
+        <StackPanel IsVisible="{Binding ShowHomePageMarketSurface}" Spacing="14">
+          <Border
+              Padding="12,10"
+              Background="#F7FAFE"
+              BorderBrush="#D5E6FD"
+              BorderThickness="1"
+              CornerRadius="4">
+            <TextBlock
+                Foreground="#45586A"
+                FontSize="12.5"
+                Text="{Binding HomePageMarketSummary}"
+                TextWrapping="Wrap" />
+          </Border>
 
-              <Border
-                  Padding="12,10"
-                  Background="#FFF8DD"
-                  BorderBrush="#F2D777"
-                  BorderThickness="1"
-                  CornerRadius="4"
-                  IsVisible="{Binding ShowHomePageMarketWarning}">
-                <TextBlock
-                    Foreground="#6E5800"
-                    FontSize="12.5"
-                    Text="{Binding HomePageMarketWarningText}"
-                    TextWrapping="Wrap" />
-              </Border>
+          <Border
+              Padding="12,10"
+              Background="#FFF8DD"
+              BorderBrush="#F2D777"
+              BorderThickness="1"
+              CornerRadius="4"
+              IsVisible="{Binding ShowHomePageMarketWarning}">
+            <TextBlock
+                Foreground="#6E5800"
+                FontSize="12.5"
+                Text="{Binding HomePageMarketWarningText}"
+                TextWrapping="Wrap" />
+          </Border>
 
-              <ItemsControl ItemsSource="{Binding HomePageMarketSections}" IsVisible="{Binding HasHomePageMarketSections}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <controls:PclCard Header="{Binding Title}" ContentMargin="18,18,18,16">
-                      <controls:PclCard.CardContent>
-                        <ItemsControl ItemsSource="{Binding Items}">
-                          <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                              <controls:PclActionSummaryRow
-                                  ActionText="{Binding ActionText}"
-                                  Command="{Binding Command}"
-                                  Info="{Binding Info}"
-                                  Meta="{Binding Meta}"
-                                  ShowMeta="{Binding HasMeta}"
-                                  Title="{Binding Title}" />
-                            </DataTemplate>
-                          </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                      </controls:PclCard.CardContent>
-                    </controls:PclCard>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+          <ItemsControl ItemsSource="{Binding HomePageMarketSections}" IsVisible="{Binding HasHomePageMarketSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="18,18,18,16">
+                  <controls:PclCard.CardContent>
+                    <ItemsControl ItemsSource="{Binding Items}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclActionSummaryRow
+                              ActionText="{Binding ActionText}"
+                              Command="{Binding Command}"
+                              Info="{Binding Info}"
+                              Meta="{Binding Meta}"
+                              ShowMeta="{Binding HasMeta}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
 
-              <controls:PclCard Header="市场还没有可展示内容" IsVisible="{Binding HasNoHomePageMarketSections}" ContentMargin="20,18,20,18">
-                <controls:PclCard.CardContent>
-                  <TextBlock
-                      Foreground="#4B5968"
-                      FontSize="13"
-                      Text="当前还没有成功聚合到主页市场条目，请稍后再试。"
-                      TextWrapping="Wrap" />
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
-            </StackPanel>
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
+          <controls:PclCard Margin="0,0,0,15" Header="市场还没有可展示内容" IsVisible="{Binding HasNoHomePageMarketSections}" ContentMargin="20,18,20,18">
+            <controls:PclCard.CardContent>
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="当前还没有成功聚合到主页市场条目，请稍后再试。"
+                  TextWrapping="Wrap" />
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+        </StackPanel>
 
-        <controls:PclCard Header="{Binding HelpDetailTitle}" IsVisible="{Binding ShowHelpDetailSurface}" ContentMargin="20,18,20,18">
-          <controls:PclCard.CardContent>
-            <StackPanel Spacing="14">
-              <Border
-                  Padding="12,10"
-                  Background="#F7FAFE"
-                  BorderBrush="#D5E6FD"
-                  BorderThickness="1"
-                  CornerRadius="4">
-                <StackPanel Spacing="5">
-                  <TextBlock
-                      Foreground="#344352"
-                      FontSize="13"
-                      FontWeight="SemiBold"
-                      Text="{Binding HelpDetailSummary}"
-                      TextWrapping="Wrap" />
-                  <TextBlock
-                      Foreground="#6B7C8F"
-                      FontSize="11.5"
-                      Text="{Binding HelpDetailSource}"
-                      TextWrapping="Wrap" />
-                </StackPanel>
-              </Border>
+        <StackPanel IsVisible="{Binding ShowHelpDetailSurface}" Spacing="0">
+          <ItemsControl ItemsSource="{Binding HelpDetailSections}" IsVisible="{Binding HasHelpDetailSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="18,18,18,16">
+                  <controls:PclCard.CardContent>
+                    <StackPanel Spacing="12">
+                      <ItemsControl ItemsSource="{Binding Lines}" IsVisible="{Binding HasLines}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*">
+                              <TextBlock
+                                  VerticalAlignment="Top"
+                                  Foreground="#1370F3"
+                                  FontSize="16"
+                                  Text="•" />
+                              <TextBlock
+                                  Grid.Column="1"
+                                  Margin="10,0,0,0"
+                                  Foreground="#45586A"
+                                  FontSize="13.5"
+                                  Text="{Binding}"
+                                  TextWrapping="Wrap" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
 
-              <ItemsControl ItemsSource="{Binding HelpDetailSections}" IsVisible="{Binding HasHelpDetailSections}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <controls:PclCard Header="{Binding Title}" ContentMargin="18,18,18,16">
-                      <controls:PclCard.CardContent>
-                        <StackPanel Spacing="12">
-                          <ItemsControl ItemsSource="{Binding Lines}" IsVisible="{Binding HasLines}">
-                            <ItemsControl.ItemTemplate>
-                              <DataTemplate>
-                                <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*">
-                                  <TextBlock
-                                      VerticalAlignment="Top"
-                                      Foreground="#1370F3"
-                                      FontSize="16"
-                                      Text="•" />
-                                  <TextBlock
-                                      Grid.Column="1"
-                                      Margin="10,0,0,0"
-                                      Foreground="#45586A"
-                                      FontSize="13.5"
-                                      Text="{Binding}"
-                                      TextWrapping="Wrap" />
-                                </Grid>
-                              </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                          </ItemsControl>
+                      <ItemsControl ItemsSource="{Binding Actions}" IsVisible="{Binding HasActions}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <controls:PclListItem
+                                Margin="0,0,0,8"
+                                Command="{Binding Command}"
+                                Info="{Binding Info}"
+                                Title="{Binding Title}" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
 
-                          <ItemsControl ItemsSource="{Binding Actions}" IsVisible="{Binding HasActions}">
-                            <ItemsControl.ItemTemplate>
-                              <DataTemplate>
-                                <controls:PclListItem
-                                    Margin="0,0,0,8"
-                                    Command="{Binding Command}"
-                                    Info="{Binding Info}"
-                                    Title="{Binding Title}" />
-                              </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                          </ItemsControl>
-                        </StackPanel>
-                      </controls:PclCard.CardContent>
-                    </controls:PclCard>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+          <controls:PclCard Margin="0,0,0,15" Header="暂无详情内容" IsVisible="{Binding HasNoHelpDetailSections}" ContentMargin="20,18,20,18">
+            <controls:PclCard.CardContent>
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="当前帮助条目没有可显示的详情内容。"
+                  TextWrapping="Wrap" />
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+        </StackPanel>
 
-              <controls:PclCard Header="暂无详情内容" IsVisible="{Binding HasNoHelpDetailSections}" ContentMargin="20,18,20,18">
-                <controls:PclCard.CardContent>
-                  <TextBlock
-                      Foreground="#4B5968"
-                      FontSize="13"
-                      Text="当前帮助条目没有可显示的详情内容。"
-                      TextWrapping="Wrap" />
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
-            </StackPanel>
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
-
-        <controls:PclCard Header="{Binding Title}" IsVisible="{Binding ShowGenericCompatibilitySurface}" ContentMargin="20,12,20,15">
-          <controls:PclCard.CardContent>
-            <StackPanel Spacing="10">
+        <StackPanel IsVisible="{Binding ShowGenericCompatibilitySurface}" Spacing="14">
+          <Border
+              Padding="12,10"
+              Background="#F7FAFE"
+              BorderBrush="#D5E6FD"
+              BorderThickness="1"
+              CornerRadius="4">
+            <StackPanel Spacing="8">
               <TextBlock
                   Foreground="#1370F3"
                   FontSize="12"
@@ -870,66 +846,23 @@
                   FontSize="13"
                   Text="{Binding Description}"
                   TextWrapping="Wrap" />
-              <Border
-                  Padding="12,10"
-                  Background="#F7FAFE"
-                  BorderBrush="#D5E6FD"
-                  BorderThickness="1"
-                  CornerRadius="4">
-                <StackPanel Spacing="6">
-                  <TextBlock
-                      Foreground="#404040"
-                      FontSize="11.5"
-                      Text="{Binding BreadcrumbTrail}"
-                      TextWrapping="Wrap" />
-                  <TextBlock
-                      Foreground="#7D8897"
-                      FontSize="11"
-                      Text="{Binding SurfaceMeta}"
-                      TextWrapping="Wrap" />
-                </StackPanel>
-              </Border>
+              <TextBlock
+                  Foreground="#404040"
+                  FontSize="11.5"
+                  Text="{Binding BreadcrumbTrail}"
+                  TextWrapping="Wrap" />
+              <TextBlock
+                  Foreground="#7D8897"
+                  FontSize="11"
+                  Text="{Binding SurfaceMeta}"
+                  TextWrapping="Wrap" />
             </StackPanel>
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
+          </Border>
 
-        <controls:PclCard Header="页面概览" IsVisible="{Binding ShowGenericCompatibilitySurface}" ContentMargin="20,12,20,15">
-          <controls:PclCard.CardContent>
-            <ItemsControl ItemsSource="{Binding SurfaceFacts}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Grid Margin="0,0,0,12" ColumnDefinitions="140,*">
-                    <TextBlock
-                        Margin="0,2,12,0"
-                        Foreground="#7D8897"
-                        FontSize="11.5"
-                        Text="{Binding Label}"
-                        TextWrapping="Wrap" />
-                    <Border
-                        Grid.Column="1"
-                        Padding="12,9"
-                        Background="{Binding BackgroundBrush}"
-                        BorderBrush="{Binding BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-                      <TextBlock
-                          Foreground="{Binding ForegroundBrush}"
-                          FontSize="13.5"
-                          FontWeight="SemiBold"
-                          Text="{Binding Value}"
-                          TextWrapping="Wrap" />
-                    </Border>
-                  </Grid>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
-
-        <ItemsControl ItemsSource="{Binding SurfaceSections}" IsVisible="{Binding ShowGenericCompatibilitySurface}">
+          <ItemsControl ItemsSource="{Binding SurfaceSections}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <controls:PclCard Header="{Binding Title}" ContentMargin="20,16,20,18">
+              <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="20,16,20,18">
                 <controls:PclCard.CardContent>
                   <StackPanel Spacing="10">
                     <TextBlock
@@ -963,43 +896,7 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-
-        <controls:PclCard Header="活动记录" IsVisible="{Binding HasActivityEntries}" ContentMargin="18,38,18,18">
-          <controls:PclCard.CardContent>
-            <ItemsControl ItemsSource="{Binding ActivityEntries}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border
-                      Margin="0,0,0,10"
-                      Padding="12,10"
-                      Background="#F7FAFE"
-                      BorderBrush="#D5E6FD"
-                      BorderThickness="1"
-                      CornerRadius="4">
-                    <Grid ColumnDefinitions="Auto,*">
-                      <TextBlock
-                          Foreground="#7D8897"
-                          FontSize="11.5"
-                          Text="{Binding Time}" />
-                      <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="3">
-                        <TextBlock
-                            Foreground="#343D4A"
-                            FontSize="13"
-                            FontWeight="SemiBold"
-                            Text="{Binding Title}" />
-                        <TextBlock
-                            Foreground="#677789"
-                            FontSize="12"
-                            Text="{Binding Body}"
-                            TextWrapping="Wrap" />
-                      </StackPanel>
-                    </Grid>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
+        </StackPanel>
       </StackPanel>
     </Grid>
   </ScrollViewer>
