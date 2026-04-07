@@ -92,6 +92,7 @@ internal sealed partial class FrontendShellViewModel
             return [];
         }
 
+        var itemIndex = 0;
         return navigation.SidebarEntries
             .GroupBy(entry => GetSidebarSectionTitle(navigation.CurrentRoute.Page, entry.Route.Subpage))
             .Select(group => new SidebarSectionViewModel(
@@ -107,6 +108,7 @@ internal sealed partial class FrontendShellViewModel
                         entry.IsSelected,
                         iconPath,
                         iconScale,
+                        itemIndex++ * 28,
                         new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the launcher-style left pane.")),
                         accessory.ToolTip,
                         accessory.IconPath,

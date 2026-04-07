@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="0,12,0,0">
@@ -28,6 +29,10 @@
                         IconData="{Binding IconPath}"
                         IconScale="{Binding IconScale}"
                         IsSelected="{Binding IsSelected}"
+                        motion:Motion.AnimateOnVisible="True"
+                        motion:Motion.Delay="{Binding EnterDelay}"
+                        motion:Motion.OffsetX="-18"
+                        motion:Motion.OvershootTranslation="True"
                         Title="{Binding Title}" />
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>

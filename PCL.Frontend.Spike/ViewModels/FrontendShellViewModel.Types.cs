@@ -59,6 +59,7 @@ internal sealed class SidebarListItemViewModel(
     bool isSelected,
     string iconPath,
     double iconScale,
+    int enterDelay,
     ActionCommand command,
     string accessoryToolTip,
     string accessoryIconPath,
@@ -73,6 +74,8 @@ internal sealed class SidebarListItemViewModel(
     public string IconPath { get; } = iconPath;
 
     public double IconScale { get; } = iconScale;
+
+    public int EnterDelay { get; } = enterDelay;
 
     public ActionCommand Command { get; } = command;
 

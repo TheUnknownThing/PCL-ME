@@ -19,6 +19,12 @@ internal static class Motion
     public static readonly AttachedProperty<int> StaggerStepProperty =
         AvaloniaProperty.RegisterAttached<Control, int>("StaggerStep", typeof(Motion), 32);
 
+    public static readonly AttachedProperty<int> DelayProperty =
+        AvaloniaProperty.RegisterAttached<Control, int>("Delay", typeof(Motion), 0);
+
+    public static readonly AttachedProperty<bool> OvershootTranslationProperty =
+        AvaloniaProperty.RegisterAttached<Control, bool>("OvershootTranslation", typeof(Motion), false);
+
     public static readonly AttachedProperty<double> OffsetXProperty =
         AvaloniaProperty.RegisterAttached<Control, double>("OffsetX", typeof(Motion), -18d);
 
@@ -69,6 +75,30 @@ internal static class Motion
     {
         ArgumentNullException.ThrowIfNull(control);
         control.SetValue(StaggerStepProperty, value);
+    }
+
+    public static int GetDelay(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return control.GetValue(DelayProperty);
+    }
+
+    public static void SetDelay(Control control, int value)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        control.SetValue(DelayProperty, value);
+    }
+
+    public static bool GetOvershootTranslation(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return control.GetValue(OvershootTranslationProperty);
+    }
+
+    public static void SetOvershootTranslation(Control control, bool value)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        control.SetValue(OvershootTranslationProperty, value);
     }
 
     public static double GetOffsetX(Control control)
@@ -197,6 +227,17 @@ internal static class Motion
             return;
         }
 
+        var delay = Math.Max(0, GetDelay(control));
+        if (delay > 0)
+        {
+            await Task.Delay(delay);
+        }
+
+        if (state.Version != version || !control.IsVisible)
+        {
+            return;
+        }
+
         var staggerStep = Math.Max(0, GetStaggerStep(control));
         for (var index = 0; index < targets.Count; index++)
         {
@@ -244,22 +285,33 @@ internal static class Motion
     private static void PrepareInitialState(Control control)
     {
         var state = States.GetOrCreateValue(control);
-        state.MotionTransitions ??= BuildTransitions(control.Transitions);
+        state.MotionTransitions ??= BuildTransitions(control, control.Transitions);
+        state.MotionTransform ??= BuildMotionTransform(control);
 
         control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
         control.Transitions = null;
         control.Opacity = GetInitialOpacity(control);
-        control.RenderTransform = new TranslateTransform(GetOffsetX(control), GetOffsetY(control));
+        state.MotionTransform.X = GetOffsetX(control);
+        state.MotionTransform.Y = GetOffsetY(control);
+        control.RenderTransform = state.MotionTransform;
         control.Transitions = state.MotionTransitions;
     }
 
     private static void PlayFinalState(Control control)
     {
         control.Opacity = 1;
-        control.RenderTransform = new TranslateTransform(0, 0);
+        if (control.RenderTransform is TranslateTransform transform)
+        {
+            transform.X = 0;
+            transform.Y = 0;
+        }
+        else
+        {
+            control.RenderTransform = new TranslateTransform(0, 0);
+        }
     }
 
-    private static Transitions BuildTransitions(Transitions? original)
+    private static Transitions BuildTransitions(Control control, Transitions? original)
     {
         var transitions = new Transitions();
         if (original is not null)
@@ -277,14 +329,37 @@ internal static class Motion
             Easing = new CubicEaseOut()
         });
 
-        transitions.Add(new TransformOperationsTransition
-        {
-            Property = Visual.RenderTransformProperty,
-            Duration = TimeSpan.FromMilliseconds(220),
-            Easing = new CubicEaseOut()
-        });
-
         return transitions;
+    }
+
+    private static TranslateTransform BuildMotionTransform(Control control)
+    {
+        var translationOvershoots = GetOvershootTranslation(control);
+        var transform = new TranslateTransform();
+        transform.Transitions =
+        [
+            new DoubleTransition
+            {
+                Property = TranslateTransform.XProperty,
+                Duration = translationOvershoots
+                    ? TimeSpan.FromMilliseconds(280)
+                    : TimeSpan.FromMilliseconds(220),
+                Easing = translationOvershoots
+                    ? new BackEaseOut()
+                    : new CubicEaseOut()
+            },
+            new DoubleTransition
+            {
+                Property = TranslateTransform.YProperty,
+                Duration = translationOvershoots
+                    ? TimeSpan.FromMilliseconds(280)
+                    : TimeSpan.FromMilliseconds(220),
+                Easing = translationOvershoots
+                    ? new BackEaseOut()
+                    : new CubicEaseOut()
+            }
+        ];
+        return transform;
     }
 
     private sealed class MotionState
@@ -294,6 +369,8 @@ internal static class Motion
         public EventHandler<AvaloniaPropertyChangedEventArgs>? PropertyChangedHandler { get; set; }
 
         public Transitions? MotionTransitions { get; set; }
+
+        public TranslateTransform? MotionTransform { get; set; }
 
         public bool IsAttached { get; set; }
 
