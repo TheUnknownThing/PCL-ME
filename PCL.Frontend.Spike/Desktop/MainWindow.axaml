@@ -329,10 +329,7 @@
 
               <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
                 <Grid x:Name="StandardRightContentHost">
-                  <ContentControl
-                      HorizontalContentAlignment="Stretch"
-                      VerticalContentAlignment="Stretch"
-                      Content="{Binding CurrentStandardRightPane}" />
+                  <controls:PclAnimatedRightPaneHost PaneContent="{Binding CurrentStandardRightPane}" />
                 </Grid>
               </Border>
             </Grid>

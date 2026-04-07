@@ -5,6 +5,7 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 namespace PCL.Frontend.Spike.Desktop.Animation;
 
@@ -39,6 +40,12 @@ internal static class Motion
 
     public static readonly AttachedProperty<double> InitialOpacityProperty =
         AvaloniaProperty.RegisterAttached<Control, double>("InitialOpacity", typeof(Motion), 0d);
+
+    public static readonly AttachedProperty<double> ExitOffsetXProperty =
+        AvaloniaProperty.RegisterAttached<Control, double>("ExitOffsetX", typeof(Motion), double.NaN);
+
+    public static readonly AttachedProperty<double> ExitOffsetYProperty =
+        AvaloniaProperty.RegisterAttached<Control, double>("ExitOffsetY", typeof(Motion), double.NaN);
 
     private static readonly ConditionalWeakTable<Control, MotionState> States = [];
 
@@ -143,6 +150,30 @@ internal static class Motion
         control.SetValue(InitialOpacityProperty, value);
     }
 
+    public static double GetExitOffsetX(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return control.GetValue(ExitOffsetXProperty);
+    }
+
+    public static void SetExitOffsetX(Control control, double value)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        control.SetValue(ExitOffsetXProperty, value);
+    }
+
+    public static double GetExitOffsetY(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return control.GetValue(ExitOffsetYProperty);
+    }
+
+    public static void SetExitOffsetY(Control control, double value)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        control.SetValue(ExitOffsetYProperty, value);
+    }
+
     private static void OnAnimateOnVisibleChanged(Control control, AvaloniaPropertyChangedEventArgs change)
     {
         if (change.GetNewValue<bool>())
@@ -230,7 +261,7 @@ internal static class Motion
 
         foreach (var target in targets)
         {
-            PrepareInitialState(target);
+            PrepareInitialState(target, control);
         }
 
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
@@ -274,24 +305,67 @@ internal static class Motion
             return [control];
         }
 
-        List<Control> targets = [];
+        return CollectStaggerTargets(control) switch
+        {
+            { Count: > 0 } targets => targets,
+            _ => [control]
+        };
+    }
+
+    private static List<Control> CollectStaggerTargets(Control control)
+    {
         switch (control)
         {
             case Panel panel:
-                targets.AddRange(panel.Children.OfType<Control>().Where(child => child.IsVisible));
-                break;
+                {
+                    var panelChildren = panel.Children.OfType<Control>().Where(child => child.IsVisible).ToList();
+                    if (panelChildren.Count > 0)
+                    {
+                        return panelChildren;
+                    }
+
+                    break;
+                }
             case Border border when border.Child is Control child:
-                targets.Add(child);
-                break;
+                return CollectStaggerTargets(child);
             case ContentControl contentControl when contentControl.Content is Control content:
-                targets.Add(content);
-                break;
+                return CollectStaggerTargets(content);
             case Decorator decorator when decorator.Child is Control child:
-                targets.Add(child);
-                break;
+                return CollectStaggerTargets(child);
         }
 
-        return targets.Count == 0 ? [control] : targets;
+        var descendantPanels = control
+            .GetVisualDescendants()
+            .OfType<Panel>()
+            .Select(panel => panel.Children.OfType<Control>().Where(child => child.IsVisible).ToList())
+            .Where(children => children.Count > 0)
+            .ToList();
+
+        var multiChildPanel = descendantPanels.FirstOrDefault(children => children.Count > 1);
+        if (multiChildPanel is not null)
+        {
+            return multiChildPanel;
+        }
+
+        var singlePanel = descendantPanels.FirstOrDefault();
+        if (singlePanel is not null)
+        {
+            return singlePanel;
+        }
+
+        return [];
+    }
+
+    public static Task PlayEnterAsync(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return RunAnimationAsync(control);
+    }
+
+    public static void PrimeEnter(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        PrimeEnterState(control);
     }
 
     public static async Task PlayExitAsync(Control control)
@@ -304,23 +378,38 @@ internal static class Motion
         }
 
         var state = States.GetOrCreateValue(control);
-        state.Version++;
-        state.MotionTransitions ??= BuildTransitions(control.Transitions, entering: true);
-        state.MotionTransform ??= new TranslateTransform();
+        var version = ++state.Version;
+        var targets = CollectTargets(control);
+        if (targets.Count == 0)
+        {
+            return;
+        }
 
-        control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-        control.Transitions = null;
-        control.Transitions = BuildTransitions(control.Transitions, entering: false);
-        state.MotionTransform.Transitions = BuildTransformTransitions(overshoot: false, entering: false);
-        control.RenderTransform = state.MotionTransform;
+        foreach (var target in targets)
+        {
+            PrepareExitState(target);
+        }
 
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
 
-        control.Opacity = 0;
-        state.MotionTransform.X = Math.Max(14, Math.Abs(GetOffsetX(control)));
-        state.MotionTransform.Y = GetOffsetY(control);
+        var staggerStep = Math.Max(0, GetStaggerStep(control));
+        List<Task> exitTasks = [];
+        for (var index = 0; index < targets.Count; index++)
+        {
+            if (staggerStep > 0 && index > 0)
+            {
+                await Task.Delay(staggerStep);
+            }
 
-        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(ExitOpacityDuration.TotalMilliseconds, ExitTranslateDuration.TotalMilliseconds)));
+            if (state.Version != version)
+            {
+                return;
+            }
+
+            exitTasks.Add(PlayExitTargetAsync(targets[index], control));
+        }
+
+        await Task.WhenAll(exitTasks);
     }
 
     private static void PrimeEnterState(Control control)
@@ -330,23 +419,27 @@ internal static class Motion
             return;
         }
 
-        PrepareInitialState(control);
+        foreach (var target in CollectTargets(control))
+        {
+            PrepareInitialState(target, control);
+        }
     }
 
-    private static void PrepareInitialState(Control control)
+    private static void PrepareInitialState(Control target, Control motionSource)
     {
-        var state = States.GetOrCreateValue(control);
-        state.MotionTransitions ??= BuildTransitions(control.Transitions, entering: true);
-        state.MotionTransform ??= BuildMotionTransform(control);
+        var state = States.GetOrCreateValue(target);
+        state.MotionTransitions ??= BuildTransitions(target.Transitions, entering: true);
+        state.MotionTransform ??= new TranslateTransform();
 
-        control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-        control.Transitions = null;
-        control.Transitions = state.MotionTransitions;
-        control.Opacity = GetInitialOpacity(control);
-        state.MotionTransform.Transitions = BuildTransformTransitions(GetOvershootTranslation(control), entering: true);
-        state.MotionTransform.X = GetOffsetX(control);
-        state.MotionTransform.Y = GetOffsetY(control);
-        control.RenderTransform = state.MotionTransform;
+        target.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+        target.Transitions = null;
+        state.MotionTransform.Transitions = null;
+        target.Opacity = GetInitialOpacity(motionSource);
+        state.MotionTransform.X = GetOffsetX(motionSource);
+        state.MotionTransform.Y = GetOffsetY(motionSource);
+        target.RenderTransform = state.MotionTransform;
+        target.Transitions = state.MotionTransitions;
+        state.MotionTransform.Transitions = BuildTransformTransitions(GetOvershootTranslation(motionSource), entering: true);
     }
 
     private static void PlayFinalState(Control control)
@@ -361,6 +454,35 @@ internal static class Motion
         {
             control.RenderTransform = new TranslateTransform(0, 0);
         }
+    }
+
+    private static void PrepareExitState(Control control)
+    {
+        var state = States.GetOrCreateValue(control);
+        state.MotionTransform ??= new TranslateTransform();
+
+        var existingTransitions = control.Transitions;
+        control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+        control.Transitions = null;
+        control.Transitions = BuildTransitions(existingTransitions, entering: false);
+        state.MotionTransform.Transitions = BuildTransformTransitions(overshoot: false, entering: false);
+        control.RenderTransform = state.MotionTransform;
+    }
+
+    private static async Task PlayExitTargetAsync(Control control, Control motionSource)
+    {
+        control.Opacity = 0;
+        if (control.RenderTransform is TranslateTransform transform)
+        {
+            transform.X = ResolveExitOffsetX(motionSource);
+            transform.Y = ResolveExitOffsetY(motionSource);
+        }
+        else
+        {
+            control.RenderTransform = new TranslateTransform(ResolveExitOffsetX(motionSource), ResolveExitOffsetY(motionSource));
+        }
+
+        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(ExitOpacityDuration.TotalMilliseconds, ExitTranslateDuration.TotalMilliseconds)));
     }
 
     private static Transitions BuildTransitions(Transitions? original, bool entering)
@@ -382,13 +504,6 @@ internal static class Motion
         });
 
         return transitions;
-    }
-
-    private static TranslateTransform BuildMotionTransform(Control control)
-    {
-        var transform = new TranslateTransform();
-        transform.Transitions = BuildTransformTransitions(GetOvershootTranslation(control), entering: true);
-        return transform;
     }
 
     private static Transitions BuildTransformTransitions(bool overshoot, bool entering)
@@ -417,6 +532,22 @@ internal static class Motion
                 Easing = easing
             }
         ];
+    }
+
+    private static double ResolveExitOffsetX(Control control)
+    {
+        var configured = GetExitOffsetX(control);
+        return double.IsNaN(configured)
+            ? Math.Max(14, Math.Abs(GetOffsetX(control)))
+            : configured;
+    }
+
+    private static double ResolveExitOffsetY(Control control)
+    {
+        var configured = GetExitOffsetY(control);
+        return double.IsNaN(configured)
+            ? GetOffsetY(control)
+            : configured;
     }
 
     private sealed class MotionState

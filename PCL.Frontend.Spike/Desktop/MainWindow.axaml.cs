@@ -522,24 +522,24 @@ internal sealed partial class MainWindow : Window
             StartRouteAnimation(leftVisual, leftOffset);
         }
 
-        if (transition.AnimateRightPane)
+        if (transition.AnimateRightPane && transition.IsLaunchRoute)
         {
-            StartRouteAnimation(rightVisual, rightOffset);
+            StartRouteAnimation(rightVisual, 0f, -32f, useBounce: true);
         }
     }
 
-    private void StartRouteAnimation(CompositionVisual visual, float offsetX)
+    private void StartRouteAnimation(CompositionVisual visual, float offsetX, float offsetY = 0f, bool useBounce = false)
     {
         if (_compositor is null)
         {
             return;
         }
 
-        var easing = new CubicEaseOut();
+        Easing easing = useBounce ? new BackEaseOut() : new CubicEaseOut();
 
         var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
         offsetAnimation.Duration = RouteTransitionDuration;
-        offsetAnimation.InsertKeyFrame(0f, new Vector3(offsetX, 0f, 0f), easing);
+        offsetAnimation.InsertKeyFrame(0f, new Vector3(offsetX, offsetY, 0f), easing);
         offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), easing);
         offsetAnimation.Target = "Offset";
 
