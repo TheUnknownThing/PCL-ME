@@ -1,5 +1,8 @@
+using System.Threading;
+using Avalonia.Threading;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Spike.Desktop.Dialogs;
 using PCL.Frontend.Spike.Workflows;
 
@@ -377,8 +380,8 @@ internal sealed partial class FrontendShellViewModel
                                || legacyFabricApiChoice is not null
                                || qslChoice is not null
                                || optiFabricChoice is not null;
-
-            var result = FrontendInstallWorkflowService.Apply(new FrontendInstallApplyRequest(
+            var activityTitle = activityTitleOverride ?? (isExistingInstance ? InstanceInstallApplyButtonText : "开始安装");
+            var request = new FrontendInstallApplyRequest(
                 _instanceComposition.Selection.LauncherDirectory,
                 targetInstanceName,
                 minecraftChoice,
@@ -394,23 +397,68 @@ internal sealed partial class FrontendShellViewModel
                 ForceCoreRefresh: !isExistingInstance || !string.Equals(
                     GetEffectiveMinecraftVersion(isExistingInstance),
                     isExistingInstance ? _instanceInstallBaselineMinecraftVersion : _downloadInstallBaselineMinecraftVersion,
-                    StringComparison.Ordinal)));
+                    StringComparison.Ordinal));
+            var taskTitle = $"{targetInstanceName} {activityTitle}";
 
-            _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
-            ReloadInstanceComposition();
+            TaskCenter.Register(
+                new FrontendInstallTask(
+                    taskTitle,
+                    async (report, cancelToken) =>
+                    {
+                        report(TaskState.Running, "正在写入安装清单并补全依赖文件…");
+                        var result = await Task.Run(() => FrontendInstallWorkflowService.Apply(request), cancelToken);
 
-            if (!isExistingInstance && AutoSelectNewInstance)
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
+                            ReloadInstanceComposition();
+                            ReloadDownloadComposition();
+                            if (!isExistingInstance)
+                            {
+                                _downloadInstallIsInSelectionStage = false;
+                                _downloadInstallExpandedOptionTitle = null;
+                                _downloadInstallMinecraftChoice = null;
+                                _downloadInstallIsNameEditedByUser = false;
+                                _downloadInstallOptionChoices.Clear();
+                                _downloadInstallOptionLoadsInProgress.Clear();
+                                _downloadInstallOptionLoadErrors.Clear();
+                                InitializeDownloadInstallSurface();
+                                RaisePropertyChanged(nameof(DownloadInstallName));
+                            }
+                            else
+                            {
+                                InitializeInstanceInstallSurface();
+                                RaiseInstallWorkflowProperties();
+                            }
+
+                            AddActivity(
+                                activityTitle,
+                                $"{targetInstanceName} • 已写入安装清单 {result.ManifestPath}，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+                        });
+
+                        report(
+                            TaskState.Success,
+                            $"已写入安装清单，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+                    },
+                    async ex =>
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            AddActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
+                        });
+                    }));
+
+            if (!isExistingInstance)
             {
-                NavigateTo(
-                    new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionOverall),
-                    $"自动切换到新实例 {targetInstanceName} 的设置页。");
+                _downloadInstallIsInSelectionStage = false;
+                _downloadInstallExpandedOptionTitle = null;
+                InitializeDownloadInstallSurface();
+                RaisePropertyChanged(nameof(DownloadInstallName));
             }
 
-            var activityTitle = activityTitleOverride ?? (isExistingInstance ? InstanceInstallApplyButtonText : "开始安装");
-            AddActivity(
-                activityTitle,
-                $"{targetInstanceName} • 已写入安装清单 {result.ManifestPath}，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
-            OpenInstanceTarget(activityTitle, result.TargetDirectory, "安装目标目录不存在。");
+            NavigateTo(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
+                $"{taskTitle} 已加入任务中心。");
         }
         catch (Exception ex)
         {
@@ -611,4 +659,45 @@ internal sealed record FrontendEditableInstallSelection(
     public static FrontendEditableInstallSelection Unchanged { get; } = new(null, false);
 
     public static FrontendEditableInstallSelection Cleared { get; } = new(null, true);
+}
+
+internal sealed class FrontendInstallTask(
+    string title,
+    Func<Action<TaskState, string>, CancellationToken, Task> executeAsync,
+    Func<Exception, Task>? onErrorAsync = null)
+    : ITask
+{
+    public string Title { get; } = title;
+
+    public event TaskStateEvent StateChanged = delegate { };
+
+    public async Task ExecuteAsync(CancellationToken cancelToken = default)
+    {
+        void Report(TaskState state, string message)
+        {
+            StateChanged(state, message);
+        }
+
+        Report(TaskState.Waiting, "已加入任务中心");
+
+        try
+        {
+            await executeAsync(Report, cancelToken);
+        }
+        catch (OperationCanceledException)
+        {
+            Report(TaskState.Canceled, "任务已取消");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            if (onErrorAsync is not null)
+            {
+                await onErrorAsync(ex);
+            }
+
+            Report(TaskState.Failed, ex.Message);
+            throw;
+        }
+    }
 }
