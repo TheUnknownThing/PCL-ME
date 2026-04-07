@@ -161,134 +161,125 @@
         <ItemsControl ItemsSource="{Binding DownloadInstallOptionCards}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <controls:PclCard ContentMargin="15,12,15,12">
+              <controls:PclCard
+                  Header="{Binding Title}"
+                  ShowChevron="True"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  HeaderCommand="{Binding ToggleCommand}"
+                  ContentMargin="20,40,18,15">
+                <controls:PclCard.HeaderOverlayContent>
+                  <Grid
+                      Height="30"
+                      Margin="132,5,32,0"
+                      VerticalAlignment="Top"
+                      ColumnDefinitions="Auto,*,Auto">
+                    <Border
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,7,0"
+                        VerticalAlignment="Center"
+                        Background="#EAF2FE"
+                        BorderBrush="#D5E6FD"
+                        BorderThickness="1"
+                        CornerRadius="5"
+                        IsHitTestVisible="False"
+                        IsVisible="{Binding ShowIcon}">
+                      <Image Source="{Binding Icon}" Stretch="Uniform" Margin="3" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="0,0,12,0"
+                        IsHitTestVisible="False"
+                        VerticalAlignment="Center"
+                        Foreground="{Binding SelectionForegroundBrush}"
+                        FontSize="13"
+                        Text="{Binding SelectionText}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button
+                        Grid.Column="2"
+                        Width="30"
+                        Height="30"
+                        Padding="0"
+                        Background="#14FFFFFF"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding ClearCommand}"
+                        CornerRadius="4"
+                        IsVisible="{Binding CanClear}">
+                      <Path
+                          Width="10"
+                          Height="10"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
+                          Fill="#7D8897"
+                          Stretch="Uniform" />
+                    </Button>
+                  </Grid>
+                </controls:PclCard.HeaderOverlayContent>
                 <controls:PclCard.CardContent>
-                  <StackPanel Spacing="10">
-                    <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Spacing="8">
+                    <Border
+                        IsVisible="{Binding IsLoading}"
+                        Padding="12,10"
+                        Background="#F7F9FC"
+                        BorderBrush="#E1E7EF"
+                        BorderThickness="1"
+                        CornerRadius="6">
                       <TextBlock
-                          VerticalAlignment="Center"
-                          Foreground="#343D4A"
-                          FontSize="13"
-                          FontWeight="Bold"
-                          Text="{Binding Title}" />
-                      <Button
-                          Grid.Column="1"
-                          Width="26"
-                          Height="26"
-                          Padding="0"
-                          Background="#F0F6FF"
-                          BorderBrush="#D5E6FD"
-                          BorderThickness="1"
-                          CornerRadius="13"
-                          Command="{Binding ToggleCommand}"
-                          IsEnabled="{Binding CanExpand}">
-                        <Path
-                            Width="10"
-                            Height="6"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Fill="#4B78C2"
-                            Stretch="Uniform"
-                            Data="M2,4 l-2,2 10,10 10,-10 -2,-2 -8,8 -8,-8 z">
-                          <Path.RenderTransform>
-                            <RotateTransform Angle="{Binding ChevronAngle}" />
-                          </Path.RenderTransform>
-                        </Path>
-                      </Button>
-                    </Grid>
+                          Foreground="#677789"
+                          FontSize="12"
+                          Text="{Binding LoadingText}" />
+                    </Border>
 
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                      <Border
-                          Width="22"
-                          Height="22"
-                          Margin="0,0,10,0"
-                          VerticalAlignment="Center"
-                          Background="#EAF2FE"
-                          BorderBrush="#D5E6FD"
-                          BorderThickness="1"
-                          CornerRadius="5"
-                          IsVisible="{Binding ShowIcon}">
-                        <Image Source="{Binding Icon}" Stretch="Uniform" Margin="3" />
-                      </Border>
+                    <Border
+                        IsVisible="{Binding ShowEmptyState}"
+                        Padding="12,10"
+                        Background="#F7F9FC"
+                        BorderBrush="#E1E7EF"
+                        BorderThickness="1"
+                        CornerRadius="6">
                       <TextBlock
-                          Grid.Column="1"
-                          VerticalAlignment="Center"
-                          Foreground="{Binding SelectionForegroundBrush}"
-                          FontSize="13.5"
-                          Text="{Binding SelectionText}"
-                          TextTrimming="CharacterEllipsis" />
-                      <controls:PclButton
-                          Grid.Column="2"
-                          Width="72"
-                          Margin="12,0,0,0"
-                          Command="{Binding ClearCommand}"
-                          IsVisible="{Binding CanClear}"
-                          Text="清除" />
-                    </Grid>
+                          Foreground="#677789"
+                          FontSize="12"
+                          Text="{Binding EmptyStateText}"
+                          TextWrapping="Wrap" />
+                    </Border>
 
-                    <StackPanel IsVisible="{Binding IsExpanded}" Spacing="8">
-                      <Border
-                          IsVisible="{Binding IsLoading}"
-                          Padding="12,10"
-                          Background="#F7F9FC"
-                          BorderBrush="#E1E7EF"
-                          BorderThickness="1"
-                          CornerRadius="6">
-                        <TextBlock
-                            Foreground="#677789"
-                            FontSize="12"
-                            Text="{Binding LoadingText}" />
-                      </Border>
-
-                      <Border
-                          IsVisible="{Binding ShowEmptyState}"
-                          Padding="12,10"
-                          Background="#F7F9FC"
-                          BorderBrush="#E1E7EF"
-                          BorderThickness="1"
-                          CornerRadius="6">
-                        <TextBlock
-                            Foreground="#677789"
-                            FontSize="12"
-                            Text="{Binding EmptyStateText}"
-                            TextWrapping="Wrap" />
-                      </Border>
-
-                      <ItemsControl ItemsSource="{Binding Choices}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <Border Background="{Binding BackgroundBrush}" BorderBrush="{Binding BorderBrush}" BorderThickness="1" CornerRadius="6">
-                              <Button
-                                  Classes="nochrome"
-                                  Command="{Binding SelectCommand}"
-                                  HorizontalContentAlignment="Stretch"
-                                  Padding="0"
-                                  Background="Transparent"
-                                  BorderBrush="Transparent"
-                                  BorderThickness="0">
-                                <Grid Margin="12,10" ColumnDefinitions="*,Auto">
-                                  <StackPanel Spacing="2">
-                                    <TextBlock Foreground="{Binding ForegroundBrush}" FontSize="13" FontWeight="SemiBold" Text="{Binding Title}" />
-                                    <TextBlock Foreground="{Binding SummaryBrush}" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
-                                  </StackPanel>
-                                  <Border
-                                      Grid.Column="1"
-                                      Padding="8,3"
-                                      Margin="12,0,0,0"
-                                      Background="#DDEBFE"
-                                      BorderBrush="#BFD9FF"
-                                      BorderThickness="1"
-                                      CornerRadius="999"
-                                      IsVisible="{Binding IsSelected}">
-                                    <TextBlock Foreground="#1370F3" FontSize="11" FontWeight="SemiBold" Text="已选择" />
-                                  </Border>
-                                </Grid>
-                              </Button>
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Background="{Binding BackgroundBrush}" BorderBrush="{Binding BorderBrush}" BorderThickness="1" CornerRadius="6">
+                            <Button
+                                Classes="nochrome"
+                                Command="{Binding SelectCommand}"
+                                HorizontalContentAlignment="Stretch"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0">
+                              <Grid Margin="12,10" ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="2">
+                                  <TextBlock Foreground="{Binding ForegroundBrush}" FontSize="13" FontWeight="SemiBold" Text="{Binding Title}" />
+                                  <TextBlock Foreground="{Binding SummaryBrush}" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <Border
+                                    Grid.Column="1"
+                                    Padding="8,3"
+                                    Margin="12,0,0,0"
+                                    Background="#DDEBFE"
+                                    BorderBrush="#BFD9FF"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    IsVisible="{Binding IsSelected}">
+                                  <TextBlock Foreground="#1370F3" FontSize="11" FontWeight="SemiBold" Text="已选择" />
+                                </Border>
+                              </Grid>
+                            </Button>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                   </StackPanel>
                 </controls:PclCard.CardContent>
               </controls:PclCard>
