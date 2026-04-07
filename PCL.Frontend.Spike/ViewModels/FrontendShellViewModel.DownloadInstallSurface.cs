@@ -303,9 +303,10 @@ internal sealed partial class FrontendShellViewModel
     private void ToggleDownloadInstallMinecraftSection(string groupTitle)
     {
         var normalizedTitle = NormalizeDownloadInstallSectionTitle(groupTitle);
+        var sections = DownloadInstallMinecraftSections.ToArray();
         ReplaceItems(
             DownloadInstallMinecraftSections,
-            DownloadInstallMinecraftSections.Select(section =>
+            sections.Select(section =>
             {
                 if (!section.CanCollapse || !string.Equals(NormalizeDownloadInstallSectionTitle(section.Title), normalizedTitle, StringComparison.Ordinal))
                 {

@@ -3,9 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.VisualTree;
-using System;
-using System.Linq;
 using System.Windows.Input;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -241,7 +238,6 @@ internal sealed partial class PclCard : UserControl
 
     private void OnHeaderButtonClick(object? sender, RoutedEventArgs e)
     {
-        var scrollViewer = GetAncestorScrollViewer();
         if (HeaderCommand is not null)
         {
             if (HeaderCommand.CanExecute(null))
@@ -249,46 +245,12 @@ internal sealed partial class PclCard : UserControl
                 HeaderCommand.Execute(null);
             }
 
-            QueueScrollViewerOffsetClamp(scrollViewer);
             return;
         }
 
         if (ShowChevron)
         {
             SetCurrentValue(IsChevronExpandedProperty, !IsChevronExpanded);
-            QueueScrollViewerOffsetClamp(scrollViewer);
         }
-    }
-
-    private ScrollViewer? GetAncestorScrollViewer()
-    {
-        return this.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
-    }
-
-    private static void QueueScrollViewerOffsetClamp(ScrollViewer? scrollViewer)
-    {
-        if (scrollViewer is null)
-        {
-            return;
-        }
-
-        EventHandler? layoutUpdatedHandler = null;
-        layoutUpdatedHandler = (_, _) =>
-        {
-            scrollViewer.LayoutUpdated -= layoutUpdatedHandler;
-            ClampScrollViewerOffset(scrollViewer);
-        };
-        scrollViewer.LayoutUpdated += layoutUpdatedHandler;
-    }
-
-    private static void ClampScrollViewerOffset(ScrollViewer scrollViewer)
-    {
-        var maxVerticalOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-        if (scrollViewer.Offset.Y <= maxVerticalOffset + 0.5)
-        {
-            return;
-        }
-
-        scrollViewer.Offset = new Vector(scrollViewer.Offset.X, maxVerticalOffset);
     }
 }
