@@ -115,7 +115,6 @@ internal sealed partial class FrontendShellViewModel
     {
         "CurseForge" => "CF",
         "Modrinth" => "MR",
-        { Length: > 0 } source => source[..1].ToUpperInvariant(),
         _ => "?"
     };
 
