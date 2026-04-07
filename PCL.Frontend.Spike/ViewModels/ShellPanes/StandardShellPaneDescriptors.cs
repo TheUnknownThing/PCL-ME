@@ -8,7 +8,8 @@ internal enum StandardShellLeftPaneKind
     Sidebar = 1,
     Summary = 2,
     Empty = 3,
-    InstanceSelection = 4
+    InstanceSelection = 4,
+    TaskManager = 5
 }
 
 internal enum StandardShellRightPaneKind
@@ -43,7 +44,8 @@ internal enum StandardShellRightPaneKind
     InstanceServer = 27,
     InstanceResource = 28,
     InstanceSelection = 29,
-    Generic = 30
+    Generic = 30,
+    TaskManager = 31
 }
 
 internal enum StandardShellRightPaneGroup

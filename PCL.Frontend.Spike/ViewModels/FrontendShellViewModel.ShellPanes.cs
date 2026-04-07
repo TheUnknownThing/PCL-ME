@@ -78,7 +78,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_currentRoute.Page == LauncherFrontendPageKey.TaskManager)
         {
-            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.None, "task-manager-no-left-pane");
+            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.TaskManager, "task-manager-left");
         }
 
         if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSelect)
@@ -107,6 +107,7 @@ internal sealed partial class FrontendShellViewModel
             StandardShellLeftPaneKind.Sidebar => new StandardShellNavigationListPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.Summary => new StandardShellSummaryPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.InstanceSelection => new InstanceSelectShellLeftPaneViewModel(this, descriptor),
+            StandardShellLeftPaneKind.TaskManager => new TaskManagerShellLeftPaneViewModel(this, descriptor),
             _ => new StandardShellEmptyPaneViewModel(this, descriptor)
         };
     }
@@ -136,7 +137,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPageKey.VersionSaves => ResolveVersionSavesRightPaneDescriptor(),
             LauncherFrontendPageKey.InstanceSetup => ResolveInstanceRightPaneDescriptor(),
             LauncherFrontendPageKey.InstanceSelect => CreateRightPaneDescriptor(StandardShellRightPaneKind.InstanceSelection, StandardShellRightPaneGroup.Generic, "instance-select-shell", usesCompatibilityView: false),
-            LauncherFrontendPageKey.TaskManager => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "task-manager-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.TaskManager => CreateRightPaneDescriptor(StandardShellRightPaneKind.TaskManager, StandardShellRightPaneGroup.Generic, "task-manager-shell", usesCompatibilityView: false),
             LauncherFrontendPageKey.GameLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "game-log-shell", usesCompatibilityView: false),
             LauncherFrontendPageKey.CompDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "comp-detail-shell", usesCompatibilityView: false),
             LauncherFrontendPageKey.HelpDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "help-detail-shell", usesCompatibilityView: false),

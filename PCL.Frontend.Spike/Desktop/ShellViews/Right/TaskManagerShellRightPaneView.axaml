@@ -1,0 +1,110 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.TaskManagerShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="18">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Foreground="#415671" FontSize="13.5" Text="{Binding TaskManagerActiveTaskTitle}" />
+          <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="{Binding TaskManagerSummary}" />
+        </StackPanel>
+        <controls:PclIconButton
+            Grid.Column="1"
+            Margin="12,0,0,0"
+            Command="{Binding RefreshTaskManagerCommand}"
+            IconBrush="#5F8DE8"
+            HoverBackgroundBrush="#324E88E8"
+            IconData="M10.2,1.2 C5.6,1.2 1.8,4.9 1.8,9.5 L0,9.5 2.9,12.4 5.8,9.5 4,9.5 C4,6.2 6.8,3.5 10.2,3.5 C12.1,3.5 13.8,4.3 15,5.7 L16.7,4.1 C15,2.2 12.7,1.2 10.2,1.2 z M17.5,6.5 14.6,9.4 16.4,9.4 C16.4,12.8 13.6,15.5 10.2,15.5 C8.3,15.5 6.6,14.7 5.4,13.3 L3.7,14.9 C5.4,16.8 7.7,17.8 10.2,17.8 C14.8,17.8 18.6,14.1 18.6,9.5 L20.4,9.5 17.5,6.5 z" />
+        <controls:PclIconButton
+            Grid.Column="2"
+            Margin="8,0,0,0"
+            Command="{Binding ClearFinishedTasksCommand}"
+            IconBrush="#5F8DE8"
+            HoverBackgroundBrush="#324E88E8"
+            IconData="M3,5 L17,5 17,7 16,7 16,18 4,18 4,7 3,7 z M7,2 L13,2 14,3 18,3 18,5 2,5 2,3 6,3 z M6,7 6,16 14,16 14,7 z" />
+      </Grid>
+
+      <ItemsControl ItemsSource="{Binding TaskManagerEntries}" IsVisible="{Binding HasTaskManagerEntries}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border
+                Padding="0,0,0,14"
+                Margin="0,0,0,14"
+                BorderBrush="#D8E3F4"
+                BorderThickness="0,0,0,1">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                  <StackPanel Spacing="3">
+                    <TextBlock Foreground="#47586D" FontSize="13.5" Text="{Binding Title}" />
+                    <TextBlock Foreground="#75869C" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <Border
+                      Grid.Column="1"
+                      Margin="12,0,0,0"
+                      Padding="10,3"
+                      Background="#F3F8FF"
+                      BorderBrush="#CFE0FA"
+                      BorderThickness="1"
+                      CornerRadius="999">
+                    <TextBlock Foreground="#5B87DA" FontSize="11.5" Text="{Binding State}" />
+                  </Border>
+                  <controls:PclIconButton
+                      Grid.Column="2"
+                      Margin="10,0,0,0"
+                      Command="{Binding CancelCommand}"
+                      HoverBackgroundBrush="#1E5F8DE8"
+                      IconBrush="#7FA4E8"
+                      IsVisible="{Binding CanCancel}"
+                      IconData="M3,3 L17,17 M17,3 L3,17" />
+                </Grid>
+
+                <StackPanel IsVisible="{Binding HasProgress}" Spacing="4">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="安装进度" />
+                    <TextBlock Grid.Column="1" Foreground="#5B87DA" FontSize="11.5" Text="{Binding ProgressText}" />
+                  </Grid>
+                  <ProgressBar Height="6" Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding StageEntries}" IsVisible="{Binding HasStageEntries}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,2,0,0" ColumnDefinitions="44,*">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Foreground="#4F86E9"
+                            FontSize="16"
+                            Text="{Binding Indicator}" />
+                        <StackPanel Grid.Column="1" Spacing="2">
+                          <TextBlock Foreground="#66788F" FontSize="12" Text="{Binding Title}" />
+                          <TextBlock Foreground="#9AA8B8" FontSize="10.5" Text="{Binding Message}" TextWrapping="Wrap" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasProgress}">
+                  <TextBlock Foreground="#8B9AAF" FontSize="10.5" Text="{Binding SpeedText, StringFormat=当前速度 {0}}" />
+                  <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#8B9AAF" FontSize="10.5" Text="{Binding RemainingFilesText, StringFormat=剩余文件 {0}}" />
+                </Grid>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <StackPanel IsVisible="{Binding HasNoTaskManagerEntries}" Spacing="8">
+        <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前没有活动任务" />
+        <TextBlock
+            Foreground="#7E8FA5"
+            FontSize="12"
+            Text="下载、安装或其他后台流程开始后，这里会自动显示实时进度、速度和剩余文件数量。"
+            TextWrapping="Wrap" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -655,6 +655,9 @@ internal sealed partial class FrontendShellViewModel
             case StandardShellRightPaneKind.Generic:
                 RefreshCurrentDedicatedGenericRouteSurface();
                 break;
+            case StandardShellRightPaneKind.TaskManager:
+                RefreshTaskManagerSurface();
+                break;
             case StandardShellRightPaneKind.DownloadInstall:
                 RefreshDownloadInstallSurface();
                 break;
