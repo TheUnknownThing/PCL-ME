@@ -519,6 +519,8 @@ internal sealed class DownloadResourceEntryViewModel(
     string version,
     string loader,
     IReadOnlyList<string> tags,
+    IReadOnlyList<string> supportedVersions,
+    IReadOnlyList<string> supportedLoaders,
     int downloadCount,
     int followCount,
     int releaseRank,
@@ -539,6 +541,10 @@ internal sealed class DownloadResourceEntryViewModel(
     public string Loader { get; } = loader;
 
     public IReadOnlyList<string> Tags { get; } = tags;
+
+    public IReadOnlyList<string> SupportedVersions { get; } = supportedVersions;
+
+    public IReadOnlyList<string> SupportedLoaders { get; } = supportedLoaders;
 
     public int DownloadCount { get; } = downloadCount;
 
@@ -616,6 +622,8 @@ internal sealed class DownloadResourceEntryViewModel(
         Source,
         Version,
         Loader,
+        string.Join(" ", SupportedVersions),
+        string.Join(" ", SupportedLoaders),
         string.Join(" ", Tags)
     });
 

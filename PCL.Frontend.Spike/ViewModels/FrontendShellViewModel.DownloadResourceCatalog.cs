@@ -490,6 +490,12 @@ internal sealed partial class FrontendShellViewModel
 
         IEnumerable<DownloadResourceEntryViewModel> entries = _allDownloadResourceEntries;
 
+        var searchQuery = DownloadResourceSearchQuery.Trim();
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            entries = entries.Where(entry => entry.SearchText.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        }
+
         var sourceFilter = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
         if (!string.IsNullOrWhiteSpace(sourceFilter))
         {
@@ -505,13 +511,17 @@ internal sealed partial class FrontendShellViewModel
         var versionFilter = GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex);
         if (!string.IsNullOrWhiteSpace(versionFilter))
         {
-            entries = entries.Where(entry => string.Equals(entry.Version, versionFilter, StringComparison.OrdinalIgnoreCase));
+            entries = entries.Where(entry =>
+                string.Equals(entry.Version, versionFilter, StringComparison.OrdinalIgnoreCase)
+                || entry.SupportedVersions.Any(version => string.Equals(version, versionFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
         var loaderFilter = GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex);
         if (!string.IsNullOrWhiteSpace(loaderFilter))
         {
-            entries = entries.Where(entry => string.Equals(entry.Loader, loaderFilter, StringComparison.OrdinalIgnoreCase));
+            entries = entries.Where(entry =>
+                string.Equals(entry.Loader, loaderFilter, StringComparison.OrdinalIgnoreCase)
+                || entry.SupportedLoaders.Any(loader => string.Equals(loader, loaderFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
         entries = GetSelectedFilterValue(DownloadResourceSortOptions, SelectedDownloadResourceSortIndex) switch
@@ -857,8 +867,8 @@ internal sealed partial class FrontendShellViewModel
         return entries
             .Select(entry =>
             {
-                Bitmap? icon = null;
-                if (!string.IsNullOrWhiteSpace(entry.IconName))
+                var icon = LoadCachedBitmapFromPath(entry.IconPath);
+                if (icon is null && !string.IsNullOrWhiteSpace(entry.IconName))
                 {
                     icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
                 }
@@ -871,6 +881,8 @@ internal sealed partial class FrontendShellViewModel
                     entry.Version,
                     entry.Loader,
                     entry.Tags,
+                    entry.SupportedVersions,
+                    entry.SupportedLoaders,
                     entry.DownloadCount,
                     entry.FollowCount,
                     entry.ReleaseRank,
@@ -1100,6 +1112,8 @@ internal sealed partial class FrontendShellViewModel
             version,
             loader,
             tags,
+            [],
+            [],
             downloadCount,
             followCount,
             releaseRank,

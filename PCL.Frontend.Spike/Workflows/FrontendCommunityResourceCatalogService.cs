@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using PCL.Core.App.Essentials;
@@ -13,6 +15,7 @@ internal static class FrontendCommunityResourceCatalogService
     private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry> Cache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, string?> IconCache = new(StringComparer.Ordinal);
     private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
     private static readonly IReadOnlyList<RouteConfig> RouteConfigs =
     [
@@ -77,7 +80,10 @@ internal static class FrontendCommunityResourceCatalogService
         {
             return new FrontendCommunityResourceQueryResult(
                 cacheEntry.State,
-                GetMinecraftVersionOptions(preferredVersion, normalizedVersion, cacheEntry.State.Entries.Select(entry => entry.Version)),
+                GetMinecraftVersionOptions(
+                    preferredVersion,
+                    normalizedVersion,
+                    cacheEntry.State.Entries.SelectMany(entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions)),
                 GetSourceOptions(config));
         }
 
@@ -94,7 +100,10 @@ internal static class FrontendCommunityResourceCatalogService
         Cache[cacheKey] = new CacheEntry(state, DateTimeOffset.UtcNow);
         return new FrontendCommunityResourceQueryResult(
             state,
-            GetMinecraftVersionOptions(preferredVersion, normalizedVersion, state.Entries.Select(entry => entry.Version)),
+            GetMinecraftVersionOptions(
+                preferredVersion,
+                normalizedVersion,
+                state.Entries.SelectMany(entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions)),
             GetSourceOptions(config));
     }
 
@@ -257,6 +266,14 @@ internal static class FrontendCommunityResourceCatalogService
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Cast<string>()
             .ToArray();
+        var normalizedVersions = versions
+            .Select(NormalizeMinecraftVersion)
+            .Where(version => !string.IsNullOrWhiteSpace(version))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(ParseVersion)
+            .ToArray();
+        var loaders = ResolveSupportedLoaders(rawCategories, config.UseShaderLoaderOptions);
 
         var downloads = GetInt(hit, "downloads");
         var follows = GetInt(hit, "follows");
@@ -267,15 +284,19 @@ internal static class FrontendCommunityResourceCatalogService
             GetString(hit, "author"),
             updatedAt,
             downloads);
+        var iconPath = CacheIcon(GetString(hit, "icon_url"));
 
         return new FrontendDownloadResourceEntry(
             title,
             summary,
             "Modrinth",
-            ResolvePrimaryVersion(versions, preferredVersion),
+            ResolvePrimaryVersion(normalizedVersions, preferredVersion),
             ResolvePrimaryLoader(rawCategories, config.UseShaderLoaderOptions),
             translatedTags.Length == 0 ? [config.Title] : translatedTags,
+            normalizedVersions,
+            loaders,
             "查看详情",
+            iconPath,
             config.IconName,
             FrontendCommunityProjectService.CreateCompDetailTarget(projectId),
             downloads,
@@ -312,6 +333,24 @@ internal static class FrontendCommunityResourceCatalogService
 
         var latestFiles = item["latestFilesIndexes"] as JsonArray ?? [];
         var primaryFile = SelectCurseForgeFileIndex(latestFiles, preferredVersion);
+        var normalizedVersions = latestFiles
+            .Select(node => node as JsonObject)
+            .Where(node => node is not null)
+            .Select(node => NormalizeMinecraftVersion(GetString(node!, "gameVersion")))
+            .Where(version => !string.IsNullOrWhiteSpace(version))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(ParseVersion)
+            .ToArray();
+        var loaders = config.UseShaderLoaderOptions
+            ? [.. ResolveSupportedLoaders(translatedTags, true)]
+            : latestFiles
+                .Select(node => node as JsonObject)
+                .Where(node => node is not null)
+                .Select(node => ResolveCurseForgeLoader(node!, config.UseShaderLoaderOptions, translatedTags))
+                .Where(loader => !string.IsNullOrWhiteSpace(loader))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
         var website = GetString(item["links"] as JsonObject, "websiteUrl");
         if (string.IsNullOrWhiteSpace(website))
         {
@@ -325,6 +364,12 @@ internal static class FrontendCommunityResourceCatalogService
         var downloads = GetInt(item, "downloadCount");
         var releasedAt = ParseDateTimeOffset(item["dateReleased"]);
         var updatedAt = ParseDateTimeOffset(item["dateModified"]) ?? releasedAt;
+        var logo = item["logo"] as JsonObject;
+        var iconPath = CacheIcon(GetString(logo, "thumbnailUrl"));
+        if (string.IsNullOrWhiteSpace(iconPath))
+        {
+            iconPath = CacheIcon(GetString(logo, "url"));
+        }
 
         return new FrontendDownloadResourceEntry(
             title,
@@ -333,7 +378,10 @@ internal static class FrontendCommunityResourceCatalogService
             primaryFile is null ? string.Empty : GetString(primaryFile, "gameVersion"),
             primaryFile is null ? ResolveShaderLoaderFromTags(translatedTags) : ResolveCurseForgeLoader(primaryFile, config.UseShaderLoaderOptions, translatedTags),
             translatedTags.Length == 0 ? [config.Title] : translatedTags,
+            normalizedVersions,
+            loaders,
             "查看详情",
+            iconPath,
             config.IconName,
             FrontendCommunityProjectService.CreateCompDetailTarget(projectId.ToString()),
             downloads,
@@ -597,14 +645,26 @@ internal static class FrontendCommunityResourceCatalogService
             filtered = filtered.Where(entry => entry.Tags.Any(tag => string.Equals(tag, query.Tag, StringComparison.OrdinalIgnoreCase)));
         }
 
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            filtered = filtered.Where(entry =>
+                entry.Title.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)
+                || entry.Info.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)
+                || entry.Tags.Any(tag => tag.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase)));
+        }
+
         if (!string.IsNullOrWhiteSpace(query.Version))
         {
-            filtered = filtered.Where(entry => string.Equals(entry.Version, query.Version, StringComparison.OrdinalIgnoreCase));
+            filtered = filtered.Where(entry =>
+                string.Equals(entry.Version, query.Version, StringComparison.OrdinalIgnoreCase)
+                || entry.SupportedVersions.Any(version => string.Equals(version, query.Version, StringComparison.OrdinalIgnoreCase)));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Loader))
         {
-            filtered = filtered.Where(entry => string.Equals(entry.Loader, query.Loader, StringComparison.OrdinalIgnoreCase));
+            filtered = filtered.Where(entry =>
+                string.Equals(entry.Loader, query.Loader, StringComparison.OrdinalIgnoreCase)
+                || entry.SupportedLoaders.Any(loader => string.Equals(loader, query.Loader, StringComparison.OrdinalIgnoreCase)));
         }
 
         return query.Sort switch
@@ -759,6 +819,112 @@ internal static class FrontendCommunityResourceCatalogService
         }
 
         return string.Empty;
+    }
+
+    private static IReadOnlyList<string> ResolveSupportedLoaders(IEnumerable<string> rawValues, bool useShaderLoaderOptions)
+    {
+        var values = rawValues.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var loaders = new List<string>();
+
+        if (useShaderLoaderOptions)
+        {
+            if (values.Contains("vanilla") || values.Contains("原版可用"))
+            {
+                loaders.Add("原版可用");
+            }
+
+            if (values.Contains("optifine") || values.Contains("OptiFine"))
+            {
+                loaders.Add("OptiFine");
+            }
+
+            if (values.Contains("iris") || values.Contains("Iris"))
+            {
+                loaders.Add("Iris");
+            }
+
+            return loaders;
+        }
+
+        if (values.Contains("forge") || values.Contains("Forge"))
+        {
+            loaders.Add("Forge");
+        }
+
+        if (values.Contains("neoforge") || values.Contains("NeoForge"))
+        {
+            loaders.Add("NeoForge");
+        }
+
+        if (values.Contains("fabric") || values.Contains("Fabric"))
+        {
+            loaders.Add("Fabric");
+        }
+
+        if (values.Contains("quilt") || values.Contains("Quilt"))
+        {
+            loaders.Add("Quilt");
+        }
+
+        return loaders;
+    }
+
+    private static string? CacheIcon(string? iconUrl)
+    {
+        if (string.IsNullOrWhiteSpace(iconUrl))
+        {
+            return null;
+        }
+
+        if (IconCache.TryGetValue(iconUrl, out var cachedPath) && !string.IsNullOrWhiteSpace(cachedPath) && File.Exists(cachedPath))
+        {
+            return cachedPath;
+        }
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, iconUrl);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("image/*"));
+            using var response = HttpClient.Send(request);
+            response.EnsureSuccessStatusCode();
+
+            var extension = ResolveIconExtension(iconUrl, response.Content.Headers.ContentType?.MediaType);
+            var iconDirectory = Path.Combine(Path.GetTempPath(), "PCL-CE", "frontend-resource-icons");
+            Directory.CreateDirectory(iconDirectory);
+
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(iconUrl))).ToLowerInvariant();
+            var targetPath = Path.Combine(iconDirectory, $"{hash}{extension}");
+            if (!File.Exists(targetPath))
+            {
+                var payload = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+                File.WriteAllBytes(targetPath, payload);
+            }
+
+            IconCache[iconUrl] = targetPath;
+            return targetPath;
+        }
+        catch
+        {
+            IconCache[iconUrl] = null;
+            return null;
+        }
+    }
+
+    private static string ResolveIconExtension(string iconUrl, string? mediaType)
+    {
+        if (!string.IsNullOrWhiteSpace(mediaType))
+        {
+            return mediaType.ToLowerInvariant() switch
+            {
+                "image/jpeg" => ".jpg",
+                "image/webp" => ".webp",
+                "image/gif" => ".gif",
+                _ => ".png"
+            };
+        }
+
+        var extension = Path.GetExtension(iconUrl);
+        return string.IsNullOrWhiteSpace(extension) || extension == "." ? ".png" : extension;
     }
 
     private static IReadOnlyList<string> TranslateModrinthCategories(IEnumerable<string> categories)
