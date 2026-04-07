@@ -9,6 +9,9 @@ namespace PCL.Frontend.Spike.Desktop.Controls;
 
 internal sealed partial class PclOutlineButton : UserControl
 {
+    public static readonly StyledProperty<Thickness> TextMarginProperty =
+        AvaloniaProperty.Register<PclOutlineButton, Thickness>(nameof(TextMargin), new Thickness(0, -1, 0, 0));
+
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<PclOutlineButton, string>(nameof(Text), string.Empty);
 
@@ -65,6 +68,12 @@ internal sealed partial class PclOutlineButton : UserControl
     {
         get => GetValue(CommandProperty);
         set => SetValue(CommandProperty, value);
+    }
+
+    public Thickness TextMargin
+    {
+        get => GetValue(TextMarginProperty);
+        set => SetValue(TextMarginProperty, value);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

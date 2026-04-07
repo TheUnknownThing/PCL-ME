@@ -377,7 +377,7 @@ internal sealed partial class FrontendShellViewModel
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
         _importSettingsCommand = new ActionCommand(() => _ = ImportSettingsAsync());
         _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
-        _addJavaRuntimeCommand = new ActionCommand(AddJavaRuntime);
+        _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
         _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/PCL-Community/PCL2-CE");
