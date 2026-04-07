@@ -27,7 +27,7 @@ internal sealed partial class PclConfirmDialog : Window
 
         if (isDanger)
         {
-            TitleTextBlock.Foreground = Brush.Parse("#FF4C4C");
+            TitleTextBlock.Foreground = Brush.Parse("#D33232");
             OverlayBorder.Background = Brush.Parse("#8C500000");
         }
 

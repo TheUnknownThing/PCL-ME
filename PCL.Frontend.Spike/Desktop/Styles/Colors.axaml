@@ -33,7 +33,7 @@
       <SolidColorBrush x:Key="ColorBrushGray8">#F5F5F5</SolidColorBrush>
 
       <SolidColorBrush x:Key="ColorBrushRedBack">#80FBDDDD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushRedLight">#FF4C4C</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushRedLight">#D33232</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushRedDark">#CE2111</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushHalfWhite">#55FFFFFF</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushSemiWhite">#BBFFFFFF</SolidColorBrush>
@@ -84,7 +84,7 @@
       <SolidColorBrush x:Key="ColorBrushGray8">#404040</SolidColorBrush>
 
       <SolidColorBrush x:Key="ColorBrushRedBack">#80FBDDDD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushRedLight">#FF4C4C</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushRedLight">#D33232</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushRedDark">#CE2111</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushHalfWhite">#555A5A5A</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushSemiWhite">#BBFFFFFF</SolidColorBrush>

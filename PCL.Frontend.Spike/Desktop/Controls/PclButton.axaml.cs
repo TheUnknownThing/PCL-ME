@@ -127,7 +127,7 @@ internal sealed partial class PclButton : UserControl
         {
             PclButtonColorState.Highlight when _isHovered => Brush.Parse("#1370F3"),
             PclButtonColorState.Highlight => Brush.Parse("#0B5BCB"),
-            PclButtonColorState.Red when _isHovered => Brush.Parse("#FF4C4C"),
+            PclButtonColorState.Red when _isHovered => Brush.Parse("#D33232"),
             PclButtonColorState.Red => Brush.Parse("#CE2111"),
             _ when _isHovered => Brush.Parse("#1370F3"),
             _ => Brush.Parse("#343D4A")

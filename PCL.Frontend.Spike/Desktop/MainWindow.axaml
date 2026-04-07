@@ -376,7 +376,7 @@
                 <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,*">
                   <TextBlock
                       Margin="7,-1,70,9"
-                      Foreground="{DynamicResource ColorBrush2}"
+                      Foreground="{Binding CurrentPrompt.TitleBrush}"
                       FontSize="23"
                       Text="{Binding CurrentPrompt.Title}" />
 

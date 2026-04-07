@@ -763,6 +763,7 @@ internal sealed class PromptCardViewModel(
     string message,
     string source,
     string severity,
+    IBrush titleBrush,
     IBrush accentBrush,
     IBrush backgroundBrush,
     IReadOnlyList<PromptOptionViewModel> options)
@@ -778,6 +779,8 @@ internal sealed class PromptCardViewModel(
     public string Source { get; } = source;
 
     public string Severity { get; } = severity;
+
+    public IBrush TitleBrush { get; } = titleBrush;
 
     public IBrush AccentBrush { get; } = accentBrush;
 
