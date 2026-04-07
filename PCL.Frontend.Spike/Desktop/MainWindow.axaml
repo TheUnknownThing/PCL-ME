@@ -264,6 +264,20 @@
           </Border>
 
           <Grid Grid.Row="1">
+            <Border
+                x:Name="ShellLeftBackdrop"
+                Width="{Binding CurrentShellLeftPaneWidth}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}"
+                IsHitTestVisible="False">
+              <Border
+                  Width="1"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Stretch"
+                  Background="#14FFFFFF" />
+            </Border>
+
             <Grid
                 x:Name="LaunchRouteGrid"
                 IsVisible="{Binding IsLaunchRoute}"
@@ -277,7 +291,7 @@
                   Grid.Column="0"
                   Width="300"
                   ClipToBounds="True"
-                  Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">
+                  Background="Transparent">
                 <Grid x:Name="LaunchLeftContentHost">
                   <controls:PclLaunchLeftPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" />
                 </Grid>
@@ -303,7 +317,7 @@
                   Grid.Column="0"
                   Width="{Binding StandardShellLeftPaneWidth}"
                   ClipToBounds="True"
-                  Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">
+                  Background="Transparent">
                 <Grid x:Name="StandardLeftContentHost">
                   <ContentControl
                       HorizontalContentAlignment="Stretch"
@@ -350,13 +364,14 @@
             </StackPanel>
 
             <Border
-                IsVisible="{Binding IsPromptOverlayVisible}"
-                motion:Motion.AnimateOnVisible="True"
-                motion:Motion.OffsetY="8"
+                x:Name="PromptOverlayBackdrop"
+                IsVisible="False"
+                Classes="pcl-dialog-overlay"
                 Background="#5A000000" />
 
             <Border
-                IsVisible="{Binding IsPromptOverlayVisible}"
+                x:Name="PromptOverlayHost"
+                IsVisible="False"
                 MinWidth="400"
                 MaxWidth="620"
                 MaxHeight="540"
@@ -368,11 +383,11 @@
                 BorderThickness="0"
                 CornerRadius="7">
               <Border
+                  x:Name="PromptOverlayPanel"
+                  Classes="pcl-dialog-panel"
                   Background="{DynamicResource ColorBrushMsgBox}"
                   BoxShadow="0 2 20 0 #CC3C3C3C"
-                  CornerRadius="7"
-                  motion:Motion.AnimateOnVisible="True"
-                  motion:Motion.OffsetY="18">
+                  CornerRadius="7">
                 <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,*">
                   <TextBlock
                       Margin="7,-1,70,9"

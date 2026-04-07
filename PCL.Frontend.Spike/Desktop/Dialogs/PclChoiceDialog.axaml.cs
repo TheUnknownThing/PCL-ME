@@ -5,7 +5,7 @@ using PCL.Frontend.Spike.ViewModels;
 
 namespace PCL.Frontend.Spike.Desktop.Dialogs;
 
-internal sealed partial class PclChoiceDialog : Window
+internal sealed partial class PclChoiceDialog : PclAnimatedDialog<string?>
 {
     private readonly ListBox _choiceListBox;
     private string? _selectedId;
@@ -18,6 +18,7 @@ internal sealed partial class PclChoiceDialog : Window
         string confirmText)
     {
         InitializeComponent();
+        InitializeDialogAnimation();
 
         TitleTextBlock.Text = title;
         MessageTextBlock.Text = message;
@@ -71,12 +72,12 @@ internal sealed partial class PclChoiceDialog : Window
             return;
         }
 
-        Close(_selectedId);
+        CloseWithAnimation(_selectedId);
     }
 
     private void Cancel()
     {
-        Close(null);
+        CloseWithAnimation(null);
     }
 
     private void UpdateSelectionState()

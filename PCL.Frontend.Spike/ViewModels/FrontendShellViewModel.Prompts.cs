@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Spike.Desktop.Animation;
 using PCL.Frontend.Spike.Workflows;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.Models;
@@ -156,7 +157,7 @@ internal sealed partial class FrontendShellViewModel
                 option.Label,
                 string.Empty,
                 ResolvePromptOptionColorType(prompt.Severity, index, prompt.Options.Count),
-                new ActionCommand(() => ApplyPromptOption(lane, prompt.Id, option)))).ToList());
+                new ActionCommand(() => _ = ApplyPromptOptionAsync(lane, prompt.Id, option)))).ToList());
     }
 
     private static PclButtonColorState ResolvePromptOptionColorType(
@@ -179,12 +180,18 @@ internal sealed partial class FrontendShellViewModel
             : PclButtonColorState.Normal;
     }
 
-    private void ApplyPromptOption(SpikePromptLaneKind lane, string promptId, LauncherFrontendPromptOption option)
+    private async Task ApplyPromptOptionAsync(SpikePromptLaneKind lane, string promptId, LauncherFrontendPromptOption option)
     {
         var commandSummary = option.Commands.Count == 0
             ? "No commands attached."
             : string.Join(" • ", option.Commands.Select(DescribePromptCommand));
         AddActivity($"Prompt action: {option.Label}", commandSummary);
+
+        if (option.ClosesPrompt && IsPromptOverlayVisible)
+        {
+            SetPromptOverlayOpen(false);
+            await Task.Delay(PclModalMotion.ExitDuration);
+        }
 
         foreach (var command in option.Commands)
         {
@@ -202,7 +209,11 @@ internal sealed partial class FrontendShellViewModel
             RebuildPromptLanes();
             SyncPromptLaneState();
             SelectPromptLane(_selectedPromptLane, updateActivity: false);
-            if (!HasActivePrompts)
+            if (HasActivePrompts)
+            {
+                SetPromptOverlayOpen(true);
+            }
+            else
             {
                 SetPromptOverlayOpen(false);
             }

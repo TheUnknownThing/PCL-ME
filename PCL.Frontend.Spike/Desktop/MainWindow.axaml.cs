@@ -1,11 +1,15 @@
 using System;
+using System.ComponentModel;
+using Avalonia.Animation;
 using Avalonia;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
+using PCL.Frontend.Spike.Desktop.Animation;
 using PCL.Frontend.Spike.Icons;
 using PCL.Frontend.Spike.ViewModels;
 using System.Numerics;
@@ -16,6 +20,7 @@ namespace PCL.Frontend.Spike.Desktop;
 internal sealed partial class MainWindow : Window
 {
     private static readonly TimeSpan RouteTransitionDuration = TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan ShellDividerTransitionDuration = TimeSpan.FromMilliseconds(260);
     private FrontendShellViewModel? _shellViewModel;
     private CompositionVisual? _gridRootVisual;
     private CompositionVisual? _launchLeftContentHostVisual;
@@ -23,10 +28,17 @@ internal sealed partial class MainWindow : Window
     private CompositionVisual? _standardLeftContentHostVisual;
     private CompositionVisual? _standardRightContentHostVisual;
     private Compositor? _compositor;
+    private int _promptOverlayAnimationVersion;
+    private bool _isPromptOverlayRenderedOpen;
 
     public MainWindow()
     {
         InitializeComponent();
+        ConfigureShellDividerTransitions();
+        PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+        PromptOverlayBackdrop.IsVisible = false;
+        PromptOverlayHost.IsVisible = false;
+        PromptOverlayHost.IsHitTestVisible = false;
 
         BackButton.IconData = FrontendIconCatalog.Back.Data;
         MinimizeButton.IconData = FrontendIconCatalog.Minimize.Data;
@@ -56,6 +68,25 @@ internal sealed partial class MainWindow : Window
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
         UpdateWindowChromeState();
+    }
+
+    private void ConfigureShellDividerTransitions()
+    {
+        ShellLeftBackdrop.Transitions = CreateShellDividerTransitions();
+        StandardLeftHost.Transitions = CreateShellDividerTransitions();
+    }
+
+    private static Transitions CreateShellDividerTransitions()
+    {
+        return new Transitions
+        {
+            new DoubleTransition
+            {
+                Property = Layoutable.WidthProperty,
+                Duration = ShellDividerTransitionDuration,
+                Easing = new CubicEaseOut()
+            }
+        };
     }
 
     private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -186,6 +217,7 @@ internal sealed partial class MainWindow : Window
         if (_shellViewModel is not null)
         {
             _shellViewModel.NavigationTransitionRequested -= OnNavigationTransitionRequested;
+            _shellViewModel.PropertyChanged -= OnShellViewModelPropertyChanged;
         }
 
         _shellViewModel = DataContext as FrontendShellViewModel;
@@ -193,7 +225,10 @@ internal sealed partial class MainWindow : Window
         if (_shellViewModel is not null)
         {
             _shellViewModel.NavigationTransitionRequested += OnNavigationTransitionRequested;
+            _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
         }
+
+        QueuePromptOverlaySync();
     }
 
     private void OnNavigationTransitionRequested(object? sender, ShellNavigationTransitionEventArgs e)
@@ -201,6 +236,58 @@ internal sealed partial class MainWindow : Window
         Dispatcher.UIThread.Post(
             () => PlayRouteTransition(e),
             DispatcherPriority.Render);
+    }
+
+    private void OnShellViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayVisible))
+        {
+            QueuePromptOverlaySync();
+        }
+    }
+
+    private void QueuePromptOverlaySync()
+    {
+        Dispatcher.UIThread.Post(() => _ = SyncPromptOverlayAsync(), DispatcherPriority.Render);
+    }
+
+    private async Task SyncPromptOverlayAsync()
+    {
+        var shouldShow = _shellViewModel?.IsPromptOverlayVisible == true;
+        if (shouldShow == _isPromptOverlayRenderedOpen)
+        {
+            return;
+        }
+
+        var version = ++_promptOverlayAnimationVersion;
+        _isPromptOverlayRenderedOpen = shouldShow;
+
+        if (shouldShow)
+        {
+            PromptOverlayBackdrop.IsVisible = true;
+            PromptOverlayHost.IsVisible = true;
+            PromptOverlayHost.IsHitTestVisible = true;
+            PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+            await PclModalMotion.PlayOpenAsync(
+                PromptOverlayBackdrop,
+                PromptOverlayPanel,
+                () => version == _promptOverlayAnimationVersion && _isPromptOverlayRenderedOpen);
+            return;
+        }
+
+        PromptOverlayHost.IsHitTestVisible = false;
+        await PclModalMotion.PlayCloseAsync(
+            PromptOverlayBackdrop,
+            PromptOverlayPanel,
+            () => version == _promptOverlayAnimationVersion && !_isPromptOverlayRenderedOpen);
+        if (version != _promptOverlayAnimationVersion || _isPromptOverlayRenderedOpen)
+        {
+            return;
+        }
+
+        PromptOverlayBackdrop.IsVisible = false;
+        PromptOverlayHost.IsVisible = false;
+        PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
     }
 
     private void UpdateWindowChromeState()

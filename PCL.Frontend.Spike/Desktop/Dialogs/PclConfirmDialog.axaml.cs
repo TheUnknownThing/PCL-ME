@@ -7,7 +7,7 @@ using PCL.Frontend.Spike.ViewModels;
 
 namespace PCL.Frontend.Spike.Desktop.Dialogs;
 
-internal sealed partial class PclConfirmDialog : Window
+internal sealed partial class PclConfirmDialog : PclAnimatedDialog<bool>
 {
     public PclConfirmDialog(
         string title,
@@ -16,6 +16,7 @@ internal sealed partial class PclConfirmDialog : Window
         bool isDanger)
     {
         InitializeComponent();
+        InitializeDialogAnimation();
 
         TitleTextBlock.Text = title;
         MessageTextBlock.Text = message;
@@ -71,12 +72,12 @@ internal sealed partial class PclConfirmDialog : Window
 
     private void Confirm()
     {
-        Close(true);
+        CloseWithAnimation(true);
     }
 
     private void Cancel()
     {
-        Close(false);
+        CloseWithAnimation(false);
     }
 
     private void InitializeComponent()

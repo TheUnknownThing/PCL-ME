@@ -13,10 +13,12 @@
   <Grid Background="Transparent">
     <Border
         x:Name="OverlayBorder"
+        Classes="pcl-dialog-overlay"
         Background="#5A000000" />
 
     <Border
         x:Name="MessagePanel"
+        Classes="pcl-dialog-panel"
         MinWidth="400"
         MaxWidth="560"
         Margin="25"

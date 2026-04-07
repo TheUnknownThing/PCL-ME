@@ -218,6 +218,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         ? 276
         : 236;
 
+    public double CurrentShellLeftPaneWidth => IsLaunchRoute
+        ? 300
+        : StandardShellLeftPaneWidth;
+
     public bool CanGoBack
     {
         get => _canGoBack;

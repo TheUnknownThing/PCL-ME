@@ -5,7 +5,7 @@ using PCL.Frontend.Spike.ViewModels;
 
 namespace PCL.Frontend.Spike.Desktop.Dialogs;
 
-internal sealed partial class PclTextInputDialog : Window
+internal sealed partial class PclTextInputDialog : PclAnimatedDialog<string?>
 {
     private readonly TextBox _inputTextBox;
 
@@ -17,6 +17,7 @@ internal sealed partial class PclTextInputDialog : Window
         string? placeholderText)
     {
         InitializeComponent();
+        InitializeDialogAnimation();
 
         TitleTextBlock.Text = title;
         MessageTextBlock.Text = message;
@@ -59,7 +60,7 @@ internal sealed partial class PclTextInputDialog : Window
 
     private void Confirm()
     {
-        Close(_inputTextBox.Text);
+        CloseWithAnimation(_inputTextBox.Text);
     }
 
     private void AlignToOwnerBounds()
@@ -76,7 +77,7 @@ internal sealed partial class PclTextInputDialog : Window
 
     private void Cancel()
     {
-        Close(null);
+        CloseWithAnimation(null);
     }
 
     private void InitializeComponent()
