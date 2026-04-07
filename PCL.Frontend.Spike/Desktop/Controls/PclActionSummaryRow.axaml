@@ -4,38 +4,44 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
-  <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
-    <StackPanel Margin="0,0,18,0" Spacing="3">
-      <TextBlock
-          Foreground="#343D4A"
-          FontSize="13.5"
-          FontWeight="SemiBold"
-          Text="{Binding Title, ElementName=Root}" />
-      <TextBlock
-          Foreground="#677789"
-          FontSize="12.5"
-          Text="{Binding Info, ElementName=Root}"
-          TextWrapping="Wrap" />
-      <Border
-          Padding="8,4"
-          Background="#F7FAFE"
-          BorderBrush="#D5E6FD"
-          BorderThickness="1"
-          CornerRadius="4"
-          IsVisible="{Binding ShowMeta, ElementName=Root}">
+  <Border
+      Margin="0,0,0,2"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      CornerRadius="4">
+    <Grid MinHeight="42" ColumnDefinitions="14,*,Auto,12">
+      <StackPanel
+          Grid.Column="1"
+          Margin="0,6,14,6"
+          VerticalAlignment="Center"
+          Spacing="2">
         <TextBlock
-            Foreground="#4B78C2"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13.5"
+            FontWeight="SemiBold"
+            Text="{Binding Title, ElementName=Root}"
+            TextTrimming="CharacterEllipsis" />
+        <TextBlock
+            Foreground="#677789"
+            FontSize="12"
+            Text="{Binding Info, ElementName=Root}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="Wrap" />
+        <TextBlock
+            Foreground="#8C99A6"
             FontSize="11.5"
-            Text="{Binding Meta, ElementName=Root}" />
-      </Border>
-    </StackPanel>
+            IsVisible="{Binding ShowMeta, ElementName=Root}"
+            Text="{Binding Meta, ElementName=Root}"
+            TextTrimming="CharacterEllipsis" />
+      </StackPanel>
 
-    <controls:PclButton
-        Grid.Column="1"
-        Width="100"
-        Height="35"
-        VerticalAlignment="Center"
-        Command="{Binding Command, ElementName=Root}"
-        Text="{Binding ActionText, ElementName=Root}" />
-  </Grid>
+      <controls:PclButton
+          Grid.Column="2"
+          Width="92"
+          Height="30"
+          Margin="0,0,0,0"
+          VerticalAlignment="Center"
+          Command="{Binding Command, ElementName=Root}"
+          Text="{Binding ActionText, ElementName=Root}" />
+    </Grid>
+  </Border>
 </UserControl>
