@@ -20,6 +20,7 @@ internal sealed partial class FrontendShellViewModel
     private const int DownloadResourcePageSize = 40;
     private readonly ActionCommand _resetDownloadResourceFiltersCommand;
     private readonly ActionCommand _installDownloadResourceModPackCommand;
+    private readonly ActionCommand _searchDownloadResourceCommand;
     private readonly ActionCommand _firstDownloadResourcePageCommand;
     private readonly ActionCommand _previousDownloadResourcePageCommand;
     private readonly ActionCommand _nextDownloadResourcePageCommand;
@@ -87,11 +88,7 @@ internal sealed partial class FrontendShellViewModel
         get => _downloadResourceSearchQuery;
         set
         {
-            if (SetProperty(ref _downloadResourceSearchQuery, value) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
-            {
-                PreviewDownloadResourceFilters(resetPage: true);
-                ScheduleDownloadResourceRefresh(immediate: false, resetPage: true);
-            }
+            SetProperty(ref _downloadResourceSearchQuery, value);
         }
     }
 
@@ -158,11 +155,10 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceSourceOptions);
-            if (SetProperty(ref _selectedDownloadResourceSourceIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+            if (SetProperty(ref _selectedDownloadResourceSourceIndex, nextValue) &&
+                IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
             {
                 UpdateDownloadResourceHint();
-                PreviewDownloadResourceFilters(resetPage: true);
-                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
             }
         }
     }
@@ -173,11 +169,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceTagOptions);
-            if (SetProperty(ref _selectedDownloadResourceTagIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
-            {
-                PreviewDownloadResourceFilters(resetPage: true);
-                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
-            }
+            SetProperty(ref _selectedDownloadResourceTagIndex, nextValue);
         }
     }
 
@@ -187,11 +179,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceSortOptions);
-            if (SetProperty(ref _selectedDownloadResourceSortIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
-            {
-                PreviewDownloadResourceFilters(resetPage: true);
-                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
-            }
+            SetProperty(ref _selectedDownloadResourceSortIndex, nextValue);
         }
     }
 
@@ -201,11 +189,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceVersionOptions);
-            if (SetProperty(ref _selectedDownloadResourceVersionIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
-            {
-                PreviewDownloadResourceFilters(resetPage: true);
-                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
-            }
+            SetProperty(ref _selectedDownloadResourceVersionIndex, nextValue);
         }
     }
 
@@ -215,11 +199,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = ClampFilterIndex(value, DownloadResourceLoaderOptions);
-            if (SetProperty(ref _selectedDownloadResourceLoaderIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
-            {
-                PreviewDownloadResourceFilters(resetPage: true);
-                ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
-            }
+            SetProperty(ref _selectedDownloadResourceLoaderIndex, nextValue);
         }
     }
 
@@ -240,6 +220,8 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand ResetDownloadResourceFiltersCommand => _resetDownloadResourceFiltersCommand;
 
     public ActionCommand InstallDownloadResourceModPackCommand => _installDownloadResourceModPackCommand;
+
+    public ActionCommand SearchDownloadResourceCommand => _searchDownloadResourceCommand;
 
     public ActionCommand FirstDownloadResourcePageCommand => _firstDownloadResourcePageCommand;
 
@@ -379,6 +361,16 @@ internal sealed partial class FrontendShellViewModel
         RaiseDownloadResourceFilterState();
         ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
         AddActivity("重置资源筛选", $"{DownloadResourceSurfaceTitle} 已恢复到默认筛选条件。");
+    }
+
+    private void SearchDownloadResource()
+    {
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+        {
+            return;
+        }
+
+        ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
     }
 
     private void InstallDownloadResourceModPack()

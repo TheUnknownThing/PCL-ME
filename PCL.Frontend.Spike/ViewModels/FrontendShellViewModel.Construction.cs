@@ -425,6 +425,7 @@ internal sealed partial class FrontendShellViewModel
         _saveHeadCommand = new ActionCommand(() => _ = SaveHeadAsync());
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
         _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
+        _searchDownloadResourceCommand = new ActionCommand(SearchDownloadResource);
         _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
         _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 1);
         _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
