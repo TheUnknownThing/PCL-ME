@@ -385,7 +385,6 @@
                   VerticalAlignment="Center"
                   Foreground="#4B5968"
                   FontSize="13.5"
-                  FontWeight="SemiBold"
                   Text="{Binding DownloadResourcePageLabel}" />
               <controls:PclIconButton
                   Command="{Binding NextDownloadResourcePageCommand}"

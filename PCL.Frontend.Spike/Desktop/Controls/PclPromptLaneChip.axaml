@@ -34,7 +34,6 @@
             x:Name="TitleBlock"
             Foreground="{Binding ForegroundBrush, ElementName=Root}"
             FontSize="14"
-            FontWeight="SemiBold"
             Text="{Binding Title, ElementName=Root}" />
         <TextBlock
             x:Name="CountBlock"

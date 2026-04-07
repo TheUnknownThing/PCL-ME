@@ -35,7 +35,6 @@
                     <TextBlock
                         Foreground="#343D4A"
                         FontSize="12.5"
-                        FontWeight="SemiBold"
                         Text="{Binding Title}"
                         TextTrimming="CharacterEllipsis" />
                     <TextBlock

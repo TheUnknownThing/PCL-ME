@@ -19,7 +19,6 @@
               VerticalAlignment="Center"
               Foreground="#4B78C2"
               FontSize="14"
-              FontWeight="SemiBold"
               Text="例" />
         </Border>
         <TextBlock
@@ -28,7 +27,6 @@
             VerticalAlignment="Center"
             Foreground="#343D4A"
             FontSize="14"
-            FontWeight="SemiBold"
             Text="{Binding InstanceInstallSelectionTitle}" />
         <TextBlock
             Grid.Row="2"

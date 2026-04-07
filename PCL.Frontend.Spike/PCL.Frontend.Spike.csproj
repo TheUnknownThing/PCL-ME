@@ -28,9 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_Regular.ttf" />
-    <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_Medium.ttf" />
-    <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_Bold.ttf" />
+    <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_*.ttf" />
     <AvaloniaResource Include="..\Plain Craft Launcher 2\Images\icon.ico" Link="Assets/icon.ico" />
     <AvaloniaResource Include="..\Plain Craft Launcher 2\Images\icon.png" Link="Assets/icon.png" />
     <None Include="..\Plain Craft Launcher 2\Resources\forge-installer.jar" Link="forge-installer.jar" CopyToOutputDirectory="PreserveNewest" />

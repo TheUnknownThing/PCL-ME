@@ -45,7 +45,6 @@
                   <TextBlock
                       Foreground="#344352"
                       FontSize="13"
-                      FontWeight="SemiBold"
                       Text="{Binding InstanceSelectionResultSummary}" />
                   <TextBlock
                       Foreground="#6B7C8F"
@@ -84,7 +83,6 @@
                                   <TextBlock
                                       Foreground="#215EA9"
                                       FontSize="11.5"
-                                      FontWeight="SemiBold"
                                       Text="{Binding}" />
                                 </Border>
                               </DataTemplate>
@@ -168,7 +166,7 @@
               <Grid Grid.Column="1" Margin="22,18,0,0" RowDefinitions="Auto,*">
                 <Grid ColumnDefinitions="*,Auto,Auto">
                   <StackPanel Spacing="4">
-                    <TextBlock Foreground="#415671" FontSize="13.5" FontWeight="SemiBold" Text="{Binding TaskManagerActiveTaskTitle}" />
+                    <TextBlock Foreground="#415671" FontSize="13.5" Text="{Binding TaskManagerActiveTaskTitle}" />
                     <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="{Binding TaskManagerSummary}" />
                   </StackPanel>
                   <controls:PclIconButton
@@ -200,7 +198,7 @@
                             <StackPanel Spacing="10">
                               <Grid ColumnDefinitions="*,Auto,Auto">
                                 <StackPanel Spacing="3">
-                                  <TextBlock Foreground="#47586D" FontSize="13.5" FontWeight="SemiBold" Text="{Binding Title}" />
+                                  <TextBlock Foreground="#47586D" FontSize="13.5" Text="{Binding Title}" />
                                   <TextBlock Foreground="#75869C" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <Border
@@ -211,7 +209,7 @@
                                     BorderBrush="#CFE0FA"
                                     BorderThickness="1"
                                     CornerRadius="999">
-                                  <TextBlock Foreground="#5B87DA" FontSize="11.5" FontWeight="SemiBold" Text="{Binding State}" />
+                                  <TextBlock Foreground="#5B87DA" FontSize="11.5" Text="{Binding State}" />
                                 </Border>
                                 <controls:PclIconButton
                                     Grid.Column="2"
@@ -226,7 +224,7 @@
                               <StackPanel IsVisible="{Binding HasProgress}" Spacing="4">
                                 <Grid ColumnDefinitions="*,Auto">
                                   <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="安装进度" />
-                                  <TextBlock Grid.Column="1" Foreground="#5B87DA" FontSize="11.5" FontWeight="SemiBold" Text="{Binding ProgressText}" />
+                                  <TextBlock Grid.Column="1" Foreground="#5B87DA" FontSize="11.5" Text="{Binding ProgressText}" />
                                 </Grid>
                                 <ProgressBar Height="6" Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
                               </StackPanel>
@@ -239,7 +237,6 @@
                                           HorizontalAlignment="Center"
                                           Foreground="#4F86E9"
                                           FontSize="16"
-                                          FontWeight="SemiBold"
                                           Text="{Binding Indicator}" />
                                       <StackPanel Grid.Column="1" Spacing="2">
                                         <TextBlock Foreground="#66788F" FontSize="12" Text="{Binding Title}" />
@@ -264,7 +261,7 @@
                         Padding="0,2,0,0"
                         IsVisible="{Binding HasNoTaskManagerEntries}">
                       <StackPanel Spacing="8">
-                        <TextBlock Foreground="#47586D" FontSize="13.5" FontWeight="SemiBold" Text="当前没有活动任务" />
+                        <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前没有活动任务" />
                         <TextBlock
                             Foreground="#7E8FA5"
                             FontSize="12"
@@ -319,7 +316,7 @@
                     CornerRadius="4">
                   <StackPanel Spacing="4">
                     <TextBlock Foreground="#7D8897" FontSize="11.5" Text="实时输出行数" />
-                    <TextBlock Foreground="#2B4260" FontSize="18" FontWeight="Bold" Text="{Binding GameLogLiveLineCount}" />
+                    <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogLiveLineCount}" />
                   </StackPanel>
                 </Border>
                 <Border
@@ -332,7 +329,7 @@
                     CornerRadius="4">
                   <StackPanel Spacing="4">
                     <TextBlock Foreground="#7D8897" FontSize="11.5" Text="最近日志文件" />
-                    <TextBlock Foreground="#2B4260" FontSize="18" FontWeight="Bold" Text="{Binding GameLogRecentFileCount}" />
+                    <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogRecentFileCount}" />
                     <TextBlock Foreground="#7A8794" FontSize="11" Text="{Binding GameLogLatestUpdateLabel}" />
                   </StackPanel>
                 </Border>
@@ -363,7 +360,7 @@
               </controls:PclCard>
 
               <StackPanel IsVisible="{Binding HasGameLogFiles}" Spacing="8">
-                <TextBlock Foreground="#47586D" FontSize="13.5" FontWeight="SemiBold" Text="最近生成的日志文件" />
+                <TextBlock Foreground="#47586D" FontSize="13.5" Text="最近生成的日志文件" />
                 <ItemsControl ItemsSource="{Binding GameLogFileEntries}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -378,7 +375,7 @@
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowGameLogEmptyState}" Spacing="8">
-                <TextBlock Foreground="#47586D" FontSize="13.5" FontWeight="SemiBold" Text="还没有可展示的日志" />
+                <TextBlock Foreground="#47586D" FontSize="13.5" Text="还没有可展示的日志" />
                 <TextBlock
                     Foreground="#4B5968"
                     FontSize="13"
@@ -431,7 +428,6 @@
                           <TextBlock
                               Foreground="White"
                               FontSize="9.5"
-                              FontWeight="SemiBold"
                               Text="{Binding CommunityProjectSourceBadgeText}" />
                         </Border>
                       </Grid>
@@ -444,7 +440,6 @@
                         VerticalAlignment="Center"
                         Foreground="{DynamicResource ColorBrush1}"
                         FontSize="14"
-                        FontWeight="SemiBold"
                         Text="{Binding CommunityProjectTitle}"
                         TextTrimming="CharacterEllipsis" />
 
@@ -858,7 +853,6 @@
               <TextBlock
                   Foreground="#1370F3"
                   FontSize="12"
-                  FontWeight="Bold"
                   Text="{Binding Eyebrow}" />
               <TextBlock
                   Foreground="#4B5968"
@@ -887,7 +881,6 @@
                     <TextBlock
                         Foreground="{Binding AccentBrush}"
                         FontSize="12"
-                        FontWeight="Bold"
                         Text="{Binding Eyebrow}" />
                     <ItemsControl ItemsSource="{Binding Lines}">
                       <ItemsControl.ItemTemplate>

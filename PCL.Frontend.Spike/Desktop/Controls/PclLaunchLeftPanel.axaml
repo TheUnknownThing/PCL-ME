@@ -182,7 +182,6 @@
           <TextBlock
               HorizontalAlignment="Center"
               FontSize="17"
-              FontWeight="SemiBold"
               Foreground="#343D4A"
               Text="离线创建" />
           <TextBox
@@ -234,7 +233,6 @@
           <TextBlock
               HorizontalAlignment="Center"
               FontSize="17"
-              FontWeight="SemiBold"
               Foreground="#343D4A"
               Text="微软登录" />
           <TextBlock
@@ -258,7 +256,6 @@
                   HorizontalAlignment="Center"
                   FontFamily="Menlo, Monaco, Consolas"
                   FontSize="20"
-                  FontWeight="Bold"
                   Foreground="#0B5BCB"
                   Text="{Binding LaunchMicrosoftDeviceCode}" />
             </StackPanel>
@@ -289,7 +286,6 @@
           <TextBlock
               HorizontalAlignment="Center"
               FontSize="17"
-              FontWeight="SemiBold"
               Foreground="#343D4A"
               Text="外置登录" />
           <TextBox
