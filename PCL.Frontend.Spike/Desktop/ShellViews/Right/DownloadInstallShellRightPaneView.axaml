@@ -54,8 +54,9 @@
                       <DataTemplate>
                         <Button
                             Classes="install-choice-row"
-                            Command="{Binding SelectCommand}">
-                          <Grid Margin="0,0,0,2" ColumnDefinitions="Auto,*" RowDefinitions="Auto,1">
+                            Command="{Binding SelectCommand}"
+                            HorizontalAlignment="Stretch">
+                          <Grid HorizontalAlignment="Stretch" Margin="0,0,0,2" ColumnDefinitions="Auto,*" RowDefinitions="Auto,1">
                             <Border
                                 Width="34"
                                 Height="34"
@@ -249,8 +250,9 @@
                         <DataTemplate>
                           <Button
                               Classes="install-choice-row"
-                              Command="{Binding SelectCommand}">
-                            <Grid Margin="0,0,0,2" ColumnDefinitions="4,*,Auto" RowDefinitions="Auto,1">
+                              Command="{Binding SelectCommand}"
+                              HorizontalAlignment="Stretch">
+                            <Grid HorizontalAlignment="Stretch" Margin="0,0,0,2" ColumnDefinitions="4,*,Auto" RowDefinitions="Auto,1">
                               <Border
                                   Grid.RowSpan="2"
                                   Width="4"
