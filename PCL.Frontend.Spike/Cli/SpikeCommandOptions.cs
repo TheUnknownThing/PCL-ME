@@ -12,6 +12,7 @@ internal sealed record SpikeCommandOptions(
     MinecraftLaunchJavaPromptDecision JavaPromptDecision,
     SpikeJavaDownloadSessionState JavaDownloadState,
     MinecraftCrashOutputPromptActionKind CrashAction,
+    bool ForceCjkFontWarning,
     string? SaveBatchPath,
     string? WorkspaceRoot,
     string? InputRoot,

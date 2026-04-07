@@ -18,6 +18,7 @@ internal static class SpikeCommandParser
                 JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
                 JavaDownloadState: SpikeJavaDownloadSessionState.Finished,
                 CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
+                ForceCjkFontWarning: false,
                 SaveBatchPath: null,
                 WorkspaceRoot: null,
                 InputRoot: null,
@@ -41,6 +42,7 @@ internal static class SpikeCommandParser
         var javaPromptDecision = MinecraftLaunchJavaPromptDecision.Download;
         var javaDownloadState = SpikeJavaDownloadSessionState.Finished;
         var crashAction = MinecraftCrashOutputPromptActionKind.ExportReport;
+        var forceCjkFontWarning = false;
         string? saveBatchPath = null;
         string? workspaceRoot = null;
         string? inputRoot = null;
@@ -107,6 +109,12 @@ internal static class SpikeCommandParser
                         return Error($"Unknown crash action '{value}'.");
                     }
                     break;
+                case "force-cjk-font-warning":
+                    if (!TryParseBooleanFlag(value!, out forceCjkFontWarning))
+                    {
+                        return Error($"Unknown CJK font warning flag '{value}'.");
+                    }
+                    break;
                 case "scenario":
                     scenario = value!.Trim().ToLowerInvariant();
                     break;
@@ -138,6 +146,7 @@ internal static class SpikeCommandParser
             javaPromptDecision,
             javaDownloadState,
             crashAction,
+            forceCjkFontWarning,
             saveBatchPath,
             workspaceRoot,
             inputRoot,
@@ -150,7 +159,7 @@ internal static class SpikeCommandParser
 PCL.Frontend.Spike
 
 Usage:
-  app [--scenario modern-fabric|legacy-forge] [--host-env true|false] [--input-root path]
+  app [--scenario modern-fabric|legacy-forge] [--host-env true|false] [--input-root path] [--force-cjk-font-warning true|false]
   startup [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
   shell [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--workspace path] [--input-root path]
   launch [modern-fabric|legacy-forge] [--mode plan|run|execute] [--format json|text] [--host-env true|false] [--java-prompt download|abort] [--java-download-state finished|failed|aborted] [--save-batch path] [--workspace path] [--input-root path]

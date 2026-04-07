@@ -29,6 +29,14 @@ internal sealed class App(SpikeCommandOptions options) : Application
             {
                 DataContext = FrontendShellViewModel.CreateBootstrap(options, shellActionService)
             };
+
+            desktop.MainWindow.Opened += async (_, _) =>
+            {
+                if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, options.ForceCjkFontWarning))
+                {
+                    await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(desktop);
+                }
+            };
         }
 
         base.OnFrameworkInitializationCompleted();

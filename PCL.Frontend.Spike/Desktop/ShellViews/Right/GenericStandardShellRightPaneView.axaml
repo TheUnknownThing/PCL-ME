@@ -366,7 +366,7 @@
                         Background="#0C1117"
                         BorderBrush="Transparent"
                         BorderThickness="0"
-                        FontFamily="Consolas"
+                        FontFamily="{DynamicResource LaunchFontFamily}"
                         FontSize="12.5"
                         Foreground="#D7E3F1"
                         IsReadOnly="True"

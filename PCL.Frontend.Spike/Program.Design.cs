@@ -22,6 +22,7 @@ public partial class Program
             JavaPromptDecision: MinecraftLaunchJavaPromptDecision.Download,
             JavaDownloadState: SpikeJavaDownloadSessionState.Finished,
             CrashAction: MinecraftCrashOutputPromptActionKind.ExportReport,
+            ForceCjkFontWarning: false,
             SaveBatchPath: null,
             WorkspaceRoot: null,
             InputRoot: null,

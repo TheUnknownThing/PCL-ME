@@ -40,7 +40,7 @@
           <TextBlock
               x:Name="TitleBlock"
               FontSize="14"
-              FontWeight="SemiBold"
+              FontWeight="Medium"
               Foreground="#404040" />
           <TextBlock
               x:Name="SummaryBlock"
