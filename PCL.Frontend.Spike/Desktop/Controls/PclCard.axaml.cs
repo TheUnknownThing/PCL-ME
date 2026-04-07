@@ -9,6 +9,11 @@ namespace PCL.Frontend.Spike.Desktop.Controls;
 
 internal sealed partial class PclCard : UserControl
 {
+    private static readonly Thickness StandardHeaderTextMargin = new(15, 12, 0, 0);
+    private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
+    private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
+    private static readonly Thickness CollapsibleChevronMargin = new(0, 12, 16, 0);
+
     public static readonly StyledProperty<string> HeaderProperty =
         AvaloniaProperty.Register<PclCard, string>(nameof(Header), string.Empty);
 
@@ -40,6 +45,7 @@ internal sealed partial class PclCard : UserControl
         PointerExited += OnPointerExited;
         HeaderButton.Click += OnHeaderButtonClick;
         RefreshHeaderLayout();
+        RefreshHeaderMetrics();
         RefreshChevronState();
         RefreshState();
     }
@@ -134,6 +140,7 @@ internal sealed partial class PclCard : UserControl
             HeaderTextBlock.Text = change.GetNewValue<string>() ?? string.Empty;
             RaisePropertyChanged(HasHeaderProperty, false, HasHeader);
             RefreshHeaderLayout();
+            RefreshHeaderMetrics();
             RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
         }
         else if (change.Property == IsChevronExpandedProperty)
@@ -144,6 +151,7 @@ internal sealed partial class PclCard : UserControl
         else if (change.Property == ShowChevronProperty)
         {
             RefreshHeaderLayout();
+            RefreshHeaderMetrics();
             RefreshChevronState();
             RefreshState();
             RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
@@ -213,6 +221,14 @@ internal sealed partial class PclCard : UserControl
             ? (ShowChevron ? new GridLength(40) : GridLength.Auto)
             : new GridLength(0);
         CardBorder.MinHeight = HasHeader && ShowChevron ? 40 : 0;
+    }
+
+    private void RefreshHeaderMetrics()
+    {
+        HeaderTextBlock.Margin = ShowChevron ? CollapsibleHeaderTextMargin : StandardHeaderTextMargin;
+        HeaderTextBlock.VerticalAlignment = ShowChevron ? Avalonia.Layout.VerticalAlignment.Center : Avalonia.Layout.VerticalAlignment.Top;
+        ChevronPath.Margin = ShowChevron ? CollapsibleChevronMargin : StandardChevronMargin;
+        ChevronPath.VerticalAlignment = ShowChevron ? Avalonia.Layout.VerticalAlignment.Center : Avalonia.Layout.VerticalAlignment.Top;
     }
 
     private void RefreshChevronState()
