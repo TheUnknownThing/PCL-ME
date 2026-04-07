@@ -52,14 +52,16 @@ public sealed class LauncherFrontendNavigationServiceTest
     {
         var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
             new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod),
-            BackstackDepth: 1,
-            CurrentPageTitleOverride: "实例设置 - Demo Instance"));
+            BackstackDepth: 2,
+            CurrentPageTitleOverride: "实例设置 - Demo Instance",
+            ParentRoute: new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect)));
 
         Assert.AreEqual("实例设置 - Demo Instance", view.CurrentPageTitle);
         Assert.IsTrue(view.ShowsBackButton);
         Assert.AreEqual(LauncherFrontendPageKind.Secondary, view.CurrentPage.Kind);
         Assert.AreEqual("实例设置分区", view.CurrentPage.SidebarGroupTitle);
-        Assert.AreEqual(LauncherFrontendBackTargetKind.History, view.BackTarget?.Kind);
+        Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
+        Assert.AreEqual(LauncherFrontendPageKey.InstanceSelect, view.BackTarget?.Route?.Page);
         Assert.AreEqual("Mod", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
         CollectionAssert.AreEqual(
             new[] { "实例设置 - Demo Instance", "Mod" },
@@ -93,6 +95,21 @@ public sealed class LauncherFrontendNavigationServiceTest
         Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
         Assert.AreEqual(LauncherFrontendPageKey.Download, view.BackTarget?.Route?.Page);
         Assert.IsTrue(view.SidebarEntries.Any());
+    }
+
+    [TestMethod]
+    public void BuildViewUsesProvidedParentRouteForNestedVersionSaves()
+    {
+        var parentRoute = new LauncherFrontendRoute(
+            LauncherFrontendPageKey.InstanceSetup,
+            LauncherFrontendSubpageKey.VersionWorld);
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesBackup),
+            ParentRoute: parentRoute));
+
+        Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
+        Assert.AreEqual(parentRoute, view.BackTarget?.Route);
+        Assert.AreEqual("世界", view.BackTarget?.Label.Replace("返回到 ", ""));
     }
 
     [TestMethod]
