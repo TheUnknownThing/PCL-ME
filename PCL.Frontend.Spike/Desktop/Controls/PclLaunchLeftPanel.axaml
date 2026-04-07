@@ -60,7 +60,7 @@
           </Border>
           <Border
               Margin="0,4,0,0"
-              Padding="10,4"
+              Padding="6,2"
               HorizontalAlignment="Center"
               Background="#FDFDFD"
               BorderBrush="#14000000"
