@@ -56,6 +56,7 @@ internal sealed record FrontendDownloadResourceState(
     bool UseShaderLoaderOptions,
     string HintText,
     IReadOnlyList<FrontendDownloadResourceFilterOption> TagOptions,
+    bool HasMoreEntries,
     IReadOnlyList<FrontendDownloadResourceEntry> Entries);
 
 internal sealed record FrontendDownloadResourceFilterOption(

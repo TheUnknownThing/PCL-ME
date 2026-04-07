@@ -428,7 +428,7 @@ internal sealed partial class FrontendShellViewModel
         _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
         _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
-        _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1);
+        _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries);
         _manageDownloadFavoriteTargetCommand = new ActionCommand(ManageDownloadFavoriteTargets);
         _resetInstanceExportOptionsCommand = new ActionCommand(ResetInstanceExportOptions);
         _importInstanceExportConfigCommand = new ActionCommand(() => _ = ImportInstanceExportConfigAsync());
