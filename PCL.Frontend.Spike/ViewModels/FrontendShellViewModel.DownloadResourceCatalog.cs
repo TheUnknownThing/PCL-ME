@@ -634,25 +634,6 @@ internal sealed partial class FrontendShellViewModel
         _nextDownloadResourcePageCommand.NotifyCanExecuteChanged();
     }
 
-    private void QueueDownloadResourceSelectedOptionRefresh()
-    {
-        var route = _currentRoute.Subpage;
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (_currentRoute.Subpage != route || !IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
-            {
-                return;
-            }
-
-            SyncSelectedDownloadResourceOptions();
-            RaisePropertyChanged(nameof(SelectedDownloadResourceSourceOption));
-            RaisePropertyChanged(nameof(SelectedDownloadResourceTagOption));
-            RaisePropertyChanged(nameof(SelectedDownloadResourceSortOption));
-            RaisePropertyChanged(nameof(SelectedDownloadResourceVersionOption));
-            RaisePropertyChanged(nameof(SelectedDownloadResourceLoaderOption));
-        }, DispatcherPriority.Background);
-    }
-
     private void RaiseDownloadResourceFilterState()
     {
         SyncSelectedDownloadResourceOptions();
@@ -676,7 +657,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowDownloadResourceInstallModPackAction));
         RaisePropertyChanged(nameof(DownloadResourcePageLabel));
         RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
-        QueueDownloadResourceSelectedOptionRefresh();
     }
 
     private void UpdateDownloadResourceHint()
