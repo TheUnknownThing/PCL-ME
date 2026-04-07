@@ -43,13 +43,14 @@
                   </StackPanel>
                   <Border
                       Grid.Column="1"
-                      Margin="12,0,0,0"
-                      Padding="10,3"
-                      Background="#F3F8FF"
-                      BorderBrush="#CFE0FA"
+                      Margin="10,0,0,0"
+                      Padding="8,2"
+                      VerticalAlignment="Top"
+                      Background="#EAF3FF"
+                      BorderBrush="#BED6F8"
                       BorderThickness="1"
                       CornerRadius="999">
-                    <TextBlock Foreground="#5B87DA" FontSize="11.5" Text="{Binding State}" />
+                    <TextBlock Foreground="#1B73E8" FontSize="10.5" Text="{Binding State}" />
                   </Border>
                   <controls:PclIconButton
                       Grid.Column="2"
