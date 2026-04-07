@@ -154,11 +154,6 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDownloadResourceSourceIndex;
         set
         {
-            if (value < 0)
-            {
-                return;
-            }
-
             var nextValue = ClampFilterIndex(value, DownloadResourceSourceOptions);
             if (SetProperty(ref _selectedDownloadResourceSourceIndex, nextValue) &&
                 IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
@@ -173,11 +168,6 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDownloadResourceTagIndex;
         set
         {
-            if (value < 0)
-            {
-                return;
-            }
-
             var nextValue = ClampFilterIndex(value, DownloadResourceTagOptions);
             SetProperty(ref _selectedDownloadResourceTagIndex, nextValue);
         }
@@ -188,11 +178,6 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDownloadResourceSortIndex;
         set
         {
-            if (value < 0)
-            {
-                return;
-            }
-
             var nextValue = ClampFilterIndex(value, DownloadResourceSortOptions);
             SetProperty(ref _selectedDownloadResourceSortIndex, nextValue);
         }
@@ -203,11 +188,6 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDownloadResourceVersionIndex;
         set
         {
-            if (value < 0)
-            {
-                return;
-            }
-
             var nextValue = ClampFilterIndex(value, DownloadResourceVersionOptions);
             SetProperty(ref _selectedDownloadResourceVersionIndex, nextValue);
         }
@@ -218,11 +198,6 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDownloadResourceLoaderIndex;
         set
         {
-            if (value < 0)
-            {
-                return;
-            }
-
             var nextValue = ClampFilterIndex(value, DownloadResourceLoaderOptions);
             SetProperty(ref _selectedDownloadResourceLoaderIndex, nextValue);
         }
