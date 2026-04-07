@@ -235,9 +235,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string DownloadResourcePageLabel => _downloadResourceTotalPages <= 0
         ? "0"
-        : _downloadResourceHasMoreEntries
-            ? $"{_downloadResourcePageIndex + 1} / {_downloadResourceTotalPages}+"
-            : $"{_downloadResourcePageIndex + 1} / {_downloadResourceTotalPages}";
+        : (_downloadResourcePageIndex + 1).ToString();
 
     public ActionCommand ResetDownloadResourceFiltersCommand => _resetDownloadResourceFiltersCommand;
 
