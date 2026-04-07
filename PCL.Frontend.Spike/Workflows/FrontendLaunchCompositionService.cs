@@ -557,19 +557,10 @@ internal static class FrontendLaunchCompositionService
 
     private static FrontendLaunchProfileSummary ReadSelectedProfile(FrontendRuntimePaths runtimePaths)
     {
-        var profilesPath = Path.Combine(runtimePaths.LauncherAppDataDirectory, "profiles.json");
-        if (!File.Exists(profilesPath))
-        {
-            return BuildFallbackProfile(runtimePaths);
-        }
-
         try
         {
-            var document = MinecraftLaunchProfileStorageService.ParseDocument(
-                File.ReadAllText(profilesPath),
-                value => LauncherFrontendRuntimeStateService.TryUnprotectString(
-                    runtimePaths.SharedConfigDirectory,
-                    value) ?? value ?? string.Empty);
+            var profileDocument = FrontendProfileStorageService.Load(runtimePaths).Document;
+            var document = profileDocument;
             var selectedProfile = document.LastUsedProfile >= 0 && document.LastUsedProfile < document.Profiles.Count
                 ? document.Profiles[document.LastUsedProfile]
                 : document.Profiles.FirstOrDefault();

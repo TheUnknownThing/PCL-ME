@@ -15,6 +15,8 @@ internal sealed record FrontendRuntimePaths(
 
     public string FrontendTempDirectory => Path.Combine(TempDirectory, "frontend-artifacts");
 
+    public string LauncherProfileDirectory => SharedConfigDirectory;
+
     public static FrontendRuntimePaths Resolve(FrontendPlatformAdapter platformAdapter)
     {
         ArgumentNullException.ThrowIfNull(platformAdapter);
