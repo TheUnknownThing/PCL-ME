@@ -36,6 +36,8 @@ internal sealed record FrontendCommunityProjectState(
     string Summary,
     string Description,
     string Source,
+    string? IconUrl,
+    string? IconPath,
     string Website,
     string Status,
     string UpdatedLabel,

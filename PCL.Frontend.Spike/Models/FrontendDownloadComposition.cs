@@ -72,6 +72,7 @@ internal sealed record FrontendDownloadResourceEntry(
     IReadOnlyList<string> SupportedVersions,
     IReadOnlyList<string> SupportedLoaders,
     string ActionText,
+    string? IconUrl,
     string? IconPath,
     string? IconName,
     string? TargetPath,

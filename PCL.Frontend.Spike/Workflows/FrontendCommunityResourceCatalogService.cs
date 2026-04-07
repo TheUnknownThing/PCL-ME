@@ -1,7 +1,5 @@
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using PCL.Core.App.Essentials;
@@ -15,7 +13,6 @@ internal static class FrontendCommunityResourceCatalogService
     private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry> Cache = new(StringComparer.Ordinal);
-    private static readonly ConcurrentDictionary<string, string?> IconCache = new(StringComparer.Ordinal);
     private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
     private static readonly IReadOnlyList<RouteConfig> RouteConfigs =
     [
@@ -284,7 +281,8 @@ internal static class FrontendCommunityResourceCatalogService
             GetString(hit, "author"),
             updatedAt,
             downloads);
-        var iconPath = CacheIcon(GetString(hit, "icon_url"));
+        var iconUrl = GetString(hit, "icon_url");
+        var iconPath = FrontendCommunityIconCache.TryGetCachedIconPath(iconUrl);
 
         return new FrontendDownloadResourceEntry(
             title,
@@ -296,6 +294,7 @@ internal static class FrontendCommunityResourceCatalogService
             normalizedVersions,
             loaders,
             "查看详情",
+            iconUrl,
             iconPath,
             config.IconName,
             FrontendCommunityProjectService.CreateCompDetailTarget(projectId),
@@ -365,11 +364,8 @@ internal static class FrontendCommunityResourceCatalogService
         var releasedAt = ParseDateTimeOffset(item["dateReleased"]);
         var updatedAt = ParseDateTimeOffset(item["dateModified"]) ?? releasedAt;
         var logo = item["logo"] as JsonObject;
-        var iconPath = CacheIcon(GetString(logo, "thumbnailUrl"));
-        if (string.IsNullOrWhiteSpace(iconPath))
-        {
-            iconPath = CacheIcon(GetString(logo, "url"));
-        }
+        var iconUrl = GetString(logo, "thumbnailUrl") ?? GetString(logo, "url");
+        var iconPath = FrontendCommunityIconCache.TryGetCachedIconPath(iconUrl);
 
         return new FrontendDownloadResourceEntry(
             title,
@@ -381,6 +377,7 @@ internal static class FrontendCommunityResourceCatalogService
             normalizedVersions,
             loaders,
             "查看详情",
+            iconUrl,
             iconPath,
             config.IconName,
             FrontendCommunityProjectService.CreateCompDetailTarget(projectId.ToString()),
@@ -867,64 +864,6 @@ internal static class FrontendCommunityResourceCatalogService
         }
 
         return loaders;
-    }
-
-    private static string? CacheIcon(string? iconUrl)
-    {
-        if (string.IsNullOrWhiteSpace(iconUrl))
-        {
-            return null;
-        }
-
-        if (IconCache.TryGetValue(iconUrl, out var cachedPath) && !string.IsNullOrWhiteSpace(cachedPath) && File.Exists(cachedPath))
-        {
-            return cachedPath;
-        }
-
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get, iconUrl);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("image/*"));
-            using var response = HttpClient.Send(request);
-            response.EnsureSuccessStatusCode();
-
-            var extension = ResolveIconExtension(iconUrl, response.Content.Headers.ContentType?.MediaType);
-            var iconDirectory = Path.Combine(Path.GetTempPath(), "PCL-CE", "frontend-resource-icons");
-            Directory.CreateDirectory(iconDirectory);
-
-            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(iconUrl))).ToLowerInvariant();
-            var targetPath = Path.Combine(iconDirectory, $"{hash}{extension}");
-            if (!File.Exists(targetPath))
-            {
-                var payload = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-                File.WriteAllBytes(targetPath, payload);
-            }
-
-            IconCache[iconUrl] = targetPath;
-            return targetPath;
-        }
-        catch
-        {
-            IconCache[iconUrl] = null;
-            return null;
-        }
-    }
-
-    private static string ResolveIconExtension(string iconUrl, string? mediaType)
-    {
-        if (!string.IsNullOrWhiteSpace(mediaType))
-        {
-            return mediaType.ToLowerInvariant() switch
-            {
-                "image/jpeg" => ".jpg",
-                "image/webp" => ".webp",
-                "image/gif" => ".gif",
-                _ => ".png"
-            };
-        }
-
-        var extension = Path.GetExtension(iconUrl);
-        return string.IsNullOrWhiteSpace(extension) || extension == "." ? ".png" : extension;
     }
 
     private static IReadOnlyList<string> TranslateModrinthCategories(IEnumerable<string> categories)

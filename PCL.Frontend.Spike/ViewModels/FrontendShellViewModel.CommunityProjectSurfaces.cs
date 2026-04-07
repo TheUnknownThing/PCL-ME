@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
@@ -25,14 +26,18 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string[] CommunityProjectKnownLoaders = ["Forge", "NeoForge", "Fabric", "Quilt", "OptiFine", "Iris"];
 
     private string _selectedCommunityProjectId = string.Empty;
+    private LauncherFrontendSubpageKey? _selectedCommunityProjectOriginSubpage;
     private string _selectedCommunityProjectVersionFilter = string.Empty;
     private string _selectedCommunityProjectLoaderFilter = string.Empty;
+    private Bitmap? _communityProjectIcon;
     private FrontendCommunityProjectState _communityProjectState = new(
         string.Empty,
         "未选择工程",
         "先从收藏夹中选择一个工程，再查看对应详情。",
         string.Empty,
         "未指定来源",
+        null,
+        null,
         string.Empty,
         "等待选择",
         "尚未加载",
@@ -73,6 +78,10 @@ internal sealed partial class FrontendShellViewModel
     public string CommunityProjectDescription => _communityProjectState.Description;
 
     public string CommunityProjectSource => _communityProjectState.Source;
+
+    public Bitmap? CommunityProjectIcon => _communityProjectIcon;
+
+    public bool HasCommunityProjectIcon => CommunityProjectIcon is not null;
 
     public string CommunityProjectWebsite => _communityProjectState.Website;
 
@@ -154,10 +163,12 @@ internal sealed partial class FrontendShellViewModel
         string projectId,
         string? projectTitle = null,
         string? initialVersionFilter = null,
-        string? initialLoaderFilter = null)
+        string? initialLoaderFilter = null,
+        LauncherFrontendSubpageKey? originSubpage = null)
     {
         _selectedCommunityProjectId = projectId.Trim();
         _selectedCommunityProjectTitleHint = projectTitle?.Trim() ?? string.Empty;
+        _selectedCommunityProjectOriginSubpage = originSubpage ?? _selectedCommunityProjectOriginSubpage;
         _selectedCommunityProjectVersionFilter = NormalizeMinecraftVersion(initialVersionFilter) ?? initialVersionFilter?.Trim() ?? string.Empty;
         _selectedCommunityProjectLoaderFilter = initialLoaderFilter?.Trim() ?? string.Empty;
         var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
@@ -183,6 +194,8 @@ internal sealed partial class FrontendShellViewModel
                 "先从收藏夹或市场条目进入，才能查看对应工程详情。",
                 string.Empty,
                 "未指定来源",
+                null,
+                null,
                 string.Empty,
                 "等待选择",
                 "尚未加载",
@@ -195,6 +208,7 @@ internal sealed partial class FrontendShellViewModel
                 "当前详情页没有携带工程标识。",
                 true);
             SetCommunityProjectLoading(false);
+            ApplyCommunityProjectIcon();
             RebuildCommunityProjectSurfaceCollections();
             RaiseCommunityProjectProperties();
             return;
@@ -210,6 +224,8 @@ internal sealed partial class FrontendShellViewModel
             title,
             string.Empty,
             "正在加载",
+            null,
+            null,
             string.Empty,
             "正在加载",
             "尚未加载",
@@ -227,6 +243,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(CommunityProjectReleaseGroups, []);
         ReplaceItems(CommunityProjectSections, []);
         SetCommunityProjectLoading(true);
+        ApplyCommunityProjectIcon();
         RaiseCommunityProjectProperties();
 
         var refreshVersion = ++_communityProjectRefreshVersion;
@@ -256,6 +273,7 @@ internal sealed partial class FrontendShellViewModel
 
             _communityProjectState = state;
             SetCommunityProjectLoading(false);
+            ApplyCommunityProjectIcon();
             RebuildCommunityProjectSurfaceCollections();
             RaiseCommunityProjectProperties();
         });
@@ -626,6 +644,7 @@ internal sealed partial class FrontendShellViewModel
         var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
         var extension = Path.GetExtension(suggestedFileName);
         var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
+        var suggestedStartFolder = ResolveCommunityProjectDownloadStartDirectory();
 
         string? targetPath;
         try
@@ -634,6 +653,7 @@ internal sealed partial class FrontendShellViewModel
                 "选择保存位置",
                 suggestedFileName,
                 "资源文件",
+                suggestedStartFolder,
                 patterns);
         }
         catch (Exception ex)
@@ -651,7 +671,10 @@ internal sealed partial class FrontendShellViewModel
         TaskCenter.Register(new FrontendManagedFileDownloadTask(
             $"下载资源文件：{Path.GetFileNameWithoutExtension(targetPath)}",
             entry.Target,
-            targetPath));
+            targetPath,
+            onStarted: filePath => SpikeHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", SpikeHintTheme.Info),
+            onCompleted: filePath => SpikeHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", SpikeHintTheme.Success),
+            onFailed: message => SpikeHintBus.Show(message, SpikeHintTheme.Error)));
         AddActivity($"开始下载资源文件: {entry.Title}", targetPath);
     }
 
@@ -1040,6 +1063,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CommunityProjectSummary));
         RaisePropertyChanged(nameof(CommunityProjectDescription));
         RaisePropertyChanged(nameof(CommunityProjectSource));
+        RaisePropertyChanged(nameof(CommunityProjectIcon));
+        RaisePropertyChanged(nameof(HasCommunityProjectIcon));
         RaisePropertyChanged(nameof(CommunityProjectWebsite));
         RaisePropertyChanged(nameof(CommunityProjectStatus));
         RaisePropertyChanged(nameof(CommunityProjectUpdatedLabel));
@@ -1065,6 +1090,85 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowCommunityProjectLoadingCard));
         RaisePropertyChanged(nameof(ShowCommunityProjectContent));
         RaisePropertyChanged(nameof(CommunityProjectLoadingText));
+    }
+
+    private void ApplyCommunityProjectIcon()
+    {
+        _communityProjectIcon = LoadCachedBitmapFromPath(_communityProjectState.IconPath)
+                                ?? LoadCommunityProjectFallbackIcon();
+        _ = EnsureCommunityProjectIconAsync(_communityProjectState.IconUrl);
+    }
+
+    private async Task EnsureCommunityProjectIconAsync(string? iconUrl)
+    {
+        if (string.IsNullOrWhiteSpace(iconUrl))
+        {
+            return;
+        }
+
+        var iconPath = await FrontendCommunityIconCache.EnsureCachedIconAsync(iconUrl);
+        if (string.IsNullOrWhiteSpace(iconPath))
+        {
+            return;
+        }
+
+        var bitmap = await Task.Run(() => LoadCachedBitmapFromPath(iconPath));
+        if (bitmap is null)
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (!string.Equals(iconUrl, _communityProjectState.IconUrl, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _communityProjectIcon = bitmap;
+            RaisePropertyChanged(nameof(CommunityProjectIcon));
+            RaisePropertyChanged(nameof(HasCommunityProjectIcon));
+        });
+    }
+
+    private Bitmap? LoadCommunityProjectFallbackIcon()
+    {
+        return _selectedCommunityProjectOriginSubpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png"),
+            LauncherFrontendSubpageKey.DownloadPack => LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png"),
+            LauncherFrontendSubpageKey.DownloadDataPack => LoadLauncherBitmap("Images", "Blocks", "RedstoneLampOn.png"),
+            LauncherFrontendSubpageKey.DownloadResourcePack => LoadLauncherBitmap("Images", "Blocks", "Grass.png"),
+            LauncherFrontendSubpageKey.DownloadShader => LoadLauncherBitmap("Images", "Blocks", "GoldBlock.png"),
+            LauncherFrontendSubpageKey.DownloadWorld => LoadLauncherBitmap("Images", "Blocks", "GrassPath.png"),
+            _ => LoadLauncherBitmap("Images", "Icons", "NoIcon.png")
+        };
+    }
+
+    private string? ResolveCommunityProjectDownloadStartDirectory()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            return null;
+        }
+
+        var directory = _selectedCommunityProjectOriginSubpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadResourcePack => ResolveCurrentInstanceResourceDirectory("resourcepacks"),
+            LauncherFrontendSubpageKey.DownloadShader => ResolveCurrentInstanceResourceDirectory("shaderpacks"),
+            LauncherFrontendSubpageKey.DownloadWorld => Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves"),
+            LauncherFrontendSubpageKey.DownloadDataPack => _instanceComposition.Selection.IndieDirectory,
+            LauncherFrontendSubpageKey.DownloadPack => _instanceComposition.Selection.InstanceDirectory,
+            _ => ResolveCurrentInstanceResourceDirectory("mods")
+        };
+
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return null;
+        }
+
+        Directory.CreateDirectory(directory);
+        return directory;
     }
 
     private void SetCommunityProjectLoading(bool isLoading)
@@ -1102,7 +1206,10 @@ internal sealed partial class FrontendShellViewModel
 internal sealed class FrontendManagedFileDownloadTask(
     string title,
     string sourceUrl,
-    string targetPath) : ITask, ITaskProgressive, ITaskTelemetry, ITaskCancelable
+    string targetPath,
+    Action<string>? onStarted = null,
+    Action<string>? onCompleted = null,
+    Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskTelemetry, ITaskCancelable
 {
     private static readonly HttpClient DownloadHttpClient = new(new SocketsHttpHandler
     {
@@ -1151,6 +1258,7 @@ internal sealed class FrontendManagedFileDownloadTask(
             var lastReportedBytes = 0L;
             var lastReportedAt = Environment.TickCount64;
             StateChanged(TaskState.Running, "正在下载文件…");
+            onStarted?.Invoke(targetPath);
 
             while (true)
             {
@@ -1185,12 +1293,14 @@ internal sealed class FrontendManagedFileDownloadTask(
             ProgressChanged(1d);
             PublishTelemetry(1d, 0d, 0);
             StateChanged(TaskState.Success, $"已保存到 {targetPath}");
+            onCompleted?.Invoke(targetPath);
         }
         catch (OperationCanceledException)
         {
             CleanupPartialDownload();
             PublishTelemetry(0d, 0d);
             StateChanged(TaskState.Canceled, "下载已取消");
+            onFailed?.Invoke($"{Path.GetFileName(targetPath)} 下载已取消");
             throw;
         }
         catch (Exception ex)
@@ -1198,6 +1308,7 @@ internal sealed class FrontendManagedFileDownloadTask(
             CleanupPartialDownload();
             PublishTelemetry(0d, 0d);
             StateChanged(TaskState.Failed, ex.Message);
+            onFailed?.Invoke($"{Path.GetFileName(targetPath)} 下载失败");
             throw;
         }
     }

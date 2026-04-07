@@ -163,7 +163,12 @@ internal sealed class FrontendShellActionService(
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
-    public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string typeName, params string[] patterns)
+    public async Task<string?> PickSaveFileAsync(
+        string title,
+        string suggestedFileName,
+        string typeName,
+        string? suggestedStartFolder = null,
+        params string[] patterns)
     {
         var storageProvider = TryGetStorageProvider(out var error)
             ?? throw new InvalidOperationException(error ?? "当前环境不支持文件选择器。");
@@ -176,6 +181,9 @@ internal sealed class FrontendShellActionService(
                     Patterns = patterns
                 }
             };
+        var startLocation = string.IsNullOrWhiteSpace(suggestedStartFolder)
+            ? null
+            : await storageProvider.TryGetFolderFromPathAsync(suggestedStartFolder);
 
         var result = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
@@ -183,6 +191,7 @@ internal sealed class FrontendShellActionService(
             SuggestedFileName = suggestedFileName,
             DefaultExtension = Path.GetExtension(suggestedFileName),
             FileTypeChoices = fileTypes,
+            SuggestedStartLocation = startLocation,
             ShowOverwritePrompt = true
         });
         return result?.TryGetLocalPath();

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -526,9 +529,30 @@ internal sealed class DownloadResourceEntryViewModel(
     int releaseRank,
     int updateRank,
     string actionText,
-    ActionCommand command)
+    ActionCommand command,
+    string? iconUrl)
+    : INotifyPropertyChanged
 {
-    public Bitmap? Icon { get; } = icon;
+    private Bitmap? _icon = icon;
+    private int _iconLoadStarted;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public Bitmap? Icon
+    {
+        get => _icon;
+        private set
+        {
+            if (ReferenceEquals(_icon, value))
+            {
+                return;
+            }
+
+            _icon = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasIcon));
+        }
+    }
 
     public string Title { get; } = title;
 
@@ -557,6 +581,8 @@ internal sealed class DownloadResourceEntryViewModel(
     public string ActionText { get; } = actionText;
 
     public ActionCommand Command { get; } = command;
+
+    public string? IconUrl { get; } = iconUrl;
 
     public bool HasIcon => Icon is not null;
 
@@ -627,6 +653,20 @@ internal sealed class DownloadResourceEntryViewModel(
         string.Join(" ", Tags)
     });
 
+    public bool TryBeginIconLoad()
+    {
+        return !string.IsNullOrWhiteSpace(IconUrl)
+               && Interlocked.CompareExchange(ref _iconLoadStarted, 1, 0) == 0;
+    }
+
+    public void ApplyIcon(Bitmap? icon)
+    {
+        if (icon is not null)
+        {
+            Icon = icon;
+        }
+    }
+
     private static string FormatCompactCount(int value)
     {
         return value switch
@@ -635,6 +675,11 @@ internal sealed class DownloadResourceEntryViewModel(
             >= 10_000 => $"{value / 10_000d:0.#}万",
             _ => value.ToString()
         };
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 
