@@ -10,12 +10,14 @@ namespace PCL.Frontend.Spike.Workflows;
 internal static class FrontendDownloadCompositionService
 {
     public static FrontendDownloadComposition ComposeBootstrap(
+        FrontendRuntimePaths runtimePaths,
         FrontendInstanceComposition instanceComposition)
     {
+        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
             new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
-            new FrontendDownloadFavoritesState(["默认收藏夹"], string.Empty, false, []),
+            BuildBootstrapFavoritesState(sharedConfig),
             new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
     }
 
@@ -50,6 +52,19 @@ internal static class FrontendDownloadCompositionService
             versionSourceIndex,
             preferredMinecraftVersion,
             cancellationToken);
+    }
+
+    public static Task<FrontendDownloadFavoritesState> LoadFavoritesStateAsync(
+        FrontendRuntimePaths runtimePaths,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var communitySourcePreference = ReadValue(sharedConfig, "ToolDownloadMod", 1);
+            return BuildFavoritesState(sharedConfig, communitySourcePreference);
+        }, cancellationToken);
     }
 
     private static FrontendDownloadInstallState BuildInstallState(FrontendInstanceComposition instanceComposition)
@@ -115,6 +130,32 @@ internal static class FrontendDownloadCompositionService
             targetNames.Length == 0 ? ["默认收藏夹"] : targetNames,
             warningText,
             showWarning && sections.Length > 0,
+            sections.Length == 0
+                ? [new FrontendDownloadCatalogSection("默认收藏夹", EnsureCatalogEntries([], "当前还没有任何收藏内容。"))]
+                : sections);
+    }
+
+    private static FrontendDownloadFavoritesState BuildBootstrapFavoritesState(JsonFileProvider sharedConfig)
+    {
+        var raw = ReadValue(sharedConfig, "CompFavorites", "[]");
+        var targets = ParseFavoriteTargets(raw, out var migratedOldFormat);
+        var emptyLookup = new Dictionary<string, FrontendCommunityProjectSummary>(StringComparer.OrdinalIgnoreCase);
+        var targetNames = targets.Select(target => target.Name).ToArray();
+        var sections = targets
+            .Select(target => new FrontendDownloadCatalogSection(
+                target.Name,
+                EnsureCatalogEntries(
+                    target.Favorites
+                        .Select(favorite => CreateFavoriteEntry(target, favorite, emptyLookup))
+                        .OrderBy(entry => entry.Title, StringComparer.CurrentCultureIgnoreCase)
+                        .ToArray(),
+                    "当前收藏夹中还没有任何项目。")))
+            .ToArray();
+
+        return new FrontendDownloadFavoritesState(
+            targetNames.Length == 0 ? ["默认收藏夹"] : targetNames,
+            migratedOldFormat ? "检测到旧格式收藏夹数据，已按默认收藏夹方式读取。" : string.Empty,
+            migratedOldFormat && sections.Length > 0,
             sections.Length == 0
                 ? [new FrontendDownloadCatalogSection("默认收藏夹", EnsureCatalogEntries([], "当前还没有任何收藏内容。"))]
                 : sections);

@@ -219,7 +219,10 @@ internal sealed partial class FrontendShellViewModel
     private bool _showDownloadFavoriteWarning;
     private CancellationTokenSource? _downloadCatalogRefreshCts;
     private int _downloadCatalogRefreshVersion;
+    private CancellationTokenSource? _downloadFavoriteRefreshCts;
+    private int _downloadFavoriteRefreshVersion;
     private bool _isDownloadCatalogLoading;
+    private bool _isDownloadFavoriteLoading;
     private bool _isDownloadResourceLoading;
     private readonly Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> _downloadResourceRuntimeStates = new();
     private int _communityProjectRefreshVersion;
