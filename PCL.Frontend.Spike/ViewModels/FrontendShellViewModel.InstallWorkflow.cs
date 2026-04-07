@@ -403,10 +403,21 @@ internal sealed partial class FrontendShellViewModel
             TaskCenter.Register(
                 new FrontendInstallTask(
                     taskTitle,
-                    async (report, cancelToken) =>
+                    async (installTask, cancelToken) =>
                     {
-                        report(TaskState.Running, "正在写入安装清单并补全依赖文件…");
-                        var result = await Task.Run(() => FrontendInstallWorkflowService.Apply(request), cancelToken);
+                        installTask.AdvancePhase(
+                            FrontendInstallApplyPhase.PrepareManifest,
+                            "正在写入安装清单并准备安装环境…");
+                        var result = await Task.Run(
+                            () => FrontendInstallWorkflowService.Apply(
+                                request,
+                                (phase, message) => installTask.AdvancePhase(phase, message),
+                                snapshot =>
+                                {
+                                    installTask.ApplyRepairTelemetry(snapshot);
+                                },
+                                cancelToken),
+                            cancelToken);
 
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
@@ -436,8 +447,7 @@ internal sealed partial class FrontendShellViewModel
                                 $"{targetInstanceName} • 已写入安装清单 {result.ManifestPath}，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
                         });
 
-                        report(
-                            TaskState.Success,
+                        installTask.CompleteSuccessfully(
                             $"已写入安装清单，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
                     },
                     async ex =>
@@ -663,30 +673,162 @@ internal sealed record FrontendEditableInstallSelection(
 
 internal sealed class FrontendInstallTask(
     string title,
-    Func<Action<TaskState, string>, CancellationToken, Task> executeAsync,
+    Func<FrontendInstallTask, CancellationToken, Task> executeAsync,
     Func<Exception, Task>? onErrorAsync = null)
-    : ITask
+    : ITask, ITaskProgressive, ITaskGroup, ITaskTelemetry
 {
+    private readonly Dictionary<FrontendInstallTaskStage, FrontendInstallStageTask> _stages = new()
+    {
+        [FrontendInstallTaskStage.Prepare] = new("写入安装清单"),
+        [FrontendInstallTaskStage.SupportFiles] = new("下载游戏支持文件"),
+        [FrontendInstallTaskStage.AssetFiles] = new("下载游戏资源文件"),
+        [FrontendInstallTaskStage.Finalize] = new("完成安装")
+    };
+
+    private readonly Dictionary<FrontendInstallTaskStage, double> _stageWeights = new()
+    {
+        [FrontendInstallTaskStage.Prepare] = 1d,
+        [FrontendInstallTaskStage.SupportFiles] = 4d,
+        [FrontendInstallTaskStage.AssetFiles] = 5d,
+        [FrontendInstallTaskStage.Finalize] = 1d
+    };
+
+    private double _progress;
+    private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", null, null);
+
     public string Title { get; } = title;
+
+    public TaskTelemetrySnapshot Telemetry => _telemetry;
 
     public event TaskStateEvent StateChanged = delegate { };
 
-    public async Task ExecuteAsync(CancellationToken cancelToken = default)
+    public event TaskProgressEvent ProgressChanged = delegate { };
+
+    public event TaskGroupEvent AddTask = delegate { };
+
+    public event TaskGroupEvent RemoveTask = delegate { };
+
+    public event TaskTelemetryEvent TelemetryChanged = delegate { };
+
+    public void AdvancePhase(FrontendInstallApplyPhase phase, string message)
     {
-        void Report(TaskState state, string message)
+        switch (phase)
         {
-            StateChanged(state, message);
+            case FrontendInstallApplyPhase.PrepareManifest:
+                UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Running, message, 0.55);
+                UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Waiting, "等待开始下载支持文件…", 0d);
+                UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Waiting, "等待解析资源文件清单…", 0d);
+                UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Waiting, "等待安装收尾…", 0d);
+                ReportState(TaskState.Running, message);
+                break;
+            case FrontendInstallApplyPhase.DownloadSupportFiles:
+                UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Success, "安装清单已写入", 1d);
+                if (_stages[FrontendInstallTaskStage.SupportFiles].State == TaskState.Waiting)
+                {
+                    UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Running, message, 0.02);
+                }
+
+                ReportState(TaskState.Running, message);
+                break;
+            case FrontendInstallApplyPhase.Finalize:
+                if (_stages[FrontendInstallTaskStage.SupportFiles].State is TaskState.Waiting or TaskState.Running)
+                {
+                    UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "游戏支持文件已就绪", 1d);
+                }
+
+                if (_stages[FrontendInstallTaskStage.AssetFiles].State is TaskState.Waiting or TaskState.Running)
+                {
+                    UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "资源文件已就绪", 1d);
+                }
+
+                UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Running, message, 0.45);
+                ReportState(TaskState.Running, message);
+                break;
+        }
+    }
+
+    public void ApplyRepairTelemetry(FrontendInstanceRepairTelemetrySnapshot snapshot)
+    {
+        var supportSnapshot = BuildMergedGroupSnapshot(
+            snapshot,
+            FrontendInstanceRepairFileGroup.Client,
+            FrontendInstanceRepairFileGroup.Libraries,
+            FrontendInstanceRepairFileGroup.AssetIndex);
+        var assetSnapshot = GetGroupSnapshot(snapshot, FrontendInstanceRepairFileGroup.Assets);
+
+        UpdateStageFromGroup(
+            FrontendInstallTaskStage.SupportFiles,
+            supportSnapshot,
+            "正在补全游戏主文件与支持库…",
+            "无需下载游戏支持文件");
+        UpdateStageFromGroup(
+            FrontendInstallTaskStage.AssetFiles,
+            assetSnapshot,
+            "正在下载游戏资源文件…",
+            "无需下载游戏资源文件");
+
+        if (supportSnapshot.TotalFiles == 0 && assetSnapshot.TotalFiles == 0)
+        {
+            UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "无需补全游戏支持文件", 1d);
+            UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "无需下载游戏资源文件", 1d);
         }
 
-        Report(TaskState.Waiting, "已加入任务中心");
+        var progressText = $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%";
+        var speedText = snapshot.SpeedBytesPerSecond > 0d
+            ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s"
+            : "0 B/s";
+        PublishTelemetry(
+            new TaskTelemetrySnapshot(
+                progressText,
+                speedText,
+                snapshot.RemainingFileCount,
+                null));
+
+        ReportState(
+            TaskState.Running,
+            string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
+                ? "正在下载依赖文件…"
+                : $"正在处理 {snapshot.CurrentFileName}");
+    }
+
+    public void CompleteSuccessfully(string message)
+    {
+        UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Success, "安装清单已写入", 1d);
+        UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "游戏支持文件已准备完成", 1d);
+        UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "资源文件已准备完成", 1d);
+        UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Success, "安装完成", 1d);
+        PublishTelemetry(
+            new TaskTelemetrySnapshot(
+                "100%",
+                "0 B/s",
+                0,
+                null));
+        ReportState(TaskState.Success, message);
+    }
+
+    public async Task ExecuteAsync(CancellationToken cancelToken = default)
+    {
+        foreach (var stage in _stages.Values)
+        {
+            AddTask(stage);
+        }
+
+        ReportState(TaskState.Waiting, "已加入任务中心");
+
+        foreach (var stage in _stages.Values)
+        {
+            stage.Report(TaskState.Waiting, "等待执行", 0d);
+        }
 
         try
         {
-            await executeAsync(Report, cancelToken);
+            await executeAsync(this, cancelToken);
         }
         catch (OperationCanceledException)
         {
-            Report(TaskState.Canceled, "任务已取消");
+            UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Canceled, "任务已取消", _progress);
+            PublishTelemetry(new TaskTelemetrySnapshot($"{Math.Round(_progress * 100, 1):0.#}%", "0 B/s", null, null));
+            ReportState(TaskState.Canceled, "任务已取消");
             throw;
         }
         catch (Exception ex)
@@ -696,8 +838,171 @@ internal sealed class FrontendInstallTask(
                 await onErrorAsync(ex);
             }
 
-            Report(TaskState.Failed, ex.Message);
+            UpdateFailingStage(ex.Message);
+            ReportState(TaskState.Failed, ex.Message);
             throw;
         }
+    }
+
+    private void UpdateFailingStage(string message)
+    {
+        var stage = _stages.Values.FirstOrDefault(candidate => candidate.State == TaskState.Running)
+                    ?? _stages[FrontendInstallTaskStage.Finalize];
+        stage.Report(TaskState.Failed, message, stage.Progress);
+        PublishTelemetry(
+            new TaskTelemetrySnapshot(
+                $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
+                _telemetry.SpeedText,
+                _telemetry.RemainingFileCount,
+                null));
+    }
+
+    private void UpdateStage(
+        FrontendInstallTaskStage stage,
+        TaskState state,
+        string message,
+        double progress)
+    {
+        _stages[stage].Report(state, message, progress);
+        RecalculateProgress();
+    }
+
+    private void UpdateStageFromGroup(
+        FrontendInstallTaskStage stage,
+        FrontendInstanceRepairGroupSnapshot snapshot,
+        string activePrefix,
+        string emptyMessage)
+    {
+        if (snapshot.TotalFiles == 0)
+        {
+            UpdateStage(stage, TaskState.Success, emptyMessage, 1d);
+            return;
+        }
+
+        var message = snapshot.Progress >= 0.999
+            ? $"{snapshot.CompletedFiles}/{snapshot.TotalFiles} 个文件已就绪"
+            : string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
+                ? $"{activePrefix} {snapshot.CompletedFiles}/{snapshot.TotalFiles}"
+                : $"{activePrefix} {snapshot.CompletedFiles}/{snapshot.TotalFiles} • {snapshot.CurrentFileName}";
+        var state = snapshot.Progress >= 0.999 ? TaskState.Success : TaskState.Running;
+        UpdateStage(stage, state, message, snapshot.Progress);
+    }
+
+    private void PublishTelemetry(TaskTelemetrySnapshot snapshot)
+    {
+        _telemetry = snapshot;
+        TelemetryChanged(snapshot);
+    }
+
+    private void ReportState(TaskState state, string message)
+    {
+        StateChanged(state, message);
+    }
+
+    private void RecalculateProgress()
+    {
+        var totalWeight = _stageWeights.Sum(pair => pair.Value);
+        _progress = totalWeight <= 0d
+            ? 0d
+            : _stages.Sum(pair => pair.Value.Progress * _stageWeights[pair.Key]) / totalWeight;
+        ProgressChanged(_progress);
+        PublishTelemetry(
+            _telemetry with
+            {
+                ProgressText = $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%"
+            });
+    }
+
+    private static FrontendInstanceRepairGroupSnapshot BuildMergedGroupSnapshot(
+        FrontendInstanceRepairTelemetrySnapshot snapshot,
+        params FrontendInstanceRepairFileGroup[] groups)
+    {
+        var available = groups
+            .Select(group => GetGroupSnapshot(snapshot, group))
+            .Where(group => group.TotalFiles > 0)
+            .ToArray();
+        if (available.Length == 0)
+        {
+            return new FrontendInstanceRepairGroupSnapshot(
+                FrontendInstanceRepairFileGroup.Client,
+                0,
+                0,
+                0,
+                0,
+                string.Empty);
+        }
+
+        var active = available.FirstOrDefault(group => group.Progress < 0.999) ?? available.Last();
+        return new FrontendInstanceRepairGroupSnapshot(
+            FrontendInstanceRepairFileGroup.Client,
+            available.Sum(group => group.CompletedFiles),
+            available.Sum(group => group.TotalFiles),
+            available.Sum(group => group.CompletedBytes),
+            available.Sum(group => group.TotalBytes),
+            active.CurrentFileName);
+    }
+
+    private static FrontendInstanceRepairGroupSnapshot GetGroupSnapshot(
+        FrontendInstanceRepairTelemetrySnapshot snapshot,
+        FrontendInstanceRepairFileGroup group)
+    {
+        return snapshot.Groups.TryGetValue(group, out var value)
+            ? value
+            : new FrontendInstanceRepairGroupSnapshot(group, 0, 0, 0, 0, string.Empty);
+    }
+
+    private static string FormatBytes(double value)
+    {
+        if (value <= 0)
+        {
+            return "0 B";
+        }
+
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        var size = value;
+        var unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.Length - 1)
+        {
+            size /= 1024;
+            unitIndex++;
+        }
+
+        return $"{size:0.##} {units[unitIndex]}";
+    }
+}
+
+internal enum FrontendInstallTaskStage
+{
+    Prepare,
+    SupportFiles,
+    AssetFiles,
+    Finalize
+}
+
+internal sealed class FrontendInstallStageTask(string title) : ITask, ITaskProgressive
+{
+    private double _progress;
+
+    public string Title { get; } = title;
+
+    public TaskState State { get; private set; } = TaskState.Waiting;
+
+    public double Progress => _progress;
+
+    public event TaskStateEvent StateChanged = delegate { };
+
+    public event TaskProgressEvent ProgressChanged = delegate { };
+
+    public Task ExecuteAsync(CancellationToken cancelToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public void Report(TaskState state, string message, double progress)
+    {
+        State = state;
+        _progress = Math.Clamp(progress, 0d, 1d);
+        ProgressChanged(_progress);
+        StateChanged(state, message);
     }
 }

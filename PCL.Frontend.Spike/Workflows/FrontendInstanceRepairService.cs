@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -8,7 +9,10 @@ internal static class FrontendInstanceRepairService
 {
     private static readonly HttpClient HttpClient = new();
 
-    public static FrontendInstanceRepairResult Repair(FrontendInstanceRepairRequest request)
+    public static FrontendInstanceRepairResult Repair(
+        FrontendInstanceRepairRequest request,
+        Action<FrontendInstanceRepairTelemetrySnapshot>? onTelemetry = null,
+        CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -17,6 +21,7 @@ internal static class FrontendInstanceRepairService
         var downloadedFiles = new List<string>();
         var reusedFiles = new List<string>();
         var manifestDocuments = LoadManifestDocuments(request.LauncherDirectory, request.InstanceName);
+        var progressTracker = onTelemetry is null ? null : new FrontendInstanceRepairProgressTracker(onTelemetry);
 
         if (manifestDocuments.Count == 0)
         {
@@ -42,15 +47,17 @@ internal static class FrontendInstanceRepairService
             var assetIndexPlan = CreateAssetIndexDownload(request.LauncherDirectory, resolvedAssetIndex, request.ForceCoreRefresh);
             if (assetIndexPlan is not null)
             {
-                MaterializeFile(assetIndexPlan, downloadedFiles, reusedFiles);
+                progressTracker?.UpsertPlan(assetIndexPlan);
+                MaterializeFile(assetIndexPlan, downloadedFiles, reusedFiles, progressTracker, cancelToken);
             }
 
             AddAssetObjectDownloads(filePlans, request.LauncherDirectory, request.InstanceDirectory, resolvedAssetIndex);
         }
 
+        progressTracker?.UpsertPlans(filePlans.Values);
         foreach (var plan in filePlans.Values)
         {
-            MaterializeFile(plan, downloadedFiles, reusedFiles);
+            MaterializeFile(plan, downloadedFiles, reusedFiles, progressTracker, cancelToken);
         }
 
         return new FrontendInstanceRepairResult(downloadedFiles, reusedFiles);
@@ -110,7 +117,8 @@ internal static class FrontendInstanceRepairService
                 [url],
                 GetString(client, "sha1"),
                 GetLong(client, "size"),
-                forceDownload));
+                forceDownload,
+                FrontendInstanceRepairFileGroup.Client));
     }
 
     private static void AddLibraryDownloads(
@@ -193,7 +201,8 @@ internal static class FrontendInstanceRepairService
                     [derivedUrl],
                     null,
                     null,
-                    forceDownload);
+                    forceDownload,
+                    FrontendInstanceRepairFileGroup.Libraries);
             }
             else
             {
@@ -260,7 +269,8 @@ internal static class FrontendInstanceRepairService
                 [],
                 GetString(downloadEntry, "sha1"),
                 GetLong(downloadEntry, "size"),
-                false);
+                false,
+                FrontendInstanceRepairFileGroup.Libraries);
             return true;
         }
 
@@ -279,7 +289,8 @@ internal static class FrontendInstanceRepairService
             [url],
             GetString(downloadEntry, "sha1"),
             GetLong(downloadEntry, "size"),
-            false);
+            false,
+            FrontendInstanceRepairFileGroup.Libraries);
         return true;
     }
 
@@ -300,7 +311,8 @@ internal static class FrontendInstanceRepairService
             [url],
             GetString(assetIndex, "sha1"),
             GetLong(assetIndex, "size"),
-            forceDownload);
+            forceDownload,
+            FrontendInstanceRepairFileGroup.AssetIndex);
     }
 
     private static void AddAssetObjectDownloads(
@@ -352,7 +364,8 @@ internal static class FrontendInstanceRepairService
                     [$"https://resources.download.minecraft.net/{hash[..2]}/{hash}"],
                     hash,
                     GetLong(asset.Value, "size"),
-                    false));
+                    false,
+                    FrontendInstanceRepairFileGroup.Assets));
         }
     }
 
@@ -367,7 +380,8 @@ internal static class FrontendInstanceRepairService
                 existing.Urls.Count >= filePlan.Urls.Count ? existing.Urls : filePlan.Urls,
                 existing.Sha1 ?? filePlan.Sha1,
                 existing.Size ?? filePlan.Size,
-                existing.ForceDownload || filePlan.ForceDownload);
+                existing.ForceDownload || filePlan.ForceDownload,
+                filePlan.Group);
             return;
         }
 
@@ -443,12 +457,15 @@ internal static class FrontendInstanceRepairService
     private static void MaterializeFile(
         FrontendInstanceRepairFilePlan filePlan,
         ICollection<string> downloadedFiles,
-        ICollection<string> reusedFiles)
+        ICollection<string> reusedFiles,
+        FrontendInstanceRepairProgressTracker? progressTracker,
+        CancellationToken cancelToken)
     {
         var isFileValid = IsFileValid(filePlan);
         if (!filePlan.ForceDownload && isFileValid)
         {
             reusedFiles.Add(filePlan.LocalPath);
+            progressTracker?.MarkReused(filePlan);
             return;
         }
 
@@ -457,17 +474,22 @@ internal static class FrontendInstanceRepairService
             if (isFileValid)
             {
                 reusedFiles.Add(filePlan.LocalPath);
+                progressTracker?.MarkReused(filePlan);
                 return;
             }
 
             throw new InvalidOperationException($"实例修复文件缺少可用下载源：{filePlan.LocalPath}");
         }
 
-        DownloadFile(filePlan);
+        DownloadFile(filePlan, progressTracker, cancelToken);
         downloadedFiles.Add(filePlan.LocalPath);
+        progressTracker?.MarkDownloaded(filePlan);
     }
 
-    private static void DownloadFile(FrontendInstanceRepairFilePlan filePlan)
+    private static void DownloadFile(
+        FrontendInstanceRepairFilePlan filePlan,
+        FrontendInstanceRepairProgressTracker? progressTracker,
+        CancellationToken cancelToken)
     {
         Exception? lastError = null;
 
@@ -475,9 +497,44 @@ internal static class FrontendInstanceRepairService
         {
             try
             {
-                var bytes = HttpClient.GetByteArrayAsync(url).GetAwaiter().GetResult();
+                cancelToken.ThrowIfCancellationRequested();
+                progressTracker?.StartDownload(filePlan);
+
+                using var response = HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancelToken).GetAwaiter().GetResult();
+                response.EnsureSuccessStatusCode();
+                using var stream = response.Content.ReadAsStreamAsync(cancelToken).GetAwaiter().GetResult();
+
                 Directory.CreateDirectory(Path.GetDirectoryName(filePlan.LocalPath)!);
-                File.WriteAllBytes(filePlan.LocalPath, bytes);
+                var tempPath = $"{filePlan.LocalPath}.download";
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+
+                using (var output = File.Create(tempPath))
+                {
+                    var buffer = new byte[81920];
+                    long transferredBytes = 0;
+                    while (true)
+                    {
+                        var read = stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancelToken).GetAwaiter().GetResult();
+                        if (read <= 0)
+                        {
+                            break;
+                        }
+
+                        output.Write(buffer, 0, read);
+                        transferredBytes += read;
+                        progressTracker?.ReportDownloadProgress(filePlan, transferredBytes);
+                    }
+                }
+
+                if (File.Exists(filePlan.LocalPath))
+                {
+                    File.Delete(filePlan.LocalPath);
+                }
+
+                File.Move(tempPath, filePlan.LocalPath);
 
                 if (!IsFileValid(filePlan))
                 {
@@ -488,6 +545,12 @@ internal static class FrontendInstanceRepairService
             }
             catch (Exception ex)
             {
+                var tempPath = $"{filePlan.LocalPath}.download";
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+
                 lastError = ex;
             }
         }
@@ -602,4 +665,162 @@ internal sealed record FrontendInstanceRepairFilePlan(
     IReadOnlyList<string> Urls,
     string? Sha1,
     long? Size,
-    bool ForceDownload);
+    bool ForceDownload,
+    FrontendInstanceRepairFileGroup Group);
+
+internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInstanceRepairTelemetrySnapshot> onTelemetry)
+{
+    private readonly Dictionary<string, ProgressEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+    private long _lastSampleBytes;
+    private long _lastSampleTimestampMs;
+    private double _speedBytesPerSecond;
+    private string _currentFileName = string.Empty;
+
+    public void UpsertPlans(IEnumerable<FrontendInstanceRepairFilePlan> plans)
+    {
+        var changed = false;
+        foreach (var plan in plans)
+        {
+            if (_entries.ContainsKey(plan.LocalPath))
+            {
+                continue;
+            }
+
+            _entries.Add(plan.LocalPath, new ProgressEntry(plan));
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Publish();
+        }
+    }
+
+    public void UpsertPlan(FrontendInstanceRepairFilePlan plan)
+    {
+        UpsertPlans([plan]);
+    }
+
+    public void MarkReused(FrontendInstanceRepairFilePlan plan)
+    {
+        var entry = GetEntry(plan);
+        entry.CurrentBytes = entry.TotalBytes;
+        entry.IsCompleted = true;
+        entry.WasDownloaded = false;
+        entry.TransferBytes = 0;
+        _currentFileName = Path.GetFileName(plan.LocalPath);
+        Publish();
+    }
+
+    public void StartDownload(FrontendInstanceRepairFilePlan plan)
+    {
+        var entry = GetEntry(plan);
+        entry.CurrentBytes = 0;
+        entry.IsCompleted = false;
+        entry.WasDownloaded = false;
+        entry.TransferBytes = 0;
+        _currentFileName = Path.GetFileName(plan.LocalPath);
+        Publish(forceSpeedRefresh: true);
+    }
+
+    public void ReportDownloadProgress(FrontendInstanceRepairFilePlan plan, long transferredBytes)
+    {
+        var entry = GetEntry(plan);
+        entry.CurrentBytes = Math.Clamp(transferredBytes, 0, entry.TotalBytes > 0 ? entry.TotalBytes : transferredBytes);
+        entry.TransferBytes = transferredBytes;
+        _currentFileName = Path.GetFileName(plan.LocalPath);
+        Publish(forceSpeedRefresh: true);
+    }
+
+    public void MarkDownloaded(FrontendInstanceRepairFilePlan plan)
+    {
+        var entry = GetEntry(plan);
+        entry.CurrentBytes = entry.TotalBytes > 0 ? entry.TotalBytes : Math.Max(entry.CurrentBytes, 1);
+        entry.IsCompleted = true;
+        entry.WasDownloaded = true;
+        entry.TransferBytes = entry.CurrentBytes;
+        _currentFileName = Path.GetFileName(plan.LocalPath);
+        Publish(forceSpeedRefresh: true);
+    }
+
+    private ProgressEntry GetEntry(FrontendInstanceRepairFilePlan plan)
+    {
+        if (_entries.TryGetValue(plan.LocalPath, out var entry))
+        {
+            return entry;
+        }
+
+        entry = new ProgressEntry(plan);
+        _entries.Add(plan.LocalPath, entry);
+        return entry;
+    }
+
+    private void Publish(bool forceSpeedRefresh = false)
+    {
+        var nowMs = _stopwatch.ElapsedMilliseconds;
+        var completedBytes = _entries.Values.Sum(entry => entry.CompletedBytes);
+        var transferredBytes = _entries.Values.Sum(entry => entry.TransferBytes);
+        if (forceSpeedRefresh)
+        {
+            var elapsedMs = Math.Max(1, nowMs - _lastSampleTimestampMs);
+            if (elapsedMs >= 180 || _lastSampleTimestampMs == 0)
+            {
+                _speedBytesPerSecond = Math.Max(0d, transferredBytes - _lastSampleBytes) * 1000d / elapsedMs;
+                _lastSampleBytes = transferredBytes;
+                _lastSampleTimestampMs = nowMs;
+            }
+        }
+
+        var groups = _entries.Values
+            .GroupBy(entry => entry.Plan.Group)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var active = group.FirstOrDefault(entry => !entry.IsCompleted && entry.CurrentBytes > 0)
+                                 ?? group.FirstOrDefault(entry => !entry.IsCompleted)
+                                 ?? group.First();
+                    return new FrontendInstanceRepairGroupSnapshot(
+                        group.Key,
+                        group.Count(entry => entry.IsCompleted),
+                        group.Count(),
+                        group.Sum(entry => entry.CompletedBytes),
+                        group.Sum(entry => entry.TotalBytes),
+                        Path.GetFileName(active.Plan.LocalPath));
+                });
+
+        var totalFiles = _entries.Count;
+        var completedFiles = _entries.Values.Count(entry => entry.IsCompleted);
+        onTelemetry(
+            new FrontendInstanceRepairTelemetrySnapshot(
+                groups,
+                _currentFileName,
+                _entries.Values.Count(entry => entry.IsCompleted && entry.WasDownloaded),
+                _entries.Values.Count(entry => entry.IsCompleted && !entry.WasDownloaded),
+                totalFiles,
+                Math.Max(0, totalFiles - completedFiles),
+                completedBytes,
+                _entries.Values.Sum(entry => entry.TotalBytes),
+                _speedBytesPerSecond));
+    }
+
+    private sealed class ProgressEntry(FrontendInstanceRepairFilePlan plan)
+    {
+        public FrontendInstanceRepairFilePlan Plan { get; } = plan;
+
+        public long TotalBytes { get; } = Math.Max(0, plan.Size ?? 0);
+
+        public long CurrentBytes { get; set; }
+
+        public bool IsCompleted { get; set; }
+
+        public bool WasDownloaded { get; set; }
+
+        public long TransferBytes { get; set; }
+
+        public long CompletedBytes => IsCompleted
+            ? (TotalBytes > 0 ? TotalBytes : CurrentBytes)
+            : CurrentBytes;
+    }
+}

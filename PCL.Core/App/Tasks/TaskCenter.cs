@@ -25,6 +25,7 @@ public static class TaskCenter
         var cancelable = instance as ITaskCancelable;
         var pausable = instance as ITaskPausable;
         var progressive = instance as ITaskProgressive;
+        var telemetry = instance as ITaskTelemetry;
         // ReSharper restore SuspiciousTypeConversion.Global
 
         var model = new TaskModel
@@ -34,6 +35,11 @@ public static class TaskCenter
             OnCancel = cancelable == null ? null : (() => cancelable.Cancel()),
             OnPause = pausable == null ? null : (() => pausable.Pause()),
         };
+
+        if (telemetry != null)
+        {
+            ApplyTelemetry(model, telemetry.Telemetry);
+        }
 
         // state event
         instance.StateChanged += (state, message) =>
@@ -52,6 +58,11 @@ public static class TaskCenter
             };
         }
 
+        if (telemetry != null)
+        {
+            telemetry.TelemetryChanged += snapshot => ApplyTelemetry(model, snapshot);
+        }
+
         // group events
         if (instance is ITaskGroup group)
         {
@@ -68,6 +79,14 @@ public static class TaskCenter
         }
 
         return model;
+    }
+
+    private static void ApplyTelemetry(TaskModel model, TaskTelemetrySnapshot snapshot)
+    {
+        model.ProgressText = snapshot.ProgressText;
+        model.SpeedText = snapshot.SpeedText;
+        model.RemainingFileCount = snapshot.RemainingFileCount;
+        model.RemainingThreadCount = snapshot.RemainingThreadCount;
     }
 
     /// <summary>

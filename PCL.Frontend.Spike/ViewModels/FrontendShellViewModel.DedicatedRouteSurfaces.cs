@@ -18,10 +18,14 @@ internal sealed partial class FrontendShellViewModel
     private string _instanceSelectionSearchQuery = string.Empty;
     private string _instanceSelectionLauncherDirectory = string.Empty;
     private int _instanceSelectionTotalCount;
+    private string _taskManagerActiveTaskTitle = "当前没有活动任务";
     private int _taskManagerWaitingCount;
     private int _taskManagerRunningCount;
     private int _taskManagerFinishedCount;
     private int _taskManagerFailedCount;
+    private double _taskManagerOverallProgress = 1d;
+    private string _taskManagerDownloadSpeedText = "0 B/s";
+    private string _taskManagerRemainingFilesText = "0";
     private int _gameLogRecentFileCount;
     private string _gameLogLatestUpdateLabel = "尚未发现日志文件";
 
@@ -126,6 +130,18 @@ internal sealed partial class FrontendShellViewModel
     public string TaskManagerSummary => HasTaskManagerEntries
         ? $"运行中 {TaskManagerRunningCount} 项，等待中 {TaskManagerWaitingCount} 项"
         : "当前没有需要壳层跟踪的后台任务";
+
+    public string TaskManagerActiveTaskTitle => _taskManagerActiveTaskTitle;
+
+    public double TaskManagerOverallProgress => _taskManagerOverallProgress;
+
+    public double TaskManagerOverallProgressValue => _taskManagerOverallProgress * 100d;
+
+    public string TaskManagerOverallProgressText => $"{Math.Round(TaskManagerOverallProgress * 100, 1, MidpointRounding.AwayFromZero)} %";
+
+    public string TaskManagerDownloadSpeedText => _taskManagerDownloadSpeedText;
+
+    public string TaskManagerRemainingFilesText => _taskManagerRemainingFilesText;
 
     public bool ShowGameLogSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.GameLog;
 
@@ -343,12 +359,34 @@ internal sealed partial class FrontendShellViewModel
                 .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
                 .Select(CreateTaskManagerEntry));
 
+        var primaryTask = tasks
+            .OrderByDescending(task => task.State == TaskState.Running)
+            .ThenByDescending(task => task.State == TaskState.Waiting)
+            .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
+            .FirstOrDefault();
+        _taskManagerActiveTaskTitle = primaryTask?.Title ?? "当前没有活动任务";
+        _taskManagerOverallProgress = primaryTask?.SupportProgress == true
+            ? Math.Clamp(primaryTask.Progress, 0d, 1d)
+            : tasks.Length == 0
+                ? 1d
+                : 0d;
+        _taskManagerDownloadSpeedText = string.IsNullOrWhiteSpace(primaryTask?.SpeedText)
+            ? "0 B/s"
+            : primaryTask.SpeedText;
+        _taskManagerRemainingFilesText = primaryTask?.RemainingFileCount?.ToString() ?? "0";
+
         RaisePropertyChanged(nameof(HasTaskManagerEntries));
         RaisePropertyChanged(nameof(HasNoTaskManagerEntries));
+        RaisePropertyChanged(nameof(TaskManagerActiveTaskTitle));
         RaisePropertyChanged(nameof(TaskManagerWaitingCount));
         RaisePropertyChanged(nameof(TaskManagerRunningCount));
         RaisePropertyChanged(nameof(TaskManagerFinishedCount));
         RaisePropertyChanged(nameof(TaskManagerFailedCount));
+        RaisePropertyChanged(nameof(TaskManagerOverallProgress));
+        RaisePropertyChanged(nameof(TaskManagerOverallProgressValue));
+        RaisePropertyChanged(nameof(TaskManagerOverallProgressText));
+        RaisePropertyChanged(nameof(TaskManagerDownloadSpeedText));
+        RaisePropertyChanged(nameof(TaskManagerRemainingFilesText));
         RaisePropertyChanged(nameof(TaskManagerSummary));
     }
 
@@ -670,12 +708,37 @@ internal sealed partial class FrontendShellViewModel
             task.Title,
             MapTaskStateLabel(task.State),
             string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
-            task.SupportProgress ? $"{Math.Round(task.Progress * 100, MidpointRounding.AwayFromZero)}%" : "无进度信息",
+            task.SupportProgress
+                ? (string.IsNullOrWhiteSpace(task.ProgressText)
+                    ? $"{Math.Round(task.Progress * 100, 1, MidpointRounding.AwayFromZero)}%"
+                    : task.ProgressText)
+                : "无进度信息",
+            task.Progress,
+            task.SupportProgress,
+            string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText,
+            task.RemainingFileCount?.ToString() ?? "0",
             task.Children.Count,
+            task.Children.Select(CreateTaskManagerStageEntry).ToArray(),
             task.Cancel.CanExecute(null),
             task.Pause.CanExecute(null),
             new ActionCommand(() => task.Cancel.Execute(null), () => task.Cancel.CanExecute(null)),
             new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
+    }
+
+    private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task)
+    {
+        var indicator = task.State switch
+        {
+            TaskState.Success => "✓",
+            TaskState.Failed => "×",
+            TaskState.Canceled => "×",
+            TaskState.Running when task.SupportProgress => $"{Math.Round(task.Progress * 100, MidpointRounding.AwayFromZero)}%",
+            TaskState.Running => "···",
+            TaskState.Waiting => "···",
+            _ => "·"
+        };
+        var message = string.IsNullOrWhiteSpace(task.StateMessage) ? task.Title : task.StateMessage;
+        return new TaskManagerStageEntryViewModel(indicator, task.Title, message);
     }
 
     private static string MapTaskStateLabel(TaskState state)
@@ -953,7 +1016,12 @@ internal sealed class TaskManagerEntryViewModel(
     string state,
     string summary,
     string progressText,
+    double progressValue,
+    bool hasProgress,
+    string speedText,
+    string remainingFilesText,
     int childCount,
+    IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
     bool canCancel,
     bool canPause,
     ActionCommand cancelCommand,
@@ -967,11 +1035,23 @@ internal sealed class TaskManagerEntryViewModel(
 
     public string ProgressText { get; } = progressText;
 
+    public double ProgressValue { get; } = Math.Clamp(progressValue, 0d, 1d) * 100d;
+
+    public bool HasProgress => hasProgress;
+
+    public string SpeedText { get; } = speedText;
+
+    public string RemainingFilesText { get; } = remainingFilesText;
+
     public int ChildCount { get; } = childCount;
 
     public bool HasChildren => ChildCount > 0;
 
     public string ChildrenText => $"子任务 {ChildCount} 项";
+
+    public IReadOnlyList<TaskManagerStageEntryViewModel> StageEntries { get; } = stageEntries;
+
+    public bool HasStageEntries => StageEntries.Count > 0;
 
     public bool CanCancel { get; } = canCancel;
 
@@ -980,6 +1060,18 @@ internal sealed class TaskManagerEntryViewModel(
     public ActionCommand CancelCommand { get; } = cancelCommand;
 
     public ActionCommand PauseCommand { get; } = pauseCommand;
+}
+
+internal sealed class TaskManagerStageEntryViewModel(
+    string indicator,
+    string title,
+    string message)
+{
+    public string Indicator { get; } = indicator;
+
+    public string Title { get; } = title;
+
+    public string Message { get; } = message;
 }
 
 internal sealed record DedicatedGenericRouteMetadata(

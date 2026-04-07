@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -209,14 +210,20 @@ internal static class FrontendInstallWorkflowService
             or "OptiFabric";
     }
 
-    public static FrontendInstallApplyResult Apply(FrontendInstallApplyRequest request)
+    public static FrontendInstallApplyResult Apply(
+        FrontendInstallApplyRequest request,
+        Action<FrontendInstallApplyPhase, string>? onPhaseChanged = null,
+        Action<FrontendInstanceRepairTelemetrySnapshot>? onRepairTelemetry = null,
+        CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        cancelToken.ThrowIfCancellationRequested();
 
         var launcherDirectory = request.LauncherDirectory;
         var targetDirectory = Path.Combine(launcherDirectory, "versions", request.TargetInstanceName);
         Directory.CreateDirectory(targetDirectory);
 
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, "正在写入安装清单并准备安装环境…");
         var manifestNode = BuildTargetManifest(request);
         RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
         var manifestPath = Path.Combine(targetDirectory, $"{request.TargetInstanceName}.json");
@@ -232,6 +239,7 @@ internal static class FrontendInstallWorkflowService
             : Path.Combine(launcherDirectory, "mods");
         Directory.CreateDirectory(modsDirectory);
 
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在准备受管依赖文件…");
         ApplyManagedModSelection(modsDirectory, request.FabricApiChoice, "fabric-api");
         ApplyManagedModSelection(modsDirectory, request.LegacyFabricApiChoice, "legacy-fabric-api");
         ApplyManagedModSelection(modsDirectory, request.QslChoice, "quilted-fabric-api", "qsl");
@@ -241,14 +249,18 @@ internal static class FrontendInstallWorkflowService
             ShouldInstallOptiFineAsMod(request) ? request.OptiFineChoice : null,
             "OptiFine_");
 
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在补全游戏主文件与支持库…");
         var repairResult = request.RunRepair
             ? FrontendInstanceRepairService.Repair(new FrontendInstanceRepairRequest(
                 launcherDirectory,
                 targetDirectory,
                 request.TargetInstanceName,
-                request.ForceCoreRefresh))
+                request.ForceCoreRefresh),
+                onRepairTelemetry,
+                cancelToken)
             : new FrontendInstanceRepairResult([], []);
 
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.Finalize, "正在整理实例目录并完成安装…");
         EnsureResourceFolders(targetDirectory, request.UseInstanceIsolation ? targetDirectory : launcherDirectory);
 
         return new FrontendInstallApplyResult(
@@ -1861,3 +1873,10 @@ internal sealed record FrontendInstallApplyResult(
     string ManifestPath,
     IReadOnlyList<string> DownloadedFiles,
     IReadOnlyList<string> ReusedFiles);
+
+internal enum FrontendInstallApplyPhase
+{
+    PrepareManifest,
+    DownloadSupportFiles,
+    Finalize
+}
