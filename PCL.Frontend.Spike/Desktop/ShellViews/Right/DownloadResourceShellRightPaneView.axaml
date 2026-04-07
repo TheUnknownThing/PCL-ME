@@ -382,7 +382,7 @@
 
         <controls:PclCard ContentMargin="10,10,10,10" IsVisible="{Binding ShowDownloadResourcePagination}">
           <controls:PclCard.CardContent>
-            <StackPanel Orientation="Horizontal" Height="23">
+            <StackPanel Orientation="Horizontal" Height="23" HorizontalAlignment="Center">
               <controls:PclIconButton
                   Command="{Binding FirstDownloadResourcePageCommand}"
                   IconBrush="#63758B"
