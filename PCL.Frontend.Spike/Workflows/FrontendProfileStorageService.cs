@@ -229,34 +229,10 @@ internal static class FrontendProfileStorageService
             return string.Empty;
         }
 
-        var explicitKey = LauncherSecretKeyResolutionService.ParseExplicitKeyOverride(
+        var encryptionKey = LauncherSharedEncryptionKeyService.ResolveOrCreate(
+            runtimePaths.SharedConfigDirectory,
             Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY"));
-        var encryptionKey = explicitKey ?? ReadPersistedKey(runtimePaths);
         return LauncherDataProtectionService.Protect(value, encryptionKey);
-    }
-
-    private static byte[] ReadPersistedKey(FrontendRuntimePaths runtimePaths)
-    {
-        var persistedKeyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(runtimePaths.SharedConfigDirectory);
-        var persistedEnvelope = LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(persistedKeyPath);
-        if (persistedEnvelope is not null)
-        {
-            return LauncherStoredKeyEnvelopeService.ReadKey(
-                LauncherVersionedDataService.Parse(persistedEnvelope));
-        }
-
-        var resolution = LauncherSecretKeyResolutionService.Resolve(new LauncherSecretKeyResolutionRequest(
-            ExplicitKeyOverride: null,
-            PersistedKeyEnvelope: null,
-            ReadPersistedKey: LauncherStoredKeyEnvelopeService.ReadKey,
-            ProtectGeneratedKey: LauncherStoredKeyEnvelopeService.CreateStoredKeyEnvelope));
-        if (resolution.ShouldPersist && resolution.PersistedKeyEnvelope is not null)
-        {
-            Directory.CreateDirectory(runtimePaths.SharedConfigDirectory);
-            LauncherSecretKeyStorageService.PersistKeyEnvelope(persistedKeyPath, resolution.PersistedKeyEnvelope);
-        }
-
-        return resolution.Key;
     }
 
     private static MinecraftLaunchPersistedProfile ConvertToPersistedProfile(MinecraftLaunchStoredProfile profile)

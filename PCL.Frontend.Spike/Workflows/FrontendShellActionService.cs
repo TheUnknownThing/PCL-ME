@@ -835,18 +835,9 @@ internal sealed class FrontendShellActionService(
 
     private byte[] ResolveSharedEncryptionKey()
     {
-        var explicitKey = LauncherSecretKeyResolutionService.ParseExplicitKeyOverride(
+        return LauncherSharedEncryptionKeyService.ResolveOrCreate(
+            RuntimePaths.SharedConfigDirectory,
             Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY"));
-        if (explicitKey is not null)
-        {
-            return explicitKey;
-        }
-
-        var persistedKeyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(RuntimePaths.SharedConfigDirectory);
-        var persistedEnvelope = LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(persistedKeyPath)
-            ?? throw new InvalidOperationException("Launcher encryption key is unavailable.");
-        var storedKey = LauncherVersionedDataService.Parse(persistedEnvelope);
-        return LauncherStoredKeyEnvelopeService.ReadKey(storedKey);
     }
 }
 
