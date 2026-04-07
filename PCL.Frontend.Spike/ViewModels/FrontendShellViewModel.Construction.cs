@@ -31,6 +31,7 @@ internal sealed partial class FrontendShellViewModel
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
+    private CrashSpikePlan _activeCrashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
     private readonly List<LauncherFrontendRoute> _routeHistory = [];
     private readonly ActionCommand _backCommand;
@@ -337,6 +338,7 @@ internal sealed partial class FrontendShellViewModel
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
+        _activeCrashPlan = _crashPlan;
         _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);

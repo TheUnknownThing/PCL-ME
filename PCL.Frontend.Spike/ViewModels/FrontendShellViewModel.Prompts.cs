@@ -3,6 +3,8 @@ using Avalonia.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils.OS;
+using System.Runtime.InteropServices;
 using PCL.Frontend.Spike.Desktop.Animation;
 using PCL.Frontend.Spike.Workflows;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -476,13 +478,13 @@ internal sealed partial class FrontendShellViewModel
     {
         NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
 
-        var logPath = _shellActionService.MaterializeCrashLog(_crashPlan);
+        var logPath = _shellActionService.MaterializeCrashLog(_activeCrashPlan);
         OpenExternalTarget(logPath, "已生成并打开崩溃日志副本。");
     }
 
     private void ExportCrashReportFromPrompt()
     {
-        var exportResult = _shellActionService.ExportCrashReport(_crashPlan);
+        var exportResult = _shellActionService.ExportCrashReport(_activeCrashPlan);
         OpenExternalTarget(exportResult.ArchivePath, "已导出并打开崩溃报告压缩包。");
         AddActivity("崩溃报告已导出", $"{exportResult.ArchivePath} • {exportResult.ArchivedFileCount} 个文件已归档。");
     }
@@ -673,6 +675,10 @@ internal sealed partial class FrontendShellViewModel
             _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
             AppendLaunchLogLine($"游戏进程已退出，退出码 {startResult.Process.ExitCode}。");
             AddActivity("游戏进程已结束", $"{LaunchVersionSubtitle} • ExitCode {startResult.Process.ExitCode}");
+            if (startResult.Process.ExitCode != 0)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => ShowCrashPromptForLaunchFailure(startResult));
+            }
         }
         catch (Exception ex)
         {
@@ -762,10 +768,118 @@ internal sealed partial class FrontendShellViewModel
 
     private void EnsureCrashPromptLane()
     {
-        var crashPrompts = LauncherFrontendPromptService.BuildCrashPromptQueue(_crashPlan.OutputPrompt);
+        var crashPrompts = LauncherFrontendPromptService.BuildCrashPromptQueue(_activeCrashPlan.OutputPrompt);
         _promptCatalog[SpikePromptLaneKind.Crash] = crashPrompts
             .Select(prompt => CreatePromptCard(SpikePromptLaneKind.Crash, prompt))
             .ToList();
+    }
+
+    private void ShowCrashPromptForLaunchFailure(FrontendLaunchStartResult startResult)
+    {
+        _activeCrashPlan = BuildCrashPlanForLaunchFailure(startResult);
+        EnsureCrashPromptLane();
+        RebuildPromptLanes();
+        SetPromptOverlayOpen(true);
+        SelectPromptLane(SpikePromptLaneKind.Crash, updateActivity: false);
+        AddActivity("Minecraft 出现错误", "已弹出崩溃恢复提示，可直接查看日志或导出错误报告。");
+    }
+
+    private CrashSpikePlan BuildCrashPlanForLaunchFailure(FrontendLaunchStartResult startResult)
+    {
+        var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
+            BuildLaunchFailureMessage(startResult),
+            IsManualAnalysis: false,
+            HasDirectFile: true,
+            CanOpenModLoaderSettings: false));
+        var exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(new MinecraftCrashExportPlanRequest(
+            Timestamp: DateTime.Now,
+            ReportDirectory: Path.Combine(
+                _shellActionService.RuntimePaths.FrontendTempDirectory,
+                "CrashReport",
+                DateTime.Now.ToString("yyyy-MM-dd")),
+            LauncherVersionName: "frontend-spike",
+            UniqueAddress: _instanceComposition.Selection.InstanceDirectory ??
+                           _launchComposition.InstancePath,
+            SourceFilePaths:
+            [
+                startResult.LaunchScriptPath,
+                startResult.RawOutputLogPath
+            ],
+            AdditionalSourceFilePaths:
+            [
+                startResult.SessionSummaryPath,
+                Path.Combine(_launchComposition.InstancePath, "logs", "latest.log")
+            ],
+            CurrentLauncherLogFilePath: Path.Combine(
+                _shellActionService.RuntimePaths.LauncherAppDataDirectory,
+                "Log",
+                "PCL.log"),
+            Environment: GetHostEnvironmentSnapshot(),
+            CurrentAccessToken: _launchComposition.SelectedProfile.AccessToken,
+            CurrentUserUuid: _launchComposition.SelectedProfile.Uuid,
+            UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
+
+        return new CrashSpikePlan(outputPrompt, exportPlan);
+    }
+
+    private static string BuildLaunchFailureMessage(FrontendLaunchStartResult startResult)
+    {
+        var details = new List<string>
+        {
+            $"游戏进程异常退出，退出码 {startResult.Process.ExitCode}。"
+        };
+
+        var lastOutputLine = TryReadLastMeaningfulLine(startResult.RawOutputLogPath);
+        if (!string.IsNullOrWhiteSpace(lastOutputLine))
+        {
+            details.Add(lastOutputLine);
+        }
+
+        details.Add($"原始输出日志：{startResult.RawOutputLogPath}");
+        return string.Join(Environment.NewLine, details);
+    }
+
+    private static string? TryReadLastMeaningfulLine(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            return File.ReadLines(path)
+                .Reverse()
+                .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static SystemEnvironmentSnapshot GetHostEnvironmentSnapshot()
+    {
+        var availableMemory = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
+        var totalPhysicalMemoryBytes = availableMemory > 0
+            ? (ulong)availableMemory
+            : 8UL * 1024UL * 1024UL * 1024UL;
+
+        return new SystemEnvironmentSnapshot(
+            RuntimeInformation.OSDescription,
+            Environment.OSVersion.Version,
+            RuntimeInformation.OSArchitecture,
+            Environment.Is64BitOperatingSystem,
+            totalPhysicalMemoryBytes,
+            GetHostCpuName(),
+            []);
+    }
+
+    private static string GetHostCpuName()
+    {
+        return Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER") ??
+               Environment.GetEnvironmentVariable("HOSTTYPE") ??
+               RuntimeInformation.ProcessArchitecture.ToString();
     }
 
     private void TriggerCrashPromptTest()
@@ -859,9 +973,9 @@ internal sealed partial class FrontendShellViewModel
     private LauncherFrontendCrashSurfaceData BuildCrashSurfaceData()
     {
         return new LauncherFrontendCrashSurfaceData(
-            _crashPlan.ExportPlan.SuggestedArchiveName,
-            _crashPlan.ExportPlan.ExportRequest.SourceFiles.Count,
-            !string.IsNullOrWhiteSpace(_crashPlan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath),
-            _crashPlan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath);
+            _activeCrashPlan.ExportPlan.SuggestedArchiveName,
+            _activeCrashPlan.ExportPlan.ExportRequest.SourceFiles.Count,
+            !string.IsNullOrWhiteSpace(_activeCrashPlan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath),
+            _activeCrashPlan.ExportPlan.ExportRequest.CurrentLauncherLogFilePath);
     }
 }
