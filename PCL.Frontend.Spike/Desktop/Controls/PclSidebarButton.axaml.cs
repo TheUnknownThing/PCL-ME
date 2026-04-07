@@ -21,12 +21,6 @@ internal sealed partial class PclSidebarButton : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclSidebarButton, ICommand?>(nameof(Command));
 
-    private static readonly IBrush SelectedBackground = Brush.Parse("#EAF2FE");
-    private static readonly IBrush SelectedBorder = Brush.Parse("#D5E6FD");
-    private static readonly IBrush HoverBackground = Brush.Parse("#EFF5FE");
-    private static readonly IBrush HoverBorder = Brush.Parse("#E0EAFD");
-    private static readonly IBrush IdleBackground = Brush.Parse("#01FFFFFF");
-    private static readonly IBrush IdleBorder = Brush.Parse("#01FFFFFF");
     private bool _isHovered;
     private bool _isPressed;
 
@@ -108,16 +102,19 @@ internal sealed partial class PclSidebarButton : UserControl
 
     private void RefreshVisualState()
     {
+        var idleBrush = GetBrush("ColorBrushSemiTransparent", "#01FFFFFF");
         PanBack.Background = IsSelected
-            ? SelectedBackground
+            ? _isHovered
+                ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
+                : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
             : _isHovered
-                ? HoverBackground
-                : IdleBackground;
+                ? GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE")
+                : idleBrush;
         PanBack.BorderBrush = IsSelected
-            ? SelectedBorder
+            ? GetBrush("ColorBrush6", "#D5E6FD")
             : _isHovered
-                ? HoverBorder
-                : IdleBorder;
+                ? GetBrush("ColorBrush7", "#E0EAFD")
+                : idleBrush;
         PanBack.Opacity = _isPressed ? 0.92 : 1.0;
         PanBack.RenderTransform = _isPressed
             ? new ScaleTransform(0.985, 0.985)
@@ -125,9 +122,26 @@ internal sealed partial class PclSidebarButton : UserControl
                 ? new ScaleTransform(1.01, 1.01)
                 : new ScaleTransform(1, 1);
 
-        TitleBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#404040");
-        SummaryBlock.Foreground = IsSelected ? Brush.Parse("#4B5968") : Brush.Parse("#7D8897");
-        ChevronBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#A6B8CF");
+        TitleBlock.Foreground = IsSelected
+            ? GetBrush("ColorBrush3", "#1370F3")
+            : GetBrush("ColorBrushGray1", "#404040");
+        SummaryBlock.Foreground = IsSelected
+            ? GetBrush("ColorBrushEntrySecondarySelected", "#4B78C2")
+            : GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
+        ChevronBlock.Foreground = IsSelected
+            ? GetBrush("ColorBrush3", "#1370F3")
+            : GetBrush("ColorBrushEntryChevronIdle", "#A6B8CF");
         SelectionBar.IsVisible = IsSelected;
+    }
+
+    private IBrush GetBrush(string resourceKey, string fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
+            resource is IBrush brush)
+        {
+            return brush;
+        }
+
+        return Brush.Parse(fallback);
     }
 }

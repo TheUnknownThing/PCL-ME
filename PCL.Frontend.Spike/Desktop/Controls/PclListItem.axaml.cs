@@ -216,20 +216,39 @@ internal sealed partial class PclListItem : UserControl
         }
     }
 
+    private IBrush GetBrush(string resourceKey, string fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
+            resource is IBrush brush)
+        {
+            return brush;
+        }
+
+        return Brush.Parse(fallback);
+    }
+
     private void RefreshVisualState()
     {
         var showHighlight = IsSelected || _isHovered;
         RectBack.Opacity = showHighlight ? 1.0 : 0.0;
         RectBack.Background = IsSelected
             ? _isHovered
-                ? Brush.Parse("#DDEBFE")
-                : Brush.Parse("#EAF2FE")
-            : Brush.Parse("#E2EEFE");
+                ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
+                : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
+            : GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE");
         SelectionBar.IsVisible = IsSelected;
-        TitleBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#404040");
-        InfoBlock.Foreground = IsSelected ? Brush.Parse("#4B78C2") : Brush.Parse("#7D8897");
-        LogoPath.Fill = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#737373");
-        AccessoryPath.Fill = _isHovered ? Brush.Parse("#4890F5") : Brush.Parse("#96C0F9");
+        TitleBlock.Foreground = IsSelected
+            ? GetBrush("ColorBrush3", "#1370F3")
+            : GetBrush("ColorBrushGray1", "#404040");
+        InfoBlock.Foreground = IsSelected
+            ? GetBrush("ColorBrushEntrySecondarySelected", "#4B78C2")
+            : GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
+        LogoPath.Fill = IsSelected
+            ? GetBrush("ColorBrush3", "#1370F3")
+            : GetBrush("ColorBrushGray2", "#737373");
+        AccessoryPath.Fill = _isHovered
+            ? GetBrush("ColorBrush4", "#4890F5")
+            : GetBrush("ColorBrush5", "#96C0F9");
         AccessoryButton.IsHitTestVisible = AccessoryButton.IsVisible && (IsSelected || _isHovered);
         AccessoryButton.Opacity = AccessoryButton.IsVisible && (IsSelected || _isHovered) ? 1.0 : 0.0;
         RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);

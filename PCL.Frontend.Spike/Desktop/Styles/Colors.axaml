@@ -11,6 +11,12 @@
       <SolidColorBrush x:Key="ColorBrush8">#EAF2FE</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushBg0">#96C0F9</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushBg1">#BEE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntryHoverBackground">#E2EEFE</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedBackground">#EAF2FE</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedHoverBackground">#DDEBFE</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected">#4B78C2</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle">#7D8897</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntryChevronIdle">#A6B8CF</SolidColorBrush>
 
       <Color x:Key="ColorObject1">#343D4A</Color>
       <Color x:Key="ColorObject2">#0B5BCB</Color>
@@ -62,6 +68,12 @@
       <SolidColorBrush x:Key="ColorBrush8">#3B4041</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushBg0">#96C0F9</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushBg1">#BE5A5A5A</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntryHoverBackground">#E2EEFE</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedBackground">#EAF2FE</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedHoverBackground">#DDEBFE</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected">#4B78C2</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle">#7D8897</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushEntryChevronIdle">#A6B8CF</SolidColorBrush>
 
       <Color x:Key="ColorObject1">#EBEBEB</Color>
       <Color x:Key="ColorObject2">#66CCFF</Color>

@@ -14,13 +14,13 @@
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
     <Style Selector="Button.shortcut-entry:pointerover Border.shortcut-back">
-      <Setter Property="Background" Value="#ECF4FF" />
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
     </Style>
     <Style Selector="Button.shortcut-entry:pointerover Path.shortcut-icon">
-      <Setter Property="Fill" Value="#1370F3" />
+      <Setter Property="Fill" Value="{DynamicResource ColorBrush3}" />
     </Style>
     <Style Selector="Button.shortcut-entry:pointerover TextBlock.shortcut-text">
-      <Setter Property="Foreground" Value="#1370F3" />
+      <Setter Property="Foreground" Value="{DynamicResource ColorBrush3}" />
     </Style>
   </UserControl.Styles>
   <Border Background="#F4F5F8">

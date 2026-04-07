@@ -29,7 +29,7 @@
         x:Name="RectBack"
         Grid.ColumnSpan="7"
         Margin="0"
-        Background="#EAF2FE"
+        Background="{DynamicResource ColorBrushEntrySelectedBackground}"
         BorderThickness="0"
         CornerRadius="4"
         Opacity="0" />
@@ -38,7 +38,7 @@
         x:Name="SelectionBar"
         Grid.RowSpan="3"
         Margin="0,7,0,7"
-        Background="#1370F3"
+        Background="{DynamicResource ColorBrush3}"
         CornerRadius="0,3,3,0"
         IsVisible="False" />
 
@@ -49,7 +49,7 @@
         Height="16"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Fill="#737373"
+        Fill="{DynamicResource ColorBrushGray2}"
         Stretch="Uniform"
         IsVisible="False" />
 
@@ -70,12 +70,12 @@
         <TextBlock
             x:Name="TitleBlock"
             FontSize="14"
-            Foreground="#404040"
+            Foreground="{DynamicResource ColorBrushGray1}"
             TextTrimming="CharacterEllipsis" />
         <TextBlock
             x:Name="InfoBlock"
             FontSize="11.5"
-            Foreground="#7D8897"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             IsVisible="False"
             TextTrimming="CharacterEllipsis"
             TextWrapping="Wrap" />
@@ -102,7 +102,7 @@
           x:Name="AccessoryPath"
           Width="12"
           Height="12"
-          Fill="#96C0F9"
+          Fill="{DynamicResource ColorBrush5}"
           Stretch="Uniform" />
     </Button>
   </Grid>
