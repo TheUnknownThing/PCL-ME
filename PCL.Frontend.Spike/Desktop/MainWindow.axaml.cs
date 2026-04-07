@@ -522,10 +522,8 @@ internal sealed partial class MainWindow : Window
             StartRouteAnimation(leftVisual, leftOffset);
         }
 
-        if (transition.AnimateRightPane && transition.IsLaunchRoute)
-        {
-            StartRouteAnimation(rightVisual, 0f, -32f, useBounce: true);
-        }
+        // The launch right pane is a single alert card. Animate that control directly
+        // to avoid composition-level flicker on text-heavy content.
     }
 
     private void StartRouteAnimation(CompositionVisual visual, float offsetX, float offsetY = 0f, bool useBounce = false)

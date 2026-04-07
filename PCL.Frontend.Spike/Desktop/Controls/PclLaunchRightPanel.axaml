@@ -7,31 +7,32 @@
     <StackPanel
         Margin="25,25,25,10"
         Spacing="15">
-      <controls:PclCard
-          IsVisible="{Binding ShowLaunchCommunityHint}"
-          Header="社区版提示"
-          ContentMargin="20,12,20,15">
-        <controls:PclCard.CardContent>
-          <Grid>
-            <controls:PclIconButton
-                x:Name="DismissLaunchCommunityHintButton"
-                Margin="0,-28,-8,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Command="{Binding DismissLaunchCommunityHintCommand}" />
-            <StackPanel Spacing="2">
-              <TextBlock
-                  FontSize="13.5"
-                  TextWrapping="Wrap"
-                  Text="{Binding LaunchCommunityHintPrimaryText}" />
-              <TextBlock
-                  FontSize="13.5"
-                  TextWrapping="Wrap"
-                  Text="{Binding LaunchCommunityHintSecondaryText}" />
-            </StackPanel>
-          </Grid>
-        </controls:PclCard.CardContent>
-      </controls:PclCard>
+      <Border x:Name="LaunchCommunityHintHost" IsVisible="False" Background="Transparent">
+        <controls:PclCard
+            x:Name="LaunchCommunityHintCard"
+            Header="社区版提示"
+            ContentMargin="20,12,20,15">
+          <controls:PclCard.CardContent>
+            <Grid>
+              <controls:PclIconButton
+                  x:Name="DismissLaunchCommunityHintButton"
+                  Margin="0,-28,-8,0"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Top" />
+              <StackPanel Spacing="2">
+                <TextBlock
+                    FontSize="13.5"
+                    TextWrapping="Wrap"
+                    Text="{Binding LaunchCommunityHintPrimaryText}" />
+                <TextBlock
+                    FontSize="13.5"
+                    TextWrapping="Wrap"
+                    Text="{Binding LaunchCommunityHintSecondaryText}" />
+              </StackPanel>
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </Border>
     </StackPanel>
   </ScrollViewer>
 </UserControl>
