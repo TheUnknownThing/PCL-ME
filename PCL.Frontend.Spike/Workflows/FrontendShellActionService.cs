@@ -327,6 +327,8 @@ internal sealed class FrontendShellActionService(
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
 
+        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts);
+
         var launcherDataDirectory = RuntimePaths.LauncherAppDataDirectory;
         var logDirectory = Path.Combine(launcherDataDirectory, "Log");
         Directory.CreateDirectory(launcherDataDirectory);
@@ -383,6 +385,32 @@ internal sealed class FrontendShellActionService(
             launchScriptPath,
             sessionSummaryPath,
             rawOutputLogPath);
+    }
+
+    private static void EnsureRequiredArtifacts(IReadOnlyList<FrontendLaunchArtifactRequirement> requirements)
+    {
+        ArgumentNullException.ThrowIfNull(requirements);
+
+        foreach (var requirement in requirements)
+        {
+            if (File.Exists(requirement.TargetPath))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(requirement.TargetPath)!);
+            try
+            {
+                var payload = JavaRuntimeHttpClient.GetByteArrayAsync(requirement.DownloadUrl).GetAwaiter().GetResult();
+                File.WriteAllBytes(requirement.TargetPath, payload);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"缺少启动所需文件且自动下载失败：{requirement.TargetPath}",
+                    ex);
+            }
+        }
     }
 
     public void ApplyWatcherStopShellPlan(FrontendLaunchComposition launchComposition)

@@ -283,7 +283,7 @@ internal sealed partial class FrontendShellViewModel
         var runtimePaths = _shellActionService.RuntimePaths;
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
         var launcherDirectory = ResolveLauncherFolder(
-            ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"),
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
         var selectedInstance = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
         var versionsDirectory = Path.Combine(launcherDirectory, "versions");
@@ -567,18 +567,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
     {
-        var normalized = string.IsNullOrWhiteSpace(rawValue)
-            ? "$.minecraft\\"
-            : rawValue.Trim();
-        normalized = normalized.Replace("$", EnsureStepSurfaceTrailingSeparator(runtimePaths.ExecutableDirectory), StringComparison.Ordinal);
-        return Path.GetFullPath(normalized);
-    }
-
-    private static string EnsureStepSurfaceTrailingSeparator(string path)
-    {
-        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
-            ? path
-            : path + Path.DirectorySeparatorChar;
+        return FrontendLauncherPathService.ResolveLauncherFolder(rawValue, runtimePaths);
     }
 
     private static InstanceSelectionSnapshot? BuildInstanceSelectionSnapshot(string directory, string selectedInstance)

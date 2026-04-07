@@ -1111,7 +1111,7 @@ internal sealed partial class FrontendShellViewModel
     private string ResolveDownloadLauncherFolder()
     {
         var provider = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
-        var rawValue = "$.minecraft\\";
+        var rawValue = FrontendLauncherPathService.DefaultLauncherFolderRaw;
 
         if (provider.Exists("LaunchFolderSelect"))
         {
@@ -1121,25 +1121,11 @@ internal sealed partial class FrontendShellViewModel
             }
             catch
             {
-                rawValue = "$.minecraft\\";
+                rawValue = FrontendLauncherPathService.DefaultLauncherFolderRaw;
             }
         }
 
-        var normalized = string.IsNullOrWhiteSpace(rawValue)
-            ? "$.minecraft\\"
-            : rawValue.Trim();
-        normalized = normalized.Replace(
-            "$",
-            EnsureTrailingSeparator(_shellActionService.RuntimePaths.ExecutableDirectory),
-            StringComparison.Ordinal);
-        return Path.GetFullPath(normalized);
-    }
-
-    private static string EnsureTrailingSeparator(string path)
-    {
-        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
-            ? path
-            : path + Path.DirectorySeparatorChar;
+        return FrontendLauncherPathService.ResolveLauncherFolder(rawValue, _shellActionService.RuntimePaths);
     }
 
     private static string SanitizeInstallDirectoryName(string value)

@@ -6,6 +6,7 @@ internal sealed record FrontendLaunchComposition(
     string Scenario,
     string InstanceName,
     string InstancePath,
+    IReadOnlyList<FrontendLaunchArtifactRequirement> RequiredArtifacts,
     FrontendLaunchProfileSummary SelectedProfile,
     FrontendJavaRuntimeSummary? SelectedJavaRuntime,
     int LaunchCount,
@@ -24,6 +25,11 @@ internal sealed record FrontendLaunchComposition(
     MinecraftLaunchSessionStartWorkflowPlan SessionStartPlan,
     MinecraftGameShellPlan PostLaunchShell,
     MinecraftLaunchNotification CompletionNotification);
+
+internal sealed record FrontendLaunchArtifactRequirement(
+    string TargetPath,
+    string DownloadUrl,
+    string? Sha1);
 
 internal sealed record FrontendLaunchProfileSummary(
     MinecraftLaunchProfileKind Kind,
