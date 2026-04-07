@@ -10,6 +10,12 @@ namespace PCL.Frontend.Spike.Desktop.Animation;
 
 internal static class Motion
 {
+    private static readonly TimeSpan EnterOpacityDuration = TimeSpan.FromMilliseconds(170);
+    private static readonly TimeSpan EnterTranslateDuration = TimeSpan.FromMilliseconds(280);
+    private static readonly TimeSpan EnterTranslateDurationWithoutOvershoot = TimeSpan.FromMilliseconds(220);
+    private static readonly TimeSpan ExitOpacityDuration = TimeSpan.FromMilliseconds(130);
+    private static readonly TimeSpan ExitTranslateDuration = TimeSpan.FromMilliseconds(170);
+
     public static readonly AttachedProperty<bool> AnimateOnVisibleProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("AnimateOnVisible", typeof(Motion));
 
@@ -142,6 +148,7 @@ internal static class Motion
         if (change.GetNewValue<bool>())
         {
             Attach(control);
+            PrimeEnterState(control);
             QueueAnimation(control);
             return;
         }
@@ -157,11 +164,16 @@ internal static class Motion
             return;
         }
 
-        state.AttachedHandler = (_, _) => QueueAnimation(control);
+        state.AttachedHandler = (_, _) =>
+        {
+            PrimeEnterState(control);
+            QueueAnimation(control);
+        };
         state.PropertyChangedHandler = (_, args) =>
         {
             if (args.Property == Visual.IsVisibleProperty && args.GetNewValue<bool>())
             {
+                PrimeEnterState(control);
                 QueueAnimation(control);
             }
         };
@@ -282,19 +294,59 @@ internal static class Motion
         return targets.Count == 0 ? [control] : targets;
     }
 
+    public static async Task PlayExitAsync(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+
+        if (!control.IsVisible)
+        {
+            return;
+        }
+
+        var state = States.GetOrCreateValue(control);
+        state.Version++;
+        state.MotionTransitions ??= BuildTransitions(control.Transitions, entering: true);
+        state.MotionTransform ??= new TranslateTransform();
+
+        control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+        control.Transitions = null;
+        control.Transitions = BuildTransitions(control.Transitions, entering: false);
+        state.MotionTransform.Transitions = BuildTransformTransitions(overshoot: false, entering: false);
+        control.RenderTransform = state.MotionTransform;
+
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+
+        control.Opacity = 0;
+        state.MotionTransform.X = Math.Max(14, Math.Abs(GetOffsetX(control)));
+        state.MotionTransform.Y = GetOffsetY(control);
+
+        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(ExitOpacityDuration.TotalMilliseconds, ExitTranslateDuration.TotalMilliseconds)));
+    }
+
+    private static void PrimeEnterState(Control control)
+    {
+        if (!GetAnimateOnVisible(control))
+        {
+            return;
+        }
+
+        PrepareInitialState(control);
+    }
+
     private static void PrepareInitialState(Control control)
     {
         var state = States.GetOrCreateValue(control);
-        state.MotionTransitions ??= BuildTransitions(control, control.Transitions);
+        state.MotionTransitions ??= BuildTransitions(control.Transitions, entering: true);
         state.MotionTransform ??= BuildMotionTransform(control);
 
         control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
         control.Transitions = null;
+        control.Transitions = state.MotionTransitions;
         control.Opacity = GetInitialOpacity(control);
+        state.MotionTransform.Transitions = BuildTransformTransitions(GetOvershootTranslation(control), entering: true);
         state.MotionTransform.X = GetOffsetX(control);
         state.MotionTransform.Y = GetOffsetY(control);
         control.RenderTransform = state.MotionTransform;
-        control.Transitions = state.MotionTransitions;
     }
 
     private static void PlayFinalState(Control control)
@@ -311,7 +363,7 @@ internal static class Motion
         }
     }
 
-    private static Transitions BuildTransitions(Control control, Transitions? original)
+    private static Transitions BuildTransitions(Transitions? original, bool entering)
     {
         var transitions = new Transitions();
         if (original is not null)
@@ -325,7 +377,7 @@ internal static class Motion
         transitions.Add(new DoubleTransition
         {
             Property = Visual.OpacityProperty,
-            Duration = TimeSpan.FromMilliseconds(170),
+            Duration = entering ? EnterOpacityDuration : ExitOpacityDuration,
             Easing = new CubicEaseOut()
         });
 
@@ -334,32 +386,37 @@ internal static class Motion
 
     private static TranslateTransform BuildMotionTransform(Control control)
     {
-        var translationOvershoots = GetOvershootTranslation(control);
         var transform = new TranslateTransform();
-        transform.Transitions =
+        transform.Transitions = BuildTransformTransitions(GetOvershootTranslation(control), entering: true);
+        return transform;
+    }
+
+    private static Transitions BuildTransformTransitions(bool overshoot, bool entering)
+    {
+        var duration = entering
+            ? overshoot
+                ? EnterTranslateDuration
+                : EnterTranslateDurationWithoutOvershoot
+            : ExitTranslateDuration;
+        Easing easing = entering && overshoot
+            ? new BackEaseOut()
+            : new CubicEaseOut();
+
+        return
         [
             new DoubleTransition
             {
                 Property = TranslateTransform.XProperty,
-                Duration = translationOvershoots
-                    ? TimeSpan.FromMilliseconds(280)
-                    : TimeSpan.FromMilliseconds(220),
-                Easing = translationOvershoots
-                    ? new BackEaseOut()
-                    : new CubicEaseOut()
+                Duration = duration,
+                Easing = easing
             },
             new DoubleTransition
             {
                 Property = TranslateTransform.YProperty,
-                Duration = translationOvershoots
-                    ? TimeSpan.FromMilliseconds(280)
-                    : TimeSpan.FromMilliseconds(220),
-                Easing = translationOvershoots
-                    ? new BackEaseOut()
-                    : new CubicEaseOut()
+                Duration = duration,
+                Easing = easing
             }
         ];
-        return transform;
     }
 
     private sealed class MotionState
