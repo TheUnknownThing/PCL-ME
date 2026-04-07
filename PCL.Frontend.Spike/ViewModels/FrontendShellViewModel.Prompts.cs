@@ -635,6 +635,9 @@ internal sealed partial class FrontendShellViewModel
                 _instanceComposition.Selection.InstanceDirectory);
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
+            ShowLaunchCompletionNotification();
+            _isLaunchInProgress = false;
+            RaiseLaunchSessionProperties();
 
             _ = MonitorLaunchSessionAsync(startResult);
         }
@@ -731,6 +734,24 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(ShowLaunchLog));
             }
         });
+    }
+
+    private void ShowLaunchCompletionNotification()
+    {
+        if (string.IsNullOrWhiteSpace(_launchComposition.CompletionNotification.Message))
+        {
+            return;
+        }
+
+        switch (_launchComposition.CompletionNotification.Kind)
+        {
+            case MinecraftLaunchNotificationKind.Info:
+                SpikeHintBus.Show(_launchComposition.CompletionNotification.Message, SpikeHintTheme.Info);
+                break;
+            case MinecraftLaunchNotificationKind.Finish:
+                SpikeHintBus.Show(_launchComposition.CompletionNotification.Message, SpikeHintTheme.Success);
+                break;
+        }
     }
 
     private void RaiseLaunchSessionProperties()
