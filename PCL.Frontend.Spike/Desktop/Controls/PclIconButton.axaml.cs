@@ -104,7 +104,8 @@ internal sealed partial class PclIconButton : UserControl
         }
         else if (change.Property == IconBrushProperty ||
                  change.Property == HoverBackgroundBrushProperty ||
-                 change.Property == IdleBackgroundBrushProperty)
+                 change.Property == IdleBackgroundBrushProperty ||
+                 change.Property == IsEnabledProperty)
         {
             RefreshVisualState();
         }
@@ -120,8 +121,8 @@ internal sealed partial class PclIconButton : UserControl
     private void RefreshVisualState()
     {
         ShapeIcon.Fill = IconBrush;
-        PanBack.Background = _isHovered ? HoverBackgroundBrush : IdleBackgroundBrush;
-        PanBack.Opacity = 1.0;
+        PanBack.Background = IsEnabled && _isHovered ? HoverBackgroundBrush : IdleBackgroundBrush;
+        PanBack.Opacity = IsEnabled ? 1.0 : 0.2;
         PanBack.RenderTransform = _isPressed ? new ScaleTransform(0.8, 0.8) : new ScaleTransform(1, 1);
     }
 
