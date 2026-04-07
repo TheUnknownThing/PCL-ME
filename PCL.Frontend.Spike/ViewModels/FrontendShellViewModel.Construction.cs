@@ -33,7 +33,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly CrashSpikePlan _crashPlan;
     private CrashSpikePlan _activeCrashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
-    private readonly List<LauncherFrontendRoute> _routeHistory = [];
+    private readonly List<LauncherFrontendRoute> _routeAncestors = [];
     private readonly ActionCommand _backCommand;
     private readonly ActionCommand _togglePromptOverlayCommand;
     private readonly ActionCommand _dismissPromptOverlayCommand;

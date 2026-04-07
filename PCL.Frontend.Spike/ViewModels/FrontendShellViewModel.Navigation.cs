@@ -29,10 +29,10 @@ internal sealed partial class FrontendShellViewModel
         Eyebrow = eyebrow;
         Title = shellPlan.Navigation.CurrentPage.Title;
         Description = description;
-        Status = $"Immediate command: {shellPlan.StartupPlan.ImmediateCommand.Kind} | Splash: {(shellPlan.StartupPlan.Visual.ShouldShowSplashScreen ? "on" : "off")} | Backstack depth: {_routeHistory.Count}";
+        Status = $"Immediate command: {shellPlan.StartupPlan.ImmediateCommand.Kind} | Splash: {(shellPlan.StartupPlan.Visual.ShouldShowSplashScreen ? "on" : "off")} | Navigation depth: {_routeAncestors.Count}";
         BreadcrumbTrail = string.Join(" / ", shellPlan.Navigation.Breadcrumbs.Select(crumb => crumb.Title));
         SurfaceMeta = $"{shellPlan.Navigation.CurrentPage.Kind} surface • {(shellPlan.Navigation.CurrentPage.SidebarGroupTitle ?? "No sidebar group")} • {(shellPlan.Navigation.ShowsBackButton ? shellPlan.Navigation.BackTarget?.Label ?? "Back available" : "Top-level route")}";
-        CanGoBack = shellPlan.Navigation.ShowsBackButton;
+        CanGoBack = shellPlan.Navigation.ShowsBackButton && shellPlan.Navigation.BackTarget is not null;
 
         ReplaceNavigationEntriesIfChanged(TopLevelEntries, shellPlan.Navigation.TopLevelEntries, NavigationVisualStyle.TopLevel);
         ReplaceNavigationEntriesIfChanged(SidebarEntries, shellPlan.Navigation.SidebarEntries, NavigationVisualStyle.Sidebar);
@@ -60,7 +60,12 @@ internal sealed partial class FrontendShellViewModel
             iconPath,
             iconScale,
             GetNavigationPalette(entry.IsSelected, style),
-            new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the {(style == NavigationVisualStyle.Sidebar ? "sidebar" : "top bar")}."))
+            new ActionCommand(() => NavigateTo(
+                entry.Route,
+                $"Navigated to {entry.Title} from the {(style == NavigationVisualStyle.Sidebar ? "sidebar" : "top bar")}.",
+                style == NavigationVisualStyle.Sidebar
+                    ? RouteNavigationBehavior.Lateral
+                    : RouteNavigationBehavior.Reset))
         );
     }
 
@@ -82,7 +87,9 @@ internal sealed partial class FrontendShellViewModel
             GetUtilityIcon(entry.Id),
             1.0,
             GetNavigationPalette(entry.IsSelected, NavigationVisualStyle.Utility),
-            new ActionCommand(() => NavigateTo(entry.Route, $"Opened utility surface {entry.Title}.")));
+            entry.Id == "back"
+                ? new ActionCommand(NavigateBack, () => CanGoBack)
+                : new ActionCommand(() => NavigateTo(entry.Route, $"Opened utility surface {entry.Title}.", RouteNavigationBehavior.Child)));
     }
 
     private IEnumerable<SidebarSectionViewModel> BuildSidebarSections(LauncherFrontendNavigationView navigation)
@@ -114,7 +121,7 @@ internal sealed partial class FrontendShellViewModel
                             iconPath,
                             iconScale,
                             itemIndex++ * 28,
-                            new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the launcher-style left pane.")),
+                            new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the launcher-style left pane.", RouteNavigationBehavior.Lateral)),
                             accessory.ToolTip,
                             accessory.IconPath,
                             accessory.Command is null
@@ -438,7 +445,8 @@ internal sealed partial class FrontendShellViewModel
         var request = _shellComposition.NavigationRequest with
         {
             CurrentRoute = _currentRoute,
-            BackstackDepth = _routeHistory.Count
+            BackstackDepth = _routeAncestors.Count,
+            ParentRoute = ResolveParentRoute()
         };
         return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
             _shellComposition.StartupWorkflowRequest,
@@ -446,7 +454,10 @@ internal sealed partial class FrontendShellViewModel
             request));
     }
 
-    private void NavigateTo(LauncherFrontendRoute route, string activityMessage)
+    private void NavigateTo(
+        LauncherFrontendRoute route,
+        string activityMessage,
+        RouteNavigationBehavior behavior = RouteNavigationBehavior.Automatic)
     {
         route = NormalizeRoute(route);
         if (route == _currentRoute)
@@ -455,12 +466,101 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        ApplyRouteNavigation(route, behavior);
+        ChangeRoute(route, activityMessage, ShellNavigationTransitionDirection.Forward);
+    }
+
+    private static LauncherFrontendRoute NormalizeRoute(LauncherFrontendRoute route)
+    {
+        return route switch
+        {
+            { Page: LauncherFrontendPageKey.Download, Subpage: LauncherFrontendSubpageKey.Default } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+            { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.Default } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsGameLink),
+            _ => route
+        };
+    }
+
+    private void ApplyRouteNavigation(LauncherFrontendRoute route, RouteNavigationBehavior behavior)
+    {
+        switch (ResolveRouteNavigationBehavior(route, behavior))
+        {
+            case RouteNavigationBehavior.Child:
+                _routeAncestors.Add(_currentRoute);
+                break;
+            case RouteNavigationBehavior.Lateral:
+                break;
+            case RouteNavigationBehavior.Reset:
+                _routeAncestors.Clear();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(behavior), behavior, "Unknown route navigation behavior.");
+        }
+    }
+
+    private RouteNavigationBehavior ResolveRouteNavigationBehavior(
+        LauncherFrontendRoute route,
+        RouteNavigationBehavior behavior)
+    {
+        if (behavior != RouteNavigationBehavior.Automatic)
+        {
+            return behavior;
+        }
+
+        if (route.Page == _currentRoute.Page)
+        {
+            return RouteNavigationBehavior.Lateral;
+        }
+
+        return IsTopLevelRoute(route)
+            ? RouteNavigationBehavior.Reset
+            : RouteNavigationBehavior.Child;
+    }
+
+    private void NavigateBack()
+    {
+        if (_currentNavigation is null)
+        {
+            return;
+        }
+
+        if (_currentNavigation.BackTarget?.Route is { } backRoute)
+        {
+            if (_routeAncestors.Count > 0)
+            {
+                _routeAncestors.RemoveAt(_routeAncestors.Count - 1);
+            }
+
+            ChangeRoute(backRoute, $"Followed shell back target to {backRoute.Page}.", ShellNavigationTransitionDirection.Backward);
+        }
+    }
+
+    private void ChangeRoute(
+        LauncherFrontendRoute route,
+        string activityMessage,
+        ShellNavigationTransitionDirection direction)
+    {
         var previousIsLaunchRoute = IsLaunchRoute;
         var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
         var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
 
-        _routeHistory.Add(_currentRoute);
         _currentRoute = route;
+        ReloadRouteCompositions(route);
+        RefreshShell(activityMessage);
+        RequestNavigationTransition(
+            direction,
+            previousIsLaunchRoute,
+            previousLeftPaneKey,
+            previousRightPaneKey);
+        if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
+    }
+
+    private void ReloadRouteCompositions(LauncherFrontendRoute route)
+    {
         if (route.Page == LauncherFrontendPageKey.Setup)
         {
             ReloadSetupComposition(initializeAllSurfaces: false);
@@ -478,113 +578,58 @@ internal sealed partial class FrontendShellViewModel
             ReloadVersionSavesComposition();
             ReloadDownloadComposition();
         }
-
-        RefreshShell(activityMessage);
-        RequestNavigationTransition(
-            ShellNavigationTransitionDirection.Forward,
-            previousIsLaunchRoute,
-            previousLeftPaneKey,
-            previousRightPaneKey);
-        if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
-        {
-            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
-        }
     }
 
-    private static LauncherFrontendRoute NormalizeRoute(LauncherFrontendRoute route)
+    private LauncherFrontendRoute? ResolveParentRoute()
     {
-        return route switch
+        if (_routeAncestors.Count > 0)
         {
-            { Page: LauncherFrontendPageKey.Download, Subpage: LauncherFrontendSubpageKey.Default } =>
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-            { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.Default } =>
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsGameLink),
-            _ => route
+            return _routeAncestors[^1];
+        }
+
+        return ResolveDefaultParentRoute(_currentRoute);
+    }
+
+    private LauncherFrontendRoute? ResolveDefaultParentRoute(LauncherFrontendRoute route)
+    {
+        return route.Page switch
+        {
+            LauncherFrontendPageKey.Launch => null,
+            LauncherFrontendPageKey.Download => null,
+            LauncherFrontendPageKey.Setup => null,
+            LauncherFrontendPageKey.Tools => null,
+            LauncherFrontendPageKey.InstanceSelect => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.TaskManager => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.InstanceSetup => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.CompDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Download,
+                _selectedCommunityProjectOriginSubpage ?? LauncherFrontendSubpageKey.DownloadInstall),
+            LauncherFrontendPageKey.HelpDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Tools,
+                LauncherFrontendSubpageKey.ToolsLauncherHelp),
+            LauncherFrontendPageKey.GameLog => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.VersionSaves => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.InstanceSetup,
+                LauncherFrontendSubpageKey.VersionWorld),
+            LauncherFrontendPageKey.HomePageMarket => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            _ => null
         };
     }
-    private void NavigateBack()
+
+    private static bool IsTopLevelRoute(LauncherFrontendRoute route)
     {
-        if (_currentNavigation is null)
-        {
-            return;
-        }
+        return route.Page is LauncherFrontendPageKey.Launch
+            or LauncherFrontendPageKey.Download
+            or LauncherFrontendPageKey.Setup
+            or LauncherFrontendPageKey.Tools;
+    }
 
-        if (_routeHistory.Count > 0)
-        {
-            var previousIsLaunchRoute = IsLaunchRoute;
-            var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
-            var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
-
-            var previousRoute = _routeHistory[^1];
-            _routeHistory.RemoveAt(_routeHistory.Count - 1);
-            _currentRoute = previousRoute;
-            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
-            {
-                ReloadSetupComposition(initializeAllSurfaces: false);
-            }
-            else if (_currentRoute.Page == LauncherFrontendPageKey.Tools)
-            {
-                ReloadToolsComposition();
-            }
-            else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
-            {
-                ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
-            }
-            else if (_currentRoute.Page == LauncherFrontendPageKey.VersionSaves)
-            {
-                ReloadVersionSavesComposition();
-                ReloadDownloadComposition();
-            }
-
-            RefreshShell("Returned to the previous shell route.");
-            RequestNavigationTransition(
-                ShellNavigationTransitionDirection.Backward,
-                previousIsLaunchRoute,
-                previousLeftPaneKey,
-                previousRightPaneKey);
-            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
-            {
-                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
-            }
-            return;
-        }
-
-        if (_currentNavigation.BackTarget?.Route is { } backRoute)
-        {
-            var previousIsLaunchRoute = IsLaunchRoute;
-            var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
-            var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
-
-            _currentRoute = backRoute;
-            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
-            {
-                ReloadSetupComposition(initializeAllSurfaces: false);
-            }
-            else if (_currentRoute.Page == LauncherFrontendPageKey.Tools)
-            {
-                ReloadToolsComposition();
-            }
-            else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
-            {
-                ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
-            }
-            else if (_currentRoute.Page == LauncherFrontendPageKey.VersionSaves)
-            {
-                ReloadVersionSavesComposition();
-                ReloadDownloadComposition();
-            }
-
-            RefreshShell($"Followed shell back target to {backRoute.Page}.");
-            RequestNavigationTransition(
-                ShellNavigationTransitionDirection.Backward,
-                previousIsLaunchRoute,
-                previousLeftPaneKey,
-                previousRightPaneKey);
-            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
-            {
-                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
-            }
-        }
+    private enum RouteNavigationBehavior
+    {
+        Automatic = 0,
+        Child = 1,
+        Lateral = 2,
+        Reset = 3
     }
 
     private void RequestNavigationTransition(
