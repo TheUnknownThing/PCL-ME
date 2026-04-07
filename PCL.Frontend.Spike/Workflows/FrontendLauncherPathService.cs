@@ -64,6 +64,16 @@ internal static class FrontendLauncherPathService
             return resolvedPath;
         }
 
+        if (HasLauncherPayload(legacyResolvedPath) && !HasLauncherPayload(resolvedPath))
+        {
+            if (TryMigrateLegacyDirectory(legacyResolvedPath, resolvedPath))
+            {
+                return resolvedPath;
+            }
+
+            return legacyResolvedPath;
+        }
+
         if (TryMigrateLegacyDirectory(legacyResolvedPath, resolvedPath))
         {
             return resolvedPath;
@@ -104,19 +114,88 @@ internal static class FrontendLauncherPathService
 
     private static bool TryMigrateLegacyDirectory(string legacyPath, string targetPath)
     {
-        if (!Directory.Exists(legacyPath) || Directory.Exists(targetPath))
+        if (!Directory.Exists(legacyPath))
         {
             return false;
         }
 
         try
         {
-            Directory.Move(legacyPath, targetPath);
+            if (!Directory.Exists(targetPath))
+            {
+                Directory.Move(legacyPath, targetPath);
+                return true;
+            }
+
+            MergeDirectoryContents(legacyPath, targetPath);
+
+            if (!Directory.EnumerateFileSystemEntries(legacyPath).Any())
+            {
+                Directory.Delete(legacyPath, false);
+            }
+
             return true;
         }
         catch
         {
             return false;
+        }
+    }
+
+    private static bool HasLauncherPayload(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return false;
+        }
+
+        return Directory.Exists(Path.Combine(path, "versions")) ||
+               Directory.Exists(Path.Combine(path, "libraries")) ||
+               Directory.Exists(Path.Combine(path, "assets")) ||
+               File.Exists(Path.Combine(path, "launcher_profiles.json"));
+    }
+
+    private static void MergeDirectoryContents(string sourcePath, string targetPath)
+    {
+        Directory.CreateDirectory(targetPath);
+
+        foreach (var directory in Directory.EnumerateDirectories(sourcePath))
+        {
+            var name = Path.GetFileName(directory);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            var targetDirectory = Path.Combine(targetPath, name);
+            if (Directory.Exists(targetDirectory))
+            {
+                MergeDirectoryContents(directory, targetDirectory);
+                if (!Directory.EnumerateFileSystemEntries(directory).Any())
+                {
+                    Directory.Delete(directory, false);
+                }
+                continue;
+            }
+
+            Directory.Move(directory, targetDirectory);
+        }
+
+        foreach (var file in Directory.EnumerateFiles(sourcePath))
+        {
+            var name = Path.GetFileName(file);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            var targetFile = Path.Combine(targetPath, name);
+            if (File.Exists(targetFile))
+            {
+                continue;
+            }
+
+            File.Move(file, targetFile);
         }
     }
 }

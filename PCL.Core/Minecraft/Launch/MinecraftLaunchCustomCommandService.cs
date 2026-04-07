@@ -5,8 +5,6 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchCustomCommandService
 {
-    private const string BatchLineBreak = "\r\n";
-
     public static MinecraftLaunchCustomCommandPlan BuildPlan(MinecraftLaunchCustomCommandRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -27,38 +25,55 @@ public static class MinecraftLaunchCustomCommandService
         }
 
         var useUtf8Encoding = request.JavaMajorVersion > 8;
-        var batchLines = new List<string>();
+        var scriptLines = new List<string>();
+        var lineBreak = OperatingSystem.IsWindows() ? "\r\n" : "\n";
 
-        if (useUtf8Encoding)
+        if (OperatingSystem.IsWindows())
         {
-            batchLines.Add("chcp 65001>nul");
-        }
+            if (useUtf8Encoding)
+            {
+                scriptLines.Add("chcp 65001>nul");
+            }
 
-        batchLines.Add("@echo off");
-        batchLines.Add($"title 启动 - {request.InstanceName}");
-        batchLines.Add("echo 游戏正在启动，请稍候。");
-        batchLines.Add($"cd /D \"{request.WorkingDirectory}\"");
+            scriptLines.Add("@echo off");
+            scriptLines.Add($"title 启动 - {request.InstanceName}");
+            scriptLines.Add("echo 游戏正在启动，请稍候。");
+            scriptLines.Add($"cd /D \"{request.WorkingDirectory}\"");
+        }
+        else
+        {
+            scriptLines.Add("#!/bin/sh");
+            scriptLines.Add("printf '%s\\n' '游戏正在启动，请稍候。'");
+            scriptLines.Add($"cd \"{request.WorkingDirectory}\" || exit 1");
+        }
 
         var commandExecutions = new List<MinecraftLaunchCustomCommandExecution>();
         AddCommand(
             commandExecutions,
-            batchLines,
+            scriptLines,
             request.GlobalCommand,
             request.WaitForGlobalCommand,
             MinecraftLaunchCustomCommandScope.Global);
         AddCommand(
             commandExecutions,
-            batchLines,
+            scriptLines,
             request.InstanceCommand,
             request.WaitForInstanceCommand,
             MinecraftLaunchCustomCommandScope.Instance);
 
-        batchLines.Add($"\"{request.JavaExecutablePath}\" {request.LaunchArguments}");
-        batchLines.Add("echo 游戏已退出。");
-        batchLines.Add("pause");
+        scriptLines.Add($"\"{request.JavaExecutablePath}\" {request.LaunchArguments}");
+        if (OperatingSystem.IsWindows())
+        {
+            scriptLines.Add("echo 游戏已退出。");
+            scriptLines.Add("pause");
+        }
+        else
+        {
+            scriptLines.Add("printf '%s\\n' '游戏已退出。'");
+        }
 
         return new MinecraftLaunchCustomCommandPlan(
-            string.Join(BatchLineBreak, batchLines),
+            string.Join(lineBreak, scriptLines),
             useUtf8Encoding,
             commandExecutions);
     }
