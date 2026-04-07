@@ -3,8 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
+using System;
 using System.Linq;
 using System.Windows.Input;
 
@@ -150,7 +150,6 @@ internal sealed partial class PclCard : UserControl
         {
             RefreshChevronState();
             RaisePropertyChanged(IsContentVisibleProperty, !change.GetNewValue<bool>(), IsContentVisible);
-            ScheduleScrollViewerOffsetClamp();
         }
         else if (change.Property == ShowChevronProperty)
         {
@@ -242,6 +241,7 @@ internal sealed partial class PclCard : UserControl
 
     private void OnHeaderButtonClick(object? sender, RoutedEventArgs e)
     {
+        var scrollViewer = GetAncestorScrollViewer();
         if (HeaderCommand is not null)
         {
             if (HeaderCommand.CanExecute(null))
@@ -249,37 +249,46 @@ internal sealed partial class PclCard : UserControl
                 HeaderCommand.Execute(null);
             }
 
+            QueueScrollViewerOffsetClamp(scrollViewer);
             return;
         }
 
         if (ShowChevron)
         {
             SetCurrentValue(IsChevronExpandedProperty, !IsChevronExpanded);
+            QueueScrollViewerOffsetClamp(scrollViewer);
         }
     }
 
-    private void ScheduleScrollViewerOffsetClamp()
+    private ScrollViewer? GetAncestorScrollViewer()
     {
-        if (!ShowChevron)
+        return this.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
+    }
+
+    private static void QueueScrollViewerOffsetClamp(ScrollViewer? scrollViewer)
+    {
+        if (scrollViewer is null)
         {
             return;
         }
 
-        Dispatcher.UIThread.Post(() =>
+        EventHandler? layoutUpdatedHandler = null;
+        layoutUpdatedHandler = (_, _) =>
         {
-            var scrollViewer = this.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
-            if (scrollViewer is null)
-            {
-                return;
-            }
+            scrollViewer.LayoutUpdated -= layoutUpdatedHandler;
+            ClampScrollViewerOffset(scrollViewer);
+        };
+        scrollViewer.LayoutUpdated += layoutUpdatedHandler;
+    }
 
-            var maxVerticalOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-            if (scrollViewer.Offset.Y <= maxVerticalOffset + 0.5)
-            {
-                return;
-            }
+    private static void ClampScrollViewerOffset(ScrollViewer scrollViewer)
+    {
+        var maxVerticalOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+        if (scrollViewer.Offset.Y <= maxVerticalOffset + 0.5)
+        {
+            return;
+        }
 
-            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, maxVerticalOffset);
-        }, DispatcherPriority.Background);
+        scrollViewer.Offset = new Vector(scrollViewer.Offset.X, maxVerticalOffset);
     }
 }
