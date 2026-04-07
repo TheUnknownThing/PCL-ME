@@ -169,8 +169,8 @@ internal sealed partial class FrontendShellViewModel
         return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.DownloadInstall => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadInstall, StandardShellRightPaneGroup.DownloadInstall, "download-install", usesCompatibilityView: false),
-            LauncherFrontendSubpageKey.DownloadClient
-                or LauncherFrontendSubpageKey.DownloadOptiFine
+            LauncherFrontendSubpageKey.DownloadClient => CreateRightPaneDescriptor(StandardShellRightPaneKind.DownloadInstall, StandardShellRightPaneGroup.DownloadInstall, "download-client-install", usesCompatibilityView: false),
+            LauncherFrontendSubpageKey.DownloadOptiFine
                 or LauncherFrontendSubpageKey.DownloadForge
                 or LauncherFrontendSubpageKey.DownloadNeoForge
                 or LauncherFrontendSubpageKey.DownloadCleanroom

@@ -175,6 +175,16 @@ internal sealed partial class FrontendShellViewModel
         RefreshDownloadInstallSurfaceState();
     }
 
+    private void RefreshDownloadInstallSurface()
+    {
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall))
+        {
+            return;
+        }
+
+        InitializeDownloadInstallSurface();
+    }
+
     private void RefreshDownloadCatalogSurface()
     {
         _downloadCatalogRefreshCts?.Cancel();
