@@ -46,6 +46,8 @@ internal sealed partial class FrontendShellViewModel
                 ReplaceItems(ActivePrompts, []);
                 RaisePropertyChanged(nameof(HasActivePrompts));
                 RaisePropertyChanged(nameof(HasNoActivePrompts));
+                RaisePropertyChanged(nameof(CurrentPrompt));
+                RaisePropertyChanged(nameof(HasCurrentPrompt));
                 RaisePropertyChanged(nameof(IsPromptOverlayVisible));
                 return;
             }
@@ -58,6 +60,8 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(ActivePrompts, _promptCatalog[lane]);
         RaisePropertyChanged(nameof(HasActivePrompts));
         RaisePropertyChanged(nameof(HasNoActivePrompts));
+        RaisePropertyChanged(nameof(CurrentPrompt));
+        RaisePropertyChanged(nameof(HasCurrentPrompt));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);

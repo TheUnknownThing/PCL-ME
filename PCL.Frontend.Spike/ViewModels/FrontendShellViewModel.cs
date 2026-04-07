@@ -170,6 +170,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool HasNoActivePrompts => !HasActivePrompts;
 
+    public PromptCardViewModel? CurrentPrompt => ActivePrompts.Count > 0 ? ActivePrompts[0] : null;
+
+    public bool HasCurrentPrompt => CurrentPrompt is not null;
+
     public bool IsPromptOverlayVisible => HasActivePrompts && _isPromptOverlayOpen;
 
     public bool HasSidebarEntries => SidebarEntries.Count > 0;

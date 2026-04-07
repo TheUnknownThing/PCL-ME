@@ -374,116 +374,54 @@
                   motion:Motion.AnimateOnVisible="True"
                   motion:Motion.OffsetY="18">
                 <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,*">
-                  <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="4">
-                      <TextBlock
-                          Margin="7,-1,70,9"
-                          Foreground="{DynamicResource ColorBrush2}"
-                          FontSize="23"
-                          Text="{Binding PromptInboxTitle}" />
-                    </StackPanel>
-                    <Button
-                        Grid.Column="1"
-                        Width="32"
-                        Height="32"
-                        Classes="chrome"
-                        Command="{Binding DismissPromptOverlayCommand}">
-                      <TextBlock
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Foreground="#404040"
-                          FontSize="24"
-                          Text="✕" />
-                    </Button>
-                  </Grid>
+                  <TextBlock
+                      Margin="7,-1,70,9"
+                      Foreground="{DynamicResource ColorBrush2}"
+                      FontSize="23"
+                      Text="{Binding CurrentPrompt.Title}" />
 
                   <Rectangle
                       Grid.Row="1"
                       Height="2"
-                      Fill="{DynamicResource ColorBrush2}" />
+                      Fill="{Binding CurrentPrompt.AccentBrush}" />
 
-                  <Grid Grid.Row="3" RowDefinitions="Auto,Auto,*">
-                    <TextBlock
-                        Margin="7,0,15,10"
-                        Foreground="{DynamicResource ColorBrush1}"
-                        FontSize="15"
-                        LineHeight="18"
-                        Text="{Binding PromptInboxSummary}"
-                        TextWrapping="Wrap" />
+                  <Grid Grid.Row="3" RowDefinitions="*,Auto">
+                    <ScrollViewer
+                        Grid.Row="0"
+                        MaxHeight="380"
+                        Padding="7,0,15,17"
+                        VerticalScrollBarVisibility="Auto">
+                      <TextBlock
+                          Margin="1"
+                          Foreground="{DynamicResource ColorBrush1}"
+                          FontSize="15"
+                          LineHeight="18"
+                          Text="{Binding CurrentPrompt.Message}"
+                          TextWrapping="Wrap" />
+                    </ScrollViewer>
 
                     <ItemsControl
                         Grid.Row="1"
-                        Margin="7,0,0,12"
-                        ItemsSource="{Binding PromptLanes}">
+                        HorizontalAlignment="Right"
+                        ItemsSource="{Binding CurrentPrompt.Options}">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                          <WrapPanel Orientation="Horizontal" />
+                          <StackPanel Orientation="Horizontal" />
                         </ItemsPanelTemplate>
                       </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                          <controls:PclPromptLaneChip
-                              Margin="0,0,10,10"
-                              BackgroundBrush="{Binding BackgroundBrush}"
-                              ChipBorderBrush="{Binding BorderBrush}"
+                          <controls:PclButton
+                              MinWidth="96"
+                              Margin="12,0,0,0"
+                              ColorType="{Binding ColorType}"
                               Command="{Binding Command}"
-                              Count="{Binding Count}"
-                              ForegroundBrush="{Binding ForegroundBrush}"
-                              Title="{Binding Title}" />
+                              ContentPadding="8,5"
+                              Text="{Binding Label}"
+                              TextMargin="0,-1,0,0" />
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
-
-                    <ScrollViewer
-                        Grid.Row="2"
-                        MaxHeight="380"
-                        Padding="7,0,15,0"
-                        VerticalScrollBarVisibility="Auto">
-                      <StackPanel Spacing="18">
-                        <ItemsControl ItemsSource="{Binding ActivePrompts}">
-                          <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                              <controls:PclPromptCard
-                                  AccentBrush="{Binding AccentBrush}"
-                                  BadgeBackgroundBrush="{Binding BackgroundBrush}"
-                                  Message="{Binding Message}"
-                                  Severity="{Binding Severity}"
-                                  Source="{Binding Source}"
-                                  Title="{Binding Title}">
-                                <controls:PclPromptCard.OptionsContent>
-                                  <ItemsControl ItemsSource="{Binding Options}">
-                                    <ItemsControl.ItemsPanel>
-                                      <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" />
-                                      </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                      <DataTemplate>
-                                        <controls:PclButton
-                                            MinWidth="96"
-                                            Margin="12,0,0,10"
-                                            ColorType="{Binding ColorType}"
-                                            Command="{Binding Command}"
-                                            ContentPadding="8,5"
-                                            Text="{Binding Label}"
-                                            TextMargin="0,-1,0,0" />
-                                      </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                  </ItemsControl>
-                                </controls:PclPromptCard.OptionsContent>
-                              </controls:PclPromptCard>
-                            </DataTemplate>
-                          </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            Foreground="#7D8897"
-                            FontSize="12"
-                            IsVisible="{Binding HasNoActivePrompts}"
-                            Text="{Binding PromptEmptyState}" />
-                      </StackPanel>
-                    </ScrollViewer>
                   </Grid>
                 </Grid>
               </Border>
