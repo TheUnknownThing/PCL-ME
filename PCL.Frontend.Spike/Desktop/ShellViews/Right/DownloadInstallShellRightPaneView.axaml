@@ -4,6 +4,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="Button.install-choice-row">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.install-choice-row:pointerover">
+      <Setter Property="Background" Value="#14000000" />
+    </Style>
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="12">
       <StackPanel IsVisible="{Binding ShowDownloadInstallMinecraftCatalog}" Spacing="12">
@@ -37,36 +49,56 @@
                   HeaderCommand="{Binding ToggleCommand}"
                   ContentMargin="18,40,18,8">
                 <controls:PclCard.CardContent>
-                  <ItemsControl ItemsSource="{Binding Choices}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Border Margin="0,0,0,10" Background="#F7F9FC" BorderBrush="#E1E7EF" BorderThickness="1" CornerRadius="6">
+                    <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
                           <Button
-                              Classes="nochrome"
+                              Classes="install-choice-row"
                               Command="{Binding SelectCommand}"
-                              HorizontalContentAlignment="Stretch"
-                              Padding="0"
+                              HorizontalAlignment="Stretch">
+                            <Border
                               Background="Transparent"
-                              BorderBrush="Transparent"
-                              BorderThickness="0">
-                            <Grid Margin="12,10" ColumnDefinitions="Auto,*">
-                              <Border
-                                  Width="34"
-                                  Height="34"
-                                  Margin="0,0,12,0"
-                                  Background="#EAF2FE"
-                                  BorderBrush="#D5E6FD"
-                                  BorderThickness="1"
-                                  CornerRadius="8">
-                                <Image Source="{Binding Icon}" Stretch="Uniform" Margin="6" />
-                              </Border>
-                              <StackPanel Grid.Column="1" Spacing="2">
-                                <TextBlock Foreground="#343D4A" FontSize="13.5" FontWeight="SemiBold" Text="{Binding Title}" />
-                                <TextBlock Foreground="#7D8897" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
-                              </StackPanel>
-                            </Grid>
-                          </Button>
-                        </Border>
+                              CornerRadius="6"
+                              MinHeight="36">
+                              <Grid
+                                HorizontalAlignment="Stretch"
+                                ColumnDefinitions="4,4,34,*"
+                                RowDefinitions="*,Auto,Auto,*">
+                                <Border
+                                  Grid.RowSpan="4"
+                                  Grid.Column="0"
+                                  Background="#1370F3"
+                                  CornerRadius="0,3,3,0"
+                                  Opacity="0" />
+                                <Image
+                                  Grid.RowSpan="4"
+                                  Grid.Column="2"
+                                  Width="30"
+                                  Height="30"
+                                  VerticalAlignment="Center"
+                                  Source="{Binding Icon}"
+                                  Stretch="Uniform"
+                                  Margin="0" />
+                                <TextBlock
+                                  Grid.Row="1"
+                                  Grid.Column="3"
+                                  Margin="2,0,0,0"
+                                  Foreground="#343D4A"
+                                  FontSize="13.5"
+                                  FontWeight="SemiBold"
+                                  Text="{Binding Title}"
+                                  TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                  Grid.Row="2"
+                                  Grid.Column="3"
+                                  Margin="2,0,0,0"
+                                  Foreground="#7D8897"
+                                  FontSize="11.5"
+                                  Text="{Binding Summary}"
+                                  TextTrimming="CharacterEllipsis" />
+                              </Grid>
+                            </Border>
+                        </Button>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
@@ -219,64 +251,75 @@
                 </controls:PclCard.HeaderOverlayContent>
                 <controls:PclCard.CardContent>
                   <StackPanel Spacing="8">
-                    <Border
+                    <TextBlock
                         IsVisible="{Binding IsLoading}"
-                        Padding="12,10"
-                        Background="#F7F9FC"
-                        BorderBrush="#E1E7EF"
-                        BorderThickness="1"
-                        CornerRadius="6">
-                      <TextBlock
-                          Foreground="#677789"
-                          FontSize="12"
-                          Text="{Binding LoadingText}" />
-                    </Border>
+                        Margin="0,2,0,8"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="{Binding LoadingText}" />
 
-                    <Border
+                    <TextBlock
                         IsVisible="{Binding ShowEmptyState}"
-                        Padding="12,10"
-                        Background="#F7F9FC"
-                        BorderBrush="#E1E7EF"
-                        BorderThickness="1"
-                        CornerRadius="6">
-                      <TextBlock
-                          Foreground="#677789"
-                          FontSize="12"
-                          Text="{Binding EmptyStateText}"
-                          TextWrapping="Wrap" />
-                    </Border>
+                        Margin="0,2,0,8"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="{Binding EmptyStateText}"
+                        TextWrapping="Wrap" />
 
                     <ItemsControl ItemsSource="{Binding Choices}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                          <Border Background="{Binding BackgroundBrush}" BorderBrush="{Binding BorderBrush}" BorderThickness="1" CornerRadius="6">
-                            <Button
-                                Classes="nochrome"
-                                Command="{Binding SelectCommand}"
-                                HorizontalContentAlignment="Stretch"
-                                Padding="0"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                BorderThickness="0">
-                              <Grid Margin="12,10" ColumnDefinitions="*,Auto">
-                                <StackPanel Spacing="2">
-                                  <TextBlock Foreground="{Binding ForegroundBrush}" FontSize="13" FontWeight="SemiBold" Text="{Binding Title}" />
-                                  <TextBlock Foreground="{Binding SummaryBrush}" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <Border
-                                    Grid.Column="1"
-                                    Padding="8,3"
-                                    Margin="12,0,0,0"
-                                    Background="#DDEBFE"
-                                    BorderBrush="#BFD9FF"
-                                    BorderThickness="1"
-                                    CornerRadius="999"
-                                    IsVisible="{Binding IsSelected}">
-                                  <TextBlock Foreground="#1370F3" FontSize="11" FontWeight="SemiBold" Text="已选择" />
-                                </Border>
+                          <Button
+                              Classes="install-choice-row"
+                              Command="{Binding SelectCommand}"
+                              HorizontalAlignment="Stretch">
+                            <Border
+                                Background="{Binding BackgroundBrush}"
+                                BorderBrush="{Binding BorderBrush}"
+                                BorderThickness="0"
+                                CornerRadius="6"
+                                MinHeight="36">
+                              <Grid HorizontalAlignment="Stretch" ColumnDefinitions="4,*,Auto" RowDefinitions="*,Auto,Auto,*">
+                              <Border
+                                  Grid.RowSpan="4"
+                                  Width="4"
+                                  Margin="0,2,8,2"
+                                  Background="{Binding ForegroundBrush}"
+                                  CornerRadius="0,3,3,0"
+                                  IsVisible="{Binding IsSelected}" />
+
+                              <TextBlock
+                                  Grid.Row="1"
+                                  Grid.Column="1"
+                                  Foreground="{Binding ForegroundBrush}"
+                                  FontSize="13"
+                                  FontWeight="SemiBold"
+                                  Text="{Binding Title}"
+                                  TextTrimming="CharacterEllipsis" />
+                              <TextBlock
+                                  Grid.Row="2"
+                                  Grid.Column="1"
+                                  Foreground="{Binding SummaryBrush}"
+                                  FontSize="11.5"
+                                  Text="{Binding Summary}"
+                                  TextTrimming="CharacterEllipsis" />
+
+                              <Border
+                                  Grid.Column="2"
+                                  Grid.RowSpan="4"
+                                  Margin="8,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Padding="8,3"
+                                  Background="#DDEBFE"
+                                  BorderBrush="#BFD9FF"
+                                  BorderThickness="1"
+                                  CornerRadius="999"
+                                  IsVisible="{Binding IsSelected}">
+                                <TextBlock Foreground="#1370F3" FontSize="11" FontWeight="SemiBold" Text="已选择" />
+                              </Border>
                               </Grid>
-                            </Button>
-                          </Border>
+                            </Border>
+                          </Button>
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
