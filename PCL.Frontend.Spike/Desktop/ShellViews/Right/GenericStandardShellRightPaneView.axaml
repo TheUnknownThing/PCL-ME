@@ -403,6 +403,7 @@
                         Grid.RowSpan="3"
                         Width="50"
                         Height="50"
+                        ClipToBounds="True"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Background="#F7FAFE"

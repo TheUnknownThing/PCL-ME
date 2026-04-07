@@ -19,7 +19,7 @@
               BorderBrush="Transparent"
               BorderThickness="0"
               FontSize="13.5"
-              Text="{Binding DownloadResourceSearchQuery}"
+              Text="{Binding DownloadResourceSearchQuery, UpdateSourceTrigger=PropertyChanged}"
               VerticalContentAlignment="Center"
               Watermark="{Binding DownloadResourceSearchWatermark}" />
           <Path
@@ -201,6 +201,7 @@
                               Grid.RowSpan="3"
                               Width="50"
                               Height="50"
+                              ClipToBounds="True"
                               HorizontalAlignment="Right"
                               VerticalAlignment="Center"
                               Background="#F7FAFE"
@@ -208,13 +209,13 @@
                               BorderThickness="1"
                               CornerRadius="6">
                             <Image
-                                Width="38"
-                                Height="38"
+                                Width="50"
+                                Height="50"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding HasIcon}"
                                 Source="{Binding Icon}"
-                              Stretch="Uniform" />
+                                Stretch="UniformToFill" />
                           </Border>
 
                           <TextBlock

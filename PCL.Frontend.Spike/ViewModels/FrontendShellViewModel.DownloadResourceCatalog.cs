@@ -720,7 +720,7 @@ internal sealed partial class FrontendShellViewModel
             ? "结果来自实时社区目录，尝试调整搜索与筛选条件。"
             : result.State.HintText;
 
-        _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(result.State);
+        _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(result.State, selectedSource);
         _downloadResourceTagOptions = MergeFilterOptions(
             BuildFallbackDownloadResourceTagOptions(),
             result.State.TagOptions.Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue)),
@@ -857,27 +857,26 @@ internal sealed partial class FrontendShellViewModel
         return merged;
     }
 
-    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDownloadResourceSourceOptions(FrontendDownloadResourceState runtimeState)
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDownloadResourceSourceOptions(
+        FrontendDownloadResourceState runtimeState,
+        string? selectedSource = null)
     {
-        if (runtimeState.SupportsSecondarySource)
-        {
-            return
-            [
-                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
-                new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
-            ];
-        }
-
-        var source = runtimeState.Entries
+        var primarySource = runtimeState.Entries
             .Select(entry => entry.Source)
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))
             ?? "CurseForge";
-        return
-        [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel(source, source)
-        ];
+        IReadOnlyList<DownloadResourceFilterOptionViewModel> baseOptions = runtimeState.SupportsSecondarySource
+            ? [
+                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
+                new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
+            ]
+            : [
+                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                new DownloadResourceFilterOptionViewModel(primarySource, primarySource)
+            ];
+
+        return MergeFilterOptions(baseOptions, [], selectedSource);
     }
 
     private IReadOnlyList<DownloadResourceEntryViewModel> CreateDownloadResourceEntries(IReadOnlyList<FrontendDownloadResourceEntry> entries)
