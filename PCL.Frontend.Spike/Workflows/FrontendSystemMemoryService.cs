@@ -174,7 +174,9 @@ internal static class FrontendSystemMemoryService
             vmStatOutput = RunCommand("vm_stat");
         }
 
-        var availableBytes = ParseMacAvailableBytes(vmStatOutput);
+        var availableBytes = string.IsNullOrWhiteSpace(vmStatOutput)
+            ? 0
+            : ParseMacAvailableBytes(vmStatOutput);
         return (totalBytes, availableBytes);
     }
 
