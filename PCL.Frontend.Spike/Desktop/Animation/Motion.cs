@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using PCL.Frontend.Spike.Desktop.Controls;
 
 namespace PCL.Frontend.Spike.Desktop.Animation;
 
@@ -314,6 +315,19 @@ internal static class Motion
 
     private static List<Control> CollectStaggerTargets(Control control)
     {
+        var descendantCards = control
+            .GetVisualDescendants()
+            .OfType<PclCard>()
+            .Where(card => card.IsVisible)
+            .OrderBy(card => card.Bounds.Top)
+            .ThenBy(card => card.Bounds.Left)
+            .Cast<Control>()
+            .ToList();
+        if (descendantCards.Count > 1)
+        {
+            return descendantCards;
+        }
+
         switch (control)
         {
             case Panel panel:
