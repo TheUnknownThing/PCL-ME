@@ -751,7 +751,25 @@ internal sealed partial class FrontendShellViewModel
             _downloadResourcePageIndex = Math.Max(_downloadResourcePageIndex, targetPageIndex.Value);
         }
 
-        RaiseDownloadResourceFilterState();
+        // Raise option properties first so ComboBox ItemsSource updates
+        RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
+        RaisePropertyChanged(nameof(DownloadResourceTagOptions));
+        RaisePropertyChanged(nameof(DownloadResourceVersionOptions));
+        RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
+
+        // Then raise selected index properties to update selections
+        RaisePropertyChanged(nameof(SelectedDownloadResourceSourceIndex));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceTagIndex));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceVersionIndex));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceLoaderIndex));
+
+        RaisePropertyChanged(nameof(DownloadResourceSearchQuery));
+        RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
+        RaisePropertyChanged(nameof(DownloadResourceSortOptions));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceSortIndex));
+        RaisePropertyChanged(nameof(ShowDownloadResourceInstallModPackAction));
+        RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+        RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
         ApplyDownloadResourceFilters(resetPage);
         SetDownloadResourceLoading(false);
     }
