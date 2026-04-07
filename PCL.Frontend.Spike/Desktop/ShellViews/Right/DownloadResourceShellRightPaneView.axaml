@@ -4,44 +4,74 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="TextBox.search-input">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.search-input:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.search-input:focus">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.search-input /template/ Border">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
-      <controls:PclCard ContentMargin="8,7,8,7">
-        <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="*,Auto">
-            <Grid
-                ColumnDefinitions="Auto,*"
-                Height="40"
-                VerticalAlignment="Center">
-              <Path
-                  Width="14"
-                  Height="14"
-                  Margin="10,0,10,0"
-                  VerticalAlignment="Center"
-                  Fill="#7B8EA5"
-                  Stretch="Uniform"
-                  Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
-              <TextBox
-                  Grid.Column="1"
-                  x:Name="DownloadResourceSearchTextBox"
-                  Background="Transparent"
-                  BorderBrush="Transparent"
-                  BorderThickness="0"
-                  FontSize="13.5"
-                  Text="{Binding DownloadResourceSearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                  VerticalContentAlignment="Center"
-                  Watermark="{Binding DownloadResourceSearchWatermark}" />
-            </Grid>
-            <controls:PclButton
-                Grid.Column="1"
-                Width="72"
-                Height="40"
-                Margin="12,0,0,0"
-                Command="{Binding SearchDownloadResourceCommand}"
-                Text="搜索" />
-          </Grid>
-        </controls:PclCard.CardContent>
-      </controls:PclCard>
+      <Border
+          x:Name="SearchRowBorder"
+          Height="40"
+          Background="#F8FBFF"
+          BorderBrush="#D5E6FD"
+          BorderThickness="1"
+          CornerRadius="5">
+        <Border.Transitions>
+          <Transitions>
+            <BrushTransition Property="Background" Duration="0:0:0.12" />
+            <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+          </Transitions>
+        </Border.Transitions>
+        <Grid>
+          <TextBox
+              x:Name="DownloadResourceSearchTextBox"
+              Classes="search-input"
+              FocusAdorner="{x:Null}"
+              Padding="34,0,78,0"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              FontSize="13.5"
+              Text="{Binding DownloadResourceSearchQuery, UpdateSourceTrigger=PropertyChanged}"
+              VerticalContentAlignment="Center"
+              Watermark="{Binding DownloadResourceSearchWatermark}" />
+          <Path
+              Width="14"
+              Height="14"
+              Margin="14,0,0,0"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Center"
+              Fill="#7B8EA5"
+              Stretch="Uniform"
+              Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
+          <controls:PclButton
+              Width="60"
+              Height="32"
+              Margin="0,4,4,4"
+              Command="{Binding SearchDownloadResourceCommand}"
+              HorizontalAlignment="Right"
+              Text="搜索" />
+        </Grid>
+      </Border>
 
       <controls:PclCard ContentMargin="7,7,7,7">
         <controls:PclCard.CardContent>
