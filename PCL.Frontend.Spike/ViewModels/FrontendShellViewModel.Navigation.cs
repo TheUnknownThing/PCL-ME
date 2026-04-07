@@ -95,27 +95,33 @@ internal sealed partial class FrontendShellViewModel
         var itemIndex = 0;
         return navigation.SidebarEntries
             .GroupBy(entry => GetSidebarSectionTitle(navigation.CurrentRoute.Page, entry.Route.Subpage))
-            .Select(group => new SidebarSectionViewModel(
-                group.Key,
-                !string.IsNullOrWhiteSpace(group.Key),
-                group.Select(entry =>
-                {
-                    var (iconPath, iconScale) = GetSidebarIcon(entry.Route.Page, entry.Route.Subpage, entry.Title);
-                    var accessory = GetSidebarAccessory(entry.Route.Page, entry.Route.Subpage, entry.Title);
-                    return new SidebarListItemViewModel(
-                        entry.Title,
-                        entry.Summary,
-                        entry.IsSelected,
-                        iconPath,
-                        iconScale,
-                        itemIndex++ * 28,
-                        new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the launcher-style left pane.")),
-                        accessory.ToolTip,
-                        accessory.IconPath,
-                        accessory.Command is null
-                            ? null
-                            : new ActionCommand(() => ApplySidebarAccessory(entry.Title, accessory.ActionLabel, accessory.Command)));
-                }).ToArray()))
+            .Select(group =>
+            {
+                var hasTitle = !string.IsNullOrWhiteSpace(group.Key);
+                var enterDelay = hasTitle ? itemIndex++ * 28 : itemIndex * 28;
+                return new SidebarSectionViewModel(
+                    group.Key,
+                    hasTitle,
+                    enterDelay,
+                    group.Select(entry =>
+                    {
+                        var (iconPath, iconScale) = GetSidebarIcon(entry.Route.Page, entry.Route.Subpage, entry.Title);
+                        var accessory = GetSidebarAccessory(entry.Route.Page, entry.Route.Subpage, entry.Title);
+                        return new SidebarListItemViewModel(
+                            entry.Title,
+                            entry.Summary,
+                            entry.IsSelected,
+                            iconPath,
+                            iconScale,
+                            itemIndex++ * 28,
+                            new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the launcher-style left pane.")),
+                            accessory.ToolTip,
+                            accessory.IconPath,
+                            accessory.Command is null
+                                ? null
+                                : new ActionCommand(() => ApplySidebarAccessory(entry.Title, accessory.ActionLabel, accessory.Command)));
+                    }).ToArray());
+            })
             .ToArray();
     }
 

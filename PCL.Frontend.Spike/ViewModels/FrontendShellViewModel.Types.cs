@@ -44,11 +44,14 @@ internal sealed class NavigationEntryViewModel(
 internal sealed class SidebarSectionViewModel(
     string title,
     bool hasTitle,
+    int enterDelay,
     IReadOnlyList<SidebarListItemViewModel> items)
 {
     public string Title { get; } = title;
 
     public bool HasTitle { get; } = hasTitle;
+
+    public int EnterDelay { get; } = enterDelay;
 
     public IReadOnlyList<SidebarListItemViewModel> Items { get; } = items;
 }
