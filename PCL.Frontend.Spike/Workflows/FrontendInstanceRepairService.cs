@@ -670,10 +670,12 @@ internal sealed record FrontendInstanceRepairFilePlan(
 
 internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInstanceRepairTelemetrySnapshot> onTelemetry)
 {
+    private const int TelemetryIntervalMs = 120;
     private readonly Dictionary<string, ProgressEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
     private long _lastSampleBytes;
     private long _lastSampleTimestampMs;
+    private long _lastTelemetryTimestampMs;
     private double _speedBytesPerSecond;
     private string _currentFileName = string.Empty;
 
@@ -693,7 +695,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
 
         if (changed)
         {
-            Publish();
+            Publish(forceEmit: true);
         }
     }
 
@@ -710,7 +712,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
         entry.WasDownloaded = false;
         entry.TransferBytes = 0;
         _currentFileName = Path.GetFileName(plan.LocalPath);
-        Publish();
+        Publish(forceEmit: true);
     }
 
     public void StartDownload(FrontendInstanceRepairFilePlan plan)
@@ -741,7 +743,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
         entry.WasDownloaded = true;
         entry.TransferBytes = entry.CurrentBytes;
         _currentFileName = Path.GetFileName(plan.LocalPath);
-        Publish(forceSpeedRefresh: true);
+        Publish(forceSpeedRefresh: true, forceEmit: true);
     }
 
     private ProgressEntry GetEntry(FrontendInstanceRepairFilePlan plan)
@@ -756,7 +758,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
         return entry;
     }
 
-    private void Publish(bool forceSpeedRefresh = false)
+    private void Publish(bool forceSpeedRefresh = false, bool forceEmit = false)
     {
         var nowMs = _stopwatch.ElapsedMilliseconds;
         var completedBytes = _entries.Values.Sum(entry => entry.CompletedBytes);
@@ -770,6 +772,11 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
                 _lastSampleBytes = transferredBytes;
                 _lastSampleTimestampMs = nowMs;
             }
+        }
+
+        if (!forceEmit && nowMs - _lastTelemetryTimestampMs < TelemetryIntervalMs)
+        {
+            return;
         }
 
         var groups = _entries.Values
@@ -792,6 +799,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
 
         var totalFiles = _entries.Count;
         var completedFiles = _entries.Values.Count(entry => entry.IsCompleted);
+        _lastTelemetryTimestampMs = nowMs;
         onTelemetry(
             new FrontendInstanceRepairTelemetrySnapshot(
                 groups,

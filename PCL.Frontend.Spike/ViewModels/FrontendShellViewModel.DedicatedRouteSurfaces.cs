@@ -26,6 +26,7 @@ internal sealed partial class FrontendShellViewModel
     private double _taskManagerOverallProgress = 1d;
     private string _taskManagerDownloadSpeedText = "0 B/s";
     private string _taskManagerRemainingFilesText = "0";
+    private DispatcherTimer? _taskManagerRefreshTimer;
     private int _gameLogRecentFileCount;
     private string _gameLogLatestUpdateLabel = "尚未发现日志文件";
 
@@ -162,6 +163,7 @@ internal sealed partial class FrontendShellViewModel
     private void InitializeStepOneSurfaces()
     {
         TaskCenter.Tasks.CollectionChanged += OnTaskCenterCollectionChanged;
+        EnsureTaskManagerRefreshTimer();
         SyncTaskSubscriptions();
     }
 
@@ -757,7 +759,7 @@ internal sealed partial class FrontendShellViewModel
     private void OnTaskCenterCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         SyncTaskSubscriptions();
-        Dispatcher.UIThread.Post(RefreshTaskManagerSurface);
+        QueueTaskManagerSurfaceRefresh(immediate: true);
     }
 
     private void SyncTaskSubscriptions()
@@ -782,12 +784,45 @@ internal sealed partial class FrontendShellViewModel
 
     private void OnTaskModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Dispatcher.UIThread.Post(RefreshTaskManagerSurface);
+        QueueTaskManagerSurfaceRefresh();
     }
 
     private void OnTaskChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        Dispatcher.UIThread.Post(RefreshTaskManagerSurface);
+        QueueTaskManagerSurfaceRefresh();
+    }
+
+    private void QueueTaskManagerSurfaceRefresh(bool immediate = false)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            EnsureTaskManagerRefreshTimer();
+            var refreshTimer = _taskManagerRefreshTimer!;
+            if (immediate)
+            {
+                refreshTimer.Stop();
+                RefreshTaskManagerSurface();
+                return;
+            }
+
+            refreshTimer.Stop();
+            refreshTimer.Start();
+        });
+    }
+
+    private void EnsureTaskManagerRefreshTimer()
+    {
+        if (_taskManagerRefreshTimer is not null)
+        {
+            return;
+        }
+
+        _taskManagerRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        _taskManagerRefreshTimer.Tick += (_, _) =>
+        {
+            _taskManagerRefreshTimer?.Stop();
+            RefreshTaskManagerSurface();
+        };
     }
 
     private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
