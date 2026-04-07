@@ -789,11 +789,14 @@ internal sealed class PromptCardViewModel(
 internal sealed class PromptOptionViewModel(
     string label,
     string detail,
+    PclButtonColorState colorType,
     ActionCommand command)
 {
     public string Label { get; } = label;
 
     public string Detail { get; } = detail;
+
+    public PclButtonColorState ColorType { get; } = colorType;
 
     public ActionCommand Command { get; } = command;
 }
