@@ -675,7 +675,7 @@ internal sealed partial class FrontendShellViewModel
                     return;
                 }
 
-                ApplyDownloadResourceQueryResult(result, resetPage, targetPageIndex);
+                ApplyDownloadResourceQueryResult(result, query, resetPage, targetPageIndex);
             });
         }
         catch (OperationCanceledException)
@@ -711,12 +711,16 @@ internal sealed partial class FrontendShellViewModel
             GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex));
     }
 
-    private void ApplyDownloadResourceQueryResult(FrontendCommunityResourceQueryResult result, bool resetPage, int? targetPageIndex)
+    private void ApplyDownloadResourceQueryResult(
+        FrontendCommunityResourceQueryResult result,
+        FrontendCommunityResourceQuery query,
+        bool resetPage,
+        int? targetPageIndex)
     {
-        var selectedSource = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
-        var selectedTag = GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex);
-        var selectedVersion = GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex);
-        var selectedLoader = GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex);
+        var selectedSource = query.Source;
+        var selectedTag = query.Tag;
+        var selectedVersion = query.Version;
+        var selectedLoader = query.Loader;
 
         _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         _downloadResourceHasMoreEntries = result.State.HasMoreEntries;
