@@ -158,11 +158,11 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowInnerNavigation => CanGoBack;
 
-    public bool IsInstanceSelectionContextRoute => ShowInstanceSelectSurface;
+    public bool IsContextModeRoute => _currentNavigation?.ShowsBackButton ?? false;
 
-    public bool ShowWindowBranding => !IsInstanceSelectionContextRoute;
+    public bool ShowWindowBranding => !IsContextModeRoute;
 
-    public bool ShowWindowUtilityButtons => !IsInstanceSelectionContextRoute;
+    public bool ShowWindowUtilityButtons => !IsContextModeRoute;
 
     public bool ShowMaximizeButton => false;
 
