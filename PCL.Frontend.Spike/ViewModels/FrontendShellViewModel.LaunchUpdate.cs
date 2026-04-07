@@ -374,6 +374,8 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchProfileDescription => _launchComposition.SelectedProfile.Kind switch
     {
+        MinecraftLaunchProfileKind.Auth when !string.IsNullOrWhiteSpace(_launchComposition.SelectedProfile.AuthServerName)
+            => $"外置验证 / {_launchComposition.SelectedProfile.AuthServerName}",
         MinecraftLaunchProfileKind.Auth when !string.IsNullOrWhiteSpace(_launchComposition.SelectedProfile.AuthServer)
             => $"外置验证 / {GetLaunchAuthServerDisplayName(_launchComposition.SelectedProfile.AuthServer!)}",
         MinecraftLaunchProfileKind.Microsoft => "正版验证",

@@ -227,6 +227,7 @@ internal static class FrontendLaunchCompositionService
                 plan.ReplacementPlan.Values.TryGetValue("${auth_access_token}", out var accessToken) ? accessToken : null,
                 null,
                 null,
+                null,
                 plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft),
             null,
             10,
@@ -583,6 +584,7 @@ internal static class FrontendLaunchCompositionService
                 selectedProfile.AccessToken,
                 selectedProfile.ClientToken,
                 selectedProfile.Server,
+                selectedProfile.ServerName,
                 document.Profiles.Any(profile => profile.Kind == MinecraftLaunchStoredProfileKind.Microsoft));
         }
         catch
@@ -600,6 +602,7 @@ internal static class FrontendLaunchCompositionService
         return new FrontendLaunchProfileSummary(
             string.IsNullOrWhiteSpace(legacyName) ? MinecraftLaunchProfileKind.None : MinecraftLaunchProfileKind.Legacy,
             string.IsNullOrWhiteSpace(legacyName) ? "未选择档案" : legacyName,
+            null,
             null,
             null,
             null,
