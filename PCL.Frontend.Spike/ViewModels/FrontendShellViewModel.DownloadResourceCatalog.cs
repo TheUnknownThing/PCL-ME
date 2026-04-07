@@ -38,6 +38,11 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedDownloadResourceSortIndex;
     private int _selectedDownloadResourceVersionIndex;
     private int _selectedDownloadResourceLoaderIndex;
+    private DownloadResourceFilterOptionViewModel? _selectedDownloadResourceSourceOption;
+    private DownloadResourceFilterOptionViewModel? _selectedDownloadResourceTagOption;
+    private DownloadResourceFilterOptionViewModel? _selectedDownloadResourceSortOption;
+    private DownloadResourceFilterOptionViewModel? _selectedDownloadResourceVersionOption;
+    private DownloadResourceFilterOptionViewModel? _selectedDownloadResourceLoaderOption;
     private int _downloadResourcePageIndex;
     private int _downloadResourceTotalPages = 1;
     private bool _downloadResourceHasMoreEntries;
@@ -148,6 +153,67 @@ internal sealed partial class FrontendShellViewModel
     public IReadOnlyList<DownloadResourceFilterOptionViewModel> DownloadResourceVersionOptions => _downloadResourceVersionOptions;
 
     public IReadOnlyList<DownloadResourceFilterOptionViewModel> DownloadResourceLoaderOptions => _downloadResourceLoaderOptions;
+
+    public DownloadResourceFilterOptionViewModel? SelectedDownloadResourceSourceOption
+    {
+        get => _selectedDownloadResourceSourceOption;
+        set => SetSelectedDownloadResourceOption(
+            DownloadResourceSourceOptions,
+            value,
+            ref _selectedDownloadResourceSourceOption,
+            nameof(SelectedDownloadResourceSourceOption),
+            ref _selectedDownloadResourceSourceIndex,
+            nameof(SelectedDownloadResourceSourceIndex),
+            UpdateDownloadResourceHint);
+    }
+
+    public DownloadResourceFilterOptionViewModel? SelectedDownloadResourceTagOption
+    {
+        get => _selectedDownloadResourceTagOption;
+        set => SetSelectedDownloadResourceOption(
+            DownloadResourceTagOptions,
+            value,
+            ref _selectedDownloadResourceTagOption,
+            nameof(SelectedDownloadResourceTagOption),
+            ref _selectedDownloadResourceTagIndex,
+            nameof(SelectedDownloadResourceTagIndex));
+    }
+
+    public DownloadResourceFilterOptionViewModel? SelectedDownloadResourceSortOption
+    {
+        get => _selectedDownloadResourceSortOption;
+        set => SetSelectedDownloadResourceOption(
+            DownloadResourceSortOptions,
+            value,
+            ref _selectedDownloadResourceSortOption,
+            nameof(SelectedDownloadResourceSortOption),
+            ref _selectedDownloadResourceSortIndex,
+            nameof(SelectedDownloadResourceSortIndex));
+    }
+
+    public DownloadResourceFilterOptionViewModel? SelectedDownloadResourceVersionOption
+    {
+        get => _selectedDownloadResourceVersionOption;
+        set => SetSelectedDownloadResourceOption(
+            DownloadResourceVersionOptions,
+            value,
+            ref _selectedDownloadResourceVersionOption,
+            nameof(SelectedDownloadResourceVersionOption),
+            ref _selectedDownloadResourceVersionIndex,
+            nameof(SelectedDownloadResourceVersionIndex));
+    }
+
+    public DownloadResourceFilterOptionViewModel? SelectedDownloadResourceLoaderOption
+    {
+        get => _selectedDownloadResourceLoaderOption;
+        set => SetSelectedDownloadResourceOption(
+            DownloadResourceLoaderOptions,
+            value,
+            ref _selectedDownloadResourceLoaderOption,
+            nameof(SelectedDownloadResourceLoaderOption),
+            ref _selectedDownloadResourceLoaderIndex,
+            nameof(SelectedDownloadResourceLoaderIndex));
+    }
 
     public int SelectedDownloadResourceSourceIndex
     {
@@ -352,6 +418,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourcePageIndex = 0;
         _downloadResourceTotalPages = 1;
         _downloadResourceHasMoreEntries = false;
+        SyncSelectedDownloadResourceOptions();
         UpdateDownloadResourceHint();
     }
 
@@ -569,6 +636,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RaiseDownloadResourceFilterState()
     {
+        SyncSelectedDownloadResourceOptions();
         RaisePropertyChanged(nameof(DownloadResourceSearchQuery));
         RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
         RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
@@ -581,6 +649,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedDownloadResourceSortIndex));
         RaisePropertyChanged(nameof(SelectedDownloadResourceVersionIndex));
         RaisePropertyChanged(nameof(SelectedDownloadResourceLoaderIndex));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceSourceOption));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceTagOption));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceSortOption));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceVersionOption));
+        RaisePropertyChanged(nameof(SelectedDownloadResourceLoaderOption));
         RaisePropertyChanged(nameof(ShowDownloadResourceInstallModPackAction));
         RaisePropertyChanged(nameof(DownloadResourcePageLabel));
         RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
@@ -849,6 +922,81 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return 0;
+    }
+
+    private void SyncSelectedDownloadResourceOptions()
+    {
+        _selectedDownloadResourceSourceOption = GetFilterOptionAt(DownloadResourceSourceOptions, _selectedDownloadResourceSourceIndex);
+        _selectedDownloadResourceTagOption = GetFilterOptionAt(DownloadResourceTagOptions, _selectedDownloadResourceTagIndex);
+        _selectedDownloadResourceSortOption = GetFilterOptionAt(DownloadResourceSortOptions, _selectedDownloadResourceSortIndex);
+        _selectedDownloadResourceVersionOption = GetFilterOptionAt(DownloadResourceVersionOptions, _selectedDownloadResourceVersionIndex);
+        _selectedDownloadResourceLoaderOption = GetFilterOptionAt(DownloadResourceLoaderOptions, _selectedDownloadResourceLoaderIndex);
+    }
+
+    private void SetSelectedDownloadResourceOption(
+        IReadOnlyList<DownloadResourceFilterOptionViewModel> options,
+        DownloadResourceFilterOptionViewModel? value,
+        ref DownloadResourceFilterOptionViewModel? field,
+        string selectedOptionPropertyName,
+        ref int indexField,
+        string selectedIndexPropertyName,
+        Action? afterIndexChanged = null)
+    {
+        if (value is null && options.Count > 0)
+        {
+            return;
+        }
+
+        var nextValue = ResolveSelectedFilterOption(options, value, indexField);
+        if (ReferenceEquals(field, nextValue))
+        {
+            return;
+        }
+
+        field = nextValue;
+        RaisePropertyChanged(selectedOptionPropertyName);
+
+        var nextIndex = FindFilterOptionIndex(options, nextValue?.FilterValue ?? string.Empty);
+        if (indexField == nextIndex)
+        {
+            return;
+        }
+
+        indexField = nextIndex;
+        RaisePropertyChanged(selectedIndexPropertyName);
+        afterIndexChanged?.Invoke();
+    }
+
+    private static DownloadResourceFilterOptionViewModel? ResolveSelectedFilterOption(
+        IReadOnlyList<DownloadResourceFilterOptionViewModel> options,
+        DownloadResourceFilterOptionViewModel? selectedOption,
+        int fallbackIndex)
+    {
+        if (options.Count == 0)
+        {
+            return null;
+        }
+
+        if (selectedOption is not null)
+        {
+            var matchedOption = options.FirstOrDefault(option =>
+                ReferenceEquals(option, selectedOption)
+                || (string.Equals(option.FilterValue, selectedOption.FilterValue, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(option.Label, selectedOption.Label, StringComparison.OrdinalIgnoreCase)));
+            if (matchedOption is not null)
+            {
+                return matchedOption;
+            }
+        }
+
+        return GetFilterOptionAt(options, fallbackIndex);
+    }
+
+    private static DownloadResourceFilterOptionViewModel? GetFilterOptionAt(
+        IReadOnlyList<DownloadResourceFilterOptionViewModel> options,
+        int index)
+    {
+        return options.Count == 0 ? null : options[Math.Clamp(index, 0, options.Count - 1)];
     }
 
     private static IReadOnlyList<DownloadResourceFilterOptionViewModel> MergeFilterOptions(
