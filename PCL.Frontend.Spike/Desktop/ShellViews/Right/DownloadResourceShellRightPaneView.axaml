@@ -4,6 +4,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="TextBox#DownloadResourceSearchTextBox:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox#DownloadResourceSearchTextBox:focus">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
       <controls:PclCard ContentMargin="8,7,8,7">
@@ -213,6 +223,7 @@
                               ClipToBounds="True"
                               HorizontalAlignment="Right"
                               VerticalAlignment="Center"
+                              BorderThickness="0"
                               CornerRadius="6">
                             <Image
                                 Width="50"
