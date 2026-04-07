@@ -89,6 +89,22 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasCommunityProjectDescription => !string.IsNullOrWhiteSpace(CommunityProjectDescription);
 
+    public string CommunityProjectIntroDescription => !string.IsNullOrWhiteSpace(CommunityProjectSummary)
+        ? CommunityProjectSummary
+        : CommunityProjectDescription;
+
+    public IReadOnlyList<string> CommunityProjectCategoryTags => BuildCommunityProjectCategoryTags(CommunityProjectCategorySummary);
+
+    public bool HasCommunityProjectCategoryTags => CommunityProjectCategoryTags.Count > 0;
+
+    public string CommunityProjectSourceBadgeText => CommunityProjectSource switch
+    {
+        "CurseForge" => "CF",
+        "Modrinth" => "MR",
+        { Length: > 0 } source => source[..1].ToUpperInvariant(),
+        _ => "?"
+    };
+
     public bool HasCommunityProjectActionButtons => CommunityProjectActionButtons.Count > 0;
 
     public bool ShowCommunityProjectLoadingCard => _isCommunityProjectLoading;
@@ -356,6 +372,21 @@ internal sealed partial class FrontendShellViewModel
             string.Equals(option, selectedValue, StringComparison.OrdinalIgnoreCase) ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
             new ActionCommand(() => applyFilter(option)))));
         return buttons;
+    }
+
+    private static IReadOnlyList<string> BuildCommunityProjectCategoryTags(string summary)
+    {
+        if (string.IsNullOrWhiteSpace(summary)
+            || string.Equals(summary, "未提供标签信息", StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        return summary
+            .Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(8)
+            .ToArray();
     }
 
     private IReadOnlyList<CommunityProjectReleaseGroupViewModel> BuildCommunityProjectReleaseGroups((bool GroupByDrop, bool FoldOld) versionGrouping)
@@ -957,6 +988,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CommunityProjectDownloadCountLabel));
         RaisePropertyChanged(nameof(CommunityProjectFollowCountLabel));
         RaisePropertyChanged(nameof(HasCommunityProjectDescription));
+        RaisePropertyChanged(nameof(CommunityProjectIntroDescription));
+        RaisePropertyChanged(nameof(CommunityProjectCategoryTags));
+        RaisePropertyChanged(nameof(HasCommunityProjectCategoryTags));
+        RaisePropertyChanged(nameof(CommunityProjectSourceBadgeText));
         RaisePropertyChanged(nameof(HasCommunityProjectActionButtons));
         RaisePropertyChanged(nameof(ShowCommunityProjectFilterCard));
         RaisePropertyChanged(nameof(ShowCommunityProjectVersionFilters));

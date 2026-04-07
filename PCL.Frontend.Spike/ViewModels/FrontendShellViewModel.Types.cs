@@ -373,6 +373,8 @@ internal sealed class DownloadCatalogEntryViewModel(
     public ActionCommand Command { get; } = command;
 
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
+
+    public string CombinedInfo => string.Join(" • ", new[] { Info, Meta }.Where(part => !string.IsNullOrWhiteSpace(part)));
 }
 
 internal sealed class CommunityProjectReleaseGroupViewModel(
