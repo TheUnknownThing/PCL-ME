@@ -167,22 +167,12 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeDownloadInstallSurface()
     {
-        EnsureDownloadInstallEditableState();
-        _downloadInstallName = _downloadComposition.Install.Name;
-        DownloadInstallMinecraftVersion = _downloadInstallMinecraftChoice is null
-            ? _downloadComposition.Install.MinecraftVersion
-            : $"Minecraft {_downloadInstallMinecraftChoice.Version}";
-        DownloadInstallMinecraftIcon = LoadLauncherBitmap("Images", "Blocks", _downloadComposition.Install.MinecraftIconName ?? "Grass.png");
+        if (!_downloadInstallIsInSelectionStage && !_downloadInstallIsNameEditedByUser)
+        {
+            _downloadInstallName = "新的安装方案";
+        }
 
-        ReplaceItems(
-            DownloadInstallHints,
-            GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
-                CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
-
-        ReplaceItems(
-            DownloadInstallOptions,
-            _downloadComposition.Install.Options.Select(option =>
-                CreateInstallOptionViewModel(isExistingInstance: false, option.Title, option.IconName)));
+        RefreshDownloadInstallSurfaceState();
     }
 
     private void RefreshDownloadCatalogSurface()

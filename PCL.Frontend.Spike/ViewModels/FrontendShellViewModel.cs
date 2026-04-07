@@ -42,6 +42,10 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<SurfaceNoticeViewModel> DownloadInstallHints { get; } = [];
 
+    public ObservableCollection<DownloadInstallMinecraftSectionViewModel> DownloadInstallMinecraftSections { get; } = [];
+
+    public ObservableCollection<DownloadInstallOptionCardViewModel> DownloadInstallOptionCards { get; } = [];
+
     public ObservableCollection<DownloadInstallOptionViewModel> DownloadInstallOptions { get; } = [];
 
     public ObservableCollection<DownloadCatalogActionViewModel> DownloadCatalogIntroActions { get; } = [];

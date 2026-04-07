@@ -50,6 +50,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void EnsureDownloadInstallEditableState()
     {
+        if (_downloadInstallIsInSelectionStage)
+        {
+            return;
+        }
+
         var installState = _downloadComposition.Install;
         var signature = string.Join(
             "|",
@@ -293,6 +298,19 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task StartDownloadInstallAsync()
     {
+        if (!_downloadInstallIsInSelectionStage || _downloadInstallMinecraftChoice is null)
+        {
+            AddActivity("开始安装", "请先从下载页选择一个 Minecraft 版本。");
+            return;
+        }
+
+        ValidateDownloadInstallName();
+        if (!string.IsNullOrWhiteSpace(DownloadInstallNameValidationMessage))
+        {
+            AddActivity("开始安装", DownloadInstallNameValidationMessage);
+            return;
+        }
+
         var targetName = string.IsNullOrWhiteSpace(DownloadInstallName)
             ? _downloadComposition.Install.Name
             : DownloadInstallName.Trim();

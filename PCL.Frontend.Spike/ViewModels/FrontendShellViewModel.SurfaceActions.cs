@@ -1476,9 +1476,18 @@ internal sealed partial class FrontendShellViewModel
 
     private void ResetDownloadInstallSurface()
     {
+        _downloadInstallIsInSelectionStage = false;
+        _downloadInstallExpandedOptionTitle = null;
+        _downloadInstallMinecraftChoice = null;
+        _downloadInstallIsNameEditedByUser = false;
+        _downloadInstallOptionChoices.Clear();
+        _downloadInstallOptionLoadsInProgress.Clear();
+        _downloadInstallOptionLoadErrors.Clear();
+        _downloadInstallMinecraftCatalogLoaded = false;
+        ReplaceItems(DownloadInstallMinecraftSections, []);
         InitializeDownloadInstallSurface();
         RaisePropertyChanged(nameof(DownloadInstallName));
-        AddActivity("刷新自动安装页", "自动安装选择面板已恢复到默认演示状态。");
+        AddActivity("刷新自动安装页", "自动安装页已恢复为原版下载流程：先选 Minecraft 版本，再确认安装组合。");
     }
 
     private void ResetGameLinkSurface()

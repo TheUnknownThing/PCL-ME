@@ -80,6 +80,88 @@ internal static class FrontendInstallWorkflowService
         return choices;
     }
 
+    public static IReadOnlyList<FrontendInstallChoice> GetMinecraftCatalogChoices(string? preferredVersion)
+    {
+        var root = ReadJsonObject(MojangVersionManifestUrl);
+        if (root["versions"] is not JsonArray versions)
+        {
+            return [];
+        }
+
+        var choices = versions
+            .Select(node => node as JsonObject)
+            .Where(node => node is not null)
+            .Select(node =>
+            {
+                var rawId = node!["id"]?.GetValue<string>() ?? string.Empty;
+                var manifestUrl = node["url"]?.GetValue<string>();
+                if (string.IsNullOrWhiteSpace(rawId) || string.IsNullOrWhiteSpace(manifestUrl))
+                {
+                    return null;
+                }
+
+                var releaseTime = node["releaseTime"]?.GetValue<string>();
+                var normalizedId = NormalizeMinecraftCatalogVersionId(rawId);
+                var group = ResolveMinecraftCatalogGroup(rawId, node["type"]?.GetValue<string>(), releaseTime);
+                var iconName = ResolveMinecraftCatalogIconName(group);
+                var lore = ResolveMinecraftCatalogLore(rawId, group, releaseTime);
+                var formattedTitle = FormatMinecraftCatalogVersion(normalizedId);
+                var summary = string.IsNullOrWhiteSpace(lore)
+                    ? BuildMinecraftCatalogTimestampSummary(releaseTime, normalizedId, formattedTitle)
+                    : BuildMinecraftCatalogLoreSummary(lore, normalizedId, formattedTitle);
+
+                return new FrontendInstallChoice(
+                    Id: $"minecraft:{normalizedId}",
+                    Title: formattedTitle,
+                    Summary: summary,
+                    Version: normalizedId,
+                    Kind: FrontendInstallChoiceKind.Minecraft,
+                    ManifestUrl: manifestUrl,
+                    Metadata: new JsonObject
+                    {
+                        ["catalogGroup"] = group,
+                        ["iconName"] = iconName,
+                        ["releaseTime"] = ParseCatalogReleaseTime(releaseTime)?.ToString("O"),
+                        ["rawVersion"] = rawId
+                    });
+            })
+            .Where(choice => choice is not null)
+            .Cast<FrontendInstallChoice>()
+            .OrderByDescending(choice => choice.Metadata?["releaseTime"]?.GetValue<string>(), StringComparer.Ordinal)
+            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(preferredVersion)
+            && choices.All(choice => !string.Equals(choice.Version, preferredVersion, StringComparison.OrdinalIgnoreCase)))
+        {
+            var extra = versions
+                .Select(node => node as JsonObject)
+                .FirstOrDefault(node => string.Equals(node?["id"]?.GetValue<string>(), preferredVersion, StringComparison.OrdinalIgnoreCase));
+            if (extra is not null)
+            {
+                var releaseTime = extra["releaseTime"]?.GetValue<string>();
+                var group = ResolveMinecraftCatalogGroup(preferredVersion, extra["type"]?.GetValue<string>(), releaseTime);
+                choices.Insert(
+                    0,
+                    new FrontendInstallChoice(
+                        Id: $"minecraft:{preferredVersion}",
+                        Title: FormatMinecraftCatalogVersion(preferredVersion),
+                        Summary: $"当前实例 • {FormatReleaseTime(releaseTime)}",
+                        Version: preferredVersion,
+                        Kind: FrontendInstallChoiceKind.Minecraft,
+                        ManifestUrl: extra["url"]?.GetValue<string>(),
+                        Metadata: new JsonObject
+                        {
+                            ["catalogGroup"] = group,
+                            ["iconName"] = ResolveMinecraftCatalogIconName(group),
+                            ["releaseTime"] = ParseCatalogReleaseTime(releaseTime)?.ToString("O"),
+                            ["rawVersion"] = preferredVersion
+                        }));
+            }
+        }
+
+        return choices;
+    }
+
     public static IReadOnlyList<FrontendInstallChoice> GetSupportedChoices(
         string optionTitle,
         string minecraftVersion)
@@ -1481,6 +1563,141 @@ internal static class FrontendInstallWorkflowService
             .Cast<string>()
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         return tokens.Contains("Fabric") && tokens.Contains(minecraftVersion);
+    }
+
+    private static DateTimeOffset? ParseCatalogReleaseTime(string? rawValue)
+    {
+        return DateTimeOffset.TryParse(rawValue, out var value) ? value : null;
+    }
+
+    private static string NormalizeMinecraftCatalogVersionId(string rawId)
+    {
+        return rawId switch
+        {
+            "2point0_blue" => "2.0_blue",
+            "2point0_red" => "2.0_red",
+            "2point0_purple" => "2.0_purple",
+            "20w14infinite" => "20w14∞",
+            _ => rawId
+        };
+    }
+
+    private static string ResolveMinecraftCatalogGroup(string versionId, string? type, string? releaseTime)
+    {
+        var normalizedId = versionId.ToLowerInvariant();
+        switch (type?.ToLowerInvariant())
+        {
+            case "release":
+                return "正式版";
+            case "snapshot":
+            case "pending":
+                if (IsAprilFoolsVersion(normalizedId, releaseTime))
+                {
+                    return "愚人节版";
+                }
+
+                return LooksLikeMisclassifiedRelease(normalizedId) ? "正式版" : "预览版";
+            case "special":
+                return "愚人节版";
+            default:
+                return IsAprilFoolsVersion(normalizedId, releaseTime) ? "愚人节版" : "远古版";
+        }
+    }
+
+    private static bool LooksLikeMisclassifiedRelease(string normalizedId)
+    {
+        return normalizedId.StartsWith("1.", StringComparison.Ordinal)
+               && !normalizedId.Contains("combat", StringComparison.Ordinal)
+               && !normalizedId.Contains("rc", StringComparison.Ordinal)
+               && !normalizedId.Contains("experimental", StringComparison.Ordinal)
+               && !normalizedId.Equals("1.2", StringComparison.Ordinal)
+               && !normalizedId.Contains("pre", StringComparison.Ordinal);
+    }
+
+    private static bool IsAprilFoolsVersion(string normalizedId, string? releaseTime)
+    {
+        if (ResolveMinecraftCatalogAprilFoolsLore(normalizedId).Length > 0)
+        {
+            return true;
+        }
+
+        var parsed = ParseCatalogReleaseTime(releaseTime);
+        return parsed is not null
+               && parsed.Value.ToUniversalTime().AddHours(2) is var adjusted
+               && adjusted.Month == 4
+               && adjusted.Day == 1;
+    }
+
+    private static string ResolveMinecraftCatalogIconName(string group)
+    {
+        return group switch
+        {
+            "预览版" => "CommandBlock.png",
+            "愚人节版" => "GoldBlock.png",
+            "远古版" => "CobbleStone.png",
+            _ => "Grass.png"
+        };
+    }
+
+    private static string ResolveMinecraftCatalogLore(string versionId, string group, string? releaseTime)
+    {
+        var lore = ResolveMinecraftCatalogAprilFoolsLore(versionId.ToLowerInvariant());
+        if (lore.Length > 0)
+        {
+            return lore;
+        }
+
+        if (!string.Equals(group, "愚人节版", StringComparison.Ordinal))
+        {
+            return string.Empty;
+        }
+
+        var parsed = ParseCatalogReleaseTime(releaseTime);
+        return parsed is null ? string.Empty : $"发布于 {parsed.Value.LocalDateTime:yyyy/MM/dd HH:mm} 的愚人节特辑";
+    }
+
+    private static string ResolveMinecraftCatalogAprilFoolsLore(string normalizedId)
+    {
+        return normalizedId switch
+        {
+            var value when value.StartsWith("2.0", StringComparison.Ordinal) || value.StartsWith("2point0", StringComparison.Ordinal) =>
+                value.EndsWith("red", StringComparison.Ordinal)
+                    ? "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（红色版本）"
+                    : value.EndsWith("blue", StringComparison.Ordinal)
+                        ? "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（蓝色版本）"
+                        : value.EndsWith("purple", StringComparison.Ordinal)
+                            ? "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（紫色版本）"
+                            : "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！",
+            "15w14a" => "2015 | 作为一款全年龄向的游戏，我们需要和平，需要爱与拥抱。",
+            "1.rv-pre1" => "2016 | 是时候将现代科技带入 Minecraft 了！",
+            "3d shareware v1.34" => "2019 | 我们从地下室的废墟里找到了这个开发于 1994 年的杰作！",
+            var value when value.StartsWith("20w14inf", StringComparison.Ordinal) || value == "20w14∞" => "2020 | 我们加入了 20 亿个新的维度，让无限的想象变成了现实！",
+            "22w13oneblockatatime" => "2022 | 一次一个方块更新！迎接全新的挖掘、合成与骑乘玩法吧！",
+            "23w13a_or_b" => "2023 | 研究表明：玩家喜欢作出选择，越多越好！",
+            "24w14potato" => "2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！",
+            "25w14craftmine" => "2025 | 你可以合成任何东西，包括合成你的世界！",
+            _ => string.Empty
+        };
+    }
+
+    private static string FormatMinecraftCatalogVersion(string versionId)
+    {
+        return versionId.Replace('_', ' ');
+    }
+
+    private static string BuildMinecraftCatalogTimestampSummary(string? releaseTime, string normalizedId, string formattedTitle)
+    {
+        var published = FormatReleaseTime(releaseTime);
+        return formattedTitle == normalizedId
+            ? published
+            : $"{published} | {normalizedId}";
+    }
+
+    private static string BuildMinecraftCatalogLoreSummary(string lore, string normalizedId, string formattedTitle)
+    {
+        return formattedTitle == normalizedId
+            ? lore
+            : $"{lore} | {normalizedId}";
     }
 
     private static string FormatReleaseTime(string? rawValue)
