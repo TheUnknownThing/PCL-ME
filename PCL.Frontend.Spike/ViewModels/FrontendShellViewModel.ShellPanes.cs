@@ -76,6 +76,11 @@ internal sealed partial class FrontendShellViewModel
 
     private StandardShellLeftPaneDescriptor ResolveStandardLeftPaneDescriptor()
     {
+        if (_currentRoute.Page == LauncherFrontendPageKey.TaskManager)
+        {
+            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.None, "task-manager-no-left-pane");
+        }
+
         if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSelect)
         {
             return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.InstanceSelection, "instance-select-left");
@@ -98,6 +103,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return descriptor.Kind switch
         {
+            StandardShellLeftPaneKind.None => new StandardShellEmptyPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.Sidebar => new StandardShellNavigationListPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.Summary => new StandardShellSummaryPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.InstanceSelection => new InstanceSelectShellLeftPaneViewModel(this, descriptor),

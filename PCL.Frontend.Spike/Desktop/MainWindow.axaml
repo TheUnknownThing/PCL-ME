@@ -301,6 +301,7 @@
               <Border
                   x:Name="StandardLeftHost"
                   Grid.Column="0"
+                  IsVisible="{Binding ShowStandardShellLeftPane}"
                   Width="{Binding StandardShellLeftPaneWidth}"
                   ClipToBounds="True"
                   Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}">

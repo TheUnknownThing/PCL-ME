@@ -220,7 +220,11 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.InstanceSelection
         ? 276
+        : CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.None
+            ? 0
         : 236;
+
+    public bool ShowStandardShellLeftPane => CurrentStandardLeftPaneDescriptor?.Kind != StandardShellLeftPaneKind.None;
 
     public bool CanGoBack
     {

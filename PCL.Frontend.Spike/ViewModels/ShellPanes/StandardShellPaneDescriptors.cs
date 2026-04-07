@@ -4,10 +4,11 @@ namespace PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 internal enum StandardShellLeftPaneKind
 {
-    Sidebar = 0,
-    Summary = 1,
-    Empty = 2,
-    InstanceSelection = 3
+    None = 0,
+    Sidebar = 1,
+    Summary = 2,
+    Empty = 3,
+    InstanceSelection = 4
 }
 
 internal enum StandardShellRightPaneKind
