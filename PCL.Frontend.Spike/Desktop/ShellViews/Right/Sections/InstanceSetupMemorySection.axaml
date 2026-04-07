@@ -83,7 +83,12 @@
             BorderThickness="1"
             CornerRadius="6">
           <StackPanel Spacing="8">
-            <Grid ColumnDefinitions="4.7*,2.5*,0.7*" Height="6">
+            <Grid Height="6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding InstanceUsedRamBarWidth}" />
+                <ColumnDefinition Width="{Binding InstanceAllocatedRamBarWidth}" />
+                <ColumnDefinition Width="{Binding InstanceFreeRamBarWidth}" />
+              </Grid.ColumnDefinitions>
               <Border Grid.Column="0" Background="#58C86F" CornerRadius="3,0,0,3" />
               <Border Grid.Column="1" Background="#86B6FF" />
               <Border Grid.Column="2" Background="#D5DCE5" CornerRadius="0,3,3,0" />

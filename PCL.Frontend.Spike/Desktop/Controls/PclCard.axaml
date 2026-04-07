@@ -5,25 +5,11 @@
     x:Name="Root">
   <Grid ClipToBounds="False">
     <Border
-        x:Name="CardShadow"
-        Margin="-1,-1,-1,-2"
-        Background="{DynamicResource ColorBrush1}"
-        CornerRadius="6"
-        Effect="blur(3)"
-        Opacity="0.1">
-      <Border.Transitions>
-        <Transitions>
-          <BrushTransition Property="Background" Duration="0:0:0.24" />
-          <DoubleTransition Property="Opacity" Duration="0:0:0.24" />
-        </Transitions>
-      </Border.Transitions>
-    </Border>
-
-    <Border
         x:Name="CardBorder"
         Background="{DynamicResource ColorBrushMyCard}"
         BorderBrush="#00FFFFFF"
         BorderThickness="1"
+        BoxShadow="0 6 18 0 #14343D4A"
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
@@ -71,7 +57,7 @@
 
         <ContentPresenter
             Grid.Row="1"
-            Margin="{Binding ContentMargin, ElementName=Root}"
+            Margin="{Binding EffectiveContentMargin, ElementName=Root}"
             IsVisible="{Binding IsContentVisible, ElementName=Root}"
             Content="{Binding CardContent, ElementName=Root}" />
       </Grid>

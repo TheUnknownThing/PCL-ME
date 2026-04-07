@@ -6,10 +6,10 @@
     xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     Title="Plain Craft Launcher Community Edition"
     Icon="/Assets/icon.ico"
-    Width="1158"
-    Height="648"
-    MinWidth="980"
-    MinHeight="620"
+    Width="900"
+    Height="540"
+    MinWidth="810"
+    MinHeight="470"
     Background="Transparent"
     SystemDecorations="None"
     TransparencyLevelHint="Transparent"
@@ -267,6 +267,10 @@
             <Grid
                 x:Name="LaunchRouteGrid"
                 IsVisible="{Binding IsLaunchRoute}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.InitialOpacity="0"
+                motion:Motion.OffsetX="0"
+                motion:Motion.OffsetY="0"
                 ColumnDefinitions="Auto,*">
               <Border
                   x:Name="LaunchLeftHost"
@@ -289,6 +293,10 @@
             <Grid
                 x:Name="StandardRouteGrid"
                 IsVisible="{Binding IsStandardShellRoute}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.InitialOpacity="0"
+                motion:Motion.OffsetX="0"
+                motion:Motion.OffsetY="0"
                 ColumnDefinitions="Auto,*">
               <Border
                   x:Name="StandardLeftHost"
@@ -345,115 +353,78 @@
                 IsVisible="{Binding IsPromptOverlayVisible}"
                 motion:Motion.AnimateOnVisible="True"
                 motion:Motion.OffsetY="8"
-                Background="#500E2038" />
+                Background="#5A000000" />
 
             <Border
                 IsVisible="{Binding IsPromptOverlayVisible}"
-                Width="520"
+                MinWidth="400"
+                MaxWidth="620"
                 MaxHeight="540"
+                Margin="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="#00000000"
                 BorderBrush="#00000000"
                 BorderThickness="0"
-                CornerRadius="14">
-              <StackPanel
-                  Margin="20"
+                CornerRadius="7">
+              <Border
+                  Background="{DynamicResource ColorBrushMsgBox}"
+                  BoxShadow="0 2 20 0 #CC3C3C3C"
+                  CornerRadius="7"
                   motion:Motion.AnimateOnVisible="True"
-                  motion:Motion.StaggerChildren="True"
-                  motion:Motion.OffsetY="18"
-                  Spacing="14">
-                <controls:PclCard ContentMargin="20,20,20,20">
-                  <controls:PclCard.CardContent>
-                    <StackPanel Spacing="14">
-                      <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel Spacing="4">
-                          <TextBlock
-                              Foreground="#1370F3"
-                              FontSize="12"
-                              FontWeight="Bold"
-                              Text="{Binding PromptInboxTitle}" />
-                          <TextBlock
-                              Foreground="#343D4A"
-                              FontSize="18"
-                              FontWeight="SemiBold"
-                              Text="{Binding PromptInboxSummary}" />
-                        </StackPanel>
-                        <Button
-                            Grid.Column="1"
-                            Classes="chrome"
-                            Command="{Binding DismissPromptOverlayCommand}">
-                          <TextBlock
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center"
-                              Foreground="#404040"
-                              FontSize="18"
-                              Text="✕" />
-                        </Button>
-                      </Grid>
+                  motion:Motion.OffsetY="18">
+                <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,*">
+                  <TextBlock
+                      Margin="7,-1,70,9"
+                      Foreground="{DynamicResource ColorBrush2}"
+                      FontSize="23"
+                      Text="{Binding CurrentPrompt.Title}" />
 
-                      <ItemsControl ItemsSource="{Binding PromptLanes}">
-                        <ItemsControl.ItemsPanel>
-                          <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                          </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <controls:PclPromptLaneChip
-                                Margin="0,0,10,0"
-                                BackgroundBrush="{Binding BackgroundBrush}"
-                                ChipBorderBrush="{Binding BorderBrush}"
-                                Command="{Binding Command}"
-                                Count="{Binding Count}"
-                                ForegroundBrush="{Binding ForegroundBrush}"
-                                Title="{Binding Title}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
+                  <Rectangle
+                      Grid.Row="1"
+                      Height="2"
+                      Fill="{Binding CurrentPrompt.AccentBrush}" />
 
-                      <ScrollViewer MaxHeight="410" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="10">
-                          <ItemsControl ItemsSource="{Binding ActivePrompts}">
-                            <ItemsControl.ItemTemplate>
-                              <DataTemplate>
-                                <controls:PclPromptCard
-                                    AccentBrush="{Binding AccentBrush}"
-                                    BadgeBackgroundBrush="{Binding BackgroundBrush}"
-                                    Message="{Binding Message}"
-                                    Severity="{Binding Severity}"
-                                    Source="{Binding Source}"
-                                    Title="{Binding Title}">
-                                  <controls:PclPromptCard.OptionsContent>
-                                    <ItemsControl ItemsSource="{Binding Options}">
-                                      <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                          <controls:PclPromptOption
-                                              Margin="0,0,0,8"
-                                              Command="{Binding Command}"
-                                              Detail="{Binding Detail}"
-                                              Label="{Binding Label}" />
-                                        </DataTemplate>
-                                      </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                  </controls:PclPromptCard.OptionsContent>
-                                </controls:PclPromptCard>
-                              </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                          </ItemsControl>
+                  <Grid Grid.Row="3" RowDefinitions="*,Auto">
+                    <ScrollViewer
+                        Grid.Row="0"
+                        MaxHeight="380"
+                        Padding="7,0,15,17"
+                        VerticalScrollBarVisibility="Auto">
+                      <TextBlock
+                          Margin="1"
+                          Foreground="{DynamicResource ColorBrush1}"
+                          FontSize="15"
+                          LineHeight="18"
+                          Text="{Binding CurrentPrompt.Message}"
+                          TextWrapping="Wrap" />
+                    </ScrollViewer>
 
-                          <TextBlock
-                              HorizontalAlignment="Center"
-                              Foreground="#7D8897"
-                              FontSize="12"
-                              Text="{Binding PromptEmptyState}"
-                              IsVisible="{Binding HasNoActivePrompts}" />
-                        </StackPanel>
-                      </ScrollViewer>
-                    </StackPanel>
-                  </controls:PclCard.CardContent>
-                </controls:PclCard>
-              </StackPanel>
+                    <ItemsControl
+                        Grid.Row="1"
+                        HorizontalAlignment="Right"
+                        ItemsSource="{Binding CurrentPrompt.Options}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclButton
+                              MinWidth="96"
+                              Margin="12,0,0,0"
+                              ColorType="{Binding ColorType}"
+                              Command="{Binding Command}"
+                              ContentPadding="8,5"
+                              Text="{Binding Label}"
+                              TextMargin="0,-1,0,0" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Grid>
+                </Grid>
+              </Border>
             </Border>
           </Grid>
         </Grid>

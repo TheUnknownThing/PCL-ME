@@ -216,7 +216,12 @@
                   IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
             </Grid>
 
-            <Grid ColumnDefinitions="4.7*,2.5*,0.7*" RowDefinitions="Auto,4,Auto">
+            <Grid RowDefinitions="Auto,4,Auto">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding UsedRamBarWidth}" />
+                <ColumnDefinition Width="{Binding AllocatedRamBarWidth}" />
+                <ColumnDefinition Width="{Binding FreeRamBarWidth}" />
+              </Grid.ColumnDefinitions>
               <TextBlock
                   Grid.ColumnSpan="3"
                   Margin="2,0,0,5"

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.ViewModels;
 
@@ -23,7 +24,15 @@ internal sealed partial class PclConfirmDialog : Window
         ConfirmCommand = new ActionCommand(Confirm);
         CancelCommand = new ActionCommand(Cancel);
         DataContext = this;
+
+        if (isDanger)
+        {
+            TitleTextBlock.Foreground = Brush.Parse("#FF4C4C");
+            OverlayBorder.Background = Brush.Parse("#8C500000");
+        }
+
         KeyDown += OnDialogKeyDown;
+        Opened += (_, _) => AlignToOwnerBounds();
     }
 
     public string ConfirmText { get; }
@@ -41,11 +50,23 @@ internal sealed partial class PclConfirmDialog : Window
             e.Handled = true;
             Cancel();
         }
-        else if (e.Key == Key.Enter)
+        else if (e.Key == Key.Enter && ConfirmCommand.CanExecute(null))
         {
             e.Handled = true;
             Confirm();
         }
+    }
+
+    private void AlignToOwnerBounds()
+    {
+        if (Owner is not Window owner)
+        {
+            return;
+        }
+
+        Position = owner.Position;
+        Width = Math.Max(owner.Bounds.Width, 320);
+        Height = Math.Max(owner.Bounds.Height, 240);
     }
 
     private void Confirm()

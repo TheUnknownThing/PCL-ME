@@ -46,6 +46,8 @@ internal sealed partial class FrontendShellViewModel
                 ReplaceItems(ActivePrompts, []);
                 RaisePropertyChanged(nameof(HasActivePrompts));
                 RaisePropertyChanged(nameof(HasNoActivePrompts));
+                RaisePropertyChanged(nameof(CurrentPrompt));
+                RaisePropertyChanged(nameof(HasCurrentPrompt));
                 RaisePropertyChanged(nameof(IsPromptOverlayVisible));
                 return;
             }
@@ -58,6 +60,8 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(ActivePrompts, _promptCatalog[lane]);
         RaisePropertyChanged(nameof(HasActivePrompts));
         RaisePropertyChanged(nameof(HasNoActivePrompts));
+        RaisePropertyChanged(nameof(CurrentPrompt));
+        RaisePropertyChanged(nameof(HasCurrentPrompt));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);
@@ -147,10 +151,31 @@ internal sealed partial class FrontendShellViewModel
             prompt.Severity.ToString(),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#A94F2B") : Brush.Parse("#256A61"),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#FFF1EA") : Brush.Parse("#EAF7F5"),
-            prompt.Options.Select(option => new PromptOptionViewModel(
+            prompt.Options.Select((option, index) => new PromptOptionViewModel(
                 option.Label,
-                DescribePromptOption(option),
+                string.Empty,
+                ResolvePromptOptionColorType(prompt.Severity, index, prompt.Options.Count),
                 new ActionCommand(() => ApplyPromptOption(lane, prompt.Id, option)))).ToList());
+    }
+
+    private static PclButtonColorState ResolvePromptOptionColorType(
+        LauncherFrontendPromptSeverity severity,
+        int index,
+        int optionCount)
+    {
+        if (index != 0)
+        {
+            return PclButtonColorState.Normal;
+        }
+
+        if (severity == LauncherFrontendPromptSeverity.Warning)
+        {
+            return PclButtonColorState.Red;
+        }
+
+        return optionCount > 1
+            ? PclButtonColorState.Highlight
+            : PclButtonColorState.Normal;
     }
 
     private void ApplyPromptOption(SpikePromptLaneKind lane, string promptId, LauncherFrontendPromptOption option)

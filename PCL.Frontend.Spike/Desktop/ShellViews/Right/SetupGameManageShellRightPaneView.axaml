@@ -8,7 +8,7 @@
     <StackPanel Margin="25,10,25,10" Spacing="15">
       <controls:PclCard Header="游戏资源获取行为" ContentMargin="25,37,25,15">
         <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,27,27,Auto,27">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,Auto,Auto,Auto,27">
             <TextBlock
                 VerticalAlignment="Center"
                 Foreground="#343D4A"

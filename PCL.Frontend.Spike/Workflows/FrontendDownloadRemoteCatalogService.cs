@@ -1,6 +1,8 @@
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Models;
 
@@ -12,6 +14,7 @@ internal static class FrontendDownloadRemoteCatalogService
     private static readonly object CacheSync = new();
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(5);
     private static readonly Dictionary<RemoteCatalogCacheKey, RemoteCatalogCacheEntry> Cache = [];
+    private static readonly Dictionary<RouteCatalogCacheKey, RouteCatalogCacheEntry> RouteCache = [];
     private static readonly LauncherFrontendSubpageKey[] CatalogRoutes =
     [
         LauncherFrontendSubpageKey.DownloadClient,
@@ -71,6 +74,66 @@ internal static class FrontendDownloadRemoteCatalogService
         }
     }
 
+    public static Task<FrontendDownloadCatalogState> LoadCatalogStateAsync(
+        LauncherFrontendSubpageKey route,
+        int versionSourceIndex,
+        string? preferredMinecraftVersion,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(
+            () => BuildCatalogState(route, versionSourceIndex, preferredMinecraftVersion),
+            cancellationToken);
+    }
+
+    public static string GetLoadingText(LauncherFrontendSubpageKey route)
+    {
+        return GetGoldCatalogDescriptor(route).LoadingText;
+    }
+
+    public static FrontendDownloadCatalogState BuildCatalogState(
+        LauncherFrontendSubpageKey route,
+        int versionSourceIndex,
+        string? preferredMinecraftVersion)
+    {
+        var normalizedVersion = NormalizeMinecraftVersion(preferredMinecraftVersion);
+        var cacheKey = new RouteCatalogCacheKey(route, versionSourceIndex, normalizedVersion);
+        RouteCatalogCacheEntry? staleEntry;
+
+        lock (CacheSync)
+        {
+            if (RouteCache.TryGetValue(cacheKey, out var cachedEntry)
+                && DateTimeOffset.UtcNow - cachedEntry.FetchedAtUtc <= CacheLifetime)
+            {
+                return cachedEntry.State;
+            }
+
+            RouteCache.TryGetValue(cacheKey, out staleEntry);
+        }
+
+        try
+        {
+            var state = FetchCatalogState(route, versionSourceIndex, normalizedVersion);
+            lock (CacheSync)
+            {
+                RouteCache[cacheKey] = new RouteCatalogCacheEntry(DateTimeOffset.UtcNow, state);
+            }
+
+            return state;
+        }
+        catch (Exception ex)
+        {
+            if (staleEntry is not null)
+            {
+                return staleEntry.State with
+                {
+                    IntroBody = $"{staleEntry.State.IntroBody} 刷新远程目录失败，因此暂时保留上次成功同步的结果。错误：{ex.Message}"
+                };
+            }
+
+            return BuildFailureState(route, ex.Message);
+        }
+    }
+
     private static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState> FetchCatalogStates(
         int versionSourceIndex,
         string preferredMinecraftVersion)
@@ -85,22 +148,19 @@ internal static class FrontendDownloadRemoteCatalogService
             [LauncherFrontendSubpageKey.DownloadFabric] = BuildFabricFamilyCatalogState(
                 versionSourceIndex,
                 preferredMinecraftVersion,
-                "Fabric",
-                "https://fabricmc.net/",
+                LauncherFrontendSubpageKey.DownloadFabric,
                 CreateFabricRootSources(versionSourceIndex),
                 minecraftVersion => CreateFabricLoaderSources(versionSourceIndex, minecraftVersion)),
             [LauncherFrontendSubpageKey.DownloadLegacyFabric] = BuildFabricFamilyCatalogState(
                 versionSourceIndex,
                 preferredMinecraftVersion,
-                "Legacy Fabric",
-                "https://legacyfabric.net/",
+                LauncherFrontendSubpageKey.DownloadLegacyFabric,
                 CreateLegacyFabricRootSources(versionSourceIndex),
                 minecraftVersion => CreateLegacyFabricLoaderSources(versionSourceIndex, minecraftVersion)),
             [LauncherFrontendSubpageKey.DownloadQuilt] = BuildFabricFamilyCatalogState(
                 versionSourceIndex,
                 preferredMinecraftVersion,
-                "Quilt",
-                "https://quiltmc.org/",
+                LauncherFrontendSubpageKey.DownloadQuilt,
                 CreateQuiltRootSources(versionSourceIndex),
                 minecraftVersion => CreateQuiltLoaderSources(versionSourceIndex, minecraftVersion)),
             [LauncherFrontendSubpageKey.DownloadLiteLoader] = BuildLiteLoaderCatalogState(versionSourceIndex, preferredMinecraftVersion),
@@ -108,87 +168,122 @@ internal static class FrontendDownloadRemoteCatalogService
         };
     }
 
+    private static FrontendDownloadCatalogState FetchCatalogState(
+        LauncherFrontendSubpageKey route,
+        int versionSourceIndex,
+        string preferredMinecraftVersion)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadClient => BuildClientCatalogState(versionSourceIndex),
+            LauncherFrontendSubpageKey.DownloadOptiFine => BuildOptiFineCatalogState(versionSourceIndex, preferredMinecraftVersion),
+            LauncherFrontendSubpageKey.DownloadForge => BuildForgeCatalogState(versionSourceIndex, preferredMinecraftVersion),
+            LauncherFrontendSubpageKey.DownloadNeoForge => BuildNeoForgeCatalogState(versionSourceIndex, preferredMinecraftVersion),
+            LauncherFrontendSubpageKey.DownloadCleanroom => BuildCleanroomCatalogState(preferredMinecraftVersion),
+            LauncherFrontendSubpageKey.DownloadFabric => BuildFabricFamilyCatalogState(
+                versionSourceIndex,
+                preferredMinecraftVersion,
+                LauncherFrontendSubpageKey.DownloadFabric,
+                CreateFabricRootSources(versionSourceIndex),
+                minecraftVersion => CreateFabricLoaderSources(versionSourceIndex, minecraftVersion)),
+            LauncherFrontendSubpageKey.DownloadLegacyFabric => BuildFabricFamilyCatalogState(
+                versionSourceIndex,
+                preferredMinecraftVersion,
+                LauncherFrontendSubpageKey.DownloadLegacyFabric,
+                CreateLegacyFabricRootSources(versionSourceIndex),
+                minecraftVersion => CreateLegacyFabricLoaderSources(versionSourceIndex, minecraftVersion)),
+            LauncherFrontendSubpageKey.DownloadQuilt => BuildFabricFamilyCatalogState(
+                versionSourceIndex,
+                preferredMinecraftVersion,
+                LauncherFrontendSubpageKey.DownloadQuilt,
+                CreateQuiltRootSources(versionSourceIndex),
+                minecraftVersion => CreateQuiltLoaderSources(versionSourceIndex, minecraftVersion)),
+            LauncherFrontendSubpageKey.DownloadLiteLoader => BuildLiteLoaderCatalogState(versionSourceIndex, preferredMinecraftVersion),
+            LauncherFrontendSubpageKey.DownloadLabyMod => BuildLabyModCatalogState(preferredMinecraftVersion),
+            _ => BuildFailureState(route, "当前页面暂不支持远程目录。")
+        };
+    }
+
     private static FrontendDownloadCatalogState BuildClientCatalogState(int versionSourceIndex)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadClient);
         var payload = FetchJsonObject(CreateClientSources(versionSourceIndex), versionSourceIndex);
         var versions = payload.Value["versions"] as JsonArray
                        ?? throw new InvalidOperationException("Minecraft 版本清单缺少 versions 字段。");
 
-        var releaseEntries = versions
-            .Select(node => node as JsonObject)
-            .Where(node => string.Equals(node?["type"]?.GetValue<string>(), "release", StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(node => ParseReleaseMoment(node?["releaseTime"]?.GetValue<string>()))
-            .Take(12)
-            .Select(node => CreateClientCatalogEntry(node!, payload.Source.DisplayName))
-            .ToArray();
+        var groupedVersions = new Dictionary<string, List<JsonObject>>
+        {
+            ["正式版"] = [],
+            ["预览版"] = [],
+            ["远古版"] = [],
+            ["愚人节版"] = []
+        };
 
-        var previewEntries = versions
-            .Select(node => node as JsonObject)
-            .Where(node =>
-            {
-                var type = node?["type"]?.GetValue<string>();
-                return string.Equals(type, "snapshot", StringComparison.OrdinalIgnoreCase)
-                       || string.Equals(type, "pending", StringComparison.OrdinalIgnoreCase);
-            })
-            .OrderByDescending(node => ParseReleaseMoment(node?["releaseTime"]?.GetValue<string>()))
-            .Take(12)
-            .Select(node => CreateClientCatalogEntry(node!, payload.Source.DisplayName))
-            .ToArray();
+        foreach (var node in versions.Select(item => item as JsonObject).Where(item => item is not null))
+        {
+            groupedVersions[ClassifyClientCategory(node!)].Add(node!);
+        }
+
+        foreach (var group in groupedVersions.Values)
+        {
+            group.Sort(static (left, right) =>
+                ParseReleaseMoment(right["releaseTime"]?.GetValue<string>())
+                    .CompareTo(ParseReleaseMoment(left["releaseTime"]?.GetValue<string>())));
+        }
 
         var latest = new List<FrontendDownloadCatalogEntry>();
-        if (payload.Value["latest"] is JsonObject latestNode)
+        if (groupedVersions["正式版"].Count > 0)
         {
-            AddLatestClientEntry(latest, versions, latestNode["release"]?.GetValue<string>(), "最新正式版", payload.Source.DisplayName);
-            AddLatestClientEntry(latest, versions, latestNode["snapshot"]?.GetValue<string>(), "最新快照版", payload.Source.DisplayName);
+            var latestRelease = groupedVersions["正式版"][0];
+            latest.Add(CreateClientCatalogEntry(
+                latestRelease,
+                $"最新正式版，发布于 {FormatReleaseTime(latestRelease["releaseTime"]?.GetValue<string>())}",
+                payload.Source.DisplayName));
+        }
+
+        if (groupedVersions["预览版"].Count > 0
+            && groupedVersions["正式版"].Count > 0
+            && ParseReleaseMoment(groupedVersions["正式版"][0]["releaseTime"]?.GetValue<string>())
+            < ParseReleaseMoment(groupedVersions["预览版"][0]["releaseTime"]?.GetValue<string>()))
+        {
+            var latestPreview = groupedVersions["预览版"][0];
+            latest.Add(CreateClientCatalogEntry(
+                latestPreview,
+                $"最新预览版，发布于 {FormatReleaseTime(latestPreview["releaseTime"]?.GetValue<string>())}",
+                payload.Source.DisplayName));
+        }
+
+        var sections = new List<FrontendDownloadCatalogSection>
+        {
+            new("最新版本", EnsureEntries(latest.ToArray(), "当前远程版本清单没有返回最新版本。"))
+        };
+        foreach (var category in new[] { "正式版", "预览版", "远古版", "愚人节版" })
+        {
+            var entries = groupedVersions[category]
+                .Select(node => CreateClientCatalogEntry(node, BuildClientVersionInfo(node), payload.Source.DisplayName))
+                .ToArray();
+            if (entries.Length == 0)
+            {
+                continue;
+            }
+
+            sections.Add(new FrontendDownloadCatalogSection($"{category} ({entries.Length})", entries));
         }
 
         return new FrontendDownloadCatalogState(
-            "Minecraft 版本目录",
-            $"当前目录直接来自 {payload.Source.DisplayName}，页面显示会随着远程版本清单变动而更新。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://www.minecraft.net/zh-hans", true),
-                new FrontendDownloadCatalogAction("查看原始清单", payload.Source.Url, false)),
-            [
-                new FrontendDownloadCatalogSection("最新版本", EnsureEntries(latest, "当前远程版本清单没有返回最新版本。")),
-                new FrontendDownloadCatalogSection("正式版", EnsureEntries(releaseEntries, "当前远程版本清单没有返回正式版条目。")),
-                new FrontendDownloadCatalogSection("快照与预览", EnsureEntries(previewEntries, "当前远程版本清单没有返回快照或预览条目。"))
-            ]);
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
+            sections);
     }
 
-    private static void AddLatestClientEntry(
-        ICollection<FrontendDownloadCatalogEntry> latest,
-        JsonArray versions,
-        string? versionId,
-        string label,
-        string sourceName)
-    {
-        if (string.IsNullOrWhiteSpace(versionId))
-        {
-            return;
-        }
-
-        var node = versions
-            .Select(item => item as JsonObject)
-            .FirstOrDefault(item => string.Equals(item?["id"]?.GetValue<string>(), versionId, StringComparison.OrdinalIgnoreCase));
-        if (node is null)
-        {
-            return;
-        }
-
-        latest.Add(new FrontendDownloadCatalogEntry(
-            node["id"]?.GetValue<string>() ?? versionId,
-            label,
-            $"{FormatClientType(node["type"]?.GetValue<string>())} • {FormatReleaseTime(node["releaseTime"]?.GetValue<string>())} • {sourceName}",
-            "查看清单",
-            node["url"]?.GetValue<string>()));
-    }
-
-    private static FrontendDownloadCatalogEntry CreateClientCatalogEntry(JsonObject node, string sourceName)
+    private static FrontendDownloadCatalogEntry CreateClientCatalogEntry(JsonObject node, string info, string sourceName)
     {
         return new FrontendDownloadCatalogEntry(
-            node["id"]?.GetValue<string>() ?? "未知版本",
-            FormatReleaseTime(node["releaseTime"]?.GetValue<string>()),
-            $"{FormatClientType(node["type"]?.GetValue<string>())} • {sourceName}",
+            NormalizeClientVersionTitle(node["id"]?.GetValue<string>()),
+            info,
+            sourceName,
             "查看清单",
             node["url"]?.GetValue<string>());
     }
@@ -197,13 +292,12 @@ internal static class FrontendDownloadRemoteCatalogService
         int versionSourceIndex,
         string preferredMinecraftVersion)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadOptiFine);
         var payload = FetchOptiFineEntries(versionSourceIndex);
         var groupedSections = BuildGroupedSections(
             payload.Value,
             entry => entry.MinecraftVersion,
             preferredMinecraftVersion,
-            4,
-            8,
             entry => new FrontendDownloadCatalogEntry(
                 entry.Title,
                 entry.IsPreview ? "预览版" : "稳定版",
@@ -212,11 +306,10 @@ internal static class FrontendDownloadRemoteCatalogService
                 entry.TargetUrl));
 
         return new FrontendDownloadCatalogState(
-            "OptiFine 远程目录",
-            $"当前条目直接来自 {payload.Source.DisplayName}，不再回退到本地版本清单。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://optifine.net/", true),
-                new FrontendDownloadCatalogAction("查看原始目录", payload.Source.Url, false)),
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
             groupedSections.Count > 0
                 ? groupedSections
                 : [new FrontendDownloadCatalogSection("远程目录", EnsureEntries([], "当前没有可用的 OptiFine 远程条目。"))]);
@@ -226,6 +319,7 @@ internal static class FrontendDownloadRemoteCatalogService
         int versionSourceIndex,
         string preferredMinecraftVersion)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadForge);
         var sources = CreateForgeListSources(versionSourceIndex);
         var payload = FetchString(sources, versionSourceIndex);
         var minecraftVersions = payload.Source.IsOfficial
@@ -237,68 +331,37 @@ internal static class FrontendDownloadRemoteCatalogService
             throw new InvalidOperationException("Forge 远程目录没有返回任何 Minecraft 版本。");
         }
 
-        var activeVersion = ResolvePreferredForgeMinecraftVersion(preferredMinecraftVersion, minecraftVersions);
-        var buildEntries = TryBuildForgeVersionEntries(versionSourceIndex, activeVersion);
         var versionEntries = minecraftVersions
-            .Take(18)
             .Select(version => new FrontendDownloadCatalogEntry(
-                version.Replace("_pre", " pre", StringComparison.Ordinal),
-                string.Equals(version, activeVersion, StringComparison.OrdinalIgnoreCase) ? "当前目标版本" : "支持的 Minecraft 版本",
+                version.Replace("_p", " P", StringComparison.Ordinal),
+                "支持的 Minecraft 版本",
                 payload.Source.DisplayName,
                 "打开目录",
                 BuildForgeVersionCatalogUrl(payload.Source.IsOfficial, version)))
             .ToArray();
 
         return new FrontendDownloadCatalogState(
-            "Forge 远程目录",
-            $"Minecraft 版本目录来自 {payload.Source.DisplayName}，并会优先补充当前目标 {activeVersion} 的实际 Forge 构建。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://files.minecraftforge.net/", true),
-                new FrontendDownloadCatalogAction("查看原始目录", payload.Source.Url, false)),
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
             [
                 new FrontendDownloadCatalogSection(
-                    $"{activeVersion} 可用构建",
-                    EnsureEntries(buildEntries, $"当前没有读取到 {activeVersion} 的 Forge 构建。")),
-                new FrontendDownloadCatalogSection(
-                    "支持的 Minecraft 版本",
+                    $"版本列表 ({versionEntries.Length})",
                     EnsureEntries(versionEntries, "当前 Forge 远程目录没有返回任何 Minecraft 版本。"))
             ]);
-    }
-
-    private static IReadOnlyList<FrontendDownloadCatalogEntry> TryBuildForgeVersionEntries(
-        int versionSourceIndex,
-        string minecraftVersion)
-    {
-        try
-        {
-            var payload = FetchForgeVersionEntries(versionSourceIndex, minecraftVersion);
-            return payload.Value
-                .Take(12)
-                .Select(entry => new FrontendDownloadCatalogEntry(
-                    entry.Title,
-                    entry.Info,
-                    $"{entry.Meta} • {payload.Source.DisplayName}",
-                    "打开目录",
-                    entry.Target))
-                .ToArray();
-        }
-        catch
-        {
-            return [];
-        }
     }
 
     private static FrontendDownloadCatalogState BuildNeoForgeCatalogState(
         int versionSourceIndex,
         string preferredMinecraftVersion)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadNeoForge);
         var payload = FetchNeoForgeEntries(versionSourceIndex);
         var sections = BuildGroupedSections(
             payload.Value,
             entry => entry.MinecraftVersion,
             preferredMinecraftVersion,
-            4,
-            8,
             entry => new FrontendDownloadCatalogEntry(
                 entry.Title,
                 entry.IsPreview ? "测试构建" : "稳定构建",
@@ -307,11 +370,10 @@ internal static class FrontendDownloadRemoteCatalogService
                 entry.TargetUrl));
 
         return new FrontendDownloadCatalogState(
-            "NeoForge 远程目录",
-            $"页面现在直接读取 {payload.Source.DisplayName} 的 NeoForge 发行目录。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://neoforged.net/", true),
-                new FrontendDownloadCatalogAction("查看原始目录", payload.Source.Url, false)),
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
             sections.Count > 0
                 ? sections
                 : [new FrontendDownloadCatalogSection("远程目录", EnsureEntries([], "当前没有可用的 NeoForge 远程条目。"))]);
@@ -319,6 +381,7 @@ internal static class FrontendDownloadRemoteCatalogService
 
     private static FrontendDownloadCatalogState BuildCleanroomCatalogState(string preferredMinecraftVersion)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadCleanroom);
         var payload = FetchJsonArray(
             [new RemoteSource("Cleanroom GitHub Releases", "https://api.github.com/repos/CleanroomMC/Cleanroom/releases", true)],
             1);
@@ -335,37 +398,45 @@ internal static class FrontendDownloadRemoteCatalogService
                     "查看发布页",
                     node["html_url"]?.GetValue<string>() ?? $"https://github.com/CleanroomMC/Cleanroom/releases/tag/{Uri.EscapeDataString(tag)}");
             })
-            .Take(18)
             .ToArray();
 
         return new FrontendDownloadCatalogState(
-            "Cleanroom 远程目录",
-            "当前页面直接读取 Cleanroom 的 GitHub Releases，而不是本地识别结果。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://github.com/CleanroomMC/Cleanroom", true),
-                new FrontendDownloadCatalogAction("查看原始目录", payload.Source.Url, false)),
-            [new FrontendDownloadCatalogSection("1.12.2 构建", EnsureEntries(entries, "当前没有可用的 Cleanroom 远程条目。"))]);
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
+            [new FrontendDownloadCatalogSection($"1.12.2 ({entries.Length})", EnsureEntries(entries, "当前没有可用的 Cleanroom 远程条目。"))]);
     }
 
     private static FrontendDownloadCatalogState BuildFabricFamilyCatalogState(
         int versionSourceIndex,
         string preferredMinecraftVersion,
-        string title,
-        string officialSite,
+        LauncherFrontendSubpageKey route,
         IReadOnlyList<RemoteSource> rootSources,
         Func<string, IReadOnlyList<RemoteSource>> loaderSourceFactory)
     {
+        var descriptor = GetGoldCatalogDescriptor(route);
         var rootPayload = FetchJsonObject(rootSources, versionSourceIndex);
-        var sections = new List<FrontendDownloadCatalogSection>();
         var effectivePreferredVersion = ResolvePreferredGameVersion(preferredMinecraftVersion, rootPayload.Value["game"] as JsonArray);
 
-        if (!string.IsNullOrWhiteSpace(effectivePreferredVersion))
+        var installerEntries = (rootPayload.Value["installer"] as JsonArray)?
+            .Select(node => node as JsonObject)
+            .Where(node => !string.IsNullOrWhiteSpace(node?["version"]?.GetValue<string>()))
+            .Select(node => new FrontendDownloadCatalogEntry(
+                node!["version"]!.GetValue<string>(),
+                node["stable"]?.GetValue<bool>() == true ? "稳定安装器" : "测试安装器",
+                rootPayload.Source.DisplayName,
+                "查看目录",
+                rootPayload.Source.Url))
+            .ToArray() ?? [];
+
+        if (installerEntries.Length == 0 && !string.IsNullOrWhiteSpace(effectivePreferredVersion))
         {
             try
             {
                 var loaderSources = loaderSourceFactory(effectivePreferredVersion);
                 var loaderPayload = FetchJsonArray(loaderSources, versionSourceIndex);
-                var loaderEntries = loaderPayload.Value
+                installerEntries = loaderPayload.Value
                     .Select(node => node as JsonObject)
                     .Where(node => node?["loader"] is JsonObject)
                     .Select(node =>
@@ -374,64 +445,33 @@ internal static class FrontendDownloadRemoteCatalogService
                         var version = loader["version"]?.GetValue<string>() ?? string.Empty;
                         return new FrontendDownloadCatalogEntry(
                             version,
-                            loader["stable"]?.GetValue<bool>() == true ? "稳定构建" : "测试构建",
+                            loader["stable"]?.GetValue<bool>() == true ? "稳定安装器" : "测试安装器",
                             $"{effectivePreferredVersion} • {loaderPayload.Source.DisplayName}",
                             "查看清单",
                             loaderSources.First().Url.TrimEnd('/') + "/" + Uri.EscapeDataString(version) + "/profile/json");
                     })
                     .Where(entry => !string.IsNullOrWhiteSpace(entry.Title))
-                    .Take(12)
                     .ToArray();
-
-                sections.Add(new FrontendDownloadCatalogSection(
-                    $"{effectivePreferredVersion} 可用加载器",
-                    EnsureEntries(loaderEntries, $"当前没有读取到 {effectivePreferredVersion} 的 {title} 加载器条目。")));
             }
             catch
             {
-                // Keep the root catalog usable even if the version-specific loader endpoint is temporarily unavailable.
+                // Keep the catalog readable even if the loader endpoint is temporarily unavailable.
             }
         }
 
-        var installerEntries = (rootPayload.Value["installer"] as JsonArray)?
-            .Select(node => node as JsonObject)
-            .Where(node => !string.IsNullOrWhiteSpace(node?["version"]?.GetValue<string>()))
-            .Take(12)
-            .Select(node => new FrontendDownloadCatalogEntry(
-                node!["version"]!.GetValue<string>(),
-                node["stable"]?.GetValue<bool>() == true ? "稳定安装器" : "测试安装器",
-                rootPayload.Source.DisplayName,
-                "查看目录",
-                rootPayload.Source.Url))
-            .ToArray() ?? [];
-        sections.Add(new FrontendDownloadCatalogSection("安装器版本", EnsureEntries(installerEntries, "当前没有可用的安装器版本。")));
-
-        var gameEntries = (rootPayload.Value["game"] as JsonArray)?
-            .Select(node => node as JsonObject)
-            .Where(node => !string.IsNullOrWhiteSpace(node?["version"]?.GetValue<string>()))
-            .Take(16)
-            .Select(node => new FrontendDownloadCatalogEntry(
-                node!["version"]!.GetValue<string>(),
-                node["stable"]?.GetValue<bool>() == true ? "稳定游戏版本" : "测试游戏版本",
-                rootPayload.Source.DisplayName,
-                "查看目录",
-                rootPayload.Source.Url))
-            .ToArray() ?? [];
-        sections.Add(new FrontendDownloadCatalogSection("支持的游戏版本", EnsureEntries(gameEntries, "当前没有可用的游戏版本条目。")));
-
         return new FrontendDownloadCatalogState(
-            $"{title} 远程目录",
-            $"当前页面直接读取 {rootPayload.Source.DisplayName} 的 {title} 目录数据。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", officialSite, true),
-                new FrontendDownloadCatalogAction("查看原始目录", rootPayload.Source.Url, false)),
-            sections);
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
+            [new FrontendDownloadCatalogSection($"版本列表 ({installerEntries.Length})", EnsureEntries(installerEntries, "当前没有可用的安装器版本。"))]);
     }
 
     private static FrontendDownloadCatalogState BuildLiteLoaderCatalogState(
         int versionSourceIndex,
         string preferredMinecraftVersion)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadLiteLoader);
         var payload = FetchJsonObject(CreateLiteLoaderSources(versionSourceIndex), versionSourceIndex);
         var versions = payload.Value["versions"] as JsonObject
                        ?? throw new InvalidOperationException("LiteLoader 目录缺少 versions 字段。");
@@ -466,8 +506,6 @@ internal static class FrontendDownloadRemoteCatalogService
             entries.OrderByDescending(entry => entry.Timestamp),
             entry => entry.MinecraftVersion,
             preferredMinecraftVersion,
-            4,
-            4,
             entry => new FrontendDownloadCatalogEntry(
                 entry.Title,
                 entry.IsPreview ? "测试构建" : "稳定构建",
@@ -476,11 +514,10 @@ internal static class FrontendDownloadRemoteCatalogService
                 entry.TargetUrl));
 
         return new FrontendDownloadCatalogState(
-            "LiteLoader 远程目录",
-            $"当前页面直接读取 {payload.Source.DisplayName} 的 LiteLoader 版本目录。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://www.liteloader.com/", true),
-                new FrontendDownloadCatalogAction("查看原始目录", payload.Source.Url, false)),
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
             sections.Count > 0
                 ? sections
                 : [new FrontendDownloadCatalogSection("远程目录", EnsureEntries([], "当前没有可用的 LiteLoader 远程条目。"))]);
@@ -488,6 +525,7 @@ internal static class FrontendDownloadRemoteCatalogService
 
     private static FrontendDownloadCatalogState BuildLabyModCatalogState(string preferredMinecraftVersion)
     {
+        var descriptor = GetGoldCatalogDescriptor(LauncherFrontendSubpageKey.DownloadLabyMod);
         var production = FetchJsonObject(
             [new RemoteSource("LabyMod Production", "https://releases.r2.labymod.net/api/v1/manifest/production/latest.json", true)],
             1);
@@ -506,15 +544,13 @@ internal static class FrontendDownloadRemoteCatalogService
         AddSupportedLabyVersions(supportedVersions, snapshot.Value, "快照版");
 
         return new FrontendDownloadCatalogState(
-            "LabyMod 远程目录",
-            "当前页面直接读取 LabyMod 官方 manifest，而不是本地实例识别结果。",
-            CreateActions(
-                new FrontendDownloadCatalogAction("打开官网", "https://www.labymod.net/", true),
-                new FrontendDownloadCatalogAction("查看稳定版清单", production.Source.Url, false),
-                new FrontendDownloadCatalogAction("查看快照版清单", snapshot.Source.Url, false)),
+            descriptor.IntroTitle,
+            descriptor.IntroBody,
+            descriptor.LoadingText,
+            descriptor.Actions,
             [
-                new FrontendDownloadCatalogSection("可用频道", EnsureEntries(channelEntries, "当前没有可用的 LabyMod 频道。")),
-                new FrontendDownloadCatalogSection("支持的 Minecraft 版本", EnsureEntries(supportedVersions.Take(18).ToArray(), "当前没有返回可支持的 Minecraft 版本。"))
+                new FrontendDownloadCatalogSection($"版本列表 ({channelEntries.Length})", EnsureEntries(channelEntries, "当前没有可用的 LabyMod 频道。")),
+                new FrontendDownloadCatalogSection($"支持的 Minecraft 版本 ({supportedVersions.Count})", EnsureEntries(supportedVersions.ToArray(), "当前没有返回可支持的 Minecraft 版本。"))
             ]);
     }
 
@@ -794,8 +830,6 @@ internal static class FrontendDownloadRemoteCatalogService
         IEnumerable<T> items,
         Func<T, string> groupKeySelector,
         string preferredKey,
-        int maxGroups,
-        int maxEntriesPerGroup,
         Func<T, FrontendDownloadCatalogEntry> entrySelector)
     {
         var grouped = items
@@ -810,18 +844,20 @@ internal static class FrontendDownloadRemoteCatalogService
             var preferredGroup = grouped.FirstOrDefault(group => string.Equals(group.Key, preferredKey, StringComparison.OrdinalIgnoreCase));
             if (preferredGroup is not null)
             {
+                var preferredEntries = preferredGroup.Select(entrySelector).ToArray();
                 sections.Add(new FrontendDownloadCatalogSection(
-                    $"{preferredGroup.Key} 当前目标",
-                    EnsureEntries(preferredGroup.Take(maxEntriesPerGroup).Select(entrySelector).ToArray(), $"当前没有可用的 {preferredGroup.Key} 条目。")));
+                    $"{preferredGroup.Key} ({preferredEntries.Length})",
+                    EnsureEntries(preferredEntries, $"当前没有可用的 {preferredGroup.Key} 条目。")));
                 grouped.Remove(preferredGroup);
             }
         }
 
-        foreach (var group in grouped.Take(maxGroups))
+        foreach (var group in grouped)
         {
+            var groupEntries = group.Select(entrySelector).ToArray();
             sections.Add(new FrontendDownloadCatalogSection(
-                group.Key,
-                EnsureEntries(group.Take(maxEntriesPerGroup).Select(entrySelector).ToArray(), $"当前没有可用的 {group.Key} 条目。")));
+                $"{group.Key} ({groupEntries.Length})",
+                EnsureEntries(groupEntries, $"当前没有可用的 {group.Key} 条目。")));
         }
 
         return sections;
@@ -831,11 +867,174 @@ internal static class FrontendDownloadRemoteCatalogService
     {
         return CatalogRoutes.ToDictionary(
             route => route,
-            route => new FrontendDownloadCatalogState(
-                $"{GetRouteTitle(route)} 远程目录",
-                $"读取远程目录失败：{error}",
-                [],
-                [new FrontendDownloadCatalogSection("远程目录", EnsureEntries([], "当前无法读取远程目录，请稍后重试。"))]));
+            route => BuildFailureState(route, error));
+    }
+
+    private static FrontendDownloadCatalogState BuildFailureState(LauncherFrontendSubpageKey route, string error)
+    {
+        var descriptor = GetGoldCatalogDescriptor(route);
+        return new FrontendDownloadCatalogState(
+            descriptor.IntroTitle,
+            $"读取远程目录失败：{error}",
+            descriptor.LoadingText,
+            descriptor.Actions,
+            [new FrontendDownloadCatalogSection("远程目录", EnsureEntries([], "当前无法读取远程目录，请稍后重试。"))]);
+    }
+
+    private static string ClassifyClientCategory(JsonObject version)
+    {
+        var type = version["type"]?.GetValue<string>() ?? string.Empty;
+        var id = version["id"]?.GetValue<string>() ?? string.Empty;
+        switch (type.ToLowerInvariant())
+        {
+            case "release":
+                return "正式版";
+            case "snapshot":
+            case "pending":
+                if (id.StartsWith("1.", StringComparison.OrdinalIgnoreCase)
+                    && !id.Contains("combat", StringComparison.OrdinalIgnoreCase)
+                    && !id.Contains("rc", StringComparison.OrdinalIgnoreCase)
+                    && !id.Contains("experimental", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(id, "1.2", StringComparison.OrdinalIgnoreCase)
+                    && !id.Contains("pre", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "正式版";
+                }
+
+                return IsAprilFoolsVersion(id, version["releaseTime"]?.GetValue<string>()) ? "愚人节版" : "预览版";
+            case "special":
+                return "愚人节版";
+            default:
+                return "远古版";
+        }
+    }
+
+    private static string BuildClientVersionInfo(JsonObject version)
+    {
+        var id = NormalizeClientVersionTitle(version["id"]?.GetValue<string>());
+        var foolName = GetClientAprilFoolsName(id);
+        if (!string.IsNullOrWhiteSpace(foolName))
+        {
+            return foolName;
+        }
+
+        return FormatReleaseTime(version["releaseTime"]?.GetValue<string>());
+    }
+
+    private static bool IsAprilFoolsVersion(string id, string? releaseTime)
+    {
+        if (!string.IsNullOrWhiteSpace(GetClientAprilFoolsName(id)))
+        {
+            return true;
+        }
+
+        var releaseMoment = ParseReleaseMoment(releaseTime);
+        return releaseMoment != DateTimeOffset.MinValue
+               && releaseMoment.UtcDateTime.AddHours(2).Month == 4
+               && releaseMoment.UtcDateTime.AddHours(2).Day == 1;
+    }
+
+    private static string NormalizeClientVersionTitle(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return "未知版本";
+        }
+
+        return id switch
+        {
+            "2point0_blue" => "2.0_blue",
+            "2point0_red" => "2.0_red",
+            "2point0_purple" => "2.0_purple",
+            "20w14infinite" => "20w14∞",
+            _ => id
+        };
+    }
+
+    private static string GetClientAprilFoolsName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return string.Empty;
+        }
+
+        var normalized = name.ToLowerInvariant();
+        if (normalized.StartsWith("2.0", StringComparison.Ordinal) || normalized.StartsWith("2point0", StringComparison.Ordinal))
+        {
+            var tag = normalized.EndsWith("red", StringComparison.Ordinal) ? "（红色版本）"
+                : normalized.EndsWith("blue", StringComparison.Ordinal) ? "（蓝色版本）"
+                : normalized.EndsWith("purple", StringComparison.Ordinal) ? "（紫色版本）"
+                : string.Empty;
+            return "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！" + tag;
+        }
+
+        return normalized switch
+        {
+            "15w14a" => "2015 | 作为一款全年龄向的游戏，我们需要和平，需要爱与拥抱。",
+            "1.rv-pre1" => "2016 | 是时候将现代科技带入 Minecraft 了！",
+            "3d shareware v1.34" => "2019 | 我们从地下室的废墟里找到了这个开发于 1994 年的杰作！",
+            "20w14infinite" or "20w14∞" => "2020 | 我们加入了 20 亿个新的维度，让无限的想象变成了现实！",
+            "22w13oneblockatatime" => "2022 | 一次一个方块更新！迎接全新的挖掘、合成与骑乘玩法吧！",
+            "23w13a_or_b" => "2023 | 研究表明：玩家喜欢作出选择，越多越好！",
+            "24w14potato" => "2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！",
+            "25w14craftmine" => "2025 | 你可以合成任何东西，包括合成你的世界！",
+            "26w14a" => "2026 | 为什么需要物品栏？让方块们跟着你走吧！",
+            _ => string.Empty
+        };
+    }
+
+    private static GoldCatalogDescriptor GetGoldCatalogDescriptor(LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadClient => new GoldCatalogDescriptor(string.Empty, string.Empty, "正在获取版本列表", []),
+            LauncherFrontendSubpageKey.DownloadForge => new GoldCatalogDescriptor(
+                "Forge 简介",
+                "Forge 是一个 Mod 加载器，你需要先安装 Forge 才能安装各种 Forge 模组。",
+                "正在获取 Forge 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://files.minecraftforge.net", true))),
+            LauncherFrontendSubpageKey.DownloadNeoForge => new GoldCatalogDescriptor(
+                "NeoForge 简介",
+                "NeoForge 是 Minecraft 1.20.1+ 的 Mod 加载器，你需要先安装它才能安装各种 NeoForge 模组，它也兼容一些 Forge 模组。\n本页面提供 NeoForge 安装器下载，在下载后你需要手动打开安装器进行安装。",
+                "正在获取 NeoForge 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://neoforged.net/", true))),
+            LauncherFrontendSubpageKey.DownloadFabric => new GoldCatalogDescriptor(
+                "Fabric 简介",
+                "Fabric Loader 是新版 Minecraft 下的轻量化 Mod 加载器，你需要先安装它才能安装各种 Fabric 模组。\n本页面提供 Fabric 安装器下载，在下载后你需要手动打开安装器进行安装。",
+                "正在获取 Fabric 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://www.fabricmc.net", true))),
+            LauncherFrontendSubpageKey.DownloadLegacyFabric => new GoldCatalogDescriptor(
+                "Legacy Fabric 简介",
+                "Legacy Fabric 是 Fabric 的旧版本移植，你需要先安装它才能安装各种 Legacy Fabric 模组。\n本页面提供 Legacy Fabric 安装器下载，在下载后你需要手动打开安装器进行安装。",
+                "正在获取 Legacy Fabric 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://legacyfabric.net/", true))),
+            LauncherFrontendSubpageKey.DownloadQuilt => new GoldCatalogDescriptor(
+                "Quilt 简介",
+                "Quilt Loader 是新版 Minecraft 下的轻量模块化 Mod 加载器，你需要先安装它才能安装各种 Quilt 模组。\n本页面提供 Quilt 安装器下载，在下载后你需要手动打开安装器进行安装。",
+                "正在获取 Quilt 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://quiltmc.org", true))),
+            LauncherFrontendSubpageKey.DownloadOptiFine => new GoldCatalogDescriptor(
+                "OptiFine 简介",
+                "OptiFine 又称为高清修复，以允许安装光影、使用高清材质、提高游戏性能，但与 Mod 的兼容性不佳。",
+                "正在获取 OptiFine 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://www.optifine.net/", true))),
+            LauncherFrontendSubpageKey.DownloadLiteLoader => new GoldCatalogDescriptor(
+                "LiteLoader 简介",
+                "与 Forge 类似，LiteLoader 可以用于加载老版本 Minecraft 中的 LiteLoader 模组。",
+                "正在获取 LiteLoader 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://www.liteloader.com", true))),
+            LauncherFrontendSubpageKey.DownloadLabyMod => new GoldCatalogDescriptor(
+                "LabyMod 简介",
+                "LabyMod 是 Minecraft 下的优化客户端。\n本页面提供 LabyMod 安装器下载，在下载后你需要手动打开安装器进行安装。",
+                "正在获取 LabyMod 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://labymod.net", true))),
+            LauncherFrontendSubpageKey.DownloadCleanroom => new GoldCatalogDescriptor(
+                "Cleanroom 简介",
+                "Cleanroom 是针对 1.12.2 基于 Forge 二次开发的 Mod 加载器，理论上与 99% 的 Forge Mod 兼容。",
+                "正在获取 Cleanroom 列表",
+                CreateActions(new FrontendDownloadCatalogAction("打开官网", "https://cleanroommc.com/zh/", true))),
+            _ => new GoldCatalogDescriptor($"{GetRouteTitle(route)} 简介", string.Empty, $"正在获取 {GetRouteTitle(route)} 列表", [])
+        };
     }
 
     private static IReadOnlyList<FrontendDownloadCatalogAction> CreateActions(params FrontendDownloadCatalogAction[] actions)
@@ -1231,9 +1430,24 @@ internal static class FrontendDownloadRemoteCatalogService
 
     private sealed record RemoteCatalogCacheKey(int SourceIndex, string PreferredMinecraftVersion);
 
+    private sealed record RouteCatalogCacheKey(
+        LauncherFrontendSubpageKey Route,
+        int SourceIndex,
+        string PreferredMinecraftVersion);
+
     private sealed record RemoteCatalogCacheEntry(
         DateTimeOffset FetchedAtUtc,
         IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState> States);
+
+    private sealed record RouteCatalogCacheEntry(
+        DateTimeOffset FetchedAtUtc,
+        FrontendDownloadCatalogState State);
+
+    private sealed record GoldCatalogDescriptor(
+        string IntroTitle,
+        string IntroBody,
+        string LoadingText,
+        IReadOnlyList<FrontendDownloadCatalogAction> Actions);
 
     private sealed record RemoteSource(string DisplayName, string Url, bool IsOfficial);
 

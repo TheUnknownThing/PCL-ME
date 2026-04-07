@@ -23,6 +23,7 @@ internal sealed record FrontendDownloadInstallOption(
 internal sealed record FrontendDownloadCatalogState(
     string IntroTitle,
     string IntroBody,
+    string LoadingText,
     IReadOnlyList<FrontendDownloadCatalogAction> Actions,
     IReadOnlyList<FrontendDownloadCatalogSection> Sections);
 

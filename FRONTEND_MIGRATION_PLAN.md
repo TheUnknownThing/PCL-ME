@@ -528,6 +528,11 @@ Verification note:
 
 - in the current workspace, `dotnet run PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` may enter the inspection/replay host instead of the interactive desktop shell, so route-click verification should be done from the desktop app entry rather than assuming the CLI host is the real UI path
 
+Status on 2026-04-07:
+
+- the copied tools test surface now matches the gold `PageToolsTest.xaml` button sizing more closely, restoring the original `35`-high action buttons and toolbox spacing for 百宝箱, 下载自定义文件, 下载正版玩家的皮肤, 成就生成器, and 头像生成器 actions
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after that UI parity pass; the existing nullable warning in `FrontendSystemMemoryService` remains unchanged
+
 ## Commit Guidance
 
 Prefer frequent, narrow commits.

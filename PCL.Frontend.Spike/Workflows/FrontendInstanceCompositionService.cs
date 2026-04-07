@@ -49,7 +49,7 @@ internal static class FrontendInstanceCompositionService
             HasLabyMod: manifestSummary.HasLabyMod,
             VanillaVersion: vanillaVersion);
         var javaEntries = ParseJavaEntries(ReadValue(sharedConfig, "LaunchArgumentJavaUser", "[]"));
-        var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, instanceConfig, javaEntries);
+        var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
 
         return new FrontendInstanceComposition(
             selection,
@@ -94,6 +94,10 @@ internal static class FrontendInstanceCompositionService
             MemoryModeIndex: 2,
             CustomMemoryAllocationGb: FrontendSetupCompositionService.MapStoredLaunchRamToGb(15),
             OptimizeMemoryIndex: 0,
+            UsedMemoryGb: 0,
+            TotalMemoryGb: 0,
+            AutomaticAllocatedMemoryGb: 0,
+            GlobalAllocatedMemoryGb: 0,
             UsedMemoryLabel: "0.0 GB",
             TotalMemoryLabel: " / 0.0 GB",
             AllocatedMemoryLabel: "0.0 GB",
@@ -251,6 +255,7 @@ internal static class FrontendInstanceCompositionService
         FrontendInstanceSelectionState selection,
         FrontendVersionManifestSummary manifestSummary,
         JsonFileProvider sharedConfig,
+        YamlFileProvider localConfig,
         YamlFileProvider instanceConfig,
         IReadOnlyList<FrontendJavaEntry> javaEntries)
     {
@@ -264,11 +269,36 @@ internal static class FrontendInstanceCompositionService
         }
 
         var resolvedJava = ResolveSelectedJava(javaPreference, javaEntries, selection.LauncherDirectory);
-        var (totalMemoryGb, availableMemoryGb) = GetPhysicalMemoryState();
+        var (totalMemoryGb, availableMemoryGb) = FrontendSystemMemoryService.GetPhysicalMemoryState();
         var customMemoryValue = ReadValue(instanceConfig, "VersionRamCustom", 15);
         var memoryModeIndex = Math.Clamp(ReadValue(instanceConfig, "VersionRamType", 2), 0, 2);
+        var globalMemoryModeIndex = Math.Clamp(ReadValue(localConfig, "LaunchRamType", 0), 0, 1);
+        var globalCustomMemoryGb = FrontendSetupCompositionService.MapStoredLaunchRamToGb(ReadValue(localConfig, "LaunchRamCustom", 15));
         var customMemoryGb = FrontendSetupCompositionService.MapStoredLaunchRamToGb(customMemoryValue);
-        var allocatedMemory = CalculateAllocatedMemory(selection, memoryModeIndex, customMemoryGb, resolvedJava?.Is64Bit, totalMemoryGb, availableMemoryGb);
+        var modCount = Directory.Exists(ResolveResourceDirectory(selection, ResourceKind.Mods))
+            ? Directory.EnumerateFiles(ResolveResourceDirectory(selection, ResourceKind.Mods), "*", SearchOption.TopDirectoryOnly).Count()
+            : 0;
+        var effectiveMemoryModeIndex = memoryModeIndex == 2 ? globalMemoryModeIndex : memoryModeIndex;
+        var effectiveCustomMemoryGb = memoryModeIndex == 2 ? globalCustomMemoryGb : customMemoryGb;
+        var automaticAllocatedMemory = FrontendSystemMemoryService.CalculateAllocatedMemoryGb(
+            0,
+            effectiveCustomMemoryGb,
+            selection.IsModable,
+            !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion),
+            modCount,
+            resolvedJava?.Is64Bit,
+            totalMemoryGb,
+            availableMemoryGb);
+        var allocatedMemory = FrontendSystemMemoryService.CalculateAllocatedMemoryGb(
+            effectiveMemoryModeIndex,
+            effectiveCustomMemoryGb,
+            selection.IsModable,
+            !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion),
+            modCount,
+            resolvedJava?.Is64Bit,
+            totalMemoryGb,
+            availableMemoryGb);
+        var usedMemoryGb = Math.Max(totalMemoryGb - availableMemoryGb, 0);
 
         return new FrontendInstanceSetupState(
             IsolationIndex: ReadValue(instanceConfig, "VersionArgumentIndieV2", false) ? 0 : 1,
@@ -281,7 +311,11 @@ internal static class FrontendInstanceCompositionService
             MemoryModeIndex: memoryModeIndex,
             CustomMemoryAllocationGb: customMemoryGb,
             OptimizeMemoryIndex: Math.Clamp(ReadValue(instanceConfig, "VersionRamOptimize", 0), 0, 2),
-            UsedMemoryLabel: $"{Math.Max(totalMemoryGb - availableMemoryGb, 0):0.0} GB",
+            UsedMemoryGb: usedMemoryGb,
+            TotalMemoryGb: totalMemoryGb,
+            AutomaticAllocatedMemoryGb: automaticAllocatedMemory,
+            GlobalAllocatedMemoryGb: allocatedMemory,
+            UsedMemoryLabel: $"{usedMemoryGb:0.0} GB",
             TotalMemoryLabel: $" / {totalMemoryGb:0.0} GB",
             AllocatedMemoryLabel: $"{allocatedMemory:0.0} GB",
             ShowMemoryWarning: memoryModeIndex == 1 && totalMemoryGb > 0 && allocatedMemory / totalMemoryGb > 0.75,
@@ -744,55 +778,6 @@ internal static class FrontendInstanceCompositionService
         }
 
         return result;
-    }
-
-    private static double CalculateAllocatedMemory(
-        FrontendInstanceSelectionState selection,
-        int memoryModeIndex,
-        double customMemoryGb,
-        bool? is64BitJava,
-        double totalMemoryGb,
-        double availableMemoryGb)
-    {
-        double allocated;
-        if (memoryModeIndex == 2)
-        {
-            allocated = 2.5;
-        }
-        else if (memoryModeIndex == 1)
-        {
-            allocated = customMemoryGb;
-        }
-        else
-        {
-            var modCount = Directory.Exists(ResolveResourceDirectory(selection, ResourceKind.Mods))
-                ? Directory.EnumerateFiles(ResolveResourceDirectory(selection, ResourceKind.Mods), "*", SearchOption.TopDirectoryOnly).Count()
-                : 0;
-            var modded = selection.IsModable;
-            var target = modded
-                ? Math.Clamp(1.5 + modCount / 90.0, 0.5, 6.0)
-                : 1.5;
-            allocated = Math.Min(Math.Max(target, 0.5), Math.Max(availableMemoryGb, 1.0));
-        }
-
-        if (is64BitJava == false)
-        {
-            allocated = Math.Min(1.0, allocated);
-        }
-
-        return Math.Round(Math.Min(allocated, Math.Max(totalMemoryGb, 1.0)), 1);
-    }
-
-    private static (double TotalGb, double AvailableGb) GetPhysicalMemoryState()
-    {
-        var gcInfo = GC.GetGCMemoryInfo();
-        var total = gcInfo.TotalAvailableMemoryBytes > 0
-            ? gcInfo.TotalAvailableMemoryBytes
-            : 8L * 1024 * 1024 * 1024;
-        var used = GC.GetTotalMemory(forceFullCollection: false);
-        return (
-            total / 1024d / 1024d / 1024d,
-            Math.Max(total - used, 0) / 1024d / 1024d / 1024d);
     }
 
     private static bool IsModable(FrontendVersionManifestSummary manifestSummary)

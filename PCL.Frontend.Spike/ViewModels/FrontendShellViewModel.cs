@@ -158,17 +158,21 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowInnerNavigation => CanGoBack;
 
-    public bool IsInstanceSelectionContextRoute => ShowInstanceSelectSurface;
+    public bool IsContextModeRoute => _currentNavigation?.ShowsBackButton ?? false;
 
-    public bool ShowWindowBranding => !IsInstanceSelectionContextRoute;
+    public bool ShowWindowBranding => !IsContextModeRoute;
 
-    public bool ShowWindowUtilityButtons => !IsInstanceSelectionContextRoute;
+    public bool ShowWindowUtilityButtons => !IsContextModeRoute;
 
     public bool ShowMaximizeButton => false;
 
     public bool HasActivePrompts => ActivePrompts.Count > 0;
 
     public bool HasNoActivePrompts => !HasActivePrompts;
+
+    public PromptCardViewModel? CurrentPrompt => ActivePrompts.Count > 0 ? ActivePrompts[0] : null;
+
+    public bool HasCurrentPrompt => CurrentPrompt is not null;
 
     public bool IsPromptOverlayVisible => HasActivePrompts && _isPromptOverlayOpen;
 

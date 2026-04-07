@@ -382,7 +382,12 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
                 RaisePropertyChanged(nameof(CustomRamAllocation));
                 RaisePropertyChanged(nameof(CustomRamAllocationLabel));
+                RaisePropertyChanged(nameof(UsedRamLabel));
+                RaisePropertyChanged(nameof(TotalRamLabel));
                 RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(UsedRamBarWidth));
+                RaisePropertyChanged(nameof(AllocatedRamBarWidth));
+                RaisePropertyChanged(nameof(FreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowRamAllocationWarning));
                 RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
                 RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
@@ -723,7 +728,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
         RaisePropertyChanged(nameof(CustomRamAllocation));
         RaisePropertyChanged(nameof(CustomRamAllocationLabel));
+        RaisePropertyChanged(nameof(UsedRamLabel));
+        RaisePropertyChanged(nameof(TotalRamLabel));
         RaisePropertyChanged(nameof(AllocatedRamLabel));
+        RaisePropertyChanged(nameof(UsedRamBarWidth));
+        RaisePropertyChanged(nameof(AllocatedRamBarWidth));
+        RaisePropertyChanged(nameof(FreeRamBarWidth));
         RaisePropertyChanged(nameof(ShowRamAllocationWarning));
         RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
         RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));

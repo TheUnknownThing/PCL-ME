@@ -81,8 +81,18 @@ internal sealed partial class PclCard : UserControl
     {
         get
         {
-            // TODO: May require special margin where header is present.
-            return ContentMargin;
+            if (!HasHeader || ContentMargin.Top < 30)
+            {
+                return ContentMargin;
+            }
+
+            // Most migrated cards copied the original absolute top inset,
+            // so in Avalonia they end up counting both the header row and the old inset.
+            return new Thickness(
+                ContentMargin.Left,
+                Math.Max(10, ContentMargin.Top - 28),
+                ContentMargin.Right,
+                ContentMargin.Bottom);
         }
     }
 
@@ -136,16 +146,15 @@ internal sealed partial class PclCard : UserControl
 
     private void RefreshState()
     {
-        CardShadow.Background = _isHovered
-            ? Brush.Parse("#0B5BCB")
-            : Brush.Parse("#343D4A");
-        CardShadow.Opacity = _isHovered ? 0.3 : 0.1;
         CardBorder.BorderBrush = _isHovered
             ? Brush.Parse("#28D5E6FD")
             : Brush.Parse("#00FFFFFF");
         CardBorder.Background = _isHovered
             ? Brush.Parse("#E6FFFFFF")
             : Brush.Parse("#CDFFFFFF");
+        CardBorder.BoxShadow = BoxShadows.Parse(_isHovered
+            ? "0 10 24 0 #200B5BCB"
+            : "0 6 18 0 #14343D4A");
         HeaderTextBlock.Foreground = _isHovered
             ? Brush.Parse("#0B5BCB")
             : Brush.Parse("#343D4A");

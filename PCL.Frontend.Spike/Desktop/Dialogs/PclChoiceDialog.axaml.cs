@@ -8,6 +8,7 @@ namespace PCL.Frontend.Spike.Desktop.Dialogs;
 internal sealed partial class PclChoiceDialog : Window
 {
     private readonly ListBox _choiceListBox;
+    private string? _selectedId;
 
     public PclChoiceDialog(
         string title,
@@ -20,21 +21,27 @@ internal sealed partial class PclChoiceDialog : Window
 
         TitleTextBlock.Text = title;
         MessageTextBlock.Text = message;
-        SelectionSummaryTextBlock.Text = $"可选项：{options.Count}";
         ConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
-        ConfirmCommand = new ActionCommand(Confirm);
+        ConfirmCommand = new ActionCommand(Confirm, () => !string.IsNullOrWhiteSpace(_selectedId));
         CancelCommand = new ActionCommand(Cancel);
         DataContext = this;
+        MessageHost.IsVisible = !string.IsNullOrWhiteSpace(message);
 
         _choiceListBox = this.FindControl<ListBox>("ChoiceListBox")
             ?? throw new InvalidOperationException("选择对话框未找到列表。");
         _choiceListBox.ItemsSource = options;
         _choiceListBox.DoubleTapped += (_, _) => Confirm();
+        _choiceListBox.SelectionChanged += (_, _) => UpdateSelectionState();
         _choiceListBox.SelectedItem = options.FirstOrDefault(option => string.Equals(option.Id, selectedId, StringComparison.Ordinal))
                                       ?? options.FirstOrDefault();
+        UpdateSelectionState();
 
         KeyDown += OnDialogKeyDown;
-        Opened += (_, _) => _choiceListBox.Focus();
+        Opened += (_, _) =>
+        {
+            AlignToOwnerBounds();
+            _choiceListBox.Focus();
+        };
     }
 
     public string ConfirmText { get; }
@@ -50,7 +57,7 @@ internal sealed partial class PclChoiceDialog : Window
             e.Handled = true;
             Cancel();
         }
-        else if (e.Key == Key.Enter)
+        else if (e.Key == Key.Enter && ConfirmCommand.CanExecute(null))
         {
             e.Handled = true;
             Confirm();
@@ -59,12 +66,35 @@ internal sealed partial class PclChoiceDialog : Window
 
     private void Confirm()
     {
-        Close((_choiceListBox.SelectedItem as PclChoiceDialogOption)?.Id);
+        if (!ConfirmCommand.CanExecute(null))
+        {
+            return;
+        }
+
+        Close(_selectedId);
     }
 
     private void Cancel()
     {
         Close(null);
+    }
+
+    private void UpdateSelectionState()
+    {
+        _selectedId = (_choiceListBox.SelectedItem as PclChoiceDialogOption)?.Id;
+        ConfirmCommand.NotifyCanExecuteChanged();
+    }
+
+    private void AlignToOwnerBounds()
+    {
+        if (Owner is not Window owner)
+        {
+            return;
+        }
+
+        Position = owner.Position;
+        Width = Math.Max(owner.Bounds.Width, 320);
+        Height = Math.Max(owner.Bounds.Height, 240);
     }
 
     private void InitializeComponent()
