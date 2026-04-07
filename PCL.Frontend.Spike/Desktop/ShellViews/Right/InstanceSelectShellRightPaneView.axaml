@@ -18,19 +18,9 @@
   </UserControl.Styles>
 
   <Grid>
-    <Border>
-      <Border.Background>
-        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-          <GradientStop Color="#DCE8FB" Offset="0" />
-          <GradientStop Color="#D4E5FA" Offset="0.45" />
-          <GradientStop Color="#CAE0FA" Offset="1" />
-        </LinearGradientBrush>
-      </Border.Background>
-    </Border>
-
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-      <StackPanel Margin="22,18,22,14" Spacing="14">
-        <StackPanel Spacing="12" IsVisible="{Binding HasInstanceSelectionSearchBox}">
+      <StackPanel Margin="25,15,25,10" Spacing="0">
+        <StackPanel Margin="0,0,0,12" IsVisible="{Binding HasInstanceSelectionSearchBox}">
           <Grid ColumnDefinitions="*,Auto">
             <Border
                 Height="40"
@@ -66,34 +56,18 @@
                 Command="{Binding RefreshInstanceSelectionCommand}"
                 Text="刷新" />
           </Grid>
-
-          <controls:PclCard ContentMargin="14,14,14,14">
-            <controls:PclCard.CardContent>
-              <StackPanel Spacing="4">
-                <TextBlock
-                    Foreground="#344352"
-                    FontSize="13"
-                    FontWeight="SemiBold"
-                    Text="{Binding InstanceSelectionResultSummary}" />
-                <TextBlock
-                    Foreground="#8A98A8"
-                    FontSize="11.5"
-                    Text="{Binding InstanceSelectionLauncherDirectory}"
-                    TextWrapping="Wrap" />
-              </StackPanel>
-            </controls:PclCard.CardContent>
-          </controls:PclCard>
         </StackPanel>
 
         <ItemsControl ItemsSource="{Binding InstanceSelectionGroups}" IsVisible="{Binding HasInstanceSelectionEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <controls:PclCard
+                  Margin="0,0,0,15"
                   Header="{Binding HeaderText}"
                   HeaderCommand="{Binding ToggleExpandCommand}"
                   ShowChevron="True"
                   IsChevronExpanded="{Binding IsExpanded}"
-                  ContentMargin="10,36,10,10">
+                  ContentMargin="20,40,18,2">
                 <controls:PclCard.CardContent>
                   <ItemsControl ItemsSource="{Binding Entries}">
                     <ItemsControl.ItemTemplate>
@@ -101,7 +75,7 @@
                         <Button
                             Classes="instance-entry"
                             Command="{Binding SelectCommand}">
-                          <Grid Margin="8,0,8,8" ColumnDefinitions="Auto,*,Auto">
+                          <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*,Auto">
                             <Image
                                 Width="32"
                                 Height="32"
@@ -143,8 +117,8 @@
                                 <ItemsControl.ItemTemplate>
                                   <DataTemplate>
                                     <Border
-                                        Margin="0,0,6,0"
-                                        Padding="7,2"
+                                        Margin="0,0,6,2"
+                                        Padding="6,2"
                                         Background="#EFF1F4"
                                         CornerRadius="4">
                                       <TextBlock
@@ -160,13 +134,13 @@
                                   Foreground="#738293"
                                   FontSize="11.5"
                                   Text="{Binding Subtitle}"
-                                  TextTrimming="CharacterEllipsis"
+                                  TextWrapping="Wrap"
                                   IsVisible="{Binding HasSubtitle}" />
                               <TextBlock
                                   Foreground="#A0A9B5"
                                   FontSize="10.8"
                                   Text="{Binding Detail}"
-                                  TextTrimming="CharacterEllipsis"
+                                  TextWrapping="Wrap"
                                   IsVisible="{Binding HasDetail}" />
                             </StackPanel>
 
@@ -208,6 +182,7 @@
             Width="580"
             MaxWidth="640"
             Padding="26,18,26,18"
+            Margin="0,28,0,0"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Background="#F9FBFF"
