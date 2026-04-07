@@ -536,6 +536,8 @@ internal static class FrontendCommunityProjectService
             meta,
             string.IsNullOrWhiteSpace(target) ? "查看详情" : "打开下载",
             target,
+            GetString(file, "filename"),
+            !string.IsNullOrWhiteSpace(GetString(file, "url")),
             gameVersions,
             loaders,
             publishedAt?.ToUnixTimeSeconds() ?? 0);
@@ -574,6 +576,8 @@ internal static class FrontendCommunityProjectService
             meta,
             string.IsNullOrWhiteSpace(downloadUrl) ? (string.IsNullOrWhiteSpace(website) ? "查看详情" : "打开项目页") : "打开下载",
             downloadUrl ?? website,
+            GetString(file, "fileName"),
+            !string.IsNullOrWhiteSpace(downloadUrl),
             gameVersions,
             loaders,
             publishedAt?.ToUnixTimeSeconds() ?? 0);

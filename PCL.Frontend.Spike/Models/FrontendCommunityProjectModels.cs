@@ -24,6 +24,8 @@ internal sealed record FrontendCommunityProjectReleaseEntry(
     string Meta,
     string ActionText,
     string? Target,
+    string? SuggestedFileName,
+    bool IsDirectDownload,
     IReadOnlyList<string> GameVersions,
     IReadOnlyList<string> Loaders,
     long PublishedUnixTime);

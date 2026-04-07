@@ -163,6 +163,31 @@ internal sealed class FrontendShellActionService(
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
+    public async Task<string?> PickSaveFileAsync(string title, string suggestedFileName, string typeName, params string[] patterns)
+    {
+        var storageProvider = TryGetStorageProvider(out var error)
+            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件选择器。");
+        var fileTypes = patterns.Length == 0
+            ? null
+            : new List<FilePickerFileType>
+            {
+                new(typeName)
+                {
+                    Patterns = patterns
+                }
+            };
+
+        var result = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedFileName,
+            DefaultExtension = Path.GetExtension(suggestedFileName),
+            FileTypeChoices = fileTypes,
+            ShowOverwritePrompt = true
+        });
+        return result?.TryGetLocalPath();
+    }
+
     public async Task<string?> ReadClipboardTextAsync()
     {
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop

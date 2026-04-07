@@ -2,13 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
@@ -442,9 +447,11 @@ internal sealed partial class FrontendShellViewModel
                         entry.Info,
                         entry.Meta,
                         entry.ActionText,
-                        string.IsNullOrWhiteSpace(entry.Target)
-                            ? CreateIntentCommand(entry.Title, entry.Info)
-                            : CreateOpenTargetCommand($"打开文件: {entry.Title}", entry.Target, entry.Target)))
+                        entry.IsDirectDownload && !string.IsNullOrWhiteSpace(entry.Target)
+                            ? CreateCommunityProjectReleaseDownloadCommand(entry)
+                            : string.IsNullOrWhiteSpace(entry.Target)
+                                ? CreateIntentCommand(entry.Title, entry.Info)
+                                : CreateOpenTargetCommand($"打开文件: {entry.Title}", entry.Target, entry.Target)))
                     .ToArray()))
             .ToArray();
     }
@@ -601,6 +608,59 @@ internal sealed partial class FrontendShellViewModel
         return string.IsNullOrWhiteSpace(entry.Target)
             ? CreateIntentCommand(entry.Title, entry.Info)
             : CreateOpenTargetCommand($"打开项目内容: {entry.Title}", entry.Target, entry.Target);
+    }
+
+    private ActionCommand CreateCommunityProjectReleaseDownloadCommand(FrontendCommunityProjectReleaseEntry entry)
+    {
+        return new ActionCommand(() => _ = DownloadCommunityProjectReleaseAsync(entry));
+    }
+
+    private async Task DownloadCommunityProjectReleaseAsync(FrontendCommunityProjectReleaseEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.Target))
+        {
+            AddActivity($"下载资源文件: {entry.Title}", "当前版本没有可用的下载地址。");
+            return;
+        }
+
+        var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+        var extension = Path.GetExtension(suggestedFileName);
+        var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
+
+        string? targetPath;
+        try
+        {
+            targetPath = await _shellActionService.PickSaveFileAsync(
+                "选择保存位置",
+                suggestedFileName,
+                "资源文件",
+                patterns);
+        }
+        catch (Exception ex)
+        {
+            AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(targetPath))
+        {
+            AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
+            return;
+        }
+
+        TaskCenter.Register(new FrontendManagedFileDownloadTask(
+            $"下载资源文件：{Path.GetFileNameWithoutExtension(targetPath)}",
+            entry.Target,
+            targetPath));
+        AddActivity($"开始下载资源文件: {entry.Title}", targetPath);
+    }
+
+    private static string SanitizeCommunityProjectReleaseFileName(string? suggestedFileName, string fallbackTitle)
+    {
+        var candidate = string.IsNullOrWhiteSpace(suggestedFileName) ? fallbackTitle : suggestedFileName.Trim();
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var cleaned = new string(candidate.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? "community-resource-download" : cleaned;
     }
 
     private async Task CopyCommunityProjectTextAsync(string title, string text, string emptyMessage)
@@ -1035,6 +1095,147 @@ internal sealed partial class FrontendShellViewModel
             >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
             >= 10_000 => $"{value / 10_000d:0.#}万",
             _ => value.ToString()
+        };
+    }
+}
+
+internal sealed class FrontendManagedFileDownloadTask(
+    string title,
+    string sourceUrl,
+    string targetPath) : ITask, ITaskProgressive, ITaskTelemetry, ITaskCancelable
+{
+    private static readonly HttpClient DownloadHttpClient = new(new SocketsHttpHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+    })
+    {
+        Timeout = TimeSpan.FromMinutes(15)
+    };
+
+    private readonly CancellationTokenSource _cancellation = new();
+    private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", 1, null);
+
+    public string Title { get; } = title;
+
+    public TaskTelemetrySnapshot Telemetry => _telemetry;
+
+    public event TaskStateEvent StateChanged = delegate { };
+
+    public event TaskProgressEvent ProgressChanged = delegate { };
+
+    public event TaskTelemetryEvent TelemetryChanged = delegate { };
+
+    public void Cancel()
+    {
+        _cancellation.Cancel();
+    }
+
+    public async Task ExecuteAsync(CancellationToken cancelToken = default)
+    {
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancelToken, _cancellation.Token);
+        var token = linkedCts.Token;
+        StateChanged(TaskState.Waiting, "已加入任务中心");
+
+        try
+        {
+            using var response = await DownloadHttpClient.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
+            response.EnsureSuccessStatusCode();
+
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await using var sourceStream = await response.Content.ReadAsStreamAsync(token);
+            await using var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
+
+            var contentLength = response.Content.Headers.ContentLength;
+            var buffer = new byte[81920];
+            var totalRead = 0L;
+            var lastReportedBytes = 0L;
+            var lastReportedAt = Environment.TickCount64;
+            StateChanged(TaskState.Running, "正在下载文件…");
+
+            while (true)
+            {
+                var read = await sourceStream.ReadAsync(buffer, token);
+                if (read <= 0)
+                {
+                    break;
+                }
+
+                await targetStream.WriteAsync(buffer.AsMemory(0, read), token);
+                totalRead += read;
+
+                var totalLength = contentLength.GetValueOrDefault();
+                var progress = totalLength > 0
+                    ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
+                    : 0d;
+                ProgressChanged(progress);
+
+                var now = Environment.TickCount64;
+                if (now - lastReportedAt >= 250)
+                {
+                    var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                    var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
+                    PublishTelemetry(progress, speed);
+                    lastReportedAt = now;
+                    lastReportedBytes = totalRead;
+                    StateChanged(TaskState.Running, $"正在下载 {Path.GetFileName(targetPath)}…");
+                }
+            }
+
+            await targetStream.FlushAsync(token);
+            ProgressChanged(1d);
+            PublishTelemetry(1d, 0d, 0);
+            StateChanged(TaskState.Success, $"已保存到 {targetPath}");
+        }
+        catch (OperationCanceledException)
+        {
+            CleanupPartialDownload();
+            PublishTelemetry(0d, 0d);
+            StateChanged(TaskState.Canceled, "下载已取消");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            CleanupPartialDownload();
+            PublishTelemetry(0d, 0d);
+            StateChanged(TaskState.Failed, ex.Message);
+            throw;
+        }
+    }
+
+    private void CleanupPartialDownload()
+    {
+        try
+        {
+            if (File.Exists(targetPath))
+            {
+                File.Delete(targetPath);
+            }
+        }
+        catch
+        {
+            // Best effort cleanup only.
+        }
+    }
+
+    private void PublishTelemetry(double progress, double speedBytesPerSecond, int? remainingFileCount = 1)
+    {
+        _telemetry = new TaskTelemetrySnapshot(
+            $"{Math.Round(progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
+            $"{FormatBytes(speedBytesPerSecond)}/s",
+            remainingFileCount,
+            null);
+        TelemetryChanged(_telemetry);
+    }
+
+    private static string FormatBytes(double value)
+    {
+        var absolute = Math.Max(value, 0d);
+        return absolute switch
+        {
+            >= 1024d * 1024d * 1024d => $"{absolute / (1024d * 1024d * 1024d):0.##} GB",
+            >= 1024d * 1024d => $"{absolute / (1024d * 1024d):0.##} MB",
+            >= 1024d => $"{absolute / 1024d:0.##} KB",
+            _ => $"{absolute:0} B"
         };
     }
 }
