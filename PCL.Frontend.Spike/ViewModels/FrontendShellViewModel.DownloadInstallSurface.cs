@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -35,6 +36,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _downloadInstallMinecraftCatalogLoaded;
     private bool _isDownloadInstallMinecraftCatalogLoading;
     private int _downloadInstallMinecraftCatalogVersion;
+    private LauncherFrontendSubpageKey? _downloadInstallLastVisitedSubpage;
     private bool _downloadInstallIsInSelectionStage;
     private string _downloadInstallMinecraftCatalogStatus = "正在获取版本列表";
     private string _downloadInstallNameValidationMessage = string.Empty;
@@ -89,6 +91,10 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanStartDownloadInstall => _downloadInstallIsInSelectionStage && string.IsNullOrWhiteSpace(DownloadInstallNameValidationMessage);
 
+    private bool IsDownloadClientInstallRoute =>
+        _currentRoute.Page == LauncherFrontendPageKey.Download
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadClient;
+
     private void RefreshDownloadInstallSurfaceState()
     {
         ReplaceItems(DownloadInstallOptions, []);
@@ -97,11 +103,19 @@ internal sealed partial class FrontendShellViewModel
         if (_downloadInstallIsInSelectionStage)
         {
             SyncDownloadInstallSelectionHeader();
-            ReplaceItems(
-                DownloadInstallHints,
-                GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
-                    CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
-            ReplaceItems(DownloadInstallOptionCards, BuildDownloadInstallOptionCards());
+            if (IsDownloadClientInstallRoute)
+            {
+                ReplaceItems(DownloadInstallHints, []);
+                ReplaceItems(DownloadInstallOptionCards, []);
+            }
+            else
+            {
+                ReplaceItems(
+                    DownloadInstallHints,
+                    GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
+                        CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
+                ReplaceItems(DownloadInstallOptionCards, BuildDownloadInstallOptionCards());
+            }
         }
         else
         {
@@ -114,6 +128,32 @@ internal sealed partial class FrontendShellViewModel
 
         ValidateDownloadInstallName();
         RaiseDownloadInstallSurfaceProperties();
+    }
+
+    private void SyncDownloadInstallRouteState()
+    {
+        if (_downloadInstallLastVisitedSubpage == _currentRoute.Subpage)
+        {
+            return;
+        }
+
+        _downloadInstallLastVisitedSubpage = _currentRoute.Subpage;
+        if (!IsDownloadClientInstallRoute)
+        {
+            return;
+        }
+
+        _downloadInstallIsInSelectionStage = false;
+        _downloadInstallExpandedOptionTitle = null;
+        _downloadInstallMinecraftChoice = null;
+        _downloadInstallIsNameEditedByUser = false;
+        _downloadInstallOptionChoices.Clear();
+        _downloadInstallOptionLoadsInProgress.Clear();
+        _downloadInstallOptionLoadErrors.Clear();
+        _downloadInstallAutoSelectedFabricApi = false;
+        _downloadInstallAutoSelectedLegacyFabricApi = false;
+        _downloadInstallAutoSelectedQsl = false;
+        _downloadInstallAutoSelectedOptiFabric = false;
     }
 
     private void RaiseDownloadInstallSurfaceProperties()

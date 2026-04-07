@@ -182,6 +182,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        SyncDownloadInstallRouteState();
         InitializeDownloadInstallSurface();
     }
 

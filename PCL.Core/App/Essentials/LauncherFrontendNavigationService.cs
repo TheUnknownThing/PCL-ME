@@ -123,7 +123,7 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadShader, "光影包", "安装光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadWorld, "存档", "导入地图与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadCompFavorites, "收藏夹", "查看收藏的资源条目。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "浏览客户端版本。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "选择并安装 Minecraft 版本。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadOptiFine, "OptiFine", "安装 OptiFine。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadForge, "Forge", "安装 Forge。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadNeoForge, "NeoForge", "安装 NeoForge。"),

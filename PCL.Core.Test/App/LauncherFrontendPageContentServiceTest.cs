@@ -210,6 +210,26 @@ public sealed class LauncherFrontendPageContentServiceTest
             section.Lines.Any(line => line.Contains("Forge", StringComparison.Ordinal))));
     }
 
+    [TestMethod]
+    public void BuildDownloadClientContentDescribesDirectMinecraftInstallFlow()
+    {
+        var content = LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
+            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadClient))),
+            BuildStartupPlan(),
+            BuildConsent(),
+            BuildPromptLanes()));
+
+        Assert.AreEqual("Minecraft 安装页面", content.Eyebrow);
+        Assert.AreEqual("Minecraft", content.Facts.Single(fact => fact.Label == "当前分区").Value);
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "Minecraft 版本分组" &&
+            section.Lines.Any(line => line.Contains("正式版", StringComparison.Ordinal))));
+        Assert.IsTrue(content.Sections.Any(section =>
+            section.Title == "直接安装语义" &&
+            section.Lines.Any(line => line.Contains("查看清单", StringComparison.Ordinal))));
+    }
+
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
     {
         return LauncherStartupWorkflowService.BuildPlan(new LauncherStartupWorkflowRequest(

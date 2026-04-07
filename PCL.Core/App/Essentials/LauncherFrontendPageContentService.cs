@@ -135,6 +135,7 @@ public static class LauncherFrontendPageContentService
         return request.Navigation.CurrentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.DownloadInstall => BuildDownloadInstallContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle),
+            LauncherFrontendSubpageKey.DownloadClient => BuildDownloadClientContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle),
             LauncherFrontendSubpageKey.DownloadMod
                 or LauncherFrontendSubpageKey.DownloadPack
                 or LauncherFrontendSubpageKey.DownloadDataPack
@@ -186,6 +187,43 @@ public static class LauncherFrontendPageContentService
                         "更细的加载器版本、兼容性提示和自动推荐结果仍需要后端合同输入。",
                         "前端已经准备好承载这些数据，并保持原版控件层级。",
                         "安装规划与冲突判断仍应继续停留在壳层之外。"
+                    ])
+            ]);
+    }
+
+    private static LauncherFrontendPageContent BuildDownloadClientContent(
+        LauncherFrontendPageContentRequest request,
+        int promptTotal,
+        int visibleUtilityCount,
+        string? selectedLaneTitle)
+    {
+        var surface = request.Navigation.CurrentPage;
+
+        return new LauncherFrontendPageContent(
+            "Minecraft 安装页面",
+            "Minecraft 子页已经切换到更接近原版版本列表的结构，并且可以直接衔接当前壳层的安装流程。",
+            [
+                new LauncherFrontendPageFact("当前分区", surface.SidebarItemTitle ?? surface.Title),
+                new LauncherFrontendPageFact("Visible utilities", visibleUtilityCount.ToString()),
+                new LauncherFrontendPageFact("Sidebar routes", request.Navigation.SidebarEntries.Count.ToString()),
+                new LauncherFrontendPageFact("Queued prompts", promptTotal.ToString())
+            ],
+            [
+                new LauncherFrontendPageSection(
+                    "版本列表",
+                    "Minecraft 版本分组",
+                    [
+                        "主体继续按最新版本、正式版、预览版、远古版和愚人节版来组织 Minecraft 版本，而不是把每个版本退回成远程链接条目。",
+                        "这一层级对齐的是原版 DownloadClient 页面先展示版本分组、再进入后续操作的方式。",
+                        $"Focused prompt lane: {selectedLaneTitle ?? "None"}"
+                    ]),
+                new LauncherFrontendPageSection(
+                    "安装入口",
+                    "直接安装语义",
+                    [
+                        "选择某个 Minecraft 版本后，会继续进入当前壳层的实例命名与安装动作，而不是显示“查看清单”之类的目录型按钮。",
+                        "这条路由聚焦纯 Minecraft 版本安装，不会默认把 Forge、Fabric 等附加安装卡混进来。",
+                        "页面目标是让 Minecraft 子页本身就成为可安装入口。"
                     ])
             ]);
     }
