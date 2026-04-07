@@ -12,7 +12,6 @@
             <TextBlock
                 Foreground="#1370F3"
                 FontSize="12"
-                FontWeight="Bold"
                 Text="{Binding Eyebrow}" />
             <TextBlock
                 Foreground="#343D4A"
@@ -68,7 +67,6 @@
                     <TextBlock
                         Foreground="{Binding ForegroundBrush}"
                         FontSize="13"
-                        FontWeight="SemiBold"
                         Text="{Binding Value}"
                         TextWrapping="Wrap" />
                   </StackPanel>

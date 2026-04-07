@@ -4,6 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Resources>
+    <DataTemplate x:Key="DownloadResourceFilterOptionTemplate">
+      <TextBlock Text="{Binding Label}" />
+    </DataTemplate>
+  </UserControl.Resources>
   <UserControl.Styles>
     <Style Selector="TextBox.search-input">
       <Setter Property="Background" Value="Transparent" />
@@ -87,14 +92,11 @@
             <ComboBox
                 Grid.Row="0"
                 Grid.Column="1"
-                SelectedIndex="{Binding SelectedDownloadResourceSourceIndex}"
-                ItemsSource="{Binding DownloadResourceSourceOptions}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+                x:Name="DownloadResourceSourceComboBox"
+                ItemsSource="{Binding DownloadResourceSourceOptions}"
+                ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
+                SelectedItem="{Binding SelectedDownloadResourceSourceOption}"
+                SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <TextBlock
                 Grid.Row="0"
@@ -107,14 +109,11 @@
             <ComboBox
                 Grid.Row="0"
                 Grid.Column="3"
-                SelectedIndex="{Binding SelectedDownloadResourceTagIndex}"
-                ItemsSource="{Binding DownloadResourceTagOptions}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+                x:Name="DownloadResourceTagComboBox"
+                ItemsSource="{Binding DownloadResourceTagOptions}"
+                ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
+                SelectedItem="{Binding SelectedDownloadResourceTagOption}"
+                SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <TextBlock
                 Grid.Row="0"
@@ -127,14 +126,11 @@
             <ComboBox
                 Grid.Row="0"
                 Grid.Column="5"
-                SelectedIndex="{Binding SelectedDownloadResourceSortIndex}"
-                ItemsSource="{Binding DownloadResourceSortOptions}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+                x:Name="DownloadResourceSortComboBox"
+                ItemsSource="{Binding DownloadResourceSortOptions}"
+                ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
+                SelectedItem="{Binding SelectedDownloadResourceSortOption}"
+                SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <StackPanel
                 Grid.Row="0"
@@ -166,14 +162,11 @@
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="1"
-                SelectedIndex="{Binding SelectedDownloadResourceVersionIndex}"
-                ItemsSource="{Binding DownloadResourceVersionOptions}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+                x:Name="DownloadResourceVersionComboBox"
+                ItemsSource="{Binding DownloadResourceVersionOptions}"
+                ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
+                SelectedItem="{Binding SelectedDownloadResourceVersionOption}"
+                SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <TextBlock
                 Grid.Row="2"
@@ -186,14 +179,11 @@
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="3"
-                SelectedIndex="{Binding SelectedDownloadResourceLoaderIndex}"
-                ItemsSource="{Binding DownloadResourceLoaderOptions}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Label}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+                x:Name="DownloadResourceLoaderComboBox"
+                ItemsSource="{Binding DownloadResourceLoaderOptions}"
+                ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
+                SelectedItem="{Binding SelectedDownloadResourceLoaderOption}"
+                SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>
@@ -425,7 +415,6 @@
                   VerticalAlignment="Center"
                   Foreground="#4B5968"
                   FontSize="13.5"
-                  FontWeight="SemiBold"
                   Text="{Binding DownloadResourcePageLabel}" />
               <controls:PclIconButton
                   Command="{Binding NextDownloadResourcePageCommand}"

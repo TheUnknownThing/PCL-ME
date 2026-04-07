@@ -12,7 +12,7 @@
             Margin="0,0,16,0"
             Background="#F7FAFE"
             BorderBrush="#D5E6FD"
-            BorderThickness="1"
+            BorderThickness="0"
             CornerRadius="12">
           <Image
               Width="46"
@@ -27,7 +27,6 @@
           <TextBlock
               Foreground="#343D4A"
               FontSize="20"
-              FontWeight="SemiBold"
               Text="{Binding InstanceOverviewName}" />
           <TextBlock
               Foreground="#677789"

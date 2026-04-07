@@ -52,6 +52,7 @@
     </Style>
 
     <Style Selector="Button.nochrome">
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
@@ -70,6 +71,12 @@
               Padding="{TemplateBinding Padding}" />
         </ControlTemplate>
       </Setter>
+    </Style>
+
+    <Style Selector="Button.nochrome:focus">
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style Selector="Button.nochrome:pointerover">

@@ -112,7 +112,6 @@
               <TextBlock
                   Foreground="#343D4A"
                   FontSize="14"
-                  FontWeight="SemiBold"
                   Text="MinecraftServerQuery 仍在占位迁移中" />
               <TextBlock
                   Foreground="#4B5968"
@@ -184,7 +183,7 @@
                       Text="{Binding AchievementBlockId}" />
                 </Border>
                 <StackPanel Grid.Column="2" Spacing="2">
-                  <TextBlock Foreground="#FFD34D" FontSize="13" FontWeight="SemiBold" Text="{Binding AchievementTitle}" />
+                  <TextBlock Foreground="#FFD34D" FontSize="13" Text="{Binding AchievementTitle}" />
                   <TextBlock Foreground="#FFFFFF" FontSize="12.5" Text="{Binding AchievementFirstLine}" />
                   <TextBlock Foreground="#D8D8D8" FontSize="12" Text="{Binding AchievementSecondLine}" />
                 </StackPanel>

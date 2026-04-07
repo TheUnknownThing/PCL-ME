@@ -43,7 +43,6 @@
             VerticalAlignment="Top"
             IsHitTestVisible="False"
             FontSize="13"
-            FontWeight="Bold"
             Foreground="{DynamicResource ColorBrush1}" />
 
         <Path

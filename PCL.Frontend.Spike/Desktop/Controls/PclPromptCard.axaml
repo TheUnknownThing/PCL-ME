@@ -14,7 +14,6 @@
       <TextBlock
           Foreground="{DynamicResource ColorBrush1}"
           FontSize="16"
-          FontWeight="SemiBold"
           Text="{Binding Title, ElementName=Root}" />
       <TextBlock
           Foreground="#4B5968"

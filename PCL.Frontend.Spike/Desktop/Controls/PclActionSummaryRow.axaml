@@ -17,7 +17,6 @@
         <TextBlock
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13.5"
-            FontWeight="SemiBold"
             Text="{Binding Title, ElementName=Root}"
             TextTrimming="CharacterEllipsis" />
         <TextBlock

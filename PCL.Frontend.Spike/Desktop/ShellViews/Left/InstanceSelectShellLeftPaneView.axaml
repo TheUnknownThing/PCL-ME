@@ -31,7 +31,6 @@
               Margin="13,5,5,3"
               Foreground="#A7AFBA"
               FontSize="12"
-              FontWeight="SemiBold"
               Text="文件夹列表" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionFolderEntries}" IsVisible="{Binding HasInstanceSelectionFolders}">
             <ItemsControl.ItemTemplate>
@@ -52,7 +51,6 @@
               Margin="13,5,5,3"
               Foreground="#A7AFBA"
               FontSize="12"
-              FontWeight="SemiBold"
               Text="添加导入" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionShortcutEntries}">
             <ItemsControl.ItemTemplate>

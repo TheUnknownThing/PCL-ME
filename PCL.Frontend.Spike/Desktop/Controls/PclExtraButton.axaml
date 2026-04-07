@@ -16,7 +16,7 @@
       RenderTransform="scale(1)"
       Background="{DynamicResource ColorBrush3}"
       BorderBrush="#00000000"
-      BorderThickness="0.001"
+      BorderThickness="0"
       BoxShadow="0 0 10 0 #33000000">
     <Border.Transitions>
       <Transitions>
@@ -28,6 +28,7 @@
     <Button
         x:Name="ButtonHost"
         Classes="nochrome"
+        FocusAdorner="{x:Null}"
         Background="Transparent"
         BorderBrush="Transparent"
         BorderThickness="0"

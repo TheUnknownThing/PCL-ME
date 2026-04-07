@@ -109,7 +109,6 @@
                     <TextBlock
                         Foreground="{DynamicResource ColorBrush1}"
                         FontSize="14"
-                        FontWeight="SemiBold"
                         Text="{Binding Title}" />
                     <TextBlock
                         Foreground="#697A8C"

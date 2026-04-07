@@ -38,7 +38,6 @@
                     Grid.Column="1"
                     Foreground="#343D4A"
                     FontSize="14"
-                    FontWeight="SemiBold"
                     Text="自动选择" />
                 <TextBlock
                     Grid.Row="1"
@@ -72,7 +71,6 @@
                           Grid.Column="1"
                           Foreground="{Binding TitleForeground}"
                           FontSize="14"
-                          FontWeight="SemiBold"
                           Opacity="{Binding TitleOpacity}"
                           Text="{Binding Title}" />
                       <StackPanel

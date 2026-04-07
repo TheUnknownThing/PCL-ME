@@ -11,7 +11,6 @@
           <TextBlock
               Foreground="#343D4A"
               FontSize="18"
-              FontWeight="SemiBold"
               Text="当前页面没有额外左侧内容" />
           <TextBlock
               Foreground="#677789"

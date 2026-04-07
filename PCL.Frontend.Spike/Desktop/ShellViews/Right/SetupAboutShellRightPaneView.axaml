@@ -25,7 +25,6 @@
                     <TextBlock
                         Foreground="#343D4A"
                         FontSize="14"
-                        FontWeight="SemiBold"
                         Text="{Binding Title}" />
                     <TextBlock
                         Foreground="#677789"
@@ -66,7 +65,6 @@
                     <TextBlock
                         Foreground="#343D4A"
                         FontSize="14"
-                        FontWeight="SemiBold"
                         Text="{Binding Title}" />
                     <TextBlock
                         Foreground="#677789"

@@ -86,7 +86,6 @@
                                   Margin="2,0,0,0"
                                   Foreground="#343D4A"
                                   FontSize="13.5"
-                                  FontWeight="SemiBold"
                                   Text="{Binding Title}"
                                   TextTrimming="CharacterEllipsis" />
                                 <TextBlock
@@ -115,13 +114,15 @@
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto,*">
               <Button
+                  Classes="nochrome"
                   Width="26"
                   Height="26"
                   Padding="0"
-                  Background="#F0F6FF"
-                  BorderBrush="#D5E6FD"
-                  BorderThickness="1"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
                   Command="{Binding DownloadInstallBackCommand}"
+                  FocusAdorner="{x:Null}"
                   CornerRadius="13">
                 <Path
                     Width="10"
@@ -132,15 +133,15 @@
                     Stretch="Uniform"
                     Data="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z" />
               </Button>
-              <Border
+                <Border
                   Grid.Column="1"
                   Width="32"
                   Height="32"
                   Margin="12,0,14,0"
                   VerticalAlignment="Center"
-                  Background="#EAF2FE"
-                  BorderBrush="#D5E6FD"
-                  BorderThickness="1"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
                   CornerRadius="6">
                 <Image Source="{Binding DownloadInstallMinecraftIcon}" Stretch="Uniform" Margin="5" />
               </Border>
@@ -212,9 +213,9 @@
                         Height="18"
                         Margin="0,0,7,0"
                         VerticalAlignment="Center"
-                        Background="#EAF2FE"
-                        BorderBrush="#D5E6FD"
-                        BorderThickness="1"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
                         CornerRadius="5"
                         IsHitTestVisible="False"
                         IsVisible="{Binding ShowIcon}">
@@ -295,7 +296,6 @@
                                   Grid.Column="1"
                                   Foreground="{Binding ForegroundBrush}"
                                   FontSize="13"
-                                  FontWeight="SemiBold"
                                   Text="{Binding Title}"
                                   TextTrimming="CharacterEllipsis" />
                               <TextBlock
@@ -317,7 +317,7 @@
                                   BorderThickness="1"
                                   CornerRadius="999"
                                   IsVisible="{Binding IsSelected}">
-                                <TextBlock Foreground="#1370F3" FontSize="11" FontWeight="SemiBold" Text="已选择" />
+                                <TextBlock Foreground="#1370F3" FontSize="11" Text="已选择" />
                               </Border>
                               </Grid>
                             </Border>
