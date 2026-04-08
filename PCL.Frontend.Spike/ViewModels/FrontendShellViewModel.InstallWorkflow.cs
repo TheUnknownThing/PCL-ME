@@ -109,6 +109,7 @@ internal sealed partial class FrontendShellViewModel
 
         _instanceInstallBaselineMinecraftVersion = installState.MinecraftVersion;
         _instanceInstallMinecraftChoice = null;
+        ResetInstanceInstallOptionBrowserState();
     }
 
     private async Task EditInstallMinecraftAsync(bool isExistingInstance)
@@ -139,6 +140,7 @@ internal sealed partial class FrontendShellViewModel
                     ClearManagedSelections(_instanceInstallSelections);
                 }
 
+                ResetInstanceInstallOptionBrowserState();
                 InstanceInstallMinecraftVersion = $"Minecraft {selectedChoice.Version}";
                 InstanceInstallMinecraftIcon = LoadLauncherBitmap("Images", "Blocks", "Grass.png");
                 InitializeInstanceInstallSurface();

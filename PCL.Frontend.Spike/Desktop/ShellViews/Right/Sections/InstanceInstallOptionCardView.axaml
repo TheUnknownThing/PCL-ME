@@ -3,7 +3,13 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
-  <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="20,40,18,15">
+  <controls:PclCard
+      Margin="0,0,0,15"
+      Header="{Binding Title}"
+      ShowChevron="{Binding CanExpand}"
+      IsChevronExpanded="{Binding IsExpanded}"
+      HeaderCommand="{Binding ToggleCommand}"
+      ContentMargin="20,40,18,15">
     <controls:PclCard.HeaderOverlayContent>
       <Grid
           Height="30"
@@ -14,18 +20,23 @@
             Width="18"
             Height="18"
             Margin="0,0,7,0"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            CornerRadius="5"
             IsHitTestVisible="False"
-            VerticalAlignment="Center">
-          <Image Source="{Binding Icon}" Stretch="Uniform" />
+            IsVisible="{Binding ShowIcon}">
+          <Image Source="{Binding Icon}" Stretch="Uniform" Margin="3" />
         </Border>
         <TextBlock
             Grid.Column="1"
             Margin="0,0,12,0"
             IsHitTestVisible="False"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{Binding SelectionForegroundBrush}"
             FontSize="13"
-            Text="{Binding Selection}"
+            Text="{Binding SelectionText}"
             TextTrimming="CharacterEllipsis" />
         <Button
             Grid.Column="2"
@@ -50,28 +61,78 @@
       </Grid>
     </controls:PclCard.HeaderOverlayContent>
     <controls:PclCard.CardContent>
-      <StackPanel Spacing="10">
+      <StackPanel IsVisible="{Binding CanExpand}" Spacing="8">
         <TextBlock
+            IsVisible="{Binding IsLoading}"
+            Margin="0,2,0,8"
             Foreground="#677789"
             FontSize="12"
-            Text="{Binding DetailText}"
+            Text="{Binding LoadingText}" />
+
+        <TextBlock
+            IsVisible="{Binding ShowEmptyState}"
+            Margin="0,2,0,8"
+            Foreground="#677789"
+            FontSize="12"
+            Text="{Binding EmptyStateText}"
             TextWrapping="Wrap" />
 
-        <Grid ColumnDefinitions="Auto,Auto">
-          <controls:PclButton
-              Grid.Column="0"
-              Width="88"
-              IsEnabled="{Binding CanSelect}"
-              Command="{Binding SelectCommand}"
-              Text="{Binding SelectText}" />
-          <controls:PclButton
-              Grid.Column="1"
-              Width="88"
-              Margin="10,0,0,0"
-              IsEnabled="{Binding CanClear}"
-              Command="{Binding ClearCommand}"
-              Text="清除选择" />
-        </Grid>
+        <ItemsControl ItemsSource="{Binding Choices}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button
+                  Classes="install-choice-row"
+                  Command="{Binding SelectCommand}"
+                  HorizontalAlignment="Stretch">
+                <Border
+                    Background="{Binding BackgroundBrush}"
+                    BorderBrush="{Binding BorderBrush}"
+                    BorderThickness="0"
+                    CornerRadius="6"
+                    MinHeight="36">
+                  <Grid HorizontalAlignment="Stretch" ColumnDefinitions="4,*,Auto" RowDefinitions="*,Auto,Auto,*">
+                    <Border
+                        Grid.RowSpan="4"
+                        Width="4"
+                        Margin="0,2,8,2"
+                        Background="{Binding ForegroundBrush}"
+                        CornerRadius="0,3,3,0"
+                        IsVisible="{Binding IsSelected}" />
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Foreground="{Binding ForegroundBrush}"
+                        FontSize="13"
+                        Text="{Binding Title}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Foreground="{Binding SummaryBrush}"
+                        FontSize="11.5"
+                        Text="{Binding Summary}"
+                        TextTrimming="CharacterEllipsis" />
+
+                    <Border
+                        Grid.Column="2"
+                        Grid.RowSpan="4"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Padding="8,3"
+                        Background="#DDEBFE"
+                        BorderBrush="#BFD9FF"
+                        BorderThickness="1"
+                        CornerRadius="999"
+                        IsVisible="{Binding IsSelected}">
+                      <TextBlock Foreground="#1370F3" FontSize="11" Text="已选择" />
+                    </Border>
+                  </Grid>
+                </Border>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
       </StackPanel>
     </controls:PclCard.CardContent>
   </controls:PclCard>

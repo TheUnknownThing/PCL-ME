@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -253,7 +254,8 @@ internal sealed class SurfaceNoticeViewModel(
     string text,
     IBrush backgroundBrush,
     IBrush borderBrush,
-    IBrush foregroundBrush)
+    IBrush foregroundBrush,
+    Thickness margin)
 {
     public string Text { get; } = text;
 
@@ -262,6 +264,8 @@ internal sealed class SurfaceNoticeViewModel(
     public IBrush BorderBrush { get; } = borderBrush;
 
     public IBrush ForegroundBrush { get; } = foregroundBrush;
+
+    public Thickness Margin { get; } = margin;
 }
 
 internal sealed class DownloadInstallMinecraftSectionViewModel(

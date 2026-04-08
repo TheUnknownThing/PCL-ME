@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -571,9 +572,19 @@ internal sealed partial class FrontendShellViewModel
         return new ToolboxActionViewModel(title, toolTip, minWidth, colorType, command);
     }
 
-    private SurfaceNoticeViewModel CreateNoticeStrip(string text, string background, string border, string foreground)
+    private SurfaceNoticeViewModel CreateNoticeStrip(
+        string text,
+        string background,
+        string border,
+        string foreground,
+        Thickness? margin = null)
     {
-        return new SurfaceNoticeViewModel(text, Brush.Parse(background), Brush.Parse(border), Brush.Parse(foreground));
+        return new SurfaceNoticeViewModel(
+            text,
+            Brush.Parse(background),
+            Brush.Parse(border),
+            Brush.Parse(foreground),
+            margin ?? default);
     }
 
     private DownloadInstallOptionViewModel CreateDownloadInstallOption(

@@ -426,7 +426,7 @@ internal sealed partial class FrontendShellViewModel
         var cards = new List<DownloadInstallOptionCardViewModel>();
         foreach (var (title, iconName) in DownloadInstallOptionBlueprints)
         {
-            if (!ShouldShowDownloadInstallOption(title, minecraftVersion))
+            if (!ShouldShowInstallOption(title, minecraftVersion))
             {
                 continue;
             }
@@ -437,7 +437,7 @@ internal sealed partial class FrontendShellViewModel
         return cards;
     }
 
-    private bool ShouldShowDownloadInstallOption(string optionTitle, string minecraftVersion)
+    private bool ShouldShowInstallOption(string optionTitle, string minecraftVersion)
     {
         return optionTitle switch
         {

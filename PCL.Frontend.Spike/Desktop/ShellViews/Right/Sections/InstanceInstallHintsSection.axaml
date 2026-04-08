@@ -6,7 +6,7 @@
     <ItemsControl.ItemTemplate>
       <DataTemplate>
         <Border
-            Margin="0,0,0,0"
+            Margin="{Binding Margin}"
             Padding="12,10"
             Background="{Binding BackgroundBrush}"
             BorderBrush="{Binding BorderBrush}"
