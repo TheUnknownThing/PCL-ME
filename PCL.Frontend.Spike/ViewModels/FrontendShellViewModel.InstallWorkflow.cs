@@ -121,7 +121,7 @@ internal sealed partial class FrontendShellViewModel
             var selectedId = isExistingInstance ? _instanceInstallMinecraftChoice?.Id : _downloadInstallMinecraftChoice?.Id;
             var result = await _shellActionService.PromptForChoiceAsync(
                 "选择 Minecraft 版本",
-                "继续沿用原版安装页的版本选择语义，从可安装版本中选定一个新的基线版本。",
+                "从可用版本中选择要使用的 Minecraft 版本。",
                 choices.Select(choice => new PclChoiceDialogOption(choice.Id, choice.Title, choice.Summary)).ToArray(),
                 selectedId,
                 "使用该版本");
@@ -168,7 +168,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
         {
-            AddActivity($"选择安装项: {optionTitle}", "当前壳层尚未为这一项接入安装实现；这里不会再回退到旧安装器。");
+            AddActivity($"选择安装项: {optionTitle}", "暂不支持自动安装这一项。");
             return;
         }
 
@@ -194,7 +194,7 @@ internal sealed partial class FrontendShellViewModel
             var selectedId = state.SelectedChoice?.Id;
             var result = await _shellActionService.PromptForChoiceAsync(
                 $"选择 {optionTitle}",
-                "继续沿用原版安装页的卡片选择流程，从当前可用候选中选定一个版本。",
+                "从当前可用候选中选择一个版本。",
                 choices.Select(choice => new PclChoiceDialogOption(choice.Id, choice.Title, choice.Summary)).ToArray(),
                 selectedId,
                 "使用该版本");

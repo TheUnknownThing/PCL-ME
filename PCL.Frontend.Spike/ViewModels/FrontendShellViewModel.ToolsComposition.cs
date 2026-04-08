@@ -132,8 +132,7 @@ internal sealed partial class FrontendShellViewModel
                 $"GC 可用内存上限: {FormatBytes(gcInfo.TotalAvailableMemoryBytes)}",
                 $"GC 已提交字节: {FormatBytes(gcInfo.TotalCommittedBytes)}",
                 string.Empty,
-                "当前 replacement shell 已不再把“内存优化”按钮留作纯意图日志。",
-                "但跨平台的内存优化执行器尚未迁入前端壳层，因此这里会先导出诊断信息，明确提示当前缺口。"
+                "已导出当前进程与 GC 诊断信息。"
             ]);
         OpenInstanceTarget("内存优化", reportPath, "内存优化诊断报告不存在。");
     }
@@ -161,12 +160,11 @@ internal sealed partial class FrontendShellViewModel
                 [
                     $"# {title}",
                     string.Empty,
-                    "这个百宝箱动作已经从纯活动日志升级为可追踪的诊断报告输出。",
-                    "当前前端没有找到它的专属执行器，因此先导出这份说明文件，避免静默退回到意图占位。",
-                    string.Empty,
                     $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
                     $"动作: {title}",
-                    $"当前实例: {_instanceComposition.Selection.InstanceName}"
+                    $"当前实例: {_instanceComposition.Selection.InstanceName}",
+                    string.Empty,
+                    "该功能当前不可用。"
                 ]);
             OpenInstanceTarget(title, reportPath, "百宝箱诊断文件不存在。");
         });

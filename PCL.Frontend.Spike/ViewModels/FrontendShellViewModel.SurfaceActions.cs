@@ -342,7 +342,7 @@ internal sealed partial class FrontendShellViewModel
             ReloadToolsComposition();
             ResetGameLinkSessionRuntimeState();
             SyncLobbyRuntimeState(preserveTypedLobbyId: false);
-            AddActivity("Natayark 账户", "已清除当前前端记录的大厅身份信息。");
+            AddActivity("Natayark 账户", "已清除当前保存的大厅身份信息。");
             return;
         }
 
@@ -351,7 +351,7 @@ internal sealed partial class FrontendShellViewModel
         {
             userName = await _shellActionService.PromptForTextAsync(
                 "Natayark 账户",
-                "当前桌面壳层暂未迁入网页登录流程。你可以先保存一个大厅显示名，创建或加入大厅时会优先使用它。",
+                "输入一个大厅显示名。创建或加入大厅时会优先使用它。",
                 LinkUsername,
                 "保存",
                 "输入大厅显示名");
@@ -689,7 +689,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var confirmed = await _shellActionService.ConfirmAsync(
             "停用联机功能",
-            "要撤销大厅协议授权并清除当前前端可见的联机身份信息吗？",
+            "要撤销大厅协议授权并清除当前保存的联机身份信息吗？",
             "停用",
             isDanger: true);
         if (!confirmed)
@@ -706,7 +706,7 @@ internal sealed partial class FrontendShellViewModel
         ReloadToolsComposition();
         ResetGameLinkSessionRuntimeState();
         SyncLobbyRuntimeState(preserveTypedLobbyId: false);
-        AddActivity("停用联机功能", "已撤销大厅授权，并清除当前前端记录的联机身份信息。");
+        AddActivity("停用联机功能", "已撤销大厅授权，并清除当前保存的联机身份信息。");
     }
 
     private void OpenGameLinkFaq()
@@ -727,7 +727,7 @@ internal sealed partial class FrontendShellViewModel
                 "2. 点击“加入”后，页面会直接接入大厅运行时并等待连接完成。",
                 string.Empty,
                 "## NAT 测试为什么会导出诊断？",
-                "真正的 EasyTier NAT 运行时尚未完全迁入当前前端，所以这里先导出跨平台诊断信息，帮助 reviewer 检查网络接口与设置。",
+                "NAT 测试会导出当前网络诊断信息，便于检查网卡、地址和相关设置。",
                 string.Empty,
                 "## 虚拟 IP 现在复制的是什么？",
                 "当前复制的是大厅运行时暴露的本地转发地址，可在多人游戏列表没有自动显示局域网会话时手动连接。",
@@ -791,7 +791,7 @@ internal sealed partial class FrontendShellViewModel
         {
             profileName = await _shellActionService.PromptForTextAsync(
                 "新建档案",
-                "输入一个实例专用登录档案名称。当前前端会先生成可编辑的档案模板文件。",
+                "输入一个实例专用登录档案名称。",
                 string.IsNullOrWhiteSpace(InstanceServerAuthName) ? _instanceComposition.Selection.InstanceName : InstanceServerAuthName,
                 "创建",
                 "例如：LittleSkin 档案");
@@ -1488,7 +1488,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(DownloadInstallMinecraftSections, []);
         InitializeDownloadInstallSurface();
         RaisePropertyChanged(nameof(DownloadInstallName));
-        AddActivity("刷新自动安装页", "自动安装页已恢复为原版下载流程：先选 Minecraft 版本，再确认安装组合。");
+        AddActivity("刷新自动安装页", "自动安装选项已重新载入。");
     }
 
     private void ResetGameLinkSurface()

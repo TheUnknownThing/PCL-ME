@@ -134,7 +134,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string TaskManagerSummary => HasTaskManagerEntries
         ? $"运行中 {TaskManagerRunningCount} 项，等待中 {TaskManagerWaitingCount} 项"
-        : "当前没有需要壳层跟踪的后台任务";
+        : "当前没有后台任务";
 
     public string TaskManagerActiveTaskTitle => _taskManagerActiveTaskTitle;
 
@@ -213,7 +213,7 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPageKey.InstanceSelect:
                 metadata = new DedicatedGenericRouteMetadata(
                     "实例选择",
-                    "从当前启动目录读取真实实例列表，并直接切换启动目标，而不是退回通用迁移面板。",
+                    "查看当前启动目录中的实例列表，并切换启动目标。",
                     [
                         new LauncherFrontendPageFact("启动目录", string.IsNullOrWhiteSpace(_instanceSelectionLauncherDirectory) ? "未解析" : _instanceSelectionLauncherDirectory),
                         new LauncherFrontendPageFact("已选实例", _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : "未选择"),
@@ -223,7 +223,7 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPageKey.TaskManager:
                 metadata = new DedicatedGenericRouteMetadata(
                     "任务中心",
-                    "这里直接观察 TaskCenter 的实时任务状态，包括等待、执行、完成和失败，不再展示迁移占位摘要。",
+                    "查看后台任务的等待、执行、完成和失败状态。",
                     [
                         new LauncherFrontendPageFact("等待中", TaskManagerWaitingCount.ToString()),
                         new LauncherFrontendPageFact("运行中", TaskManagerRunningCount.ToString()),
@@ -244,7 +244,7 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPageKey.CompDetail:
                 metadata = new DedicatedGenericRouteMetadata(
                     "工程详情",
-                    "资源工程详情页现在会直接请求实时社区元数据与最近版本，而不是落回通用下载迁移面板。",
+                    "查看资源工程的实时社区信息与最近版本。",
                     [
                         new LauncherFrontendPageFact("来源", CommunityProjectSource),
                         new LauncherFrontendPageFact("状态", CommunityProjectStatus),
@@ -569,7 +569,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var confirmed = await _shellActionService.ConfirmAsync(
             "实例删除确认",
-            $"确定要将实例 {entry.Name} 移入 replacement shell 的回收区吗？该操作会保留实例目录，便于后续人工恢复。",
+            $"确定要将实例 {entry.Name} 移入回收区吗？该操作会保留实例目录，便于后续恢复。",
             "移入回收区",
             isDanger: true);
         if (!confirmed)
@@ -618,7 +618,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _launchLogBuilder.Clear();
         RaiseGameLogSurfaceProperties();
-        AddActivity("清空实时日志", "仅清除了前端当前持有的会话输出缓存。");
+        AddActivity("清空实时日志", "已清空当前会话输出缓存。");
     }
 
     private void RaiseGameLogSurfaceProperties()
