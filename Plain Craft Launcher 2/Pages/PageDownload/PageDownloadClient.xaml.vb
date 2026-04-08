@@ -1,10 +1,23 @@
 ﻿Public Class PageDownloadClient
 
     Private Sub LoaderInit() Handles Me.Initialized
-        PageLoaderInit(Load, PanLoad, PanBack, Nothing, DlClientListLoader, AddressOf Load_OnFinish)
+        PageLoaderInit(Load, PanLoad, PanBack, Nothing, DlClientListLoader, AddressOf Load_OnFinish, AutoRun:=False)
     End Sub
     Private Sub Init() Handles Me.Loaded
         PanBack.ScrollToHome()
+        StartMinecraftListLoad()
+    End Sub
+
+    Private Sub StartMinecraftListLoad()
+        Select Case DlClientListLoader.State
+            Case LoadState.Waiting, LoadState.Aborted
+                DlClientListLoader.Start()
+        End Select
+    End Sub
+    Private Sub Load_Click(sender As Object, e As MouseButtonEventArgs) Handles Load.Click
+        If DlClientListLoader.State = LoadState.Failed Then
+            DlClientListLoader.Start(IsForceRestart:=True)
+        End If
     End Sub
 
     Private Sub Load_OnFinish()
