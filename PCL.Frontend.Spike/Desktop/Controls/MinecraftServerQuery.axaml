@@ -1,7 +1,8 @@
 <UserControl
     x:Class="PCL.Frontend.Spike.Desktop.Controls.MinecraftServerQuery"
     xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
   <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
     <TextBox
         Grid.Column="0"
@@ -10,12 +11,11 @@
         Padding="8,4"
         Watermark="输入服务器地址"
         Text="{Binding MinecraftServerQueryAddress}" />
-    <Button
+    <controls:PclButton
         Grid.Column="1"
         Width="60"
-        Height="30"
         Command="{Binding QueryMinecraftServerCommand}"
-        Content="查询" />
+        Text="查询" />
 
     <Border
         Grid.Row="1"
