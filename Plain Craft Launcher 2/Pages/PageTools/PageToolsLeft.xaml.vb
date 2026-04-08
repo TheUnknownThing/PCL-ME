@@ -8,7 +8,6 @@ Public Class PageToolsLeft
         Dim IsHiddenPage As Boolean = False
         Dim hide = Config.Preference.Hide
         
-        If ItemGameLink.Checked AndAlso hide.ToolsGameLink Then IsHiddenPage = True
         If ItemTest.Checked AndAlso hide.ToolsTest Then IsHiddenPage = True
         If ItemLauncherHelp.Checked AndAlso hide.ToolsHelp Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
@@ -19,28 +18,24 @@ Public Class PageToolsLeft
         '选择第一个未被禁用的子页面
         If IsPageSwitched Then Return
         Dim hideCfg = Config.Preference.Hide
-        If Not hideCfg.ToolsGameLink Then
-            ItemGameLink.SetChecked(True, False, False)
-        ElseIf Not hideCfg.ToolsTest Then
+        If Not hideCfg.ToolsTest Then
             ItemTest.SetChecked(True, False, False)            
         ElseIf Not hideCfg.ToolsHelp Then
             ItemLauncherHelp.SetChecked(True, False, False)    
         Else
-            ItemGameLink.SetChecked(True, False, False)
+            ItemTest.SetChecked(True, False, False)
         End If
     End Sub
     Public Sub New()
         InitializeComponent()
         '选择第一个未被禁用的子页面
         Dim hideCfg = Config.Preference.Hide
-        If Not hideCfg.ToolsGameLink Then
-            PageID = FormMain.PageSubType.ToolsGameLink
-        ElseIf Not hideCfg.ToolsTest Then
+        If Not hideCfg.ToolsTest Then
             PageID = FormMain.PageSubType.ToolsTest
         ElseIf Not hideCfg.ToolsHelp Then
             PageID = FormMain.PageSubType.ToolsLauncherHelp
         Else
-            PageID = FormMain.PageSubType.ToolsGameLink
+            PageID = FormMain.PageSubType.ToolsTest
         End If
         AnimatedControl = Me.PanItem
     End Sub
@@ -54,12 +49,12 @@ Public Class PageToolsLeft
     ''' <summary>
     ''' 当前页面的编号。
     ''' </summary>
-    Public PageID As FormMain.PageSubType = FormMain.PageSubType.ToolsGameLink
+    Public PageID As FormMain.PageSubType = FormMain.PageSubType.ToolsTest
 
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As MyListItem, e As RouteEventArgs) Handles ItemGameLink.Check, ItemLauncherHelp.Check, ItemTest.Check
+    Private Sub PageCheck(sender As MyListItem, e As RouteEventArgs) Handles ItemLauncherHelp.Check, ItemTest.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -68,10 +63,7 @@ Public Class PageToolsLeft
     Public Function PageGet(Optional ID As FormMain.PageSubType = -1)
         If ID = -1 Then ID = PageID
         Select Case ID
-            Case FormMain.PageSubType.ToolsGameLink
-                If FrmToolsGameLink Is Nothing Then FrmToolsGameLink = New PageToolsGameLink
-                Return FrmToolsGameLink
-            Case FormMain.PageSubType.ToolsTest
+            Case FormMain.PageSubType.ToolsGameLink, FormMain.PageSubType.ToolsTest
                 If FrmToolsTest Is Nothing Then FrmToolsTest = New PageToolsTest
                 Return FrmToolsTest
             Case FormMain.PageSubType.ToolsLauncherHelp
@@ -123,10 +115,9 @@ Public Class PageToolsLeft
         If sender.Tag Is Nothing Then Return
         Dim id = Val(sender.Tag)
         Select Case id
-            Case FormMain.PageSubType.ToolsGameLink
-                If FrmToolsGameLink Is Nothing Then FrmToolsGameLink = New PageToolsGameLink
-                FrmToolsGameLink.Reload()
-                ItemGameLink.Checked = True
+            Case FormMain.PageSubType.ToolsGameLink, FormMain.PageSubType.ToolsTest
+                If FrmToolsTest Is Nothing Then FrmToolsTest = New PageToolsTest
+                ItemTest.Checked = True
             Case FormMain.PageSubType.ToolsLauncherHelp
                 If FrmToolsHelp Is Nothing Then FrmToolsHelp = New PageToolsHelp
                 FrmToolsHelp.Refresh()

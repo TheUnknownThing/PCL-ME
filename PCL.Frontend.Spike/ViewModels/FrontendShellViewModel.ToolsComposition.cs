@@ -13,7 +13,6 @@ internal sealed partial class FrontendShellViewModel
         _suppressToolsPersistence = true;
         try
         {
-            InitializeToolsGameLinkSurface();
             InitializeToolsTestSurface();
             RefreshHelpTopics();
         }

@@ -108,7 +108,7 @@ public static class LauncherFrontendNavigationService
                 new LauncherFrontendTopLevelPage(
                     LauncherFrontendPageKey.Tools,
                     "工具",
-                    "联机入口、帮助与实验功能。")
+                    "帮助与实验功能。")
             ],
             [
                 new LauncherFrontendSidebarGroup(
@@ -141,11 +141,9 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLaunch, "启动", "启动参数与窗口策略。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupUI, "界面", "主题、动画与外观。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupGameManage, "游戏管理", "实例与文件管理策略。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLink, "联机", "联机相关设置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupAbout, "关于", "版本与项目信息。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLog, "日志", "日志与诊断开关。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupFeedback, "反馈", "问题反馈入口。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupGameLink, "游戏联机", "游戏联机与服务配置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupUpdate, "更新", "更新通道与检查策略。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupJava, "Java", "Java 运行时配置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLauncherMisc, "启动器杂项", "零散启动器行为设置。")
@@ -154,9 +152,8 @@ public static class LauncherFrontendNavigationService
                     LauncherFrontendPageKey.Tools,
                     "工具分区",
                     [
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsGameLink, "联机大厅", "工具页默认入口。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsLauncherHelp, "帮助", "查看帮助与说明。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsTest, "测试", "实验或调试工具。")
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsTest, "测试", "实验或调试工具。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsLauncherHelp, "帮助", "查看帮助与说明。")
                     ]),
                 new LauncherFrontendSidebarGroup(
                     LauncherFrontendPageKey.InstanceSetup,

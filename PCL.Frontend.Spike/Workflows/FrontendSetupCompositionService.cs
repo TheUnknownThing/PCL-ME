@@ -343,7 +343,6 @@ internal static class FrontendSetupCompositionService
                     CreateUiToggle(localConfig, "启动", "UiHiddenSetupLaunch"),
                     CreateUiToggle(localConfig, "Java", "UiHiddenSetupJava"),
                     CreateUiToggle(localConfig, "管理", "UiHiddenSetupGameManage"),
-                    CreateUiToggle(localConfig, "联机", "UiHiddenSetupGameLink"),
                     CreateUiToggle(localConfig, "个性化", "UiHiddenSetupUi"),
                     CreateUiToggle(localConfig, "杂项", "UiHiddenSetupLauncherMisc"),
                     CreateUiToggle(localConfig, "软件更新", "UiHiddenSetupUpdate"),
@@ -354,7 +353,6 @@ internal static class FrontendSetupCompositionService
             new FrontendSetupUiToggleGroup(
                 "子页面 工具",
                 [
-                    CreateUiToggle(localConfig, "联机", "UiHiddenToolsGameLink"),
                     CreateUiToggle(localConfig, "百宝箱", "UiHiddenToolsTest"),
                     CreateUiToggle(localConfig, "帮助", "UiHiddenToolsHelp")
                 ]),

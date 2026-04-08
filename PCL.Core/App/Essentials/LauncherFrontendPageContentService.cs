@@ -275,7 +275,6 @@ public static class LauncherFrontendPageContentService
             LauncherFrontendSubpageKey.SetupAbout => BuildSetupAboutContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupFeedback => BuildSetupFeedbackContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupGameManage => BuildSetupGameManageContent(request, promptTotal),
-            LauncherFrontendSubpageKey.SetupGameLink => BuildSetupGameLinkContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupJava => BuildSetupJavaContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLauncherMisc => BuildSetupLauncherMiscContent(request, promptTotal),
             LauncherFrontendSubpageKey.SetupLog => BuildSetupLogContent(request, promptTotal),
@@ -419,28 +418,6 @@ public static class LauncherFrontendPageContentService
                 "可从此进入下载或查看详情。"));
     }
 
-    private static LauncherFrontendPageContent BuildSetupGameLinkContent(
-        LauncherFrontendPageContentRequest request,
-        int promptTotal)
-    {
-        return CreateContent(
-            "游戏联机页面",
-            "配置游戏联机相关设置。",
-            BuildFacts(
-                ("当前分区", "游戏联机"),
-                ("导航项", request.Navigation.SidebarEntries.Count.ToString()),
-                ("提示数", promptTotal.ToString()),
-                ("页面类型", request.Navigation.CurrentPage.Kind.ToString())),
-            Section(
-                "联机设置",
-                "基础配置",
-                "可调整服务地址、用户信息和联机相关选项。"),
-            Section(
-                "网络",
-                "测试与连接",
-                "网络测试、连接状态和相关提示会显示在此页。"));
-    }
-
     private static LauncherFrontendPageContent BuildSetupGameManageContent(
         LauncherFrontendPageContentRequest request,
         int promptTotal)
@@ -557,34 +534,10 @@ public static class LauncherFrontendPageContentService
     {
         return request.Navigation.CurrentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.ToolsGameLink => BuildToolsGameLinkContent(request, promptTotal),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => BuildToolsHelpContent(request, promptTotal),
             LauncherFrontendSubpageKey.ToolsTest => BuildToolsTestContent(request, promptTotal),
             _ => BuildGenericToolsContent(request, promptTotal)
         };
-    }
-
-    private static LauncherFrontendPageContent BuildToolsGameLinkContent(
-        LauncherFrontendPageContentRequest request,
-        int promptTotal)
-    {
-        return CreateContent(
-            "联机大厅页面",
-            "创建、加入并管理联机大厅。",
-            BuildFacts(
-                ("当前分区", "联机大厅"),
-                ("导航项", request.Navigation.SidebarEntries.Count.ToString()),
-                ("提示数", promptTotal.ToString()),
-                ("页面类型", request.Navigation.CurrentPage.Kind.ToString())),
-            Section(
-                "大厅",
-                "加入与创建大厅",
-                "输入大厅编号可加入现有大厅。",
-                "选择世界或端口后可创建大厅。"),
-            Section(
-                "分享",
-                "大厅信息",
-                "可复制大厅编号、虚拟 IP 并查看成员。"));
     }
 
     private static LauncherFrontendPageContent BuildToolsHelpContent(

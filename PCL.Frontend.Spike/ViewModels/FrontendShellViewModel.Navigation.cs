@@ -509,8 +509,12 @@ internal sealed partial class FrontendShellViewModel
         {
             { Page: LauncherFrontendPageKey.Download, Subpage: LauncherFrontendSubpageKey.Default } =>
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+            { Page: LauncherFrontendPageKey.Setup, Subpage: LauncherFrontendSubpageKey.SetupLink or LauncherFrontendSubpageKey.SetupGameLink } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
             { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.Default } =>
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsGameLink),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
+            { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.ToolsGameLink } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
             _ => route
         };
     }

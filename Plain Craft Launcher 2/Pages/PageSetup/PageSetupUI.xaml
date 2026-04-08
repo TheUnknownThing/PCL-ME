@@ -376,7 +376,6 @@
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="2" Text="启动" x:Name="CheckHiddenSetupLaunch" Tag="UiHiddenSetupLaunch" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="Java" x:Name="CheckHiddenSetupJava" Tag="UiHiddenSetupJava" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="管理" x:Name="CheckHiddenSetupGameManage" Tag="UiHiddenSetupGameManage" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="联机" x:Name="CheckHiddenSetupGameLink" Tag="UiHiddenSetupGameLink" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="6" Text="个性化" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="2" Text="杂项" x:Name="CheckHiddenLauncherMisc" Tag="UiHiddenSetupLauncherMisc" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="3" Text="软件更新" x:Name="CheckHiddenSetupUpdate" Tag="UiHiddenSetupUpdate" />
@@ -384,7 +383,6 @@
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="5" Text="反馈" x:Name="CheckHiddenSetupFeedback" Tag="UiHiddenSetupFeedback" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="6" Text="查看日志" x:Name="CheckHiddenSetupLog" Tag="UiHiddenSetupLog" />
                         <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="子页面 工具" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="2" Text="联机" x:Name="CheckHiddenToolsGameLink" Tag="UiHiddenToolsGameLink" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="百宝箱" x:Name="CheckHiddenToolsTest" Tag="UiHiddenToolsTest" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="4" Text="帮助" x:Name="CheckHiddenToolsHelp" Tag="UiHiddenToolsHelp" />
                         <TextBlock Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Left" Text="子页面 实例设置 " />

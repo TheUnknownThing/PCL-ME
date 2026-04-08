@@ -157,12 +157,10 @@ internal sealed partial class FrontendShellViewModel
         return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.SetupLaunch => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLaunch, StandardShellRightPaneGroup.SetupFamily, "setup-launch", usesCompatibilityView: false),
-            LauncherFrontendSubpageKey.SetupLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLink, StandardShellRightPaneGroup.SetupFamily, "setup-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupAbout => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupAbout, StandardShellRightPaneGroup.SetupFamily, "setup-about", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupFeedback => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupFeedback, StandardShellRightPaneGroup.SetupFamily, "setup-feedback", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLog, StandardShellRightPaneGroup.SetupFamily, "setup-log", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupUpdate => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupUpdate, StandardShellRightPaneGroup.SetupFamily, "setup-update", usesCompatibilityView: false),
-            LauncherFrontendSubpageKey.SetupGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupGameLink, StandardShellRightPaneGroup.SetupFamily, "setup-game-link", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupGameManage => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupGameManage, StandardShellRightPaneGroup.SetupFamily, "setup-game-manage", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupLauncherMisc => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupLauncherMisc, StandardShellRightPaneGroup.SetupFamily, "setup-launcher-misc", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupJava => CreateRightPaneDescriptor(StandardShellRightPaneKind.SetupJava, StandardShellRightPaneGroup.SetupFamily, "setup-java", usesCompatibilityView: false),
@@ -201,10 +199,9 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.ToolsGameLink => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link", usesCompatibilityView: false),
-            LauncherFrontendSubpageKey.ToolsLauncherHelp => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsHelp, StandardShellRightPaneGroup.ToolsFamily, "tools-help", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsTest => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsTest, StandardShellRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false),
-            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsGameLink, StandardShellRightPaneGroup.ToolsFamily, "tools-game-link", usesCompatibilityView: false)
+            LauncherFrontendSubpageKey.ToolsLauncherHelp => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsHelp, StandardShellRightPaneGroup.ToolsFamily, "tools-help", usesCompatibilityView: false),
+            _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.ToolsTest, StandardShellRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false)
         };
     }
 

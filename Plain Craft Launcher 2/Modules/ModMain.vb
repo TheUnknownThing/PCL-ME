@@ -485,7 +485,6 @@ EndHint:
 
     '工具页面声明
     Public FrmToolsLeft As PageToolsLeft
-    Public FrmToolsGameLink As PageToolsGameLink
     Public FrmToolsHelp As PageToolsHelp
     Public FrmToolsTest As PageToolsTest
 
@@ -521,7 +520,6 @@ EndHint:
     Public FrmSetupAbout As PageSetupAbout
     Public FrmSetupLog As PageSetupLog
     Public FrmSetupFeedback As PageSetupFeedback
-    Public FrmSetupGameLink As PageSetupGameLink
     Public FrmSetupLauncherMisc As PageSetupLauncherMisc
 
     '登录页面声明
