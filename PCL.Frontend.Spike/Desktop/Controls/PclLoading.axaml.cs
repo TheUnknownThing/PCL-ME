@@ -22,8 +22,8 @@ internal sealed partial class PclLoading : UserControl
     public static readonly StyledProperty<bool> IsErrorProperty =
         AvaloniaProperty.Register<PclLoading, bool>(nameof(IsError), false);
 
-    public static readonly StyledProperty<IBrush> IndicatorBrushProperty =
-        AvaloniaProperty.Register<PclLoading, IBrush>(nameof(IndicatorBrush), Brush.Parse("#4B5968"));
+    public static readonly StyledProperty<IBrush?> IndicatorBrushProperty =
+        AvaloniaProperty.Register<PclLoading, IBrush?>(nameof(IndicatorBrush));
 
     private static readonly IBrush ErrorBrush = Brush.Parse("#D33232");
     private static readonly TimeSpan AnimationTickInterval = TimeSpan.FromMilliseconds(16);
@@ -90,7 +90,7 @@ internal sealed partial class PclLoading : UserControl
         set => SetValue(IsErrorProperty, value);
     }
 
-    public IBrush IndicatorBrush
+    public IBrush? IndicatorBrush
     {
         get => GetValue(IndicatorBrushProperty);
         set => SetValue(IndicatorBrushProperty, value);
@@ -147,7 +147,7 @@ internal sealed partial class PclLoading : UserControl
 
     private void RefreshVisualState()
     {
-        var brush = IsError ? ErrorBrush : IndicatorBrush;
+        var brush = IsError ? ErrorBrush : IndicatorBrush ?? GetBrush("ColorBrush3", "#1370F3");
         PickaxePath.Stroke = brush;
         LeftDebris.Fill = brush;
         RightDebris.Fill = brush;
@@ -313,5 +313,16 @@ internal sealed partial class PclLoading : UserControl
         var remaining = 1d - Math.Clamp(progress, 0d, 1d);
         return 1d - Math.Pow(remaining, (period - 1) * 0.25d)
             * Math.Cos((period - 3.5d) * Math.PI * Math.Pow(1d - remaining, 1.5d));
+    }
+
+    private static IBrush GetBrush(string resourceKey, string fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
+            resource is IBrush brush)
+        {
+            return brush;
+        }
+
+        return Brush.Parse(fallback);
     }
 }
