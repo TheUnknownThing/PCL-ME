@@ -561,9 +561,12 @@
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <controls:PclOutlineButton
-                          Margin="0,0,8,0"
+                      <controls:PclIconTextButton
+                          Margin="0,0,4,4"
                           Command="{Binding Command}"
+                          ColorType="{Binding ColorType}"
+                          IconData="{Binding IconData}"
+                          IconScale="{Binding IconScale}"
                           Text="{Binding Text}" />
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>

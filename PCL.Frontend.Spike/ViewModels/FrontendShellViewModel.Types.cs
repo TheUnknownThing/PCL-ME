@@ -428,6 +428,24 @@ internal sealed class CommunityProjectFilterButtonViewModel(
     public ActionCommand Command { get; } = command;
 }
 
+internal sealed class CommunityProjectActionButtonViewModel(
+    string text,
+    string iconData,
+    double iconScale,
+    PclIconTextButtonColorState colorType,
+    ActionCommand command)
+{
+    public string Text { get; } = text;
+
+    public string IconData { get; } = iconData;
+
+    public double IconScale { get; } = iconScale;
+
+    public PclIconTextButtonColorState ColorType { get; } = colorType;
+
+    public ActionCommand Command { get; } = command;
+}
+
 internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
 {
     private const int PageSize = 20;
