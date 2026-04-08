@@ -75,17 +75,24 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyOptimisticInstanceSelection(string instanceName)
     {
-        ReplaceItems(
-            InstanceSelectionEntries,
-            InstanceSelectionEntries.Select(entry => CloneInstanceSelectionEntry(entry, instanceName)));
-
-        ReplaceItems(
-            InstanceSelectionGroups,
-            InstanceSelectionGroups.Select(group =>
+        var optimisticEntries = InstanceSelectionEntries
+            .Select(entry => CloneInstanceSelectionEntry(entry, instanceName))
+            .ToArray();
+        var optimisticGroups = InstanceSelectionGroups
+            .Select(group =>
                 new InstanceSelectionGroupViewModel(
                     group.Title,
                     group.Entries.Select(entry => CloneInstanceSelectionEntry(entry, instanceName)).ToArray(),
-                    group.IsExpanded)));
+                    group.IsExpanded))
+            .ToArray();
+
+        ReplaceItems(
+            InstanceSelectionEntries,
+            optimisticEntries);
+
+        ReplaceItems(
+            InstanceSelectionGroups,
+            optimisticGroups);
     }
 
     private static InstanceSelectEntryViewModel CloneInstanceSelectionEntry(

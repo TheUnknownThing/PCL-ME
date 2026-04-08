@@ -458,9 +458,14 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        _shellActionService.PersistLocalValue("LaunchInstanceSelect", instanceName);
-        RefreshLaunchState();
-        RefreshShell($"已将启动实例切换为 {instanceName}。");
+        if (_instanceComposition.Selection.HasSelection &&
+            string.Equals(_instanceComposition.Selection.InstanceName, instanceName, System.StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyOptimisticInstanceSelection(instanceName);
+            return;
+        }
+
+        RefreshSelectedInstanceSmoothly(instanceName);
     }
 
     private async Task AddInstanceSelectionFolderAsync()
