@@ -76,6 +76,11 @@ internal sealed partial class FrontendShellViewModel
 
     private StandardShellLeftPaneDescriptor ResolveStandardLeftPaneDescriptor()
     {
+        if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail)
+        {
+            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.None, "comp-detail-full-width");
+        }
+
         if (_currentRoute.Page == LauncherFrontendPageKey.TaskManager)
         {
             return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.TaskManager, "task-manager-left");
