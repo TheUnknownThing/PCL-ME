@@ -15,12 +15,16 @@ internal abstract class PclAnimatedDialog<TResult> : Window
 
     protected void InitializeDialogAnimation()
     {
-        _overlayBorder = this.FindControl<Control>("OverlayBorder")
-            ?? throw new InvalidOperationException("对话框遮罩层未找到。");
-        _messagePanel = this.FindControl<Control>("MessagePanel")
-            ?? throw new InvalidOperationException("对话框主体未找到。");
+        _overlayBorder = FindRequiredControl<Control>("OverlayBorder");
+        _messagePanel = FindRequiredControl<Control>("MessagePanel");
         PclModalMotion.ResetToClosedState(_overlayBorder, _messagePanel);
         Opened += OnDialogOpened;
+    }
+
+    protected T FindRequiredControl<T>(string name) where T : Control
+    {
+        return this.FindControl<T>(name)
+               ?? throw new InvalidOperationException($"对话框缺少必需控件：{name}");
     }
 
     protected void CloseWithAnimation(TResult result)
