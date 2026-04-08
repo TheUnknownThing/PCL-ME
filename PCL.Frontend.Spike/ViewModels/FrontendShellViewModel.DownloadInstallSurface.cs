@@ -277,7 +277,7 @@ internal sealed partial class FrontendShellViewModel
             result.Add(new DownloadInstallMinecraftSectionViewModel(
                 $"{groupTitle} ({sectionChoices.Length})",
                 sectionChoices,
-                isExpanded: string.Equals(groupTitle, "正式版", StringComparison.Ordinal),
+                isExpanded: false,
                 canCollapse: true,
                 toggleCommand: new ActionCommand(() => ToggleDownloadInstallMinecraftSection(groupTitle))));
         }
