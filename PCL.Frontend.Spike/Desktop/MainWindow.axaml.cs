@@ -22,8 +22,6 @@ namespace PCL.Frontend.Spike.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
-    private static readonly TimeSpan RouteTransitionDuration = TimeSpan.FromMilliseconds(300);
-    private static readonly TimeSpan ShellDividerTransitionDuration = TimeSpan.FromMilliseconds(260);
     private FrontendShellViewModel? _shellViewModel;
     private CompositionVisual? _gridRootVisual;
     private CompositionVisual? _launchLeftContentHostVisual;
@@ -90,7 +88,7 @@ internal sealed partial class MainWindow : Window
             new DoubleTransition
             {
                 Property = Layoutable.WidthProperty,
-                Duration = ShellDividerTransitionDuration,
+                Duration = MotionDurations.DividerResize,
                 Easing = new CubicEaseOut()
             }
         };
@@ -171,7 +169,7 @@ internal sealed partial class MainWindow : Window
 
     private async void RunEntranceAnimation()
     {
-        await Task.Delay(100);
+        await Task.Delay(MotionDurations.WindowEnterDelay);
 
         InitializeCompositionVisuals();
         if (_gridRootVisual is null || _compositor is null)
@@ -181,19 +179,19 @@ internal sealed partial class MainWindow : Window
         }
 
         var opacityAnimation = _compositor.CreateScalarKeyFrameAnimation();
-        opacityAnimation.Duration = TimeSpan.FromMilliseconds(250);
+        opacityAnimation.Duration = MotionDurations.StartupFade;
         opacityAnimation.InsertKeyFrame(0f, 0f, new CubicEaseOut());
         opacityAnimation.InsertKeyFrame(1f, 1f, new CubicEaseOut());
         opacityAnimation.Target = "Opacity";
 
         var rotationAnimation = _compositor.CreateScalarKeyFrameAnimation();
-        rotationAnimation.Duration = TimeSpan.FromMilliseconds(500);
+        rotationAnimation.Duration = MotionDurations.StartupRotate;
         rotationAnimation.InsertKeyFrame(0f, -0.06f, new CubicEaseOut());
         rotationAnimation.InsertKeyFrame(1f, 0f, new CubicEaseOut());
         rotationAnimation.Target = "RotationAngle";
 
         var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
-        offsetAnimation.Duration = TimeSpan.FromMilliseconds(600);
+        offsetAnimation.Duration = MotionDurations.StartupLift;
         offsetAnimation.InsertKeyFrame(0f, new Vector3(0f, 60f, 0f), new CubicEaseOut());
         offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), new CubicEaseOut());
         offsetAnimation.Target = "Offset";
@@ -390,7 +388,12 @@ internal sealed partial class MainWindow : Window
     {
         try
         {
-            var visibleDuration = TimeSpan.FromMilliseconds(800 + Math.Clamp(state.Message.Length, 5, 23) * 180);
+            var visibleDuration = TimeSpan.FromMilliseconds(
+                MotionDurations.HintVisibleBaseMilliseconds +
+                Math.Clamp(
+                    state.Message.Length,
+                    MotionDurations.HintVisibleMinCharacters,
+                    MotionDurations.HintVisibleMaxCharacters) * MotionDurations.HintVisiblePerCharacterMilliseconds);
             await Task.Delay(visibleDuration, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -409,7 +412,7 @@ internal sealed partial class MainWindow : Window
 
         try
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken);
+            await Task.Delay(MotionDurations.HintSettle, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -436,7 +439,7 @@ internal sealed partial class MainWindow : Window
         }
 
         state.Border.RenderTransform = new TranslateTransform(12, 0);
-        await Task.Delay(70);
+        await Task.Delay(MotionDurations.HintNudge);
         if (!state.IsClosing)
         {
             state.Border.RenderTransform = new TranslateTransform(0, 0);
@@ -469,13 +472,13 @@ internal sealed partial class MainWindow : Window
             new DoubleTransition
             {
                 Property = Visual.OpacityProperty,
-                Duration = TimeSpan.FromMilliseconds(100),
+                Duration = MotionDurations.QuickState,
                 Easing = new CubicEaseOut()
             },
             new TransformOperationsTransition
             {
                 Property = Visual.RenderTransformProperty,
-                Duration = TimeSpan.FromMilliseconds(220),
+                Duration = MotionDurations.EntranceTranslate,
                 Easing = new CubicEaseOut()
             }
         };
@@ -556,13 +559,13 @@ internal sealed partial class MainWindow : Window
         Easing easing = useBounce ? new BackEaseOut() : new CubicEaseOut();
 
         var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
-        offsetAnimation.Duration = RouteTransitionDuration;
+        offsetAnimation.Duration = MotionDurations.RouteTransition;
         offsetAnimation.InsertKeyFrame(0f, new Vector3(offsetX, offsetY, 0f), easing);
         offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), easing);
         offsetAnimation.Target = "Offset";
 
         var opacityAnimation = _compositor.CreateScalarKeyFrameAnimation();
-        opacityAnimation.Duration = RouteTransitionDuration;
+        opacityAnimation.Duration = MotionDurations.RouteTransition;
         opacityAnimation.InsertKeyFrame(0f, 0f, easing);
         opacityAnimation.InsertKeyFrame(1f, 1f, easing);
         opacityAnimation.Target = "Opacity";

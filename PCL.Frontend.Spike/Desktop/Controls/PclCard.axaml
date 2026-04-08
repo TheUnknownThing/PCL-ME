@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclCard"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     x:Name="Root">
   <Grid ClipToBounds="False">
     <Border
@@ -13,8 +14,8 @@
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="BorderBrush" Duration="0:0:0.24" />
-          <BrushTransition Property="Background" Duration="0:0:0.24" />
+          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
+          <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
         </Transitions>
       </Border.Transitions>
       <Grid x:Name="LayoutRoot">

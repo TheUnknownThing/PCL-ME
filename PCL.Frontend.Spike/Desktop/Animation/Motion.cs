@@ -12,12 +12,6 @@ namespace PCL.Frontend.Spike.Desktop.Animation;
 
 internal static class Motion
 {
-    private static readonly TimeSpan EnterOpacityDuration = TimeSpan.FromMilliseconds(170);
-    private static readonly TimeSpan EnterTranslateDuration = TimeSpan.FromMilliseconds(280);
-    private static readonly TimeSpan EnterTranslateDurationWithoutOvershoot = TimeSpan.FromMilliseconds(220);
-    private static readonly TimeSpan ExitOpacityDuration = TimeSpan.FromMilliseconds(130);
-    private static readonly TimeSpan ExitTranslateDuration = TimeSpan.FromMilliseconds(170);
-
     public static readonly AttachedProperty<bool> AnimateOnVisibleProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("AnimateOnVisible", typeof(Motion));
 
@@ -496,7 +490,7 @@ internal static class Motion
             control.RenderTransform = new TranslateTransform(ResolveExitOffsetX(motionSource), ResolveExitOffsetY(motionSource));
         }
 
-        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(ExitOpacityDuration.TotalMilliseconds, ExitTranslateDuration.TotalMilliseconds)));
+        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(MotionDurations.ExitFade.TotalMilliseconds, MotionDurations.EntranceFade.TotalMilliseconds)));
     }
 
     private static Transitions BuildTransitions(Transitions? original, bool entering)
@@ -513,7 +507,7 @@ internal static class Motion
         transitions.Add(new DoubleTransition
         {
             Property = Visual.OpacityProperty,
-            Duration = entering ? EnterOpacityDuration : ExitOpacityDuration,
+            Duration = entering ? MotionDurations.EntranceFade : MotionDurations.ExitFade,
             Easing = new CubicEaseOut()
         });
 
@@ -524,9 +518,9 @@ internal static class Motion
     {
         var duration = entering
             ? overshoot
-                ? EnterTranslateDuration
-                : EnterTranslateDurationWithoutOvershoot
-            : ExitTranslateDuration;
+                ? MotionDurations.EntranceTranslateOvershoot
+                : MotionDurations.EntranceTranslate
+            : MotionDurations.EntranceFade;
         Easing easing = entering && overshoot
             ? new BackEaseOut()
             : new CubicEaseOut();
