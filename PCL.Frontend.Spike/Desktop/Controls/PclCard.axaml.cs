@@ -13,6 +13,7 @@ internal sealed partial class PclCard : UserControl
     private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
     private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
     private static readonly Thickness CollapsibleChevronMargin = new(0, 12, 16, 0);
+    private readonly RotateTransform _chevronTransform = new();
 
     public static readonly StyledProperty<string> HeaderProperty =
         AvaloniaProperty.Register<PclCard, string>(nameof(Header), string.Empty);
@@ -44,9 +45,11 @@ internal sealed partial class PclCard : UserControl
         PointerEntered += OnPointerEntered;
         PointerExited += OnPointerExited;
         HeaderButton.Click += OnHeaderButtonClick;
+        ChevronPath.RenderTransform = _chevronTransform;
         RefreshHeaderLayout();
         RefreshHeaderMetrics();
         RefreshChevronState();
+        RefreshContentState();
         RefreshState();
     }
 
@@ -146,6 +149,7 @@ internal sealed partial class PclCard : UserControl
         else if (change.Property == IsChevronExpandedProperty)
         {
             RefreshChevronState();
+            RefreshContentState();
             RaisePropertyChanged(IsContentVisibleProperty, !change.GetNewValue<bool>(), IsContentVisible);
         }
         else if (change.Property == ShowChevronProperty)
@@ -153,6 +157,7 @@ internal sealed partial class PclCard : UserControl
             RefreshHeaderLayout();
             RefreshHeaderMetrics();
             RefreshChevronState();
+            RefreshContentState();
             RefreshState();
             RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
             RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
@@ -233,7 +238,15 @@ internal sealed partial class PclCard : UserControl
 
     private void RefreshChevronState()
     {
-        ChevronPath.RenderTransform = new RotateTransform(IsChevronExpanded ? 180 : 270);
+        _chevronTransform.Angle = IsChevronExpanded ? 180 : 270;
+    }
+
+    private void RefreshContentState()
+    {
+        var isContentVisible = IsContentVisible;
+        ContentHost.IsVisible = isContentVisible;
+        ContentHost.IsHitTestVisible = isContentVisible;
+        ContentHost.Height = isContentVisible ? double.NaN : 0;
     }
 
     private void OnHeaderButtonClick(object? sender, RoutedEventArgs e)
