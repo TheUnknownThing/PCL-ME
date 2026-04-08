@@ -283,6 +283,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var runtimePaths = _shellActionService.RuntimePaths;
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var launcherDirectory = ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
@@ -292,9 +293,8 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(
             InstanceSelectionFolderEntries,
-            [
-                CreateInstanceSelectionFolderEntry(launcherDirectory)
-            ]);
+            BuildInstanceSelectionFolderSnapshots(sharedConfig, localConfig, runtimePaths, launcherDirectory)
+                .Select(CreateInstanceSelectionFolderEntry));
 
         ReplaceItems(
             InstanceSelectionShortcutEntries,
@@ -496,16 +496,40 @@ internal sealed partial class FrontendShellViewModel
     {
         try
         {
-            var folderPath = await _shellActionService.PickFolderAsync("选择已有 Minecraft 文件夹");
-            if (string.IsNullOrWhiteSpace(folderPath))
+            var pickedFolderPath = await _shellActionService.PickFolderAsync("选择已有 Minecraft 文件夹");
+            if (string.IsNullOrWhiteSpace(pickedFolderPath))
             {
                 AddActivity("添加已有文件夹", "未选择任何文件夹。");
                 return;
             }
 
-            _shellActionService.PersistLocalValue("LaunchFolderSelect", Path.GetFullPath(folderPath));
+            var runtimePaths = _shellActionService.RuntimePaths;
+            var resolvedFolderPath = ResolvePickedLauncherFolderPath(pickedFolderPath);
+            var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var currentFolderPath = ResolveLauncherFolder(
+                ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+                runtimePaths);
+            var configuredFolders = BuildInstanceSelectionFolderSnapshots(sharedConfig, localConfig, runtimePaths, currentFolderPath)
+                .ToList();
+            var existingFolder = configuredFolders.FirstOrDefault(folder =>
+                string.Equals(folder.Directory, resolvedFolderPath, GetPathComparison()));
+            var addedToList = existingFolder is null;
+
+            if (existingFolder is null)
+            {
+                configuredFolders.Add(new InstanceSelectionFolderSnapshot(
+                    GetInstanceSelectionDirectoryLabel(resolvedFolderPath),
+                    resolvedFolderPath,
+                    StoreLauncherFolderPath(resolvedFolderPath, runtimePaths)));
+                _shellActionService.PersistSharedValue("LaunchFolders", SerializeInstanceSelectionFolders(configuredFolders, runtimePaths));
+            }
+
+            _shellActionService.PersistLocalValue("LaunchFolderSelect", StoreLauncherFolderPath(resolvedFolderPath, runtimePaths));
             RefreshLaunchState();
-            RefreshShell($"已切换启动目录到 {folderPath}。");
+            RefreshShell(addedToList
+                ? $"已将 {resolvedFolderPath} 添加到实例目录列表并切换过去。"
+                : $"已切换启动目录到 {resolvedFolderPath}。");
         }
         catch (Exception ex)
         {
@@ -1062,23 +1086,34 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private InstanceSelectionFolderEntryViewModel CreateInstanceSelectionFolderEntry(string directory)
+    private InstanceSelectionFolderEntryViewModel CreateInstanceSelectionFolderEntry(InstanceSelectionFolderSnapshot folder)
     {
         return new InstanceSelectionFolderEntryViewModel(
-            GetInstanceSelectionDirectoryLabel(directory),
-            directory,
-            true,
+            folder.Label,
+            folder.Directory,
+            string.Equals(folder.Directory, _instanceSelectionLauncherDirectory, GetPathComparison()),
             FrontendIconCatalog.Folder.Data,
-            new ActionCommand(() => AddActivity("当前文件夹", directory)),
             new ActionCommand(() =>
             {
-                if (_shellActionService.TryOpenExternalTarget(directory, out var error))
+                if (string.Equals(folder.Directory, _instanceSelectionLauncherDirectory, GetPathComparison()))
                 {
-                    AddActivity("打开实例根目录", directory);
+                    AddActivity("当前文件夹", folder.Directory);
+                    return;
+                }
+
+                _shellActionService.PersistLocalValue("LaunchFolderSelect", folder.StoredPath);
+                RefreshLaunchState();
+                RefreshShell($"已切换实例目录到 {folder.Directory}。");
+            }),
+            new ActionCommand(() =>
+            {
+                if (_shellActionService.TryOpenExternalTarget(folder.Directory, out var error))
+                {
+                    AddActivity("打开实例根目录", folder.Directory);
                 }
                 else
                 {
-                    AddActivity("打开实例根目录失败", error ?? directory);
+                    AddActivity("打开实例根目录失败", error ?? folder.Directory);
                 }
             }));
     }
@@ -1340,7 +1375,157 @@ internal sealed partial class FrontendShellViewModel
             : null;
     }
 
-    private static T ReadValue<T>(YamlFileProvider provider, string key, T fallback)
+    private static IReadOnlyList<InstanceSelectionFolderSnapshot> BuildInstanceSelectionFolderSnapshots(
+        IKeyValueFileProvider sharedConfig,
+        IKeyValueFileProvider localConfig,
+        FrontendRuntimePaths runtimePaths,
+        string selectedDirectory)
+    {
+        var rawFolders = ReadValue(sharedConfig, "LaunchFolders", string.Empty);
+        if (string.IsNullOrWhiteSpace(rawFolders))
+        {
+            rawFolders = ReadValue(localConfig, "LaunchFolders", string.Empty);
+        }
+
+        var folders = new List<InstanceSelectionFolderSnapshot>();
+        var comparer = GetPathComparer();
+        var seenDirectories = new HashSet<string>(comparer);
+        foreach (var rawEntry in rawFolders.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var folder = ParseInstanceSelectionFolderSnapshot(rawEntry, runtimePaths);
+            if (folder is null || !seenDirectories.Add(folder.Directory))
+            {
+                continue;
+            }
+
+            folders.Add(folder);
+        }
+
+        if (seenDirectories.Add(selectedDirectory))
+        {
+            folders.Insert(0, new InstanceSelectionFolderSnapshot(
+                GetInstanceSelectionDirectoryLabel(selectedDirectory),
+                selectedDirectory,
+                StoreLauncherFolderPath(selectedDirectory, runtimePaths)));
+        }
+
+        return folders;
+    }
+
+    private static InstanceSelectionFolderSnapshot? ParseInstanceSelectionFolderSnapshot(string rawEntry, FrontendRuntimePaths runtimePaths)
+    {
+        if (string.IsNullOrWhiteSpace(rawEntry))
+        {
+            return null;
+        }
+
+        var separatorIndex = rawEntry.IndexOf('>');
+        var label = separatorIndex > 0
+            ? rawEntry[..separatorIndex].Trim()
+            : string.Empty;
+        var rawPath = separatorIndex >= 0
+            ? rawEntry[(separatorIndex + 1)..].Trim()
+            : rawEntry.Trim();
+        if (string.IsNullOrWhiteSpace(rawPath))
+        {
+            return null;
+        }
+
+        var directory = ResolveLauncherFolder(rawPath, runtimePaths);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return null;
+        }
+
+        return new InstanceSelectionFolderSnapshot(
+            string.IsNullOrWhiteSpace(label) ? GetInstanceSelectionDirectoryLabel(directory) : label,
+            directory,
+            rawPath);
+    }
+
+    private static string SerializeInstanceSelectionFolders(
+        IReadOnlyList<InstanceSelectionFolderSnapshot> folders,
+        FrontendRuntimePaths runtimePaths)
+    {
+        return string.Join(
+            "|",
+            folders.Select(folder =>
+            {
+                var label = string.IsNullOrWhiteSpace(folder.Label)
+                    ? GetInstanceSelectionDirectoryLabel(folder.Directory)
+                    : folder.Label.Trim();
+                var storedPath = StoreLauncherFolderPath(folder.Directory, runtimePaths);
+                return $"{label}>{storedPath}";
+            }));
+    }
+
+    private static string ResolvePickedLauncherFolderPath(string pickedFolderPath)
+    {
+        var fullPath = Path.GetFullPath(pickedFolderPath);
+        if (string.Equals(Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)), "versions", GetPathComparison())
+            && Directory.GetParent(fullPath) is { } parent)
+        {
+            return parent.FullName;
+        }
+
+        if (Directory.Exists(Path.Combine(fullPath, "versions")))
+        {
+            return fullPath;
+        }
+
+        foreach (var childDirectory in Directory.EnumerateDirectories(fullPath, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (Directory.Exists(Path.Combine(childDirectory, "versions")))
+            {
+                return Path.GetFullPath(childDirectory);
+            }
+        }
+
+        return fullPath;
+    }
+
+    private static string StoreLauncherFolderPath(string directory, FrontendRuntimePaths runtimePaths)
+    {
+        var fullPath = Path.GetFullPath(directory);
+        var executableDirectory = EnsureTrailingSeparator(Path.GetFullPath(runtimePaths.ExecutableDirectory));
+        var comparison = GetPathComparison();
+        if (fullPath.StartsWith(executableDirectory, comparison))
+        {
+            var relativePath = fullPath[executableDirectory.Length..]
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return string.IsNullOrWhiteSpace(relativePath)
+                ? "$"
+                : $"${Path.DirectorySeparatorChar}{relativePath}";
+        }
+
+        return fullPath;
+    }
+
+    private static string EnsureTrailingSeparator(string path)
+    {
+        if (path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar))
+        {
+            return path;
+        }
+
+        return path + Path.DirectorySeparatorChar;
+    }
+
+    private static StringComparison GetPathComparison()
+    {
+        return OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+    }
+
+    private static StringComparer GetPathComparer()
+    {
+        return OperatingSystem.IsWindows()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+    }
+
+    private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
     {
         try
         {
@@ -1570,6 +1755,11 @@ internal sealed record DedicatedGenericRouteMetadata(
     string Eyebrow,
     string Description,
     IReadOnlyList<LauncherFrontendPageFact> Facts);
+
+internal sealed record InstanceSelectionFolderSnapshot(
+    string Label,
+    string Directory,
+    string StoredPath);
 
 internal sealed record InstanceSelectionSnapshot(
     string Name,
