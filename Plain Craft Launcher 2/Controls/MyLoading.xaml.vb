@@ -129,6 +129,11 @@ Public Class MyLoading
         End If
     End Sub
     Private Sub RefreshState() Handles _State.LoadingStateChanged, Me.Loaded, Me.Unloaded
+        If _State.LoadingState <> MyLoadingState.Run OrElse Not IsLoaded Then
+            AniStop(LoopAnimationName)
+            IsLooping = False
+            ErrorAnimationWaiting = False
+        End If
         If _State.LoadingState = MyLoadingState.Run AndAlso Not IsLoaded Then InnerState = MyLoadingState.Stop
         InnerState = _State.LoadingState
         OuterState = _State.LoadingState
@@ -181,6 +186,11 @@ Public Class MyLoading
     ''' 主动画循环是否正在运行中。
     ''' </summary>
     Private IsLooping As Boolean = False
+    Private ReadOnly Property LoopAnimationName As String
+        Get
+            Return "MyLoader Loop " & Uuid
+        End Get
+    End Property
     Private Sub AniLoop()
         '这坨循环代码也是老屎坑了，救救.jpg
         If Not HasAnimation OrElse IsLooping OrElse Not InnerState = MyLoadingState.Run OrElse AniSpeed > 10 OrElse Not IsLoaded Then Return
@@ -207,7 +217,7 @@ Public Class MyLoading
                                IsLooping = False
                                AniLoop()
                            End Sub,, True)
-            }, "MyLoader Loop " & Uuid & "/" & GetUuid())
+            }, LoopAnimationName)
         If ShowProgress Then
 
         End If
