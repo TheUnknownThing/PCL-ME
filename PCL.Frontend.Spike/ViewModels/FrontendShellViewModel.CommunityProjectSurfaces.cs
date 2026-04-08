@@ -783,6 +783,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             AddActivity("输入实例名称失败", ex.Message);
+            SpikeHintBus.Show($"输入实例名称失败: {ex.Message}", SpikeHintTheme.Error);
             return;
         }
 
