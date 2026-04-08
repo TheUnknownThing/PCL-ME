@@ -333,12 +333,6 @@
         </ItemsControl>
 
         <Grid ColumnDefinitions="*,Auto">
-          <TextBlock
-              VerticalAlignment="Center"
-              Foreground="#6B7C8E"
-              FontSize="12.5"
-              Text="继续沿用原版下载页的双阶段安装流程，在当前壳层直接写入安装清单并补全依赖文件。"
-              TextWrapping="Wrap" />
           <controls:PclButton
               Grid.Column="1"
               Width="120"
