@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -25,25 +26,31 @@ internal sealed partial class PclLoading : UserControl
         AvaloniaProperty.Register<PclLoading, IBrush>(nameof(IndicatorBrush), Brush.Parse("#4B5968"));
 
     private static readonly IBrush ErrorBrush = Brush.Parse("#D33232");
+    private static readonly TimeSpan AnimationTickInterval = TimeSpan.FromMilliseconds(16);
     private static readonly TimeSpan StrikeLeadIn = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan StrikeDownDuration = TimeSpan.FromMilliseconds(350);
-    private static readonly TimeSpan StrikeReboundDuration = TimeSpan.FromMilliseconds(520);
-    private static readonly TimeSpan StrikeResetDuration = TimeSpan.FromMilliseconds(320);
+    private static readonly TimeSpan StrikeRecoveryDuration = TimeSpan.FromMilliseconds(900);
+    private static readonly TimeSpan StrikeImpactTime = StrikeLeadIn + StrikeDownDuration;
+    private static readonly TimeSpan CycleDuration = StrikeImpactTime + StrikeRecoveryDuration;
+    private static readonly TimeSpan DebrisFadeDelay = TimeSpan.FromMilliseconds(50);
     private static readonly TimeSpan DebrisFadeDuration = TimeSpan.FromMilliseconds(100);
     private static readonly TimeSpan DebrisFlightDuration = TimeSpan.FromMilliseconds(180);
-    private static readonly TimeSpan AnimationPadding = TimeSpan.FromMilliseconds(40);
     private static readonly TimeSpan ErrorGlyphDuration = TimeSpan.FromMilliseconds(300);
     private static readonly Easing StandardEase = new CubicEaseOut();
     private static readonly Easing BounceEase = new BackEaseOut();
     private const double RestAngle = 55d;
     private const double StrikeAngle = -20d;
-    private const double ReboundAngle = 30d;
+    private const double FluentRecoveryDelta = 50d;
+    private const double ElasticRecoveryDelta = 25d;
+    private const double WeakPower = 2d;
+    private const int WeakElasticPeriod = 6;
+    private const double MiddlePower = 3d;
     private const double HiddenErrorScale = 0.6d;
     private const double VisibleErrorScale = 1d;
 
-    private CancellationTokenSource? _animationCts;
-    private Task? _animationLoop;
-    private RotateTransform PickaxeRotateTransform => (RotateTransform)PickaxePath.RenderTransform!;
+    private readonly DispatcherTimer _animationTimer = new() { Interval = AnimationTickInterval };
+    private readonly Stopwatch _animationStopwatch = new();
+    private RotateTransform PickaxeRotateTransform => (RotateTransform)PickaxeHost.RenderTransform!;
     private TranslateTransform LeftDebrisTranslateTransform => (TranslateTransform)((TransformGroup)LeftDebris.RenderTransform!).Children[1]!;
     private TranslateTransform RightDebrisTranslateTransform => (TranslateTransform)((TransformGroup)RightDebris.RenderTransform!).Children[1]!;
     private ScaleTransform ErrorGlyphScaleTransform => (ScaleTransform)ErrorGlyph.RenderTransform!;
@@ -54,6 +61,7 @@ internal sealed partial class PclLoading : UserControl
         ConfigureTransitions();
         RefreshText();
         RefreshVisualState();
+        _animationTimer.Tick += OnAnimationTick;
         AttachedToVisualTree += OnAttachedToVisualTree;
         DetachedFromVisualTree += OnDetachedFromVisualTree;
     }
@@ -120,31 +128,6 @@ internal sealed partial class PclLoading : UserControl
 
     private void ConfigureTransitions()
     {
-        PickaxeRotateTransform.Transitions =
-        [
-            CreateDoubleTransition(RotateTransform.AngleProperty, StrikeDownDuration, StandardEase)
-        ];
-
-        LeftDebrisTranslateTransform.Transitions =
-        [
-            CreateDoubleTransition(TranslateTransform.XProperty, DebrisFlightDuration, StandardEase),
-            CreateDoubleTransition(TranslateTransform.YProperty, DebrisFlightDuration, StandardEase)
-        ];
-        RightDebrisTranslateTransform.Transitions =
-        [
-            CreateDoubleTransition(TranslateTransform.XProperty, DebrisFlightDuration, StandardEase),
-            CreateDoubleTransition(TranslateTransform.YProperty, DebrisFlightDuration, StandardEase)
-        ];
-
-        LeftDebris.Transitions =
-        [
-            CreateDoubleTransition(OpacityProperty, DebrisFadeDuration, StandardEase)
-        ];
-        RightDebris.Transitions =
-        [
-            CreateDoubleTransition(OpacityProperty, DebrisFadeDuration, StandardEase)
-        ];
-
         ErrorGlyph.Transitions =
         [
             CreateDoubleTransition(OpacityProperty, ErrorGlyphDuration, StandardEase)
@@ -174,7 +157,7 @@ internal sealed partial class PclLoading : UserControl
         ErrorGlyph.Opacity = IsError ? 1d : 0d;
         ErrorGlyphScaleTransform.ScaleX = IsError ? VisibleErrorScale : HiddenErrorScale;
         ErrorGlyphScaleTransform.ScaleY = IsError ? VisibleErrorScale : HiddenErrorScale;
-        if (!IsError)
+        if (!IsError && !_animationTimer.IsEnabled)
         {
             ResetStrikeVisuals();
         }
@@ -209,89 +192,75 @@ internal sealed partial class PclLoading : UserControl
 
     private void StartAnimationLoop()
     {
-        if (_animationLoop is { IsCompleted: false })
+        if (_animationTimer.IsEnabled)
         {
             return;
         }
 
-        _animationCts = new CancellationTokenSource();
-        _animationLoop = RunAnimationLoopAsync(_animationCts.Token);
+        _animationStopwatch.Restart();
+        _animationTimer.Start();
+        UpdateAnimationFrame(TimeSpan.Zero);
     }
 
     private void StopAnimationLoop()
     {
-        if (_animationCts is null)
+        if (!_animationTimer.IsEnabled)
         {
             return;
         }
 
-        _animationCts.Cancel();
-        _animationCts.Dispose();
-        _animationCts = null;
-        _animationLoop = null;
+        _animationTimer.Stop();
+        _animationStopwatch.Reset();
     }
 
-    private async Task RunAnimationLoopAsync(CancellationToken cancellationToken)
+    private void OnAnimationTick(object? sender, EventArgs e)
     {
-        try
+        UpdateAnimationFrame(_animationStopwatch.Elapsed);
+    }
+
+    private void UpdateAnimationFrame(TimeSpan elapsed)
+    {
+        var cycleElapsed = NormalizeCycleElapsed(elapsed);
+        if (cycleElapsed <= StrikeLeadIn)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Dispatcher.UIThread.InvokeAsync(ResetStrikeVisuals);
-                await Task.Delay(StrikeLeadIn, cancellationToken);
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    PickaxeRotateTransform.Transitions =
-                    [
-                        CreateDoubleTransition(RotateTransform.AngleProperty, StrikeDownDuration, StandardEase)
-                    ];
-                    PickaxeRotateTransform.Angle = StrikeAngle;
-                });
-                await Task.Delay(StrikeDownDuration + AnimationPadding, cancellationToken);
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    LeftDebris.Opacity = 1d;
-                    RightDebris.Opacity = 1d;
-                    LeftDebrisTranslateTransform.X = 0d;
-                    LeftDebrisTranslateTransform.Y = 0d;
-                    RightDebrisTranslateTransform.X = 0d;
-                    RightDebrisTranslateTransform.Y = 0d;
-                    PickaxeRotateTransform.Transitions =
-                    [
-                        CreateDoubleTransition(RotateTransform.AngleProperty, StrikeReboundDuration, BounceEase)
-                    ];
-                    PickaxeRotateTransform.Angle = ReboundAngle;
-                });
-                await Task.Delay(TimeSpan.FromMilliseconds(70), cancellationToken);
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    LeftDebris.Opacity = 0d;
-                    RightDebris.Opacity = 0d;
-                    LeftDebrisTranslateTransform.X = -5d;
-                    LeftDebrisTranslateTransform.Y = -6d;
-                    RightDebrisTranslateTransform.X = 5d;
-                    RightDebrisTranslateTransform.Y = -6d;
-                });
-                await Task.Delay(StrikeReboundDuration + AnimationPadding, cancellationToken);
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    PickaxeRotateTransform.Transitions =
-                    [
-                        CreateDoubleTransition(RotateTransform.AngleProperty, StrikeResetDuration, BounceEase)
-                    ];
-                    PickaxeRotateTransform.Angle = RestAngle;
-                });
-                await Task.Delay(StrikeResetDuration + AnimationPadding, cancellationToken);
-            }
+            ResetStrikeVisuals();
+            return;
         }
-        catch (OperationCanceledException)
+
+        if (cycleElapsed <= StrikeImpactTime)
         {
-            // Control was detached or animation was stopped.
+            var progress = ClampProgress(cycleElapsed - StrikeLeadIn, StrikeDownDuration);
+            PickaxeRotateTransform.Angle = RestAngle + (StrikeAngle - RestAngle) * EaseInBack(progress, WeakPower);
+            LeftDebris.Opacity = 0d;
+            RightDebris.Opacity = 0d;
+            LeftDebrisTranslateTransform.X = 0d;
+            LeftDebrisTranslateTransform.Y = 0d;
+            RightDebrisTranslateTransform.X = 0d;
+            RightDebrisTranslateTransform.Y = 0d;
+            return;
         }
+
+        var postImpactElapsed = cycleElapsed - StrikeImpactTime;
+        var recoveryProgress = ClampProgress(postImpactElapsed, StrikeRecoveryDuration);
+        // The legacy WPF control layers a fluent rebound with an elastic settle on the same transform.
+        PickaxeRotateTransform.Angle = StrikeAngle
+            + FluentRecoveryDelta * EaseOutFluent(recoveryProgress, MiddlePower)
+            + ElasticRecoveryDelta * EaseOutElastic(recoveryProgress, WeakElasticPeriod);
+
+        var debrisFlightProgress = ClampProgress(postImpactElapsed, DebrisFlightDuration);
+        var debrisOffsetProgress = EaseOutFluent(debrisFlightProgress, MiddlePower);
+        var debrisOpacity = 1d;
+        if (postImpactElapsed > DebrisFadeDelay)
+        {
+            debrisOpacity = 1d - ClampProgress(postImpactElapsed - DebrisFadeDelay, DebrisFadeDuration);
+        }
+
+        LeftDebris.Opacity = debrisOpacity;
+        RightDebris.Opacity = debrisOpacity;
+        LeftDebrisTranslateTransform.X = -5d * debrisOffsetProgress;
+        LeftDebrisTranslateTransform.Y = -6d * debrisOffsetProgress;
+        RightDebrisTranslateTransform.X = 5d * debrisOffsetProgress;
+        RightDebrisTranslateTransform.Y = -6d * debrisOffsetProgress;
     }
 
     private static DoubleTransition CreateDoubleTransition(
@@ -305,5 +274,44 @@ internal sealed partial class PclLoading : UserControl
             Duration = duration,
             Easing = easing
         };
+    }
+
+    private static TimeSpan NormalizeCycleElapsed(TimeSpan elapsed)
+    {
+        if (elapsed <= TimeSpan.Zero)
+        {
+            return TimeSpan.Zero;
+        }
+
+        return TimeSpan.FromTicks(elapsed.Ticks % CycleDuration.Ticks);
+    }
+
+    private static double ClampProgress(TimeSpan elapsed, TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero)
+        {
+            return 1d;
+        }
+
+        return Math.Clamp(elapsed.TotalMilliseconds / duration.TotalMilliseconds, 0d, 1d);
+    }
+
+    private static double EaseInBack(double progress, double power)
+    {
+        progress = Math.Clamp(progress, 0d, 1d);
+        return Math.Pow(progress, power) * Math.Cos(1.5d * Math.PI * (1d - progress));
+    }
+
+    private static double EaseOutFluent(double progress, double power)
+    {
+        progress = Math.Clamp(progress, 0d, 1d);
+        return 1d - Math.Pow(1d - progress, power);
+    }
+
+    private static double EaseOutElastic(double progress, int period)
+    {
+        var remaining = 1d - Math.Clamp(progress, 0d, 1d);
+        return 1d - Math.Pow(remaining, (period - 1) * 0.25d)
+            * Math.Cos((period - 3.5d) * Math.PI * Math.Pow(1d - remaining, 1.5d));
     }
 }
