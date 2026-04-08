@@ -4,10 +4,10 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Spike.Desktop.Animation;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -45,6 +45,7 @@ internal sealed partial class PclCard : UserControl
     private bool _isHovered;
     private bool _isContentRenderedVisible = true;
     private int _contentAnimationVersion;
+    private CancellationTokenSource? _contentAnimationCts;
 
     public PclCard()
     {
@@ -63,15 +64,6 @@ internal sealed partial class PclCard : UserControl
             }
         ];
         ChevronPath.RenderTransform = _chevronTransform;
-        ContentHost.Transitions =
-        [
-            new DoubleTransition
-            {
-                Property = Layoutable.HeightProperty,
-                Duration = ExpandCollapseDuration,
-                Easing = new CubicEaseOut()
-            }
-        ];
         RefreshHeaderLayout();
         RefreshHeaderMetrics();
         RefreshChevronState();
@@ -269,29 +261,52 @@ internal sealed partial class PclCard : UserControl
     {
         if (!ShowChevron)
         {
+            StopContentAnimation();
             _contentAnimationVersion++;
             SetContentRenderedVisible(true);
             ContentHost.Height = double.NaN;
+            Height = double.NaN;
             return;
         }
 
         if (!animate || VisualRoot is null)
         {
+            StopContentAnimation();
             _contentAnimationVersion++;
             SetContentRenderedVisible(IsChevronExpanded);
-            ContentHost.Height = IsChevronExpanded ? double.NaN : 0;
+            ContentHost.Height = double.NaN;
+            Height = IsChevronExpanded ? double.NaN : GetCollapsedHeight();
             return;
         }
 
+        AnimateContentState();
+    }
+
+    private void AnimateContentState()
+    {
+        StopContentAnimation();
+        var cts = new CancellationTokenSource();
+        _contentAnimationCts = cts;
         var version = ++_contentAnimationVersion;
         if (IsChevronExpanded)
         {
-            _ = ExpandContentAsync(version);
+            _ = ExpandContentAsync(version, cts.Token);
+            return;
         }
-        else
+
+        _ = CollapseContentAsync(version, cts.Token);
+    }
+
+    private void StopContentAnimation()
+    {
+        if (_contentAnimationCts is null)
         {
-            _ = CollapseContentAsync(version);
+            return;
         }
+
+        _contentAnimationCts.Cancel();
+        _contentAnimationCts.Dispose();
+        _contentAnimationCts = null;
     }
 
     private void SetContentRenderedVisible(bool isVisible)
@@ -307,57 +322,44 @@ internal sealed partial class PclCard : UserControl
         }
     }
 
-    private async Task ExpandContentAsync(int version)
+    private async Task ExpandContentAsync(int version, CancellationToken cancellationToken)
     {
         SetContentRenderedVisible(true);
+        ContentHost.Height = double.NaN;
 
-        var startHeight = Math.Max(0, ContentHost.Bounds.Height);
-        var targetHeight = MeasureExpandedHeight();
+        var startHeight = Math.Max(GetCollapsedHeight(), Bounds.Height);
+        var targetHeight = Math.Max(startHeight, MeasureExpandedHeight());
         if (targetHeight <= 0)
         {
             ContentHost.Height = double.NaN;
+            Height = double.NaN;
             return;
         }
 
-        ContentHost.Height = startHeight;
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (!IsAnimationCurrent(version) || !IsChevronExpanded)
+        await AnimateCardHeightAsync(startHeight, targetHeight, version, cancellationToken);
+        if (!IsAnimationCurrent(version, cancellationToken) || !IsChevronExpanded)
         {
             return;
         }
 
-        ContentHost.Height = targetHeight;
-        await Task.Delay(ExpandCollapseDuration);
-        if (!IsAnimationCurrent(version) || !IsChevronExpanded)
-        {
-            return;
-        }
-
-        ContentHost.Height = double.NaN;
+        Height = double.NaN;
     }
 
-    private async Task CollapseContentAsync(int version)
+    private async Task CollapseContentAsync(int version, CancellationToken cancellationToken)
     {
         SetContentRenderedVisible(true);
+        ContentHost.Height = double.NaN;
 
-        var startHeight = Math.Max(0, ContentHost.Bounds.Height);
+        var startHeight = Math.Max(GetCollapsedHeight(), Bounds.Height);
         if (startHeight <= 0)
         {
-            ContentHost.Height = 0;
+            Height = GetCollapsedHeight();
             SetContentRenderedVisible(false);
             return;
         }
 
-        ContentHost.Height = startHeight;
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (!IsAnimationCurrent(version) || IsChevronExpanded)
-        {
-            return;
-        }
-
-        ContentHost.Height = 0;
-        await Task.Delay(ExpandCollapseDuration);
-        if (!IsAnimationCurrent(version) || IsChevronExpanded)
+        await AnimateCardHeightAsync(startHeight, GetCollapsedHeight(), version, cancellationToken);
+        if (!IsAnimationCurrent(version, cancellationToken) || IsChevronExpanded)
         {
             return;
         }
@@ -365,25 +367,66 @@ internal sealed partial class PclCard : UserControl
         SetContentRenderedVisible(false);
     }
 
-    private bool IsAnimationCurrent(int version)
+    private async Task AnimateCardHeightAsync(double startHeight, double targetHeight, int version, CancellationToken cancellationToken)
     {
-        return version == _contentAnimationVersion && VisualRoot is not null;
+        await Dispatcher.UIThread.InvokeAsync(() => Height = startHeight, DispatcherPriority.Render);
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        if (!IsAnimationCurrent(version, cancellationToken))
+        {
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / ExpandCollapseDuration.TotalMilliseconds, 0, 1);
+            var easedProgress = 1 - Math.Pow(1 - progress, 3);
+            var currentHeight = startHeight + ((targetHeight - startHeight) * easedProgress);
+            await Dispatcher.UIThread.InvokeAsync(() => Height = currentHeight, DispatcherPriority.Render);
+            if (progress >= 1 || !IsAnimationCurrent(version, cancellationToken))
+            {
+                break;
+            }
+
+            await Task.Delay(16, cancellationToken);
+        }
+
+        if (!IsAnimationCurrent(version, cancellationToken))
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() => Height = targetHeight, DispatcherPriority.Render);
+    }
+
+    private bool IsAnimationCurrent(int version, CancellationToken cancellationToken)
+    {
+        return !cancellationToken.IsCancellationRequested && version == _contentAnimationVersion && VisualRoot is not null;
     }
 
     private double MeasureExpandedHeight()
     {
-        var originalHeight = ContentHost.Height;
+        var originalCardHeight = Height;
+        var originalContentHeight = ContentHost.Height;
         try
         {
+            Height = double.NaN;
             ContentHost.Height = double.NaN;
             var availableWidth = Math.Max(0, CardBorder.Bounds.Width - CardBorder.BorderThickness.Left - CardBorder.BorderThickness.Right);
             ContentHost.Measure(new Size(availableWidth > 0 ? availableWidth : double.PositiveInfinity, double.PositiveInfinity));
-            return Math.Max(0, ContentHost.DesiredSize.Height);
+            return GetCollapsedHeight() + Math.Max(0, ContentHost.DesiredSize.Height);
         }
         finally
         {
-            ContentHost.Height = originalHeight;
+            Height = originalCardHeight;
+            ContentHost.Height = originalContentHeight;
         }
+    }
+
+    private static double GetCollapsedHeight()
+    {
+        return 40;
     }
 
     private void OnHeaderButtonClick(object? sender, RoutedEventArgs e)
