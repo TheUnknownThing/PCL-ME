@@ -16,8 +16,10 @@ internal static class ShellPaneTemplateRegistry
         RegisterTemplate<StandardShellSummaryPaneViewModel, StandardShellSummaryPaneView>,
         RegisterTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>,
         RegisterTemplate<InstanceSelectShellLeftPaneViewModel, InstanceSelectShellLeftPaneView>,
+        RegisterTemplate<TaskManagerShellLeftPaneViewModel, TaskManagerShellLeftPaneView>,
         RegisterTemplate<GenericStandardShellRightPaneViewModel, GenericStandardShellRightPaneView>,
         RegisterTemplate<InstanceSelectShellRightPaneViewModel, InstanceSelectShellRightPaneView>,
+        RegisterTemplate<TaskManagerShellRightPaneViewModel, TaskManagerShellRightPaneView>,
         RegisterTemplate<DownloadInstallShellRightPaneViewModel, DownloadInstallShellRightPaneView>,
         RegisterTemplate<DownloadCatalogShellRightPaneViewModel, DownloadCatalogShellRightPaneView>,
         RegisterTemplate<DownloadResourceShellRightPaneViewModel, DownloadResourceShellRightPaneView>,
@@ -82,7 +84,8 @@ internal static class ShellPaneTemplateRegistry
             [StandardShellRightPaneKind.InstanceScreenshot] = static (shell, descriptor) => new InstanceScreenshotShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.InstanceServer] = static (shell, descriptor) => new InstanceServerShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.InstanceResource] = static (shell, descriptor) => new InstanceResourceShellRightPaneViewModel(shell, descriptor),
-            [StandardShellRightPaneKind.InstanceSelection] = static (shell, descriptor) => new InstanceSelectShellRightPaneViewModel(shell, descriptor)
+            [StandardShellRightPaneKind.InstanceSelection] = static (shell, descriptor) => new InstanceSelectShellRightPaneViewModel(shell, descriptor),
+            [StandardShellRightPaneKind.TaskManager] = static (shell, descriptor) => new TaskManagerShellRightPaneViewModel(shell, descriptor)
         };
 
     public static void Register(Application application)

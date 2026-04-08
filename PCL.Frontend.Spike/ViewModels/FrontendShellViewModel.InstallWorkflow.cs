@@ -675,7 +675,7 @@ internal sealed class FrontendInstallTask(
     string title,
     Func<FrontendInstallTask, CancellationToken, Task> executeAsync,
     Func<Exception, Task>? onErrorAsync = null)
-    : ITask, ITaskProgressive, ITaskGroup, ITaskTelemetry
+    : ITask, ITaskProgressive, ITaskGroup, ITaskTelemetry, ITaskCancelable
 {
     private readonly Dictionary<FrontendInstallTaskStage, FrontendInstallStageTask> _stages = new()
     {
@@ -695,6 +695,7 @@ internal sealed class FrontendInstallTask(
 
     private double _progress;
     private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", null, null);
+    private readonly CancellationTokenSource _cancellation = new();
 
     public string Title { get; } = title;
 
@@ -709,6 +710,17 @@ internal sealed class FrontendInstallTask(
     public event TaskGroupEvent RemoveTask = delegate { };
 
     public event TaskTelemetryEvent TelemetryChanged = delegate { };
+
+    public void Cancel()
+    {
+        if (_cancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _cancellation.Cancel();
+        ReportState(TaskState.Running, "正在取消任务…");
+    }
 
     public void AdvancePhase(FrontendInstallApplyPhase phase, string message)
     {
@@ -808,6 +820,9 @@ internal sealed class FrontendInstallTask(
 
     public async Task ExecuteAsync(CancellationToken cancelToken = default)
     {
+        using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancelToken, _cancellation.Token);
+        var executionToken = linkedCancellation.Token;
+
         foreach (var stage in _stages.Values)
         {
             AddTask(stage);
@@ -822,7 +837,7 @@ internal sealed class FrontendInstallTask(
 
         try
         {
-            await executeAsync(this, cancelToken);
+            await executeAsync(this, executionToken);
         }
         catch (OperationCanceledException)
         {

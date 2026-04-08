@@ -123,7 +123,7 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadShader, "光影包", "安装光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadWorld, "存档", "导入地图与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadCompFavorites, "收藏夹", "查看收藏的资源条目。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "浏览客户端版本。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "选择并安装 Minecraft 版本。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadOptiFine, "OptiFine", "安装 OptiFine。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadForge, "Forge", "安装 Forge。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadNeoForge, "NeoForge", "安装 NeoForge。"),
@@ -273,22 +273,55 @@ public static class LauncherFrontendNavigationService
             return null;
         }
 
-        if (request.BackstackDepth > 0)
+        var route = request.ParentRoute ?? ResolveDefaultBackRoute(request.CurrentRoute, currentPage);
+        if (route is null)
         {
-            return new LauncherFrontendBackTarget(
-                LauncherFrontendBackTargetKind.History,
-                Route: null,
-                Label: "返回上一页");
+            return null;
         }
 
-        var route = currentPage.SidebarGroupPage is not null
-            ? new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value)
-            : new LauncherFrontendRoute(LauncherFrontendPageKey.Launch);
-        var label = topLevelEntries.FirstOrDefault(entry => entry.Route.Page == route.Page)?.Title ?? "启动";
         return new LauncherFrontendBackTarget(
             LauncherFrontendBackTargetKind.Route,
             route,
-            $"返回到 {label}");
+            $"返回到 {GetRouteLabel(route, topLevelEntries)}");
+    }
+
+    private static LauncherFrontendRoute? ResolveDefaultBackRoute(
+        LauncherFrontendRoute currentRoute,
+        LauncherFrontendPageResolution currentPage)
+    {
+        return currentRoute.Page switch
+        {
+            LauncherFrontendPageKey.InstanceSelect => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.TaskManager => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.InstanceSetup => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.CompDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Download,
+                LauncherFrontendSubpageKey.DownloadInstall),
+            LauncherFrontendPageKey.HelpDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Tools,
+                LauncherFrontendSubpageKey.ToolsLauncherHelp),
+            LauncherFrontendPageKey.GameLog => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.VersionSaves => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.InstanceSetup,
+                LauncherFrontendSubpageKey.VersionWorld),
+            LauncherFrontendPageKey.HomePageMarket => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            _ when currentPage.SidebarGroupPage is not null => new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value),
+            _ => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch)
+        };
+    }
+
+    private static string GetRouteLabel(
+        LauncherFrontendRoute route,
+        IReadOnlyList<LauncherFrontendNavigationEntry> topLevelEntries)
+    {
+        var subpageTitle = GetSubpageTitle(route);
+        if (!string.IsNullOrWhiteSpace(subpageTitle))
+        {
+            return subpageTitle!;
+        }
+
+        return topLevelEntries.FirstOrDefault(entry => entry.Route.Page == route.Page)?.Title
+               ?? ResolvePage(route.Page).Title;
     }
 }
 
@@ -354,7 +387,8 @@ public sealed record LauncherFrontendNavigationViewRequest(
     int BackstackDepth = 0,
     bool HasRunningTasks = false,
     bool HasGameLogs = false,
-    string? CurrentPageTitleOverride = null);
+    string? CurrentPageTitleOverride = null,
+    LauncherFrontendRoute? ParentRoute = null);
 
 public sealed record LauncherFrontendNavigationView(
     LauncherFrontendRoute CurrentRoute,

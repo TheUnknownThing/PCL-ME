@@ -48,6 +48,11 @@ internal sealed class InstanceSelectShellLeftPaneViewModel(
     StandardShellLeftPaneDescriptor descriptor)
     : ShellLeftPaneViewModel(shell, descriptor);
 
+internal sealed class TaskManagerShellLeftPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellLeftPaneDescriptor descriptor)
+    : ShellLeftPaneViewModel(shell, descriptor);
+
 internal sealed class DownloadInstallShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)
@@ -194,6 +199,11 @@ internal sealed class InstanceResourceShellRightPaneViewModel(
     : ShellRightPaneViewModel(shell, descriptor);
 
 internal sealed class InstanceSelectShellRightPaneViewModel(
+    FrontendShellViewModel shell,
+    StandardShellRightPaneDescriptor descriptor)
+    : ShellRightPaneViewModel(shell, descriptor);
+
+internal sealed class TaskManagerShellRightPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellRightPaneDescriptor descriptor)
     : ShellRightPaneViewModel(shell, descriptor);

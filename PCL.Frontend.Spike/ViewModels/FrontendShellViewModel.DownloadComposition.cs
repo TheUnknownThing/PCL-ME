@@ -1,5 +1,9 @@
+using Avalonia.Threading;
+using System.Threading;
+using System.Threading.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -16,26 +20,103 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadDownloadComposition(bool includeRemoteState = false)
     {
+        _downloadFavoriteRefreshCts?.Cancel();
+        _downloadFavoriteRefreshCts = null;
+        _downloadFavoriteRefreshVersion++;
+        _isDownloadFavoriteLoading = false;
         _downloadComposition = includeRemoteState
             ? FrontendDownloadCompositionService.Compose(
                 _shellActionService.RuntimePaths,
                 _instanceComposition,
                 _versionSavesComposition)
-            : FrontendDownloadCompositionService.ComposeBootstrap(_instanceComposition);
+            : FrontendDownloadCompositionService.ComposeBootstrap(
+                _shellActionService.RuntimePaths,
+                _instanceComposition);
         _downloadCompositionHasRemoteState = includeRemoteState;
-        _downloadFavoriteTargetOptions = _downloadComposition.Favorites.Targets.Count == 0
-            ? ["默认收藏夹"]
-            : _downloadComposition.Favorites.Targets;
-        _selectedDownloadFavoriteTargetIndex = Math.Clamp(_selectedDownloadFavoriteTargetIndex, 0, _downloadFavoriteTargetOptions.Count - 1);
+        SyncDownloadFavoriteTargets();
     }
 
     private void EnsureDownloadCompositionRemoteStateLoaded()
     {
-        if (_downloadCompositionHasRemoteState)
+        if (_downloadCompositionHasRemoteState || _isDownloadFavoriteLoading)
         {
             return;
         }
 
-        ReloadDownloadComposition(includeRemoteState: true);
+        _downloadFavoriteRefreshCts?.Cancel();
+        var refreshVersion = ++_downloadFavoriteRefreshVersion;
+        var cts = new CancellationTokenSource();
+        _downloadFavoriteRefreshCts = cts;
+        _isDownloadFavoriteLoading = true;
+        _ = LoadDownloadFavoriteStateAsync(refreshVersion, cts.Token);
+    }
+
+    private async Task LoadDownloadFavoriteStateAsync(int refreshVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var favoritesState = await FrontendDownloadCompositionService.LoadFavoritesStateAsync(
+                _shellActionService.RuntimePaths,
+                cancellationToken);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (cancellationToken.IsCancellationRequested || refreshVersion != _downloadFavoriteRefreshVersion)
+                {
+                    return;
+                }
+
+                _downloadFavoriteRefreshCts = null;
+                _isDownloadFavoriteLoading = false;
+                _downloadComposition = _downloadComposition with { Favorites = favoritesState };
+                _downloadCompositionHasRemoteState = true;
+                SyncDownloadFavoriteTargets();
+                if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
+                {
+                    RefreshDownloadFavoriteSurface();
+                }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // Route changes or refreshes can supersede the current favorite metadata request.
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (refreshVersion != _downloadFavoriteRefreshVersion)
+                {
+                    return;
+                }
+
+                _downloadFavoriteRefreshCts = null;
+                _isDownloadFavoriteLoading = false;
+                _downloadComposition = _downloadComposition with
+                {
+                    Favorites = _downloadComposition.Favorites with
+                    {
+                        WarningText = $"收藏夹在线元数据加载失败：{ex.Message}",
+                        ShowWarning = _downloadComposition.Favorites.Sections.Count > 0
+                    }
+                };
+
+                if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
+                {
+                    DownloadFavoriteWarningText = _downloadComposition.Favorites.WarningText;
+                    ShowDownloadFavoriteWarning = _downloadComposition.Favorites.ShowWarning;
+                }
+            });
+        }
+    }
+
+    private void SyncDownloadFavoriteTargets()
+    {
+        _downloadFavoriteTargetOptions = _downloadComposition.Favorites.Targets.Count == 0
+            ? ["默认收藏夹"]
+            : _downloadComposition.Favorites.Targets;
+        _selectedDownloadFavoriteTargetIndex = Math.Clamp(_selectedDownloadFavoriteTargetIndex, 0, _downloadFavoriteTargetOptions.Count - 1);
+        RaisePropertyChanged(nameof(DownloadFavoriteTargetOptions));
+        RaisePropertyChanged(nameof(SelectedDownloadFavoriteTargetIndex));
     }
 }
