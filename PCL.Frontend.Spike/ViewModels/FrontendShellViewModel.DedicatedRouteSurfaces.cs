@@ -525,9 +525,10 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.PersistSharedValue("LaunchFolders", SerializeInstanceSelectionFolders(configuredFolders, runtimePaths));
             }
 
-            _shellActionService.PersistLocalValue("LaunchFolderSelect", StoreLauncherFolderPath(resolvedFolderPath, runtimePaths));
-            RefreshLaunchState();
-            RefreshShell(addedToList
+            RefreshSelectedLauncherFolderSmoothly(
+                StoreLauncherFolderPath(resolvedFolderPath, runtimePaths),
+                resolvedFolderPath,
+                addedToList
                 ? $"已将 {resolvedFolderPath} 添加到实例目录列表并切换过去。"
                 : $"已切换启动目录到 {resolvedFolderPath}。");
         }
@@ -1101,9 +1102,10 @@ internal sealed partial class FrontendShellViewModel
                     return;
                 }
 
-                _shellActionService.PersistLocalValue("LaunchFolderSelect", folder.StoredPath);
-                RefreshLaunchState();
-                RefreshShell($"已切换实例目录到 {folder.Directory}。");
+                RefreshSelectedLauncherFolderSmoothly(
+                    folder.StoredPath,
+                    folder.Directory,
+                    $"已切换实例目录到 {folder.Directory}。");
             }),
             new ActionCommand(() =>
             {
@@ -1549,6 +1551,22 @@ internal sealed partial class FrontendShellViewModel
         var trimmed = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         var name = Path.GetFileName(trimmed);
         return string.IsNullOrWhiteSpace(name) ? trimmed : name;
+    }
+
+    private void RefreshInstanceSelectionRouteMetadata()
+    {
+        if (_currentRoute.Page != LauncherFrontendPageKey.InstanceSelect)
+        {
+            return;
+        }
+
+        if (TryBuildDedicatedGenericRouteMetadata(out var metadata))
+        {
+            Eyebrow = metadata.Eyebrow;
+            Description = metadata.Description;
+            ReplaceSurfaceFactsIfChanged(metadata.Facts);
+            ReplaceSurfaceSectionsIfChanged([]);
+        }
     }
 }
 

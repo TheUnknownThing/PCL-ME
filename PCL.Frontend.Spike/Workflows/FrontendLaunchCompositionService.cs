@@ -16,6 +16,9 @@ namespace PCL.Frontend.Spike.Workflows;
 internal static class FrontendLaunchCompositionService
 {
     private static readonly HttpClient JavaRuntimeHttpClient = new();
+    private static readonly object HostJavaProbeLock = new();
+    private static FrontendJavaRuntimeSummary? CachedHostJavaRuntime;
+    private static bool IsHostJavaProbeCached;
 
     public static FrontendLaunchComposition Compose(
         SpikeCommandOptions options,
@@ -1128,16 +1131,28 @@ internal static class FrontendLaunchCompositionService
 
     private static FrontendJavaRuntimeSummary? ProbeHostJavaRuntime()
     {
-        foreach (var candidate in EnumerateHostJavaRuntimeCandidates())
+        lock (HostJavaProbeLock)
         {
-            var runtime = TryProbeJavaRuntime(candidate);
-            if (runtime is not null)
+            if (IsHostJavaProbeCached)
             {
-                return runtime;
+                return CachedHostJavaRuntime;
             }
-        }
 
-        return null;
+            foreach (var candidate in EnumerateHostJavaRuntimeCandidates())
+            {
+                var runtime = TryProbeJavaRuntime(candidate);
+                if (runtime is not null)
+                {
+                    CachedHostJavaRuntime = runtime;
+                    IsHostJavaProbeCached = true;
+                    return runtime;
+                }
+            }
+
+            IsHostJavaProbeCached = true;
+            CachedHostJavaRuntime = null;
+            return null;
+        }
     }
 
     private static IReadOnlyList<string> EnumerateHostJavaRuntimeCandidates()

@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
 
@@ -11,6 +13,29 @@ namespace PCL.Frontend.Spike.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private int _instanceSelectionRefreshVersion;
+
+    private void RefreshSelectedLauncherFolderSmoothly(
+        string storedFolderPath,
+        string launcherDirectory,
+        string activityMessage)
+    {
+        _shellActionService.PersistLocalValue("LaunchFolderSelect", storedFolderPath);
+
+        var localConfig = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(selectedInstanceName) &&
+            !Directory.Exists(Path.Combine(launcherDirectory, "versions", selectedInstanceName)))
+        {
+            _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
+        }
+
+        RefreshInstanceSelectionSurface();
+        RefreshInstanceSelectionRouteMetadata();
+
+        var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
+        AddActivity("切换实例目录", activityMessage);
+        _ = RefreshSelectedInstanceStateAsync(refreshVersion);
+    }
 
     private void RefreshSelectedInstanceSmoothly(string instanceName)
     {
