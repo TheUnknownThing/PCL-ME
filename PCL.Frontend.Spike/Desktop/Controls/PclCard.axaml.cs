@@ -4,6 +4,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using System.Windows.Input;
+using PCL.Frontend.Spike.Desktop.Animation;
+using PCL.Frontend.Spike.Icons;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
 
@@ -35,7 +37,14 @@ internal sealed partial class PclCard : UserControl
     public static readonly StyledProperty<ICommand?> HeaderCommandProperty =
         AvaloniaProperty.Register<PclCard, ICommand?>(nameof(HeaderCommand));
 
+    public static readonly StyledProperty<bool> IsClosableProperty =
+        AvaloniaProperty.Register<PclCard, bool>(nameof(IsClosable));
+
+    public static readonly StyledProperty<ICommand?> CloseCommandProperty =
+        AvaloniaProperty.Register<PclCard, ICommand?>(nameof(CloseCommand));
+
     private bool _isHovered;
+    private bool _isCloseAnimationPending;
 
     public PclCard()
     {
@@ -44,6 +53,8 @@ internal sealed partial class PclCard : UserControl
         PointerEntered += OnPointerEntered;
         PointerExited += OnPointerExited;
         HeaderButton.Click += OnHeaderButtonClick;
+        CloseButton.IconData = FrontendIconCatalog.Close.Data;
+        CloseButton.Click += OnCloseButtonClick;
         RefreshHeaderLayout();
         RefreshHeaderMetrics();
         RefreshChevronState();
@@ -92,11 +103,25 @@ internal sealed partial class PclCard : UserControl
         set => SetValue(HeaderCommandProperty, value);
     }
 
+    public bool IsClosable
+    {
+        get => GetValue(IsClosableProperty);
+        set => SetValue(IsClosableProperty, value);
+    }
+
+    public ICommand? CloseCommand
+    {
+        get => GetValue(CloseCommandProperty);
+        set => SetValue(CloseCommandProperty, value);
+    }
+
     public bool HasHeader => !string.IsNullOrWhiteSpace(Header);
 
     public bool HasHeaderOverlayContent => HeaderOverlayContent is not null;
 
     public bool IsContentVisible => !ShowChevron || IsChevronExpanded;
+
+    public bool ShowCloseButton => IsClosable && !ShowChevron && CloseCommand is not null;
 
     public Thickness EffectiveContentMargin
     {
@@ -154,6 +179,7 @@ internal sealed partial class PclCard : UserControl
             RefreshHeaderMetrics();
             RefreshChevronState();
             RefreshState();
+            RaisePropertyChanged(ShowCloseButtonProperty, false, ShowCloseButton);
             RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
             RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
         }
@@ -165,9 +191,17 @@ internal sealed partial class PclCard : UserControl
         {
             RefreshState();
         }
+        else if (change.Property == IsClosableProperty || change.Property == CloseCommandProperty)
+        {
+            RaisePropertyChanged(ShowCloseButtonProperty, false, ShowCloseButton);
+        }
         else if (change.Property == HeaderOverlayContentProperty)
         {
             RaisePropertyChanged(HasHeaderOverlayContentProperty, false, HasHeaderOverlayContent);
+        }
+        else if (change.Property == IsVisibleProperty && change.GetNewValue<bool>() && !_isCloseAnimationPending)
+        {
+            ResetCloseVisualState();
         }
     }
 
@@ -182,6 +216,9 @@ internal sealed partial class PclCard : UserControl
 
     private static readonly DirectProperty<PclCard, Thickness> EffectiveContentMarginProperty =
         AvaloniaProperty.RegisterDirect<PclCard, Thickness>(nameof(EffectiveContentMargin), x => x.EffectiveContentMargin);
+
+    private static readonly DirectProperty<PclCard, bool> ShowCloseButtonProperty =
+        AvaloniaProperty.RegisterDirect<PclCard, bool>(nameof(ShowCloseButton), x => x.ShowCloseButton);
 
     private void OnPointerEntered(object? sender, PointerEventArgs e)
     {
@@ -251,6 +288,45 @@ internal sealed partial class PclCard : UserControl
         if (ShowChevron)
         {
             SetCurrentValue(IsChevronExpandedProperty, !IsChevronExpanded);
+        }
+    }
+
+    private async void OnCloseButtonClick(object? sender, RoutedEventArgs e)
+    {
+        if (_isCloseAnimationPending || !ShowCloseButton || CloseCommand?.CanExecute(null) != true)
+        {
+            return;
+        }
+
+        _isCloseAnimationPending = true;
+        try
+        {
+            Motion.SetExitOffsetX(this, 0);
+            Motion.SetExitOffsetY(this, -10);
+            await Motion.PlayExitAsync(this);
+            CloseCommand.Execute(null);
+        }
+        finally
+        {
+            _isCloseAnimationPending = false;
+            if (IsVisible)
+            {
+                ResetCloseVisualState();
+            }
+        }
+    }
+
+    private void ResetCloseVisualState()
+    {
+        Opacity = 1;
+        if (RenderTransform is TranslateTransform transform)
+        {
+            transform.X = 0;
+            transform.Y = 0;
+        }
+        else
+        {
+            RenderTransform = new TranslateTransform();
         }
     }
 }

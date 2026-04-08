@@ -25,6 +25,9 @@ internal sealed partial class PclIconButton : UserControl
     public static readonly StyledProperty<IBrush> IdleBackgroundBrushProperty =
         AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(IdleBackgroundBrush), Brush.Parse("#00FFFFFF"));
 
+    public static readonly StyledProperty<double> IconScaleProperty =
+        AvaloniaProperty.Register<PclIconButton, double>(nameof(IconScale), 1.0);
+
     private bool _isHovered;
     private bool _isPressed;
     private DispatcherTimer? _releaseBounceTimer;
@@ -95,6 +98,12 @@ internal sealed partial class PclIconButton : UserControl
         set => SetValue(IdleBackgroundBrushProperty, value);
     }
 
+    public double IconScale
+    {
+        get => GetValue(IconScaleProperty);
+        set => SetValue(IconScaleProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -106,6 +115,7 @@ internal sealed partial class PclIconButton : UserControl
         else if (change.Property == IconBrushProperty ||
                  change.Property == HoverBackgroundBrushProperty ||
                  change.Property == IdleBackgroundBrushProperty ||
+                 change.Property == IconScaleProperty ||
                  change.Property == IsEnabledProperty)
         {
             RefreshVisualState();
@@ -122,6 +132,7 @@ internal sealed partial class PclIconButton : UserControl
     private void RefreshVisualState()
     {
         ShapeIcon.Fill = IconBrush;
+        ShapeIcon.RenderTransform = new ScaleTransform(IconScale, IconScale);
         PanBack.Background = IsEnabled && _isHovered ? HoverBackgroundBrush : IdleBackgroundBrush;
         PanBack.Opacity = IsEnabled ? 1.0 : 0.2;
         PanBack.RenderTransform = _isPressed ? new ScaleTransform(0.8, 0.8) : new ScaleTransform(1, 1);

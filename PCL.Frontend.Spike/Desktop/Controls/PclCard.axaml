@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animation="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     x:Name="Root">
   <Grid ClipToBounds="False">
     <Border
@@ -60,6 +61,17 @@
             RenderTransformOrigin="0.5,0.5"
             Stretch="Uniform"
             IsVisible="{Binding ShowChevron, ElementName=Root}" />
+
+        <controls:PclIconButton
+            x:Name="CloseButton"
+            Grid.Row="0"
+            Margin="0,6,6,0"
+            HorizontalAlignment="Right"
+            HoverBackgroundBrush="#1AD7DFEA"
+            IconBrush="#8E99A8"
+            IconScale="0.72"
+            VerticalAlignment="Top"
+            IsVisible="{Binding ShowCloseButton, ElementName=Root}" />
 
         <ContentPresenter
             x:Name="HeaderOverlayContentPresenter"

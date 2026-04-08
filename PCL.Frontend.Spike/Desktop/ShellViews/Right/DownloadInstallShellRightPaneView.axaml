@@ -205,9 +205,9 @@
                 <controls:PclCard.HeaderOverlayContent>
                   <Grid
                       Height="30"
-                      Margin="132,5,32,0"
+                      Margin="132,5,15,0"
                       VerticalAlignment="Top"
-                      ColumnDefinitions="Auto,*,Auto">
+                      ColumnDefinitions="Auto,*">
                     <Border
                         Width="18"
                         Height="18"
@@ -230,26 +230,6 @@
                         FontSize="13"
                         Text="{Binding SelectionText}"
                         TextTrimming="CharacterEllipsis" />
-                    <Button
-                        Grid.Column="2"
-                        Width="30"
-                        Height="30"
-                        Padding="0"
-                        Background="#14FFFFFF"
-                        BorderBrush="Transparent"
-                        BorderThickness="0"
-                        Command="{Binding ClearCommand}"
-                        CornerRadius="4"
-                        IsVisible="{Binding CanClear}">
-                      <Path
-                          Width="10"
-                          Height="10"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Data="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
-                          Fill="#7D8897"
-                          Stretch="Uniform" />
-                    </Button>
                   </Grid>
                 </controls:PclCard.HeaderOverlayContent>
                 <controls:PclCard.CardContent>
@@ -325,6 +305,13 @@
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <controls:PclButton
+                        Width="88"
+                        HorizontalAlignment="Right"
+                        IsVisible="{Binding CanClear}"
+                        Command="{Binding ClearCommand}"
+                        Text="清除选择" />
                   </StackPanel>
                 </controls:PclCard.CardContent>
               </controls:PclCard>

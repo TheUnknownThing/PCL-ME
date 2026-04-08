@@ -11,25 +11,20 @@
         <controls:PclCard
             x:Name="LaunchCommunityHintCard"
             Header="社区版提示"
+            IsClosable="True"
+            CloseCommand="{Binding DismissLaunchCommunityHintCommand}"
             ContentMargin="20,12,20,15">
           <controls:PclCard.CardContent>
-            <Grid>
-              <controls:PclIconButton
-                  x:Name="DismissLaunchCommunityHintButton"
-                  Margin="0,-28,-8,0"
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Top" />
-              <StackPanel Spacing="2">
-                <TextBlock
-                    FontSize="13.5"
-                    TextWrapping="Wrap"
-                    Text="{Binding LaunchCommunityHintPrimaryText}" />
-                <TextBlock
-                    FontSize="13.5"
-                    TextWrapping="Wrap"
-                    Text="{Binding LaunchCommunityHintSecondaryText}" />
-              </StackPanel>
-            </Grid>
+            <StackPanel Spacing="2">
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchCommunityHintPrimaryText}" />
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchCommunityHintSecondaryText}" />
+            </StackPanel>
           </controls:PclCard.CardContent>
         </controls:PclCard>
       </Border>

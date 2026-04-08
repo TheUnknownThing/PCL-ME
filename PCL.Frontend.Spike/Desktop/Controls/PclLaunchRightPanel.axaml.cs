@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Spike.Desktop.Animation;
-using PCL.Frontend.Spike.Icons;
 using PCL.Frontend.Spike.ViewModels;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -21,14 +20,11 @@ internal sealed partial class PclLaunchRightPanel : UserControl
     private int _launchHintAnimationVersion;
     private int _routeEnterAnimationVersion;
     private bool _isLaunchHintRendered;
-    private bool _isDismissAnimationPending;
 
     public PclLaunchRightPanel()
     {
         InitializeComponent();
         ConfigureLaunchHintMotion();
-        DismissLaunchCommunityHintButton.IconData = FrontendIconCatalog.Close.Data;
-        DismissLaunchCommunityHintButton.Click += OnDismissLaunchCommunityHintClick;
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += OnAttachedToVisualTree;
     }
@@ -66,29 +62,28 @@ internal sealed partial class PclLaunchRightPanel : UserControl
     {
         var version = ++_launchHintAnimationVersion;
         Dispatcher.UIThread.Post(
-            async () =>
+            () =>
             {
                 if (version != _launchHintAnimationVersion || VisualRoot is null)
                 {
                     return;
                 }
 
-                await SyncLaunchHintAsync(version);
+                SyncLaunchHint();
             },
             DispatcherPriority.Render);
     }
 
-    private async Task SyncLaunchHintAsync(int version)
+    private void SyncLaunchHint()
     {
         var shouldShow = _shell?.ShowLaunchCommunityHint == true;
-        if (shouldShow == _isLaunchHintRendered && !_isDismissAnimationPending)
+        if (shouldShow == _isLaunchHintRendered)
         {
             return;
         }
 
         if (shouldShow)
         {
-            _isDismissAnimationPending = false;
             _isLaunchHintRendered = true;
             LaunchCommunityHintHost.IsVisible = true;
             return;
@@ -97,14 +92,6 @@ internal sealed partial class PclLaunchRightPanel : UserControl
         if (!_isLaunchHintRendered)
         {
             LaunchCommunityHintHost.IsVisible = false;
-            _isDismissAnimationPending = false;
-            return;
-        }
-
-        _isDismissAnimationPending = false;
-        await PlayLaunchHintExitAsync();
-        if (version != _launchHintAnimationVersion)
-        {
             return;
         }
 
@@ -121,11 +108,6 @@ internal sealed partial class PclLaunchRightPanel : UserControl
         Motion.SetOvershootTranslation(LaunchCommunityHintHost, true);
         Motion.SetExitOffsetX(LaunchCommunityHintHost, 0);
         Motion.SetExitOffsetY(LaunchCommunityHintHost, ExitOffsetY);
-    }
-
-    private async Task PlayLaunchHintExitAsync()
-    {
-        await Motion.PlayExitAsync(LaunchCommunityHintHost);
     }
 
     internal void QueueRouteEnterAnimation()
@@ -189,28 +171,5 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
         LaunchCommunityHintHost.Opacity = 1;
         transform.Y = 0;
-    }
-
-    private async void OnDismissLaunchCommunityHintClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        if (_isDismissAnimationPending || _shell is null || !_isLaunchHintRendered)
-        {
-            return;
-        }
-
-        _isDismissAnimationPending = true;
-        var version = ++_launchHintAnimationVersion;
-        await PlayLaunchHintExitAsync();
-        if (version != _launchHintAnimationVersion)
-        {
-            return;
-        }
-
-        _isLaunchHintRendered = false;
-        LaunchCommunityHintHost.IsVisible = false;
-        if (_shell.DismissLaunchCommunityHintCommand.CanExecute(null))
-        {
-            _shell.DismissLaunchCommunityHintCommand.Execute(null);
-        }
     }
 }
