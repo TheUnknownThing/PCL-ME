@@ -7,6 +7,9 @@ namespace PCL.Frontend.Spike.Desktop.Dialogs;
 
 internal sealed partial class PclChoiceDialog : PclAnimatedDialog<string?>
 {
+    private readonly TextBlock _titleTextBlock;
+    private readonly TextBlock _messageTextBlock;
+    private readonly ScrollViewer _messageHost;
     private readonly ListBox _choiceListBox;
     private string? _selectedId;
 
@@ -20,16 +23,19 @@ internal sealed partial class PclChoiceDialog : PclAnimatedDialog<string?>
         InitializeComponent();
         InitializeDialogAnimation();
 
-        TitleTextBlock.Text = title;
-        MessageTextBlock.Text = message;
+        _titleTextBlock = FindRequiredControl<TextBlock>("TitleTextBlock");
+        _messageTextBlock = FindRequiredControl<TextBlock>("MessageTextBlock");
+        _messageHost = FindRequiredControl<ScrollViewer>("MessageHost");
+        _choiceListBox = FindRequiredControl<ListBox>("ChoiceListBox");
+
+        _titleTextBlock.Text = title;
+        _messageTextBlock.Text = message;
         ConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
         ConfirmCommand = new ActionCommand(Confirm, () => !string.IsNullOrWhiteSpace(_selectedId));
         CancelCommand = new ActionCommand(Cancel);
         DataContext = this;
-        MessageHost.IsVisible = !string.IsNullOrWhiteSpace(message);
+        _messageHost.IsVisible = !string.IsNullOrWhiteSpace(message);
 
-        _choiceListBox = this.FindControl<ListBox>("ChoiceListBox")
-            ?? throw new InvalidOperationException("选择对话框未找到列表。");
         _choiceListBox.ItemsSource = options;
         _choiceListBox.DoubleTapped += (_, _) => Confirm();
         _choiceListBox.SelectionChanged += (_, _) => UpdateSelectionState();

@@ -163,6 +163,7 @@ internal sealed partial class FrontendShellViewModel
         _selectedHeadSkinPath = testState.SelectedHeadSkinPath;
 
         ReplaceItems(ToolboxActions, testState.ToolboxActions.Select(CreateToolboxAction));
+        InitializeMinecraftServerQuerySurface();
     }
 
     private void InitializeDownloadInstallSurface()

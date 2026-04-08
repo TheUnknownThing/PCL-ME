@@ -99,27 +99,9 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="瞅眼服务器" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="瞅眼服务器" ContentMargin="15,40,15,15">
         <controls:PclCard.CardContent>
-          <Border
-              MinHeight="168"
-              Padding="18,16"
-              Background="#F8FBFF"
-              BorderBrush="#D5E6FD"
-              BorderThickness="1"
-              CornerRadius="5">
-            <StackPanel VerticalAlignment="Center" Spacing="8">
-              <TextBlock
-                  Foreground="#343D4A"
-                  FontSize="14"
-                  Text="MinecraftServerQuery 仍在占位迁移中" />
-              <TextBlock
-                  Foreground="#4B5968"
-                  FontSize="13"
-                  Text="这里保留原版服务器查询控件的卡位与内容容器尺寸，后续继续按原版组件复制，而不是改成新的工具面板样式。"
-                  TextWrapping="Wrap" />
-            </StackPanel>
-          </Border>
+          <controls:MinecraftServerQuery />
         </controls:PclCard.CardContent>
       </controls:PclCard>
 

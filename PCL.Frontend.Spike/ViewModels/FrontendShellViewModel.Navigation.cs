@@ -1,7 +1,9 @@
+using System.IO;
 using System.Collections.ObjectModel;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
 using PCL.Frontend.Spike.ViewModels.ShellPanes;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -442,16 +444,47 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendShellPlan BuildShellPlan()
     {
-        var request = _shellComposition.NavigationRequest with
-        {
-            CurrentRoute = _currentRoute,
-            BackstackDepth = _routeAncestors.Count,
-            ParentRoute = ResolveParentRoute()
-        };
         return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
             _shellComposition.StartupWorkflowRequest,
             _shellComposition.StartupConsentRequest,
-            request));
+            BuildCurrentNavigationRequest()));
+    }
+
+    private LauncherFrontendNavigationViewRequest BuildCurrentNavigationRequest()
+    {
+        return _shellComposition.NavigationRequest with
+        {
+            CurrentRoute = _currentRoute,
+            BackstackDepth = _routeAncestors.Count,
+            ParentRoute = ResolveParentRoute(),
+            HasRunningTasks = LauncherFrontendRuntimeStateService.HasRunningTasks(),
+            HasGameLogs = HasNavigationGameLogs()
+        };
+    }
+
+    private bool HasNavigationGameLogs()
+    {
+        var runtimePaths = _shellActionService.RuntimePaths;
+        var platformAdapter = _shellActionService.PlatformAdapter;
+
+        return _launchLogBuilder.Length > 0
+            || FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                runtimePaths.LauncherAppDataDirectory,
+                platformAdapter).Any(File.Exists)
+            || FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
+                Path.Combine(runtimePaths.ExecutableDirectory, "PCL"),
+                platformAdapter).Any(File.Exists)
+            || Directory.Exists(Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log"))
+            || Directory.Exists(Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log"));
+    }
+
+    private void RefreshDynamicUtilityEntries()
+    {
+        var navigation = LauncherFrontendNavigationService.BuildView(BuildCurrentNavigationRequest());
+        ReplaceUtilityEntriesIfChanged(navigation.UtilityEntries.Where(entry => entry.IsVisible).ToArray());
+        RaisePropertyChanged(nameof(HasUtilityEntries));
+        RaisePropertyChanged(nameof(ShowBottomRightUtilityEntryButtons));
+        RaisePropertyChanged(nameof(ShowBottomRightExtraButtons));
     }
 
     private void NavigateTo(
@@ -715,6 +748,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowInnerNavigation));
         RaisePropertyChanged(nameof(ShowWindowBranding));
         RaisePropertyChanged(nameof(ShowWindowUtilityButtons));
+        RaisePropertyChanged(nameof(HasRunningTaskManagerTasks));
+        RaisePropertyChanged(nameof(ShowTaskManagerShortcutButton));
+        RaisePropertyChanged(nameof(ShowBottomRightUtilityEntryButtons));
+        RaisePropertyChanged(nameof(ShowBottomRightPromptQueueButton));
+        RaisePropertyChanged(nameof(ShowBottomRightExtraButtons));
         RaisePropertyChanged(nameof(ShowMaximizeButton));
         RaisePropertyChanged(nameof(ShowStandardShellLeftPane));
         RaisePropertyChanged(nameof(StandardShellLeftPaneWidth));
@@ -739,6 +777,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasSurfaceFacts));
         RaisePropertyChanged(nameof(HasSurfaceSections));
         RaisePropertyChanged(nameof(HasUtilityEntries));
+        RaisePropertyChanged(nameof(ShowBottomRightUtilityEntryButtons));
         RaisePropertyChanged(nameof(HasActivityEntries));
         RaisePropertyChanged(nameof(HasInstanceSelectionFolders));
         RaisePropertyChanged(nameof(HasInstanceSelectionSearchBox));

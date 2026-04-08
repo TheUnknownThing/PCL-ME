@@ -190,7 +190,8 @@ public sealed class LauncherFrontendPageContentServiceTest
         Assert.AreEqual("测试", content.Facts.Single(fact => fact.Label == "当前分区").Value);
         Assert.IsTrue(content.Sections.Any(section =>
             section.Title == "下载与皮肤工具" &&
-            section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal))));
+            section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal)) &&
+            section.Lines.Any(line => line.Contains("服务器地址输入框", StringComparison.Ordinal))));
     }
 
     [TestMethod]

@@ -9,6 +9,10 @@ namespace PCL.Frontend.Spike.Desktop.Dialogs;
 
 internal sealed partial class PclConfirmDialog : PclAnimatedDialog<bool>
 {
+    private readonly TextBlock _titleTextBlock;
+    private readonly TextBlock _messageTextBlock;
+    private readonly Border _overlayBorder;
+
     public PclConfirmDialog(
         string title,
         string message,
@@ -18,8 +22,12 @@ internal sealed partial class PclConfirmDialog : PclAnimatedDialog<bool>
         InitializeComponent();
         InitializeDialogAnimation();
 
-        TitleTextBlock.Text = title;
-        MessageTextBlock.Text = message;
+        _titleTextBlock = FindRequiredControl<TextBlock>("TitleTextBlock");
+        _messageTextBlock = FindRequiredControl<TextBlock>("MessageTextBlock");
+        _overlayBorder = FindRequiredControl<Border>("OverlayBorder");
+
+        _titleTextBlock.Text = title;
+        _messageTextBlock.Text = message;
         ConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
         ConfirmColorType = isDanger ? PclButtonColorState.Red : PclButtonColorState.Highlight;
         ConfirmCommand = new ActionCommand(Confirm);
@@ -28,8 +36,8 @@ internal sealed partial class PclConfirmDialog : PclAnimatedDialog<bool>
 
         if (isDanger)
         {
-            TitleTextBlock.Foreground = Brush.Parse("#D33232");
-            OverlayBorder.Background = Brush.Parse("#8C500000");
+            _titleTextBlock.Foreground = Brush.Parse("#D33232");
+            _overlayBorder.Background = Brush.Parse("#8C500000");
         }
 
         KeyDown += OnDialogKeyDown;

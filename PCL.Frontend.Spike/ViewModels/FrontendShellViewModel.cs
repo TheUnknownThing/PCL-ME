@@ -170,6 +170,16 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowWindowUtilityButtons => !IsContextModeRoute;
 
+    public bool HasRunningTaskManagerTasks => LauncherFrontendRuntimeStateService.HasRunningTasks();
+
+    public bool ShowTaskManagerShortcutButton => !ShowWindowUtilityButtons && HasRunningTaskManagerTasks && !ShowTaskManagerSurface;
+
+    public bool ShowBottomRightUtilityEntryButtons => ShowWindowUtilityButtons && HasUtilityEntries;
+
+    public bool ShowBottomRightPromptQueueButton => ShowWindowUtilityButtons;
+
+    public bool ShowBottomRightExtraButtons => ShowWindowUtilityButtons || ShowTaskManagerShortcutButton;
+
     public bool ShowMaximizeButton => false;
 
     public bool HasActivePrompts => ActivePrompts.Count > 0;

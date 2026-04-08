@@ -37,6 +37,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _backCommand;
     private readonly ActionCommand _togglePromptOverlayCommand;
     private readonly ActionCommand _dismissPromptOverlayCommand;
+    private readonly ActionCommand _openTaskManagerShortcutCommand;
     private readonly ActionCommand _launchCommand;
     private readonly ActionCommand _versionSelectCommand;
     private readonly ActionCommand _versionSetupCommand;
@@ -112,6 +113,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _saveOfficialSkinCommand;
     private readonly ActionCommand _previewAchievementCommand;
     private readonly ActionCommand _saveAchievementCommand;
+    private readonly ActionCommand _queryMinecraftServerCommand;
     private readonly ActionCommand _selectHeadSkinCommand;
     private readonly ActionCommand _saveHeadCommand;
     private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
@@ -347,6 +349,10 @@ internal sealed partial class FrontendShellViewModel
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
+        _openTaskManagerShortcutCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
+            "已从右下角快捷入口打开任务中心。",
+            RouteNavigationBehavior.Child));
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
@@ -424,6 +430,7 @@ internal sealed partial class FrontendShellViewModel
         _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
         _previewAchievementCommand = new ActionCommand(PreviewAchievement);
         _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
+        _queryMinecraftServerCommand = new ActionCommand(() => _ = QueryMinecraftServerAsync());
         _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());
         _saveHeadCommand = new ActionCommand(() => _ = SaveHeadAsync());
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);

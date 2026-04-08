@@ -7,6 +7,9 @@ namespace PCL.Frontend.Spike.Desktop.Dialogs;
 
 internal sealed partial class PclTextInputDialog : PclAnimatedDialog<string?>
 {
+    private readonly TextBlock _titleTextBlock;
+    private readonly TextBlock _messageTextBlock;
+    private readonly ScrollViewer _messageHost;
     private readonly TextBox _inputTextBox;
 
     public PclTextInputDialog(
@@ -20,16 +23,19 @@ internal sealed partial class PclTextInputDialog : PclAnimatedDialog<string?>
         InitializeComponent();
         InitializeDialogAnimation();
 
-        TitleTextBlock.Text = title;
-        MessageTextBlock.Text = message;
+        _titleTextBlock = FindRequiredControl<TextBlock>("TitleTextBlock");
+        _messageTextBlock = FindRequiredControl<TextBlock>("MessageTextBlock");
+        _messageHost = FindRequiredControl<ScrollViewer>("MessageHost");
+        _inputTextBox = FindRequiredControl<TextBox>("InputTextBox");
+
+        _titleTextBlock.Text = title;
+        _messageTextBlock.Text = message;
         ConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
         ConfirmCommand = new ActionCommand(Confirm);
         CancelCommand = new ActionCommand(Cancel);
         DataContext = this;
-        MessageHost.IsVisible = !string.IsNullOrWhiteSpace(message);
+        _messageHost.IsVisible = !string.IsNullOrWhiteSpace(message);
 
-        _inputTextBox = this.FindControl<TextBox>("InputTextBox")
-            ?? throw new InvalidOperationException("输入对话框未找到文本框。");
         _inputTextBox.Text = initialText ?? string.Empty;
         _inputTextBox.Watermark = placeholderText ?? string.Empty;
         if (isPassword)
