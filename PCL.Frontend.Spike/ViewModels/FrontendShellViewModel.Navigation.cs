@@ -515,6 +515,8 @@ internal sealed partial class FrontendShellViewModel
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
             { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.ToolsGameLink } =>
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
+            { Page: LauncherFrontendPageKey.InstanceSetup, Subpage: LauncherFrontendSubpageKey.VersionModDisabled } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod),
             _ => route
         };
     }

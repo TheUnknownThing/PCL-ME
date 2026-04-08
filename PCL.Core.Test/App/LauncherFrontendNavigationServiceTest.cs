@@ -69,6 +69,17 @@ public sealed class LauncherFrontendNavigationServiceTest
     }
 
     [TestMethod]
+    public void BuildViewDoesNotExposeStandaloneDisabledModSidebarEntry()
+    {
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod)));
+
+        CollectionAssert.DoesNotContain(
+            view.SidebarEntries.Select(entry => entry.Route.Subpage).ToArray(),
+            LauncherFrontendSubpageKey.VersionModDisabled);
+    }
+
+    [TestMethod]
     public void BuildViewKeepsTopLevelNavigationVisibleWhenHistoryExists()
     {
         var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(

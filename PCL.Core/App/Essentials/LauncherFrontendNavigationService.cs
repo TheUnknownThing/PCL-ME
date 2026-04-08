@@ -165,7 +165,6 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionWorld, "世界", "查看世界与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionScreenshot, "截图", "浏览截图。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionMod, "Mod", "管理启用的 Mod。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionModDisabled, "已禁用 Mod", "管理已禁用的 Mod。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionResourcePack, "资源包", "管理资源包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionShader, "光影包", "管理光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSchematic, "投影", "管理投影与建筑文件。"),
