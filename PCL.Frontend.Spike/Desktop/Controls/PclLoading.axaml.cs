@@ -221,13 +221,13 @@ internal sealed partial class PclLoading : UserControl
     private void UpdateAnimationFrame(TimeSpan elapsed)
     {
         var cycleElapsed = NormalizeCycleElapsed(elapsed);
-        if (cycleElapsed <= StrikeLeadIn)
+        if (cycleElapsed < StrikeLeadIn)
         {
             ResetStrikeVisuals();
             return;
         }
 
-        if (cycleElapsed <= StrikeImpactTime)
+        if (cycleElapsed < StrikeImpactTime)
         {
             var progress = ClampProgress(cycleElapsed - StrikeLeadIn, StrikeDownDuration);
             PickaxeRotateTransform.Angle = RestAngle + (StrikeAngle - RestAngle) * EaseInBack(progress, WeakPower);
@@ -250,7 +250,7 @@ internal sealed partial class PclLoading : UserControl
         var debrisFlightProgress = ClampProgress(postImpactElapsed, DebrisFlightDuration);
         var debrisOffsetProgress = EaseOutFluent(debrisFlightProgress, MiddlePower);
         var debrisOpacity = 1d;
-        if (postImpactElapsed > DebrisFadeDelay)
+        if (postImpactElapsed >= DebrisFadeDelay)
         {
             debrisOpacity = 1d - ClampProgress(postImpactElapsed - DebrisFadeDelay, DebrisFadeDuration);
         }
