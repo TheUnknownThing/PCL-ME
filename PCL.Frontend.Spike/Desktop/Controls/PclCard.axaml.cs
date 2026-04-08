@@ -1,14 +1,20 @@
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
+using PCL.Frontend.Spike.Desktop.Animation;
 using System.Windows.Input;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
 
 internal sealed partial class PclCard : UserControl
 {
+    private static readonly TimeSpan ExpandCollapseDuration = MotionDurations.HintSettle;
     private static readonly Thickness StandardHeaderTextMargin = new(15, 12, 0, 0);
     private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
     private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
@@ -37,6 +43,8 @@ internal sealed partial class PclCard : UserControl
         AvaloniaProperty.Register<PclCard, ICommand?>(nameof(HeaderCommand));
 
     private bool _isHovered;
+    private bool _isContentRenderedVisible = true;
+    private int _contentAnimationVersion;
 
     public PclCard()
     {
@@ -45,11 +53,29 @@ internal sealed partial class PclCard : UserControl
         PointerEntered += OnPointerEntered;
         PointerExited += OnPointerExited;
         HeaderButton.Click += OnHeaderButtonClick;
+        _chevronTransform.Transitions =
+        [
+            new DoubleTransition
+            {
+                Property = RotateTransform.AngleProperty,
+                Duration = MotionDurations.SurfaceState,
+                Easing = new CubicEaseOut()
+            }
+        ];
         ChevronPath.RenderTransform = _chevronTransform;
+        ContentHost.Transitions =
+        [
+            new DoubleTransition
+            {
+                Property = Layoutable.HeightProperty,
+                Duration = ExpandCollapseDuration,
+                Easing = new CubicEaseOut()
+            }
+        ];
         RefreshHeaderLayout();
         RefreshHeaderMetrics();
         RefreshChevronState();
-        RefreshContentState();
+        RefreshContentState(animate: false);
         RefreshState();
     }
 
@@ -99,7 +125,7 @@ internal sealed partial class PclCard : UserControl
 
     public bool HasHeaderOverlayContent => HeaderOverlayContent is not null;
 
-    public bool IsContentVisible => !ShowChevron || IsChevronExpanded;
+    public bool IsContentVisible => !ShowChevron || _isContentRenderedVisible;
 
     public Thickness EffectiveContentMargin
     {
@@ -150,16 +176,14 @@ internal sealed partial class PclCard : UserControl
         {
             RefreshChevronState();
             RefreshContentState();
-            RaisePropertyChanged(IsContentVisibleProperty, !change.GetNewValue<bool>(), IsContentVisible);
         }
         else if (change.Property == ShowChevronProperty)
         {
             RefreshHeaderLayout();
             RefreshHeaderMetrics();
             RefreshChevronState();
-            RefreshContentState();
+            RefreshContentState(animate: false);
             RefreshState();
-            RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
             RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
         }
         else if (change.Property == ContentMarginProperty)
@@ -241,12 +265,125 @@ internal sealed partial class PclCard : UserControl
         _chevronTransform.Angle = IsChevronExpanded ? 180 : 270;
     }
 
-    private void RefreshContentState()
+    private void RefreshContentState(bool animate = true)
     {
-        var isContentVisible = IsContentVisible;
-        ContentHost.IsVisible = isContentVisible;
-        ContentHost.IsHitTestVisible = isContentVisible;
-        ContentHost.Height = isContentVisible ? double.NaN : 0;
+        if (!ShowChevron)
+        {
+            _contentAnimationVersion++;
+            SetContentRenderedVisible(true);
+            ContentHost.Height = double.NaN;
+            return;
+        }
+
+        if (!animate || VisualRoot is null)
+        {
+            _contentAnimationVersion++;
+            SetContentRenderedVisible(IsChevronExpanded);
+            ContentHost.Height = IsChevronExpanded ? double.NaN : 0;
+            return;
+        }
+
+        var version = ++_contentAnimationVersion;
+        if (IsChevronExpanded)
+        {
+            _ = ExpandContentAsync(version);
+        }
+        else
+        {
+            _ = CollapseContentAsync(version);
+        }
+    }
+
+    private void SetContentRenderedVisible(bool isVisible)
+    {
+        var oldValue = IsContentVisible;
+        _isContentRenderedVisible = isVisible;
+        ContentHost.IsVisible = isVisible;
+        ContentHost.IsHitTestVisible = isVisible;
+        var newValue = IsContentVisible;
+        if (oldValue != newValue)
+        {
+            RaisePropertyChanged(IsContentVisibleProperty, oldValue, newValue);
+        }
+    }
+
+    private async Task ExpandContentAsync(int version)
+    {
+        SetContentRenderedVisible(true);
+
+        var startHeight = Math.Max(0, ContentHost.Bounds.Height);
+        var targetHeight = MeasureExpandedHeight();
+        if (targetHeight <= 0)
+        {
+            ContentHost.Height = double.NaN;
+            return;
+        }
+
+        ContentHost.Height = startHeight;
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        if (!IsAnimationCurrent(version) || !IsChevronExpanded)
+        {
+            return;
+        }
+
+        ContentHost.Height = targetHeight;
+        await Task.Delay(ExpandCollapseDuration);
+        if (!IsAnimationCurrent(version) || !IsChevronExpanded)
+        {
+            return;
+        }
+
+        ContentHost.Height = double.NaN;
+    }
+
+    private async Task CollapseContentAsync(int version)
+    {
+        SetContentRenderedVisible(true);
+
+        var startHeight = Math.Max(0, ContentHost.Bounds.Height);
+        if (startHeight <= 0)
+        {
+            ContentHost.Height = 0;
+            SetContentRenderedVisible(false);
+            return;
+        }
+
+        ContentHost.Height = startHeight;
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        if (!IsAnimationCurrent(version) || IsChevronExpanded)
+        {
+            return;
+        }
+
+        ContentHost.Height = 0;
+        await Task.Delay(ExpandCollapseDuration);
+        if (!IsAnimationCurrent(version) || IsChevronExpanded)
+        {
+            return;
+        }
+
+        SetContentRenderedVisible(false);
+    }
+
+    private bool IsAnimationCurrent(int version)
+    {
+        return version == _contentAnimationVersion && VisualRoot is not null;
+    }
+
+    private double MeasureExpandedHeight()
+    {
+        var originalHeight = ContentHost.Height;
+        try
+        {
+            ContentHost.Height = double.NaN;
+            var availableWidth = Math.Max(0, CardBorder.Bounds.Width - CardBorder.BorderThickness.Left - CardBorder.BorderThickness.Right);
+            ContentHost.Measure(new Size(availableWidth > 0 ? availableWidth : double.PositiveInfinity, double.PositiveInfinity));
+            return Math.Max(0, ContentHost.DesiredSize.Height);
+        }
+        finally
+        {
+            ContentHost.Height = originalHeight;
+        }
     }
 
     private void OnHeaderButtonClick(object? sender, RoutedEventArgs e)
