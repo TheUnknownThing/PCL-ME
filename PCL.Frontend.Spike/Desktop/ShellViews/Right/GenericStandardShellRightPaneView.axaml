@@ -579,14 +579,10 @@
               IsVisible="{Binding ShowCommunityProjectLoadingCard}"
               VerticalAlignment="Center">
             <controls:PclCard.CardContent>
-              <StackPanel HorizontalAlignment="Center" Spacing="10">
-                <ProgressBar Width="180" Height="4" IsIndeterminate="True" />
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    Foreground="#4B5968"
-                    FontSize="13"
-                    Text="{Binding CommunityProjectLoadingText}" />
-              </StackPanel>
+              <controls:PclLoading
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Text="{Binding CommunityProjectLoadingText}" />
             </controls:PclCard.CardContent>
           </controls:PclCard>
 

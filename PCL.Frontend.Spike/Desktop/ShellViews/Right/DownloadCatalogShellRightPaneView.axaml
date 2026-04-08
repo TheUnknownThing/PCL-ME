@@ -93,14 +93,10 @@
           HorizontalAlignment="Center"
           IsVisible="{Binding ShowDownloadCatalogLoadingCard}">
         <controls:PclCard.CardContent>
-          <StackPanel HorizontalAlignment="Center" Spacing="10">
-            <ProgressBar Width="180" Height="4" IsIndeterminate="True" />
-            <TextBlock
-                HorizontalAlignment="Center"
-                Foreground="#4B5968"
-                FontSize="13"
-                Text="{Binding DownloadCatalogLoadingText}" />
-          </StackPanel>
+          <controls:PclLoading
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Text="{Binding DownloadCatalogLoadingText}" />
         </controls:PclCard.CardContent>
       </controls:PclCard>
     </StackPanel>
