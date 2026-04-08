@@ -435,6 +435,7 @@
         <controls:PclCard.CardContent>
           <controls:PclLoading
               HorizontalAlignment="Center"
+              IndicatorBrush="{DynamicResource ColorBrush2}"
               VerticalAlignment="Center"
               Text="{Binding DownloadResourceLoadingText}" />
         </controls:PclCard.CardContent>
