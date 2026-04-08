@@ -4,6 +4,7 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Frontend.Spike.Desktop.Animation;
 using PCL.Frontend.Spike.Icons;
 using PCL.Frontend.Spike.ViewModels;
 
@@ -11,24 +12,23 @@ namespace PCL.Frontend.Spike.Desktop.Controls;
 
 internal sealed partial class PclLaunchRightPanel : UserControl
 {
-    private static readonly TimeSpan EnterOpacityDuration = TimeSpan.FromMilliseconds(170);
-    private static readonly TimeSpan EnterTranslateDuration = TimeSpan.FromMilliseconds(280);
-    private static readonly TimeSpan ExitOpacityDuration = TimeSpan.FromMilliseconds(130);
-    private static readonly TimeSpan ExitTranslateDuration = TimeSpan.FromMilliseconds(170);
-    private static readonly Easing EnterOpacityEasing = new CubicEaseOut();
-    private static readonly Easing EnterTranslateEasing = new BackEaseOut();
-    private static readonly Easing ExitEasing = new CubicEaseOut();
+    private static readonly TimeSpan RouteEnterOpacityDuration = TimeSpan.FromMilliseconds(170);
+    private static readonly TimeSpan RouteEnterTranslateDuration = TimeSpan.FromMilliseconds(280);
+    private static readonly Easing RouteEnterOpacityEasing = new CubicEaseOut();
+    private static readonly Easing RouteEnterTranslateEasing = new BackEaseOut();
     private const double EnterOffsetY = -16d;
     private const double ExitOffsetY = -10d;
 
     private FrontendShellViewModel? _shell;
     private int _launchHintAnimationVersion;
+    private int _routeEnterAnimationVersion;
     private bool _isLaunchHintRendered;
     private bool _isDismissAnimationPending;
 
     public PclLaunchRightPanel()
     {
         InitializeComponent();
+        ConfigureLaunchHintMotion();
         DismissLaunchCommunityHintButton.IconData = FrontendIconCatalog.Close.Data;
         DismissLaunchCommunityHintButton.Click += OnDismissLaunchCommunityHintClick;
         DataContextChanged += OnDataContextChanged;
@@ -93,14 +93,6 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             _isDismissAnimationPending = false;
             _isLaunchHintRendered = true;
             LaunchCommunityHintHost.IsVisible = true;
-            PrimeLaunchHintHost();
-            await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-            if (version != _launchHintAnimationVersion || !_isLaunchHintRendered)
-            {
-                return;
-            }
-
-            PlayLaunchHintEnter();
             return;
         }
 
@@ -120,31 +112,61 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
         _isLaunchHintRendered = false;
         LaunchCommunityHintHost.IsVisible = false;
-        PrimeLaunchHintHost();
     }
 
-    private void PrimeLaunchHintHost()
+    private void ConfigureLaunchHintMotion()
+    {
+        Motion.SetAnimateOnVisible(LaunchCommunityHintHost, true);
+        Motion.SetInitialOpacity(LaunchCommunityHintHost, 0);
+        Motion.SetOffsetX(LaunchCommunityHintHost, 0);
+        Motion.SetOffsetY(LaunchCommunityHintHost, EnterOffsetY);
+        Motion.SetOvershootTranslation(LaunchCommunityHintHost, true);
+        Motion.SetExitOffsetX(LaunchCommunityHintHost, 0);
+        Motion.SetExitOffsetY(LaunchCommunityHintHost, ExitOffsetY);
+    }
+
+    private async Task PlayLaunchHintExitAsync()
+    {
+        await Motion.PlayExitAsync(LaunchCommunityHintHost);
+    }
+
+    internal void QueueRouteEnterAnimation()
+    {
+        if (!_isLaunchHintRendered)
+        {
+            return;
+        }
+
+        var version = ++_routeEnterAnimationVersion;
+        Dispatcher.UIThread.Post(
+            async () =>
+            {
+                if (version != _routeEnterAnimationVersion || VisualRoot is null || !_isLaunchHintRendered)
+                {
+                    return;
+                }
+
+                await PlayRouteEnterAnimationAsync(version);
+            },
+            DispatcherPriority.Loaded);
+    }
+
+    private async Task PlayRouteEnterAnimationAsync(int version)
     {
         LaunchCommunityHintHost.Transitions = null;
         LaunchCommunityHintHost.Opacity = 0;
         LaunchCommunityHintHost.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
 
-        if (LaunchCommunityHintHost.RenderTransform is not TranslateTransform transform)
-        {
-            transform = new TranslateTransform();
-            LaunchCommunityHintHost.RenderTransform = transform;
-        }
-
+        var transform = LaunchCommunityHintHost.RenderTransform as TranslateTransform ?? new TranslateTransform();
         transform.Transitions = null;
+        transform.X = 0;
         transform.Y = EnterOffsetY;
-    }
+        LaunchCommunityHintHost.RenderTransform = transform;
 
-    private void PlayLaunchHintEnter()
-    {
-        if (LaunchCommunityHintHost.RenderTransform is not TranslateTransform transform)
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        if (version != _routeEnterAnimationVersion || !_isLaunchHintRendered || !LaunchCommunityHintHost.IsVisible)
         {
-            transform = new TranslateTransform(0, EnterOffsetY);
-            LaunchCommunityHintHost.RenderTransform = transform;
+            return;
         }
 
         LaunchCommunityHintHost.Transitions =
@@ -152,8 +174,8 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             new DoubleTransition
             {
                 Property = Visual.OpacityProperty,
-                Duration = EnterOpacityDuration,
-                Easing = EnterOpacityEasing
+                Duration = RouteEnterOpacityDuration,
+                Easing = RouteEnterOpacityEasing
             }
         ];
 
@@ -162,46 +184,13 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             new DoubleTransition
             {
                 Property = TranslateTransform.YProperty,
-                Duration = EnterTranslateDuration,
-                Easing = EnterTranslateEasing
+                Duration = RouteEnterTranslateDuration,
+                Easing = RouteEnterTranslateEasing
             }
         ];
 
         LaunchCommunityHintHost.Opacity = 1;
         transform.Y = 0;
-    }
-
-    private async Task PlayLaunchHintExitAsync()
-    {
-        if (LaunchCommunityHintHost.RenderTransform is not TranslateTransform transform)
-        {
-            transform = new TranslateTransform();
-            LaunchCommunityHintHost.RenderTransform = transform;
-        }
-
-        LaunchCommunityHintHost.Transitions =
-        [
-            new DoubleTransition
-            {
-                Property = Visual.OpacityProperty,
-                Duration = ExitOpacityDuration,
-                Easing = ExitEasing
-            }
-        ];
-
-        transform.Transitions =
-        [
-            new DoubleTransition
-            {
-                Property = TranslateTransform.YProperty,
-                Duration = ExitTranslateDuration,
-                Easing = ExitEasing
-            }
-        ];
-
-        LaunchCommunityHintHost.Opacity = 0;
-        transform.Y = ExitOffsetY;
-        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(ExitOpacityDuration.TotalMilliseconds, ExitTranslateDuration.TotalMilliseconds)));
     }
 
     private async void OnDismissLaunchCommunityHintClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -221,7 +210,6 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
         _isLaunchHintRendered = false;
         LaunchCommunityHintHost.IsVisible = false;
-        PrimeLaunchHintHost();
         if (_shell.DismissLaunchCommunityHintCommand.CanExecute(null))
         {
             _shell.DismissLaunchCommunityHintCommand.Execute(null);

@@ -299,7 +299,7 @@
 
               <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
                 <Grid x:Name="LaunchRightContentHost">
-                  <controls:PclLaunchRightPanel />
+                  <controls:PclLaunchRightPanel x:Name="LaunchRightPanel" />
                 </Grid>
               </Border>
             </Grid>
