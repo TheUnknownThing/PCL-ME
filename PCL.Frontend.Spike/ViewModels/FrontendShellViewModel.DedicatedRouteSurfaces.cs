@@ -481,8 +481,12 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        _shellActionService.PersistLocalValue("LaunchInstanceSelect", entry.Name);
-        RefreshLaunchState();
+        if (!_instanceComposition.Selection.HasSelection ||
+            !string.Equals(_instanceComposition.Selection.InstanceName, entry.Name, System.StringComparison.OrdinalIgnoreCase))
+        {
+            RefreshSelectedInstanceSmoothly(entry.Name);
+        }
+
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
             $"已切换启动实例到 {entry.Name} 并返回启动页。");
