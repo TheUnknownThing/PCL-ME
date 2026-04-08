@@ -670,9 +670,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var icon = ResolveInstanceSelectionBitmap(entry);
         var displayTags = BuildInstanceSelectionDisplayTags(entry);
-        var subtitle = string.IsNullOrWhiteSpace(entry.CustomInfo)
-            ? entry.Subtitle
-            : entry.CustomInfo;
+        var subtitle = BuildInstanceSelectionSubtitle(entry, displayTags);
 
         return new InstanceSelectEntryViewModel(
             entry.Name,
@@ -772,6 +770,30 @@ internal sealed partial class FrontendShellViewModel
         return tags;
     }
 
+    private static string BuildInstanceSelectionSubtitle(InstanceSelectionSnapshot entry, IReadOnlyList<string> displayTags)
+    {
+        if (!string.IsNullOrWhiteSpace(entry.CustomInfo))
+        {
+            return entry.CustomInfo!;
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Subtitle))
+        {
+            var subtitle = entry.Subtitle
+                .Replace("Minecraft ", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("•", " ", StringComparison.Ordinal)
+                .Trim();
+            foreach (var tag in displayTags)
+            {
+                subtitle = subtitle.Replace(tag, string.Empty, StringComparison.CurrentCultureIgnoreCase).Trim();
+            }
+
+            return string.Join(" ", subtitle.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        return string.Empty;
+    }
+
     private static Bitmap? ResolveInstanceSelectionBitmap(InstanceSelectionSnapshot entry)
     {
         if (entry.IsCustomLogo)
@@ -837,15 +859,21 @@ internal sealed partial class FrontendShellViewModel
 
         return entry.DisplayType switch
         {
-            2 => "api",
             3 => "hidden",
             4 => "rarely-used",
+            _ when !string.IsNullOrWhiteSpace(entry.LoaderLabel) => $"loader:{NormalizeInstanceSelectionLoader(entry.LoaderLabel!)}",
+            2 => "api",
             _ => "normal"
         };
     }
 
     private static string ResolveInstanceSelectionGroupTitle(string key, IReadOnlyList<InstanceSelectionSnapshot> entries)
     {
+        if (key.StartsWith("loader:", StringComparison.Ordinal))
+        {
+            return ResolveSingleLoaderInstanceGroupTitle(key["loader:".Length..]);
+        }
+
         return key switch
         {
             "api" => ResolveApiInstanceGroupTitle(entries),
@@ -853,6 +881,36 @@ internal sealed partial class FrontendShellViewModel
             "hidden" => "隐藏的实例",
             "rarely-used" => "不常用实例",
             _ => "常规实例"
+        };
+    }
+
+    private static string ResolveSingleLoaderInstanceGroupTitle(string loaderKey)
+    {
+        return loaderKey switch
+        {
+            "forge" => "Forge 实例",
+            "neoforge" => "NeoForge 实例",
+            "cleanroom" => "Cleanroom 实例",
+            "labymod" => "LabyMod 实例",
+            "liteloader" => "LiteLoader 实例",
+            "quilt" => "Quilt 实例",
+            "legacy-fabric" => "Legacy Fabric 实例",
+            _ => "Fabric 实例"
+        };
+    }
+
+    private static string NormalizeInstanceSelectionLoader(string loaderLabel)
+    {
+        return loaderLabel.Trim() switch
+        {
+            "Forge" => "forge",
+            "NeoForge" => "neoforge",
+            "Cleanroom" => "cleanroom",
+            "LabyMod" => "labymod",
+            "LiteLoader" => "liteloader",
+            "Quilt" => "quilt",
+            "Legacy Fabric" => "legacy-fabric",
+            _ => "fabric"
         };
     }
 
@@ -1237,6 +1295,8 @@ internal sealed class InstanceSelectEntryViewModel(
     public bool HasSubtitle => !string.IsNullOrWhiteSpace(Subtitle);
 
     public bool HasDetail => !string.IsNullOrWhiteSpace(Detail);
+
+    public bool HasMetadataContent => HasTags || HasSubtitle;
 
     public bool IsSelected { get; } = isSelected;
 
