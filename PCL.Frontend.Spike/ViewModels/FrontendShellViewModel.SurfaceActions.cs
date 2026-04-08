@@ -264,6 +264,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedHeadSkinPath));
         RaisePropertyChanged(nameof(HasSelectedHeadSkin));
         RaisePropertyChanged(nameof(HeadPreviewSize));
+        ResetMinecraftServerQuerySurface();
         AddActivity("刷新测试工具页", "测试页表单与工具按钮已从当前启动器配置重新加载。");
     }
 

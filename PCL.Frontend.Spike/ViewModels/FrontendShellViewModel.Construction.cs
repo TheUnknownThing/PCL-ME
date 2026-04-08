@@ -112,6 +112,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _saveOfficialSkinCommand;
     private readonly ActionCommand _previewAchievementCommand;
     private readonly ActionCommand _saveAchievementCommand;
+    private readonly ActionCommand _queryMinecraftServerCommand;
     private readonly ActionCommand _selectHeadSkinCommand;
     private readonly ActionCommand _saveHeadCommand;
     private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
@@ -424,6 +425,7 @@ internal sealed partial class FrontendShellViewModel
         _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
         _previewAchievementCommand = new ActionCommand(PreviewAchievement);
         _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
+        _queryMinecraftServerCommand = new ActionCommand(() => _ = QueryMinecraftServerAsync());
         _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());
         _saveHeadCommand = new ActionCommand(() => _ = SaveHeadAsync());
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
