@@ -841,7 +841,9 @@ internal sealed partial class FrontendShellViewModel
                     SpikeHintBus.Show(message, SpikeHintTheme.Error);
                 });
             }));
-        AddActivity($"开始安装整合包: {entry.Title}", $"{instanceName} • {archivePath}");
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
+            $"{taskTitle} 已加入任务中心。");
     }
 
     private async Task<string?> PromptForCommunityProjectInstanceNameAsync(string versionsDirectory)

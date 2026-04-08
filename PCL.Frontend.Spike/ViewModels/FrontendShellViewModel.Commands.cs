@@ -10,6 +10,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand DismissPromptOverlayCommand => _dismissPromptOverlayCommand;
 
+    public ActionCommand OpenTaskManagerShortcutCommand => _openTaskManagerShortcutCommand;
+
     public ActionCommand LaunchCommand => _launchCommand;
 
     public ActionCommand VersionSelectCommand => _versionSelectCommand;

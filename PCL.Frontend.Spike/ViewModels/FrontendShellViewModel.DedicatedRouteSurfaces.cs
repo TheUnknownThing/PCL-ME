@@ -402,6 +402,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(TaskManagerDownloadSpeedText));
         RaisePropertyChanged(nameof(TaskManagerRemainingFilesText));
         RaisePropertyChanged(nameof(TaskManagerSummary));
+        RaisePropertyChanged(nameof(HasRunningTaskManagerTasks));
+        RaisePropertyChanged(nameof(ShowTaskManagerShortcutButton));
+        RaisePropertyChanged(nameof(ShowBottomRightExtraButtons));
+        RefreshDynamicUtilityEntries();
     }
 
     private void RefreshGameLogSurface()
@@ -449,6 +453,7 @@ internal sealed partial class FrontendShellViewModel
         RaiseGameLogSurfaceProperties();
         RaisePropertyChanged(nameof(HasGameLogFiles));
         RaisePropertyChanged(nameof(HasNoGameLogFiles));
+        RefreshDynamicUtilityEntries();
     }
 
     private void SelectInstanceForLaunch(string instanceName)
