@@ -22,7 +22,6 @@ Public Module ModMainWindowStartupThreadShell
         RunInNewThread(
             Sub()
                 Try
-                    DlClientListMojangLoader.Start(1) 'PCL 会同时根据这里的加载结果决定是否使用官方源进行下载
                     onApplyMilestone?.Invoke()
                     ServerLoader.Start(1)
                     If onClearTaskTemp IsNot Nothing Then
