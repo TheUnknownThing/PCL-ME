@@ -694,53 +694,61 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DownloadCommunityProjectReleaseAsync(FrontendCommunityProjectReleaseEntry entry)
     {
-        if (string.IsNullOrWhiteSpace(entry.Target))
-        {
-            AddActivity($"下载资源文件: {entry.Title}", "当前版本没有可用的下载地址。");
-            return;
-        }
-
-        if (ShouldAutoInstallCommunityProjectRelease(entry))
-        {
-            await DownloadAndInstallCommunityProjectReleaseAsync(entry);
-            return;
-        }
-
-        var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
-        var extension = Path.GetExtension(suggestedFileName);
-        var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
-        var suggestedStartFolder = ResolveCommunityProjectDownloadStartDirectory();
-
-        string? targetPath;
         try
         {
-            targetPath = await _shellActionService.PickSaveFileAsync(
-                "选择保存位置",
-                suggestedFileName,
-                "资源文件",
-                suggestedStartFolder,
-                patterns);
+            if (string.IsNullOrWhiteSpace(entry.Target))
+            {
+                AddActivity($"下载资源文件: {entry.Title}", "当前版本没有可用的下载地址。");
+                return;
+            }
+
+            if (ShouldAutoInstallCommunityProjectRelease(entry))
+            {
+                await DownloadAndInstallCommunityProjectReleaseAsync(entry);
+                return;
+            }
+
+            var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+            var extension = Path.GetExtension(suggestedFileName);
+            var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
+            var suggestedStartFolder = ResolveCommunityProjectDownloadStartDirectory();
+
+            string? targetPath;
+            try
+            {
+                targetPath = await _shellActionService.PickSaveFileAsync(
+                    "选择保存位置",
+                    suggestedFileName,
+                    "资源文件",
+                    suggestedStartFolder,
+                    patterns);
+            }
+            catch (Exception ex)
+            {
+                AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(targetPath))
+            {
+                AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
+                return;
+            }
+
+            TaskCenter.Register(new FrontendManagedFileDownloadTask(
+                $"下载资源文件：{Path.GetFileNameWithoutExtension(targetPath)}",
+                entry.Target,
+                targetPath,
+                onStarted: filePath => SpikeHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", SpikeHintTheme.Info),
+                onCompleted: filePath => SpikeHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", SpikeHintTheme.Success),
+                onFailed: message => SpikeHintBus.Show(message, SpikeHintTheme.Error)));
+            AddActivity($"开始下载资源文件: {entry.Title}", targetPath);
         }
         catch (Exception ex)
         {
-            AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
-            return;
+            AddActivity($"下载资源文件失败: {entry.Title}", ex.Message);
+            SpikeHintBus.Show(ex.Message, SpikeHintTheme.Error);
         }
-
-        if (string.IsNullOrWhiteSpace(targetPath))
-        {
-            AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
-            return;
-        }
-
-        TaskCenter.Register(new FrontendManagedFileDownloadTask(
-            $"下载资源文件：{Path.GetFileNameWithoutExtension(targetPath)}",
-            entry.Target,
-            targetPath,
-            onStarted: filePath => SpikeHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", SpikeHintTheme.Info),
-            onCompleted: filePath => SpikeHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", SpikeHintTheme.Success),
-            onFailed: message => SpikeHintBus.Show(message, SpikeHintTheme.Error)));
-        AddActivity($"开始下载资源文件: {entry.Title}", targetPath);
     }
 
     private bool ShouldAutoInstallCommunityProjectRelease(FrontendCommunityProjectReleaseEntry entry)

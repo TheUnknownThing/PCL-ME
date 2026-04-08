@@ -580,7 +580,13 @@ internal static class FrontendCommunityProjectService
             loaders);
         var downloads = GetInt(file, "downloadCount");
         var publishedAt = ParseDateTimeOffset(file["fileDate"]);
+        var fileName = GetString(file, "fileName");
+        var fileId = GetInt(file, "id");
         var downloadUrl = GetString(file, "downloadUrl");
+        if (string.IsNullOrWhiteSpace(downloadUrl) && fileId > 0 && !string.IsNullOrWhiteSpace(fileName))
+        {
+            downloadUrl = BuildCurseForgeMediaUrl(fileId, fileName);
+        }
         var meta = $"发布 {FormatDateLabel(publishedAt)}"
                    + (downloads > 0 ? $" • {FormatCompactCount(downloads)} 下载" : string.Empty);
         return new FrontendCommunityProjectReleaseEntry(
@@ -589,11 +595,16 @@ internal static class FrontendCommunityProjectService
             meta,
             string.IsNullOrWhiteSpace(downloadUrl) ? (string.IsNullOrWhiteSpace(website) ? "查看详情" : "打开项目页") : "打开下载",
             downloadUrl ?? website,
-            GetString(file, "fileName"),
+            fileName,
             !string.IsNullOrWhiteSpace(downloadUrl),
             gameVersions,
             loaders,
             publishedAt?.ToUnixTimeSeconds() ?? 0);
+    }
+
+    private static string BuildCurseForgeMediaUrl(int fileId, string fileName)
+    {
+        return $"https://mediafiles.forgecdn.net/files/{fileId / 1000}/{fileId % 1000:D3}/{Uri.EscapeDataString(fileName)}";
     }
 
     private static IReadOnlyList<FrontendDownloadCatalogEntry> BuildModrinthLinkEntries(JsonObject project, string? website)
