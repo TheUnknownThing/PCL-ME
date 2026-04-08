@@ -1061,7 +1061,7 @@ public static class LauncherFrontendPageContentService
                     [
                         "下载自定义文件卡继续保留下载地址、User-Agent、保存目录和文件名四行表单。",
                         "正版皮肤下载与头像生成器也继续按原页面顺序保留在后续卡片中。",
-                        "瞅眼服务器控件可以先保留卡位，等专属组件迁移时再替换成真正内容。"
+                        "瞅眼服务器卡已经重新接回原版的服务器地址输入框、查询按钮与结果面板结构。"
                     ]),
                 new LauncherFrontendPageSection(
                     "生成器",
