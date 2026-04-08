@@ -147,4 +147,5 @@ internal sealed record FrontendInstanceResourceEntry(
     string Summary,
     string Meta,
     string Path,
-    string IconName);
+    string IconName,
+    bool IsEnabled = true);

@@ -4,17 +4,34 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections">
-  <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding HasInstanceResourceEntries}">
+  <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding ShowInstanceResourceContent}">
     <controls:PclCard.CardContent>
-      <Grid RowDefinitions="Auto,12,Auto,12,*">
-        <WrapPanel Grid.Row="0" HorizontalAlignment="Left">
-          <controls:PclButton MinWidth="72" Margin="0,0,8,8" ColorType="Highlight" Text="全部" />
-          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="已启用" />
-          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="已禁用" />
-          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="可更新" />
-          <controls:PclButton MinWidth="72" Margin="0,0,8,8" Text="错误" />
-          <controls:PclButton MinWidth="72" Margin="0,0,8,8" IsVisible="{Binding ShowInstanceResourceCheckButton}" Text="重复" />
-        </WrapPanel>
+      <Grid RowDefinitions="Auto,12,Auto,12,Auto">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" IsVisible="{Binding ShowInstanceResourceFilterBar}">
+          <controls:PclRadioButton
+              Margin="2,0"
+              Command="{Binding SetInstanceResourceAllFilterCommand}"
+              IsChecked="{Binding IsInstanceResourceFilterAllSelected}"
+              Text="{Binding InstanceResourceFilterAllText}" />
+          <controls:PclRadioButton
+              Margin="2,0"
+              Command="{Binding SetInstanceResourceEnabledFilterCommand}"
+              IsChecked="{Binding IsInstanceResourceFilterEnabledSelected}"
+              IsVisible="{Binding ShowInstanceResourceEnabledFilter}"
+              Text="{Binding InstanceResourceFilterEnabledText}" />
+          <controls:PclRadioButton
+              Margin="2,0"
+              Command="{Binding SetInstanceResourceDisabledFilterCommand}"
+              IsChecked="{Binding IsInstanceResourceFilterDisabledSelected}"
+              IsVisible="{Binding ShowInstanceResourceDisabledFilter}"
+              Text="{Binding InstanceResourceFilterDisabledText}" />
+          <controls:PclRadioButton
+              Margin="2,0"
+              Command="{Binding SetInstanceResourceDuplicateFilterCommand}"
+              IsChecked="{Binding IsInstanceResourceFilterDuplicateSelected}"
+              IsVisible="{Binding ShowInstanceResourceDuplicateFilter}"
+              Text="{Binding InstanceResourceFilterDuplicateText}" />
+        </StackPanel>
 
         <controls:PclButton
             Grid.Row="2"
@@ -22,36 +39,16 @@
             HorizontalAlignment="Right"
             Text="排序：文件名" />
 
-        <ListBox
+        <ItemsControl
             Grid.Row="4"
-            MinHeight="0"
-            Background="Transparent"
-            BorderThickness="0"
             ItemsSource="{Binding InstanceResourceEntries}"
             Padding="0">
-          <ListBox.Styles>
-            <Style Selector="ListBoxItem">
-              <Setter Property="Padding" Value="0" />
-              <Setter Property="Margin" Value="0,0,0,12" />
-              <Setter Property="Background" Value="Transparent" />
-              <Setter Property="BorderThickness" Value="0" />
-              <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            </Style>
-            <Style Selector="ListBoxItem:selected">
-              <Setter Property="Background" Value="Transparent" />
-              <Setter Property="BorderBrush" Value="Transparent" />
-            </Style>
-            <Style Selector="ListBoxItem:pointerover">
-              <Setter Property="Background" Value="Transparent" />
-              <Setter Property="BorderBrush" Value="Transparent" />
-            </Style>
-          </ListBox.Styles>
-          <ListBox.ItemTemplate>
+          <ItemsControl.ItemTemplate>
             <DataTemplate>
               <sections:ResourceEntryCardView />
             </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
       </Grid>
     </controls:PclCard.CardContent>
   </controls:PclCard>
