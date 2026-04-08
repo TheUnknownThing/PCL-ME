@@ -12,15 +12,15 @@ internal static class FrontendSetupFeedbackService
 
     private static readonly FeedbackSectionDefinition[] SectionDefinitions =
     [
-        new("processing", "正在处理", false, 6820804544),
-        new("waiting-process", "等待处理", false, 6820804546),
-        new("wait", "等待", false, 8743070786),
-        new("pause", "暂停", false, 8558220235),
-        new("upnext", "在即", false, 8550609020),
-        new("completed", "已完成", true, 6820804547),
-        new("decline", "已拒绝", true, 6820804539),
-        new("ignored", "已忽略", true, 8064650117),
-        new("duplicate", "重复", true, 6820804541)
+        new("processing", "正在处理", true, 6820804544),
+        new("waiting-process", "等待处理", true, 6820804546),
+        new("wait", "等待", true, 8743070786),
+        new("pause", "暂停", true, 8558220235),
+        new("upnext", "在即", true, 8550609020),
+        new("completed", "已完成", false, 6820804547),
+        new("decline", "已拒绝", false, 6820804539),
+        new("ignored", "已忽略", false, 8064650117),
+        new("duplicate", "重复", false, 6820804541)
     ];
 
     public static async Task<FrontendSetupFeedbackSnapshot> QueryAsync(CancellationToken cancellationToken = default)

@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
-  <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,40,18,15">
+  <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="20,40,18,15">
     <controls:PclCard.HeaderOverlayContent>
       <Grid
           Height="30"

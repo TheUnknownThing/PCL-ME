@@ -123,7 +123,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="自定义成就图片生成器（仅支持英文）" ShowChevron="True" IsChevronExpanded="True" ContentMargin="25,30,25,15">
+      <controls:PclCard Header="自定义成就图片生成器（仅支持英文）" ShowChevron="True" IsChevronExpanded="False" ContentMargin="25,30,25,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28,10,28,10,28">
@@ -193,7 +193,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="True" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="False" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <Grid ColumnDefinitions="Auto,*">

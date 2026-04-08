@@ -57,7 +57,7 @@
       <ItemsControl ItemsSource="{Binding DownloadFavoriteSections}" IsVisible="{Binding HasDownloadFavoriteSections}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="True" ContentMargin="12,38,12,12">
+            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="12,38,12,12">
               <controls:PclCard.CardContent>
                 <ItemsControl ItemsSource="{Binding Items}">
                   <ItemsControl.ItemTemplate>
