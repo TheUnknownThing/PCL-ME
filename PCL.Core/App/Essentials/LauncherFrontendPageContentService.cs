@@ -757,17 +757,19 @@ public static class LauncherFrontendPageContentService
         LauncherFrontendPageContentRequest request,
         int promptTotal)
     {
+        var routeTitle = request.Navigation.CurrentPage.SidebarItemTitle ?? request.Navigation.CurrentPage.Title;
+
         return CreateContent(
-            "实例安装页面",
+            "实例修改页面",
             "修改 Minecraft 版本并选择需要的组件。",
             BuildFacts(
-                ("当前分区", "安装"),
+                ("当前分区", routeTitle),
                 ("导航项", request.Navigation.SidebarEntries.Count.ToString()),
                 ("提示数", promptTotal.ToString()),
                 ("页面类型", request.Navigation.CurrentPage.Kind.ToString())),
             Section(
-                "安装",
-                "安装项",
+                routeTitle,
+                "修改项",
                 "可修改 Minecraft 版本并选择需要的组件。",
                 "开始操作前请确认组件兼容性。"));
     }

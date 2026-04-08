@@ -80,6 +80,27 @@ public sealed class LauncherFrontendNavigationServiceTest
     }
 
     [TestMethod]
+    public void BuildViewPlacesModifyPageWithCoreInstanceEntries()
+    {
+        var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionInstall)));
+
+        Assert.AreEqual("修改", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                LauncherFrontendSubpageKey.VersionOverall,
+                LauncherFrontendSubpageKey.VersionSetup,
+                LauncherFrontendSubpageKey.VersionInstall,
+                LauncherFrontendSubpageKey.VersionExport
+            },
+            view.SidebarEntries
+                .Take(4)
+                .Select(entry => entry.Route.Subpage)
+                .ToArray());
+    }
+
+    [TestMethod]
     public void BuildViewKeepsTopLevelNavigationVisibleWhenHistoryExists()
     {
         var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(

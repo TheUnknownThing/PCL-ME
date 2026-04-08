@@ -161,6 +161,7 @@ public static class LauncherFrontendNavigationService
                     [
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionOverall, "概览", "实例总览。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSetup, "设置", "实例专属设置。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionInstall, "修改", "修改 Minecraft 版本与组件。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionExport, "导出", "导出实例或整合包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionWorld, "世界", "查看世界与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionScreenshot, "截图", "浏览截图。"),
@@ -168,7 +169,6 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionResourcePack, "资源包", "管理资源包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionShader, "光影包", "管理光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSchematic, "投影", "管理投影与建筑文件。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionInstall, "安装", "安装缺失组件。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionServer, "服务器", "管理服务器入口。")
                     ]),
                 new LauncherFrontendSidebarGroup(

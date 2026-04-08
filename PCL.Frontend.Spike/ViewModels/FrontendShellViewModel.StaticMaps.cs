@@ -162,6 +162,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPageKey.Tools => "奇妙小工具",
             LauncherFrontendPageKey.InstanceSetup when subpage is LauncherFrontendSubpageKey.VersionOverall
                 or LauncherFrontendSubpageKey.VersionSetup
+                or LauncherFrontendSubpageKey.VersionInstall
                 or LauncherFrontendSubpageKey.VersionExport => "实例",
             LauncherFrontendPageKey.InstanceSetup when subpage is LauncherFrontendSubpageKey.VersionWorld
                 or LauncherFrontendSubpageKey.VersionScreenshot => "内容",
