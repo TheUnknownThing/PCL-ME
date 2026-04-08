@@ -76,9 +76,10 @@ internal sealed partial class FrontendShellViewModel
 
     private StandardShellLeftPaneDescriptor ResolveStandardLeftPaneDescriptor()
     {
-        if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail)
+        if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail
+            || _currentRoute.Page == LauncherFrontendPageKey.GameLog)
         {
-            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.None, "comp-detail-full-width");
+            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.None, $"{_currentRoute.Page.ToString().ToLowerInvariant()}-full-width");
         }
 
         if (_currentRoute.Page == LauncherFrontendPageKey.TaskManager)
