@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:animation="clr-namespace:PCL.Frontend.Spike.Desktop.Animation">
   <Style Selector="ScrollBar:vertical">
     <Setter Property="AllowAutoHide" Value="False" />
     <Setter Property="Template">
@@ -41,8 +41,8 @@
                           Opacity="0.5">
                         <Border.Transitions>
                           <Transitions>
-                            <BrushTransition Property="Background" Duration="0:0:0.15" />
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                            <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.HintSettle}" />
+                            <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.HintSettle}" />
                           </Transitions>
                         </Border.Transitions>
                       </Border>

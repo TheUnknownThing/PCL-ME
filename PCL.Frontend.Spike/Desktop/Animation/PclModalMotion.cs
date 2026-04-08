@@ -15,9 +15,9 @@ internal static class PclModalMotion
     private static readonly string EnterOvershootTransform = $"scale({EnterOvershootScale:0.###})";
     private static readonly string ExitTransform = $"scale({ExitScale:0.###})";
 
-    public static TimeSpan EnterOvershootDuration { get; } = TimeSpan.FromMilliseconds(92);
+    public static TimeSpan EnterOvershootDuration => MotionDurations.ModalOvershoot;
 
-    public static TimeSpan ExitDuration { get; } = TimeSpan.FromMilliseconds(96);
+    public static TimeSpan ExitDuration => MotionDurations.ModalExit;
 
     public static void ResetToClosedState(Control overlay, Control panel)
     {

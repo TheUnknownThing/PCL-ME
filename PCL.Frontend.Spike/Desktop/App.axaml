@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Spike.Desktop.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     RequestedThemeVariant="Light">
   <Application.Resources>
     <ResourceDictionary>
@@ -25,7 +26,7 @@
       <Setter Property="Opacity" Value="0" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="0:0:0.11" />
+          <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.QuickState}" />
         </Transitions>
       </Setter>
     </Style>
@@ -36,8 +37,8 @@
       <Setter Property="RenderTransform" Value="scale(0.94)" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="0:0:0.11" />
-          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.11" />
+          <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.QuickState}" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.QuickState}" />
         </Transitions>
       </Setter>
     </Style>
@@ -46,7 +47,7 @@
       <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+          <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
         </Transitions>
       </Setter>
     </Style>

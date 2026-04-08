@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Frontend.Spike.Desktop.Animation;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
 
@@ -130,7 +131,7 @@ internal sealed partial class PclIconButton : UserControl
     {
         _releaseBounceTimer?.Stop();
         PanBack.RenderTransform = new ScaleTransform(1.05, 1.05);
-        _releaseBounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(110) };
+        _releaseBounceTimer = new DispatcherTimer { Interval = MotionDurations.QuickState };
         _releaseBounceTimer.Tick += (_, _) =>
         {
             _releaseBounceTimer?.Stop();

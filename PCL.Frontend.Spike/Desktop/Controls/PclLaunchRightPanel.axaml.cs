@@ -12,8 +12,6 @@ namespace PCL.Frontend.Spike.Desktop.Controls;
 
 internal sealed partial class PclLaunchRightPanel : UserControl
 {
-    private static readonly TimeSpan RouteEnterOpacityDuration = TimeSpan.FromMilliseconds(170);
-    private static readonly TimeSpan RouteEnterTranslateDuration = TimeSpan.FromMilliseconds(280);
     private static readonly Easing RouteEnterOpacityEasing = new CubicEaseOut();
     private static readonly Easing RouteEnterTranslateEasing = new BackEaseOut();
     private const double EnterOffsetY = -16d;
@@ -174,7 +172,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             new DoubleTransition
             {
                 Property = Visual.OpacityProperty,
-                Duration = RouteEnterOpacityDuration,
+                Duration = MotionDurations.EntranceFade,
                 Easing = RouteEnterOpacityEasing
             }
         ];
@@ -184,7 +182,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             new DoubleTransition
             {
                 Property = TranslateTransform.YProperty,
-                Duration = RouteEnterTranslateDuration,
+                Duration = MotionDurations.EntranceTranslateOvershoot,
                 Easing = RouteEnterTranslateEasing
             }
         ];

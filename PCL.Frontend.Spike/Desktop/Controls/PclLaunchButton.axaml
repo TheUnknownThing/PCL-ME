@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclLaunchButton"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     x:Name="Root">
   <Grid Height="54">
     <Button
@@ -26,10 +27,10 @@
           BorderBrush="{DynamicResource ColorBrush3}">
         <Border.Transitions>
           <Transitions>
-            <BrushTransition Property="Background" Duration="0:0:0.12" />
-            <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
-            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
-            <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+            <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+            <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+            <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+            <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
           </Transitions>
         </Border.Transitions>
         <Grid Margin="0,4,0,4">

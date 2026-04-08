@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Spike.Desktop.Controls.PclPromptLaneChip"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     x:Name="Root"
     motion:Motion.AnimateOnVisible="True"
@@ -17,8 +18,8 @@
       RenderTransform="scale(1)">
     <Border.Transitions>
       <Transitions>
-        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
-        <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
       </Transitions>
     </Border.Transitions>
     <Button
