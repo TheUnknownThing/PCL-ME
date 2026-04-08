@@ -28,7 +28,7 @@ internal sealed partial class PclLoading : UserControl
     private static readonly IBrush ErrorBrush = Brush.Parse("#D33232");
     private static readonly TimeSpan AnimationTickInterval = TimeSpan.FromMilliseconds(16);
     private static readonly TimeSpan StrikeLeadIn = TimeSpan.FromMilliseconds(250);
-    private static readonly TimeSpan StrikeDownDuration = TimeSpan.FromMilliseconds(350);
+    private static readonly TimeSpan StrikeDownDuration = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan StrikeRecoveryDuration = TimeSpan.FromMilliseconds(900);
     private static readonly TimeSpan StrikeImpactTime = StrikeLeadIn + StrikeDownDuration;
     private static readonly TimeSpan CycleDuration = StrikeImpactTime + StrikeRecoveryDuration;

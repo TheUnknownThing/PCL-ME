@@ -23,7 +23,7 @@
           ClipToBounds="False">
         <Canvas.RenderTransform>
           <RotateTransform
-              Angle="45"
+              Angle="55"
               CenterX="14"
               CenterY="12" />
         </Canvas.RenderTransform>

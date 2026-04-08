@@ -391,7 +391,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceTagOptions = tagOptions;
         _downloadResourceLoaderOptions = useShaderLoader
             ? [
-                new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
+                new DownloadResourceFilterOptionViewModel("任意", string.Empty),
                 new DownloadResourceFilterOptionViewModel("原版可用", "原版可用"),
                 new DownloadResourceFilterOptionViewModel("Iris", "Iris"),
                 new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine")
@@ -900,7 +900,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
+            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
             new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine"),
             new DownloadResourceFilterOptionViewModel("Iris", "Iris")
         ];
