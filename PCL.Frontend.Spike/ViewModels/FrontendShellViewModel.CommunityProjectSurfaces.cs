@@ -449,13 +449,17 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        return groups
+        var orderedGroups = groups
             .OrderByDescending(pair => GetCommunityProjectGroupPriority(pair.Key))
             .ThenByDescending(pair => ParseVersion(ExtractCommunityProjectGroupVersion(pair.Key)))
             .ThenBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
-            .Select((pair, index) => new CommunityProjectReleaseGroupViewModel(
+            .ToArray();
+
+        var shouldAutoExpandSingleGroup = orderedGroups.Length == 1;
+        return orderedGroups
+            .Select(pair => new CommunityProjectReleaseGroupViewModel(
                 pair.Key,
-                index == 0 || GetCommunityProjectGroupPriority(pair.Key) > 0,
+                shouldAutoExpandSingleGroup || ShouldExpandCommunityProjectReleaseGroup(pair.Key),
                 pair.Value
                     .OrderByDescending(entry => entry.PublishedUnixTime)
                     .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
@@ -471,6 +475,27 @@ internal sealed partial class FrontendShellViewModel
                                 : CreateOpenTargetCommand($"打开文件: {entry.Title}", entry.Target, entry.Target)))
                     .ToArray()))
             .ToArray();
+    }
+
+    private bool ShouldExpandCommunityProjectReleaseGroup(string groupTitle)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
+            && string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter))
+        {
+            return false;
+        }
+
+        var matchesVersion = string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
+            || string.Equals(
+                ExtractCommunityProjectGroupVersion(groupTitle),
+                _selectedCommunityProjectVersionFilter,
+                StringComparison.OrdinalIgnoreCase);
+        var matchesLoader = string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
+            || string.Equals(
+                ExtractCommunityProjectGroupLoader(groupTitle),
+                _selectedCommunityProjectLoaderFilter,
+                StringComparison.OrdinalIgnoreCase);
+        return matchesVersion && matchesLoader;
     }
 
     private static void AddCommunityProjectReleaseGroupEntry(
