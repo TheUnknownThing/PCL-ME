@@ -23,9 +23,9 @@
           ClipToBounds="False">
         <Canvas.RenderTransform>
           <RotateTransform
-              Angle="55"
-              CenterX="40"
-              CenterY="36" />
+              Angle="45"
+              CenterX="14"
+              CenterY="12" />
         </Canvas.RenderTransform>
         <Path
             x:Name="PickaxePath"
