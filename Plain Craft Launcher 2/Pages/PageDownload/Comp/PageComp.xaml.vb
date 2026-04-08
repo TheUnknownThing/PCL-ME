@@ -274,8 +274,8 @@ Public Class PageComp
     '搜索按钮
     Private Sub StartNewSearch() Handles PanSearchBox.Search
         Page = 0
-        If Loader.ShouldStart(LoaderInput()) Then Storage = New CompProjectStorage '避免连续搜索两次使得 CompProjectStorage 引用丢失（#1311）
-        Loader.Start()
+        Storage = New CompProjectStorage '显式重新搜索时始终从头拉取，避免重用上次状态后卡在空白页
+        CType(Parent, MyPageRight).PageLoaderRestart(LoaderInput(), IsForceRestart:=True)
     End Sub
     Private Sub EnterTrigger(sender As Object, e As KeyEventArgs) Handles PanSearchBox.KeyDown, TextSearchVersion.KeyDown
         If e.Key = Key.Enter Then StartNewSearch()
