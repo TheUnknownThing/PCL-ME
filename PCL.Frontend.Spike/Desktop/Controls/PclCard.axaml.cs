@@ -14,7 +14,6 @@ namespace PCL.Frontend.Spike.Desktop.Controls;
 
 internal sealed partial class PclCard : UserControl
 {
-    private static readonly TimeSpan ExpandCollapseDuration = MotionDurations.HintSettle;
     private static readonly Thickness StandardHeaderTextMargin = new(15, 12, 0, 0);
     private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
     private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
@@ -46,6 +45,18 @@ internal sealed partial class PclCard : UserControl
     private bool _isContentRenderedVisible = true;
     private int _contentAnimationVersion;
     private CancellationTokenSource? _contentAnimationCts;
+
+    private readonly record struct HeightAnimationPlan(
+        double TotalDistance,
+        double ConstantDistance,
+        TimeSpan ConstantDuration,
+        double EaseDistance,
+        TimeSpan EaseDuration,
+        double EaseInitialPixelsPerSecond,
+        bool UseSimpleEase)
+    {
+        public TimeSpan TotalDuration => ConstantDuration + EaseDuration;
+    }
 
     public PclCard()
     {
@@ -376,15 +387,14 @@ internal sealed partial class PclCard : UserControl
             return;
         }
 
+        var plan = CreateHeightAnimationPlan(targetHeight - startHeight);
         var stopwatch = Stopwatch.StartNew();
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / ExpandCollapseDuration.TotalMilliseconds, 0, 1);
-            var easedProgress = 1 - Math.Pow(1 - progress, 3);
-            var currentHeight = startHeight + ((targetHeight - startHeight) * easedProgress);
+            var currentHeight = startHeight + GetAnimatedDelta(plan, stopwatch.Elapsed) * Math.Sign(targetHeight - startHeight);
             await Dispatcher.UIThread.InvokeAsync(() => Height = currentHeight, DispatcherPriority.Render);
-            if (progress >= 1 || !IsAnimationCurrent(version, cancellationToken))
+            if (stopwatch.Elapsed >= plan.TotalDuration || !IsAnimationCurrent(version, cancellationToken))
             {
                 break;
             }
@@ -398,6 +408,116 @@ internal sealed partial class PclCard : UserControl
         }
 
         await Dispatcher.UIThread.InvokeAsync(() => Height = targetHeight, DispatcherPriority.Render);
+    }
+
+    private static HeightAnimationPlan CreateHeightAnimationPlan(double delta)
+    {
+        var absDelta = Math.Abs(delta);
+        if (absDelta <= 800)
+        {
+            return new HeightAnimationPlan(
+                absDelta,
+                0,
+                TimeSpan.Zero,
+                absDelta,
+                MotionDurations.HintSettle,
+                0,
+                UseSimpleEase: true);
+        }
+
+        if (delta < 0 && absDelta > 500)
+        {
+            const double easeDistance = 200;
+            var constantDistance = Math.Max(0, absDelta - easeDistance);
+            return new HeightAnimationPlan(
+                absDelta,
+                constantDistance,
+                TimeSpan.FromMilliseconds(100),
+                Math.Min(easeDistance, absDelta),
+                TimeSpan.FromMilliseconds(150),
+                constantDistance / 0.1,
+                UseSimpleEase: false);
+        }
+
+        if (delta > 0 && absDelta > 3000)
+        {
+            const double constantDistance = 1500;
+            return new HeightAnimationPlan(
+                absDelta,
+                Math.Min(constantDistance, absDelta),
+                TimeSpan.FromMilliseconds(300),
+                Math.Max(0, absDelta - constantDistance),
+                TimeSpan.FromMilliseconds(400),
+                5000,
+                UseSimpleEase: false);
+        }
+
+        var easeSegmentDistance = Math.Min(150, absDelta);
+        var constantSegmentDistance = Math.Max(0, absDelta - easeSegmentDistance);
+        return new HeightAnimationPlan(
+            absDelta,
+            constantSegmentDistance,
+            TimeSpan.FromMilliseconds(constantSegmentDistance / 4000 * 1000),
+            easeSegmentDistance,
+            TimeSpan.FromMilliseconds(200),
+            4000,
+            UseSimpleEase: false);
+    }
+
+    private static double GetAnimatedDelta(HeightAnimationPlan plan, TimeSpan elapsed)
+    {
+        if (plan.TotalDistance <= 0 || plan.TotalDuration <= TimeSpan.Zero)
+        {
+            return plan.TotalDistance;
+        }
+
+        if (plan.UseSimpleEase)
+        {
+            var progress = Math.Clamp(elapsed.TotalMilliseconds / plan.TotalDuration.TotalMilliseconds, 0, 1);
+            return plan.TotalDistance * (1 - Math.Pow(1 - progress, 3));
+        }
+
+        if (elapsed <= plan.ConstantDuration)
+        {
+            if (plan.ConstantDuration <= TimeSpan.Zero || plan.ConstantDistance <= 0)
+            {
+                return 0;
+            }
+
+            return plan.ConstantDistance * Math.Clamp(elapsed.TotalMilliseconds / plan.ConstantDuration.TotalMilliseconds, 0, 1);
+        }
+
+        var easedElapsed = elapsed - plan.ConstantDuration;
+        var easedProgress = plan.EaseDuration <= TimeSpan.Zero
+            ? 1
+            : Math.Clamp(easedElapsed.TotalMilliseconds / plan.EaseDuration.TotalMilliseconds, 0, 1);
+        return plan.ConstantDistance + (plan.EaseDistance * EvaluateInitialVelocityEase(
+            easedProgress,
+            plan.EaseInitialPixelsPerSecond,
+            plan.EaseDuration,
+            plan.EaseDistance));
+    }
+
+    private static double EvaluateInitialVelocityEase(
+        double progress,
+        double initialPixelsPerSecond,
+        TimeSpan duration,
+        double distance)
+    {
+        if (distance <= 0)
+        {
+            return 1;
+        }
+
+        var clampedProgress = Math.Clamp(progress, 0, 1);
+        var normalizedInitialSpeed = initialPixelsPerSecond * duration.TotalSeconds / distance;
+        var alpha = Math.Max(0, normalizedInitialSpeed - 1);
+        if (alpha <= 0)
+        {
+            return clampedProgress;
+        }
+
+        return ((alpha + 1) * clampedProgress) / (1 + (alpha * clampedProgress));
     }
 
     private bool IsAnimationCurrent(int version, CancellationToken cancellationToken)
