@@ -105,10 +105,13 @@ internal sealed partial class FrontendShellViewModel
             entry.Detail,
             entry.Tags,
             string.Equals(entry.Title, selectedInstanceName, StringComparison.OrdinalIgnoreCase),
+            entry.IsFavorite,
             entry.Icon,
             entry.SelectCommand,
-            entry.OpenCommand,
-            entry.OpenFolderCommand);
+            entry.OpenSettingsCommand,
+            entry.ToggleFavoriteCommand,
+            entry.OpenFolderCommand,
+            entry.DeleteCommand);
     }
 
     private sealed record DeferredInstanceSelectionRefreshState(

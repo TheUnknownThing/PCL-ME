@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    xmlns:motion="clr-namespace:PCL.Frontend.Spike.Desktop.Animation"
     DataContext="{Binding Shell}">
   <UserControl.Styles>
     <Style Selector="Button.instance-entry">
@@ -14,18 +15,41 @@
       <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
+    <Style Selector="Border.instance-entry-shell">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.14" />
+        </Transitions>
+      </Setter>
+    </Style>
     <Style Selector="Border.instance-entry-back">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Border.instance-entry-shell:pointerover">
+      <Setter Property="Background" Value="#F3F8FF" />
+    </Style>
+    <Style Selector="StackPanel.instance-entry-actions">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="RenderTransform" Value="translate(8px,0px)" />
       <Setter Property="Transitions">
         <Transitions>
-          <BrushTransition Property="Background" Duration="0:0:0.12" />
+          <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
         </Transitions>
       </Setter>
     </Style>
-    <Style Selector="Button.instance-entry:pointerover Border.instance-entry-back">
-      <Setter Property="Background" Value="#F3F8FF" />
+    <Style Selector="Border.instance-entry-shell:pointerover StackPanel.instance-entry-actions">
+      <Setter Property="IsHitTestVisible" Value="True" />
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="RenderTransform" Value="translate(0px,0px)" />
     </Style>
   </UserControl.Styles>
 
@@ -70,6 +94,11 @@
                   HeaderCommand="{Binding ToggleExpandCommand}"
                   ShowChevron="True"
                   IsChevronExpanded="{Binding IsExpanded}"
+                  motion:Motion.AnimateOnVisible="True"
+                  motion:Motion.InitialOpacity="0"
+                  motion:Motion.OffsetX="0"
+                  motion:Motion.OffsetY="14"
+                  motion:Motion.OvershootTranslation="True"
                   ContentMargin="20,40,18,2">
                 <controls:PclCard.CardContent>
                   <ItemsControl ItemsSource="{Binding Entries}">
@@ -80,64 +109,106 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <Button
-                            Classes="instance-entry nochrome"
-                            Command="{Binding SelectCommand}"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Stretch">
-                          <Border
-                              Classes="instance-entry-back"
-                              Padding="8,7">
-                            <Grid ColumnDefinitions="Auto,*">
-                              <Image
-                                  Width="24"
-                                  Height="24"
-                                  Margin="0,2,0,0"
-                                  VerticalAlignment="Top"
-                                  Source="{Binding Icon}"
-                                  Stretch="UniformToFill" />
+                        <Border
+                            Classes="instance-entry-shell"
+                            Margin="0,0,0,2"
+                            Padding="6,5">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <Button
+                                Classes="instance-entry nochrome"
+                                Command="{Binding SelectCommand}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                              <Border Classes="instance-entry-back">
+                                <Grid ColumnDefinitions="Auto,*">
+                                  <Image
+                                      Width="24"
+                                      Height="24"
+                                      Margin="0,1,0,0"
+                                      VerticalAlignment="Top"
+                                      Source="{Binding Icon}"
+                                      Stretch="UniformToFill" />
 
-                              <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="2">
-                                <TextBlock
-                                    Foreground="#3D4653"
-                                    FontSize="13.5"
-                                    Text="{Binding Title}"
-                                    TextTrimming="CharacterEllipsis" />
+                                  <StackPanel Grid.Column="1" Margin="8,0,0,0" Spacing="1">
+                                    <TextBlock
+                                        Foreground="#3D4653"
+                                        FontSize="13.5"
+                                        Text="{Binding Title}"
+                                        TextTrimming="CharacterEllipsis" />
 
-                                <WrapPanel IsVisible="{Binding HasMetadataContent}">
-                                  <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
-                                    <ItemsControl.ItemsPanel>
-                                      <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                      </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                      <DataTemplate>
-                                        <Border
-                                            Margin="0,0,6,2"
-                                            Padding="4,1"
-                                            Background="#EEF1F5"
-                                            CornerRadius="3">
-                                          <TextBlock
-                                              Foreground="#9AA5B4"
-                                              FontSize="10.4"
-                                              Text="{Binding}" />
-                                        </Border>
-                                      </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                  </ItemsControl>
-                                  <TextBlock
-                                      Margin="0,0,0,2"
-                                      Foreground="#8D98A7"
-                                      FontSize="11.2"
-                                      Text="{Binding Subtitle}"
-                                      TextTrimming="CharacterEllipsis"
-                                      IsVisible="{Binding HasSubtitle}" />
-                                </WrapPanel>
-                              </StackPanel>
-                            </Grid>
-                          </Border>
-                        </Button>
+                                    <WrapPanel IsVisible="{Binding HasMetadataContent}">
+                                      <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
+                                        <ItemsControl.ItemsPanel>
+                                          <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                          </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                          <DataTemplate>
+                                            <Border
+                                                Margin="0,0,5,1"
+                                                Padding="4,1"
+                                                Background="#EEF1F5"
+                                                CornerRadius="3">
+                                              <TextBlock
+                                                  Foreground="#9AA5B4"
+                                                  FontSize="10.4"
+                                                  Text="{Binding}" />
+                                            </Border>
+                                          </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                      </ItemsControl>
+                                      <TextBlock
+                                          Margin="0,0,0,1"
+                                          Foreground="#8D98A7"
+                                          FontSize="11.2"
+                                          Text="{Binding Subtitle}"
+                                          TextTrimming="CharacterEllipsis"
+                                          IsVisible="{Binding HasSubtitle}" />
+                                    </WrapPanel>
+                                  </StackPanel>
+                                </Grid>
+                              </Border>
+                            </Button>
+
+                            <StackPanel
+                                Classes="instance-entry-actions"
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                VerticalAlignment="Center">
+                              <controls:PclIconButton
+                                  Command="{Binding ToggleFavoriteCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="{Binding FavoriteIconBrush}"
+                                  IconData="{Binding FavoriteIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="收藏 / 取消收藏" />
+                              <controls:PclIconButton
+                                  Command="{Binding OpenFolderCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="#4592FF"
+                                  IconData="{Binding OpenFolderIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="打开实例文件夹" />
+                              <controls:PclIconButton
+                                  Command="{Binding DeleteCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="#4592FF"
+                                  IconData="{Binding DeleteIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="删除实例" />
+                              <controls:PclIconButton
+                                  Command="{Binding OpenSettingsCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="#4592FF"
+                                  IconData="{Binding SettingsIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="打开实例设置" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>

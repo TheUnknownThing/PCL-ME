@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
@@ -473,6 +474,20 @@ internal sealed partial class FrontendShellViewModel
         RefreshSelectedInstanceSmoothly(instanceName);
     }
 
+    private void SelectInstanceAndCloseSelection(InstanceSelectionSnapshot entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.Name))
+        {
+            return;
+        }
+
+        _shellActionService.PersistLocalValue("LaunchInstanceSelect", entry.Name);
+        RefreshLaunchState();
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            $"已切换启动实例到 {entry.Name} 并返回启动页。");
+    }
+
     private async Task AddInstanceSelectionFolderAsync()
     {
         try
@@ -527,8 +542,72 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.PersistLocalValue("LaunchInstanceSelect", entry.Name);
         RefreshLaunchState();
         NavigateTo(
-            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionOverall),
-            $"已打开实例 {entry.Name} 的概览。");
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionSetup),
+            $"已打开实例 {entry.Name} 的设置页面。");
+    }
+
+    private void ToggleInstanceSelectionFavorite(InstanceSelectionSnapshot entry)
+    {
+        try
+        {
+            var nextIsFavorite = !entry.IsStarred;
+            _shellActionService.PersistInstanceValue(entry.Directory, "IsStar", nextIsFavorite);
+            RefreshInstanceSelectionSurface();
+            AddActivity(nextIsFavorite ? "加入收藏夹" : "移出收藏夹", entry.Name);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("切换实例收藏状态失败", ex.Message);
+        }
+    }
+
+    private async Task DeleteInstanceSelectionEntryAsync(InstanceSelectionSnapshot entry)
+    {
+        var confirmed = await _shellActionService.ConfirmAsync(
+            "实例删除确认",
+            $"确定要将实例 {entry.Name} 移入 replacement shell 的回收区吗？该操作会保留实例目录，便于后续人工恢复。",
+            "移入回收区",
+            isDanger: true);
+        if (!confirmed)
+        {
+            AddActivity("删除实例", "已取消删除。");
+            return;
+        }
+
+        try
+        {
+            var trashDirectory = Path.Combine(_instanceSelectionLauncherDirectory, ".pcl-trash", "versions");
+            Directory.CreateDirectory(trashDirectory);
+
+            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var targetDirectory = GetUniquePath(Path.Combine(trashDirectory, $"{entry.Name}-{timestamp}"));
+            Directory.Move(entry.Directory, targetDirectory);
+
+            var metadataPath = Path.Combine(targetDirectory, ".pcl-trash.json");
+            File.WriteAllText(
+                metadataPath,
+                JsonSerializer.Serialize(new
+                {
+                    instanceName = entry.Name,
+                    originalPath = entry.Directory,
+                    deletedAt = DateTimeOffset.Now
+                }, new JsonSerializerOptions { WriteIndented = true }));
+
+            if (_instanceComposition.Selection.HasSelection
+                && (string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(_instanceComposition.Selection.InstanceName, entry.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
+                RefreshLaunchState();
+            }
+
+            RefreshInstanceSelectionSurface();
+            OpenInstanceTarget("删除实例", targetDirectory, "回收区目录不存在。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("删除实例失败", ex.Message);
+        }
     }
 
     private void ClearGameLogSurface()
@@ -688,9 +767,11 @@ internal sealed partial class FrontendShellViewModel
             entry.Detail,
             displayTags,
             entry.IsSelected,
+            entry.IsStarred,
             icon,
-            new ActionCommand(() => SelectInstanceForLaunch(entry.Name)),
+            new ActionCommand(() => SelectInstanceAndCloseSelection(entry)),
             new ActionCommand(() => OpenInstanceSelectionEntry(entry)),
+            new ActionCommand(() => ToggleInstanceSelectionFavorite(entry)),
             new ActionCommand(() =>
             {
                 if (_shellActionService.TryOpenExternalTarget(entry.Directory, out var error))
@@ -701,7 +782,8 @@ internal sealed partial class FrontendShellViewModel
                 {
                     AddActivity("打开实例目录失败", error ?? entry.Directory);
                 }
-            }));
+            }),
+            new ActionCommand(() => _ = DeleteInstanceSelectionEntryAsync(entry)));
     }
 
     private IReadOnlyList<InstanceSelectionGroupViewModel> BuildInstanceSelectionGroups(
@@ -1287,10 +1369,13 @@ internal sealed class InstanceSelectEntryViewModel(
     string detail,
     IReadOnlyList<string> tags,
     bool isSelected,
+    bool isFavorite,
     Bitmap? icon,
     ActionCommand selectCommand,
-    ActionCommand openCommand,
-    ActionCommand openFolderCommand)
+    ActionCommand openSettingsCommand,
+    ActionCommand toggleFavoriteCommand,
+    ActionCommand openFolderCommand,
+    ActionCommand deleteCommand)
 {
     public string Title { get; } = title;
 
@@ -1310,15 +1395,33 @@ internal sealed class InstanceSelectEntryViewModel(
 
     public bool IsSelected { get; } = isSelected;
 
+    public bool IsFavorite { get; } = isFavorite;
+
     public Bitmap? Icon { get; } = icon;
 
     public string SelectText => IsSelected ? "当前实例" : "设为启动实例";
 
+    public string FavoriteIconData => IsFavorite
+        ? FrontendIconCatalog.FavoriteFilled.Data
+        : FrontendIconCatalog.FavoriteOutline.Data;
+
+    public IBrush FavoriteIconBrush => Brush.Parse("#4592FF");
+
+    public string OpenFolderIconData => FrontendIconCatalog.FolderOutline.Data;
+
+    public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
+
+    public string SettingsIconData => FrontendIconCatalog.SettingsOutline.Data;
+
     public ActionCommand SelectCommand { get; } = selectCommand;
 
-    public ActionCommand OpenCommand { get; } = openCommand;
+    public ActionCommand OpenSettingsCommand { get; } = openSettingsCommand;
+
+    public ActionCommand ToggleFavoriteCommand { get; } = toggleFavoriteCommand;
 
     public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
+
+    public ActionCommand DeleteCommand { get; } = deleteCommand;
 }
 
 internal sealed class InstanceSelectionGroupViewModel : ViewModelBase
