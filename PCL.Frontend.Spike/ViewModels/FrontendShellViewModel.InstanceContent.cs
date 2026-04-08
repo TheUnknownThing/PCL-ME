@@ -94,6 +94,10 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoInstanceServerEntries => !HasInstanceServerEntries;
 
+    public bool ShowInstanceServerContent => _instanceComposition.Server.Entries.Count > 0;
+
+    public bool ShowInstanceServerEmptyState => !ShowInstanceServerContent;
+
     public bool HasInstanceResourceEntries => InstanceResourceEntries.Count > 0;
 
     public bool HasNoInstanceResourceEntries => !HasInstanceResourceEntries;
@@ -270,6 +274,8 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(InstanceServerSearchQuery));
             RaisePropertyChanged(nameof(HasInstanceServerEntries));
             RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
+            RaisePropertyChanged(nameof(ShowInstanceServerContent));
+            RaisePropertyChanged(nameof(ShowInstanceServerEmptyState));
         }
 
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource))
