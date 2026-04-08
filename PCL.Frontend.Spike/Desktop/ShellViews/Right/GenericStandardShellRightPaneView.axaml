@@ -605,14 +605,14 @@
             <controls:PclCard Margin="0,0,0,15" IsVisible="{Binding ShowCommunityProjectFilterCard}" ContentMargin="0,0,0,0">
               <controls:PclCard.CardContent>
                 <StackPanel>
-                  <Grid Margin="10,10,10,5" ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCommunityProjectVersionFilters}">
+                  <StackPanel Margin="10,10,0,5" Orientation="Horizontal" IsVisible="{Binding ShowCommunityProjectVersionFilters}">
                     <TextBlock
-                        Margin="2,0,8,0"
+                        Margin="2,0,0,0"
                         VerticalAlignment="Center"
                         Foreground="#343D4A"
                         FontSize="13"
                         Text="实例筛选：" />
-                    <ItemsControl Grid.Column="1" ItemsSource="{Binding CommunityProjectVersionFilterButtons}">
+                    <ItemsControl ItemsSource="{Binding CommunityProjectVersionFilterButtons}">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                           <WrapPanel />
@@ -620,26 +620,24 @@
                       </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                          <controls:PclButton
-                              Margin="0,0,8,8"
-                              MinWidth="72"
+                          <controls:PclRadioButton
+                              Margin="2,0,2,0"
                               Command="{Binding Command}"
-                              ColorType="{Binding ColorType}"
-                              ContentPadding="10,4"
+                              IsChecked="{Binding IsChecked}"
                               Text="{Binding Text}" />
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                  </Grid>
+                  </StackPanel>
 
-                  <Grid Margin="10,5,10,10" ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCommunityProjectLoaderFilters}">
+                  <StackPanel Margin="10,5,0,10" Orientation="Horizontal" IsVisible="{Binding ShowCommunityProjectLoaderFilters}">
                     <TextBlock
-                        Margin="2,0,8,0"
+                        Margin="2,0,0,0"
                         VerticalAlignment="Center"
                         Foreground="#343D4A"
                         FontSize="13"
                         Text="模组加载器筛选：" />
-                    <ItemsControl Grid.Column="1" ItemsSource="{Binding CommunityProjectLoaderFilterButtons}">
+                    <ItemsControl ItemsSource="{Binding CommunityProjectLoaderFilterButtons}">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                           <WrapPanel />
@@ -647,17 +645,15 @@
                       </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                          <controls:PclButton
-                              Margin="0,0,8,8"
-                              MinWidth="72"
+                          <controls:PclRadioButton
+                              Margin="2,0,2,0"
                               Command="{Binding Command}"
-                              ColorType="{Binding ColorType}"
-                              ContentPadding="10,4"
+                              IsChecked="{Binding IsChecked}"
                               Text="{Binding Text}" />
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                  </Grid>
+                  </StackPanel>
                 </StackPanel>
               </controls:PclCard.CardContent>
             </controls:PclCard>

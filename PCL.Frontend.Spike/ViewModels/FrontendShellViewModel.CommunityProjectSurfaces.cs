@@ -57,9 +57,9 @@ internal sealed partial class FrontendShellViewModel
 
     public ObservableCollection<DownloadCatalogActionViewModel> CommunityProjectActionButtons { get; } = [];
 
-    public ObservableCollection<DownloadCatalogActionViewModel> CommunityProjectVersionFilterButtons { get; } = [];
+    public ObservableCollection<CommunityProjectFilterButtonViewModel> CommunityProjectVersionFilterButtons { get; } = [];
 
-    public ObservableCollection<DownloadCatalogActionViewModel> CommunityProjectLoaderFilterButtons { get; } = [];
+    public ObservableCollection<CommunityProjectFilterButtonViewModel> CommunityProjectLoaderFilterButtons { get; } = [];
 
     public ObservableCollection<CommunityProjectReleaseGroupViewModel> CommunityProjectReleaseGroups { get; } = [];
 
@@ -376,22 +376,22 @@ internal sealed partial class FrontendShellViewModel
         return buttons;
     }
 
-    private static IReadOnlyList<DownloadCatalogActionViewModel> BuildCommunityProjectFilterButtons(
+    private static IReadOnlyList<CommunityProjectFilterButtonViewModel> BuildCommunityProjectFilterButtons(
         IReadOnlyList<string> options,
         string selectedValue,
         string allLabel,
         Action<string> applyFilter)
     {
-        var buttons = new List<DownloadCatalogActionViewModel>
+        var buttons = new List<CommunityProjectFilterButtonViewModel>
         {
             new(
                 allLabel,
-                string.IsNullOrWhiteSpace(selectedValue) ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
+                string.IsNullOrWhiteSpace(selectedValue),
                 new ActionCommand(() => applyFilter(string.Empty)))
         };
-        buttons.AddRange(options.Select(option => new DownloadCatalogActionViewModel(
+        buttons.AddRange(options.Select(option => new CommunityProjectFilterButtonViewModel(
             option,
-            string.Equals(option, selectedValue, StringComparison.OrdinalIgnoreCase) ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
+            string.Equals(option, selectedValue, StringComparison.OrdinalIgnoreCase),
             new ActionCommand(() => applyFilter(option)))));
         return buttons;
     }

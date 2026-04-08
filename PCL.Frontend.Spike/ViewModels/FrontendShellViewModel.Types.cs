@@ -416,6 +416,18 @@ internal sealed class DownloadCatalogActionViewModel(
     public ActionCommand Command { get; } = command;
 }
 
+internal sealed class CommunityProjectFilterButtonViewModel(
+    string text,
+    bool isChecked,
+    ActionCommand command)
+{
+    public string Text { get; } = text;
+
+    public bool IsChecked { get; } = isChecked;
+
+    public ActionCommand Command { get; } = command;
+}
+
 internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
 {
     private const int PageSize = 20;
