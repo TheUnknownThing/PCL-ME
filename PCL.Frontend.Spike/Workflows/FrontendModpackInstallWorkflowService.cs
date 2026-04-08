@@ -215,7 +215,8 @@ internal static class FrontendModpackInstallWorkflowService
 
             var env = file["env"] as JsonObject;
             var clientSupport = env?["client"]?.GetValue<string>() ?? string.Empty;
-            if (string.Equals(clientSupport, "unsupported", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(clientSupport, "unsupported", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(clientSupport, "optional", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -318,7 +319,7 @@ internal static class FrontendModpackInstallWorkflowService
                 FileId = node!["fileID"]?.GetValue<int?>(),
                 Required = node["required"]?.GetValue<bool?>() ?? true
             })
-            .Where(node => node.FileId is > 0)
+            .Where(node => node.FileId is > 0 && node.Required)
             .ToArray();
 
         var fileMetadata = ReadCurseForgeFileMetadata(
