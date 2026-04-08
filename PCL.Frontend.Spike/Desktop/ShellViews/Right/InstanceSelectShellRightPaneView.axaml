@@ -6,21 +6,26 @@
     DataContext="{Binding Shell}">
   <UserControl.Styles>
     <Style Selector="Button.instance-entry">
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
     <Style Selector="Border.instance-entry-back">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.12" />
+        </Transitions>
+      </Setter>
     </Style>
     <Style Selector="Button.instance-entry:pointerover Border.instance-entry-back">
       <Setter Property="Background" Value="#F3F8FF" />
-    </Style>
-    <Style Selector="Border.instance-entry-back.selected">
-      <Setter Property="Background" Value="#E8F2FF" />
     </Style>
   </UserControl.Styles>
 
@@ -68,15 +73,20 @@
                   ContentMargin="20,40,18,2">
                 <controls:PclCard.CardContent>
                   <ItemsControl ItemsSource="{Binding Entries}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Spacing="0" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <Button
-                            Classes="instance-entry"
-                            Command="{Binding SelectCommand}">
+                            Classes="instance-entry nochrome"
+                            Command="{Binding SelectCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
                           <Border
                               Classes="instance-entry-back"
-                              Classes.selected="{Binding IsSelected}"
-                              Margin="0,0,0,4"
                               Padding="8,7">
                             <Grid ColumnDefinitions="Auto,*">
                               <Image
