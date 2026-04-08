@@ -361,7 +361,7 @@ internal static class FrontendModpackInstallWorkflowService
 
         var overridesPath = root["overrides"]?.GetValue<string>() ?? "overrides";
         var effectiveOverridesPath = overridesPath is "." or "./"
-            ? baseFolder.TrimEnd('/')
+            ? (string.IsNullOrWhiteSpace(baseFolder) ? "." : baseFolder.TrimEnd('/'))
             : baseFolder + overridesPath.TrimStart('/');
 
         return new FrontendModpackPackage(
@@ -438,7 +438,12 @@ internal static class FrontendModpackInstallWorkflowService
                 continue;
             }
 
-            var sourcePath = Path.GetFullPath(Path.Combine(extractRoot, NormalizeRelativePath(source.RelativePath)));
+            var normalizedRelativePath = source.RelativePath is "." or "./"
+                ? string.Empty
+                : NormalizeRelativePath(source.RelativePath);
+            var sourcePath = string.IsNullOrWhiteSpace(normalizedRelativePath)
+                ? Path.GetFullPath(extractRoot)
+                : Path.GetFullPath(Path.Combine(extractRoot, normalizedRelativePath));
             if (!sourcePath.StartsWith(Path.GetFullPath(extractRoot), StringComparison.Ordinal))
             {
                 continue;
