@@ -2,7 +2,7 @@ Public Class PageDownloadInstall
 
     Private Sub LoaderInit() Handles Me.Initialized
         DisabledPageAnimControls.Add(BtnStart)
-        PageLoaderInit(LoadMinecraft, PanLoad, PanAllBack, Nothing, DlClientListLoader, AddressOf LoadMinecraft_OnFinish, AutoRun:=False)
+        PageLoaderInit(LoadMinecraft, PanLoad, PanAllBack, Nothing, DlClientListLoader, AddressOf LoadMinecraft_OnFinish)
     End Sub
 
     Public Sub New()
@@ -13,7 +13,6 @@ Public Class PageDownloadInstall
     Private IsLoad As Boolean = False
     Private Sub Init() Handles Me.Loaded
         PanBack.ScrollToHome()
-        StartMinecraftListLoad()
         DlOptiFineListLoader.Start()
         DlLiteLoaderListLoader.Start()
         DlFabricListLoader.Start()
@@ -46,18 +45,6 @@ Public Class PageDownloadInstall
         LoadLabyMod.State = DlLabyModListLoader
         LoadLegacyFabric.State = DlLegacyFabricListLoader
         LoadLegacyFabricApi.State = DlLegacyFabricApiLoader
-    End Sub
-
-    Private Sub StartMinecraftListLoad()
-        Select Case DlClientListLoader.State
-            Case LoadState.Waiting, LoadState.Aborted
-                DlClientListLoader.Start()
-        End Select
-    End Sub
-    Private Sub LoadMinecraft_Click(sender As Object, e As MouseButtonEventArgs) Handles LoadMinecraft.Click
-        If DlClientListLoader.State = LoadState.Failed Then
-            DlClientListLoader.Start(IsForceRestart:=True)
-        End If
     End Sub
 
 #Region "页面切换"
