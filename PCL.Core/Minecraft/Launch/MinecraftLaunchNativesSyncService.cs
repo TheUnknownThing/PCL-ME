@@ -28,6 +28,12 @@ public static class MinecraftLaunchNativesSyncService
                 continue;
             }
 
+            logs.Add("Native 存档：" + archivePath);
+            if (archiveRequest.ExtractExcludes.Count > 0)
+            {
+                logs.Add("排除规则：" + string.Join(", ", archiveRequest.ExtractExcludes));
+            }
+
             ZipArchive archive;
             try
             {

@@ -24,6 +24,7 @@ public static class MinecraftLaunchSessionLogService
             $"HMCL 格式：{request.IsHmclFormatJson}",
             $"Java 信息：{(string.IsNullOrWhiteSpace(request.JavaDescription) ? "无可用 Java" : request.JavaDescription)}",
             $"Natives 文件夹：{request.NativesFolder}",
+            $"Natives 压缩包：{request.NativeArchiveCount}",
             string.Empty,
             "~ 档案参数 ~",
             $"玩家用户名：{request.PlayerName}",
@@ -33,6 +34,23 @@ public static class MinecraftLaunchSessionLogService
             $"验证方式：{request.LoginType}",
             string.Empty
         };
+
+        if (!string.IsNullOrWhiteSpace(request.NativeExtractionDirectory) &&
+            !string.Equals(request.NativeExtractionDirectory, request.NativesFolder, StringComparison.OrdinalIgnoreCase))
+        {
+            lines.Insert(14, $"Natives 解压目录：{request.NativeExtractionDirectory}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.NativeSearchPath) &&
+            !string.Equals(request.NativeSearchPath, request.NativesFolder, StringComparison.Ordinal))
+        {
+            lines.Insert(14, $"Natives 搜索路径：{request.NativeSearchPath}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.NativeAliasDirectory))
+        {
+            lines.Insert(14, $"Natives ASCII 别名：{request.NativeAliasDirectory}");
+        }
 
         return new MinecraftLaunchSessionLogPlan(lines);
     }
@@ -58,7 +76,11 @@ public sealed record MinecraftLaunchSessionLogRequest(
     string AccessToken,
     string ClientToken,
     string Uuid,
-    string LoginType);
+    string LoginType,
+    string? NativeSearchPath = null,
+    string? NativeExtractionDirectory = null,
+    string? NativeAliasDirectory = null,
+    int NativeArchiveCount = 0);
 
 public sealed record MinecraftLaunchSessionLogPlan(
     IReadOnlyList<string> LogLines);

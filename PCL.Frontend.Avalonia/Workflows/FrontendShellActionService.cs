@@ -371,7 +371,7 @@ internal sealed class FrontendShellActionService(
         ArgumentNullException.ThrowIfNull(launchComposition);
 
         EnsureRequiredArtifacts(launchComposition.RequiredArtifacts);
-        EnsureNativeLibraries(launchComposition.NativeSyncRequest);
+        var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
         EnsureNativePathAlias(launchComposition.NativePathAliasDirectory, launchComposition.NativesDirectory);
 
         var launcherDataDirectory = RuntimePaths.LauncherAppDataDirectory;
@@ -390,9 +390,12 @@ internal sealed class FrontendShellActionService(
         EnsureFileExecutable(launchScriptPath);
 
         var sessionSummaryPath = GetUniqueFilePath(Path.Combine(logDirectory, $"session-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
+        var sessionSummaryLines = BuildSessionSummaryLines(
+            launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines,
+            nativeSyncResult);
         File.WriteAllLines(
             sessionSummaryPath,
-            launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines,
+            sessionSummaryLines,
             new UTF8Encoding(false));
 
         var rawOutputLogPath = Path.Combine(logDirectory, "RawOutput.log");
@@ -434,16 +437,31 @@ internal sealed class FrontendShellActionService(
             rawOutputLogPath);
     }
 
-    private static void EnsureNativeLibraries(MinecraftLaunchNativesSyncRequest? nativeSyncRequest)
+    private static IReadOnlyList<string> BuildSessionSummaryLines(
+        IReadOnlyList<string> startupSummaryLines,
+        MinecraftLaunchNativesSyncResult? nativeSyncResult)
+    {
+        if (nativeSyncResult is null || nativeSyncResult.LogMessages.Count == 0)
+        {
+            return startupSummaryLines;
+        }
+
+        return startupSummaryLines
+            .Concat(["~ Natives 同步 ~"])
+            .Concat(nativeSyncResult.LogMessages)
+            .ToArray();
+    }
+
+    private static MinecraftLaunchNativesSyncResult? EnsureNativeLibraries(MinecraftLaunchNativesSyncRequest? nativeSyncRequest)
     {
         if (nativeSyncRequest is null || nativeSyncRequest.NativeArchives.Count == 0)
         {
-            return;
+            return null;
         }
 
         try
         {
-            MinecraftLaunchNativesSyncService.Sync(nativeSyncRequest);
+            return MinecraftLaunchNativesSyncService.Sync(nativeSyncRequest);
         }
         catch (Exception ex)
         {

@@ -28,7 +28,10 @@ internal sealed record LaunchAvaloniaPlan(
     MinecraftLaunchSessionStartWorkflowPlan SessionStartPlan,
     MinecraftLaunchScriptExportPlan? ScriptExportPlan,
     MinecraftGameShellPlan PostLaunchShell,
-    MinecraftLaunchNotification CompletionNotification);
+    MinecraftLaunchNotification CompletionNotification,
+    string? NativePathAliasDirectory = null,
+    string? NativeExtractionDirectory = null,
+    int NativeArchiveCount = 0);
 
 internal sealed record CrashAvaloniaPlan(
     MinecraftCrashOutputPrompt OutputPrompt,

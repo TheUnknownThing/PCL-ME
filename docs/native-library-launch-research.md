@@ -162,7 +162,19 @@ Expected result:
 
 - future native-library regressions become easy to trace without reproducing them blindly.
 
-Status: pending
+Implemented in this slice:
+
+- startup session summaries now record the real natives folder used by launch instead of a fixed placeholder path
+- startup session summaries now include native search path, extraction target, ASCII alias path, and native archive count
+- inspection renderers now surface native alias, extraction target, archive count, and search path in launch summaries
+- native sync logs now record each native archive path and its extract exclusion rules, and those logs are appended into the written startup session summary
+
+Still remaining:
+
+- surface native preparation details directly in the interactive launch prompt / activity stream when preparation succeeds
+- carry the richer native diagnostics through inspection/replay plans, not only live launch composition and session summaries
+
+Status: in progress
 
 ## Current Launch-State Summary
 
@@ -181,4 +193,4 @@ What Avalonia launch now does:
 What is still missing compared with HMCL:
 
 - native replacement / patching for unsupported platforms (`NativePatcher`-style behavior)
-- richer launch diagnostics for native archive choice, extraction, and fallback behavior
+- richer live UI diagnostics for native preparation and unsupported-platform fallback behavior

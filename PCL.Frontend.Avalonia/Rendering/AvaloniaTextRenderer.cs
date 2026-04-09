@@ -179,7 +179,11 @@ internal static class AvaloniaTextRenderer
                         $"Resolution: {plan.ResolutionPlan.Width}x{plan.ResolutionPlan.Height}",
                         $"Classpath entries: {plan.ClasspathPlan.Entries.Count}",
                         $"Natives directory: {plan.NativesDirectory}",
+                        $"Native alias: {plan.NativePathAliasDirectory ?? "none"}",
+                        $"Native extraction target: {plan.NativeExtractionDirectory ?? plan.NativesDirectory}",
+                        $"Native archives: {plan.NativeArchiveCount}",
                         $"Replacement tokens: {plan.ReplacementPlan.Values.Count}",
+                        $"Native search path: {plan.ReplacementPlan.Values.GetValueOrDefault("${natives_directory}", plan.NativesDirectory)}",
                         $"Final arguments: {plan.ArgumentPlan.FinalArguments}"
                     ]),
                 new AvaloniaTranscriptSection(
