@@ -54,6 +54,16 @@
         Stretch="Uniform"
         IsVisible="False" />
 
+    <Image
+        x:Name="LogoImage"
+        Grid.Column="2"
+        Width="32"
+        Height="32"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Stretch="Uniform"
+        IsVisible="False" />
+
     <Button
         x:Name="MainButton"
         Classes="nochrome"

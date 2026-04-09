@@ -20,6 +20,9 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<double> IconScaleProperty =
         AvaloniaProperty.Register<PclListItem, double>(nameof(IconScale), 1.0);
 
+    public static readonly StyledProperty<IImage?> IconSourceProperty =
+        AvaloniaProperty.Register<PclListItem, IImage?>(nameof(IconSource));
+
     public static readonly StyledProperty<bool> IsSelectedProperty =
         AvaloniaProperty.Register<PclListItem, bool>(nameof(IsSelected));
 
@@ -75,6 +78,7 @@ internal sealed partial class PclListItem : UserControl
         TitleBlock.Text = Title;
         UpdateInfo(Info);
         UpdateIcon(IconData);
+        UpdateIconSource(IconSource);
         UpdateAccessory();
         ApplyIconScale(IconScale);
         RefreshVisualState();
@@ -102,6 +106,12 @@ internal sealed partial class PclListItem : UserControl
     {
         get => GetValue(IconScaleProperty);
         set => SetValue(IconScaleProperty, value);
+    }
+
+    public IImage? IconSource
+    {
+        get => GetValue(IconSourceProperty);
+        set => SetValue(IconSourceProperty, value);
     }
 
     public bool IsSelected
@@ -150,6 +160,10 @@ internal sealed partial class PclListItem : UserControl
         {
             UpdateIcon(change.GetNewValue<string>());
         }
+        else if (change.Property == IconSourceProperty)
+        {
+            UpdateIconSource(change.GetNewValue<IImage?>());
+        }
         else if (change.Property == IconScaleProperty)
         {
             ApplyIconScale(change.GetNewValue<double>());
@@ -167,10 +181,29 @@ internal sealed partial class PclListItem : UserControl
     private void UpdateIcon(string data)
     {
         var hasIcon = !string.IsNullOrWhiteSpace(data);
-        LogoPath.IsVisible = hasIcon;
+        LogoPath.IsVisible = hasIcon && IconSource is null;
         LogoPath.Data = hasIcon ? Geometry.Parse(data) : null;
+        RefreshIconLayout();
+    }
+
+    private void UpdateIconSource(IImage? source)
+    {
+        LogoImage.Source = source;
+        LogoImage.IsVisible = source is not null;
+        if (source is not null)
+        {
+            LogoPath.IsVisible = false;
+        }
+
+        RefreshIconLayout();
+    }
+
+    private void RefreshIconLayout()
+    {
+        var hasIcon = LogoPath.IsVisible || LogoImage.IsVisible;
         LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
         LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(18) : new GridLength(6);
+        MainButton.Margin = hasIcon ? new Thickness(10, 6, 0, 6) : new Thickness(4, 6, 0, 6);
     }
 
     private void UpdateInfo(string info)
@@ -192,6 +225,7 @@ internal sealed partial class PclListItem : UserControl
     private void ApplyIconScale(double scale)
     {
         LogoPath.RenderTransform = new ScaleTransform(scale, scale);
+        LogoImage.RenderTransform = new ScaleTransform(scale, scale);
     }
 
     private bool IsPointerOverAccessory(PointerEventArgs args)

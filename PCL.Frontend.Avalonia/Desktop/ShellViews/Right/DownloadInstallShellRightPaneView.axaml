@@ -53,54 +53,15 @@
                     <ItemsControl ItemsSource="{Binding Choices}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                          <Button
-                              Classes="install-choice-row"
+                          <controls:PclListItem
+                              Margin="0,0,0,2"
                               Command="{Binding SelectCommand}"
-                              HorizontalAlignment="Stretch">
-                            <Border
-                              Background="Transparent"
-                              CornerRadius="6"
-                              MinHeight="36">
-                              <Grid
-                                HorizontalAlignment="Stretch"
-                                ColumnDefinitions="4,4,34,*"
-                                RowDefinitions="*,Auto,Auto,*">
-                                <Border
-                                  Grid.RowSpan="4"
-                                  Grid.Column="0"
-                                  Background="#1370F3"
-                                  CornerRadius="0,3,3,0"
-                                  Opacity="0" />
-                                <Image
-                                  Grid.RowSpan="4"
-                                  Grid.Column="2"
-                                  Width="30"
-                                  Height="30"
-                                  VerticalAlignment="Center"
-                                  Source="{Binding Icon}"
-                                  Stretch="Uniform"
-                                  Margin="0" />
-                                <TextBlock
-                                  Grid.Row="1"
-                                  Grid.Column="3"
-                                  Margin="2,0,0,0"
-                                  Foreground="#343D4A"
-                                  FontSize="13.5"
-                                  Text="{Binding Title}"
-                                  TextTrimming="CharacterEllipsis" />
-                                <TextBlock
-                                  Grid.Row="2"
-                                  Grid.Column="3"
-                                  Margin="2,0,0,0"
-                                  Foreground="#7D8897"
-                                  FontSize="11.5"
-                                  Text="{Binding Summary}"
-                                  TextTrimming="CharacterEllipsis" />
-                              </Grid>
-                            </Border>
-                        </Button>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
+                              IconSource="{Binding Icon}"
+                              IconScale="1"
+                              Info="{Binding Summary}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
                   </ItemsControl>
                 </controls:PclCard.CardContent>
               </controls:PclCard>
