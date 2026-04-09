@@ -371,6 +371,7 @@ internal sealed class FrontendShellActionService(
         ArgumentNullException.ThrowIfNull(launchComposition);
 
         EnsureRequiredArtifacts(launchComposition.RequiredArtifacts);
+        EnsureNativeLibraries(launchComposition.NativeSyncRequest);
 
         var launcherDataDirectory = RuntimePaths.LauncherAppDataDirectory;
         var logDirectory = Path.Combine(launcherDataDirectory, "Log");
@@ -430,6 +431,23 @@ internal sealed class FrontendShellActionService(
             launchScriptPath,
             sessionSummaryPath,
             rawOutputLogPath);
+    }
+
+    private static void EnsureNativeLibraries(MinecraftLaunchNativesSyncRequest? nativeSyncRequest)
+    {
+        if (nativeSyncRequest is null || nativeSyncRequest.NativeArchives.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            MinecraftLaunchNativesSyncService.Sync(nativeSyncRequest);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("解压游戏本地库失败。", ex);
+        }
     }
 
     private static void EnsureRequiredArtifacts(IReadOnlyList<FrontendLaunchArtifactRequirement> requirements)

@@ -73,6 +73,7 @@ internal static class FrontendLaunchCompositionService
             PreferInstanceDirectory: false,
             AppDataNativesDirectory: Path.Combine(launcherFolder, "bin", "natives"),
             FinalFallbackDirectory: Path.Combine(runtimePaths.TempDirectory, "PCL", "natives")));
+        var nativeSyncRequest = BuildNativeSyncRequest(launcherFolder, selectedInstanceName, nativesDirectory);
         var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(new MinecraftLaunchReplacementValueRequest(
             ClasspathSeparator: GetClasspathSeparator(),
             NativesDirectory: nativesDirectory,
@@ -184,6 +185,7 @@ internal static class FrontendLaunchCompositionService
             resolutionPlan,
             classpathPlan,
             nativesDirectory,
+            nativeSyncRequest,
             replacementPlan,
             prerunPlan,
             argumentPlan,
@@ -256,6 +258,7 @@ internal static class FrontendLaunchCompositionService
             plan.ResolutionPlan,
             plan.ClasspathPlan,
             plan.NativesDirectory,
+            null,
             plan.ReplacementPlan,
             plan.PrerunPlan,
             plan.ArgumentPlan,
@@ -529,6 +532,24 @@ internal static class FrontendLaunchCompositionService
         return requirements.Values.ToArray();
     }
 
+    private static MinecraftLaunchNativesSyncRequest? BuildNativeSyncRequest(
+        string launcherFolder,
+        string selectedInstanceName,
+        string nativesDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        {
+            return null;
+        }
+
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var archives = new Dictionary<string, MinecraftLaunchNativeArchive>(StringComparer.OrdinalIgnoreCase);
+        CollectNativeArchivesRecursive(launcherFolder, selectedInstanceName, visited, archives);
+        return archives.Count == 0
+            ? null
+            : new MinecraftLaunchNativesSyncRequest(nativesDirectory, archives.Values.ToArray(), LogSkippedFiles: false);
+    }
+
     private static void CollectRequiredArtifactsRecursive(
         string launcherFolder,
         string versionName,
@@ -576,31 +597,67 @@ internal static class FrontendLaunchCompositionService
                 continue;
             }
 
-            var artifactPath = GetNestedString(library, "downloads", "artifact", "path");
-            var artifactUrl = GetNestedString(library, "downloads", "artifact", "url");
-            var artifactSha1 = GetNestedString(library, "downloads", "artifact", "sha1");
-            var name = GetString(library, "name");
-            var rootUrl = GetString(library, "url");
-
-            if (string.IsNullOrWhiteSpace(artifactPath) && !string.IsNullOrWhiteSpace(name))
+            if (TryResolveLibraryDownload(library, "artifact", launcherFolder, out var artifactDownload) &&
+                !string.IsNullOrWhiteSpace(artifactDownload.DownloadUrl))
             {
-                artifactPath = DeriveLibraryPathFromName(name);
+                requirements[artifactDownload.TargetPath] = new FrontendLaunchArtifactRequirement(
+                    artifactDownload.TargetPath,
+                    artifactDownload.DownloadUrl!,
+                    artifactDownload.Sha1);
             }
 
-            if (string.IsNullOrWhiteSpace(artifactUrl) &&
-                !string.IsNullOrWhiteSpace(rootUrl) &&
-                !string.IsNullOrWhiteSpace(artifactPath))
+            if (TryResolveNativeArchiveDownload(library, launcherFolder, out var nativeArchive) &&
+                !string.IsNullOrWhiteSpace(nativeArchive.DownloadUrl))
             {
-                artifactUrl = rootUrl.TrimEnd('/') + "/" + artifactPath.Replace('\\', '/');
+                requirements[nativeArchive.TargetPath] = new FrontendLaunchArtifactRequirement(
+                    nativeArchive.TargetPath,
+                    nativeArchive.DownloadUrl!,
+                    nativeArchive.Sha1);
             }
+        }
+    }
 
-            if (string.IsNullOrWhiteSpace(artifactPath) || string.IsNullOrWhiteSpace(artifactUrl))
+    private static void CollectNativeArchivesRecursive(
+        string launcherFolder,
+        string versionName,
+        ISet<string> visited,
+        IDictionary<string, MinecraftLaunchNativeArchive> archives)
+    {
+        if (!visited.Add(versionName))
+        {
+            return;
+        }
+
+        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
+        if (!File.Exists(manifestPath))
+        {
+            return;
+        }
+
+        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        var root = document.RootElement;
+        var parentVersion = GetString(root, "inheritsFrom");
+        if (!string.IsNullOrWhiteSpace(parentVersion))
+        {
+            CollectNativeArchivesRecursive(launcherFolder, parentVersion, visited, archives);
+        }
+
+        if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (var library in libraries.EnumerateArray())
+        {
+            if (!IsLibraryAllowedOnCurrentPlatform(library) ||
+                !TryResolveNativeArchiveDownload(library, launcherFolder, out var nativeArchive))
             {
                 continue;
             }
 
-            var targetPath = Path.Combine(launcherFolder, "libraries", artifactPath.Replace('/', Path.DirectorySeparatorChar));
-            requirements[targetPath] = new FrontendLaunchArtifactRequirement(targetPath, artifactUrl, artifactSha1);
+            archives[nativeArchive.TargetPath] = new MinecraftLaunchNativeArchive(
+                nativeArchive.TargetPath,
+                nativeArchive.ExtractExcludes);
         }
     }
 
@@ -928,6 +985,181 @@ internal static class FrontendLaunchCompositionService
         };
     }
 
+    private static bool TryResolveNativeArchiveDownload(
+        JsonElement library,
+        string launcherFolder,
+        out NativeArchiveDownloadInfo nativeArchive)
+    {
+        nativeArchive = null!;
+        var entryName = ResolveNativeEntryName(library);
+        if (string.IsNullOrWhiteSpace(entryName) ||
+            !TryResolveLibraryDownload(library, entryName, launcherFolder, out var download))
+        {
+            return false;
+        }
+
+        nativeArchive = new NativeArchiveDownloadInfo(
+            download.TargetPath,
+            download.DownloadUrl,
+            download.Sha1,
+            GetExtractExcludes(library));
+        return true;
+    }
+
+    private static bool TryResolveLibraryDownload(
+        JsonElement library,
+        string entryName,
+        string launcherFolder,
+        out LibraryDownloadInfo download)
+    {
+        download = null!;
+        if (!library.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        JsonElement downloadEntry;
+        if (string.Equals(entryName, "artifact", StringComparison.Ordinal))
+        {
+            if (!downloads.TryGetProperty("artifact", out downloadEntry) || downloadEntry.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (!downloads.TryGetProperty("classifiers", out var classifiers) ||
+                classifiers.ValueKind != JsonValueKind.Object ||
+                !classifiers.TryGetProperty(entryName, out downloadEntry) ||
+                downloadEntry.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+        }
+
+        var path = GetString(downloadEntry, "path");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            var libraryName = GetString(library, "name");
+            if (string.IsNullOrWhiteSpace(libraryName))
+            {
+                return false;
+            }
+
+            path = DeriveLibraryPathFromName(
+                libraryName,
+                string.Equals(entryName, "artifact", StringComparison.Ordinal) ? null : entryName);
+        }
+
+        var targetPath = Path.Combine(launcherFolder, "libraries", path.Replace('/', Path.DirectorySeparatorChar));
+        var hasExplicitUrl = downloadEntry.TryGetProperty("url", out var urlElement);
+        var url = hasExplicitUrl && urlElement.ValueKind == JsonValueKind.String
+            ? urlElement.GetString()
+            : GetString(downloadEntry, "url");
+        if (!hasExplicitUrl || !string.IsNullOrWhiteSpace(url))
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                url = BuildLibraryUrl(library, path);
+            }
+        }
+
+        download = new LibraryDownloadInfo(targetPath, url, GetString(downloadEntry, "sha1"));
+        return true;
+    }
+
+    private static string? ResolveNativeEntryName(JsonElement library)
+    {
+        var osKey = GetCurrentNativeOsKey();
+        if (library.TryGetProperty("natives", out var natives) &&
+            natives.ValueKind == JsonValueKind.Object &&
+            natives.TryGetProperty(osKey, out var classifierValue) &&
+            classifierValue.ValueKind == JsonValueKind.String)
+        {
+            return classifierValue.GetString()?.Replace("${arch}", Environment.Is64BitOperatingSystem ? "64" : "32", StringComparison.Ordinal);
+        }
+
+        if (!library.TryGetProperty("downloads", out var downloads) ||
+            downloads.ValueKind != JsonValueKind.Object ||
+            !downloads.TryGetProperty("classifiers", out var classifiers) ||
+            classifiers.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        foreach (var candidate in GetCurrentNativeClassifierCandidates())
+        {
+            if (classifiers.TryGetProperty(candidate, out _))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyList<string> GetCurrentNativeClassifierCandidates()
+    {
+        var candidates = new List<string>();
+        string[] osNames = OperatingSystem.IsMacOS()
+            ? ["osx", "macos", "mac-os", "mac"]
+            : OperatingSystem.IsWindows()
+                ? ["windows"]
+                : ["linux"];
+        var archNames = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.X86 => new[] { "x86", "32" },
+            Architecture.Arm64 => new[] { "arm64", "aarch64", "64" },
+            _ => new[] { "x86_64", "amd64", "64" }
+        };
+
+        foreach (var osName in osNames)
+        {
+            candidates.Add($"natives-{osName}");
+            candidates.Add($"native-{osName}");
+            foreach (var archName in archNames)
+            {
+                candidates.Add($"natives-{osName}-{archName}");
+                candidates.Add($"native-{osName}-{archName}");
+            }
+        }
+
+        return candidates;
+    }
+
+    private static string GetCurrentNativeOsKey()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return "windows";
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return "osx";
+        }
+
+        return "linux";
+    }
+
+    private static IReadOnlyList<string> GetExtractExcludes(JsonElement library)
+    {
+        if (!library.TryGetProperty("extract", out var extract) ||
+            extract.ValueKind != JsonValueKind.Object ||
+            !extract.TryGetProperty("exclude", out var exclude) ||
+            exclude.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return exclude.EnumerateArray()
+            .Where(item => item.ValueKind == JsonValueKind.String)
+            .Select(item => item.GetString())
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item!.Replace('\\', '/'))
+            .ToArray();
+    }
+
     private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
         MinecraftLaunchJavaWorkflowPlan javaWorkflow)
     {
@@ -1031,6 +1263,28 @@ internal static class FrontendLaunchCompositionService
         return RuntimeInformation.ProcessArchitecture == Architecture.X86
             ? "linux-i386"
             : "linux";
+    }
+
+    private sealed record LibraryDownloadInfo(
+        string TargetPath,
+        string? DownloadUrl,
+        string? Sha1);
+
+    private sealed record NativeArchiveDownloadInfo(
+        string TargetPath,
+        string? DownloadUrl,
+        string? Sha1,
+        IReadOnlyList<string> ExtractExcludes);
+
+    private static string BuildLibraryUrl(JsonElement library, string relativePath)
+    {
+        var baseUrl = GetString(library, "url");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            baseUrl = "https://libraries.minecraft.net/";
+        }
+
+        return $"{baseUrl.TrimEnd('/')}/{relativePath.Replace('\\', '/')}";
     }
 
     private static string NormalizeSelectedJavaPath(string rawValue)
@@ -1981,7 +2235,7 @@ internal static class FrontendLaunchCompositionService
             : null;
     }
 
-    private static string DeriveLibraryPathFromName(string libraryName)
+    private static string DeriveLibraryPathFromName(string libraryName, string? classifier = null)
     {
         var segments = libraryName.Split(':', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length < 3)
@@ -1992,8 +2246,11 @@ internal static class FrontendLaunchCompositionService
         var groupPath = segments[0].Replace('.', Path.DirectorySeparatorChar);
         var artifact = segments[1];
         var version = segments[2];
-        var classifier = segments.Length >= 4 ? "-" + segments[3] : string.Empty;
-        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifier}.jar");
+        var effectiveClassifier = string.IsNullOrWhiteSpace(classifier)
+            ? (segments.Length >= 4 ? segments[3] : null)
+            : classifier;
+        var classifierSuffix = string.IsNullOrWhiteSpace(effectiveClassifier) ? string.Empty : "-" + effectiveClassifier;
+        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifierSuffix}.jar");
     }
 
     private static string? FirstNonEmpty(params string?[] values)
