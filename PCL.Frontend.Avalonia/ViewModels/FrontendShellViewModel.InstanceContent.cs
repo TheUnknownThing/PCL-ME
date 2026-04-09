@@ -723,24 +723,18 @@ internal sealed partial class FrontendShellViewModel
         var address = serverInfo.Address;
 
         var serversPath = Path.Combine(_instanceComposition.Selection.IndieDirectory, "servers.dat");
-        NbtFile file;
+        NbtList serverList;
         try
         {
-            file = File.Exists(serversPath)
-                ? new NbtFile(serversPath)
-                : new NbtFile(new NbtCompound
-                {
-                    new NbtList("servers", NbtTagType.Compound)
-                });
+            serverList = File.Exists(serversPath)
+                ? await global::PCL.Core.Minecraft.NbtFileHandler.ReadTagInNbtFileAsync<NbtList>(serversPath, "servers") ?? new NbtList("servers", NbtTagType.Compound)
+                : new NbtList("servers", NbtTagType.Compound);
         }
         catch (Exception ex)
         {
             AddActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
             return;
         }
-
-        var serverList = file.RootTag.Get<NbtList>("servers")
-            ?? new NbtList("servers", NbtTagType.Compound);
 
         try
         {
@@ -755,10 +749,6 @@ internal sealed partial class FrontendShellViewModel
                 new NbtString("ip", address)
             });
 
-            if (file.RootTag.Get<NbtList>("servers") is null)
-            {
-                file.RootTag.Add(serverList);
-            }
         }
         catch (Exception ex)
         {
@@ -768,7 +758,12 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            file.SaveToFile(serversPath, NbtCompression.None);
+            var clonedServerList = (NbtList)serverList.Clone();
+            if (!await global::PCL.Core.Minecraft.NbtFileHandler.WriteTagInNbtFileAsync(clonedServerList, serversPath))
+            {
+                AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+                return;
+            }
         }
         catch
         {
