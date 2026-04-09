@@ -276,10 +276,10 @@ internal sealed partial class PclCard : UserControl
         var idleHeaderBrush = GetBrush("ColorBrush1", "#343D4A");
         var hoverHeaderBrush = GetBrush("ColorBrush2", "#0B5BCB");
 
-        CardBorder.BorderBrush = _isHovered
+        HoverOutlineBorder.BorderBrush = _isHovered
             ? hoverBorderBrush
             : idleBorderBrush;
-        CardBorder.BorderThickness = _isHovered
+        HoverOutlineBorder.BorderThickness = _isHovered
             ? HoverBorderThickness
             : IdleBorderThickness;
         CardBorder.Background = _isHovered

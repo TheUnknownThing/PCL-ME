@@ -15,8 +15,6 @@
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
-          <ThicknessTransition Property="BorderThickness" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
           <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
           <BoxShadowsTransition Property="BoxShadow" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
         </Transitions>
@@ -91,6 +89,21 @@
               Content="{Binding CardContent, ElementName=Root}" />
         </Grid>
       </Grid>
+    </Border>
+
+    <Border
+        x:Name="HoverOutlineBorder"
+        Background="Transparent"
+        BorderBrush="{DynamicResource ColorBrushTransparent}"
+        BorderThickness="1"
+        CornerRadius="6"
+        IsHitTestVisible="False">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
+          <ThicknessTransition Property="BorderThickness" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
+        </Transitions>
+      </Border.Transitions>
     </Border>
   </Grid>
 </UserControl>
