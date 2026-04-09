@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -13,6 +14,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private static readonly string LaunchAvatarFallbackImagePath = FrontendLauncherAssetLocator.GetPath("Images", "Heads", "PCL-Community.png");
+    private static readonly HttpClient LaunchAvatarHttpClient = new();
     private string _launchAvatarImagePath = LaunchAvatarFallbackImagePath;
     private int _launchAvatarRefreshVersion;
 
@@ -121,7 +123,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(skinCachePath)!);
-            var bytes = await DownloadHttpClient.GetByteArrayAsync(skinUrl).ConfigureAwait(false);
+            var bytes = await LaunchAvatarHttpClient.GetByteArrayAsync(skinUrl).ConfigureAwait(false);
             await File.WriteAllBytesAsync(skinCachePath, bytes).ConfigureAwait(false);
             return skinCachePath;
         }
