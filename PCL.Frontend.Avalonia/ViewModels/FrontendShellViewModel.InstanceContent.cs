@@ -227,11 +227,7 @@ internal sealed partial class FrontendShellViewModel
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "screenshots") : string.Empty,
             "当前实例没有截图目录。"));
 
-    public ActionCommand RefreshInstanceServerCommand => new(() =>
-    {
-        ReloadInstanceComposition();
-        AddActivity("刷新服务器信息", "已重新扫描当前实例中的服务器列表。");
-    });
+    public ActionCommand RefreshInstanceServerCommand => new(() => _ = RefreshAllInstanceServersAsync());
 
     public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerAsync());
 
@@ -631,11 +627,204 @@ internal sealed partial class FrontendShellViewModel
             InstanceServerEntries,
             _instanceComposition.Server.Entries
                 .Where(entry => MatchesSearch(entry.Title, entry.Address, entry.Status, InstanceServerSearchQuery))
-                .Select(entry => new InstanceServerEntryViewModel(
-                    entry.Title,
-                    entry.Address,
-                    entry.Status,
-                    new ActionCommand(() => ViewInstanceServer(entry)))));
+                .Select(CreateInstanceServerEntry));
+    }
+
+    private InstanceServerEntryViewModel CreateInstanceServerEntry(FrontendInstanceServerEntry entry)
+    {
+        InstanceServerEntryViewModel? viewModel = null;
+        viewModel = new InstanceServerEntryViewModel(
+            entry.Title,
+            entry.Address,
+            LoadLauncherBitmap("Images", "Backgrounds", "server_bg.png"),
+            LoadLauncherBitmap("Images", "Icons", "DefaultServer.png"),
+            new ActionCommand(() =>
+            {
+                if (viewModel is not null)
+                {
+                    _ = RefreshInstanceServerAsync(viewModel);
+                }
+            }),
+            new ActionCommand(() =>
+            {
+                if (viewModel is not null)
+                {
+                    _ = CopyInstanceServerAddressAsync(viewModel);
+                }
+            }),
+            new ActionCommand(() =>
+            {
+                if (viewModel is not null)
+                {
+                    _ = ConnectInstanceServerAsync(viewModel);
+                }
+            }),
+            new ActionCommand(() => ViewInstanceServer(entry)));
+        ApplyInstanceServerIdleState(viewModel, entry.Status);
+        return viewModel;
+    }
+
+    private async Task RefreshAllInstanceServersAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("刷新服务器信息", "当前未选择实例。");
+            return;
+        }
+
+        ReloadInstanceComposition();
+        var entries = InstanceServerEntries.ToArray();
+        if (entries.Length == 0)
+        {
+            AddActivity("刷新服务器信息", "已重新扫描当前实例中的服务器列表，但当前实例没有已保存的服务器。");
+            return;
+        }
+
+        await Task.WhenAll(entries.Select(entry => RefreshInstanceServerAsync(entry, addActivity: false)));
+        AddActivity("刷新服务器信息", $"已刷新 {entries.Length} 个服务器。");
+    }
+
+    private async Task RefreshInstanceServerAsync(InstanceServerEntryViewModel entry, bool addActivity = true)
+    {
+        var address = (entry.Address ?? string.Empty).Trim().Replace("：", ":");
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            ApplyInstanceServerErrorState(entry, "服务器地址为空。");
+            if (addActivity)
+            {
+                AddActivity("刷新服务器信息失败", $"{entry.Title} • 服务器地址为空。");
+            }
+
+            return;
+        }
+
+        ApplyInstanceServerLoadingState(entry);
+
+        try
+        {
+            var reachableAddress = await ResolveMinecraftServerQueryEndpointAsync(address, CancellationToken.None);
+            using var queryService = global::PCL.Core.Link.McPing.McPingServiceFactory.CreateService(reachableAddress.Ip, reachableAddress.Port);
+            var result = await queryService.PingAsync(CancellationToken.None);
+            if (result is null)
+            {
+                throw new InvalidOperationException("未返回服务器信息");
+            }
+
+            ApplyInstanceServerSuccessState(entry, result);
+            if (addActivity)
+            {
+                AddActivity("刷新服务器信息", $"{entry.Title} • {result.Players.Online}/{result.Players.Max} • {result.Latency}ms");
+            }
+        }
+        catch (Exception ex)
+        {
+            ApplyInstanceServerErrorState(entry, ex.Message);
+            if (addActivity)
+            {
+                AddActivity("刷新服务器信息失败", $"{entry.Title} • {ex.Message}");
+            }
+        }
+    }
+
+    private static void ApplyInstanceServerIdleState(InstanceServerEntryViewModel entry, string status)
+    {
+        entry.StatusText = string.IsNullOrWhiteSpace(status) ? "已保存服务器" : status;
+        entry.StatusBrush = global::Avalonia.Media.Brushes.White;
+        entry.PlayerCount = "-/-";
+        entry.Latency = string.Empty;
+        entry.LatencyBrush = global::Avalonia.Media.Brushes.White;
+        entry.PlayerTooltip = null;
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines("点击刷新查看服务器状态");
+    }
+
+    private static void ApplyInstanceServerLoadingState(InstanceServerEntryViewModel entry)
+    {
+        entry.StatusText = "正在连接...";
+        entry.StatusBrush = global::Avalonia.Media.Brushes.White;
+        entry.PlayerCount = "正在连接";
+        entry.Latency = string.Empty;
+        entry.LatencyBrush = global::Avalonia.Media.Brushes.White;
+        entry.PlayerTooltip = null;
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines("正在连接...");
+        entry.Logo = LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
+    }
+
+    private static void ApplyInstanceServerSuccessState(InstanceServerEntryViewModel entry, global::PCL.Core.Link.McPing.Model.McPingResult result)
+    {
+        entry.StatusText = "服务器在线";
+        entry.StatusBrush = global::Avalonia.Media.Brushes.White;
+        entry.PlayerCount = $"{result.Players.Online}/{result.Players.Max}";
+        entry.Latency = $"{result.Latency}ms";
+        entry.LatencyBrush = GetMinecraftServerQueryLatencyBrush(result.Latency);
+        entry.PlayerTooltip = result.Players.Samples?.Any() == true
+            ? string.Join(Environment.NewLine, result.Players.Samples.Select(sample => sample.Name))
+            : null;
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines(result.Description);
+        entry.Logo = DecodeMinecraftServerQueryLogo(result.Favicon)
+            ?? LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
+    }
+
+    private static void ApplyInstanceServerErrorState(InstanceServerEntryViewModel entry, string message)
+    {
+        entry.StatusText = $"无法连接: {message}";
+        entry.StatusBrush = global::Avalonia.Media.Brushes.Red;
+        entry.PlayerCount = "离线";
+        entry.Latency = string.Empty;
+        entry.LatencyBrush = global::Avalonia.Media.Brushes.White;
+        entry.PlayerTooltip = null;
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines("服务器离线");
+        entry.Logo = LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
+    }
+
+    private async Task CopyInstanceServerAddressAsync(InstanceServerEntryViewModel entry)
+    {
+        var address = (entry.Address ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            AddActivity("复制服务器地址", $"{entry.Title} 没有可复制的地址。");
+            return;
+        }
+
+        try
+        {
+            await _shellActionService.SetClipboardTextAsync(address);
+            AddActivity("复制服务器地址", $"{entry.Title} • {address}");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("复制服务器地址失败", ex.Message);
+        }
+    }
+
+    private async Task ConnectInstanceServerAsync(InstanceServerEntryViewModel entry)
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("连接服务器", "当前未选择实例。");
+            return;
+        }
+
+        var address = (entry.Address ?? string.Empty).Trim().Replace("：", ":");
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            AddActivity("连接服务器", $"{entry.Title} 没有可用的服务器地址。");
+            return;
+        }
+
+        try
+        {
+            InstanceServerAutoJoin = address;
+            RefreshLaunchState();
+            NavigateTo(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                $"已切换到启动页并准备连接服务器 {entry.Title}。");
+            await HandleLaunchRequestedAsync();
+            AddActivity("连接服务器", $"{entry.Title} • {address}");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("连接服务器失败", ex.Message);
+        }
     }
 
     private async Task PasteInstanceWorldClipboardAsync()

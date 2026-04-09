@@ -31,32 +31,121 @@
             <DataTemplate>
               <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="20,12,20,15">
                 <controls:PclCard.CardContent>
-                  <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Margin="0,0,18,0" Spacing="4">
-                      <TextBlock
-                          Foreground="#677789"
-                          FontSize="12.5"
-                          Text="{Binding Info}" />
-                      <Border
-                          Padding="8,4"
-                          Background="#F7FAFE"
-                          BorderBrush="#D5E6FD"
-                          BorderThickness="1"
-                          CornerRadius="4">
-                        <TextBlock
-                            Foreground="#4B78C2"
-                            FontSize="11.5"
-                            Text="{Binding Status}" />
-                      </Border>
-                    </StackPanel>
-                    <controls:PclButton
-                        Grid.Column="1"
-                        Width="96"
-                        Height="35"
-                        VerticalAlignment="Center"
-                        Command="{Binding ActionCommand}"
-                        Text="查看" />
-                  </Grid>
+                  <StackPanel Spacing="12">
+                    <TextBlock
+                        Foreground="#677789"
+                        FontSize="12.5"
+                        Text="{Binding Address}" />
+
+                    <Border
+                        BorderThickness="2"
+                        BorderBrush="{DynamicResource ColorBrush5}"
+                        CornerRadius="5"
+                        ClipToBounds="True">
+                      <Border.Background>
+                        <ImageBrush
+                            Source="{Binding BackgroundImage}"
+                            Stretch="UniformToFill" />
+                      </Border.Background>
+                      <Grid MinHeight="66">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                          <Image
+                              Grid.Column="0"
+                              Width="54"
+                              Height="54"
+                              Margin="6"
+                              Source="{Binding Logo}"
+                              Stretch="Uniform" />
+
+                          <StackPanel Grid.Column="1" Margin="6" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock
+                                FontSize="15"
+                                Foreground="{Binding StatusBrush}"
+                                Text="{Binding StatusText}"
+                                TextWrapping="Wrap" />
+
+                            <ItemsControl
+                                ItemsSource="{Binding MotdLines}"
+                                IsVisible="{Binding HasMotd}">
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                  <ItemsControl ItemsSource="{Binding Segments}">
+                                    <ItemsControl.ItemsPanel>
+                                      <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                      </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                      <DataTemplate>
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontStyle="{Binding FontStyle}"
+                                            FontWeight="{Binding FontWeight}"
+                                            Foreground="{Binding ForegroundBrush}"
+                                            Text="{Binding Text}" />
+                                      </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                  </ItemsControl>
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </StackPanel>
+
+                          <StackPanel
+                              Grid.Column="2"
+                              Margin="6"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Center"
+                              ToolTip.Tip="{Binding PlayerTooltip}">
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="12"
+                                Foreground="White"
+                                Text="{Binding PlayerCount}"
+                                TextAlignment="Right" />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="12"
+                                Foreground="{Binding LatencyBrush}"
+                                IsVisible="{Binding HasLatency}"
+                                Text="{Binding Latency}"
+                                TextAlignment="Right" />
+                          </StackPanel>
+                        </Grid>
+                      </Grid>
+                    </Border>
+
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*">
+                      <controls:PclButton
+                          Grid.Column="0"
+                          Width="88"
+                          Height="35"
+                          Margin="0,0,10,0"
+                          Command="{Binding RefreshCommand}"
+                          Text="刷新" />
+                      <controls:PclButton
+                          Grid.Column="1"
+                          Width="88"
+                          Height="35"
+                          Margin="0,0,10,0"
+                          Command="{Binding CopyCommand}"
+                          Text="复制地址" />
+                      <controls:PclButton
+                          Grid.Column="2"
+                          Width="88"
+                          Height="35"
+                          Margin="0,0,10,0"
+                          Command="{Binding ConnectCommand}"
+                          ColorType="Highlight"
+                          Text="连接" />
+                      <controls:PclButton
+                          Grid.Column="3"
+                          Width="88"
+                          Height="35"
+                          Command="{Binding InspectCommand}"
+                          Text="查看" />
+                    </Grid>
+                  </StackPanel>
                 </controls:PclCard.CardContent>
               </controls:PclCard>
             </DataTemplate>

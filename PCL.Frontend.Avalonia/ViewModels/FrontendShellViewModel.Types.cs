@@ -859,17 +859,110 @@ internal sealed class InstanceScreenshotEntryViewModel(
 
 internal sealed class InstanceServerEntryViewModel(
     string title,
-    string info,
-    string status,
-    ActionCommand actionCommand)
+    string address,
+    Bitmap? backgroundImage,
+    Bitmap? logo,
+    ActionCommand refreshCommand,
+    ActionCommand copyCommand,
+    ActionCommand connectCommand,
+    ActionCommand inspectCommand) : ViewModelBase
 {
+    private Bitmap? _logo = logo;
+    private string _statusText = "已保存服务器";
+    private IBrush _statusBrush = Brushes.White;
+    private string _playerCount = "-/-";
+    private string _latency = string.Empty;
+    private IBrush _latencyBrush = Brushes.White;
+    private string? _playerTooltip;
+    private IReadOnlyList<MinecraftServerQueryMotdLineViewModel> _motdLines = [];
+    private bool _hasMotd;
+    private bool _hasLatency;
+
     public string Title { get; } = title;
 
-    public string Info { get; } = info;
+    public string Address { get; } = address;
 
-    public string Status { get; } = status;
+    public Bitmap? BackgroundImage { get; } = backgroundImage;
 
-    public ActionCommand ActionCommand { get; } = actionCommand;
+    public Bitmap? Logo
+    {
+        get => _logo;
+        set => SetProperty(ref _logo, value);
+    }
+
+    public string StatusText
+    {
+        get => _statusText;
+        set => SetProperty(ref _statusText, value);
+    }
+
+    public IBrush StatusBrush
+    {
+        get => _statusBrush;
+        set => SetProperty(ref _statusBrush, value);
+    }
+
+    public string PlayerCount
+    {
+        get => _playerCount;
+        set => SetProperty(ref _playerCount, value);
+    }
+
+    public string Latency
+    {
+        get => _latency;
+        set
+        {
+            if (SetProperty(ref _latency, value))
+            {
+                HasLatency = !string.IsNullOrWhiteSpace(value);
+            }
+        }
+    }
+
+    public IBrush LatencyBrush
+    {
+        get => _latencyBrush;
+        set => SetProperty(ref _latencyBrush, value);
+    }
+
+    public string? PlayerTooltip
+    {
+        get => _playerTooltip;
+        set => SetProperty(ref _playerTooltip, value);
+    }
+
+    public IReadOnlyList<MinecraftServerQueryMotdLineViewModel> MotdLines
+    {
+        get => _motdLines;
+        set
+        {
+            if (SetProperty(ref _motdLines, value))
+            {
+                HasMotd = value.Count > 0;
+            }
+        }
+    }
+
+    public bool HasMotd
+    {
+        get => _hasMotd;
+        private set => SetProperty(ref _hasMotd, value);
+    }
+
+    public bool HasLatency
+    {
+        get => _hasLatency;
+        private set => SetProperty(ref _hasLatency, value);
+    }
+
+    public ActionCommand RefreshCommand { get; } = refreshCommand;
+
+    public ActionCommand CopyCommand { get; } = copyCommand;
+
+    public ActionCommand ConnectCommand { get; } = connectCommand;
+
+    public ActionCommand InspectCommand { get; } = inspectCommand;
 }
 
 internal sealed class InstanceResourceEntryViewModel(
