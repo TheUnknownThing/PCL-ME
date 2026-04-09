@@ -15,10 +15,10 @@ using Ae.Dns.Protocol.Records;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Core.App.Essentials;
 using PCL.Core.Link.McPing;
 using PCL.Core.Link.McPing.Model;
 using PCL.Core.Utils;
-using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
