@@ -267,21 +267,39 @@ internal sealed partial class PclCard : UserControl
     private void RefreshState()
     {
         var isHeaderInteractive = ShowChevron || HeaderCommand is not null;
+        var idleBorderBrush = GetBrush("ColorBrushTransparent", "#00FFFFFF");
+        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver", "#28D5E6FD");
+        var idleSurfaceBrush = GetBrush("ColorBrushMyCard", "#CDFFFFFF");
+        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#E6FFFFFF");
+        var idleHeaderBrush = GetBrush("ColorBrush1", "#343D4A");
+        var hoverHeaderBrush = GetBrush("ColorBrush2", "#0B5BCB");
+
         CardBorder.BorderBrush = _isHovered
-            ? Brush.Parse("#28D5E6FD")
-            : Brush.Parse("#00FFFFFF");
+            ? hoverBorderBrush
+            : idleBorderBrush;
         CardBorder.Background = _isHovered
-            ? Brush.Parse("#E6FFFFFF")
-            : Brush.Parse("#CDFFFFFF");
+            ? hoverSurfaceBrush
+            : idleSurfaceBrush;
         CardBorder.BoxShadow = BoxShadows.Parse(_isHovered
             ? "0 10 24 0 #200B5BCB"
             : "0 6 18 0 #14343D4A");
         HeaderTextBlock.Foreground = _isHovered
-            ? Brush.Parse("#0B5BCB")
-            : Brush.Parse("#343D4A");
+            ? hoverHeaderBrush
+            : idleHeaderBrush;
         ChevronPath.Fill = HeaderTextBlock.Foreground;
         HeaderButton.Cursor = isHeaderInteractive ? new Cursor(StandardCursorType.Hand) : new Cursor(StandardCursorType.Arrow);
         HeaderButton.IsHitTestVisible = isHeaderInteractive;
+    }
+
+    private static IBrush GetBrush(string resourceKey, string fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
+            resource is IBrush brush)
+        {
+            return brush;
+        }
+
+        return Brush.Parse(fallback);
     }
 
     private void RefreshHeaderLayout()
