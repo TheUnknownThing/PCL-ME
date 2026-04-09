@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using PCL.Core.IO;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -76,13 +77,16 @@ internal sealed class FrontendPlatformAdapter
 
         if (OperatingSystem.IsWindows())
         {
-            shortcutPath = Path.Combine(desktopDirectory, $"{displayName}.cmd");
-            shortcutContent = $"""
-                @echo off
-                start "" "{executablePath}"
-                """;
+            shortcutPath = Path.Combine(desktopDirectory, $"{displayName}.lnk");
+            Files.CreateShortcut(
+                shortcutPath,
+                executablePath,
+                workingDirectory: Path.GetDirectoryName(executablePath),
+                description: $"{displayName} 快捷方式");
+            return new FrontendShortcutMaterializationResult(shortcutPath);
         }
-        else if (OperatingSystem.IsMacOS())
+        
+        if (OperatingSystem.IsMacOS())
         {
             shortcutPath = Path.Combine(desktopDirectory, $"{displayName}.command");
             shortcutContent = $"""
