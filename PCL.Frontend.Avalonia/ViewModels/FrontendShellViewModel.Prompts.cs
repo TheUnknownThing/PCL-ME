@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Core.App.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
@@ -630,6 +631,8 @@ internal sealed partial class FrontendShellViewModel
                 AppendLaunchLogLine(line);
             }
 
+            await EnsureLaunchFilesAsync();
+
             var startResult = _shellActionService.StartLaunchSession(
                 _launchComposition,
                 _instanceComposition.Selection.InstanceDirectory);
@@ -641,12 +644,56 @@ internal sealed partial class FrontendShellViewModel
 
             _ = MonitorLaunchSessionAsync(startResult);
         }
+        catch (OperationCanceledException)
+        {
+            _isLaunchInProgress = false;
+            RaiseLaunchSessionProperties();
+            AppendLaunchLogLine("启动已取消。");
+            AddActivity("启动已取消", "启动前文件校验或准备步骤已取消。");
+        }
         catch (Exception ex)
         {
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine($"启动失败：{ex.Message}");
             AddActivity("启动失败", ex.Message);
+        }
+    }
+
+    private async Task EnsureLaunchFilesAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection || DisableInstanceFileValidation)
+        {
+            return;
+        }
+
+        AppendLaunchLogLine("正在校验并补全实例文件...");
+        AppendLaunchLogLine("详细进度已同步到任务管理。");
+
+        try
+        {
+            var repairResult = await ExecuteManagedInstanceRepairAsync(
+                $"启动前校验实例文件：{_instanceComposition.Selection.InstanceName}",
+                new FrontendInstanceRepairRequest(
+                _instanceComposition.Selection.LauncherDirectory,
+                _instanceComposition.Selection.InstanceDirectory,
+                _instanceComposition.Selection.InstanceName,
+                ForceCoreRefresh: false));
+            var completionMessage = $"启动前文件校验完成：下载 {repairResult.DownloadedFiles.Count} 个文件，复用 {repairResult.ReusedFiles.Count} 个文件。";
+            AppendLaunchLogLine(completionMessage);
+
+            if (repairResult.DownloadedFiles.Count > 0)
+            {
+                AddActivity("启动前文件校验", completionMessage);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"启动前文件校验失败：{ex.Message}", ex);
         }
     }
 

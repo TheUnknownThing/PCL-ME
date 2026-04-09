@@ -400,6 +400,10 @@ internal sealed partial class FrontendShellViewModel
             var result = await RunInstanceRepairAsync("补全文件", "file-checks", forceCoreRefresh: false);
             AddActivity("补全文件", $"已补全 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
         }
+        catch (OperationCanceledException)
+        {
+            AddActivity("补全文件已取消", "实例文件补全过程已取消。");
+        }
         catch (Exception ex)
         {
             AddActivity("补全文件失败", ex.Message);
@@ -429,6 +433,10 @@ internal sealed partial class FrontendShellViewModel
             var backupDirectory = BackupInstanceCoreFiles("reset-backups");
             var result = await RunInstanceRepairAsync("重置实例", "reset-plans", forceCoreRefresh: true, backupDirectory);
             AddActivity("重置实例", $"已重置核心文件并下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+        }
+        catch (OperationCanceledException)
+        {
+            AddActivity("重置实例已取消", "实例重置过程已取消。");
         }
         catch (Exception ex)
         {
@@ -586,11 +594,13 @@ internal sealed partial class FrontendShellViewModel
         var manifestPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.json");
         var jarPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.jar");
 
-        var result = await Task.Run(() => _shellActionService.RepairInstance(new FrontendInstanceRepairRequest(
-            _instanceComposition.Selection.LauncherDirectory,
-            _instanceComposition.Selection.InstanceDirectory,
-            _instanceComposition.Selection.InstanceName,
-            forceCoreRefresh)));
+        var result = await ExecuteManagedInstanceRepairAsync(
+            $"{actionTitle}：{_instanceComposition.Selection.InstanceName}",
+            new FrontendInstanceRepairRequest(
+                _instanceComposition.Selection.LauncherDirectory,
+                _instanceComposition.Selection.InstanceDirectory,
+                _instanceComposition.Selection.InstanceName,
+                forceCoreRefresh));
 
         var summaryLines = new List<string?>
         {

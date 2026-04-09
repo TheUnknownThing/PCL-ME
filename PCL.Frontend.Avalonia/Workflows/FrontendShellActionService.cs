@@ -119,9 +119,12 @@ internal sealed class FrontendShellActionService(
         exitLauncher();
     }
 
-    public FrontendInstanceRepairResult RepairInstance(FrontendInstanceRepairRequest request)
+    public FrontendInstanceRepairResult RepairInstance(
+        FrontendInstanceRepairRequest request,
+        Action<FrontendInstanceRepairTelemetrySnapshot>? onTelemetry = null,
+        CancellationToken cancellationToken = default)
     {
-        return FrontendInstanceRepairService.Repair(request);
+        return FrontendInstanceRepairService.Repair(request, onTelemetry, cancellationToken);
     }
 
     public bool TryOpenExternalTarget(string target, out string? error)
