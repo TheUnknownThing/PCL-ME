@@ -9,7 +9,7 @@
       ShowChevron="{Binding CanExpand}"
       IsChevronExpanded="{Binding IsExpanded}"
       HeaderCommand="{Binding ToggleCommand}"
-      ContentMargin="20,40,18,15">
+      ContentMargin="{Binding CardContentMargin}">
     <controls:PclCard.HeaderOverlayContent>
       <Grid
           Height="30"

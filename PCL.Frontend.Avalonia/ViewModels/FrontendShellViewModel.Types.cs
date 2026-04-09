@@ -405,7 +405,13 @@ internal sealed class DownloadInstallOptionCardViewModel(
     public bool CanExpand
     {
         get => _canExpand;
-        set => SetProperty(ref _canExpand, value);
+        set
+        {
+            if (SetProperty(ref _canExpand, value))
+            {
+                RaisePropertyChanged(nameof(CardContentMargin));
+            }
+        }
     }
 
     public bool IsExpanded
@@ -421,6 +427,10 @@ internal sealed class DownloadInstallOptionCardViewModel(
     }
 
     public double ChevronAngle => IsExpanded ? 180 : 0;
+
+    public Thickness CardContentMargin => CanExpand
+        ? new Thickness(20, 40, 18, 15)
+        : default;
 
     public bool IsLoading
     {
