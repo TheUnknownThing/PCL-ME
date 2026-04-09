@@ -115,7 +115,7 @@
                       </Grid>
                     </Border>
 
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,*">
                       <controls:PclButton
                           Grid.Column="0"
                           Width="88"
@@ -138,12 +138,6 @@
                           Command="{Binding ConnectCommand}"
                           ColorType="Highlight"
                           Text="连接" />
-                      <controls:PclButton
-                          Grid.Column="3"
-                          Width="88"
-                          Height="35"
-                          Command="{Binding InspectCommand}"
-                          Text="查看" />
                     </Grid>
                   </StackPanel>
                 </controls:PclCard.CardContent>
