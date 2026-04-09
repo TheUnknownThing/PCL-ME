@@ -14,7 +14,7 @@ executable_name="PCL.Frontend.Avalonia"
 mac_launcher_name="PCLLauncher"
 linux_launcher_script="launch-pcl-ce.sh"
 windows_launcher_script="Launch Plain Craft Launcher Community Edition.vbs"
-icon_png="${repo_root}/PCL.Frontend.WPF/Images/icon.png"
+icon_png="${repo_root}/PCL.Frontend.Avalonia/Assets/icon.png"
 
 default_rids=(osx-arm64 linux-x64 win-x64)
 if [[ "$#" -gt 0 ]]; then

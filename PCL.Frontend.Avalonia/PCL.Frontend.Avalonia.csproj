@@ -11,16 +11,17 @@
     <Company>PCL Community</Company>
     <Product>Plain Craft Launcher Community Edition</Product>
     <Description>Avalonia replacement frontend for Plain Craft Launcher Community Edition.</Description>
-    <ApplicationIcon>..\PCL.Frontend.WPF\Images\icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets/icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <BuildInParallel>false</BuildInParallel>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Ae.Dns.Client" Version="3.1.0" />
-    <PackageReference Include="Avalonia" Version="11.2.6" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.2.6" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.6" />
+    <PackageReference Include="Avalonia" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     <PackageReference Include="fNbt" Version="1.0.0" />
   </ItemGroup>
 
@@ -30,12 +31,9 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_*.ttf" />
-    <AvaloniaResource Include="..\PCL.Frontend.WPF\Images\icon.ico" Link="Assets/icon.ico" />
-    <AvaloniaResource Include="..\PCL.Frontend.WPF\Images\icon.png" Link="Assets/icon.png" />
-    <None Include="..\PCL.Frontend.WPF\Resources\forge-installer.jar" Link="forge-installer.jar" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\PCL.Frontend.WPF\metadata.json" Link="LauncherAssets/metadata.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\PCL.Frontend.WPF\Resources\Help.zip" Link="LauncherAssets/Resources/Help.zip" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\PCL.Frontend.WPF\Resources\Custom.xml" Link="LauncherAssets/Resources/Custom.xml" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\PCL.Frontend.WPF\Images\**\*" Link="LauncherAssets/Images/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <AvaloniaResource Include="Assets/icon.ico" />
+    <AvaloniaResource Include="Assets/icon.png" />
+    <None Include="Assets/forge-installer.jar" Link="forge-installer.jar" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets/LauncherAssets/**" Link="LauncherAssets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

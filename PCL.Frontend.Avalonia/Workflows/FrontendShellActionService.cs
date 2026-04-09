@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
@@ -205,7 +206,7 @@ internal sealed class FrontendShellActionService(
             throw new InvalidOperationException("当前环境不支持剪贴板。");
         }
 
-        return await desktop.MainWindow.Clipboard.GetTextAsync();
+        return await desktop.MainWindow.Clipboard.TryGetTextAsync();
     }
 
     public async Task SetClipboardTextAsync(string text)
