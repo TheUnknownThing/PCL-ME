@@ -77,7 +77,13 @@
           IconData="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
           IconScale="0.75"
           IdleBackgroundBrush="#00FFFFFF"
-          Opacity="0" />
+          Opacity="0">
+        <controls:PclIconButton.Transitions>
+          <Transitions>
+            <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.QuickState}" />
+          </Transitions>
+        </controls:PclIconButton.Transitions>
+      </controls:PclIconButton>
 
       <controls:PclButton
           x:Name="SearchButton"

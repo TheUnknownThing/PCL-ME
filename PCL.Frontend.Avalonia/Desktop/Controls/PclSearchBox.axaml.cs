@@ -123,6 +123,7 @@ internal sealed partial class PclSearchBox : UserControl
     private void RefreshClearButtonState()
     {
         var hasText = !string.IsNullOrWhiteSpace(Text);
+        ClearButton.IsEnabled = hasText;
         ClearButton.Opacity = hasText ? 1 : 0;
         ClearButton.IsHitTestVisible = hasText;
     }
