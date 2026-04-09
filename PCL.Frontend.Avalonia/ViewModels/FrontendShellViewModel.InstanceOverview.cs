@@ -353,8 +353,10 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var extension = _shellActionService.GetCommandScriptExtension();
+        var scriptDirectory = GetInstanceOverviewArtifactDirectory("launch-scripts");
+        Directory.CreateDirectory(scriptDirectory);
         var scriptPath = Path.Combine(
-            GetInstanceOverviewArtifactDirectory("launch-scripts"),
+            scriptDirectory,
             $"启动 {_instanceComposition.Selection.InstanceName}{extension}");
         var encoding = _launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding
             ? new UTF8Encoding(false)
