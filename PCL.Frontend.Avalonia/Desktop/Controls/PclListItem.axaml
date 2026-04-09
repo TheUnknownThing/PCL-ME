@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     x:Name="Root"
+    Height="42"
     MinHeight="34">
   <Grid
       x:Name="LayoutRoot"
@@ -92,12 +93,12 @@
         <TextBlock
             x:Name="InfoBlock"
             HorizontalAlignment="Left"
-            FontSize="11.5"
+            FontSize="12"
             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             IsVisible="False"
             TextAlignment="Left"
             TextTrimming="CharacterEllipsis"
-            TextWrapping="Wrap" />
+            TextWrapping="NoWrap" />
       </StackPanel>
     </Button>
 

@@ -214,6 +214,7 @@ internal sealed partial class PclListItem : UserControl
         LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
         LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(iconColumnWidth) : new GridLength(6);
         MainButton.Margin = new Thickness(4, 0, 0, 0);
+        TitleBlock.Margin = new Thickness(0, 0, 0, isCompactLayout ? 0 : 2);
     }
 
     private void UpdateInfo(string info)
