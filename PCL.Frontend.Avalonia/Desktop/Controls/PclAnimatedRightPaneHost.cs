@@ -78,9 +78,7 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         {
             nextPresenter = CreatePresenter(newContent);
             ConfigureMotion(nextPresenter, previousPresenter is null ? 0 : EnterDelayMilliseconds);
-            nextPresenter.Opacity = 0;
-            nextPresenter.SetValue(ZIndexProperty, 1);
-            Children.Add(nextPresenter);
+            AttachPresenter(nextPresenter, zIndex: 1, opacity: 0);
             _currentPresenter = nextPresenter;
         }
         else
@@ -120,10 +118,7 @@ internal sealed class PclAnimatedRightPaneHost : Grid
     {
         presenter.IsHitTestVisible = false;
         await Motion.PlayExitAsync(presenter);
-        if (!ReferenceEquals(presenter, _currentPresenter))
-        {
-            Children.Remove(presenter);
-        }
+        DetachPresenter(presenter);
     }
 
     private static ContentControl CreatePresenter(object content)
@@ -147,5 +142,22 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         Motion.SetOvershootTranslation(control, true);
         Motion.SetExitOffsetX(control, 0);
         Motion.SetExitOffsetY(control, ExitOffsetY);
+    }
+
+    private void AttachPresenter(ContentControl presenter, int zIndex, double opacity)
+    {
+        presenter.Opacity = opacity;
+        presenter.SetValue(ZIndexProperty, zIndex);
+        Children.Add(presenter);
+    }
+
+    private void DetachPresenter(ContentControl presenter)
+    {
+        if (ReferenceEquals(presenter, _currentPresenter))
+        {
+            return;
+        }
+
+        Children.Remove(presenter);
     }
 }
