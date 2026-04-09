@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
@@ -12,14 +10,7 @@ namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right;
 
 internal sealed partial class DownloadResourceShellRightPaneView : UserControl
 {
-    private static readonly IBrush SearchRowIdleBackgroundBrush = Brush.Parse("#F8FBFF");
-    private static readonly IBrush SearchRowIdleBorderBrush = Brush.Parse("#D5E6FD");
-    private static readonly IBrush SearchRowHoverBackgroundBrush = Brush.Parse("#F2F7FF");
-    private static readonly IBrush SearchRowHoverBorderBrush = Brush.Parse("#B7CDEE");
-    private static readonly IBrush TransparentBrush = Brushes.Transparent;
-
-    private readonly TextBox _searchTextBox;
-    private readonly Border _searchRowBorder;
+    private readonly PclSearchBox _searchRow;
     private readonly PclCard _filterCard;
     private readonly Border _hintBanner;
     private readonly StackPanel _contentHost;
@@ -30,14 +21,13 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     private readonly ComboBox _versionComboBox;
     private readonly ComboBox _loaderComboBox;
     private FrontendShellViewModel? _observedShell;
-    private bool _isSearchRowHovered;
     private int _visualStateVersion;
     private string _lastHintText = string.Empty;
 
     public DownloadResourceShellRightPaneView()
     {
         InitializeComponent();
-        _searchRowBorder = this.FindControl<Border>("SearchRowBorder")
+        _searchRow = this.FindControl<PclSearchBox>("SearchRow")
             ?? throw new InvalidOperationException("下载资源页面未找到搜索框容器。");
         _filterCard = this.FindControl<PclCard>("FilterCard")
             ?? throw new InvalidOperationException("下载资源页面未找到筛选卡片。");
@@ -47,8 +37,6 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
             ?? throw new InvalidOperationException("下载资源页面未找到内容容器。");
         _loadingCard = this.FindControl<PclCard>("LoadingCard")
             ?? throw new InvalidOperationException("下载资源页面未找到加载卡片。");
-        _searchTextBox = this.FindControl<TextBox>("DownloadResourceSearchTextBox")
-            ?? throw new InvalidOperationException("下载资源页面未找到搜索文本框。");
         _sourceComboBox = this.FindControl<ComboBox>("DownloadResourceSourceComboBox")
             ?? throw new InvalidOperationException("下载资源页面未找到来源筛选框。");
         _tagComboBox = this.FindControl<ComboBox>("DownloadResourceTagComboBox")
@@ -59,57 +47,14 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
             ?? throw new InvalidOperationException("下载资源页面未找到版本筛选框。");
         _loaderComboBox = this.FindControl<ComboBox>("DownloadResourceLoaderComboBox")
             ?? throw new InvalidOperationException("下载资源页面未找到加载器筛选框。");
-        _searchTextBox.KeyDown += SearchTextBoxOnKeyDown;
-        _searchTextBox.GotFocus += (_, _) => ApplySearchTextBoxChrome();
-        _searchTextBox.LostFocus += (_, _) => ApplySearchTextBoxChrome();
         DataContextChanged += OnDataContextChanged;
         DetachedFromVisualTree += (_, _) =>
         {
             ObserveShell(null);
             _visualStateVersion++;
         };
-        PointerMoved += OnViewPointerMoved;
-        PointerExited += OnViewPointerExited;
-        PointerPressed += OnViewPointerPressed;
         ConfigureSurfaceMotion();
-        ApplySearchTextBoxChrome();
-        ApplySearchRowVisualState();
         ScheduleVisualStateSync();
-    }
-
-    private void SearchTextBoxOnKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter)
-        {
-            return;
-        }
-
-        if (DataContext is not FrontendShellViewModel { SearchDownloadResourceCommand: var searchCommand }
-            || !searchCommand.CanExecute(null))
-        {
-            return;
-        }
-
-        e.Handled = true;
-        searchCommand.Execute(null);
-    }
-
-    private void OnViewPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.Source is not StyledElement source)
-        {
-            return;
-        }
-
-        for (StyledElement? current = source; current is not null; current = current.Parent)
-        {
-            if (ReferenceEquals(current, _searchRowBorder))
-            {
-                return;
-            }
-        }
-
-        TopLevel.GetTopLevel(this)?.FocusManager?.ClearFocus();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -136,46 +81,6 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         {
             _observedShell.PropertyChanged += OnShellPropertyChanged;
         }
-    }
-
-    private void OnViewPointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (e.Source is not StyledElement source)
-        {
-            UpdateSearchRowHoverState(false);
-            return;
-        }
-
-        UpdateSearchRowHoverState(IsWithinSearchRow(source));
-    }
-
-    private void OnViewPointerExited(object? sender, PointerEventArgs e)
-    {
-        UpdateSearchRowHoverState(false);
-    }
-
-    private bool IsWithinSearchRow(StyledElement source)
-    {
-        for (StyledElement? current = source; current is not null; current = current.Parent)
-        {
-            if (ReferenceEquals(current, _searchRowBorder))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void UpdateSearchRowHoverState(bool isHovered)
-    {
-        if (_isSearchRowHovered == isHovered)
-        {
-            return;
-        }
-
-        _isSearchRowHovered = isHovered;
-        ApplySearchRowVisualState();
     }
 
     private void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -206,23 +111,6 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         ScheduleSelectionRestore();
     }
 
-    private void ApplySearchRowVisualState()
-    {
-        _searchRowBorder.Background = _isSearchRowHovered
-            ? SearchRowHoverBackgroundBrush
-            : SearchRowIdleBackgroundBrush;
-        _searchRowBorder.BorderBrush = _isSearchRowHovered
-            ? SearchRowHoverBorderBrush
-            : SearchRowIdleBorderBrush;
-    }
-
-    private void ApplySearchTextBoxChrome()
-    {
-        _searchTextBox.Background = TransparentBrush;
-        _searchTextBox.BorderBrush = TransparentBrush;
-        _searchTextBox.BorderThickness = new Thickness(0);
-    }
-
     private void ScheduleSelectionRestore()
     {
         Dispatcher.UIThread.Post(RestoreFilterSelections, DispatcherPriority.Background);
@@ -230,7 +118,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
 
     private void ConfigureSurfaceMotion()
     {
-        ConfigureAnimatedSurface(_searchRowBorder, enterOffsetY: -12, exitOffsetY: -10);
+        ConfigureAnimatedSurface(_searchRow, enterOffsetY: -12, exitOffsetY: -10);
         ConfigureAnimatedSurface(_filterCard, enterOffsetY: -12, exitOffsetY: -10);
         ConfigureAnimatedSurface(_hintBanner, enterOffsetY: -10, exitOffsetY: -8);
         ConfigureAnimatedSurface(_contentHost, enterOffsetY: -8, exitOffsetY: -8, staggerChildren: true, delayMilliseconds: 32);
@@ -275,7 +163,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
 
         await HideAnimatedAsync(_contentHost, version);
         await HideAnimatedAsync(_hintBanner, version);
-        await ShowAnimatedAsync(_searchRowBorder, version);
+        await ShowAnimatedAsync(_searchRow, version);
         await ShowAnimatedAsync(_filterCard, version);
         await ShowAnimatedAsync(_loadingCard, version);
     }
@@ -288,7 +176,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         }
 
         await HideAnimatedAsync(_loadingCard, version);
-        await ShowAnimatedAsync(_searchRowBorder, version);
+        await ShowAnimatedAsync(_searchRow, version);
         await ShowAnimatedAsync(_filterCard, version);
 
         if (showHint)
