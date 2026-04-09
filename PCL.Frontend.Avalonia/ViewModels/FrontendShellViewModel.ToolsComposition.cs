@@ -1,4 +1,4 @@
-using System.Text;
+using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -7,6 +7,11 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private const string ToolboxUnsupportedMessage = "为便于维护，社区版中不包含百宝箱功能……";
+    private const string LauncherShortcutDisplayName = "PCL 社区版";
+    private const string ShortcutDesktopOptionId = "desktop";
+    private const string ShortcutStartMenuOptionId = "start-menu";
+
     private void ApplyToolsComposition(FrontendToolsComposition composition)
     {
         _toolsComposition = composition;
@@ -50,7 +55,7 @@ internal sealed partial class FrontendShellViewModel
         return actionKey switch
         {
             "crash-test" => new ActionCommand(TriggerCrashPromptTest),
-            "memory-optimize" => new ActionCommand(ExportMemoryOptimizeReport),
+            "memory-optimize" => new ActionCommand(OpenMemoryOptimizeDialog),
             "clear-rubbish" => new ActionCommand(ClearToolboxRubbish),
             "daily-luck" => new ActionCommand(ShowDailyLuck),
             "create-shortcut" => new ActionCommand(CreateLauncherShortcut),
@@ -88,60 +93,144 @@ internal sealed partial class FrontendShellViewModel
                 : $"已清理 {removedCount} 个缓存或日志项目。");
     }
 
-    private void ShowDailyLuck()
+    private void ShowDailyLuck() => _ = ShowDailyLuckAsync();
+
+    private async Task ShowDailyLuckAsync()
     {
         var seed = GenerateDailyLuckSeed();
         var random = new Random(seed);
         var luckValue = random.Next(0, 101);
-        var reportPath = WriteToolboxReport(
-            "daily-luck",
-            "今日人品.txt",
-            [
-                $"日期: {DateTime.Now:yyyy/MM/dd}",
-                $"种子: {seed}",
-                $"今日人品: {luckValue}",
-                $"评价: {GetDailyLuckRating(luckValue)}"
-            ]);
-        OpenInstanceTarget("今日人品", reportPath, "人品报告不存在。");
+        var rating = GetDailyLuckRating(luckValue);
+        var title = $"今日人品 - {DateTime.Now:yyyy/MM/dd}";
+        var message = luckValue >= 60
+            ? $"你今天的人品值是：{luckValue}！{rating}"
+            : $"你今天的人品值是：{luckValue}... {rating}";
+        var result = await ShowToolboxConfirmationAsync(title, message, isDanger: luckValue <= 30);
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity("今日人品", $"今日人品值: {luckValue}");
     }
 
-    private void ShowLauncherLaunchCount()
+    private void ShowLauncherLaunchCount() => _ = ShowLauncherLaunchCountAsync();
+
+    private async Task ShowLauncherLaunchCountAsync()
     {
-        var reportPath = WriteToolboxReport(
-            "launch-count",
-            "启动计数.txt",
-            [
-                $"启动器累计启动次数: {_launchComposition.LaunchCount}",
-                $"当前实例: {_instanceComposition.Selection.InstanceName}"
-            ]);
-        OpenInstanceTarget("查看启动计数", reportPath, "启动计数报告不存在。");
+        var message = $"PCL 已经为你启动了 {_launchComposition.LaunchCount} 次游戏了。";
+        var result = await ShowToolboxConfirmationAsync("启动次数", message);
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity("查看启动计数", message);
     }
 
-    private void ExportMemoryOptimizeReport()
+    private void OpenMemoryOptimizeDialog() => _ = OpenMemoryOptimizeDialogAsync();
+
+    private async Task OpenMemoryOptimizeDialogAsync()
     {
-        var gcInfo = GC.GetGCMemoryInfo();
-        var reportPath = WriteToolboxReport(
-            "memory-optimize",
-            "内存优化诊断.txt",
-            [
-                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                $"系统: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}",
-                $"当前进程: {Environment.ProcessPath ?? "未知"}",
-                $"当前工作集: {FormatBytes(Environment.WorkingSet)}",
-                $"GC 可用内存上限: {FormatBytes(gcInfo.TotalAvailableMemoryBytes)}",
-                $"GC 已提交字节: {FormatBytes(gcInfo.TotalCommittedBytes)}",
-                string.Empty,
-                "已导出当前进程与 GC 诊断信息。"
-            ]);
-        OpenInstanceTarget("内存优化", reportPath, "内存优化诊断报告不存在。");
+        var (totalMemoryGb, availableMemoryGb) = FrontendSystemMemoryService.GetPhysicalMemoryState();
+        var memoryLoadPercent = totalMemoryGb <= 0
+            ? 0
+            : (int)Math.Round((1d - Math.Clamp(availableMemoryGb / totalMemoryGb, 0d, 1d)) * 100d);
+        if (memoryLoadPercent <= 90)
+        {
+            var prompt = BuildMemoryOptimizePrompt(totalMemoryGb);
+            if (!string.IsNullOrWhiteSpace(prompt))
+            {
+                var confirmed = await ShowToolboxConfirmationAsync("确认内存优化？", prompt, "继续");
+                if (confirmed is null)
+                {
+                    return;
+                }
+
+                if (confirmed == false)
+                {
+                    AddActivity("内存优化", "已取消内存优化。");
+                    return;
+                }
+            }
+        }
+
+        var detail = OperatingSystem.IsWindows()
+            ? "Avalonia 前端尚未接入与标准实现一致的 Windows 内存优化执行器。已保留标准确认弹窗行为，不再打开文本编辑器。"
+            : "当前平台暂不支持与标准实现一致的内存优化执行器。已保留标准确认弹窗行为，不再打开文本编辑器。";
+        var result = await ShowToolboxConfirmationAsync("内存优化", detail);
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity("内存优化", detail);
     }
 
-    private void CreateLauncherShortcut()
+    private void CreateLauncherShortcut() => _ = CreateLauncherShortcutAsync();
+
+    private async Task CreateLauncherShortcutAsync()
     {
+        var shortcutTargets = BuildShortcutTargets(LauncherShortcutDisplayName);
+        if (shortcutTargets.Count == 0)
+        {
+            AddActivity("创建快捷方式失败", "当前系统未提供可用的快捷方式目录。");
+            return;
+        }
+
+        var summary = "这个快捷方式不会自动移除，在删除/移动启动器前请手动移除快捷方式。"
+                      + Environment.NewLine
+                      + Environment.NewLine
+                      + string.Join(Environment.NewLine, shortcutTargets.Select(target => $"{target.Title}位置: {target.ShortcutPath}"));
+
+        ToolboxShortcutTarget? selectedTarget;
         try
         {
-            var shortcutPath = _shellActionService.CreateLauncherShortcut("PCL 社区版");
-            OpenInstanceTarget("创建快捷方式", shortcutPath, "快捷方式文件不存在。");
+            if (shortcutTargets.Count == 1)
+            {
+                var onlyTarget = shortcutTargets[0];
+                var confirmed = await ShowToolboxConfirmationAsync("创建快捷方式", summary, "创建");
+                if (confirmed is null)
+                {
+                    return;
+                }
+
+                if (confirmed == false)
+                {
+                    AddActivity("创建快捷方式", "已取消创建快捷方式。");
+                    return;
+                }
+
+                selectedTarget = onlyTarget;
+            }
+            else
+            {
+                var selectedId = await _shellActionService.PromptForChoiceAsync(
+                    "选择快捷方式位置",
+                    summary,
+                    shortcutTargets.Select(target => new PclChoiceDialogOption(
+                        target.Id,
+                        target.Title,
+                        $"位置: {target.ShortcutPath}")).ToArray(),
+                    ShortcutDesktopOptionId,
+                    "创建");
+                if (selectedId is null)
+                {
+                    AddActivity("创建快捷方式", "已取消创建快捷方式。");
+                    return;
+                }
+
+                selectedTarget = shortcutTargets.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.Ordinal));
+                if (selectedTarget is null)
+                {
+                    AddActivity("创建快捷方式失败", $"未识别的快捷方式位置: {selectedId}");
+                    return;
+                }
+            }
+
+            var shortcutPath = _shellActionService.CreateLauncherShortcutAt(selectedTarget.Directory, LauncherShortcutDisplayName);
+            AvaloniaHintBus.Show($"已在{selectedTarget.Title}创建快捷方式", AvaloniaHintTheme.Success);
+            AddActivity("创建快捷方式", shortcutPath);
         }
         catch (Exception ex)
         {
@@ -151,31 +240,18 @@ internal sealed partial class FrontendShellViewModel
 
     private ActionCommand CreateUnsupportedToolboxActionCommand(string title)
     {
-        return new ActionCommand(() =>
-        {
-            var reportPath = WriteToolboxReport(
-                "unsupported-actions",
-                $"{SanitizeFileSegment(title)}.md",
-                [
-                    $"# {title}",
-                    string.Empty,
-                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                    $"动作: {title}",
-                    $"当前实例: {_instanceComposition.Selection.InstanceName}",
-                    string.Empty,
-                    "该功能当前不可用。"
-                ]);
-            OpenInstanceTarget(title, reportPath, "百宝箱诊断文件不存在。");
-        });
+        return new ActionCommand(() => _ = ShowUnsupportedToolboxActionAsync(title));
     }
 
-    private string WriteToolboxReport(string folderName, string fileName, IReadOnlyList<string> lines)
+    private async Task ShowUnsupportedToolboxActionAsync(string title)
     {
-        var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "toolbox", folderName);
-        Directory.CreateDirectory(outputDirectory);
-        var outputPath = Path.Combine(outputDirectory, fileName);
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        return outputPath;
+        var result = await ShowToolboxConfirmationAsync(title, ToolboxUnsupportedMessage);
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity(title, ToolboxUnsupportedMessage);
     }
 
     private static int DeleteDirectorySafely(string path)
@@ -228,14 +304,22 @@ internal sealed partial class FrontendShellViewModel
 
     private static int GenerateDailyLuckSeed()
     {
+        return ComputeDjb2Hash(
+            DateTime.Today.ToString("yyyyMMdd")
+            + Environment.MachineName
+            + "|"
+            + Environment.UserName);
+    }
+
+    private static int ComputeDjb2Hash(string value)
+    {
         var hash = 5381L;
-        var datePart = DateTime.Now.ToString("yyyyMMdd");
-        foreach (var character in datePart)
+        foreach (var character in value)
         {
-            hash = ((hash * 33) + character) & 0x7fffffff;
+            hash = ((hash * 33) + character) % 0x100000000L;
         }
 
-        return (int)hash;
+        return (int)(hash & 0x7fffffff);
     }
 
     private static string FormatBytes(long value)
@@ -261,14 +345,92 @@ internal sealed partial class FrontendShellViewModel
     {
         return luckValue switch
         {
-            100 => "100！100！",
-            >= 95 => "差一点就到 100 了呢……",
+            100 => "100！100！" + Environment.NewLine + "隐藏主题 欧皇…… 不对，社区版应该没有这玩意……",
+            >= 95 => "差一点就到100了呢...",
             >= 90 => "好评如潮！",
             >= 60 => "还行啦，还行啦",
-            >= 40 => "勉强还行吧……",
-            >= 30 => "呜……",
+            >= 40 => "勉强还行吧...",
+            >= 30 => "呜...",
             >= 10 => "不会吧！",
             _ => "（是百分制哦）"
         };
     }
+
+    private static string BuildMemoryOptimizePrompt(double totalMemoryGb)
+    {
+        return totalMemoryGb switch
+        {
+            >= 32 => "当前总内存充足，建议关闭不必要的程序来腾出内存而不是尝试使用内存优化。",
+            >= 16 => "当前内存比较充足，建议优先考虑让系统自动管理内存。",
+            >= 6 => "建议在使用后静置一分钟等待系统响应完毕。",
+            >= 2 => "内存资源比较紧张，建议通过加装内存以避免频繁使用内存优化功能，防止内存优化对硬盘造成过大压力。",
+            > 0 => "嗯……？",
+            _ => string.Empty
+        };
+    }
+
+    private async Task<bool?> ShowToolboxConfirmationAsync(
+        string title,
+        string message,
+        string confirmText = "确定",
+        bool isDanger = false)
+    {
+        try
+        {
+            return await _shellActionService.ConfirmAsync(title, message, confirmText, isDanger);
+        }
+        catch (Exception ex)
+        {
+            AddActivity($"{title} 失败", ex.Message);
+            return null;
+        }
+    }
+
+    private List<ToolboxShortcutTarget> BuildShortcutTargets(string displayName)
+    {
+        var targets = new List<ToolboxShortcutTarget>();
+        var shortcutFileName = GetLauncherShortcutFileName(displayName);
+
+        var desktopDirectory = _shellActionService.PlatformAdapter.TryGetDesktopDirectory();
+        if (!string.IsNullOrWhiteSpace(desktopDirectory))
+        {
+            targets.Add(new ToolboxShortcutTarget(
+                ShortcutDesktopOptionId,
+                "桌面",
+                desktopDirectory,
+                Path.Combine(desktopDirectory, shortcutFileName)));
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            var startMenuDirectory = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+            if (!string.IsNullOrWhiteSpace(startMenuDirectory))
+            {
+                var programsDirectory = Path.Combine(startMenuDirectory, "Programs");
+                targets.Add(new ToolboxShortcutTarget(
+                    ShortcutStartMenuOptionId,
+                    "开始菜单",
+                    programsDirectory,
+                    Path.Combine(programsDirectory, shortcutFileName)));
+            }
+        }
+
+        return targets;
+    }
+
+    private static string GetLauncherShortcutFileName(string displayName)
+    {
+        var extension = OperatingSystem.IsWindows()
+            ? ".lnk"
+            : OperatingSystem.IsMacOS()
+                ? ".command"
+                : ".desktop";
+        return $"{displayName}{extension}";
+    }
+
+    private sealed record ToolboxShortcutTarget(
+        string Id,
+        string Title,
+        string Directory,
+        string ShortcutPath);
 }

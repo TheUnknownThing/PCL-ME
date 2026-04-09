@@ -278,7 +278,7 @@ internal sealed partial class FrontendShellViewModel
                 NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Launch), $"Opened the launch route from help detail: {title}.");
                 return;
             case "内存优化":
-                ExportMemoryOptimizeReport();
+                OpenMemoryOptimizeDialog();
                 return;
             case "清理垃圾":
                 ClearToolboxRubbish();

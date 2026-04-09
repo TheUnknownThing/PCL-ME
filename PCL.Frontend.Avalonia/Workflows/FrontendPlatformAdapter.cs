@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text;
-using PCL.Core.IO;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -78,11 +77,13 @@ internal sealed class FrontendPlatformAdapter
         if (OperatingSystem.IsWindows())
         {
             shortcutPath = Path.Combine(desktopDirectory, $"{displayName}.lnk");
-            Files.CreateShortcut(
-                shortcutPath,
-                executablePath,
-                workingDirectory: Path.GetDirectoryName(executablePath),
-                description: $"{displayName} 快捷方式");
+            var shellType = Type.GetTypeFromProgID("WScript.Shell", throwOnError: true)!;
+            dynamic shell = Activator.CreateInstance(shellType)!;
+            var link = shell.CreateShortcut(shortcutPath)!;
+            link.TargetPath = executablePath;
+            link.WorkingDirectory = Path.GetDirectoryName(executablePath) ?? Path.GetPathRoot(executablePath);
+            link.Description = $"{displayName} 快捷方式";
+            link.Save();
             return new FrontendShortcutMaterializationResult(shortcutPath);
         }
         
