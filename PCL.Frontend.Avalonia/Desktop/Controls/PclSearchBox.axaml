@@ -42,38 +42,34 @@
         <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
       </Transitions>
     </Border.Transitions>
-    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-      <Path
-          Grid.Column="0"
-          Width="14"
-          Height="14"
-          Margin="14,0,10,0"
-          HorizontalAlignment="Left"
-          VerticalAlignment="Center"
-          Fill="#7B8EA5"
-          Stretch="Uniform"
-          Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
-
+    <Grid>
       <TextBox
           x:Name="SearchTextBox"
-          Grid.Column="1"
           Classes="search-input"
           FocusAdorner="{x:Null}"
           Background="Transparent"
           BorderBrush="Transparent"
           BorderThickness="0"
           FontSize="13.5"
-          MinHeight="0"
-          Padding="0"
+          Padding="34,0,40,0"
           Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          UseLayoutRounding="False"
           VerticalContentAlignment="Center"
           Watermark="{Binding Watermark, ElementName=Root}" />
 
+      <Path
+          Width="14"
+          Height="14"
+          Margin="14,0,0,0"
+          HorizontalAlignment="Left"
+          VerticalAlignment="Center"
+          Fill="#7B8EA5"
+          Stretch="Uniform"
+          Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
+
       <controls:PclIconButton
           x:Name="ClearButton"
-          Grid.Column="2"
-          Margin="0,0,6,0"
+          Margin="0,0,10,0"
+          HorizontalAlignment="Right"
           VerticalAlignment="Center"
           HoverBackgroundBrush="#14000000"
           IconBrush="#63758B"
@@ -90,11 +86,11 @@
 
       <controls:PclButton
           x:Name="SearchButton"
-          Grid.Column="3"
           Width="60"
           Height="32"
           Margin="0,4,4,4"
           Command="{Binding SearchCommand, ElementName=Root}"
+          HorizontalAlignment="Right"
           IsVisible="{Binding ShowSearchButton, ElementName=Root}"
           Text="{Binding SearchButtonText, ElementName=Root}" />
     </Grid>
