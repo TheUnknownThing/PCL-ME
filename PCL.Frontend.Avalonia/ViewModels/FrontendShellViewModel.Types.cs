@@ -212,6 +212,8 @@ internal sealed class ExportOptionEntryViewModel(
 
     public string Description { get; } = description;
 
+    public string InlineDescription => HasDescription ? $"   {Description}" : string.Empty;
+
     public bool IsChecked
     {
         get => _isChecked;
