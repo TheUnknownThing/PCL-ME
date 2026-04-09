@@ -152,6 +152,11 @@ internal sealed partial class PclListItem : UserControl
     {
         base.OnPropertyChanged(change);
 
+        if (!IsComponentReady())
+        {
+            return;
+        }
+
         if (change.Property == TitleProperty)
         {
             TitleBlock.Text = change.GetNewValue<string>();
@@ -184,6 +189,18 @@ internal sealed partial class PclListItem : UserControl
         {
             UpdateAccessory();
         }
+    }
+
+    private bool IsComponentReady()
+    {
+        return LayoutRoot is not null &&
+               TitleBlock is not null &&
+               InfoBlock is not null &&
+               LogoPath is not null &&
+               LogoImage is not null &&
+               MainButton is not null &&
+               AccessoryButton is not null &&
+               AccessoryPath is not null;
     }
 
     private void UpdateIcon(string data)
