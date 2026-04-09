@@ -513,7 +513,9 @@ internal static class FrontendInstanceCompositionService
 
         try
         {
-            var file = new NbtFile(serversPath);
+            var file = new NbtFile();
+            using var stream = File.OpenRead(serversPath);
+            file.LoadFromStream(stream, NbtCompression.AutoDetect);
             var list = file.RootTag.Get<NbtList>("servers");
             if (list is null)
             {

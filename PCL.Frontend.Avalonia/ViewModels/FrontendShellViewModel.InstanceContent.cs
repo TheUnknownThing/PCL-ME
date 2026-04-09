@@ -727,7 +727,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             serverList = File.Exists(serversPath)
-                ? await global::PCL.Core.Minecraft.NbtFileHandler.ReadTagInNbtFileAsync<NbtList>(serversPath, "servers") ?? new NbtList("servers", NbtTagType.Compound)
+                ? LoadInstanceServerList(serversPath) ?? new NbtList("servers", NbtTagType.Compound)
                 : new NbtList("servers", NbtTagType.Compound);
         }
         catch (Exception ex)
@@ -759,7 +759,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var clonedServerList = (NbtList)serverList.Clone();
-            if (!await global::PCL.Core.Minecraft.NbtFileHandler.WriteTagInNbtFileAsync(clonedServerList, serversPath))
+            if (!TryWriteInstanceServerList(serversPath, clonedServerList))
             {
                 AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
                 return;
@@ -801,6 +801,33 @@ internal sealed partial class FrontendShellViewModel
             string.IsNullOrWhiteSpace(resolvedName) ? "Minecraft服务器" : resolvedName.Trim(),
             resolvedAddress.Trim(),
             null);
+    }
+
+    private static NbtList? LoadInstanceServerList(string serversPath)
+    {
+        var file = new NbtFile();
+        using var stream = File.OpenRead(serversPath);
+        file.LoadFromStream(stream, NbtCompression.AutoDetect);
+        return file.RootTag.Get<NbtList>("servers");
+    }
+
+    private static bool TryWriteInstanceServerList(string serversPath, NbtList serverList)
+    {
+        var directoryPath = Path.GetDirectoryName(serversPath);
+        if (string.IsNullOrWhiteSpace(directoryPath))
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(directoryPath);
+
+        var rootTag = new NbtCompound { Name = string.Empty };
+        rootTag.Add(serverList);
+
+        var file = new NbtFile(rootTag);
+        using var stream = File.Create(serversPath);
+        file.SaveToStream(stream, NbtCompression.None);
+        return true;
     }
 
     private async Task InstallInstanceResourceFromFileAsync()
