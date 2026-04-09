@@ -24,7 +24,7 @@ Have not been implemented yet, see image for reference:<br>
 [x] Empty minecraft dir should provide a dialog telling user about the current state, see image 1.<br>
 [x] Filled minecraft dir should provide a list of instances, see image 2.<br>
 [x] Currently "添加已有文件夹" will replace the folder instead of appending to list of folders to look for instances.<br>
-[ ] Text of selected folder should always be blue, but instead it needs to be hovered before it turns blue (and removing the mouse thereafter does not turn it to black). Similar issue observed for the "我清楚我在做什么" button shown when launching the debug version of PCL. They may be connected, and there may be other places where this issue is present.<br>
+[x] Text of selected folder should always be blue, but instead it needs to be hovered before it turns blue (and removing the mouse thereafter does not turn it to black). Similar issue observed for the "我清楚我在做什么" button shown when launching the debug version of PCL. They may be connected, and there may be other places where this issue is present.<br>
 [x] On the right side, instances should be displayed in a list (like mods in 下载 page), each having a full-length (currently wrapped to text) light blue highlight on hover, see image:<br>
 ![Hovering over Instance](img/hovering-over-instance.png)
 [x] When hovering over an instance, there should be four buttons on the right side of the instance corresponding to "Favorite", "Open Folder", "Delete" and "Open Instance Settings", see image above for details.

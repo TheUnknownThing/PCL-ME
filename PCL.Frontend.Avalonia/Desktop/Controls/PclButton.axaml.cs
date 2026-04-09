@@ -23,21 +23,17 @@ internal sealed partial class PclButton : UserControl
     public static readonly StyledProperty<Thickness> TextMarginProperty =
         AvaloniaProperty.Register<PclButton, Thickness>(nameof(TextMargin), default);
 
-    private bool _isHovered;
     private bool _isPressed;
 
     public PclButton()
     {
         InitializeComponent();
 
-        ButtonHost.PointerEntered += (_, _) =>
-        {
-            _isHovered = true;
-            RefreshVisualState();
-        };
+        AttachedToVisualTree += (_, _) => RefreshVisualState();
+        DataContextChanged += (_, _) => RefreshVisualState();
+        ButtonHost.PropertyChanged += OnButtonHostPropertyChanged;
         ButtonHost.PointerExited += (_, _) =>
         {
-            _isHovered = false;
             _isPressed = false;
             RefreshVisualState();
         };
@@ -103,10 +99,26 @@ internal sealed partial class PclButton : UserControl
         }
     }
 
+    private void OnButtonHostPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+    {
+        if (change.Property != InputElement.IsPointerOverProperty)
+        {
+            return;
+        }
+
+        if (!ButtonHost.IsPointerOver)
+        {
+            _isPressed = false;
+        }
+
+        RefreshVisualState();
+    }
+
     private void RefreshVisualState()
     {
+        var isHovered = ButtonHost.IsPointerOver;
         var borderBrush = ResolveBorderBrush();
-        var background = ResolveBackgroundBrush();
+        var background = ResolveBackgroundBrush(isHovered);
 
         PanFore.BorderBrush = borderBrush;
         PanFore.Background = background;
@@ -118,6 +130,7 @@ internal sealed partial class PclButton : UserControl
 
     private IBrush ResolveBorderBrush()
     {
+        var isHovered = ButtonHost.IsPointerOver;
         if (!IsEnabled)
         {
             return Brush.Parse("#A6A6A6");
@@ -125,23 +138,23 @@ internal sealed partial class PclButton : UserControl
 
         return ColorType switch
         {
-            PclButtonColorState.Highlight when _isHovered => Brush.Parse("#1370F3"),
+            PclButtonColorState.Highlight when isHovered => Brush.Parse("#1370F3"),
             PclButtonColorState.Highlight => Brush.Parse("#0B5BCB"),
-            PclButtonColorState.Red when _isHovered => Brush.Parse("#D33232"),
+            PclButtonColorState.Red when isHovered => Brush.Parse("#D33232"),
             PclButtonColorState.Red => Brush.Parse("#CE2111"),
-            _ when _isHovered => Brush.Parse("#1370F3"),
+            _ when isHovered => Brush.Parse("#1370F3"),
             _ => Brush.Parse("#343D4A")
         };
     }
 
-    private IBrush ResolveBackgroundBrush()
+    private IBrush ResolveBackgroundBrush(bool isHovered)
     {
         if (!IsEnabled)
         {
             return Brush.Parse("#40FFFFFF");
         }
 
-        if (_isHovered)
+        if (isHovered)
         {
             return ColorType == PclButtonColorState.Red
                 ? Brush.Parse("#80FBDDDD")
