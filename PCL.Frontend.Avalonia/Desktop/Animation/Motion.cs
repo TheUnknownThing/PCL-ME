@@ -313,8 +313,8 @@ internal static class Motion
             .GetVisualDescendants()
             .OfType<PclCard>()
             .Where(card => card.IsVisible)
-            .OrderBy(card => card.Bounds.Top)
-            .ThenBy(card => card.Bounds.Left)
+            .OrderBy(card => GetRelativeCardOrigin(card, control).Y)
+            .ThenBy(card => GetRelativeCardOrigin(card, control).X)
             .Cast<Control>()
             .ToList();
         if (descendantCards.Count > 1)
@@ -362,6 +362,12 @@ internal static class Motion
         }
 
         return [];
+    }
+
+    private static Point GetRelativeCardOrigin(Control target, Visual ancestor)
+    {
+        return target.TranslatePoint(default, ancestor)
+               ?? new Point(target.Bounds.Left, target.Bounds.Top);
     }
 
     public static Task PlayEnterAsync(Control control)
