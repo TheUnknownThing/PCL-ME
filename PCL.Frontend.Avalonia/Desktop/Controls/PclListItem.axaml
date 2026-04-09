@@ -32,9 +32,17 @@
         Grid.ColumnSpan="7"
         Margin="0"
         Background="{DynamicResource ColorBrushEntrySelectedBackground}"
-        BorderThickness="0"
+        BorderBrush="{DynamicResource ColorBrush6}"
+        BorderThickness="1"
         CornerRadius="4"
-        Opacity="0" />
+        Opacity="0">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+          <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        </Transitions>
+      </Border.Transitions>
+    </Border>
 
     <Border
         x:Name="SelectionBar"

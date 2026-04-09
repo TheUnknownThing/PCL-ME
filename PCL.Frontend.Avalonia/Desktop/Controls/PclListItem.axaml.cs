@@ -315,6 +315,11 @@ internal sealed partial class PclListItem : UserControl
                 ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
                 : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
             : GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE");
+        RectBack.BorderBrush = IsSelected
+            ? GetBrush("ColorBrush6", "#D5E6FD")
+            : isHovered
+                ? GetBrush("ColorBrush6", "#D5E6FD")
+                : GetBrush("ColorBrush7", "#E0EAFD");
         SelectionBar.IsVisible = IsSelected;
         TitleBlock.Foreground = IsSelected
             ? GetBrush("ColorBrush3", "#1370F3")
