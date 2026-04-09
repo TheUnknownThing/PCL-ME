@@ -207,7 +207,7 @@ internal sealed partial class PclListItem : UserControl
         var hasIcon = LogoPath.IsVisible || LogoImage.IsVisible;
         LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
         LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(18) : new GridLength(6);
-        MainButton.Margin = hasIcon ? new Thickness(10, 0, 0, 0) : new Thickness(4, 0, 0, 0);
+        MainButton.Margin = new Thickness(4, 0, 0, 0);
     }
 
     private void UpdateInfo(string info)
