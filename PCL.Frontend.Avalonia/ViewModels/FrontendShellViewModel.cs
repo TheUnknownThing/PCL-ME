@@ -232,19 +232,33 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         ?? _currentNavigation?.CurrentPage.Title
         ?? Title;
 
-    public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.InstanceSelection
-        ? 276
-        : CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.TaskManager
-            ? 200
-        : CurrentStandardLeftPaneDescriptor?.Kind == StandardShellLeftPaneKind.None
-            ? 0
-            : 236;
+    public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind switch
+    {
+        StandardShellLeftPaneKind.InstanceSelection => 276,
+        StandardShellLeftPaneKind.TaskManager => 200,
+        StandardShellLeftPaneKind.None => 0,
+        StandardShellLeftPaneKind.Sidebar => _standardSidebarAutoWidth,
+        _ => 236
+    };
 
     public bool ShowStandardShellLeftPane => CurrentStandardLeftPaneDescriptor?.Kind != StandardShellLeftPaneKind.None;
 
     public double CurrentShellLeftPaneWidth => IsLaunchRoute
         ? 300
         : StandardShellLeftPaneWidth;
+
+    internal void SetStandardSidebarAutoWidth(double width)
+    {
+        var clamped = Math.Clamp(width, 164, 320);
+        if (Math.Abs(_standardSidebarAutoWidth - clamped) < 0.5)
+        {
+            return;
+        }
+
+        _standardSidebarAutoWidth = clamped;
+        RaisePropertyChanged(nameof(StandardShellLeftPaneWidth));
+        RaisePropertyChanged(nameof(CurrentShellLeftPaneWidth));
+    }
 
     public bool CanGoBack
     {

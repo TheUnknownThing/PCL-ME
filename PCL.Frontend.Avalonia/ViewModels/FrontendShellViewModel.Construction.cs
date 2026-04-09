@@ -148,6 +148,7 @@ internal sealed partial class FrontendShellViewModel
     private string _promptInboxTitle = string.Empty;
     private string _promptInboxSummary = string.Empty;
     private string _promptEmptyState = string.Empty;
+    private double _standardSidebarAutoWidth = 236;
     private bool _canGoBack;
     private bool _isPromptOverlayOpen;
     private bool _isLaunchMigrationExpanded = true;

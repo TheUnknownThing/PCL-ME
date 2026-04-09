@@ -6,7 +6,7 @@
     x:Name="Root">
   <Grid
       x:Name="LayoutRoot"
-      MinHeight="36"
+      MinHeight="34"
       Background="{DynamicResource ColorBrushSemiTransparent}"
       RenderTransformOrigin="0.5,0.5"
       RenderTransform="scale(1)">
@@ -77,17 +77,25 @@
         BorderBrush="Transparent"
         BorderThickness="0"
         HorizontalContentAlignment="Stretch">
-      <StackPanel Margin="4,6,0,6" VerticalAlignment="Center" Spacing="1">
+      <StackPanel
+          Margin="4,6,0,6"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Center"
+          Spacing="1">
         <TextBlock
             x:Name="TitleBlock"
+            HorizontalAlignment="Left"
             FontSize="14"
             Foreground="{DynamicResource ColorBrushGray1}"
+            TextAlignment="Left"
             TextTrimming="CharacterEllipsis" />
         <TextBlock
             x:Name="InfoBlock"
+            HorizontalAlignment="Left"
             FontSize="11.5"
             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             IsVisible="False"
+            TextAlignment="Left"
             TextTrimming="CharacterEllipsis"
             TextWrapping="Wrap" />
       </StackPanel>

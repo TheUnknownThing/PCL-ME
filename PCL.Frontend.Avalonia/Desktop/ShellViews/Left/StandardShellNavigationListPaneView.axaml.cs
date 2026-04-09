@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Left;
@@ -90,6 +92,8 @@ internal sealed partial class StandardShellNavigationListPaneView : UserControl
         {
             RenderRows.Add(row);
         }
+
+        Dispatcher.UIThread.Post(UpdateAutoPaneWidth, DispatcherPriority.Loaded);
     }
 
     private static SidebarRenderRow[] BuildRenderRows(IEnumerable<SidebarSectionViewModel> sections)
@@ -106,6 +110,47 @@ internal sealed partial class StandardShellNavigationListPaneView : UserControl
         }
 
         return rows.ToArray();
+    }
+
+    private void UpdateAutoPaneWidth()
+    {
+        if (_shell is null)
+        {
+            return;
+        }
+
+        var itemControls = SidebarRowsHost
+            .GetVisualDescendants()
+            .OfType<PclListItem>()
+            .ToArray();
+        var headerControls = SidebarRowsHost
+            .GetVisualDescendants()
+            .OfType<TextBlock>()
+            .Where(text => text.DataContext is SidebarHeaderRenderRow)
+            .ToArray();
+
+        var maxWidth = 0d;
+        foreach (var item in itemControls)
+        {
+            item.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            var width = item.DesiredSize.Width + item.Margin.Left + item.Margin.Right;
+            maxWidth = Math.Max(maxWidth, width);
+        }
+
+        foreach (var header in headerControls)
+        {
+            header.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            var width = header.DesiredSize.Width + header.Margin.Left + header.Margin.Right;
+            maxWidth = Math.Max(maxWidth, width);
+        }
+
+        if (maxWidth <= 0)
+        {
+            return;
+        }
+
+        // Reserve a little room for scrollbar/animation jitter and keep transitions smooth.
+        _shell.SetStandardSidebarAutoWidth(Math.Ceiling(maxWidth + 8));
     }
 }
 
