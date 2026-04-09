@@ -202,7 +202,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow?.Clipboard is null)
         {
-            throw new InvalidOperationException("当前壳层未提供剪贴板。");
+            throw new InvalidOperationException("当前环境不支持剪贴板。");
         }
 
         return await desktop.MainWindow.Clipboard.GetTextAsync();
@@ -213,7 +213,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow?.Clipboard is null)
         {
-            throw new InvalidOperationException("当前壳层未提供剪贴板。");
+            throw new InvalidOperationException("当前环境不支持剪贴板。");
         }
 
         await desktop.MainWindow.Clipboard.SetTextAsync(text ?? string.Empty);
@@ -674,7 +674,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow?.StorageProvider is null)
         {
-            error = "当前壳层未提供文件选择器。";
+            error = "当前环境不支持文件选择。";
             return null;
         }
 
@@ -686,7 +686,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow is null)
         {
-            throw new InvalidOperationException("当前壳层未提供桌面主窗口。");
+            throw new InvalidOperationException("当前环境未提供主窗口。");
         }
 
         return desktop.MainWindow;

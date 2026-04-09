@@ -416,7 +416,7 @@ internal sealed partial class FrontendShellViewModel
 
         var confirmed = await _shellActionService.ConfirmAsync(
             "实例重置确认",
-            $"确定要重置实例 {_instanceComposition.Selection.InstanceName} 吗？replacement shell 会先保存核心备份，然后重新下载当前实例的核心文件、依赖库与资源索引，并尽量复用已通过校验的资源文件。",
+            $"确定要重置实例 {_instanceComposition.Selection.InstanceName} 吗？操作前会先保存核心备份，然后重新下载当前实例的核心文件、依赖库与资源索引，并尽量复用已通过校验的资源文件。",
             "开始重置");
         if (!confirmed)
         {
@@ -447,7 +447,7 @@ internal sealed partial class FrontendShellViewModel
         var instanceName = _instanceComposition.Selection.InstanceName;
         var confirmed = await _shellActionService.ConfirmAsync(
             "实例删除确认",
-            $"确定要将实例 {instanceName} 移入 replacement shell 的回收区吗？该操作会保留实例目录，便于后续人工恢复。",
+            $"确定要将实例 {instanceName} 移入回收区吗？该操作会保留实例目录，便于后续恢复。",
             "移入回收区",
             isDanger: true);
         if (!confirmed)
@@ -602,7 +602,7 @@ internal sealed partial class FrontendShellViewModel
             $"下载文件数: {result.DownloadedFiles.Count}",
             $"复用文件数: {result.ReusedFiles.Count}",
             string.Empty,
-            "已写入 replacement shell 的实例修复结果。"
+            "已写入实例修复结果。"
         };
         summaryLines.AddRange(result.DownloadedFiles.Take(20).Select(path => $"downloaded: {path}"));
         summaryLines.AddRange(result.ReusedFiles.Take(20).Select(path => $"reused: {path}"));

@@ -533,7 +533,8 @@ internal static class FrontendInstanceCompositionService
                 recursive: false,
                 fileFilter: path => DisabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
                 metaPrefix: "已禁用",
-                defaultIconName: "RedstoneBlock.png"),
+                defaultIconName: "RedstoneBlock.png",
+                isEnabled: false),
             ResourceKind.ResourcePacks => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), "资源包", "Grass.png"),
             ResourceKind.Shaders => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), "光影包", "RedstoneLampOn.png"),
             ResourceKind.Schematics => BuildFileResourceEntries(
@@ -551,7 +552,8 @@ internal static class FrontendInstanceCompositionService
         bool recursive,
         Func<string, bool> fileFilter,
         string metaPrefix,
-        string defaultIconName)
+        string defaultIconName,
+        bool isEnabled = true)
     {
         if (!Directory.Exists(directory))
         {
@@ -568,7 +570,8 @@ internal static class FrontendInstanceCompositionService
                 Summary: $"{GetRelativeParent(directory, file.FullName)} • {file.LastWriteTime:yyyy/MM/dd HH:mm}",
                 Meta: $"{metaPrefix} • {file.Extension.TrimStart('.').ToUpperInvariant()}",
                 Path: file.FullName,
-                IconName: defaultIconName))
+                IconName: defaultIconName,
+                IsEnabled: isEnabled))
             .ToArray();
     }
 

@@ -162,11 +162,11 @@ internal static class FrontendToolsCompositionService
             entries.AddRange(
             [
                 new FrontendToolsHelpEntry(["指南"], "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "实例, 启动, 版本", "fallback://launch/select-instance", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["指南"], "Java 下载提示", "Java 缺失时由后端给出下载提示，前端只负责渲染选择与跳转。", "Java, 运行时, 下载", "fallback://launch/java-runtime", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["指南"], "Java 下载提示", "Java 缺失时，可以按提示下载并选择可用运行时。", "Java, 运行时, 下载", "fallback://launch/java-runtime", true, true, true, false, null, null, null),
                 new FrontendToolsHelpEntry(["启动器"], "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "日志, 导出, 诊断", "fallback://diagnostics/log-export", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["启动器"], "崩溃恢复提示", "崩溃报告、导出与恢复动作都通过可移植提示合同提供给壳层。", "崩溃, 恢复, 日志", "fallback://diagnostics/crash-recovery", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["帮助"], "为什么先复制原页面", "当前目标是保持 PCL 的页面结构和控件语言，而不是重新设计。", "迁移, 页面, 结构", "fallback://migration/copy-original", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["帮助"], "哪些逻辑不应放回前端", "启动、登录、Java 与崩溃策略仍应保留在后端服务中。", "迁移, 后端, 边界", "fallback://migration/backend-boundary", true, true, true, false, null, null, null)
+                new FrontendToolsHelpEntry(["启动器"], "崩溃恢复提示", "发生崩溃后，可以查看日志、导出报告并按提示恢复。", "崩溃, 恢复, 日志", "fallback://diagnostics/crash-recovery", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["帮助"], "页面布局说明", "新版页面会尽量保持常用操作的顺序与分组，方便继续使用。", "页面, 布局, 操作", "fallback://help/page-layout", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["帮助"], "启动前检查什么", "启动前建议确认实例、账号、Java 和提示信息是否正确。", "启动, 检查, Java", "fallback://help/launch-checklist", true, true, true, false, null, null, null)
             ]);
         }
 

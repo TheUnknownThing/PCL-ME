@@ -279,7 +279,7 @@ internal sealed partial class FrontendShellViewModel
                 AddActivity("关闭提示", "当前提示已标记为完成。");
                 break;
             case LauncherFrontendPromptCommandKind.ExitLauncher:
-                AddActivity("退出启动器", "已根据提示请求关闭前端壳层。");
+                AddActivity("退出启动器", "已根据提示请求关闭启动器。");
                 _shellActionService.ExitLauncher();
                 break;
             default:
@@ -361,7 +361,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (_isLaunchInProgress)
         {
-            AddActivity("启动进行中", "当前已经有一个前端启动会话正在运行。");
+            AddActivity("启动进行中", "当前已经有一个启动会话正在运行。");
             return;
         }
 
@@ -418,7 +418,7 @@ internal sealed partial class FrontendShellViewModel
         if (lane == SpikePromptLaneKind.Launch)
         {
             _isLaunchBlockedByPrompt = false;
-            AddActivity("继续启动流程", _pendingLaunchAfterPrompt ? "启动前提示已放行，前端将继续当前启动。" : "启动前提示已放行，启动按钮恢复可用。");
+            AddActivity("继续启动流程", _pendingLaunchAfterPrompt ? "启动前提示已放行，将继续当前启动。" : "启动前提示已放行，启动按钮恢复可用。");
             return;
         }
 

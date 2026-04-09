@@ -46,7 +46,7 @@ internal sealed partial class FrontendShellViewModel
         if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
         {
             return new InstallOptionPresentation(
-                "当前壳层尚未接入这一安装项的自动安装实现。",
+                "暂不支持自动安装这一项。",
                 "当前不可用",
                 false);
         }

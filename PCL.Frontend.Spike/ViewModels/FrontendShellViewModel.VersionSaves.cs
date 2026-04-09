@@ -45,6 +45,10 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoVersionSaveDatapackEntries => !HasVersionSaveDatapackEntries;
 
+    public bool ShowVersionSaveDatapackContent => _versionSavesComposition.Datapacks.Count > 0;
+
+    public bool ShowVersionSaveDatapackEmptyState => !ShowVersionSaveDatapackContent;
+
     public ActionCommand OpenVersionSaveFolderCommand => new(() =>
         OpenInstanceTarget("打开存档文件夹", _versionSavesComposition.Selection.SavePath, "当前没有可打开的存档。"));
 
@@ -105,6 +109,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoVersionSaveBackupEntries));
         RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
         RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
+        RaisePropertyChanged(nameof(ShowVersionSaveDatapackContent));
+        RaisePropertyChanged(nameof(ShowVersionSaveDatapackEmptyState));
     }
 
     private void RefreshVersionSaveDatapackEntries()
@@ -122,6 +128,8 @@ internal sealed partial class FrontendShellViewModel
 
         RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
         RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
+        RaisePropertyChanged(nameof(ShowVersionSaveDatapackContent));
+        RaisePropertyChanged(nameof(ShowVersionSaveDatapackEmptyState));
     }
 
     private void CreateVersionSaveBackup()

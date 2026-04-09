@@ -66,6 +66,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<SurfaceNoticeViewModel> InstanceInstallHints { get; } = [];
 
+    public ObservableCollection<DownloadInstallOptionCardViewModel> InstanceInstallOptionCards { get; } = [];
+
     public ObservableCollection<DownloadInstallOptionViewModel> InstanceInstallOptions { get; } = [];
 
     public ObservableCollection<SimpleListEntryViewModel> InstanceWorldEntries { get; } = [];

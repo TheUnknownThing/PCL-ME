@@ -108,7 +108,7 @@ public static class LauncherFrontendNavigationService
                 new LauncherFrontendTopLevelPage(
                     LauncherFrontendPageKey.Tools,
                     "工具",
-                    "联机入口、帮助与实验功能。")
+                    "帮助与实验功能。")
             ],
             [
                 new LauncherFrontendSidebarGroup(
@@ -141,11 +141,9 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLaunch, "启动", "启动参数与窗口策略。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupUI, "界面", "主题、动画与外观。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupGameManage, "游戏管理", "实例与文件管理策略。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLink, "联机", "联机相关设置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupAbout, "关于", "版本与项目信息。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLog, "日志", "日志与诊断开关。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupFeedback, "反馈", "问题反馈入口。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupGameLink, "游戏联机", "游戏联机与服务配置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupUpdate, "更新", "更新通道与检查策略。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupJava, "Java", "Java 运行时配置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLauncherMisc, "启动器杂项", "零散启动器行为设置。")
@@ -154,9 +152,8 @@ public static class LauncherFrontendNavigationService
                     LauncherFrontendPageKey.Tools,
                     "工具分区",
                     [
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsGameLink, "联机大厅", "工具页默认入口。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsLauncherHelp, "帮助", "查看帮助与说明。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsTest, "测试", "实验或调试工具。")
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsTest, "测试", "实验或调试工具。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsLauncherHelp, "帮助", "查看帮助与说明。")
                     ]),
                 new LauncherFrontendSidebarGroup(
                     LauncherFrontendPageKey.InstanceSetup,
@@ -164,15 +161,14 @@ public static class LauncherFrontendNavigationService
                     [
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionOverall, "概览", "实例总览。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSetup, "设置", "实例专属设置。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionInstall, "修改", "修改 Minecraft 版本与组件。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionExport, "导出", "导出实例或整合包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionWorld, "世界", "查看世界与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionScreenshot, "截图", "浏览截图。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionMod, "Mod", "管理启用的 Mod。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionModDisabled, "已禁用 Mod", "管理已禁用的 Mod。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionResourcePack, "资源包", "管理资源包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionShader, "光影包", "管理光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSchematic, "投影", "管理投影与建筑文件。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionInstall, "安装", "安装缺失组件。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionServer, "服务器", "管理服务器入口。")
                     ]),
                 new LauncherFrontendSidebarGroup(

@@ -276,115 +276,110 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="实时日志" IsVisible="{Binding ShowGameLogSurface}" ContentMargin="20,18,20,18">
-          <controls:PclCard.CardContent>
-            <StackPanel Spacing="14">
-              <WrapPanel>
-                <controls:PclButton
-                    Width="92"
-                    Height="35"
-                    Margin="0,0,10,0"
-                    ColorType="Highlight"
-                    Command="{Binding RefreshGameLogCommand}"
-                    Text="刷新" />
-                <controls:PclButton
-                    Width="92"
-                    Height="35"
-                    Margin="0,0,10,0"
-                    Command="{Binding ExportLogCommand}"
-                    Text="导出日志" />
-                <controls:PclButton
-                    Width="120"
-                    Height="35"
-                    Margin="0,0,10,0"
-                    Command="{Binding OpenLogDirectoryCommand}"
-                    Text="打开日志目录" />
-                <controls:PclButton
-                    Width="108"
-                    Height="35"
-                    Command="{Binding ClearGameLogCommand}"
-                    ColorType="Red"
-                  Text="清空缓存" />
-              </WrapPanel>
+        <StackPanel IsVisible="{Binding ShowGameLogSurface}" Spacing="14">
+          <WrapPanel>
+            <controls:PclButton
+                Width="92"
+                Height="35"
+                Margin="0,0,10,0"
+                ColorType="Highlight"
+                Command="{Binding RefreshGameLogCommand}"
+                Text="刷新" />
+            <controls:PclButton
+                Width="92"
+                Height="35"
+                Margin="0,0,10,0"
+                Command="{Binding ExportLogCommand}"
+                Text="导出日志" />
+            <controls:PclButton
+                Width="120"
+                Height="35"
+                Margin="0,0,10,0"
+                Command="{Binding OpenLogDirectoryCommand}"
+                Text="打开日志目录" />
+            <controls:PclButton
+                Width="108"
+                Height="35"
+                Command="{Binding ClearGameLogCommand}"
+                ColorType="Red"
+                Text="清空缓存" />
+          </WrapPanel>
 
-              <Grid ColumnDefinitions="*,*">
-                <Border
-                    Padding="12,10"
-                    Background="#F7FAFE"
-                    BorderBrush="#D5E6FD"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <StackPanel Spacing="4">
-                    <TextBlock Foreground="#7D8897" FontSize="11.5" Text="实时输出行数" />
-                    <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogLiveLineCount}" />
-                  </StackPanel>
-                </Border>
-                <Border
-                    Grid.Column="1"
-                    Margin="10,0,0,0"
-                    Padding="12,10"
-                    Background="#F7FAFE"
-                    BorderBrush="#D5E6FD"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <StackPanel Spacing="4">
-                    <TextBlock Foreground="#7D8897" FontSize="11.5" Text="最近日志文件" />
-                    <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogRecentFileCount}" />
-                    <TextBlock Foreground="#7A8794" FontSize="11" Text="{Binding GameLogLatestUpdateLabel}" />
-                  </StackPanel>
-                </Border>
-              </Grid>
-
-              <controls:PclCard Header="当前会话输出" IsVisible="{Binding ShowGameLogLiveOutput}" ContentMargin="16,16,16,16">
-                <controls:PclCard.CardContent>
-                  <Border
-                      Background="#0C1117"
-                      BorderBrush="#1E2A36"
-                      BorderThickness="1"
-                      CornerRadius="4"
-                      Padding="1">
-                    <TextBox
-                        MinHeight="320"
-                        AcceptsReturn="True"
-                        Background="#0C1117"
-                        BorderBrush="Transparent"
-                        BorderThickness="0"
-                        FontFamily="{DynamicResource LaunchFontFamily}"
-                        FontSize="12.5"
-                        Foreground="#D7E3F1"
-                        IsReadOnly="True"
-                        Text="{Binding LaunchLogText}"
-                        TextWrapping="Wrap" />
-                  </Border>
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
-
-              <StackPanel IsVisible="{Binding HasGameLogFiles}" Spacing="8">
-                <TextBlock Foreground="#47586D" FontSize="13.5" Text="最近生成的日志文件" />
-                <ItemsControl ItemsSource="{Binding GameLogFileEntries}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <controls:PclListItem
-                          Margin="0,0,0,8"
-                          Command="{Binding Command}"
-                          Info="{Binding Info}"
-                          Title="{Binding Title}" />
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+          <Grid ColumnDefinitions="*,*">
+            <Border
+                Padding="12,10"
+                Background="#F7FAFE"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="4">
+              <StackPanel Spacing="4">
+                <TextBlock Foreground="#7D8897" FontSize="11.5" Text="实时输出行数" />
+                <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogLiveLineCount}" />
               </StackPanel>
-
-              <StackPanel IsVisible="{Binding ShowGameLogEmptyState}" Spacing="8">
-                <TextBlock Foreground="#47586D" FontSize="13.5" Text="还没有可展示的日志" />
-                <TextBlock
-                    Foreground="#4B5968"
-                    FontSize="13"
-                    Text="启动一次游戏、触发崩溃恢复，或者刷新日志目录后，这里就会出现实时输出和最近的日志文件。"
-                    TextWrapping="Wrap" />
+            </Border>
+            <Border
+                Grid.Column="1"
+                Margin="10,0,0,0"
+                Padding="12,10"
+                Background="#F7FAFE"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="4">
+              <StackPanel Spacing="4">
+                <TextBlock Foreground="#7D8897" FontSize="11.5" Text="最近日志文件" />
+                <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogRecentFileCount}" />
+                <TextBlock Foreground="#7A8794" FontSize="11" Text="{Binding GameLogLatestUpdateLabel}" />
               </StackPanel>
-            </StackPanel>
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
+            </Border>
+          </Grid>
+
+          <StackPanel IsVisible="{Binding ShowGameLogLiveOutput}" Spacing="8">
+            <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前会话输出" />
+            <Border
+                Background="#0C1117"
+                BorderBrush="#1E2A36"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="1">
+              <TextBox
+                  MinHeight="320"
+                  AcceptsReturn="True"
+                  Background="#0C1117"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  FontFamily="{DynamicResource LaunchFontFamily}"
+                  FontSize="12.5"
+                  Foreground="#D7E3F1"
+                  IsReadOnly="True"
+                  Text="{Binding LaunchLogText}"
+                  TextWrapping="Wrap" />
+            </Border>
+          </StackPanel>
+
+          <StackPanel IsVisible="{Binding HasGameLogFiles}" Spacing="8">
+            <TextBlock Foreground="#47586D" FontSize="13.5" Text="最近生成的日志文件" />
+            <ItemsControl ItemsSource="{Binding GameLogFileEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclListItem
+                      Margin="0,0,0,8"
+                      Command="{Binding Command}"
+                      Info="{Binding Info}"
+                      Title="{Binding Title}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <StackPanel IsVisible="{Binding ShowGameLogEmptyState}" Spacing="8">
+            <TextBlock Foreground="#47586D" FontSize="13.5" Text="还没有可展示的日志" />
+            <TextBlock
+                Foreground="#4B5968"
+                FontSize="13"
+                Text="启动一次游戏、触发崩溃恢复，或者刷新日志目录后，这里就会出现实时输出和最近的日志文件。"
+                TextWrapping="Wrap" />
+          </StackPanel>
+        </StackPanel>
 
         <StackPanel IsVisible="{Binding ShowCompDetailSurface}" Spacing="0">
           <controls:PclCard Margin="0,0,0,25" ContentMargin="22,20,20,20">

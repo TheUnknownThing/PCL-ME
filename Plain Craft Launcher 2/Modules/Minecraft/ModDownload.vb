@@ -264,11 +264,14 @@ Public Module ModDownload
                 Log(ex, "[Download] UVMC 列表加载失败，忽略列表内容")
             End Try
             '确定官方源是否可用
-            If Not DlPreferMojang Then
-                Dim DeltaTime = TimeUtils.GetTimeTick() - StartTime
-                DlPreferMojang = DeltaTime < 4000
-                Log($"[Download] Mojang 官方源加载耗时：{DeltaTime}ms，{If(DlPreferMojang, "可优先使用官方源", "不优先使用官方源")}")
-            End If
+            Dim DeltaTime = TimeUtils.GetTimeTick() - StartTime
+            SyncLock DlPreferMojangLock
+                If Not DlPreferMojangEvaluated Then
+                    DlPreferMojang = DeltaTime < 4000
+                    DlPreferMojangEvaluated = True
+                    Log($"[Download] Mojang 官方源加载耗时：{DeltaTime}ms，{If(DlPreferMojang, "可优先使用官方源", "不优先使用官方源")}")
+                End If
+            End SyncLock
             '添加 PCL 特供项
             '这个社区版下不了
             'If File.Exists(PathTemp & "Cache\download.json") Then Versions.Merge(GetJson(ReadFile(PathTemp & "Cache\download.json")))
@@ -1560,7 +1563,9 @@ Public Module ModDownload
 
 #Region "DlSource | 镜像下载源"
 
-    Private DlPreferMojang As Boolean = False
+    Private DlPreferMojang As Boolean = True
+    Private DlPreferMojangEvaluated As Boolean = False
+    Private ReadOnly DlPreferMojangLock As New Object
     ''' <summary>
     ''' 下载文件（而非获取版本列表）的时候，是否优先使用官方源。
     ''' </summary>

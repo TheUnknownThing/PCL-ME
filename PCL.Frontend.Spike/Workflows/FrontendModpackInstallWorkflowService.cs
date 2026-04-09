@@ -149,7 +149,7 @@ internal static class FrontendModpackInstallWorkflowService
         {
             FrontendModpackPackageKind.Modrinth => BuildModrinthPackage(archive, baseFolder),
             FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference),
-            _ => throw new InvalidOperationException("当前前端仅支持自动安装 Modrinth 与 CurseForge 整合包。")
+            _ => throw new InvalidOperationException("仅支持自动安装 Modrinth 和 CurseForge 整合包。")
         };
     }
 
@@ -286,7 +286,7 @@ internal static class FrontendModpackInstallWorkflowService
             {
                 if (loaderId.Contains("recommended", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("该 CurseForge 整合包依赖旧版 recommended Forge，当前前端暂不支持自动安装。");
+                    throw new InvalidOperationException("该 CurseForge 整合包使用了 recommended Forge，暂不支持自动安装。");
                 }
 
                 forgeVersion = loaderId["forge-".Length..];

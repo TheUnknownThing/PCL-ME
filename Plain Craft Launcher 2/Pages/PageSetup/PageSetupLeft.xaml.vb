@@ -12,7 +12,6 @@ Public Class PageSetupLeft
         If ItemLaunch.Checked AndAlso hide.SetupLaunch Then IsHiddenPage = True
         If ItemJava.Checked AndAlso hide.SetupJava Then IsHiddenPage = True
         If ItemGameManage.Checked AndAlso hide.SetupGameManage Then IsHiddenPage = True
-        If ItemGameLink.Checked AndAlso hide.SetupGameLink Then IsHiddenPage = True
         If ItemUI.Checked AndAlso hide.SetupUi Then IsHiddenPage = True
         If ItemLauncherMisc.Checked AndAlso hide.SetupLauncherMisc Then IsHiddenPage = True
         If ItemAbout.Checked AndAlso hide.SetupAbout Then IsHiddenPage = True
@@ -34,8 +33,6 @@ Public Class PageSetupLeft
             ItemJava.SetChecked(True, False, False)            
         ElseIf Not hideCfg.SetupGameManage Then
             ItemGameManage.SetChecked(True, False, False)    
-        ElseIf Not hideCfg.SetupGameLink Then
-            ItemGameLink.SetChecked(True, False, False)            
         ElseIf Not hideCfg.SetupUi Then
             ItemUI.SetChecked(True, False, False)
         ElseIf Not hideCfg.SetupLauncherMisc Then
@@ -72,8 +69,6 @@ Public Class PageSetupLeft
             PageID = FormMain.PageSubType.SetupJava
         ElseIf Not hideCfg.SetupGameManage Then
             PageID = FormMain.PageSubType.SetupGameManage     
-        ElseIf Not hideCfg.SetupGameLink Then
-            PageID = FormMain.PageSubType.SetupGameLink            
         ElseIf Not hideCfg.SetupUi Then
             PageID = FormMain.PageSubType.SetupUI
         ElseIf Not hideCfg.SetupLauncherMisc Then
@@ -97,7 +92,7 @@ Public Class PageSetupLeft
     ''' </summary>
     Private Sub PageCheck(sender As MyListItem, e As EventArgs) Handles ItemLaunch.Check,
         ItemGameManage.Check, ItemUI.Check, ItemAbout.Check, ItemFeedback.Check, ItemLog.Check,
-        ItemGameLink.Check, ItemUpdate.Check, ItemJava.Check, ItemLauncherMisc.Check
+        ItemUpdate.Check, ItemJava.Check, ItemLauncherMisc.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会跳过切换，且由于 PageID 默认为 0 而切换到第一个页面
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -131,8 +126,8 @@ Public Class PageSetupLeft
                 If FrmSetupFeedback Is Nothing Then FrmSetupFeedback = New PageSetupFeedback
                 Return FrmSetupFeedback
             Case FormMain.PageSubType.SetupGameLink
-                If FrmSetupGameLink Is Nothing Then FrmSetupGameLink = New PageSetupGameLink
-                Return FrmSetupGameLink
+                If FrmSetupLaunch Is Nothing Then FrmSetupLaunch = New PageSetupLaunch
+                Return FrmSetupLaunch
             Case FormMain.PageSubType.SetupLauncherMisc
                 If FrmSetupLauncherMisc Is Nothing Then FrmSetupLauncherMisc = New PageSetupLauncherMisc
                 Return FrmSetupLauncherMisc
@@ -200,12 +195,6 @@ Public Class PageSetupLeft
                     If FrmSetupGameManage Is Nothing Then FrmSetupGameManage = New PageSetupGameManage
                     FrmSetupGameManage.Reset()
                     ItemGameManage.Checked = True
-                End If
-            Case FormMain.PageSubType.SetupGameLink
-                If MyMsgBox("是否要初始化 工具-联机 页面的所有设置？该操作不可撤销。", "初始化确认",, "取消", IsWarn:=True) = 1 Then
-                    If FrmSetupGameLink Is Nothing Then FrmSetupGameLink = New PageSetupGameLink
-                    FrmSetupGameLink.Reset()
-                    ItemGameLink.Checked = True
                 End If
             Case FormMain.PageSubType.SetupLauncherMisc
                 If MyMsgBox("是否要初始化 启动器-杂项 页面的所有设置？该操作不可撤销。", "初始化确认",, "取消", IsWarn:=True) = 1 Then

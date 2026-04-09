@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Spike.Desktop.Controls;
@@ -253,7 +254,8 @@ internal sealed class SurfaceNoticeViewModel(
     string text,
     IBrush backgroundBrush,
     IBrush borderBrush,
-    IBrush foregroundBrush)
+    IBrush foregroundBrush,
+    Thickness margin)
 {
     public string Text { get; } = text;
 
@@ -262,6 +264,8 @@ internal sealed class SurfaceNoticeViewModel(
     public IBrush BorderBrush { get; } = borderBrush;
 
     public IBrush ForegroundBrush { get; } = foregroundBrush;
+
+    public Thickness Margin { get; } = margin;
 }
 
 internal sealed class DownloadInstallMinecraftSectionViewModel(
@@ -269,17 +273,29 @@ internal sealed class DownloadInstallMinecraftSectionViewModel(
     IReadOnlyList<DownloadInstallMinecraftChoiceViewModel> choices,
     bool isExpanded,
     bool canCollapse,
-    ActionCommand toggleCommand)
+    ActionCommand toggleCommand) : ViewModelBase
 {
+    private bool _isExpanded = isExpanded;
+
     public string Title { get; } = title;
 
     public IReadOnlyList<DownloadInstallMinecraftChoiceViewModel> Choices { get; } = choices;
 
-    public bool IsExpanded { get; } = isExpanded;
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (SetProperty(ref _isExpanded, value))
+            {
+                RaisePropertyChanged(nameof(ChevronAngle));
+            }
+        }
+    }
 
     public bool CanCollapse { get; } = canCollapse;
 
-    public double ChevronAngle { get; } = isExpanded ? 180 : 0;
+    public double ChevronAngle => IsExpanded ? 180 : 0;
 
     public ActionCommand ToggleCommand { get; } = toggleCommand;
 }
@@ -337,41 +353,130 @@ internal sealed class DownloadInstallOptionCardViewModel(
     IReadOnlyList<DownloadInstallChoiceItemViewModel> choices,
     bool canClear,
     ActionCommand toggleCommand,
-    ActionCommand clearCommand)
+    ActionCommand clearCommand) : ViewModelBase
 {
+    private string _selectionText = selectionText;
+    private Bitmap? _icon = icon;
+    private bool _showIcon = showIcon;
+    private bool _useMutedSelectionStyle = useMutedSelectionStyle;
+    private bool _canExpand = canExpand;
+    private bool _isExpanded = isExpanded;
+    private bool _isLoading = isLoading;
+    private string _loadingText = loadingText;
+    private bool _showEmptyState = showEmptyState;
+    private string _emptyStateText = emptyStateText;
+    private IReadOnlyList<DownloadInstallChoiceItemViewModel> _choices = choices;
+    private bool _canClear = canClear;
+
     public string Title { get; } = title;
 
-    public string SelectionText { get; } = selectionText;
+    public string SelectionText
+    {
+        get => _selectionText;
+        set => SetProperty(ref _selectionText, value);
+    }
 
-    public Bitmap? Icon { get; } = icon;
+    public Bitmap? Icon
+    {
+        get => _icon;
+        set => SetProperty(ref _icon, value);
+    }
 
-    public bool ShowIcon { get; } = showIcon;
+    public bool ShowIcon
+    {
+        get => _showIcon;
+        set => SetProperty(ref _showIcon, value);
+    }
 
-    public bool UseMutedSelectionStyle { get; } = useMutedSelectionStyle;
+    public bool UseMutedSelectionStyle
+    {
+        get => _useMutedSelectionStyle;
+        set
+        {
+            if (SetProperty(ref _useMutedSelectionStyle, value))
+            {
+                RaisePropertyChanged(nameof(SelectionForegroundBrush));
+            }
+        }
+    }
 
-    public IBrush SelectionForegroundBrush { get; } = useMutedSelectionStyle ? Brush.Parse("#8C99A8") : Brush.Parse("#343D4A");
+    public IBrush SelectionForegroundBrush => UseMutedSelectionStyle ? Brush.Parse("#8C99A8") : Brush.Parse("#343D4A");
 
-    public bool CanExpand { get; } = canExpand;
+    public bool CanExpand
+    {
+        get => _canExpand;
+        set => SetProperty(ref _canExpand, value);
+    }
 
-    public bool IsExpanded { get; } = isExpanded;
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (SetProperty(ref _isExpanded, value))
+            {
+                RaisePropertyChanged(nameof(ChevronAngle));
+            }
+        }
+    }
 
-    public double ChevronAngle { get; } = isExpanded ? 180 : 0;
+    public double ChevronAngle => IsExpanded ? 180 : 0;
 
-    public bool IsLoading { get; } = isLoading;
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => SetProperty(ref _isLoading, value);
+    }
 
-    public string LoadingText { get; } = loadingText;
+    public string LoadingText
+    {
+        get => _loadingText;
+        set => SetProperty(ref _loadingText, value);
+    }
 
-    public bool ShowEmptyState { get; } = showEmptyState;
+    public bool ShowEmptyState
+    {
+        get => _showEmptyState;
+        set => SetProperty(ref _showEmptyState, value);
+    }
 
-    public string EmptyStateText { get; } = emptyStateText;
+    public string EmptyStateText
+    {
+        get => _emptyStateText;
+        set => SetProperty(ref _emptyStateText, value);
+    }
 
-    public IReadOnlyList<DownloadInstallChoiceItemViewModel> Choices { get; } = choices;
+    public IReadOnlyList<DownloadInstallChoiceItemViewModel> Choices
+    {
+        get => _choices;
+        set => SetProperty(ref _choices, value);
+    }
 
-    public bool CanClear { get; } = canClear;
+    public bool CanClear
+    {
+        get => _canClear;
+        set => SetProperty(ref _canClear, value);
+    }
 
     public ActionCommand ToggleCommand { get; } = toggleCommand;
 
     public ActionCommand ClearCommand { get; } = clearCommand;
+
+    public void UpdateFrom(DownloadInstallOptionCardViewModel other)
+    {
+        SelectionText = other.SelectionText;
+        Icon = other.Icon;
+        ShowIcon = other.ShowIcon;
+        UseMutedSelectionStyle = other.UseMutedSelectionStyle;
+        CanExpand = other.CanExpand;
+        IsExpanded = other.IsExpanded;
+        IsLoading = other.IsLoading;
+        LoadingText = other.LoadingText;
+        ShowEmptyState = other.ShowEmptyState;
+        EmptyStateText = other.EmptyStateText;
+        Choices = other.Choices;
+        CanClear = other.CanClear;
+    }
 }
 
 internal sealed class DownloadInstallOptionViewModel(

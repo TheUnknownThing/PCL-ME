@@ -114,7 +114,7 @@ internal sealed partial class FrontendShellViewModel
                     DownloadInstallHints,
                     GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
                         CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
-                ReplaceItems(DownloadInstallOptionCards, BuildDownloadInstallOptionCards());
+                SyncDownloadInstallOptionCards(BuildDownloadInstallOptionCards());
             }
         }
         else
@@ -343,23 +343,15 @@ internal sealed partial class FrontendShellViewModel
     private void ToggleDownloadInstallMinecraftSection(string groupTitle)
     {
         var normalizedTitle = NormalizeDownloadInstallSectionTitle(groupTitle);
-        var sections = DownloadInstallMinecraftSections.ToArray();
-        ReplaceItems(
-            DownloadInstallMinecraftSections,
-            sections.Select(section =>
-            {
-                if (!section.CanCollapse || !string.Equals(NormalizeDownloadInstallSectionTitle(section.Title), normalizedTitle, StringComparison.Ordinal))
-                {
-                    return section;
-                }
+        var section = DownloadInstallMinecraftSections.FirstOrDefault(existing =>
+            existing.CanCollapse
+            && string.Equals(NormalizeDownloadInstallSectionTitle(existing.Title), normalizedTitle, StringComparison.Ordinal));
+        if (section is null)
+        {
+            return;
+        }
 
-                return new DownloadInstallMinecraftSectionViewModel(
-                    section.Title,
-                    section.Choices,
-                    !section.IsExpanded,
-                    section.CanCollapse,
-                    new ActionCommand(() => ToggleDownloadInstallMinecraftSection(groupTitle)));
-            }));
+        section.IsExpanded = !section.IsExpanded;
     }
 
     private static string NormalizeDownloadInstallSectionTitle(string title)
@@ -434,7 +426,7 @@ internal sealed partial class FrontendShellViewModel
         var cards = new List<DownloadInstallOptionCardViewModel>();
         foreach (var (title, iconName) in DownloadInstallOptionBlueprints)
         {
-            if (!ShouldShowDownloadInstallOption(title, minecraftVersion))
+            if (!ShouldShowInstallOption(title, minecraftVersion))
             {
                 continue;
             }
@@ -445,7 +437,7 @@ internal sealed partial class FrontendShellViewModel
         return cards;
     }
 
-    private bool ShouldShowDownloadInstallOption(string optionTitle, string minecraftVersion)
+    private bool ShouldShowInstallOption(string optionTitle, string minecraftVersion)
     {
         return optionTitle switch
         {
@@ -498,6 +490,46 @@ internal sealed partial class FrontendShellViewModel
             CanClearInstallSelection(isExistingInstance: false, optionTitle),
             new ActionCommand(() => ToggleDownloadInstallOptionCard(optionTitle)),
             new ActionCommand(() => ClearDownloadInstallOption(optionTitle)));
+    }
+
+    private void SyncDownloadInstallOptionCards(IReadOnlyList<DownloadInstallOptionCardViewModel> cards)
+    {
+        for (var index = 0; index < cards.Count; index++)
+        {
+            var desiredCard = cards[index];
+            var existingIndex = FindDownloadInstallOptionCardIndex(desiredCard.Title);
+            if (existingIndex >= 0)
+            {
+                var existingCard = DownloadInstallOptionCards[existingIndex];
+                existingCard.UpdateFrom(desiredCard);
+                if (existingIndex != index)
+                {
+                    DownloadInstallOptionCards.Move(existingIndex, index);
+                }
+
+                continue;
+            }
+
+            DownloadInstallOptionCards.Insert(index, desiredCard);
+        }
+
+        while (DownloadInstallOptionCards.Count > cards.Count)
+        {
+            DownloadInstallOptionCards.RemoveAt(DownloadInstallOptionCards.Count - 1);
+        }
+    }
+
+    private int FindDownloadInstallOptionCardIndex(string title)
+    {
+        for (var index = 0; index < DownloadInstallOptionCards.Count; index++)
+        {
+            if (string.Equals(DownloadInstallOptionCards[index].Title, title, StringComparison.Ordinal))
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     private void ToggleDownloadInstallOptionCard(string optionTitle)

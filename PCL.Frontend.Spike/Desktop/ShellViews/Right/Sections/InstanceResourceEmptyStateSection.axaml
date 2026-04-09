@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
-  <controls:PclCard IsVisible="{Binding HasNoInstanceResourceEntries}" ContentMargin="20,17,20,17">
+  <controls:PclCard IsVisible="{Binding ShowInstanceResourceEmptyState}" ContentMargin="20,17,20,17">
     <controls:PclCard.CardContent>
       <StackPanel Spacing="10">
         <TextBlock
@@ -18,7 +18,7 @@
             Text="{Binding InstanceResourceEmptyDescription}"
             TextAlignment="Center"
             TextWrapping="Wrap" />
-        <WrapPanel HorizontalAlignment="Center" IsVisible="{Binding HasNoInstanceResourceEntries}">
+        <WrapPanel HorizontalAlignment="Center">
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"
@@ -30,7 +30,7 @@
               MinWidth="130"
               Margin="5,0"
               Command="{Binding DownloadInstanceResourceCommand}"
-              Text="{Binding InstanceResourceDownloadButtonText}" />
+              Text="{Binding InstanceResourceEmptyDownloadButtonText}" />
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"

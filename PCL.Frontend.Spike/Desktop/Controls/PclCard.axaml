@@ -79,12 +79,15 @@
             Content="{Binding HeaderOverlayContent, ElementName=Root}"
             IsVisible="{Binding HasHeaderOverlayContent, ElementName=Root}" />
 
-        <ContentPresenter
-            x:Name="CardContentPresenter"
+        <Grid
+            x:Name="ContentHost"
             Grid.Row="1"
-            Margin="{Binding EffectiveContentMargin, ElementName=Root}"
-            IsVisible="{Binding IsContentVisible, ElementName=Root}"
-            Content="{Binding CardContent, ElementName=Root}" />
+            ClipToBounds="True">
+          <ContentPresenter
+              x:Name="CardContentPresenter"
+              Margin="{Binding EffectiveContentMargin, ElementName=Root}"
+              Content="{Binding CardContent, ElementName=Root}" />
+        </Grid>
       </Grid>
     </Border>
   </Grid>

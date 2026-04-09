@@ -13,10 +13,24 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private enum InstanceResourceFilter
+    {
+        All = 0,
+        Enabled = 1,
+        Disabled = 2,
+        Duplicate = 3
+    }
+
     private string _instanceWorldSearchQuery = string.Empty;
     private string _instanceServerSearchQuery = string.Empty;
     private string _instanceResourceSearchQuery = string.Empty;
     private string _instanceResourceSurfaceTitle = "Mod";
+    private InstanceResourceFilter _instanceResourceFilter = InstanceResourceFilter.All;
+    private int _instanceResourceTotalCount;
+    private int _instanceResourceEnabledCount;
+    private int _instanceResourceDisabledCount;
+    private int _instanceResourceDuplicateCount;
+    private bool _instanceResourceIsSearching;
 
     public string InstanceWorldSearchQuery
     {
@@ -64,21 +78,71 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoInstanceWorldEntries => !HasInstanceWorldEntries;
 
+    public bool ShowInstanceWorldContent => _instanceComposition.World.Entries.Count > 0;
+
+    public bool ShowInstanceWorldEmptyState => !ShowInstanceWorldContent;
+
     public bool HasInstanceScreenshotEntries => InstanceScreenshotEntries.Count > 0;
 
     public bool HasNoInstanceScreenshotEntries => !HasInstanceScreenshotEntries;
+
+    public bool ShowInstanceScreenshotContent => _instanceComposition.Screenshot.Entries.Count > 0;
+
+    public bool ShowInstanceScreenshotEmptyState => !ShowInstanceScreenshotContent;
 
     public bool HasInstanceServerEntries => InstanceServerEntries.Count > 0;
 
     public bool HasNoInstanceServerEntries => !HasInstanceServerEntries;
 
+    public bool ShowInstanceServerContent => _instanceComposition.Server.Entries.Count > 0;
+
+    public bool ShowInstanceServerEmptyState => !ShowInstanceServerContent;
+
     public bool HasInstanceResourceEntries => InstanceResourceEntries.Count > 0;
 
     public bool HasNoInstanceResourceEntries => !HasInstanceResourceEntries;
 
-    public bool ShowInstanceResourceUnsupportedState => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource)
-        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSchematic
-        && HasNoInstanceResourceEntries;
+    public bool ShowInstanceResourceUnsupportedState => _currentRoute.Subpage switch
+    {
+        LauncherFrontendSubpageKey.VersionMod => !_instanceComposition.Selection.IsModable,
+        LauncherFrontendSubpageKey.VersionSchematic => GetCurrentInstanceResourceSourceEntries().Count == 0,
+        _ => false
+    };
+
+    public bool ShowInstanceResourceContent => !ShowInstanceResourceUnsupportedState
+        && GetCurrentInstanceResourceSourceEntries().Count > 0;
+
+    public bool ShowInstanceResourceEmptyState => ShowInstanceResourceUnsupportedState
+        || GetCurrentInstanceResourceSourceEntries().Count == 0;
+
+    public bool ShowInstanceResourceFilterBar => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
+        && _instanceComposition.Selection.IsModable;
+
+    public string InstanceResourceFilterAllText => $"{(_instanceResourceIsSearching ? "搜索结果" : "全部")} ({_instanceResourceTotalCount})";
+
+    public bool IsInstanceResourceFilterAllSelected => _instanceResourceFilter == InstanceResourceFilter.All;
+
+    public string InstanceResourceFilterEnabledText => $"启用 ({_instanceResourceEnabledCount})";
+
+    public bool ShowInstanceResourceEnabledFilter => ShowInstanceResourceFilterBar
+        && (_instanceResourceFilter == InstanceResourceFilter.Enabled
+            || (_instanceResourceEnabledCount > 0 && _instanceResourceEnabledCount < _instanceResourceTotalCount));
+
+    public bool IsInstanceResourceFilterEnabledSelected => _instanceResourceFilter == InstanceResourceFilter.Enabled;
+
+    public string InstanceResourceFilterDisabledText => $"禁用 ({_instanceResourceDisabledCount})";
+
+    public bool ShowInstanceResourceDisabledFilter => ShowInstanceResourceFilterBar
+        && (_instanceResourceFilter == InstanceResourceFilter.Disabled || _instanceResourceDisabledCount > 0);
+
+    public bool IsInstanceResourceFilterDisabledSelected => _instanceResourceFilter == InstanceResourceFilter.Disabled;
+
+    public string InstanceResourceFilterDuplicateText => $"重复 ({_instanceResourceDuplicateCount})";
+
+    public bool ShowInstanceResourceDuplicateFilter => ShowInstanceResourceFilterBar
+        && (_instanceResourceFilter == InstanceResourceFilter.Duplicate || _instanceResourceDuplicateCount > 0);
+
+    public bool IsInstanceResourceFilterDuplicateSelected => _instanceResourceFilter == InstanceResourceFilter.Duplicate;
 
     public bool ShowInstanceResourceEmptyInstallActions => !ShowInstanceResourceUnsupportedState;
 
@@ -102,8 +166,8 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceResourceEmptyTitle => _currentRoute.Subpage switch
     {
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => "该实例不可使用 Mod",
         LauncherFrontendSubpageKey.VersionMod => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionModDisabled => "尚未安装资源",
         LauncherFrontendSubpageKey.VersionResourcePack => "尚未安装资源",
         LauncherFrontendSubpageKey.VersionShader => "尚未安装资源",
         LauncherFrontendSubpageKey.VersionSchematic => "该实例不可用投影原理图",
@@ -112,12 +176,21 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceResourceEmptyDescription => _currentRoute.Subpage switch
     {
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable =>
+            "你需要先安装 Forge、Fabric 等 Mod 加载器才能使用 Mod，请在下载页面安装这些实例。如果你已经安装过了 Mod 加载器，那么你很可能选择了错误的实例，请点击实例选择按钮切换实例。",
         LauncherFrontendSubpageKey.VersionSchematic => "你可能需要先安装投影 Mod，如果已经安装过了投影 Mod 请先启动一次游戏。也可能是你选择错了实例，请点击实例选择按钮切换实例。",
-        _ => "你可以从已经下载好的文件安装资源。如果你已经安装了资源，可能是版本隔离设置有误，请在设置中调整版本隔离选项。"
+        _ => "你可以下载新的资源，也可以从已经下载好的文件安装资源。如果你已经安装了资源，可能是版本隔离设置有误，请在设置中调整版本隔离选项。"
     };
 
-    public bool ShowInstanceResourceCheckButton => _currentRoute.Subpage is LauncherFrontendSubpageKey.VersionMod
-        or LauncherFrontendSubpageKey.VersionModDisabled;
+    public string InstanceResourceEmptyDownloadButtonText => _currentRoute.Subpage switch
+    {
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => "转到下载页面",
+        LauncherFrontendSubpageKey.VersionSchematic => "下载投影 Mod",
+        _ => InstanceResourceDownloadButtonText
+    };
+
+    public bool ShowInstanceResourceCheckButton => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
+        && _instanceComposition.Selection.IsModable;
 
     public ActionCommand OpenInstanceWorldFolderCommand => new(() =>
         OpenInstanceTarget(
@@ -155,12 +228,21 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand CheckInstanceModsCommand => new(CheckInstanceMods);
 
+    public ActionCommand SetInstanceResourceAllFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.All));
+
+    public ActionCommand SetInstanceResourceEnabledFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Enabled));
+
+    public ActionCommand SetInstanceResourceDisabledFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Disabled));
+
+    public ActionCommand SetInstanceResourceDuplicateFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Duplicate));
+
     private void InitializeInstanceContentSurfaces()
     {
         _instanceWorldSearchQuery = string.Empty;
         _instanceServerSearchQuery = string.Empty;
         _instanceResourceSearchQuery = string.Empty;
         _instanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
+        _instanceResourceFilter = InstanceResourceFilter.All;
 
         RefreshInstanceWorldEntries();
         RefreshInstanceScreenshotEntries();
@@ -175,12 +257,16 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(InstanceWorldSearchQuery));
             RaisePropertyChanged(nameof(HasInstanceWorldEntries));
             RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
+            RaisePropertyChanged(nameof(ShowInstanceWorldContent));
+            RaisePropertyChanged(nameof(ShowInstanceWorldEmptyState));
         }
 
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceScreenshot))
         {
             RaisePropertyChanged(nameof(HasInstanceScreenshotEntries));
             RaisePropertyChanged(nameof(HasNoInstanceScreenshotEntries));
+            RaisePropertyChanged(nameof(ShowInstanceScreenshotContent));
+            RaisePropertyChanged(nameof(ShowInstanceScreenshotEmptyState));
         }
 
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceServer))
@@ -188,6 +274,8 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(InstanceServerSearchQuery));
             RaisePropertyChanged(nameof(HasInstanceServerEntries));
             RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
+            RaisePropertyChanged(nameof(ShowInstanceServerContent));
+            RaisePropertyChanged(nameof(ShowInstanceServerEmptyState));
         }
 
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource))
@@ -199,10 +287,25 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(InstanceResourceDownloadButtonText));
             RaisePropertyChanged(nameof(InstanceResourceEmptyTitle));
             RaisePropertyChanged(nameof(InstanceResourceEmptyDescription));
+            RaisePropertyChanged(nameof(InstanceResourceEmptyDownloadButtonText));
             RaisePropertyChanged(nameof(ShowInstanceResourceCheckButton));
             RaisePropertyChanged(nameof(HasInstanceResourceEntries));
             RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
             RaisePropertyChanged(nameof(ShowInstanceResourceUnsupportedState));
+            RaisePropertyChanged(nameof(ShowInstanceResourceContent));
+            RaisePropertyChanged(nameof(ShowInstanceResourceEmptyState));
+            RaisePropertyChanged(nameof(ShowInstanceResourceFilterBar));
+            RaisePropertyChanged(nameof(InstanceResourceFilterAllText));
+            RaisePropertyChanged(nameof(IsInstanceResourceFilterAllSelected));
+            RaisePropertyChanged(nameof(InstanceResourceFilterEnabledText));
+            RaisePropertyChanged(nameof(ShowInstanceResourceEnabledFilter));
+            RaisePropertyChanged(nameof(IsInstanceResourceFilterEnabledSelected));
+            RaisePropertyChanged(nameof(InstanceResourceFilterDisabledText));
+            RaisePropertyChanged(nameof(ShowInstanceResourceDisabledFilter));
+            RaisePropertyChanged(nameof(IsInstanceResourceFilterDisabledSelected));
+            RaisePropertyChanged(nameof(InstanceResourceFilterDuplicateText));
+            RaisePropertyChanged(nameof(ShowInstanceResourceDuplicateFilter));
+            RaisePropertyChanged(nameof(IsInstanceResourceFilterDuplicateSelected));
             RaisePropertyChanged(nameof(ShowInstanceResourceEmptyInstallActions));
             RaisePropertyChanged(nameof(ShowInstanceResourceInstanceSelectAction));
         }
@@ -220,11 +323,91 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshInstanceResourceEntries()
     {
         InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
+        var searchedEntries = GetCurrentInstanceResourceSourceEntries()
+            .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, InstanceResourceSearchQuery))
+            .ToArray();
+        var duplicateTitles = searchedEntries
+            .GroupBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _instanceResourceIsSearching = !string.IsNullOrWhiteSpace(InstanceResourceSearchQuery);
+        _instanceResourceTotalCount = searchedEntries.Length;
+        _instanceResourceEnabledCount = searchedEntries.Count(entry => entry.IsEnabled);
+        _instanceResourceDisabledCount = searchedEntries.Count(entry => !entry.IsEnabled);
+        _instanceResourceDuplicateCount = searchedEntries.Count(entry => duplicateTitles.Contains(entry.Title));
+
         ReplaceItems(
             InstanceResourceEntries,
-            GetCurrentInstanceResourceState().Entries
-                .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, InstanceResourceSearchQuery))
+            ApplyInstanceResourceFilter(searchedEntries, duplicateTitles)
                 .Select(entry => CreateInstanceResourceEntry(entry.Title, entry.Summary, entry.Meta, entry.IconName, entry.Path)));
+
+        RaisePropertyChanged(nameof(HasInstanceResourceEntries));
+        RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
+        RaisePropertyChanged(nameof(ShowInstanceResourceUnsupportedState));
+        RaisePropertyChanged(nameof(ShowInstanceResourceContent));
+        RaisePropertyChanged(nameof(ShowInstanceResourceEmptyState));
+        RaisePropertyChanged(nameof(ShowInstanceResourceFilterBar));
+        RaisePropertyChanged(nameof(InstanceResourceFilterAllText));
+        RaisePropertyChanged(nameof(IsInstanceResourceFilterAllSelected));
+        RaisePropertyChanged(nameof(InstanceResourceFilterEnabledText));
+        RaisePropertyChanged(nameof(ShowInstanceResourceEnabledFilter));
+        RaisePropertyChanged(nameof(IsInstanceResourceFilterEnabledSelected));
+        RaisePropertyChanged(nameof(InstanceResourceFilterDisabledText));
+        RaisePropertyChanged(nameof(ShowInstanceResourceDisabledFilter));
+        RaisePropertyChanged(nameof(IsInstanceResourceFilterDisabledSelected));
+        RaisePropertyChanged(nameof(InstanceResourceFilterDuplicateText));
+        RaisePropertyChanged(nameof(ShowInstanceResourceDuplicateFilter));
+        RaisePropertyChanged(nameof(IsInstanceResourceFilterDuplicateSelected));
+        RaisePropertyChanged(nameof(ShowInstanceResourceEmptyInstallActions));
+        RaisePropertyChanged(nameof(ShowInstanceResourceInstanceSelectAction));
+        RaisePropertyChanged(nameof(ShowInstanceResourceCheckButton));
+        RaisePropertyChanged(nameof(InstanceResourceEmptyTitle));
+        RaisePropertyChanged(nameof(InstanceResourceEmptyDescription));
+        RaisePropertyChanged(nameof(InstanceResourceEmptyDownloadButtonText));
+    }
+
+    private IEnumerable<FrontendInstanceResourceEntry> ApplyInstanceResourceFilter(
+        IReadOnlyList<FrontendInstanceResourceEntry> entries,
+        ISet<string> duplicateTitles)
+    {
+        if (!ShowInstanceResourceFilterBar)
+        {
+            return entries;
+        }
+
+        return _instanceResourceFilter switch
+        {
+            InstanceResourceFilter.Enabled => entries.Where(entry => entry.IsEnabled),
+            InstanceResourceFilter.Disabled => entries.Where(entry => !entry.IsEnabled),
+            InstanceResourceFilter.Duplicate => entries.Where(entry => duplicateTitles.Contains(entry.Title)),
+            _ => entries
+        };
+    }
+
+    private IReadOnlyList<FrontendInstanceResourceEntry> GetCurrentInstanceResourceSourceEntries()
+    {
+        return _currentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.VersionMod => _instanceComposition.Mods.Entries.Concat(_instanceComposition.DisabledMods.Entries).ToArray(),
+            LauncherFrontendSubpageKey.VersionModDisabled => _instanceComposition.DisabledMods.Entries,
+            LauncherFrontendSubpageKey.VersionResourcePack => _instanceComposition.ResourcePacks.Entries,
+            LauncherFrontendSubpageKey.VersionShader => _instanceComposition.Shaders.Entries,
+            LauncherFrontendSubpageKey.VersionSchematic => _instanceComposition.Schematics.Entries,
+            _ => _instanceComposition.Mods.Entries
+        };
+    }
+
+    private void SetInstanceResourceFilter(InstanceResourceFilter filter)
+    {
+        if (_instanceResourceFilter == filter)
+        {
+            return;
+        }
+
+        _instanceResourceFilter = filter;
+        RefreshInstanceResourceEntries();
     }
 
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(string title, string info, string meta, string iconName, string path)
@@ -522,15 +705,7 @@ internal sealed partial class FrontendShellViewModel
 
     private FrontendInstanceResourceState GetCurrentInstanceResourceState()
     {
-        return _currentRoute.Subpage switch
-        {
-            LauncherFrontendSubpageKey.VersionMod => _instanceComposition.Mods,
-            LauncherFrontendSubpageKey.VersionModDisabled => _instanceComposition.DisabledMods,
-            LauncherFrontendSubpageKey.VersionResourcePack => _instanceComposition.ResourcePacks,
-            LauncherFrontendSubpageKey.VersionShader => _instanceComposition.Shaders,
-            LauncherFrontendSubpageKey.VersionSchematic => _instanceComposition.Schematics,
-            _ => _instanceComposition.Mods
-        };
+        return new FrontendInstanceResourceState(GetCurrentInstanceResourceSourceEntries());
     }
 
     private string ResolveInstanceResourceSurfaceTitle()
@@ -538,7 +713,7 @@ internal sealed partial class FrontendShellViewModel
         return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.VersionMod => "Mod",
-            LauncherFrontendSubpageKey.VersionModDisabled => "已禁用 Mod",
+            LauncherFrontendSubpageKey.VersionModDisabled => "Mod",
             LauncherFrontendSubpageKey.VersionResourcePack => "资源包",
             LauncherFrontendSubpageKey.VersionShader => "光影包",
             LauncherFrontendSubpageKey.VersionSchematic => "投影原理图",
@@ -586,7 +761,7 @@ internal sealed partial class FrontendShellViewModel
         return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.VersionMod => "mods",
-            LauncherFrontendSubpageKey.VersionModDisabled => "mods-disabled",
+            LauncherFrontendSubpageKey.VersionModDisabled => "mods",
             LauncherFrontendSubpageKey.VersionResourcePack => "resourcepacks",
             LauncherFrontendSubpageKey.VersionShader => "shaderpacks",
             LauncherFrontendSubpageKey.VersionSchematic => "schematics",
