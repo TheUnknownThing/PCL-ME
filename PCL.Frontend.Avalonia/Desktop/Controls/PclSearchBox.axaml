@@ -63,7 +63,10 @@
           BorderBrush="Transparent"
           BorderThickness="0"
           FontSize="13.5"
+          MinHeight="0"
+          Padding="0"
           Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          UseLayoutRounding="False"
           VerticalContentAlignment="Center"
           Watermark="{Binding Watermark, ElementName=Root}" />
 
