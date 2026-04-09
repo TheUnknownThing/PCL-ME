@@ -14,9 +14,11 @@ using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using PCL.Core.Link.McPing;
 using PCL.Core.Link.McPing.Model;
 using PCL.Core.Utils;
+using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -170,6 +172,25 @@ internal sealed partial class FrontendShellViewModel
         MinecraftServerQueryMotdLines = [];
         MinecraftServerQueryLogo = LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
         HasMinecraftServerQueryResult = false;
+    }
+
+    private void OpenMinecraftServerInspector(string address)
+    {
+        var resolvedAddress = (address ?? string.Empty).Trim().Replace("：", ":");
+        if (string.IsNullOrWhiteSpace(resolvedAddress))
+        {
+            AddActivity("查看服务器", "服务器地址为空，无法查询。");
+            return;
+        }
+
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
+            $"已切换到测试页面并准备查询 {resolvedAddress}。");
+        Dispatcher.UIThread.Post(() =>
+        {
+            MinecraftServerQueryAddress = resolvedAddress;
+            _ = QueryMinecraftServerAsync();
+        });
     }
 
     private async Task QueryMinecraftServerAsync()

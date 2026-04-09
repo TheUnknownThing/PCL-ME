@@ -946,18 +946,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ViewInstanceServer(FrontendInstanceServerEntry entry)
     {
-        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-servers");
-        Directory.CreateDirectory(exportDirectory);
-        var safeName = string.Concat(entry.Title.Select(character => Path.GetInvalidFileNameChars().Contains(character) ? '_' : character));
-        var outputPath = Path.Combine(exportDirectory, $"{safeName}.txt");
-        var lines = new[]
-        {
-            $"名称: {entry.Title}",
-            $"地址: {entry.Address}",
-            $"状态: {entry.Status}"
-        };
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        OpenInstanceTarget("查看服务器", outputPath, "服务器详情文件不存在。");
+        OpenMinecraftServerInspector(entry.Address);
     }
 
     private FrontendInstanceResourceState GetCurrentInstanceResourceState()
