@@ -51,9 +51,8 @@
       <SolidColorBrush x:Key="ColorBrushMsgBox">#FBFBFB</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushMsgBoxText">#5C5C5C</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushMemory">#000000</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCard">#CDFFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardMouseOver">#E6FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardBorderMouseOver">#28D5E6FD</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushMyCard">#D2FBFBFB</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushMyCardMouseOver">#D2F8F8F8</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushTransparentBackground">#CDFFFFFF</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushBackground">#FBFBFB</SolidColorBrush>
     </ResourceDictionary>
@@ -111,7 +110,6 @@
       <SolidColorBrush x:Key="ColorBrushMemory">#FFFFFF</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushMyCard">#EB2B2B2B</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushMyCardMouseOver">#F5303030</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardBorderMouseOver">#3396C0F9</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushTransparentBackground">#EB2B2B2B</SolidColorBrush>
       <SolidColorBrush x:Key="ColorBrushBackground">#202325</SolidColorBrush>
     </ResourceDictionary>
