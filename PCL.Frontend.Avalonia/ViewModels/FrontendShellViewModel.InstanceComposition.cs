@@ -299,6 +299,27 @@ internal sealed partial class FrontendShellViewModel
         AddActivity(activity, error ?? target);
     }
 
+    private void OpenInstanceDirectoryTarget(string activity, string? target, string emptyState)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            AddActivity(activity, emptyState);
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(target);
+        }
+        catch (Exception ex)
+        {
+            AddActivity(activity, ex.Message);
+            return;
+        }
+
+        OpenInstanceTarget(activity, target, emptyState);
+    }
+
     private static bool ShouldRevealInstanceTargetInShell(string target)
     {
         if (string.IsNullOrWhiteSpace(target) || Directory.Exists(target) || !File.Exists(target))

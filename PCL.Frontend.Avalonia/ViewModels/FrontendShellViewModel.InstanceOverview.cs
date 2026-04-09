@@ -118,13 +118,13 @@ internal sealed partial class FrontendShellViewModel
         OpenInstanceTarget("实例文件夹", _instanceComposition.Selection.InstanceDirectory, "当前未选择实例。"));
 
     public ActionCommand OpenInstanceSavesFolderCommand => new(() =>
-        OpenInstanceTarget(
+        OpenInstanceDirectoryTarget(
             "存档文件夹",
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
             "当前实例没有存档目录。"));
 
     public ActionCommand OpenInstanceModsFolderCommand => new(() =>
-        OpenInstanceTarget(
+        OpenInstanceDirectoryTarget(
             "Mod 文件夹",
             ResolveCurrentInstanceResourceDirectory("mods"),
             "当前实例没有 Mod 目录。"));

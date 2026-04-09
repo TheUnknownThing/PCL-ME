@@ -257,27 +257,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand SetInstanceResourceDuplicateFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Duplicate));
 
-    private void OpenInstanceDirectoryTarget(string activity, string? target, string emptyState)
-    {
-        if (string.IsNullOrWhiteSpace(target))
-        {
-            AddActivity(activity, emptyState);
-            return;
-        }
-
-        try
-        {
-            Directory.CreateDirectory(target);
-        }
-        catch (Exception ex)
-        {
-            AddActivity(activity, ex.Message);
-            return;
-        }
-
-        OpenInstanceTarget(activity, target, emptyState);
-    }
-
     private void InitializeInstanceContentSurfaces()
     {
         _instanceWorldSearchQuery = string.Empty;
