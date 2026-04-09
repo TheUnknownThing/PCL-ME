@@ -8,7 +8,6 @@ namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
 internal sealed class PclAnimatedRightPaneHost : Grid
 {
-    private const int EnterDelayMilliseconds = 48;
     private const int StaggerStepMilliseconds = 42;
     private const double EnterOffsetY = -18d;
     private const double ExitOffsetY = -12d;
@@ -73,23 +72,21 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         var previousPresenter = _currentPresenter;
         ContentControl? nextPresenter = null;
 
+        _currentPresenter = null;
+
+        // Route swaps should not render two full pane trees at once.
+        DetachPresenter(previousPresenter);
         _currentContent = newContent;
         if (newContent is not null)
         {
             nextPresenter = CreatePresenter(newContent);
-            ConfigureMotion(nextPresenter, previousPresenter is null ? 0 : EnterDelayMilliseconds);
+            ConfigureMotion(nextPresenter, enterDelay: 0);
             AttachPresenter(nextPresenter, zIndex: 1, opacity: 0);
             _currentPresenter = nextPresenter;
         }
         else
         {
             _currentPresenter = null;
-        }
-
-        if (previousPresenter is not null)
-        {
-            previousPresenter.SetValue(ZIndexProperty, 0);
-            _ = RemovePresenterAfterExitAsync(previousPresenter);
         }
 
         if (nextPresenter is null)
@@ -100,6 +97,7 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
         if (version != _transitionVersion || !ReferenceEquals(nextPresenter, _currentPresenter))
         {
+            DetachPresenter(nextPresenter);
             return;
         }
 
@@ -112,13 +110,6 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         }
 
         await Motion.PlayEnterAsync(nextPresenter);
-    }
-
-    private async Task RemovePresenterAfterExitAsync(ContentControl presenter)
-    {
-        presenter.IsHitTestVisible = false;
-        await Motion.PlayExitAsync(presenter);
-        DetachPresenter(presenter);
     }
 
     private static ContentControl CreatePresenter(object content)
@@ -151,9 +142,9 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         Children.Add(presenter);
     }
 
-    private void DetachPresenter(ContentControl presenter)
+    private void DetachPresenter(ContentControl? presenter)
     {
-        if (ReferenceEquals(presenter, _currentPresenter))
+        if (presenter is null || ReferenceEquals(presenter, _currentPresenter))
         {
             return;
         }
