@@ -21,6 +21,13 @@ internal sealed partial class FrontendShellViewModel
         Duplicate = 3
     }
 
+    private enum InstanceWorldSortMethod
+    {
+        FileName = 0,
+        CreateTime = 1,
+        ModifyTime = 2
+    }
+
     private string _instanceWorldSearchQuery = string.Empty;
     private string _instanceServerSearchQuery = string.Empty;
     private string _instanceResourceSearchQuery = string.Empty;
@@ -31,6 +38,7 @@ internal sealed partial class FrontendShellViewModel
     private int _instanceResourceDisabledCount;
     private int _instanceResourceDuplicateCount;
     private bool _instanceResourceIsSearching;
+    private InstanceWorldSortMethod _instanceWorldSortMethod = InstanceWorldSortMethod.FileName;
 
     public string InstanceWorldSearchQuery
     {
@@ -81,6 +89,8 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowInstanceWorldContent => _instanceComposition.World.Entries.Count > 0;
 
     public bool ShowInstanceWorldEmptyState => !ShowInstanceWorldContent;
+
+    public string InstanceWorldSortText => $"排序：{GetInstanceWorldSortName(_instanceWorldSortMethod)}";
 
     public bool HasInstanceScreenshotEntries => InstanceScreenshotEntries.Count > 0;
 
@@ -198,6 +208,8 @@ internal sealed partial class FrontendShellViewModel
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
             "当前实例没有存档目录。"));
 
+    public ActionCommand CycleInstanceWorldSortCommand => new(CycleInstanceWorldSortMethod);
+
     public ActionCommand PasteInstanceWorldClipboardCommand => new(() => _ = PasteInstanceWorldClipboardAsync());
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
@@ -255,6 +267,7 @@ internal sealed partial class FrontendShellViewModel
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceWorld))
         {
             RaisePropertyChanged(nameof(InstanceWorldSearchQuery));
+            RaisePropertyChanged(nameof(InstanceWorldSortText));
             RaisePropertyChanged(nameof(HasInstanceWorldEntries));
             RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
             RaisePropertyChanged(nameof(ShowInstanceWorldContent));
@@ -422,14 +435,77 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceWorldEntries()
     {
+        var filteredEntries = _instanceComposition.World.Entries
+            .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Path, InstanceWorldSearchQuery));
+
         ReplaceItems(
             InstanceWorldEntries,
-            _instanceComposition.World.Entries
-                .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Path, InstanceWorldSearchQuery))
+            ApplyInstanceWorldSort(filteredEntries)
                 .Select(entry => new SimpleListEntryViewModel(
                     entry.Title,
                     entry.Summary,
                     new ActionCommand(() => OpenVersionSaveDetails(entry.Path)))));
+    }
+
+    private IEnumerable<FrontendInstanceDirectoryEntry> ApplyInstanceWorldSort(IEnumerable<FrontendInstanceDirectoryEntry> entries)
+    {
+        return _instanceWorldSortMethod switch
+        {
+            InstanceWorldSortMethod.CreateTime => entries
+                .OrderByDescending(entry => GetDirectoryCreationTimeUtc(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            InstanceWorldSortMethod.ModifyTime => entries
+                .OrderByDescending(entry => GetDirectoryLastWriteTimeUtc(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            _ => entries.OrderBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+        };
+    }
+
+    private void CycleInstanceWorldSortMethod()
+    {
+        _instanceWorldSortMethod = _instanceWorldSortMethod switch
+        {
+            InstanceWorldSortMethod.FileName => InstanceWorldSortMethod.CreateTime,
+            InstanceWorldSortMethod.CreateTime => InstanceWorldSortMethod.ModifyTime,
+            _ => InstanceWorldSortMethod.FileName
+        };
+
+        RaisePropertyChanged(nameof(InstanceWorldSortText));
+        RefreshInstanceWorldEntries();
+    }
+
+    private static string GetInstanceWorldSortName(InstanceWorldSortMethod method)
+    {
+        return method switch
+        {
+            InstanceWorldSortMethod.CreateTime => "创建时间",
+            InstanceWorldSortMethod.ModifyTime => "修改时间",
+            _ => "文件名"
+        };
+    }
+
+    private static DateTime GetDirectoryCreationTimeUtc(string path)
+    {
+        try
+        {
+            return Directory.GetCreationTimeUtc(path);
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
+
+    private static DateTime GetDirectoryLastWriteTimeUtc(string path)
+    {
+        try
+        {
+            return Directory.GetLastWriteTimeUtc(path);
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
     }
 
     private void RefreshInstanceScreenshotEntries()
