@@ -233,7 +233,7 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("刷新服务器信息", "已重新扫描当前实例中的服务器列表。");
     });
 
-    public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerFromClipboardAsync());
+    public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerAsync());
 
     public ActionCommand OpenInstanceResourceFolderCommand => new(() =>
         OpenInstanceDirectoryTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
@@ -691,7 +691,7 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("粘贴剪贴板文件", string.Join(Environment.NewLine, importedTargets));
     }
 
-    private async Task AddInstanceServerFromClipboardAsync()
+    private async Task AddInstanceServerAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
@@ -699,10 +699,10 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        string? clipboardText;
+        var serverInfo = default((bool Success, string Name, string Address, string? Activity));
         try
         {
-            clipboardText = await _shellActionService.ReadClipboardTextAsync();
+            serverInfo = await PromptForNewInstanceServerAsync();
         }
         catch (Exception ex)
         {
@@ -710,24 +710,17 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (!TryParseClipboardServer(clipboardText, out var name, out var address))
+        if (!serverInfo.Success)
         {
-            var serverInfo = await TryGetServerInfoFromClipboardOrPromptAsync(clipboardText);
-            if (!serverInfo.Success)
+            if (!string.IsNullOrWhiteSpace(serverInfo.Activity))
             {
                 AddActivity("添加新服务器", serverInfo.Activity);
-                return;
             }
-
-            name = serverInfo.Name;
-            address = serverInfo.Address;
-        }
-
-        if (string.IsNullOrWhiteSpace(address))
-        {
-            AddActivity("添加新服务器", "请先复制服务器地址，或复制“名称|地址”后再试。");
             return;
         }
+
+        var name = serverInfo.Name;
+        var address = serverInfo.Address;
 
         var serversPath = Path.Combine(_instanceComposition.Selection.IndieDirectory, "servers.dat");
         NbtFile file;
@@ -787,32 +780,32 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("添加新服务器", $"{name} • {address}");
     }
 
-    private async Task<(bool Success, string Name, string Address, string Activity)> TryGetServerInfoFromClipboardOrPromptAsync(string? clipboardText)
+    private async Task<(bool Success, string Name, string Address, string? Activity)> PromptForNewInstanceServerAsync()
     {
-        if (TryParseClipboardServer(clipboardText, out var parsedName, out var parsedAddress)
-            && !string.IsNullOrWhiteSpace(parsedAddress))
-        {
-            return (true, parsedName, parsedAddress, string.Empty);
-        }
-
         var resolvedName = await _shellActionService.PromptForTextAsync(
             "添加新服务器",
-            "请输入服务器名称",
+            "请输入新的服务器名称：",
             "Minecraft服务器");
         if (resolvedName is null)
         {
-            return (false, string.Empty, string.Empty, "已取消添加新服务器。");
+            return (false, string.Empty, string.Empty, null);
         }
 
         var resolvedAddress = await _shellActionService.PromptForTextAsync(
             "添加新服务器",
-            "请输入服务器地址（支持输入“名称|地址”）");
+            "请输入新的服务器地址：");
         if (string.IsNullOrWhiteSpace(resolvedAddress))
         {
-            return (false, string.Empty, string.Empty, "请先复制服务器地址，或复制“名称|地址”后再试。");
+            return resolvedAddress is null
+                ? (false, string.Empty, string.Empty, null)
+                : (false, string.Empty, string.Empty, "服务器地址不能为空。");
         }
 
-        return (true, string.IsNullOrWhiteSpace(resolvedName) ? "Minecraft服务器" : resolvedName, resolvedAddress.Trim(), string.Empty);
+        return (
+            true,
+            string.IsNullOrWhiteSpace(resolvedName) ? "Minecraft服务器" : resolvedName.Trim(),
+            resolvedAddress.Trim(),
+            null);
     }
 
     private async Task InstallInstanceResourceFromFileAsync()
@@ -1022,46 +1015,6 @@ internal sealed partial class FrontendShellViewModel
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .Select(line => line.Trim().Trim('"'))
             .Where(line => !string.IsNullOrWhiteSpace(line));
-    }
-
-    private static bool TryParseClipboardServer(string? clipboardText, out string name, out string address)
-    {
-        name = "Minecraft服务器";
-        address = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(clipboardText))
-        {
-            return false;
-        }
-
-        var lines = clipboardText
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Trim())
-            .Where(line => !string.IsNullOrWhiteSpace(line))
-            .ToArray();
-        if (lines.Length == 0)
-        {
-            return false;
-        }
-
-        if (lines.Length >= 2)
-        {
-            name = lines[0];
-            address = lines[1];
-            return true;
-        }
-
-        var singleLine = lines[0];
-        var split = singleLine.Split('|', 2, StringSplitOptions.TrimEntries);
-        if (split.Length == 2)
-        {
-            name = string.IsNullOrWhiteSpace(split[0]) ? "Minecraft服务器" : split[0];
-            address = split[1];
-            return !string.IsNullOrWhiteSpace(address);
-        }
-
-        address = singleLine;
-        return true;
     }
 
     private static string GetUniqueChildPath(string directory, string fileOrFolderName)
