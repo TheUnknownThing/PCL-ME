@@ -375,13 +375,17 @@ internal sealed partial class FrontendShellViewModel
             var legacyFabricApiChoice = ResolveEffectiveAddonChoice(isExistingInstance, "Legacy Fabric API", minecraftVersion);
             var qslChoice = ResolveEffectiveAddonChoice(isExistingInstance, "QFAPI / QSL", minecraftVersion);
             var optiFabricChoice = ResolveEffectiveAddonChoice(isExistingInstance, "OptiFabric", minecraftVersion);
-            var useIsolation = primaryChoice is not null
-                               || liteLoaderChoice is not null
-                               || optiFineChoice is not null
-                               || fabricApiChoice is not null
-                               || legacyFabricApiChoice is not null
-                               || qslChoice is not null
-                               || optiFabricChoice is not null;
+            var hasModableComponents = primaryChoice is not null
+                                       || liteLoaderChoice is not null
+                                       || optiFineChoice is not null
+                                       || fabricApiChoice is not null
+                                       || legacyFabricApiChoice is not null
+                                       || qslChoice is not null
+                                       || optiFabricChoice is not null;
+            var useIsolation = FrontendIsolationPolicyService.ShouldIsolateByGlobalMode(
+                SelectedLaunchIsolationIndex,
+                hasModableComponents,
+                FrontendIsolationPolicyService.IsNonReleaseMinecraftChoice(minecraftChoice));
             var activityTitle = activityTitleOverride ?? (isExistingInstance ? InstanceInstallApplyButtonText : "开始安装");
             var request = new FrontendInstallApplyRequest(
                 _instanceComposition.Selection.LauncherDirectory,

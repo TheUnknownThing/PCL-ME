@@ -37,7 +37,7 @@ internal static class FrontendInstanceCompositionService
 
         var instanceConfig = OpenInstanceConfigProvider(instanceDirectory);
         var manifestSummary = ReadManifestSummary(launcherDirectory, selectedInstanceName);
-        var isIndie = ReadValue(instanceConfig, "VersionArgumentIndieV2", false);
+        var isIndie = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary);
         var indieDirectory = isIndie ? instanceDirectory : launcherDirectory;
         var vanillaVersion = manifestSummary.VanillaVersion?.ToString() ?? ReadValue(instanceConfig, "VersionVanillaName", "Unknown");
         var selection = new FrontendInstanceSelectionState(
@@ -303,7 +303,7 @@ internal static class FrontendInstanceCompositionService
         var usedMemoryGb = Math.Max(totalMemoryGb - availableMemoryGb, 0);
 
         return new FrontendInstanceSetupState(
-            IsolationIndex: ReadValue(instanceConfig, "VersionArgumentIndieV2", false) ? 0 : 1,
+            IsolationIndex: ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary) ? 0 : 1,
             WindowTitle: ReadValue(instanceConfig, "VersionArgumentTitle", string.Empty),
             UseDefaultWindowTitle: ReadValue(instanceConfig, "VersionArgumentTitleEmpty", false),
             CustomInfo: ReadValue(instanceConfig, "VersionArgumentInfo", string.Empty),
@@ -1072,6 +1072,7 @@ internal static class FrontendInstanceCompositionService
 
         return new FrontendVersionManifestSummary(
             VanillaVersion: vanillaVersion,
+            VersionType: FirstNonEmpty(GetString(root, "type"), parentSummary.VersionType),
             HasForge: parentSummary.HasForge || ContainsLibrary(allLibraries, "net.minecraftforge:forge"),
             ForgeVersion: parentSummary.ForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.minecraftforge:forge"),
             NeoForgeVersion: parentSummary.NeoForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.neoforged:neoforge"),
@@ -1093,6 +1094,23 @@ internal static class FrontendInstanceCompositionService
             HasOptiFabric: parentSummary.HasOptiFabric || ContainsLibrary(allLibraries, "optifabric"),
             OptiFabricVersion: parentSummary.OptiFabricVersion ?? ExtractLibraryVersion(allLibraries, "optifabric"),
             LibraryNames: allLibraries);
+    }
+
+    private static bool ResolveIsolationEnabled(
+        YamlFileProvider localConfig,
+        YamlFileProvider instanceConfig,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        if (instanceConfig.Exists("VersionArgumentIndieV2"))
+        {
+            return ReadValue(instanceConfig, "VersionArgumentIndieV2", false);
+        }
+
+        var globalMode = ReadValue(localConfig, "LaunchArgumentIndieV2", 4);
+        return FrontendIsolationPolicyService.ShouldIsolateByGlobalMode(
+            globalMode,
+            IsModable(manifestSummary),
+            FrontendIsolationPolicyService.IsNonReleaseVersionType(manifestSummary.VersionType));
     }
 
     private static IReadOnlyList<string> ParseLibraryNames(JsonElement root)
@@ -1241,6 +1259,7 @@ internal static class FrontendInstanceCompositionService
 
     private sealed record FrontendVersionManifestSummary(
         string VanillaVersion,
+        string? VersionType,
         bool HasForge,
         string? ForgeVersion,
         string? NeoForgeVersion,
@@ -1263,6 +1282,7 @@ internal static class FrontendInstanceCompositionService
     {
         public static FrontendVersionManifestSummary Empty { get; } = new(
             VanillaVersion: "Unknown",
+            VersionType: null,
             HasForge: false,
             ForgeVersion: null,
             NeoForgeVersion: null,

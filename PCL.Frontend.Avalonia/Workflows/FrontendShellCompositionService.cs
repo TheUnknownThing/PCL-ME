@@ -65,7 +65,7 @@ internal static class FrontendShellCompositionService
             LegacyVersionIsolationValue: ReadValue(localConfig, "LaunchArgumentIndie", 0),
             HasWindowHeightSetting: localConfig.Exists("WindowHeight"),
             LegacyVersionIsolationDefaultValue: -1,
-            VersionIsolationV2DefaultValue: 0,
+            VersionIsolationV2DefaultValue: 4,
             SpecialBuildKind: GetStartupSpecialBuildKind(),
             IsSpecialBuildHintDisabled: !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT")),
             HasAcceptedEula: ReadValue(sharedConfig, "SystemEula", false),
