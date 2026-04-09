@@ -761,6 +761,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RaiseLaunchCompositionProperties();
+        ScheduleLaunchAvatarRefresh();
     }
 
     private void AppendLaunchLogLine(string line)
@@ -1023,6 +1024,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RaiseLaunchCompositionProperties()
     {
+        RaisePropertyChanged(nameof(LaunchAvatarImage));
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
         RaisePropertyChanged(nameof(HasSelectedLaunchProfile));
