@@ -568,11 +568,26 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenInstanceSelectionEntry(InstanceSelectionSnapshot entry)
     {
+        if (string.IsNullOrWhiteSpace(entry.Name))
+        {
+            return;
+        }
+
         _shellActionService.PersistLocalValue("LaunchInstanceSelect", entry.Name);
-        RefreshLaunchState();
+        if (!_instanceComposition.Selection.HasSelection
+            || !string.Equals(
+                _instanceComposition.Selection.InstanceName,
+                entry.Name,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyOptimisticInstanceSelection(entry.Name);
+            var refreshVersion = System.Threading.Interlocked.Increment(ref _instanceSelectionRefreshVersion);
+            _ = RefreshSelectedInstanceStateAsync(refreshVersion);
+        }
+
         NavigateTo(
-            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionSetup),
-            $"已打开实例 {entry.Name} 的设置页面。");
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionOverall),
+            $"已打开实例 {entry.Name} 的概览页面。");
     }
 
     private void ToggleInstanceSelectionFavorite(InstanceSelectionSnapshot entry)
