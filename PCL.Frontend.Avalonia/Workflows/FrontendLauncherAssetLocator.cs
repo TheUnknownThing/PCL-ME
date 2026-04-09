@@ -8,6 +8,16 @@ internal static class FrontendLauncherAssetLocator
         "..",
         "..",
         "..",
+        "PCL.Frontend.Avalonia",
+        "Assets",
+        "LauncherAssets"));
+
+    private static readonly string LegacySourceRootDirectory = Path.GetFullPath(Path.Combine(
+        AppContext.BaseDirectory,
+        "..",
+        "..",
+        "..",
+        "..",
         "PCL.Frontend.WPF"));
 
     private static readonly string PackagedRootDirectory = Path.Combine(
@@ -16,7 +26,9 @@ internal static class FrontendLauncherAssetLocator
 
     public static string RootDirectory => Directory.Exists(PackagedRootDirectory)
         ? PackagedRootDirectory
-        : SourceRootDirectory;
+        : Directory.Exists(SourceRootDirectory)
+            ? SourceRootDirectory
+            : LegacySourceRootDirectory;
 
     public static string GetPath(params string[] segments)
     {
