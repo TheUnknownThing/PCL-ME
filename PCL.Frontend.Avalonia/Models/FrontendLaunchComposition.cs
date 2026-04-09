@@ -9,6 +9,7 @@ internal sealed record FrontendLaunchComposition(
     IReadOnlyList<FrontendLaunchArtifactRequirement> RequiredArtifacts,
     FrontendLaunchProfileSummary SelectedProfile,
     FrontendJavaRuntimeSummary? SelectedJavaRuntime,
+    string? JavaWarningMessage,
     int LaunchCount,
     MinecraftLaunchPrecheckRequest PrecheckRequest,
     MinecraftLaunchPrecheckResult PrecheckResult,

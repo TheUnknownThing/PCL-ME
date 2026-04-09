@@ -86,6 +86,7 @@ public static class LauncherFrontendPageContentService
                 ("当前页面", title),
                 ("登录", launch?.LoginProviderLabel ?? "未提供"),
                 ("Java", launch?.JavaRuntimeLabel ?? "未提供"),
+                ("Java 警告", launch?.JavaWarningMessage ?? "无"),
                 ("提示数", promptTotal.ToString())),
             Section(
                 "当前启动",
@@ -98,6 +99,7 @@ public static class LauncherFrontendPageContentService
                 "运行时",
                 "Java 与分辨率",
                 $"Java: {launch?.JavaRuntimeLabel ?? "未提供"}",
+                $"Java 警告: {launch?.JavaWarningMessage ?? "无"}",
                 $"下载目标: {launch?.JavaDownloadTarget ?? "无"}",
                 $"分辨率: {launch?.ResolutionLabel ?? "未提供"}",
                 $"Classpath 条目: {launch?.ClasspathEntryCount.ToString() ?? "0"} | 替换值: {launch?.ReplacementValueCount.ToString() ?? "0"}"),
@@ -310,6 +312,7 @@ public static class LauncherFrontendPageContentService
                 "运行时",
                 "Java 与显示",
                 $"推荐 Java: {launch?.JavaRuntimeLabel ?? "未提供"}",
+                $"Java 警告: {launch?.JavaWarningMessage ?? "无"}",
                 $"下载目标: {launch?.JavaDownloadTarget ?? "无"}",
                 $"分辨率: {launch?.ResolutionLabel ?? "未提供"}",
                 $"启动图标: {FormatBool(startup.Visual.ShouldShowSplashScreen)}"));
@@ -327,6 +330,7 @@ public static class LauncherFrontendPageContentService
             BuildFacts(
                 ("当前分区", "启动"),
                 ("Java", launch?.JavaRuntimeLabel ?? "未提供"),
+                ("Java 警告", launch?.JavaWarningMessage ?? "无"),
                 ("分辨率", launch?.ResolutionLabel ?? "未提供"),
                 ("提示数", promptTotal.ToString())),
             Section(
@@ -1043,6 +1047,7 @@ public sealed record LauncherFrontendLaunchSurfaceData(
     string SelectedIdentityLabel,
     int LoginStepCount,
     string JavaRuntimeLabel,
+    string? JavaWarningMessage,
     string? JavaDownloadTarget,
     string ResolutionLabel,
     int ClasspathEntryCount,

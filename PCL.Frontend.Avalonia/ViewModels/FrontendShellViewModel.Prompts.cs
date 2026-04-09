@@ -515,7 +515,8 @@ internal sealed partial class FrontendShellViewModel
                         $"Java {installResult.VersionName}",
                         _launchComposition.JavaWorkflow.RecommendedMajorVersion,
                         IsEnabled: true,
-                        Is64Bit: Environment.Is64BitOperatingSystem)
+                        Is64Bit: Environment.Is64BitOperatingSystem),
+                    JavaWarningMessage = null
                 };
                 RaiseLaunchCompositionProperties();
                 RegisterMaterializedJavaRuntime(installResult);
@@ -616,6 +617,12 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
             return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
+        {
+            AppendLaunchLogLine(_launchComposition.JavaWarningMessage);
+            AddActivity("Java 兼容性检查已忽略", _launchComposition.JavaWarningMessage);
         }
 
         try
@@ -991,6 +998,7 @@ internal sealed partial class FrontendShellViewModel
             _launchComposition.SelectedProfile.IdentityLabel,
             _launchComposition.SelectedProfile.Kind == MinecraftLaunchProfileKind.None ? 0 : 1,
             GetLaunchJavaRuntimeLabel(),
+            _launchComposition.JavaWarningMessage,
             GetPendingJavaPrompt()?.DownloadTarget,
             $"{_launchComposition.ResolutionPlan.Width} x {_launchComposition.ResolutionPlan.Height}",
             _launchComposition.ClasspathPlan.Entries.Count,

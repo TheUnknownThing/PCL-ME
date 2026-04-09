@@ -56,7 +56,8 @@ internal static class FrontendLaunchCompositionService
         var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
         var requiredArtifacts = BuildRequiredArtifacts(launcherFolder, selectedInstanceName);
-        var selectedJavaRuntime = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, manifestSummary, javaWorkflow);
+        var javaSelection = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, manifestSummary, javaWorkflow);
+        var selectedJavaRuntime = javaSelection.Runtime;
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
             localConfig,
             CreateRuntimeResolutionFallback(),
@@ -172,6 +173,7 @@ internal static class FrontendLaunchCompositionService
             requiredArtifacts,
             selectedProfile,
             selectedJavaRuntime,
+            javaSelection.WarningMessage,
             launchCount,
             precheckRequest,
             precheckResult,
@@ -242,6 +244,7 @@ internal static class FrontendLaunchCompositionService
                 null,
                 null,
                 plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft),
+            null,
             null,
             10,
             replayPrecheckRequest,
@@ -717,7 +720,7 @@ internal static class FrontendLaunchCompositionService
             HasMicrosoftProfile: false);
     }
 
-    private static FrontendJavaRuntimeSummary? ResolveJavaRuntime(
+    private static FrontendJavaSelectionResult ResolveJavaRuntime(
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig,
         YamlFileProvider? instanceConfig,
@@ -736,14 +739,18 @@ internal static class FrontendLaunchCompositionService
             if (selectedRuntime is not null &&
                 ShouldUseConfiguredRuntime(selectedRuntime, manifestSummary, javaWorkflow, ignoreJavaCompatibilityWarning))
             {
-                return ToRuntimeSummary(selectedRuntime);
+                return new FrontendJavaSelectionResult(
+                    ToRuntimeSummary(selectedRuntime),
+                    ignoreJavaCompatibilityWarning && !IsCompatibleWithWorkflow(selectedRuntime, manifestSummary, javaWorkflow)
+                        ? BuildIgnoredJavaCompatibilityWarning(selectedRuntime, javaWorkflow)
+                        : null);
             }
         }
 
         var autoEntry = SelectCompatibleRuntime(javaEntries, manifestSummary, javaWorkflow);
         if (autoEntry is not null)
         {
-            return ToRuntimeSummary(autoEntry);
+            return new FrontendJavaSelectionResult(ToRuntimeSummary(autoEntry), null);
         }
 
         var bundledJava = OperatingSystem.IsWindows()
@@ -755,10 +762,10 @@ internal static class FrontendLaunchCompositionService
                 javaWorkflow,
                 fallbackDisplayName: $"Java {javaWorkflow.RecommendedMajorVersion}") is { } bundledRuntime)
         {
-            return bundledRuntime;
+            return new FrontendJavaSelectionResult(bundledRuntime, null);
         }
 
-        return ProbeHostJavaRuntime(manifestSummary, javaWorkflow);
+        return new FrontendJavaSelectionResult(ProbeHostJavaRuntime(manifestSummary, javaWorkflow), null);
     }
 
     private static FrontendVersionManifestSummary ReadManifestSummary(string launcherFolder, string selectedInstanceName)
@@ -1702,6 +1709,16 @@ internal static class FrontendLaunchCompositionService
                (ignoreJavaCompatibilityWarning || IsCompatibleWithWorkflow(runtime, manifestSummary, javaWorkflow));
     }
 
+    private static string BuildIgnoredJavaCompatibilityWarning(
+        FrontendStoredJavaRuntime runtime,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+    {
+        var runtimeLabel = string.IsNullOrWhiteSpace(runtime.DisplayName)
+            ? Path.GetFileName(Path.GetDirectoryName(runtime.ExecutablePath)) ?? runtime.ExecutablePath
+            : runtime.DisplayName;
+        return $"已按实例设置忽略 Java 兼容性检查，当前使用 {runtimeLabel}。推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}";
+    }
+
     private static FrontendStoredJavaRuntime? SelectCompatibleRuntime(
         IEnumerable<FrontendStoredJavaRuntime> runtimes,
         FrontendVersionManifestSummary manifestSummary,
@@ -1841,6 +1858,10 @@ internal static class FrontendLaunchCompositionService
     private readonly record struct FrontendConfiguredJavaSelection(
         bool FollowGlobal,
         string RawSelection);
+
+    private readonly record struct FrontendJavaSelectionResult(
+        FrontendJavaRuntimeSummary? Runtime,
+        string? WarningMessage);
 
     private static int? TryParseJavaMajorVersion(string output)
     {

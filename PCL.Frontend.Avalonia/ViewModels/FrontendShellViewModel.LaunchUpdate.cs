@@ -425,14 +425,26 @@ internal sealed partial class FrontendShellViewModel
         private set => SetProperty(ref _isLaunchNewsExpanded, value);
     }
 
-    public IReadOnlyList<string> LaunchMigrationLines =>
-    [
-        $"档案：{_launchComposition.SelectedProfile.IdentityLabel}",
-        $"Java：{GetLaunchJavaRuntimeLabel()}",
-        $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : _launchComposition.PrecheckResult.FailureMessage ?? "未通过")}",
-        $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}",
-        $"会话状态：{(_isLaunchInProgress ? "游戏启动中" : "待命")}"
-    ];
+    public IReadOnlyList<string> LaunchMigrationLines
+    {
+        get
+        {
+            var lines = new List<string>
+            {
+                $"档案：{_launchComposition.SelectedProfile.IdentityLabel}",
+                $"Java：{GetLaunchJavaRuntimeLabel()}",
+                $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : _launchComposition.PrecheckResult.FailureMessage ?? "未通过")}",
+                $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}",
+                $"会话状态：{(_isLaunchInProgress ? "游戏启动中" : "待命")}"
+            };
+            if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
+            {
+                lines.Insert(2, $"Java 警告：{_launchComposition.JavaWarningMessage}");
+            }
+
+            return lines;
+        }
+    }
 
     public Bitmap? LaunchAvatarImage => File.Exists(_launchAvatarImagePath)
         ? new Bitmap(_launchAvatarImagePath)
