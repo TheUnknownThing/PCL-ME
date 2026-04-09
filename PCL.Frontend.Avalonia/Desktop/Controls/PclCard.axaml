@@ -9,7 +9,7 @@
     <Border
         x:Name="CardBorder"
         Background="{DynamicResource ColorBrushMyCard}"
-        BorderBrush="#00FFFFFF"
+        BorderBrush="{DynamicResource ColorBrushTransparent}"
         BorderThickness="1"
         BoxShadow="0 6 18 0 #14343D4A"
         CornerRadius="6">
