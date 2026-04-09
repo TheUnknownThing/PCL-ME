@@ -21,6 +21,7 @@ internal sealed record FrontendLaunchComposition(
     MinecraftLaunchResolutionPlan ResolutionPlan,
     MinecraftLaunchClasspathPlan ClasspathPlan,
     string NativesDirectory,
+    string? NativePathAliasDirectory,
     MinecraftLaunchNativesSyncRequest? NativeSyncRequest,
     MinecraftLaunchReplacementValuePlan ReplacementPlan,
     MinecraftLaunchPrerunWorkflowPlan PrerunPlan,

@@ -116,6 +116,7 @@ Implemented in this slice:
 - base launch required artifacts, native archive selection, and manifest rule `os.arch` checks on the selected Java runtime architecture when available
 - base classpath library filtering on the resolved target Java architecture instead of the Avalonia process architecture
 - base Mojang runtime-download platform selection on the target Java architecture instead of `RuntimeInformation.ProcessArchitecture`
+- base JSON launch-argument `os.arch` evaluation on the selected Java runtime bitness instead of the launcher process bitness
 
 Still remaining:
 
@@ -137,7 +138,18 @@ Expected result:
 
 - older LWJGL and ARM/translated-platform native problems stop failing in ad-hoc ways and become controlled compatibility behavior.
 
-Status: pending
+Implemented in this slice:
+
+- detect manifest JVM arguments that redirect `-Djava.library.path` to `${natives_directory}/subdir`
+- extract native archives into that effective native target instead of always extracting to the base natives directory
+- create a stable ASCII-safe alias path on Linux/macOS for pre-1.19 native loading when the chosen natives directory is non-ASCII
+
+Still remaining:
+
+- native replacement / patching for unsupported platforms (`NativePatcher`-style)
+- explicit compatibility prompts for translated / launcher-supported but not Mojang-supported platform combinations
+
+Status: in progress
 
 ### Phase D
 
@@ -162,9 +174,11 @@ What Avalonia launch now does:
 - respects extract exclusion rules
 - resolves launch-time native rules and classifiers against the selected Java runtime architecture when known
 - resolves launch-time classpath libraries against the target Java architecture rather than the launcher process architecture
+- evaluates JSON argument `os.arch` rules against the selected Java runtime bitness
+- extracts natives into the effective `java.library.path` subdirectory when the manifest requests `${natives_directory}/...`
+- provides an ASCII-safe alias path for older Linux/macOS LWJGL when the real natives path is non-ASCII
 
 What is still missing compared with HMCL:
 
-- ASCII-safe temporary native path handling for older Linux/macOS LWJGL
 - native replacement / patching for unsupported platforms (`NativePatcher`-style behavior)
 - richer launch diagnostics for native archive choice, extraction, and fallback behavior

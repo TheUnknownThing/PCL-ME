@@ -372,6 +372,7 @@ internal sealed class FrontendShellActionService(
 
         EnsureRequiredArtifacts(launchComposition.RequiredArtifacts);
         EnsureNativeLibraries(launchComposition.NativeSyncRequest);
+        EnsureNativePathAlias(launchComposition.NativePathAliasDirectory, launchComposition.NativesDirectory);
 
         var launcherDataDirectory = RuntimePaths.LauncherAppDataDirectory;
         var logDirectory = Path.Combine(launcherDataDirectory, "Log");
@@ -447,6 +448,35 @@ internal sealed class FrontendShellActionService(
         catch (Exception ex)
         {
             throw new InvalidOperationException("解压游戏本地库失败。", ex);
+        }
+    }
+
+    private static void EnsureNativePathAlias(string? aliasDirectory, string targetDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(aliasDirectory))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(targetDirectory);
+            Directory.CreateDirectory(Path.GetDirectoryName(aliasDirectory)!);
+
+            if (File.Exists(aliasDirectory))
+            {
+                File.Delete(aliasDirectory);
+            }
+            else if (Directory.Exists(aliasDirectory))
+            {
+                Directory.Delete(aliasDirectory);
+            }
+
+            Directory.CreateSymbolicLink(aliasDirectory, targetDirectory);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("准备 ASCII 兼容原生库路径失败。", ex);
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Runtime.InteropServices;
 using PCL.Core.App;
@@ -78,15 +79,21 @@ internal static class FrontendLaunchCompositionService
             PreferInstanceDirectory: false,
             AppDataNativesDirectory: Path.Combine(launcherFolder, "bin", "natives"),
             FinalFallbackDirectory: Path.Combine(runtimePaths.TempDirectory, "PCL", "natives")));
+        var nativePathPlan = BuildNativePathPlan(
+            launcherFolder,
+            selectedInstanceName,
+            manifestSummary,
+            selectedJavaRuntime,
+            nativesDirectory);
         var nativeSyncRequest = BuildNativeSyncRequest(
             launcherFolder,
             selectedInstanceName,
-            nativesDirectory,
+            nativePathPlan.ExtractionDirectory,
             manifestSummary,
             selectedJavaRuntime);
         var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(new MinecraftLaunchReplacementValueRequest(
             ClasspathSeparator: GetClasspathSeparator(),
-            NativesDirectory: nativesDirectory,
+            NativesDirectory: nativePathPlan.SearchPath,
             LibraryDirectory: Path.Combine(launcherFolder, "libraries"),
             LibrariesDirectory: Path.Combine(launcherFolder, "libraries"),
             LauncherName: "PCLCE",
@@ -198,6 +205,7 @@ internal static class FrontendLaunchCompositionService
             resolutionPlan,
             classpathPlan,
             nativesDirectory,
+            nativePathPlan.AliasDirectory,
             nativeSyncRequest,
             replacementPlan,
             prerunPlan,
@@ -272,6 +280,7 @@ internal static class FrontendLaunchCompositionService
             plan.ClasspathPlan,
             plan.NativesDirectory,
             null,
+            null,
             plan.ReplacementPlan,
             plan.PrerunPlan,
             plan.ArgumentPlan,
@@ -296,6 +305,7 @@ internal static class FrontendLaunchCompositionService
                                ?? manifestSummary.JsonRequiredMajorVersion
                                ?? manifestSummary.MojangRecommendedMajorVersion
                                ?? 8;
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         var effectiveJvmArguments = string.IsNullOrWhiteSpace(instanceConfig is null
                 ? null
                 : ReadValue(instanceConfig, "VersionAdvanceJvm", string.Empty))
@@ -332,7 +342,7 @@ internal static class FrontendLaunchCompositionService
                         new MinecraftLaunchJsonArgumentRequest(
                             modernGameSections,
                             Environment.OSVersion.Version.ToString(),
-                            !Environment.Is64BitOperatingSystem)),
+                            runtimeArchitecture == MachineType.I386)),
                     manifestSummary.HasForge || manifestSummary.HasLiteLoader,
                     manifestSummary.HasOptiFine)).Arguments;
         }
@@ -614,6 +624,127 @@ internal static class FrontendLaunchCompositionService
                 Path.Combine(launcherFolder, "libraries", artifactPath.Replace('/', Path.DirectorySeparatorChar)),
                 IsNatives: library.TryGetProperty("natives", out _)));
         }
+    }
+
+    private static FrontendNativePathPlan BuildNativePathPlan(
+        string launcherFolder,
+        string selectedInstanceName,
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime,
+        string baseNativesDirectory)
+    {
+        var extractionDirectory = ResolveNativeExtractionDirectory(
+            launcherFolder,
+            selectedInstanceName,
+            manifestSummary,
+            selectedJavaRuntime,
+            baseNativesDirectory);
+        var aliasDirectory = ShouldUseLegacyAsciiNativePathWorkaround(manifestSummary, baseNativesDirectory)
+            ? BuildNativePathAliasDirectory(baseNativesDirectory)
+            : null;
+        var searchPath = string.IsNullOrWhiteSpace(aliasDirectory)
+            ? baseNativesDirectory
+            : aliasDirectory + Path.PathSeparator + baseNativesDirectory;
+
+        return new FrontendNativePathPlan(
+            baseNativesDirectory,
+            extractionDirectory,
+            searchPath,
+            aliasDirectory);
+    }
+
+    private static string ResolveNativeExtractionDirectory(
+        string launcherFolder,
+        string selectedInstanceName,
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime,
+        string baseNativesDirectory)
+    {
+        var modernJvmSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "jvm");
+        if (modernJvmSections.Count == 0)
+        {
+            return baseNativesDirectory;
+        }
+
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
+        var jvmArguments = MinecraftLaunchJsonArgumentService.ExtractValues(
+            new MinecraftLaunchJsonArgumentRequest(
+                modernJvmSections,
+                Environment.OSVersion.Version.ToString(),
+                runtimeArchitecture == MachineType.I386));
+        const string prefix = "-Djava.library.path=${natives_directory}/";
+        foreach (var argument in jvmArguments)
+        {
+            if (!argument.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var relativePath = argument[prefix.Length..];
+            var resolvedPath = TryResolveNativeExtractionSubdirectory(baseNativesDirectory, relativePath);
+            if (!string.IsNullOrWhiteSpace(resolvedPath))
+            {
+                return resolvedPath;
+            }
+        }
+
+        return baseNativesDirectory;
+    }
+
+    private static string? TryResolveNativeExtractionSubdirectory(string baseNativesDirectory, string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return null;
+        }
+
+        var normalizedRelativePath = relativePath.Replace('/', Path.DirectorySeparatorChar)
+            .Replace('\\', Path.DirectorySeparatorChar)
+            .Trim();
+        if (string.IsNullOrWhiteSpace(normalizedRelativePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var basePath = Path.GetFullPath(baseNativesDirectory);
+            var resolvedPath = Path.GetFullPath(Path.Combine(basePath, normalizedRelativePath));
+            var basePrefix = basePath.EndsWith(Path.DirectorySeparatorChar)
+                ? basePath
+                : basePath + Path.DirectorySeparatorChar;
+            return resolvedPath.StartsWith(basePrefix, StringComparison.OrdinalIgnoreCase)
+                ? resolvedPath
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool ShouldUseLegacyAsciiNativePathWorkaround(
+        FrontendVersionManifestSummary manifestSummary,
+        string nativesDirectory)
+    {
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
+        {
+            return false;
+        }
+
+        if (IsAscii(nativesDirectory))
+        {
+            return false;
+        }
+
+        return manifestSummary.VanillaVersion is null || manifestSummary.VanillaVersion < new Version(1, 19);
+    }
+
+    private static string BuildNativePathAliasDirectory(string nativesDirectory)
+    {
+        var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(nativesDirectory)))
+            .ToLowerInvariant();
+        return Path.Combine("/tmp", $"pclce-natives-{hash[..12]}");
     }
 
     private static IReadOnlyList<FrontendLaunchArtifactRequirement> BuildRequiredArtifacts(
@@ -1796,6 +1927,7 @@ internal static class FrontendLaunchCompositionService
         var modernJvmSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "jvm");
         var mainClass = ReadManifestProperty(launcherFolder, selectedInstanceName, "mainClass")
                         ?? "net.minecraft.client.main.Main";
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         return modernJvmSections.Count > 0
             ? MinecraftLaunchJvmArgumentService.BuildModernArguments(
                 new MinecraftLaunchModernJvmArgumentRequest(
@@ -1803,7 +1935,7 @@ internal static class FrontendLaunchCompositionService
                         new MinecraftLaunchJsonArgumentRequest(
                             modernJvmSections,
                             Environment.OSVersion.Version.ToString(),
-                            !Environment.Is64BitOperatingSystem)),
+                            runtimeArchitecture == MachineType.I386)),
                     effectiveJvmArguments,
                     ReadValue(sharedConfig, "LaunchPreferredIpStack", JvmPreferredIpStack.Default),
                     ResolveYoungGenerationMemoryMegabytes(indieDirectory, selectedJavaRuntime),
@@ -2277,6 +2409,12 @@ internal static class FrontendLaunchCompositionService
     private readonly record struct FrontendJavaSelectionResult(
         FrontendJavaRuntimeSummary? Runtime,
         string? WarningMessage);
+
+    private sealed record FrontendNativePathPlan(
+        string BaseDirectory,
+        string ExtractionDirectory,
+        string SearchPath,
+        string? AliasDirectory);
 
     private static int? TryParseJavaMajorVersion(string output)
     {
