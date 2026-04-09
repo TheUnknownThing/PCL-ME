@@ -249,7 +249,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     internal void SetStandardSidebarAutoWidth(double width)
     {
-        var clamped = Math.Clamp(width, 164, 320);
+        var clamped = Math.Clamp(width, 152, 320);
         if (Math.Abs(_standardSidebarAutoWidth - clamped) < 0.5)
         {
             return;

@@ -236,12 +236,21 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static StandardShellRightPaneDescriptor CreateRightPaneDescriptor(
+    private StandardShellRightPaneDescriptor CreateRightPaneDescriptor(
         StandardShellRightPaneKind kind,
         StandardShellRightPaneGroup group,
         string key,
         bool usesCompatibilityView = true)
     {
-        return new StandardShellRightPaneDescriptor(kind, group, key, usesCompatibilityView);
+        return new StandardShellRightPaneDescriptor(
+            kind,
+            group,
+            $"{key}-{GetRouteTransitionKey(_currentRoute)}",
+            usesCompatibilityView);
+    }
+
+    private static string GetRouteTransitionKey(LauncherFrontendRoute route)
+    {
+        return $"{route.Page.ToString().ToLowerInvariant()}-{route.Subpage.ToString().ToLowerInvariant()}";
     }
 }
