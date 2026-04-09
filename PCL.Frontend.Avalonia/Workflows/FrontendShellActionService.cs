@@ -132,6 +132,11 @@ internal sealed class FrontendShellActionService(
         return PlatformAdapter.TryOpenExternalTarget(target, out error);
     }
 
+    public bool TryRevealExternalTarget(string target, out string? error)
+    {
+        return PlatformAdapter.TryRevealExternalTarget(target, out error);
+    }
+
     public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
     {
         var storageProvider = TryGetStorageProvider(out var error)
