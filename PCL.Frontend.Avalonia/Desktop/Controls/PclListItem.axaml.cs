@@ -172,6 +172,10 @@ internal sealed partial class PclListItem : UserControl
         {
             ApplyIconScale(change.GetNewValue<double>());
         }
+        else if (change.Property == HeightProperty)
+        {
+            RefreshIconLayout();
+        }
         else if (change.Property == IsSelectedProperty)
         {
             RefreshVisualState();
@@ -205,8 +209,10 @@ internal sealed partial class PclListItem : UserControl
     private void RefreshIconLayout()
     {
         var hasIcon = LogoPath.IsVisible || LogoImage.IsVisible;
+        var isCompactLayout = double.IsNaN(Height) || Height < 40;
+        var iconColumnWidth = isCompactLayout ? 18 : 22;
         LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
-        LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(18) : new GridLength(6);
+        LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(iconColumnWidth) : new GridLength(6);
         MainButton.Margin = new Thickness(4, 0, 0, 0);
     }
 
