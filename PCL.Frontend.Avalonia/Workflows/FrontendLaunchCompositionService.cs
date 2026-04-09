@@ -416,7 +416,7 @@ internal static class FrontendLaunchCompositionService
                 localConfig);
         }
 
-        var javaFolder = Path.GetDirectoryName(javaExecutablePath) ?? launcherFolder;
+        var javaFolder = ResolveJavaFolderPath(javaExecutablePath, launcherFolder);
         var javawExecutablePath = OperatingSystem.IsWindows()
             ? Path.Combine(javaFolder, "javaw.exe")
             : javaExecutablePath;
@@ -2105,7 +2105,7 @@ internal static class FrontendLaunchCompositionService
             }
 
             return new FrontendStoredJavaRuntime(
-                executablePath,
+                ResolveProbedJavaExecutablePath(executablePath, process),
                 $"Java {majorVersion.Value}",
                 parsedVersion,
                 majorVersion.Value,
@@ -2119,6 +2119,42 @@ internal static class FrontendLaunchCompositionService
         {
             return null;
         }
+    }
+
+    private static string ResolveProbedJavaExecutablePath(string executablePath, Process process)
+    {
+        if (!string.IsNullOrWhiteSpace(executablePath) && Path.IsPathRooted(executablePath))
+        {
+            return executablePath;
+        }
+
+        try
+        {
+            var mainModulePath = process.MainModule?.FileName;
+            if (!string.IsNullOrWhiteSpace(mainModulePath))
+            {
+                return mainModulePath;
+            }
+        }
+        catch
+        {
+            // Some runtimes may block reading MainModule metadata.
+        }
+
+        return executablePath;
+    }
+
+    private static string ResolveJavaFolderPath(string? executablePath, string fallbackDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(executablePath))
+        {
+            return fallbackDirectory;
+        }
+
+        var folder = Path.GetDirectoryName(executablePath);
+        return string.IsNullOrWhiteSpace(folder)
+            ? fallbackDirectory
+            : folder;
     }
 
     private static string ReadFileOrDefault(string path, string fallback)
@@ -2253,9 +2289,7 @@ internal static class FrontendLaunchCompositionService
         YamlFileProvider? instanceConfig,
         YamlFileProvider localConfig)
     {
-        var javaFolder = selectedJavaRuntime?.ExecutablePath is null
-            ? launcherFolder
-            : Path.GetDirectoryName(selectedJavaRuntime.ExecutablePath) ?? launcherFolder;
+        var javaFolder = ResolveJavaFolderPath(selectedJavaRuntime?.ExecutablePath, launcherFolder);
         return new MinecraftLaunchWatcherWorkflowRequest(
             new MinecraftLaunchSessionLogRequest(
                 LauncherVersionName: "frontend-avalonia",
