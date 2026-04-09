@@ -783,7 +783,7 @@ internal sealed partial class FrontendShellViewModel
     private async Task<(bool Success, string Name, string Address, string? Activity)> PromptForNewInstanceServerAsync()
     {
         var resolvedName = await _shellActionService.PromptForTextAsync(
-            "添加新服务器",
+            "编辑服务器信息",
             "请输入新的服务器名称：",
             "Minecraft服务器");
         if (resolvedName is null)
@@ -792,7 +792,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var resolvedAddress = await _shellActionService.PromptForTextAsync(
-            "添加新服务器",
+            "编辑服务器信息",
             "请输入新的服务器地址：");
         if (string.IsNullOrWhiteSpace(resolvedAddress))
         {
