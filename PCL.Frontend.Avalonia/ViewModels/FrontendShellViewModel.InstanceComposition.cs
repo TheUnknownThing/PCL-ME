@@ -9,6 +9,31 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private static readonly HashSet<string> RevealOnlyArtifactExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".bat",
+        ".cmd",
+        ".command",
+        ".conf",
+        ".config",
+        ".csv",
+        ".desktop",
+        ".ini",
+        ".json",
+        ".log",
+        ".md",
+        ".properties",
+        ".ps1",
+        ".sh",
+        ".text",
+        ".toml",
+        ".tsv",
+        ".txt",
+        ".xml",
+        ".yaml",
+        ".yml"
+    };
+
     private static readonly string[] InstanceOverviewIconFiles =
     [
         string.Empty,
@@ -261,13 +286,28 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (_shellActionService.TryOpenExternalTarget(target, out var error))
+        string? error;
+        var openSucceeded = ShouldRevealInstanceTargetInShell(target)
+            ? _shellActionService.TryRevealExternalTarget(target, out error)
+            : _shellActionService.TryOpenExternalTarget(target, out error);
+        if (openSucceeded)
         {
             AddActivity(activity, target);
             return;
         }
 
         AddActivity(activity, error ?? target);
+    }
+
+    private static bool ShouldRevealInstanceTargetInShell(string target)
+    {
+        if (string.IsNullOrWhiteSpace(target) || Directory.Exists(target) || !File.Exists(target))
+        {
+            return false;
+        }
+
+        var extension = Path.GetExtension(target);
+        return !string.IsNullOrWhiteSpace(extension) && RevealOnlyArtifactExtensions.Contains(extension);
     }
 
     private void LockInstanceLogin()

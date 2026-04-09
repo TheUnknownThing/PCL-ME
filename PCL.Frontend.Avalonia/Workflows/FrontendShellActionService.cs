@@ -132,6 +132,11 @@ internal sealed class FrontendShellActionService(
         return PlatformAdapter.TryOpenExternalTarget(target, out error);
     }
 
+    public bool TryRevealExternalTarget(string target, out string? error)
+    {
+        return PlatformAdapter.TryRevealExternalTarget(target, out error);
+    }
+
     public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
     {
         var storageProvider = TryGetStorageProvider(out var error)
@@ -480,8 +485,13 @@ internal sealed class FrontendShellActionService(
     {
         var desktopDirectory = PlatformAdapter.TryGetDesktopDirectory()
             ?? throw new InvalidOperationException("当前系统未提供桌面目录。");
+        return CreateLauncherShortcutAt(desktopDirectory, displayName);
+    }
+
+    public string CreateLauncherShortcutAt(string targetDirectory, string displayName)
+    {
         var executablePath = Environment.ProcessPath ?? Path.Combine(RuntimePaths.ExecutableDirectory, "PCL.Frontend.Avalonia");
-        return PlatformAdapter.CreateLauncherShortcut(desktopDirectory, executablePath, displayName).ShortcutPath;
+        return PlatformAdapter.CreateLauncherShortcut(targetDirectory, executablePath, displayName).ShortcutPath;
     }
 
     private void CleanupLegacyLaunchScripts(string launcherDataDirectory, string retainedPath)

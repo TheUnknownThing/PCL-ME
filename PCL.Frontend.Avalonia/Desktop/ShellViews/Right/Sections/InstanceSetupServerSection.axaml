@@ -98,6 +98,7 @@
               Margin="0,0,20,0"
               ColorType="Highlight"
               Command="{Binding SetLittleSkinCommand}"
+              IsVisible="{Binding ShowInstanceServerAuthFields}"
               Text="设置为 LittleSkin" />
           <controls:PclButton
               Grid.Column="1"
@@ -105,11 +106,13 @@
               Margin="0,0,20,0"
               Command="{Binding LockInstanceLoginCommand}"
               IsEnabled="{Binding CanLockInstanceLogin}"
+              IsVisible="{Binding ShowInstanceServerLockAction}"
               Text="锁定验证方式" />
           <controls:PclButton
               Grid.Column="2"
               MinWidth="150"
               Command="{Binding CreateInstanceProfileCommand}"
+              IsVisible="{Binding ShowInstanceServerAuthFields}"
               Text="新建档案" />
         </Grid>
       </StackPanel>

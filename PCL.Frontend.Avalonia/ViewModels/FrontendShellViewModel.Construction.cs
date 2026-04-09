@@ -423,7 +423,7 @@ internal sealed partial class FrontendShellViewModel
         _openNatayarkPolicyCommand = CreateLinkCommand("Natayark Network 用户协议与隐私政策", "https://account.naids.com/policy");
         _openLobbyPrivacyPolicyCommand = CreateLinkCommand("大厅隐私协议", "https://www.pclc.cc/privacy/personal-info-brief.html");
         _disableGameLinkFeatureCommand = new ActionCommand(() => _ = DisableGameLinkFeatureAsync());
-        _openGameLinkFaqCommand = new ActionCommand(OpenGameLinkFaq);
+        _openGameLinkFaqCommand = new ActionCommand(() => _ = OpenGameLinkFaqAsync());
         _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
         _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
         _selectDownloadFolderCommand = new ActionCommand(() => _ = SelectDownloadFolderAsync());
@@ -442,11 +442,11 @@ internal sealed partial class FrontendShellViewModel
         _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 1);
         _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries);
-        _manageDownloadFavoriteTargetCommand = new ActionCommand(ManageDownloadFavoriteTargets);
+        _manageDownloadFavoriteTargetCommand = new ActionCommand(() => _ = ManageDownloadFavoriteTargetsAsync());
         _resetInstanceExportOptionsCommand = new ActionCommand(ResetInstanceExportOptions);
         _importInstanceExportConfigCommand = new ActionCommand(() => _ = ImportInstanceExportConfigAsync());
-        _saveInstanceExportConfigCommand = new ActionCommand(SaveInstanceExportConfig);
-        _openInstanceExportGuideCommand = new ActionCommand(OpenInstanceExportGuide);
+        _saveInstanceExportConfigCommand = new ActionCommand(() => _ = SaveInstanceExportConfigAsync());
+        _openInstanceExportGuideCommand = new ActionCommand(() => _ = OpenInstanceExportGuideAsync());
         _startInstanceExportCommand = new ActionCommand(StartInstanceExport);
         _setLittleSkinCommand = new ActionCommand(() =>
         {

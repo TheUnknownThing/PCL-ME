@@ -76,7 +76,7 @@ internal static class FrontendToolsCompositionService
                 new FrontendToolboxActionDefinition(
                     "daily-luck",
                     "今日人品",
-                    string.Empty,
+                    "查看今天的人品值。",
                     100,
                     false),
                 new FrontendToolboxActionDefinition(
@@ -94,7 +94,7 @@ internal static class FrontendToolsCompositionService
                 new FrontendToolboxActionDefinition(
                     "launch-count",
                     "查看启动计数",
-                    string.Empty,
+                    "查看 PCL 已经为你启动了多少次游戏。",
                     120,
                     false)
             ],
