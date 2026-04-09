@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
+using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft.Java;
@@ -1516,8 +1517,31 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshJavaSurface()
     {
-        ReloadSetupComposition();
-        AddActivity("刷新 Java 列表", "Java 列表已按当前启动器配置重新载入。");
+        _ = RefreshJavaSurfaceAsync();
+    }
+
+    private async Task RefreshJavaSurfaceAsync()
+    {
+        AddActivity("刷新 Java 列表", "正在重新扫描 Java 运行时。");
+
+        try
+        {
+            await FrontendJavaInventoryService.RefreshPortableJavaScanCacheAsync();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ReloadSetupComposition(initializeAllSurfaces: false);
+                RefreshLaunchState();
+                AddActivity("刷新 Java 列表", "Java 列表已按当前扫描结果重新载入。");
+            });
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ReloadSetupComposition(initializeAllSurfaces: false);
+                AddActivity("刷新 Java 列表失败", ex.Message);
+            });
+        }
     }
 
     private async Task RefreshFeedbackSectionsAsync(bool forceRefresh)
@@ -1842,8 +1866,19 @@ internal sealed partial class FrontendShellViewModel
                 IsEnable = entry.IsEnabled,
                 Source = items[updated].Source
             };
-            SaveStoredJavaItems(items);
         }
+        else
+        {
+            items.Add(new JavaStorageItem
+            {
+                Path = key,
+                IsEnable = entry.IsEnabled,
+                Source = JavaSource.AutoScanned
+            });
+        }
+
+        SaveStoredJavaItems(items);
+        ReloadSetupComposition(initializeAllSurfaces: false);
         AddActivity(
             entry.IsEnabled ? "启用 Java" : "禁用 Java",
             $"{entry.Title} • {(entry.IsEnabled ? "已启用" : "已禁用")}");

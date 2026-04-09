@@ -225,6 +225,15 @@ internal static class FrontendJavaInventoryService
         }
     }
 
+    public static Task RefreshPortableJavaScanCacheAsync()
+    {
+        lock (PortableJavaScanLock)
+        {
+            PortableJavaScanTask ??= Task.Run(ScanPortableJavaRuntimesAsync);
+            return PortableJavaScanTask;
+        }
+    }
+
     private static IReadOnlyList<FrontendStoredJavaRuntime> GetCachedManagedJavaRuntimes()
     {
         lock (PortableJavaScanLock)

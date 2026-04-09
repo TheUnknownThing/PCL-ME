@@ -509,6 +509,12 @@ internal sealed partial class FrontendShellViewModel
             await FrontendJavaInventoryService.WarmPortableJavaScanCacheAsync();
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                if (_currentRoute.Page == LauncherFrontendPageKey.Setup
+                    && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupJava)
+                {
+                    ReloadSetupComposition(initializeAllSurfaces: false);
+                }
+
                 RefreshLaunchState();
                 RefreshShell("Portable Java search cache refreshed.");
             });

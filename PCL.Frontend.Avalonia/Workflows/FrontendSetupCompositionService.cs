@@ -250,7 +250,7 @@ internal static class FrontendSetupCompositionService
             item => item.Path,
             item => item.Source,
             StringComparer.OrdinalIgnoreCase);
-        var entries = FrontendJavaInventoryService.ParseStoredJavaRuntimes(rawJavaList)
+        var entries = FrontendJavaInventoryService.ParseAvailableRuntimes(rawJavaList)
             .Select(runtime => BuildJavaRuntimeEntry(
                 runtime,
                 storageSourceMap.TryGetValue(runtime.ExecutablePath, out var source) ? source : null))
