@@ -204,6 +204,7 @@
                                   HoverBackgroundBrush="#184592FF"
                                   IconBrush="#4592FF"
                                   IconData="{Binding SettingsIconData}"
+                                  IconScale="{Binding SettingsIconScale}"
                                   IdleBackgroundBrush="#00FFFFFF"
                                   ToolTip.Tip="打开实例设置" />
                             </StackPanel>

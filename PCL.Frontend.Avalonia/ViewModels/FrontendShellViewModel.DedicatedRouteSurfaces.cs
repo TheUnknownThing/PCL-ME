@@ -1599,6 +1599,8 @@ internal sealed class InstanceSelectEntryViewModel(
     ActionCommand openFolderCommand,
     ActionCommand deleteCommand)
 {
+    private static readonly FrontendIcon NavigationSettingsIcon = FrontendIconCatalog.GetNavigationIcon("设置");
+
     public string Title { get; } = title;
 
     public string Subtitle { get; } = subtitle;
@@ -1633,7 +1635,9 @@ internal sealed class InstanceSelectEntryViewModel(
 
     public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
 
-    public string SettingsIconData => FrontendIconCatalog.SettingsOutline.Data;
+    public string SettingsIconData => NavigationSettingsIcon.Data;
+
+    public double SettingsIconScale => NavigationSettingsIcon.Scale;
 
     public ActionCommand SelectCommand { get; } = selectCommand;
 
