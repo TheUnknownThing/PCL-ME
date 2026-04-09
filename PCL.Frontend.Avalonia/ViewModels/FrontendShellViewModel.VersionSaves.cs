@@ -8,6 +8,14 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private enum VersionSaveDatapackSortMethod
+    {
+        FileName = 0,
+        ResourceName = 1,
+        CreateTime = 2,
+        FileSize = 3
+    }
+
     private FrontendVersionSavesComposition _versionSavesComposition = new(
         new FrontendVersionSaveSelectionState(false, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
         [],
@@ -16,6 +24,7 @@ internal sealed partial class FrontendShellViewModel
         []);
     private string _selectedVersionSavePath = string.Empty;
     private string _versionSaveDatapackSearchQuery = string.Empty;
+    private VersionSaveDatapackSortMethod _versionSaveDatapackSortMethod = VersionSaveDatapackSortMethod.ResourceName;
 
     public string VersionSaveDatapackSearchQuery
     {
@@ -49,6 +58,8 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowVersionSaveDatapackEmptyState => !ShowVersionSaveDatapackContent;
 
+    public string VersionSaveDatapackSortText => $"排序：{GetVersionSaveDatapackSortName(_versionSaveDatapackSortMethod)}";
+
     public ActionCommand OpenVersionSaveFolderCommand => new(() =>
         OpenInstanceTarget("打开存档文件夹", _versionSavesComposition.Selection.SavePath, "当前没有可打开的存档。"));
 
@@ -78,6 +89,7 @@ internal sealed partial class FrontendShellViewModel
     private void ReloadVersionSavesComposition()
     {
         _versionSavesComposition = FrontendVersionSavesCompositionService.Compose(_instanceComposition, _selectedVersionSavePath);
+        _versionSaveDatapackSortMethod = VersionSaveDatapackSortMethod.ResourceName;
         if (_versionSavesComposition.Selection.HasSelection)
         {
             _selectedVersionSavePath = _versionSavesComposition.Selection.SavePath;
@@ -111,14 +123,17 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
         RaisePropertyChanged(nameof(ShowVersionSaveDatapackContent));
         RaisePropertyChanged(nameof(ShowVersionSaveDatapackEmptyState));
+        RaisePropertyChanged(nameof(VersionSaveDatapackSortText));
     }
 
     private void RefreshVersionSaveDatapackEntries()
     {
+        var filteredEntries = _versionSavesComposition.Datapacks
+            .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, VersionSaveDatapackSearchQuery));
+
         ReplaceItems(
             VersionSaveDatapackEntries,
-            _versionSavesComposition.Datapacks
-                .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, VersionSaveDatapackSearchQuery))
+            ApplyVersionSaveDatapackSort(filteredEntries)
                 .Select(entry => new InstanceResourceEntryViewModel(
                     LoadLauncherBitmap("Images", "Blocks", entry.IconName),
                     entry.Title,
@@ -130,6 +145,59 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
         RaisePropertyChanged(nameof(ShowVersionSaveDatapackContent));
         RaisePropertyChanged(nameof(ShowVersionSaveDatapackEmptyState));
+        RaisePropertyChanged(nameof(VersionSaveDatapackSortText));
+    }
+
+    internal void SetVersionSaveDatapackFileNameSort() => SetVersionSaveDatapackSortMethod(VersionSaveDatapackSortMethod.FileName);
+
+    internal void SetVersionSaveDatapackNameSort() => SetVersionSaveDatapackSortMethod(VersionSaveDatapackSortMethod.ResourceName);
+
+    internal void SetVersionSaveDatapackCreateTimeSort() => SetVersionSaveDatapackSortMethod(VersionSaveDatapackSortMethod.CreateTime);
+
+    internal void SetVersionSaveDatapackFileSizeSort() => SetVersionSaveDatapackSortMethod(VersionSaveDatapackSortMethod.FileSize);
+
+    private void SetVersionSaveDatapackSortMethod(VersionSaveDatapackSortMethod target)
+    {
+        if (_versionSaveDatapackSortMethod == target)
+        {
+            return;
+        }
+
+        _versionSaveDatapackSortMethod = target;
+        RaisePropertyChanged(nameof(VersionSaveDatapackSortText));
+        RefreshVersionSaveDatapackEntries();
+    }
+
+    private IEnumerable<FrontendVersionSaveDatapackEntry> ApplyVersionSaveDatapackSort(IEnumerable<FrontendVersionSaveDatapackEntry> entries)
+    {
+        return _versionSaveDatapackSortMethod switch
+        {
+            VersionSaveDatapackSortMethod.FileName => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenBy(entry => Path.GetFileName(entry.Path), StringComparer.OrdinalIgnoreCase),
+            VersionSaveDatapackSortMethod.CreateTime => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenByDescending(entry => GetPathCreationTimeUtc(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            VersionSaveDatapackSortMethod.FileSize => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenByDescending(entry => IsDirectoryPath(entry.Path) ? 0L : GetFileSize(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            _ => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+        };
+    }
+
+    private static string GetVersionSaveDatapackSortName(VersionSaveDatapackSortMethod method)
+    {
+        return method switch
+        {
+            VersionSaveDatapackSortMethod.FileName => "文件名",
+            VersionSaveDatapackSortMethod.CreateTime => "加入时间",
+            VersionSaveDatapackSortMethod.FileSize => "文件大小",
+            _ => "资源名称"
+        };
     }
 
     private void CreateVersionSaveBackup()
