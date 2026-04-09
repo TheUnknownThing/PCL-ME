@@ -14,7 +14,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private static readonly string LaunchAvatarFallbackImagePath = FrontendLauncherAssetLocator.GetPath("Images", "Heads", "PCL-Community.png");
-    private const string LaunchAvatarHeadCacheVersion = "v2";
+    private const string LaunchAvatarHeadCacheVersion = "v3";
     private static readonly HttpClient LaunchAvatarHttpClient = new();
     private string _launchAvatarImagePath = LaunchAvatarFallbackImagePath;
     private int _launchAvatarRefreshVersion;
@@ -148,24 +148,27 @@ internal sealed partial class FrontendShellViewModel
             }
 
             var scale = Math.Max(1, width / 64);
-            using var faceLayer = CreateLaunchAvatarLayerBitmap(
-                skinBitmap,
-                new PixelRect(scale * 8, scale * 8, scale * 8, scale * 8),
-                new PixelSize(48, 48));
-            using Bitmap? hatLayer = width >= 64 && height >= 32
-                ? CreateLaunchAvatarLayerBitmap(
-                    skinBitmap,
-                    new PixelRect(scale * 40, scale * 8, scale * 8, scale * 8),
-                    new PixelSize(56, 56))
-                : null;
             Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
             using var headBitmap = new RenderTargetBitmap(new PixelSize(56, 56));
             using (var context = headBitmap.CreateDrawingContext())
             {
-                context.DrawImage(faceLayer, new Rect(4, 4, 48, 48));
-                if (hatLayer is not null)
+                using (context.PushRenderOptions(new RenderOptions
+                       {
+                           BitmapInterpolationMode = BitmapInterpolationMode.None
+                       }))
                 {
-                    context.DrawImage(hatLayer, new Rect(0, 0, 56, 56));
+                    context.DrawImage(
+                        skinBitmap,
+                        new Rect(scale * 8, scale * 8, scale * 8, scale * 8),
+                        new Rect(4, 4, 48, 48));
+
+                    if (width >= 64 && height >= 32)
+                    {
+                        context.DrawImage(
+                            skinBitmap,
+                            new Rect(scale * 40, scale * 8, scale * 8, scale * 8),
+                            new Rect(0, 0, 56, 56));
+                    }
                 }
             }
 
@@ -205,20 +208,6 @@ internal sealed partial class FrontendShellViewModel
             "Images",
             "Skins",
             $"{ResolveLaunchAvatarDefaultSkinName(profile)}.png");
-    }
-
-    private static Bitmap CreateLaunchAvatarLayerBitmap(Bitmap sourceBitmap, PixelRect sourceRect, PixelSize destinationSize)
-    {
-        using var layerBitmap = new RenderTargetBitmap(sourceRect.Size);
-        using (var layerContext = layerBitmap.CreateDrawingContext())
-        {
-            layerContext.DrawImage(
-                sourceBitmap,
-                new Rect(sourceRect.X, sourceRect.Y, sourceRect.Width, sourceRect.Height),
-                new Rect(0, 0, sourceRect.Width, sourceRect.Height));
-        }
-
-        return layerBitmap.CreateScaledBitmap(destinationSize, BitmapInterpolationMode.None);
     }
 
     private static string? ResolveLaunchAvatarSkinHeadId(FrontendLaunchProfileSummary profile)
