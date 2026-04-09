@@ -82,7 +82,13 @@ public static class MinecraftLaunchJvmArgumentService
             data.Add($"-D{request.ProxyScheme}.proxyPort={request.ProxyPort.Value}");
         }
 
-        if (request.UseJavaWrapper)
+        if (MinecraftLaunchJavaWrapperService.ShouldUse(
+                new MinecraftLaunchJavaWrapperRequest(
+                    request.UseJavaWrapper,
+                    OperatingSystem.IsWindows(),
+                    request.JavaMajorVersion,
+                    request.JavaWrapperTempDirectory,
+                    request.JavaWrapperPath)))
         {
             if (request.JavaMajorVersion >= 9)
             {

@@ -24,9 +24,9 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
                 ProxyScheme: "http",
                 ProxyHost: "http://proxy.example",
                 ProxyPort: 8080,
-                UseJavaWrapper: true,
-                JavaWrapperTempDirectory: @"C:\Temp",
-                JavaWrapperPath: @"C:\Temp\JavaWrapper.jar",
+                UseJavaWrapper: false,
+                JavaWrapperTempDirectory: null,
+                JavaWrapperPath: null,
                 MainClass: "net.minecraft.client.main.Main"));
 
         StringAssert.Contains(result, "-XX:+UseG1GC");
@@ -35,8 +35,32 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
         StringAssert.Contains(result, "-cp ${classpath}");
         StringAssert.Contains(result, "-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT");
         StringAssert.Contains(result, "-Dhttp.proxyPort=8080");
-        StringAssert.Contains(result, "-jar \"C:\\Temp\\JavaWrapper.jar\"");
         StringAssert.Contains(result, "net.minecraft.client.main.Main");
+    }
+
+    [TestMethod]
+    public void BuildLegacyArgumentsSkipsJavaWrapperWhenJavaAlreadyContainsTheFix()
+    {
+        var result = MinecraftLaunchJvmArgumentService.BuildLegacyArguments(
+            new MinecraftLaunchLegacyJvmArgumentRequest(
+                VariableJvmArguments: "-XX:+UseG1GC",
+                YoungGenerationMegabytes: 512,
+                TotalMemoryMegabytes: 4096,
+                NativesDirectory: @"C:\Minecraft\natives",
+                JavaMajorVersion: 21,
+                AuthlibInjectorArgument: null,
+                DebugLog4jConfigurationFilePath: null,
+                RendererAgentArgument: null,
+                ProxyScheme: null,
+                ProxyHost: null,
+                ProxyPort: null,
+                UseJavaWrapper: true,
+                JavaWrapperTempDirectory: @"C:\Temp",
+                JavaWrapperPath: @"C:\Temp\JavaWrapper.jar",
+                MainClass: "net.minecraft.client.main.Main"));
+
+        Assert.IsFalse(result.Contains("-jar \"C:\\Temp\\JavaWrapper.jar\"", System.StringComparison.Ordinal));
+        Assert.IsFalse(result.Contains("-Doolloo.jlw.tmpdir=", System.StringComparison.Ordinal));
     }
 
     [TestMethod]

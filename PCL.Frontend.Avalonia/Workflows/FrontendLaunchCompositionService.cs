@@ -236,6 +236,8 @@ internal static class FrontendLaunchCompositionService
                 null,
                 null,
                 null,
+                null,
+                null,
                 plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft),
             null,
             10,
@@ -683,6 +685,8 @@ internal static class FrontendLaunchCompositionService
                 selectedProfile.ClientToken,
                 selectedProfile.Server,
                 selectedProfile.ServerName,
+                selectedProfile.SkinHeadId,
+                selectedProfile.RawJson,
                 document.Profiles.Any(profile => profile.Kind == MinecraftLaunchStoredProfileKind.Microsoft));
         }
         catch
@@ -700,6 +704,8 @@ internal static class FrontendLaunchCompositionService
         return new FrontendLaunchProfileSummary(
             string.IsNullOrWhiteSpace(legacyName) ? MinecraftLaunchProfileKind.None : MinecraftLaunchProfileKind.Legacy,
             string.IsNullOrWhiteSpace(legacyName) ? "未选择档案" : legacyName,
+            null,
+            null,
             null,
             null,
             null,

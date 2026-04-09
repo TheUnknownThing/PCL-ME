@@ -434,8 +434,8 @@ internal sealed partial class FrontendShellViewModel
         $"会话状态：{(_isLaunchInProgress ? "游戏启动中" : "待命")}"
     ];
 
-    public Bitmap? LaunchAvatarImage => File.Exists(LaunchAvatarImageFilePath)
-        ? new Bitmap(LaunchAvatarImageFilePath)
+    public Bitmap? LaunchAvatarImage => File.Exists(_launchAvatarImagePath)
+        ? new Bitmap(_launchAvatarImagePath)
         : null;
 
     public Bitmap? LaunchNewsImage => File.Exists(LaunchNewsImageFilePath)

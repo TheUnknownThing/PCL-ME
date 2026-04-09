@@ -506,6 +506,7 @@ internal static class AvaloniaSampleFactory
                             LoginName: null,
                             Password: null,
                             ClientToken: null,
+                            SkinHeadId: "existing-uuid",
                             RawJson: "{}")
                     ]),
                 Authlib: null)
