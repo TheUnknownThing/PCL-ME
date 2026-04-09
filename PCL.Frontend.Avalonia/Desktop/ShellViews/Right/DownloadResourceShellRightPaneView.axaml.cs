@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right;
@@ -18,6 +20,10 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
 
     private readonly TextBox _searchTextBox;
     private readonly Border _searchRowBorder;
+    private readonly PclCard _filterCard;
+    private readonly Border _hintBanner;
+    private readonly StackPanel _contentHost;
+    private readonly PclCard _loadingCard;
     private readonly ComboBox _sourceComboBox;
     private readonly ComboBox _tagComboBox;
     private readonly ComboBox _sortComboBox;
@@ -25,12 +31,21 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     private readonly ComboBox _loaderComboBox;
     private FrontendShellViewModel? _observedShell;
     private bool _isSearchRowHovered;
+    private int _visualStateVersion;
 
     public DownloadResourceShellRightPaneView()
     {
         InitializeComponent();
         _searchRowBorder = this.FindControl<Border>("SearchRowBorder")
             ?? throw new InvalidOperationException("下载资源页面未找到搜索框容器。");
+        _filterCard = this.FindControl<PclCard>("FilterCard")
+            ?? throw new InvalidOperationException("下载资源页面未找到筛选卡片。");
+        _hintBanner = this.FindControl<Border>("HintBanner")
+            ?? throw new InvalidOperationException("下载资源页面未找到提示横幅。");
+        _contentHost = this.FindControl<StackPanel>("ContentHost")
+            ?? throw new InvalidOperationException("下载资源页面未找到内容容器。");
+        _loadingCard = this.FindControl<PclCard>("LoadingCard")
+            ?? throw new InvalidOperationException("下载资源页面未找到加载卡片。");
         _searchTextBox = this.FindControl<TextBox>("DownloadResourceSearchTextBox")
             ?? throw new InvalidOperationException("下载资源页面未找到搜索文本框。");
         _sourceComboBox = this.FindControl<ComboBox>("DownloadResourceSourceComboBox")
@@ -47,12 +62,18 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         _searchTextBox.GotFocus += (_, _) => ApplySearchTextBoxChrome();
         _searchTextBox.LostFocus += (_, _) => ApplySearchTextBoxChrome();
         DataContextChanged += OnDataContextChanged;
-        DetachedFromVisualTree += (_, _) => ObserveShell(null);
+        DetachedFromVisualTree += (_, _) =>
+        {
+            ObserveShell(null);
+            _visualStateVersion++;
+        };
         PointerMoved += OnViewPointerMoved;
         PointerExited += OnViewPointerExited;
         PointerPressed += OnViewPointerPressed;
+        ConfigureSurfaceMotion();
         ApplySearchTextBoxChrome();
         ApplySearchRowVisualState();
+        ScheduleVisualStateSync();
     }
 
     private void SearchTextBoxOnKeyDown(object? sender, KeyEventArgs e)
@@ -94,6 +115,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     {
         ObserveShell(DataContext as FrontendShellViewModel);
         ScheduleSelectionRestore();
+        ScheduleVisualStateSync();
     }
 
     private void ObserveShell(FrontendShellViewModel? shell)
@@ -169,6 +191,13 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
             or nameof(FrontendShellViewModel.SelectedDownloadResourceVersionOption)
             or nameof(FrontendShellViewModel.SelectedDownloadResourceLoaderOption)))
         {
+            if (e.PropertyName is nameof(FrontendShellViewModel.ShowDownloadResourceLoadingCard)
+                or nameof(FrontendShellViewModel.ShowDownloadResourceContent)
+                or nameof(FrontendShellViewModel.ShowDownloadResourceHint))
+            {
+                ScheduleVisualStateSync();
+            }
+
             return;
         }
 
@@ -195,6 +224,143 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     private void ScheduleSelectionRestore()
     {
         Dispatcher.UIThread.Post(RestoreFilterSelections, DispatcherPriority.Background);
+    }
+
+    private void ConfigureSurfaceMotion()
+    {
+        ConfigureAnimatedSurface(_searchRowBorder, enterOffsetY: -12, exitOffsetY: -10);
+        ConfigureAnimatedSurface(_filterCard, enterOffsetY: -12, exitOffsetY: -10);
+        ConfigureAnimatedSurface(_hintBanner, enterOffsetY: -10, exitOffsetY: -8);
+        ConfigureAnimatedSurface(_contentHost, enterOffsetY: -8, exitOffsetY: -8, staggerChildren: true, delayMilliseconds: 32);
+        ConfigureAnimatedSurface(_loadingCard, enterOffsetY: 10, exitOffsetY: 8);
+    }
+
+    private void ScheduleVisualStateSync()
+    {
+        var version = ++_visualStateVersion;
+        Dispatcher.UIThread.Post(
+            async () => await SyncVisualStateAsync(version),
+            DispatcherPriority.Background);
+    }
+
+    private async Task SyncVisualStateAsync(int version)
+    {
+        if (version != _visualStateVersion || VisualRoot is null)
+        {
+            return;
+        }
+
+        var showLoading = _observedShell?.ShowDownloadResourceLoadingCard == true;
+        var showContent = _observedShell?.ShowDownloadResourceContent == true;
+        var showHint = _observedShell?.ShowDownloadResourceHint == true;
+
+        if (showLoading)
+        {
+            await TransitionToLoadingStateAsync(version);
+            return;
+        }
+
+        await TransitionToContentStateAsync(showContent, showHint, version);
+    }
+
+    private async Task TransitionToLoadingStateAsync(int version)
+    {
+        if (version != _visualStateVersion)
+        {
+            return;
+        }
+
+        await HideAnimatedAsync(_contentHost, version);
+        await HideAnimatedAsync(_hintBanner, version);
+        await ShowAnimatedAsync(_searchRowBorder, version);
+        await ShowAnimatedAsync(_filterCard, version);
+        await ShowAnimatedAsync(_loadingCard, version);
+    }
+
+    private async Task TransitionToContentStateAsync(bool showContent, bool showHint, int version)
+    {
+        if (version != _visualStateVersion)
+        {
+            return;
+        }
+
+        await HideAnimatedAsync(_loadingCard, version);
+        await ShowAnimatedAsync(_searchRowBorder, version);
+        await ShowAnimatedAsync(_filterCard, version);
+
+        if (showHint)
+        {
+            await ShowAnimatedAsync(_hintBanner, version);
+        }
+        else
+        {
+            await HideAnimatedAsync(_hintBanner, version);
+        }
+
+        if (showContent)
+        {
+            await ShowAnimatedAsync(_contentHost, version);
+        }
+        else
+        {
+            await HideAnimatedAsync(_contentHost, version);
+        }
+    }
+
+    private async Task ShowAnimatedAsync(Control control, int version)
+    {
+        if (version != _visualStateVersion)
+        {
+            return;
+        }
+
+        if (control.IsVisible)
+        {
+            return;
+        }
+
+        control.IsVisible = true;
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        if (version != _visualStateVersion)
+        {
+            return;
+        }
+
+        await Motion.PlayEnterAsync(control);
+    }
+
+    private async Task HideAnimatedAsync(Control control, int version)
+    {
+        if (version != _visualStateVersion || !control.IsVisible)
+        {
+            return;
+        }
+
+        await Motion.PlayExitAsync(control);
+        if (version != _visualStateVersion)
+        {
+            return;
+        }
+
+        control.IsVisible = false;
+    }
+
+    private static void ConfigureAnimatedSurface(
+        Control control,
+        double enterOffsetY,
+        double exitOffsetY,
+        bool staggerChildren = false,
+        int delayMilliseconds = 0)
+    {
+        Motion.SetInitialOpacity(control, 0);
+        Motion.SetOffsetX(control, 0);
+        Motion.SetOffsetY(control, enterOffsetY);
+        Motion.SetExitOffsetX(control, 0);
+        Motion.SetExitOffsetY(control, exitOffsetY);
+        Motion.SetOvershootTranslation(control, true);
+        Motion.SetStaggerChildren(control, staggerChildren);
+        Motion.SetStaggerStep(control, 38);
+        Motion.SetDelay(control, delayMilliseconds);
     }
 
     private void RestoreFilterSelections()

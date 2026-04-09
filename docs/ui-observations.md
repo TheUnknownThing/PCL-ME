@@ -2,8 +2,8 @@
 
 ## Common Widgets
 
-[ ] All cards should have a slight dimming on surface and very thin light blue outline on mouse hover.
-[ ] Collapsable cards should have a simple push down animation when expanding, and a pull up animation when collapsing. Elements below the current card should enact accordingly.
+[x] All cards should have a slight dimming on surface and very thin light blue outline on mouse hover.
+[x] Collapsable cards should have a simple push down animation when expanding, and a pull up animation when collapsing. Elements below the current card should enact accordingly.
 
 ## Title Bar
 

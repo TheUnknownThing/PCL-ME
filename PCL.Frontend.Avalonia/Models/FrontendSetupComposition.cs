@@ -64,6 +64,7 @@ internal sealed record FrontendSetupGameManageState(
     int VersionSourceIndex,
     double DownloadThreadLimit,
     double DownloadSpeedLimit,
+    double DownloadTimeoutSeconds,
     bool AutoSelectNewInstance,
     bool UpgradePartialAuthlib,
     int CommunityDownloadSourceIndex,
