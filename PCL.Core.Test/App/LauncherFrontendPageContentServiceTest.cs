@@ -159,6 +159,7 @@ public sealed class LauncherFrontendPageContentServiceTest
                     "DemoPlayer",
                     4,
                     "Java 8 (Forge-compatible)",
+                    null,
                     "java-8-runtime",
                     "854 x 480",
                     112,

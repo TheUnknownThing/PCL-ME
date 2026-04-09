@@ -3,8 +3,9 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <StackPanel Spacing="15">
+  <StackPanel>
     <Border
+        Margin="0,15,0,0"
         Padding="12,10"
         Background="#FFF8DD"
         BorderBrush="#F2D777"
@@ -18,9 +19,9 @@
           TextWrapping="Wrap" />
     </Border>
 
-    <controls:PclCard ContentMargin="20,18,20,18">
+    <controls:PclCard Margin="0,15,0,15" ContentMargin="22,15,25,15">
       <controls:PclCard.CardContent>
-        <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="28">
+        <Grid ColumnDefinitions="Auto,*,Auto,0.3*" RowDefinitions="28">
           <TextBlock
               Grid.Column="0"
               Margin="0,0,20,0"
@@ -30,11 +31,10 @@
               Text="整合包名称" />
           <TextBox
               Grid.Column="1"
-              Margin="0,0,12,0"
               Text="{Binding InstanceExportName}" />
           <TextBlock
               Grid.Column="2"
-              Margin="18,0,20,0"
+              Margin="30,0,20,0"
               VerticalAlignment="Center"
               Foreground="#343D4A"
               FontSize="13"

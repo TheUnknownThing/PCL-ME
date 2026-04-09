@@ -1,4 +1,4 @@
-﻿using PCL.Core.Logging;
+using PCL.Core.Logging;
 using PCL.Core.Utils;
 using System;
 using System.Collections.Generic;
@@ -7,9 +7,10 @@ using System.IO;
 using System.Linq;
 
 namespace PCL.Core.Minecraft.Java.Parser;
+
 public class PeHeaderParser : IJavaParser
 {
-    private static readonly Dictionary<string, JavaBrandType> _BrandMap = new()
+    private static readonly Dictionary<string, JavaBrandType> BrandMap = new()
     {
         ["Eclipse"] = JavaBrandType.EclipseTemurin,
         ["Temurin"] = JavaBrandType.EclipseTemurin,
@@ -31,14 +32,16 @@ public class PeHeaderParser : IJavaParser
         try
         {
             if (!File.Exists(javaExePath))
+            {
                 return null;
+            }
 
             LogWrapper.Info("Java", $"解析 {javaExePath} 的 Java 程序信息");
 
             var versionInfo = FileVersionInfo.GetVersionInfo(javaExePath);
             var fileVersion = Version.Parse(versionInfo.FileVersion ?? "0.0.0.0");
-            var companyName = _NormalizeCompanyName(versionInfo);
-            var brand = _DetermineBrand(companyName);
+            var companyName = NormalizeCompanyName(versionInfo);
+            var brand = DetermineBrand(companyName);
 
             var javaFolder = Path.GetDirectoryName(javaExePath)!;
             var isJre = !File.Exists(Path.Combine(javaFolder, "javac.exe"));
@@ -47,19 +50,13 @@ public class PeHeaderParser : IJavaParser
             var arch = peData.Machine;
             var is64Bit = PEHeaderReader.IsMachine64Bit(arch);
 
-            // 可用性检查（不影响模型创建，由调用方决定是否启用）
-            var libDir = Path.Combine(Directory.GetParent(javaFolder)!.FullName, "lib");
-            var isUsable = (!isJre && File.Exists(Path.Combine(libDir, "jvm.lib"))) ||
-                           (isJre && File.Exists(Path.Combine(libDir, "rt.jar")));
-
             return new JavaInstallation(
                 javaFolder,
                 fileVersion,
                 brand,
                 arch,
                 is64Bit,
-                isJre
-            );
+                isJre);
         }
         catch (Exception ex)
         {
@@ -68,25 +65,28 @@ public class PeHeaderParser : IJavaParser
         }
     }
 
-    private static string _NormalizeCompanyName(FileVersionInfo info)
+    private static string NormalizeCompanyName(FileVersionInfo info)
     {
         var name = info.CompanyName ?? info.FileDescription ?? info.ProductName ?? string.Empty;
 
-        // 修复 Oracle/OpenJDK 混淆问题
         if (name.Contains("Oracle", StringComparison.OrdinalIgnoreCase) || name == "N/A")
         {
             if ((info.FileDescription?.Contains("Java(TM)", StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (info.ProductName?.Contains("Java(TM)", StringComparison.OrdinalIgnoreCase) ?? false))
+            {
                 return "Oracle";
+            }
+
             return "OpenJDK";
         }
+
         return name;
     }
 
-    private static JavaBrandType _DetermineBrand(string output)
+    private static JavaBrandType DetermineBrand(string output)
     {
-        var match = _BrandMap.Keys
-            .FirstOrDefault(k => output.Contains(k, StringComparison.OrdinalIgnoreCase));
-        return match != null ? _BrandMap[match] : JavaBrandType.Unknown;
+        var match = BrandMap.Keys
+            .FirstOrDefault(key => output.Contains(key, StringComparison.OrdinalIgnoreCase));
+        return match is not null ? BrandMap[match] : JavaBrandType.Unknown;
     }
 }

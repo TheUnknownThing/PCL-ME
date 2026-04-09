@@ -50,7 +50,7 @@ internal static class FrontendInstanceCompositionService
             IsModable: IsModable(manifestSummary),
             HasLabyMod: manifestSummary.HasLabyMod,
             VanillaVersion: vanillaVersion);
-        var javaEntries = ParseJavaEntries(ReadValue(sharedConfig, "LaunchArgumentJavaUser", "[]"));
+        var javaEntries = ParseJavaEntries(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
         var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
 
         return new FrontendInstanceComposition(
@@ -349,7 +349,7 @@ internal static class FrontendInstanceCompositionService
         var resourcePackEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.ResourcePacks), ArchiveExtensions, allowDirectories: true, recursive: false);
         var shaderEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.Shaders), ArchiveExtensions, allowDirectories: true, recursive: false);
         var schematicEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.Schematics), SchematicExtensions, allowDirectories: false, recursive: true);
-        var saveEntries = BuildWorldEntries(selection);
+        var saveEntries = BuildExportWorldOptions(selection);
         var screenshotEntries = BuildScreenshotEntries(selection);
         var replayEntries = BuildFolderEntries(Path.Combine(selection.IndieDirectory, "replay_recordings"), [".mcpr"], allowDirectories: false, recursive: false);
         var hasServers = File.Exists(Path.Combine(selection.IndieDirectory, "servers.dat"));
@@ -383,7 +383,7 @@ internal static class FrontendInstanceCompositionService
             new("截图", string.Empty, screenshotEntries.Count > 0, []),
             new("导出的结构", "schematics 文件夹", schematicEntries.Count > 0, schematicEntries.Select(ToExportOption).ToArray()),
             new("录像回放", "Replay Mod 的录像文件", replayEntries.Count > 0, replayEntries.Select(ToExportOption).ToArray()),
-            new("单人游戏存档", "世界 / 地图", saveEntries.Count > 0, saveEntries.Select(entry => new FrontendInstanceExportOptionEntry(entry.Title, entry.Summary, false)).ToArray()),
+            new("单人游戏存档", "世界 / 地图", false, saveEntries),
             new("多人游戏服务器列表", string.Empty, hasServers, []),
             new(
                 "PCL 启动器程序",
@@ -462,6 +462,24 @@ internal static class FrontendInstanceCompositionService
                 directory.Name,
                 $"创建时间：{directory.CreationTime:yyyy/MM/dd}，最后修改时间：{directory.LastWriteTime:yyyy/MM/dd}",
                 directory.FullName))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<FrontendInstanceExportOptionEntry> BuildExportWorldOptions(FrontendInstanceSelectionState selection)
+    {
+        var savesDirectory = Path.Combine(selection.IndieDirectory, "saves");
+        if (!Directory.Exists(savesDirectory))
+        {
+            return [];
+        }
+
+        return Directory.EnumerateDirectories(savesDirectory)
+            .Select(path => new DirectoryInfo(path))
+            .OrderByDescending(directory => directory.LastWriteTimeUtc)
+            .Select(directory => new FrontendInstanceExportOptionEntry(
+                directory.Name,
+                directory.LastWriteTime.ToString("yyyy/MM/dd HH:mm"),
+                true))
             .ToArray();
     }
 
@@ -745,44 +763,12 @@ internal static class FrontendInstanceCompositionService
 
     private static List<FrontendJavaEntry> ParseJavaEntries(string rawJson)
     {
-        var result = new List<FrontendJavaEntry>();
-        if (string.IsNullOrWhiteSpace(rawJson))
-        {
-            return result;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(rawJson);
-            if (document.RootElement.ValueKind != JsonValueKind.Array)
-            {
-                return result;
-            }
-
-            foreach (var item in document.RootElement.EnumerateArray())
-            {
-                var executablePath = GetNestedString(item, "Installation", "JavaExePath");
-                if (string.IsNullOrWhiteSpace(executablePath))
-                {
-                    continue;
-                }
-
-                var displayName = GetNestedString(item, "Installation", "Version")
-                                  ?? Path.GetFileName(Path.GetDirectoryName(executablePath))
-                                  ?? "Java";
-                var is64Bit = GetNestedBoolean(item, "Installation", "Is64Bit");
-                result.Add(new FrontendJavaEntry(
-                    executablePath,
-                    displayName,
-                    is64Bit));
-            }
-        }
-        catch
-        {
-            return result;
-        }
-
-        return result;
+        return FrontendJavaInventoryService.ParseStoredJavaRuntimes(rawJson)
+            .Select(runtime => new FrontendJavaEntry(
+                runtime.ExecutablePath,
+                runtime.DisplayName,
+                runtime.Is64Bit))
+            .ToList();
     }
 
     private static bool IsModable(FrontendVersionManifestSummary manifestSummary)

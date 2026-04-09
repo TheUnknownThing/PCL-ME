@@ -5,19 +5,23 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,10,25,25" Spacing="15">
-      <sections:InstanceExportHeaderSection />
-      <sections:InstanceExportOptionsSection />
-      <sections:InstanceExportAdvancedSection />
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="25,10,25,65">
+        <sections:InstanceExportHeaderSection />
+        <sections:InstanceExportOptionsSection />
+        <sections:InstanceExportAdvancedSection />
+      </StackPanel>
+    </ScrollViewer>
 
-      <controls:PclButton
-          Width="160"
-          Height="38"
-          HorizontalAlignment="Center"
-          Command="{Binding StartInstanceExportCommand}"
-          ColorType="Highlight"
-          Text="开始导出" />
-    </StackPanel>
-  </ScrollViewer>
+    <controls:PclButton
+        Width="160"
+        Height="38"
+        Margin="0,0,0,15"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Bottom"
+        Command="{Binding StartInstanceExportCommand}"
+        ColorType="Highlight"
+        Text="开始导出" />
+  </Grid>
 </UserControl>

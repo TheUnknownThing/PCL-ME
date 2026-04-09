@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
+using Avalonia.Threading;
 using System.Text.Json.Nodes;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
@@ -1795,8 +1796,31 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshJavaSurface()
     {
-        ReloadSetupComposition();
-        AddActivity("刷新 Java 列表", "Java 列表已按当前启动器配置重新载入。");
+        _ = RefreshJavaSurfaceAsync();
+    }
+
+    private async Task RefreshJavaSurfaceAsync()
+    {
+        AddActivity("刷新 Java 列表", "正在重新扫描 Java 运行时。");
+
+        try
+        {
+            await FrontendJavaInventoryService.RefreshPortableJavaScanCacheAsync();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ReloadSetupComposition(initializeAllSurfaces: false);
+                RefreshLaunchState();
+                AddActivity("刷新 Java 列表", "Java 列表已按当前扫描结果重新载入。");
+            });
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ReloadSetupComposition(initializeAllSurfaces: false);
+                AddActivity("刷新 Java 列表失败", ex.Message);
+            });
+        }
     }
 
     private async Task RefreshFeedbackSectionsAsync(bool forceRefresh)
@@ -1983,15 +2007,20 @@ internal sealed partial class FrontendShellViewModel
 
     private static IJavaParser? TryCreatePeHeaderParser()
     {
-        const string assemblyName = "PCL.Core";
         const string typeName = "PCL.Core.Minecraft.Java.Parser.PeHeaderParser";
 
         try
         {
-            var assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(candidate => string.Equals(candidate.GetName().Name, assemblyName, StringComparison.Ordinal))
-                ?? TryLoadPclCoreAssembly();
-            var parserType = assembly?.GetType(typeName, throwOnError: false);
+            var parserType = AppDomain.CurrentDomain.GetAssemblies()
+                .Select(candidate => candidate.GetType(typeName, throwOnError: false))
+                .FirstOrDefault(candidate => candidate is not null);
+
+            if (parserType is null)
+            {
+                parserType = TryLoadAssembly("PCL.Core.Foundation")?.GetType(typeName, throwOnError: false)
+                             ?? TryLoadAssembly("PCL.Core")?.GetType(typeName, throwOnError: false);
+            }
+
             if (parserType is null || !typeof(IJavaParser).IsAssignableFrom(parserType))
             {
                 return null;
@@ -2005,7 +2034,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private static Assembly? TryLoadPclCoreAssembly()
+    private static Assembly? TryLoadAssembly(string assemblyName)
     {
         var candidateRoots = new[]
         {
@@ -2018,7 +2047,8 @@ internal sealed partial class FrontendShellViewModel
         {
             foreach (var directory in EnumerateParentDirectories(root))
             {
-                var directPath = Path.Combine(directory, "PCL.Core.dll");
+                var assemblyFileName = $"{assemblyName}.dll";
+                var directPath = Path.Combine(directory, assemblyFileName);
                 if (seenPaths.Add(directPath) && File.Exists(directPath))
                 {
                     try
@@ -2030,13 +2060,13 @@ internal sealed partial class FrontendShellViewModel
                     }
                 }
 
-                var binDirectory = Path.Combine(directory, "PCL.Core", "bin");
+                var binDirectory = Path.Combine(directory, assemblyName, "bin");
                 if (!Directory.Exists(binDirectory))
                 {
                     continue;
                 }
 
-                foreach (var buildPath in Directory.EnumerateFiles(binDirectory, "PCL.Core.dll", SearchOption.AllDirectories)
+                foreach (var buildPath in Directory.EnumerateFiles(binDirectory, assemblyFileName, SearchOption.AllDirectories)
                              .OrderByDescending(path => File.GetLastWriteTimeUtc(path))
                              .Take(8))
                 {
@@ -2115,8 +2145,19 @@ internal sealed partial class FrontendShellViewModel
                 IsEnable = entry.IsEnabled,
                 Source = items[updated].Source
             };
-            SaveStoredJavaItems(items);
         }
+        else
+        {
+            items.Add(new JavaStorageItem
+            {
+                Path = key,
+                IsEnable = entry.IsEnabled,
+                Source = JavaSource.AutoScanned
+            });
+        }
+
+        SaveStoredJavaItems(items);
+        ReloadSetupComposition(initializeAllSurfaces: false);
         AddActivity(
             entry.IsEnabled ? "启用 Java" : "禁用 Java",
             $"{entry.Title} • {(entry.IsEnabled ? "已启用" : "已禁用")}");
@@ -2138,7 +2179,7 @@ internal sealed partial class FrontendShellViewModel
             var rawJson = provider.Exists("LaunchArgumentJavaUser")
                 ? provider.Get<string>("LaunchArgumentJavaUser")
                 : "[]";
-            return JsonSerializer.Deserialize<List<JavaStorageItem>>(rawJson) ?? [];
+            return FrontendJavaInventoryService.ParseStorageItems(rawJson).ToList();
         }
         catch
         {

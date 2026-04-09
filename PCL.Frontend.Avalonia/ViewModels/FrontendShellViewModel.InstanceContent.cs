@@ -21,6 +21,21 @@ internal sealed partial class FrontendShellViewModel
         Duplicate = 3
     }
 
+    private enum InstanceWorldSortMethod
+    {
+        FileName = 0,
+        CreateTime = 1,
+        ModifyTime = 2
+    }
+
+    private enum InstanceResourceSortMethod
+    {
+        FileName = 0,
+        ResourceName = 1,
+        CreateTime = 2,
+        FileSize = 3
+    }
+
     private string _instanceWorldSearchQuery = string.Empty;
     private string _instanceServerSearchQuery = string.Empty;
     private string _instanceResourceSearchQuery = string.Empty;
@@ -31,6 +46,8 @@ internal sealed partial class FrontendShellViewModel
     private int _instanceResourceDisabledCount;
     private int _instanceResourceDuplicateCount;
     private bool _instanceResourceIsSearching;
+    private InstanceWorldSortMethod _instanceWorldSortMethod = InstanceWorldSortMethod.FileName;
+    private InstanceResourceSortMethod _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
 
     public string InstanceWorldSearchQuery
     {
@@ -82,6 +99,8 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowInstanceWorldEmptyState => !ShowInstanceWorldContent;
 
+    public string InstanceWorldSortText => $"排序：{GetInstanceWorldSortName(_instanceWorldSortMethod)}";
+
     public bool HasInstanceScreenshotEntries => InstanceScreenshotEntries.Count > 0;
 
     public bool HasNoInstanceScreenshotEntries => !HasInstanceScreenshotEntries;
@@ -119,6 +138,8 @@ internal sealed partial class FrontendShellViewModel
         && _instanceComposition.Selection.IsModable;
 
     public string InstanceResourceFilterAllText => $"{(_instanceResourceIsSearching ? "搜索结果" : "全部")} ({_instanceResourceTotalCount})";
+
+    public string InstanceResourceSortText => $"排序：{GetInstanceResourceSortName(_instanceResourceSortMethod)}";
 
     public bool IsInstanceResourceFilterAllSelected => _instanceResourceFilter == InstanceResourceFilter.All;
 
@@ -243,6 +264,7 @@ internal sealed partial class FrontendShellViewModel
         _instanceResourceSearchQuery = string.Empty;
         _instanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
         _instanceResourceFilter = InstanceResourceFilter.All;
+        _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
 
         RefreshInstanceWorldEntries();
         RefreshInstanceScreenshotEntries();
@@ -255,6 +277,7 @@ internal sealed partial class FrontendShellViewModel
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceWorld))
         {
             RaisePropertyChanged(nameof(InstanceWorldSearchQuery));
+            RaisePropertyChanged(nameof(InstanceWorldSortText));
             RaisePropertyChanged(nameof(HasInstanceWorldEntries));
             RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
             RaisePropertyChanged(nameof(ShowInstanceWorldContent));
@@ -297,6 +320,7 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(ShowInstanceResourceFilterBar));
             RaisePropertyChanged(nameof(InstanceResourceFilterAllText));
             RaisePropertyChanged(nameof(IsInstanceResourceFilterAllSelected));
+            RaisePropertyChanged(nameof(InstanceResourceSortText));
             RaisePropertyChanged(nameof(InstanceResourceFilterEnabledText));
             RaisePropertyChanged(nameof(ShowInstanceResourceEnabledFilter));
             RaisePropertyChanged(nameof(IsInstanceResourceFilterEnabledSelected));
@@ -340,7 +364,7 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(
             InstanceResourceEntries,
-            ApplyInstanceResourceFilter(searchedEntries, duplicateTitles)
+            ApplyInstanceResourceSort(ApplyInstanceResourceFilter(searchedEntries, duplicateTitles))
                 .Select(entry => CreateInstanceResourceEntry(entry.Title, entry.Summary, entry.Meta, entry.IconName, entry.Path)));
 
         RaisePropertyChanged(nameof(HasInstanceResourceEntries));
@@ -351,6 +375,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowInstanceResourceFilterBar));
         RaisePropertyChanged(nameof(InstanceResourceFilterAllText));
         RaisePropertyChanged(nameof(IsInstanceResourceFilterAllSelected));
+        RaisePropertyChanged(nameof(InstanceResourceSortText));
         RaisePropertyChanged(nameof(InstanceResourceFilterEnabledText));
         RaisePropertyChanged(nameof(ShowInstanceResourceEnabledFilter));
         RaisePropertyChanged(nameof(IsInstanceResourceFilterEnabledSelected));
@@ -386,6 +411,27 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
+    private IEnumerable<FrontendInstanceResourceEntry> ApplyInstanceResourceSort(IEnumerable<FrontendInstanceResourceEntry> entries)
+    {
+        return _instanceResourceSortMethod switch
+        {
+            InstanceResourceSortMethod.FileName => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenBy(entry => Path.GetFileName(entry.Path), StringComparer.OrdinalIgnoreCase),
+            InstanceResourceSortMethod.CreateTime => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenByDescending(entry => GetPathCreationTimeUtc(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            InstanceResourceSortMethod.FileSize => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenByDescending(entry => IsDirectoryPath(entry.Path) ? 0L : GetFileSize(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            _ => entries
+                .OrderBy(entry => IsDirectoryPath(entry.Path) ? 0 : 1)
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+        };
+    }
+
     private IReadOnlyList<FrontendInstanceResourceEntry> GetCurrentInstanceResourceSourceEntries()
     {
         return _currentRoute.Subpage switch
@@ -410,6 +456,26 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceResourceEntries();
     }
 
+    internal void SetInstanceResourceFileNameSort() => SetInstanceResourceSortMethod(InstanceResourceSortMethod.FileName);
+
+    internal void SetInstanceResourceNameSort() => SetInstanceResourceSortMethod(InstanceResourceSortMethod.ResourceName);
+
+    internal void SetInstanceResourceCreateTimeSort() => SetInstanceResourceSortMethod(InstanceResourceSortMethod.CreateTime);
+
+    internal void SetInstanceResourceFileSizeSort() => SetInstanceResourceSortMethod(InstanceResourceSortMethod.FileSize);
+
+    private void SetInstanceResourceSortMethod(InstanceResourceSortMethod target)
+    {
+        if (_instanceResourceSortMethod == target)
+        {
+            return;
+        }
+
+        _instanceResourceSortMethod = target;
+        RaisePropertyChanged(nameof(InstanceResourceSortText));
+        RefreshInstanceResourceEntries();
+    }
+
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(string title, string info, string meta, string iconName, string path)
     {
         return new InstanceResourceEntryViewModel(
@@ -422,14 +488,130 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceWorldEntries()
     {
+        var filteredEntries = _instanceComposition.World.Entries
+            .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Path, InstanceWorldSearchQuery));
+
         ReplaceItems(
             InstanceWorldEntries,
-            _instanceComposition.World.Entries
-                .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Path, InstanceWorldSearchQuery))
+            ApplyInstanceWorldSort(filteredEntries)
                 .Select(entry => new SimpleListEntryViewModel(
                     entry.Title,
                     entry.Summary,
                     new ActionCommand(() => OpenVersionSaveDetails(entry.Path)))));
+    }
+
+    private IEnumerable<FrontendInstanceDirectoryEntry> ApplyInstanceWorldSort(IEnumerable<FrontendInstanceDirectoryEntry> entries)
+    {
+        return _instanceWorldSortMethod switch
+        {
+            InstanceWorldSortMethod.CreateTime => entries
+                .OrderByDescending(entry => GetDirectoryCreationTimeUtc(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            InstanceWorldSortMethod.ModifyTime => entries
+                .OrderByDescending(entry => GetDirectoryLastWriteTimeUtc(entry.Path))
+                .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase),
+            _ => entries.OrderBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+        };
+    }
+
+    private void SetInstanceWorldSortMethod(InstanceWorldSortMethod target)
+    {
+        if (_instanceWorldSortMethod == target)
+        {
+            return;
+        }
+
+        _instanceWorldSortMethod = target;
+
+        RaisePropertyChanged(nameof(InstanceWorldSortText));
+        RefreshInstanceWorldEntries();
+    }
+
+    internal void SetInstanceWorldFileNameSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.FileName);
+
+    internal void SetInstanceWorldCreateTimeSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.CreateTime);
+
+    internal void SetInstanceWorldModifyTimeSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.ModifyTime);
+
+    private static string GetInstanceWorldSortName(InstanceWorldSortMethod method)
+    {
+        return method switch
+        {
+            InstanceWorldSortMethod.CreateTime => "创建时间",
+            InstanceWorldSortMethod.ModifyTime => "修改时间",
+            _ => "文件名"
+        };
+    }
+
+    private static string GetInstanceResourceSortName(InstanceResourceSortMethod method)
+    {
+        return method switch
+        {
+            InstanceResourceSortMethod.FileName => "文件名",
+            InstanceResourceSortMethod.CreateTime => "加入时间",
+            InstanceResourceSortMethod.FileSize => "文件大小",
+            _ => "资源名称"
+        };
+    }
+
+    private static DateTime GetDirectoryCreationTimeUtc(string path)
+    {
+        try
+        {
+            return Directory.GetCreationTimeUtc(path);
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
+
+    private static DateTime GetDirectoryLastWriteTimeUtc(string path)
+    {
+        try
+        {
+            return Directory.GetLastWriteTimeUtc(path);
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
+
+    private static DateTime GetPathCreationTimeUtc(string path)
+    {
+        try
+        {
+            return IsDirectoryPath(path) ? Directory.GetCreationTimeUtc(path) : File.GetCreationTimeUtc(path);
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
+
+    private static long GetFileSize(string path)
+    {
+        try
+        {
+            return File.Exists(path) ? new FileInfo(path).Length : 0L;
+        }
+        catch
+        {
+            return 0L;
+        }
+    }
+
+    private static bool IsDirectoryPath(string path)
+    {
+        try
+        {
+            return Directory.Exists(path);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void RefreshInstanceScreenshotEntries()

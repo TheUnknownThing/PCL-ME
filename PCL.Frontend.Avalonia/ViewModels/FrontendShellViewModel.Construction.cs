@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Threading;
+using Avalonia.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Cli;
@@ -494,9 +495,33 @@ internal sealed partial class FrontendShellViewModel
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
+        _ = WarmPortableJavaSearchAsync();
         if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
+    }
+
+    private async Task WarmPortableJavaSearchAsync()
+    {
+        try
+        {
+            await FrontendJavaInventoryService.WarmPortableJavaScanCacheAsync();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_currentRoute.Page == LauncherFrontendPageKey.Setup
+                    && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupJava)
+                {
+                    ReloadSetupComposition(initializeAllSurfaces: false);
+                }
+
+                RefreshLaunchState();
+                RefreshShell("Portable Java search cache refreshed.");
+            });
+        }
+        catch
+        {
+            // Java search warm-up is best-effort and should never block shell startup.
         }
     }
 
