@@ -214,7 +214,7 @@ internal sealed partial class FrontendShellViewModel
         && _instanceComposition.Selection.IsModable;
 
     public ActionCommand OpenInstanceWorldFolderCommand => new(() =>
-        OpenInstanceTarget(
+        OpenInstanceDirectoryTarget(
             "打开存档文件夹",
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
             "当前实例没有存档目录。"));
@@ -222,7 +222,7 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand PasteInstanceWorldClipboardCommand => new(() => _ = PasteInstanceWorldClipboardAsync());
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
-        OpenInstanceTarget(
+        OpenInstanceDirectoryTarget(
             "打开截图文件夹",
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "screenshots") : string.Empty,
             "当前实例没有截图目录。"));
@@ -236,7 +236,7 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerFromClipboardAsync());
 
     public ActionCommand OpenInstanceResourceFolderCommand => new(() =>
-        OpenInstanceTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
+        OpenInstanceDirectoryTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
 
     public ActionCommand InstallInstanceResourceFromFileCommand => new(() => _ = InstallInstanceResourceFromFileAsync());
 
@@ -256,6 +256,27 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand SetInstanceResourceDisabledFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Disabled));
 
     public ActionCommand SetInstanceResourceDuplicateFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Duplicate));
+
+    private void OpenInstanceDirectoryTarget(string activity, string? target, string emptyState)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            AddActivity(activity, emptyState);
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(target);
+        }
+        catch (Exception ex)
+        {
+            AddActivity(activity, ex.Message);
+            return;
+        }
+
+        OpenInstanceTarget(activity, target, emptyState);
+    }
 
     private void InitializeInstanceContentSurfaces()
     {
@@ -712,33 +733,65 @@ internal sealed partial class FrontendShellViewModel
 
         if (!TryParseClipboardServer(clipboardText, out var name, out var address))
         {
+            var serverInfo = await TryGetServerInfoFromClipboardOrPromptAsync(clipboardText);
+            if (!serverInfo.Success)
+            {
+                AddActivity("添加新服务器", serverInfo.Activity);
+                return;
+            }
+
+            name = serverInfo.Name;
+            address = serverInfo.Address;
+        }
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
             AddActivity("添加新服务器", "请先复制服务器地址，或复制“名称|地址”后再试。");
             return;
         }
 
         var serversPath = Path.Combine(_instanceComposition.Selection.IndieDirectory, "servers.dat");
-        var file = File.Exists(serversPath)
-            ? new NbtFile(serversPath)
-            : new NbtFile(new NbtCompound
-            {
-                new NbtList("servers", NbtTagType.Compound)
-            });
-        var serverList = file.RootTag.Get<NbtList>("servers")
-            ?? new NbtList("servers", NbtTagType.Compound);
-        if (serverList.ListType == NbtTagType.Unknown)
+        NbtFile file;
+        try
         {
-            serverList.ListType = NbtTagType.Compound;
+            file = File.Exists(serversPath)
+                ? new NbtFile(serversPath)
+                : new NbtFile(new NbtCompound
+                {
+                    new NbtList("servers", NbtTagType.Compound)
+                });
+        }
+        catch (Exception ex)
+        {
+            AddActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            return;
         }
 
-        serverList.Add(new NbtCompound
-        {
-            new NbtString("name", name),
-            new NbtString("ip", address)
-        });
+        var serverList = file.RootTag.Get<NbtList>("servers")
+            ?? new NbtList("servers", NbtTagType.Compound);
 
-        if (file.RootTag.Get<NbtList>("servers") is null)
+        try
         {
-            file.RootTag.Add(serverList);
+            if (serverList.ListType == NbtTagType.Unknown)
+            {
+                serverList.ListType = NbtTagType.Compound;
+            }
+
+            serverList.Add(new NbtCompound
+            {
+                new NbtString("name", name),
+                new NbtString("ip", address)
+            });
+
+            if (file.RootTag.Get<NbtList>("servers") is null)
+            {
+                file.RootTag.Add(serverList);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddActivity("添加新服务器失败", $"无法更新当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            return;
         }
 
         try
@@ -753,6 +806,34 @@ internal sealed partial class FrontendShellViewModel
 
         ReloadInstanceComposition();
         AddActivity("添加新服务器", $"{name} • {address}");
+    }
+
+    private async Task<(bool Success, string Name, string Address, string Activity)> TryGetServerInfoFromClipboardOrPromptAsync(string? clipboardText)
+    {
+        if (TryParseClipboardServer(clipboardText, out var parsedName, out var parsedAddress)
+            && !string.IsNullOrWhiteSpace(parsedAddress))
+        {
+            return (true, parsedName, parsedAddress, string.Empty);
+        }
+
+        var resolvedName = await _shellActionService.PromptForTextAsync(
+            "添加新服务器",
+            "请输入服务器名称",
+            "Minecraft服务器");
+        if (resolvedName is null)
+        {
+            return (false, string.Empty, string.Empty, "已取消添加新服务器。");
+        }
+
+        var resolvedAddress = await _shellActionService.PromptForTextAsync(
+            "添加新服务器",
+            "请输入服务器地址（支持输入“名称|地址”）");
+        if (string.IsNullOrWhiteSpace(resolvedAddress))
+        {
+            return (false, string.Empty, string.Empty, "请先复制服务器地址，或复制“名称|地址”后再试。");
+        }
+
+        return (true, string.IsNullOrWhiteSpace(resolvedName) ? "Minecraft服务器" : resolvedName, resolvedAddress.Trim(), string.Empty);
     }
 
     private async Task InstallInstanceResourceFromFileAsync()
