@@ -270,9 +270,9 @@ internal sealed partial class PclCard : UserControl
     {
         var isHeaderInteractive = ShowChevron || HeaderCommand is not null;
         var idleBorderBrush = GetBrush("ColorBrushTransparent", "#00FFFFFF");
-        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver", "#94C5DFFE");
+        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver", "#78B7D3F5");
         var idleSurfaceBrush = GetBrush("ColorBrushMyCard", "#D2FBFBFB");
-        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#D2ECF3FB");
+        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#D2F1F4F7");
         var idleHeaderBrush = GetBrush("ColorBrush1", "#343D4A");
         var hoverHeaderBrush = GetBrush("ColorBrush2", "#0B5BCB");
 
