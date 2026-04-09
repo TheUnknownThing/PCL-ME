@@ -352,19 +352,28 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var extension = _shellActionService.GetCommandScriptExtension();
-        var scriptPath = Path.Combine(
-            GetInstanceOverviewArtifactDirectory("launch-scripts"),
-            $"启动 {_instanceComposition.Selection.InstanceName}{extension}");
-        var encoding = _launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding
-            ? new UTF8Encoding(false)
-            : Encoding.Default;
-        File.WriteAllText(
-            scriptPath,
-            _launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
-            encoding);
-        _shellActionService.EnsureFileExecutable(scriptPath);
-        OpenInstanceTarget("导出启动脚本", scriptPath, "启动脚本不存在。");
+        try
+        {
+            var extension = _shellActionService.GetCommandScriptExtension();
+            var scriptDirectory = GetInstanceOverviewArtifactDirectory("launch-scripts");
+            Directory.CreateDirectory(scriptDirectory);
+            var scriptPath = Path.Combine(
+                scriptDirectory,
+                $"启动 {SanitizeArtifactFileName(_instanceComposition.Selection.InstanceName)}{extension}");
+            var encoding = _launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding
+                ? new UTF8Encoding(false)
+                : Encoding.Default;
+            File.WriteAllText(
+                scriptPath,
+                _launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
+                encoding);
+            _shellActionService.EnsureFileExecutable(scriptPath);
+            OpenInstanceTarget("导出启动脚本", scriptPath, "启动脚本不存在。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("导出启动脚本失败", ex.Message);
+        }
     }
 
     private async Task TestInstanceAsync()
@@ -774,6 +783,29 @@ internal sealed partial class FrontendShellViewModel
 
         return builder.Length == 0 ? "instance" : builder.ToString();
     }
+
+    private static string SanitizeArtifactFileName(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            if (invalidCharacters.Contains(character))
+            {
+                continue;
+            }
+
+            builder.Append(character switch
+            {
+                '/' => '-',
+                '\\' => '-',
+                _ => character
+            });
+        }
+
+        return builder.Length == 0 ? "instance" : builder.ToString().Trim();
+    }
+
     private static void PatchCoreArchive(string corePath, string patchArchivePath)
     {
         if (!File.Exists(corePath))
