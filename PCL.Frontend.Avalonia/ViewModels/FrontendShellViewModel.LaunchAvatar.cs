@@ -151,17 +151,23 @@ internal sealed partial class FrontendShellViewModel
             using var headBitmap = new RenderTargetBitmap(new PixelSize(56, 56));
             using (var context = headBitmap.CreateDrawingContext())
             {
-                context.DrawImage(
-                    skinBitmap,
-                    new Rect(scale * 8, scale * 8, scale * 8, scale * 8),
-                    new Rect(4, 4, 48, 48));
-
-                if (width >= 64 && height >= 32)
+                using (context.PushRenderOptions(new RenderOptions
+                       {
+                           BitmapInterpolationMode = BitmapInterpolationMode.None
+                       }))
                 {
                     context.DrawImage(
                         skinBitmap,
-                        new Rect(scale * 40, scale * 8, scale * 8, scale * 8),
-                        new Rect(0, 0, 56, 56));
+                        new Rect(scale * 8, scale * 8, scale * 8, scale * 8),
+                        new Rect(4, 4, 48, 48));
+
+                    if (width >= 64 && height >= 32)
+                    {
+                        context.DrawImage(
+                            skinBitmap,
+                            new Rect(scale * 40, scale * 8, scale * 8, scale * 8),
+                            new Rect(0, 0, 56, 56));
+                    }
                 }
             }
 
