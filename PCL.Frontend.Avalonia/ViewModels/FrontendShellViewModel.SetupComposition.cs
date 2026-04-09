@@ -52,6 +52,7 @@ internal sealed partial class FrontendShellViewModel
     [
         "ToolDownloadThread",
         "ToolDownloadSpeed",
+        "ToolDownloadTimeout",
         "ToolDownloadSource",
         "ToolDownloadVersion",
         "ToolDownloadAutoSelectVersion",
@@ -281,6 +282,8 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DownloadThreadLimitLabel));
                 RaisePropertyChanged(nameof(DownloadSpeedLimit));
                 RaisePropertyChanged(nameof(DownloadSpeedLimitLabel));
+                RaisePropertyChanged(nameof(DownloadTimeoutSeconds));
+                RaisePropertyChanged(nameof(DownloadTimeoutLabel));
                 RaisePropertyChanged(nameof(AutoSelectNewInstance));
                 RaisePropertyChanged(nameof(UpgradePartialAuthlib));
                 RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
@@ -526,6 +529,9 @@ internal sealed partial class FrontendShellViewModel
             case nameof(DownloadSpeedLimit):
                 _shellActionService.PersistSharedValue("ToolDownloadSpeed", (int)Math.Round(DownloadSpeedLimit));
                 break;
+            case nameof(DownloadTimeoutSeconds):
+                _shellActionService.PersistSharedValue("ToolDownloadTimeout", (int)Math.Round(DownloadTimeoutSeconds));
+                break;
             case nameof(AutoSelectNewInstance):
                 _shellActionService.PersistSharedValue("ToolDownloadAutoSelectVersion", AutoSelectNewInstance);
                 break;
@@ -759,6 +765,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DownloadThreadLimitLabel));
         RaisePropertyChanged(nameof(DownloadSpeedLimit));
         RaisePropertyChanged(nameof(DownloadSpeedLimitLabel));
+        RaisePropertyChanged(nameof(DownloadTimeoutSeconds));
+        RaisePropertyChanged(nameof(DownloadTimeoutLabel));
         RaisePropertyChanged(nameof(AutoSelectNewInstance));
         RaisePropertyChanged(nameof(UpgradePartialAuthlib));
         RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));

@@ -16,6 +16,7 @@ public static class LauncherStartupBootstrapService
         "SystemHttpProxyType",
         "ToolDownloadThread",
         "ToolDownloadSpeed",
+        "ToolDownloadTimeout",
         "UiFont"
     ];
 

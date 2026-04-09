@@ -106,6 +106,20 @@ internal sealed partial class FrontendShellViewModel
 
     public string DownloadSpeedLimitLabel => $"{Math.Round(DownloadSpeedLimit)}";
 
+    public double DownloadTimeoutSeconds
+    {
+        get => _downloadTimeoutSeconds;
+        set
+        {
+            if (SetProperty(ref _downloadTimeoutSeconds, value))
+            {
+                RaisePropertyChanged(nameof(DownloadTimeoutLabel));
+            }
+        }
+    }
+
+    public string DownloadTimeoutLabel => $"{Math.Round(DownloadTimeoutSeconds)} s";
+
     public bool AutoSelectNewInstance
     {
         get => _autoSelectNewInstance;

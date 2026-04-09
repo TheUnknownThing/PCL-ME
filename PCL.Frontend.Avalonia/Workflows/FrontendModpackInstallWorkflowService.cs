@@ -10,29 +10,24 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendModpackInstallWorkflowService
 {
-    private static readonly HttpClient HttpClient = new(new SocketsHttpHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-    })
-    {
-        Timeout = TimeSpan.FromMinutes(15)
-    };
-
     private static readonly UTF8Encoding Utf8NoBom = new(false);
     private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
 
     public static async Task<FrontendModpackInstallResult> InstallDownloadedArchiveAsync(
         FrontendModpackInstallRequest request,
         Action<FrontendModpackInstallStatus>? onStatusChanged = null,
+        TimeSpan? requestTimeout = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         cancelToken.ThrowIfCancellationRequested();
+        var effectiveTimeout = NormalizeDownloadTimeout(requestTimeout);
+        using var httpClient = CreateDownloadHttpClient(effectiveTimeout);
 
         Directory.CreateDirectory(request.TargetDirectory);
         ReportStatus(onStatusChanged, 0.02, "正在解析整合包清单…");
 
-        var package = InspectPackage(request.ArchivePath, request.CommunitySourcePreference);
+        var package = InspectPackage(request.ArchivePath, request.CommunitySourcePreference, httpClient, cancelToken);
         cancelToken.ThrowIfCancellationRequested();
 
         ReportStatus(onStatusChanged, 0.08, "正在准备实例安装方案…");
@@ -71,7 +66,7 @@ internal static class FrontendModpackInstallWorkflowService
                         string.IsNullOrWhiteSpace(fileName) ? "正在下载整合包附带文件…" : $"正在处理 {fileName}…",
                         RemainingFileCount: resolvedFiles.Length - completedCount);
 
-                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, cancelToken).ConfigureAwait(false))
+                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, cancelToken).ConfigureAwait(false))
                     {
                         downloadedFiles.Add(file.TargetPath);
                     }
@@ -141,14 +136,18 @@ internal static class FrontendModpackInstallWorkflowService
         }
     }
 
-    private static FrontendModpackPackage InspectPackage(string archivePath, int communitySourcePreference)
+    private static FrontendModpackPackage InspectPackage(
+        string archivePath,
+        int communitySourcePreference,
+        HttpClient httpClient,
+        CancellationToken cancelToken)
     {
         using var archive = ZipFile.OpenRead(archivePath);
         var (kind, baseFolder) = DetectPackageKind(archive);
         return kind switch
         {
             FrontendModpackPackageKind.Modrinth => BuildModrinthPackage(archive, baseFolder),
-            FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference),
+            FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference, httpClient, cancelToken),
             _ => throw new InvalidOperationException("仅支持自动安装 Modrinth 和 CurseForge 整合包。")
         };
     }
@@ -261,7 +260,12 @@ internal static class FrontendModpackInstallWorkflowService
             files);
     }
 
-    private static FrontendModpackPackage BuildCurseForgePackage(ZipArchive archive, string baseFolder, int communitySourcePreference)
+    private static FrontendModpackPackage BuildCurseForgePackage(
+        ZipArchive archive,
+        string baseFolder,
+        int communitySourcePreference,
+        HttpClient httpClient,
+        CancellationToken cancelToken)
     {
         var root = ReadJsonObjectFromEntry(archive, baseFolder + "manifest.json");
         if (root["minecraft"] is not JsonObject minecraft
@@ -324,7 +328,9 @@ internal static class FrontendModpackInstallWorkflowService
 
         var fileMetadata = ReadCurseForgeFileMetadata(
             manifestFiles.Select(node => node.FileId!.Value).ToArray(),
-            requestMirrorFirst: communitySourcePreference == 0);
+            requestMirrorFirst: communitySourcePreference == 0,
+            httpClient,
+            cancelToken);
         if (fileMetadata.Count < manifestFiles.Length)
         {
             throw new InvalidOperationException("整合包中的部分 CurseForge 文件已不存在，无法继续自动安装。");
@@ -462,6 +468,7 @@ internal static class FrontendModpackInstallWorkflowService
     private static async Task<bool> EnsurePackFileAsync(
         FrontendModpackFileDownloadPlan file,
         int communitySourcePreference,
+        HttpClient httpClient,
         CancellationToken cancelToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(file.TargetPath)!);
@@ -476,7 +483,7 @@ internal static class FrontendModpackInstallWorkflowService
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, url);
-                using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
+                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
                 var tempFile = file.TargetPath + ".pcltmp";
@@ -555,7 +562,11 @@ internal static class FrontendModpackInstallWorkflowService
         provider.Sync();
     }
 
-    private static Dictionary<int, JsonObject> ReadCurseForgeFileMetadata(IReadOnlyList<int> fileIds, bool requestMirrorFirst)
+    private static Dictionary<int, JsonObject> ReadCurseForgeFileMetadata(
+        IReadOnlyList<int> fileIds,
+        bool requestMirrorFirst,
+        HttpClient httpClient,
+        CancellationToken cancelToken)
     {
         if (fileIds.Count == 0)
         {
@@ -581,7 +592,7 @@ internal static class FrontendModpackInstallWorkflowService
                 }
 
                 request.Content = new StringContent(body, Utf8NoBom, "application/json");
-                using var response = HttpClient.Send(request);
+                using var response = httpClient.Send(request, cancelToken);
                 response.EnsureSuccessStatusCode();
 
                 var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -844,6 +855,28 @@ internal static class FrontendModpackInstallWorkflowService
         return path;
     }
 
+    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
+    {
+        return new HttpClient(new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+        })
+        {
+            Timeout = timeout
+        };
+    }
+
+    private static TimeSpan NormalizeDownloadTimeout(TimeSpan? requestTimeout)
+    {
+        var timeout = requestTimeout ?? TimeSpan.FromSeconds(8);
+        if (timeout <= TimeSpan.Zero)
+        {
+            return TimeSpan.FromSeconds(8);
+        }
+
+        return timeout;
+    }
+
     internal static void TryDeleteDirectory(string? path)
     {
         if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
@@ -882,18 +915,11 @@ internal static class FrontendModpackInstallWorkflowService
 internal sealed class FrontendManagedModpackInstallTask(
     string title,
     FrontendModpackInstallRequest request,
+    TimeSpan requestTimeout,
     Action<string>? onStarted = null,
     Action<FrontendModpackInstallResult>? onCompleted = null,
     Action<string>? onFailed = null) : PCL.Core.App.Tasks.ITask, PCL.Core.App.Tasks.ITaskProgressive, PCL.Core.App.Tasks.ITaskTelemetry, PCL.Core.App.Tasks.ITaskCancelable
 {
-    private static readonly HttpClient DownloadHttpClient = new(new SocketsHttpHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-    })
-    {
-        Timeout = TimeSpan.FromMinutes(15)
-    };
-
     private readonly CancellationTokenSource _cancellation = new();
     private PCL.Core.App.Tasks.TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", 1, null);
     private double _progress;
@@ -926,11 +952,12 @@ internal sealed class FrontendManagedModpackInstallTask(
             PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在下载整合包文件…");
             onStarted?.Invoke(request.ArchivePath);
 
-            await DownloadArchiveAsync(token).ConfigureAwait(false);
+            await DownloadArchiveAsync(token, requestTimeout).ConfigureAwait(false);
 
             var result = await FrontendModpackInstallWorkflowService.InstallDownloadedArchiveAsync(
                 request,
                 status => UpdateFromInstallStatus(status),
+                requestTimeout,
                 token).ConfigureAwait(false);
 
             PublishProgress(1d);
@@ -951,9 +978,10 @@ internal sealed class FrontendManagedModpackInstallTask(
         }
     }
 
-    private async Task DownloadArchiveAsync(CancellationToken token)
+    private async Task DownloadArchiveAsync(CancellationToken token, TimeSpan timeout)
     {
-        using var response = await DownloadHttpClient.GetAsync(request.SourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        using var client = CreateDownloadHttpClient(timeout);
+        using var response = await client.GetAsync(request.SourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         await using var sourceStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
@@ -1004,6 +1032,18 @@ internal sealed class FrontendManagedModpackInstallTask(
                 "0 B/s",
                 1,
                 null));
+    }
+
+    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
+    {
+        var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
+        return new HttpClient(new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+        })
+        {
+            Timeout = safeTimeout
+        };
     }
 
     private void UpdateFromInstallStatus(FrontendModpackInstallStatus status)

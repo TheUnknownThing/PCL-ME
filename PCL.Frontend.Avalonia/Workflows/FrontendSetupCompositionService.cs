@@ -205,6 +205,7 @@ internal static class FrontendSetupCompositionService
             VersionSourceIndex: ReadValue(sharedConfig, "ToolDownloadVersion", 1),
             DownloadThreadLimit: ReadValue(sharedConfig, "ToolDownloadThread", 63),
             DownloadSpeedLimit: ReadValue(sharedConfig, "ToolDownloadSpeed", 42),
+            DownloadTimeoutSeconds: ReadValue(sharedConfig, "ToolDownloadTimeout", 8),
             AutoSelectNewInstance: ReadValue(sharedConfig, "ToolDownloadAutoSelectVersion", true),
             UpgradePartialAuthlib: ReadValue(sharedConfig, "ToolFixAuthlib", true),
             CommunityDownloadSourceIndex: ReadValue(sharedConfig, "ToolDownloadMod", 1),

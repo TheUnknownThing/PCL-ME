@@ -739,6 +739,7 @@ internal sealed partial class FrontendShellViewModel
                 $"下载资源文件：{Path.GetFileNameWithoutExtension(targetPath)}",
                 entry.Target,
                 targetPath,
+                ResolveDownloadRequestTimeout(),
                 onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
                 onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
                 onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
@@ -819,6 +820,7 @@ internal sealed partial class FrontendShellViewModel
                 _communityProjectState.IconPath,
                 description,
                 _selectedCommunityDownloadSourceIndex),
+            ResolveDownloadRequestTimeout(),
             onStarted: filePath =>
             {
                 Dispatcher.UIThread.Post(() =>
@@ -1494,24 +1496,23 @@ internal sealed partial class FrontendShellViewModel
             _ => value.ToString()
         };
     }
+
+    private TimeSpan ResolveDownloadRequestTimeout()
+    {
+        var seconds = Math.Clamp((int)Math.Round(DownloadTimeoutSeconds), 1, 60);
+        return TimeSpan.FromSeconds(seconds);
+    }
 }
 
 internal sealed class FrontendManagedFileDownloadTask(
     string title,
     string sourceUrl,
     string targetPath,
+    TimeSpan requestTimeout,
     Action<string>? onStarted = null,
     Action<string>? onCompleted = null,
     Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskTelemetry, ITaskCancelable
 {
-    private static readonly HttpClient DownloadHttpClient = new(new SocketsHttpHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-    })
-    {
-        Timeout = TimeSpan.FromMinutes(15)
-    };
-
     private readonly CancellationTokenSource _cancellation = new();
     private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", 1, null);
 
@@ -1538,7 +1539,8 @@ internal sealed class FrontendManagedFileDownloadTask(
 
         try
         {
-            using var response = await DownloadHttpClient.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
+            using var client = CreateDownloadHttpClient(requestTimeout);
+            using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
             response.EnsureSuccessStatusCode();
 
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
@@ -1604,6 +1606,18 @@ internal sealed class FrontendManagedFileDownloadTask(
             onFailed?.Invoke($"{Path.GetFileName(targetPath)} 下载失败");
             throw;
         }
+    }
+
+    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
+    {
+        var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
+        return new HttpClient(new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+        })
+        {
+            Timeout = safeTimeout
+        };
     }
 
     private void CleanupPartialDownload()
