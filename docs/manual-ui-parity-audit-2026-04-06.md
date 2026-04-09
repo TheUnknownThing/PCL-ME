@@ -7,7 +7,7 @@ Date: 2026-04-06
 Manual side-by-side comparison between:
 
 - left: gold implementation
-- right: current cross-platform implementation in `PCL.Frontend.Spike`
+- right: current cross-platform implementation in `PCL.Frontend.Avalonia`
 
 Test method:
 
@@ -66,7 +66,7 @@ Right-side gaps:
 
 - Opens a different shell-style surface with large explanatory cards, metadata cards, and an activity log. This does not match the gold instance selector.
 - The title bar/header is visibly broken or truncated instead of cleanly presenting `实例选择`.
-- The instance root path points to the repo build output under `PCL.Frontend.Spike/bin/Debug/net10.0/.minecraft/`, which is not an expected launcher-facing default.
+- The instance root path points to the repo build output under `PCL.Frontend.Avalonia/bin/Debug/net10.0/.minecraft/`, which is not an expected launcher-facing default.
 - Empty-state actions differ. The right page emphasizes search/refresh/clear-filter rather than the gold page's simple empty-state flow.
 - Extra floating buttons are still present on this surface.
 

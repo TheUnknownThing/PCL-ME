@@ -14,8 +14,8 @@ The host-shell refactor established swappable standard-shell hosts. This documen
 
 Even after the host swap refactor, CE still carries more rendering weight than `PCL.Neo` because several routes still resolve through a legacy compatibility right pane:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/LegacyStandardShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/LegacyStandardShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
 
 That compatibility path still hosts a very large right-side view and keeps route-family logic concentrated in one place.
 
@@ -42,31 +42,31 @@ Primary `PCL.Neo` references:
 
 Primary CE implementation files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/LegacyStandardShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.ShellPanes.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/MainWindow.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/MainWindow.axaml.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/LegacyStandardShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.ShellPanes.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Navigation.cs`
 
 Large CE view files to target next:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceSetupShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceOverviewShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceResourceShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceExportShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceInstallShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/VersionSaveDatapackShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceSetupShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceOverviewShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceResourceShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceExportShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceInstallShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/VersionSaveDatapackShellRightPaneView.axaml`
 
 Large CE view-model partials that still influence UI weight:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.DownloadResourceCatalog.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceContent.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SetupComposition.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.DownloadResourceCatalog.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Prompts.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.InstanceContent.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.SetupComposition.cs`
 
 ## Performance Targets
 
@@ -176,9 +176,9 @@ Scope:
 
 Primary files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.ShellPanes.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/LegacyStandardShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.ShellPanes.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/LegacyStandardShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
 
 Deliverables:
 
@@ -228,10 +228,10 @@ Scope:
 
 Primary files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SetupComposition.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SetupSettings.cs`
-- new files under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.SetupComposition.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.SetupSettings.cs`
+- new files under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/`
 
 Deliverables:
 
@@ -269,11 +269,11 @@ Scope:
 
 Primary files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.DownloadResourceCatalog.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.ToolSurfaces.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.ToolsComposition.cs`
-- new files under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.DownloadResourceCatalog.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.ToolSurfaces.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.ToolsComposition.cs`
+- new files under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/`
 
 Deliverables:
 
@@ -294,7 +294,7 @@ Status update:
 - Completed on 2026-04-06.
 - Added dedicated right-pane views for download install, download catalog, download resource, download favorites, tools game link, and tools test.
 - Removed the download/tools surface blocks from `PclShellContentPanel.axaml`, so the compatibility panel no longer carries Engineer C routes.
-- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the extraction.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed after the extraction.
 
 ### Workstream D: Second-Pass Decomposition of Large Dedicated Panes
 
@@ -305,9 +305,9 @@ Owner:
 Status:
 
 - Completed on April 6, 2026.
-- Reduced the route-host files for instance setup, overview, resource, export, install, and version-save datapack panes to thin shell hosts backed by focused section controls under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/Sections/`.
+- Reduced the route-host files for instance setup, overview, resource, export, install, and version-save datapack panes to thin shell hosts backed by focused section controls under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/Sections/`.
 - Extracted a shared `ResourceEntryCardView` for the duplicated resource/datapack entry rows, while keeping route-specific headers, empty states, and option groups in focused section controls.
-- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the decomposition.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed after the decomposition.
 
 Goal:
 
@@ -315,12 +315,12 @@ Goal:
 
 Priority files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceSetupShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceOverviewShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceResourceShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceExportShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/InstanceInstallShellRightPaneView.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/VersionSaveDatapackShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceSetupShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceOverviewShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceResourceShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceExportShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/InstanceInstallShellRightPaneView.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/VersionSaveDatapackShellRightPaneView.axaml`
 
 Suggested decomposition pattern:
 
@@ -353,7 +353,7 @@ Status:
 - Completed on April 6, 2026.
 - Route changes now resolve the standard-shell pane descriptors before route-family refresh logic runs, and only the active right-pane family is refreshed during navigation.
 - Removed the shell-level setup/download/tools compatibility booleans in favor of descriptor-kind checks, and narrowed collection-state notifications to the active right pane instead of broadcasting every pane-family flag on each route change.
-- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the cleanup.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed after the cleanup.
 
 Goal:
 
@@ -368,13 +368,13 @@ Scope:
 
 Primary files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.DownloadResourceCatalog.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceContent.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Navigation.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.DownloadResourceCatalog.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Prompts.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.InstanceContent.cs`
 
 Deliverables:
 
@@ -401,7 +401,7 @@ Status:
 - Completed on April 6, 2026.
 - Centralized standard-shell right-pane construction in `ShellPaneTemplateRegistry`, so new pane types now land through one shared registration/factory path instead of duplicating template and VM-resolution edits.
 - Added a reusable `PclActionSummaryRow` control for the repeated catalog/favorites action rows to keep shared right-pane list sections visually aligned without growing route hosts again.
-- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after the cleanup.
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed after the cleanup.
 
 Goal:
 
@@ -415,9 +415,9 @@ Scope:
 
 Primary files:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/ShellPaneTemplateRegistry.cs`
-- new controls under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/`
-- optionally `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/App.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/ShellPaneTemplateRegistry.cs`
+- new controls under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/`
+- optionally `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/App.axaml`
 
 Deliverables:
 
@@ -516,4 +516,4 @@ Success criteria:
 - route family or pane slice is no longer heavier than necessary
 - no active rendering path depends on hidden legacy sections for that slice
 - no change alters the visual style away from the current `PCL.Neo`-aligned shell
-- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes
+- `dotnet build /Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passes

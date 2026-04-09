@@ -1,0 +1,42 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.VersionSaveDatapackEmptyStateSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard IsVisible="{Binding HasNoVersionSaveDatapackEntries}" ContentMargin="20,17,20,17">
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="10">
+        <TextBlock
+            HorizontalAlignment="Center"
+            Foreground="#4B5968"
+            FontSize="19"
+            Text="尚未安装数据包" />
+        <Border Height="2" Background="#D5E6FD" />
+        <TextBlock
+            Foreground="#677789"
+            FontSize="12.5"
+            Text="你可以从已经下载好的文件安装数据包。数据包需要放置在存档的 datapacks 文件夹中才能生效。"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+        <WrapPanel HorizontalAlignment="Center">
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+              ColorType="Highlight"
+              Text="从文件安装" />
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding DownloadVersionSaveDatapackCommand}"
+              Text="下载新数据包" />
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+              Text="打开文件夹" />
+        </WrapPanel>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

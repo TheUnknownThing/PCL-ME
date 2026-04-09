@@ -7,7 +7,7 @@
 
 ## Title Bar
 
-Defined primarily in `PCL.Frontend.Spike/Desktop/MainWindow.axaml`
+Defined primarily in `PCL.Frontend.Avalonia/Desktop/MainWindow.axaml`
 
 [x] When toggling modes, the white backdrop should fade in instead of popping in without animation.<br>
 [x] Remove the "Maximize" button from the title bar.<br>

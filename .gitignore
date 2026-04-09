@@ -347,9 +347,10 @@ MaskFiles/
 
 **/.DS_Store
 
-# Temp test files
+# Temp test files and old frontend implementation
 
-.spike-mc/
+.avalonia-mc/
+PCL.Frontend.WPF/
 
 # IDE
 .vscode/

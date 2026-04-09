@@ -1,0 +1,78 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://PCL.Frontend.Avalonia/Desktop/Styles/Colors.axaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <FontFamily x:Key="LaunchFontFamily">avares://PCL.Frontend.Avalonia/Assets/Fonts#HarmonyOS Sans, Microsoft YaHei UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Source Han Sans CN, WenQuanYi Micro Hei, sans-serif</FontFamily>
+
+  <SolidColorBrush x:Key="ComboBoxBackground">#55FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackgroundPressed">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackgroundDisabled">#FFEBEBEB</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused">#FFFFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused">#FF1370F3</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused">#FF96C0F9</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBorderBrush">#FF96C0F9</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver">#FF4890F5</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBorderBrushPressed">#FF1370F3</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled">#FFCCCCCC</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxForeground">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxForegroundDisabled">#FFA6A6A6</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxForegroundFocused">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground">#FF748396</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundFocusedPressed">#FF748396</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground">#FF5E6E82</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxEditableDropDownGlyphForeground">#FF5E6E82</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundDisabled">#FFA8B5C5</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused">#FF1370F3</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocusedPressed">#FF0B5BCB</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownBackground">#FFFFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownForeground">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush">#FF96C0F9</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed">#FFE0EAFD</SolidColorBrush>
+  <Thickness x:Key="ComboBoxDropdownBorderThickness">1</Thickness>
+
+  <SolidColorBrush x:Key="ComboBoxItemForeground">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundPressed">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled">#FFA6A6A6</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelected">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedDisabled">#FFA6A6A6</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackground">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#FFEAF2FE</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#FFD5E6FD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundDisabled">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#FFD5E6FD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedUnfocused">#FFD5E6FD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed">#FFBFD9FC</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver">#FFDDEBFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedDisabled">#FFF0F0F0</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrush">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushPointerOver">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushPressed">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushDisabled">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelected">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedUnfocused">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPointerOver">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedDisabled">#00FFFFFF</SolidColorBrush>
+
+  <SolidColorBrush x:Key="TextFieldBackground">#55FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBackgroundFocused">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBackgroundDisabled">#FFEBEBEB</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBorderBrush">#FF96C0F9</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBorderBrushPointerOver">#FF4890F5</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBorderBrushFocused">#FF1370F3</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBorderBrushDisabled">#FFCCCCCC</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldForeground">#FF343D4A</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldForegroundDisabled">#FFA6A6A6</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldSelectionBrush">#FF1370F3</SolidColorBrush>
+</ResourceDictionary>

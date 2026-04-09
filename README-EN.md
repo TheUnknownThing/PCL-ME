@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="Plain Craft Launcher 2/Images/icon.ico" alt="Logo" width="80" height="80">
+<img src="PCL.Frontend.WPF/Images/icon.ico" alt="Logo" width="80" height="80">
 
 # PCL Community Edition
 
@@ -56,7 +56,7 @@ You can still try using the latest launcher version on unsupported platforms, bu
 
 ## 🔒 License
 
-- `Plain Craft Launcher 2/` uses [Custom License](https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/LICENCE)
+- `PCL.Frontend.WPF/` uses [Custom License](https://github.com/PCL-Community/PCL-CE/blob/dev/PCL.Frontend.WPF/LICENCE)
 - `All other directories` use [Apache License 2.0](https://github.com/PCL-Community/PCL-CE/blob/dev/LICENSE)
 
 ## 🌟 Statistic

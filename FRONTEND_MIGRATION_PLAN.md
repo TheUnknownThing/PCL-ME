@@ -79,7 +79,7 @@ What that means today:
 
 ## Repo Boundaries
 
-### `PCL.Frontend.Spike`
+### `PCL.Frontend.Avalonia`
 
 Owns:
 
@@ -103,7 +103,7 @@ Own:
 - runtime state services
 - cross-platform abstractions where possible
 
-### `Plain Craft Launcher 2`
+### `PCL.Frontend.WPF`
 
 Still owns:
 
@@ -316,7 +316,7 @@ Completed in this track:
 
 Manual verification completed on this track:
 
-1. Built `PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` successfully on macOS.
+1. Built `PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` successfully on macOS.
 2. Ran an ad hoc verification harness against the built frontend assembly.
 3. Confirmed the adapter resolves launcher app data to `~/.config/PCL` on macOS.
 4. Confirmed shortcut creation emits a real `.command` file with executable Unix mode bits.
@@ -407,18 +407,18 @@ Status on 2026-04-04:
 
 Completed in this track:
 
-- `PCL.Frontend.Spike` now carries packaging metadata, the copied launcher icon, and published launcher assets so packaged builds keep using the real copied images, help archive, homepage template, and `metadata.json`
-- `PCL.Frontend.Spike/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` outputs under `artifacts/frontend-packages/`
+- `PCL.Frontend.Avalonia` now carries packaging metadata, the copied launcher icon, and published launcher assets so packaged builds keep using the real copied images, help archive, homepage template, and `metadata.json`
+- `PCL.Frontend.Avalonia/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` outputs under `artifacts/frontend-packages/`
 - macOS packaging now emits `Plain Craft Launcher Community Edition.app` with an internal `PCLLauncher` stub that starts the Avalonia shell through `app --host-env true`
 - Linux packaging now emits a tarball with the published frontend, copied launcher icon, `launch-pcl-ce.sh`, and a `.desktop` launcher entry
 - Windows packaging now emits a zip archive with the published frontend plus `Launch Plain Craft Launcher Community Edition.vbs` as a launcher entry point that preserves the CLI binary behavior
-- packaged startup no longer depends on repo-relative `Plain Craft Launcher 2/...` paths because the frontend now resolves copied launcher assets from `LauncherAssets/` in publish output
+- packaged startup no longer depends on repo-relative `PCL.Frontend.WPF/...` paths because the frontend now resolves copied launcher assets from `LauncherAssets/` in publish output
 
 Manual verification completed on this track:
 
-1. `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS on 2026-04-05 after the packaging changes landed.
-2. `./PCL.Frontend.Spike/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`.
-3. The packaged macOS launcher stub at `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started the packaged frontend process as `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Spike app --host-env true`.
+1. `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed on macOS on 2026-04-05 after the packaging changes landed.
+2. `./PCL.Frontend.Avalonia/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`.
+3. The packaged macOS launcher stub at `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started the packaged frontend process as `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Avalonia app --host-env true`.
 4. That macOS packaged startup smoke test exited without the earlier `metadata.json` startup failure once the copied launcher assets were included in publish output.
 5. The packaged Linux output contains `launch-pcl-ce.sh` plus `Plain Craft Launcher Community Edition.desktop`, and the packaged Windows output contains `Launch Plain Craft Launcher Community Edition.vbs`.
 
@@ -518,7 +518,7 @@ The frontend migration is complete when:
 
 This is the minimum review checklist engineers should keep green while migrating.
 
-1. `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj`
+1. `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj`
 2. Open the desktop shell entry and navigate all major route groups.
 3. Validate at least one migrated action from the changed route family.
 4. Confirm real files/config/runtime state are being used.
@@ -526,12 +526,12 @@ This is the minimum review checklist engineers should keep green while migrating
 
 Verification note:
 
-- in the current workspace, `dotnet run PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` may enter the inspection/replay host instead of the interactive desktop shell, so route-click verification should be done from the desktop app entry rather than assuming the CLI host is the real UI path
+- in the current workspace, `dotnet run PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` may enter the inspection/replay host instead of the interactive desktop shell, so route-click verification should be done from the desktop app entry rather than assuming the CLI host is the real UI path
 
 Status on 2026-04-07:
 
 - the copied tools test surface now matches the gold `PageToolsTest.xaml` button sizing more closely, restoring the original `35`-high action buttons and toolbox spacing for 百宝箱, 下载自定义文件, 下载正版玩家的皮肤, 成就生成器, and 头像生成器 actions
-- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed after that UI parity pass; the existing nullable warning in `FrontendSystemMemoryService` remains unchanged
+- `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed after that UI parity pass; the existing nullable warning in `FrontendSystemMemoryService` remains unchanged
 
 ## Commit Guidance
 
@@ -552,7 +552,7 @@ Avoid:
 
 ## Bottom Line
 
-The work should now feel like product migration, not spike extension.
+The work should now feel like product migration, not avalonia extension.
 
 The next engineers should keep asking:
 

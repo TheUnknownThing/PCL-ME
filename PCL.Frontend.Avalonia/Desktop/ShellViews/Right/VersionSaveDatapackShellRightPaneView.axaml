@@ -1,0 +1,16 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.VersionSaveDatapackShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
+    DataContext="{Binding Shell}">
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowVersionSaveDatapackContent}">
+      <StackPanel Margin="25,10,25,10" Spacing="15">
+        <sections:VersionSaveDatapackHeaderSection />
+        <sections:VersionSaveDatapackEntriesSection />
+      </StackPanel>
+    </ScrollViewer>
+    <sections:VersionSaveDatapackEmptyStateSection HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" IsVisible="{Binding ShowVersionSaveDatapackEmptyState}" />
+  </Grid>
+</UserControl>

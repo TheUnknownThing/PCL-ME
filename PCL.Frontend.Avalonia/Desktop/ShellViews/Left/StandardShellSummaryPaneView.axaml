@@ -1,0 +1,81 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Left.StandardShellSummaryPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="18,20,18,18" Spacing="15">
+      <controls:PclCard Header="当前页面" ContentMargin="18,14,18,18">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="10">
+            <TextBlock
+                Foreground="#1370F3"
+                FontSize="12"
+                Text="{Binding Eyebrow}" />
+            <TextBlock
+                Foreground="#343D4A"
+                FontSize="22"
+                FontWeight="SemiLight"
+                Text="{Binding Title}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Foreground="#677789"
+                FontSize="12.5"
+                Text="{Binding Description}"
+                TextWrapping="Wrap" />
+
+            <Border
+                Padding="12,10"
+                Background="#EEF4FD"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="4">
+              <StackPanel Spacing="6">
+                <TextBlock
+                    Foreground="#404040"
+                    FontSize="11.5"
+                    Text="{Binding BreadcrumbTrail}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Foreground="#7D8897"
+                    FontSize="11"
+                    Text="{Binding SurfaceMeta}"
+                    TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="关键信息" IsVisible="{Binding HasSurfaceFacts}" ContentMargin="16,38,16,16">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding SurfaceFacts}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,*">
+                  <Border
+                      Width="4"
+                      Margin="0,1,10,1"
+                      Background="{Binding AccentBrush}"
+                      CornerRadius="2" />
+                  <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock
+                        Foreground="#7D8897"
+                        FontSize="11.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Foreground="{Binding ForegroundBrush}"
+                        FontSize="13"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

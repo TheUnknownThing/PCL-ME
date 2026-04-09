@@ -1,0 +1,29 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.VersionSaveDatapackEntriesSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections">
+  <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding ShowVersionSaveDatapackContent}">
+    <controls:PclCard.CardContent>
+      <Grid RowDefinitions="Auto,12,Auto">
+        <controls:PclButton
+            Grid.Row="0"
+            Width="110"
+            HorizontalAlignment="Right"
+            Text="排序：资源名称" />
+
+        <ItemsControl
+            Grid.Row="2"
+            ItemsSource="{Binding VersionSaveDatapackEntries}"
+            Padding="0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <sections:ResourceEntryCardView />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

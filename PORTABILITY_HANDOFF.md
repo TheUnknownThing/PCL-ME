@@ -6,7 +6,7 @@ Status as of 2026-04-05:
 
 - the portable backend is real
 - the Avalonia replacement shell is real
-- copied launcher UI exists for most major routes in `PCL.Frontend.Spike`
+- copied launcher UI exists for most major routes in `PCL.Frontend.Avalonia`
 - startup, prompt, launch, setup, instance, download, and version-saves composition are now partially or mostly runtime-backed
 - the tools route family now has a dedicated runtime composition path
 - instance resource/server/export surfaces now perform several real file, clipboard, and archive actions from the replacement shell
@@ -19,7 +19,7 @@ Status as of 2026-04-05:
 - download modpack install now copies a local pack into the launcher `versions` folder from the replacement shell
 - packaged frontend builds now exist for `osx-arm64`, `linux-x64`, and `win-x64`, and the packaged macOS app now starts the real Avalonia shell path instead of falling back to the CLI default
 - the repo is past the “can this work outside WPF?” stage
-- the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
+- the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived avalonia
 
 The important change in direction is this:
 
@@ -41,7 +41,7 @@ In concrete terms, “done” means:
 - the Avalonia shell can boot, navigate, configure, download, launch, diagnose, and manage instances with real behavior
 - the remaining WPF-specific logic is either deleted or reduced to platform-specific adapter implementations
 - cross-platform differences are isolated behind backend or shell action services instead of page-local UI code
-- reviewers can validate real launcher behavior from the desktop app without depending on replay-only spike paths
+- reviewers can validate real launcher behavior from the desktop app without depending on replay-only avalonia paths
 
 ## Current Repo Map
 
@@ -61,7 +61,7 @@ In concrete terms, “done” means:
 - portable linked projection of backend-safe code from `PCL.Core`
 - not a separate implementation tree
 
-### `PCL.Frontend.Spike`
+### `PCL.Frontend.Avalonia`
 
 - current replacement frontend
 - contains:
@@ -70,7 +70,7 @@ In concrete terms, “done” means:
   - copied launcher UI
   - frontend-side composition and shell action adapters
 
-### `Plain Craft Launcher 2`
+### `PCL.Frontend.WPF`
 
 - legacy WPF frontend
 - still the visual and behavioral source of truth
@@ -89,18 +89,18 @@ These areas are no longer the primary risk:
 - download page runtime composition
 - version-saves runtime composition
 - tools route runtime composition
-- frontend adapter cleanup between runtime composition and inspection-only spike helpers
+- frontend adapter cleanup between runtime composition and inspection-only avalonia helpers
 
 Important frontend-side files:
 
-- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendDownloadCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendToolsCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendVersionSavesCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.*.cs`
-- `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
+- `PCL.Frontend.Avalonia/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Avalonia/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Avalonia/Workflows/FrontendDownloadCompositionService.cs`
+- `PCL.Frontend.Avalonia/Workflows/FrontendToolsCompositionService.cs`
+- `PCL.Frontend.Avalonia/Workflows/FrontendVersionSavesCompositionService.cs`
+- `PCL.Frontend.Avalonia/Workflows/FrontendShellActionService.cs`
+- `PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.*.cs`
+- `PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
 
 Important backend-side directories:
 
@@ -188,7 +188,7 @@ Goal:
 
 Done when:
 
-- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes
+- `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passes
 - the shell opens and major route groups still render
 
 Manual verification:
@@ -318,8 +318,8 @@ Done when:
 Status on 2026-04-04:
 
 - complete in `codex/frontend-track4-adapters` at the implementation level
-- launcher app-data path selection, external target opening, shortcut creation, command script extension selection, Unix executable marking, and default Java path hints now route through `PCL.Frontend.Spike/Workflows/FrontendPlatformAdapter.cs`
-- open-file/open-folder picker and clipboard behavior continue to route through `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- launcher app-data path selection, external target opening, shortcut creation, command script extension selection, Unix executable marking, and default Java path hints now route through `PCL.Frontend.Avalonia/Workflows/FrontendPlatformAdapter.cs`
+- open-file/open-folder picker and clipboard behavior continue to route through `PCL.Frontend.Avalonia/Workflows/FrontendShellActionService.cs`
 - stored launcher key envelope decoding now routes through `PCL.Core/App/Essentials/LauncherStoredKeyEnvelopeService.cs` instead of frontend-local Windows-only decode branches
 - migrated frontend view-model code no longer carries inline platform branches for shortcut creation, exported launch script naming, or default Java path selection
 
@@ -330,7 +330,7 @@ Manual verification:
 
 Verified on 2026-04-04:
 
-- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS
+- `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed on macOS
 - an ad hoc verification harness against the built frontend assembly resolved launcher app data to `~/.config/PCL`
 - the same harness created a real `.command` shortcut file and confirmed executable Unix mode bits
 - the same harness marked an exported script file executable on macOS
@@ -363,7 +363,7 @@ Status on 2026-04-04:
 
 Verified on 2026-04-05:
 
-- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after wiring the copied install cards to the new workflow
+- `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed on macOS after wiring the copied install cards to the new workflow
 - the frontend now owns the copied download/instance install selection flow for Minecraft, Fabric, Legacy Fabric, Quilt, LabyMod, Fabric API, Legacy Fabric API, and QFAPI / QSL through `FrontendInstallWorkflowService` and the shell dialog adapters
 - a real verification pass against `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft` created a temporary `versions/codex-track5-verify/codex-track5-verify.json`, first as Fabric with `mods/fabric-api-0.138.4+1.21.10.jar`, then reapplied the same instance as Quilt with `mods/quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
 - the managed install workflow reused 4,397 existing files on the first apply and 4,478 existing files on the second apply while switching the loader manifest and managed addon jar without falling back to WPF code
@@ -397,16 +397,16 @@ Done when:
 Status on 2026-04-05:
 
 - frontend packaging landed in `c21e1e7d` `feat: package frontend launcher builds`
-- `PCL.Frontend.Spike/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` frontend builds under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`
-- the packaged frontend now carries `LauncherAssets/metadata.json`, the copied `Images` tree, and the copied `Resources/Help.zip` plus `Resources/Custom.xml`, so packaged startup no longer depends on source-tree-relative `Plain Craft Launcher 2/...` paths
+- `PCL.Frontend.Avalonia/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` frontend builds under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`
+- the packaged frontend now carries `LauncherAssets/metadata.json`, the copied `Images` tree, and the copied `Resources/Help.zip` plus `Resources/Custom.xml`, so packaged startup no longer depends on source-tree-relative `PCL.Frontend.WPF/...` paths
 - the macOS package now emits `Plain Craft Launcher Community Edition.app` with a `Contents/MacOS/PCLLauncher` stub that starts the replacement shell through `app --host-env true`
 - the Linux package now emits `launch-pcl-ce.sh` plus `Plain Craft Launcher Community Edition.desktop`, and the Windows package now emits `Launch Plain Craft Launcher Community Edition.vbs`
 
 Verified on 2026-04-05:
 
-- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after the Track 6 packaging patch
-- `./PCL.Frontend.Spike/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts
-- launching `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Spike app --host-env true`
+- `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passed on macOS after the Track 6 packaging patch
+- `./PCL.Frontend.Avalonia/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts
+- launching `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Avalonia app --host-env true`
 - that packaged macOS startup smoke test produced no error output after the copied launcher assets were included in publish output
 - Windows and Linux package entry-point files are present in the produced artifacts, but runtime validation on real Windows and Linux hosts is still pending
 
@@ -419,7 +419,7 @@ Manual verification:
 
 The next engineers should not take “finish the launcher” as one task. They should take one of these.
 
-### Slice A. Launch execution cutover spike-to-real pass
+### Slice A. Launch execution cutover avalonia-to-real pass
 
 Scope:
 
@@ -466,7 +466,7 @@ The frontend migration should be considered complete only when all of the follow
 - cross-platform shell behavior is explicit and tested
 - WPF is no longer needed for normal operation
 - the copied launcher design language is preserved
-- runtime behavior is backed by portable services and adapters, not spike fixtures
+- runtime behavior is backed by portable services and adapters, not avalonia fixtures
 
 ## Suggested Commit Style
 
@@ -492,7 +492,7 @@ Avoid:
 - `5b0ac628` `feat: report toolbox memory diagnostics`
 - `ef3c0b92` `feat: wire instance overview runtime actions`
 - `91228f81` `feat: add frontend shell dialog adapters`
-- `fb4c56c5` `refactor: isolate inspection-only spike workflows`
+- `fb4c56c5` `refactor: isolate inspection-only avalonia workflows`
 - `40467f7d` `refactor: add frontend inspection composition boundary`
 - `c32d72b1` `docs: mark frontend phase 5 complete`
 - `311b88b3` `feat: wire save detail and download surfaces`

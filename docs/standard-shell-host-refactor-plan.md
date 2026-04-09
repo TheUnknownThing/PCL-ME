@@ -26,8 +26,8 @@ Completed in the current slice:
   - exact right-pane kind
   - route-family group
   - compatibility-host flag for unmigrated views
-- Pane VM contract files were added under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/ShellPanes/`.
-- Pane-to-view registration now lives centrally in `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/ShellPaneTemplateRegistry.cs`.
+- Pane VM contract files were added under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/ShellPanes/`.
+- Pane-to-view registration now lives centrally in `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/ShellPaneTemplateRegistry.cs`.
 - `App` now registers shell pane templates through that dedicated registry instead of accumulating inline `Application.DataTemplates` entries in `App.axaml`.
 - The standard-shell left host now resolves into dedicated pane variants:
   - navigation list pane
@@ -43,7 +43,7 @@ Completed in the current slice:
   - the full instance family
 - Workstream G cleanup also removed the corresponding migrated-family `IsXxxSurface` properties and `RaisePropertyChanged(nameof(IsXxxSurface))` calls.
 - Remaining standard-shell right routes still use a temporary compatibility pane that hosts a reduced `PclShellContentPanel` for the not-yet-extracted setup/download/tools routes.
-- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes after the host-contract changes.
+- `dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj` passes after the host-contract changes.
 
 Current migration state:
 
@@ -64,13 +64,13 @@ These are the primary implementation references from `PCL.Neo`:
 
 These are the primary CE files to refactor:
 
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclLaunchLeftPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/MainWindow.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/MainWindow.axaml.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclLaunchLeftPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclLaunchRightPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Navigation.cs`
 
 ## Why This Refactor Is Needed
 
@@ -148,8 +148,8 @@ Scope:
 - Preserve host-level animation entry points in `MainWindow.axaml.cs`.
 
 Files:
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/MainWindow.axaml.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/MainWindow.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/MainWindow.axaml.cs`
 
 Deliverables:
 - Standard shell hosts no longer directly hardwire `PclShellSidebarPanel` and `PclShellContentPanel`.
@@ -172,9 +172,9 @@ Scope:
 - Preserve current commands and collections for reuse.
 
 Files:
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
-- New files under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/ShellPanes/`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Navigation.cs`
+- New files under `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/ShellPanes/`
 
 Deliverables:
 - `FrontendShellViewModel` exposes current pane identities or pane VMs.
@@ -195,7 +195,7 @@ Scope:
 - Prefer DataTemplates or a dedicated registry over hardcoded XAML route switches.
 
 Files:
-- New registry or template files under `PCL.Frontend.Spike/Desktop/`
+- New registry or template files under `PCL.Frontend.Avalonia/Desktop/`
 - Possibly `App.axaml` if templates are registered globally
 
 Deliverables:
@@ -226,12 +226,12 @@ Suggested families:
 
 Files:
 - Source:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Setup*.cs`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Download*.cs`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Tool*.cs`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Setup*.cs`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Download*.cs`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Tool*.cs`
 - Target:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/`
 
 Deliverables:
 - Dedicated right-pane views for setup/download/tools.
@@ -258,11 +258,11 @@ Suggested families:
 
 Files:
 - Source:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Instance*.cs`
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.VersionSaves.cs`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Instance*.cs`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.VersionSaves.cs`
 - Target:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/`
 
 Deliverables:
 - Dedicated right-pane views for instance and version-saves routes.
@@ -288,9 +288,9 @@ Likely left pane types:
 
 Files:
 - Source:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellSidebarPanel.axaml`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellSidebarPanel.axaml`
 - Target:
-  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Left/`
+  - `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Left/`
 
 Deliverables:
 - Standard shell left side is rendered via pane host.
@@ -312,10 +312,10 @@ Scope:
 - Remove temporary compatibility shims after all pane routes are migrated.
 
 Files:
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/Controls/PclShellSidebarPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/ViewModels/FrontendShellViewModel.Navigation.cs`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellContentPanel.axaml`
+- `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/Controls/PclShellSidebarPanel.axaml`
 
 Deliverables:
 - Obsolete route boolean model removed or drastically reduced.
@@ -447,7 +447,7 @@ The refactor is complete when:
 
 Continue the migration by replacing the temporary right-pane compatibility path family-by-family:
 
-- extract setup/download/tools routes from `PclShellContentPanel.axaml` into `/Users/theunknownthing/PCL-CE/PCL.Frontend.Spike/Desktop/ShellViews/Right/`
+- extract setup/download/tools routes from `PclShellContentPanel.axaml` into `/Users/theunknownthing/PCL-CE/PCL.Frontend.Avalonia/Desktop/ShellViews/Right/`
 - extract instance/version-saves routes into the same host system
 - introduce additional dedicated left-pane variants only where the shared sidebar/overview pane becomes too conditional
 - remove compatibility shims and obsolete `IsXxxSurface` booleans only after all active standard-shell routes are off the monolith
