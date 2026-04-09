@@ -267,11 +267,16 @@ internal sealed partial class PclCard : UserControl
     private void RefreshState()
     {
         var isHeaderInteractive = ShowChevron || HeaderCommand is not null;
+        var idleBorderBrush = GetBrush("ColorBrushTransparent", "#00FFFFFF");
+        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver", "#94C5DFFE");
         var idleSurfaceBrush = GetBrush("ColorBrushMyCard", "#D2FBFBFB");
-        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#D2F8F8F8");
+        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#D2ECF3FB");
         var idleHeaderBrush = GetBrush("ColorBrush1", "#343D4A");
         var hoverHeaderBrush = GetBrush("ColorBrush2", "#0B5BCB");
 
+        CardBorder.BorderBrush = _isHovered
+            ? hoverBorderBrush
+            : idleBorderBrush;
         CardBorder.Background = _isHovered
             ? hoverSurfaceBrush
             : idleSurfaceBrush;
@@ -348,15 +353,15 @@ internal sealed partial class PclCard : UserControl
 
     private static BoxShadows CreateHoverBoxShadow()
     {
-        var edgeColor = WithAlpha(GetColor("ColorObject5", "#96C0F9"), 0x4A);
-        var shadowColor = WithAlpha(GetColor("ColorObject4", "#4890F5"), 0x28);
+        var edgeColor = WithAlpha(GetColor("ColorObject5", "#96C0F9"), 0x78);
+        var shadowColor = WithAlpha(GetColor("ColorObject3", "#1370F3"), 0x34);
 
         return new BoxShadows(
             new BoxShadow
             {
                 OffsetX = 0,
                 OffsetY = 0,
-                Blur = 0,
+                Blur = 2,
                 Spread = 1,
                 Color = edgeColor
             },
@@ -364,8 +369,8 @@ internal sealed partial class PclCard : UserControl
                 new BoxShadow
                 {
                     OffsetX = 0,
-                    OffsetY = 8,
-                    Blur = 20,
+                    OffsetY = 10,
+                    Blur = 24,
                     Spread = 0,
                     Color = shadowColor
                 }

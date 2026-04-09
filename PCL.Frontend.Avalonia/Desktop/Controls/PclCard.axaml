@@ -15,6 +15,7 @@
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
           <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
           <BoxShadowsTransition Property="BoxShadow" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
         </Transitions>
