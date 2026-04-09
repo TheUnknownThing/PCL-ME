@@ -1704,15 +1704,20 @@ internal sealed partial class FrontendShellViewModel
 
     private static IJavaParser? TryCreatePeHeaderParser()
     {
-        const string assemblyName = "PCL.Core";
         const string typeName = "PCL.Core.Minecraft.Java.Parser.PeHeaderParser";
 
         try
         {
-            var assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(candidate => string.Equals(candidate.GetName().Name, assemblyName, StringComparison.Ordinal))
-                ?? TryLoadPclCoreAssembly();
-            var parserType = assembly?.GetType(typeName, throwOnError: false);
+            var parserType = AppDomain.CurrentDomain.GetAssemblies()
+                .Select(candidate => candidate.GetType(typeName, throwOnError: false))
+                .FirstOrDefault(candidate => candidate is not null);
+
+            if (parserType is null)
+            {
+                parserType = TryLoadAssembly("PCL.Core.Foundation")?.GetType(typeName, throwOnError: false)
+                             ?? TryLoadAssembly("PCL.Core")?.GetType(typeName, throwOnError: false);
+            }
+
             if (parserType is null || !typeof(IJavaParser).IsAssignableFrom(parserType))
             {
                 return null;
@@ -1726,7 +1731,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private static Assembly? TryLoadPclCoreAssembly()
+    private static Assembly? TryLoadAssembly(string assemblyName)
     {
         var candidateRoots = new[]
         {
@@ -1739,7 +1744,8 @@ internal sealed partial class FrontendShellViewModel
         {
             foreach (var directory in EnumerateParentDirectories(root))
             {
-                var directPath = Path.Combine(directory, "PCL.Core.dll");
+                var assemblyFileName = $"{assemblyName}.dll";
+                var directPath = Path.Combine(directory, assemblyFileName);
                 if (seenPaths.Add(directPath) && File.Exists(directPath))
                 {
                     try
@@ -1751,13 +1757,13 @@ internal sealed partial class FrontendShellViewModel
                     }
                 }
 
-                var binDirectory = Path.Combine(directory, "PCL.Core", "bin");
+                var binDirectory = Path.Combine(directory, assemblyName, "bin");
                 if (!Directory.Exists(binDirectory))
                 {
                     continue;
                 }
 
-                foreach (var buildPath in Directory.EnumerateFiles(binDirectory, "PCL.Core.dll", SearchOption.AllDirectories)
+                foreach (var buildPath in Directory.EnumerateFiles(binDirectory, assemblyFileName, SearchOption.AllDirectories)
                              .OrderByDescending(path => File.GetLastWriteTimeUtc(path))
                              .Take(8))
                 {

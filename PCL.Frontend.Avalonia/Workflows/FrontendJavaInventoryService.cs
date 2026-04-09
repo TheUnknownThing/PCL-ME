@@ -3,7 +3,6 @@ using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
-using PCL.Core.Minecraft.Java.Scanner;
 using PCL.Core.Utils;
 
 namespace PCL.Frontend.Avalonia.Workflows;
@@ -241,15 +240,7 @@ internal static class FrontendJavaInventoryService
         IReadOnlyList<FrontendStoredJavaRuntime> scannedRuntimes;
         try
         {
-            var runtime = SystemJavaRuntimeEnvironment.Current;
-            var manager = new JavaManager(
-                JavaParser,
-                NullJavaStorage.Instance,
-                new DefaultJavaInstallationEvaluator(runtime),
-                new DefaultPathsScanner(runtime),
-                new PathEnvironmentScanner(runtime),
-                new WhereCommandScanner(runtime, new ProcessCommandRunner()));
-
+            var manager = JavaManagerFactory.CreateDefault();
             await manager.ScanJavaAsync(force: true).ConfigureAwait(false);
             scannedRuntimes = manager.GetSortedJavaList()
                 .Select(entry => new FrontendStoredJavaRuntime(

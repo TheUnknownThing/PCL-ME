@@ -1,15 +1,16 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using PCL.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 
 namespace PCL.Core.Minecraft.Java.Scanner;
 
 public class RegistryJavaScanner : IJavaScanner
 {
-    private static readonly string[] _RegistryPaths =
+    private static readonly string[] RegistryPaths =
     [
         @"SOFTWARE\JavaSoft\Java Development Kit",
         @"SOFTWARE\JavaSoft\Java Runtime Environment",
@@ -17,7 +18,7 @@ public class RegistryJavaScanner : IJavaScanner
         @"SOFTWARE\WOW6432Node\JavaSoft\Java Runtime Environment"
     ];
 
-    private static readonly string[] _BrandRegistryPaths =
+    private static readonly string[] BrandRegistryPaths =
     [
         @"SOFTWARE\Azul Systems\Zulu",
         @"SOFTWARE\BellSoft\Liberica"
@@ -25,10 +26,15 @@ public class RegistryJavaScanner : IJavaScanner
 
     public void Scan(ICollection<string> results)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
         try
         {
-            _ScanJavaSoftRegistry(results);
-            _ScanBrandRegistry(results);
+            ScanJavaSoftRegistry(results);
+            ScanBrandRegistry(results);
         }
         catch (Exception ex)
         {
@@ -36,42 +42,62 @@ public class RegistryJavaScanner : IJavaScanner
         }
     }
 
-    private static void _ScanJavaSoftRegistry(ICollection<string> results)
+    [SupportedOSPlatform("windows")]
+    private static void ScanJavaSoftRegistry(ICollection<string> results)
     {
-        foreach (var regPath in _RegistryPaths)
+        foreach (var regPath in RegistryPaths)
         {
             using var regKey = Registry.LocalMachine.OpenSubKey(regPath);
-            if (regKey == null) continue;
+            if (regKey is null)
+            {
+                continue;
+            }
 
             foreach (var subKeyName in regKey.GetSubKeyNames())
             {
                 using var subKey = regKey.OpenSubKey(subKeyName);
                 var javaHome = subKey?.GetValue("JavaHome") as string;
                 if (string.IsNullOrEmpty(javaHome) ||
-                    Path.GetInvalidPathChars().Any(c => javaHome.Contains(c))) continue;
+                    Path.GetInvalidPathChars().Any(c => javaHome.Contains(c)))
+                {
+                    continue;
+                }
 
                 var javaExePath = Path.Combine(javaHome, "bin", "java.exe");
-                if (File.Exists(javaExePath)) results.Add(javaExePath);
+                if (File.Exists(javaExePath))
+                {
+                    results.Add(javaExePath);
+                }
             }
         }
     }
 
-    private static void _ScanBrandRegistry(ICollection<string> results)
+    [SupportedOSPlatform("windows")]
+    private static void ScanBrandRegistry(ICollection<string> results)
     {
-        foreach (var keyPath in _BrandRegistryPaths)
+        foreach (var keyPath in BrandRegistryPaths)
         {
             using var brandKey = Registry.LocalMachine.OpenSubKey(keyPath);
-            if (brandKey == null) continue;
+            if (brandKey is null)
+            {
+                continue;
+            }
 
             foreach (var subKeyName in brandKey.GetSubKeyNames())
             {
                 using var subKey = brandKey.OpenSubKey(subKeyName);
                 var installPath = subKey?.GetValue("InstallationPath") as string;
                 if (string.IsNullOrEmpty(installPath) ||
-                    Path.GetInvalidPathChars().Any(c => installPath.Contains(c))) continue;
+                    Path.GetInvalidPathChars().Any(c => installPath.Contains(c)))
+                {
+                    continue;
+                }
 
                 var javaExePath = Path.Combine(installPath, "bin", "java.exe");
-                if (File.Exists(javaExePath)) results.Add(javaExePath);
+                if (File.Exists(javaExePath))
+                {
+                    results.Add(javaExePath);
+                }
             }
         }
     }

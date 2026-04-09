@@ -486,7 +486,10 @@ Status: completed
 Follow-up work after the initial repair lands.
 
 - Route Avalonia launch-time candidate discovery through a shared `JavaManager` inventory path that Avalonia can consume directly.
-- Portable scanner integration inside Avalonia is already implemented, but the initial version blocked shell construction by scanning synchronously during composition. That regression has been fixed locally by moving scan warm-up to the background and refreshing launch composition after cache population.
+  - Completed in the current refactor by moving the retained `PeHeaderParser`, `RegistryJavaScanner`, and `MicrosoftStoreJavaScanner` into `PCL.Core.Foundation`, then exposing a shared `JavaManagerFactory.CreateDefault(...)`.
+  - `PCL.Core.JavaService` now builds its manager through that factory with `StatesJavaStorage`.
+  - Avalonia background discovery now builds the same retained manager through that factory, so launch-time candidate discovery uses the same parser / scanner stack as the retained path, including Windows registry and Microsoft Store sources.
+- Portable scanner integration inside Avalonia is already implemented, but the initial version blocked shell construction by scanning synchronously during composition. That regression has been fixed by moving scan warm-up to the background and refreshing launch composition after cache population.
 - Consider adding HMCL-style special constraints incrementally:
   - Linux legacy-native Java 8 restriction
   - ARM64/x86 compatibility rules
