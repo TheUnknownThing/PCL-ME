@@ -178,9 +178,7 @@ internal sealed partial class FrontendShellViewModel
             return PclButtonColorState.Red;
         }
 
-        return optionCount > 1
-            ? PclButtonColorState.Highlight
-            : PclButtonColorState.Normal;
+        return PclButtonColorState.Highlight;
     }
 
     private async Task ApplyPromptOptionAsync(AvaloniaPromptLaneKind lane, string promptId, LauncherFrontendPromptOption option)

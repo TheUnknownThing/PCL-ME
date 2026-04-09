@@ -38,21 +38,25 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<ICommand?> AccessoryCommandProperty =
         AvaloniaProperty.Register<PclListItem, ICommand?>(nameof(AccessoryCommand));
 
-    private bool _isHovered;
     private bool _isPressed;
 
     public PclListItem()
     {
         InitializeComponent();
 
-        LayoutRoot.PointerEntered += (_, _) =>
+        AttachedToVisualTree += (_, _) =>
         {
-            _isHovered = true;
+            UpdateAccessory();
             RefreshVisualState();
         };
+        DataContextChanged += (_, _) =>
+        {
+            UpdateAccessory();
+            RefreshVisualState();
+        };
+        LayoutRoot.PropertyChanged += OnLayoutRootPropertyChanged;
         LayoutRoot.PointerExited += (_, _) =>
         {
-            _isHovered = false;
             _isPressed = false;
             RefreshVisualState();
         };
@@ -217,8 +221,9 @@ internal sealed partial class PclListItem : UserControl
     {
         var hasAccessory = !string.IsNullOrWhiteSpace(AccessoryIconData) && AccessoryCommand is not null;
         AccessoryButton.IsVisible = hasAccessory;
-        AccessoryButton.IsHitTestVisible = hasAccessory && (IsSelected || _isHovered);
-        AccessoryButton.Opacity = hasAccessory && (IsSelected || _isHovered) ? 1.0 : 0.0;
+        var isHovered = LayoutRoot.IsPointerOver;
+        AccessoryButton.IsHitTestVisible = hasAccessory && (IsSelected || isHovered);
+        AccessoryButton.Opacity = hasAccessory && (IsSelected || isHovered) ? 1.0 : 0.0;
         AccessoryPath.Data = hasAccessory ? Geometry.Parse(AccessoryIconData) : null;
     }
 
@@ -250,6 +255,21 @@ internal sealed partial class PclListItem : UserControl
         }
     }
 
+    private void OnLayoutRootPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+    {
+        if (change.Property != InputElement.IsPointerOverProperty)
+        {
+            return;
+        }
+
+        if (!LayoutRoot.IsPointerOver)
+        {
+            _isPressed = false;
+        }
+
+        RefreshVisualState();
+    }
+
     private IBrush GetBrush(string resourceKey, string fallback)
     {
         if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
@@ -263,10 +283,11 @@ internal sealed partial class PclListItem : UserControl
 
     private void RefreshVisualState()
     {
-        var showHighlight = IsSelected || _isHovered;
+        var isHovered = LayoutRoot.IsPointerOver;
+        var showHighlight = IsSelected || isHovered;
         RectBack.Opacity = showHighlight ? 1.0 : 0.0;
         RectBack.Background = IsSelected
-            ? _isHovered
+            ? isHovered
                 ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
                 : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
             : GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE");
@@ -280,11 +301,11 @@ internal sealed partial class PclListItem : UserControl
         LogoPath.Fill = IsSelected
             ? GetBrush("ColorBrush3", "#1370F3")
             : GetBrush("ColorBrushGray2", "#737373");
-        AccessoryPath.Fill = _isHovered
+        AccessoryPath.Fill = isHovered
             ? GetBrush("ColorBrush4", "#4890F5")
             : GetBrush("ColorBrush5", "#96C0F9");
-        AccessoryButton.IsHitTestVisible = AccessoryButton.IsVisible && (IsSelected || _isHovered);
-        AccessoryButton.Opacity = AccessoryButton.IsVisible && (IsSelected || _isHovered) ? 1.0 : 0.0;
+        AccessoryButton.IsHitTestVisible = AccessoryButton.IsVisible && (IsSelected || isHovered);
+        AccessoryButton.Opacity = AccessoryButton.IsVisible && (IsSelected || isHovered) ? 1.0 : 0.0;
         RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);
     }
 }
