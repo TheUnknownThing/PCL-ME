@@ -1,201 +1,208 @@
 using System.Text.Json;
-using PCL.Frontend.Avalonia.Desktop;
 using PCL.Frontend.Avalonia.Cli;
+using PCL.Frontend.Avalonia.Desktop;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Rendering;
 using PCL.Frontend.Avalonia.Serialization;
 using PCL.Frontend.Avalonia.Workflows;
 using PCL.Frontend.Avalonia.Workflows.Inspection;
 
-var parseResult = AvaloniaCommandParser.Parse(args);
-if (parseResult.ShowHelp)
+public partial class Program
 {
-    Console.WriteLine(AvaloniaCommandParser.GetUsageText());
-    return;
-}
-
-if (parseResult.ErrorMessage is not null || parseResult.Options is null)
-{
-    Console.Error.WriteLine(parseResult.ErrorMessage ?? "Unknown error.");
-    Console.WriteLine();
-    Console.WriteLine(AvaloniaCommandParser.GetUsageText());
-    Environment.ExitCode = 1;
-    return;
-}
-
-var options = parseResult.Options;
-if (options.Command == AvaloniaCommandKind.App)
-{
-    AvaloniaDesktopHost.Run(options);
-    return;
-}
-
-var payload = BuildPayload(options);
-
-if (options.Format == AvaloniaOutputFormat.Text)
-{
-    Console.WriteLine(AvaloniaTextRenderer.Render(payload));
-}
-else
-{
-    Console.WriteLine(JsonSerializer.Serialize(payload, CreateJsonOptions()));
-}
-
-static object BuildPayload(AvaloniaCommandOptions options)
-{
-    return options.Mode switch
+    [STAThread]
+    public static void Main(string[] args)
     {
-        AvaloniaOutputMode.Plan => BuildPlanPayload(options),
-        AvaloniaOutputMode.Run => BuildRunPayload(options),
-        AvaloniaOutputMode.Execute => BuildExecutePayload(options),
-        _ => throw new InvalidOperationException($"Unsupported mode '{options.Mode}'.")
-    };
-}
+        var parseResult = AvaloniaCommandParser.Parse(args);
+        if (parseResult.ShowHelp)
+        {
+            Console.WriteLine(AvaloniaCommandParser.GetUsageText());
+            return;
+        }
 
-static object BuildPlanPayload(AvaloniaCommandOptions options)
-{
-    var shellInputs = AvaloniaInputResolver.ResolveShellInputs(options);
-    var startupInputs = AvaloniaInputResolver.ResolveStartupInputs(options);
-    var launchInputs = AvaloniaInputResolver.ResolveLaunchInputs(options);
-    var crashInputs = AvaloniaInputResolver.ResolveCrashInputs(options);
+        if (parseResult.ErrorMessage is not null || parseResult.Options is null)
+        {
+            Console.Error.WriteLine(parseResult.ErrorMessage ?? "Unknown error.");
+            Console.WriteLine();
+            Console.WriteLine(AvaloniaCommandParser.GetUsageText());
+            Environment.ExitCode = 1;
+            return;
+        }
 
-    return options.Command switch
+        var options = parseResult.Options;
+        if (options.Command == AvaloniaCommandKind.App)
+        {
+            AvaloniaDesktopHost.Run(options);
+            return;
+        }
+
+        var payload = BuildPayload(options);
+
+        if (options.Format == AvaloniaOutputFormat.Text)
+        {
+            Console.WriteLine(AvaloniaTextRenderer.Render(payload));
+        }
+        else
+        {
+            Console.WriteLine(JsonSerializer.Serialize(payload, CreateJsonOptions()));
+        }
+    }
+
+    private static object BuildPayload(AvaloniaCommandOptions options)
     {
-        AvaloniaCommandKind.Startup => AvaloniaSampleFactory.BuildStartupPlan(startupInputs),
-        AvaloniaCommandKind.Shell => AvaloniaSampleFactory.BuildShellPlan(shellInputs),
-        AvaloniaCommandKind.Launch => AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
-        AvaloniaCommandKind.Crash => AvaloniaSampleFactory.BuildCrashPlan(crashInputs),
-        AvaloniaCommandKind.All => new AvaloniaPlanBundle(
-            AvaloniaSampleFactory.BuildStartupPlan(startupInputs),
-            AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
-            AvaloniaSampleFactory.BuildCrashPlan(crashInputs)),
-        _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
-    };
-}
+        return options.Mode switch
+        {
+            AvaloniaOutputMode.Plan => BuildPlanPayload(options),
+            AvaloniaOutputMode.Run => BuildRunPayload(options),
+            AvaloniaOutputMode.Execute => BuildExecutePayload(options),
+            _ => throw new InvalidOperationException($"Unsupported mode '{options.Mode}'.")
+        };
+    }
 
-static object BuildRunPayload(AvaloniaCommandOptions options)
-{
-    var shellInputs = AvaloniaInputResolver.ResolveShellInputs(options);
-    var startupInputs = AvaloniaInputResolver.ResolveStartupInputs(options);
-    var launchInputs = AvaloniaInputResolver.ResolveLaunchInputs(options);
-    var crashInputs = AvaloniaInputResolver.ResolveCrashInputs(options);
-
-    return options.Command switch
+    private static object BuildPlanPayload(AvaloniaCommandOptions options)
     {
-        AvaloniaCommandKind.Startup => AvaloniaRunner.BuildStartupRun(AvaloniaSampleFactory.BuildStartupPlan(startupInputs)),
-        AvaloniaCommandKind.Shell => AvaloniaRunner.BuildShellRun(AvaloniaSampleFactory.BuildShellPlan(shellInputs)),
-        AvaloniaCommandKind.Launch => AvaloniaRunner.BuildLaunchRun(
-            AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
-            options.JavaPromptDecision,
-            options.JavaDownloadState),
-        AvaloniaCommandKind.Crash => AvaloniaRunner.BuildCrashRun(
-            AvaloniaSampleFactory.BuildCrashPlan(crashInputs),
-            options.CrashAction),
-        AvaloniaCommandKind.All => new AvaloniaRunBundle(
-            AvaloniaRunner.BuildStartupRun(AvaloniaSampleFactory.BuildStartupPlan(startupInputs)),
-            AvaloniaRunner.BuildLaunchRun(
+        var shellInputs = AvaloniaInputResolver.ResolveShellInputs(options);
+        var startupInputs = AvaloniaInputResolver.ResolveStartupInputs(options);
+        var launchInputs = AvaloniaInputResolver.ResolveLaunchInputs(options);
+        var crashInputs = AvaloniaInputResolver.ResolveCrashInputs(options);
+
+        return options.Command switch
+        {
+            AvaloniaCommandKind.Startup => AvaloniaSampleFactory.BuildStartupPlan(startupInputs),
+            AvaloniaCommandKind.Shell => AvaloniaSampleFactory.BuildShellPlan(shellInputs),
+            AvaloniaCommandKind.Launch => AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
+            AvaloniaCommandKind.Crash => AvaloniaSampleFactory.BuildCrashPlan(crashInputs),
+            AvaloniaCommandKind.All => new AvaloniaPlanBundle(
+                AvaloniaSampleFactory.BuildStartupPlan(startupInputs),
+                AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
+                AvaloniaSampleFactory.BuildCrashPlan(crashInputs)),
+            _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
+        };
+    }
+
+    private static object BuildRunPayload(AvaloniaCommandOptions options)
+    {
+        var shellInputs = AvaloniaInputResolver.ResolveShellInputs(options);
+        var startupInputs = AvaloniaInputResolver.ResolveStartupInputs(options);
+        var launchInputs = AvaloniaInputResolver.ResolveLaunchInputs(options);
+        var crashInputs = AvaloniaInputResolver.ResolveCrashInputs(options);
+
+        return options.Command switch
+        {
+            AvaloniaCommandKind.Startup => AvaloniaRunner.BuildStartupRun(AvaloniaSampleFactory.BuildStartupPlan(startupInputs)),
+            AvaloniaCommandKind.Shell => AvaloniaRunner.BuildShellRun(AvaloniaSampleFactory.BuildShellPlan(shellInputs)),
+            AvaloniaCommandKind.Launch => AvaloniaRunner.BuildLaunchRun(
                 AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
                 options.JavaPromptDecision,
                 options.JavaDownloadState),
-            AvaloniaRunner.BuildCrashRun(AvaloniaSampleFactory.BuildCrashPlan(crashInputs), options.CrashAction)),
-        _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
-    };
-}
+            AvaloniaCommandKind.Crash => AvaloniaRunner.BuildCrashRun(
+                AvaloniaSampleFactory.BuildCrashPlan(crashInputs),
+                options.CrashAction),
+            AvaloniaCommandKind.All => new AvaloniaRunBundle(
+                AvaloniaRunner.BuildStartupRun(AvaloniaSampleFactory.BuildStartupPlan(startupInputs)),
+                AvaloniaRunner.BuildLaunchRun(
+                    AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
+                    options.JavaPromptDecision,
+                    options.JavaDownloadState),
+                AvaloniaRunner.BuildCrashRun(AvaloniaSampleFactory.BuildCrashPlan(crashInputs), options.CrashAction)),
+            _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
+        };
+    }
 
-static object BuildExecutePayload(AvaloniaCommandOptions options)
-{
-    var workspaceRoot = ResolveWorkspaceRoot(options.WorkspaceRoot);
-    var shellInputs = AvaloniaInputResolver.ResolveShellInputs(options);
-    var startupInputs = AvaloniaInputResolver.ResolveStartupInputs(options);
-    var launchInputs = AvaloniaInputResolver.ResolveLaunchInputs(options);
-    var crashInputs = AvaloniaInputResolver.ResolveCrashInputs(options);
-
-    return options.Command switch
+    private static object BuildExecutePayload(AvaloniaCommandOptions options)
     {
-        AvaloniaCommandKind.Startup => CreateStartupExecution(startupInputs, workspaceRoot),
-        AvaloniaCommandKind.Shell => CreateShellExecution(shellInputs, workspaceRoot),
-        AvaloniaCommandKind.Launch => CreateLaunchExecution(
-            launchInputs,
-            workspaceRoot,
-            options.JavaPromptDecision,
-            options.JavaDownloadState,
-            options.SaveBatchPath),
-        AvaloniaCommandKind.Crash => CreateCrashExecution(crashInputs, workspaceRoot, options.CrashAction, options.ExportArchivePath),
-        AvaloniaCommandKind.All => new AvaloniaExecutionBundle(
-            CreateStartupExecution(startupInputs, Path.Combine(workspaceRoot, "startup")),
-            CreateLaunchExecution(
+        var workspaceRoot = ResolveWorkspaceRoot(options.WorkspaceRoot);
+        var shellInputs = AvaloniaInputResolver.ResolveShellInputs(options);
+        var startupInputs = AvaloniaInputResolver.ResolveStartupInputs(options);
+        var launchInputs = AvaloniaInputResolver.ResolveLaunchInputs(options);
+        var crashInputs = AvaloniaInputResolver.ResolveCrashInputs(options);
+
+        return options.Command switch
+        {
+            AvaloniaCommandKind.Startup => CreateStartupExecution(startupInputs, workspaceRoot),
+            AvaloniaCommandKind.Shell => CreateShellExecution(shellInputs, workspaceRoot),
+            AvaloniaCommandKind.Launch => CreateLaunchExecution(
                 launchInputs,
-                Path.Combine(workspaceRoot, "launch"),
+                workspaceRoot,
                 options.JavaPromptDecision,
                 options.JavaDownloadState,
                 options.SaveBatchPath),
-            CreateCrashExecution(crashInputs, Path.Combine(workspaceRoot, "crash"), options.CrashAction, options.ExportArchivePath)),
-        _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
-    };
-}
-
-static JsonSerializerOptions CreateJsonOptions()
-{
-    return AvaloniaJson.CreateOptions();
-}
-
-static string ResolveWorkspaceRoot(string? requestedWorkspaceRoot)
-{
-    if (!string.IsNullOrWhiteSpace(requestedWorkspaceRoot))
-    {
-        return Path.GetFullPath(requestedWorkspaceRoot);
+            AvaloniaCommandKind.Crash => CreateCrashExecution(crashInputs, workspaceRoot, options.CrashAction, options.ExportArchivePath),
+            AvaloniaCommandKind.All => new AvaloniaExecutionBundle(
+                CreateStartupExecution(startupInputs, Path.Combine(workspaceRoot, "startup")),
+                CreateLaunchExecution(
+                    launchInputs,
+                    Path.Combine(workspaceRoot, "launch"),
+                    options.JavaPromptDecision,
+                    options.JavaDownloadState,
+                    options.SaveBatchPath),
+                CreateCrashExecution(crashInputs, Path.Combine(workspaceRoot, "crash"), options.CrashAction, options.ExportArchivePath)),
+            _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
+        };
     }
 
-    var workspaceId = Guid.NewGuid().ToString("N")[..8];
-    var directoryName = $"avalonia-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{workspaceId}";
-    return Path.Combine(Path.GetTempPath(), "PCL.Frontend.Avalonia", directoryName);
-}
+    private static JsonSerializerOptions CreateJsonOptions()
+    {
+        return AvaloniaJson.CreateOptions();
+    }
 
-static StartupAvaloniaExecution CreateStartupExecution(StartupAvaloniaInputs inputs, string workspaceRoot)
-{
-    var execution = AvaloniaExecutor.ExecuteStartup(
-        AvaloniaSampleFactory.BuildStartupPlan(inputs),
-        workspaceRoot);
-    var inputArtifact = AvaloniaInputStore.SaveStartupInputs(execution.Execution.WorkspaceRoot, inputs);
-    return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
-}
+    private static string ResolveWorkspaceRoot(string? requestedWorkspaceRoot)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedWorkspaceRoot))
+        {
+            return Path.GetFullPath(requestedWorkspaceRoot);
+        }
 
-static ShellAvaloniaExecution CreateShellExecution(ShellAvaloniaInputs inputs, string workspaceRoot)
-{
-    var execution = AvaloniaExecutor.ExecuteShell(
-        AvaloniaSampleFactory.BuildShellPlan(inputs),
-        workspaceRoot);
-    var inputArtifact = AvaloniaInputStore.SaveShellInputs(execution.Execution.WorkspaceRoot, inputs);
-    return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
-}
+        var workspaceId = Guid.NewGuid().ToString("N")[..8];
+        var directoryName = $"avalonia-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{workspaceId}";
+        return Path.Combine(Path.GetTempPath(), "PCL.Frontend.Avalonia", directoryName);
+    }
 
-static LaunchAvaloniaExecution CreateLaunchExecution(
-    LaunchAvaloniaInputs inputs,
-    string workspaceRoot,
-    PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptDecision javaPromptDecision,
-    AvaloniaJavaDownloadSessionState javaDownloadState,
-    string? saveBatchPath)
-{
-    var execution = AvaloniaExecutor.ExecuteLaunch(
-        AvaloniaSampleFactory.BuildLaunchPlan(inputs, saveBatchPath),
-        workspaceRoot,
-        javaPromptDecision,
-        javaDownloadState);
-    var inputArtifact = AvaloniaInputStore.SaveLaunchInputs(execution.Execution.WorkspaceRoot, inputs);
-    return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
-}
+    private static StartupAvaloniaExecution CreateStartupExecution(StartupAvaloniaInputs inputs, string workspaceRoot)
+    {
+        var execution = AvaloniaExecutor.ExecuteStartup(
+            AvaloniaSampleFactory.BuildStartupPlan(inputs),
+            workspaceRoot);
+        var inputArtifact = AvaloniaInputStore.SaveStartupInputs(execution.Execution.WorkspaceRoot, inputs);
+        return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+    }
 
-static CrashAvaloniaExecution CreateCrashExecution(
-    CrashAvaloniaInputs inputs,
-    string workspaceRoot,
-    PCL.Core.Minecraft.MinecraftCrashOutputPromptActionKind crashAction,
-    string? exportArchivePath)
-{
-    var execution = AvaloniaExecutor.ExecuteCrash(
-        AvaloniaSampleFactory.BuildCrashPlan(inputs),
-        workspaceRoot,
-        crashAction,
-        exportArchivePath);
-    var inputArtifact = AvaloniaInputStore.SaveCrashInputs(execution.Execution.WorkspaceRoot, inputs);
-    return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+    private static ShellAvaloniaExecution CreateShellExecution(ShellAvaloniaInputs inputs, string workspaceRoot)
+    {
+        var execution = AvaloniaExecutor.ExecuteShell(
+            AvaloniaSampleFactory.BuildShellPlan(inputs),
+            workspaceRoot);
+        var inputArtifact = AvaloniaInputStore.SaveShellInputs(execution.Execution.WorkspaceRoot, inputs);
+        return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+    }
+
+    private static LaunchAvaloniaExecution CreateLaunchExecution(
+        LaunchAvaloniaInputs inputs,
+        string workspaceRoot,
+        PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptDecision javaPromptDecision,
+        AvaloniaJavaDownloadSessionState javaDownloadState,
+        string? saveBatchPath)
+    {
+        var execution = AvaloniaExecutor.ExecuteLaunch(
+            AvaloniaSampleFactory.BuildLaunchPlan(inputs, saveBatchPath),
+            workspaceRoot,
+            javaPromptDecision,
+            javaDownloadState);
+        var inputArtifact = AvaloniaInputStore.SaveLaunchInputs(execution.Execution.WorkspaceRoot, inputs);
+        return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+    }
+
+    private static CrashAvaloniaExecution CreateCrashExecution(
+        CrashAvaloniaInputs inputs,
+        string workspaceRoot,
+        PCL.Core.Minecraft.MinecraftCrashOutputPromptActionKind crashAction,
+        string? exportArchivePath)
+    {
+        var execution = AvaloniaExecutor.ExecuteCrash(
+            AvaloniaSampleFactory.BuildCrashPlan(inputs),
+            workspaceRoot,
+            crashAction,
+            exportArchivePath);
+        var inputArtifact = AvaloniaInputStore.SaveCrashInputs(execution.Execution.WorkspaceRoot, inputs);
+        return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+    }
 }
