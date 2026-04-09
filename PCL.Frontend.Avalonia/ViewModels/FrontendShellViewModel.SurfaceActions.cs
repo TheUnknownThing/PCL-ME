@@ -5,11 +5,13 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
+using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -709,136 +711,126 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("停用联机功能", "已撤销大厅授权，并清除当前保存的联机身份信息。");
     }
 
-    private void OpenGameLinkFaq()
+    private void OpenGameLinkFaq() => _ = OpenGameLinkFaqAsync();
+
+    private async Task OpenGameLinkFaqAsync()
     {
-        var faqPath = WriteGameLinkArtifact(
-            "faq",
-            "P2P 联机常见问题.md",
-            [
-                "# P2P 联机常见问题",
-                string.Empty,
-                "## 如何创建大厅？",
-                "1. 先在设置页完成 EasyTier / 联机相关选项。",
-                "2. 在工具 - 联机页选择世界后点击“创建”，或使用“手动输入”直接填写局域网端口。",
-                "3. 创建完成后复制大厅编号发送给朋友。",
-                string.Empty,
-                "## 如何加入大厅？",
-                "1. 将朋友发送给你的大厅编号粘贴到输入框。",
-                "2. 点击“加入”后，页面会直接接入大厅运行时并等待连接完成。",
-                string.Empty,
-                "## NAT 测试为什么会导出诊断？",
-                "NAT 测试会导出当前网络诊断信息，便于检查网卡、地址和相关设置。",
-                string.Empty,
-                "## 虚拟 IP 现在复制的是什么？",
-                "当前复制的是大厅运行时暴露的本地转发地址，可在多人游戏列表没有自动显示局域网会话时手动连接。",
-                string.Empty,
-                "相关链接：",
-                "- Natayark Network 用户协议与隐私政策: https://account.naids.com/policy",
-                "- 大厅隐私协议: https://www.pclc.cc/privacy/personal-info-brief.html",
-                "- EasyTier 工具官网: https://easytier.cn/"
-            ]);
-        OpenInstanceTarget("常见问题解答", faqPath, "联机帮助文件不存在。");
+        string[] lines =
+        [
+            "如何创建大厅？",
+            "1. 先在设置页完成 EasyTier / 联机相关选项。",
+            "2. 在工具 - 联机页选择世界后点击“创建”，或使用“手动输入”直接填写局域网端口。",
+            "3. 创建完成后复制大厅编号发送给朋友。",
+            string.Empty,
+            "如何加入大厅？",
+            "1. 将朋友发送给你的大厅编号粘贴到输入框。",
+            "2. 点击“加入”后，页面会直接接入大厅运行时并等待连接完成。",
+            string.Empty,
+            "NAT 测试为什么会导出诊断？",
+            "NAT 测试会导出当前网络诊断信息，便于检查网卡、地址和相关设置。",
+            string.Empty,
+            "虚拟 IP 现在复制的是什么？",
+            "当前复制的是大厅运行时暴露的本地转发地址，可在多人游戏列表没有自动显示局域网会话时手动连接。",
+            string.Empty,
+            "相关链接：",
+            "- Natayark Network 用户协议与隐私政策: https://account.naids.com/policy",
+            "- 大厅隐私协议: https://www.pclc.cc/privacy/personal-info-brief.html",
+            "- EasyTier 工具官网: https://easytier.cn/"
+        ];
+        var result = await ShowToolboxConfirmationAsync("P2P 联机常见问题", string.Join(Environment.NewLine, lines));
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity("常见问题解答", "已显示联机常见问题。");
     }
 
-    private void ManageDownloadFavoriteTargets()
+    private void ManageDownloadFavoriteTargets() => _ = ManageDownloadFavoriteTargetsAsync();
+
+    private async Task ManageDownloadFavoriteTargetsAsync()
     {
-        var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
-        var rawFavorites = provider.Exists("CompFavorites")
-            ? SafeReadFavoriteJson(provider)
-            : "[]";
-        var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "download-favorites");
-        Directory.CreateDirectory(outputDirectory);
-        var outputPath = Path.Combine(outputDirectory, "favorites-overview.json");
+        var root = LoadDownloadFavoriteTargetRoot();
+        var targets = root.OfType<JsonObject>().ToArray();
+        var selectedIndex = Math.Clamp(SelectedDownloadFavoriteTargetIndex, 0, Math.Max(targets.Length - 1, 0));
+        var currentTarget = targets.Length == 0
+            ? EnsureCommunityProjectFavoriteTarget(root)
+            : targets[selectedIndex];
+        var currentTargetName = GetDownloadFavoriteTargetName(currentTarget);
 
-        var payload = new
+        string? actionId;
+        try
         {
-            exportedAt = DateTime.Now,
-            selectedTarget = SelectedDownloadFavoriteTargetIndex >= 0 && SelectedDownloadFavoriteTargetIndex < DownloadFavoriteTargetOptions.Count
-                ? DownloadFavoriteTargetOptions[SelectedDownloadFavoriteTargetIndex]
-                : string.Empty,
-            targets = _downloadComposition.Favorites.Targets,
-            sections = _downloadComposition.Favorites.Sections.Select(section => new
-            {
-                section.Title,
-                Entries = section.Entries.Select(entry => new
-                {
-                    entry.Title,
-                    entry.Info,
-                    entry.Meta,
-                    entry.Target
-                })
-            }),
-            rawFavorites
-        };
+            actionId = await _shellActionService.PromptForChoiceAsync(
+                "管理收藏夹",
+                $"当前收藏夹：{currentTargetName}",
+                [
+                    new PclChoiceDialogOption("share", "分享当前收藏夹", "复制当前收藏夹的分享代码。"),
+                    new PclChoiceDialogOption("import", "导入收藏", "把分享代码导入到当前或新的收藏夹。"),
+                    new PclChoiceDialogOption("create", "新建收藏夹", "创建一个新的收藏夹目标。"),
+                    new PclChoiceDialogOption("rename", "重命名收藏夹名称", "修改当前收藏夹的名称。"),
+                    new PclChoiceDialogOption("delete", "删除当前收藏夹", "删除当前收藏夹。")
+                ],
+                "share",
+                "继续");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("管理收藏夹失败", ex.Message);
+            return;
+        }
 
-        File.WriteAllText(outputPath, JsonSerializer.Serialize(payload, new JsonSerializerOptions
+        if (actionId is null)
         {
-            WriteIndented = true
-        }), new UTF8Encoding(false));
-        OpenInstanceTarget("管理收藏夹", outputPath, "收藏夹概览文件不存在。");
+            return;
+        }
+
+        switch (actionId)
+        {
+            case "share":
+                await ShareDownloadFavoriteTargetAsync(currentTarget);
+                return;
+            case "import":
+                await ImportDownloadFavoriteTargetAsync(root, currentTarget);
+                return;
+            case "create":
+                await CreateDownloadFavoriteTargetAsync(root);
+                return;
+            case "rename":
+                await RenameDownloadFavoriteTargetAsync(root, currentTarget, selectedIndex);
+                return;
+            case "delete":
+                await DeleteDownloadFavoriteTargetAsync(root, currentTarget);
+                return;
+            default:
+                AddActivity("管理收藏夹失败", $"未识别的收藏夹操作：{actionId}");
+                return;
+        }
     }
 
-    private async Task CreateInstanceProfileAsync()
+    private Task CreateInstanceProfileAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
             AddActivity("新建档案", "当前未选择实例。");
-            return;
+            return Task.CompletedTask;
         }
 
-        string? profileName;
-        try
-        {
-            profileName = await _shellActionService.PromptForTextAsync(
-                "新建档案",
-                "输入一个实例专用登录档案名称。",
-                string.IsNullOrWhiteSpace(InstanceServerAuthName) ? _instanceComposition.Selection.InstanceName : InstanceServerAuthName,
-                "创建",
-                "例如：LittleSkin 档案");
-        }
-        catch (Exception ex)
-        {
-            AddActivity("新建档案失败", ex.Message);
-            return;
-        }
-
-        if (profileName is null)
-        {
-            AddActivity("新建档案", "已取消创建实例档案。");
-            return;
-        }
-
-        profileName = profileName.Trim();
-        if (string.IsNullOrWhiteSpace(profileName))
-        {
-            AddActivity("新建档案", "档案名称不能为空。");
-            return;
-        }
-
-        var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-profiles");
-        Directory.CreateDirectory(outputDirectory);
-        var outputPath = Path.Combine(
-            outputDirectory,
-            $"{SanitizeFileSegment(_instanceComposition.Selection.InstanceName)}-{SanitizeFileSegment(profileName)}.json");
-
-        var payload = new
-        {
-            profileName,
-            instanceName = _instanceComposition.Selection.InstanceName,
-            instanceDirectory = _instanceComposition.Selection.InstanceDirectory,
-            loginMode = InstanceServerLoginRequireOptions[SelectedInstanceServerLoginRequireIndex],
-            authServer = InstanceServerAuthServer,
-            registerUrl = InstanceServerAuthRegister,
-            authName = InstanceServerAuthName,
-            autoJoinServer = InstanceServerAutoJoin,
-            createdAt = DateTime.Now
-        };
-
-        await File.WriteAllTextAsync(outputPath, JsonSerializer.Serialize(payload, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        }), new UTF8Encoding(false));
-        OpenInstanceTarget("新建档案", outputPath, "实例档案模板不存在。");
+        ResetMicrosoftDeviceFlow();
+        LaunchAuthlibServer = string.IsNullOrWhiteSpace(InstanceServerAuthServer)
+            ? DefaultAuthlibServer
+            : InstanceServerAuthServer.Trim();
+        LaunchAuthlibLoginName = string.Empty;
+        LaunchAuthlibPassword = string.Empty;
+        LaunchAuthlibStatusText = string.IsNullOrWhiteSpace(InstanceServerAuthName)
+            ? "已从实例设置带入第三方验证服务器。"
+            : $"已从实例设置带入 {InstanceServerAuthName}。";
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            "Opened the launch route from instance settings for auth profile creation.");
+        SetLaunchProfileSurface(LaunchProfileSurfaceKind.AuthlibEditor);
+        AddActivity("新建档案", $"已跳转到启动页，为 {_instanceComposition.Selection.InstanceName} 创建第三方验证档案。");
+        return Task.CompletedTask;
     }
 
     private void RaiseToolsGameLinkProperties()
@@ -1012,6 +1004,293 @@ internal sealed partial class FrontendShellViewModel
         {
             return "[]";
         }
+    }
+
+    private JsonArray LoadDownloadFavoriteTargetRoot()
+    {
+        var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
+        var rawFavorites = provider.Exists("CompFavorites")
+            ? SafeReadFavoriteJson(provider)
+            : "[]";
+        var root = ParseCommunityProjectFavoriteTargets(rawFavorites);
+        EnsureCommunityProjectFavoriteTarget(root);
+        return root;
+    }
+
+    private void PersistDownloadFavoriteTargetRoot(JsonArray root, int selectedIndex)
+    {
+        _shellActionService.PersistSharedValue("CompFavorites", root.ToJsonString(new JsonSerializerOptions
+        {
+            WriteIndented = false
+        }));
+        ReloadDownloadComposition();
+        SelectedDownloadFavoriteTargetIndex = Math.Clamp(selectedIndex, 0, Math.Max(DownloadFavoriteTargetOptions.Count - 1, 0));
+        RefreshDownloadFavoriteSurface();
+    }
+
+    private async Task ShareDownloadFavoriteTargetAsync(JsonObject target)
+    {
+        var favoriteIds = EnsureCommunityProjectFavoriteArray(target)
+            .Select(GetCommunityProjectFavoriteId)
+            .OfType<string>()
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (favoriteIds.Length == 0)
+        {
+            AddActivity("分享当前收藏夹", "分享了个寂寞啊！");
+            return;
+        }
+
+        try
+        {
+            await _shellActionService.SetClipboardTextAsync(JsonSerializer.Serialize(favoriteIds));
+            AddActivity("分享当前收藏夹", $"已复制 {GetDownloadFavoriteTargetName(target)} 的分享代码。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("分享当前收藏夹失败", ex.Message);
+        }
+    }
+
+    private async Task ImportDownloadFavoriteTargetAsync(JsonArray root, JsonObject currentTarget)
+    {
+        string? shareCode;
+        try
+        {
+            shareCode = await _shellActionService.PromptForTextAsync(
+                "导入收藏",
+                "输入分享的收藏。",
+                string.Empty,
+                "继续",
+                "例如：[\"23333\"]");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("导入收藏失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(shareCode))
+        {
+            return;
+        }
+
+        var importedIds = ParseDownloadFavoriteShareCode(shareCode);
+        if (importedIds.Count == 0)
+        {
+            AddActivity("导入收藏", "分享了个寂寞啊！");
+            return;
+        }
+
+        string? destinationId;
+        try
+        {
+            destinationId = await _shellActionService.PromptForChoiceAsync(
+                "导入收藏",
+                $"识别到 {importedIds.Count} 个收藏项目，要加入到哪里？",
+                [
+                    new PclChoiceDialogOption("new", "新的收藏夹", "新建一个收藏夹并导入这些收藏。"),
+                    new PclChoiceDialogOption("current", "当前收藏夹", "把这些收藏加入当前收藏夹。")
+                ],
+                "current",
+                "继续");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("导入收藏失败", ex.Message);
+            return;
+        }
+
+        if (destinationId is null)
+        {
+            return;
+        }
+
+        if (string.Equals(destinationId, "new", StringComparison.Ordinal))
+        {
+            string? newTargetName;
+            try
+            {
+                newTargetName = await _shellActionService.PromptForTextAsync(
+                    "新收藏夹名称",
+                    "请输入新收藏夹名称");
+            }
+            catch (Exception ex)
+            {
+                AddActivity("导入收藏失败", ex.Message);
+                return;
+            }
+
+            newTargetName = newTargetName?.Trim();
+            if (string.IsNullOrWhiteSpace(newTargetName))
+            {
+                return;
+            }
+
+            root.Add(CreateDownloadFavoriteTargetNode(newTargetName, importedIds));
+            PersistDownloadFavoriteTargetRoot(root, root.OfType<JsonObject>().Count() - 1);
+            AddActivity("导入收藏", $"已导入到新收藏夹：{newTargetName}");
+            return;
+        }
+
+        var favorites = EnsureCommunityProjectFavoriteArray(currentTarget);
+        var mergedIds = new HashSet<string>(
+            favorites.Select(GetCommunityProjectFavoriteId).OfType<string>(),
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var id in importedIds)
+        {
+            if (mergedIds.Add(id))
+            {
+                favorites.Add(id);
+            }
+        }
+
+        PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
+        AddActivity("导入收藏", $"已导入到当前收藏夹：{GetDownloadFavoriteTargetName(currentTarget)}");
+    }
+
+    private async Task CreateDownloadFavoriteTargetAsync(JsonArray root)
+    {
+        string? newTargetName;
+        try
+        {
+            newTargetName = await _shellActionService.PromptForTextAsync(
+                "新建收藏夹",
+                "请输入新收藏夹名称");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("新建收藏夹失败", ex.Message);
+            return;
+        }
+
+        newTargetName = newTargetName?.Trim();
+        if (string.IsNullOrWhiteSpace(newTargetName))
+        {
+            return;
+        }
+
+        root.Add(CreateDownloadFavoriteTargetNode(newTargetName));
+        PersistDownloadFavoriteTargetRoot(root, root.OfType<JsonObject>().Count() - 1);
+        AddActivity("新建收藏夹", newTargetName);
+    }
+
+    private async Task RenameDownloadFavoriteTargetAsync(JsonArray root, JsonObject target, int selectedIndex)
+    {
+        string? nextName;
+        try
+        {
+            nextName = await _shellActionService.PromptForTextAsync(
+                "输入新名称",
+                "请输入收藏夹名称。",
+                GetDownloadFavoriteTargetName(target));
+        }
+        catch (Exception ex)
+        {
+            AddActivity("重命名收藏夹失败", ex.Message);
+            return;
+        }
+
+        nextName = nextName?.Trim();
+        if (string.IsNullOrWhiteSpace(nextName) || string.Equals(nextName, GetDownloadFavoriteTargetName(target), StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        target["Name"] = nextName;
+        PersistDownloadFavoriteTargetRoot(root, selectedIndex);
+        AddActivity("重命名收藏夹名称", nextName);
+    }
+
+    private async Task DeleteDownloadFavoriteTargetAsync(JsonArray root, JsonObject target)
+    {
+        var targets = root.OfType<JsonObject>().ToArray();
+        if (targets.Length <= 1)
+        {
+            AddActivity("删除当前收藏夹", "您不能删除最后一个收藏夹。");
+            return;
+        }
+
+        var favoriteCount = EnsureCommunityProjectFavoriteArray(target)
+            .Select(GetCommunityProjectFavoriteId)
+            .OfType<string>()
+            .Count();
+        var content = $"确认删除 {GetDownloadFavoriteTargetName(target)} 收藏夹？{Environment.NewLine}{Environment.NewLine}" +
+                      $"此收藏夹有 {favoriteCount} 个收藏项目{Environment.NewLine}" +
+                      $"收藏夹 ID 为 {GetDownloadFavoriteTargetId(target)}{Environment.NewLine}" +
+                      "此操作不可逆！";
+        bool confirmed;
+        try
+        {
+            confirmed = await _shellActionService.ConfirmAsync("删除确认", content, "删除", isDanger: true);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("删除当前收藏夹失败", ex.Message);
+            return;
+        }
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        root.Remove(target);
+        PersistDownloadFavoriteTargetRoot(root, 0);
+        AddActivity("删除当前收藏夹", $"已删除 {GetDownloadFavoriteTargetName(target)}。");
+    }
+
+    private static HashSet<string> ParseDownloadFavoriteShareCode(string code)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<HashSet<string>>(code) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static JsonObject CreateDownloadFavoriteTargetNode(string name, IEnumerable<string>? favoriteIds = null)
+    {
+        var favorites = new JsonArray();
+        if (favoriteIds is not null)
+        {
+            foreach (var favoriteId in favoriteIds
+                         .Where(value => !string.IsNullOrWhiteSpace(value))
+                         .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                favorites.Add(favoriteId);
+            }
+        }
+
+        return new JsonObject
+        {
+            ["Name"] = name,
+            ["Id"] = Guid.NewGuid().ToString("N"),
+            ["Favs"] = favorites,
+            ["Notes"] = new JsonObject()
+        };
+    }
+
+    private static string GetDownloadFavoriteTargetName(JsonObject target)
+    {
+        return target["Name"]?.GetValue<string>()?.Trim() switch
+        {
+            { Length: > 0 } value => value,
+            _ => "默认收藏夹"
+        };
+    }
+
+    private static string GetDownloadFavoriteTargetId(JsonObject target)
+    {
+        return target["Id"]?.GetValue<string>()?.Trim() switch
+        {
+            { Length: > 0 } value => value,
+            _ => "default"
+        };
     }
 
     private async Task SelectDownloadFolderAsync()

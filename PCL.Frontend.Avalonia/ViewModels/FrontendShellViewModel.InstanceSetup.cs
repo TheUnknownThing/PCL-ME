@@ -179,12 +179,15 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedInstanceServerLoginRequireIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
+                RaisePropertyChanged(nameof(ShowInstanceServerLockAction));
                 RaisePropertyChanged(nameof(CanLockInstanceLogin));
             }
         }
     }
 
     public bool ShowInstanceServerAuthFields => SelectedInstanceServerLoginRequireIndex >= 2;
+
+    public bool ShowInstanceServerLockAction => SelectedInstanceServerLoginRequireIndex >= 2;
 
     public bool ShowInstanceServerLoginLockedWarning => IsInstanceServerLoginLocked;
 
