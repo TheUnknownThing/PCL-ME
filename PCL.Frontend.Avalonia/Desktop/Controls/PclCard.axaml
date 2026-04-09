@@ -16,6 +16,7 @@
       <Border.Transitions>
         <Transitions>
           <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
+          <ThicknessTransition Property="BorderThickness" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
           <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
           <BoxShadowsTransition Property="BoxShadow" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
         </Transitions>

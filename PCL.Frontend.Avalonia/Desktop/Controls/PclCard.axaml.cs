@@ -15,6 +15,8 @@ namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
 internal sealed partial class PclCard : UserControl
 {
+    private static readonly Thickness IdleBorderThickness = new(1);
+    private static readonly Thickness HoverBorderThickness = new(1.4);
     private static readonly Thickness StandardHeaderTextMargin = new(15, 12, 0, 0);
     private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
     private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
@@ -277,6 +279,9 @@ internal sealed partial class PclCard : UserControl
         CardBorder.BorderBrush = _isHovered
             ? hoverBorderBrush
             : idleBorderBrush;
+        CardBorder.BorderThickness = _isHovered
+            ? HoverBorderThickness
+            : IdleBorderThickness;
         CardBorder.Background = _isHovered
             ? hoverSurfaceBrush
             : idleSurfaceBrush;
