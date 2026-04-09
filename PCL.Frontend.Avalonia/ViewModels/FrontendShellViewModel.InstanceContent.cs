@@ -208,8 +208,6 @@ internal sealed partial class FrontendShellViewModel
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
             "当前实例没有存档目录。"));
 
-    public ActionCommand CycleInstanceWorldSortCommand => new(CycleInstanceWorldSortMethod);
-
     public ActionCommand PasteInstanceWorldClipboardCommand => new(() => _ = PasteInstanceWorldClipboardAsync());
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
@@ -461,18 +459,24 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private void CycleInstanceWorldSortMethod()
+    private void SetInstanceWorldSortMethod(InstanceWorldSortMethod target)
     {
-        _instanceWorldSortMethod = _instanceWorldSortMethod switch
+        if (_instanceWorldSortMethod == target)
         {
-            InstanceWorldSortMethod.FileName => InstanceWorldSortMethod.CreateTime,
-            InstanceWorldSortMethod.CreateTime => InstanceWorldSortMethod.ModifyTime,
-            _ => InstanceWorldSortMethod.FileName
-        };
+            return;
+        }
+
+        _instanceWorldSortMethod = target;
 
         RaisePropertyChanged(nameof(InstanceWorldSortText));
         RefreshInstanceWorldEntries();
     }
+
+    internal void SetInstanceWorldFileNameSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.FileName);
+
+    internal void SetInstanceWorldCreateTimeSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.CreateTime);
+
+    internal void SetInstanceWorldModifyTimeSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.ModifyTime);
 
     private static string GetInstanceWorldSortName(InstanceWorldSortMethod method)
     {
