@@ -55,9 +55,13 @@ internal static class FrontendLaunchCompositionService
         var selectedProfile = ReadSelectedProfile(runtimePaths);
         var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
-        var requiredArtifacts = BuildRequiredArtifacts(launcherFolder, selectedInstanceName);
         var javaSelection = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, manifestSummary, javaWorkflow);
         var selectedJavaRuntime = javaSelection.Runtime;
+        var requiredArtifacts = BuildRequiredArtifacts(
+            launcherFolder,
+            selectedInstanceName,
+            manifestSummary,
+            selectedJavaRuntime);
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
             localConfig,
             CreateRuntimeResolutionFallback(),
@@ -67,13 +71,19 @@ internal static class FrontendLaunchCompositionService
         var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(BuildClasspathRequest(
             launcherFolder,
             selectedInstanceName,
-            manifestSummary));
+            manifestSummary,
+            selectedJavaRuntime));
         var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(new MinecraftLaunchNativesDirectoryRequest(
             PreferredInstanceDirectory: Path.Combine(instancePath, $"{selectedInstanceName}-natives"),
             PreferInstanceDirectory: false,
             AppDataNativesDirectory: Path.Combine(launcherFolder, "bin", "natives"),
             FinalFallbackDirectory: Path.Combine(runtimePaths.TempDirectory, "PCL", "natives")));
-        var nativeSyncRequest = BuildNativeSyncRequest(launcherFolder, selectedInstanceName, nativesDirectory);
+        var nativeSyncRequest = BuildNativeSyncRequest(
+            launcherFolder,
+            selectedInstanceName,
+            nativesDirectory,
+            manifestSummary,
+            selectedJavaRuntime);
         var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(new MinecraftLaunchReplacementValueRequest(
             ClasspathSeparator: GetClasspathSeparator(),
             NativesDirectory: nativesDirectory,
@@ -164,7 +174,10 @@ internal static class FrontendLaunchCompositionService
             HasMicrosoftProfile: selectedProfile.HasMicrosoftProfile,
             IsRestrictedFeatureAllowed: true);
         var precheckResult = MinecraftLaunchPrecheckService.Evaluate(precheckRequest);
-        var manifestPlan = BuildJavaRuntimeManifestPlan(javaWorkflow);
+        var manifestPlan = BuildJavaRuntimeManifestPlan(
+            javaWorkflow,
+            manifestSummary,
+            selectedJavaRuntime);
         var transferPlan = BuildJavaRuntimeTransferPlan(launcherFolder, manifestPlan);
 
         return new FrontendLaunchComposition(
@@ -501,8 +514,10 @@ internal static class FrontendLaunchCompositionService
     private static MinecraftLaunchClasspathRequest BuildClasspathRequest(
         string launcherFolder,
         string selectedInstanceName,
-        FrontendVersionManifestSummary manifestSummary)
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime)
     {
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         var instanceJarPath = string.IsNullOrWhiteSpace(selectedInstanceName)
             ? null
             : Path.Combine(launcherFolder, "versions", selectedInstanceName, $"{selectedInstanceName}.jar");
@@ -511,15 +526,16 @@ internal static class FrontendLaunchCompositionService
             : [instanceJarPath];
 
         return new MinecraftLaunchClasspathRequest(
-            Libraries: manifestSummary.Libraries,
+            Libraries: ReadClasspathLibraries(launcherFolder, selectedInstanceName, runtimeArchitecture),
             CustomHeadEntries: customHeadEntries,
             RetroWrapperPath: null,
             ClasspathSeparator: GetClasspathSeparator());
     }
 
-    private static IReadOnlyList<FrontendLaunchArtifactRequirement> BuildRequiredArtifacts(
+    private static IReadOnlyList<MinecraftLaunchClasspathLibrary> ReadClasspathLibraries(
         string launcherFolder,
-        string selectedInstanceName)
+        string selectedInstanceName,
+        MachineType runtimeArchitecture)
     {
         if (string.IsNullOrWhiteSpace(selectedInstanceName))
         {
@@ -527,24 +543,123 @@ internal static class FrontendLaunchCompositionService
         }
 
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var libraries = new List<MinecraftLaunchClasspathLibrary>();
+        CollectClasspathLibrariesRecursive(
+            launcherFolder,
+            selectedInstanceName,
+            runtimeArchitecture,
+            visited,
+            libraries);
+        return libraries;
+    }
+
+    private static void CollectClasspathLibrariesRecursive(
+        string launcherFolder,
+        string versionName,
+        MachineType runtimeArchitecture,
+        ISet<string> visited,
+        IList<MinecraftLaunchClasspathLibrary> libraries)
+    {
+        if (!visited.Add(versionName))
+        {
+            return;
+        }
+
+        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
+        if (!File.Exists(manifestPath))
+        {
+            return;
+        }
+
+        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        var root = document.RootElement;
+        var parentVersion = GetString(root, "inheritsFrom");
+        if (!string.IsNullOrWhiteSpace(parentVersion))
+        {
+            CollectClasspathLibrariesRecursive(
+                launcherFolder,
+                parentVersion,
+                runtimeArchitecture,
+                visited,
+                libraries);
+        }
+
+        if (!root.TryGetProperty("libraries", out var manifestLibraries) ||
+            manifestLibraries.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (var library in manifestLibraries.EnumerateArray())
+        {
+            if (!IsLibraryAllowedOnCurrentPlatform(library, runtimeArchitecture))
+            {
+                continue;
+            }
+
+            var name = GetString(library, "name");
+            var artifactPath = GetNestedString(library, "downloads", "artifact", "path");
+            if (string.IsNullOrWhiteSpace(artifactPath) && !string.IsNullOrWhiteSpace(name))
+            {
+                artifactPath = DeriveLibraryPathFromName(name);
+            }
+
+            if (string.IsNullOrWhiteSpace(artifactPath))
+            {
+                continue;
+            }
+
+            libraries.Add(new MinecraftLaunchClasspathLibrary(
+                name,
+                Path.Combine(launcherFolder, "libraries", artifactPath.Replace('/', Path.DirectorySeparatorChar)),
+                IsNatives: library.TryGetProperty("natives", out _)));
+        }
+    }
+
+    private static IReadOnlyList<FrontendLaunchArtifactRequirement> BuildRequiredArtifacts(
+        string launcherFolder,
+        string selectedInstanceName,
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime)
+    {
+        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        {
+            return [];
+        }
+
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var requirements = new Dictionary<string, FrontendLaunchArtifactRequirement>(StringComparer.OrdinalIgnoreCase);
-        CollectRequiredArtifactsRecursive(launcherFolder, selectedInstanceName, visited, requirements);
+        CollectRequiredArtifactsRecursive(
+            launcherFolder,
+            selectedInstanceName,
+            runtimeArchitecture,
+            visited,
+            requirements);
         return requirements.Values.ToArray();
     }
 
     private static MinecraftLaunchNativesSyncRequest? BuildNativeSyncRequest(
         string launcherFolder,
         string selectedInstanceName,
-        string nativesDirectory)
+        string nativesDirectory,
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime)
     {
         if (string.IsNullOrWhiteSpace(selectedInstanceName))
         {
             return null;
         }
 
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var archives = new Dictionary<string, MinecraftLaunchNativeArchive>(StringComparer.OrdinalIgnoreCase);
-        CollectNativeArchivesRecursive(launcherFolder, selectedInstanceName, visited, archives);
+        CollectNativeArchivesRecursive(
+            launcherFolder,
+            selectedInstanceName,
+            runtimeArchitecture,
+            visited,
+            archives);
         return archives.Count == 0
             ? null
             : new MinecraftLaunchNativesSyncRequest(nativesDirectory, archives.Values.ToArray(), LogSkippedFiles: false);
@@ -553,6 +668,7 @@ internal static class FrontendLaunchCompositionService
     private static void CollectRequiredArtifactsRecursive(
         string launcherFolder,
         string versionName,
+        MachineType runtimeArchitecture,
         ISet<string> visited,
         IDictionary<string, FrontendLaunchArtifactRequirement> requirements)
     {
@@ -572,7 +688,12 @@ internal static class FrontendLaunchCompositionService
         var parentVersion = GetString(root, "inheritsFrom");
         if (!string.IsNullOrWhiteSpace(parentVersion))
         {
-            CollectRequiredArtifactsRecursive(launcherFolder, parentVersion, visited, requirements);
+            CollectRequiredArtifactsRecursive(
+                launcherFolder,
+                parentVersion,
+                runtimeArchitecture,
+                visited,
+                requirements);
         }
 
         var clientDownloadUrl = GetNestedString(root, "downloads", "client", "url");
@@ -592,7 +713,7 @@ internal static class FrontendLaunchCompositionService
 
         foreach (var library in libraries.EnumerateArray())
         {
-            if (!IsLibraryAllowedOnCurrentPlatform(library))
+            if (!IsLibraryAllowedOnCurrentPlatform(library, runtimeArchitecture))
             {
                 continue;
             }
@@ -606,7 +727,7 @@ internal static class FrontendLaunchCompositionService
                     artifactDownload.Sha1);
             }
 
-            if (TryResolveNativeArchiveDownload(library, launcherFolder, out var nativeArchive) &&
+            if (TryResolveNativeArchiveDownload(library, launcherFolder, runtimeArchitecture, out var nativeArchive) &&
                 !string.IsNullOrWhiteSpace(nativeArchive.DownloadUrl))
             {
                 requirements[nativeArchive.TargetPath] = new FrontendLaunchArtifactRequirement(
@@ -620,6 +741,7 @@ internal static class FrontendLaunchCompositionService
     private static void CollectNativeArchivesRecursive(
         string launcherFolder,
         string versionName,
+        MachineType runtimeArchitecture,
         ISet<string> visited,
         IDictionary<string, MinecraftLaunchNativeArchive> archives)
     {
@@ -639,7 +761,12 @@ internal static class FrontendLaunchCompositionService
         var parentVersion = GetString(root, "inheritsFrom");
         if (!string.IsNullOrWhiteSpace(parentVersion))
         {
-            CollectNativeArchivesRecursive(launcherFolder, parentVersion, visited, archives);
+            CollectNativeArchivesRecursive(
+                launcherFolder,
+                parentVersion,
+                runtimeArchitecture,
+                visited,
+                archives);
         }
 
         if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
@@ -649,8 +776,8 @@ internal static class FrontendLaunchCompositionService
 
         foreach (var library in libraries.EnumerateArray())
         {
-            if (!IsLibraryAllowedOnCurrentPlatform(library) ||
-                !TryResolveNativeArchiveDownload(library, launcherFolder, out var nativeArchive))
+            if (!IsLibraryAllowedOnCurrentPlatform(library, runtimeArchitecture) ||
+                !TryResolveNativeArchiveDownload(library, launcherFolder, runtimeArchitecture, out var nativeArchive))
             {
                 continue;
             }
@@ -920,7 +1047,7 @@ internal static class FrontendLaunchCompositionService
         return result.ToArray();
     }
 
-    private static bool IsLibraryAllowedOnCurrentPlatform(JsonElement library)
+    private static bool IsLibraryAllowedOnCurrentPlatform(JsonElement library, MachineType runtimeArchitecture)
     {
         if (!library.TryGetProperty("rules", out var rules) || rules.ValueKind != JsonValueKind.Array)
         {
@@ -930,7 +1057,7 @@ internal static class FrontendLaunchCompositionService
         var allowed = false;
         foreach (var rule in rules.EnumerateArray())
         {
-            if (!RuleMatchesCurrentPlatform(rule))
+            if (!RuleMatchesCurrentPlatform(rule, runtimeArchitecture))
             {
                 continue;
             }
@@ -941,7 +1068,12 @@ internal static class FrontendLaunchCompositionService
         return allowed;
     }
 
-    private static bool RuleMatchesCurrentPlatform(JsonElement rule)
+    private static bool IsLibraryAllowedOnCurrentPlatform(JsonElement library)
+    {
+        return IsLibraryAllowedOnCurrentPlatform(library, GetPreferredMachineType());
+    }
+
+    private static bool RuleMatchesCurrentPlatform(JsonElement rule, MachineType runtimeArchitecture)
     {
         if (!rule.TryGetProperty("os", out var os) || os.ValueKind != JsonValueKind.Object)
         {
@@ -955,7 +1087,7 @@ internal static class FrontendLaunchCompositionService
         }
 
         var osArch = GetString(os, "arch");
-        if (!string.IsNullOrWhiteSpace(osArch) && !IsCurrentArchitecture(osArch))
+        if (!string.IsNullOrWhiteSpace(osArch) && !IsCurrentArchitecture(osArch, runtimeArchitecture))
         {
             return false;
         }
@@ -974,13 +1106,14 @@ internal static class FrontendLaunchCompositionService
         };
     }
 
-    private static bool IsCurrentArchitecture(string osArch)
+    private static bool IsCurrentArchitecture(string osArch, MachineType runtimeArchitecture)
     {
         return osArch.ToLowerInvariant() switch
         {
-            "x86" => RuntimeInformation.ProcessArchitecture == Architecture.X86,
-            "x86_64" or "amd64" => RuntimeInformation.ProcessArchitecture == Architecture.X64,
-            "arm64" or "aarch64" => RuntimeInformation.ProcessArchitecture == Architecture.Arm64,
+            "x86" => runtimeArchitecture == MachineType.I386,
+            "x86_64" or "amd64" => runtimeArchitecture == MachineType.AMD64,
+            "arm64" or "aarch64" => runtimeArchitecture == MachineType.ARM64,
+            "arm" => runtimeArchitecture is MachineType.ARM or MachineType.ARMNT,
             _ => true
         };
     }
@@ -988,10 +1121,11 @@ internal static class FrontendLaunchCompositionService
     private static bool TryResolveNativeArchiveDownload(
         JsonElement library,
         string launcherFolder,
+        MachineType runtimeArchitecture,
         out NativeArchiveDownloadInfo nativeArchive)
     {
         nativeArchive = null!;
-        var entryName = ResolveNativeEntryName(library);
+        var entryName = ResolveNativeEntryName(library, runtimeArchitecture);
         if (string.IsNullOrWhiteSpace(entryName) ||
             !TryResolveLibraryDownload(library, entryName, launcherFolder, out var download))
         {
@@ -1068,7 +1202,7 @@ internal static class FrontendLaunchCompositionService
         return true;
     }
 
-    private static string? ResolveNativeEntryName(JsonElement library)
+    private static string? ResolveNativeEntryName(JsonElement library, MachineType runtimeArchitecture)
     {
         var osKey = GetCurrentNativeOsKey();
         if (library.TryGetProperty("natives", out var natives) &&
@@ -1076,7 +1210,10 @@ internal static class FrontendLaunchCompositionService
             natives.TryGetProperty(osKey, out var classifierValue) &&
             classifierValue.ValueKind == JsonValueKind.String)
         {
-            return classifierValue.GetString()?.Replace("${arch}", Environment.Is64BitOperatingSystem ? "64" : "32", StringComparison.Ordinal);
+            return classifierValue.GetString()?.Replace(
+                "${arch}",
+                GetNativeArchitectureToken(runtimeArchitecture),
+                StringComparison.Ordinal);
         }
 
         if (!library.TryGetProperty("downloads", out var downloads) ||
@@ -1087,7 +1224,7 @@ internal static class FrontendLaunchCompositionService
             return null;
         }
 
-        foreach (var candidate in GetCurrentNativeClassifierCandidates())
+        foreach (var candidate in GetCurrentNativeClassifierCandidates(runtimeArchitecture))
         {
             if (classifiers.TryGetProperty(candidate, out _))
             {
@@ -1098,7 +1235,7 @@ internal static class FrontendLaunchCompositionService
         return null;
     }
 
-    private static IReadOnlyList<string> GetCurrentNativeClassifierCandidates()
+    private static IReadOnlyList<string> GetCurrentNativeClassifierCandidates(MachineType runtimeArchitecture)
     {
         var candidates = new List<string>();
         string[] osNames = OperatingSystem.IsMacOS()
@@ -1106,10 +1243,10 @@ internal static class FrontendLaunchCompositionService
             : OperatingSystem.IsWindows()
                 ? ["windows"]
                 : ["linux"];
-        var archNames = RuntimeInformation.ProcessArchitecture switch
+        var archNames = runtimeArchitecture switch
         {
-            Architecture.X86 => new[] { "x86", "32" },
-            Architecture.Arm64 => new[] { "arm64", "aarch64", "64" },
+            MachineType.I386 => new[] { "x86", "32" },
+            MachineType.ARM64 => new[] { "arm64", "aarch64", "64" },
             _ => new[] { "x86_64", "amd64", "64" }
         };
 
@@ -1142,6 +1279,11 @@ internal static class FrontendLaunchCompositionService
         return "linux";
     }
 
+    private static string GetNativeArchitectureToken(MachineType runtimeArchitecture)
+    {
+        return runtimeArchitecture == MachineType.I386 ? "32" : "64";
+    }
+
     private static IReadOnlyList<string> GetExtractExcludes(JsonElement library)
     {
         if (!library.TryGetProperty("extract", out var extract) ||
@@ -1161,7 +1303,9 @@ internal static class FrontendLaunchCompositionService
     }
 
     private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
-        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow,
+        FrontendVersionManifestSummary manifestSummary,
+        FrontendJavaRuntimeSummary? selectedJavaRuntime)
     {
         if (string.IsNullOrWhiteSpace(javaWorkflow.MissingJavaPrompt.DownloadTarget))
         {
@@ -1170,6 +1314,7 @@ internal static class FrontendLaunchCompositionService
 
         try
         {
+            var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
             var liveIndexJson = TryDownloadUtf8String(MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().AllUrls);
             if (string.IsNullOrWhiteSpace(liveIndexJson))
             {
@@ -1179,7 +1324,7 @@ internal static class FrontendLaunchCompositionService
             return MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
                 new MinecraftJavaRuntimeManifestRequestPlanRequest(
                     liveIndexJson,
-                    ResolveJavaRuntimePlatformKey(),
+                    ResolveJavaRuntimePlatformKey(runtimeArchitecture),
                     javaWorkflow.MissingJavaPrompt.DownloadTarget,
                     MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
         }
@@ -1241,26 +1386,26 @@ internal static class FrontendLaunchCompositionService
         return null;
     }
 
-    private static string ResolveJavaRuntimePlatformKey()
+    private static string ResolveJavaRuntimePlatformKey(MachineType runtimeArchitecture)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return RuntimeInformation.ProcessArchitecture switch
+            return runtimeArchitecture switch
             {
-                Architecture.Arm64 => "windows-arm64",
-                Architecture.X86 => "windows-x86",
+                MachineType.ARM64 => "windows-arm64",
+                MachineType.I386 => "windows-x86",
                 _ => "windows-x64"
             };
         }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            return RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+            return runtimeArchitecture == MachineType.ARM64
                 ? "mac-os-arm64"
                 : "mac-os";
         }
 
-        return RuntimeInformation.ProcessArchitecture == Architecture.X86
+        return runtimeArchitecture == MachineType.I386
             ? "linux-i386"
             : "linux";
     }
@@ -2062,6 +2207,21 @@ internal static class FrontendLaunchCompositionService
         };
     }
 
+    private static MachineType ResolveTargetJavaArchitecture(
+        FrontendJavaRuntimeSummary? selectedJavaRuntime,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        if (selectedJavaRuntime?.Architecture is { } runtimeArchitecture &&
+            runtimeArchitecture != MachineType.Unknown)
+        {
+            return runtimeArchitecture;
+        }
+
+        return ShouldForceX86Java(manifestSummary)
+            ? MachineType.I386
+            : GetPreferredMachineType();
+    }
+
     private static bool ViolatesLegacyLinuxJavaConstraint(
         FrontendStoredJavaRuntime runtime,
         FrontendVersionManifestSummary manifestSummary)
@@ -2101,7 +2261,8 @@ internal static class FrontendLaunchCompositionService
             runtime.DisplayName,
             runtime.MajorVersion,
             runtime.IsEnabled,
-            runtime.Is64Bit);
+            runtime.Is64Bit,
+            runtime.Architecture);
     }
 
     private static FrontendJavaRuntimeSummary? ToRuntimeSummaryOrNull(FrontendStoredJavaRuntime? runtime)

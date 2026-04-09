@@ -506,14 +506,19 @@ internal sealed partial class FrontendShellViewModel
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                var installedRuntime = FrontendJavaInventoryService.TryResolveRuntime(
+                    _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
+                    isEnabled: true,
+                    fallbackDisplayName: $"Java {installResult.VersionName}");
                 _launchComposition = _launchComposition with
                 {
                     SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
-                        _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
-                        $"Java {installResult.VersionName}",
-                        _launchComposition.JavaWorkflow.RecommendedMajorVersion,
-                        IsEnabled: true,
-                        Is64Bit: Environment.Is64BitOperatingSystem),
+                        installedRuntime?.ExecutablePath ?? _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
+                        installedRuntime?.DisplayName ?? $"Java {installResult.VersionName}",
+                        installedRuntime?.MajorVersion ?? _launchComposition.JavaWorkflow.RecommendedMajorVersion,
+                        IsEnabled: installedRuntime?.IsEnabled ?? true,
+                        Is64Bit: installedRuntime?.Is64Bit ?? Environment.Is64BitOperatingSystem,
+                        Architecture: installedRuntime?.Architecture),
                     JavaWarningMessage = null
                 };
                 RaiseLaunchCompositionProperties();

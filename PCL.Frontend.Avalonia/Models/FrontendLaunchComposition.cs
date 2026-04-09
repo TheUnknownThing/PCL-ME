@@ -1,4 +1,5 @@
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils;
 
 namespace PCL.Frontend.Avalonia.Models;
 
@@ -64,4 +65,5 @@ internal sealed record FrontendJavaRuntimeSummary(
     string DisplayName,
     int? MajorVersion,
     bool IsEnabled,
-    bool? Is64Bit);
+    bool? Is64Bit,
+    MachineType? Architecture);

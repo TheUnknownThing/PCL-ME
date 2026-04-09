@@ -36,12 +36,12 @@ Relevant code:
 - `PCL.Frontend.Avalonia/Workflows/FrontendShellActionService.cs`
 - `PCL.Core/Minecraft/Launch/MinecraftLaunchNativesSyncService.cs`
 
-Observed behavior:
+Observed behavior before the current fixes:
 
-- Launch composition resolves a natives directory and injects it into JVM arguments.
-- Launch startup does not currently call `MinecraftLaunchNativesSyncService`.
-- Launch required-artifact collection currently only includes `downloads.artifact`, not native classifiers.
-- `MinecraftLaunchNativesSyncService` currently only extracts `.dll`, so Linux/macOS native libraries are skipped entirely.
+- Launch composition resolved a natives directory and injected it into JVM arguments.
+- Launch startup did not call `MinecraftLaunchNativesSyncService`.
+- Launch required-artifact collection only included `downloads.artifact`, not native classifiers.
+- `MinecraftLaunchNativesSyncService` only extracted `.dll`, so Linux/macOS native libraries were skipped entirely.
 
 Important implication:
 
@@ -54,11 +54,17 @@ Relevant code:
 - `PCL.Frontend.Avalonia/Workflows/FrontendInstanceRepairService.cs`
 - `PCL.Core/Minecraft/Launch/MinecraftLaunchNativesSyncService.cs`
 
-Observed behavior:
+Observed behavior after the first launch fixes:
 
-- Repair code already knows how to resolve native-classifier downloads from `natives` / `downloads.classifiers`.
-- Launch code does not currently reuse that logic.
-- A native sync service already exists, but it is not wired into Avalonia launch and is not cross-platform yet.
+- Launch now plans native-classifier downloads as required artifacts.
+- Launch now runs native sync before starting Java.
+- Native extraction is now cross-platform and honors `extract.exclude`.
+- Launch runtime selection and setup UI now share the retained Java inventory stack.
+
+Remaining split:
+
+- Repair and launch still use separate manifest-reading paths.
+- Inspection and diagnostics still do not report native planning in the same depth HMCL does.
 
 ## Working Hypothesis
 
@@ -86,7 +92,11 @@ Expected result:
 - Linux/macOS/Windows launches can actually populate `${natives_directory}` before startup.
 - Failures such as missing `liblwjgl.so` become launch-preparation errors instead of runtime linker crashes.
 
-Status: in progress
+Implemented:
+
+- `30531d83` `Prepare and extract launch native libraries`
+
+Status: completed
 
 ### Phase B
 
@@ -100,7 +110,20 @@ Expected result:
 
 - launch, repair, and later diagnostics all agree on which native archives belong to the selected runtime/platform combination.
 
-Status: pending
+Implemented in this slice:
+
+- carry Java architecture through `FrontendJavaRuntimeSummary`
+- base launch required artifacts, native archive selection, and manifest rule `os.arch` checks on the selected Java runtime architecture when available
+- base classpath library filtering on the resolved target Java architecture instead of the Avalonia process architecture
+- base Mojang runtime-download platform selection on the target Java architecture instead of `RuntimeInformation.ProcessArchitecture`
+
+Still remaining:
+
+- remove the remaining duplication between repair manifest traversal and launch manifest traversal
+- align inspection output and diagnostics with the new target-runtime-native planning
+- decide whether manifest-summary parsing should also become fully runtime-contextual, or stay as metadata-only parsing
+
+Status: in progress
 
 ### Phase C
 
@@ -128,3 +151,20 @@ Expected result:
 - future native-library regressions become easy to trace without reproducing them blindly.
 
 Status: pending
+
+## Current Launch-State Summary
+
+What Avalonia launch now does:
+
+- chooses Java with compatibility-aware selection and retained inventory data
+- plans native classifier downloads into the required-artifact list
+- extracts native jars before launch on Linux, macOS, and Windows
+- respects extract exclusion rules
+- resolves launch-time native rules and classifiers against the selected Java runtime architecture when known
+- resolves launch-time classpath libraries against the target Java architecture rather than the launcher process architecture
+
+What is still missing compared with HMCL:
+
+- ASCII-safe temporary native path handling for older Linux/macOS LWJGL
+- native replacement / patching for unsupported platforms (`NativePatcher`-style behavior)
+- richer launch diagnostics for native archive choice, extraction, and fallback behavior
