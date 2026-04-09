@@ -50,7 +50,7 @@ internal static class FrontendInstanceCompositionService
             IsModable: IsModable(manifestSummary),
             HasLabyMod: manifestSummary.HasLabyMod,
             VanillaVersion: vanillaVersion);
-        var javaEntries = ParseJavaEntries(ReadValue(sharedConfig, "LaunchArgumentJavaUser", "[]"));
+        var javaEntries = ParseJavaEntries(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
         var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
 
         return new FrontendInstanceComposition(
@@ -745,44 +745,12 @@ internal static class FrontendInstanceCompositionService
 
     private static List<FrontendJavaEntry> ParseJavaEntries(string rawJson)
     {
-        var result = new List<FrontendJavaEntry>();
-        if (string.IsNullOrWhiteSpace(rawJson))
-        {
-            return result;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(rawJson);
-            if (document.RootElement.ValueKind != JsonValueKind.Array)
-            {
-                return result;
-            }
-
-            foreach (var item in document.RootElement.EnumerateArray())
-            {
-                var executablePath = GetNestedString(item, "Installation", "JavaExePath");
-                if (string.IsNullOrWhiteSpace(executablePath))
-                {
-                    continue;
-                }
-
-                var displayName = GetNestedString(item, "Installation", "Version")
-                                  ?? Path.GetFileName(Path.GetDirectoryName(executablePath))
-                                  ?? "Java";
-                var is64Bit = GetNestedBoolean(item, "Installation", "Is64Bit");
-                result.Add(new FrontendJavaEntry(
-                    executablePath,
-                    displayName,
-                    is64Bit));
-            }
-        }
-        catch
-        {
-            return result;
-        }
-
-        return result;
+        return FrontendJavaInventoryService.ParseStoredJavaRuntimes(rawJson)
+            .Select(runtime => new FrontendJavaEntry(
+                runtime.ExecutablePath,
+                runtime.DisplayName,
+                runtime.Is64Bit))
+            .ToList();
     }
 
     private static bool IsModable(FrontendVersionManifestSummary manifestSummary)

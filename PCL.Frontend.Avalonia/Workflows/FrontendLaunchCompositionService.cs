@@ -6,7 +6,10 @@ using System.Runtime.InteropServices;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.Minecraft;
+using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows.Inspection;
@@ -17,7 +20,7 @@ internal static class FrontendLaunchCompositionService
 {
     private static readonly HttpClient JavaRuntimeHttpClient = new();
     private static readonly object HostJavaProbeLock = new();
-    private static FrontendJavaRuntimeSummary? CachedHostJavaRuntime;
+    private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedHostJavaRuntimes;
     private static bool IsHostJavaProbeCached;
 
     public static FrontendLaunchComposition Compose(
@@ -53,7 +56,7 @@ internal static class FrontendLaunchCompositionService
         var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
         var requiredArtifacts = BuildRequiredArtifacts(launcherFolder, selectedInstanceName);
-        var selectedJavaRuntime = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, javaWorkflow);
+        var selectedJavaRuntime = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, manifestSummary, javaWorkflow);
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
             localConfig,
             CreateRuntimeResolutionFallback(),
@@ -719,104 +722,43 @@ internal static class FrontendLaunchCompositionService
         YamlFileProvider localConfig,
         YamlFileProvider? instanceConfig,
         string launcherFolder,
+        FrontendVersionManifestSummary manifestSummary,
         MinecraftLaunchJavaWorkflowPlan javaWorkflow)
     {
-        var rawSelectedJava = instanceConfig is not null && instanceConfig.Exists("VersionArgumentJavaSelect")
-            ? NormalizeInstanceJavaSelection(ReadValue(instanceConfig, "VersionArgumentJavaSelect", string.Empty), launcherFolder)
-            : ReadValue(sharedConfig, "LaunchArgumentJavaSelect", string.Empty);
-        var selectedJavaPath = NormalizeSelectedJavaPath(rawSelectedJava);
-        var javaEntries = ParseJavaEntries(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
+        var selectedJavaPath = ResolveConfiguredJavaSelection(sharedConfig, instanceConfig, launcherFolder);
+        var ignoreJavaCompatibilityWarning = instanceConfig is not null &&
+                                            ReadValue(instanceConfig, "VersionAdvanceJava", false);
+        var javaEntries = FrontendJavaInventoryService.ParseStoredJavaRuntimes(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
 
         if (!string.IsNullOrWhiteSpace(selectedJavaPath))
         {
-            var selectedEntry = javaEntries.FirstOrDefault(entry =>
-                string.Equals(entry.ExecutablePath, selectedJavaPath, StringComparison.OrdinalIgnoreCase));
-            if (selectedEntry is not null)
+            var selectedRuntime = ResolveConfiguredRuntime(javaEntries, selectedJavaPath, javaWorkflow);
+            if (selectedRuntime is not null &&
+                ShouldUseConfiguredRuntime(selectedRuntime, manifestSummary, javaWorkflow, ignoreJavaCompatibilityWarning))
             {
-                return selectedEntry.IsEnabled ? selectedEntry : null;
-            }
-
-            if (File.Exists(selectedJavaPath))
-            {
-                return new FrontendJavaRuntimeSummary(
-                    selectedJavaPath,
-                    Path.GetFileName(Path.GetDirectoryName(selectedJavaPath)) ?? $"Java {javaWorkflow.RecommendedMajorVersion}",
-                    MajorVersion: null,
-                    IsEnabled: true,
-                    Is64Bit: null);
+                return ToRuntimeSummary(selectedRuntime);
             }
         }
 
-        var autoEntry = javaEntries.FirstOrDefault(entry => entry.IsEnabled);
+        var autoEntry = SelectCompatibleRuntime(javaEntries, manifestSummary, javaWorkflow);
         if (autoEntry is not null)
         {
-            return autoEntry;
+            return ToRuntimeSummary(autoEntry);
         }
 
         var bundledJava = OperatingSystem.IsWindows()
             ? Path.Combine(launcherFolder, "runtime", "java", "bin", "java.exe")
             : Path.Combine(launcherFolder, "runtime", "java", "bin", "java");
-        if (File.Exists(bundledJava))
-        {
-            return new FrontendJavaRuntimeSummary(
+        if (TryResolveCompatibleRuntime(
                 bundledJava,
-                $"Java {javaWorkflow.RecommendedMajorVersion}",
-                javaWorkflow.RecommendedMajorVersion,
-                IsEnabled: true,
-                Is64Bit: Environment.Is64BitOperatingSystem);
-        }
-
-        return ProbeHostJavaRuntime();
-    }
-
-    private static List<FrontendJavaRuntimeSummary> ParseJavaEntries(string rawJson)
-    {
-        var result = new List<FrontendJavaRuntimeSummary>();
-        if (string.IsNullOrWhiteSpace(rawJson))
+                manifestSummary,
+                javaWorkflow,
+                fallbackDisplayName: $"Java {javaWorkflow.RecommendedMajorVersion}") is { } bundledRuntime)
         {
-            return result;
+            return bundledRuntime;
         }
 
-        try
-        {
-            using var document = JsonDocument.Parse(rawJson);
-            if (document.RootElement.ValueKind != JsonValueKind.Array)
-            {
-                return result;
-            }
-
-            foreach (var item in document.RootElement.EnumerateArray())
-            {
-                var executablePath = GetNestedString(item, "Installation", "JavaExePath");
-                if (string.IsNullOrWhiteSpace(executablePath))
-                {
-                    continue;
-                }
-
-                var majorVersion = GetNestedInt(item, "Installation", "MajorVersion");
-                var versionText = GetNestedString(item, "Installation", "Version");
-                var isEnabled = GetBoolean(item, "IsEnabled") ?? true;
-                var is64Bit = GetNestedBoolean(item, "Installation", "Is64Bit");
-                var displayName = !string.IsNullOrWhiteSpace(versionText)
-                    ? versionText
-                    : majorVersion is { } major
-                        ? $"Java {major}"
-                        : Path.GetFileName(Path.GetDirectoryName(executablePath)) ?? "Java";
-
-                result.Add(new FrontendJavaRuntimeSummary(
-                    executablePath,
-                    displayName,
-                    majorVersion,
-                    isEnabled,
-                    is64Bit));
-            }
-        }
-        catch
-        {
-            return result;
-        }
-
-        return result;
+        return ProbeHostJavaRuntime(manifestSummary, javaWorkflow);
     }
 
     private static FrontendVersionManifestSummary ReadManifestSummary(string launcherFolder, string selectedInstanceName)
@@ -1111,11 +1053,34 @@ internal static class FrontendLaunchCompositionService
         }
     }
 
-    private static string NormalizeInstanceJavaSelection(string rawValue, string launcherFolder)
+    private static string ResolveConfiguredJavaSelection(
+        JsonFileProvider sharedConfig,
+        YamlFileProvider? instanceConfig,
+        string launcherFolder)
+    {
+        if (instanceConfig is null || !instanceConfig.Exists("VersionArgumentJavaSelect"))
+        {
+            return NormalizeSelectedJavaPath(ReadValue(sharedConfig, "LaunchArgumentJavaSelect", string.Empty));
+        }
+
+        var instanceSelection = ReadInstanceJavaSelection(
+            ReadValue(instanceConfig, "VersionArgumentJavaSelect", string.Empty),
+            launcherFolder);
+        return instanceSelection.FollowGlobal
+            ? NormalizeSelectedJavaPath(ReadValue(sharedConfig, "LaunchArgumentJavaSelect", string.Empty))
+            : NormalizeSelectedJavaPath(instanceSelection.RawSelection);
+    }
+
+    private static FrontendConfiguredJavaSelection ReadInstanceJavaSelection(string rawValue, string launcherFolder)
     {
         if (string.IsNullOrWhiteSpace(rawValue) || string.Equals(rawValue, "使用全局设置", StringComparison.Ordinal))
         {
-            return string.Empty;
+            return new FrontendConfiguredJavaSelection(FollowGlobal: true, RawSelection: string.Empty);
+        }
+
+        if (!rawValue.TrimStart().StartsWith("{", StringComparison.Ordinal))
+        {
+            return new FrontendConfiguredJavaSelection(FollowGlobal: false, RawSelection: rawValue);
         }
 
         try
@@ -1124,40 +1089,54 @@ internal static class FrontendLaunchCompositionService
             var kind = GetString(document.RootElement, "kind")?.ToLowerInvariant();
             return kind switch
             {
-                "exist" => GetString(document.RootElement, "JavaExePath") ?? string.Empty,
-                "relative" => Path.Combine(launcherFolder, GetString(document.RootElement, "RelativePath") ?? string.Empty),
-                _ => string.Empty
+                "auto" => new FrontendConfiguredJavaSelection(FollowGlobal: false, RawSelection: string.Empty),
+                "exist" => new FrontendConfiguredJavaSelection(
+                    FollowGlobal: false,
+                    RawSelection: GetString(document.RootElement, "JavaExePath") ?? string.Empty),
+                "relative" => new FrontendConfiguredJavaSelection(
+                    FollowGlobal: false,
+                    RawSelection: Path.Combine(launcherFolder, GetString(document.RootElement, "RelativePath") ?? string.Empty)),
+                _ => new FrontendConfiguredJavaSelection(FollowGlobal: true, RawSelection: string.Empty)
             };
         }
         catch
         {
-            return string.Empty;
+            return new FrontendConfiguredJavaSelection(FollowGlobal: true, RawSelection: string.Empty);
         }
     }
 
-    private static FrontendJavaRuntimeSummary? ProbeHostJavaRuntime()
+    private static FrontendJavaRuntimeSummary? ProbeHostJavaRuntime(
+        FrontendVersionManifestSummary manifestSummary,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
     {
         lock (HostJavaProbeLock)
         {
             if (IsHostJavaProbeCached)
             {
-                return CachedHostJavaRuntime;
+                return SelectCompatibleRuntime(CachedHostJavaRuntimes ?? [], manifestSummary, javaWorkflow) is { } cachedRuntime
+                    ? ToRuntimeSummary(cachedRuntime)
+                    : null;
             }
 
+            var runtimes = new List<FrontendStoredJavaRuntime>();
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var candidate in EnumerateHostJavaRuntimeCandidates())
             {
                 var runtime = TryProbeJavaRuntime(candidate);
                 if (runtime is not null)
                 {
-                    CachedHostJavaRuntime = runtime;
-                    IsHostJavaProbeCached = true;
-                    return runtime;
+                    if (seenPaths.Add(runtime.ExecutablePath))
+                    {
+                        runtimes.Add(runtime);
+                    }
                 }
             }
 
             IsHostJavaProbeCached = true;
-            CachedHostJavaRuntime = null;
-            return null;
+            CachedHostJavaRuntimes = runtimes;
+            return SelectCompatibleRuntime(runtimes, manifestSummary, javaWorkflow) is { } resolvedRuntime
+                ? ToRuntimeSummary(resolvedRuntime)
+                : null;
         }
     }
 
@@ -1269,8 +1248,17 @@ internal static class FrontendLaunchCompositionService
         }
     }
 
-    private static FrontendJavaRuntimeSummary? TryProbeJavaRuntime(string executablePath)
+    private static FrontendStoredJavaRuntime? TryProbeJavaRuntime(string executablePath)
     {
+        if (FrontendJavaInventoryService.TryResolveRuntime(executablePath) is { ParsedVersion: not null } resolvedRuntime)
+        {
+            var majorVersion = resolvedRuntime.MajorVersion ?? GetMajorVersion(resolvedRuntime.ParsedVersion);
+            return resolvedRuntime with
+            {
+                DisplayName = majorVersion is { } major ? $"Java {major}" : resolvedRuntime.DisplayName
+            };
+        }
+
         try
         {
             using var process = Process.Start(new ProcessStartInfo
@@ -1302,8 +1290,10 @@ internal static class FrontendLaunchCompositionService
             }
 
             var output = process.StandardError.ReadToEnd() + process.StandardOutput.ReadToEnd();
-            var majorVersion = TryParseJavaMajorVersion(output);
+            var parsedVersion = TryParseJavaVersion(output);
+            var majorVersion = GetMajorVersion(parsedVersion);
             if (process.ExitCode != 0 ||
+                parsedVersion is null ||
                 majorVersion is null ||
                 output.Contains("Unable to locate a Java Runtime", StringComparison.OrdinalIgnoreCase) ||
                 output.Contains("No Java runtime present", StringComparison.OrdinalIgnoreCase))
@@ -1311,12 +1301,16 @@ internal static class FrontendLaunchCompositionService
                 return null;
             }
 
-            return new FrontendJavaRuntimeSummary(
+            return new FrontendStoredJavaRuntime(
                 executablePath,
                 $"Java {majorVersion.Value}",
+                parsedVersion,
                 majorVersion.Value,
                 IsEnabled: true,
-                Is64Bit: Environment.Is64BitOperatingSystem);
+                Is64Bit: TryParseJavaBitness(output),
+                IsJre: null,
+                Brand: null,
+                Architecture: null);
         }
         catch
         {
@@ -1653,7 +1647,217 @@ internal static class FrontendLaunchCompositionService
         return replaced;
     }
 
+    private static FrontendJavaRuntimeSummary? TryResolveCompatibleRuntime(
+        string executablePath,
+        FrontendVersionManifestSummary manifestSummary,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow,
+        string? fallbackDisplayName = null)
+    {
+        var runtime = FrontendJavaInventoryService.TryResolveRuntime(executablePath, fallbackDisplayName: fallbackDisplayName);
+        return runtime is not null && IsCompatibleWithWorkflow(runtime, manifestSummary, javaWorkflow)
+            ? ToRuntimeSummary(runtime)
+            : null;
+    }
+
+    private static FrontendStoredJavaRuntime? ResolveConfiguredRuntime(
+        IReadOnlyList<FrontendStoredJavaRuntime> javaEntries,
+        string selectedJavaPath,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+    {
+        var selectedEntry = javaEntries.FirstOrDefault(entry =>
+            string.Equals(entry.ExecutablePath, selectedJavaPath, StringComparison.OrdinalIgnoreCase));
+        if (selectedEntry is not null)
+        {
+            return selectedEntry.IsEnabled ? selectedEntry : null;
+        }
+
+        if (!File.Exists(selectedJavaPath))
+        {
+            return null;
+        }
+
+        return FrontendJavaInventoryService.TryResolveRuntime(
+                   selectedJavaPath,
+                   isEnabled: true,
+                   fallbackDisplayName: Path.GetFileName(Path.GetDirectoryName(selectedJavaPath)) ?? $"Java {javaWorkflow.RecommendedMajorVersion}")
+               ?? new FrontendStoredJavaRuntime(
+                   selectedJavaPath,
+                   Path.GetFileName(Path.GetDirectoryName(selectedJavaPath)) ?? $"Java {javaWorkflow.RecommendedMajorVersion}",
+                   ParsedVersion: null,
+                   MajorVersion: null,
+                   IsEnabled: true,
+                   Is64Bit: null,
+                   IsJre: null,
+                   Brand: null,
+                   Architecture: null);
+    }
+
+    private static bool ShouldUseConfiguredRuntime(
+        FrontendStoredJavaRuntime runtime,
+        FrontendVersionManifestSummary manifestSummary,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow,
+        bool ignoreJavaCompatibilityWarning)
+    {
+        return runtime.IsEnabled &&
+               (ignoreJavaCompatibilityWarning || IsCompatibleWithWorkflow(runtime, manifestSummary, javaWorkflow));
+    }
+
+    private static FrontendStoredJavaRuntime? SelectCompatibleRuntime(
+        IEnumerable<FrontendStoredJavaRuntime> runtimes,
+        FrontendVersionManifestSummary manifestSummary,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+    {
+        return runtimes
+            .Where(runtime => runtime.IsEnabled && IsCompatibleWithWorkflow(runtime, manifestSummary, javaWorkflow))
+            .OrderBy(runtime => runtime.MajorVersion ?? int.MaxValue)
+            .ThenBy(runtime => GetArchitecturePreference(runtime, manifestSummary))
+            .ThenBy(runtime => runtime.IsJre ?? true)
+            .ThenBy(runtime => runtime.Brand ?? JavaBrandType.Unknown)
+            .ThenByDescending(runtime => runtime.ParsedVersion)
+            .FirstOrDefault();
+    }
+
+    private static bool IsCompatibleWithWorkflow(
+        FrontendStoredJavaRuntime runtime,
+        FrontendVersionManifestSummary manifestSummary,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+    {
+        return runtime.ParsedVersion is not null &&
+               JavaManager.IsVersionSuitable(runtime.ParsedVersion, javaWorkflow.MinimumVersion, javaWorkflow.MaximumVersion) &&
+               IsArchitectureCompatible(runtime, manifestSummary) &&
+               !ViolatesLegacyLinuxJavaConstraint(runtime, manifestSummary) &&
+               !ViolatesLegacyLaunchWrapperConstraint(runtime, manifestSummary);
+    }
+
+    private static int GetArchitecturePreference(
+        FrontendStoredJavaRuntime runtime,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        if (runtime.Architecture is null or MachineType.Unknown)
+        {
+            return 2;
+        }
+
+        if (ShouldForceX86Java(manifestSummary))
+        {
+            return runtime.Architecture == MachineType.I386 ? 0 : 1;
+        }
+
+        return runtime.Architecture == GetPreferredMachineType()
+            ? 0
+            : 1;
+    }
+
+    private static bool IsArchitectureCompatible(
+        FrontendStoredJavaRuntime runtime,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        if (runtime.Architecture is null or MachineType.Unknown)
+        {
+            return true;
+        }
+
+        if (ShouldForceX86Java(manifestSummary))
+        {
+            return runtime.Architecture == MachineType.I386;
+        }
+
+        return runtime.Architecture == GetPreferredMachineType();
+    }
+
+    private static bool ShouldForceX86Java(FrontendVersionManifestSummary manifestSummary)
+    {
+        if (RuntimeInformation.OSArchitecture != Architecture.Arm64)
+        {
+            return false;
+        }
+
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsMacOS())
+        {
+            return false;
+        }
+
+        return manifestSummary.VanillaVersion is null || manifestSummary.VanillaVersion < new Version(1, 6);
+    }
+
+    private static MachineType GetPreferredMachineType()
+    {
+        return RuntimeInformation.OSArchitecture switch
+        {
+            Architecture.X86 => MachineType.I386,
+            Architecture.X64 => MachineType.AMD64,
+            Architecture.Arm64 => MachineType.ARM64,
+            _ => MachineType.Unknown
+        };
+    }
+
+    private static bool ViolatesLegacyLinuxJavaConstraint(
+        FrontendStoredJavaRuntime runtime,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        return OperatingSystem.IsLinux() &&
+               RuntimeInformation.OSArchitecture == Architecture.X64 &&
+               !manifestSummary.HasCleanroom &&
+               manifestSummary.VanillaVersion is not null &&
+               manifestSummary.VanillaVersion <= new Version(1, 12, 999) &&
+               runtime.Architecture == MachineType.AMD64 &&
+               (runtime.MajorVersion ?? int.MaxValue) > 8;
+    }
+
+    private static bool ViolatesLegacyLaunchWrapperConstraint(
+        FrontendStoredJavaRuntime runtime,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        if (manifestSummary.VanillaVersion is null || manifestSummary.VanillaVersion > new Version(1, 12, 999))
+        {
+            return false;
+        }
+
+        var launchWrapperVersion = ExtractLibraryVersion(manifestSummary.Libraries, "net.minecraft:launchwrapper");
+        if (!Version.TryParse(launchWrapperVersion, out var parsedLaunchWrapperVersion))
+        {
+            return false;
+        }
+
+        return parsedLaunchWrapperVersion < new Version(1, 13) &&
+               (runtime.MajorVersion ?? int.MaxValue) > 8;
+    }
+
+    private static FrontendJavaRuntimeSummary ToRuntimeSummary(FrontendStoredJavaRuntime runtime)
+    {
+        return new FrontendJavaRuntimeSummary(
+            runtime.ExecutablePath,
+            runtime.DisplayName,
+            runtime.MajorVersion,
+            runtime.IsEnabled,
+            runtime.Is64Bit);
+    }
+
+    private static FrontendJavaRuntimeSummary? ToRuntimeSummaryOrNull(FrontendStoredJavaRuntime? runtime)
+    {
+        return runtime is null ? null : ToRuntimeSummary(runtime);
+    }
+
+    private readonly record struct FrontendConfiguredJavaSelection(
+        bool FollowGlobal,
+        string RawSelection);
+
     private static int? TryParseJavaMajorVersion(string output)
+    {
+        return GetMajorVersion(TryParseJavaVersion(output));
+    }
+
+    private static int? GetMajorVersion(Version? version)
+    {
+        if (version is null)
+        {
+            return null;
+        }
+
+        return version.Major == 1 ? version.Minor : version.Major;
+    }
+
+    private static Version? TryParseJavaVersion(string output)
     {
         if (string.IsNullOrWhiteSpace(output))
         {
@@ -1673,16 +1877,45 @@ internal static class FrontendLaunchCompositionService
         }
 
         var rawVersion = output[(versionStart + 1)..versionEnd];
-        if (rawVersion.StartsWith("1.", StringComparison.Ordinal))
+        var matches = System.Text.RegularExpressions.Regex.Matches(rawVersion, @"\d+");
+        if (matches.Count == 0)
         {
-            return int.TryParse(rawVersion.Split('.')[1], out var legacyMajorVersion)
-                ? legacyMajorVersion
-                : null;
+            return null;
         }
 
-        return int.TryParse(rawVersion.Split(['.', '-', '+'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(), out var majorVersion)
-            ? majorVersion
-            : null;
+        var parts = new int[Math.Min(4, matches.Count)];
+        for (var i = 0; i < parts.Length; i++)
+        {
+            parts[i] = int.Parse(matches[i].Value);
+        }
+
+        return parts.Length switch
+        {
+            1 => new Version(parts[0], 0),
+            2 => new Version(parts[0], parts[1]),
+            3 => new Version(parts[0], parts[1], parts[2]),
+            _ => new Version(parts[0], parts[1], parts[2], parts[3])
+        };
+    }
+
+    private static bool? TryParseJavaBitness(string output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            return null;
+        }
+
+        if (output.Contains("64-Bit", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (output.Contains("32-Bit", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return null;
     }
 
     private static string? NullIfWhiteSpace(string? value)

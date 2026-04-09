@@ -1859,7 +1859,7 @@ internal sealed partial class FrontendShellViewModel
             var rawJson = provider.Exists("LaunchArgumentJavaUser")
                 ? provider.Get<string>("LaunchArgumentJavaUser")
                 : "[]";
-            return JsonSerializer.Deserialize<List<JavaStorageItem>>(rawJson) ?? [];
+            return FrontendJavaInventoryService.ParseStorageItems(rawJson).ToList();
         }
         catch
         {

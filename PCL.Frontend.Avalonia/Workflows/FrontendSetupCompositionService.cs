@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
-using System.Text.Json;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
@@ -246,20 +245,15 @@ internal static class FrontendSetupCompositionService
     {
         var selectedJava = ReadValue(sharedConfig, "LaunchArgumentJavaSelect", string.Empty);
         var rawJavaList = ReadValue(localConfig, "LaunchArgumentJavaUser", "[]");
-        JavaStorageItem[] items;
-
-        try
-        {
-            items = JsonSerializer.Deserialize<JavaStorageItem[]>(rawJavaList) ?? [];
-        }
-        catch
-        {
-            items = [];
-        }
-
-        var entries = items
-            .Where(item => !string.IsNullOrWhiteSpace(item.Path))
-            .Select(item => BuildJavaRuntimeEntry(item))
+        var storageItems = FrontendJavaInventoryService.ParseStorageItems(rawJavaList);
+        var storageSourceMap = storageItems.ToDictionary(
+            item => item.Path,
+            item => item.Source,
+            StringComparer.OrdinalIgnoreCase);
+        var entries = FrontendJavaInventoryService.ParseStoredJavaRuntimes(rawJavaList)
+            .Select(runtime => BuildJavaRuntimeEntry(
+                runtime,
+                storageSourceMap.TryGetValue(runtime.ExecutablePath, out var source) ? source : null))
             .OrderByDescending(item => item.IsEnabled)
             .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -269,14 +263,18 @@ internal static class FrontendSetupCompositionService
             entries);
     }
 
-    private static FrontendSetupJavaRuntimeEntry BuildJavaRuntimeEntry(JavaStorageItem item)
+    private static FrontendSetupJavaRuntimeEntry BuildJavaRuntimeEntry(
+        FrontendStoredJavaRuntime runtime,
+        JavaSource? source)
     {
-        var folder = ResolveJavaFolder(item.Path);
-        var title = ResolveJavaTitle(folder, item.Path);
+        var folder = ResolveJavaFolder(runtime.ExecutablePath);
+        var title = string.IsNullOrWhiteSpace(runtime.DisplayName)
+            ? ResolveJavaTitle(folder, runtime.ExecutablePath)
+            : runtime.DisplayName;
         var tags = new List<string>
         {
-            item.IsEnable ? "已启用" : "已禁用",
-            item.Source switch
+            runtime.IsEnabled ? "已启用" : "已禁用",
+            source switch
             {
                 JavaSource.AutoInstalled => "自动安装",
                 JavaSource.ManualAdded => "手动添加",
@@ -285,11 +283,11 @@ internal static class FrontendSetupCompositionService
         };
 
         return new FrontendSetupJavaRuntimeEntry(
-            item.Path,
+            runtime.ExecutablePath,
             title,
             folder,
             tags,
-            item.IsEnable);
+            runtime.IsEnabled);
     }
 
     private static FrontendSetupUiState BuildUiState(
