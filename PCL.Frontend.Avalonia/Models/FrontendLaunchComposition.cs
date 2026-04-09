@@ -39,6 +39,8 @@ internal sealed record FrontendLaunchProfileSummary(
     string? ClientToken,
     string? AuthServer,
     string? AuthServerName,
+    string? SkinHeadId,
+    string? RawJson,
     bool HasMicrosoftProfile)
 {
     public string AuthLabel => Kind switch

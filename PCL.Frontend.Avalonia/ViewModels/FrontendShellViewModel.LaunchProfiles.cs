@@ -872,6 +872,7 @@ internal sealed partial class FrontendShellViewModel
             profile.LoginName,
             profile.Password,
             profile.ClientToken,
+            profile.SkinHeadId,
             profile.RawJson);
     }
 

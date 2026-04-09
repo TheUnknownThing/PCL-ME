@@ -121,7 +121,7 @@ internal static class FrontendProfileStorageService
             uuid,
             userName,
             Desc: string.Empty,
-            SkinHeadId: string.Empty,
+            SkinHeadId: ResolveOfflineDefaultSkinHeadId(uuid),
             Expires: 0,
             Server: null,
             ServerName: null,
@@ -244,7 +244,7 @@ internal static class FrontendProfileStorageService
             profile.Uuid,
             profile.Username,
             Desc: null,
-            SkinHeadId: string.Empty,
+            profile.SkinHeadId,
             Expires: 0,
             profile.Server,
             profile.ServerName,
@@ -254,6 +254,31 @@ internal static class FrontendProfileStorageService
             profile.Password,
             profile.ClientToken,
             profile.RawJson);
+    }
+
+    private static string ResolveOfflineDefaultSkinHeadId(string uuid)
+    {
+        if (string.IsNullOrWhiteSpace(uuid) || uuid.Length != 32)
+        {
+            return "Steve";
+        }
+
+        var a = ParseHexNibble(uuid[7]);
+        var b = ParseHexNibble(uuid[15]);
+        var c = ParseHexNibble(uuid[23]);
+        var d = ParseHexNibble(uuid[31]);
+        return ((a ^ b ^ c ^ d) & 1) == 1 ? "Alex" : "Steve";
+    }
+
+    private static int ParseHexNibble(char value)
+    {
+        return value switch
+        {
+            >= '0' and <= '9' => value - '0',
+            >= 'a' and <= 'f' => value - 'a' + 10,
+            >= 'A' and <= 'F' => value - 'A' + 10,
+            _ => 0
+        };
     }
 }
 
