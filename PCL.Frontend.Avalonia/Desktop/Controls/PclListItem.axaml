@@ -78,7 +78,7 @@
         BorderThickness="0"
         HorizontalContentAlignment="Stretch">
       <StackPanel
-          Margin="4,6,0,6"
+          Margin="4,0,0,0"
           HorizontalAlignment="Stretch"
           VerticalAlignment="Center"
           Spacing="1">
