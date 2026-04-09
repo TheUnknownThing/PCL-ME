@@ -731,7 +731,7 @@ internal static class FrontendLaunchCompositionService
         var selectedJavaPath = ResolveConfiguredJavaSelection(sharedConfig, instanceConfig, launcherFolder);
         var ignoreJavaCompatibilityWarning = instanceConfig is not null &&
                                             ReadValue(instanceConfig, "VersionAdvanceJava", false);
-        var javaEntries = FrontendJavaInventoryService.ParseStoredJavaRuntimes(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
+        var javaEntries = FrontendJavaInventoryService.ParseAvailableRuntimes(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
 
         if (!string.IsNullOrWhiteSpace(selectedJavaPath))
         {

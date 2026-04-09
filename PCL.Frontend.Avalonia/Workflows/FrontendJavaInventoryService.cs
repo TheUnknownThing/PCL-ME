@@ -1,7 +1,9 @@
 using System.Text.Json;
+using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
+using PCL.Core.Minecraft.Java.Scanner;
 using PCL.Core.Utils;
 
 namespace PCL.Frontend.Avalonia.Workflows;
@@ -10,6 +12,9 @@ internal static class FrontendJavaInventoryService
 {
     private static readonly IJavaParser JavaParser = new CompositeJavaParser(
         new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner()));
+    private static readonly object PortableJavaScanLock = new();
+    private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedPortableJavaRuntimes;
+    private static bool IsPortableJavaScanCached;
 
     public static IReadOnlyList<JavaStorageItem> ParseStorageItems(string rawJson)
     {
@@ -135,6 +140,44 @@ internal static class FrontendJavaInventoryService
         }
     }
 
+    public static IReadOnlyList<FrontendStoredJavaRuntime> ParseAvailableRuntimes(string rawJson)
+    {
+        var storedRuntimes = ParseStoredJavaRuntimes(rawJson);
+        var managedRuntimes = GetManagedJavaRuntimes();
+        if (managedRuntimes.Count == 0)
+        {
+            return storedRuntimes;
+        }
+
+        var merged = new Dictionary<string, FrontendStoredJavaRuntime>(StringComparer.OrdinalIgnoreCase);
+        foreach (var runtime in storedRuntimes)
+        {
+            merged[runtime.ExecutablePath] = runtime;
+        }
+
+        foreach (var runtime in managedRuntimes)
+        {
+            if (!merged.TryGetValue(runtime.ExecutablePath, out var existingRuntime))
+            {
+                merged[runtime.ExecutablePath] = runtime;
+                continue;
+            }
+
+            merged[runtime.ExecutablePath] = existingRuntime with
+            {
+                DisplayName = string.IsNullOrWhiteSpace(existingRuntime.DisplayName) ? runtime.DisplayName : existingRuntime.DisplayName,
+                ParsedVersion = existingRuntime.ParsedVersion ?? runtime.ParsedVersion,
+                MajorVersion = existingRuntime.MajorVersion ?? runtime.MajorVersion,
+                Is64Bit = existingRuntime.Is64Bit ?? runtime.Is64Bit,
+                IsJre = existingRuntime.IsJre ?? runtime.IsJre,
+                Brand = existingRuntime.Brand ?? runtime.Brand,
+                Architecture = existingRuntime.Architecture ?? runtime.Architecture
+            };
+        }
+
+        return merged.Values.ToArray();
+    }
+
     public static FrontendStoredJavaRuntime? TryResolveRuntime(string executablePath, bool isEnabled = true, string? fallbackDisplayName = null)
     {
         if (string.IsNullOrWhiteSpace(executablePath))
@@ -166,6 +209,50 @@ internal static class FrontendJavaInventoryService
             installation?.IsJre,
             installation?.Brand,
             installation?.Architecture);
+    }
+
+    private static IReadOnlyList<FrontendStoredJavaRuntime> GetManagedJavaRuntimes()
+    {
+        lock (PortableJavaScanLock)
+        {
+            if (IsPortableJavaScanCached)
+            {
+                return CachedPortableJavaRuntimes ?? [];
+            }
+
+            try
+            {
+                var runtime = SystemJavaRuntimeEnvironment.Current;
+                var manager = new JavaManager(
+                    JavaParser,
+                    NullJavaStorage.Instance,
+                    new DefaultJavaInstallationEvaluator(runtime),
+                    new DefaultPathsScanner(runtime),
+                    new PathEnvironmentScanner(runtime),
+                    new WhereCommandScanner(runtime, new ProcessCommandRunner()));
+
+                manager.ScanJavaAsync(force: true).GetAwaiter().GetResult();
+                CachedPortableJavaRuntimes = manager.GetSortedJavaList()
+                    .Select(entry => new FrontendStoredJavaRuntime(
+                        entry.Installation.JavaExePath,
+                        entry.Installation.Version.ToString(),
+                        entry.Installation.Version,
+                        entry.Installation.MajorVersion,
+                        entry.IsEnabled,
+                        entry.Installation.Is64Bit,
+                        entry.Installation.IsJre,
+                        entry.Installation.Brand,
+                        entry.Installation.Architecture))
+                    .ToArray();
+            }
+            catch
+            {
+                CachedPortableJavaRuntimes = [];
+            }
+
+            IsPortableJavaScanCached = true;
+            return CachedPortableJavaRuntimes;
+        }
     }
 
     private static JavaInstallation? TryParseInstallation(string executablePath)

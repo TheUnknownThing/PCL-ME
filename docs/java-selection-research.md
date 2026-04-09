@@ -477,7 +477,7 @@ Expected result:
 
 Follow-up work after the initial repair lands.
 
-- Decide whether to route Avalonia launch-time selection directly through the retained `JavaManager`.
+- Route Avalonia launch-time candidate discovery through the retained `JavaManager` inventory when available, while keeping Avalonia local storage as the primary source of enablement state.
 - Consider adding HMCL-style special constraints incrementally:
   - Linux legacy-native Java 8 restriction
   - ARM64/x86 compatibility rules
