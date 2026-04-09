@@ -32,6 +32,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     private FrontendShellViewModel? _observedShell;
     private bool _isSearchRowHovered;
     private int _visualStateVersion;
+    private string _lastHintText = string.Empty;
 
     public DownloadResourceShellRightPaneView()
     {
@@ -193,7 +194,8 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         {
             if (e.PropertyName is nameof(FrontendShellViewModel.ShowDownloadResourceLoadingCard)
                 or nameof(FrontendShellViewModel.ShowDownloadResourceContent)
-                or nameof(FrontendShellViewModel.ShowDownloadResourceHint))
+                or nameof(FrontendShellViewModel.ShowDownloadResourceHint)
+                or nameof(FrontendShellViewModel.DownloadResourceHintText))
             {
                 ScheduleVisualStateSync();
             }
@@ -253,6 +255,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         var showLoading = _observedShell?.ShowDownloadResourceLoadingCard == true;
         var showContent = _observedShell?.ShowDownloadResourceContent == true;
         var showHint = _observedShell?.ShowDownloadResourceHint == true;
+        var hintText = _observedShell?.DownloadResourceHintText ?? string.Empty;
 
         if (showLoading)
         {
@@ -260,7 +263,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
             return;
         }
 
-        await TransitionToContentStateAsync(showContent, showHint, version);
+        await TransitionToContentStateAsync(showContent, showHint, hintText, version);
     }
 
     private async Task TransitionToLoadingStateAsync(int version)
@@ -277,7 +280,7 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         await ShowAnimatedAsync(_loadingCard, version);
     }
 
-    private async Task TransitionToContentStateAsync(bool showContent, bool showHint, int version)
+    private async Task TransitionToContentStateAsync(bool showContent, bool showHint, string hintText, int version)
     {
         if (version != _visualStateVersion)
         {
@@ -290,11 +293,16 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
 
         if (showHint)
         {
-            await ShowAnimatedAsync(_hintBanner, version);
+            var trimmedHintText = hintText.Trim();
+            var shouldReplay = _hintBanner.IsVisible
+                               && !string.Equals(_lastHintText, trimmedHintText, StringComparison.Ordinal);
+            await ShowAnimatedAsync(_hintBanner, version, replayWhenVisible: shouldReplay);
+            _lastHintText = trimmedHintText;
         }
         else
         {
             await HideAnimatedAsync(_hintBanner, version);
+            _lastHintText = string.Empty;
         }
 
         if (showContent)
@@ -307,14 +315,14 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         }
     }
 
-    private async Task ShowAnimatedAsync(Control control, int version)
+    private async Task ShowAnimatedAsync(Control control, int version, bool replayWhenVisible = false)
     {
         if (version != _visualStateVersion)
         {
             return;
         }
 
-        if (control.IsVisible)
+        if (control.IsVisible && !replayWhenVisible)
         {
             return;
         }

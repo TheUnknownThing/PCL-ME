@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
 
@@ -10,6 +11,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private const string InstanceExportConfigSeparator = "==============================================================";
+    private const string InstanceExportConfigCacheKey = "CacheExportConfig";
     private string _instanceExportName = "Modern Fabric Demo";
     private string _instanceExportVersion = "1.0.0";
     private bool _instanceExportIncludeResources;
@@ -133,7 +135,9 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("读取配置", sourcePath);
     }
 
-    private void SaveInstanceExportConfig()
+    private void SaveInstanceExportConfig() => _ = SaveInstanceExportConfigAsync();
+
+    private async Task SaveInstanceExportConfigAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
@@ -141,9 +145,6 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-export-configs");
-        Directory.CreateDirectory(exportDirectory);
-        var outputPath = Path.Combine(exportDirectory, $"{_instanceComposition.Selection.InstanceName}-export-config.txt");
         var lines = new List<string>
         {
             $"Name:{InstanceExportName}",
@@ -162,15 +163,71 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        OpenInstanceTarget("保存配置", outputPath, "配置文件不存在。");
+        string? suggestedStartFolder = null;
+        try
+        {
+            var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
+            if (provider.Exists(InstanceExportConfigCacheKey))
+            {
+                var cachedPath = provider.Get<string>(InstanceExportConfigCacheKey);
+                suggestedStartFolder = Path.GetDirectoryName(cachedPath);
+            }
+        }
+        catch
+        {
+            // Ignore invalid cached save locations and fall back to the system default picker directory.
+        }
+
+        string? outputPath;
+        try
+        {
+            outputPath = await _shellActionService.PickSaveFileAsync(
+                "选择文件位置",
+                "export_config.txt",
+                "整合包导出配置",
+                suggestedStartFolder,
+                "*.txt");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("保存配置失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
+            _shellActionService.PersistSharedValue(InstanceExportConfigCacheKey, outputPath);
+            if (_shellActionService.TryRevealExternalTarget(outputPath, out var error))
+            {
+                AddActivity("保存配置", outputPath);
+                return;
+            }
+
+            AddActivity("保存配置失败", error ?? outputPath);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("保存配置失败", ex.Message);
+        }
     }
 
-    private void OpenInstanceExportGuide()
+    private void OpenInstanceExportGuide() => _ = OpenInstanceExportGuideAsync();
+
+    private async Task OpenInstanceExportGuideAsync()
     {
-        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-export-guides");
-        Directory.CreateDirectory(exportDirectory);
-        var outputPath = Path.Combine(exportDirectory, "整合包制作指南.txt");
+        if (TryResolveHelpEntry("指南/整合包制作.json", out var guideEntry))
+        {
+            ShowHelpDetail(guideEntry, addActivity: true);
+            return;
+        }
+
         var lines = new[]
         {
             "整合包制作指南",
@@ -181,8 +238,15 @@ internal sealed partial class FrontendShellViewModel
             "4. “Modrinth 上传模式”会输出 .mrpack 文件，便于继续整理发布。",
             "5. 导出完成后，请检查生成的压缩包结构和内容是否符合当前实例需求。"
         };
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        OpenInstanceTarget("整合包制作指南", outputPath, "指南文件不存在。");
+        var result = await ShowToolboxConfirmationAsync(
+            "整合包制作指南",
+            string.Join(Environment.NewLine, lines.Skip(2)));
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity("整合包制作指南", "已显示制作指南。");
     }
 
     private void StartInstanceExport()

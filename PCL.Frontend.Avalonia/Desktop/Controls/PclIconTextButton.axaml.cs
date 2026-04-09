@@ -2,6 +2,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
@@ -25,6 +26,8 @@ internal sealed partial class PclIconTextButton : UserControl
 
     private bool _isHovered;
     private bool _isPressed;
+
+    public event EventHandler<RoutedEventArgs>? Click;
 
     public PclIconTextButton()
     {
@@ -54,6 +57,7 @@ internal sealed partial class PclIconTextButton : UserControl
             _isPressed = false;
             RefreshVisualState();
         };
+        ButtonHost.Click += (_, args) => Click?.Invoke(this, args);
 
         UpdateIcon();
         RefreshVisualState();

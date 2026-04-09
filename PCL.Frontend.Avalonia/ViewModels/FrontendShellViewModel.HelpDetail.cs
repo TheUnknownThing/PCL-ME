@@ -278,7 +278,7 @@ internal sealed partial class FrontendShellViewModel
                 NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Launch), $"Opened the launch route from help detail: {title}.");
                 return;
             case "内存优化":
-                ExportMemoryOptimizeReport();
+                OpenMemoryOptimizeDialog();
                 return;
             case "清理垃圾":
                 ClearToolboxRubbish();
@@ -342,13 +342,18 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void OpenHelpPopup(string title, string? eventData)
+    private void OpenHelpPopup(string title, string? eventData) => _ = OpenHelpPopupAsync(title, eventData);
+
+    private async Task OpenHelpPopupAsync(string title, string? eventData)
     {
-        var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "help-popups");
-        Directory.CreateDirectory(outputDirectory);
-        var outputPath = Path.Combine(outputDirectory, $"{SanitizeFileSegment(title)}.md");
-        File.WriteAllText(outputPath, eventData ?? string.Empty, new UTF8Encoding(false));
-        OpenInstanceTarget(title, outputPath, "帮助弹窗内容文件不存在。");
+        var popup = ParseHelpPopupSpec(title, eventData);
+        var result = await ShowToolboxConfirmationAsync(popup.Title, popup.Message, popup.ButtonText);
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity(title, popup.Title);
     }
 
     private void OpenHelpTarget(string title, string? target, string? infoFallback)
@@ -367,6 +372,39 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity($"{title} 失败", error ?? target);
         }
+    }
+
+    private static HelpPopupSpec ParseHelpPopupSpec(string fallbackTitle, string? eventData)
+    {
+        if (string.IsNullOrWhiteSpace(eventData))
+        {
+            return new HelpPopupSpec(fallbackTitle, "帮助弹窗缺少内容。", "确定");
+        }
+
+        var segments = eventData.Split('|', 3);
+        if (segments.Length < 2)
+        {
+            return new HelpPopupSpec(
+                fallbackTitle,
+                NormalizeHelpPopupText(eventData),
+                "确定");
+        }
+
+        var popupTitle = string.IsNullOrWhiteSpace(segments[0])
+            ? fallbackTitle
+            : NormalizeHelpPopupText(segments[0]);
+        var popupMessage = NormalizeHelpPopupText(segments[1]);
+        var buttonText = segments.Length >= 3 && !string.IsNullOrWhiteSpace(segments[2])
+            ? NormalizeHelpPopupText(segments[2])
+            : "确定";
+        return new HelpPopupSpec(popupTitle, popupMessage, buttonText);
+    }
+
+    private static string NormalizeHelpPopupText(string? text)
+    {
+        return (text ?? string.Empty)
+            .Replace("\\n", Environment.NewLine, StringComparison.Ordinal)
+            .Trim();
     }
 
     private bool TryResolveHelpEntry(string? reference, out FrontendToolsHelpEntry entry)
@@ -461,6 +499,8 @@ internal sealed partial class FrontendShellViewModel
         pendingActions.Clear();
     }
 }
+
+internal sealed record HelpPopupSpec(string Title, string Message, string ButtonText);
 
 internal sealed class HelpDetailSectionViewModel(
     string title,

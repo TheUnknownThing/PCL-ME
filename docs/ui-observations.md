@@ -31,6 +31,6 @@ Have not been implemented yet, see image for reference:<br>
     [x] Favorite: Marks instance as or removes instance from favorites. Favorited instances should be copied to the top of the list (Favorites section) which should trigger a list expansion animation (and removing is similar). Note that for favorited instances the icon is filled instead of outlined.<br>
     [x] Open Folder: Opens the instance folder in file explorer.<br>
     [x] Delete: Deletes the instance after a confirmation dialog.<br>
-    [ ] Open Instance Settings: Selects the instance and opens the instance settings page for the instance.<br>
+    [x] Open Instance Settings: Selects the instance and opens the instance settings page for the instance.<br>
 [x] After clicking on an instance the selection page shuold close and revert to the main page.<br>
 [x] Instance selection seems to be very slow. Investigate why and fix it.<br>

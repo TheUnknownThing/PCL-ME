@@ -184,10 +184,6 @@ internal sealed partial class PclLoading : UserControl
         }
 
         StopAnimationLoop();
-        if (!IsError)
-        {
-            ResetStrikeVisuals();
-        }
     }
 
     private void StartAnimationLoop()
