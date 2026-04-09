@@ -534,7 +534,6 @@ internal sealed partial class MainWindow : Window
         }
 
         var leftOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? -50f : 50f;
-        var rightOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? 50f : -50f;
 
         if (transition.AnimateLeftPane)
         {

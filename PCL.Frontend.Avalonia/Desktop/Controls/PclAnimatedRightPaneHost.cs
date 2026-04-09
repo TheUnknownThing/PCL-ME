@@ -138,7 +138,9 @@ internal sealed class PclAnimatedRightPaneHost : Grid
 
     private static void ConfigureMotion(Control control, int enterDelay)
     {
-        Motion.SetStaggerChildren(control, true);
+        // Animate the whole pane as a single unit so non-card elements
+        // (for example warning/hint banners) participate in the same sequence.
+        Motion.SetStaggerChildren(control, false);
         Motion.SetStaggerStep(control, StaggerStepMilliseconds);
         Motion.SetDelay(control, enterDelay);
         Motion.SetInitialOpacity(control, 0);
