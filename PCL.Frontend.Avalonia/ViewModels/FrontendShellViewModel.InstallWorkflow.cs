@@ -534,7 +534,53 @@ internal sealed partial class FrontendShellViewModel
             return null;
         }
 
+        var cachedChoice = ResolveCachedBaselineChoice(isExistingInstance, optionTitle, baselineText);
+        if (cachedChoice is not null)
+        {
+            return cachedChoice;
+        }
+
         var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion);
+        return MatchInstallChoice(choices, baselineText);
+    }
+
+    private FrontendInstallChoice? ResolveCachedEffectiveChoice(bool isExistingInstance, string optionTitle, string minecraftVersion)
+    {
+        var state = GetEditableSelectionState(isExistingInstance, optionTitle);
+        if (state.SelectedChoice is not null)
+        {
+            return state.SelectedChoice;
+        }
+
+        if (state.IsExplicitlyCleared || !FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
+        {
+            return null;
+        }
+
+        var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
+        if (string.IsNullOrWhiteSpace(baselineText) || baselineText is "未安装" or "可以添加")
+        {
+            return null;
+        }
+
+        return ResolveCachedBaselineChoice(isExistingInstance, optionTitle, baselineText);
+    }
+
+    private FrontendInstallChoice? ResolveCachedBaselineChoice(bool isExistingInstance, string optionTitle, string baselineText)
+    {
+        return MatchInstallChoice(GetCachedInstallChoices(isExistingInstance, optionTitle), baselineText);
+    }
+
+    private IReadOnlyList<FrontendInstallChoice> GetCachedInstallChoices(bool isExistingInstance, string optionTitle)
+    {
+        var choices = isExistingInstance ? _instanceInstallOptionChoices : _downloadInstallOptionChoices;
+        return choices.TryGetValue(optionTitle, out var cachedChoices)
+            ? cachedChoices
+            : [];
+    }
+
+    private static FrontendInstallChoice? MatchInstallChoice(IEnumerable<FrontendInstallChoice> choices, string baselineText)
+    {
         return choices.FirstOrDefault(choice =>
             string.Equals(choice.Title, baselineText, StringComparison.OrdinalIgnoreCase)
             || choice.Title.Contains(baselineText, StringComparison.OrdinalIgnoreCase)

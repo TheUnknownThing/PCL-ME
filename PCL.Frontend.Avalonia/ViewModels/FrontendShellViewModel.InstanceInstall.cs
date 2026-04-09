@@ -27,6 +27,8 @@ internal sealed partial class FrontendShellViewModel
     private bool _instanceInstallAutoSelectedLegacyFabricApi;
     private bool _instanceInstallAutoSelectedQsl;
     private bool _instanceInstallAutoSelectedOptiFabric;
+    private int _instanceInstallOptionLoadGeneration;
+    private string _instanceInstallPrefetchSignature = string.Empty;
 
     public string InstanceInstallSelectionTitle
     {
@@ -85,6 +87,7 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(InstanceInstallHints, BuildInstanceInstallHintStrips());
         SyncInstanceInstallOptionCards(BuildInstanceInstallOptionCards());
+        EnsureInstanceInstallOptionChoicesPrefetched();
     }
 
     private void RefreshInstanceInstallSurface()
@@ -127,11 +130,13 @@ internal sealed partial class FrontendShellViewModel
     private string BuildInstanceInstallTargetSummary()
     {
         var parts = new List<string>();
-        var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance: true).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
-        var primaryChoice = ResolveInstanceInstallPrimaryChoice(minecraftVersion);
-        if (primaryChoice is not null)
+        var primaryTitle = GetCurrentPrimaryInstallTitle(isExistingInstance: true);
+        if (primaryTitle is not null)
         {
-            parts.Add(primaryChoice.Title);
+            var primarySelection = GetEffectiveSelectionText(isExistingInstance: true, primaryTitle);
+            parts.Add(string.IsNullOrWhiteSpace(primarySelection)
+                ? primaryTitle
+                : $"{primaryTitle} {primarySelection}".Trim());
         }
 
         parts.Add(GetEffectiveMinecraftVersion(isExistingInstance: true));
@@ -139,59 +144,45 @@ internal sealed partial class FrontendShellViewModel
         return string.Join(" / ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
-    private FrontendInstallChoice? ResolveInstanceInstallPrimaryChoice(string minecraftVersion)
-    {
-        return ResolveEffectiveChoice(isExistingInstance: true, "NeoForge", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "Cleanroom", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "Fabric", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "Legacy Fabric", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "Quilt", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "Forge", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "OptiFine", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "LiteLoader", minecraftVersion)
-               ?? ResolveEffectiveChoice(isExistingInstance: true, "LabyMod", minecraftVersion);
-    }
-
     private string GetInstanceInstallSelectionIconName()
     {
-        var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance: true).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
-        if (ResolveEffectiveChoice(true, "NeoForge", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "NeoForge"))
         {
             return "NeoForge.png";
         }
 
-        if (ResolveEffectiveChoice(true, "Cleanroom", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "Cleanroom"))
         {
             return "Cleanroom.png";
         }
 
-        if (ResolveEffectiveChoice(true, "Fabric", minecraftVersion) is not null
-            || ResolveEffectiveChoice(true, "Legacy Fabric", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "Fabric")
+            || HasInstallSelection(true, "Legacy Fabric"))
         {
             return "Fabric.png";
         }
 
-        if (ResolveEffectiveChoice(true, "Quilt", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "Quilt"))
         {
             return "Quilt.png";
         }
 
-        if (ResolveEffectiveChoice(true, "Forge", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "Forge"))
         {
             return "Anvil.png";
         }
 
-        if (ResolveEffectiveChoice(true, "OptiFine", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "OptiFine"))
         {
             return "GrassPath.png";
         }
 
-        if (ResolveEffectiveChoice(true, "LabyMod", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "LabyMod"))
         {
             return "LabyMod.png";
         }
 
-        if (ResolveEffectiveChoice(true, "LiteLoader", minecraftVersion) is not null)
+        if (HasInstallSelection(true, "LiteLoader"))
         {
             return "Egg.png";
         }
@@ -223,7 +214,7 @@ internal sealed partial class FrontendShellViewModel
 
     private DownloadInstallOptionCardViewModel CreateInstanceInstallOptionCard(string optionTitle, string iconName, string minecraftVersion)
     {
-        var effectiveChoice = ResolveEffectiveChoice(isExistingInstance: true, optionTitle, minecraftVersion);
+        var effectiveChoice = ResolveCachedEffectiveChoice(isExistingInstance: true, optionTitle, minecraftVersion);
         var staticUnavailableReason = GetInstallOptionStaticUnavailableReason(isExistingInstance: true, optionTitle, minecraftVersion);
         var loadError = _instanceInstallOptionLoadErrors.TryGetValue(optionTitle, out var loadErrorText)
             ? loadErrorText
@@ -237,8 +228,10 @@ internal sealed partial class FrontendShellViewModel
             ?? (hasLoadedChoices
                 ? GetInstallOptionUnavailableReason(isExistingInstance: true, optionTitle, minecraftVersion, cachedChoices)
                 : null);
-        var selectionText = effectiveChoice?.Title
-                            ?? (unavailableReason is null ? "可以添加" : unavailableReason);
+        var hasSelection = HasInstallSelection(isExistingInstance: true, optionTitle);
+        var selectionText = hasSelection
+            ? GetEffectiveSelectionText(isExistingInstance: true, optionTitle)
+            : unavailableReason ?? "可以添加";
         var canExpand = unavailableReason is null;
         var isExpanded = canExpand && string.Equals(_instanceInstallExpandedOptionTitle, optionTitle, StringComparison.Ordinal);
         var choiceItems = cachedChoices.Select(choice => new DownloadInstallChoiceItemViewModel(
@@ -250,9 +243,9 @@ internal sealed partial class FrontendShellViewModel
         return new DownloadInstallOptionCardViewModel(
             optionTitle,
             selectionText,
-            effectiveChoice is null ? null : LoadLauncherBitmap("Images", "Blocks", iconName),
-            effectiveChoice is not null,
-            effectiveChoice is null,
+            hasSelection ? LoadLauncherBitmap("Images", "Blocks", iconName) : null,
+            hasSelection,
+            !hasSelection,
             canExpand,
             isExpanded,
             _instanceInstallOptionLoadsInProgress.Contains(optionTitle),
@@ -330,7 +323,37 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void EnsureInstanceInstallOptionChoicesLoaded(string optionTitle, string minecraftVersion)
+    private void EnsureInstanceInstallOptionChoicesPrefetched()
+    {
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceInstall))
+        {
+            return;
+        }
+
+        var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance: true).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
+        if (string.IsNullOrWhiteSpace(minecraftVersion))
+        {
+            return;
+        }
+
+        var visibleTitles = DownloadInstallOptionBlueprints
+            .Where(option => ShouldShowInstallOption(option.Title, minecraftVersion))
+            .Select(option => option.Title)
+            .ToArray();
+        var signature = $"{_instanceInstallOptionLoadGeneration}:{minecraftVersion}:{string.Join("|", visibleTitles)}";
+        if (string.Equals(signature, _instanceInstallPrefetchSignature, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _instanceInstallPrefetchSignature = signature;
+        foreach (var optionTitle in visibleTitles)
+        {
+            EnsureInstanceInstallOptionChoicesLoaded(optionTitle, minecraftVersion, refreshSurfaceOnStart: false);
+        }
+    }
+
+    private void EnsureInstanceInstallOptionChoicesLoaded(string optionTitle, string minecraftVersion, bool refreshSurfaceOnStart = true)
     {
         if (_instanceInstallOptionChoices.ContainsKey(optionTitle) || _instanceInstallOptionLoadsInProgress.Contains(optionTitle))
         {
@@ -339,8 +362,12 @@ internal sealed partial class FrontendShellViewModel
 
         _instanceInstallOptionLoadsInProgress.Add(optionTitle);
         _instanceInstallOptionLoadErrors.Remove(optionTitle);
-        InitializeInstanceInstallSurface();
+        if (refreshSurfaceOnStart)
+        {
+            InitializeInstanceInstallSurface();
+        }
 
+        var generation = _instanceInstallOptionLoadGeneration;
         var versionSignature = minecraftVersion;
         _ = Task.Run(() => GetSelectableInstallChoices(isExistingInstance: true, optionTitle, versionSignature))
             .ContinueWith(async task =>
@@ -348,6 +375,11 @@ internal sealed partial class FrontendShellViewModel
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     _instanceInstallOptionLoadsInProgress.Remove(optionTitle);
+                    if (generation != _instanceInstallOptionLoadGeneration)
+                    {
+                        return;
+                    }
+
                     var currentVersion = GetEffectiveMinecraftVersion(isExistingInstance: true).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
                     if (!string.Equals(currentVersion, versionSignature, StringComparison.Ordinal))
                     {
@@ -543,6 +575,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ResetInstanceInstallOptionBrowserState()
     {
+        _instanceInstallOptionLoadGeneration++;
         _instanceInstallExpandedOptionTitle = null;
         _instanceInstallOptionChoices.Clear();
         _instanceInstallOptionLoadErrors.Clear();
@@ -551,5 +584,6 @@ internal sealed partial class FrontendShellViewModel
         _instanceInstallAutoSelectedLegacyFabricApi = false;
         _instanceInstallAutoSelectedQsl = false;
         _instanceInstallAutoSelectedOptiFabric = false;
+        _instanceInstallPrefetchSignature = string.Empty;
     }
 }
