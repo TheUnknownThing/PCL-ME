@@ -303,7 +303,7 @@ internal static class FrontendInstanceCompositionService
         var usedMemoryGb = Math.Max(totalMemoryGb - availableMemoryGb, 0);
 
         return new FrontendInstanceSetupState(
-            IsolationIndex: ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary) ? 0 : 1,
+            IsolationIndex: ResolveInstanceIsolationIndex(instanceConfig),
             WindowTitle: ReadValue(instanceConfig, "VersionArgumentTitle", string.Empty),
             UseDefaultWindowTitle: ReadValue(instanceConfig, "VersionArgumentTitleEmpty", false),
             CustomInfo: ReadValue(instanceConfig, "VersionArgumentInfo", string.Empty),
@@ -1111,6 +1111,18 @@ internal static class FrontendInstanceCompositionService
             globalMode,
             IsModable(manifestSummary),
             FrontendIsolationPolicyService.IsNonReleaseVersionType(manifestSummary.VersionType));
+    }
+
+    private static int ResolveInstanceIsolationIndex(YamlFileProvider instanceConfig)
+    {
+        if (!instanceConfig.Exists("VersionArgumentIndieV2"))
+        {
+            return 0;
+        }
+
+        return ReadValue(instanceConfig, "VersionArgumentIndieV2", false)
+            ? 1
+            : 2;
     }
 
     private static IReadOnlyList<string> ParseLibraryNames(JsonElement root)

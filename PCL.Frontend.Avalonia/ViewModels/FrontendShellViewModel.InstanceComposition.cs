@@ -184,7 +184,18 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.PersistInstanceValue(instanceDirectory, "DisplayType", SelectedInstanceOverviewCategoryIndex);
                 break;
             case nameof(SelectedInstanceIsolationIndex):
-                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionArgumentIndieV2", SelectedInstanceIsolationIndex == 0);
+                switch (SelectedInstanceIsolationIndex)
+                {
+                    case 0:
+                        _shellActionService.RemoveInstanceValues(instanceDirectory, ["VersionArgumentIndieV2"]);
+                        break;
+                    case 1:
+                        _shellActionService.PersistInstanceValue(instanceDirectory, "VersionArgumentIndieV2", true);
+                        break;
+                    default:
+                        _shellActionService.PersistInstanceValue(instanceDirectory, "VersionArgumentIndieV2", false);
+                        break;
+                }
                 break;
             case nameof(InstanceWindowTitleSetting):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionArgumentTitle", InstanceWindowTitleSetting);

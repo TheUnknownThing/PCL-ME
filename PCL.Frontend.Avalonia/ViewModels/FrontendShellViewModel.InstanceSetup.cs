@@ -6,7 +6,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private int _selectedInstanceIsolationIndex = 1;
+    private int _selectedInstanceIsolationIndex;
     private string _instanceWindowTitle = string.Empty;
     private bool _useDefaultInstanceWindowTitle;
     private string _instanceCustomInfo = string.Empty;
@@ -44,6 +44,7 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> InstanceIsolationOptions { get; } =
     [
+        "默认（跟随全局）",
         "开启",
         "关闭"
     ];
