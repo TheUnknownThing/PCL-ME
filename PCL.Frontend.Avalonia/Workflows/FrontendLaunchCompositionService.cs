@@ -21,8 +21,11 @@ internal static class FrontendLaunchCompositionService
 {
     private static readonly HttpClient JavaRuntimeHttpClient = new();
     private static readonly object HostJavaProbeLock = new();
+    private static readonly object NativeReplacementCatalogLock = new();
     private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedHostJavaRuntimes;
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>>? CachedNativeReplacementCatalog;
     private static bool IsHostJavaProbeCached;
+    private static bool IsNativeReplacementCatalogCached;
 
     public static FrontendLaunchComposition Compose(
         AvaloniaCommandOptions options,
@@ -637,21 +640,14 @@ internal static class FrontendLaunchCompositionService
                 continue;
             }
 
-            var name = GetString(library, "name");
-            var artifactPath = GetNestedString(library, "downloads", "artifact", "path");
-            if (string.IsNullOrWhiteSpace(artifactPath) && !string.IsNullOrWhiteSpace(name))
-            {
-                artifactPath = DeriveLibraryPathFromName(name);
-            }
-
-            if (string.IsNullOrWhiteSpace(artifactPath))
+            if (!TryResolveEffectiveArtifactDownload(library, launcherFolder, runtimeArchitecture, out var artifactDownload))
             {
                 continue;
             }
 
             libraries.Add(new MinecraftLaunchClasspathLibrary(
-                name,
-                Path.Combine(launcherFolder, "libraries", artifactPath.Replace('/', Path.DirectorySeparatorChar)),
+                GetString(library, "name"),
+                artifactDownload.TargetPath,
                 IsNatives: library.TryGetProperty("natives", out _)));
         }
     }
@@ -879,7 +875,7 @@ internal static class FrontendLaunchCompositionService
                 continue;
             }
 
-            if (TryResolveLibraryDownload(library, "artifact", launcherFolder, out var artifactDownload) &&
+            if (TryResolveEffectiveArtifactDownload(library, launcherFolder, runtimeArchitecture, out var artifactDownload) &&
                 !string.IsNullOrWhiteSpace(artifactDownload.DownloadUrl))
             {
                 requirements[artifactDownload.TargetPath] = new FrontendLaunchArtifactRequirement(
@@ -1286,11 +1282,22 @@ internal static class FrontendLaunchCompositionService
         out NativeArchiveDownloadInfo nativeArchive)
     {
         nativeArchive = null!;
-        var entryName = ResolveNativeEntryName(library, runtimeArchitecture);
-        if (string.IsNullOrWhiteSpace(entryName) ||
-            !TryResolveLibraryDownload(library, entryName, launcherFolder, out var download))
+        LibraryDownloadInfo download;
+        if (IsDedicatedNativeLibrary(library))
         {
-            return false;
+            if (!TryResolveEffectiveArtifactDownload(library, launcherFolder, runtimeArchitecture, out download))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            var entryName = ResolveNativeEntryName(library, runtimeArchitecture);
+            if (string.IsNullOrWhiteSpace(entryName) ||
+                !TryResolveLibraryDownload(library, entryName, launcherFolder, out download))
+            {
+                return false;
+            }
         }
 
         nativeArchive = new NativeArchiveDownloadInfo(
@@ -1360,6 +1367,220 @@ internal static class FrontendLaunchCompositionService
         }
 
         download = new LibraryDownloadInfo(targetPath, url, GetString(downloadEntry, "sha1"));
+        return true;
+    }
+
+    private static bool TryResolveEffectiveArtifactDownload(
+        JsonElement library,
+        string launcherFolder,
+        MachineType runtimeArchitecture,
+        out LibraryDownloadInfo download)
+    {
+        if (TryResolveArtifactReplacementDownload(library, launcherFolder, runtimeArchitecture, out download))
+        {
+            return true;
+        }
+
+        return TryResolveLibraryDownload(library, "artifact", launcherFolder, out download);
+    }
+
+    private static bool TryResolveArtifactReplacementDownload(
+        JsonElement library,
+        string launcherFolder,
+        MachineType runtimeArchitecture,
+        out LibraryDownloadInfo download)
+    {
+        download = null!;
+        var libraryName = GetString(library, "name");
+        return !string.IsNullOrWhiteSpace(libraryName) &&
+               TryResolveArtifactReplacementDownload(libraryName, launcherFolder, runtimeArchitecture, out download);
+    }
+
+    private static bool TryResolveArtifactReplacementDownload(
+        string libraryName,
+        string launcherFolder,
+        MachineType runtimeArchitecture,
+        out LibraryDownloadInfo download)
+    {
+        download = null!;
+        var platformKey = ResolveNativeReplacementPlatformKey(runtimeArchitecture);
+        if (string.IsNullOrWhiteSpace(platformKey))
+        {
+            return false;
+        }
+
+        var catalog = GetNativeReplacementCatalog();
+        if (!catalog.TryGetValue(platformKey, out var platformCatalog) ||
+            !platformCatalog.TryGetValue(libraryName, out var replacement))
+        {
+            return false;
+        }
+
+        var replacementTargetPath = Path.Combine(
+            launcherFolder,
+            "libraries",
+            replacement.ArtifactPath.Replace('/', Path.DirectorySeparatorChar));
+        var replacementUrl = string.IsNullOrWhiteSpace(replacement.DownloadUrl)
+            ? "https://repo1.maven.org/maven2/" + replacement.ArtifactPath
+            : replacement.DownloadUrl;
+
+        download = new LibraryDownloadInfo(
+            replacementTargetPath,
+            replacementUrl,
+            replacement.Sha1);
+        return true;
+    }
+
+    private static string? ResolveNativeReplacementPlatformKey(MachineType runtimeArchitecture)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return runtimeArchitecture switch
+            {
+                MachineType.ARM64 => "windows-arm64",
+                MachineType.I386 => "windows-x86",
+                MachineType.AMD64 => "windows-x64",
+                _ => null
+            };
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return runtimeArchitecture switch
+            {
+                MachineType.ARM64 => "macos-arm64",
+                MachineType.AMD64 => "macos-x64",
+                _ => null
+            };
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return runtimeArchitecture switch
+            {
+                MachineType.ARM64 => "linux-arm64",
+                MachineType.I386 => "linux-x86",
+                MachineType.AMD64 => "linux-x64",
+                _ => null
+            };
+        }
+
+        return null;
+    }
+
+    private static bool TryParseLibraryCoordinate(string? name, out LibraryCoordinate coordinate)
+    {
+        coordinate = new LibraryCoordinate(string.Empty, string.Empty, string.Empty, null);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        var parts = name.Split(':', StringSplitOptions.None);
+        if (parts.Length is < 3 or > 4)
+        {
+            return false;
+        }
+
+        coordinate = new LibraryCoordinate(
+            parts[0],
+            parts[1],
+            parts[2],
+            parts.Length >= 4 ? parts[3] : null);
+        return true;
+    }
+
+    private static bool IsDedicatedNativeLibrary(JsonElement library)
+    {
+        return TryParseLibraryCoordinate(GetString(library, "name"), out var coordinate) &&
+               !string.IsNullOrWhiteSpace(coordinate.Classifier) &&
+               (coordinate.Classifier.StartsWith("natives-", StringComparison.OrdinalIgnoreCase) ||
+                coordinate.Classifier.StartsWith("native-", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>> GetNativeReplacementCatalog()
+    {
+        lock (NativeReplacementCatalogLock)
+        {
+            if (IsNativeReplacementCatalogCached)
+            {
+                return CachedNativeReplacementCatalog ?? EmptyNativeReplacementCatalog;
+            }
+
+            CachedNativeReplacementCatalog = LoadNativeReplacementCatalog();
+            IsNativeReplacementCatalogCached = true;
+            return CachedNativeReplacementCatalog;
+        }
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>> LoadNativeReplacementCatalog()
+    {
+        var catalogPath = FrontendLauncherAssetLocator.GetPath("NativeReplacements", "native-replacements.json");
+        if (!File.Exists(catalogPath))
+        {
+            return EmptyNativeReplacementCatalog;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(catalogPath));
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return EmptyNativeReplacementCatalog;
+            }
+
+            var platforms = new Dictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var platformProperty in document.RootElement.EnumerateObject())
+            {
+                if (platformProperty.Value.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var replacements = new Dictionary<string, ReplacementArtifactInfo>(StringComparer.OrdinalIgnoreCase);
+                foreach (var replacementProperty in platformProperty.Value.EnumerateObject())
+                {
+                    if (TryParseReplacementArtifactInfo(replacementProperty.Value, out var replacement))
+                    {
+                        replacements[replacementProperty.Name] = replacement;
+                    }
+                }
+
+                if (replacements.Count > 0)
+                {
+                    platforms[platformProperty.Name] = replacements;
+                }
+            }
+
+            return platforms.Count == 0 ? EmptyNativeReplacementCatalog : platforms;
+        }
+        catch
+        {
+            return EmptyNativeReplacementCatalog;
+        }
+    }
+
+    private static bool TryParseReplacementArtifactInfo(JsonElement element, out ReplacementArtifactInfo replacement)
+    {
+        replacement = null!;
+        if (element.ValueKind != JsonValueKind.Object ||
+            !element.TryGetProperty("artifact", out var artifact) ||
+            artifact.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        var path = GetString(artifact, "path");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        replacement = new ReplacementArtifactInfo(
+            GetString(element, "name"),
+            path,
+            GetString(artifact, "url"),
+            GetString(artifact, "sha1"));
         return true;
     }
 
@@ -1576,11 +1797,26 @@ internal static class FrontendLaunchCompositionService
         string? DownloadUrl,
         string? Sha1);
 
+    private sealed record ReplacementArtifactInfo(
+        string? ReplacementName,
+        string ArtifactPath,
+        string? DownloadUrl,
+        string? Sha1);
+
+    private sealed record LibraryCoordinate(
+        string GroupId,
+        string ArtifactId,
+        string Version,
+        string? Classifier);
+
     private sealed record NativeArchiveDownloadInfo(
         string TargetPath,
         string? DownloadUrl,
         string? Sha1,
         IReadOnlyList<string> ExtractExcludes);
+
+    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>> EmptyNativeReplacementCatalog =
+        new Dictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>>(StringComparer.OrdinalIgnoreCase);
 
     private static string BuildLibraryUrl(JsonElement library, string relativePath)
     {
