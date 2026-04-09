@@ -267,22 +267,17 @@ internal sealed partial class PclCard : UserControl
     private void RefreshState()
     {
         var isHeaderInteractive = ShowChevron || HeaderCommand is not null;
-        var idleBorderBrush = GetBrush("ColorBrushTransparent", "#00FFFFFF");
-        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver", "#28D5E6FD");
-        var idleSurfaceBrush = GetBrush("ColorBrushMyCard", "#CDFFFFFF");
-        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#E6FFFFFF");
+        var idleSurfaceBrush = GetBrush("ColorBrushMyCard", "#D2FBFBFB");
+        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#D2F8F8F8");
         var idleHeaderBrush = GetBrush("ColorBrush1", "#343D4A");
         var hoverHeaderBrush = GetBrush("ColorBrush2", "#0B5BCB");
 
-        CardBorder.BorderBrush = _isHovered
-            ? hoverBorderBrush
-            : idleBorderBrush;
         CardBorder.Background = _isHovered
             ? hoverSurfaceBrush
             : idleSurfaceBrush;
-        CardBorder.BoxShadow = BoxShadows.Parse(_isHovered
-            ? "0 10 24 0 #200B5BCB"
-            : "0 6 18 0 #14343D4A");
+        CardBorder.BoxShadow = _isHovered
+            ? CreateHoverBoxShadow()
+            : CreateIdleBoxShadow();
         HeaderTextBlock.Foreground = _isHovered
             ? hoverHeaderBrush
             : idleHeaderBrush;
@@ -300,6 +295,81 @@ internal sealed partial class PclCard : UserControl
         }
 
         return Brush.Parse(fallback);
+    }
+
+    private static Color GetColor(string resourceKey, string fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true)
+        {
+            if (resource is Color color)
+            {
+                return color;
+            }
+
+            if (resource is ISolidColorBrush brush)
+            {
+                return brush.Color;
+            }
+        }
+
+        return Color.Parse(fallback);
+    }
+
+    private static Color WithAlpha(Color color, byte alpha)
+    {
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
+
+    private static BoxShadows CreateIdleBoxShadow()
+    {
+        var edgeColor = WithAlpha(GetColor("ColorObject1", "#343D4A"), 0x10);
+        var shadowColor = WithAlpha(GetColor("ColorObject1", "#343D4A"), 0x14);
+
+        return new BoxShadows(
+            new BoxShadow
+            {
+                OffsetX = 0,
+                OffsetY = 0,
+                Blur = 0,
+                Spread = 1,
+                Color = edgeColor
+            },
+            [
+                new BoxShadow
+                {
+                    OffsetX = 0,
+                    OffsetY = 6,
+                    Blur = 18,
+                    Spread = 0,
+                    Color = shadowColor
+                }
+            ]);
+    }
+
+    private static BoxShadows CreateHoverBoxShadow()
+    {
+        var edgeColor = WithAlpha(GetColor("ColorObject5", "#96C0F9"), 0x4A);
+        var shadowColor = WithAlpha(GetColor("ColorObject4", "#4890F5"), 0x28);
+
+        return new BoxShadows(
+            new BoxShadow
+            {
+                OffsetX = 0,
+                OffsetY = 0,
+                Blur = 0,
+                Spread = 1,
+                Color = edgeColor
+            },
+            [
+                new BoxShadow
+                {
+                    OffsetX = 0,
+                    OffsetY = 8,
+                    Blur = 20,
+                    Spread = 0,
+                    Color = shadowColor
+                }
+            ]);
     }
 
     private void RefreshHeaderLayout()
