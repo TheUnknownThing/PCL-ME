@@ -417,6 +417,8 @@ Expected result:
 
 - setup page, instance page, and launch path will read the same Java inventory again.
 
+Status: completed
+
 ### Phase 2
 
 Repair launch-time automatic Java selection.
@@ -439,6 +441,8 @@ Expected result:
 
 - `auto` becomes compatibility-aware again instead of using "first enabled Java".
 
+Status: completed
+
 ### Phase 3
 
 Validate explicit Java selection and recover safely.
@@ -459,6 +463,8 @@ Expected result:
 - explicit Java behaves like HMCL-style validated custom selection instead of bypassing compatibility checks,
 - and "follow global" no longer drops the global Java selection.
 
+Status: completed
+
 ### Phase 4
 
 Improve host Java probing metadata.
@@ -473,16 +479,21 @@ Expected result:
 
 - automatic fallback to host Java becomes less lossy and less dependent on probe order.
 
+Status: completed
+
 ### Phase 5
 
 Follow-up work after the initial repair lands.
 
-- Route Avalonia launch-time candidate discovery through the retained `JavaManager` inventory when available, while keeping Avalonia local storage as the primary source of enablement state.
+- Route Avalonia launch-time candidate discovery through a shared `JavaManager` inventory path that Avalonia can consume directly.
+- Portable scanner integration inside Avalonia is already implemented, but the initial version blocked shell construction by scanning synchronously during composition. That regression has been fixed locally by moving scan warm-up to the background and refreshing launch composition after cache population.
 - Consider adding HMCL-style special constraints incrementally:
   - Linux legacy-native Java 8 restriction
   - ARM64/x86 compatibility rules
   - LaunchWrapper / ModLauncher special cases
 - Reassess whether instance-level "ignore Java compatibility warning" needs dedicated UI feedback beyond the current runtime-selection override.
+
+Status: in progress
 
 ## Open Design Questions
 

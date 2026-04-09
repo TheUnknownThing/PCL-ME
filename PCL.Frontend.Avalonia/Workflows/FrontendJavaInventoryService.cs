@@ -15,6 +15,7 @@ internal static class FrontendJavaInventoryService
     private static readonly object PortableJavaScanLock = new();
     private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedPortableJavaRuntimes;
     private static bool IsPortableJavaScanCached;
+    private static Task<IReadOnlyList<FrontendStoredJavaRuntime>>? PortableJavaScanTask;
 
     public static IReadOnlyList<JavaStorageItem> ParseStorageItems(string rawJson)
     {
@@ -143,7 +144,7 @@ internal static class FrontendJavaInventoryService
     public static IReadOnlyList<FrontendStoredJavaRuntime> ParseAvailableRuntimes(string rawJson)
     {
         var storedRuntimes = ParseStoredJavaRuntimes(rawJson);
-        var managedRuntimes = GetManagedJavaRuntimes();
+        var managedRuntimes = GetCachedManagedJavaRuntimes();
         if (managedRuntimes.Count == 0)
         {
             return storedRuntimes;
@@ -211,46 +212,68 @@ internal static class FrontendJavaInventoryService
             installation?.Architecture);
     }
 
-    private static IReadOnlyList<FrontendStoredJavaRuntime> GetManagedJavaRuntimes()
+    public static Task WarmPortableJavaScanCacheAsync()
     {
         lock (PortableJavaScanLock)
         {
             if (IsPortableJavaScanCached)
             {
-                return CachedPortableJavaRuntimes ?? [];
+                return Task.CompletedTask;
             }
 
-            try
-            {
-                var runtime = SystemJavaRuntimeEnvironment.Current;
-                var manager = new JavaManager(
-                    JavaParser,
-                    NullJavaStorage.Instance,
-                    new DefaultJavaInstallationEvaluator(runtime),
-                    new DefaultPathsScanner(runtime),
-                    new PathEnvironmentScanner(runtime),
-                    new WhereCommandScanner(runtime, new ProcessCommandRunner()));
+            PortableJavaScanTask ??= Task.Run(ScanPortableJavaRuntimesAsync);
+            return PortableJavaScanTask;
+        }
+    }
 
-                manager.ScanJavaAsync(force: true).GetAwaiter().GetResult();
-                CachedPortableJavaRuntimes = manager.GetSortedJavaList()
-                    .Select(entry => new FrontendStoredJavaRuntime(
-                        entry.Installation.JavaExePath,
-                        entry.Installation.Version.ToString(),
-                        entry.Installation.Version,
-                        entry.Installation.MajorVersion,
-                        entry.IsEnabled,
-                        entry.Installation.Is64Bit,
-                        entry.Installation.IsJre,
-                        entry.Installation.Brand,
-                        entry.Installation.Architecture))
-                    .ToArray();
-            }
-            catch
-            {
-                CachedPortableJavaRuntimes = [];
-            }
+    private static IReadOnlyList<FrontendStoredJavaRuntime> GetCachedManagedJavaRuntimes()
+    {
+        lock (PortableJavaScanLock)
+        {
+            return IsPortableJavaScanCached
+                ? CachedPortableJavaRuntimes ?? []
+                : [];
+        }
+    }
 
+    private static async Task<IReadOnlyList<FrontendStoredJavaRuntime>> ScanPortableJavaRuntimesAsync()
+    {
+        IReadOnlyList<FrontendStoredJavaRuntime> scannedRuntimes;
+        try
+        {
+            var runtime = SystemJavaRuntimeEnvironment.Current;
+            var manager = new JavaManager(
+                JavaParser,
+                NullJavaStorage.Instance,
+                new DefaultJavaInstallationEvaluator(runtime),
+                new DefaultPathsScanner(runtime),
+                new PathEnvironmentScanner(runtime),
+                new WhereCommandScanner(runtime, new ProcessCommandRunner()));
+
+            await manager.ScanJavaAsync(force: true).ConfigureAwait(false);
+            scannedRuntimes = manager.GetSortedJavaList()
+                .Select(entry => new FrontendStoredJavaRuntime(
+                    entry.Installation.JavaExePath,
+                    entry.Installation.Version.ToString(),
+                    entry.Installation.Version,
+                    entry.Installation.MajorVersion,
+                    entry.IsEnabled,
+                    entry.Installation.Is64Bit,
+                    entry.Installation.IsJre,
+                    entry.Installation.Brand,
+                    entry.Installation.Architecture))
+                .ToArray();
+        }
+        catch
+        {
+            scannedRuntimes = [];
+        }
+
+        lock (PortableJavaScanLock)
+        {
+            CachedPortableJavaRuntimes = scannedRuntimes;
             IsPortableJavaScanCached = true;
+            PortableJavaScanTask = null;
             return CachedPortableJavaRuntimes;
         }
     }
