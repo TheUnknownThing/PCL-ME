@@ -396,7 +396,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (!_launchComposition.PrecheckResult.IsSuccess)
         {
-            AddActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
+            AddFailureActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
             return;
         }
 

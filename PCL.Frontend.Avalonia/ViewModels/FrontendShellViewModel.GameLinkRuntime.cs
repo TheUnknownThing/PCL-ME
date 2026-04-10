@@ -43,7 +43,7 @@ internal sealed partial class FrontendShellViewModel
         Dispatcher.UIThread.Post(() =>
         {
             GameLinkAnnouncement = "检测到缺少 EasyTier 运行时文件，请先完成下载或补齐运行时后再试。";
-            AddActivity("联机大厅", "当前运行环境缺少 EasyTier 运行时文件。");
+            AddFailureActivity("联机大厅失败", "当前运行环境缺少 EasyTier 运行时文件。");
         });
     }
 
@@ -87,7 +87,7 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
-            AddActivity("联机大厅失败", ex.Message);
+            AddFailureActivity("联机大厅失败", ex.Message);
             SyncLobbyRuntimeState(preserveTypedLobbyId: true);
         });
     }

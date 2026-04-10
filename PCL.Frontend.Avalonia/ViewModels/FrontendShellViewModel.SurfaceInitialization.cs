@@ -716,7 +716,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(entry.Target))
         {
-            AddActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
+            AddFailureActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
             return;
         }
 
@@ -737,7 +737,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+            AddFailureActivity($"选择保存位置失败: {entry.Title}", ex.Message);
             return;
         }
 
@@ -826,7 +826,7 @@ internal sealed partial class FrontendShellViewModel
             }
             else
             {
-                AddActivity($"{title} 失败", error ?? detail);
+                AddFailureActivity($"{title} 失败", error ?? detail);
             }
         });
     }
