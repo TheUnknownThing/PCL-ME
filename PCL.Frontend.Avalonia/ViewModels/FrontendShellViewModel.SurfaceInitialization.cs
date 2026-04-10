@@ -2,9 +2,11 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
@@ -298,9 +300,9 @@ internal sealed partial class FrontendShellViewModel
                             entry.Info,
                             entry.Meta,
                             entry.ActionText,
-                            string.IsNullOrWhiteSpace(entry.Target)
-                                ? CreateIntentCommand($"下载页操作: {entry.Title}", $"{entry.Info} • {entry.Meta}")
-                                : CreateOpenTargetCommand($"打开条目: {entry.Title}", entry.Target, entry.Target))).ToArray())));
+                            CreateDownloadCatalogCommand(entry))).ToArray(),
+                    section.IsCollapsible,
+                    section.IsInitiallyExpanded)));
     }
 
     private void SetDownloadCatalogLoading(bool isLoading)
@@ -618,9 +620,13 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(DownloadCatalogIntroActions, actions);
     }
 
-    private DownloadCatalogSectionViewModel CreateDownloadCatalogSection(string title, IReadOnlyList<DownloadCatalogEntryViewModel> items)
+    private DownloadCatalogSectionViewModel CreateDownloadCatalogSection(
+        string title,
+        IReadOnlyList<DownloadCatalogEntryViewModel> items,
+        bool isCollapsible = false,
+        bool isExpanded = true)
     {
-        return new DownloadCatalogSectionViewModel(title, items);
+        return new DownloadCatalogSectionViewModel(title, items, isCollapsible, isExpanded);
     }
 
     private DownloadCatalogEntryViewModel CreateDownloadCatalogEntry(string title, string info, string meta, string actionText)
@@ -662,6 +668,113 @@ internal sealed partial class FrontendShellViewModel
     private ActionCommand CreateIntentCommand(string title, string detail)
     {
         return new ActionCommand(() => AddActivity(title, detail));
+    }
+
+    private ActionCommand CreateDownloadCatalogCommand(FrontendDownloadCatalogEntry entry)
+    {
+        if (entry.ActionKind == FrontendDownloadCatalogEntryActionKind.DownloadFile
+            && !string.IsNullOrWhiteSpace(entry.Target))
+        {
+            return new ActionCommand(() => _ = DownloadCatalogFileAsync(entry));
+        }
+
+        return string.IsNullOrWhiteSpace(entry.Target)
+            ? CreateIntentCommand($"下载页操作: {entry.Title}", $"{entry.Info} • {entry.Meta}".Trim(' ', '•'))
+            : CreateOpenTargetCommand($"打开条目: {entry.Title}", entry.Target, entry.Target);
+    }
+
+    private async Task DownloadCatalogFileAsync(FrontendDownloadCatalogEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.Target))
+        {
+            AddActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
+            return;
+        }
+
+        var suggestedFileName = ResolveDownloadCatalogSuggestedFileName(entry);
+        var extension = Path.GetExtension(suggestedFileName);
+        var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
+        var typeName = $"{GetDownloadCatalogRouteTitle(_currentRoute.Subpage)} 安装器";
+
+        string? targetPath;
+        try
+        {
+            targetPath = await _shellActionService.PickSaveFileAsync(
+                "选择保存位置",
+                suggestedFileName,
+                typeName,
+                ResolveDownloadCatalogStartDirectory(),
+                patterns);
+        }
+        catch (Exception ex)
+        {
+            AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(targetPath))
+        {
+            AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
+            return;
+        }
+
+        TaskCenter.Register(new FrontendManagedFileDownloadTask(
+            $"下载 {Path.GetFileNameWithoutExtension(targetPath)}",
+            entry.Target,
+            targetPath,
+            ResolveDownloadRequestTimeout(),
+            onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
+            onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+            onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
+        AddActivity($"开始下载: {entry.Title}", $"{entry.Target} -> {targetPath}");
+    }
+
+    private string ResolveDownloadCatalogSuggestedFileName(FrontendDownloadCatalogEntry entry)
+    {
+        if (!string.IsNullOrWhiteSpace(entry.SuggestedFileName))
+        {
+            return entry.SuggestedFileName!.Trim();
+        }
+
+        if (Uri.TryCreate(entry.Target, UriKind.Absolute, out var uri))
+        {
+            var fileName = Path.GetFileName(uri.LocalPath);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                return fileName;
+            }
+        }
+
+        return entry.Title.Trim() + ".jar";
+    }
+
+    private string? ResolveDownloadCatalogStartDirectory()
+    {
+        if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
+        {
+            return null;
+        }
+
+        var directory = Path.GetFullPath(ToolDownloadFolder);
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
+
+    private static string GetDownloadCatalogRouteTitle(LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadOptiFine => "OptiFine",
+            LauncherFrontendSubpageKey.DownloadForge => "Forge",
+            LauncherFrontendSubpageKey.DownloadNeoForge => "NeoForge",
+            LauncherFrontendSubpageKey.DownloadCleanroom => "Cleanroom",
+            LauncherFrontendSubpageKey.DownloadFabric => "Fabric",
+            LauncherFrontendSubpageKey.DownloadQuilt => "Quilt",
+            LauncherFrontendSubpageKey.DownloadLiteLoader => "LiteLoader",
+            LauncherFrontendSubpageKey.DownloadLabyMod => "LabyMod",
+            LauncherFrontendSubpageKey.DownloadLegacyFabric => "Legacy Fabric",
+            _ => "文件"
+        };
     }
 
     private ActionCommand CreateDownloadFavoriteCommand(FrontendDownloadCatalogEntry entry)

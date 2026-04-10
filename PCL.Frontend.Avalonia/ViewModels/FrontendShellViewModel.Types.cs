@@ -569,14 +569,19 @@ internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
     private readonly IReadOnlyList<DownloadCatalogEntryViewModel> _allItems;
     private readonly ActionCommand _previousPageCommand;
     private readonly ActionCommand _nextPageCommand;
+    private bool _isExpanded;
     private int _pageIndex;
 
     public DownloadCatalogSectionViewModel(
         string title,
-        IReadOnlyList<DownloadCatalogEntryViewModel> items)
+        IReadOnlyList<DownloadCatalogEntryViewModel> items,
+        bool isCollapsible = false,
+        bool isExpanded = true)
     {
         Title = title;
         _allItems = items;
+        IsCollapsible = isCollapsible;
+        _isExpanded = isExpanded;
         _previousPageCommand = new ActionCommand(
             () => ChangePage(-1),
             () => _pageIndex > 0);
@@ -589,6 +594,14 @@ internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
     public string Title { get; }
 
     public ObservableCollection<DownloadCatalogEntryViewModel> Items { get; } = [];
+
+    public bool IsCollapsible { get; }
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => SetProperty(ref _isExpanded, value);
+    }
 
     public bool ShowPagination => TotalPages > 1;
 

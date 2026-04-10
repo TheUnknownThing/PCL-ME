@@ -32,16 +32,28 @@ internal sealed record FrontendDownloadCatalogAction(
     string Target,
     bool IsHighlight);
 
+internal enum FrontendDownloadCatalogEntryActionKind
+{
+    OpenTarget = 0,
+    DownloadFile = 1
+}
+
 internal sealed record FrontendDownloadCatalogSection(
     string Title,
-    IReadOnlyList<FrontendDownloadCatalogEntry> Entries);
+    IReadOnlyList<FrontendDownloadCatalogEntry> Entries,
+    bool IsCollapsible = false,
+    bool IsInitiallyExpanded = true,
+    string? LazyLoadToken = null,
+    string LoadingText = "正在获取版本列表");
 
 internal sealed record FrontendDownloadCatalogEntry(
     string Title,
     string Info,
     string Meta,
     string ActionText,
-    string? Target);
+    string? Target,
+    FrontendDownloadCatalogEntryActionKind ActionKind = FrontendDownloadCatalogEntryActionKind.OpenTarget,
+    string? SuggestedFileName = null);
 
 internal sealed record FrontendDownloadFavoritesState(
     IReadOnlyList<string> Targets,
