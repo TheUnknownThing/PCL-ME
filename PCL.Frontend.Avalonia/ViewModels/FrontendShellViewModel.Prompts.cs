@@ -630,6 +630,16 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
+            var launchCancellation = new CancellationTokenSource();
+            _launchSessionCancellation = launchCancellation;
+            ShowLaunchDialog();
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                "初始化",
+                0d,
+                showDownload: false,
+                isError: false);
+
             _isLaunchInProgress = true;
             _showLaunchLog = true;
             _launchLogBuilder.Clear();
@@ -641,14 +651,33 @@ internal sealed partial class FrontendShellViewModel
                 AppendLaunchLogLine(line);
             }
 
-            await EnsureLaunchFilesAsync();
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                DisableInstanceFileValidation || !_instanceComposition.Selection.HasSelection
+                    ? "准备启动参数"
+                    : "校验实例文件",
+                DisableInstanceFileValidation || !_instanceComposition.Selection.HasSelection ? 0.18d : 0.06d,
+                showDownload: false,
+                isError: false);
+
+            await EnsureLaunchFilesAsync(launchCancellation.Token);
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                "写入启动脚本",
+                0.88d,
+                showDownload: false,
+                isError: false);
 
             var startResult = _shellActionService.StartLaunchSession(
                 _launchComposition,
                 _instanceComposition.Selection.InstanceDirectory);
+            _activeLaunchProcess = startResult.Process;
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
             ShowLaunchCompletionNotification();
+            SetLaunchDialogLaunchedState();
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
 
@@ -660,6 +689,7 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine("启动已取消。");
             AddActivity("启动已取消", "启动前文件校验或准备步骤已取消。");
+            SetLaunchDialogStoppedState("已取消启动", "启动前文件校验或准备步骤已取消。", isError: false);
         }
         catch (Exception ex)
         {
@@ -667,10 +697,17 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine($"启动失败：{ex.Message}");
             AddActivity("启动失败", ex.Message);
+            SetLaunchDialogStoppedState("启动失败", ex.Message, isError: true);
+        }
+        finally
+        {
+            _launchSessionCancellation?.Dispose();
+            _launchSessionCancellation = null;
+            RaiseLaunchSessionProperties();
         }
     }
 
-    private async Task EnsureLaunchFilesAsync()
+    private async Task EnsureLaunchFilesAsync(CancellationToken cancellationToken)
     {
         if (!_instanceComposition.Selection.HasSelection || DisableInstanceFileValidation)
         {
@@ -685,10 +722,12 @@ internal sealed partial class FrontendShellViewModel
             var repairResult = await ExecuteManagedInstanceRepairAsync(
                 $"启动前校验实例文件：{_instanceComposition.Selection.InstanceName}",
                 new FrontendInstanceRepairRequest(
-                _instanceComposition.Selection.LauncherDirectory,
-                _instanceComposition.Selection.InstanceDirectory,
-                _instanceComposition.Selection.InstanceName,
-                ForceCoreRefresh: false));
+                    _instanceComposition.Selection.LauncherDirectory,
+                    _instanceComposition.Selection.InstanceDirectory,
+                    _instanceComposition.Selection.InstanceName,
+                    ForceCoreRefresh: false),
+                ApplyLaunchRepairTelemetry,
+                cancellationToken);
             var completionMessage = $"启动前文件校验完成：下载 {repairResult.DownloadedFiles.Count} 个文件，复用 {repairResult.ReusedFiles.Count} 个文件。";
             AppendLaunchLogLine(completionMessage);
 
@@ -735,7 +774,7 @@ internal sealed partial class FrontendShellViewModel
             _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
             AppendLaunchLogLine($"游戏进程已退出，退出码 {startResult.Process.ExitCode}。");
             AddActivity("游戏进程已结束", $"{LaunchVersionSubtitle} • ExitCode {startResult.Process.ExitCode}");
-            if (startResult.Process.ExitCode != 0)
+            if (startResult.Process.ExitCode != 0 && !_launchProcessTerminationRequested)
             {
                 await Dispatcher.UIThread.InvokeAsync(() => ShowCrashPromptForLaunchFailure(startResult));
             }
@@ -749,10 +788,16 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                _activeLaunchProcess = null;
+                _launchProcessTerminationRequested = false;
                 _isLaunchInProgress = false;
                 RaiseLaunchSessionProperties();
                 RefreshLaunchState();
                 RefreshGameLogSurface();
+                if (IsLaunchDialogVisible)
+                {
+                    HideLaunchDialog();
+                }
             });
         }
     }
@@ -819,6 +864,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchLogText));
         RaisePropertyChanged(nameof(LaunchMigrationLines));
         _launchCommand.NotifyCanExecuteChanged();
+        _cancelLaunchCommand.NotifyCanExecuteChanged();
+        RaiseLaunchDialogProperties();
     }
 
     private void EnsureLaunchPromptLane()

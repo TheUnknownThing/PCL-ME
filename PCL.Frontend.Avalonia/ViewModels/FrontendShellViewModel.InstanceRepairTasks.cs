@@ -7,14 +7,25 @@ internal sealed partial class FrontendShellViewModel
 {
     private async Task<FrontendInstanceRepairResult> ExecuteManagedInstanceRepairAsync(
         string taskTitle,
-        FrontendInstanceRepairRequest request)
+        FrontendInstanceRepairRequest request,
+        Action<FrontendInstanceRepairTelemetrySnapshot>? onTelemetry = null,
+        CancellationToken cancellationToken = default)
     {
         var repairTask = new FrontendManagedInstanceRepairTask(
             taskTitle,
-            (onTelemetry, cancellationToken) => _shellActionService.RepairInstance(request, onTelemetry, cancellationToken));
+            (taskTelemetry, taskCancellationToken) =>
+            {
+                void PublishTelemetry(FrontendInstanceRepairTelemetrySnapshot snapshot)
+                {
+                    taskTelemetry(snapshot);
+                    onTelemetry?.Invoke(snapshot);
+                }
+
+                return _shellActionService.RepairInstance(request, PublishTelemetry, taskCancellationToken);
+            });
 
         TaskCenter.Register(repairTask, start: false);
-        await repairTask.ExecuteAsync();
+        await repairTask.ExecuteAsync(cancellationToken);
         return repairTask.Result ?? throw new InvalidOperationException("实例修复任务未返回结果。");
     }
 }

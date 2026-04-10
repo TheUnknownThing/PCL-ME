@@ -14,6 +14,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand LaunchCommand => _launchCommand;
 
+    public ActionCommand CancelLaunchCommand => _cancelLaunchCommand;
+
     public ActionCommand VersionSelectCommand => _versionSelectCommand;
 
     public ActionCommand VersionSetupCommand => _versionSetupCommand;

@@ -40,6 +40,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _dismissPromptOverlayCommand;
     private readonly ActionCommand _openTaskManagerShortcutCommand;
     private readonly ActionCommand _launchCommand;
+    private readonly ActionCommand _cancelLaunchCommand;
     private readonly ActionCommand _versionSelectCommand;
     private readonly ActionCommand _versionSetupCommand;
     private readonly ActionCommand _toggleLaunchMigrationCommand;
@@ -357,6 +358,7 @@ internal sealed partial class FrontendShellViewModel
             "已从右下角快捷入口打开任务中心。",
             RouteNavigationBehavior.Child));
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
+        _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
