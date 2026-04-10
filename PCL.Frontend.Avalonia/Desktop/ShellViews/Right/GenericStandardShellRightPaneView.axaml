@@ -4,6 +4,23 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="TextBox.live-log-console">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox.live-log-console:pointerover">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox.live-log-console:focus">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid>
       <StackPanel Margin="25,25,25,10" Spacing="15">
@@ -336,20 +353,21 @@
           <StackPanel IsVisible="{Binding ShowGameLogLiveOutput}" Spacing="8">
             <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前会话输出" />
             <Border
-                Background="#0C1117"
-                BorderBrush="#1E2A36"
+                Background="#FFFFFFFF"
+                BorderBrush="#D5E6FD"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="1">
               <TextBox
+                  Classes="live-log-console"
                   MinHeight="320"
                   AcceptsReturn="True"
-                  Background="#0C1117"
+                  Background="#FFFFFFFF"
                   BorderBrush="Transparent"
                   BorderThickness="0"
                   FontFamily="{DynamicResource LaunchFontFamily}"
                   FontSize="12.5"
-                  Foreground="#D7E3F1"
+                  Foreground="#343D4A"
                   IsReadOnly="True"
                   Text="{Binding LaunchLogText}"
                   TextWrapping="Wrap" />
