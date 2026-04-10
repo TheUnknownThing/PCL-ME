@@ -74,6 +74,16 @@ public static class MinecraftLaunchNativesSyncService
                         continue;
                     }
 
+                    if (!IsNativeLibraryFile(entry.Name))
+                    {
+                        if (request.LogSkippedFiles)
+                        {
+                            logs.Add("按文件类型跳过：" + entryPath);
+                        }
+
+                        continue;
+                    }
+
                     var relativePath = entryPath.Replace('/', Path.DirectorySeparatorChar);
                     var targetPath = Path.GetFullPath(Path.Combine(targetRoot, relativePath));
                     if (!targetPath.StartsWith(targetRoot, StringComparison.OrdinalIgnoreCase))
@@ -158,6 +168,18 @@ public static class MinecraftLaunchNativesSyncService
         catch
         {
         }
+    }
+
+    private static bool IsNativeLibraryFile(string fileName)
+    {
+        return Path.GetExtension(fileName) switch
+        {
+            ".dll" => true,
+            ".so" => true,
+            ".dylib" => true,
+            ".jnilib" => true,
+            _ => false
+        };
     }
 }
 
