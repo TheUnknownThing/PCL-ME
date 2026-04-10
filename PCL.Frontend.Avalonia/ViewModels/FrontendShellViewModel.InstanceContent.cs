@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -48,6 +49,8 @@ internal sealed partial class FrontendShellViewModel
     private bool _instanceResourceIsSearching;
     private InstanceWorldSortMethod _instanceWorldSortMethod = InstanceWorldSortMethod.FileName;
     private InstanceResourceSortMethod _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
+    private readonly HashSet<string> _instanceResourceSelectedPaths = new(StringComparer.OrdinalIgnoreCase);
+    private bool _suppressInstanceResourceSelectionChanged;
 
     public string InstanceWorldSearchQuery
     {
@@ -213,6 +216,29 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowInstanceResourceCheckButton => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
         && _instanceComposition.Selection.IsModable;
 
+    public int InstanceResourceSelectedCount => _instanceResourceSelectedPaths.Count;
+
+    public bool HasSelectedInstanceResources => InstanceResourceSelectedCount > 0;
+
+    public string InstanceResourceSelectionText => $"已选择 {InstanceResourceSelectedCount} 项";
+
+    public bool ShowInstanceResourceDefaultActions => !HasSelectedInstanceResources;
+
+    public bool ShowInstanceResourceBatchActions => HasSelectedInstanceResources;
+
+    public bool ShowInstanceResourceToggleActions => IsInstanceResourceToggleSupported();
+
+    public bool CanSelectAllInstanceResources => InstanceResourceEntries.Count > 0
+        && InstanceResourceSelectedCount < InstanceResourceEntries.Count;
+
+    public bool CanEnableSelectedInstanceResources => ShowInstanceResourceToggleActions
+        && InstanceResourceEntries.Any(entry => entry.IsSelected && !entry.IsEnabledState);
+
+    public bool CanDisableSelectedInstanceResources => ShowInstanceResourceToggleActions
+        && InstanceResourceEntries.Any(entry => entry.IsSelected && entry.IsEnabledState);
+
+    public bool CanDeleteSelectedInstanceResources => HasSelectedInstanceResources;
+
     public ActionCommand OpenInstanceWorldFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
             "打开存档文件夹",
@@ -238,8 +264,15 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand DownloadInstanceResourceCommand => new(DownloadInstanceResource);
 
-    public ActionCommand SelectAllInstanceResourcesCommand => new(() =>
-        AddActivity("全选资源", $"{InstanceResourceSurfaceTitle} • Would toggle select-all for the current list."));
+    public ActionCommand SelectAllInstanceResourcesCommand => new(SelectAllInstanceResources);
+
+    public ActionCommand ClearInstanceResourceSelectionCommand => new(ClearInstanceResourceSelection);
+
+    public ActionCommand EnableSelectedInstanceResourcesCommand => new(() => _ = SetSelectedInstanceResourcesEnabledAsync(true));
+
+    public ActionCommand DisableSelectedInstanceResourcesCommand => new(() => _ = SetSelectedInstanceResourcesEnabledAsync(false));
+
+    public ActionCommand DeleteSelectedInstanceResourcesCommand => new(() => _ = DeleteSelectedInstanceResourcesAsync());
 
     public ActionCommand ExportInstanceResourceInfoCommand => new(ExportInstanceResourceInfo);
 
@@ -258,6 +291,7 @@ internal sealed partial class FrontendShellViewModel
         _instanceWorldSearchQuery = string.Empty;
         _instanceServerSearchQuery = string.Empty;
         _instanceResourceSearchQuery = string.Empty;
+        _instanceResourceSelectedPaths.Clear();
         _instanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
         _instanceResourceFilter = InstanceResourceFilter.All;
         _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
@@ -328,6 +362,7 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(IsInstanceResourceFilterDuplicateSelected));
             RaisePropertyChanged(nameof(ShowInstanceResourceEmptyInstallActions));
             RaisePropertyChanged(nameof(ShowInstanceResourceInstanceSelectAction));
+            RaiseInstanceResourceSelectionProperties();
         }
     }
 
@@ -358,10 +393,13 @@ internal sealed partial class FrontendShellViewModel
         _instanceResourceDisabledCount = searchedEntries.Count(entry => !entry.IsEnabled);
         _instanceResourceDuplicateCount = searchedEntries.Count(entry => duplicateTitles.Contains(entry.Title));
 
+        var visibleEntries = ApplyInstanceResourceSort(ApplyInstanceResourceFilter(searchedEntries, duplicateTitles))
+            .ToArray();
+        _instanceResourceSelectedPaths.IntersectWith(visibleEntries.Select(entry => entry.Path));
+
         ReplaceItems(
             InstanceResourceEntries,
-            ApplyInstanceResourceSort(ApplyInstanceResourceFilter(searchedEntries, duplicateTitles))
-                .Select(entry => CreateInstanceResourceEntry(entry.Title, entry.Summary, entry.Meta, entry.IconName, entry.Path)));
+            visibleEntries.Select(CreateInstanceResourceEntry));
 
         RaisePropertyChanged(nameof(HasInstanceResourceEntries));
         RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
@@ -387,6 +425,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceResourceEmptyTitle));
         RaisePropertyChanged(nameof(InstanceResourceEmptyDescription));
         RaisePropertyChanged(nameof(InstanceResourceEmptyDownloadButtonText));
+        RaiseInstanceResourceSelectionProperties();
     }
 
     private IEnumerable<FrontendInstanceResourceEntry> ApplyInstanceResourceFilter(
@@ -472,14 +511,126 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceResourceEntries();
     }
 
-    private InstanceResourceEntryViewModel CreateInstanceResourceEntry(string title, string info, string meta, string iconName, string path)
+    private void RaiseInstanceResourceSelectionProperties()
+    {
+        RaisePropertyChanged(nameof(InstanceResourceSelectedCount));
+        RaisePropertyChanged(nameof(HasSelectedInstanceResources));
+        RaisePropertyChanged(nameof(InstanceResourceSelectionText));
+        RaisePropertyChanged(nameof(ShowInstanceResourceDefaultActions));
+        RaisePropertyChanged(nameof(ShowInstanceResourceBatchActions));
+        RaisePropertyChanged(nameof(ShowInstanceResourceToggleActions));
+        RaisePropertyChanged(nameof(CanSelectAllInstanceResources));
+        RaisePropertyChanged(nameof(CanEnableSelectedInstanceResources));
+        RaisePropertyChanged(nameof(CanDisableSelectedInstanceResources));
+        RaisePropertyChanged(nameof(CanDeleteSelectedInstanceResources));
+    }
+
+    private bool IsInstanceResourceToggleSupported()
+    {
+        return _instanceComposition.Selection.IsModable
+            && (_currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
+                || _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionModDisabled);
+    }
+
+    private IReadOnlyList<InstanceResourceEntryViewModel> GetSelectedInstanceResourceEntries()
+    {
+        return InstanceResourceEntries
+            .Where(entry => entry.IsSelected)
+            .ToArray();
+    }
+
+    private void HandleInstanceResourceSelectionChanged(string path, bool isSelected)
+    {
+        if (_suppressInstanceResourceSelectionChanged)
+        {
+            return;
+        }
+
+        if (isSelected)
+        {
+            _instanceResourceSelectedPaths.Add(path);
+        }
+        else
+        {
+            _instanceResourceSelectedPaths.Remove(path);
+        }
+
+        RaiseInstanceResourceSelectionProperties();
+    }
+
+    private void SelectAllInstanceResources()
+    {
+        if (InstanceResourceEntries.Count == 0)
+        {
+            AddActivity("全选资源", $"{InstanceResourceSurfaceTitle} 列表为空。");
+            return;
+        }
+
+        if (!CanSelectAllInstanceResources)
+        {
+            return;
+        }
+
+        _suppressInstanceResourceSelectionChanged = true;
+        try
+        {
+            foreach (var entry in InstanceResourceEntries)
+            {
+                entry.IsSelected = true;
+            }
+        }
+        finally
+        {
+            _suppressInstanceResourceSelectionChanged = false;
+        }
+
+        _instanceResourceSelectedPaths.Clear();
+        foreach (var entry in InstanceResourceEntries)
+        {
+            _instanceResourceSelectedPaths.Add(entry.Path);
+        }
+
+        RaiseInstanceResourceSelectionProperties();
+        AddActivity("全选资源", $"{InstanceResourceSurfaceTitle} • 已选中 {InstanceResourceEntries.Count} 项。");
+    }
+
+    private void ClearInstanceResourceSelection()
+    {
+        if (!HasSelectedInstanceResources)
+        {
+            return;
+        }
+
+        _suppressInstanceResourceSelectionChanged = true;
+        try
+        {
+            foreach (var entry in InstanceResourceEntries)
+            {
+                entry.IsSelected = false;
+            }
+        }
+        finally
+        {
+            _suppressInstanceResourceSelectionChanged = false;
+        }
+
+        _instanceResourceSelectedPaths.Clear();
+        RaiseInstanceResourceSelectionProperties();
+    }
+
+    private InstanceResourceEntryViewModel CreateInstanceResourceEntry(FrontendInstanceResourceEntry entry)
     {
         return new InstanceResourceEntryViewModel(
-            LoadLauncherBitmap("Images", "Blocks", iconName),
-            title,
-            info,
-            meta,
-            new ActionCommand(() => OpenInstanceTarget("查看资源", path, $"{InstanceResourceSurfaceTitle} 项目不存在。")));
+            LoadLauncherBitmap("Images", "Blocks", entry.IconName),
+            entry.Title,
+            entry.Summary,
+            entry.Meta,
+            entry.Path,
+            new ActionCommand(() => OpenInstanceTarget("查看资源", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。")),
+            isEnabled: entry.IsEnabled,
+            showSelection: true,
+            isSelected: _instanceResourceSelectedPaths.Contains(entry.Path),
+            selectionChanged: isSelected => HandleInstanceResourceSelectionChanged(entry.Path, isSelected));
     }
 
     private void RefreshInstanceWorldEntries()
@@ -1062,6 +1213,134 @@ internal sealed partial class FrontendShellViewModel
             $"{InstanceResourceSurfaceTitle} 页面已跳转到下载页。");
     }
 
+    private async Task SetSelectedInstanceResourcesEnabledAsync(bool isEnabled)
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity(isEnabled ? "启用资源" : "禁用资源", "当前未选择实例。");
+            return;
+        }
+
+        if (!IsInstanceResourceToggleSupported())
+        {
+            AddActivity(isEnabled ? "启用资源" : "禁用资源", $"{InstanceResourceSurfaceTitle} 当前不支持启用或禁用操作。");
+            return;
+        }
+
+        var selectedEntries = GetSelectedInstanceResourceEntries();
+        if (selectedEntries.Count == 0)
+        {
+            AddActivity(isEnabled ? "启用资源" : "禁用资源", "当前没有选中的资源。");
+            return;
+        }
+
+        var candidates = selectedEntries
+            .Where(entry => entry.IsEnabledState != isEnabled)
+            .ToArray();
+        if (candidates.Length == 0)
+        {
+            AddActivity(isEnabled ? "启用资源" : "禁用资源", isEnabled ? "选中的资源已经全部启用。" : "选中的资源已经全部禁用。");
+            return;
+        }
+
+        var succeededEntries = new List<string>();
+        var failedEntries = new List<string>();
+
+        foreach (var entry in candidates)
+        {
+            try
+            {
+                SetInstanceResourceEnabled(entry.Path, isEnabled);
+                succeededEntries.Add(entry.Title);
+            }
+            catch (Exception ex)
+            {
+                failedEntries.Add($"{entry.Title}: {ex.Message}");
+            }
+        }
+
+        ReloadInstanceComposition();
+        if (succeededEntries.Count > 0)
+        {
+            AddActivity(
+                isEnabled ? "启用资源" : "禁用资源",
+                failedEntries.Count == 0
+                    ? $"{(isEnabled ? "已启用" : "已禁用")} {succeededEntries.Count} 项：{string.Join("、", succeededEntries)}"
+                    : $"{(isEnabled ? "已启用" : "已禁用")} {succeededEntries.Count} 项，{failedEntries.Count} 项失败。");
+        }
+
+        if (failedEntries.Count > 0)
+        {
+            AddActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
+        }
+    }
+
+    private async Task DeleteSelectedInstanceResourcesAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("删除资源", "当前未选择实例。");
+            return;
+        }
+
+        var selectedEntries = GetSelectedInstanceResourceEntries();
+        if (selectedEntries.Count == 0)
+        {
+            AddActivity("删除资源", "当前没有选中的资源。");
+            return;
+        }
+
+        var itemDescription = string.Join(Environment.NewLine, selectedEntries.Take(8).Select(entry => $"- {entry.Title}"));
+        if (selectedEntries.Count > 8)
+        {
+            itemDescription = $"{itemDescription}{Environment.NewLine}- 以及另外 {selectedEntries.Count - 8} 项";
+        }
+
+        var confirmed = await ShowToolboxConfirmationAsync(
+            "资源删除确认",
+            $"确定要将这 {selectedEntries.Count} 个{InstanceResourceSurfaceTitle}项目移入回收区吗？{Environment.NewLine}{Environment.NewLine}{itemDescription}",
+            "移入回收区",
+            isDanger: true);
+        if (confirmed != true)
+        {
+            if (confirmed == false)
+            {
+                AddActivity("删除资源", "已取消删除。");
+            }
+
+            return;
+        }
+
+        var trashDirectory = ResolveInstanceResourceTrashDirectory();
+        Directory.CreateDirectory(trashDirectory);
+
+        var succeededEntries = new List<string>();
+        var failedEntries = new List<string>();
+        foreach (var entry in selectedEntries)
+        {
+            try
+            {
+                MoveInstanceResourceToTrash(entry.Path, trashDirectory);
+                succeededEntries.Add(entry.Title);
+            }
+            catch (Exception ex)
+            {
+                failedEntries.Add($"{entry.Title}: {ex.Message}");
+            }
+        }
+
+        ReloadInstanceComposition();
+        if (succeededEntries.Count > 0)
+        {
+            AddActivity("删除资源", $"已移入回收区 {succeededEntries.Count} 项。");
+        }
+
+        if (failedEntries.Count > 0)
+        {
+            AddActivity("删除资源失败", string.Join(Environment.NewLine, failedEntries));
+        }
+    }
+
     private void ExportInstanceResourceInfo()
     {
         if (!_instanceComposition.Selection.HasSelection)
@@ -1081,6 +1360,40 @@ internal sealed partial class FrontendShellViewModel
             : entries.Select(entry => $"{entry.Title} | {entry.Meta} | {entry.Summary} | {entry.Path}").ToArray();
         File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
         OpenInstanceTarget("导出资源信息", outputPath, "导出文件不存在。");
+    }
+
+    private void SetInstanceResourceEnabled(string path, bool isEnabled)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new InvalidOperationException("资源路径为空。");
+        }
+
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException("资源文件不存在。", path);
+        }
+
+        if (isEnabled)
+        {
+            var enabledFileName = Path.GetFileName(path);
+            if (enabledFileName.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase))
+            {
+                enabledFileName = enabledFileName[..^".disabled".Length];
+            }
+            else if (enabledFileName.EndsWith(".old", StringComparison.OrdinalIgnoreCase))
+            {
+                enabledFileName = enabledFileName[..^".old".Length];
+            }
+
+            var enabledPath = GetUniqueChildPath(Path.GetDirectoryName(path)!, enabledFileName);
+            File.Move(path, enabledPath);
+            return;
+        }
+
+        var disabledFileName = $"{Path.GetFileName(path)}.disabled";
+        var disabledPath = GetUniqueChildPath(Path.GetDirectoryName(path)!, disabledFileName);
+        File.Move(path, disabledPath);
     }
 
     private void CheckInstanceMods() => _ = CheckInstanceModsAsync();
@@ -1208,6 +1521,43 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.VersionSchematic => "schematics",
             _ => "resources"
         };
+    }
+
+    private string ResolveInstanceResourceTrashDirectory()
+    {
+        return Path.Combine(
+            _instanceComposition.Selection.LauncherDirectory,
+            ".pcl-trash",
+            "resources",
+            ResolveInstanceResourceExportSlug());
+    }
+
+    private static void MoveInstanceResourceToTrash(string sourcePath, string trashDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            throw new InvalidOperationException("资源路径为空。");
+        }
+
+        if (!File.Exists(sourcePath) && !Directory.Exists(sourcePath))
+        {
+            throw new FileNotFoundException("资源项目不存在。", sourcePath);
+        }
+
+        Directory.CreateDirectory(trashDirectory);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var targetPath = GetUniqueChildPath(
+            trashDirectory,
+            $"{timestamp}-{Path.GetFileName(sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))}");
+
+        if (Directory.Exists(sourcePath))
+        {
+            Directory.Move(sourcePath, targetPath);
+            return;
+        }
+
+        File.Move(sourcePath, targetPath);
     }
 
     private static IEnumerable<string> ParseClipboardPaths(string? clipboardText)

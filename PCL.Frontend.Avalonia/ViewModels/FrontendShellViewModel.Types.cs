@@ -1064,8 +1064,18 @@ internal sealed class InstanceResourceEntryViewModel(
     string title,
     string info,
     string meta,
-    ActionCommand actionCommand)
+    string path,
+    ActionCommand actionCommand,
+    bool isEnabled = true,
+    bool showSelection = false,
+    bool isSelected = false,
+    Action<bool>? selectionChanged = null) : ViewModelBase
 {
+    private static readonly IBrush ActiveTitleForeground = Brush.Parse("#343D4A");
+    private static readonly IBrush InactiveTitleForeground = Brush.Parse("#7D8897");
+    private bool _isSelected = isSelected;
+    private bool _isEnabled = isEnabled;
+
     public Bitmap? Icon { get; } = icon;
 
     public string Title { get; } = title;
@@ -1074,7 +1084,40 @@ internal sealed class InstanceResourceEntryViewModel(
 
     public string Meta { get; } = meta;
 
+    public string Path { get; } = path;
+
     public ActionCommand ActionCommand { get; } = actionCommand;
+
+    public bool ShowSelection { get; } = showSelection;
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (SetProperty(ref _isSelected, value))
+            {
+                selectionChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool IsEnabledState
+    {
+        get => _isEnabled;
+        set
+        {
+            if (SetProperty(ref _isEnabled, value))
+            {
+                RaisePropertyChanged(nameof(ContentOpacity));
+                RaisePropertyChanged(nameof(TitleForeground));
+            }
+        }
+    }
+
+    public double ContentOpacity => IsEnabledState ? 1.0 : 0.56;
+
+    public IBrush TitleForeground => IsEnabledState ? ActiveTitleForeground : InactiveTitleForeground;
 }
 
 internal sealed class HelpTopicViewModel(

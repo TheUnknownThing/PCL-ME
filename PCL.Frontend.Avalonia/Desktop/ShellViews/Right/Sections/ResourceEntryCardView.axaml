@@ -3,8 +3,15 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <Grid Margin="0,0,0,12" ColumnDefinitions="Auto,*,Auto">
+  <Grid Margin="0,0,0,12" ColumnDefinitions="Auto,Auto,*,Auto">
+    <CheckBox
+        Margin="0,0,12,0"
+        VerticalAlignment="Center"
+        IsChecked="{Binding IsSelected, Mode=TwoWay}"
+        IsVisible="{Binding ShowSelection}" />
+
     <Image
+        Grid.Column="1"
         Width="28"
         Height="28"
         Margin="0,0,12,0"
@@ -13,9 +20,9 @@
         Source="{Binding Icon}"
         Stretch="Uniform" />
 
-    <StackPanel Grid.Column="1" Margin="0,0,12,0" Spacing="3">
+    <StackPanel Grid.Column="2" Margin="0,0,12,0" Spacing="3" Opacity="{Binding ContentOpacity}">
       <TextBlock
-          Foreground="#343D4A"
+          Foreground="{Binding TitleForeground}"
           FontSize="13.5"
           Text="{Binding Title}" />
       <TextBlock
@@ -37,7 +44,7 @@
     </StackPanel>
 
     <controls:PclButton
-        Grid.Column="2"
+        Grid.Column="3"
         Width="96"
         Height="35"
         VerticalAlignment="Center"

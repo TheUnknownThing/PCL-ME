@@ -139,6 +139,7 @@ internal sealed partial class FrontendShellViewModel
                     entry.Title,
                     entry.Summary,
                     entry.Meta,
+                    entry.Path,
                     new ActionCommand(() => OpenInstanceTarget("查看数据包", entry.Path, "当前数据包不存在。")))));
 
         RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
