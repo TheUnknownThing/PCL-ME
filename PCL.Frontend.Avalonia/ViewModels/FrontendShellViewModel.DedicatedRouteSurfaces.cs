@@ -555,10 +555,41 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            AddActivity("导入整合包", $"已选择 {Path.GetFileName(sourcePath)}，后续可在下载页面继续安装流程。");
+            var extension = Path.GetExtension(sourcePath);
+            if (!string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(extension, ".mrpack", StringComparison.OrdinalIgnoreCase))
+            {
+                AddActivity("导入整合包", "当前仅支持直接导入 .zip 或 .mrpack 整合包；.rar / .7z 请先转换为标准压缩格式。");
+                return;
+            }
+
+            var preparedDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "prepared-modpacks");
+            Directory.CreateDirectory(preparedDirectory);
+            var displayName = Path.GetFileNameWithoutExtension(sourcePath);
+            var preparedArchivePath = Path.Combine(
+                preparedDirectory,
+                $"{SanitizeFileSegment(displayName)}{extension.ToLowerInvariant()}");
+            ClearPreparedDownloadInstall(deleteArchive: true);
+            File.Copy(sourcePath, preparedArchivePath, overwrite: true);
+
+            AddActivity("导入整合包", $"已选择 {Path.GetFileName(sourcePath)}，正在读取整合包安装信息。");
+            var draft = await FrontendModpackInstallWorkflowService.PrepareArchiveAsync(
+                new FrontendModpackPrepareRequest(
+                    preparedArchivePath,
+                    displayName,
+                    SanitizeInstallDirectoryName(displayName),
+                    SourceUrl: null,
+                    ProjectId: null,
+                    ProjectSource: "本地文件",
+                    IconPath: null,
+                    ProjectDescription: null,
+                    CommunitySourcePreference: _selectedCommunityDownloadSourceIndex),
+                ResolveDownloadRequestTimeout());
+
+            ActivatePreparedModpackDownloadInstall(draft);
             NavigateTo(
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-                $"已准备导入整合包 {Path.GetFileName(sourcePath)}。");
+                $"已载入 {Path.GetFileName(sourcePath)} 的标准安装面板。");
         }
         catch (Exception ex)
         {
@@ -607,35 +638,20 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DeleteInstanceSelectionEntryAsync(InstanceSelectionSnapshot entry)
     {
-        var confirmed = await _shellActionService.ConfirmAsync(
-            "实例删除确认",
-            $"确定要将实例 {entry.Name} 移入回收区吗？该操作会保留实例目录，便于后续恢复。",
-            "移入回收区",
-            isDanger: true);
-        if (!confirmed)
-        {
-            AddActivity("删除实例", "已取消删除。");
-            return;
-        }
-
         try
         {
-            var trashDirectory = Path.Combine(_instanceSelectionLauncherDirectory, ".pcl-trash", "versions");
-            Directory.CreateDirectory(trashDirectory);
-
-            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            var targetDirectory = GetUniquePath(Path.Combine(trashDirectory, $"{entry.Name}-{timestamp}"));
-            Directory.Move(entry.Directory, targetDirectory);
-
-            var metadataPath = Path.Combine(targetDirectory, ".pcl-trash.json");
-            File.WriteAllText(
-                metadataPath,
-                JsonSerializer.Serialize(new
-                {
-                    instanceName = entry.Name,
-                    originalPath = entry.Directory,
-                    deletedAt = DateTimeOffset.Now
-                }, new JsonSerializerOptions { WriteIndented = true }));
+            var showIndieWarning = _instanceComposition.Selection.HasSelection
+                && GetPathComparison().Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory)
+                && _instanceComposition.Selection.IsIndie;
+            var outcome = await DeleteInstanceDirectoryAsync(
+                entry.Name,
+                entry.Directory,
+                _instanceSelectionLauncherDirectory,
+                showIndieWarning);
+            if (outcome is null)
+            {
+                return;
+            }
 
             if (_instanceComposition.Selection.HasSelection
                 && (string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, StringComparison.OrdinalIgnoreCase)
@@ -646,7 +662,14 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshInstanceSelectionSurface();
-            OpenInstanceTarget("删除实例", targetDirectory, "回收区目录不存在。");
+
+            if (outcome.IsPermanentDelete)
+            {
+                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                return;
+            }
+
+            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
         }
         catch (Exception ex)
         {

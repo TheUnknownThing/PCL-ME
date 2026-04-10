@@ -1749,6 +1749,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadInstallOptionLoadsInProgress.Clear();
         _downloadInstallOptionLoadErrors.Clear();
         _downloadInstallMinecraftCatalogLoaded = false;
+        ClearPreparedDownloadInstall(deleteArchive: true);
         ReplaceItems(DownloadInstallMinecraftSections, []);
         InitializeDownloadInstallSurface();
         RaisePropertyChanged(nameof(DownloadInstallName));

@@ -287,7 +287,7 @@
               Margin="16,0,0,0"
               Command="{Binding StartDownloadInstallCommand}"
               IsEnabled="{Binding CanStartDownloadInstall}"
-              Text="开始安装" />
+              Text="{Binding DownloadInstallStartButtonText}" />
         </Grid>
       </StackPanel>
     </StackPanel>

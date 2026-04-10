@@ -47,6 +47,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _downloadInstallAutoSelectedLegacyFabricApi;
     private bool _downloadInstallAutoSelectedQsl;
     private bool _downloadInstallAutoSelectedOptiFabric;
+    private FrontendPreparedModpackInstall? _downloadInstallPreparedModpack;
 
     public ActionCommand DownloadInstallBackCommand => new(ExitDownloadInstallSelectionStage);
 
@@ -91,6 +92,8 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanStartDownloadInstall => _downloadInstallIsInSelectionStage && string.IsNullOrWhiteSpace(DownloadInstallNameValidationMessage);
 
+    public string DownloadInstallStartButtonText => _downloadInstallPreparedModpack is null ? "开始安装" : "开始安装整合包";
+
     private bool IsDownloadClientInstallRoute =>
         _currentRoute.Page == LauncherFrontendPageKey.Download
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadClient;
@@ -110,10 +113,16 @@ internal sealed partial class FrontendShellViewModel
             }
             else
             {
-                ReplaceItems(
-                    DownloadInstallHints,
+                var hintStrips = new List<SurfaceNoticeViewModel>();
+                if (_downloadInstallPreparedModpack is not null)
+                {
+                    hintStrips.AddRange(BuildPreparedModpackHintStrips(_downloadInstallPreparedModpack));
+                }
+
+                hintStrips.AddRange(
                     GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
                         CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
+                ReplaceItems(DownloadInstallHints, hintStrips);
                 SyncDownloadInstallOptionCards(BuildDownloadInstallOptionCards());
             }
         }
@@ -165,6 +174,39 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowDownloadInstallMinecraftCatalogEmptyState));
         RaisePropertyChanged(nameof(ShowDownloadInstallNameValidation));
         RaisePropertyChanged(nameof(CanStartDownloadInstall));
+        RaisePropertyChanged(nameof(DownloadInstallStartButtonText));
+    }
+
+    private IReadOnlyList<SurfaceNoticeViewModel> BuildPreparedModpackHintStrips(FrontendPreparedModpackInstall draft)
+    {
+        var sourceLabel = string.IsNullOrWhiteSpace(draft.ProjectSource) ? "本地整合包" : $"{draft.ProjectSource} 整合包";
+        var selectionSummary = string.Join(
+            " · ",
+            new[]
+            {
+                draft.MinecraftChoice.Title,
+                draft.PrimaryChoice?.Title,
+                draft.FabricApiChoice?.Title,
+                draft.LegacyFabricApiChoice?.Title,
+                draft.QslChoice?.Title,
+                draft.OptiFabricChoice?.Title
+            }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+        return
+        [
+            CreateNoticeStrip(
+                $"已载入 {sourceLabel}：{draft.DisplayName}。下面会沿用标准安装面板，先补全基础游戏与加载器，再写入整合包文件。",
+                "#EEF6FF",
+                "#C7DBFF",
+                "#2A5DA8"),
+            CreateNoticeStrip(
+                string.IsNullOrWhiteSpace(selectionSummary)
+                    ? "已从整合包清单读取 Minecraft 与加载器信息。你也可以继续在下方使用标准选项进行调整。"
+                    : $"已识别安装方案：{selectionSummary}",
+                "#F7FAFF",
+                "#DCE6F5",
+                "#50627B")
+        ];
     }
 
     private void EnsureDownloadInstallMinecraftCatalogLoaded(bool forceReload = false)
@@ -362,6 +404,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void EnterDownloadInstallSelectionStage(FrontendInstallChoice choice)
     {
+        ClearPreparedDownloadInstall(deleteArchive: true);
         ResetDownloadInstallEditableSelections(choice);
         _downloadInstallIsInSelectionStage = true;
         RefreshDownloadInstallSurfaceState();
@@ -371,6 +414,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _downloadInstallIsInSelectionStage = false;
         _downloadInstallExpandedOptionTitle = null;
+        ClearPreparedDownloadInstall(deleteArchive: true);
         ReplaceItems(DownloadInstallHints, []);
         ReplaceItems(DownloadInstallOptionCards, []);
         RaiseDownloadInstallSurfaceProperties();
@@ -399,6 +443,106 @@ internal sealed partial class FrontendShellViewModel
         _downloadInstallAutoSelectedOptiFabric = false;
         _downloadInstallIsNameEditedByUser = false;
         UpdateGeneratedDownloadInstallName(force: true);
+    }
+
+    private void ActivatePreparedModpackDownloadInstall(FrontendPreparedModpackInstall draft)
+    {
+        _downloadInstallPreparedModpack = draft;
+        ResetDownloadInstallEditableSelections(draft.MinecraftChoice);
+        var primaryOptionTitle = ResolvePreparedPrimaryOptionTitle(draft.PrimaryChoice);
+        if (!string.IsNullOrWhiteSpace(primaryOptionTitle))
+        {
+            ApplyPreparedDownloadInstallSelection(primaryOptionTitle, draft.PrimaryChoice);
+        }
+
+        ApplyPreparedDownloadInstallSelection("LiteLoader", draft.LiteLoaderChoice);
+        ApplyPreparedDownloadInstallSelection("OptiFine", draft.OptiFineChoice);
+        ApplyPreparedDownloadInstallSelection("Fabric API", draft.FabricApiChoice);
+        ApplyPreparedDownloadInstallSelection("Legacy Fabric API", draft.LegacyFabricApiChoice);
+        ApplyPreparedDownloadInstallSelection("QFAPI / QSL", draft.QslChoice);
+        ApplyPreparedDownloadInstallSelection("OptiFabric", draft.OptiFabricChoice);
+
+        _downloadInstallIsInSelectionStage = true;
+        RefreshDownloadInstallSurfaceState();
+        PrimePreparedDownloadInstallAutoSelections(draft.MinecraftChoice.Version);
+    }
+
+    private static string? ResolvePreparedPrimaryOptionTitle(FrontendInstallChoice? choice)
+    {
+        return choice?.Kind switch
+        {
+            FrontendInstallChoiceKind.Forge => "Forge",
+            FrontendInstallChoiceKind.NeoForge => "NeoForge",
+            FrontendInstallChoiceKind.Cleanroom => "Cleanroom",
+            FrontendInstallChoiceKind.FabricLoader => "Fabric",
+            FrontendInstallChoiceKind.LegacyFabricLoader => "Legacy Fabric",
+            FrontendInstallChoiceKind.QuiltLoader => "Quilt",
+            FrontendInstallChoiceKind.LabyMod => "LabyMod",
+            _ => null
+        };
+    }
+
+    private void ApplyPreparedDownloadInstallSelection(string optionTitle, FrontendInstallChoice? choice)
+    {
+        if (choice is null)
+        {
+            return;
+        }
+
+        if (ManagedPrimaryInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
+        {
+            foreach (var title in ManagedPrimaryInstallTitles.Where(title => !string.Equals(title, optionTitle, StringComparison.Ordinal)))
+            {
+                _downloadInstallSelections[title] = FrontendEditableInstallSelection.Cleared;
+            }
+        }
+        else if (ManagedApiInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
+        {
+            foreach (var title in ManagedApiInstallTitles.Where(title => !string.Equals(title, optionTitle, StringComparison.Ordinal)))
+            {
+                _downloadInstallSelections[title] = FrontendEditableInstallSelection.Cleared;
+            }
+        }
+
+        _downloadInstallSelections[optionTitle] = new FrontendEditableInstallSelection(choice, false);
+    }
+
+    private void PrimePreparedDownloadInstallAutoSelections(string minecraftVersion)
+    {
+        if (HasInstallSelection(isExistingInstance: false, "Quilt")
+            && ResolveEffectiveChoice(false, "QFAPI / QSL", minecraftVersion) is null)
+        {
+            EnsureDownloadInstallOptionChoicesLoaded("QFAPI / QSL", minecraftVersion);
+        }
+
+        if (HasInstallSelection(isExistingInstance: false, "Fabric")
+            && ResolveEffectiveChoice(false, "Fabric API", minecraftVersion) is null)
+        {
+            EnsureDownloadInstallOptionChoicesLoaded("Fabric API", minecraftVersion);
+        }
+
+        if (HasInstallSelection(isExistingInstance: false, "Legacy Fabric")
+            && ResolveEffectiveChoice(false, "Legacy Fabric API", minecraftVersion) is null)
+        {
+            EnsureDownloadInstallOptionChoicesLoaded("Legacy Fabric API", minecraftVersion);
+        }
+
+        if (HasInstallSelection(isExistingInstance: false, "Fabric")
+            && HasInstallSelection(isExistingInstance: false, "OptiFine")
+            && ResolveEffectiveChoice(false, "OptiFabric", minecraftVersion) is null)
+        {
+            EnsureDownloadInstallOptionChoicesLoaded("OptiFabric", minecraftVersion);
+        }
+    }
+
+    private void ClearPreparedDownloadInstall(bool deleteArchive)
+    {
+        if (deleteArchive && _downloadInstallPreparedModpack is not null)
+        {
+            FrontendModpackInstallWorkflowService.TryDeleteFile(_downloadInstallPreparedModpack.ArchivePath);
+        }
+
+        _downloadInstallPreparedModpack = null;
     }
 
     private void SyncDownloadInstallSelectionHeader()
@@ -775,6 +919,12 @@ internal sealed partial class FrontendShellViewModel
 
     private string BuildGeneratedDownloadInstallName()
     {
+        if (_downloadInstallPreparedModpack is not null)
+        {
+            var suggested = SanitizeInstallDirectoryName(_downloadInstallPreparedModpack.SuggestedInstanceName);
+            return string.IsNullOrWhiteSpace(suggested) ? "新的安装方案" : suggested;
+        }
+
         var minecraftVersion = _downloadInstallMinecraftChoice?.Version;
         if (string.IsNullOrWhiteSpace(minecraftVersion))
         {
