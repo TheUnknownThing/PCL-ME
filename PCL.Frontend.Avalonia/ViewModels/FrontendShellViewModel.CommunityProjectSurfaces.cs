@@ -1528,7 +1528,13 @@ internal sealed class FrontendManagedFileDownloadTask(
 
     public void Cancel()
     {
+        if (_cancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
         _cancellation.Cancel();
+        StateChanged(TaskState.Running, "正在取消下载…");
     }
 
     public async Task ExecuteAsync(CancellationToken cancelToken = default)
