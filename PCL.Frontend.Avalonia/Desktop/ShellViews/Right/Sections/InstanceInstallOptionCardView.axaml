@@ -64,6 +64,7 @@
                   HorizontalAlignment="Stretch"
                   Margin="0"
                   Command="{Binding SelectCommand}"
+                  IconSource="{Binding Icon}"
                   Info="{Binding Summary}"
                   IsSelected="{Binding IsSelected}"
                   Title="{Binding Title}" />

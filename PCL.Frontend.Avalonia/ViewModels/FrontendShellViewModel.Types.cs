@@ -322,12 +322,15 @@ internal sealed class DownloadInstallMinecraftChoiceViewModel(
 internal sealed class DownloadInstallChoiceItemViewModel(
     string title,
     string summary,
+    Bitmap? icon,
     bool isSelected,
     ActionCommand selectCommand)
 {
     public string Title { get; } = title;
 
     public string Summary { get; } = summary;
+
+    public Bitmap? Icon { get; } = icon;
 
     public bool IsSelected { get; } = isSelected;
 
