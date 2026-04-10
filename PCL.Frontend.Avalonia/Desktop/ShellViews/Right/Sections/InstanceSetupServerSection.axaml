@@ -19,7 +19,7 @@
               Text="当前实例的验证方式已锁定，无法再次更改。请使用要求的验证方式启动游戏。"
               TextWrapping="Wrap" />
         </Border>
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,28,28,28,9,28">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,Auto,9,28">
           <TextBlock
               Grid.Row="0"
               Margin="0,0,25,0"
@@ -30,75 +30,76 @@
           <ComboBox
               Grid.Row="0"
               Grid.Column="1"
+              IsEnabled="{Binding IsInstanceServerLoginEditable}"
               ItemsSource="{Binding InstanceServerLoginRequireOptions}"
               SelectedIndex="{Binding SelectedInstanceServerLoginRequireIndex}" />
 
-          <TextBlock
+          <Grid
               Grid.Row="1"
-              Margin="0,8,25,0"
-              VerticalAlignment="Center"
-              Foreground="#343D4A"
-              FontSize="13"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
-              Text="目标验证服务器" />
-          <TextBox
-              Grid.Row="1"
-              Grid.Column="1"
+              Grid.ColumnSpan="2"
               Margin="0,8,0,0"
               IsVisible="{Binding ShowInstanceServerAuthFields}"
-              Text="{Binding InstanceServerAuthServer}" />
+              ColumnDefinitions="Auto,*"
+              RowDefinitions="28,9,28,9,28">
+            <TextBlock
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13"
+                Text="目标验证服务器" />
+            <TextBox
+                Grid.Column="1"
+                IsEnabled="{Binding IsInstanceServerAuthEditable}"
+                Text="{Binding InstanceServerAuthServer}" />
 
-          <TextBlock
-              Grid.Row="2"
-              Margin="0,8,25,0"
-              VerticalAlignment="Center"
-              Foreground="#343D4A"
-              FontSize="13"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
-              Text="注册链接" />
-          <TextBox
-              Grid.Row="2"
-              Grid.Column="1"
-              Margin="0,8,0,0"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
-              Text="{Binding InstanceServerAuthRegister}" />
+            <TextBlock
+                Grid.Row="2"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13"
+                Text="注册链接" />
+            <TextBox
+                Grid.Row="2"
+                Grid.Column="1"
+                IsEnabled="{Binding IsInstanceServerAuthEditable}"
+                Text="{Binding InstanceServerAuthRegister}" />
+
+            <TextBlock
+                Grid.Row="4"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13"
+                Text="服务器名称" />
+            <TextBox
+                Grid.Row="4"
+                Grid.Column="1"
+                IsEnabled="{Binding IsInstanceServerAuthEditable}"
+                Text="{Binding InstanceServerAuthName}" />
+          </Grid>
 
           <TextBlock
               Grid.Row="3"
-              Margin="0,8,25,0"
-              VerticalAlignment="Center"
-              Foreground="#343D4A"
-              FontSize="13"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
-              Text="服务器名称" />
-          <TextBox
-              Grid.Row="3"
-              Grid.Column="1"
-              Margin="0,8,0,0"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
-              Text="{Binding InstanceServerAuthName}" />
-
-          <TextBlock
-              Grid.Row="5"
               Margin="0,0,25,0"
               VerticalAlignment="Center"
               Foreground="#343D4A"
               FontSize="13"
               Text="自动进入服务器" />
           <TextBox
-              Grid.Row="5"
+              Grid.Row="3"
               Grid.Column="1"
               Text="{Binding InstanceServerAutoJoin}" />
         </Grid>
 
-        <Grid ColumnDefinitions="Auto,Auto,Auto">
+        <Grid ColumnDefinitions="Auto,Auto,Auto" IsVisible="{Binding ShowInstanceServerProfileActions}">
           <controls:PclButton
               Grid.Column="0"
               MinWidth="150"
               Margin="0,0,20,0"
               ColorType="Highlight"
               Command="{Binding SetLittleSkinCommand}"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
+              IsEnabled="{Binding IsInstanceServerAuthEditable}"
               Text="设置为 LittleSkin" />
           <controls:PclButton
               Grid.Column="1"
@@ -112,7 +113,7 @@
               Grid.Column="2"
               MinWidth="150"
               Command="{Binding CreateInstanceProfileCommand}"
-              IsVisible="{Binding ShowInstanceServerAuthFields}"
+              IsEnabled="{Binding CanCreateInstanceProfile}"
               Text="新建档案" />
         </Grid>
       </StackPanel>

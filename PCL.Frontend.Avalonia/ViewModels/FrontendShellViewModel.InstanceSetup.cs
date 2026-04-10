@@ -180,19 +180,31 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedInstanceServerLoginRequireIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
+                RaisePropertyChanged(nameof(ShowInstanceServerProfileActions));
                 RaisePropertyChanged(nameof(ShowInstanceServerLockAction));
+                RaisePropertyChanged(nameof(IsInstanceServerLoginEditable));
+                RaisePropertyChanged(nameof(IsInstanceServerAuthEditable));
                 RaisePropertyChanged(nameof(CanLockInstanceLogin));
+                RaisePropertyChanged(nameof(CanCreateInstanceProfile));
             }
         }
     }
 
     public bool ShowInstanceServerAuthFields => SelectedInstanceServerLoginRequireIndex >= 2;
 
+    public bool ShowInstanceServerProfileActions => ShowInstanceServerAuthFields;
+
     public bool ShowInstanceServerLockAction => SelectedInstanceServerLoginRequireIndex >= 2;
 
     public bool ShowInstanceServerLoginLockedWarning => IsInstanceServerLoginLocked;
 
+    public bool IsInstanceServerLoginEditable => !IsInstanceServerLoginLocked;
+
+    public bool IsInstanceServerAuthEditable => !IsInstanceServerLoginLocked;
+
     public bool CanLockInstanceLogin => !IsInstanceServerLoginLocked && SelectedInstanceServerLoginRequireIndex > 0;
+
+    public bool CanCreateInstanceProfile => ShowInstanceServerProfileActions;
 
     public bool IsInstanceServerLoginLocked
     {
@@ -202,6 +214,8 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _isInstanceServerLoginLocked, value))
             {
                 RaisePropertyChanged(nameof(ShowInstanceServerLoginLockedWarning));
+                RaisePropertyChanged(nameof(IsInstanceServerLoginEditable));
+                RaisePropertyChanged(nameof(IsInstanceServerAuthEditable));
                 RaisePropertyChanged(nameof(CanLockInstanceLogin));
             }
         }
@@ -375,7 +389,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedInstanceServerLoginRequireIndex));
         RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
         RaisePropertyChanged(nameof(ShowInstanceServerLoginLockedWarning));
+        RaisePropertyChanged(nameof(ShowInstanceServerProfileActions));
+        RaisePropertyChanged(nameof(ShowInstanceServerLockAction));
+        RaisePropertyChanged(nameof(IsInstanceServerLoginEditable));
+        RaisePropertyChanged(nameof(IsInstanceServerAuthEditable));
         RaisePropertyChanged(nameof(CanLockInstanceLogin));
+        RaisePropertyChanged(nameof(CanCreateInstanceProfile));
         RaisePropertyChanged(nameof(InstanceServerAuthServer));
         RaisePropertyChanged(nameof(InstanceServerAuthRegister));
         RaisePropertyChanged(nameof(InstanceServerAuthName));

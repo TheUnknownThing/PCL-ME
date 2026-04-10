@@ -30,19 +30,12 @@
             HorizontalAlignment="Center"
             IsVisible="{Binding ShowLaunchProfileSummaryCard}"
             Spacing="8">
-          <Border
+          <Image
               Width="84"
               Height="84"
-              CornerRadius="8"
-              Background="#F7EFD7"
-              BoxShadow="0 6 18 0 #10000000">
-            <Image
-                Width="84"
-                Height="84"
-                Source="{Binding LaunchAvatarImage}"
-                Stretch="Uniform"
-                RenderOptions.BitmapInterpolationMode="None" />
-          </Border>
+              Source="{Binding LaunchAvatarImage}"
+              Stretch="Uniform"
+              RenderOptions.BitmapInterpolationMode="None" />
           <TextBlock
               HorizontalAlignment="Center"
               FontSize="16"
