@@ -1148,6 +1148,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return new TaskManagerEntryViewModel(
             task.Title,
+            task.State,
             MapTaskStateLabel(task.State),
             string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
             task.SupportProgress
@@ -1727,6 +1728,7 @@ internal sealed class InstanceSelectionShortcutEntryViewModel(
 
 internal sealed class TaskManagerEntryViewModel(
     string title,
+    TaskState taskState,
     string state,
     string summary,
     string progressText,
@@ -1741,11 +1743,31 @@ internal sealed class TaskManagerEntryViewModel(
     ActionCommand cancelCommand,
     ActionCommand pauseCommand)
 {
+    private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
+    private static readonly IBrush RunningBadgeBorderBrush = Brush.Parse("#CFE0FA");
+    private static readonly IBrush RunningBadgeForegroundBrush = Brush.Parse("#5B87DA");
+    private static readonly IBrush WaitingBadgeBackgroundBrush = Brush.Parse("#F4F7FB");
+    private static readonly IBrush WaitingBadgeBorderBrush = Brush.Parse("#DAE3F0");
+    private static readonly IBrush WaitingBadgeForegroundBrush = Brush.Parse("#7E8FA5");
+    private static readonly IBrush SuccessBadgeBackgroundBrush = Brush.Parse("#EEF9F1");
+    private static readonly IBrush SuccessBadgeBorderBrush = Brush.Parse("#CBE8D4");
+    private static readonly IBrush SuccessBadgeForegroundBrush = Brush.Parse("#3D9B5A");
+    private static readonly IBrush FailedBadgeBackgroundBrush = Brush.Parse("#FFF0F0");
+    private static readonly IBrush FailedBadgeBorderBrush = Brush.Parse("#F1C8C8");
+    private static readonly IBrush FailedBadgeForegroundBrush = Brush.Parse("#D05B5B");
+    private static readonly IBrush CanceledBadgeBackgroundBrush = Brush.Parse("#F5F6F8");
+    private static readonly IBrush CanceledBadgeBorderBrush = Brush.Parse("#D7DCE4");
+    private static readonly IBrush CanceledBadgeForegroundBrush = Brush.Parse("#7B8796");
+
     public string Title { get; } = title;
+
+    public TaskState TaskState { get; } = taskState;
 
     public string State { get; } = state;
 
     public string Summary { get; } = summary;
+
+    public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
 
     public string ProgressText { get; } = progressText;
 
@@ -1774,6 +1796,33 @@ internal sealed class TaskManagerEntryViewModel(
     public ActionCommand CancelCommand { get; } = cancelCommand;
 
     public ActionCommand PauseCommand { get; } = pauseCommand;
+
+    public IBrush StateBadgeBackgroundBrush => TaskState switch
+    {
+        TaskState.Success => SuccessBadgeBackgroundBrush,
+        TaskState.Failed => FailedBadgeBackgroundBrush,
+        TaskState.Canceled => CanceledBadgeBackgroundBrush,
+        TaskState.Waiting => WaitingBadgeBackgroundBrush,
+        _ => RunningBadgeBackgroundBrush
+    };
+
+    public IBrush StateBadgeBorderBrush => TaskState switch
+    {
+        TaskState.Success => SuccessBadgeBorderBrush,
+        TaskState.Failed => FailedBadgeBorderBrush,
+        TaskState.Canceled => CanceledBadgeBorderBrush,
+        TaskState.Waiting => WaitingBadgeBorderBrush,
+        _ => RunningBadgeBorderBrush
+    };
+
+    public IBrush StateBadgeForegroundBrush => TaskState switch
+    {
+        TaskState.Success => SuccessBadgeForegroundBrush,
+        TaskState.Failed => FailedBadgeForegroundBrush,
+        TaskState.Canceled => CanceledBadgeForegroundBrush,
+        TaskState.Waiting => WaitingBadgeForegroundBrush,
+        _ => RunningBadgeForegroundBrush
+    };
 }
 
 internal sealed class TaskManagerStageEntryViewModel(
@@ -1781,11 +1830,35 @@ internal sealed class TaskManagerStageEntryViewModel(
     string title,
     string message)
 {
+    private static readonly IBrush RunningIndicatorBrush = Brush.Parse("#4F86E9");
+    private static readonly IBrush WaitingIndicatorBrush = Brush.Parse("#9AA8B8");
+    private static readonly IBrush SuccessIndicatorBrush = Brush.Parse("#4F86E9");
+    private static readonly IBrush FailedIndicatorBrush = Brush.Parse("#D05B5B");
+    private static readonly IBrush CanceledIndicatorBrush = Brush.Parse("#9AA8B8");
+
     public string Indicator { get; } = indicator;
 
     public string Title { get; } = title;
 
     public string Message { get; } = message;
+
+    public bool HasMessageDetail => !string.IsNullOrWhiteSpace(Message) && !string.Equals(Message, Title, StringComparison.Ordinal);
+
+    public IBrush IndicatorBrush => ResolveIndicatorBrush();
+
+    public double IndicatorFontSize => Indicator.EndsWith('%') ? 12.5 : 16d;
+
+    private IBrush ResolveIndicatorBrush()
+    {
+        return Indicator switch
+        {
+            "✓" => SuccessIndicatorBrush,
+            "×" => FailedIndicatorBrush,
+            "···" => WaitingIndicatorBrush,
+            _ when Indicator.EndsWith('%') => RunningIndicatorBrush,
+            _ => CanceledIndicatorBrush
+        };
+    }
 }
 
 internal sealed record DedicatedGenericRouteMetadata(
