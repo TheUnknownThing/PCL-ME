@@ -30,6 +30,7 @@
                 Text="最高动画帧率" />
             <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,58">
               <Slider
+                  VerticalAlignment="Center"
                   Minimum="0"
                   Maximum="59"
                   Value="{Binding AnimationFpsLimit}" />
@@ -51,6 +52,7 @@
                 Text="实时日志行数" />
             <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,58">
               <Slider
+                  VerticalAlignment="Center"
                   Minimum="0"
                   Maximum="29"
                   Value="{Binding MaxRealTimeLogValue}" />
@@ -203,6 +205,7 @@
                   Text="动画速度" />
               <Grid Grid.Column="1" ColumnDefinitions="*,52">
                 <Slider
+                    VerticalAlignment="Center"
                     Minimum="0"
                     Maximum="30"
                     Value="{Binding DebugAnimationSpeed}" />

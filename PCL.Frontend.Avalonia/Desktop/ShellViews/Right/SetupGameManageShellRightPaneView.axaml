@@ -44,6 +44,7 @@
                 Text="最大线程数" />
             <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,48">
               <Slider
+                  VerticalAlignment="Center"
                   Minimum="1"
                   Maximum="255"
                   Value="{Binding DownloadThreadLimit}" />
@@ -65,6 +66,7 @@
                 Text="速度限制" />
             <Grid Grid.Row="5" Grid.Column="1" ColumnDefinitions="*,48">
               <Slider
+                  VerticalAlignment="Center"
                   Minimum="0"
                   Maximum="42"
                   Value="{Binding DownloadSpeedLimit}" />
@@ -86,6 +88,7 @@
                 Text="下载超时" />
             <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,48">
               <Slider
+                  VerticalAlignment="Center"
                   Minimum="1"
                   Maximum="60"
                   Value="{Binding DownloadTimeoutSeconds}" />

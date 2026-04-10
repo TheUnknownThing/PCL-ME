@@ -195,6 +195,7 @@
                   IsChecked="{Binding UseCustomRamAllocation}" />
               <Grid Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" ColumnDefinitions="*,62">
                 <Slider
+                    VerticalAlignment="Center"
                     IsEnabled="{Binding IsCustomRamAllocationEnabled}"
                     Minimum="1"
                     Maximum="16"
