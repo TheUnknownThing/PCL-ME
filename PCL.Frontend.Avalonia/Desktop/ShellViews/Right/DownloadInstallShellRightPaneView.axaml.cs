@@ -212,7 +212,7 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
         Motion.SetOffsetY(control, 0);
         Motion.SetExitOffsetX(control, exitOffsetX);
         Motion.SetExitOffsetY(control, 0);
-        Motion.SetOvershootTranslation(control, true);
+        Motion.SetOvershootTranslation(control, false);
     }
 
     private enum DownloadInstallStage
