@@ -476,7 +476,7 @@ public static class MinecraftCrashAnalysisService
 
                 if (_logMc.Contains("Caught exception from ", StringComparison.Ordinal))
                 {
-                    AppendReason(CrashReason.ConfirmedModCrash, TryAnalyzeModName(MatchSingle(_logMc, "(?<=Caught exception from )[^\n]+?")?.Trim()));
+                    AppendReason(CrashReason.ConfirmedModCrash, TryAnalyzeModName(MatchSingle(_logMc, "(?<=Caught exception from )[^\r\n]+")?.Trim()));
                 }
 
                 if (_logMc.Contains("DuplicateModsFoundException", StringComparison.Ordinal))
@@ -501,7 +501,9 @@ public static class MinecraftCrashAnalysisService
 
                 if (_logMc.Contains("Incompatible mods found!", StringComparison.Ordinal))
                 {
-                    AppendReason(CrashReason.IncompatibleMods, MatchSingle(_logMc, "(?<=Incompatible mods found![\\s\\S]+: )[\\s\\S]+?(?=\\tat )"));
+                    AppendReason(
+                        CrashReason.IncompatibleMods,
+                        MatchSingle(_logMc, "(?<=Incompatible mods found!\\s*)[\\s\\S]+?(?=\\n\\tat |\\z)")?.Trim());
                 }
 
                 if (_logMc.Contains("Missing or unsupported mandatory dependencies:", StringComparison.Ordinal))
