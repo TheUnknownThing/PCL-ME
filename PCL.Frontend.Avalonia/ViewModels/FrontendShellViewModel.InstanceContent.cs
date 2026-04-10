@@ -620,18 +620,101 @@ internal sealed partial class FrontendShellViewModel
 
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(FrontendInstanceResourceEntry entry)
     {
+        var detailCommand = new ActionCommand(() => _ = ShowInstanceResourceDetailsAsync(entry));
+        var openCommand = new ActionCommand(() =>
+            OpenInstanceTarget("打开资源文件位置", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。"));
+        var toggleCommand = IsInstanceResourceToggleSupported()
+            ? new ActionCommand(() => _ = SetInstanceResourceEntriesEnabledAsync(
+                new[] { (Title: entry.Title, Path: entry.Path, IsEnabledState: entry.IsEnabled) },
+                !entry.IsEnabled,
+                "当前没有可切换状态的资源。"))
+            : null;
+        var deleteCommand = new ActionCommand(() => _ = DeleteInstanceResourcesAsync(
+            new[] { (Title: entry.Title, Path: entry.Path) },
+            "当前没有可删除的资源。"));
+
         return new InstanceResourceEntryViewModel(
             LoadLauncherBitmap("Images", "Blocks", entry.IconName),
             entry.Title,
             entry.Summary,
             entry.Meta,
             entry.Path,
-            new ActionCommand(() => OpenInstanceTarget("查看资源", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。")),
-            actionToolTip: "查看资源",
+            openCommand,
+            actionToolTip: "打开文件位置",
             isEnabled: entry.IsEnabled,
             showSelection: true,
             isSelected: _instanceResourceSelectedPaths.Contains(entry.Path),
-            selectionChanged: isSelected => HandleInstanceResourceSelectionChanged(entry.Path, isSelected));
+            selectionChanged: isSelected => HandleInstanceResourceSelectionChanged(entry.Path, isSelected),
+            infoCommand: detailCommand,
+            openCommand: openCommand,
+            toggleCommand: toggleCommand,
+            deleteCommand: deleteCommand);
+    }
+
+    private async Task ShowInstanceResourceDetailsAsync(FrontendInstanceResourceEntry entry)
+    {
+        var lines = new List<string>
+        {
+            $"名称: {entry.Title}",
+            $"状态: {(entry.IsEnabled ? "启用" : "禁用")}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(entry.Meta))
+        {
+            lines.Add($"类型: {entry.Meta}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Summary))
+        {
+            lines.Add($"摘要: {entry.Summary}");
+        }
+
+        lines.Add($"路径: {entry.Path}");
+
+        try
+        {
+            if (Directory.Exists(entry.Path))
+            {
+                var directoryInfo = new DirectoryInfo(entry.Path);
+                lines.Add("项目类型: 文件夹");
+                lines.Add($"创建时间: {directoryInfo.CreationTime:yyyy/MM/dd HH:mm:ss}");
+                lines.Add($"修改时间: {directoryInfo.LastWriteTime:yyyy/MM/dd HH:mm:ss}");
+            }
+            else if (File.Exists(entry.Path))
+            {
+                var fileInfo = new FileInfo(entry.Path);
+                lines.Add($"文件大小: {FormatInstanceResourceFileSize(fileInfo.Length)}");
+                lines.Add($"创建时间: {fileInfo.CreationTime:yyyy/MM/dd HH:mm:ss}");
+                lines.Add($"修改时间: {fileInfo.LastWriteTime:yyyy/MM/dd HH:mm:ss}");
+            }
+        }
+        catch (Exception ex)
+        {
+            lines.Add($"附加信息读取失败: {ex.Message}");
+        }
+
+        var result = await ShowToolboxConfirmationAsync(
+            $"查看{InstanceResourceSurfaceTitle}详情",
+            string.Join(Environment.NewLine, lines),
+            "关闭");
+        if (result is not null)
+        {
+            AddActivity($"查看{InstanceResourceSurfaceTitle}详情", entry.Title);
+        }
+    }
+
+    private static string FormatInstanceResourceFileSize(long bytes)
+    {
+        string[] units = new[] { "B", "KB", "MB", "GB", "TB" };
+        double size = bytes;
+        var unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.Length - 1)
+        {
+            size /= 1024;
+            unitIndex++;
+        }
+
+        return unitIndex == 0 ? $"{size:0} {units[unitIndex]}" : $"{size:0.##} {units[unitIndex]}";
     }
 
     private void RefreshInstanceWorldEntries()
@@ -1228,20 +1311,36 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var selectedEntries = GetSelectedInstanceResourceEntries();
-        if (selectedEntries.Count == 0)
+        var selectedEntries = GetSelectedInstanceResourceEntries()
+            .Select(entry => (Title: entry.Title, Path: entry.Path, IsEnabledState: entry.IsEnabledState))
+            .ToArray();
+        if (selectedEntries.Length == 0)
         {
             AddActivity(isEnabled ? "启用资源" : "禁用资源", "当前没有选中的资源。");
             return;
         }
 
-        var candidates = selectedEntries
+        await SetInstanceResourceEntriesEnabledAsync(selectedEntries, isEnabled, "当前没有选中的资源。");
+    }
+
+    private Task SetInstanceResourceEntriesEnabledAsync(
+        IReadOnlyList<(string Title, string Path, bool IsEnabledState)> entries,
+        bool isEnabled,
+        string emptyMessage)
+    {
+        if (entries.Count == 0)
+        {
+            AddActivity(isEnabled ? "启用资源" : "禁用资源", emptyMessage);
+            return Task.CompletedTask;
+        }
+
+        var candidates = entries
             .Where(entry => entry.IsEnabledState != isEnabled)
             .ToArray();
         if (candidates.Length == 0)
         {
             AddActivity(isEnabled ? "启用资源" : "禁用资源", isEnabled ? "选中的资源已经全部启用。" : "选中的资源已经全部禁用。");
-            return;
+            return Task.CompletedTask;
         }
 
         var succeededEntries = new List<string>();
@@ -1274,6 +1373,8 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task DeleteSelectedInstanceResourcesAsync()
@@ -1284,22 +1385,37 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var selectedEntries = GetSelectedInstanceResourceEntries();
-        if (selectedEntries.Count == 0)
+        var selectedEntries = GetSelectedInstanceResourceEntries()
+            .Select(entry => (Title: entry.Title, Path: entry.Path))
+            .ToArray();
+        if (selectedEntries.Length == 0)
         {
             AddActivity("删除资源", "当前没有选中的资源。");
             return;
         }
 
-        var itemDescription = string.Join(Environment.NewLine, selectedEntries.Take(8).Select(entry => $"- {entry.Title}"));
-        if (selectedEntries.Count > 8)
+        await DeleteInstanceResourcesAsync(selectedEntries, "当前没有选中的资源。");
+    }
+
+    private async Task DeleteInstanceResourcesAsync(
+        IReadOnlyList<(string Title, string Path)> entries,
+        string emptyMessage)
+    {
+        if (entries.Count == 0)
         {
-            itemDescription = $"{itemDescription}{Environment.NewLine}- 以及另外 {selectedEntries.Count - 8} 项";
+            AddActivity("删除资源", emptyMessage);
+            return;
+        }
+
+        var itemDescription = string.Join(Environment.NewLine, entries.Take(8).Select(entry => $"- {entry.Title}"));
+        if (entries.Count > 8)
+        {
+            itemDescription = $"{itemDescription}{Environment.NewLine}- 以及另外 {entries.Count - 8} 项";
         }
 
         var confirmed = await ShowToolboxConfirmationAsync(
             "资源删除确认",
-            $"确定要将这 {selectedEntries.Count} 个{InstanceResourceSurfaceTitle}项目移入回收区吗？{Environment.NewLine}{Environment.NewLine}{itemDescription}",
+            $"确定要将这 {entries.Count} 个{InstanceResourceSurfaceTitle}项目移入回收区吗？{Environment.NewLine}{Environment.NewLine}{itemDescription}",
             "移入回收区",
             isDanger: true);
         if (confirmed != true)
@@ -1317,7 +1433,7 @@ internal sealed partial class FrontendShellViewModel
 
         var succeededEntries = new List<string>();
         var failedEntries = new List<string>();
-        foreach (var entry in selectedEntries)
+        foreach (var entry in entries)
         {
             try
             {

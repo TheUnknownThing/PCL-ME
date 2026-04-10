@@ -49,7 +49,9 @@ internal sealed partial class ResourceEntryCardView : UserControl
     {
         if (e.PropertyName is nameof(InstanceResourceEntryViewModel.IsSelected)
             or nameof(InstanceResourceEntryViewModel.ShowSelection)
-            or nameof(InstanceResourceEntryViewModel.HasAction))
+            or nameof(InstanceResourceEntryViewModel.HasStandardActionStack)
+            or nameof(InstanceResourceEntryViewModel.HasTags)
+            or nameof(InstanceResourceEntryViewModel.IsEnabledState))
         {
             RefreshVisualState();
         }
@@ -70,6 +72,18 @@ internal sealed partial class ResourceEntryCardView : UserControl
     {
         if (_entryViewModel is null)
         {
+            _isPressed = false;
+            RefreshVisualState();
+            return;
+        }
+
+        if (e.InitialPressMouseButton == MouseButton.Right && !IsPointerOverAction())
+        {
+            if (_entryViewModel.InfoCommand?.CanExecute(null) == true)
+            {
+                _entryViewModel.InfoCommand.Execute(null);
+            }
+
             _isPressed = false;
             RefreshVisualState();
             return;
@@ -98,7 +112,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
 
     private bool IsPointerOverAction()
     {
-        return ActionButton.IsVisible && ActionButton.IsPointerOver;
+        return ActionStack.IsHitTestVisible && ActionStack.IsPointerOver;
     }
 
     private void RefreshVisualState()
@@ -106,7 +120,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
         var entry = _entryViewModel;
         var isSelected = entry?.ShowSelection == true && entry.IsSelected;
         var isHovered = LayoutRoot.IsPointerOver;
-        var showAction = entry?.HasAction == true && (isHovered || isSelected || entry.ShowSelection is false);
+        var showActionStack = entry?.HasStandardActionStack == true && (isHovered || isSelected || entry.ShowSelection is false);
 
         SelectionBar.IsVisible = isSelected;
         HoverBackground.Opacity = isHovered || isSelected ? 1.0 : 0.0;
@@ -124,9 +138,9 @@ internal sealed partial class ResourceEntryCardView : UserControl
                 : GetBrush("ColorBrush7", "#E0EAFD");
         LayoutRoot.RenderTransform = _isPressed && isHovered ? new ScaleTransform(0.996, 0.996) : new ScaleTransform(1, 1);
 
-        ActionButton.Opacity = showAction ? 1.0 : 0.0;
-        ActionButton.IsHitTestVisible = showAction;
-        LayoutRoot.ColumnDefinitions[5].Width = showAction ? GridLength.Auto : new GridLength(0);
+        ActionStack.Opacity = showActionStack ? 1.0 : 0.0;
+        ActionStack.IsHitTestVisible = showActionStack;
+        LayoutRoot.ColumnDefinitions[5].Width = showActionStack ? GridLength.Auto : new GridLength(0);
     }
 
     private static IBrush GetBrush(string resourceKey, string fallback)

@@ -1081,7 +1081,11 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         bool isEnabled = true,
         bool showSelection = false,
         bool isSelected = false,
-        Action<bool>? selectionChanged = null)
+        Action<bool>? selectionChanged = null,
+        ActionCommand? infoCommand = null,
+        ActionCommand? openCommand = null,
+        ActionCommand? toggleCommand = null,
+        ActionCommand? deleteCommand = null)
     {
         Icon = icon;
         Title = title;
@@ -1095,6 +1099,10 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         _isEnabled = isEnabled;
         _selectionChanged = selectionChanged;
         _primaryCommand = new ActionCommand(ExecutePrimaryAction);
+        InfoCommand = infoCommand;
+        OpenCommand = openCommand ?? actionCommand;
+        ToggleCommand = toggleCommand;
+        DeleteCommand = deleteCommand;
     }
 
     public Bitmap? Icon { get; }
@@ -1115,11 +1123,72 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 
     public bool ShowSelection { get; }
 
+    public ActionCommand? InfoCommand { get; }
+
+    public ActionCommand? OpenCommand { get; }
+
+    public ActionCommand? ToggleCommand { get; }
+
+    public ActionCommand? DeleteCommand { get; }
+
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
 
     public bool HasAction => ActionCommand is not null;
 
     public string ActionIconData => FrontendIconCatalog.FolderOutline.Data;
+
+    public bool HasInfoAction => InfoCommand is not null;
+
+    public bool HasOpenAction => OpenCommand is not null;
+
+    public bool HasToggleAction => ToggleCommand is not null;
+
+    public bool HasDeleteAction => DeleteCommand is not null;
+
+    public bool HasStandardActionStack => HasInfoAction || HasOpenAction || HasToggleAction || HasDeleteAction;
+
+    public string InfoIconData => FrontendIconCatalog.InfoCircle.Data;
+
+    public double InfoIconScale => FrontendIconCatalog.InfoCircle.Scale;
+
+    public string OpenIconData => FrontendIconCatalog.OpenFolder.Data;
+
+    public double OpenIconScale => FrontendIconCatalog.OpenFolder.Scale;
+
+    public string ToggleIconData => IsEnabledState
+        ? FrontendIconCatalog.DisableCircle.Data
+        : FrontendIconCatalog.EnableCircle.Data;
+
+    public double ToggleIconScale => IsEnabledState
+        ? FrontendIconCatalog.DisableCircle.Scale
+        : FrontendIconCatalog.EnableCircle.Scale;
+
+    public string ToggleToolTip => IsEnabledState ? "禁用" : "启用";
+
+    public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
+
+    public double DeleteIconScale => FrontendIconCatalog.DeleteOutline.Scale;
+
+    public IReadOnlyList<string> Tags
+    {
+        get
+        {
+            var tags = new List<string>();
+            if (!string.IsNullOrWhiteSpace(Meta))
+            {
+                tags.Add(Meta);
+            }
+
+            if (HasToggleAction && !IsEnabledState)
+            {
+                tags.Add("已禁用");
+            }
+
+            return tags;
+        }
+    }
+
+    public bool HasTags => Tags.Count > 0;
 
     public bool IsSelected
     {
@@ -1143,6 +1212,11 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
             {
                 RaisePropertyChanged(nameof(ContentOpacity));
                 RaisePropertyChanged(nameof(TitleForeground));
+                RaisePropertyChanged(nameof(ToggleIconData));
+                RaisePropertyChanged(nameof(ToggleIconScale));
+                RaisePropertyChanged(nameof(ToggleToolTip));
+                RaisePropertyChanged(nameof(Tags));
+                RaisePropertyChanged(nameof(HasTags));
             }
         }
     }
