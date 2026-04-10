@@ -44,6 +44,7 @@
             Margin="15,12,0,0"
             VerticalAlignment="Top"
             IsHitTestVisible="False"
+            IsVisible="{Binding HasHeader, ElementName=Root}"
             FontSize="13"
             Foreground="{DynamicResource ColorBrush1}" />
 
