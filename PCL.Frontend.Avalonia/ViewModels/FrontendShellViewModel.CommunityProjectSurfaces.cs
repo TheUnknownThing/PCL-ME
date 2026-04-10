@@ -725,7 +725,7 @@ internal sealed partial class FrontendShellViewModel
             }
             catch (Exception ex)
             {
-                AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+                AddFailureActivity($"选择保存位置失败: {entry.Title}", ex.Message);
                 return;
             }
 
@@ -747,8 +747,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"下载资源文件失败: {entry.Title}", ex.Message);
-            AvaloniaHintBus.Show(ex.Message, AvaloniaHintTheme.Error);
+            AddFailureActivity($"下载资源文件失败: {entry.Title}", ex.Message);
         }
     }
 
@@ -783,8 +782,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("输入实例名称失败", ex.Message);
-            AvaloniaHintBus.Show($"输入实例名称失败: {ex.Message}", AvaloniaHintTheme.Error);
+            AddFailureActivity("输入实例名称失败", ex.Message);
             return;
         }
 
@@ -839,8 +837,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AddActivity($"整合包安装失败: {entry.Title}", message);
-                    AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error);
+                    AddFailureActivity($"整合包安装失败: {entry.Title}", message);
                 });
             }));
         NavigateTo(
@@ -996,7 +993,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"{title} 失败", ex.Message);
+            AddFailureActivity($"{title} 失败", ex.Message);
         }
     }
 
@@ -1051,7 +1048,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("收藏项目失败", ex.Message);
+            AddFailureActivity("收藏项目失败", ex.Message);
         }
     }
 
@@ -1528,7 +1525,13 @@ internal sealed class FrontendManagedFileDownloadTask(
 
     public void Cancel()
     {
+        if (_cancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
         _cancellation.Cancel();
+        StateChanged(TaskState.Running, "正在取消下载…");
     }
 
     public async Task ExecuteAsync(CancellationToken cancelToken = default)

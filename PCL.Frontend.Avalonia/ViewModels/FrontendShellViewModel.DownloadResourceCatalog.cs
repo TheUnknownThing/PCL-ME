@@ -30,6 +30,7 @@ internal sealed partial class FrontendShellViewModel
     private string _downloadResourceSurfaceTitle = string.Empty;
     private string _downloadResourceLoadingText = string.Empty;
     private string _downloadResourceEmptyStateText = "没有找到符合条件的资源条目。";
+    private string _downloadResourceEmptyStateHintText = string.Empty;
     private string _downloadResourceHintText = string.Empty;
     private bool _showDownloadResourceHint;
     private bool _showDownloadResourceInstallModPackAction;
@@ -125,6 +126,20 @@ internal sealed partial class FrontendShellViewModel
         get => _downloadResourceEmptyStateText;
         private set => SetProperty(ref _downloadResourceEmptyStateText, value);
     }
+
+    public string DownloadResourceEmptyStateHintText
+    {
+        get => _downloadResourceEmptyStateHintText;
+        private set
+        {
+            if (SetProperty(ref _downloadResourceEmptyStateHintText, value))
+            {
+                RaisePropertyChanged(nameof(ShowDownloadResourceEmptyStateHint));
+            }
+        }
+    }
+
+    public bool ShowDownloadResourceEmptyStateHint => !string.IsNullOrWhiteSpace(DownloadResourceEmptyStateHintText);
 
     public string DownloadResourceHintText
     {
@@ -300,6 +315,7 @@ internal sealed partial class FrontendShellViewModel
         DownloadResourceSurfaceTitle = string.Empty;
         DownloadResourceLoadingText = string.Empty;
         DownloadResourceEmptyStateText = "没有找到符合条件的资源条目。";
+        DownloadResourceEmptyStateHintText = string.Empty;
         DownloadResourceHintText = string.Empty;
         ShowDownloadResourceHint = false;
         ShowDownloadResourceInstallModPackAction = false;
@@ -339,6 +355,7 @@ internal sealed partial class FrontendShellViewModel
         DownloadResourceSurfaceTitle = $"{surfaceTitle} 列表";
         DownloadResourceLoadingText = $"正在获取{surfaceTitle}列表";
         DownloadResourceEmptyStateText = $"没有找到符合条件的{surfaceTitle}条目。";
+        DownloadResourceEmptyStateHintText = string.Empty;
         DownloadResourceHintText = string.Empty;
         ShowDownloadResourceHint = false;
         ShowDownloadResourceInstallModPackAction = showInstallModPackAction;
@@ -374,6 +391,7 @@ internal sealed partial class FrontendShellViewModel
         DownloadResourceSurfaceTitle = $"{surfaceTitle} 列表";
         DownloadResourceLoadingText = $"正在获取{surfaceTitle}列表";
         DownloadResourceEmptyStateText = $"没有找到符合条件的{surfaceTitle}条目。";
+        DownloadResourceEmptyStateHintText = string.Empty;
         DownloadResourceHintText = "无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。请稍后重试，或使用 VPN 以改善网络环境。";
         ShowDownloadResourceInstallModPackAction = showInstallModPackAction;
         _downloadResourceSupportsModrinth = supportsModrinth;
@@ -508,7 +526,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("安装整合包失败", ex.Message);
+            AddFailureActivity("安装整合包失败", ex.Message);
         }
     }
 
@@ -767,7 +785,7 @@ internal sealed partial class FrontendShellViewModel
                 _downloadResourceRuntimeStates.Remove(route);
                 DownloadResourceHintText = $"实时社区搜索失败：{ex.Message}";
                 ShowDownloadResourceHint = true;
-                DownloadResourceLoadingText = "请稍后重试，或调整来源筛选。";
+                DownloadResourceEmptyStateHintText = "请稍后重试，或调整来源筛选。";
                 SetDownloadResourceLoading(false);
             });
         }
@@ -798,10 +816,9 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         _downloadResourceHasMoreEntries = result.State.HasMoreEntries;
         DownloadResourceHintText = result.State.HintText;
+        // Keep the loading card copy stable until it has fully transitioned out.
+        DownloadResourceEmptyStateHintText = string.Empty;
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(result.State.HintText);
-        DownloadResourceLoadingText = string.IsNullOrWhiteSpace(result.State.HintText)
-            ? "结果来自实时社区目录，尝试调整搜索与筛选条件。"
-            : result.State.HintText;
 
         _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(result.State, selectedSource);
         _downloadResourceTagOptions = MergeFilterOptions(

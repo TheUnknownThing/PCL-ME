@@ -927,7 +927,7 @@ internal sealed partial class FrontendShellViewModel
             ApplyInstanceServerErrorState(entry, "服务器地址为空。");
             if (addActivity)
             {
-                AddActivity("刷新服务器信息失败", $"{entry.Title} • 服务器地址为空。");
+                AddFailureActivity("刷新服务器信息失败", $"{entry.Title} • 服务器地址为空。");
             }
 
             return;
@@ -956,7 +956,7 @@ internal sealed partial class FrontendShellViewModel
             ApplyInstanceServerErrorState(entry, ex.Message);
             if (addActivity)
             {
-                AddActivity("刷新服务器信息失败", $"{entry.Title} • {ex.Message}");
+                AddFailureActivity("刷新服务器信息失败", $"{entry.Title} • {ex.Message}");
             }
         }
     }
@@ -1027,7 +1027,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("复制服务器地址失败", ex.Message);
+            AddFailureActivity("复制服务器地址失败", ex.Message);
         }
     }
 
@@ -1058,7 +1058,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("连接服务器失败", ex.Message);
+            AddFailureActivity("连接服务器失败", ex.Message);
         }
     }
 
@@ -1077,7 +1077,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("粘贴剪贴板文件失败", ex.Message);
+            AddFailureActivity("粘贴剪贴板文件失败", ex.Message);
             return;
         }
 
@@ -1130,7 +1130,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加新服务器失败", ex.Message);
+            AddFailureActivity("添加新服务器失败", ex.Message);
             return;
         }
 
@@ -1156,7 +1156,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            AddFailureActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
             return;
         }
 
@@ -1176,7 +1176,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加新服务器失败", $"无法更新当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            AddFailureActivity("添加新服务器失败", $"无法更新当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
             return;
         }
 
@@ -1185,13 +1185,13 @@ internal sealed partial class FrontendShellViewModel
             var clonedServerList = (NbtList)serverList.Clone();
             if (!TryWriteInstanceServerList(serversPath, clonedServerList))
             {
-                AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+                AddFailureActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
                 return;
             }
         }
         catch
         {
-            AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+            AddFailureActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
             return;
         }
 
@@ -1271,7 +1271,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("从文件安装资源失败", ex.Message);
+            AddFailureActivity("从文件安装资源失败", ex.Message);
             return;
         }
 
@@ -1371,7 +1371,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (failedEntries.Count > 0)
         {
-            AddActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
+            AddFailureActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
         }
 
         return Task.CompletedTask;
@@ -1454,7 +1454,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (failedEntries.Count > 0)
         {
-            AddActivity("删除资源失败", string.Join(Environment.NewLine, failedEntries));
+            AddFailureActivity("删除资源失败", string.Join(Environment.NewLine, failedEntries));
         }
     }
 

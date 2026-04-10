@@ -228,7 +228,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             LaunchOfflineStatusText = ex.Message.Trim().TrimStart('$');
-            AddActivity("离线创建失败", LaunchOfflineStatusText);
+            AddFailureActivity("离线创建失败", LaunchOfflineStatusText);
         }
         finally
         {
@@ -343,7 +343,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var message = GetLaunchProfileFriendlyError(ex);
             LaunchMicrosoftStatusText = message;
-            AddActivity("微软登录失败", message);
+            AddFailureActivity("微软登录失败", message);
             if (ex is TimeoutException || message.Contains("过期", StringComparison.Ordinal))
             {
                 ResetMicrosoftDeviceFlow(keepStatus: true);
@@ -425,7 +425,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             LaunchAuthlibStatusText = GetLaunchProfileFriendlyError(ex);
-            AddActivity("外置登录失败", LaunchAuthlibStatusText);
+            AddFailureActivity("外置登录失败", LaunchAuthlibStatusText);
         }
         finally
         {
@@ -457,7 +457,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             LaunchMicrosoftStatusText = GetLaunchProfileFriendlyError(ex);
-            AddActivity("微软登录失败", LaunchMicrosoftStatusText);
+            AddFailureActivity("微软登录失败", LaunchMicrosoftStatusText);
             ResetMicrosoftDeviceFlow(keepStatus: true);
         }
         finally
@@ -559,7 +559,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("切换档案失败", ex.Message);
+            AddFailureActivity("切换档案失败", ex.Message);
         }
     }
 

@@ -162,7 +162,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("加载 Minecraft 版本失败", ex.Message);
+            AddFailureActivity("加载 Minecraft 版本失败", ex.Message);
         }
     }
 
@@ -262,7 +262,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"选择安装项: {optionTitle}", ex.Message);
+            AddFailureActivity($"选择安装项失败: {optionTitle}", ex.Message);
         }
     }
 
@@ -460,7 +460,7 @@ internal sealed partial class FrontendShellViewModel
                     {
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            AddActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
+                            AddFailureActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
                         });
                     }));
 
@@ -478,7 +478,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
+            AddFailureActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
         }
     }
 

@@ -94,7 +94,7 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() => AddActivity("刷新实例状态失败", ex.Message));
+            await Dispatcher.UIThread.InvokeAsync(() => AddFailureActivity("刷新实例状态失败", ex.Message));
         }
     }
 

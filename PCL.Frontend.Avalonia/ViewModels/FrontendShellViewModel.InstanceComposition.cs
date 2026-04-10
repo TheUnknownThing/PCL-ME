@@ -291,9 +291,10 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenInstanceTarget(string activity, string? target, string emptyState)
     {
+        var failureTitle = $"{activity}失败";
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity(activity, emptyState);
+            AddFailureActivity(failureTitle, emptyState);
             return;
         }
 
@@ -307,14 +308,15 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity(activity, error ?? target);
+        AddFailureActivity(failureTitle, error ?? target);
     }
 
     private void OpenInstanceDirectoryTarget(string activity, string? target, string emptyState)
     {
+        var failureTitle = $"{activity}失败";
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity(activity, emptyState);
+            AddFailureActivity(failureTitle, emptyState);
             return;
         }
 
@@ -324,7 +326,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity(activity, ex.Message);
+            AddFailureActivity(failureTitle, ex.Message);
             return;
         }
 

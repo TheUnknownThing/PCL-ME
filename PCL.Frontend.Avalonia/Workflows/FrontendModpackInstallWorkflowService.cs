@@ -481,13 +481,13 @@ internal static class FrontendModpackInstallWorkflowService
         foreach (var url in BuildPreferredDownloadUrls(file.DownloadUrls, communitySourcePreference))
         {
             cancelToken.ThrowIfCancellationRequested();
+            var tempFile = file.TargetPath + ".pcltmp";
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, url);
                 using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
-                var tempFile = file.TargetPath + ".pcltmp";
                 TryDeleteFile(tempFile);
                 await using (var sourceStream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false))
                 await using (var targetStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
@@ -509,8 +509,14 @@ internal static class FrontendModpackInstallWorkflowService
                 File.Move(tempFile, file.TargetPath);
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                TryDeleteFile(tempFile);
+                throw;
+            }
             catch
             {
+                TryDeleteFile(tempFile);
                 // Try the next candidate URL.
             }
         }
@@ -604,6 +610,10 @@ internal static class FrontendModpackInstallWorkflowService
                     .Select(node => node as JsonObject)
                     .Where(node => node is not null)
                     .ToDictionary(node => node!["id"]?.GetValue<int>() ?? 0, node => node!, EqualityComparer<int>.Default);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
