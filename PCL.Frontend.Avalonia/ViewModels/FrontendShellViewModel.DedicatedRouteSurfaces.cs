@@ -1769,6 +1769,8 @@ internal sealed class TaskManagerEntryViewModel(
 
     public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
 
+    public bool ShowSummary => HasSummary && !HasStageEntries;
+
     public string ProgressText { get; } = progressText;
 
     public double ProgressValue { get; } = Math.Clamp(progressValue, 0d, 1d) * 100d;

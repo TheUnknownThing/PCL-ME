@@ -8,7 +8,7 @@
       Header="{Binding Title}"
       IsClosable="{Binding CanCancel}"
       CloseCommand="{Binding CancelCommand}"
-      ContentMargin="25,40,18,12">
+      ContentMargin="25,40,15,10">
     <controls:PclCard.HeaderOverlayContent>
       <Border
           Margin="0,8,36,0"
@@ -30,7 +30,7 @@
         <TextBlock
             Foreground="#75869C"
             FontSize="11.5"
-            IsVisible="{Binding HasSummary}"
+            IsVisible="{Binding ShowSummary}"
             Text="{Binding Summary}"
             TextWrapping="Wrap" />
 

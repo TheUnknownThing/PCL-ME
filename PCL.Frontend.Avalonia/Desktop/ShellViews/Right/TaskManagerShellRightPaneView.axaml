@@ -6,12 +6,7 @@
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,25,25,10" Spacing="18">
-      <StackPanel Spacing="4">
-        <TextBlock Foreground="#415671" FontSize="13.5" Text="{Binding TaskManagerActiveTaskTitle}" />
-        <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="{Binding TaskManagerSummary}" />
-      </StackPanel>
-
+    <StackPanel Margin="25,25,25,10" Spacing="15">
       <ItemsControl ItemsSource="{Binding TaskManagerEntries}" IsVisible="{Binding HasTaskManagerEntries}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
