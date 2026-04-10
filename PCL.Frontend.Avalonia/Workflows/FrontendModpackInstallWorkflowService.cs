@@ -407,7 +407,8 @@ internal static class FrontendModpackInstallWorkflowService
             OptiFabricChoice: null,
             UseInstanceIsolation: true,
             RunRepair: true,
-            ForceCoreRefresh: true);
+            ForceCoreRefresh: true,
+            PreserveExistingManagedModFiles: true);
     }
 
     private static FrontendInstallChoice ResolveMinecraftChoice(string version)
