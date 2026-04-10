@@ -17,12 +17,13 @@
                   Width="140"
                   ItemsSource="{Binding DownloadFavoriteTargetOptions}"
                   SelectedIndex="{Binding SelectedDownloadFavoriteTargetIndex}" />
-              <controls:PclButton
+              <controls:PclIconButton
+                  x:Name="ManageTargetButton"
                   Grid.Column="1"
-                  Width="72"
                   Margin="8,0,0,0"
                   Command="{Binding ManageDownloadFavoriteTargetCommand}"
-                  Text="管理" />
+                  ToolTip.Tip="管理"
+                  VerticalAlignment="Center" />
             </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>
