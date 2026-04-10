@@ -298,6 +298,30 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasActivityEntries));
     }
 
+    private void AddFailureActivity(string title, string body)
+    {
+        AddActivity(title, body);
+        AvaloniaHintBus.Show(ComposeFailureHintMessage(title, body), AvaloniaHintTheme.Error);
+    }
+
+    private static string ComposeFailureHintMessage(string title, string body)
+    {
+        var normalizedTitle = (title ?? string.Empty).Trim();
+        var normalizedBody = (body ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedBody))
+        {
+            return string.IsNullOrWhiteSpace(normalizedTitle) ? "操作失败。" : normalizedTitle;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedTitle) ||
+            normalizedBody.StartsWith(normalizedTitle, StringComparison.Ordinal))
+        {
+            return normalizedBody;
+        }
+
+        return $"{normalizedTitle}: {normalizedBody}";
+    }
+
     private void TogglePromptOverlay()
     {
         SetPromptOverlayOpen(!IsPromptOverlayVisible);
@@ -401,7 +425,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!bool.TryParse(rawValue, out var enabled))
         {
-            AddActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
+            AddFailureActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
             return;
         }
 
@@ -455,7 +479,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(argument))
         {
-            AddActivity("追加启动参数失败", "提示中未提供可写入的参数。");
+            AddFailureActivity("追加启动参数失败", "提示中未提供可写入的参数。");
             return;
         }
 
@@ -492,7 +516,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
         {
-            AddActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
+            AddFailureActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
             return;
         }
 
@@ -535,7 +559,7 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                AddActivity("Java 运行时准备失败", ex.Message);
+                AddFailureActivity("Java 运行时准备失败", ex.Message);
             });
         }
     }
@@ -583,7 +607,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity("外部打开失败", "缺少可打开的目标。");
+            AddFailureActivity("外部打开失败", "缺少可打开的目标。");
             return;
         }
 
@@ -593,7 +617,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
+        AddFailureActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
     }
 
     private void UpdateStartupConsentRequest(Func<LauncherStartupConsentRequest, LauncherStartupConsentRequest> updater)
@@ -618,7 +642,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (_launchComposition.SelectedJavaRuntime is null)
         {
-            AddActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
+            AddFailureActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
             return;
         }
 
@@ -696,7 +720,7 @@ internal sealed partial class FrontendShellViewModel
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine($"启动失败：{ex.Message}");
-            AddActivity("启动失败", ex.Message);
+            AddFailureActivity("启动失败", ex.Message);
             SetLaunchDialogStoppedState("启动失败", ex.Message, isError: true);
         }
         finally

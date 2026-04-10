@@ -508,7 +508,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("安装整合包失败", ex.Message);
+            AddFailureActivity("安装整合包失败", ex.Message);
         }
     }
 
