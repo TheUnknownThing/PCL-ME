@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -565,65 +566,158 @@ internal sealed class CommunityProjectActionButtonViewModel(
 
 internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
 {
-    private const int PageSize = 20;
-    private readonly IReadOnlyList<DownloadCatalogEntryViewModel> _allItems;
+    private IReadOnlyList<DownloadCatalogEntryViewModel> _allItems;
     private readonly ActionCommand _previousPageCommand;
     private readonly ActionCommand _nextPageCommand;
-    private int _pageIndex;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? _loadEntriesAsync;
+    private CancellationTokenSource? _loadEntriesCts;
+    private bool _hasLoaded;
+    private bool _isExpanded;
+    private bool _isLoading;
 
     public DownloadCatalogSectionViewModel(
         string title,
-        IReadOnlyList<DownloadCatalogEntryViewModel> items)
+        IReadOnlyList<DownloadCatalogEntryViewModel> items,
+        bool isCollapsible = false,
+        bool isExpanded = true,
+        Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
+        string loadingText = "正在获取版本列表")
     {
         Title = title;
+        LoadingText = loadingText;
         _allItems = items;
+        IsCollapsible = isCollapsible;
+        _isExpanded = isExpanded;
+        _loadEntriesAsync = loadEntriesAsync;
+        _hasLoaded = loadEntriesAsync is null;
         _previousPageCommand = new ActionCommand(
-            () => ChangePage(-1),
-            () => _pageIndex > 0);
+            () => { },
+            () => false);
         _nextPageCommand = new ActionCommand(
-            () => ChangePage(1),
-            () => _pageIndex + 1 < TotalPages);
-        RefreshItems();
+            () => { },
+            () => false);
+
+        if (_hasLoaded)
+        {
+            ReplaceVisibleItems(items);
+        }
+        else if (_isExpanded)
+        {
+            EnsureEntriesLoaded();
+        }
     }
 
     public string Title { get; }
 
+    public string LoadingText { get; }
+
     public ObservableCollection<DownloadCatalogEntryViewModel> Items { get; } = [];
 
-    public bool ShowPagination => TotalPages > 1;
+    public bool IsCollapsible { get; }
 
-    public string PageLabel => $"{_pageIndex + 1} / {TotalPages}";
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (SetProperty(ref _isExpanded, value) && value)
+            {
+                EnsureEntriesLoaded();
+            }
+        }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set => SetProperty(ref _isLoading, value);
+    }
+
+    public bool HasItems => Items.Count > 0;
+
+    public bool ShowPagination => false;
+
+    public string PageLabel => string.Empty;
 
     public ActionCommand PreviousPageCommand => _previousPageCommand;
 
     public ActionCommand NextPageCommand => _nextPageCommand;
 
-    private int TotalPages => Math.Max(1, (_allItems.Count + PageSize - 1) / PageSize);
-
-    private void ChangePage(int delta)
+    private void ReplaceVisibleItems(IReadOnlyList<DownloadCatalogEntryViewModel> items)
     {
-        var nextPage = Math.Clamp(_pageIndex + delta, 0, TotalPages - 1);
-        if (nextPage == _pageIndex)
-        {
-            return;
-        }
-
-        _pageIndex = nextPage;
-        RefreshItems();
-    }
-
-    private void RefreshItems()
-    {
+        _allItems = items;
         Items.Clear();
-        foreach (var item in _allItems.Skip(_pageIndex * PageSize).Take(PageSize))
+        foreach (var item in items)
         {
             Items.Add(item);
         }
 
+        RaisePropertyChanged(nameof(HasItems));
         RaisePropertyChanged(nameof(ShowPagination));
         RaisePropertyChanged(nameof(PageLabel));
-        _previousPageCommand.NotifyCanExecuteChanged();
-        _nextPageCommand.NotifyCanExecuteChanged();
+    }
+
+    private void EnsureEntriesLoaded()
+    {
+        if (_hasLoaded || IsLoading || _loadEntriesAsync is null)
+        {
+            return;
+        }
+
+        _loadEntriesCts?.Cancel();
+        _loadEntriesCts = new CancellationTokenSource();
+        IsLoading = true;
+        _ = LoadEntriesAsync(_loadEntriesCts.Token);
+    }
+
+    private async Task LoadEntriesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var items = await _loadEntriesAsync!(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _hasLoaded = true;
+            ReplaceVisibleItems(items);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer expand request superseded this load.
+        }
+        catch (Exception ex)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _hasLoaded = true;
+            ReplaceVisibleItems(
+            [
+                new DownloadCatalogEntryViewModel(
+                    "加载失败",
+                    ex.Message,
+                    string.Empty,
+                    "重试",
+                    new ActionCommand(ReloadEntries))
+            ]);
+        }
+        finally
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IsLoading = false;
+            }
+        }
+    }
+
+    private void ReloadEntries()
+    {
+        _hasLoaded = false;
+        EnsureEntriesLoaded();
     }
 }
 
