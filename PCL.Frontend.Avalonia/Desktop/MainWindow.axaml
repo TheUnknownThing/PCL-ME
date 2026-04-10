@@ -121,7 +121,7 @@
       </Border.Background>
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.SurfaceState}" />
+          <BrushTransition Property="Background" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Border.Transitions>
 

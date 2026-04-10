@@ -22,8 +22,8 @@
     </Grid.ColumnDefinitions>
     <Grid.Transitions>
       <Transitions>
-        <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-        <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
       </Transitions>
     </Grid.Transitions>
 
@@ -38,8 +38,8 @@
         Opacity="0">
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-          <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+          <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Border.Transitions>
     </Border>

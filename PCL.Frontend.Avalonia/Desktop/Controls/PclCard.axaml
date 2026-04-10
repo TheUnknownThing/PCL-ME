@@ -15,8 +15,8 @@
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
-          <BoxShadowsTransition Property="BoxShadow" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
+          <BrushTransition Property="Background" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BoxShadowsTransition Property="BoxShadow" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Border.Transitions>
       <Grid x:Name="LayoutRoot">
@@ -101,8 +101,8 @@
         IsHitTestVisible="False">
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
-          <ThicknessTransition Property="BorderThickness" Duration="{x:Static animation:MotionDurations.EmphasizedSurfaceState}" />
+          <BrushTransition Property="BorderBrush" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+          <ThicknessTransition Property="BorderThickness" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Border.Transitions>
     </Border>
