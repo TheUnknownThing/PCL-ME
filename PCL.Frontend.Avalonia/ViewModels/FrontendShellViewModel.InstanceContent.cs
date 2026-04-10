@@ -1083,7 +1083,9 @@ internal sealed partial class FrontendShellViewModel
         OpenInstanceTarget("导出资源信息", outputPath, "导出文件不存在。");
     }
 
-    private void CheckInstanceMods()
+    private void CheckInstanceMods() => _ = CheckInstanceModsAsync();
+
+    private async Task CheckInstanceModsAsync()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
@@ -1100,9 +1102,6 @@ internal sealed partial class FrontendShellViewModel
             .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-mod-checks");
-        Directory.CreateDirectory(exportDirectory);
-        var outputPath = Path.Combine(exportDirectory, $"{_instanceComposition.Selection.InstanceName}-mod-check.txt");
         var lines = new List<string>
         {
             $"实例: {_instanceComposition.Selection.InstanceName}",
@@ -1129,8 +1128,15 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        OpenInstanceTarget("检查 Mod", outputPath, "检查结果不存在。");
+        var result = await ShowToolboxConfirmationAsync("检查 Mod", string.Join(Environment.NewLine, lines));
+        if (result is null)
+        {
+            return;
+        }
+
+        AddActivity(
+            "检查 Mod",
+            $"已检查 {_instanceComposition.Selection.InstanceName}：启用 {enabledMods.Count} 个，禁用 {disabledMods.Count} 个，重复 {duplicateGroups.Length} 组。");
     }
 
     private void ViewInstanceServer(FrontendInstanceServerEntry entry)

@@ -184,25 +184,21 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void ShowAvailableUpdateDetail()
+    private void ShowAvailableUpdateDetail() => _ = ShowAvailableUpdateDetailAsync();
+
+    private async Task ShowAvailableUpdateDetailAsync()
     {
         if (!string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateChangelog))
         {
-            var outputPath = Path.Combine(
-                _shellActionService.RuntimePaths.FrontendArtifactDirectory,
-                "update-details",
-                $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.md");
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-            File.WriteAllText(outputPath, _updateStatus.AvailableUpdateChangelog, new UTF8Encoding(false));
+            var result = await ShowToolboxConfirmationAsync(
+                $"更新详情: {_updateStatus.AvailableUpdateName}",
+                _updateStatus.AvailableUpdateChangelog);
+            if (result is null)
+            {
+                return;
+            }
 
-            if (_shellActionService.TryOpenExternalTarget(outputPath, out var error))
-            {
-                AddActivity("查看更新详情", outputPath);
-            }
-            else
-            {
-                AddActivity("查看更新详情失败", error ?? outputPath);
-            }
+            AddActivity("查看更新详情", _updateStatus.AvailableUpdateName);
 
             return;
         }
@@ -301,23 +297,26 @@ internal sealed partial class FrontendShellViewModel
                             ? "IPv6 已就绪"
                             : "需要进一步诊断";
 
-            var reportPath = WriteGameLinkArtifact(
-                "nat-tests",
-                $"nat-diagnostics-{DateTime.Now:yyyyMMdd-HHmmss}.txt",
-                [
-                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                    $"界面状态: {GameLinkNatStatus}",
-                    $"启用 IPv6 设置: {(AllowIpv6Communication ? "是" : "否")}",
-                    $"低延迟优先: {(PreferLowestLatencyPath ? "是" : "否")}",
-                    $"对称 NAT 猜测: {(TryPunchSymmetricNat ? "是" : "否")}",
-                    string.Empty,
-                    "活动网络接口",
-                    .. interfaces.Length == 0
-                        ? ["- 未检测到处于联通状态的网络接口。"]
-                        : interfaces.SelectMany(DescribeInterface)
-                ]);
+            List<string> lines =
+            [
+                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                $"界面状态: {GameLinkNatStatus}",
+                $"启用 IPv6 设置: {(AllowIpv6Communication ? "是" : "否")}",
+                $"低延迟优先: {(PreferLowestLatencyPath ? "是" : "否")}",
+                $"对称 NAT 猜测: {(TryPunchSymmetricNat ? "是" : "否")}",
+                string.Empty,
+                "活动网络接口",
+                .. interfaces.Length == 0
+                    ? ["- 未检测到处于联通状态的网络接口。"]
+                    : interfaces.SelectMany(DescribeInterface)
+            ];
+            var result = await ShowToolboxConfirmationAsync("测试 NAT 类型", string.Join(Environment.NewLine, lines));
+            if (result is null)
+            {
+                return;
+            }
 
-            OpenInstanceTarget("测试 NAT 类型", reportPath, "NAT 诊断报告不存在。");
+            AddActivity("测试 NAT 类型", $"检测结果：{GameLinkNatStatus}");
         }
         catch (Exception ex)
         {
@@ -950,15 +949,6 @@ internal sealed partial class FrontendShellViewModel
 
         var port = LobbyRuntime.ResolveRuntimeLobbyPort();
         return $"127.0.0.1:{Math.Max(1, port)}";
-    }
-
-    private string WriteGameLinkArtifact(string folderName, string fileName, IReadOnlyList<string> lines)
-    {
-        var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "game-link", folderName);
-        Directory.CreateDirectory(outputDirectory);
-        var outputPath = Path.Combine(outputDirectory, fileName);
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        return outputPath;
     }
 
     private static IEnumerable<string> DescribeInterface(NetworkInterface networkInterface)
@@ -1641,28 +1631,22 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("生成教学文件", targetPath);
     }
 
-    private void ViewHomepageTutorial()
+    private void ViewHomepageTutorial() => _ = ViewHomepageTutorialAsync();
+
+    private async Task ViewHomepageTutorialAsync()
     {
         const string tutorialText = """
 1. 点击“生成教学文件”，会在运行目录下生成 PCL/Custom.xaml。
 2. 使用文本编辑器修改这个文件，保存后可再次点击“刷新主页”。
 3. 若使用联网主页，请确认下载地址指向可信的主页内容。
 """;
-        var outputPath = Path.Combine(
-            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
-            "homepage",
-            "homepage-tutorial.txt");
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        File.WriteAllText(outputPath, tutorialText, new UTF8Encoding(false));
+        var result = await ShowToolboxConfirmationAsync("查看主页教程", tutorialText);
+        if (result is null)
+        {
+            return;
+        }
 
-        if (_shellActionService.TryOpenExternalTarget(outputPath, out var error))
-        {
-            AddActivity("查看主页教程", outputPath);
-        }
-        else
-        {
-            AddActivity("查看主页教程失败", error ?? outputPath);
-        }
+        AddActivity("查看主页教程", "已显示主页自定义教程。");
     }
 
     private void PreviewAchievement()
@@ -1947,6 +1931,9 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private void OpenJavaRuntimeDetail(string key, string title, string folder, IReadOnlyList<string> tags)
+        => _ = OpenJavaRuntimeDetailAsync(key, title, folder, tags);
+
+    private async Task OpenJavaRuntimeDetailAsync(string key, string title, string folder, IReadOnlyList<string> tags)
     {
         if (string.IsNullOrWhiteSpace(key) || !File.Exists(key))
         {
@@ -1955,39 +1942,39 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var installation = ParseJavaInstallation(key);
-        var detailDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "java-details");
-        Directory.CreateDirectory(detailDirectory);
-        var detailPath = Path.Combine(detailDirectory, $"{SanitizeFileSegment(title)}.md");
         var sourceLabel = ResolveJavaSourceLabel(key);
         var detail = installation is null
-            ? $$"""
-                # {{title}}
+            ? string.Join(Environment.NewLine,
+            [
+                $"路径: {key}",
+                $"目录: {folder}",
+                $"来源: {sourceLabel}",
+                $"当前标签: {string.Join(" / ", tags)}",
+                $"默认 Java: {(_selectedJavaRuntimeKey == key ? "是" : "否")}",
+                string.Empty,
+                "无法进一步解析该 Java 的详细元数据，请确认文件仍然可执行。"
+            ])
+            : string.Join(Environment.NewLine,
+            [
+                $"类型: {(installation.IsJre ? "JRE" : "JDK")}",
+                $"版本: {installation.Version}",
+                $"主版本: {installation.MajorVersion}",
+                $"架构: {installation.Architecture} ({(installation.Is64Bit ? "64 Bit" : "32 Bit")})",
+                $"品牌: {installation.Brand}",
+                $"来源: {sourceLabel}",
+                $"默认 Java: {(_selectedJavaRuntimeKey == key ? "是" : "否")}",
+                $"已启用: {(JavaRuntimeEntries.FirstOrDefault(item => item.Key == key)?.IsEnabled == true ? "是" : "否")}",
+                $"可用性: {(installation.IsStillAvailable ? "可用" : "不可用")}",
+                $"可执行文件: {installation.JavaExePath}",
+                $"目录: {installation.JavaFolder}"
+            ]);
+        var result = await ShowToolboxConfirmationAsync($"查看 Java 详情: {title}", detail);
+        if (result is null)
+        {
+            return;
+        }
 
-                - 路径: `{{key}}`
-                - 目录: `{{folder}}`
-                - 来源: {{sourceLabel}}
-                - 当前标签: {{string.Join(" / ", tags)}}
-                - 默认 Java: {{(_selectedJavaRuntimeKey == key ? "是" : "否")}}
-
-                无法进一步解析该 Java 的详细元数据，请确认文件仍然可执行。
-                """
-            : $$"""
-                # {{title}}
-
-                - 类型: {{(installation.IsJre ? "JRE" : "JDK")}}
-                - 版本: {{installation.Version}}
-                - 主版本: {{installation.MajorVersion}}
-                - 架构: {{installation.Architecture}} ({{(installation.Is64Bit ? "64 Bit" : "32 Bit")}})
-                - 品牌: {{installation.Brand}}
-                - 来源: {{sourceLabel}}
-                - 默认 Java: {{(_selectedJavaRuntimeKey == key ? "是" : "否")}}
-                - 已启用: {{(JavaRuntimeEntries.FirstOrDefault(item => item.Key == key)?.IsEnabled == true ? "是" : "否")}}
-                - 可用性: {{(installation.IsStillAvailable ? "可用" : "不可用")}}
-                - 可执行文件: `{{installation.JavaExePath}}`
-                - 目录: `{{installation.JavaFolder}}`
-                """;
-        File.WriteAllText(detailPath, detail, new UTF8Encoding(false));
-        OpenInstanceTarget($"查看 Java 详情: {title}", detailPath, "Java 详情文件不存在。");
+        AddActivity($"查看 Java 详情: {title}", "已显示 Java 运行时详情。");
     }
 
     private static JavaInstallation? ParseJavaInstallation(string javaExecutablePath)
