@@ -816,6 +816,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         _downloadResourceHasMoreEntries = result.State.HasMoreEntries;
         DownloadResourceHintText = result.State.HintText;
+        // Keep the loading card copy stable until it has fully transitioned out.
         DownloadResourceEmptyStateHintText = string.Empty;
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(result.State.HintText);
 
