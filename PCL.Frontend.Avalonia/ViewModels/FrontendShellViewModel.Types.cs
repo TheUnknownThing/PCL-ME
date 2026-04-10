@@ -1066,6 +1066,7 @@ internal sealed class InstanceResourceEntryViewModel(
     string meta,
     string path,
     ActionCommand actionCommand,
+    string actionToolTip = "查看",
     bool isEnabled = true,
     bool showSelection = false,
     bool isSelected = false,
@@ -1073,6 +1074,7 @@ internal sealed class InstanceResourceEntryViewModel(
 {
     private static readonly IBrush ActiveTitleForeground = Brush.Parse("#343D4A");
     private static readonly IBrush InactiveTitleForeground = Brush.Parse("#7D8897");
+    private static readonly IBrush SelectedTitleForeground = Brush.Parse("#1370F3");
     private bool _isSelected = isSelected;
     private bool _isEnabled = isEnabled;
 
@@ -1088,7 +1090,13 @@ internal sealed class InstanceResourceEntryViewModel(
 
     public ActionCommand ActionCommand { get; } = actionCommand;
 
+    public string ActionToolTip { get; } = actionToolTip;
+
     public bool ShowSelection { get; } = showSelection;
+
+    public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
+
+    public bool HasAction => ActionCommand is not null;
 
     public bool IsSelected
     {
@@ -1097,6 +1105,7 @@ internal sealed class InstanceResourceEntryViewModel(
         {
             if (SetProperty(ref _isSelected, value))
             {
+                RaisePropertyChanged(nameof(TitleForeground));
                 selectionChanged?.Invoke(value);
             }
         }
@@ -1117,7 +1126,11 @@ internal sealed class InstanceResourceEntryViewModel(
 
     public double ContentOpacity => IsEnabledState ? 1.0 : 0.56;
 
-    public IBrush TitleForeground => IsEnabledState ? ActiveTitleForeground : InactiveTitleForeground;
+    public IBrush TitleForeground => IsSelected && IsEnabledState
+        ? SelectedTitleForeground
+        : IsEnabledState
+            ? ActiveTitleForeground
+            : InactiveTitleForeground;
 }
 
 internal sealed class HelpTopicViewModel(
