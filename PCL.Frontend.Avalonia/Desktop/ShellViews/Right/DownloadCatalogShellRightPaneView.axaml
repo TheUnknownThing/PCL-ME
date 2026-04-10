@@ -43,43 +43,30 @@
       <ItemsControl IsVisible="{Binding ShowDownloadCatalogContent}" ItemsSource="{Binding DownloadCatalogSections}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <controls:PclCard Margin="20,15,20,0" Header="{Binding Title}" ContentMargin="20,40,18,20">
+            <controls:PclCard
+                Margin="20,15,20,0"
+                Header="{Binding Title}"
+                ShowChevron="{Binding IsCollapsible}"
+                IsChevronExpanded="{Binding IsExpanded}"
+                ContentMargin="20,40,18,12">
               <controls:PclCard.CardContent>
-                <StackPanel Spacing="10">
-                  <ItemsControl ItemsSource="{Binding Items}">
+                <StackPanel Spacing="8">
+                  <controls:PclLoading
+                      HorizontalAlignment="Center"
+                      IsVisible="{Binding IsLoading}"
+                      Text="{Binding LoadingText}" />
+
+                  <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <controls:PclActionSummaryRow
-                            ActionText="{Binding ActionText}"
+                        <controls:PclListItem
+                            Margin="0,0,0,8"
                             Command="{Binding Command}"
-                            Info="{Binding Info}"
-                            Meta="{Binding Meta}"
-                            ShowMeta="{Binding HasMeta}"
+                            Info="{Binding CombinedInfo}"
                             Title="{Binding Title}" />
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-
-                  <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding ShowPagination}">
-                    <controls:PclButton
-                        Grid.Column="0"
-                        Width="88"
-                        Command="{Binding PreviousPageCommand}"
-                        Text="上一页" />
-                    <TextBlock
-                        Grid.Column="1"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="#4B5968"
-                        FontSize="13"
-                        Text="{Binding PageLabel}" />
-                    <controls:PclButton
-                        Grid.Column="2"
-                        Width="88"
-                        HorizontalAlignment="Right"
-                        Command="{Binding NextPageCommand}"
-                        Text="下一页" />
-                  </Grid>
                 </StackPanel>
               </controls:PclCard.CardContent>
             </controls:PclCard>

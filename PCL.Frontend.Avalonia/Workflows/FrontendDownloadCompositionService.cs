@@ -54,6 +54,24 @@ internal static class FrontendDownloadCompositionService
             cancellationToken);
     }
 
+    public static Task<IReadOnlyList<FrontendDownloadCatalogEntry>> LoadCatalogSectionEntriesAsync(
+        FrontendRuntimePaths runtimePaths,
+        FrontendInstanceComposition instanceComposition,
+        LauncherFrontendSubpageKey route,
+        string lazyLoadToken,
+        CancellationToken cancellationToken = default)
+    {
+        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
+        var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
+        return FrontendDownloadRemoteCatalogService.LoadCatalogSectionEntriesAsync(
+            route,
+            lazyLoadToken,
+            versionSourceIndex,
+            preferredMinecraftVersion,
+            cancellationToken);
+    }
+
     public static Task<FrontendDownloadFavoritesState> LoadFavoritesStateAsync(
         FrontendRuntimePaths runtimePaths,
         CancellationToken cancellationToken = default)

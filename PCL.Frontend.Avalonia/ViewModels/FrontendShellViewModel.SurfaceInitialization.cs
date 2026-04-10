@@ -291,18 +291,7 @@ internal sealed partial class FrontendShellViewModel
                         : CreateOpenTargetCommand(action.Text, action.Target, action.Target))).ToArray());
         ReplaceItems(
             DownloadCatalogSections,
-            state.Sections.Select(section =>
-                CreateDownloadCatalogSection(
-                    section.Title,
-                    section.Entries.Select(entry =>
-                        new DownloadCatalogEntryViewModel(
-                            entry.Title,
-                            entry.Info,
-                            entry.Meta,
-                            entry.ActionText,
-                            CreateDownloadCatalogCommand(entry))).ToArray(),
-                    section.IsCollapsible,
-                    section.IsInitiallyExpanded)));
+            state.Sections.Select(section => CreateDownloadCatalogSectionViewModel(_currentRoute.Subpage, section)));
     }
 
     private void SetDownloadCatalogLoading(bool isLoading)
@@ -624,9 +613,40 @@ internal sealed partial class FrontendShellViewModel
         string title,
         IReadOnlyList<DownloadCatalogEntryViewModel> items,
         bool isCollapsible = false,
-        bool isExpanded = true)
+        bool isExpanded = true,
+        Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
+        string loadingText = "正在获取版本列表")
     {
-        return new DownloadCatalogSectionViewModel(title, items, isCollapsible, isExpanded);
+        return new DownloadCatalogSectionViewModel(title, items, isCollapsible, isExpanded, loadEntriesAsync, loadingText);
+    }
+
+    private DownloadCatalogSectionViewModel CreateDownloadCatalogSectionViewModel(
+        LauncherFrontendSubpageKey route,
+        FrontendDownloadCatalogSection section)
+    {
+        Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null;
+        if (!string.IsNullOrWhiteSpace(section.LazyLoadToken))
+        {
+            var lazyLoadToken = section.LazyLoadToken;
+            loadEntriesAsync = async cancellationToken =>
+            {
+                var entries = await FrontendDownloadCompositionService.LoadCatalogSectionEntriesAsync(
+                    _shellActionService.RuntimePaths,
+                    _instanceComposition,
+                    route,
+                    lazyLoadToken,
+                    cancellationToken);
+                return entries.Select(CreateDownloadCatalogEntryViewModel).ToArray();
+            };
+        }
+
+        return CreateDownloadCatalogSection(
+            section.Title,
+            section.Entries.Select(CreateDownloadCatalogEntryViewModel).ToArray(),
+            section.IsCollapsible,
+            section.IsInitiallyExpanded,
+            loadEntriesAsync,
+            section.LoadingText);
     }
 
     private DownloadCatalogEntryViewModel CreateDownloadCatalogEntry(string title, string info, string meta, string actionText)
@@ -637,6 +657,16 @@ internal sealed partial class FrontendShellViewModel
             meta,
             actionText,
             new ActionCommand(() => AddActivity($"下载页操作: {title}", $"{meta} • {info}")));
+    }
+
+    private DownloadCatalogEntryViewModel CreateDownloadCatalogEntryViewModel(FrontendDownloadCatalogEntry entry)
+    {
+        return new DownloadCatalogEntryViewModel(
+            entry.Title,
+            entry.Info,
+            entry.Meta,
+            entry.ActionText,
+            CreateDownloadCatalogCommand(entry));
     }
 
     private IReadOnlyList<DownloadCatalogSectionViewModel> BuildDownloadFavoriteSections()
