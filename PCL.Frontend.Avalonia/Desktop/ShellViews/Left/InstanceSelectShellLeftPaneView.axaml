@@ -51,7 +51,7 @@
               Margin="13,5,5,3"
               Foreground="#A7AFBA"
               FontSize="12"
-              Text="添加导入" />
+              Text="快捷操作" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionShortcutEntries}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>

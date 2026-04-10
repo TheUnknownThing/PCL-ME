@@ -24,6 +24,17 @@ internal sealed partial class FrontendShellViewModel
         return Path.Combine(launcherDirectory, ".pcl-trash", "versions");
     }
 
+    private void OpenInstanceSelectionTrashDirectory()
+    {
+        var launcherDirectory = string.IsNullOrWhiteSpace(_instanceSelectionLauncherDirectory)
+            ? _instanceComposition.Selection.LauncherDirectory
+            : _instanceSelectionLauncherDirectory;
+        var targetDirectory = string.IsNullOrWhiteSpace(launcherDirectory)
+            ? string.Empty
+            : ResolveInstanceVersionTrashDirectory(launcherDirectory);
+        OpenInstanceDirectoryTarget("实例回收区", targetDirectory, "当前未找到启动目录。");
+    }
+
     private async Task<InstanceDeleteOutcome?> DeleteInstanceDirectoryAsync(
         string instanceName,
         string instanceDirectory,
