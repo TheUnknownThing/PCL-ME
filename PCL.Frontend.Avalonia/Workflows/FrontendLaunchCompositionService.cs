@@ -618,7 +618,55 @@ internal static class FrontendLaunchCompositionService
             runtimeArchitecture,
             visited,
             libraries);
-        return libraries;
+        return DeduplicateClasspathLibraries(libraries);
+    }
+
+    private static IReadOnlyList<MinecraftLaunchClasspathLibrary> DeduplicateClasspathLibraries(
+        IReadOnlyList<MinecraftLaunchClasspathLibrary> libraries)
+    {
+        if (libraries.Count <= 1)
+        {
+            return libraries;
+        }
+
+        var deduplicated = new List<MinecraftLaunchClasspathLibrary>(libraries.Count);
+        var indexByKey = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var library in libraries)
+        {
+            var key = GetClasspathLibraryIdentityKey(library);
+            if (indexByKey.TryGetValue(key, out var existingIndex))
+            {
+                deduplicated[existingIndex] = library;
+                continue;
+            }
+
+            indexByKey[key] = deduplicated.Count;
+            deduplicated.Add(library);
+        }
+
+        return deduplicated;
+    }
+
+    private static string GetClasspathLibraryIdentityKey(MinecraftLaunchClasspathLibrary library)
+    {
+        if (TryParseLibraryCoordinate(library.Name, out var coordinate))
+        {
+            return $"{coordinate.GroupId}:{coordinate.ArtifactId}:{coordinate.Classifier ?? string.Empty}:{library.IsNatives}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(library.Name))
+        {
+            var parts = library.Name.Split(':', StringSplitOptions.None);
+            if (parts.Length >= 3)
+            {
+                var classifier = parts.Length >= 4 ? parts[3] : string.Empty;
+                return $"{parts[0]}:{parts[1]}:{classifier}:{library.IsNatives}";
+            }
+
+            return $"{library.Name}:{library.IsNatives}";
+        }
+
+        return $"{library.Path}:{library.IsNatives}";
     }
 
     private static void CollectClasspathLibrariesRecursive(
@@ -1774,9 +1822,26 @@ internal static class FrontendLaunchCompositionService
         out LibraryDownloadInfo download)
     {
         download = null!;
-        if (!library.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object)
+        var libraryName = GetString(library, "name");
+        if (string.IsNullOrWhiteSpace(libraryName))
         {
             return TryResolveLegacyLibraryDownloadWithoutDownloads(library, entryName, launcherFolder, out download);
+        }
+
+        if (!library.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object)
+        {
+            if (!string.Equals(entryName, "artifact", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var fallbackPath = DeriveLibraryPathFromName(libraryName);
+            var fallbackTargetPath = Path.Combine(launcherFolder, "libraries", fallbackPath.Replace('/', Path.DirectorySeparatorChar));
+            download = new LibraryDownloadInfo(
+                fallbackTargetPath,
+                BuildLibraryUrl(library, fallbackPath),
+                GetString(library, "sha1"));
+            return true;
         }
 
         JsonElement downloadEntry;
@@ -1801,12 +1866,6 @@ internal static class FrontendLaunchCompositionService
         var path = GetString(downloadEntry, "path");
         if (string.IsNullOrWhiteSpace(path))
         {
-            var libraryName = GetString(library, "name");
-            if (string.IsNullOrWhiteSpace(libraryName))
-            {
-                return false;
-            }
-
             path = DeriveLibraryPathFromName(
                 libraryName,
                 string.Equals(entryName, "artifact", StringComparison.Ordinal) ? null : entryName);
