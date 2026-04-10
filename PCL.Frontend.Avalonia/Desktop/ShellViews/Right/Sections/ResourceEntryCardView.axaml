@@ -1,0 +1,112 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.ResourceEntryCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <Grid
+      x:Name="LayoutRoot"
+      Height="44"
+      Margin="0,0,0,8"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      ColumnDefinitions="4,34,7,*,Auto,0,4"
+      RowDefinitions="*,20,18,*"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Grid.Transitions>
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Grid.Transitions>
+
+    <Border
+        x:Name="HoverBackground"
+        Grid.ColumnSpan="7"
+        Background="{DynamicResource ColorBrushEntrySelectedBackground}"
+        BorderBrush="{DynamicResource ColorBrush6}"
+        BorderThickness="1"
+        CornerRadius="4"
+        Opacity="0">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+    </Border>
+
+    <Border
+        x:Name="SelectionBar"
+        Grid.RowSpan="4"
+        Margin="0,6,0,6"
+        Background="{DynamicResource ColorBrush3}"
+        CornerRadius="0,3,3,0"
+        IsVisible="False" />
+
+    <Image
+        Grid.Column="1"
+        Grid.Row="1"
+        Grid.RowSpan="2"
+        Width="34"
+        Height="34"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        Opacity="{Binding ContentOpacity}"
+        Source="{Binding Icon}"
+        Stretch="Uniform" />
+
+    <Grid
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        Grid.Row="1"
+        Margin="0,1,0,0"
+        ColumnDefinitions="*,Auto">
+      <TextBlock
+          Foreground="{Binding TitleForeground}"
+          FontSize="14"
+          Text="{Binding Title}"
+          TextTrimming="CharacterEllipsis" />
+      <TextBlock
+          Grid.Column="1"
+          Margin="8,0,0,0"
+          Foreground="{DynamicResource ColorBrushGray1}"
+          FontSize="12"
+          IsVisible="{Binding HasMeta}"
+          Opacity="0.42"
+          Text="{Binding Meta}"
+          TextTrimming="CharacterEllipsis" />
+    </Grid>
+
+    <TextBlock
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        Grid.Row="2"
+        Margin="0,0,3,1"
+        Foreground="{DynamicResource ColorBrushGray4}"
+        FontSize="12"
+        Opacity="{Binding ContentOpacity}"
+        Text="{Binding Info}"
+        TextTrimming="CharacterEllipsis"
+        TextWrapping="NoWrap" />
+
+    <controls:PclIconButton
+        x:Name="ActionButton"
+        Grid.Column="5"
+        Grid.Row="1"
+        Grid.RowSpan="2"
+        Width="25"
+        Height="25"
+        Margin="0,0,5,0"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        Command="{Binding ActionCommand}"
+        IconBrush="{DynamicResource ColorBrush5}"
+        IconData="M889.018182 418.909091H884.363636V316.509091a93.090909 93.090909 0 0 0-99.607272-89.832727h-302.545455l-93.090909-76.334546A46.545455 46.545455 0 0 0 358.865455 139.636364H146.152727A93.090909 93.090909 0 0 0 46.545455 229.469091V837.818182a46.545455 46.545455 0 0 0 46.545454 46.545454 46.545455 46.545455 0 0 0 16.756364-3.258181 109.381818 109.381818 0 0 0 25.134545 3.258181h586.472727a85.178182 85.178182 0 0 0 87.04-63.301818l163.374546-302.545454a46.545455 46.545455 0 0 0 5.585454-21.876364A82.385455 82.385455 0 0 0 889.018182 418.909091z m-744.727273-186.181818h198.283636l93.09091 76.334545a46.545455 46.545455 0 0 0 29.323636 10.705455h319.301818a12.101818 12.101818 0 0 1 6.516364 0V418.909091H302.545455a85.178182 85.178182 0 0 0-87.04 63.301818L139.636364 622.778182V232.727273a19.549091 19.549091 0 0 1 6.516363 0z m578.094546 552.029091a27.461818 27.461818 0 0 0-2.792728 6.516363H154.530909l147.083636-272.290909a27.461818 27.461818 0 0 0 2.792728-6.981818h565.061818z"
+        IconScale="1.05"
+        IsVisible="{Binding HasAction}"
+        Opacity="0"
+        ToolTip.Tip="{Binding ActionToolTip}" />
+  </Grid>
+</UserControl>

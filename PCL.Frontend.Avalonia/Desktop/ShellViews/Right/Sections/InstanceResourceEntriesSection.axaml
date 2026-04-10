@@ -2,7 +2,8 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceResourceEntriesSection"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections">
   <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding ShowInstanceResourceContent}">
     <controls:PclCard.HeaderOverlayContent>
       <controls:PclIconTextButton
@@ -47,18 +48,7 @@
             Padding="0">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <controls:PclListItem
-                  Height="44"
-                  Margin="0,0,0,8"
-                  AccessoryCommand="{Binding ActionCommand}"
-                  AccessoryIconData="{Binding ActionIconData}"
-                  AccessoryToolTip="{Binding ActionToolTip}"
-                  Command="{Binding PrimaryCommand}"
-                  IconSource="{Binding Icon}"
-                  Info="{Binding Info}"
-                  IsSelected="{Binding IsSelected}"
-                  Title="{Binding Title}"
-                  TitleSuffix="{Binding Meta}" />
+              <sections:ResourceEntryCardView />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
