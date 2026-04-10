@@ -58,8 +58,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand CleanLogsCommand => _cleanLogsCommand;
 
-    public ActionCommand GetMirrorCdkCommand => _getMirrorCdkCommand;
-
     public ActionCommand DownloadUpdateCommand => _downloadUpdateCommand;
 
     public ActionCommand ShowUpdateDetailCommand => _showUpdateDetailCommand;

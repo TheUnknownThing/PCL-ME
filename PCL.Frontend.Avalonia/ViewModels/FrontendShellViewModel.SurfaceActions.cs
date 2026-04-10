@@ -107,7 +107,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task CheckForLauncherUpdatesAsync(bool forceRefresh)
     {
-        var signature = $"{SelectedUpdateChannelIndex}|{MirrorCdk}";
+        var signature = $"{SelectedUpdateChannelIndex}";
         if (_isCheckingUpdate)
         {
             return;
@@ -126,7 +126,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex, MirrorCdk);
+            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex);
             _lastUpdateCheckSignature = signature;
             RaiseUpdateSurfaceProperties();
 

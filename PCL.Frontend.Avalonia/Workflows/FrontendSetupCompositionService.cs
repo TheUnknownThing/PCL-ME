@@ -20,7 +20,7 @@ internal static class FrontendSetupCompositionService
         return new FrontendSetupComposition(
             BuildAboutState(),
             BuildLogState(paths),
-            BuildUpdateState(paths, sharedConfig, localConfig),
+            BuildUpdateState(sharedConfig, localConfig),
             BuildLaunchState(sharedConfig, localConfig),
             BuildGameLinkState(sharedConfig),
             BuildGameManageState(sharedConfig),
@@ -144,14 +144,12 @@ internal static class FrontendSetupCompositionService
     }
 
     private static FrontendSetupUpdateState BuildUpdateState(
-        FrontendRuntimePaths paths,
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
         return new FrontendSetupUpdateState(
             UpdateChannelIndex: ReadValue(localConfig, "SystemUpdateChannel", 0),
-            UpdateModeIndex: ReadValue(localConfig, "SystemSystemUpdate", 1),
-            MirrorCdk: ReadProtectedValue(paths, "SystemMirrorChyanKey"));
+            UpdateModeIndex: ReadValue(localConfig, "SystemSystemUpdate", 1));
     }
 
     private static FrontendSetupLaunchState BuildLaunchState(

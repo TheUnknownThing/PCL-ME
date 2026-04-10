@@ -110,12 +110,6 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string MirrorCdk
-    {
-        get => _mirrorCdk;
-        set => SetProperty(ref _mirrorCdk, value);
-    }
-
     public Bitmap? UpdateAvailableIcon => File.Exists(UpdateAvailableIconFilePath)
         ? new Bitmap(UpdateAvailableIconFilePath)
         : null;

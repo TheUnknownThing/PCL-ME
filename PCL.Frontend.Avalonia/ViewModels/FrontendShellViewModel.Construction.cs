@@ -62,7 +62,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _exportAllLogsCommand;
     private readonly ActionCommand _openLogDirectoryCommand;
     private readonly ActionCommand _cleanLogsCommand;
-    private readonly ActionCommand _getMirrorCdkCommand;
     private readonly ActionCommand _downloadUpdateCommand;
     private readonly ActionCommand _showUpdateDetailCommand;
     private readonly ActionCommand _checkUpdateAgainCommand;
@@ -167,7 +166,6 @@ internal sealed partial class FrontendShellViewModel
     private string _helpSearchQuery = string.Empty;
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
-    private string _mirrorCdk = string.Empty;
     private bool _isCheckingUpdate;
     private string _lastUpdateCheckSignature = string.Empty;
     private bool _isRefreshingFeedback;
@@ -380,7 +378,6 @@ internal sealed partial class FrontendShellViewModel
         _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
         _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
         _cleanLogsCommand = new ActionCommand(CleanLauncherLogs);
-        _getMirrorCdkCommand = CreateLinkCommand("获取 Mirror 酱 CDK", "https://mirrorchyan.com/");
         _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));

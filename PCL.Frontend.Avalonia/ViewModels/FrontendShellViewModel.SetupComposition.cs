@@ -99,11 +99,6 @@ internal sealed partial class FrontendShellViewModel
         "SystemSystemUpdate"
     ];
 
-    private static readonly string[] UpdateProtectedResetKeys =
-    [
-        "SystemMirrorChyanKey"
-    ];
-
     private static readonly string[] UiLocalResetKeys =
     [
         "UiLauncherLogo",
@@ -263,7 +258,6 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendSubpageKey.SetupUpdate:
                 RaisePropertyChanged(nameof(SelectedUpdateChannelIndex));
                 RaisePropertyChanged(nameof(SelectedUpdateModeIndex));
-                RaisePropertyChanged(nameof(MirrorCdk));
                 RaiseUpdateSurfaceProperties();
                 break;
             case LauncherFrontendSubpageKey.SetupLink:
@@ -422,9 +416,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedUpdateModeIndex):
                 _shellActionService.PersistLocalValue("SystemSystemUpdate", SelectedUpdateModeIndex);
-                break;
-            case nameof(MirrorCdk):
-                _shellActionService.PersistProtectedSharedValue("SystemMirrorChyanKey", MirrorCdk);
                 break;
             case nameof(SelectedLaunchIsolationIndex):
                 _shellActionService.PersistLocalValue("LaunchArgumentIndieV2", SelectedLaunchIsolationIndex);
@@ -720,7 +711,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasFeedbackSections));
         RaisePropertyChanged(nameof(SelectedUpdateChannelIndex));
         RaisePropertyChanged(nameof(SelectedUpdateModeIndex));
-        RaisePropertyChanged(nameof(MirrorCdk));
         RaiseUpdateSurfaceProperties();
         RaisePropertyChanged(nameof(SelectedLaunchIsolationIndex));
         RaisePropertyChanged(nameof(LaunchWindowTitleSetting));
