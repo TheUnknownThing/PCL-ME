@@ -325,12 +325,6 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (_downloadInstallPreparedModpack is not null)
-        {
-            await StartPreparedModpackInstallAsync(targetName);
-            return;
-        }
-
         await ApplyInstallAsync(targetName, isExistingInstance: false);
     }
 
@@ -486,96 +480,6 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
         }
-    }
-
-    private Task StartPreparedModpackInstallAsync(string targetInstanceName)
-    {
-        if (_downloadInstallPreparedModpack is null)
-        {
-            AddActivity("开始安装整合包", "当前没有已准备好的整合包安装方案。");
-            return Task.CompletedTask;
-        }
-
-        try
-        {
-            var unresolvedSelections = GetUnresolvedManagedSelections(isExistingInstance: false);
-            if (unresolvedSelections.Count > 0)
-            {
-                AddActivity(
-                    "开始安装整合包失败",
-                    $"以下安装项当前无法映射到受支持的安装矩阵：{string.Join("、", unresolvedSelections)}。请重新选择或清除后再继续。");
-                return Task.CompletedTask;
-            }
-
-            var minecraftChoice = ResolveEffectiveMinecraftChoice(isExistingInstance: false);
-            var minecraftVersion = minecraftChoice.Version;
-            var overrides = new FrontendModpackInstallOverrides(
-                minecraftChoice,
-                ResolveEffectivePrimaryChoice(isExistingInstance: false, minecraftVersion),
-                ResolveEffectiveAddonChoice(isExistingInstance: false, "LiteLoader", minecraftVersion),
-                ResolveEffectiveAddonChoice(isExistingInstance: false, "OptiFine", minecraftVersion),
-                ResolveEffectiveAddonChoice(isExistingInstance: false, "Fabric API", minecraftVersion),
-                ResolveEffectiveAddonChoice(isExistingInstance: false, "Legacy Fabric API", minecraftVersion),
-                ResolveEffectiveAddonChoice(isExistingInstance: false, "QFAPI / QSL", minecraftVersion),
-                ResolveEffectiveAddonChoice(isExistingInstance: false, "OptiFabric", minecraftVersion),
-                UseInstanceIsolation: true,
-                ForceCoreRefresh: true);
-            var preparedInstall = _downloadInstallPreparedModpack;
-            var taskTitle = $"{targetInstanceName} 开始安装整合包";
-            var targetDirectory = Path.Combine(_instanceComposition.Selection.LauncherDirectory, "versions", targetInstanceName);
-
-            TaskCenter.Register(new FrontendManagedModpackInstallTask(
-                taskTitle,
-                new FrontendModpackInstallRequest(
-                    preparedInstall.SourceUrl ?? string.Empty,
-                    preparedInstall.ArchivePath,
-                    _instanceComposition.Selection.LauncherDirectory,
-                    targetInstanceName,
-                    targetDirectory,
-                    preparedInstall.ProjectId,
-                    preparedInstall.ProjectSource,
-                    preparedInstall.IconPath,
-                    preparedInstall.ProjectDescription,
-                    preparedInstall.CommunitySourcePreference,
-                    overrides,
-                    ArchiveReady: true),
-                ResolveDownloadRequestTimeout(),
-                onCompleted: result =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        HandleCommunityProjectModpackInstalled(result);
-                    });
-                },
-                onFailed: message =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        AddActivity("整合包安装失败", message);
-                        AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error);
-                    });
-                }));
-
-            _downloadInstallIsInSelectionStage = false;
-            _downloadInstallExpandedOptionTitle = null;
-            _downloadInstallMinecraftChoice = null;
-            _downloadInstallIsNameEditedByUser = false;
-            _downloadInstallOptionChoices.Clear();
-            _downloadInstallOptionLoadsInProgress.Clear();
-            _downloadInstallOptionLoadErrors.Clear();
-            ClearPreparedDownloadInstall(deleteArchive: false);
-            InitializeDownloadInstallSurface();
-            RaisePropertyChanged(nameof(DownloadInstallName));
-            NavigateTo(
-                new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-                $"{taskTitle} 已加入任务中心。");
-        }
-        catch (Exception ex)
-        {
-            AddActivity("开始安装整合包失败", ex.Message);
-        }
-
-        return Task.CompletedTask;
     }
 
     private FrontendInstallChoice ResolveEffectiveMinecraftChoice(bool isExistingInstance)

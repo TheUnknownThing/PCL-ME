@@ -13,33 +13,6 @@ internal static class FrontendModpackInstallWorkflowService
     private static readonly UTF8Encoding Utf8NoBom = new(false);
     private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
 
-    public static async Task<FrontendPreparedModpackInstall> PrepareArchiveAsync(
-        FrontendModpackPrepareRequest request,
-        TimeSpan? requestTimeout = null,
-        CancellationToken cancelToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        cancelToken.ThrowIfCancellationRequested();
-
-        var effectiveTimeout = NormalizeDownloadTimeout(requestTimeout);
-        using var httpClient = CreateDownloadHttpClient(effectiveTimeout);
-
-        Directory.CreateDirectory(Path.GetDirectoryName(request.ArchivePath)!);
-        if (!string.IsNullOrWhiteSpace(request.SourceUrl))
-        {
-            await DownloadArchiveToPathAsync(request.SourceUrl, request.ArchivePath, httpClient, cancelToken).ConfigureAwait(false);
-        }
-        else if (!File.Exists(request.ArchivePath))
-        {
-            throw new FileNotFoundException("未找到待分析的整合包文件。", request.ArchivePath);
-        }
-
-        var package = await Task.Run(
-            () => InspectPackage(request.ArchivePath, request.CommunitySourcePreference, httpClient, cancelToken),
-            cancelToken).ConfigureAwait(false);
-        return BuildPreparedInstall(package, request);
-    }
-
     public static async Task<FrontendModpackInstallResult> InstallDownloadedArchiveAsync(
         FrontendModpackInstallRequest request,
         Action<FrontendModpackInstallStatus>? onStatusChanged = null,
@@ -161,43 +134,6 @@ internal static class FrontendModpackInstallWorkflowService
         {
             TryDeleteDirectory(extractRoot);
         }
-    }
-
-    private static FrontendPreparedModpackInstall BuildPreparedInstall(
-        FrontendModpackPackage package,
-        FrontendModpackPrepareRequest request)
-    {
-        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion);
-        var primaryChoice =
-            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion) ??
-            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion) ??
-            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion) ??
-            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion);
-        var liteLoaderChoice = ResolveManagedModChoice("LiteLoader", package.MinecraftVersion, package.Files);
-        var optiFineChoice = ResolveManagedModChoice("OptiFine", package.MinecraftVersion, package.Files);
-        var fabricApiChoice = ResolveManagedModChoice("Fabric API", package.MinecraftVersion, package.Files);
-        var legacyFabricApiChoice = ResolveManagedModChoice("Legacy Fabric API", package.MinecraftVersion, package.Files);
-        var qslChoice = ResolveManagedModChoice("QFAPI / QSL", package.MinecraftVersion, package.Files);
-        var optiFabricChoice = ResolveManagedModChoice("OptiFabric", package.MinecraftVersion, package.Files);
-
-        return new FrontendPreparedModpackInstall(
-            request.ArchivePath,
-            request.DisplayName,
-            request.SuggestedInstanceName,
-            request.SourceUrl,
-            request.ProjectId,
-            request.ProjectSource,
-            request.IconPath,
-            request.ProjectDescription,
-            request.CommunitySourcePreference,
-            minecraftChoice,
-            primaryChoice,
-            liteLoaderChoice,
-            optiFineChoice,
-            fabricApiChoice,
-            legacyFabricApiChoice,
-            qslChoice,
-            optiFabricChoice);
     }
 
     private static FrontendModpackPackage InspectPackage(
@@ -451,25 +387,6 @@ internal static class FrontendModpackInstallWorkflowService
         FrontendModpackPackage package,
         FrontendModpackInstallRequest request)
     {
-        if (request.InstallOverrides is not null)
-        {
-            return new FrontendInstallApplyRequest(
-                request.LauncherDirectory,
-                request.InstanceName,
-                request.InstallOverrides.MinecraftChoice,
-                request.InstallOverrides.PrimaryLoaderChoice,
-                request.InstallOverrides.LiteLoaderChoice,
-                request.InstallOverrides.OptiFineChoice,
-                request.InstallOverrides.FabricApiChoice,
-                request.InstallOverrides.LegacyFabricApiChoice,
-                request.InstallOverrides.QslChoice,
-                request.InstallOverrides.OptiFabricChoice,
-                UseInstanceIsolation: request.InstallOverrides.UseInstanceIsolation,
-                RunRepair: true,
-                ForceCoreRefresh: request.InstallOverrides.ForceCoreRefresh,
-                PreserveExistingManagedModFiles: true);
-        }
-
         var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion);
         var primaryChoice =
             ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion) ??
@@ -515,27 +432,6 @@ internal static class FrontendModpackInstallWorkflowService
             string.Equals(candidate.Version, requestedVersion, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Title, requestedVersion, StringComparison.OrdinalIgnoreCase));
         return choice ?? throw new InvalidOperationException($"未找到 {optionTitle} {requestedVersion} 的安装方案。");
-    }
-
-    private static FrontendInstallChoice? ResolveManagedModChoice(
-        string optionTitle,
-        string minecraftVersion,
-        IReadOnlyList<FrontendModpackFilePlan> files)
-    {
-        var matchingFileNames = files
-            .Select(file => Path.GetFileName(file.RelativeTargetPath))
-            .Where(fileName => !string.IsNullOrWhiteSpace(fileName))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (matchingFileNames.Count == 0)
-        {
-            return null;
-        }
-
-        return FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion)
-            .FirstOrDefault(choice =>
-                !string.IsNullOrWhiteSpace(choice.FileName)
-                && matchingFileNames.Contains(choice.FileName));
     }
 
     private static void ApplyOverrides(
@@ -620,20 +516,6 @@ internal static class FrontendModpackInstallWorkflowService
         }
 
         throw new InvalidOperationException($"无法下载整合包文件：{file.DisplayName}");
-    }
-
-    private static async Task DownloadArchiveToPathAsync(
-        string sourceUrl,
-        string archivePath,
-        HttpClient httpClient,
-        CancellationToken cancelToken)
-    {
-        using var response = await httpClient.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-
-        await using var sourceStream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
-        await using var targetStream = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
-        await sourceStream.CopyToAsync(targetStream, cancelToken).ConfigureAwait(false);
     }
 
     private static bool ValidateExistingFile(FrontendModpackFileDownloadPlan file)
@@ -1068,17 +950,10 @@ internal sealed class FrontendManagedModpackInstallTask(
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(request.ArchivePath)!);
-            if (request.ArchiveReady && File.Exists(request.ArchivePath))
-            {
-                PublishProgress(0.35);
-                PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在读取已准备的整合包安装信息…");
-            }
-            else
-            {
-                PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在下载整合包文件…");
-                onStarted?.Invoke(request.ArchivePath);
-                await DownloadArchiveAsync(token, requestTimeout).ConfigureAwait(false);
-            }
+            PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在下载整合包文件…");
+            onStarted?.Invoke(request.ArchivePath);
+
+            await DownloadArchiveAsync(token, requestTimeout).ConfigureAwait(false);
 
             var result = await FrontendModpackInstallWorkflowService.InstallDownloadedArchiveAsync(
                 request,
@@ -1106,11 +981,6 @@ internal sealed class FrontendManagedModpackInstallTask(
 
     private async Task DownloadArchiveAsync(CancellationToken token, TimeSpan timeout)
     {
-        if (string.IsNullOrWhiteSpace(request.SourceUrl))
-        {
-            throw new InvalidOperationException("整合包下载地址不存在。");
-        }
-
         using var client = CreateDownloadHttpClient(timeout);
         using var response = await client.GetAsync(request.SourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -1239,51 +1109,7 @@ internal sealed record FrontendModpackInstallRequest(
     string? ProjectSource,
     string? IconPath,
     string? ProjectDescription,
-    int CommunitySourcePreference,
-    FrontendModpackInstallOverrides? InstallOverrides = null,
-    bool ArchiveReady = false);
-
-internal sealed record FrontendModpackPrepareRequest(
-    string ArchivePath,
-    string DisplayName,
-    string SuggestedInstanceName,
-    string? SourceUrl,
-    string? ProjectId,
-    string? ProjectSource,
-    string? IconPath,
-    string? ProjectDescription,
     int CommunitySourcePreference);
-
-internal sealed record FrontendPreparedModpackInstall(
-    string ArchivePath,
-    string DisplayName,
-    string SuggestedInstanceName,
-    string? SourceUrl,
-    string? ProjectId,
-    string? ProjectSource,
-    string? IconPath,
-    string? ProjectDescription,
-    int CommunitySourcePreference,
-    FrontendInstallChoice MinecraftChoice,
-    FrontendInstallChoice? PrimaryChoice,
-    FrontendInstallChoice? LiteLoaderChoice,
-    FrontendInstallChoice? OptiFineChoice,
-    FrontendInstallChoice? FabricApiChoice,
-    FrontendInstallChoice? LegacyFabricApiChoice,
-    FrontendInstallChoice? QslChoice,
-    FrontendInstallChoice? OptiFabricChoice);
-
-internal sealed record FrontendModpackInstallOverrides(
-    FrontendInstallChoice MinecraftChoice,
-    FrontendInstallChoice? PrimaryLoaderChoice,
-    FrontendInstallChoice? LiteLoaderChoice,
-    FrontendInstallChoice? OptiFineChoice,
-    FrontendInstallChoice? FabricApiChoice,
-    FrontendInstallChoice? LegacyFabricApiChoice,
-    FrontendInstallChoice? QslChoice,
-    FrontendInstallChoice? OptiFabricChoice,
-    bool UseInstanceIsolation,
-    bool ForceCoreRefresh);
 
 internal sealed record FrontendModpackInstallResult(
     string InstanceName,
