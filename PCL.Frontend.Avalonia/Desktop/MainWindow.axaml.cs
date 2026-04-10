@@ -46,7 +46,6 @@ internal sealed partial class MainWindow : Window
         MinimizeButton.IconData = FrontendIconCatalog.Minimize.Data;
         MaximizeButton.IconData = FrontendIconCatalog.Maximize.Data;
         CloseButton.IconData = FrontendIconCatalog.Close.Data;
-        PromptQueueButton.IconData = FrontendIconCatalog.PromptQueue.Data;
 
         if (!OperatingSystem.IsMacOS())
         {
