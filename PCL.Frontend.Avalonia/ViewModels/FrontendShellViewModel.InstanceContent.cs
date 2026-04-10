@@ -627,6 +627,7 @@ internal sealed partial class FrontendShellViewModel
             entry.Meta,
             entry.Path,
             new ActionCommand(() => OpenInstanceTarget("查看资源", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。")),
+            actionToolTip: "查看资源",
             isEnabled: entry.IsEnabled,
             showSelection: true,
             isSelected: _instanceResourceSelectedPaths.Contains(entry.Path),
