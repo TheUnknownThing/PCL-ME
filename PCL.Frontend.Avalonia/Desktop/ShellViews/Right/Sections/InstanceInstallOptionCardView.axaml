@@ -61,7 +61,8 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <controls:PclListItem
-                  Margin="0,0,0,2"
+                  HorizontalAlignment="Stretch"
+                  Margin="0"
                   Command="{Binding SelectCommand}"
                   Info="{Binding Summary}"
                   IsSelected="{Binding IsSelected}"
