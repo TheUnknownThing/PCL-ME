@@ -641,7 +641,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var showIndieWarning = _instanceComposition.Selection.HasSelection
-                && GetPathComparison().Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory)
+                && string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, GetPathComparison())
                 && _instanceComposition.Selection.IsIndie;
             var outcome = await DeleteInstanceDirectoryAsync(
                 entry.Name,

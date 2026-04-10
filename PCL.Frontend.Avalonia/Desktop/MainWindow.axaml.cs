@@ -70,7 +70,9 @@ internal sealed partial class MainWindow : Window
             RunEntranceAnimation();
         };
         Closed += OnWindowClosed;
+        Deactivated += OnWindowDeactivated;
         KeyDown += OnWindowKeyDown;
+        KeyUp += OnWindowKeyUp;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
         UpdateWindowChromeState();
@@ -223,7 +225,9 @@ internal sealed partial class MainWindow : Window
         AvaloniaHintBus.OnShow -= OnHintWrapperShow;
         MotionDurations.Changed -= OnMotionDurationsChanged;
         Closed -= OnWindowClosed;
+        Deactivated -= OnWindowDeactivated;
         KeyDown -= OnWindowKeyDown;
+        KeyUp -= OnWindowKeyUp;
 
         foreach (var state in _activeHints.Values)
         {
@@ -248,6 +252,8 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)
     {
+        _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+
         if (e.Handled || e.Key != Key.Escape || _shellViewModel is null)
         {
             return;
@@ -258,6 +264,16 @@ internal sealed partial class MainWindow : Window
             _shellViewModel.BackCommand.Execute(null);
             e.Handled = true;
         }
+    }
+
+    private void OnWindowKeyUp(object? sender, KeyEventArgs e)
+    {
+        _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+    }
+
+    private void OnWindowDeactivated(object? sender, EventArgs e)
+    {
+        _shellViewModel?.UpdateKeyboardModifiers(KeyModifiers.None);
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -272,6 +288,7 @@ internal sealed partial class MainWindow : Window
 
         if (_shellViewModel is not null)
         {
+            _shellViewModel.UpdateKeyboardModifiers(KeyModifiers.None);
             _shellViewModel.NavigationTransitionRequested += OnNavigationTransitionRequested;
             _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
         }

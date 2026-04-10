@@ -461,42 +461,28 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var instanceName = _instanceComposition.Selection.InstanceName;
-        var confirmed = await _shellActionService.ConfirmAsync(
-            "实例删除确认",
-            $"确定要将实例 {instanceName} 移入回收区吗？该操作会保留实例目录，便于后续恢复。",
-            "移入回收区",
-            isDanger: true);
-        if (!confirmed)
-        {
-            AddActivity("删除实例", "已取消删除。");
-            return;
-        }
-
         try
         {
-            var sourceDirectory = _instanceComposition.Selection.InstanceDirectory;
-            var trashDirectory = Path.Combine(_instanceComposition.Selection.LauncherDirectory, ".pcl-trash", "versions");
-            Directory.CreateDirectory(trashDirectory);
-
-            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            var targetDirectory = GetUniquePath(Path.Combine(trashDirectory, $"{instanceName}-{timestamp}"));
-            Directory.Move(sourceDirectory, targetDirectory);
-
-            var metadataPath = Path.Combine(targetDirectory, ".pcl-trash.json");
-            File.WriteAllText(
-                metadataPath,
-                JsonSerializer.Serialize(new
-                {
-                    instanceName,
-                    originalPath = sourceDirectory,
-                    deletedAt = DateTimeOffset.Now
-                }, new JsonSerializerOptions { WriteIndented = true }),
-                new UTF8Encoding(false));
+            var outcome = await DeleteInstanceDirectoryAsync(
+                _instanceComposition.Selection.InstanceName,
+                _instanceComposition.Selection.InstanceDirectory,
+                _instanceComposition.Selection.LauncherDirectory,
+                _instanceComposition.Selection.IsIndie);
+            if (outcome is null)
+            {
+                return;
+            }
 
             _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
             ReloadInstanceComposition();
-            OpenInstanceTarget("删除实例", targetDirectory, "回收区目录不存在。");
+
+            if (outcome.IsPermanentDelete)
+            {
+                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                return;
+            }
+
+            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
         }
         catch (Exception ex)
         {
