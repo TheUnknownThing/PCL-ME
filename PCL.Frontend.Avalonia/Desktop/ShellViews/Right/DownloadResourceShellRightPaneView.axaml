@@ -2,7 +2,6 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.DownloadResourceShellRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     DataContext="{Binding Shell}">
   <UserControl.Resources>
@@ -10,74 +9,14 @@
       <TextBlock Text="{Binding Label}" />
     </DataTemplate>
   </UserControl.Resources>
-  <UserControl.Styles>
-    <Style Selector="TextBox.search-input">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-    </Style>
-    <Style Selector="TextBox.search-input:pointerover">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-    </Style>
-    <Style Selector="TextBox.search-input:focus">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-    </Style>
-    <Style Selector="TextBox.search-input /template/ Border">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-    </Style>
-  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
-      <Border
-          x:Name="SearchRowBorder"
-          Height="40"
-          Background="#F8FBFF"
-          BorderBrush="#D5E6FD"
-          BorderThickness="1"
-          CornerRadius="5">
-        <Border.Transitions>
-          <Transitions>
-            <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-            <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-          </Transitions>
-        </Border.Transitions>
-        <Grid>
-          <TextBox
-              x:Name="DownloadResourceSearchTextBox"
-              Classes="search-input"
-              FocusAdorner="{x:Null}"
-              Padding="34,0,78,0"
-              Background="Transparent"
-              BorderBrush="Transparent"
-              BorderThickness="0"
-              FontSize="13.5"
-              Text="{Binding DownloadResourceSearchQuery, UpdateSourceTrigger=PropertyChanged}"
-              VerticalContentAlignment="Center"
-              Watermark="{Binding DownloadResourceSearchWatermark}" />
-          <Path
-              Width="14"
-              Height="14"
-              Margin="14,0,0,0"
-              HorizontalAlignment="Left"
-              VerticalAlignment="Center"
-              Fill="#7B8EA5"
-              Stretch="Uniform"
-              Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
-          <controls:PclButton
-              Width="60"
-              Height="32"
-              Margin="0,4,4,4"
-              Command="{Binding SearchDownloadResourceCommand}"
-              HorizontalAlignment="Right"
-              Text="搜索" />
-        </Grid>
-      </Border>
+      <controls:PclSearchBox
+          x:Name="SearchRow"
+          SearchCommand="{Binding SearchDownloadResourceCommand}"
+          ShowSearchButton="True"
+          Text="{Binding DownloadResourceSearchQuery, Mode=TwoWay}"
+          Watermark="{Binding DownloadResourceSearchWatermark}" />
 
       <controls:PclCard x:Name="FilterCard" ContentMargin="7,7,7,7">
         <controls:PclCard.CardContent>

@@ -11,21 +11,9 @@
           <controls:PclCard.CardContent>
             <StackPanel Spacing="14">
               <Grid ColumnDefinitions="*,Auto">
-                <Border
-                    Height="40"
-                    Padding="12,0"
-                    Background="#F8FBFF"
-                    BorderBrush="#D5E6FD"
-                    BorderThickness="1"
-                    CornerRadius="5">
-                  <TextBox
-                      Background="Transparent"
-                      BorderBrush="Transparent"
-                      BorderThickness="0"
-                      FontSize="13.5"
-                      Text="{Binding InstanceSelectionSearchQuery}"
-                      Watermark="搜索实例名称、版本或加载器" />
-                </Border>
+                <controls:PclSearchBox
+                    Text="{Binding InstanceSelectionSearchQuery, Mode=TwoWay}"
+                    Watermark="搜索实例名称、版本或加载器" />
                 <controls:PclButton
                     Grid.Column="1"
                     Width="72"
