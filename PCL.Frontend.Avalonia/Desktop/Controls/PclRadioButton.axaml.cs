@@ -24,6 +24,9 @@ internal sealed partial class PclRadioButton : UserControl
     {
         InitializeComponent();
 
+        AttachedToVisualTree += (_, _) => RefreshVisualState();
+        DataContextChanged += (_, _) => RefreshVisualState();
+
         ButtonHost.PointerEntered += (_, _) =>
         {
             _isHovered = true;
