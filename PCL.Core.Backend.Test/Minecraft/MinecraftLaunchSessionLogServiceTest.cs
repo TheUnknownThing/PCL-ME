@@ -48,6 +48,7 @@ public sealed class MinecraftLaunchSessionLogServiceTest
                 "HMCL 格式：False",
                 "Java 信息：Java 17",
                 @"Natives 文件夹：C:\natives",
+                "Natives 压缩包：0",
                 "",
                 "~ 档案参数 ~",
                 "玩家用户名：Player",

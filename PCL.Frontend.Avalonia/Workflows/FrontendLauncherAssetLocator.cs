@@ -12,23 +12,13 @@ internal static class FrontendLauncherAssetLocator
         "Assets",
         "LauncherAssets"));
 
-    private static readonly string LegacySourceRootDirectory = Path.GetFullPath(Path.Combine(
-        AppContext.BaseDirectory,
-        "..",
-        "..",
-        "..",
-        "..",
-        "PCL.Frontend.WPF"));
-
     private static readonly string PackagedRootDirectory = Path.Combine(
         AppContext.BaseDirectory,
         "LauncherAssets");
 
     public static string RootDirectory => Directory.Exists(PackagedRootDirectory)
         ? PackagedRootDirectory
-        : Directory.Exists(SourceRootDirectory)
-            ? SourceRootDirectory
-            : LegacySourceRootDirectory;
+        : SourceRootDirectory;
 
     public static string GetPath(params string[] segments)
     {

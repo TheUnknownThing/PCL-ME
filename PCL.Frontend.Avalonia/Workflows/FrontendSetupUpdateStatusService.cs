@@ -9,7 +9,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendSetupUpdateStatusService
 {
-    private const string GithubReleaseBaseUrl = "https://github.com/PCL-Community/PCL2-CE/releases";
+    private const string GithubReleaseBaseUrl = "https://github.com/TheUnknownThing/PCL-CE/releases";
     private static readonly HttpClient HttpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(10)
@@ -20,7 +20,7 @@ internal static class FrontendSetupUpdateStatusService
         var currentVersion = ReadCurrentVersion();
         return new FrontendSetupUpdateStatus(
             UpdateSurfaceState.Checking,
-            CurrentVersionName: $"PCL CE {FormatVersionName(currentVersion.VersionName)}",
+            CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
             CurrentVersionDescription: "正在检查更新...",
             AvailableUpdateName: string.Empty,
             AvailableUpdatePublisher: string.Empty,
@@ -37,7 +37,7 @@ internal static class FrontendSetupUpdateStatusService
         var currentVersion = ReadCurrentVersion();
         return new FrontendSetupUpdateStatus(
             UpdateSurfaceState.Checking,
-            CurrentVersionName: $"PCL CE {FormatVersionName(currentVersion.VersionName)}",
+            CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
             CurrentVersionDescription: "正在检查更新...",
             AvailableUpdateName: string.Empty,
             AvailableUpdatePublisher: string.Empty,
@@ -72,10 +72,10 @@ internal static class FrontendSetupUpdateStatusService
             {
                 return new FrontendSetupUpdateStatus(
                     UpdateSurfaceState.Available,
-                    CurrentVersionName: $"PCL CE {FormatVersionName(currentVersion.VersionName)}",
+                    CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
                     CurrentVersionDescription: $"发现新版本：{FormatVersionName(latestVersion.VersionName)}",
-                    AvailableUpdateName: $"PCL CE {FormatVersionName(latestVersion.VersionName)}",
-                    AvailableUpdatePublisher: $"by PCL-Community • {latestVersion.SourceName}",
+                    AvailableUpdateName: $"PCL-ME {FormatVersionName(latestVersion.VersionName)}",
+                    AvailableUpdatePublisher: $"by PCL-ME Contributors • {latestVersion.SourceName}",
                     AvailableUpdateSummary: ExtractSummary(latestVersion.Changelog),
                     AvailableUpdateSource: latestVersion.SourceName,
                     AvailableUpdateSha256: latestVersion.Sha256,
@@ -86,7 +86,7 @@ internal static class FrontendSetupUpdateStatusService
 
             return new FrontendSetupUpdateStatus(
                 UpdateSurfaceState.Latest,
-                CurrentVersionName: $"PCL CE {FormatVersionName(currentVersion.VersionName)}",
+                CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
                 CurrentVersionDescription: "已是最新版本",
                 AvailableUpdateName: string.Empty,
                 AvailableUpdatePublisher: string.Empty,
@@ -101,7 +101,7 @@ internal static class FrontendSetupUpdateStatusService
         {
             return new FrontendSetupUpdateStatus(
                 UpdateSurfaceState.Error,
-                CurrentVersionName: $"PCL CE {FormatVersionName(currentVersion.VersionName)}",
+                CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
                 CurrentVersionDescription: $"检查更新时出错: {ex.Message}",
                 AvailableUpdateName: string.Empty,
                 AvailableUpdatePublisher: string.Empty,
@@ -126,7 +126,7 @@ internal static class FrontendSetupUpdateStatusService
         CancellationToken cancellationToken)
     {
         var sources = new List<Func<CancellationToken, Task<RemoteVersionInfo>>>();
-        if (!string.IsNullOrWhiteSpace(mirrorCdk))
+        if (OperatingSystem.IsWindows() && !string.IsNullOrWhiteSpace(mirrorCdk))
         {
             sources.Add(token => QueryMirrorChyanAsync(channel, architecture, mirrorCdk, token));
         }

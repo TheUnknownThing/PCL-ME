@@ -33,7 +33,7 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
             var result = MinecraftLaunchNativesSyncService.Sync(
                 new MinecraftLaunchNativesSyncRequest(
                     targetDirectory,
-                    [archivePath],
+                    [new MinecraftLaunchNativeArchive(archivePath, [])],
                     LogSkippedFiles: false));
 
             Assert.IsTrue(File.Exists(Path.Combine(targetDirectory, "a.dll")));
@@ -71,7 +71,7 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
             var result = MinecraftLaunchNativesSyncService.Sync(
                 new MinecraftLaunchNativesSyncRequest(
                     targetDirectory,
-                    [archivePath],
+                    [new MinecraftLaunchNativeArchive(archivePath, [])],
                     LogSkippedFiles: true));
 
             Assert.IsTrue(result.LogMessages.Any(log => log.Contains("无需解压：" + Path.Combine(targetDirectory, "match.dll"), StringComparison.Ordinal)));
@@ -100,7 +100,7 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
                 () => MinecraftLaunchNativesSyncService.Sync(
                     new MinecraftLaunchNativesSyncRequest(
                         Path.Combine(root, "natives"),
-                        [archivePath],
+                        [new MinecraftLaunchNativeArchive(archivePath, [])],
                         LogSkippedFiles: false)));
 
             StringAssert.Contains(exception.Message, "无法打开 Natives 文件");

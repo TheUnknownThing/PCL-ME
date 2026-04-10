@@ -373,7 +373,7 @@ internal sealed partial class FrontendShellViewModel
         _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => !_isLaunchProfileActionInProgress);
         _submitAuthlibLaunchProfileCommand = new ActionCommand(() => _ = SubmitAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _useLittleSkinLaunchProfileCommand = new ActionCommand(ApplyLittleSkinLaunchProfilePreset, () => !_isLaunchProfileActionInProgress);
-        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/PCL-Community/PCL2-CE/issues");
+        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/TheUnknownThing/PCL-CE/issues");
         _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
         _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
         _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
@@ -382,7 +382,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
-        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/PCL-Community/PCL2-CE/releases");
+        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/TheUnknownThing/PCL-CE/releases");
         _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
@@ -392,7 +392,7 @@ internal sealed partial class FrontendShellViewModel
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
-        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/PCL-Community/PCL2-CE");
+        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/TheUnknownThing/PCL-CE");
         _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
         _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
         _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);

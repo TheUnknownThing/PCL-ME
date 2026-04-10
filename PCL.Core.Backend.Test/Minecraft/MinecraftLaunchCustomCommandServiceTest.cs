@@ -21,19 +21,30 @@ public sealed class MinecraftLaunchCustomCommandServiceTest
             InstanceCommand: "echo version",
             WaitForInstanceCommand: false));
 
-        var expectedScript = string.Join("\r\n", new[]
-        {
-            "chcp 65001>nul",
-            "@echo off",
-            "title 启动 - Fabric 1.20.1",
-            "echo 游戏正在启动，请稍候。",
-            "cd /D \"C:\\Minecraft\"",
-            "echo global",
-            "echo version",
-            "\"C:\\Java\\bin\\java.exe\" --demo",
-            "echo 游戏已退出。",
-            "pause"
-        });
+        var expectedScript = OperatingSystem.IsWindows()
+            ? string.Join("\r\n", new[]
+            {
+                "chcp 65001>nul",
+                "@echo off",
+                "title 启动 - Fabric 1.20.1",
+                "echo 游戏正在启动，请稍候。",
+                "cd /D \"C:\\Minecraft\"",
+                "echo global",
+                "echo version",
+                "\"C:\\Java\\bin\\java.exe\" --demo",
+                "echo 游戏已退出。",
+                "pause"
+            })
+            : string.Join("\n", new[]
+            {
+                "#!/bin/sh",
+                "printf '%s\\n' '游戏正在启动，请稍候。'",
+                "cd \"C:\\Minecraft\" || exit 1",
+                "echo global",
+                "echo version",
+                "\"C:\\Java\\bin\\java.exe\" --demo",
+                "printf '%s\\n' '游戏已退出。'"
+            });
 
         Assert.AreEqual(expectedScript, result.BatchScriptContent);
         Assert.IsTrue(result.UseUtf8Encoding);

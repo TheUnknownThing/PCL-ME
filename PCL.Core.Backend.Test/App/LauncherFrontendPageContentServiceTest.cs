@@ -69,7 +69,9 @@ public sealed class LauncherFrontendPageContentServiceTest
         Assert.AreEqual("测试页面", testContent.Eyebrow);
         Assert.IsTrue(testContent.Sections.Any(section =>
             section.Title == "下载与皮肤工具" &&
-            section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal)) &&
+            section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal))));
+        Assert.IsTrue(testContent.Sections.Any(section =>
+            section.Title == "服务器工具" &&
             section.Lines.Any(line => line.Contains("服务器地址输入框", StringComparison.Ordinal))));
     }
 

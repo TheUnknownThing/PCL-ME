@@ -18,8 +18,10 @@ public sealed class MinecraftLaunchExecutionWorkflowServiceTest
                 StartLogMessage: "start",
                 FailureLogMessage: "fail"));
 
-        Assert.AreEqual("cmd.exe", result.FileName);
-        Assert.AreEqual("/c \"echo hello\"", result.Arguments);
+        Assert.AreEqual(OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh", result.FileName);
+        Assert.AreEqual(
+            OperatingSystem.IsWindows() ? "/c \"echo hello\"" : "-lc \"echo hello\"",
+            result.Arguments);
         Assert.AreEqual(@"C:\Minecraft", result.WorkingDirectory);
         Assert.IsFalse(result.UseShellExecute);
         Assert.IsTrue(result.CreateNoWindow);
