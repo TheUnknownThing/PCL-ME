@@ -16,7 +16,7 @@
                       Width="34"
                       Height="34"
                       Margin="3"
-                      Background="#EAF2FE"
+                      Background="Transparent"
                       CornerRadius="17"
                       ClipToBounds="True">
                     <Image Source="{Binding Avatar}" Stretch="UniformToFill" />
@@ -56,7 +56,7 @@
                       Width="34"
                       Height="34"
                       Margin="3"
-                      Background="#EAF2FE"
+                      Background="Transparent"
                       CornerRadius="17"
                       ClipToBounds="True">
                     <Image Source="{Binding Avatar}" Stretch="UniformToFill" />
