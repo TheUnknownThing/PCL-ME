@@ -322,9 +322,10 @@
                     Text="{Binding DownloadResourceEmptyStateText}"
                     TextWrapping="Wrap" />
                 <TextBlock
+                    IsVisible="{Binding ShowDownloadResourceEmptyStateHint}"
                     Foreground="#96A2B1"
                     FontSize="12"
-                    Text="{Binding DownloadResourceLoadingText}"
+                    Text="{Binding DownloadResourceEmptyStateHintText}"
                     TextWrapping="Wrap" />
               </StackPanel>
             </StackPanel>
