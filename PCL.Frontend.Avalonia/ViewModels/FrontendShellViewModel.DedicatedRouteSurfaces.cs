@@ -647,7 +647,13 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshInstanceSelectionSurface();
-            OpenInstanceTarget("删除实例", targetDirectory, "回收区目录不存在。");
+            if (outcome.IsPermanentDelete)
+            {
+                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                return;
+            }
+
+            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
         }
         catch (Exception ex)
         {
