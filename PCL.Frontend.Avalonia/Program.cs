@@ -70,11 +70,11 @@ public partial class Program
             AvaloniaCommandKind.Startup => AvaloniaSampleFactory.BuildStartupPlan(startupInputs),
             AvaloniaCommandKind.Shell => AvaloniaSampleFactory.BuildShellPlan(shellInputs),
             AvaloniaCommandKind.Launch => AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
-            AvaloniaCommandKind.Crash => AvaloniaSampleFactory.BuildCrashPlan(crashInputs),
+            AvaloniaCommandKind.Crash => BuildCrashPlan(options, crashInputs),
             AvaloniaCommandKind.All => new AvaloniaPlanBundle(
                 AvaloniaSampleFactory.BuildStartupPlan(startupInputs),
                 AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
-                AvaloniaSampleFactory.BuildCrashPlan(crashInputs)),
+                BuildCrashPlan(options, crashInputs)),
             _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
         };
     }
@@ -95,7 +95,7 @@ public partial class Program
                 options.JavaPromptDecision,
                 options.JavaDownloadState),
             AvaloniaCommandKind.Crash => AvaloniaRunner.BuildCrashRun(
-                AvaloniaSampleFactory.BuildCrashPlan(crashInputs),
+                BuildCrashPlan(options, crashInputs),
                 options.CrashAction),
             AvaloniaCommandKind.All => new AvaloniaRunBundle(
                 AvaloniaRunner.BuildStartupRun(AvaloniaSampleFactory.BuildStartupPlan(startupInputs)),
@@ -103,7 +103,7 @@ public partial class Program
                     AvaloniaSampleFactory.BuildLaunchPlan(launchInputs, options.SaveBatchPath),
                     options.JavaPromptDecision,
                     options.JavaDownloadState),
-                AvaloniaRunner.BuildCrashRun(AvaloniaSampleFactory.BuildCrashPlan(crashInputs), options.CrashAction)),
+                AvaloniaRunner.BuildCrashRun(BuildCrashPlan(options, crashInputs), options.CrashAction)),
             _ => throw new InvalidOperationException($"Unsupported command '{options.Command}'.")
         };
     }
@@ -198,11 +198,23 @@ public partial class Program
         string? exportArchivePath)
     {
         var execution = AvaloniaExecutor.ExecuteCrash(
-            AvaloniaSampleFactory.BuildCrashPlan(inputs),
+            BuildCrashPlan(inputs),
             workspaceRoot,
             crashAction,
             exportArchivePath);
         var inputArtifact = AvaloniaInputStore.SaveCrashInputs(execution.Execution.WorkspaceRoot, inputs);
         return AvaloniaExecutionAugmenter.AddInputArtifact(execution, inputArtifact);
+    }
+
+    private static CrashAvaloniaPlan BuildCrashPlan(AvaloniaCommandOptions options, CrashAvaloniaInputs inputs)
+    {
+        return options.UseHostEnvironment || options.InputRoot is not null
+            ? BuildCrashPlan(inputs)
+            : AvaloniaSampleFactory.BuildCrashPlan(inputs);
+    }
+
+    private static CrashAvaloniaPlan BuildCrashPlan(CrashAvaloniaInputs inputs)
+    {
+        return FrontendInspectionCrashCompositionService.Compose(inputs);
     }
 }

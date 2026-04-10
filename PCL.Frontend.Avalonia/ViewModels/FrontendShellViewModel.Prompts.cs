@@ -865,12 +865,7 @@ internal sealed partial class FrontendShellViewModel
 
     private CrashAvaloniaPlan BuildCrashPlanForLaunchFailure(FrontendLaunchStartResult startResult)
     {
-        var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
-            BuildLaunchFailureMessage(startResult),
-            IsManualAnalysis: false,
-            HasDirectFile: true,
-            CanOpenModLoaderSettings: false));
-        var exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(new MinecraftCrashExportPlanRequest(
+        var exportRequest = new MinecraftCrashExportPlanRequest(
             Timestamp: DateTime.Now,
             ReportDirectory: Path.Combine(
                 _shellActionService.RuntimePaths.FrontendTempDirectory,
@@ -896,9 +891,30 @@ internal sealed partial class FrontendShellViewModel
             Environment: GetHostEnvironmentSnapshot(),
             CurrentAccessToken: _launchComposition.SelectedProfile.AccessToken,
             CurrentUserUuid: _launchComposition.SelectedProfile.Uuid,
-            UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
+            UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        var analysisResult = MinecraftCrashAnalysisService.Analyze(new MinecraftCrashAnalysisRequest(
+            BuildAnalysisSourcePaths(exportRequest),
+            exportRequest.CurrentLauncherLogFilePath));
+        var resultText = analysisResult.HasKnownReason
+            ? analysisResult.ResultText
+            : $"{analysisResult.ResultText}{Environment.NewLine}{Environment.NewLine}详细信息：{Environment.NewLine}{BuildLaunchFailureMessage(startResult)}";
+        var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
+            resultText,
+            IsManualAnalysis: false,
+            HasDirectFile: analysisResult.HasDirectFile,
+            CanOpenModLoaderSettings: true));
+        var exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(exportRequest);
 
         return new CrashAvaloniaPlan(outputPrompt, exportPlan);
+    }
+
+    private static IReadOnlyList<string> BuildAnalysisSourcePaths(MinecraftCrashExportPlanRequest request)
+    {
+        return request.SourceFilePaths
+            .Concat(request.AdditionalSourceFilePaths ?? [])
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private static string BuildLaunchFailureMessage(FrontendLaunchStartResult startResult)

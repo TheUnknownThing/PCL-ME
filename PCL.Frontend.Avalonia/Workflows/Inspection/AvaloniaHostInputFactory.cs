@@ -160,22 +160,35 @@ internal static class AvaloniaHostInputFactory
         var homeDirectory = GetUserHomeDirectory();
         var minecraftRoot = GetMinecraftRootDirectory(homeDirectory);
         var logDirectory = Path.Combine(minecraftRoot, "logs");
-        var launcherLogDirectory = Path.Combine(GetLauncherAppDataDirectory(), "Log");
+        var launcherAppDataDirectory = GetLauncherAppDataDirectory();
+        var launcherLogDirectory = Path.Combine(launcherAppDataDirectory, "Log");
+        var crashReportDirectory = Path.Combine(minecraftRoot, "crash-reports");
+        var primaryFiles = new List<string>
+        {
+            Path.Combine(launcherAppDataDirectory, $"LatestLaunch{GetCommandScriptExtension()}"),
+            Path.Combine(logDirectory, "RawOutput.log"),
+            Path.Combine(logDirectory, "latest.log"),
+            Path.Combine(logDirectory, "debug.log")
+        };
+        var additionalFiles = new List<string>();
+
+        if (Directory.Exists(crashReportDirectory))
+        {
+            additionalFiles.AddRange(Directory.EnumerateFiles(crashReportDirectory));
+        }
+
+        if (Directory.Exists(minecraftRoot))
+        {
+            additionalFiles.AddRange(Directory.EnumerateFiles(minecraftRoot, "*.log"));
+        }
 
         return sample with
         {
             ExportPlanRequest = sample.ExportPlanRequest with
             {
                 ReportDirectory = Path.Combine(Path.GetTempPath(), "PCL", "CrashReport", DateTime.Now.ToString("yyyy-MM-dd")),
-                SourceFilePaths =
-                [
-                    Path.Combine(GetLauncherAppDataDirectory(), $"LatestLaunch{GetCommandScriptExtension()}"),
-                    Path.Combine(logDirectory, "RawOutput.log")
-                ],
-                AdditionalSourceFilePaths =
-                [
-                    Path.Combine(logDirectory, "latest.log")
-                ],
+                SourceFilePaths = primaryFiles,
+                AdditionalSourceFilePaths = additionalFiles,
                 CurrentLauncherLogFilePath = Path.Combine(launcherLogDirectory, "PCL.log"),
                 Environment = GetHostEnvironmentSnapshot(),
                 UserProfilePath = homeDirectory
