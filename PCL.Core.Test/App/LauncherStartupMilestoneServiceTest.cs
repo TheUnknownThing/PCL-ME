@@ -25,6 +25,6 @@ public sealed class LauncherStartupMilestoneServiceTest
         Assert.IsTrue(result.ShouldAttemptUnlockHiddenTheme);
         Assert.IsNotNull(result.HiddenThemeNotice);
         Assert.AreEqual("提示", result.HiddenThemeNotice.Title);
-        StringAssert.Contains(result.HiddenThemeNotice.Message, "99 次 PCL 社区版");
+        StringAssert.Contains(result.HiddenThemeNotice.Message, "99 次 PCL 跨平台版");
     }
 }

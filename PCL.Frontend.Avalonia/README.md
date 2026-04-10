@@ -1,8 +1,8 @@
 # PCL.Frontend.Avalonia
 
-`PCL.Frontend.Avalonia` is the current replacement-shell prototype for the extracted startup / launch / crash workflow layer.
+`PCL.Frontend.Avalonia` is the active cross-platform frontend for PCL-ME, built on top of the extracted startup / launch / crash workflow layer.
 
-It targets plain `net10.0`, references `PCL.Core.Backend`, and intentionally avoids WPF or Windows-only frontend code.
+It targets plain `net10.0`, references `PCL.Core.Backend`, and carries the current `C# + Avalonia` desktop stack instead of the legacy WPF/VB.NET frontend.
 
 The project now has two complementary faces:
 
@@ -11,7 +11,7 @@ The project now has two complementary faces:
 
 ## What it proves
 
-- a non-WPF shell can consume the extracted startup, launch, and crash contracts
+- a cross-platform Avalonia shell can consume the extracted startup, launch, and crash contracts
 - the portable backend can drive both machine-readable output and shell-oriented transcript output
 - the same prototype shell can materialize bootstrap, prerun, and crash-export artifacts in a real workspace through adapter-style file execution
 - launch scenarios can now trace Authlib or Microsoft login request execution with inspectable request/response artifacts
@@ -90,7 +90,7 @@ Current desktop shell behavior:
 - top-level routes, sidebar sections, and utility surfaces are rendered from `LauncherFrontendNavigationService`
 - startup, launch, and crash prompt lanes are rendered from `LauncherFrontendPromptService`
 - route-specific center-pane facts and sections are rendered from `LauncherFrontendPageContentService`
-- route switching, shell back-navigation, and prompt dismissal stay in the frontend layer without copying WPF event flow
+- route switching, shell back-navigation, and prompt dismissal stay in the frontend layer without copying legacy WPF event flow
 - startup prompts now appear at boot, launch prompts appear from a launch attempt, and crash prompts appear from an explicit crash event trigger
 - prompt choices now drive config persistence, route changes, crash export/log actions, Java runtime materialization, launch abort/continue state, and shell exit behavior
 - the activity feed still records those actions so contract-driven behavior can be reviewed visually
@@ -124,15 +124,15 @@ APP_VERSION=2026.04.05 ./PCL.Frontend.Avalonia/scripts/package-frontend.sh osx-a
 
 Packaging notes:
 
-- macOS packaging emits `Plain Craft Launcher Community Edition.app` plus a zip archive, and the app bundle launches the Avalonia shell with `app --host-env true`
+- macOS packaging emits `PCL-ME.app` plus a zip archive, and the app bundle launches the Avalonia shell with `app --host-env true`
 - Linux packaging emits a tarball with the published frontend, a copied launcher icon, a launcher shell script, and a `.desktop` file that resolves relative to the extracted package folder
-- Windows packaging emits a zip archive of the published frontend directory plus a `Launch Plain Craft Launcher Community Edition.vbs` entry point that starts the Avalonia shell without changing the CLI binary behavior
+- Windows packaging emits a zip archive of the published frontend directory plus a `Launch PCL-ME.vbs` entry point that starts the Avalonia shell without changing the CLI binary behavior
 - the script defaults to self-contained publish output; set `PUBLISH_MODE=framework-dependent` to switch modes
 
 ## Execute mode outputs
 
 - shell execution writes startup prompt, navigation view, and navigation catalog artifacts so a replacement frontend can inspect the portable shell seam directly
-- shell execution now also writes frontend prompt queue and page-surface artifacts so route composition can be validated without WPF state
+- shell execution now also writes frontend prompt queue and page-surface artifacts so route composition can be validated without depending on legacy WPF state
 - startup execution creates bootstrap directories, deletes seeded legacy log placeholders, and writes prompt/config artifacts
 - launch execution can materialize `launcher_profiles.json`, `options.txt`, a generated launch batch file, and session summary artifacts
 - launch execution now also materializes per-step login request/response artifacts under `_artifacts/login/...`
@@ -159,7 +159,7 @@ Packaging notes:
 
 ## Current limitations
 
-- the avalonia is still a prototype shell, not a user-facing replacement launcher
+- the Avalonia frontend is now the active PCL-ME UI, but some workflows are still mid-migration
 - the new desktop shell now has a portable page-content seam, but many page-specific production contracts are still incomplete
 - live launch request execution, real Java transfer networking, and crash save-picker or Explorer behavior still live in the real launcher
 - launch-page state is still largely sample-backed even though prompt-command execution is now real inside the shell

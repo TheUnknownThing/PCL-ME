@@ -1,5 +1,5 @@
 {
-  "name": "Plain Craft Launcher Community Edition",
+  "name": "PCL-ME",
   "version": {
     "base": "2.14.5",
     "upstream": "2.12.1",
@@ -9,9 +9,9 @@
   "licenses": [
     {
       "name": "PCL.Core",
-      "info": "Copyright © PCL Community",
-      "website": "https://github.com/PCL-Community/PCL2-CE/tree/dev/PCL.Core",
-      "license": "https://github.com/PCL-Community/PCL2-CE/blob/dev/LICENSE"
+      "info": "Copyright © PCL-ME Contributors",
+      "website": "https://github.com/TheUnknownThing/PCL-CE/tree/dev/PCL.Core",
+      "license": "https://github.com/TheUnknownThing/PCL-CE/blob/dev/LICENCE"
     },
     {
       "name": "Java Launch Wrapper",

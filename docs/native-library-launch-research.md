@@ -47,7 +47,7 @@ Important implication:
 
 - A Linux failure such as `Failed to locate library: liblwjgl.so` is expected if the native jar is not unpacked, or if unpacking is attempted but still filters out `.so`.
 
-### 3. PCL-CE already has pieces of the missing pipeline, but they are split
+### 3. PCL-ME already has pieces of the missing pipeline, but they are split
 
 Relevant code:
 

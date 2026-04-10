@@ -387,7 +387,7 @@ internal static class FrontendInstanceCompositionService
             new("多人游戏服务器列表", string.Empty, hasServers, []),
             new(
                 "PCL 启动器程序",
-                "打包社区版 PCL，以便没有启动器的玩家安装整合包",
+                "打包跨平台版 PCL，以便没有启动器的玩家安装整合包",
                 hasLauncherContent,
                 [
                     CreateExportOption("PCL 个性化内容", hasLauncherContent ? "检测到实例 PCL 配置目录" : "未检测到实例 PCL 配置目录", hasLauncherContent)

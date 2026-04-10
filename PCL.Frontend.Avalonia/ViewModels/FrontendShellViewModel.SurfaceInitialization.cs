@@ -28,24 +28,24 @@ internal sealed partial class FrontendShellViewModel
                 CreateLinkCommand("赞助原作者", "https://ifdian.net/a/LTCat")),
             new AboutEntryViewModel(
                 "PCL Community",
-                "Plain Craft Launcher 社区版的开发团队！",
+                "PCL-ME 当前延续自社区维护分支。",
                 LoadLauncherBitmap("Images", "Heads", "PCL-Community.png"),
                 "GitHub 主页",
                 CreateLinkCommand("打开 PCL Community GitHub", "https://github.com/PCL-Community")),
             new AboutEntryViewModel(
-                "Plain Craft Launcher 社区版",
+                "PCL-ME",
                 _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "Heads", "Logo-CE.png"),
                 "查看源代码",
-                CreateLinkCommand("查看仓库源代码", "https://github.com/PCL-Community/PCL2-CE"))
+                CreateLinkCommand("查看仓库源代码", "https://github.com/TheUnknownThing/PCL-CE"))
         ]);
 
         ReplaceItems(AboutAcknowledgementEntries,
         [
             new AboutEntryViewModel("bangbang93", "提供 BMCLAPI 镜像源和 Forge 安装工具。", LoadLauncherBitmap("Images", "Heads", "bangbang93.png"), "赞助镜像源", CreateLinkCommand("赞助 BMCLAPI 镜像源", "https://afdian.com/a/bangbang93")),
             new AboutEntryViewModel("MC 百科", "提供了 Mod 名称的中文翻译和更多相关信息！", LoadLauncherBitmap("Images", "Heads", "wiki.png"), "打开百科", CreateLinkCommand("打开 MC 百科", "https://www.mcmod.cn")),
-            new AboutEntryViewModel("Pysio @ Akaere Network", "提供了 PCL CE 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), "转到博客", CreateLinkCommand("打开 Pysio 博客", "https://www.pysio.online")),
-            new AboutEntryViewModel("云默安 @ 至远光辉", "提供了 PCL CE 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), "打开网站", CreateLinkCommand("打开至远光辉", "https://www.zyghit.cn")),
+            new AboutEntryViewModel("Pysio @ Akaere Network", "提供了 PCL-ME 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), "转到博客", CreateLinkCommand("打开 Pysio 博客", "https://www.pysio.online")),
+            new AboutEntryViewModel("云默安 @ 至远光辉", "提供了 PCL-ME 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), "打开网站", CreateLinkCommand("打开至远光辉", "https://www.zyghit.cn")),
             new AboutEntryViewModel("EasyTier", "提供了联机模块", LoadLauncherBitmap("Images", "Heads", "EasyTier.png"), "打开网站", CreateLinkCommand("打开 EasyTier", "https://easytier.cn")),
             new AboutEntryViewModel("z0z0r4", "提供了 MCIM 中国 Mod 下载镜像源和帮助库图床！", LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
             new AboutEntryViewModel("00ll00", "提供了 Java Launch Wrapper 和一些重要服务支持！", LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
@@ -133,7 +133,7 @@ internal sealed partial class FrontendShellViewModel
                 new SimpleListEntryViewModel(
                     entry.Title,
                     entry.Summary,
-                    string.Equals(entry.Title, "PCL CE 大厅相关隐私政策", StringComparison.Ordinal)
+                    string.Equals(entry.Title, "PCL-ME 大厅相关隐私政策", StringComparison.Ordinal)
                         ? _openLobbyPrivacyPolicyCommand
                         : _openNatayarkPolicyCommand)));
 

@@ -40,12 +40,12 @@ public static class LauncherStartupConsentService
     {
         string? hint = kind switch
         {
-            LauncherStartupSpecialBuildKind.Debug => "当前运行的 PCL 社区版为 Debug 版本。" + Environment.NewLine +
+            LauncherStartupSpecialBuildKind.Debug => "当前运行的 PCL 跨平台版为 Debug 版本。" + Environment.NewLine +
                                                      "该版本仅适合开发者调试运行，可能会有严重的性能下降以及各种奇怪的网络问题。" + Environment.NewLine +
                                                      Environment.NewLine +
                                                      "非开发者用户使用该版本造成的一切问题均不被社区支持，相关 issue 可能会被直接关闭。" + Environment.NewLine +
                                                      "除非您是开发者，否则请立即删除该版本，并下载最新稳定版使用。",
-            LauncherStartupSpecialBuildKind.Ci => "当前运行的 PCL 社区版为 CI 自动构建版本。" + Environment.NewLine +
+            LauncherStartupSpecialBuildKind.Ci => "当前运行的 PCL 跨平台版为 CI 自动构建版本。" + Environment.NewLine +
                                                   "该版本包含最新的漏洞修复、优化和新特性，但性能和稳定性较差，不适合日常使用和制作整合包。" + Environment.NewLine +
                                                   Environment.NewLine +
                                                   "除非社区开发者要求或您自己想要这么做，否则请下载最新稳定版使用。",

@@ -397,7 +397,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchNewsSectionTitle => "启动状态";
 
-    public string LaunchCommunityHintPrimaryText => "你正在使用 PCL 社区版！此版本为独立开发和维护，与官方版本维护路线不同，体验有所出入。";
+    public string LaunchCommunityHintPrimaryText => "你正在使用 PCL 跨平台版！此版本为独立开发和维护，与官方版本维护路线不同，体验有所出入。";
 
     public string LaunchCommunityHintSecondaryText => "若要永久隐藏此提示，请输入正确的 PCL CE 开发组织名称。";
 
