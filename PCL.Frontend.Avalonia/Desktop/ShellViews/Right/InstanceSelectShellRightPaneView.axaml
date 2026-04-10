@@ -32,8 +32,15 @@
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
+    <Style Selector="Border.instance-entry-selected-back">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Border.instance-entry-shell:pointerover Border.instance-entry-selected-back">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedHoverBackground}" />
+    </Style>
     <Style Selector="Border.instance-entry-shell:pointerover">
-      <Setter Property="Background" Value="#F3F8FF" />
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
     </Style>
     <Style Selector="StackPanel.instance-entry-actions">
       <Setter Property="IsHitTestVisible" Value="False" />
@@ -92,6 +99,11 @@
                             Margin="0,0,0,2"
                             Padding="6,5">
                           <Grid ColumnDefinitions="*,Auto">
+                            <Border
+                                Classes="instance-entry-selected-back"
+                                Grid.ColumnSpan="2"
+                                IsHitTestVisible="False"
+                                IsVisible="{Binding IsSelected}" />
                             <Button
                                 Classes="instance-entry nochrome"
                                 Command="{Binding SelectCommand}"
