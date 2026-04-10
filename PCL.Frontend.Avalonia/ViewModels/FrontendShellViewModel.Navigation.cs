@@ -467,7 +467,7 @@ internal sealed partial class FrontendShellViewModel
         var runtimePaths = _shellActionService.RuntimePaths;
         var platformAdapter = _shellActionService.PlatformAdapter;
 
-        return _launchLogBuilder.Length > 0
+        return HasLaunchLogLines
             || FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
                 runtimePaths.LauncherAppDataDirectory,
                 platformAdapter).Any(File.Exists)

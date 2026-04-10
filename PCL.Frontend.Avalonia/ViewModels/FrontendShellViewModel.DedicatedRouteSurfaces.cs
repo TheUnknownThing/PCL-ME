@@ -154,11 +154,11 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoGameLogFiles => !HasGameLogFiles;
 
-    public bool ShowGameLogLiveOutput => _launchLogBuilder.Length > 0;
+    public bool ShowGameLogLiveOutput => HasLaunchLogLines;
 
     public bool ShowGameLogEmptyState => !ShowGameLogLiveOutput && HasNoGameLogFiles;
 
-    public int GameLogLiveLineCount => CountLaunchLogLines();
+    public int GameLogLiveLineCount => _launchLogLines.Count;
 
     public int GameLogRecentFileCount => _gameLogRecentFileCount;
 
@@ -663,7 +663,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ClearGameLogSurface()
     {
-        _launchLogBuilder.Clear();
+        ClearLaunchLogBuffer();
         RaiseGameLogSurfaceProperties();
         AddActivity("清空实时日志", "已清空当前会话输出缓存。");
     }
@@ -675,26 +675,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLogLiveLineCount));
         RaisePropertyChanged(nameof(GameLogRecentFileCount));
         RaisePropertyChanged(nameof(GameLogLatestUpdateLabel));
-        RaisePropertyChanged(nameof(LaunchLogText));
-    }
-
-    private int CountLaunchLogLines()
-    {
-        if (_launchLogBuilder.Length == 0)
-        {
-            return 0;
-        }
-
-        var lineCount = 1;
-        for (var index = 0; index < _launchLogBuilder.Length; index++)
-        {
-            if (_launchLogBuilder[index] == '\n')
-            {
-                lineCount++;
-            }
-        }
-
-        return lineCount;
     }
 
     private static IEnumerable<string> EnumerateLogDirectoryFiles(string directory)

@@ -632,7 +632,7 @@ internal sealed partial class FrontendShellViewModel
         {
             _isLaunchInProgress = true;
             _showLaunchLog = true;
-            _launchLogBuilder.Clear();
+            ClearLaunchLogBuffer();
             RaiseLaunchSessionProperties();
             RefreshGameLogSurface();
 
@@ -778,13 +778,7 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
-            if (_launchLogBuilder.Length > 0)
-            {
-                _launchLogBuilder.AppendLine();
-            }
-
-            _launchLogBuilder.Append(line);
-            RaisePropertyChanged(nameof(LaunchLogText));
+            AppendLaunchLogEntry(line);
             RaiseGameLogSurfaceProperties();
             if (!_showLaunchLog)
             {

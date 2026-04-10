@@ -409,9 +409,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowLaunchLog => _showLaunchLog;
 
-    public string LaunchLogText => _launchLogBuilder.Length == 0
-        ? "正在等待启动日志输出。"
-        : _launchLogBuilder.ToString();
+    public string LaunchLogText => _launchLogVisibleText;
 
     public bool IsLaunchMigrationExpanded
     {

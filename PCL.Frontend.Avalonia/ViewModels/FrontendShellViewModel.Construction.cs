@@ -160,7 +160,10 @@ internal sealed partial class FrontendShellViewModel
     private LaunchProfileSurfaceKind _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
     private bool _pendingLaunchAfterPrompt;
     private bool _showLaunchLog;
-    private readonly StringBuilder _launchLogBuilder = new();
+    private readonly List<string> _launchLogLines = [];
+    private string _launchLogVisibleText = EmptyLaunchLogText;
+    private int _launchLogVisibleStartIndex;
+    private bool _isLaunchLogViewportPinned = true;
     private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
     private string _launchPromptContextKey = string.Empty;
     private string _helpSearchQuery = string.Empty;
