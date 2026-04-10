@@ -16,9 +16,13 @@
       <Setter Property="Background" Value="#14000000" />
     </Style>
   </UserControl.Styles>
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <ScrollViewer
+      x:Name="InstallScrollViewer"
+      VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="12">
-      <StackPanel IsVisible="{Binding ShowDownloadInstallMinecraftCatalog}" Spacing="12">
+      <StackPanel
+          x:Name="MinecraftCatalogStage"
+          Spacing="12">
         <controls:PclCard IsVisible="{Binding ShowDownloadInstallMinecraftCatalogLoading}" ContentMargin="18,16,18,16">
           <controls:PclCard.CardContent>
             <TextBlock
@@ -70,7 +74,9 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel IsVisible="{Binding ShowDownloadInstallSelectionStage}" Spacing="12">
+      <StackPanel
+          x:Name="SelectionStage"
+          Spacing="12">
         <controls:PclCard ContentMargin="13,13,16,13">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto,*">
