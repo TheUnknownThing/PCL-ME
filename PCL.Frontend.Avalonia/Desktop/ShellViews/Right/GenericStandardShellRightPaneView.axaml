@@ -2,23 +2,71 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.GenericStandardShellRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     DataContext="{Binding Shell}">
   <UserControl.Styles>
+    <Style Selector="Border.live-log-surface">
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="#D5E6FD" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.live-log-surface.pointerover">
+      <Setter Property="BorderBrush" Value="#CFE0FA" />
+    </Style>
+    <Style Selector="Border.live-log-surface.focused">
+      <Setter Property="BorderBrush" Value="#96C0F9" />
+    </Style>
+    <Style Selector="Border.live-log-surface.focused.pointerover">
+      <Setter Property="BorderBrush" Value="#96C0F9" />
+    </Style>
     <Style Selector="TextBox.live-log-console">
       <Setter Property="Foreground" Value="#343D4A" />
       <Setter Property="Background" Value="#FFFFFFFF" />
       <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="SelectionBrush" Value="#E8F1FF" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
     </Style>
     <Style Selector="TextBox.live-log-console:pointerover">
       <Setter Property="Foreground" Value="#343D4A" />
       <Setter Property="Background" Value="#FFFFFFFF" />
       <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
     </Style>
     <Style Selector="TextBox.live-log-console:focus">
       <Setter Property="Foreground" Value="#343D4A" />
       <Setter Property="Background" Value="#FFFFFFFF" />
       <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
+    </Style>
+    <Style Selector="TextBox.live-log-console:focus:pointerover">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
+    </Style>
+    <Style Selector="TextBox.live-log-console /template/ Border">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="TextBox.live-log-console /template/ ScrollViewer#PART_ScrollViewer">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox.live-log-console /template/ TextPresenter">
+      <Setter Property="TextElement.Foreground" Value="#343D4A" />
     </Style>
   </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -341,23 +389,23 @@
           <StackPanel IsVisible="{Binding ShowGameLogLiveOutput}" Spacing="8">
             <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前会话输出" />
             <Border
-                Background="#FFFFFFFF"
-                BorderBrush="#D5E6FD"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="1">
+                x:Name="LiveLogSurface"
+                Classes="live-log-surface">
               <TextBox
+                  x:Name="LiveLogConsole"
                   Classes="live-log-console"
-                  MinHeight="320"
+                  Height="320"
                   AcceptsReturn="True"
-                  Background="#FFFFFFFF"
-                  BorderBrush="Transparent"
-                  BorderThickness="0"
                   FontFamily="{DynamicResource LaunchFontFamily}"
                   FontSize="12.5"
-                  Foreground="#343D4A"
+                  GotFocus="LiveLogConsole_OnGotFocus"
                   IsReadOnly="True"
+                  LostFocus="LiveLogConsole_OnLostFocus"
+                  PointerEntered="LiveLogConsole_OnPointerEntered"
+                  PointerExited="LiveLogConsole_OnPointerExited"
                   Text="{Binding LaunchLogText}"
+                  VerticalContentAlignment="Top"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                   TextWrapping="Wrap" />
             </Border>
           </StackPanel>
