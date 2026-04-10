@@ -6,22 +6,14 @@
   <controls:PclCard ContentMargin="18,18,18,18">
     <controls:PclCard.CardContent>
       <Grid ColumnDefinitions="Auto,*">
-        <Border
-            Width="72"
-            Height="72"
+        <Image
+            Width="46"
+            Height="46"
             Margin="0,0,16,0"
-            Background="#F7FAFE"
-            BorderBrush="#D5E6FD"
-            BorderThickness="0"
-            CornerRadius="12">
-          <Image
-              Width="46"
-              Height="46"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center"
-              Source="{Binding InstanceOverviewSelectedIcon}"
-              Stretch="Uniform" />
-        </Border>
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Source="{Binding InstanceOverviewSelectedIcon}"
+            Stretch="Uniform" />
 
         <StackPanel Grid.Column="1" Spacing="6">
           <TextBlock
