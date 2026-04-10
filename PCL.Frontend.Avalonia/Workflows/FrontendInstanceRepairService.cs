@@ -492,6 +492,7 @@ internal static class FrontendInstanceRepairService
         CancellationToken cancelToken)
     {
         Exception? lastError = null;
+        var tempPath = $"{filePlan.LocalPath}.download";
 
         foreach (var url in filePlan.Urls)
         {
@@ -505,7 +506,6 @@ internal static class FrontendInstanceRepairService
                 using var stream = response.Content.ReadAsStreamAsync(cancelToken).GetAwaiter().GetResult();
 
                 Directory.CreateDirectory(Path.GetDirectoryName(filePlan.LocalPath)!);
-                var tempPath = $"{filePlan.LocalPath}.download";
                 if (File.Exists(tempPath))
                 {
                     File.Delete(tempPath);
@@ -543,9 +543,17 @@ internal static class FrontendInstanceRepairService
 
                 return;
             }
+            catch (OperationCanceledException)
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+
+                throw;
+            }
             catch (Exception ex)
             {
-                var tempPath = $"{filePlan.LocalPath}.download";
                 if (File.Exists(tempPath))
                 {
                     File.Delete(tempPath);
