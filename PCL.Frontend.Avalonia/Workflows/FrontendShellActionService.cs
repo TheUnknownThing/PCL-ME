@@ -13,6 +13,7 @@ using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
 using PCL.Core.Utils.Processes;
+using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Models;
 
@@ -28,6 +29,34 @@ internal sealed class FrontendShellActionService(
     public FrontendRuntimePaths RuntimePaths { get; } = runtimePaths;
 
     public FrontendPlatformAdapter PlatformAdapter { get; } = platformAdapter;
+
+    public static void ApplyStoredAnimationPreferences(FrontendRuntimePaths runtimePaths)
+    {
+        ArgumentNullException.ThrowIfNull(runtimePaths);
+
+        var animationFpsLimit = 59;
+        var debugAnimationSpeed = 9d;
+        if (File.Exists(runtimePaths.SharedConfigPath))
+        {
+            var provider = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            if (provider.Exists("UiAniFPS"))
+            {
+                animationFpsLimit = provider.Get<int>("UiAniFPS");
+            }
+
+            if (provider.Exists("SystemDebugAnim"))
+            {
+                debugAnimationSpeed = provider.Get<int>("SystemDebugAnim");
+            }
+        }
+
+        ApplyAnimationPreferences(animationFpsLimit, debugAnimationSpeed);
+    }
+
+    public static void ApplyAnimationPreferences(int animationFpsLimit, double debugAnimationSpeed)
+    {
+        MotionDurations.ApplyRuntimePreferences(animationFpsLimit, debugAnimationSpeed);
+    }
 
     public void AcceptLauncherEula()
     {

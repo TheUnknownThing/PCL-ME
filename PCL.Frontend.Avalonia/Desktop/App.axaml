@@ -29,7 +29,7 @@
       <Setter Property="Opacity" Value="0" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.QuickState}" />
+          <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Setter>
     </Style>
@@ -40,8 +40,8 @@
       <Setter Property="RenderTransform" Value="scale(0.94)" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.QuickState}" />
-          <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.QuickState}" />
+          <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Setter>
     </Style>
@@ -50,7 +50,7 @@
       <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Setter>
     </Style>

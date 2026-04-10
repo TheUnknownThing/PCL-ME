@@ -18,8 +18,8 @@
       RenderTransform="scale(1)">
     <Border.Transitions>
       <Transitions>
-        <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-        <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
       </Transitions>
     </Border.Transitions>
     <Button

@@ -62,6 +62,7 @@ internal sealed partial class MainWindow : Window
 
         GridRoot.Opacity = 0;
         AvaloniaHintBus.OnShow += OnHintWrapperShow;
+        MotionDurations.Changed += OnMotionDurationsChanged;
 
         Opened += (_, _) =>
         {
@@ -220,6 +221,7 @@ internal sealed partial class MainWindow : Window
     private void OnWindowClosed(object? sender, EventArgs e)
     {
         AvaloniaHintBus.OnShow -= OnHintWrapperShow;
+        MotionDurations.Changed -= OnMotionDurationsChanged;
         Closed -= OnWindowClosed;
         KeyDown -= OnWindowKeyDown;
 
@@ -230,6 +232,18 @@ internal sealed partial class MainWindow : Window
         }
 
         _activeHints.Clear();
+    }
+
+    private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            ConfigureShellDividerTransitions();
+            foreach (var state in _activeHints.Values)
+            {
+                state.Border.Transitions = CreateHintTransitions();
+            }
+        });
     }
 
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)
@@ -467,21 +481,7 @@ internal sealed partial class MainWindow : Window
             RenderTransform = new TranslateTransform(48, 0),
             BoxShadow = BoxShadows.Parse("0 6 18 0 #28000000")
         };
-        border.Transitions = new Transitions
-        {
-            new DoubleTransition
-            {
-                Property = Visual.OpacityProperty,
-                Duration = MotionDurations.QuickState,
-                Easing = new CubicEaseOut()
-            },
-            new TransformOperationsTransition
-            {
-                Property = Visual.RenderTransformProperty,
-                Duration = MotionDurations.EntranceTranslate,
-                Easing = new CubicEaseOut()
-            }
-        };
+        border.Transitions = CreateHintTransitions();
         border.Child = new TextBlock
         {
             Text = message,
@@ -494,6 +494,25 @@ internal sealed partial class MainWindow : Window
 
         ApplyHintTheme(border, theme);
         return border;
+    }
+
+    private static Transitions CreateHintTransitions()
+    {
+        return
+        [
+            new DoubleTransition
+            {
+                Property = Visual.OpacityProperty,
+                Duration = MotionDurations.QuickState,
+                Easing = new CubicEaseOut()
+            },
+            new TransformOperationsTransition
+            {
+                Property = Visual.RenderTransformProperty,
+                Duration = MotionDurations.EntranceTranslate,
+                Easing = new CubicEaseOut()
+            }
+        ];
     }
 
     private static void ApplyHintTheme(Border border, AvaloniaHintTheme theme)

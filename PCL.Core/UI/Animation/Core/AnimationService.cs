@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using PCL.Core.App.Configuration;
 using PCL.Core.App;
 using PCL.Core.App.IoC;
 using PCL.Core.UI.Animation.Animatable;
@@ -16,6 +17,8 @@ namespace PCL.Core.UI.Animation.Core;
 [LifecycleService(LifecycleState.WindowCreating)]
 public sealed class AnimationService : GeneralService
 {
+    private const int DisabledAnimationSettingThreshold = 30;
+
     #region Lifecycle
     
     private static LifecycleContext? _context;
@@ -190,5 +193,28 @@ public sealed class AnimationService : GeneralService
     internal static void PushAnimationFireAndForget(IAnimation animation, IAnimatable target)
     {
         _animationChannel.Writer.TryWrite((animation, target));
+    }
+
+    public static int NormalizeFpsSetting(int storedFpsLimit)
+    {
+        return Math.Max(1, storedFpsLimit + 1);
+    }
+
+    public static double NormalizeSpeedSetting(double storedSpeedSetting)
+    {
+        return Math.Round(storedSpeedSetting) >= DisabledAnimationSettingThreshold
+            ? 200d
+            : Math.Clamp(storedSpeedSetting / 10d + 0.1d, 0.1d, 3d);
+    }
+
+    public static void ApplyPreferences(int storedFpsLimit, double storedSpeedSetting)
+    {
+        Fps = NormalizeFpsSetting(storedFpsLimit);
+        Scale = NormalizeSpeedSetting(storedSpeedSetting);
+
+        if (_clock is not null)
+        {
+            _clock.Fps = Fps;
+        }
     }
 }
