@@ -10,6 +10,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Avalonia.Desktop.Controls;
+using PCL.Frontend.Avalonia.Icons;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -1059,44 +1060,66 @@ internal sealed class InstanceServerEntryViewModel(
     public ActionCommand InspectCommand { get; } = inspectCommand;
 }
 
-internal sealed class InstanceResourceEntryViewModel(
-    Bitmap? icon,
-    string title,
-    string info,
-    string meta,
-    string path,
-    ActionCommand actionCommand,
-    string actionToolTip = "查看",
-    bool isEnabled = true,
-    bool showSelection = false,
-    bool isSelected = false,
-    Action<bool>? selectionChanged = null) : ViewModelBase
+internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 {
     private static readonly IBrush ActiveTitleForeground = Brush.Parse("#343D4A");
     private static readonly IBrush InactiveTitleForeground = Brush.Parse("#7D8897");
     private static readonly IBrush SelectedTitleForeground = Brush.Parse("#1370F3");
-    private bool _isSelected = isSelected;
-    private bool _isEnabled = isEnabled;
+    private readonly Action<bool>? _selectionChanged;
+    private readonly ActionCommand _primaryCommand;
+    private bool _isSelected;
+    private bool _isEnabled;
 
-    public Bitmap? Icon { get; } = icon;
+    public InstanceResourceEntryViewModel(
+        Bitmap? icon,
+        string title,
+        string info,
+        string meta,
+        string path,
+        ActionCommand actionCommand,
+        string actionToolTip = "查看",
+        bool isEnabled = true,
+        bool showSelection = false,
+        bool isSelected = false,
+        Action<bool>? selectionChanged = null)
+    {
+        Icon = icon;
+        Title = title;
+        Info = info;
+        Meta = meta;
+        Path = path;
+        ActionCommand = actionCommand;
+        ActionToolTip = actionToolTip;
+        ShowSelection = showSelection;
+        _isSelected = isSelected;
+        _isEnabled = isEnabled;
+        _selectionChanged = selectionChanged;
+        _primaryCommand = new ActionCommand(ExecutePrimaryAction);
+    }
 
-    public string Title { get; } = title;
+    public Bitmap? Icon { get; }
 
-    public string Info { get; } = info;
+    public string Title { get; }
 
-    public string Meta { get; } = meta;
+    public string Info { get; }
 
-    public string Path { get; } = path;
+    public string Meta { get; }
 
-    public ActionCommand ActionCommand { get; } = actionCommand;
+    public string Path { get; }
 
-    public string ActionToolTip { get; } = actionToolTip;
+    public ActionCommand ActionCommand { get; }
 
-    public bool ShowSelection { get; } = showSelection;
+    public ActionCommand PrimaryCommand => _primaryCommand;
+
+    public string ActionToolTip { get; }
+
+    public bool ShowSelection { get; }
 
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
 
     public bool HasAction => ActionCommand is not null;
+
+    public string ActionIconData => FrontendIconCatalog.FolderOutline.Data;
 
     public bool IsSelected
     {
@@ -1106,7 +1129,7 @@ internal sealed class InstanceResourceEntryViewModel(
             if (SetProperty(ref _isSelected, value))
             {
                 RaisePropertyChanged(nameof(TitleForeground));
-                selectionChanged?.Invoke(value);
+                _selectionChanged?.Invoke(value);
             }
         }
     }
@@ -1131,6 +1154,20 @@ internal sealed class InstanceResourceEntryViewModel(
         : IsEnabledState
             ? ActiveTitleForeground
             : InactiveTitleForeground;
+
+    private void ExecutePrimaryAction()
+    {
+        if (ShowSelection)
+        {
+            IsSelected = !IsSelected;
+            return;
+        }
+
+        if (ActionCommand.CanExecute(null))
+        {
+            ActionCommand.Execute(null);
+        }
+    }
 }
 
 internal sealed class HelpTopicViewModel(
