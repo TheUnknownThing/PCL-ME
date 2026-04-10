@@ -567,6 +567,7 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(AnimationFpsLimit):
                 _shellActionService.PersistSharedValue("UiAniFPS", (int)Math.Round(AnimationFpsLimit));
+                FrontendShellActionService.ApplyAnimationPreferences((int)Math.Round(AnimationFpsLimit), DebugAnimationSpeed);
                 break;
             case nameof(MaxRealTimeLogValue):
                 _shellActionService.PersistSharedValue("SystemMaxLog", (int)Math.Round(MaxRealTimeLogValue));
@@ -585,6 +586,7 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(DebugAnimationSpeed):
                 _shellActionService.PersistSharedValue("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
+                FrontendShellActionService.ApplyAnimationPreferences((int)Math.Round(AnimationFpsLimit), DebugAnimationSpeed);
                 break;
             case nameof(SkipCopyDuringDownload):
                 _shellActionService.PersistSharedValue("SystemDebugSkipCopy", SkipCopyDuringDownload);

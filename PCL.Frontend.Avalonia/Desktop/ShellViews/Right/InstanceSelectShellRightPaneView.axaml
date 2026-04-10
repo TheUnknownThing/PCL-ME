@@ -23,7 +23,7 @@
       <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="Transitions">
         <Transitions>
-          <BrushTransition Property="Background" Duration="0:0:0.14" />
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
         </Transitions>
       </Setter>
     </Style>
@@ -48,8 +48,8 @@
       <Setter Property="RenderTransform" Value="translate(8px,0px)" />
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
-          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
         </Transitions>
       </Setter>
     </Style>

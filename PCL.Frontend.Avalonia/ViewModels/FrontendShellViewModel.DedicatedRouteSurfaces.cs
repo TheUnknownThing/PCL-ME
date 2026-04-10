@@ -308,7 +308,12 @@ internal sealed partial class FrontendShellViewModel
                     "导入整合包",
                     "选择 CurseForge、Modrinth 或普通压缩整合包文件",
                     "F1 m 11.293 11.293 l -3 3 a 1 1 0 0 0 0 1.41406 a 1 1 0 0 0 1.41406 0 L 12 13.4141 l 2.29297 2.29297 a 1 1 0 0 0 1.41406 0 a 1 1 0 0 0 0 -1.41406 l -3 -3 a 1.0001 1.0001 0 0 0 -1.41406 0 z M 12 11 a 1 1 0 0 0 -1 1 v 6 a 1 1 0 0 0 1 1 a 1 1 0 0 0 1 -1 V 12 A 1 1 0 0 0 12 11 Z M 14 1 a 1 1 0 0 0 -1 1 v 5 c 0 1.09272 0.907275 2 2 2 h 5 A 1 1 0 0 0 21 8 A 1 1 0 0 0 20 7 H 15 V 2 A 1 1 0 0 0 14 1 Z M 6 1 C 4.35499 1 3 2.35499 3 4 v 16 c 0 1.64501 1.35499 3 3 3 h 12 c 1.64501 0 3 -1.35499 3 -3 V 8.00195 V 8 C 21.001 7.09394 20.6387 6.22279 19.9961 5.58398 L 16.4121 2 L 16.4101 1.99805 C 15.7718 1.35838 14.9038 0.999054 14 1 Z m 0 2 h 8 a 1.0001 1.0001 0 0 0 0.002 0 c 0.373356 -0.0006051 0.730614 0.147632 0.994141 0.412109 a 1.0001 1.0001 0 0 0 0 0.00195 l 3.58789 3.58789 a 1.0001 1.0001 0 0 0 0.0039 0.00195 C 18.8531 7.26753 19.0006 7.62412 19 7.99805 A 1.0001 1.0001 0 0 0 19 8 v 12 c 0 0.564129 -0.435871 1 -1 1 H 6 C 5.43587 21 5 20.5641 5 20 V 4 C 5 3.43587 5.43587 3 6 3 Z",
-                    _importInstanceSelectionPackCommand)
+                    _importInstanceSelectionPackCommand),
+                CreateInstanceSelectionShortcutEntry(
+                    "实例回收区",
+                    "打开当前启动目录的实例回收区，继续手动清理或恢复实例",
+                    FrontendIconCatalog.FolderOutline.Data,
+                    new ActionCommand(OpenInstanceSelectionTrashDirectory))
             ]);
 
         var allEntries = Directory.Exists(versionsDirectory)
@@ -620,22 +625,18 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            var trashDirectory = Path.Combine(_instanceSelectionLauncherDirectory, ".pcl-trash", "versions");
-            Directory.CreateDirectory(trashDirectory);
-
-            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            var targetDirectory = GetUniquePath(Path.Combine(trashDirectory, $"{entry.Name}-{timestamp}"));
-            Directory.Move(entry.Directory, targetDirectory);
-
-            var metadataPath = Path.Combine(targetDirectory, ".pcl-trash.json");
-            File.WriteAllText(
-                metadataPath,
-                JsonSerializer.Serialize(new
-                {
-                    instanceName = entry.Name,
-                    originalPath = entry.Directory,
-                    deletedAt = DateTimeOffset.Now
-                }, new JsonSerializerOptions { WriteIndented = true }));
+            var showIndieWarning = _instanceComposition.Selection.HasSelection
+                && string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, GetPathComparison())
+                && _instanceComposition.Selection.IsIndie;
+            var outcome = await DeleteInstanceDirectoryAsync(
+                entry.Name,
+                entry.Directory,
+                _instanceSelectionLauncherDirectory,
+                showIndieWarning);
+            if (outcome is null)
+            {
+                return;
+            }
 
             if (_instanceComposition.Selection.HasSelection
                 && (string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, StringComparison.OrdinalIgnoreCase)
@@ -646,7 +647,13 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshInstanceSelectionSurface();
-            OpenInstanceTarget("删除实例", targetDirectory, "回收区目录不存在。");
+            if (outcome.IsPermanentDelete)
+            {
+                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                return;
+            }
+
+            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
         }
         catch (Exception ex)
         {
@@ -1148,6 +1155,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return new TaskManagerEntryViewModel(
             task.Title,
+            task.State,
             MapTaskStateLabel(task.State),
             string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
             task.SupportProgress
@@ -1727,6 +1735,7 @@ internal sealed class InstanceSelectionShortcutEntryViewModel(
 
 internal sealed class TaskManagerEntryViewModel(
     string title,
+    TaskState taskState,
     string state,
     string summary,
     string progressText,
@@ -1741,11 +1750,33 @@ internal sealed class TaskManagerEntryViewModel(
     ActionCommand cancelCommand,
     ActionCommand pauseCommand)
 {
+    private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
+    private static readonly IBrush RunningBadgeBorderBrush = Brush.Parse("#CFE0FA");
+    private static readonly IBrush RunningBadgeForegroundBrush = Brush.Parse("#5B87DA");
+    private static readonly IBrush WaitingBadgeBackgroundBrush = Brush.Parse("#F4F7FB");
+    private static readonly IBrush WaitingBadgeBorderBrush = Brush.Parse("#DAE3F0");
+    private static readonly IBrush WaitingBadgeForegroundBrush = Brush.Parse("#7E8FA5");
+    private static readonly IBrush SuccessBadgeBackgroundBrush = Brush.Parse("#EEF9F1");
+    private static readonly IBrush SuccessBadgeBorderBrush = Brush.Parse("#CBE8D4");
+    private static readonly IBrush SuccessBadgeForegroundBrush = Brush.Parse("#3D9B5A");
+    private static readonly IBrush FailedBadgeBackgroundBrush = Brush.Parse("#FFF0F0");
+    private static readonly IBrush FailedBadgeBorderBrush = Brush.Parse("#F1C8C8");
+    private static readonly IBrush FailedBadgeForegroundBrush = Brush.Parse("#D05B5B");
+    private static readonly IBrush CanceledBadgeBackgroundBrush = Brush.Parse("#F5F6F8");
+    private static readonly IBrush CanceledBadgeBorderBrush = Brush.Parse("#D7DCE4");
+    private static readonly IBrush CanceledBadgeForegroundBrush = Brush.Parse("#7B8796");
+
     public string Title { get; } = title;
+
+    public TaskState TaskState { get; } = taskState;
 
     public string State { get; } = state;
 
     public string Summary { get; } = summary;
+
+    public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
+
+    public bool ShowSummary => HasSummary && !HasStageEntries;
 
     public string ProgressText { get; } = progressText;
 
@@ -1774,6 +1805,33 @@ internal sealed class TaskManagerEntryViewModel(
     public ActionCommand CancelCommand { get; } = cancelCommand;
 
     public ActionCommand PauseCommand { get; } = pauseCommand;
+
+    public IBrush StateBadgeBackgroundBrush => TaskState switch
+    {
+        TaskState.Success => SuccessBadgeBackgroundBrush,
+        TaskState.Failed => FailedBadgeBackgroundBrush,
+        TaskState.Canceled => CanceledBadgeBackgroundBrush,
+        TaskState.Waiting => WaitingBadgeBackgroundBrush,
+        _ => RunningBadgeBackgroundBrush
+    };
+
+    public IBrush StateBadgeBorderBrush => TaskState switch
+    {
+        TaskState.Success => SuccessBadgeBorderBrush,
+        TaskState.Failed => FailedBadgeBorderBrush,
+        TaskState.Canceled => CanceledBadgeBorderBrush,
+        TaskState.Waiting => WaitingBadgeBorderBrush,
+        _ => RunningBadgeBorderBrush
+    };
+
+    public IBrush StateBadgeForegroundBrush => TaskState switch
+    {
+        TaskState.Success => SuccessBadgeForegroundBrush,
+        TaskState.Failed => FailedBadgeForegroundBrush,
+        TaskState.Canceled => CanceledBadgeForegroundBrush,
+        TaskState.Waiting => WaitingBadgeForegroundBrush,
+        _ => RunningBadgeForegroundBrush
+    };
 }
 
 internal sealed class TaskManagerStageEntryViewModel(
@@ -1781,11 +1839,35 @@ internal sealed class TaskManagerStageEntryViewModel(
     string title,
     string message)
 {
+    private static readonly IBrush RunningIndicatorBrush = Brush.Parse("#4F86E9");
+    private static readonly IBrush WaitingIndicatorBrush = Brush.Parse("#9AA8B8");
+    private static readonly IBrush SuccessIndicatorBrush = Brush.Parse("#4F86E9");
+    private static readonly IBrush FailedIndicatorBrush = Brush.Parse("#D05B5B");
+    private static readonly IBrush CanceledIndicatorBrush = Brush.Parse("#9AA8B8");
+
     public string Indicator { get; } = indicator;
 
     public string Title { get; } = title;
 
     public string Message { get; } = message;
+
+    public bool HasMessageDetail => !string.IsNullOrWhiteSpace(Message) && !string.Equals(Message, Title, StringComparison.Ordinal);
+
+    public IBrush IndicatorBrush => ResolveIndicatorBrush();
+
+    public double IndicatorFontSize => Indicator.EndsWith('%') ? 12.5 : 16d;
+
+    private IBrush ResolveIndicatorBrush()
+    {
+        return Indicator switch
+        {
+            "✓" => SuccessIndicatorBrush,
+            "×" => FailedIndicatorBrush,
+            "···" => WaitingIndicatorBrush,
+            _ when Indicator.EndsWith('%') => RunningIndicatorBrush,
+            _ => CanceledIndicatorBrush
+        };
+    }
 }
 
 internal sealed record DedicatedGenericRouteMetadata(

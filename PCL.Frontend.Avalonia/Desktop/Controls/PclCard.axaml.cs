@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 using PCL.Frontend.Avalonia.Icons;
@@ -54,6 +55,7 @@ internal sealed partial class PclCard : UserControl
     private bool _isCloseAnimationPending;
     private bool _isContentRenderedVisible = true;
     private int _contentAnimationVersion;
+    private bool _isMotionDurationSubscribed;
     private CancellationTokenSource? _contentAnimationCts;
 
     private readonly record struct HeightAnimationPlan(
@@ -77,6 +79,47 @@ internal sealed partial class PclCard : UserControl
         HeaderButton.Click += OnHeaderButtonClick;
         CloseButton.IconData = FrontendIconCatalog.Close.Data;
         CloseButton.Click += OnCloseButtonClick;
+        AttachedToVisualTree += OnAttachedToVisualTree;
+        DetachedFromVisualTree += OnDetachedFromVisualTree;
+        ConfigureChevronTransitions();
+        ChevronPath.RenderTransform = _chevronTransform;
+        RefreshHeaderLayout();
+        RefreshHeaderMetrics();
+        RefreshChevronState();
+        RefreshContentState(animate: false);
+        RefreshState();
+    }
+
+    private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (_isMotionDurationSubscribed)
+        {
+            return;
+        }
+
+        MotionDurations.Changed += OnMotionDurationsChanged;
+        _isMotionDurationSubscribed = true;
+        ConfigureChevronTransitions();
+    }
+
+    private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (!_isMotionDurationSubscribed)
+        {
+            return;
+        }
+
+        MotionDurations.Changed -= OnMotionDurationsChanged;
+        _isMotionDurationSubscribed = false;
+    }
+
+    private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(ConfigureChevronTransitions);
+    }
+
+    private void ConfigureChevronTransitions()
+    {
         _chevronTransform.Transitions =
         [
             new DoubleTransition
@@ -86,12 +129,6 @@ internal sealed partial class PclCard : UserControl
                 Easing = new CubicEaseOut()
             }
         ];
-        ChevronPath.RenderTransform = _chevronTransform;
-        RefreshHeaderLayout();
-        RefreshHeaderMetrics();
-        RefreshChevronState();
-        RefreshContentState(animate: false);
-        RefreshState();
     }
 
     public string Header
@@ -534,7 +571,7 @@ internal sealed partial class PclCard : UserControl
                 break;
             }
 
-            await Task.Delay(16, cancellationToken);
+            await Task.Delay(MotionDurations.FrameInterval, cancellationToken);
         }
 
         if (!IsAnimationCurrent(version, cancellationToken))
@@ -567,9 +604,9 @@ internal sealed partial class PclCard : UserControl
             return new HeightAnimationPlan(
                 absDelta,
                 constantDistance,
-                TimeSpan.FromMilliseconds(100),
+                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(100)),
                 Math.Min(easeDistance, absDelta),
-                TimeSpan.FromMilliseconds(150),
+                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(150)),
                 constantDistance / 0.1,
                 UseSimpleEase: false);
         }
@@ -580,9 +617,9 @@ internal sealed partial class PclCard : UserControl
             return new HeightAnimationPlan(
                 absDelta,
                 Math.Min(constantDistance, absDelta),
-                TimeSpan.FromMilliseconds(300),
+                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(300)),
                 Math.Max(0, absDelta - constantDistance),
-                TimeSpan.FromMilliseconds(400),
+                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(400)),
                 5000,
                 UseSimpleEase: false);
         }
@@ -592,9 +629,9 @@ internal sealed partial class PclCard : UserControl
         return new HeightAnimationPlan(
             absDelta,
             constantSegmentDistance,
-            TimeSpan.FromMilliseconds(constantSegmentDistance / 4000 * 1000),
+            MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(constantSegmentDistance / 4000 * 1000)),
             easeSegmentDistance,
-            TimeSpan.FromMilliseconds(200),
+            MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(200)),
             4000,
             UseSimpleEase: false);
     }

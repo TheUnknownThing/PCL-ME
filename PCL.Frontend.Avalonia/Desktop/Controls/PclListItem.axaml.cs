@@ -17,6 +17,9 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<string> InfoProperty =
         AvaloniaProperty.Register<PclListItem, string>(nameof(Info), string.Empty);
 
+    public static readonly StyledProperty<string> TitleSuffixProperty =
+        AvaloniaProperty.Register<PclListItem, string>(nameof(TitleSuffix), string.Empty);
+
     public static readonly StyledProperty<double> IconScaleProperty =
         AvaloniaProperty.Register<PclListItem, double>(nameof(IconScale), 1.0);
 
@@ -80,6 +83,7 @@ internal sealed partial class PclListItem : UserControl
         };
 
         TitleBlock.Text = Title;
+        UpdateTitleSuffix(TitleSuffix);
         UpdateInfo(Info);
         UpdateIcon(IconData);
         UpdateIconSource(IconSource);
@@ -104,6 +108,12 @@ internal sealed partial class PclListItem : UserControl
     {
         get => GetValue(InfoProperty);
         set => SetValue(InfoProperty, value);
+    }
+
+    public string TitleSuffix
+    {
+        get => GetValue(TitleSuffixProperty);
+        set => SetValue(TitleSuffixProperty, value);
     }
 
     public double IconScale
@@ -161,6 +171,10 @@ internal sealed partial class PclListItem : UserControl
         {
             TitleBlock.Text = change.GetNewValue<string>();
         }
+        else if (change.Property == TitleSuffixProperty)
+        {
+            UpdateTitleSuffix(change.GetNewValue<string>());
+        }
         else if (change.Property == InfoProperty)
         {
             UpdateInfo(change.GetNewValue<string>());
@@ -195,6 +209,7 @@ internal sealed partial class PclListItem : UserControl
     {
         return LayoutRoot is not null &&
                TitleBlock is not null &&
+               TitleSuffixBlock is not null &&
                InfoBlock is not null &&
                LogoPath is not null &&
                LogoImage is not null &&
@@ -240,6 +255,13 @@ internal sealed partial class PclListItem : UserControl
         var hasInfo = !string.IsNullOrWhiteSpace(info);
         InfoBlock.IsVisible = hasInfo;
         InfoBlock.Text = hasInfo ? info : string.Empty;
+    }
+
+    private void UpdateTitleSuffix(string suffix)
+    {
+        var hasSuffix = !string.IsNullOrWhiteSpace(suffix);
+        TitleSuffixBlock.IsVisible = hasSuffix;
+        TitleSuffixBlock.Text = hasSuffix ? suffix : string.Empty;
     }
 
     private void UpdateAccessory()

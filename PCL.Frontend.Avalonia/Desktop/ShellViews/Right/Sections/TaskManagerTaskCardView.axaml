@@ -1,0 +1,76 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.TaskManagerTaskCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard
+      Margin="0,0,0,15"
+      Header="{Binding Title}"
+      IsClosable="{Binding CanCancel}"
+      CloseCommand="{Binding CancelCommand}"
+      ContentMargin="25,40,15,10">
+    <controls:PclCard.HeaderOverlayContent>
+      <Border
+          Margin="0,8,36,0"
+          Padding="10,3"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Top"
+          Background="{Binding StateBadgeBackgroundBrush}"
+          BorderBrush="{Binding StateBadgeBorderBrush}"
+          BorderThickness="1"
+          CornerRadius="999">
+        <TextBlock
+            Foreground="{Binding StateBadgeForegroundBrush}"
+            FontSize="11.5"
+            Text="{Binding State}" />
+      </Border>
+    </controls:PclCard.HeaderOverlayContent>
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="10">
+        <TextBlock
+            Foreground="#75869C"
+            FontSize="11.5"
+            IsVisible="{Binding ShowSummary}"
+            Text="{Binding Summary}"
+            TextWrapping="Wrap" />
+
+        <StackPanel IsVisible="{Binding HasProgress}" Spacing="4">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="安装进度" />
+            <TextBlock Grid.Column="1" Foreground="#5B87DA" FontSize="11.5" Text="{Binding ProgressText}" />
+          </Grid>
+          <ProgressBar Height="6" Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding StageEntries}" IsVisible="{Binding HasStageEntries}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid Margin="0,2,0,0" ColumnDefinitions="32,*">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Foreground="{Binding IndicatorBrush}"
+                    FontSize="{Binding IndicatorFontSize}"
+                    FontWeight="SemiBold"
+                    Text="{Binding Indicator}" />
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Foreground="#66788F" FontSize="12" Text="{Binding Title}" />
+                  <TextBlock
+                      Foreground="#9AA8B8"
+                      FontSize="10.5"
+                      IsVisible="{Binding HasMessageDetail}"
+                      Text="{Binding Message}"
+                      TextWrapping="Wrap" />
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasProgress}">
+          <TextBlock Foreground="#8B9AAF" FontSize="10.5" Text="{Binding SpeedText, StringFormat=当前速度 {0}}" />
+          <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#8B9AAF" FontSize="10.5" Text="{Binding RemainingFilesText, StringFormat=剩余文件 {0}}" />
+        </Grid>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

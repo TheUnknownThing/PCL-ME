@@ -406,7 +406,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            var result = await RunInstanceRepairAsync("补全文件", "file-checks", forceCoreRefresh: false);
+            var result = await RunInstanceRepairAsync("补全文件", forceCoreRefresh: false);
             AddActivity("补全文件", $"已补全 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
         }
         catch (OperationCanceledException)
@@ -440,7 +440,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var backupDirectory = BackupInstanceCoreFiles("reset-backups");
-            var result = await RunInstanceRepairAsync("重置实例", "reset-plans", forceCoreRefresh: true, backupDirectory);
+            var result = await RunInstanceRepairAsync("重置实例", forceCoreRefresh: true, backupDirectory);
             AddActivity("重置实例", $"已重置核心文件并下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
         }
         catch (OperationCanceledException)
@@ -461,42 +461,28 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var instanceName = _instanceComposition.Selection.InstanceName;
-        var confirmed = await _shellActionService.ConfirmAsync(
-            "实例删除确认",
-            $"确定要将实例 {instanceName} 移入回收区吗？该操作会保留实例目录，便于后续恢复。",
-            "移入回收区",
-            isDanger: true);
-        if (!confirmed)
-        {
-            AddActivity("删除实例", "已取消删除。");
-            return;
-        }
-
         try
         {
-            var sourceDirectory = _instanceComposition.Selection.InstanceDirectory;
-            var trashDirectory = Path.Combine(_instanceComposition.Selection.LauncherDirectory, ".pcl-trash", "versions");
-            Directory.CreateDirectory(trashDirectory);
-
-            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            var targetDirectory = GetUniquePath(Path.Combine(trashDirectory, $"{instanceName}-{timestamp}"));
-            Directory.Move(sourceDirectory, targetDirectory);
-
-            var metadataPath = Path.Combine(targetDirectory, ".pcl-trash.json");
-            File.WriteAllText(
-                metadataPath,
-                JsonSerializer.Serialize(new
-                {
-                    instanceName,
-                    originalPath = sourceDirectory,
-                    deletedAt = DateTimeOffset.Now
-                }, new JsonSerializerOptions { WriteIndented = true }),
-                new UTF8Encoding(false));
+            var outcome = await DeleteInstanceDirectoryAsync(
+                _instanceComposition.Selection.InstanceName,
+                _instanceComposition.Selection.InstanceDirectory,
+                _instanceComposition.Selection.LauncherDirectory,
+                _instanceComposition.Selection.IsIndie);
+            if (outcome is null)
+            {
+                return;
+            }
 
             _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
             ReloadInstanceComposition();
-            OpenInstanceTarget("删除实例", targetDirectory, "回收区目录不存在。");
+
+            if (outcome.IsPermanentDelete)
+            {
+                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                return;
+            }
+
+            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
         }
         catch (Exception ex)
         {
@@ -575,15 +561,6 @@ internal sealed partial class FrontendShellViewModel
         return backupDirectory;
     }
 
-    private string WriteInstanceOverviewArtifact(string folderName, string fileName, IReadOnlyList<string> lines)
-    {
-        var directory = GetInstanceOverviewArtifactDirectory(folderName);
-        Directory.CreateDirectory(directory);
-        var outputPath = Path.Combine(directory, fileName);
-        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        return outputPath;
-    }
-
     private string GetInstanceOverviewArtifactDirectory(string folderName)
     {
         return Path.Combine(
@@ -595,7 +572,6 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task<FrontendInstanceRepairResult> RunInstanceRepairAsync(
         string actionTitle,
-        string artifactFolderName,
         bool forceCoreRefresh,
         string? backupDirectory = null)
     {
@@ -621,16 +597,16 @@ internal sealed partial class FrontendShellViewModel
             $"下载文件数: {result.DownloadedFiles.Count}",
             $"复用文件数: {result.ReusedFiles.Count}",
             string.Empty,
-            "已写入实例修复结果。"
+            "实例修复结果如下。"
         };
         summaryLines.AddRange(result.DownloadedFiles.Take(20).Select(path => $"downloaded: {path}"));
         summaryLines.AddRange(result.ReusedFiles.Take(20).Select(path => $"reused: {path}"));
 
-        var summaryPath = WriteInstanceOverviewArtifact(
-            artifactFolderName,
-            $"{_instanceComposition.Selection.InstanceName}-{(forceCoreRefresh ? "reset" : "file-check")}.txt",
-            summaryLines.Where(line => !string.IsNullOrWhiteSpace(line)).Cast<string>().ToArray());
-        OpenInstanceTarget(actionTitle, summaryPath, "实例修复结果不存在。");
+        await ShowToolboxConfirmationAsync(
+            actionTitle,
+            string.Join(
+                Environment.NewLine,
+                summaryLines.Where(line => !string.IsNullOrWhiteSpace(line)).Cast<string>()));
         return result;
     }
 

@@ -244,7 +244,7 @@ internal static class FrontendCommunityResourceCatalogService
         {
             var officialUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: false, offset);
             var mirrorUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: true, offset);
-            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: false);
+            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: true);
             var hits = response["hits"]?.AsArray() ?? [];
             var totalHits = GetInt(response, "total_hits");
 

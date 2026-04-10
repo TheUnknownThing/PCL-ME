@@ -339,7 +339,8 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var extension = Path.GetExtension(target);
-        return !string.IsNullOrWhiteSpace(extension) && RevealOnlyArtifactExtensions.Contains(extension);
+        var neverRevealInShell = !string.IsNullOrWhiteSpace(extension) && RevealOnlyArtifactExtensions.Contains(extension);
+        return !neverRevealInShell;
     }
 
     private void LockInstanceLogin()

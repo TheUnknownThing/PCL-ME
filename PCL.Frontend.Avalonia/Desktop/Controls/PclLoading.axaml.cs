@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Desktop.Animation;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -26,16 +28,16 @@ internal sealed partial class PclLoading : UserControl
         AvaloniaProperty.Register<PclLoading, IBrush?>(nameof(IndicatorBrush));
 
     private static readonly IBrush ErrorBrush = Brush.Parse("#D33232");
-    private static readonly TimeSpan AnimationTickInterval = TimeSpan.FromMilliseconds(16);
-    private static readonly TimeSpan StrikeLeadIn = TimeSpan.FromMilliseconds(250);
-    private static readonly TimeSpan StrikeDownDuration = TimeSpan.FromMilliseconds(500);
-    private static readonly TimeSpan StrikeRecoveryDuration = TimeSpan.FromMilliseconds(900);
-    private static readonly TimeSpan StrikeImpactTime = StrikeLeadIn + StrikeDownDuration;
-    private static readonly TimeSpan CycleDuration = StrikeImpactTime + StrikeRecoveryDuration;
-    private static readonly TimeSpan DebrisFadeDelay = TimeSpan.FromMilliseconds(50);
-    private static readonly TimeSpan DebrisFadeDuration = TimeSpan.FromMilliseconds(100);
-    private static readonly TimeSpan DebrisFlightDuration = TimeSpan.FromMilliseconds(180);
-    private static readonly TimeSpan ErrorGlyphDuration = TimeSpan.FromMilliseconds(300);
+    private static TimeSpan AnimationTickInterval => MotionDurations.FrameInterval;
+    private static TimeSpan StrikeLeadIn => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(250));
+    private static TimeSpan StrikeDownDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(500));
+    private static TimeSpan StrikeRecoveryDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(900));
+    private static TimeSpan StrikeImpactTime => StrikeLeadIn + StrikeDownDuration;
+    private static TimeSpan CycleDuration => StrikeImpactTime + StrikeRecoveryDuration;
+    private static TimeSpan DebrisFadeDelay => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(50));
+    private static TimeSpan DebrisFadeDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(100));
+    private static TimeSpan DebrisFlightDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(180));
+    private static TimeSpan ErrorGlyphDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(300));
     private static readonly Easing StandardEase = new CubicEaseOut();
     private static readonly Easing BounceEase = new BackEaseOut();
     private const double RestAngle = 55d;
@@ -50,6 +52,7 @@ internal sealed partial class PclLoading : UserControl
 
     private readonly DispatcherTimer _animationTimer = new() { Interval = AnimationTickInterval };
     private readonly Stopwatch _animationStopwatch = new();
+    private bool _isMotionDurationSubscribed;
     private RotateTransform PickaxeRotateTransform => (RotateTransform)PickaxeHost.RenderTransform!;
     private TranslateTransform LeftDebrisTranslateTransform => (TranslateTransform)((TransformGroup)LeftDebris.RenderTransform!).Children[1]!;
     private TranslateTransform RightDebrisTranslateTransform => (TranslateTransform)((TransformGroup)RightDebris.RenderTransform!).Children[1]!;
@@ -118,12 +121,32 @@ internal sealed partial class PclLoading : UserControl
 
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
+        if (!_isMotionDurationSubscribed)
+        {
+            MotionDurations.Changed += OnMotionDurationsChanged;
+            _isMotionDurationSubscribed = true;
+        }
+
+        _animationTimer.Interval = AnimationTickInterval;
+        ConfigureTransitions();
         SyncAnimationState();
     }
 
     private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
+        if (_isMotionDurationSubscribed)
+        {
+            MotionDurations.Changed -= OnMotionDurationsChanged;
+            _isMotionDurationSubscribed = false;
+        }
+
         StopAnimationLoop();
+    }
+
+    private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        _animationTimer.Interval = AnimationTickInterval;
+        ConfigureTransitions();
     }
 
     private void ConfigureTransitions()

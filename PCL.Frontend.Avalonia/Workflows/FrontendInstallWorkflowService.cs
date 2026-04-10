@@ -240,13 +240,31 @@ internal static class FrontendInstallWorkflowService
         Directory.CreateDirectory(modsDirectory);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在准备受管依赖文件…");
-        ApplyManagedModSelection(modsDirectory, request.FabricApiChoice, "fabric-api");
-        ApplyManagedModSelection(modsDirectory, request.LegacyFabricApiChoice, "legacy-fabric-api");
-        ApplyManagedModSelection(modsDirectory, request.QslChoice, "quilted-fabric-api", "qsl");
-        ApplyManagedModSelection(modsDirectory, request.OptiFabricChoice, "optifabric");
+        ApplyManagedModSelection(
+            modsDirectory,
+            request.FabricApiChoice,
+            request.PreserveExistingManagedModFiles,
+            "fabric-api");
+        ApplyManagedModSelection(
+            modsDirectory,
+            request.LegacyFabricApiChoice,
+            request.PreserveExistingManagedModFiles,
+            "legacy-fabric-api");
+        ApplyManagedModSelection(
+            modsDirectory,
+            request.QslChoice,
+            request.PreserveExistingManagedModFiles,
+            "quilted-fabric-api",
+            "qsl");
+        ApplyManagedModSelection(
+            modsDirectory,
+            request.OptiFabricChoice,
+            request.PreserveExistingManagedModFiles,
+            "optifabric");
         ApplyManagedModSelection(
             modsDirectory,
             ShouldInstallOptiFineAsMod(request) ? request.OptiFineChoice : null,
+            request.PreserveExistingManagedModFiles,
             "OptiFine_");
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在补全游戏主文件与支持库…");
@@ -1396,6 +1414,7 @@ internal static class FrontendInstallWorkflowService
     private static void ApplyManagedModSelection(
         string modsDirectory,
         FrontendInstallChoice? selectedChoice,
+        bool preserveExistingFilesWhenChoiceMissing,
         params string[] filePrefixes)
     {
         if (Directory.Exists(modsDirectory))
@@ -1404,6 +1423,11 @@ internal static class FrontendInstallWorkflowService
             {
                 var fileName = Path.GetFileName(file);
                 if (!filePrefixes.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                if (selectedChoice is null && preserveExistingFilesWhenChoiceMissing)
                 {
                     continue;
                 }
@@ -1867,7 +1891,8 @@ internal sealed record FrontendInstallApplyRequest(
     FrontendInstallChoice? OptiFabricChoice,
     bool UseInstanceIsolation,
     bool RunRepair,
-    bool ForceCoreRefresh);
+    bool ForceCoreRefresh,
+    bool PreserveExistingManagedModFiles = false);
 
 internal sealed record FrontendInstallApplyResult(
     string TargetDirectory,

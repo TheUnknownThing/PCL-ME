@@ -38,34 +38,33 @@
                   FontSize="13.5"
                   Margin="0,0,20,0"
                   Text="主题" />
-              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="Auto,*,Auto,*,Auto,*">
+              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="Auto,*,92,*,92,*">
                 <ComboBox
                     Grid.Column="0"
-                    Width="120"
                     ItemsSource="{Binding DarkModeOptions}"
                     SelectedIndex="{Binding SelectedDarkModeIndex}" />
                 <TextBlock
                     Grid.Column="2"
-                    Margin="20,0,10,0"
+                    Margin="20,0,0,0"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Foreground="#343D4A"
                     FontSize="12.5"
                     Text="浅色配色" />
                 <ComboBox
                     Grid.Column="3"
-                    Width="120"
                     ItemsSource="{Binding ThemeColorOptions}"
                     SelectedIndex="{Binding SelectedLightColorIndex}" />
                 <TextBlock
                     Grid.Column="4"
-                    Margin="20,0,10,0"
+                    Margin="20,0,0,0"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Foreground="#343D4A"
                     FontSize="12.5"
                     Text="深色配色" />
                 <ComboBox
                     Grid.Column="5"
-                    Width="120"
                     ItemsSource="{Binding ThemeColorOptions}"
                     SelectedIndex="{Binding SelectedDarkColorIndex}" />
               </Grid>

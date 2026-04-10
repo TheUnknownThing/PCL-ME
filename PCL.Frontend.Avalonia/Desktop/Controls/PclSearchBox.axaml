@@ -38,8 +38,8 @@
       CornerRadius="5">
     <Border.Transitions>
       <Transitions>
-        <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-        <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
       </Transitions>
     </Border.Transitions>
     <Grid>
@@ -79,7 +79,7 @@
           Opacity="0">
         <controls:PclIconButton.Transitions>
           <Transitions>
-            <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.QuickState}" />
+            <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
           </Transitions>
         </controls:PclIconButton.Transitions>
       </controls:PclIconButton>

@@ -22,8 +22,8 @@
     </Grid.ColumnDefinitions>
     <Grid.Transitions>
       <Transitions>
-        <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-        <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
       </Transitions>
     </Grid.Transitions>
 
@@ -38,8 +38,8 @@
         Opacity="0">
       <Border.Transitions>
         <Transitions>
-          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
-          <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+          <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Border.Transitions>
     </Border>
@@ -86,20 +86,38 @@
         BorderBrush="Transparent"
         BorderThickness="0"
         HorizontalContentAlignment="Stretch">
-      <StackPanel
+      <Grid
           Margin="4,0,0,0"
           HorizontalAlignment="Stretch"
           VerticalAlignment="Center"
-          Spacing="1">
+          ColumnDefinitions="*,Auto"
+          RowDefinitions="Auto,Auto">
         <TextBlock
             x:Name="TitleBlock"
+            Grid.Row="0"
+            Grid.Column="0"
             HorizontalAlignment="Left"
             FontSize="14"
             Foreground="{DynamicResource ColorBrushGray1}"
             TextAlignment="Left"
             TextTrimming="CharacterEllipsis" />
         <TextBlock
+            x:Name="TitleSuffixBlock"
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="8,0,0,0"
+            HorizontalAlignment="Right"
+            FontSize="12"
+            Foreground="{DynamicResource ColorBrushGray1}"
+            IsVisible="False"
+            Opacity="0.42"
+            TextAlignment="Right"
+            TextTrimming="CharacterEllipsis" />
+        <TextBlock
             x:Name="InfoBlock"
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
             HorizontalAlignment="Left"
             FontSize="12"
             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
@@ -107,7 +125,7 @@
             TextAlignment="Left"
             TextTrimming="CharacterEllipsis"
             TextWrapping="NoWrap" />
-      </StackPanel>
+      </Grid>
     </Button>
 
     <Button

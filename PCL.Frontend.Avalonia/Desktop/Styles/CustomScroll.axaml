@@ -41,8 +41,8 @@
                           Opacity="0.5">
                         <Border.Transitions>
                           <Transitions>
-                            <BrushTransition Property="Background" Duration="{x:Static animation:MotionDurations.HintSettle}" />
-                            <DoubleTransition Property="Opacity" Duration="{x:Static animation:MotionDurations.HintSettle}" />
+                            <BrushTransition Property="Background" Duration="{Binding HintSettle, Source={x:Static animation:MotionDurations.Source}}" />
+                            <DoubleTransition Property="Opacity" Duration="{Binding HintSettle, Source={x:Static animation:MotionDurations.Source}}" />
                           </Transitions>
                         </Border.Transitions>
                       </Border>

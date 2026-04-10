@@ -12,6 +12,8 @@ internal sealed class App(AvaloniaCommandOptions options) : Application
 {
     public override void Initialize()
     {
+        var platformAdapter = new FrontendPlatformAdapter();
+        FrontendShellActionService.ApplyStoredAnimationPreferences(FrontendRuntimePaths.Resolve(platformAdapter));
         AvaloniaXamlLoader.Load(this);
         ShellPaneTemplateRegistry.Register(this);
     }

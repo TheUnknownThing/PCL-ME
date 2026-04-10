@@ -5,10 +5,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Avalonia.Desktop.Controls;
+using PCL.Frontend.Avalonia.Icons;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -565,65 +567,158 @@ internal sealed class CommunityProjectActionButtonViewModel(
 
 internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
 {
-    private const int PageSize = 20;
-    private readonly IReadOnlyList<DownloadCatalogEntryViewModel> _allItems;
+    private IReadOnlyList<DownloadCatalogEntryViewModel> _allItems;
     private readonly ActionCommand _previousPageCommand;
     private readonly ActionCommand _nextPageCommand;
-    private int _pageIndex;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? _loadEntriesAsync;
+    private CancellationTokenSource? _loadEntriesCts;
+    private bool _hasLoaded;
+    private bool _isExpanded;
+    private bool _isLoading;
 
     public DownloadCatalogSectionViewModel(
         string title,
-        IReadOnlyList<DownloadCatalogEntryViewModel> items)
+        IReadOnlyList<DownloadCatalogEntryViewModel> items,
+        bool isCollapsible = false,
+        bool isExpanded = true,
+        Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
+        string loadingText = "正在获取版本列表")
     {
         Title = title;
+        LoadingText = loadingText;
         _allItems = items;
+        IsCollapsible = isCollapsible;
+        _isExpanded = isExpanded;
+        _loadEntriesAsync = loadEntriesAsync;
+        _hasLoaded = loadEntriesAsync is null;
         _previousPageCommand = new ActionCommand(
-            () => ChangePage(-1),
-            () => _pageIndex > 0);
+            () => { },
+            () => false);
         _nextPageCommand = new ActionCommand(
-            () => ChangePage(1),
-            () => _pageIndex + 1 < TotalPages);
-        RefreshItems();
+            () => { },
+            () => false);
+
+        if (_hasLoaded)
+        {
+            ReplaceVisibleItems(items);
+        }
+        else if (_isExpanded)
+        {
+            EnsureEntriesLoaded();
+        }
     }
 
     public string Title { get; }
 
+    public string LoadingText { get; }
+
     public ObservableCollection<DownloadCatalogEntryViewModel> Items { get; } = [];
 
-    public bool ShowPagination => TotalPages > 1;
+    public bool IsCollapsible { get; }
 
-    public string PageLabel => $"{_pageIndex + 1} / {TotalPages}";
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (SetProperty(ref _isExpanded, value) && value)
+            {
+                EnsureEntriesLoaded();
+            }
+        }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set => SetProperty(ref _isLoading, value);
+    }
+
+    public bool HasItems => Items.Count > 0;
+
+    public bool ShowPagination => false;
+
+    public string PageLabel => string.Empty;
 
     public ActionCommand PreviousPageCommand => _previousPageCommand;
 
     public ActionCommand NextPageCommand => _nextPageCommand;
 
-    private int TotalPages => Math.Max(1, (_allItems.Count + PageSize - 1) / PageSize);
-
-    private void ChangePage(int delta)
+    private void ReplaceVisibleItems(IReadOnlyList<DownloadCatalogEntryViewModel> items)
     {
-        var nextPage = Math.Clamp(_pageIndex + delta, 0, TotalPages - 1);
-        if (nextPage == _pageIndex)
-        {
-            return;
-        }
-
-        _pageIndex = nextPage;
-        RefreshItems();
-    }
-
-    private void RefreshItems()
-    {
+        _allItems = items;
         Items.Clear();
-        foreach (var item in _allItems.Skip(_pageIndex * PageSize).Take(PageSize))
+        foreach (var item in items)
         {
             Items.Add(item);
         }
 
+        RaisePropertyChanged(nameof(HasItems));
         RaisePropertyChanged(nameof(ShowPagination));
         RaisePropertyChanged(nameof(PageLabel));
-        _previousPageCommand.NotifyCanExecuteChanged();
-        _nextPageCommand.NotifyCanExecuteChanged();
+    }
+
+    private void EnsureEntriesLoaded()
+    {
+        if (_hasLoaded || IsLoading || _loadEntriesAsync is null)
+        {
+            return;
+        }
+
+        _loadEntriesCts?.Cancel();
+        _loadEntriesCts = new CancellationTokenSource();
+        IsLoading = true;
+        _ = LoadEntriesAsync(_loadEntriesCts.Token);
+    }
+
+    private async Task LoadEntriesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var items = await _loadEntriesAsync!(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _hasLoaded = true;
+            ReplaceVisibleItems(items);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer expand request superseded this load.
+        }
+        catch (Exception ex)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _hasLoaded = true;
+            ReplaceVisibleItems(
+            [
+                new DownloadCatalogEntryViewModel(
+                    "加载失败",
+                    ex.Message,
+                    string.Empty,
+                    "重试",
+                    new ActionCommand(ReloadEntries))
+            ]);
+        }
+        finally
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IsLoading = false;
+            }
+        }
+    }
+
+    private void ReloadEntries()
+    {
+        _hasLoaded = false;
+        EnsureEntriesLoaded();
     }
 }
 
@@ -965,22 +1060,188 @@ internal sealed class InstanceServerEntryViewModel(
     public ActionCommand InspectCommand { get; } = inspectCommand;
 }
 
-internal sealed class InstanceResourceEntryViewModel(
-    Bitmap? icon,
-    string title,
-    string info,
-    string meta,
-    ActionCommand actionCommand)
+internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 {
-    public Bitmap? Icon { get; } = icon;
+    private static readonly IBrush ActiveTitleForeground = Brush.Parse("#343D4A");
+    private static readonly IBrush InactiveTitleForeground = Brush.Parse("#7D8897");
+    private static readonly IBrush SelectedTitleForeground = Brush.Parse("#1370F3");
+    private readonly Action<bool>? _selectionChanged;
+    private readonly ActionCommand _primaryCommand;
+    private bool _isSelected;
+    private bool _isEnabled;
 
-    public string Title { get; } = title;
+    public InstanceResourceEntryViewModel(
+        Bitmap? icon,
+        string title,
+        string info,
+        string meta,
+        string path,
+        ActionCommand actionCommand,
+        string actionToolTip = "查看",
+        bool isEnabled = true,
+        bool showSelection = false,
+        bool isSelected = false,
+        Action<bool>? selectionChanged = null,
+        ActionCommand? infoCommand = null,
+        ActionCommand? openCommand = null,
+        ActionCommand? toggleCommand = null,
+        ActionCommand? deleteCommand = null)
+    {
+        Icon = icon;
+        Title = title;
+        Info = info;
+        Meta = meta;
+        Path = path;
+        ActionCommand = actionCommand;
+        ActionToolTip = actionToolTip;
+        ShowSelection = showSelection;
+        _isSelected = isSelected;
+        _isEnabled = isEnabled;
+        _selectionChanged = selectionChanged;
+        _primaryCommand = new ActionCommand(ExecutePrimaryAction);
+        InfoCommand = infoCommand;
+        OpenCommand = openCommand ?? actionCommand;
+        ToggleCommand = toggleCommand;
+        DeleteCommand = deleteCommand;
+    }
 
-    public string Info { get; } = info;
+    public Bitmap? Icon { get; }
 
-    public string Meta { get; } = meta;
+    public string Title { get; }
 
-    public ActionCommand ActionCommand { get; } = actionCommand;
+    public string Info { get; }
+
+    public string Meta { get; }
+
+    public string Path { get; }
+
+    public ActionCommand ActionCommand { get; }
+
+    public ActionCommand PrimaryCommand => _primaryCommand;
+
+    public string ActionToolTip { get; }
+
+    public bool ShowSelection { get; }
+
+    public ActionCommand? InfoCommand { get; }
+
+    public ActionCommand? OpenCommand { get; }
+
+    public ActionCommand? ToggleCommand { get; }
+
+    public ActionCommand? DeleteCommand { get; }
+
+    public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
+
+    public bool HasAction => ActionCommand is not null;
+
+    public string ActionIconData => FrontendIconCatalog.FolderOutline.Data;
+
+    public bool HasInfoAction => InfoCommand is not null;
+
+    public bool HasOpenAction => OpenCommand is not null;
+
+    public bool HasToggleAction => ToggleCommand is not null;
+
+    public bool HasDeleteAction => DeleteCommand is not null;
+
+    public bool HasStandardActionStack => HasInfoAction || HasOpenAction || HasToggleAction || HasDeleteAction;
+
+    public string InfoIconData => FrontendIconCatalog.InfoCircle.Data;
+
+    public double InfoIconScale => FrontendIconCatalog.InfoCircle.Scale;
+
+    public string OpenIconData => FrontendIconCatalog.OpenFolder.Data;
+
+    public double OpenIconScale => FrontendIconCatalog.OpenFolder.Scale;
+
+    public string ToggleIconData => IsEnabledState
+        ? FrontendIconCatalog.DisableCircle.Data
+        : FrontendIconCatalog.EnableCircle.Data;
+
+    public double ToggleIconScale => IsEnabledState
+        ? FrontendIconCatalog.DisableCircle.Scale
+        : FrontendIconCatalog.EnableCircle.Scale;
+
+    public string ToggleToolTip => IsEnabledState ? "禁用" : "启用";
+
+    public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
+
+    public double DeleteIconScale => FrontendIconCatalog.DeleteOutline.Scale;
+
+    public IReadOnlyList<string> Tags
+    {
+        get
+        {
+            var tags = new List<string>();
+            if (!string.IsNullOrWhiteSpace(Meta))
+            {
+                tags.Add(Meta);
+            }
+
+            if (HasToggleAction && !IsEnabledState)
+            {
+                tags.Add("已禁用");
+            }
+
+            return tags;
+        }
+    }
+
+    public bool HasTags => Tags.Count > 0;
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (SetProperty(ref _isSelected, value))
+            {
+                RaisePropertyChanged(nameof(TitleForeground));
+                _selectionChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public bool IsEnabledState
+    {
+        get => _isEnabled;
+        set
+        {
+            if (SetProperty(ref _isEnabled, value))
+            {
+                RaisePropertyChanged(nameof(ContentOpacity));
+                RaisePropertyChanged(nameof(TitleForeground));
+                RaisePropertyChanged(nameof(ToggleIconData));
+                RaisePropertyChanged(nameof(ToggleIconScale));
+                RaisePropertyChanged(nameof(ToggleToolTip));
+                RaisePropertyChanged(nameof(Tags));
+                RaisePropertyChanged(nameof(HasTags));
+            }
+        }
+    }
+
+    public double ContentOpacity => IsEnabledState ? 1.0 : 0.56;
+
+    public IBrush TitleForeground => IsSelected && IsEnabledState
+        ? SelectedTitleForeground
+        : IsEnabledState
+            ? ActiveTitleForeground
+            : InactiveTitleForeground;
+
+    private void ExecutePrimaryAction()
+    {
+        if (ShowSelection)
+        {
+            IsSelected = !IsSelected;
+            return;
+        }
+
+        if (ActionCommand.CanExecute(null))
+        {
+            ActionCommand.Execute(null);
+        }
+    }
 }
 
 internal sealed class HelpTopicViewModel(
