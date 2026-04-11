@@ -590,9 +590,48 @@ internal static class FrontendInstanceRepairService
         var group = segments[0].Replace('.', '/');
         var artifact = segments[1];
         var version = segments[2];
-        var extension = segments.Length >= 4 && !string.IsNullOrWhiteSpace(segments[3]) ? segments[3] : "jar";
-        var suffix = string.IsNullOrWhiteSpace(classifier) ? string.Empty : $"-{classifier}";
+        var resolvedClassifier = classifier;
+        var extension = "jar";
+
+        if (segments.Length >= 5 && !string.IsNullOrWhiteSpace(segments[4]))
+        {
+            extension = segments[4];
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedClassifier) && segments.Length >= 4)
+        {
+            resolvedClassifier = segments[3];
+        }
+
+        if (!string.IsNullOrWhiteSpace(resolvedClassifier))
+        {
+            ParseLibraryCoordinateExtension(ref resolvedClassifier, ref extension);
+        }
+
+        ParseLibraryCoordinateExtension(ref version, ref extension);
+        var suffix = string.IsNullOrWhiteSpace(resolvedClassifier) ? string.Empty : $"-{resolvedClassifier}";
         return $"{group}/{artifact}/{version}/{artifact}-{version}{suffix}.{extension}";
+    }
+
+    private static void ParseLibraryCoordinateExtension(ref string? value, ref string extension)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var extensionIndex = value.IndexOf('@');
+        if (extensionIndex < 0)
+        {
+            return;
+        }
+
+        if (extensionIndex < value.Length - 1)
+        {
+            extension = value[(extensionIndex + 1)..];
+        }
+
+        value = value[..extensionIndex];
     }
 
     private static string GetOsKey()

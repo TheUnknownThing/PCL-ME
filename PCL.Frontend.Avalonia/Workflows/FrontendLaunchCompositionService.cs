@@ -3468,8 +3468,47 @@ internal static class FrontendLaunchCompositionService
         var effectiveClassifier = string.IsNullOrWhiteSpace(classifier)
             ? (segments.Length >= 4 ? segments[3] : null)
             : classifier;
+        var extension = "jar";
+
+        if (segments.Length >= 5 && !string.IsNullOrWhiteSpace(segments[4]))
+        {
+            extension = segments[4];
+        }
+
+        if (!string.IsNullOrWhiteSpace(effectiveClassifier))
+        {
+            ParseLibraryCoordinateExtension(ref effectiveClassifier, ref extension);
+        }
+
+        ParseLibraryCoordinateExtension(ref version, ref extension);
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return libraryName.Replace(':', Path.DirectorySeparatorChar);
+        }
+
         var classifierSuffix = string.IsNullOrWhiteSpace(effectiveClassifier) ? string.Empty : "-" + effectiveClassifier;
-        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifierSuffix}.jar");
+        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifierSuffix}.{extension}");
+    }
+
+    private static void ParseLibraryCoordinateExtension(ref string? value, ref string extension)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var extensionIndex = value.IndexOf('@');
+        if (extensionIndex < 0)
+        {
+            return;
+        }
+
+        if (extensionIndex < value.Length - 1)
+        {
+            extension = value[(extensionIndex + 1)..];
+        }
+
+        value = value[..extensionIndex];
     }
 
     private static string? FirstNonEmpty(params string?[] values)
