@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -16,6 +17,7 @@ using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Desktop.Controls;
+using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -84,6 +86,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ObservableCollection<CommunityProjectReleaseGroupViewModel> CommunityProjectReleaseGroups { get; } = [];
 
+    public ObservableCollection<DownloadCatalogSectionViewModel> CommunityProjectDependencySections { get; } = [];
+
     public ObservableCollection<DownloadCatalogSectionViewModel> CommunityProjectSections { get; } = [];
 
     public ObservableCollection<DownloadCatalogSectionViewModel> HomePageMarketSections { get; } = [];
@@ -139,6 +143,71 @@ internal sealed partial class FrontendShellViewModel
         _ => "?"
     };
 
+    public string CommunityProjectCurrentInstanceName => _instanceComposition.Selection.HasSelection
+        ? _instanceComposition.Selection.InstanceName
+        : "未选择实例";
+
+    public string CommunityProjectCurrentInstanceSummary
+    {
+        get
+        {
+            if (!_instanceComposition.Selection.HasSelection)
+            {
+                return "下载页当前还没有选中实例，无法直接安装到实例。";
+            }
+
+            var parts = new List<string> { CommunityProjectCurrentInstanceName };
+            if (!string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion))
+            {
+                parts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
+            }
+
+            var loader = ResolveSelectedInstanceLoaderLabel();
+            if (!string.IsNullOrWhiteSpace(loader))
+            {
+                parts.Add(loader);
+            }
+
+            return string.Join(" • ", parts);
+        }
+    }
+
+    public bool ShowCommunityProjectInstallSuggestionCard => GetSuggestedCommunityProjectInstallRelease() is not null;
+
+    public string CommunityProjectInstallSuggestionTitle => GetSuggestedCommunityProjectInstallRelease()?.Title ?? "当前没有可安装的版本";
+
+    public string CommunityProjectInstallSuggestionSummary
+    {
+        get
+        {
+            var release = GetSuggestedCommunityProjectInstallRelease();
+            if (release is null)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(release.Info))
+            {
+                parts.Add(release.Info);
+            }
+
+            if (!string.IsNullOrWhiteSpace(release.Meta))
+            {
+                parts.Add(release.Meta);
+            }
+
+            if (_instanceComposition.Selection.HasSelection)
+            {
+                parts.Add($"安装到 {CommunityProjectCurrentInstanceName} 的 mods 文件夹");
+            }
+
+            return string.Join(" • ", parts);
+        }
+    }
+
+    public ActionCommand InstallCommunityProjectToCurrentInstanceCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
+
     public bool HasCommunityProjectActionButtons => CommunityProjectActionButtons.Count > 0;
 
     public bool ShowCommunityProjectLoadingCard => _isCommunityProjectLoading;
@@ -160,6 +229,17 @@ internal sealed partial class FrontendShellViewModel
     public bool HasCommunityProjectReleaseGroups => CommunityProjectReleaseGroups.Count > 0;
 
     public bool HasNoCommunityProjectReleaseGroups => !HasCommunityProjectReleaseGroups;
+
+    public bool HasCommunityProjectDependencySections => CommunityProjectDependencySections.Count > 0;
+
+    public string CommunityProjectDependencyCardTitle => string.IsNullOrWhiteSpace(_communityProjectDependencyReleaseTitle)
+        ? "当前版本依赖"
+        : $"{_communityProjectDependencyReleaseTitle} 的依赖";
+
+    public bool ShowCommunityProjectDependencyEmptyState => false;
+
+    public bool ShowCommunityProjectDependencyCard => _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+        && HasCommunityProjectDependencySections;
 
     public bool HasCommunityProjectSections => CommunityProjectSections.Count > 0;
 
@@ -193,8 +273,13 @@ internal sealed partial class FrontendShellViewModel
         _selectedCommunityProjectId = projectId.Trim();
         _selectedCommunityProjectTitleHint = projectTitle?.Trim() ?? string.Empty;
         _selectedCommunityProjectOriginSubpage = originSubpage ?? _selectedCommunityProjectOriginSubpage;
-        _selectedCommunityProjectVersionFilter = NormalizeMinecraftVersion(initialVersionFilter) ?? initialVersionFilter?.Trim() ?? string.Empty;
-        _selectedCommunityProjectLoaderFilter = initialLoaderFilter?.Trim() ?? string.Empty;
+        _selectedCommunityProjectVersionFilter = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
+            ?? NormalizeMinecraftVersion(initialVersionFilter)
+            ?? initialVersionFilter?.Trim()
+            ?? string.Empty;
+        _selectedCommunityProjectLoaderFilter = ResolveSelectedInstanceLoaderLabel()
+            ?? initialLoaderFilter?.Trim()
+            ?? string.Empty;
         var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
             ? "已打开资源工程详情。"
             : $"已打开 {projectTitle} 的资源详情。";
@@ -265,6 +350,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(CommunityProjectVersionFilterButtons, []);
         ReplaceItems(CommunityProjectLoaderFilterButtons, []);
         ReplaceItems(CommunityProjectReleaseGroups, []);
+        ReplaceItems(CommunityProjectDependencySections, []);
         ReplaceItems(CommunityProjectSections, []);
         SetCommunityProjectLoading(true);
         ApplyCommunityProjectIcon();
@@ -330,6 +416,7 @@ internal sealed partial class FrontendShellViewModel
                 "全部",
                 SelectCommunityProjectLoaderFilter));
         ReplaceItems(CommunityProjectReleaseGroups, BuildCommunityProjectReleaseGroups(versionGrouping));
+        RebuildCommunityProjectDependencySections(versionGrouping);
         ReplaceItems(
             CommunityProjectSections,
             _communityProjectState.Links.Count == 0
@@ -520,6 +607,33 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
     }
 
+    private void RebuildCommunityProjectDependencySections((bool GroupByDrop, bool FoldOld) versionGrouping)
+    {
+        var release = GetCurrentCommunityProjectRelease(versionGrouping);
+        _communityProjectDependencyReleaseTitle = release?.Title ?? string.Empty;
+        if (release is null || release.Dependencies.Count == 0)
+        {
+            ReplaceItems(CommunityProjectDependencySections, []);
+            return;
+        }
+
+        var sections = release.Dependencies
+            .GroupBy(entry => entry.Kind)
+            .OrderBy(group => GetCommunityProjectDependencyPriority(group.Key))
+            .Select(group => new DownloadCatalogSectionViewModel(
+                GetCommunityProjectDependencyGroupTitle(group.Key),
+                group.OrderBy(entry => entry.Title, StringComparer.CurrentCultureIgnoreCase)
+                    .Select(entry => new DownloadCatalogEntryViewModel(
+                        entry.Title,
+                        entry.Summary,
+                        entry.Meta,
+                        "查看详情",
+                        CreateCommunityProjectDependencyCommand(entry)))
+                    .ToArray()))
+            .ToArray();
+        ReplaceItems(CommunityProjectDependencySections, sections);
+    }
+
     private Bitmap? GetCommunityProjectReleaseChannelIcon(FrontendCommunityProjectReleaseChannel channel)
     {
         return channel switch
@@ -684,6 +798,15 @@ internal sealed partial class FrontendShellViewModel
             : CreateOpenTargetCommand($"打开项目内容: {entry.Title}", entry.Target, entry.Target);
     }
 
+    private ActionCommand CreateCommunityProjectDependencyCommand(FrontendCommunityProjectDependencyEntry entry)
+    {
+        return FrontendCommunityProjectService.TryParseCompDetailTarget(entry.Target, out var projectId)
+            ? new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title))
+            : string.IsNullOrWhiteSpace(entry.Target)
+                ? CreateIntentCommand(entry.Title, entry.Summary)
+                : CreateOpenTargetCommand($"打开依赖项目: {entry.Title}", entry.Target, entry.Target);
+    }
+
     private ActionCommand CreateCommunityProjectReleaseDownloadCommand(FrontendCommunityProjectReleaseEntry entry)
     {
         return new ActionCommand(() => _ = DownloadCommunityProjectReleaseAsync(entry));
@@ -745,6 +868,77 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             AddFailureActivity($"下载资源文件失败: {entry.Title}", ex.Message);
+        }
+    }
+
+    private bool CanInstallCommunityProjectToCurrentInstance()
+    {
+        return _instanceComposition.Selection.HasSelection
+               && _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+               && TryGetCommunityProjectInstallRelease(out _);
+    }
+
+    private FrontendCommunityProjectReleaseEntry? GetSuggestedCommunityProjectInstallRelease()
+    {
+        return TryGetCommunityProjectInstallRelease(out var release) ? release : null;
+    }
+
+    private async Task InstallCommunityProjectToCurrentInstanceAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("安装到当前实例", "当前未选择实例。");
+            return;
+        }
+
+        if (!TryGetCommunityProjectInstallRelease(out var entry))
+        {
+            AddActivity("安装到当前实例", "当前筛选条件下没有可直接安装的版本文件。");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.Target))
+        {
+            AddActivity("安装到当前实例", "当前版本没有可用的下载地址。");
+            return;
+        }
+
+        var targetDirectory = ResolveCommunityProjectDownloadStartDirectory();
+        if (string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            AddActivity("安装到当前实例", "当前实例没有可用的安装目录。");
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(targetDirectory);
+            var fileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+            var targetPath = GetUniqueChildPath(targetDirectory, fileName);
+            TaskCenter.Register(new FrontendManagedFileDownloadTask(
+                $"安装资源文件：{entry.Title}",
+                entry.Target,
+                targetPath,
+                ResolveDownloadRequestTimeout(),
+                onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {CommunityProjectCurrentInstanceName}", AvaloniaHintTheme.Info),
+                onCompleted: _ =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        ReloadInstanceComposition(initializeAllSurfaces: false);
+                        AddActivity("安装到当前实例", $"{entry.Title} -> {targetPath}");
+                        AvaloniaHintBus.Show($"{entry.Title} 已安装到 {CommunityProjectCurrentInstanceName}", AvaloniaHintTheme.Success);
+                    });
+                },
+                onFailed: message =>
+                {
+                    Dispatcher.UIThread.Post(() => AddFailureActivity("安装到当前实例失败", message));
+                }));
+            AddActivity("安装到当前实例", $"{entry.Title} 已加入任务中心。");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("安装到当前实例失败", ex.Message);
         }
     }
 
@@ -840,6 +1034,51 @@ internal sealed partial class FrontendShellViewModel
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
             $"{taskTitle} 已加入任务中心。");
+    }
+
+    private async Task SelectCommunityProjectInstanceAsync()
+    {
+        var instances = LoadAvailableDownloadTargetInstances();
+        if (instances.Count == 0)
+        {
+            NavigateTo(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect),
+                "下载页未发现可用实例，已转到实例选择页。");
+            return;
+        }
+
+        string? selectedId;
+        try
+        {
+            selectedId = await _shellActionService.PromptForChoiceAsync(
+                "选择实例",
+                "下载页会根据当前实例的版本与加载器筛选资源，并支持直接安装到该实例。",
+                instances.Select(entry => new PclChoiceDialogOption(
+                    entry.Name,
+                    entry.Name,
+                    entry.Subtitle)).ToArray(),
+                _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : null,
+                "切换实例");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("选择实例失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedId))
+        {
+            return;
+        }
+
+        if (_instanceComposition.Selection.HasSelection
+            && string.Equals(_instanceComposition.Selection.InstanceName, selectedId, StringComparison.OrdinalIgnoreCase))
+        {
+            AddActivity("选择实例", $"{selectedId} 已经是当前实例。");
+            return;
+        }
+
+        RefreshSelectedInstanceSmoothly(selectedId);
     }
 
     private async Task<string?> PromptForCommunityProjectInstanceNameAsync(string versionsDirectory)
@@ -965,6 +1204,181 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return string.Empty;
+    }
+
+    private string? ResolveSelectedInstanceLoaderLabel()
+    {
+        if (!_instanceComposition.Selection.HasSelection
+            || string.IsNullOrWhiteSpace(_instanceComposition.Selection.InstanceDirectory))
+        {
+            return null;
+        }
+
+        return BuildInstanceSelectionSnapshot(
+            _instanceComposition.Selection.InstanceDirectory,
+            _instanceComposition.Selection.InstanceName)?.LoaderLabel;
+    }
+
+    private IReadOnlyList<InstanceSelectionSnapshot> LoadAvailableDownloadTargetInstances()
+    {
+        var runtimePaths = _shellActionService.RuntimePaths;
+        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var launcherDirectory = ResolveLauncherFolder(
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+            runtimePaths);
+        var selectedInstance = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        var versionsDirectory = Path.Combine(launcherDirectory, "versions");
+        if (!Directory.Exists(versionsDirectory))
+        {
+            return [];
+        }
+
+        return Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly)
+            .Select(directory => BuildInstanceSelectionSnapshot(directory, selectedInstance))
+            .Where(snapshot => snapshot is not null)
+            .Select(snapshot => snapshot!)
+            .OrderByDescending(snapshot => snapshot.IsSelected)
+            .ThenByDescending(snapshot => snapshot.IsStarred)
+            .ThenBy(snapshot => snapshot.IsBroken)
+            .ThenBy(snapshot => snapshot.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+    }
+
+    private FrontendCommunityProjectReleaseEntry? GetCurrentCommunityProjectRelease((bool GroupByDrop, bool FoldOld) versionGrouping)
+    {
+        return SelectPreferredCommunityProjectRelease(GetVisibleCommunityProjectReleases(versionGrouping));
+    }
+
+    private bool TryGetCommunityProjectInstallRelease(out FrontendCommunityProjectReleaseEntry entry)
+    {
+        var versionGrouping = DetermineCommunityProjectVersionGrouping(_communityProjectState.Releases);
+        entry = SelectPreferredCommunityProjectRelease(
+            GetVisibleCommunityProjectReleases(versionGrouping)
+                .Where(release => release.IsDirectDownload && !string.IsNullOrWhiteSpace(release.Target)))!;
+        return entry is not null;
+    }
+
+    private FrontendCommunityProjectReleaseEntry? SelectPreferredCommunityProjectRelease(
+        IEnumerable<FrontendCommunityProjectReleaseEntry> releases)
+    {
+        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
+        var preferredLoader = ResolveSelectedInstanceLoaderLabel();
+
+        return releases
+            .OrderByDescending(release => ReleaseMatchesExactInstanceVersion(release, preferredVersion))
+            .ThenByDescending(release => ReleaseMatchesExactInstanceLoader(release, preferredLoader))
+            .ThenByDescending(release => release.PublishedUnixTime)
+            .ThenBy(release => release.Title, StringComparer.CurrentCultureIgnoreCase)
+            .FirstOrDefault();
+    }
+
+    private static bool ReleaseMatchesExactInstanceVersion(FrontendCommunityProjectReleaseEntry release, string? preferredVersion)
+    {
+        if (string.IsNullOrWhiteSpace(preferredVersion))
+        {
+            return false;
+        }
+
+        return release.GameVersions.Any(version =>
+            string.Equals(NormalizeMinecraftVersion(version) ?? version, preferredVersion, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ReleaseMatchesExactInstanceLoader(FrontendCommunityProjectReleaseEntry release, string? preferredLoader)
+    {
+        if (string.IsNullOrWhiteSpace(preferredLoader))
+        {
+            return false;
+        }
+
+        return release.Loaders.Any(loader => string.Equals(loader, preferredLoader, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private IEnumerable<FrontendCommunityProjectReleaseEntry> GetVisibleCommunityProjectReleases((bool GroupByDrop, bool FoldOld) versionGrouping)
+    {
+        return _communityProjectState.Releases.Where(release => MatchesCommunityProjectReleaseFilters(release, versionGrouping));
+    }
+
+    private bool MatchesCommunityProjectReleaseFilters(
+        FrontendCommunityProjectReleaseEntry release,
+        (bool GroupByDrop, bool FoldOld) versionGrouping)
+    {
+        var versions = release.GameVersions.Count == 0 ? ["其他"] : release.GameVersions;
+        var loaders = release.Loaders.Count == 0 ? [string.Empty] : release.Loaders;
+
+        var matchesVersion = string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
+            || versions.Any(version => string.Equals(
+                GetGroupedCommunityProjectVersionName(version, versionGrouping.GroupByDrop, versionGrouping.FoldOld),
+                _selectedCommunityProjectVersionFilter,
+                StringComparison.OrdinalIgnoreCase));
+        var matchesLoader = string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
+            || loaders.Any(loader => string.Equals(loader, _selectedCommunityProjectLoaderFilter, StringComparison.OrdinalIgnoreCase));
+        return matchesVersion && matchesLoader;
+    }
+
+    private static int GetCommunityProjectDependencyPriority(FrontendCommunityProjectDependencyKind kind)
+    {
+        return kind switch
+        {
+            FrontendCommunityProjectDependencyKind.Required => 0,
+            FrontendCommunityProjectDependencyKind.Tool => 1,
+            FrontendCommunityProjectDependencyKind.Include => 2,
+            FrontendCommunityProjectDependencyKind.Optional => 3,
+            FrontendCommunityProjectDependencyKind.Embedded => 4,
+            FrontendCommunityProjectDependencyKind.Incompatible => 5,
+            _ => 6
+        };
+    }
+
+    private static string GetCommunityProjectDependencyGroupTitle(FrontendCommunityProjectDependencyKind kind)
+    {
+        return kind switch
+        {
+            FrontendCommunityProjectDependencyKind.Required => "必需依赖",
+            FrontendCommunityProjectDependencyKind.Tool => "工具依赖",
+            FrontendCommunityProjectDependencyKind.Include => "内含依赖",
+            FrontendCommunityProjectDependencyKind.Optional => "可选依赖",
+            FrontendCommunityProjectDependencyKind.Embedded => "已嵌入依赖",
+            FrontendCommunityProjectDependencyKind.Incompatible => "不兼容项目",
+            _ => "其他依赖"
+        };
+    }
+
+    private void ApplyCurrentInstanceCommunityProjectFilters()
+    {
+        if (_communityProjectState.Releases.Count == 0)
+        {
+            RaiseCommunityProjectProperties();
+            return;
+        }
+
+        var versionGrouping = DetermineCommunityProjectVersionGrouping(_communityProjectState.Releases);
+        var versionOptions = BuildCommunityProjectVersionOptions(versionGrouping);
+        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
+        if (!string.IsNullOrWhiteSpace(preferredVersion))
+        {
+            var groupedPreferredVersion = GetGroupedCommunityProjectVersionName(
+                preferredVersion,
+                versionGrouping.GroupByDrop,
+                versionGrouping.FoldOld);
+            _selectedCommunityProjectVersionFilter = versionOptions.Any(option =>
+                string.Equals(option, groupedPreferredVersion, StringComparison.OrdinalIgnoreCase))
+                ? groupedPreferredVersion
+                : string.Empty;
+        }
+        else
+        {
+            _selectedCommunityProjectVersionFilter = string.Empty;
+        }
+
+        var loaderOptions = BuildCommunityProjectLoaderOptions();
+        var preferredLoader = ResolveSelectedInstanceLoaderLabel();
+        _selectedCommunityProjectLoaderFilter = !string.IsNullOrWhiteSpace(preferredLoader)
+            && loaderOptions.Any(option => string.Equals(option, preferredLoader, StringComparison.OrdinalIgnoreCase))
+            ? preferredLoader
+            : string.Empty;
+
+        RebuildCommunityProjectSurfaceCollections();
+        RaiseCommunityProjectProperties();
     }
 
     private static string SanitizeCommunityProjectReleaseFileName(string? suggestedFileName, string fallbackTitle)
@@ -1363,12 +1777,20 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CommunityProjectCategoryTags));
         RaisePropertyChanged(nameof(HasCommunityProjectCategoryTags));
         RaisePropertyChanged(nameof(CommunityProjectSourceBadgeText));
+        RaisePropertyChanged(nameof(CommunityProjectCurrentInstanceName));
+        RaisePropertyChanged(nameof(CommunityProjectCurrentInstanceSummary));
+        RaisePropertyChanged(nameof(ShowCommunityProjectInstallSuggestionCard));
+        RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionTitle));
+        RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionSummary));
         RaisePropertyChanged(nameof(HasCommunityProjectActionButtons));
         RaisePropertyChanged(nameof(ShowCommunityProjectFilterCard));
         RaisePropertyChanged(nameof(ShowCommunityProjectVersionFilters));
         RaisePropertyChanged(nameof(ShowCommunityProjectLoaderFilters));
         RaisePropertyChanged(nameof(HasCommunityProjectReleaseGroups));
         RaisePropertyChanged(nameof(HasNoCommunityProjectReleaseGroups));
+        RaisePropertyChanged(nameof(HasCommunityProjectDependencySections));
+        RaisePropertyChanged(nameof(CommunityProjectDependencyCardTitle));
+        RaisePropertyChanged(nameof(ShowCommunityProjectDependencyCard));
         RaisePropertyChanged(nameof(HasCommunityProjectSections));
         RaisePropertyChanged(nameof(HasNoCommunityProjectSections));
         RaisePropertyChanged(nameof(ShowCommunityProjectWarning));
@@ -1584,6 +2006,8 @@ internal sealed partial class FrontendShellViewModel
         var seconds = Math.Clamp((int)Math.Round(DownloadTimeoutSeconds), 1, 60);
         return TimeSpan.FromSeconds(seconds);
     }
+
+    private string _communityProjectDependencyReleaseTitle = string.Empty;
 }
 
 internal sealed class FrontendManagedFileDownloadTask(

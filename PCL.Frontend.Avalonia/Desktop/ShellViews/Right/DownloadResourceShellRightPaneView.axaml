@@ -92,6 +92,30 @@
   </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
+      <controls:PclCard Header="当前实例" ContentMargin="20,18,20,18">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="5">
+              <TextBlock
+                  Foreground="#344352"
+                  FontSize="13"
+                  Text="{Binding DownloadResourceCurrentInstanceTitle}" />
+              <TextBlock
+                  Foreground="#6B7C8F"
+                  FontSize="11.5"
+                  Text="{Binding DownloadResourceCurrentInstanceSummary}"
+                  TextWrapping="Wrap" />
+            </StackPanel>
+            <controls:PclButton
+                Grid.Column="1"
+                Width="96"
+                Height="35"
+                Command="{Binding SelectDownloadResourceInstanceCommand}"
+                Text="切换实例" />
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
       <controls:PclSearchBox
           x:Name="SearchRow"
           SearchCommand="{Binding SearchDownloadResourceCommand}"
