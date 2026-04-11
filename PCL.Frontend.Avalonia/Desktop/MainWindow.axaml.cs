@@ -255,6 +255,12 @@ internal sealed partial class MainWindow : Window
     {
         _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
 
+        if (_shellViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (e.Handled || e.Key != Key.Escape || _shellViewModel is null)
         {
             return;
@@ -312,15 +318,27 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        if (e.PropertyName == nameof(FrontendShellViewModel.CurrentPrompt))
+        if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayWarning))
         {
             UpdatePromptOverlayBackdropBrush();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayTextInput)
+            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList))
+        {
+            QueuePromptOverlayFocus();
         }
     }
 
     private void QueuePromptOverlaySync()
     {
         Dispatcher.UIThread.Post(() => _ = SyncPromptOverlayAsync(), DispatcherPriority.Render);
+    }
+
+    private void QueuePromptOverlayFocus()
+    {
+        Dispatcher.UIThread.Post(() => _ = FocusPromptOverlayPrimaryControlAsync(), DispatcherPriority.Input);
     }
 
     private async Task SyncPromptOverlayAsync()
@@ -350,6 +368,7 @@ internal sealed partial class MainWindow : Window
                 PromptOverlayBackdrop,
                 PromptOverlayPanel,
                 () => version == _promptOverlayAnimationVersion && _isPromptOverlayRenderedOpen);
+            QueuePromptOverlayFocus();
             return;
         }
 
@@ -368,15 +387,35 @@ internal sealed partial class MainWindow : Window
         PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
     }
 
+    private async Task FocusPromptOverlayPrimaryControlAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+
+        if (_shellViewModel?.ShowPromptOverlayTextInput == true && PromptOverlayInputTextBox.IsVisible)
+        {
+            PromptOverlayInputTextBox.Focus();
+            PromptOverlayInputTextBox.SelectionStart = 0;
+            PromptOverlayInputTextBox.SelectionEnd = PromptOverlayInputTextBox.Text?.Length ?? 0;
+            return;
+        }
+
+        if (_shellViewModel?.ShowPromptOverlayChoiceList == true && PromptOverlayChoiceListBox.IsVisible)
+        {
+            PromptOverlayChoiceListBox.Focus();
+        }
+    }
+
     private void UpdatePromptOverlayBackdropBrush()
     {
-        var isWarning = string.Equals(
-            _shellViewModel?.CurrentPrompt?.Severity,
-            "Warning",
-            StringComparison.OrdinalIgnoreCase);
+        var isWarning = _shellViewModel?.IsPromptOverlayWarning == true;
         PromptOverlayBackdrop.Background = isWarning
             ? PromptOverlayWarningBrush
             : PromptOverlayDefaultBrush;
+    }
+
+    private void PromptOverlayChoiceListBox_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        _shellViewModel?.ConfirmPromptOverlayChoice();
     }
 
     private void UpdateWindowChromeState()

@@ -1,9 +1,8 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
-using PCL.Frontend.Avalonia.Desktop.Dialogs;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop;
 
@@ -34,19 +33,12 @@ internal static class FrontendFontDiagnostics
             out _);
     }
 
-    public static async Task ShowMissingCjkFontWarningAsync(IClassicDesktopStyleApplicationLifetime desktop)
+    public static async Task ShowMissingCjkFontWarningAsync(FrontendShellActionService shellActionService)
     {
-        if (desktop.MainWindow is null)
-        {
-            return;
-        }
-
-        var dialog = new PclConfirmDialog(
+        await shellActionService.ConfirmAsync(
             "Missing CJK System Font",
             "No suitable localized CJK system font was found. Install a Chinese, Japanese, or Korean UI font for text rendering, then restart the launcher. Until this is resolved, CJK text may render incorrectly or with missing glyphs.",
             "Continue",
             isDanger: false);
-
-        await dialog.ShowDialog<bool>(desktop.MainWindow);
     }
 }

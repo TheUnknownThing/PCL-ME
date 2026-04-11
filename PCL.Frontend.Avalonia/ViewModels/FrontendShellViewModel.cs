@@ -188,10 +188,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool HasCurrentPrompt => CurrentPrompt is not null;
 
-    public string PromptOverlayMessage => _activeConfirmOverlayMessage ?? CurrentPrompt?.Message ?? string.Empty;
-
-    public bool IsPromptOverlayVisible => HasActivePrompts && _isPromptOverlayOpen;
-
     public bool HasSidebarEntries => SidebarEntries.Count > 0;
 
     public bool HasSidebarSections => SidebarSections.Count > 0;

@@ -52,8 +52,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HasNoActivePrompts));
                 RaisePropertyChanged(nameof(CurrentPrompt));
                 RaisePropertyChanged(nameof(HasCurrentPrompt));
-                RaisePropertyChanged(nameof(PromptOverlayMessage));
-                RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+                RaisePromptOverlayPresentationProperties();
                 return;
             }
 
@@ -67,8 +66,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoActivePrompts));
         RaisePropertyChanged(nameof(CurrentPrompt));
         RaisePropertyChanged(nameof(HasCurrentPrompt));
-        RaisePropertyChanged(nameof(PromptOverlayMessage));
-        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+        RaisePromptOverlayPresentationProperties();
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);
         PromptInboxTitle = $"{selectedLane.Title}提示";
@@ -326,6 +324,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void TogglePromptOverlay()
     {
+        if (HasPromptOverlayInlineDialog)
+        {
+            return;
+        }
+
         SetPromptOverlayOpen(!IsPromptOverlayVisible);
     }
 

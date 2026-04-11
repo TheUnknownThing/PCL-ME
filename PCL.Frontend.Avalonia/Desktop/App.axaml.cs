@@ -43,7 +43,7 @@ internal sealed class App : Application
             {
                 if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, _options.ForceCjkFontWarning))
                 {
-                    await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(desktop);
+                    await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(shellActionService);
                 }
             };
         }

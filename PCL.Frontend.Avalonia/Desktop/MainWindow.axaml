@@ -33,6 +33,32 @@
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
       <Setter Property="VerticalContentAlignment" Value="Stretch" />
     </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:pointerover">
+      <Setter Property="Background" Value="#E2EEFE" />
+      <Setter Property="BorderBrush" Value="#D5E6FD" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected">
+      <Setter Property="Background" Value="#EAF2FE" />
+      <Setter Property="BorderBrush" Value="#96C0F9" />
+    </Style>
   </Window.Styles>
 
   <Grid x:Name="GridRoot">
@@ -394,20 +420,21 @@
                   Background="{DynamicResource ColorBrushMsgBox}"
                   BoxShadow="0 2 20 0 #CC3C3C3C"
                   CornerRadius="7">
-                <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,*,Auto">
+                <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,Auto,Auto,*,Auto">
                   <TextBlock
                       Margin="7,-1,70,9"
-                      Foreground="{Binding CurrentPrompt.TitleBrush}"
+                      Foreground="{Binding PromptOverlayTitleBrush}"
                       FontSize="23"
-                      Text="{Binding CurrentPrompt.Title}" />
+                      Text="{Binding PromptOverlayTitle}" />
 
                   <Rectangle
                       Grid.Row="1"
                       Height="2"
-                      Fill="{Binding CurrentPrompt.AccentBrush}" />
+                      Fill="{Binding PromptOverlayAccentBrush}" />
 
                   <ScrollViewer
                       Grid.Row="3"
+                      IsVisible="{Binding ShowPromptOverlayMessage}"
                       Margin="0,0,0,17"
                       MaxHeight="380"
                       Padding="7,0,15,0"
@@ -422,11 +449,64 @@
                         TextWrapping="Wrap" />
                   </ScrollViewer>
 
-                  <ItemsControl
+                  <TextBox
+                      x:Name="PromptOverlayInputTextBox"
                       Grid.Row="4"
+                      IsVisible="{Binding ShowPromptOverlayTextInput}"
+                      MinWidth="450"
+                      Margin="7,0,7,12"
+                      HorizontalAlignment="Stretch"
+                      Padding="10,6"
+                      PasswordChar="{Binding PromptOverlayInputPasswordChar}"
+                      Text="{Binding PromptOverlayInputText, Mode=TwoWay}"
+                      Watermark="{Binding PromptOverlayInputPlaceholderText}" />
+
+                  <ScrollViewer
+                      Grid.Row="5"
+                      IsVisible="{Binding ShowPromptOverlayChoiceList}"
+                      Margin="0,0,0,17"
+                      MaxHeight="280"
+                      Padding="7,0,15,0"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+                    <ListBox
+                        x:Name="PromptOverlayChoiceListBox"
+                        Classes="prompt-overlay-choice-list"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        DoubleTapped="PromptOverlayChoiceListBox_OnDoubleTapped"
+                        ItemsSource="{Binding PromptOverlayChoiceOptions}"
+                        SelectedItem="{Binding SelectedPromptOverlayChoice, Mode=TwoWay}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <Border
+                              Padding="10,8"
+                              Background="Transparent"
+                              BorderBrush="#00000000"
+                              BorderThickness="1"
+                              CornerRadius="4">
+                            <StackPanel Spacing="4">
+                              <TextBlock
+                                  Foreground="{DynamicResource ColorBrush1}"
+                                  FontSize="14"
+                                  Text="{Binding Title}" />
+                              <TextBlock
+                                  Foreground="#697A8C"
+                                  FontSize="12.5"
+                                  Text="{Binding Summary}"
+                                  TextWrapping="Wrap" />
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </ScrollViewer>
+
+                  <ItemsControl
+                      Grid.Row="6"
                       Margin="150,0,8,0"
                       HorizontalAlignment="Right"
-                      ItemsSource="{Binding CurrentPrompt.Options}">
+                      ItemsSource="{Binding PromptOverlayOptions}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" />
