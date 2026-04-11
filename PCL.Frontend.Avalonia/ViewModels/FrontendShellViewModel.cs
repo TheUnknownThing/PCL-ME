@@ -50,7 +50,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<DownloadCatalogSectionViewModel> DownloadCatalogSections { get; } = [];
 
-    public ObservableCollection<DownloadCatalogSectionViewModel> DownloadFavoriteSections { get; } = [];
+    public ObservableCollection<DownloadFavoriteSectionViewModel> DownloadFavoriteSections { get; } = [];
 
     public ObservableCollection<KeyValueEntryViewModel> VersionSaveInfoEntries { get; } = [];
 

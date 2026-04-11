@@ -281,12 +281,10 @@ internal sealed partial class FrontendShellViewModel
         EnsureDownloadCompositionRemoteStateLoaded();
         ShowDownloadFavoriteWarning = _downloadComposition.Favorites.ShowWarning;
         DownloadFavoriteWarningText = _downloadComposition.Favorites.WarningText;
-        var selectedTarget = SelectedDownloadFavoriteTargetIndex >= 0 && SelectedDownloadFavoriteTargetIndex < DownloadFavoriteTargetOptions.Count
-            ? DownloadFavoriteTargetOptions[SelectedDownloadFavoriteTargetIndex]
-            : string.Empty;
-        var sections = _downloadComposition.Favorites.Sections
-            .Where(section => string.IsNullOrWhiteSpace(selectedTarget) || string.Equals(section.Title, selectedTarget, StringComparison.OrdinalIgnoreCase))
-            .Select(section => new DownloadCatalogSectionViewModel(
+        var selectedTarget = GetSelectedDownloadFavoriteTargetState();
+        SyncDownloadFavoriteSelectionTarget(selectedTarget.Id);
+        var visibleEntries = selectedTarget.Sections
+            .Select(section => new DownloadFavoriteSectionViewModel(
                 section.Title,
                 section.Entries
                     .Where(item =>
@@ -294,21 +292,54 @@ internal sealed partial class FrontendShellViewModel
                         || item.Title.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase)
                         || item.Info.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase)
                         || item.Meta.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase))
-                    .Select(item => new DownloadCatalogEntryViewModel(
-                        item.Title,
-                        item.Info,
-                        item.Meta,
-                        item.ActionText,
-                        string.IsNullOrWhiteSpace(item.Target)
-                            ? CreateIntentCommand($"收藏夹条目: {item.Title}", item.Info)
-                            : CreateDownloadFavoriteCommand(item)))
+                    .Select(CreateDownloadFavoriteEntryViewModel)
                     .ToArray()))
             .Where(section => section.Items.Count > 0)
             .ToArray();
 
-        ReplaceItems(DownloadFavoriteSections, sections);
+        _downloadFavoriteSelectedProjectIds.IntersectWith(
+            visibleEntries
+                .SelectMany(section => section.Items)
+                .Select(entry => entry.Path)
+                .Where(path => !string.IsNullOrWhiteSpace(path)));
+
+        ReplaceItems(DownloadFavoriteSections, visibleEntries);
         RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
+        RaiseDownloadFavoriteSelectionProperties();
+    }
+
+    private InstanceResourceEntryViewModel CreateDownloadFavoriteEntryViewModel(FrontendDownloadCatalogEntry entry)
+    {
+        var projectId = entry.Identity ?? string.Empty;
+        var actionCommand = string.IsNullOrWhiteSpace(entry.Target)
+            ? CreateIntentCommand($"收藏夹条目: {entry.Title}", entry.Info)
+            : CreateDownloadFavoriteCommand(entry);
+        var icon = LoadCachedBitmapFromPath(entry.IconPath);
+        if (icon is null && !string.IsNullOrWhiteSpace(entry.IconName))
+        {
+            icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
+        }
+
+        var viewModel = new InstanceResourceEntryViewModel(
+            icon: icon,
+            title: entry.Title,
+            info: entry.Info,
+            meta: entry.Meta,
+            path: projectId,
+            actionCommand: actionCommand,
+            actionToolTip: "查看详情",
+            isEnabled: true,
+            description: entry.Info,
+            showSelection: true,
+            isSelected: !string.IsNullOrWhiteSpace(projectId) && _downloadFavoriteSelectedProjectIds.Contains(projectId),
+            selectionChanged: isSelected => HandleDownloadFavoriteSelectionChanged(projectId, isSelected),
+            infoCommand: actionCommand,
+            deleteCommand: string.IsNullOrWhiteSpace(projectId)
+                ? null
+                : new ActionCommand(() => _ = RemoveDownloadFavoriteAsync(projectId, entry.Title)));
+        QueueDownloadFavoriteIconLoad(viewModel, entry.IconUrl);
+        return viewModel;
     }
 
     private void InitializeGameManageSurface()

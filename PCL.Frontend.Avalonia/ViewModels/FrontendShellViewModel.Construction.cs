@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -187,6 +188,9 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedDownloadFavoriteTargetIndex;
     private string _downloadFavoriteWarningText = string.Empty;
     private bool _showDownloadFavoriteWarning;
+    private readonly HashSet<string> _downloadFavoriteSelectedProjectIds = new(StringComparer.OrdinalIgnoreCase);
+    private string _downloadFavoriteSelectionTargetId = string.Empty;
+    private bool _suppressDownloadFavoriteSelectionChanged;
     private CancellationTokenSource? _downloadCatalogRefreshCts;
     private int _downloadCatalogRefreshVersion;
     private CancellationTokenSource? _downloadFavoriteRefreshCts;

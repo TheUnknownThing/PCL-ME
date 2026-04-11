@@ -558,11 +558,17 @@ internal sealed partial class FrontendShellViewModel
                 BuildCommunityProjectDescriptionCopyText(),
                 "当前项目没有可供翻译的简介文本。"))));
         buttons.Add(new CommunityProjectActionButtonViewModel(
+            "收藏到",
+            FrontendIconCatalog.FolderAdd.Data,
+            FrontendIconCatalog.FolderAdd.Scale,
+            PclIconTextButtonColorState.Normal,
+            new ActionCommand(() => _ = FavoriteCurrentCommunityProjectToTargetAsync())));
+        buttons.Add(new CommunityProjectActionButtonViewModel(
             "收藏",
             CommunityProjectFavoriteIcon.Data,
             CommunityProjectFavoriteIcon.Scale,
             IsCommunityProjectFavorite() ? PclIconTextButtonColorState.Highlight : PclIconTextButtonColorState.Normal,
-            new ActionCommand(ToggleCommunityProjectFavorite)));
+            new ActionCommand(() => _ = ToggleCommunityProjectFavoriteAsync())));
         return buttons;
     }
 
@@ -1480,53 +1486,6 @@ internal sealed partial class FrontendShellViewModel
                 .Where(value => !string.IsNullOrWhiteSpace(value)));
     }
 
-    private void ToggleCommunityProjectFavorite()
-    {
-        if (string.IsNullOrWhiteSpace(_communityProjectState.ProjectId))
-        {
-            AddActivity("收藏项目", "当前没有可收藏的项目。");
-            return;
-        }
-
-        try
-        {
-            var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
-            var raw = provider.Exists("CompFavorites")
-                ? SafeReadSharedValue(provider, "CompFavorites", "[]")
-                : "[]";
-            var root = ParseCommunityProjectFavoriteTargets(raw);
-            var target = EnsureCommunityProjectFavoriteTarget(root);
-            var favorites = EnsureCommunityProjectFavoriteArray(target);
-
-            var projectId = _communityProjectState.ProjectId;
-            var existing = favorites
-                .FirstOrDefault(node => string.Equals(GetCommunityProjectFavoriteId(node), projectId, StringComparison.OrdinalIgnoreCase));
-            var added = existing is null;
-            if (added)
-            {
-                favorites.Add(projectId);
-            }
-            else
-            {
-                favorites.Remove(existing);
-            }
-
-            _shellActionService.PersistSharedValue("CompFavorites", root.ToJsonString(new JsonSerializerOptions
-            {
-                WriteIndented = false
-            }));
-            ReloadDownloadComposition();
-            RefreshDownloadFavoriteSurface();
-            RebuildCommunityProjectSurfaceCollections();
-            RaiseCommunityProjectProperties();
-            AddActivity(added ? "加入收藏夹" : "移出收藏夹", CommunityProjectTitle);
-        }
-        catch (Exception ex)
-        {
-            AddFailureActivity("收藏项目失败", ex.Message);
-        }
-    }
-
     private bool IsCommunityProjectFavorite()
     {
         if (string.IsNullOrWhiteSpace(_communityProjectState.ProjectId))
@@ -1541,13 +1500,9 @@ internal sealed partial class FrontendShellViewModel
                 ? SafeReadSharedValue(provider, "CompFavorites", "[]")
                 : "[]";
             var root = ParseCommunityProjectFavoriteTargets(raw);
-            return root
-                .OfType<JsonObject>()
-                .SelectMany(node =>
-                {
-                    var favoritesNode = node["Favs"] as JsonArray ?? node["Favorites"] as JsonArray;
-                    return favoritesNode?.Select(GetCommunityProjectFavoriteId) ?? Enumerable.Empty<string?>();
-                })
+            var target = GetSelectedDownloadFavoriteTarget(root);
+            return EnsureCommunityProjectFavoriteArray(target)
+                .Select(GetCommunityProjectFavoriteId)
                 .Any(value => string.Equals(value, _communityProjectState.ProjectId, StringComparison.OrdinalIgnoreCase));
         }
         catch

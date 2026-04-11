@@ -491,6 +491,8 @@ internal static class FrontendCommunityProjectService
             null,
             TranslateProjectType(GetString(project, "project_type")),
             BuildModrinthWebsite(project),
+            GetString(project, "icon_url"),
+            FrontendCommunityIconCache.TryGetCachedIconPath(GetString(project, "icon_url")),
             FormatDateLabel(ParseDateTimeOffset(project["updated"])),
             GetInt(project, "downloads"),
             GetInt(project, "followers"));
@@ -519,6 +521,8 @@ internal static class FrontendCommunityProjectService
             authors.Length == 0 ? null : string.Join(" / ", authors),
             TranslateCurseForgeClass(GetInt(project, "classId")),
             GetString(project["links"] as JsonObject, "websiteUrl") ?? BuildCurseForgeWebsite(project),
+            GetString(project["logo"] as JsonObject, "thumbnailUrl") ?? GetString(project["logo"] as JsonObject, "url"),
+            FrontendCommunityIconCache.TryGetCachedIconPath(GetString(project["logo"] as JsonObject, "thumbnailUrl") ?? GetString(project["logo"] as JsonObject, "url")),
             FormatDateLabel(ParseDateTimeOffset(project["dateModified"]) ?? ParseDateTimeOffset(project["dateReleased"])),
             GetInt(project, "downloadCount"),
             GetInt(project, "thumbsUpCount"));

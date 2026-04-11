@@ -10,6 +10,8 @@ internal sealed record FrontendCommunityProjectSummary(
     string? Author,
     string? ProjectType,
     string? Website,
+    string? IconUrl,
+    string? IconPath,
     string UpdatedLabel,
     int DownloadCount,
     int FollowCount);
