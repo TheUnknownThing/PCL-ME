@@ -30,6 +30,8 @@ internal sealed class FrontendShellActionService(
 
     public FrontendPlatformAdapter PlatformAdapter { get; } = platformAdapter;
 
+    public Func<string, string, string, bool, Task<bool>>? ConfirmPresenter { get; set; }
+
     public static void ApplyStoredAnimationPreferences(FrontendRuntimePaths runtimePaths)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
@@ -293,6 +295,11 @@ internal sealed class FrontendShellActionService(
         string confirmText = "确定",
         bool isDanger = false)
     {
+        if (ConfirmPresenter is not null)
+        {
+            return await ConfirmPresenter(title, message, confirmText, isDanger);
+        }
+
         var owner = GetDesktopMainWindow();
         var dialog = new PclConfirmDialog(title, message, confirmText, isDanger);
         return await dialog.ShowDialog<bool>(owner);

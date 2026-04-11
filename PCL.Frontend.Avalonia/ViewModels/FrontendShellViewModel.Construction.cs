@@ -336,6 +336,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _options = options;
         _shellActionService = shellActionService;
+        _shellActionService.ConfirmPresenter = ShowInAppConfirmationAsync;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
