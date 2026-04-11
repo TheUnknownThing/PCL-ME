@@ -657,6 +657,7 @@
                             <controls:PclListItem
                                 Margin="0,0,0,8"
                                 Command="{Binding Command}"
+                                IconSource="{Binding Icon}"
                                 Info="{Binding CombinedInfo}"
                                 Title="{Binding Title}" />
                           </DataTemplate>
@@ -689,6 +690,7 @@
                             <controls:PclListItem
                                 Margin="0,0,0,8"
                                 Command="{Binding Command}"
+                                IconSource="{Binding Icon}"
                                 Info="{Binding CombinedInfo}"
                                 Title="{Binding Title}" />
                           </DataTemplate>

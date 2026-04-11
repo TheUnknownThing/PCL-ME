@@ -6,6 +6,7 @@ using System.Threading;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using PCL.Core.App.Configuration.Storage;
 
 namespace PCL.Frontend.Avalonia.Workflows;
@@ -222,13 +223,17 @@ internal static class FrontendInstallWorkflowService
         var launcherDirectory = request.LauncherDirectory;
         var targetDirectory = Path.Combine(launcherDirectory, "versions", request.TargetInstanceName);
         Directory.CreateDirectory(targetDirectory);
+        void ReportPrepare(string message) => onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, message);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, "正在写入安装清单并准备安装环境…");
-        var manifestNode = BuildTargetManifest(request);
+        var manifestNode = BuildTargetManifest(request, ReportPrepare);
+        ReportPrepare("正在清理本地缺失依赖引用…");
         RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
         var manifestPath = Path.Combine(targetDirectory, $"{request.TargetInstanceName}.json");
+        ReportPrepare($"正在写入安装清单文件 {Path.GetFileName(manifestPath)}…");
         File.WriteAllText(manifestPath, manifestNode.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
+        ReportPrepare("正在写入实例配置…");
         var instanceConfig = OpenInstanceConfigProvider(targetDirectory);
         instanceConfig.Set("VersionVanillaName", request.MinecraftChoice.Version);
         instanceConfig.Set("VersionArgumentIndieV2", request.UseInstanceIsolation);
@@ -237,6 +242,7 @@ internal static class FrontendInstallWorkflowService
         var modsDirectory = request.UseInstanceIsolation
             ? Path.Combine(targetDirectory, "mods")
             : Path.Combine(launcherDirectory, "mods");
+        ReportPrepare("正在创建实例目录结构…");
         Directory.CreateDirectory(modsDirectory);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在准备受管依赖文件…");
@@ -288,8 +294,11 @@ internal static class FrontendInstallWorkflowService
             repairResult.ReusedFiles);
     }
 
-    private static JsonObject BuildTargetManifest(FrontendInstallApplyRequest request)
+    private static JsonObject BuildTargetManifest(
+        FrontendInstallApplyRequest request,
+        Action<string>? onStatusChanged = null)
     {
+        ReportPrepareStatus(onStatusChanged, $"正在获取 Minecraft {request.MinecraftChoice.Version} 原版清单…");
         var baseManifest = ReadJsonObject(request.MinecraftChoice.ManifestUrl ?? MojangVersionManifestUrl);
         JsonObject targetManifest;
 
@@ -298,6 +307,7 @@ internal static class FrontendInstallWorkflowService
             case FrontendInstallChoiceKind.FabricLoader:
             case FrontendInstallChoiceKind.LegacyFabricLoader:
             case FrontendInstallChoiceKind.QuiltLoader:
+                ReportPrepareStatus(onStatusChanged, $"正在获取 {request.PrimaryLoaderChoice.Title} 安装清单…");
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
                     ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
@@ -305,6 +315,7 @@ internal static class FrontendInstallWorkflowService
                     request.TargetInstanceName);
                 break;
             case FrontendInstallChoiceKind.LabyMod:
+                ReportPrepareStatus(onStatusChanged, "正在获取 LabyMod 安装清单…");
                 targetManifest = ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
                                                ?? throw new InvalidOperationException("缺少 LabyMod 清单地址。"));
                 targetManifest["id"] = request.TargetInstanceName;
@@ -312,12 +323,14 @@ internal static class FrontendInstallWorkflowService
             case FrontendInstallChoiceKind.Forge:
             case FrontendInstallChoiceKind.NeoForge:
             case FrontendInstallChoiceKind.Cleanroom:
+                ReportPrepareStatus(onStatusChanged, $"正在准备 {request.PrimaryLoaderChoice.Title} 安装器…");
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
-                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice),
+                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged),
                     request.TargetInstanceName);
                 break;
             default:
+                ReportPrepareStatus(onStatusChanged, "正在整理原版安装清单…");
                 targetManifest = CloneObject(baseManifest);
                 targetManifest["id"] = request.TargetInstanceName;
                 break;
@@ -325,6 +338,7 @@ internal static class FrontendInstallWorkflowService
 
         if (request.LiteLoaderChoice is not null)
         {
+            ReportPrepareStatus(onStatusChanged, "正在合并 LiteLoader 安装信息…");
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
                 BuildLiteLoaderManifest(request.LiteLoaderChoice),
@@ -333,12 +347,14 @@ internal static class FrontendInstallWorkflowService
 
         if (ShouldInstallOptiFineStandalone(request))
         {
+            ReportPrepareStatus(onStatusChanged, "正在处理 OptiFine 安装信息…");
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
-                BuildStandaloneOptiFineManifest(request),
+                BuildStandaloneOptiFineManifest(request, onStatusChanged),
                 request.TargetInstanceName);
         }
 
+        ReportPrepareStatus(onStatusChanged, "正在生成目标安装清单…");
         targetManifest["id"] = request.TargetInstanceName;
         return targetManifest;
     }
@@ -357,7 +373,8 @@ internal static class FrontendInstallWorkflowService
 
     private static JsonObject BuildForgelikeManifest(
         FrontendInstallApplyRequest request,
-        FrontendInstallChoice loaderChoice)
+        FrontendInstallChoice loaderChoice,
+        Action<string>? onStatusChanged = null)
     {
         ArgumentNullException.ThrowIfNull(loaderChoice);
 
@@ -366,23 +383,29 @@ internal static class FrontendInstallWorkflowService
         var installerPath = CreateTempFile("pcl-forgelike-installer-", ".jar");
         try
         {
+            ReportPrepareStatus(onStatusChanged, $"正在下载 {loaderChoice.Title} 安装器…");
             File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl).GetAwaiter().GetResult());
             using var archive = ZipFile.OpenRead(installerPath);
 
             if (loaderChoice.Kind == FrontendInstallChoiceKind.Forge
                 && !IsModernForgelikeChoice(loaderChoice))
             {
-                return BuildLegacyForgeManifest(archive, request, loaderChoice);
+                ReportPrepareStatus(onStatusChanged, $"正在解析 {loaderChoice.Title} 安装器内容…");
+                return BuildLegacyForgeManifest(archive, request, loaderChoice, onStatusChanged);
             }
 
             var tempRoot = CreateTempDirectory("pcl-forgelike-");
             try
             {
-                EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice);
+                ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
+                EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged);
                 var before = SnapshotVersionDirectories(tempRoot);
+                ReportPrepareStatus(onStatusChanged, $"正在执行 {loaderChoice.Title} 安装器…");
                 RunForgeInstallerHelper(installerPath, tempRoot);
+                ReportPrepareStatus(onStatusChanged, "正在复制安装器生成的支持库…");
                 CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
+                ReportPrepareStatus(onStatusChanged, "正在读取安装器生成的版本清单…");
                 var generatedDirectory = DetectGeneratedVersionDirectory(
                     tempRoot,
                     before,
@@ -410,8 +433,10 @@ internal static class FrontendInstallWorkflowService
     private static JsonObject BuildLegacyForgeManifest(
         ZipArchive archive,
         FrontendInstallApplyRequest request,
-        FrontendInstallChoice loaderChoice)
+        FrontendInstallChoice loaderChoice,
+        Action<string>? onStatusChanged = null)
     {
+        ReportPrepareStatus(onStatusChanged, $"正在读取 {loaderChoice.Title} 安装器配置…");
         var installProfile = ReadJsonObjectFromEntry(archive, "install_profile.json");
         if (installProfile["install"] is null)
         {
@@ -436,6 +461,7 @@ internal static class FrontendInstallWorkflowService
             "libraries",
             DeriveLibraryPathFromName(installPath).Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(libraryOutputPath)!);
+        ReportPrepareStatus(onStatusChanged, $"正在写入 {loaderChoice.Title} 支持库…");
         using (var source = archive.GetEntry(entryPath)?.Open()
                              ?? throw new InvalidOperationException($"旧版 Forge 安装器缺少条目：{entryPath}"))
         using (var output = File.Create(libraryOutputPath))
@@ -491,13 +517,15 @@ internal static class FrontendInstallWorkflowService
         };
     }
 
-    private static JsonObject BuildStandaloneOptiFineManifest(FrontendInstallApplyRequest request)
+    private static JsonObject BuildStandaloneOptiFineManifest(
+        FrontendInstallApplyRequest request,
+        Action<string>? onStatusChanged = null)
     {
         var choice = request.OptiFineChoice
                      ?? throw new InvalidOperationException("缺少 OptiFine 选择项。");
         if (IsModernOptiFineVersion(choice))
         {
-            return BuildModernOptiFineManifest(request, choice);
+            return BuildModernOptiFineManifest(request, choice, onStatusChanged);
         }
 
         return BuildLegacyOptiFineManifest(choice);
@@ -505,7 +533,8 @@ internal static class FrontendInstallWorkflowService
 
     private static JsonObject BuildModernOptiFineManifest(
         FrontendInstallApplyRequest request,
-        FrontendInstallChoice choice)
+        FrontendInstallChoice choice,
+        Action<string>? onStatusChanged = null)
     {
         var installerUrl = choice.DownloadUrl
                            ?? throw new InvalidOperationException("缺少 OptiFine 下载地址。");
@@ -514,9 +543,13 @@ internal static class FrontendInstallWorkflowService
 
         try
         {
+            ReportPrepareStatus(onStatusChanged, "正在下载 OptiFine 安装器…");
             File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl).GetAwaiter().GetResult());
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice);
+            ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged);
+            ReportPrepareStatus(onStatusChanged, "正在执行 OptiFine 安装器…");
             RunOptiFineInstaller(installerPath, tempRoot);
+            ReportPrepareStatus(onStatusChanged, "正在复制 OptiFine 生成的支持库…");
             CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
             var generatedVersion = choice.Metadata?["nameVersion"]?.GetValue<string>();
@@ -531,6 +564,7 @@ internal static class FrontendInstallWorkflowService
                 throw new InvalidOperationException("OptiFine 安装器没有产出可读取的版本清单。");
             }
 
+            ReportPrepareStatus(onStatusChanged, "正在读取 OptiFine 生成的版本清单…");
             return ReadJsonObjectFromFile(manifestPath);
         }
         finally
@@ -580,15 +614,20 @@ internal static class FrontendInstallWorkflowService
         };
     }
 
-    private static void EnsureVanillaVersionFiles(string launcherDirectory, FrontendInstallChoice minecraftChoice)
+    private static void EnsureVanillaVersionFiles(
+        string launcherDirectory,
+        FrontendInstallChoice minecraftChoice,
+        Action<string>? onStatusChanged = null)
     {
         var manifestUrl = minecraftChoice.ManifestUrl
                           ?? throw new InvalidOperationException("缺少 Minecraft 版本清单地址。");
+        ReportPrepareStatus(onStatusChanged, $"正在读取 Minecraft {minecraftChoice.Version} 版本详情…");
         var baseManifest = ReadJsonObject(manifestUrl);
         var versionDirectory = Path.Combine(launcherDirectory, "versions", minecraftChoice.Version);
         Directory.CreateDirectory(versionDirectory);
 
         var manifestPath = Path.Combine(versionDirectory, $"{minecraftChoice.Version}.json");
+        ReportPrepareStatus(onStatusChanged, $"正在写入 Minecraft {minecraftChoice.Version} 原版清单…");
         File.WriteAllText(manifestPath, baseManifest.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
         var jarPath = Path.Combine(versionDirectory, $"{minecraftChoice.Version}.jar");
@@ -603,10 +642,12 @@ internal static class FrontendInstallWorkflowService
             throw new InvalidOperationException("缺少原版客户端下载地址。");
         }
 
+        ReportPrepareStatus(onStatusChanged, $"正在下载 Minecraft {minecraftChoice.Version} 原版客户端…");
         File.WriteAllBytes(jarPath, HttpClient.GetByteArrayAsync(clientUrl).GetAwaiter().GetResult());
         var launcherProfilesPath = Path.Combine(launcherDirectory, "launcher_profiles.json");
         if (!File.Exists(launcherProfilesPath))
         {
+            ReportPrepareStatus(onStatusChanged, "正在初始化 launcher_profiles.json…");
             File.WriteAllText(launcherProfilesPath, "{}", Utf8NoBom);
         }
     }
@@ -915,7 +956,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> GetForgeChoices(string minecraftVersion)
     {
         var root = ReadJsonArray($"https://bmclapi2.bangbang93.com/forge/minecraft/{minecraftVersion.Replace("-", "_", StringComparison.Ordinal)}");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => node is not null)
             .Select(node =>
@@ -947,13 +989,13 @@ internal static class FrontendInstallWorkflowService
                     {
                         ["minecraftVersion"] = minecraftVersion,
                         ["fileVersion"] = fileVersion,
-                        ["hash"] = installerFile["hash"]?.GetValue<string>()
+                        ["hash"] = installerFile["hash"]?.GetValue<string>(),
+                        ["releaseTime"] = ParseCatalogReleaseTime(node["modified"]?.GetValue<string>())?.ToString("O")
                     });
             })
             .Where(choice => choice is not null)
-            .Cast<FrontendInstallChoice>()
-            .Take(36)
-            .ToArray();
+            .Cast<FrontendInstallChoice>(),
+            36);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetNeoForgeChoices(string minecraftVersion)
@@ -965,11 +1007,11 @@ internal static class FrontendInstallWorkflowService
         AddNeoForgeChoices(choices, main, FrontendInstallChoiceKind.NeoForge, minecraftVersion);
         AddNeoForgeChoices(choices, legacy, FrontendInstallChoiceKind.NeoForge, minecraftVersion);
 
-        return choices
+        return SortInstallChoicesByVersionDescending(
+            choices
             .GroupBy(choice => choice.Id, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First())
-            .Take(36)
-            .ToArray();
+            .Select(group => group.First()),
+            36);
     }
 
     private static void AddNeoForgeChoices(
@@ -1056,7 +1098,8 @@ internal static class FrontendInstallWorkflowService
         }
 
         var root = ReadJsonArray("https://api.github.com/repos/CleanroomMC/Cleanroom/releases");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => !string.IsNullOrWhiteSpace(node?["tag_name"]?.GetValue<string>()))
             .Select(node =>
@@ -1072,11 +1115,12 @@ internal static class FrontendInstallWorkflowService
                     FileName: $"cleanroom-{tag}-installer.jar",
                     Metadata: new JsonObject
                     {
-                        ["minecraftVersion"] = minecraftVersion
+                        ["minecraftVersion"] = minecraftVersion,
+                        ["releaseTime"] = ParseCatalogReleaseTime(node["published_at"]?.GetValue<string>())?.ToString("O")
                     });
             })
-            .Take(18)
-            .ToArray();
+            .Cast<FrontendInstallChoice>(),
+            18);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetFabricLoaderChoices(string minecraftVersion)
@@ -1098,7 +1142,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> GetQuiltLoaderChoices(string minecraftVersion)
     {
         var root = ReadJsonArray($"https://meta.quiltmc.org/v3/versions/loader/{minecraftVersion}");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => node?["loader"] is JsonObject)
             .Select(node =>
@@ -1114,9 +1159,8 @@ internal static class FrontendInstallWorkflowService
                     Kind: FrontendInstallChoiceKind.QuiltLoader,
                     ManifestUrl: profileUrl);
             })
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version))
-            .Take(18)
-            .ToArray();
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)),
+            18);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetLabyModChoices(string minecraftVersion)
@@ -1164,7 +1208,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> GetOptiFineChoices(string minecraftVersion)
     {
         var root = ReadJsonArray("https://bmclapi2.bangbang93.com/optifine/versionList");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => string.Equals(node?["mcversion"]?.GetValue<string>(), minecraftVersion, StringComparison.OrdinalIgnoreCase))
             .Select(node =>
@@ -1212,8 +1257,8 @@ internal static class FrontendInstallWorkflowService
                         ["isPreview"] = patch.Contains("pre", StringComparison.OrdinalIgnoreCase)
                     });
             })
-            .Take(24)
-            .ToArray();
+            .Cast<FrontendInstallChoice>(),
+            24);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetLiteLoaderChoices(string minecraftVersion)
@@ -1324,12 +1369,11 @@ internal static class FrontendInstallWorkflowService
                 .Where(node => node is not null)
                 .Select(ToModrinthChoice)
                 .Where(choice => choice is not null)
-                .Cast<FrontendInstallChoice>()
-                .Take(18)
-                .ToArray();
-            if (choices.Length > 0)
+                .Cast<FrontendInstallChoice>();
+            var orderedChoices = SortInstallChoicesDescending(choices, 18);
+            if (orderedChoices.Count > 0)
             {
-                return choices;
+                return orderedChoices;
             }
         }
 
@@ -1366,7 +1410,11 @@ internal static class FrontendInstallWorkflowService
             Version: title,
             Kind: FrontendInstallChoiceKind.ModFile,
             DownloadUrl: primaryFile["url"]?.GetValue<string>(),
-            FileName: primaryFile["filename"]?.GetValue<string>());
+            FileName: primaryFile["filename"]?.GetValue<string>(),
+            Metadata: new JsonObject
+            {
+                ["releaseTime"] = ParseCatalogReleaseTime(published)?.ToString("O")
+            });
     }
 
     private static IReadOnlyList<FrontendInstallChoice> ReadLoaderChoices(
@@ -1375,7 +1423,8 @@ internal static class FrontendInstallWorkflowService
         string prefix)
     {
         var root = ReadJsonArray(url);
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => node?["loader"] is JsonObject)
             .Select(node =>
@@ -1390,9 +1439,8 @@ internal static class FrontendInstallWorkflowService
                     Kind: kind,
                     ManifestUrl: $"{url.TrimEnd('/')}/{version}/profile/json");
             })
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version))
-            .Take(18)
-            .ToArray();
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)),
+            18);
     }
 
     private static IEnumerable<string> GetVersionCandidates(string minecraftVersion, bool allowFallback)
@@ -1566,6 +1614,14 @@ internal static class FrontendInstallWorkflowService
     {
         return JsonNode.Parse(source.ToJsonString())?.AsObject()
                ?? throw new InvalidOperationException("复制安装清单失败。");
+    }
+
+    private static void ReportPrepareStatus(Action<string>? onStatusChanged, string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            onStatusChanged?.Invoke(message);
+        }
     }
 
     private static string BuildModrinthVersionUrl(string projectId, string minecraftVersion, IReadOnlyList<string>? loaders)
@@ -1753,6 +1809,206 @@ internal static class FrontendInstallWorkflowService
             "alpha" => "预览版",
             _ => rawValue
         };
+    }
+
+    private static IReadOnlyList<FrontendInstallChoice> SortInstallChoicesDescending(
+        IEnumerable<FrontendInstallChoice> choices,
+        int? maxCount = null)
+    {
+        var ordered = choices.ToList();
+        ordered.Sort(CompareInstallChoicesDescending);
+        if (maxCount is int limit && ordered.Count > limit)
+        {
+            ordered.RemoveRange(limit, ordered.Count - limit);
+        }
+
+        return ordered;
+    }
+
+    private static IReadOnlyList<FrontendInstallChoice> SortInstallChoicesByVersionDescending(
+        IEnumerable<FrontendInstallChoice> choices,
+        int? maxCount = null)
+    {
+        var ordered = choices.ToList();
+        ordered.Sort((left, right) =>
+        {
+            var versionCompare = CompareLooseVersions(right.Version, left.Version);
+            if (versionCompare != 0)
+            {
+                return versionCompare;
+            }
+
+            return CompareInstallChoicesDescending(left, right);
+        });
+
+        if (maxCount is int limit && ordered.Count > limit)
+        {
+            ordered.RemoveRange(limit, ordered.Count - limit);
+        }
+
+        return ordered;
+    }
+
+    private static int CompareInstallChoicesDescending(FrontendInstallChoice? left, FrontendInstallChoice? right)
+    {
+        if (ReferenceEquals(left, right))
+        {
+            return 0;
+        }
+
+        if (left is null)
+        {
+            return 1;
+        }
+
+        if (right is null)
+        {
+            return -1;
+        }
+
+        var leftReleaseTime = GetInstallChoiceReleaseTime(left);
+        var rightReleaseTime = GetInstallChoiceReleaseTime(right);
+        if (leftReleaseTime is not null && rightReleaseTime is not null)
+        {
+            var releaseCompare = rightReleaseTime.Value.CompareTo(leftReleaseTime.Value);
+            if (releaseCompare != 0)
+            {
+                return releaseCompare;
+            }
+        }
+
+        var versionCompare = CompareLooseVersions(right.Version, left.Version);
+        if (versionCompare != 0)
+        {
+            return versionCompare;
+        }
+
+        return string.Compare(right.Title, left.Title, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateTimeOffset? GetInstallChoiceReleaseTime(FrontendInstallChoice choice)
+    {
+        var rawValue = choice.Metadata?["releaseTime"]?.GetValue<string>();
+        return DateTimeOffset.TryParse(rawValue, out var parsed) ? parsed : null;
+    }
+
+    private static int CompareLooseVersions(string? left, string? right)
+    {
+        var (leftCore, leftSuffix) = SplitVersionCoreAndSuffix(left);
+        var (rightCore, rightSuffix) = SplitVersionCoreAndSuffix(right);
+
+        var coreCompare = CompareVersionNumberSequences(
+            ExtractVersionNumbers(leftCore),
+            ExtractVersionNumbers(rightCore));
+        if (coreCompare != 0)
+        {
+            return coreCompare;
+        }
+
+        var stabilityCompare = GetVersionStabilityRank(leftSuffix).CompareTo(GetVersionStabilityRank(rightSuffix));
+        if (stabilityCompare != 0)
+        {
+            return stabilityCompare;
+        }
+
+        var suffixCompare = CompareVersionNumberSequences(
+            ExtractVersionNumbers(leftSuffix),
+            ExtractVersionNumbers(rightSuffix));
+        if (suffixCompare != 0)
+        {
+            return suffixCompare;
+        }
+
+        return string.Compare(
+            NormalizeVersionText(leftSuffix),
+            NormalizeVersionText(rightSuffix),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static (string Core, string Suffix) SplitVersionCoreAndSuffix(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        var match = Regex.Match(
+            rawValue,
+            @"alpha|beta|preview|pre|rc|snapshot|nightly|dev|experimental|test",
+            RegexOptions.IgnoreCase);
+        return !match.Success
+            ? (rawValue, string.Empty)
+            : (rawValue[..match.Index], rawValue[match.Index..]);
+    }
+
+    private static IReadOnlyList<long> ExtractVersionNumbers(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return [];
+        }
+
+        return Regex.Matches(rawValue, @"\d+")
+            .Select(match => long.TryParse(match.Value, out var value) ? value : 0L)
+            .ToArray();
+    }
+
+    private static int CompareVersionNumberSequences(
+        IReadOnlyList<long> left,
+        IReadOnlyList<long> right)
+    {
+        var maxLength = Math.Max(left.Count, right.Count);
+        for (var index = 0; index < maxLength; index++)
+        {
+            var leftValue = index < left.Count ? left[index] : 0L;
+            var rightValue = index < right.Count ? right[index] : 0L;
+            var compare = leftValue.CompareTo(rightValue);
+            if (compare != 0)
+            {
+                return compare;
+            }
+        }
+
+        return 0;
+    }
+
+    private static int GetVersionStabilityRank(string? suffix)
+    {
+        if (string.IsNullOrWhiteSpace(suffix))
+        {
+            return 5;
+        }
+
+        var normalized = suffix.ToLowerInvariant();
+        if (normalized.Contains("rc", StringComparison.Ordinal))
+        {
+            return 4;
+        }
+
+        if (normalized.Contains("preview", StringComparison.Ordinal)
+            || normalized.Contains("pre", StringComparison.Ordinal))
+        {
+            return 3;
+        }
+
+        if (normalized.Contains("beta", StringComparison.Ordinal))
+        {
+            return 2;
+        }
+
+        if (normalized.Contains("alpha", StringComparison.Ordinal))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static string NormalizeVersionText(string? rawValue)
+    {
+        return string.IsNullOrWhiteSpace(rawValue)
+            ? string.Empty
+            : rawValue.Trim().Replace('_', '-');
     }
 
     private static bool IsModernForgelikeChoice(FrontendInstallChoice choice)

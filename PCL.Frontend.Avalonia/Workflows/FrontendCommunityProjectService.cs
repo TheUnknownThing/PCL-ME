@@ -553,7 +553,8 @@ internal static class FrontendCommunityProjectService
             !string.IsNullOrWhiteSpace(GetString(file, "url")),
             gameVersions,
             loaders,
-            publishedAt?.ToUnixTimeSeconds() ?? 0);
+            publishedAt?.ToUnixTimeSeconds() ?? 0,
+            TranslateModrinthReleaseChannel(GetString(version, "version_type")));
     }
 
     private static FrontendCommunityProjectReleaseEntry? BuildCurseForgeReleaseEntry(JsonObject file, string? website)
@@ -599,12 +600,33 @@ internal static class FrontendCommunityProjectService
             !string.IsNullOrWhiteSpace(downloadUrl),
             gameVersions,
             loaders,
-            publishedAt?.ToUnixTimeSeconds() ?? 0);
+            publishedAt?.ToUnixTimeSeconds() ?? 0,
+            TranslateCurseForgeReleaseChannel(GetInt(file, "releaseType")));
     }
 
     private static string BuildCurseForgeMediaUrl(int fileId, string fileName)
     {
         return $"https://mediafiles.forgecdn.net/files/{fileId / 1000}/{fileId % 1000:D3}/{Uri.EscapeDataString(fileName)}";
+    }
+
+    private static FrontendCommunityProjectReleaseChannel TranslateModrinthReleaseChannel(string? value)
+    {
+        return value?.Trim().ToLowerInvariant() switch
+        {
+            "alpha" => FrontendCommunityProjectReleaseChannel.Alpha,
+            "beta" => FrontendCommunityProjectReleaseChannel.Beta,
+            _ => FrontendCommunityProjectReleaseChannel.Release
+        };
+    }
+
+    private static FrontendCommunityProjectReleaseChannel TranslateCurseForgeReleaseChannel(int value)
+    {
+        return value switch
+        {
+            3 => FrontendCommunityProjectReleaseChannel.Alpha,
+            2 => FrontendCommunityProjectReleaseChannel.Beta,
+            _ => FrontendCommunityProjectReleaseChannel.Release
+        };
     }
 
     private static IReadOnlyList<FrontendDownloadCatalogEntry> BuildModrinthLinkEntries(JsonObject project, string? website)

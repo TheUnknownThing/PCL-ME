@@ -35,6 +35,7 @@ public static class TaskCenter
             OnCancel = cancelable == null ? null : (() => cancelable.Cancel()),
             OnPause = pausable == null ? null : (() => pausable.Pause()),
         };
+        TouchModel(model, updateStateSince: false);
 
         if (telemetry != null)
         {
@@ -47,6 +48,7 @@ public static class TaskCenter
             LogWrapper.Trace("TaskCenter", $"{instance.Title}: state changed ({state}): {message}");
             model.State = state;
             model.StateMessage = message;
+            TouchModel(model, state);
         };
 
         // progress event
@@ -55,12 +57,17 @@ public static class TaskCenter
             progressive.ProgressChanged += progress =>
             {
                 model.Progress = Math.Clamp(progress, 0.0, 1.0);
+                TouchModel(model, updateStateSince: false);
             };
         }
 
         if (telemetry != null)
         {
-            telemetry.TelemetryChanged += snapshot => ApplyTelemetry(model, snapshot);
+            telemetry.TelemetryChanged += snapshot =>
+            {
+                ApplyTelemetry(model, snapshot);
+                TouchModel(model, updateStateSince: false);
+            };
         }
 
         // group events
@@ -71,10 +78,15 @@ public static class TaskCenter
                 var taskModel = _InitModel(task);
                 _ModelMap.Add(task, taskModel);
                 model.Children.Add(taskModel);
+                TouchModel(model, updateStateSince: false);
             };
             group.RemoveTask += task =>
             {
-                if (_ModelMap.TryGetValue(task, out var taskModel)) model.Children.Remove(taskModel);
+                if (_ModelMap.TryGetValue(task, out var taskModel))
+                {
+                    model.Children.Remove(taskModel);
+                    TouchModel(model, updateStateSince: false);
+                }
             };
         }
 
@@ -87,6 +99,32 @@ public static class TaskCenter
         model.SpeedText = snapshot.SpeedText;
         model.RemainingFileCount = snapshot.RemainingFileCount;
         model.RemainingThreadCount = snapshot.RemainingThreadCount;
+    }
+
+    private static void TouchModel(TaskModel model, TaskState? state = null, bool updateStateSince = true)
+    {
+        var now = DateTimeOffset.UtcNow;
+        model.LastUpdatedAt = now;
+
+        if (state is null)
+        {
+            return;
+        }
+
+        if (updateStateSince)
+        {
+            model.StateSince = now;
+        }
+
+        if (state == TaskState.Running)
+        {
+            model.StartedAt ??= now;
+            model.FinishedAt = null;
+        }
+        else if (state is TaskState.Success or TaskState.Canceled or TaskState.Failed)
+        {
+            model.FinishedAt ??= now;
+        }
     }
 
     /// <summary>

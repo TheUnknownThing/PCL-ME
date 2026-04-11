@@ -34,6 +34,13 @@
             Text="{Binding Summary}"
             TextWrapping="Wrap" />
 
+        <TextBlock
+            Foreground="#8A96A8"
+            FontSize="10.5"
+            IsVisible="{Binding HasActivityText}"
+            Text="{Binding ActivityText}"
+            TextWrapping="Wrap" />
+
         <StackPanel IsVisible="{Binding HasProgress}" Spacing="4">
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Foreground="#7E8FA5" FontSize="11.5" Text="安装进度" />

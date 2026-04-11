@@ -158,6 +158,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _isLaunchInProgress;
     private bool _isLaunchProfileActionInProgress;
     private LaunchProfileSurfaceKind _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
+    private int _launchProfileCompositionRefreshVersion;
     private bool _pendingLaunchAfterPrompt;
     private bool _showLaunchLog;
     private readonly List<string> _launchLogLines = [];
