@@ -94,8 +94,6 @@ internal sealed partial class FrontendShellViewModel
         ReloadToolsComposition();
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
-        RaisePropertyChanged(nameof(GameLinkWorldOptions));
-        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
     }
 
     private void InitializeActiveInstanceSurface()

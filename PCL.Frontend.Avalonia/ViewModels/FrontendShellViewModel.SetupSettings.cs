@@ -2,48 +2,6 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public IReadOnlyList<string> LinkProtocolPreferenceOptions { get; } =
-    [
-        "TCP",
-        "UDP"
-    ];
-
-    public string LinkUsername
-    {
-        get => _linkUsername;
-        set => SetProperty(ref _linkUsername, value);
-    }
-
-    public int SelectedProtocolPreferenceIndex
-    {
-        get => _selectedProtocolPreferenceIndex;
-        set => SetProperty(ref _selectedProtocolPreferenceIndex, Math.Clamp(value, 0, LinkProtocolPreferenceOptions.Count - 1));
-    }
-
-    public bool PreferLowestLatencyPath
-    {
-        get => _preferLowestLatencyPath;
-        set => SetProperty(ref _preferLowestLatencyPath, value);
-    }
-
-    public bool TryPunchSymmetricNat
-    {
-        get => _tryPunchSymmetricNat;
-        set => SetProperty(ref _tryPunchSymmetricNat, value);
-    }
-
-    public bool AllowIpv6Communication
-    {
-        get => _allowIpv6Communication;
-        set => SetProperty(ref _allowIpv6Communication, value);
-    }
-
-    public bool EnableLinkCliOutput
-    {
-        get => _enableLinkCliOutput;
-        set => SetProperty(ref _enableLinkCliOutput, value);
-    }
-
     public IReadOnlyList<string> DownloadSourceOptions { get; } =
     [
         "尽量使用镜像源",

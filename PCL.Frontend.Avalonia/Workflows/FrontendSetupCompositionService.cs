@@ -22,7 +22,6 @@ internal static class FrontendSetupCompositionService
             BuildLogState(paths),
             BuildUpdateState(sharedConfig, localConfig),
             BuildLaunchState(sharedConfig, localConfig),
-            BuildGameLinkState(sharedConfig),
             BuildGameManageState(sharedConfig),
             BuildLauncherMiscState(paths, sharedConfig, localConfig),
             BuildJavaState(sharedConfig, localConfig),
@@ -182,17 +181,6 @@ internal static class FrontendSetupCompositionService
             UseJavaExecutable: ReadValue(sharedConfig, "LaunchAdvanceNoJavaw", false),
             MicrosoftAuthIndex: ReadValue(sharedConfig, "LoginMsAuthType", 1),
             PreferredIpStackIndex: ReadValue(sharedConfig, "LaunchPreferredIpStack", 1));
-    }
-
-    private static FrontendSetupGameLinkState BuildGameLinkState(JsonFileProvider sharedConfig)
-    {
-        return new FrontendSetupGameLinkState(
-            Username: ReadValue(sharedConfig, "LinkUsername", string.Empty),
-            ProtocolPreferenceIndex: ReadValue(sharedConfig, "LinkProtocolPreference", 0),
-            PreferLowestLatencyPath: ReadValue(sharedConfig, "LinkLatencyFirstMode", true),
-            TryPunchSymmetricNat: ReadValue(sharedConfig, "LinkTryPunchSym", true),
-            AllowIpv6Communication: ReadValue(sharedConfig, "LinkEnableIPv6", true),
-            EnableCliOutput: ReadValue(sharedConfig, "LinkEnableCliOutput", false));
     }
 
     private static FrontendSetupGameManageState BuildGameManageState(JsonFileProvider sharedConfig)

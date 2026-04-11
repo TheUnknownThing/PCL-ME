@@ -24,7 +24,6 @@ internal sealed partial class FrontendShellViewModel
     private FrontendSetupComposition _setupComposition;
     private FrontendInstanceComposition _instanceComposition;
     private FrontendToolsComposition _toolsComposition = new(
-        new FrontendToolsGameLinkState(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, [], 0, [], []),
         new FrontendToolsHelpState([]),
         new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
     private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
@@ -66,7 +65,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _showUpdateDetailCommand;
     private readonly ActionCommand _checkUpdateAgainCommand;
     private readonly ActionCommand _openFullChangelogCommand;
-    private readonly ActionCommand _resetGameLinkSettingsCommand;
     private readonly ActionCommand _resetGameManageSettingsCommand;
     private readonly ActionCommand _resetLauncherMiscSettingsCommand;
     private readonly ActionCommand _exportSettingsCommand;
@@ -89,24 +87,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _viewHomepageTutorialCommand;
     private readonly ActionCommand _openHomepageMarketCommand;
     private readonly ActionCommand _toggleLaunchAdvancedOptionsCommand;
-    private readonly ActionCommand _acceptGameLinkTermsCommand;
-    private readonly ActionCommand _testLobbyNatCommand;
-    private readonly ActionCommand _loginNatayarkAccountCommand;
-    private readonly ActionCommand _joinLobbyCommand;
-    private readonly ActionCommand _pasteLobbyIdCommand;
-    private readonly ActionCommand _clearLobbyIdCommand;
-    private readonly ActionCommand _createLobbyCommand;
-    private readonly ActionCommand _refreshLobbyWorldsCommand;
-    private readonly ActionCommand _inputLobbyPortCommand;
-    private readonly ActionCommand _copyLobbyVirtualIpCommand;
-    private readonly ActionCommand _copyActiveLobbyIdCommand;
-    private readonly ActionCommand _exitLobbyCommand;
-    private readonly ActionCommand _openLobbyReportCommand;
-    private readonly ActionCommand _openNatayarkPolicyCommand;
-    private readonly ActionCommand _openLobbyPrivacyPolicyCommand;
-    private readonly ActionCommand _disableGameLinkFeatureCommand;
-    private readonly ActionCommand _openGameLinkFaqCommand;
-    private readonly ActionCommand _openEasyTierWebsiteCommand;
     private readonly ActionCommand _openPysioWebsiteCommand;
     private readonly ActionCommand _selectDownloadFolderCommand;
     private readonly ActionCommand _startCustomDownloadCommand;
@@ -175,25 +155,6 @@ internal sealed partial class FrontendShellViewModel
     private string _lastUpdateCheckSignature = string.Empty;
     private bool _isRefreshingFeedback;
     private DateTimeOffset _lastFeedbackRefreshUtc;
-    private string _linkUsername = string.Empty;
-    private int _selectedProtocolPreferenceIndex;
-    private bool _preferLowestLatencyPath = true;
-    private bool _tryPunchSymmetricNat = true;
-    private bool _allowIpv6Communication = true;
-    private bool _enableLinkCliOutput;
-    private string _gameLinkAnnouncement = "正在连接到大厅服务器...";
-    private string _gameLinkNatStatus = "点击测试";
-    private string _gameLinkAccountStatus = "点击登录 Natayark 账户";
-    private string _gameLinkLobbyId = string.Empty;
-    private string _gameLinkSessionPing = "-ms";
-    private string _gameLinkSessionId = "尚未创建大厅";
-    private string _gameLinkConnectionType = "连接中";
-    private string _gameLinkConnectedUserName = "未登录";
-    private string _gameLinkConnectedUserType = "大厅访客";
-    private IReadOnlyList<string> _gameLinkWorldOptions = ["未检测到可用存档"];
-    private int _selectedGameLinkWorldIndex;
-    private int _gameLinkSessionPort = 25565;
-    private bool _gameLinkSessionIsHost;
     private string _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
     private string _toolDownloadUserAgent = "PCL-CE-Avalonia/1.0";
     private string _toolDownloadFolder = "/Users/demo/Downloads/PCL";
@@ -346,7 +307,7 @@ internal sealed partial class FrontendShellViewModel
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
-        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _instanceComposition);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths);
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         _startupPlan = new StartupAvaloniaPlan(
@@ -392,7 +353,6 @@ internal sealed partial class FrontendShellViewModel
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
         _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/TheUnknownThing/PCL-CE/releases");
-        _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
@@ -417,24 +377,6 @@ internal sealed partial class FrontendShellViewModel
             new LauncherFrontendRoute(LauncherFrontendPageKey.HomePageMarket),
             "已打开主页市场。"));
         _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
-        _acceptGameLinkTermsCommand = new ActionCommand(AcceptGameLinkTerms);
-        _testLobbyNatCommand = new ActionCommand(() => _ = TestLobbyNatAsync());
-        _loginNatayarkAccountCommand = new ActionCommand(() => _ = LoginNatayarkAccountAsync());
-        _joinLobbyCommand = new ActionCommand(JoinLobby);
-        _pasteLobbyIdCommand = new ActionCommand(() => _ = PasteLobbyIdAsync());
-        _clearLobbyIdCommand = new ActionCommand(ClearLobbyId);
-        _createLobbyCommand = new ActionCommand(CreateLobby);
-        _refreshLobbyWorldsCommand = new ActionCommand(RefreshLobbyWorlds);
-        _inputLobbyPortCommand = new ActionCommand(() => _ = InputLobbyPortAsync());
-        _copyLobbyVirtualIpCommand = new ActionCommand(() => _ = CopyLobbyVirtualIpAsync());
-        _copyActiveLobbyIdCommand = new ActionCommand(() => _ = CopyActiveLobbyIdAsync());
-        _exitLobbyCommand = new ActionCommand(() => _ = ExitLobbyAsync());
-        _openLobbyReportCommand = CreateLinkCommand("违法违规举报", "https://qm.qq.com/q/yaubjC6C5y");
-        _openNatayarkPolicyCommand = CreateLinkCommand("Natayark Network 用户协议与隐私政策", "https://account.naids.com/policy");
-        _openLobbyPrivacyPolicyCommand = CreateLinkCommand("大厅隐私协议", "https://www.pclc.cc/privacy/personal-info-brief.html");
-        _disableGameLinkFeatureCommand = new ActionCommand(() => _ = DisableGameLinkFeatureAsync());
-        _openGameLinkFaqCommand = new ActionCommand(() => _ = OpenGameLinkFaqAsync());
-        _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
         _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
         _selectDownloadFolderCommand = new ActionCommand(() => _ = SelectDownloadFolderAsync());
         _startCustomDownloadCommand = new ActionCommand(() => _ = StartCustomDownloadAsync());

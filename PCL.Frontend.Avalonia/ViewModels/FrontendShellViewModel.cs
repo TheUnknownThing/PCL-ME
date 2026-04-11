@@ -36,10 +36,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<SimpleListEntryViewModel> LogEntries { get; } = [];
 
-    public ObservableCollection<SimpleListEntryViewModel> GameLinkPolicyEntries { get; } = [];
-
-    public ObservableCollection<SimpleListEntryViewModel> GameLinkPlayerEntries { get; } = [];
-
     public ObservableCollection<ToolboxActionViewModel> ToolboxActions { get; } = [];
 
     public ObservableCollection<SurfaceNoticeViewModel> DownloadInstallHints { get; } = [];

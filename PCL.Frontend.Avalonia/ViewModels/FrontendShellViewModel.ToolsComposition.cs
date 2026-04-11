@@ -29,7 +29,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadToolsComposition()
     {
-        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _instanceComposition));
+        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths));
     }
 
     private void PersistToolsSetting(string? propertyName)

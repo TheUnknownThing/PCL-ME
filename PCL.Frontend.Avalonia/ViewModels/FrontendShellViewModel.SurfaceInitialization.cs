@@ -46,7 +46,6 @@ internal sealed partial class FrontendShellViewModel
             new AboutEntryViewModel("MC 百科", "提供了 Mod 名称的中文翻译和更多相关信息！", LoadLauncherBitmap("Images", "Heads", "wiki.png"), "打开百科", CreateLinkCommand("打开 MC 百科", "https://www.mcmod.cn")),
             new AboutEntryViewModel("Pysio @ Akaere Network", "提供了 PCL-ME 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), "转到博客", CreateLinkCommand("打开 Pysio 博客", "https://www.pysio.online")),
             new AboutEntryViewModel("云默安 @ 至远光辉", "提供了 PCL-ME 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), "打开网站", CreateLinkCommand("打开至远光辉", "https://www.zyghit.cn")),
-            new AboutEntryViewModel("EasyTier", "提供了联机模块", LoadLauncherBitmap("Images", "Heads", "EasyTier.png"), "打开网站", CreateLinkCommand("打开 EasyTier", "https://easytier.cn")),
             new AboutEntryViewModel("z0z0r4", "提供了 MCIM 中国 Mod 下载镜像源和帮助库图床！", LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
             new AboutEntryViewModel("00ll00", "提供了 Java Launch Wrapper 和一些重要服务支持！", LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
             new AboutEntryViewModel("Patrick", "设计并制作了 PCL 图标，让龙猫从做图标的水深火热中得到了解脱……", LoadLauncherBitmap("Images", "Heads", "Patrick.png"), null, null),
@@ -109,43 +108,6 @@ internal sealed partial class FrontendShellViewModel
         _useJavaExecutable = _setupComposition.Launch.UseJavaExecutable;
         _selectedLaunchMicrosoftAuthIndex = _setupComposition.Launch.MicrosoftAuthIndex;
         _selectedLaunchPreferredIpStackIndex = _setupComposition.Launch.PreferredIpStackIndex;
-    }
-
-    private void InitializeToolsGameLinkSurface()
-    {
-        var gameLinkState = _toolsComposition.GameLink;
-        _gameLinkWorldOptions = gameLinkState.WorldOptions;
-        _gameLinkAnnouncement = gameLinkState.Announcement;
-        _gameLinkNatStatus = gameLinkState.NatStatus;
-        _gameLinkAccountStatus = gameLinkState.AccountStatus;
-        _gameLinkLobbyId = gameLinkState.LobbyId;
-        _gameLinkSessionPing = gameLinkState.SessionPing;
-        _gameLinkSessionId = gameLinkState.SessionId;
-        _gameLinkConnectionType = gameLinkState.ConnectionType;
-        _gameLinkConnectedUserName = gameLinkState.ConnectedUserName;
-        _gameLinkConnectedUserType = gameLinkState.ConnectedUserType;
-        _selectedGameLinkWorldIndex = Math.Clamp(gameLinkState.SelectedWorldIndex, 0, GameLinkWorldOptions.Count - 1);
-
-        ReplaceItems(
-            GameLinkPolicyEntries,
-            gameLinkState.PolicyEntries.Select(entry =>
-                new SimpleListEntryViewModel(
-                    entry.Title,
-                    entry.Summary,
-                    string.Equals(entry.Title, "PCL-ME 大厅相关隐私政策", StringComparison.Ordinal)
-                        ? _openLobbyPrivacyPolicyCommand
-                        : _openNatayarkPolicyCommand)));
-
-        ReplaceItems(
-            GameLinkPlayerEntries,
-            gameLinkState.PlayerEntries.Select(entry =>
-                new SimpleListEntryViewModel(
-                    entry.Title,
-                    entry.Summary,
-                    new ActionCommand(() => AddActivity("查看大厅成员", entry.Title)))));
-
-        InitializeLobbyRuntimeBridge();
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
     }
 
     private void InitializeToolsTestSurface()
@@ -345,16 +307,6 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(DownloadFavoriteSections, sections);
         RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
-    }
-
-    private void InitializeGameLinkSurface()
-    {
-        _linkUsername = _setupComposition.GameLink.Username;
-        _selectedProtocolPreferenceIndex = _setupComposition.GameLink.ProtocolPreferenceIndex;
-        _preferLowestLatencyPath = _setupComposition.GameLink.PreferLowestLatencyPath;
-        _tryPunchSymmetricNat = _setupComposition.GameLink.TryPunchSymmetricNat;
-        _allowIpv6Communication = _setupComposition.GameLink.AllowIpv6Communication;
-        _enableLinkCliOutput = _setupComposition.GameLink.EnableCliOutput;
     }
 
     private void InitializeGameManageSurface()
@@ -831,14 +783,4 @@ internal sealed partial class FrontendShellViewModel
         });
     }
 
-    private void RefreshGameLinkWorldOptions()
-    {
-        var options = _instanceComposition.World.Entries
-            .Select((entry, index) => $"{entry.Title} - {25565 + index}")
-            .ToArray();
-        _gameLinkWorldOptions = options.Length == 0
-            ? ["未检测到可用存档"]
-            : options;
-        _selectedGameLinkWorldIndex = Math.Clamp(_selectedGameLinkWorldIndex, 0, _gameLinkWorldOptions.Count - 1);
-    }
 }

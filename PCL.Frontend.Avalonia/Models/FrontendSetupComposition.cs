@@ -5,7 +5,6 @@ internal sealed record FrontendSetupComposition(
     FrontendSetupLogState Log,
     FrontendSetupUpdateState Update,
     FrontendSetupLaunchState Launch,
-    FrontendSetupGameLinkState GameLink,
     FrontendSetupGameManageState GameManage,
     FrontendSetupLauncherMiscState LauncherMisc,
     FrontendSetupJavaState Java,
@@ -49,14 +48,6 @@ internal sealed record FrontendSetupLaunchState(
     bool UseJavaExecutable,
     int MicrosoftAuthIndex,
     int PreferredIpStackIndex);
-
-internal sealed record FrontendSetupGameLinkState(
-    string Username,
-    int ProtocolPreferenceIndex,
-    bool PreferLowestLatencyPath,
-    bool TryPunchSymmetricNat,
-    bool AllowIpv6Communication,
-    bool EnableCliOutput);
 
 internal sealed record FrontendSetupGameManageState(
     int DownloadSourceIndex,

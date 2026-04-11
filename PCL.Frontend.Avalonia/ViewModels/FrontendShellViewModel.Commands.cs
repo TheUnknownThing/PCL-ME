@@ -66,8 +66,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand OpenFullChangelogCommand => _openFullChangelogCommand;
 
-    public ActionCommand ResetGameLinkSettingsCommand => _resetGameLinkSettingsCommand;
-
     public ActionCommand ResetGameManageSettingsCommand => _resetGameManageSettingsCommand;
 
     public ActionCommand ResetLauncherMiscSettingsCommand => _resetLauncherMiscSettingsCommand;
@@ -111,42 +109,6 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand OpenHomepageMarketCommand => _openHomepageMarketCommand;
 
     public ActionCommand ToggleLaunchAdvancedOptionsCommand => _toggleLaunchAdvancedOptionsCommand;
-
-    public ActionCommand AcceptGameLinkTermsCommand => _acceptGameLinkTermsCommand;
-
-    public ActionCommand TestLobbyNatCommand => _testLobbyNatCommand;
-
-    public ActionCommand LoginNatayarkAccountCommand => _loginNatayarkAccountCommand;
-
-    public ActionCommand JoinLobbyCommand => _joinLobbyCommand;
-
-    public ActionCommand PasteLobbyIdCommand => _pasteLobbyIdCommand;
-
-    public ActionCommand ClearLobbyIdCommand => _clearLobbyIdCommand;
-
-    public ActionCommand CreateLobbyCommand => _createLobbyCommand;
-
-    public ActionCommand RefreshLobbyWorldsCommand => _refreshLobbyWorldsCommand;
-
-    public ActionCommand InputLobbyPortCommand => _inputLobbyPortCommand;
-
-    public ActionCommand CopyLobbyVirtualIpCommand => _copyLobbyVirtualIpCommand;
-
-    public ActionCommand CopyActiveLobbyIdCommand => _copyActiveLobbyIdCommand;
-
-    public ActionCommand ExitLobbyCommand => _exitLobbyCommand;
-
-    public ActionCommand OpenLobbyReportCommand => _openLobbyReportCommand;
-
-    public ActionCommand OpenNatayarkPolicyCommand => _openNatayarkPolicyCommand;
-
-    public ActionCommand OpenLobbyPrivacyPolicyCommand => _openLobbyPrivacyPolicyCommand;
-
-    public ActionCommand DisableGameLinkFeatureCommand => _disableGameLinkFeatureCommand;
-
-    public ActionCommand OpenGameLinkFaqCommand => _openGameLinkFaqCommand;
-
-    public ActionCommand OpenEasyTierWebsiteCommand => _openEasyTierWebsiteCommand;
 
     public ActionCommand OpenPysioWebsiteCommand => _openPysioWebsiteCommand;
 

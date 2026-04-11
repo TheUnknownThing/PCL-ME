@@ -38,16 +38,6 @@ internal sealed partial class FrontendShellViewModel
         "LaunchArgumentJavaSelect"
     ];
 
-    private static readonly string[] GameLinkResetKeys =
-    [
-        "LinkUsername",
-        "LinkProtocolPreference",
-        "LinkLatencyFirstMode",
-        "LinkTryPunchSym",
-        "LinkEnableIPv6",
-        "LinkEnableCliOutput"
-    ];
-
     private static readonly string[] GameManageResetKeys =
     [
         "ToolDownloadThread",
@@ -136,11 +126,9 @@ internal sealed partial class FrontendShellViewModel
         "UiHiddenSetupGameManage",
         "UiHiddenSetupJava",
         "UiHiddenSetupUpdate",
-        "UiHiddenSetupGameLink",
         "UiHiddenSetupAbout",
         "UiHiddenSetupFeedback",
         "UiHiddenSetupLog",
-        "UiHiddenToolsGameLink",
         "UiHiddenToolsHelp",
         "UiHiddenToolsTest",
         "UiHiddenVersionEdit",
@@ -177,7 +165,6 @@ internal sealed partial class FrontendShellViewModel
                 InitializeLogEntries();
                 InitializeUpdateSurface();
                 InitializeLaunchSettingsSurface();
-                InitializeGameLinkSurface();
                 InitializeGameManageSurface();
                 InitializeLauncherMiscSurface();
                 InitializeJavaSurface();
@@ -219,10 +206,6 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendSubpageKey.SetupUpdate:
                 InitializeUpdateSurface();
                 break;
-            case LauncherFrontendSubpageKey.SetupLink:
-            case LauncherFrontendSubpageKey.SetupGameLink:
-                InitializeGameLinkSurface();
-                break;
             case LauncherFrontendSubpageKey.SetupGameManage:
                 InitializeGameManageSurface();
                 break;
@@ -259,15 +242,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(SelectedUpdateChannelIndex));
                 RaisePropertyChanged(nameof(SelectedUpdateModeIndex));
                 RaiseUpdateSurfaceProperties();
-                break;
-            case LauncherFrontendSubpageKey.SetupLink:
-            case LauncherFrontendSubpageKey.SetupGameLink:
-                RaisePropertyChanged(nameof(LinkUsername));
-                RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
-                RaisePropertyChanged(nameof(PreferLowestLatencyPath));
-                RaisePropertyChanged(nameof(TryPunchSymmetricNat));
-                RaisePropertyChanged(nameof(AllowIpv6Communication));
-                RaisePropertyChanged(nameof(EnableLinkCliOutput));
                 break;
             case LauncherFrontendSubpageKey.SetupGameManage:
                 RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
@@ -489,24 +463,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedLaunchPreferredIpStackIndex):
                 _shellActionService.PersistSharedValue("LaunchPreferredIpStack", SelectedLaunchPreferredIpStackIndex);
-                break;
-            case nameof(LinkUsername):
-                _shellActionService.PersistSharedValue("LinkUsername", LinkUsername);
-                break;
-            case nameof(SelectedProtocolPreferenceIndex):
-                _shellActionService.PersistSharedValue("LinkProtocolPreference", SelectedProtocolPreferenceIndex);
-                break;
-            case nameof(PreferLowestLatencyPath):
-                _shellActionService.PersistSharedValue("LinkLatencyFirstMode", PreferLowestLatencyPath);
-                break;
-            case nameof(TryPunchSymmetricNat):
-                _shellActionService.PersistSharedValue("LinkTryPunchSym", TryPunchSymmetricNat);
-                break;
-            case nameof(AllowIpv6Communication):
-                _shellActionService.PersistSharedValue("LinkEnableIPv6", AllowIpv6Communication);
-                break;
-            case nameof(EnableLinkCliOutput):
-                _shellActionService.PersistSharedValue("LinkEnableCliOutput", EnableLinkCliOutput);
                 break;
             case nameof(SelectedDownloadSourceIndex):
                 _shellActionService.PersistSharedValue("ToolDownloadSource", SelectedDownloadSourceIndex);
@@ -745,12 +701,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(UseJavaExecutable));
         RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
         RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
-        RaisePropertyChanged(nameof(LinkUsername));
-        RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
-        RaisePropertyChanged(nameof(PreferLowestLatencyPath));
-        RaisePropertyChanged(nameof(TryPunchSymmetricNat));
-        RaisePropertyChanged(nameof(AllowIpv6Communication));
-        RaisePropertyChanged(nameof(EnableLinkCliOutput));
         RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
         RaisePropertyChanged(nameof(SelectedVersionSourceIndex));
         RaisePropertyChanged(nameof(DownloadThreadLimit));
