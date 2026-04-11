@@ -495,10 +495,13 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
 
         var shouldAutoExpandSingleGroup = orderedGroups.Length == 1;
+        var shouldAutoExpandFirstGroup = shouldAutoExpandSingleGroup
+            || !string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
+            || !string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter);
         return orderedGroups
-            .Select(pair => new CommunityProjectReleaseGroupViewModel(
+            .Select((pair, index) => new CommunityProjectReleaseGroupViewModel(
                 pair.Key,
-                shouldAutoExpandSingleGroup || ShouldExpandCommunityProjectReleaseGroup(pair.Key),
+                shouldAutoExpandFirstGroup && index == 0,
                 pair.Value
                     .OrderByDescending(entry => entry.PublishedUnixTime)
                     .ThenBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
@@ -525,27 +528,6 @@ internal sealed partial class FrontendShellViewModel
             FrontendCommunityProjectReleaseChannel.Beta => LoadLauncherBitmap("Images", "Icons", "B.png"),
             _ => LoadLauncherBitmap("Images", "Icons", "R.png")
         };
-    }
-
-    private bool ShouldExpandCommunityProjectReleaseGroup(string groupTitle)
-    {
-        if (string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
-            && string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter))
-        {
-            return false;
-        }
-
-        var matchesVersion = string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
-            || string.Equals(
-                ExtractCommunityProjectGroupVersion(groupTitle),
-                _selectedCommunityProjectVersionFilter,
-                StringComparison.OrdinalIgnoreCase);
-        var matchesLoader = string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
-            || string.Equals(
-                ExtractCommunityProjectGroupLoader(groupTitle),
-                _selectedCommunityProjectLoaderFilter,
-                StringComparison.OrdinalIgnoreCase);
-        return matchesVersion && matchesLoader;
     }
 
     private static void AddCommunityProjectReleaseGroupEntry(
@@ -1215,13 +1197,9 @@ internal sealed partial class FrontendShellViewModel
     private int GetCommunityProjectGroupPriority(string groupTitle)
     {
         var version = ExtractCommunityProjectGroupVersion(groupTitle);
+        // Version filters are applied before ordering, so boosting the exact filter value here
+        // would incorrectly push 1.21 above newer patch groups like 1.21.11.
         var priority = GetCommunityProjectVersionSortPriority(version) * 10;
-        if (!string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
-            && string.Equals(version, _selectedCommunityProjectVersionFilter, StringComparison.OrdinalIgnoreCase))
-        {
-            priority += 3;
-        }
-
         var loader = ExtractCommunityProjectGroupLoader(groupTitle);
         if (!string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
             && string.Equals(loader, _selectedCommunityProjectLoaderFilter, StringComparison.OrdinalIgnoreCase))
