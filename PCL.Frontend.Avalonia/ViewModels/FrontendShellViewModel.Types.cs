@@ -731,8 +731,15 @@ internal sealed class DownloadCatalogEntryViewModel(
     string meta,
     string actionText,
     ActionCommand command,
-    Bitmap? icon = null)
+    Bitmap? icon = null,
+    string? iconUrl = null)
+    : INotifyPropertyChanged
 {
+    private Bitmap? _icon = icon;
+    private int _iconLoadStarted;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public string Title { get; } = title;
 
     public string Info { get; } = info;
@@ -743,11 +750,48 @@ internal sealed class DownloadCatalogEntryViewModel(
 
     public ActionCommand Command { get; } = command;
 
-    public Bitmap? Icon { get; } = icon;
+    public Bitmap? Icon
+    {
+        get => _icon;
+        private set
+        {
+            if (ReferenceEquals(_icon, value))
+            {
+                return;
+            }
+
+            _icon = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasIcon));
+        }
+    }
+
+    public string? IconUrl { get; } = iconUrl;
+
+    public bool HasIcon => Icon is not null;
 
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
 
     public string CombinedInfo => string.Join(" • ", new[] { Info, Meta }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+    public bool TryBeginIconLoad()
+    {
+        return !string.IsNullOrWhiteSpace(IconUrl)
+               && Interlocked.CompareExchange(ref _iconLoadStarted, 1, 0) == 0;
+    }
+
+    public void ApplyIcon(Bitmap? icon)
+    {
+        if (icon is not null)
+        {
+            Icon = icon;
+        }
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
 
 internal sealed class DownloadFavoriteSectionViewModel(

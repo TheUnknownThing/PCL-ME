@@ -718,6 +718,8 @@ internal static class FrontendCommunityProjectService
             summary.Title,
             summary.Summary,
             BuildDependencyMeta(summary),
+            summary.IconUrl,
+            summary.IconPath,
             CreateCompDetailTarget(summary.ProjectId),
             kind.Value);
     }
@@ -759,6 +761,8 @@ internal static class FrontendCommunityProjectService
             summary.Title,
             summary.Summary,
             BuildDependencyMeta(summary),
+            summary.IconUrl,
+            summary.IconPath,
             CreateCompDetailTarget(summary.ProjectId),
             kind.Value);
     }

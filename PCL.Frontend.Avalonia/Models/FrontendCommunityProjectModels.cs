@@ -43,6 +43,8 @@ internal sealed record FrontendCommunityProjectDependencyEntry(
     string Title,
     string Summary,
     string Meta,
+    string? IconUrl,
+    string? IconPath,
     string? Target,
     FrontendCommunityProjectDependencyKind Kind);
 

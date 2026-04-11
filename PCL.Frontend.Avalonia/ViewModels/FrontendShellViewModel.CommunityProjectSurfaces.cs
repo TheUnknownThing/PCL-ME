@@ -694,7 +694,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var dependencyIcon = GetCommunityProjectDependencyIcon();
+        var fallbackDependencyIcon = GetCommunityProjectDependencyIcon();
         var sections = release.Dependencies
             .GroupBy(entry => entry.Kind)
             .OrderBy(group => GetCommunityProjectDependencyPriority(group.Key))
@@ -707,10 +707,12 @@ internal sealed partial class FrontendShellViewModel
                         entry.Meta,
                         "查看详情",
                         CreateCommunityProjectDependencyCommand(entry),
-                        dependencyIcon))
+                        LoadCachedBitmapFromPath(entry.IconPath) ?? fallbackDependencyIcon,
+                        entry.IconUrl))
                     .ToArray()))
             .ToArray();
         ReplaceItems(CommunityProjectDependencySections, sections);
+        QueueCommunityProjectDependencyIconLoad(sections);
     }
 
     private Bitmap? GetCommunityProjectReleaseChannelIcon(FrontendCommunityProjectReleaseChannel channel)
@@ -1483,6 +1485,36 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.DownloadWorld => LoadLauncherBitmap("Images", "Blocks", "GrassPath.png"),
             _ => LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png")
         };
+    }
+
+    private void QueueCommunityProjectDependencyIconLoad(IEnumerable<DownloadCatalogSectionViewModel> sections)
+    {
+        foreach (var entry in sections.SelectMany(section => section.Items))
+        {
+            if (!entry.TryBeginIconLoad())
+            {
+                continue;
+            }
+
+            _ = LoadCommunityProjectDependencyIconAsync(entry);
+        }
+    }
+
+    private async Task LoadCommunityProjectDependencyIconAsync(DownloadCatalogEntryViewModel entry)
+    {
+        var iconPath = await FrontendCommunityIconCache.EnsureCachedIconAsync(entry.IconUrl);
+        if (string.IsNullOrWhiteSpace(iconPath))
+        {
+            return;
+        }
+
+        var bitmap = await Task.Run(() => LoadCachedBitmapFromPath(iconPath));
+        if (bitmap is null)
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() => entry.ApplyIcon(bitmap));
     }
 
     private string GetCommunityProjectInstallTargetSummary()
