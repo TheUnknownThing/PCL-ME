@@ -136,6 +136,9 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <controls:PclListItem
+                        AccessoryCommand="{Binding AccessoryCommand}"
+                        AccessoryIconData="{Binding AccessoryIconData}"
+                        AccessoryToolTip="{Binding AccessoryToolTip}"
                         Margin="8,2,10,2"
                         Command="{Binding Command}"
                         Info="{Binding Info}"
