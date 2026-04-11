@@ -368,13 +368,15 @@ internal static class FrontendLaunchCompositionService
         var modernGameSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "game");
         if (modernGameSections.Count > 0)
         {
+            var launchArgumentFeatures = BuildLaunchArgumentFeatures(localConfig);
             arguments += " " + MinecraftLaunchGameArgumentService.BuildModernPlan(
                 new MinecraftLaunchModernGameArgumentRequest(
                     MinecraftLaunchJsonArgumentService.ExtractValues(
                         new MinecraftLaunchJsonArgumentRequest(
                             modernGameSections,
                             Environment.OSVersion.Version.ToString(),
-                            runtimeArchitecture == MachineType.I386)),
+                            runtimeArchitecture == MachineType.I386,
+                            launchArgumentFeatures)),
                     manifestSummary.HasForge || manifestSummary.HasLiteLoader,
                     manifestSummary.HasOptiFine)).Arguments;
         }
@@ -558,6 +560,22 @@ internal static class FrontendLaunchCompositionService
                 StartedLogMessage: "缺少 Java 运行时，尚未生成可执行的启动命令。",
                 AbortKillLogMessage: "缺少 Java 运行时，无需终止游戏进程。"),
             MinecraftLaunchWatcherWorkflowService.BuildPlan(watcherWorkflowRequest));
+    }
+
+    private static IReadOnlyDictionary<string, bool> BuildLaunchArgumentFeatures(YamlFileProvider localConfig)
+    {
+        var windowMode = ReadValue(localConfig, "LaunchArgumentWindowType", (int)GameWindowSizeMode.Default);
+        var hasCustomResolution = windowMode is (int)GameWindowSizeMode.Launcher or (int)GameWindowSizeMode.Custom;
+
+        return new Dictionary<string, bool>(StringComparer.Ordinal)
+        {
+            ["has_custom_resolution"] = hasCustomResolution,
+            ["is_demo_user"] = false,
+            ["has_quick_plays_support"] = false,
+            ["is_quick_play_singleplayer"] = false,
+            ["is_quick_play_multiplayer"] = false,
+            ["is_quick_play_realms"] = false
+        };
     }
 
     private static MinecraftLaunchResolutionRequest BuildResolutionRequest(
