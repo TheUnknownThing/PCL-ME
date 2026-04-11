@@ -64,6 +64,37 @@ public static class MinecraftLaunchProfileStorageService
         });
     }
 
+    public static MinecraftLaunchProfileDocument DeleteProfile(
+        MinecraftLaunchProfileDocument document,
+        int profileIndex)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        var profiles = document.Profiles.ToList();
+        if (profileIndex < 0 || profileIndex >= profiles.Count)
+        {
+            return document;
+        }
+
+        var currentSelectedIndex = document.LastUsedProfile >= 0 && document.LastUsedProfile < document.Profiles.Count
+            ? document.LastUsedProfile
+            : 0;
+        profiles.RemoveAt(profileIndex);
+
+        if (profiles.Count == 0)
+        {
+            return new MinecraftLaunchProfileDocument(0, profiles);
+        }
+
+        var nextSelectedIndex = currentSelectedIndex switch
+        {
+            _ when currentSelectedIndex > profileIndex => currentSelectedIndex - 1,
+            _ when currentSelectedIndex == profileIndex => Math.Min(profileIndex, profiles.Count - 1),
+            _ => currentSelectedIndex
+        };
+        return new MinecraftLaunchProfileDocument(nextSelectedIndex, profiles);
+    }
+
     private static MinecraftLaunchPersistedProfile ParseProfile(JsonObject profile, Func<string?, string> decryptSecret)
     {
         var kind = ParseProfileKind(ReadString(profile, "type"));
