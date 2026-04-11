@@ -6,6 +6,8 @@ internal sealed partial class FrontendShellViewModel
 {
     public ActionCommand BackCommand => _backCommand;
 
+    public ActionCommand HomeCommand => _homeCommand;
+
     public ActionCommand TogglePromptOverlayCommand => _togglePromptOverlayCommand;
 
     public ActionCommand DismissPromptOverlayCommand => _dismissPromptOverlayCommand;

@@ -52,6 +52,7 @@ internal sealed partial class FrontendShellViewModel
     private LauncherFrontendSubpageKey? _selectedCommunityProjectOriginSubpage;
     private string _selectedCommunityProjectVersionFilter = string.Empty;
     private string _selectedCommunityProjectLoaderFilter = string.Empty;
+    private readonly List<CommunityProjectNavigationState> _communityProjectNavigationStack = [];
     private Bitmap? _communityProjectIcon;
     private FrontendCommunityProjectState _communityProjectState = new(
         string.Empty,
@@ -270,16 +271,33 @@ internal sealed partial class FrontendShellViewModel
         string? initialLoaderFilter = null,
         LauncherFrontendSubpageKey? originSubpage = null)
     {
-        _selectedCommunityProjectId = projectId.Trim();
-        _selectedCommunityProjectTitleHint = projectTitle?.Trim() ?? string.Empty;
-        _selectedCommunityProjectOriginSubpage = originSubpage ?? _selectedCommunityProjectOriginSubpage;
-        _selectedCommunityProjectVersionFilter = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
-            ?? NormalizeMinecraftVersion(initialVersionFilter)
-            ?? initialVersionFilter?.Trim()
-            ?? string.Empty;
-        _selectedCommunityProjectLoaderFilter = ResolveSelectedInstanceLoaderLabel()
-            ?? initialLoaderFilter?.Trim()
-            ?? string.Empty;
+        var normalizedProjectId = projectId.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedProjectId))
+        {
+            return;
+        }
+
+        if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail
+            && ShouldPushCommunityProjectNavigationState(normalizedProjectId))
+        {
+            _communityProjectNavigationStack.Add(CreateCommunityProjectNavigationState());
+        }
+        else if (_currentRoute.Page != LauncherFrontendPageKey.CompDetail)
+        {
+            _communityProjectNavigationStack.Clear();
+        }
+
+        ApplyCommunityProjectNavigationState(new CommunityProjectNavigationState(
+            normalizedProjectId,
+            projectTitle?.Trim() ?? string.Empty,
+            originSubpage ?? _selectedCommunityProjectOriginSubpage,
+            NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
+                ?? NormalizeMinecraftVersion(initialVersionFilter)
+                ?? initialVersionFilter?.Trim()
+                ?? string.Empty,
+            ResolveSelectedInstanceLoaderLabel()
+                ?? initialLoaderFilter?.Trim()
+                ?? string.Empty));
         var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
             ? "已打开资源工程详情。"
             : $"已打开 {projectTitle} 的资源详情。";
@@ -290,6 +308,52 @@ internal sealed partial class FrontendShellViewModel
         }
 
         NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.CompDetail), activityMessage);
+    }
+
+    private bool TryNavigateBackWithinCommunityProjectDetail()
+    {
+        if (_currentRoute.Page != LauncherFrontendPageKey.CompDetail || _communityProjectNavigationStack.Count == 0)
+        {
+            return false;
+        }
+
+        var state = _communityProjectNavigationStack[^1];
+        _communityProjectNavigationStack.RemoveAt(_communityProjectNavigationStack.Count - 1);
+        ApplyCommunityProjectNavigationState(state);
+        RefreshShell($"已返回到 {state.TitleHintOrProjectId}。");
+        return true;
+    }
+
+    private void ResetCommunityProjectNavigationStack()
+    {
+        _communityProjectNavigationStack.Clear();
+    }
+
+    private bool HasCommunityProjectNavigationHistory => _communityProjectNavigationStack.Count > 0;
+
+    private bool ShouldPushCommunityProjectNavigationState(string nextProjectId)
+    {
+        return !string.IsNullOrWhiteSpace(_selectedCommunityProjectId)
+               && !string.Equals(_selectedCommunityProjectId, nextProjectId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private CommunityProjectNavigationState CreateCommunityProjectNavigationState()
+    {
+        return new CommunityProjectNavigationState(
+            _selectedCommunityProjectId,
+            _selectedCommunityProjectTitleHint,
+            _selectedCommunityProjectOriginSubpage,
+            _selectedCommunityProjectVersionFilter,
+            _selectedCommunityProjectLoaderFilter);
+    }
+
+    private void ApplyCommunityProjectNavigationState(CommunityProjectNavigationState state)
+    {
+        _selectedCommunityProjectId = state.ProjectId;
+        _selectedCommunityProjectTitleHint = state.TitleHint;
+        _selectedCommunityProjectOriginSubpage = state.OriginSubpage;
+        _selectedCommunityProjectVersionFilter = state.VersionFilter;
+        _selectedCommunityProjectLoaderFilter = state.LoaderFilter;
     }
 
     private void RefreshCompDetailSurface()
@@ -2008,6 +2072,16 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private string _communityProjectDependencyReleaseTitle = string.Empty;
+
+    private sealed record CommunityProjectNavigationState(
+        string ProjectId,
+        string TitleHint,
+        LauncherFrontendSubpageKey? OriginSubpage,
+        string VersionFilter,
+        string LoaderFilter)
+    {
+        public string TitleHintOrProjectId => string.IsNullOrWhiteSpace(TitleHint) ? ProjectId : TitleHint;
+    }
 }
 
 internal sealed class FrontendManagedFileDownloadTask(

@@ -162,6 +162,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowInnerNavigation => CanGoBack;
 
+    public bool ShowHomeNavigation => CanGoHome;
+
     public bool IsContextModeRoute => _currentNavigation?.ShowsBackButton ?? false;
 
     public bool ShowWindowBranding => !IsContextModeRoute;
@@ -264,6 +266,19 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
                 _backCommand.NotifyCanExecuteChanged();
                 RaisePropertyChanged(nameof(ShowTopLevelNavigation));
                 RaisePropertyChanged(nameof(ShowInnerNavigation));
+            }
+        }
+    }
+
+    public bool CanGoHome
+    {
+        get => _canGoHome;
+        private set
+        {
+            if (SetProperty(ref _canGoHome, value))
+            {
+                _homeCommand.NotifyCanExecuteChanged();
+                RaisePropertyChanged(nameof(ShowHomeNavigation));
             }
         }
     }

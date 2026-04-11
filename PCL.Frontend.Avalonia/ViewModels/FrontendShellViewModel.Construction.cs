@@ -35,6 +35,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
     private readonly List<LauncherFrontendRoute> _routeAncestors = [];
     private readonly ActionCommand _backCommand;
+    private readonly ActionCommand _homeCommand;
     private readonly ActionCommand _togglePromptOverlayCommand;
     private readonly ActionCommand _dismissPromptOverlayCommand;
     private readonly ActionCommand _openTaskManagerShortcutCommand;
@@ -131,6 +132,7 @@ internal sealed partial class FrontendShellViewModel
     private string _promptEmptyState = string.Empty;
     private double _standardSidebarAutoWidth = 152;
     private bool _canGoBack;
+    private bool _canGoHome;
     private bool _isPromptOverlayOpen;
     private bool _isLaunchMigrationExpanded = true;
     private bool _isLaunchNewsExpanded = true;
@@ -323,6 +325,7 @@ internal sealed partial class FrontendShellViewModel
         _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
+        _homeCommand = new ActionCommand(NavigateHome, () => CanGoHome);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
         _openTaskManagerShortcutCommand = new ActionCommand(() => NavigateTo(
