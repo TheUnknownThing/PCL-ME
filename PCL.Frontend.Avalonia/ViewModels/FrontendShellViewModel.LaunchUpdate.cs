@@ -324,10 +324,22 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _launchBeforeCommand, value);
     }
 
+    public string LaunchEnvironmentVariables
+    {
+        get => _launchEnvironmentVariables;
+        set => SetProperty(ref _launchEnvironmentVariables, value);
+    }
+
     public bool WaitForLaunchBeforeCommand
     {
         get => _waitForLaunchBeforeCommand;
         set => SetProperty(ref _waitForLaunchBeforeCommand, value);
+    }
+
+    public bool ForceX11OnWaylandForLaunch
+    {
+        get => _forceX11OnWaylandForLaunch;
+        set => SetProperty(ref _forceX11OnWaylandForLaunch, value);
     }
 
     public bool DisableJavaLaunchWrapper

@@ -426,9 +426,19 @@ public static partial class Config
         [ConfigItem<string>("LaunchAdvanceRun", "", ConfigSource.Local)] public partial string PreLaunchCommand { get; set; }
 
         /// <summary>
+        /// 启动环境变量。
+        /// </summary>
+        [ConfigItem<string>("LaunchAdvanceEnvironmentVariables", "", ConfigSource.Local)] public partial string EnvironmentVariables { get; set; }
+
+        /// <summary>
         /// 是否等待预启动指令完成。
         /// </summary>
         [ConfigItem<bool>("LaunchAdvanceRunWait", true, ConfigSource.Local)] public partial bool PreLaunchCommandWait { get; set; }
+
+        /// <summary>
+        /// Wayland 会话下强制使用 X11。
+        /// </summary>
+        [ConfigItem<bool>("LaunchAdvanceForceX11OnWayland", false, ConfigSource.Local)] public partial bool ForceX11OnWayland { get; set; }
 
         /// <summary>
         /// 禁用 Java Launch Wrapper。
@@ -525,8 +535,10 @@ public static partial class Config
         [ConfigItem<bool>("VersionAdvanceJava", false)] public partial ArgConfig<bool> IgnoreJavaCompatibility { get; }
         [ConfigItem<bool>("VersionAdvanceDisableJlw", false)] public partial ArgConfig<bool> DisableJlwObsolete { get; }
         [ConfigItem<string>("VersionAdvanceRun", "")] public partial ArgConfig<string> PreLaunchCommand { get; }
+        [ConfigItem<string>("VersionAdvanceEnvironmentVariables", "")] public partial ArgConfig<string> EnvironmentVariables { get; }
         [ConfigItem<string>("VersionAdvanceClasspathHead", "")] public partial ArgConfig<string> ClasspathHead { get; }
         [ConfigItem<bool>("VersionAdvanceRunWait", true)] public partial ArgConfig<bool> PreLaunchCommandWait { get; }
+        [ConfigItem<int>("VersionAdvanceForceX11OnWayland", 0)] public partial ArgConfig<int> ForceX11OnWayland { get; }
         [ConfigItem<bool>("VersionAdvanceDisableJLW", false)] public partial ArgConfig<bool> DisableJlw { get; }
         [ConfigItem<bool>("VersionAdvanceUseProxyV2", false)] public partial ArgConfig<bool> UseProxy { get; }
         [ConfigItem<bool>("VersionAdvanceDisableRW", false)] public partial ArgConfig<bool> DisableRw { get; }

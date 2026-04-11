@@ -220,7 +220,9 @@ internal sealed partial class FrontendShellViewModel
     private string _launchJvmArguments = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
     private string _launchGameArguments = string.Empty;
     private string _launchBeforeCommand = string.Empty;
+    private string _launchEnvironmentVariables = string.Empty;
     private bool _waitForLaunchBeforeCommand;
+    private bool _forceX11OnWaylandForLaunch;
     private bool _disableJavaLaunchWrapper;
     private bool _disableRetroWrapper;
     private bool _requireDedicatedGpu = true;

@@ -21,7 +21,9 @@ internal sealed partial class FrontendShellViewModel
         "LaunchAdvanceJvm",
         "LaunchAdvanceGame",
         "LaunchAdvanceRun",
+        "LaunchAdvanceEnvironmentVariables",
         "LaunchAdvanceRunWait",
+        "LaunchAdvanceForceX11OnWayland",
         "LaunchAdvanceDisableJLW"
     ];
 
@@ -365,7 +367,9 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(LaunchJvmArguments));
                 RaisePropertyChanged(nameof(LaunchGameArguments));
                 RaisePropertyChanged(nameof(LaunchBeforeCommand));
+                RaisePropertyChanged(nameof(LaunchEnvironmentVariables));
                 RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
+                RaisePropertyChanged(nameof(ForceX11OnWaylandForLaunch));
                 RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
                 RaisePropertyChanged(nameof(DisableRetroWrapper));
                 RaisePropertyChanged(nameof(RequireDedicatedGpu));
@@ -443,8 +447,14 @@ internal sealed partial class FrontendShellViewModel
             case nameof(LaunchBeforeCommand):
                 _shellActionService.PersistLocalValue("LaunchAdvanceRun", LaunchBeforeCommand);
                 break;
+            case nameof(LaunchEnvironmentVariables):
+                _shellActionService.PersistLocalValue("LaunchAdvanceEnvironmentVariables", LaunchEnvironmentVariables);
+                break;
             case nameof(WaitForLaunchBeforeCommand):
                 _shellActionService.PersistLocalValue("LaunchAdvanceRunWait", WaitForLaunchBeforeCommand);
+                break;
+            case nameof(ForceX11OnWaylandForLaunch):
+                _shellActionService.PersistLocalValue("LaunchAdvanceForceX11OnWayland", ForceX11OnWaylandForLaunch);
                 break;
             case nameof(DisableJavaLaunchWrapper):
                 _shellActionService.PersistLocalValue("LaunchAdvanceDisableJLW", DisableJavaLaunchWrapper);
@@ -694,7 +704,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchJvmArguments));
         RaisePropertyChanged(nameof(LaunchGameArguments));
         RaisePropertyChanged(nameof(LaunchBeforeCommand));
+        RaisePropertyChanged(nameof(LaunchEnvironmentVariables));
         RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
+        RaisePropertyChanged(nameof(ForceX11OnWaylandForLaunch));
         RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
         RaisePropertyChanged(nameof(DisableRetroWrapper));
         RaisePropertyChanged(nameof(RequireDedicatedGpu));

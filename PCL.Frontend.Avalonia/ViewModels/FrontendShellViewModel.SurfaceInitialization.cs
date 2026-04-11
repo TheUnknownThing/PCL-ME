@@ -101,7 +101,9 @@ internal sealed partial class FrontendShellViewModel
         _launchJvmArguments = _setupComposition.Launch.JvmArguments;
         _launchGameArguments = _setupComposition.Launch.GameArguments;
         _launchBeforeCommand = _setupComposition.Launch.BeforeCommand;
+        _launchEnvironmentVariables = _setupComposition.Launch.EnvironmentVariables;
         _waitForLaunchBeforeCommand = _setupComposition.Launch.WaitForBeforeCommand;
+        _forceX11OnWaylandForLaunch = _setupComposition.Launch.ForceX11OnWayland;
         _disableJavaLaunchWrapper = _setupComposition.Launch.DisableJavaLaunchWrapper;
         _disableRetroWrapper = _setupComposition.Launch.DisableRetroWrapper;
         _requireDedicatedGpu = _setupComposition.Launch.RequireDedicatedGpu;
