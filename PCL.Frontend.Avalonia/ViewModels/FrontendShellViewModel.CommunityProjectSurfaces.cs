@@ -173,7 +173,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool ShowCommunityProjectInstallSuggestionCard => GetSuggestedCommunityProjectInstallRelease() is not null;
+    public bool ShowCommunityProjectInstallSuggestionCard => CanInstallCommunityProjectToCurrentInstance();
 
     public string CommunityProjectInstallSuggestionTitle => GetSuggestedCommunityProjectInstallRelease()?.Title ?? "当前没有可安装的版本";
 
@@ -198,9 +198,10 @@ internal sealed partial class FrontendShellViewModel
                 parts.Add(release.Meta);
             }
 
-            if (_instanceComposition.Selection.HasSelection)
+            var installTarget = GetCommunityProjectInstallTargetSummary();
+            if (!string.IsNullOrWhiteSpace(installTarget))
             {
-                parts.Add($"安装到 {CommunityProjectCurrentInstanceName} 的 mods 文件夹");
+                parts.Add(installTarget);
             }
 
             return string.Join(" • ", parts);
@@ -287,17 +288,23 @@ internal sealed partial class FrontendShellViewModel
             _communityProjectNavigationStack.Clear();
         }
 
+        var targetOriginSubpage = originSubpage ?? _selectedCommunityProjectOriginSubpage;
+        var shouldSyncFiltersWithInstance = ShouldAutoSyncCommunityProjectFiltersWithInstance(targetOriginSubpage);
         ApplyCommunityProjectNavigationState(new CommunityProjectNavigationState(
             normalizedProjectId,
             projectTitle?.Trim() ?? string.Empty,
-            originSubpage ?? _selectedCommunityProjectOriginSubpage,
-            NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
-                ?? NormalizeMinecraftVersion(initialVersionFilter)
-                ?? initialVersionFilter?.Trim()
-                ?? string.Empty,
-            ResolveSelectedInstanceLoaderLabel()
-                ?? initialLoaderFilter?.Trim()
-                ?? string.Empty));
+            targetOriginSubpage,
+            shouldSyncFiltersWithInstance
+                ? NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
+                    ?? NormalizeMinecraftVersion(initialVersionFilter)
+                    ?? initialVersionFilter?.Trim()
+                    ?? string.Empty
+                : NormalizeMinecraftVersion(initialVersionFilter) ?? initialVersionFilter?.Trim() ?? string.Empty,
+            shouldSyncFiltersWithInstance
+                ? ResolveSelectedInstanceLoaderLabel()
+                    ?? initialLoaderFilter?.Trim()
+                    ?? string.Empty
+                : initialLoaderFilter?.Trim() ?? string.Empty));
         var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
             ? "已打开资源工程详情。"
             : $"已打开 {projectTitle} 的资源详情。";
@@ -687,6 +694,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        var dependencyIcon = GetCommunityProjectDependencyIcon();
         var sections = release.Dependencies
             .GroupBy(entry => entry.Kind)
             .OrderBy(group => GetCommunityProjectDependencyPriority(group.Key))
@@ -698,7 +706,8 @@ internal sealed partial class FrontendShellViewModel
                         entry.Summary,
                         entry.Meta,
                         "查看详情",
-                        CreateCommunityProjectDependencyCommand(entry)))
+                        CreateCommunityProjectDependencyCommand(entry),
+                        dependencyIcon))
                     .ToArray()))
             .ToArray();
         ReplaceItems(CommunityProjectDependencySections, sections);
@@ -944,7 +953,8 @@ internal sealed partial class FrontendShellViewModel
     private bool CanInstallCommunityProjectToCurrentInstance()
     {
         return _instanceComposition.Selection.HasSelection
-               && _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+               && _selectedCommunityProjectOriginSubpage != LauncherFrontendSubpageKey.DownloadPack
+               && _selectedCommunityProjectOriginSubpage is not null
                && TryGetCommunityProjectInstallRelease(out _);
     }
 
@@ -1289,6 +1299,11 @@ internal sealed partial class FrontendShellViewModel
             _instanceComposition.Selection.InstanceName)?.LoaderLabel;
     }
 
+    private static bool ShouldAutoSyncCommunityProjectFiltersWithInstance(LauncherFrontendSubpageKey? originSubpage)
+    {
+        return originSubpage != LauncherFrontendSubpageKey.DownloadPack;
+    }
+
     private IReadOnlyList<InstanceSelectionSnapshot> LoadAvailableDownloadTargetInstances()
     {
         var runtimePaths = _shellActionService.RuntimePaths;
@@ -1415,6 +1430,13 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyCurrentInstanceCommunityProjectFilters()
     {
+        if (!ShouldAutoSyncCommunityProjectFiltersWithInstance(_selectedCommunityProjectOriginSubpage))
+        {
+            RebuildCommunityProjectSurfaceCollections();
+            RaiseCommunityProjectProperties();
+            return;
+        }
+
         if (_communityProjectState.Releases.Count == 0)
         {
             RaiseCommunityProjectProperties();
@@ -1449,6 +1471,35 @@ internal sealed partial class FrontendShellViewModel
 
         RebuildCommunityProjectSurfaceCollections();
         RaiseCommunityProjectProperties();
+    }
+
+    private Bitmap? GetCommunityProjectDependencyIcon()
+    {
+        return _selectedCommunityProjectOriginSubpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadDataPack => LoadLauncherBitmap("Images", "Blocks", "RedstoneLampOn.png"),
+            LauncherFrontendSubpageKey.DownloadResourcePack => LoadLauncherBitmap("Images", "Blocks", "Grass.png"),
+            LauncherFrontendSubpageKey.DownloadShader => LoadLauncherBitmap("Images", "Blocks", "GoldBlock.png"),
+            LauncherFrontendSubpageKey.DownloadWorld => LoadLauncherBitmap("Images", "Blocks", "GrassPath.png"),
+            _ => LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png")
+        };
+    }
+
+    private string GetCommunityProjectInstallTargetSummary()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            return string.Empty;
+        }
+
+        return _selectedCommunityProjectOriginSubpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadResourcePack => $"安装到 {CommunityProjectCurrentInstanceName} 的 resourcepacks 文件夹",
+            LauncherFrontendSubpageKey.DownloadShader => $"安装到 {CommunityProjectCurrentInstanceName} 的 shaderpacks 文件夹",
+            LauncherFrontendSubpageKey.DownloadWorld => $"安装到 {CommunityProjectCurrentInstanceName} 的 saves 文件夹",
+            LauncherFrontendSubpageKey.DownloadDataPack => $"安装到 {CommunityProjectCurrentInstanceName} 的实例目录",
+            _ => $"安装到 {CommunityProjectCurrentInstanceName} 的 mods 文件夹"
+        };
     }
 
     private static string SanitizeCommunityProjectReleaseFileName(string? suggestedFileName, string fallbackTitle)

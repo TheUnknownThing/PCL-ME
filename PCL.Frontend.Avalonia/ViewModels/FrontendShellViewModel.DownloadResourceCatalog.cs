@@ -147,6 +147,10 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    public bool ShowDownloadResourceCurrentInstanceCard => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
+
+    public bool ShowDownloadResourceLoaderFilter => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadWorld;
+
     public ActionCommand SelectDownloadResourceInstanceCommand => new(() => _ = SelectCommunityProjectInstanceAsync());
 
     public string DownloadResourceLoadingText
@@ -396,6 +400,8 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
             RaisePropertyChanged(nameof(DownloadResourceTagOptions));
             RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
+            RaisePropertyChanged(nameof(ShowDownloadResourceCurrentInstanceCard));
+            RaisePropertyChanged(nameof(ShowDownloadResourceLoaderFilter));
             RaisePropertyChanged(nameof(HasDownloadResourceEntries));
             RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
             RaisePropertyChanged(nameof(ShowDownloadResourceLoadingCard));
@@ -422,7 +428,10 @@ internal sealed partial class FrontendShellViewModel
             new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
         ];
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
-        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions(ResolveSelectedDownloadResourceVersionFilter());
+        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions(
+            ShouldAutoSyncDownloadResourceFiltersWithInstance()
+                ? ResolveSelectedDownloadResourceVersionFilter()
+                : null);
         _downloadResourceLoaderOptions = useShaderLoaderOptions
             ? BuildDefaultShaderLoaderOptions()
             : BuildDefaultResourceLoaderOptions();
@@ -490,7 +499,16 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceTotalPages = 1;
         _downloadResourceTotalEntryCount = 0;
         _downloadResourceHasMoreEntries = false;
-        ApplyCurrentInstanceDownloadResourceFilterSelection();
+        if (ShouldAutoSyncDownloadResourceFiltersWithInstance())
+        {
+            ApplyCurrentInstanceDownloadResourceFilterSelection();
+        }
+        else
+        {
+            _selectedDownloadResourceVersionIndex = 0;
+            _selectedDownloadResourceLoaderIndex = 0;
+        }
+
         SyncSelectedDownloadResourceOptions();
         UpdateDownloadResourceHint();
     }
@@ -782,11 +800,13 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
         RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceTitle));
         RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceSummary));
+        RaisePropertyChanged(nameof(ShowDownloadResourceCurrentInstanceCard));
         RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
         RaisePropertyChanged(nameof(DownloadResourceTagOptions));
         RaisePropertyChanged(nameof(DownloadResourceSortOptions));
         RaisePropertyChanged(nameof(DownloadResourceVersionOptions));
         RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
+        RaisePropertyChanged(nameof(ShowDownloadResourceLoaderFilter));
         RaisePropertyChanged(nameof(SelectedDownloadResourceSourceIndex));
         RaisePropertyChanged(nameof(SelectedDownloadResourceTagIndex));
         RaisePropertyChanged(nameof(SelectedDownloadResourceSortIndex));
@@ -931,6 +951,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
+            return;
+        }
+
+        if (!ShouldAutoSyncDownloadResourceFiltersWithInstance())
+        {
+            RaiseDownloadResourceFilterState();
             return;
         }
 
@@ -1096,7 +1122,9 @@ internal sealed partial class FrontendShellViewModel
         _selectedDownloadResourceVersionIndex = FindFilterOptionIndex(DownloadResourceVersionOptions, preferredVersion ?? string.Empty);
 
         var preferredLoader = ResolveSelectedDownloadResourceLoaderFilter();
-        _selectedDownloadResourceLoaderIndex = FindFilterOptionIndex(DownloadResourceLoaderOptions, preferredLoader ?? string.Empty);
+        _selectedDownloadResourceLoaderIndex = ShowDownloadResourceLoaderFilter
+            ? FindFilterOptionIndex(DownloadResourceLoaderOptions, preferredLoader ?? string.Empty)
+            : 0;
     }
 
     private string? ResolveSelectedDownloadResourceVersionFilter()
@@ -1107,6 +1135,11 @@ internal sealed partial class FrontendShellViewModel
     private string? ResolveSelectedDownloadResourceLoaderFilter()
     {
         return ResolveSelectedInstanceLoaderLabel();
+    }
+
+    private bool ShouldAutoSyncDownloadResourceFiltersWithInstance()
+    {
+        return _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
     }
 
     private void SyncSelectedDownloadResourceOptions()

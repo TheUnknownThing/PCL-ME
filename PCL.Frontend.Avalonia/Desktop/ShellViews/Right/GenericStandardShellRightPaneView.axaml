@@ -695,12 +695,11 @@
                           <ItemsControl ItemsSource="{Binding Items}">
                             <ItemsControl.ItemTemplate>
                               <DataTemplate>
-                                <controls:PclActionSummaryRow
-                                    ActionText="{Binding ActionText}"
+                                <controls:PclListItem
+                                    Margin="0,0,0,8"
                                     Command="{Binding Command}"
-                                    Info="{Binding Info}"
-                                    Meta="{Binding Meta}"
-                                    ShowMeta="{Binding HasMeta}"
+                                    IconSource="{Binding Icon}"
+                                    Info="{Binding CombinedInfo}"
                                     Title="{Binding Title}" />
                               </DataTemplate>
                             </ItemsControl.ItemTemplate>
