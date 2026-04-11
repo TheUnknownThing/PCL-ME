@@ -32,6 +32,10 @@ internal sealed class FrontendShellActionService(
 
     public Func<string, string, string, bool, Task<bool>>? ConfirmPresenter { get; set; }
 
+    public Func<string, string, string, string, string?, bool, Task<string?>>? TextInputPresenter { get; set; }
+
+    public Func<string, string, IReadOnlyList<PclChoiceDialogOption>, string?, string, Task<string?>>? ChoicePresenter { get; set; }
+
     public static void ApplyStoredAnimationPreferences(FrontendRuntimePaths runtimePaths)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
@@ -267,9 +271,12 @@ internal sealed class FrontendShellActionService(
         string? placeholderText = null,
         bool isPassword = false)
     {
-        var owner = GetDesktopMainWindow();
-        var dialog = new PclTextInputDialog(title, message, initialText, confirmText, placeholderText, isPassword);
-        return await dialog.ShowDialog<string?>(owner);
+        if (TextInputPresenter is not null)
+        {
+            return await TextInputPresenter(title, message, initialText, confirmText, placeholderText, isPassword);
+        }
+
+        throw new InvalidOperationException("Text input dialogs require an in-app presenter.");
     }
 
     public async Task<string?> PromptForChoiceAsync(
@@ -284,9 +291,12 @@ internal sealed class FrontendShellActionService(
             return null;
         }
 
-        var owner = GetDesktopMainWindow();
-        var dialog = new PclChoiceDialog(title, message, options, selectedId, confirmText);
-        return await dialog.ShowDialog<string?>(owner);
+        if (ChoicePresenter is not null)
+        {
+            return await ChoicePresenter(title, message, options, selectedId, confirmText);
+        }
+
+        throw new InvalidOperationException("Choice dialogs require an in-app presenter.");
     }
 
     public async Task<bool> ConfirmAsync(
@@ -300,9 +310,7 @@ internal sealed class FrontendShellActionService(
             return await ConfirmPresenter(title, message, confirmText, isDanger);
         }
 
-        var owner = GetDesktopMainWindow();
-        var dialog = new PclConfirmDialog(title, message, confirmText, isDanger);
-        return await dialog.ShowDialog<bool>(owner);
+        throw new InvalidOperationException("Confirm dialogs require an in-app presenter.");
     }
 
     public FrontendCrashExportResult ExportCrashReport(CrashAvaloniaPlan crashPlan)

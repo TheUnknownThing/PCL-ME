@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 using PCL.Core.App.Configuration.Storage;
 
 namespace PCL.Frontend.Avalonia.Workflows;
@@ -14,7 +15,6 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendInstallWorkflowService
 {
     private const string MojangVersionManifestUrl = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
-    private const string ForgeInstallerHelperFileName = "forge-installer.jar";
 
     private static readonly HttpClient HttpClient = new();
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -226,7 +226,8 @@ internal static class FrontendInstallWorkflowService
         void ReportPrepare(string message) => onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, message);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, "正在写入安装清单并准备安装环境…");
-        var manifestNode = BuildTargetManifest(request, ReportPrepare);
+        var manifestNode = BuildTargetManifest(request, ReportPrepare, cancelToken);
+        cancelToken.ThrowIfCancellationRequested();
         ReportPrepare("正在清理本地缺失依赖引用…");
         RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
         var manifestPath = Path.Combine(targetDirectory, $"{request.TargetInstanceName}.json");
@@ -296,8 +297,10 @@ internal static class FrontendInstallWorkflowService
 
     private static JsonObject BuildTargetManifest(
         FrontendInstallApplyRequest request,
-        Action<string>? onStatusChanged = null)
+        Action<string>? onStatusChanged = null,
+        CancellationToken cancelToken = default)
     {
+        cancelToken.ThrowIfCancellationRequested();
         ReportPrepareStatus(onStatusChanged, $"正在获取 Minecraft {request.MinecraftChoice.Version} 原版清单…");
         var baseManifest = ReadJsonObject(request.MinecraftChoice.ManifestUrl ?? MojangVersionManifestUrl);
         JsonObject targetManifest;
@@ -326,7 +329,7 @@ internal static class FrontendInstallWorkflowService
                 ReportPrepareStatus(onStatusChanged, $"正在准备 {request.PrimaryLoaderChoice.Title} 安装器…");
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
-                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged),
+                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged, cancelToken),
                     request.TargetInstanceName);
                 break;
             default:
@@ -350,7 +353,7 @@ internal static class FrontendInstallWorkflowService
             ReportPrepareStatus(onStatusChanged, "正在处理 OptiFine 安装信息…");
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
-                BuildStandaloneOptiFineManifest(request, onStatusChanged),
+                BuildStandaloneOptiFineManifest(request, onStatusChanged, cancelToken),
                 request.TargetInstanceName);
         }
 
@@ -374,9 +377,11 @@ internal static class FrontendInstallWorkflowService
     private static JsonObject BuildForgelikeManifest(
         FrontendInstallApplyRequest request,
         FrontendInstallChoice loaderChoice,
-        Action<string>? onStatusChanged = null)
+        Action<string>? onStatusChanged = null,
+        CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(loaderChoice);
+        cancelToken.ThrowIfCancellationRequested();
 
         var installerUrl = loaderChoice.DownloadUrl
                            ?? throw new InvalidOperationException("缺少安装器下载地址。");
@@ -384,45 +389,25 @@ internal static class FrontendInstallWorkflowService
         try
         {
             ReportPrepareStatus(onStatusChanged, $"正在下载 {loaderChoice.Title} 安装器…");
-            File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl).GetAwaiter().GetResult());
+            File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl, cancelToken).GetAwaiter().GetResult());
             using var archive = ZipFile.OpenRead(installerPath);
+            var installProfile = ReadJsonObjectFromEntry(archive, "install_profile.json");
 
             if (loaderChoice.Kind == FrontendInstallChoiceKind.Forge
-                && !IsModernForgelikeChoice(loaderChoice))
+                && IsLegacyForgeInstallProfile(installProfile))
             {
                 ReportPrepareStatus(onStatusChanged, $"正在解析 {loaderChoice.Title} 安装器内容…");
-                return BuildLegacyForgeManifest(archive, request, loaderChoice, onStatusChanged);
+                return BuildLegacyForgeManifest(archive, request, loaderChoice, installProfile, onStatusChanged);
             }
 
-            var tempRoot = CreateTempDirectory("pcl-forgelike-");
-            try
-            {
-                ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
-                EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged);
-                var before = SnapshotVersionDirectories(tempRoot);
-                ReportPrepareStatus(onStatusChanged, $"正在执行 {loaderChoice.Title} 安装器…");
-                RunForgeInstallerHelper(installerPath, tempRoot);
-                ReportPrepareStatus(onStatusChanged, "正在复制安装器生成的支持库…");
-                CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
-
-                ReportPrepareStatus(onStatusChanged, "正在读取安装器生成的版本清单…");
-                var generatedDirectory = DetectGeneratedVersionDirectory(
-                    tempRoot,
-                    before,
-                    loaderChoice.Kind == FrontendInstallChoiceKind.Forge ? "forge" :
-                    loaderChoice.Kind == FrontendInstallChoiceKind.NeoForge ? "neoforge" : "cleanroom");
-                if (generatedDirectory is null)
-                {
-                    throw new InvalidOperationException("安装器没有产出可读取的版本清单。");
-                }
-
-                var versionId = Path.GetFileName(generatedDirectory);
-                return ReadJsonObjectFromFile(Path.Combine(generatedDirectory, $"{versionId}.json"));
-            }
-            finally
-            {
-                TryDeleteDirectory(tempRoot);
-            }
+            return BuildModernForgelikeManifest(
+                archive,
+                installProfile,
+                installerPath,
+                request,
+                loaderChoice,
+                onStatusChanged,
+                cancelToken);
         }
         finally
         {
@@ -434,10 +419,10 @@ internal static class FrontendInstallWorkflowService
         ZipArchive archive,
         FrontendInstallApplyRequest request,
         FrontendInstallChoice loaderChoice,
+        JsonObject installProfile,
         Action<string>? onStatusChanged = null)
     {
-        ReportPrepareStatus(onStatusChanged, $"正在读取 {loaderChoice.Title} 安装器配置…");
-        var installProfile = ReadJsonObjectFromEntry(archive, "install_profile.json");
+        ValidateLegacyForgeInstallProfile(installProfile, request.MinecraftChoice.Version);
         if (installProfile["install"] is null)
         {
             var jsonPath = installProfile["json"]?.GetValue<string>()?.TrimStart('/');
@@ -483,6 +468,852 @@ internal static class FrontendInstallWorkflowService
         return manifest;
     }
 
+    private static JsonObject BuildModernForgelikeManifest(
+        ZipArchive archive,
+        JsonObject installProfile,
+        string installerPath,
+        FrontendInstallApplyRequest request,
+        FrontendInstallChoice loaderChoice,
+        Action<string>? onStatusChanged = null,
+        CancellationToken cancelToken = default)
+    {
+        var minecraftVersion = GetRequiredString(
+            installProfile,
+            "minecraft",
+            $"{loaderChoice.Title} 安装器缺少 Minecraft 版本信息。");
+        if (!string.Equals(minecraftVersion, request.MinecraftChoice.Version, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"{loaderChoice.Title} 安装器目标版本为 {minecraftVersion}，与当前选择的 {request.MinecraftChoice.Version} 不一致。");
+        }
+
+        var versionJsonPath = GetRequiredString(
+            installProfile,
+            "json",
+            $"{loaderChoice.Title} 安装器缺少版本清单路径。").TrimStart('/');
+
+        var tempRoot = CreateTempDirectory("pcl-forgelike-");
+        try
+        {
+            ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, cancelToken);
+
+            ReportPrepareStatus(onStatusChanged, $"正在解包 {loaderChoice.Title} 安装器中的支持库…");
+            CopyEmbeddedForgelikeLibraries(archive, installProfile, tempRoot);
+
+            ReportPrepareStatus(onStatusChanged, $"正在补全 {loaderChoice.Title} 安装依赖…");
+            EnsureForgelikeLibrariesAvailable(installProfile, tempRoot, cancelToken);
+
+            ReportPrepareStatus(onStatusChanged, $"正在执行 {loaderChoice.Title} 安装步骤…");
+            ExecuteForgelikeProcessors(
+                archive,
+                installProfile,
+                tempRoot,
+                installerPath,
+                request.MinecraftChoice,
+                cancelToken);
+
+            ReportPrepareStatus(onStatusChanged, "正在复制安装器生成的支持库…");
+            CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
+
+            ReportPrepareStatus(onStatusChanged, "正在读取安装器版本清单…");
+            return ReadJsonObjectFromEntry(archive, versionJsonPath);
+        }
+        finally
+        {
+            TryDeleteDirectory(tempRoot);
+        }
+    }
+
+    private static bool IsLegacyForgeInstallProfile(JsonObject installProfile)
+    {
+        return installProfile["install"] is JsonObject
+               && installProfile["versionInfo"] is JsonObject;
+    }
+
+    private static void ValidateLegacyForgeInstallProfile(JsonObject installProfile, string expectedMinecraftVersion)
+    {
+        var profileMinecraftVersion = installProfile["install"]?["minecraft"]?.GetValue<string>();
+        if (!string.IsNullOrWhiteSpace(profileMinecraftVersion)
+            && !string.Equals(profileMinecraftVersion, expectedMinecraftVersion, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Forge 安装器目标版本为 {profileMinecraftVersion}，与当前选择的 {expectedMinecraftVersion} 不一致。");
+        }
+    }
+
+    private static void CopyEmbeddedForgelikeLibraries(
+        ZipArchive archive,
+        JsonObject installProfile,
+        string launcherDirectory)
+    {
+        if (installProfile["libraries"] is JsonArray libraries)
+        {
+            foreach (var node in libraries)
+            {
+                if (node is not JsonObject library)
+                {
+                    continue;
+                }
+
+                var relativePath = ResolveLibraryRelativePath(library);
+                if (string.IsNullOrWhiteSpace(relativePath))
+                {
+                    continue;
+                }
+
+                TryCopyInstallerEntryToFile(
+                    archive,
+                    "maven/" + relativePath.Replace('\\', '/'),
+                    Path.Combine(launcherDirectory, "libraries", relativePath.Replace('/', Path.DirectorySeparatorChar)));
+            }
+        }
+
+        var mainArtifact = GetArtifactDescriptor(installProfile["path"]);
+        if (!string.IsNullOrWhiteSpace(mainArtifact))
+        {
+            var relativePath = DeriveLibraryPathFromName(mainArtifact);
+            TryCopyInstallerEntryToFile(
+                archive,
+                "maven/" + relativePath.Replace('\\', '/'),
+                Path.Combine(launcherDirectory, "libraries", relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        }
+    }
+
+    private static void EnsureForgelikeLibrariesAvailable(
+        JsonObject installProfile,
+        string launcherDirectory,
+        CancellationToken cancelToken = default)
+    {
+        if (installProfile["libraries"] is not JsonArray libraries)
+        {
+            return;
+        }
+
+        foreach (var node in libraries)
+        {
+            cancelToken.ThrowIfCancellationRequested();
+            if (node is not JsonObject library)
+            {
+                continue;
+            }
+
+            EnsureForgelikeLibraryAvailable(library, launcherDirectory, cancelToken);
+        }
+    }
+
+    private static void EnsureForgelikeLibraryAvailable(
+        JsonObject library,
+        string launcherDirectory,
+        CancellationToken cancelToken = default)
+    {
+        var relativePath = ResolveLibraryRelativePath(library);
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return;
+        }
+
+        var localPath = Path.Combine(launcherDirectory, "libraries", relativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (File.Exists(localPath))
+        {
+            var expectedSha1 = GetLibraryArtifactSha1(library);
+            if (string.IsNullOrWhiteSpace(expectedSha1)
+                || string.Equals(ComputeFileSha1(localPath), expectedSha1, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            TryDeleteFile(localPath);
+        }
+
+        var downloadUrl = ResolveLibraryArtifactUrl(library, relativePath);
+        if (string.IsNullOrWhiteSpace(downloadUrl))
+        {
+            return;
+        }
+
+        DownloadFileToPath(downloadUrl, localPath, GetLibraryArtifactSha1(library), cancelToken);
+    }
+
+    private static void ExecuteForgelikeProcessors(
+        ZipArchive archive,
+        JsonObject installProfile,
+        string launcherDirectory,
+        string installerPath,
+        FrontendInstallChoice minecraftChoice,
+        CancellationToken cancelToken = default)
+    {
+        if (installProfile["processors"] is not JsonArray processors)
+        {
+            return;
+        }
+
+        var librariesDirectory = Path.Combine(launcherDirectory, "libraries");
+        var tempDataDirectory = Path.Combine(launcherDirectory, "PCL", "InstallerData");
+        Directory.CreateDirectory(tempDataDirectory);
+
+        var variables = BuildForgelikeProcessorVariables(
+            archive,
+            installProfile["data"] as JsonObject,
+            tempDataDirectory,
+            launcherDirectory,
+            installerPath,
+            minecraftChoice.Version,
+            librariesDirectory);
+
+        foreach (var node in processors)
+        {
+            cancelToken.ThrowIfCancellationRequested();
+            if (node is not JsonObject processor || !IsClientProcessor(processor))
+            {
+                continue;
+            }
+
+            ExecuteForgelikeProcessor(
+                processor,
+                variables,
+                librariesDirectory,
+                launcherDirectory,
+                minecraftChoice,
+                cancelToken);
+        }
+    }
+
+    private static Dictionary<string, string> BuildForgelikeProcessorVariables(
+        ZipArchive archive,
+        JsonObject? data,
+        string tempDataDirectory,
+        string launcherDirectory,
+        string installerPath,
+        string minecraftVersion,
+        string librariesDirectory)
+    {
+        var variables = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["SIDE"] = "client",
+            ["MINECRAFT_JAR"] = Path.GetFullPath(Path.Combine(launcherDirectory, "versions", minecraftVersion, minecraftVersion + ".jar")),
+            ["MINECRAFT_VERSION"] = Path.GetFullPath(Path.Combine(launcherDirectory, "versions", minecraftVersion, minecraftVersion + ".jar")),
+            ["ROOT"] = Path.GetFullPath(launcherDirectory),
+            ["INSTALLER"] = Path.GetFullPath(installerPath),
+            ["LIBRARY_DIR"] = Path.GetFullPath(librariesDirectory)
+        };
+
+        if (data is null)
+        {
+            return variables;
+        }
+
+        foreach (var pair in data)
+        {
+            var rawValue = pair.Value is JsonObject datum
+                ? datum["client"]?.GetValue<string>()
+                : pair.Value?.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                continue;
+            }
+
+            variables[pair.Key] = ParseForgelikeLiteral(
+                rawValue,
+                new Dictionary<string, string>(StringComparer.Ordinal),
+                librariesDirectory,
+                path => ExtractInstallerEntryToTempFile(archive, path, tempDataDirectory));
+        }
+
+        return variables;
+    }
+
+    private static bool IsClientProcessor(JsonObject processor)
+    {
+        if (processor["sides"] is not JsonArray sides || sides.Count == 0)
+        {
+            return true;
+        }
+
+        return sides
+            .Select(node => node?.GetValue<string>())
+            .Any(side => string.Equals(side, "client", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void ExecuteForgelikeProcessor(
+        JsonObject processor,
+        IReadOnlyDictionary<string, string> variables,
+        string librariesDirectory,
+        string launcherDirectory,
+        FrontendInstallChoice minecraftChoice,
+        CancellationToken cancelToken = default)
+    {
+        var outputs = ResolveProcessorOutputs(processor, variables, librariesDirectory);
+        if (AreProcessorOutputsSatisfied(outputs))
+        {
+            return;
+        }
+
+        if (TryHandleDownloadMojmapsProcessor(processor, variables, librariesDirectory, minecraftChoice, cancelToken))
+        {
+            EnsureProcessorOutputs(outputs);
+            return;
+        }
+
+        var processorJar = GetRequiredArtifactPath(
+            processor["jar"],
+            librariesDirectory,
+            "安装器处理器缺少可执行 JAR。");
+        if (!File.Exists(processorJar))
+        {
+            throw new InvalidOperationException($"安装器处理器缺少依赖文件：{processorJar}");
+        }
+
+        var mainClass = ReadJarMainClass(processorJar);
+        if (string.IsNullOrWhiteSpace(mainClass))
+        {
+            throw new InvalidOperationException($"处理器 JAR 缺少 Main-Class：{processorJar}");
+        }
+
+        var classpath = new List<string>();
+        if (processor["classpath"] is JsonArray classpathNodes)
+        {
+            foreach (var node in classpathNodes)
+            {
+                var entryPath = GetRequiredArtifactPath(
+                    node,
+                    librariesDirectory,
+                    "安装器处理器缺少类路径依赖。");
+                if (!File.Exists(entryPath))
+                {
+                    throw new InvalidOperationException($"安装器处理器缺少类路径依赖：{entryPath}");
+                }
+
+                classpath.Add(entryPath);
+            }
+        }
+
+        classpath.Add(processorJar);
+
+        var arguments = new List<string>
+        {
+            "-cp",
+            string.Join(Path.PathSeparator, classpath),
+            mainClass
+        };
+
+        if (processor["args"] is JsonArray argNodes)
+        {
+            foreach (var node in argNodes)
+            {
+                var rawArgument = node?.GetValue<string>()
+                                  ?? throw new InvalidOperationException("安装器处理器参数缺少文本值。");
+                arguments.Add(ParseForgelikeLiteral(rawArgument, variables, librariesDirectory));
+            }
+        }
+
+        RunProcess(
+            ResolveJavaExecutable(),
+            arguments,
+            launcherDirectory,
+            "Forge-like 安装器处理器执行失败。",
+            cancelToken);
+
+        EnsureProcessorOutputs(outputs);
+    }
+
+    private static IReadOnlyDictionary<string, string> ResolveProcessorOutputs(
+        JsonObject processor,
+        IReadOnlyDictionary<string, string> variables,
+        string librariesDirectory)
+    {
+        var outputs = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (processor["outputs"] is not JsonObject outputNodes)
+        {
+            return outputs;
+        }
+
+        foreach (var pair in outputNodes)
+        {
+            var rawPath = pair.Key;
+            var rawHash = pair.Value?.GetValue<string>()
+                          ?? throw new InvalidOperationException("安装器处理器输出缺少校验值。");
+            var resolvedPath = ParseForgelikeLiteral(rawPath, variables, librariesDirectory);
+            var resolvedHash = ParseForgelikeLiteral(rawHash, variables, librariesDirectory);
+            outputs[resolvedPath] = resolvedHash;
+        }
+
+        return outputs;
+    }
+
+    private static bool AreProcessorOutputsSatisfied(IReadOnlyDictionary<string, string> outputs)
+    {
+        if (outputs.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var pair in outputs)
+        {
+            if (!File.Exists(pair.Key))
+            {
+                return false;
+            }
+
+            if (!string.Equals(ComputeFileSha1(pair.Key), pair.Value, StringComparison.OrdinalIgnoreCase))
+            {
+                TryDeleteFile(pair.Key);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void EnsureProcessorOutputs(IReadOnlyDictionary<string, string> outputs)
+    {
+        foreach (var pair in outputs)
+        {
+            if (!File.Exists(pair.Key))
+            {
+                throw new InvalidOperationException($"安装器处理器没有生成预期文件：{pair.Key}");
+            }
+
+            var actualHash = ComputeFileSha1(pair.Key);
+            if (!string.Equals(actualHash, pair.Value, StringComparison.OrdinalIgnoreCase))
+            {
+                TryDeleteFile(pair.Key);
+                throw new InvalidOperationException(
+                    $"安装器处理器输出校验失败：{pair.Key}，期望 {pair.Value}，实际 {actualHash}。");
+            }
+        }
+    }
+
+    private static bool TryHandleDownloadMojmapsProcessor(
+        JsonObject processor,
+        IReadOnlyDictionary<string, string> variables,
+        string librariesDirectory,
+        FrontendInstallChoice minecraftChoice,
+        CancellationToken cancelToken = default)
+    {
+        if (processor["args"] is not JsonArray argNodes)
+        {
+            return false;
+        }
+
+        var options = ParseProcessorOptions(
+            argNodes.Select(node => node?.GetValue<string>() ?? string.Empty),
+            variables,
+            librariesDirectory);
+        if (!string.Equals(options.GetValueOrDefault("task"), "DOWNLOAD_MOJMAPS", StringComparison.Ordinal)
+            || !string.Equals(options.GetValueOrDefault("side"), "client", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var version = options.GetValueOrDefault("version");
+        var output = options.GetValueOrDefault("output");
+        if (string.IsNullOrWhiteSpace(version) || string.IsNullOrWhiteSpace(output))
+        {
+            return false;
+        }
+
+        var mappings = ResolveClientMappingsDownload(version, minecraftChoice);
+        Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+        var payload = HttpClient.GetByteArrayAsync(mappings.Url, cancelToken).GetAwaiter().GetResult();
+        File.WriteAllBytes(output, payload);
+
+        if (!string.IsNullOrWhiteSpace(mappings.Sha1))
+        {
+            var actualHash = ComputeFileSha1(output);
+            if (!string.Equals(actualHash, mappings.Sha1, StringComparison.OrdinalIgnoreCase))
+            {
+                TryDeleteFile(output);
+                throw new InvalidOperationException(
+                    $"Mojang mappings 下载校验失败：期望 {mappings.Sha1}，实际 {actualHash}。");
+            }
+        }
+
+        return true;
+    }
+
+    private static Dictionary<string, string> ParseProcessorOptions(
+        IEnumerable<string> args,
+        IReadOnlyDictionary<string, string> variables,
+        string librariesDirectory)
+    {
+        var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        string? optionName = null;
+        foreach (var arg in args)
+        {
+            if (arg.StartsWith("--", StringComparison.Ordinal))
+            {
+                if (optionName is not null)
+                {
+                    options[optionName] = string.Empty;
+                }
+
+                optionName = arg[2..];
+                continue;
+            }
+
+            if (optionName is null)
+            {
+                continue;
+            }
+
+            options[optionName] = ParseForgelikeLiteral(arg, variables, librariesDirectory);
+            optionName = null;
+        }
+
+        if (optionName is not null)
+        {
+            options[optionName] = string.Empty;
+        }
+
+        return options;
+    }
+
+    private static (string Url, string? Sha1) ResolveClientMappingsDownload(
+        string version,
+        FrontendInstallChoice minecraftChoice)
+    {
+        JsonObject versionManifest;
+        if (string.Equals(version, minecraftChoice.Version, StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(minecraftChoice.ManifestUrl))
+        {
+            versionManifest = ReadJsonObject(minecraftChoice.ManifestUrl);
+        }
+        else
+        {
+            var manifest = ReadJsonObject(MojangVersionManifestUrl);
+            var versionUrl = manifest["versions"] is JsonArray versions
+                ? versions
+                    .Select(node => node as JsonObject)
+                    .FirstOrDefault(node => string.Equals(node?["id"]?.GetValue<string>(), version, StringComparison.OrdinalIgnoreCase))
+                    ?["url"]?.GetValue<string>()
+                : null;
+            if (string.IsNullOrWhiteSpace(versionUrl))
+            {
+                throw new InvalidOperationException($"无法找到 Minecraft {version} 的 Mojang 版本清单。");
+            }
+
+            versionManifest = ReadJsonObject(versionUrl);
+        }
+
+        var clientMappings = versionManifest["downloads"]?["client_mappings"] as JsonObject;
+        var url = clientMappings?["url"]?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            throw new InvalidOperationException($"Minecraft {version} 缺少 client_mappings 下载地址。");
+        }
+
+        return (url, clientMappings?["sha1"]?.GetValue<string>());
+    }
+
+    private static string ParseForgelikeLiteral(
+        string literal,
+        IReadOnlyDictionary<string, string> variables,
+        string librariesDirectory,
+        Func<string, string>? plainValueResolver = null)
+    {
+        if (literal.Length >= 2 && literal[0] == '{' && literal[^1] == '}')
+        {
+            var key = literal[1..^1];
+            return variables.TryGetValue(key, out var value)
+                ? value
+                : throw new InvalidOperationException($"安装器变量缺失：{key}");
+        }
+
+        if (literal.Length >= 2 && literal[0] == '\'' && literal[^1] == '\'')
+        {
+            return literal[1..^1];
+        }
+
+        if (literal.Length >= 2 && literal[0] == '[' && literal[^1] == ']')
+        {
+            return GetArtifactAbsolutePath(librariesDirectory, literal[1..^1]);
+        }
+
+        var replaced = ReplaceForgelikeTokens(literal, variables);
+        return plainValueResolver is null ? replaced : plainValueResolver(replaced);
+    }
+
+    private static string ReplaceForgelikeTokens(string value, IReadOnlyDictionary<string, string> variables)
+    {
+        var builder = new StringBuilder();
+        for (var index = 0; index < value.Length; index++)
+        {
+            var current = value[index];
+            if (current == '\\')
+            {
+                if (index == value.Length - 1)
+                {
+                    throw new InvalidOperationException($"非法安装器参数：{value}");
+                }
+
+                builder.Append(value[++index]);
+                continue;
+            }
+
+            if (current is '{' or '\'')
+            {
+                var close = current == '{' ? '}' : '\'';
+                var key = new StringBuilder();
+                while (++index < value.Length)
+                {
+                    var tokenChar = value[index];
+                    if (tokenChar == '\\')
+                    {
+                        if (index == value.Length - 1)
+                        {
+                            throw new InvalidOperationException($"非法安装器参数：{value}");
+                        }
+
+                        key.Append(value[++index]);
+                        continue;
+                    }
+
+                    if (tokenChar == close)
+                    {
+                        break;
+                    }
+
+                    key.Append(tokenChar);
+                }
+
+                if (index >= value.Length)
+                {
+                    throw new InvalidOperationException($"非法安装器参数：{value}");
+                }
+
+                if (current == '\'')
+                {
+                    builder.Append(key);
+                    continue;
+                }
+
+                if (!variables.TryGetValue(key.ToString(), out var replacement))
+                {
+                    throw new InvalidOperationException($"安装器变量缺失：{key}");
+                }
+
+                builder.Append(replacement);
+                continue;
+            }
+
+            builder.Append(current);
+        }
+
+        return builder.ToString();
+    }
+
+    private static string GetRequiredArtifactPath(
+        JsonNode? node,
+        string librariesDirectory,
+        string errorMessage)
+    {
+        var descriptor = GetArtifactDescriptor(node);
+        return string.IsNullOrWhiteSpace(descriptor)
+            ? throw new InvalidOperationException(errorMessage)
+            : GetArtifactAbsolutePath(librariesDirectory, descriptor);
+    }
+
+    private static string GetArtifactAbsolutePath(string librariesDirectory, string descriptor)
+    {
+        return Path.Combine(
+            librariesDirectory,
+            DeriveLibraryPathFromName(descriptor).Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    private static string GetRequiredString(JsonObject source, string key, string errorMessage)
+    {
+        var value = source[key]?.GetValue<string>();
+        return string.IsNullOrWhiteSpace(value) ? throw new InvalidOperationException(errorMessage) : value;
+    }
+
+    private static string? ResolveLibraryRelativePath(JsonObject library)
+    {
+        var explicitPath = library["downloads"]?["artifact"]?["path"]?.GetValue<string>();
+        if (!string.IsNullOrWhiteSpace(explicitPath))
+        {
+            return explicitPath.Replace('\\', '/');
+        }
+
+        var descriptor = GetArtifactDescriptor(library["name"]);
+        return string.IsNullOrWhiteSpace(descriptor) ? null : DeriveLibraryPathFromName(descriptor);
+    }
+
+    private static string? ResolveLibraryArtifactUrl(JsonObject library, string relativePath)
+    {
+        var explicitArtifactUrl = library["downloads"]?["artifact"]?["url"]?.GetValue<string>();
+        if (library["downloads"]?["artifact"] is JsonObject && explicitArtifactUrl is not null)
+        {
+            return string.IsNullOrWhiteSpace(explicitArtifactUrl) ? null : explicitArtifactUrl;
+        }
+
+        var baseUrl = library["url"]?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            baseUrl = "https://libraries.minecraft.net/";
+        }
+
+        return $"{baseUrl.TrimEnd('/')}/{relativePath}";
+    }
+
+    private static string? GetLibraryArtifactSha1(JsonObject library)
+    {
+        return library["downloads"]?["artifact"]?["sha1"]?.GetValue<string>()
+               ?? library["sha1"]?.GetValue<string>();
+    }
+
+    private static string? GetArtifactDescriptor(JsonNode? node)
+    {
+        if (node is null)
+        {
+            return null;
+        }
+
+        if (node is JsonValue)
+        {
+            return node.GetValue<string>();
+        }
+
+        if (node is JsonObject obj)
+        {
+            return obj["name"]?.GetValue<string>();
+        }
+
+        return null;
+    }
+
+    private static void CopyInstallerEntryToFile(ZipArchive archive, string entryPath, string targetPath)
+    {
+        using var source = OpenInstallerEntry(archive, entryPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        using var target = File.Create(targetPath);
+        source.CopyTo(target);
+    }
+
+    private static bool TryCopyInstallerEntryToFile(ZipArchive archive, string entryPath, string targetPath)
+    {
+        var entry = archive.GetEntry(entryPath.TrimStart('/').Replace('\\', '/'));
+        if (entry is null)
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        using var source = entry.Open();
+        using var target = File.Create(targetPath);
+        source.CopyTo(target);
+        return true;
+    }
+
+    private static string ExtractInstallerEntryToTempFile(ZipArchive archive, string entryPath, string tempDirectory)
+    {
+        Directory.CreateDirectory(tempDirectory);
+        var extension = Path.GetExtension(entryPath);
+        var outputPath = Path.Combine(tempDirectory, Guid.NewGuid().ToString("N") + extension);
+        CopyInstallerEntryToFile(archive, entryPath, outputPath);
+        return Path.GetFullPath(outputPath);
+    }
+
+    private static Stream OpenInstallerEntry(ZipArchive archive, string entryPath)
+    {
+        return archive.GetEntry(entryPath.TrimStart('/').Replace('\\', '/'))?.Open()
+               ?? throw new InvalidOperationException($"安装器中缺少条目：{entryPath}");
+    }
+
+    private static string ReadJarMainClass(string jarPath)
+    {
+        using var archive = ZipFile.OpenRead(jarPath);
+        using var stream = OpenInstallerEntry(archive, "META-INF/MANIFEST.MF");
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        string? currentHeader = null;
+        var currentValue = new StringBuilder();
+
+        void FlushCurrentHeader()
+        {
+            if (string.Equals(currentHeader, "Main-Class", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new OperationCanceledException(currentValue.ToString());
+            }
+
+            currentHeader = null;
+            currentValue.Clear();
+        }
+
+        try
+        {
+            while (reader.ReadLine() is { } line)
+            {
+                if (line.Length == 0)
+                {
+                    FlushCurrentHeader();
+                    continue;
+                }
+
+                if (line[0] == ' ' && currentHeader is not null)
+                {
+                    currentValue.Append(line[1..]);
+                    continue;
+                }
+
+                FlushCurrentHeader();
+                var separatorIndex = line.IndexOf(':');
+                if (separatorIndex < 0)
+                {
+                    continue;
+                }
+
+                currentHeader = line[..separatorIndex];
+                currentValue.Append(line[(separatorIndex + 1)..].TrimStart());
+            }
+
+            FlushCurrentHeader();
+        }
+        catch (OperationCanceledException ex)
+        {
+            return ex.Message;
+        }
+
+        return string.Empty;
+    }
+
+    private static string ComputeFileSha1(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(SHA1.HashData(stream)).ToLowerInvariant();
+    }
+
+    private static void DownloadFileToPath(
+        string url,
+        string targetPath,
+        string? expectedSha1 = null,
+        CancellationToken cancelToken = default)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        var tempPath = targetPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            var bytes = HttpClient.GetByteArrayAsync(url, cancelToken).GetAwaiter().GetResult();
+            File.WriteAllBytes(tempPath, bytes);
+
+            if (!string.IsNullOrWhiteSpace(expectedSha1))
+            {
+                var actualSha1 = ComputeFileSha1(tempPath);
+                if (!string.Equals(actualSha1, expectedSha1, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        $"下载的安装器依赖校验失败：{targetPath}，期望 {expectedSha1}，实际 {actualSha1}。");
+                }
+            }
+
+            File.Move(tempPath, targetPath, overwrite: true);
+        }
+        catch
+        {
+            TryDeleteFile(tempPath);
+            throw;
+        }
+    }
+
     private static JsonObject BuildLiteLoaderManifest(FrontendInstallChoice choice)
     {
         if (choice.Metadata?["token"] is not JsonObject token)
@@ -519,13 +1350,14 @@ internal static class FrontendInstallWorkflowService
 
     private static JsonObject BuildStandaloneOptiFineManifest(
         FrontendInstallApplyRequest request,
-        Action<string>? onStatusChanged = null)
+        Action<string>? onStatusChanged = null,
+        CancellationToken cancelToken = default)
     {
         var choice = request.OptiFineChoice
                      ?? throw new InvalidOperationException("缺少 OptiFine 选择项。");
         if (IsModernOptiFineVersion(choice))
         {
-            return BuildModernOptiFineManifest(request, choice, onStatusChanged);
+            return BuildModernOptiFineManifest(request, choice, onStatusChanged, cancelToken);
         }
 
         return BuildLegacyOptiFineManifest(choice);
@@ -534,8 +1366,10 @@ internal static class FrontendInstallWorkflowService
     private static JsonObject BuildModernOptiFineManifest(
         FrontendInstallApplyRequest request,
         FrontendInstallChoice choice,
-        Action<string>? onStatusChanged = null)
+        Action<string>? onStatusChanged = null,
+        CancellationToken cancelToken = default)
     {
+        cancelToken.ThrowIfCancellationRequested();
         var installerUrl = choice.DownloadUrl
                            ?? throw new InvalidOperationException("缺少 OptiFine 下载地址。");
         var installerPath = CreateTempFile("pcl-optifine-", ".jar");
@@ -544,11 +1378,11 @@ internal static class FrontendInstallWorkflowService
         try
         {
             ReportPrepareStatus(onStatusChanged, "正在下载 OptiFine 安装器…");
-            File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl).GetAwaiter().GetResult());
+            File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl, cancelToken).GetAwaiter().GetResult());
             ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged);
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, cancelToken);
             ReportPrepareStatus(onStatusChanged, "正在执行 OptiFine 安装器…");
-            RunOptiFineInstaller(installerPath, tempRoot);
+            RunOptiFineInstaller(installerPath, tempRoot, cancelToken);
             ReportPrepareStatus(onStatusChanged, "正在复制 OptiFine 生成的支持库…");
             CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
@@ -617,8 +1451,10 @@ internal static class FrontendInstallWorkflowService
     private static void EnsureVanillaVersionFiles(
         string launcherDirectory,
         FrontendInstallChoice minecraftChoice,
-        Action<string>? onStatusChanged = null)
+        Action<string>? onStatusChanged = null,
+        CancellationToken cancelToken = default)
     {
+        cancelToken.ThrowIfCancellationRequested();
         var manifestUrl = minecraftChoice.ManifestUrl
                           ?? throw new InvalidOperationException("缺少 Minecraft 版本清单地址。");
         ReportPrepareStatus(onStatusChanged, $"正在读取 Minecraft {minecraftChoice.Version} 版本详情…");
@@ -643,7 +1479,7 @@ internal static class FrontendInstallWorkflowService
         }
 
         ReportPrepareStatus(onStatusChanged, $"正在下载 Minecraft {minecraftChoice.Version} 原版客户端…");
-        File.WriteAllBytes(jarPath, HttpClient.GetByteArrayAsync(clientUrl).GetAwaiter().GetResult());
+        File.WriteAllBytes(jarPath, HttpClient.GetByteArrayAsync(clientUrl, cancelToken).GetAwaiter().GetResult());
         var launcherProfilesPath = Path.Combine(launcherDirectory, "launcher_profiles.json");
         if (!File.Exists(launcherProfilesPath))
         {
@@ -652,68 +1488,7 @@ internal static class FrontendInstallWorkflowService
         }
     }
 
-    private static IReadOnlyCollection<string> SnapshotVersionDirectories(string launcherDirectory)
-    {
-        var versionsDirectory = Path.Combine(launcherDirectory, "versions");
-        if (!Directory.Exists(versionsDirectory))
-        {
-            return Array.Empty<string>();
-        }
-
-        return Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly)
-            .Select(Path.GetFileName)
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Cast<string>()
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string? DetectGeneratedVersionDirectory(
-        string launcherDirectory,
-        IReadOnlyCollection<string> previousDirectories,
-        string loaderKeyword)
-    {
-        var versionsDirectory = Path.Combine(launcherDirectory, "versions");
-        if (!Directory.Exists(versionsDirectory))
-        {
-            return null;
-        }
-
-        var candidates = Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly)
-            .Where(path => !previousDirectories.Contains(Path.GetFileName(path)))
-            .Where(path => Directory.EnumerateFiles(path, "*.json", SearchOption.TopDirectoryOnly).Any())
-            .ToList();
-
-        if (candidates.Count <= 1)
-        {
-            return candidates.SingleOrDefault();
-        }
-
-        return candidates.FirstOrDefault(path => Path.GetFileName(path).Contains(loaderKeyword, StringComparison.OrdinalIgnoreCase))
-               ?? candidates.First();
-    }
-
-    private static void RunForgeInstallerHelper(string installerPath, string launcherDirectory)
-    {
-        var helperBaseDirectory = Path.GetDirectoryName(typeof(FrontendInstallWorkflowService).Assembly.Location)
-                                  ?? AppContext.BaseDirectory;
-        var helperPath = Path.Combine(helperBaseDirectory, ForgeInstallerHelperFileName);
-        if (!File.Exists(helperPath))
-        {
-            throw new InvalidOperationException($"缺少 {ForgeInstallerHelperFileName}。");
-        }
-
-        var javaPath = ResolveJavaExecutable();
-        var classPath = string.Join(Path.PathSeparator, helperPath, installerPath);
-        var arguments = $"-cp {QuoteArgument(classPath)} com.bangbang93.ForgeInstaller {QuoteArgument(launcherDirectory)}";
-        if ((GetJavaMajorVersion(javaPath) ?? 0) >= 9)
-        {
-            arguments = "--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED " + arguments;
-        }
-
-        RunProcess(javaPath, arguments, launcherDirectory, "Forge-like 安装器执行失败。");
-    }
-
-    private static void RunOptiFineInstaller(string installerPath, string launcherDirectory)
+    private static void RunOptiFineInstaller(string installerPath, string launcherDirectory, CancellationToken cancelToken = default)
     {
         var javaPath = ResolveJavaExecutable();
         var arguments = $"-Duser.home={QuoteArgument(launcherDirectory)} -cp {QuoteArgument(installerPath)} optifine.Installer";
@@ -722,11 +1497,12 @@ internal static class FrontendInstallWorkflowService
             arguments = "--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED " + arguments;
         }
 
-        RunProcess(javaPath, arguments, launcherDirectory, "OptiFine 安装器执行失败。");
+        RunProcess(javaPath, arguments, launcherDirectory, "OptiFine 安装器执行失败。", cancelToken);
     }
 
-    private static void RunProcess(string fileName, string arguments, string workingDirectory, string failureMessage)
+    private static void RunProcess(string fileName, string arguments, string workingDirectory, string failureMessage, CancellationToken cancelToken = default)
     {
+        cancelToken.ThrowIfCancellationRequested();
         var startInfo = new ProcessStartInfo
         {
             FileName = fileName,
@@ -740,9 +1516,83 @@ internal static class FrontendInstallWorkflowService
 
         using var process = Process.Start(startInfo)
                             ?? throw new InvalidOperationException(failureMessage);
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
+        using var cancellationRegistration = cancelToken.Register(() =>
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+                // Ignore kill failures: the process may have already exited.
+            }
+        });
+
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
         process.WaitForExit();
+        var stdout = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
+
+        cancelToken.ThrowIfCancellationRequested();
+
+        if (process.ExitCode != 0)
+        {
+            var detail = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+            throw new InvalidOperationException($"{failureMessage} {detail}".Trim());
+        }
+    }
+
+    private static void RunProcess(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        string workingDirectory,
+        string failureMessage,
+        CancellationToken cancelToken = default)
+    {
+        cancelToken.ThrowIfCancellationRequested();
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = fileName,
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = Process.Start(startInfo)
+                            ?? throw new InvalidOperationException(failureMessage);
+        using var cancellationRegistration = cancelToken.Register(() =>
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+                // Ignore kill failures: the process may have already exited.
+            }
+        });
+
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+        var stdout = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
+
+        cancelToken.ThrowIfCancellationRequested();
 
         if (process.ExitCode != 0)
         {
@@ -873,7 +1723,6 @@ internal static class FrontendInstallWorkflowService
         foreach (var key in new[] { "game", "jvm" })
         {
             var values = new JsonArray();
-            var seen = new HashSet<string>(StringComparer.Ordinal);
 
             void Append(JsonObject? source)
             {
@@ -885,12 +1734,6 @@ internal static class FrontendInstallWorkflowService
                 foreach (var item in array)
                 {
                     if (item is null)
-                    {
-                        continue;
-                    }
-
-                    var signature = item.ToJsonString();
-                    if (!seen.Add(signature))
                     {
                         continue;
                     }
@@ -2011,12 +2854,6 @@ internal static class FrontendInstallWorkflowService
             : rawValue.Trim().Replace('_', '-');
     }
 
-    private static bool IsModernForgelikeChoice(FrontendInstallChoice choice)
-    {
-        return choice.Kind == FrontendInstallChoiceKind.NeoForge
-               || GetVersionMajor(choice.Version) >= 20;
-    }
-
     private static bool IsModernOptiFineVersion(FrontendInstallChoice choice)
     {
         var minecraftVersion = choice.Metadata?["minecraftVersion"]?.GetValue<string>() ?? string.Empty;
@@ -2031,12 +2868,6 @@ internal static class FrontendInstallWorkflowService
                && minor >= 14;
     }
 
-    private static int GetVersionMajor(string version)
-    {
-        var first = version.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-        return int.TryParse(first, out var major) ? major : 0;
-    }
-
     private static string DeriveLibraryPathFromName(string name, string? classifier = null)
     {
         var parts = name.Split(':', StringSplitOptions.TrimEntries);
@@ -2048,11 +2879,48 @@ internal static class FrontendInstallWorkflowService
         var groupPath = parts[0].Replace('.', '/');
         var artifact = parts[1];
         var version = parts[2];
-        var extension = parts.Length > 3 && parts[3].StartsWith("@", StringComparison.Ordinal)
-            ? parts[3][1..]
-            : "jar";
-        var classifierSegment = string.IsNullOrWhiteSpace(classifier) ? string.Empty : "-" + classifier;
+        var resolvedClassifier = classifier;
+        var extension = "jar";
+
+        if (parts.Length > 4 && !string.IsNullOrWhiteSpace(parts[4]))
+        {
+            extension = parts[4];
+        }
+
+        if (parts.Length > 3)
+        {
+            var suffix = parts[3];
+            ParseExtensionSuffix(ref suffix, ref extension);
+            if (!string.IsNullOrWhiteSpace(suffix))
+            {
+                resolvedClassifier = suffix;
+            }
+        }
+
+        ParseExtensionSuffix(ref version, ref extension);
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            throw new InvalidOperationException($"无法从库名称推导路径：{name}");
+        }
+
+        var classifierSegment = string.IsNullOrWhiteSpace(resolvedClassifier) ? string.Empty : "-" + resolvedClassifier;
         return $"{groupPath}/{artifact}/{version}/{artifact}-{version}{classifierSegment}.{extension}";
+    }
+
+    private static void ParseExtensionSuffix(ref string value, ref string extension)
+    {
+        var extensionIndex = value.IndexOf('@');
+        if (extensionIndex < 0)
+        {
+            return;
+        }
+
+        if (extensionIndex < value.Length - 1)
+        {
+            extension = value[(extensionIndex + 1)..];
+        }
+
+        value = value[..extensionIndex];
     }
 
     private static string CreateTempFile(string prefix, string extension)

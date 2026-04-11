@@ -64,6 +64,46 @@ public sealed class LauncherStoredKeyEnvelopeServiceTest
             LauncherStoredKeyEnvelopeService.ReadKey(upgradedEnvelope.Value, persistedPath, secretStore));
     }
 
+    [TestMethod]
+    public void CreateStoredKeyEnvelopeFallsBackToPortableEnvelopeWhenSecretStoreWriteFails()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var key = new byte[] { 9, 7, 5, 3 };
+        var persistedPath = "/tmp/pcl-test/UserKey.bin";
+
+        var envelope = LauncherStoredKeyEnvelopeService.CreateStoredKeyEnvelope(
+            key,
+            persistedPath,
+            new ThrowingLauncherPlatformSecretStore());
+
+        Assert.AreEqual(2u, envelope.Version);
+        CollectionAssert.AreEqual(key, envelope.Data);
+    }
+
+    [TestMethod]
+    public void TryUpgradeStoredKeyEnvelopeReturnsNullWhenSecretStoreWriteFails()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var key = new byte[] { 2, 4, 6, 8 };
+        var persistedPath = "/tmp/pcl-test/UserKey.bin";
+
+        var upgradedEnvelope = LauncherStoredKeyEnvelopeService.TryUpgradeStoredKeyEnvelope(
+            new LauncherVersionedData(2, key),
+            key,
+            persistedPath,
+            new ThrowingLauncherPlatformSecretStore());
+
+        Assert.IsNull(upgradedEnvelope);
+    }
+
     private sealed class FakeLauncherPlatformSecretStore : ILauncherPlatformSecretStore
     {
         private readonly Dictionary<string, byte[]> _values = [];
@@ -73,5 +113,15 @@ public sealed class LauncherStoredKeyEnvelopeServiceTest
         public byte[] ReadSecret(string secretId) => _values[secretId];
 
         public void WriteSecret(string secretId, byte[] secretValue) => _values[secretId] = secretValue;
+    }
+
+    private sealed class ThrowingLauncherPlatformSecretStore : ILauncherPlatformSecretStore
+    {
+        public bool IsSupported => true;
+
+        public byte[] ReadSecret(string secretId) => throw new InvalidOperationException("store unavailable");
+
+        public void WriteSecret(string secretId, byte[] secretValue) =>
+            throw new InvalidOperationException("store unavailable");
     }
 }

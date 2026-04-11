@@ -529,8 +529,9 @@ internal sealed partial class FrontendShellViewModel
                 configuredFolders.Add(new InstanceSelectionFolderSnapshot(
                     GetInstanceSelectionDirectoryLabel(resolvedFolderPath),
                     resolvedFolderPath,
-                    StoreLauncherFolderPath(resolvedFolderPath, runtimePaths)));
-                _shellActionService.PersistSharedValue("LaunchFolders", SerializeInstanceSelectionFolders(configuredFolders, runtimePaths));
+                    StoreLauncherFolderPath(resolvedFolderPath, runtimePaths),
+                    IsPersisted: true));
+                PersistInstanceSelectionFolders(configuredFolders, runtimePaths);
             }
 
             RefreshSelectedLauncherFolderSmoothly(
@@ -571,6 +572,66 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             AddFailureActivity("导入整合包失败", ex.Message);
+        }
+    }
+
+    private async Task DeleteInstanceSelectionFolderAsync(InstanceSelectionFolderSnapshot folder)
+    {
+        if (!folder.IsPersisted)
+        {
+            AddActivity("移除文件夹记录", "当前文件夹未保存到列表中。");
+            return;
+        }
+
+        var confirmed = await _shellActionService.ConfirmAsync(
+            "移除文件夹确认",
+            $"确定要从文件夹列表中移除 {folder.Directory} 吗？{Environment.NewLine}该操作只会删除列表记录，不会删除磁盘上的文件。",
+            "从列表移除",
+            isDanger: false);
+        if (!confirmed)
+        {
+            AddActivity("移除文件夹记录", "已取消移除。");
+            return;
+        }
+
+        try
+        {
+            var runtimePaths = _shellActionService.RuntimePaths;
+            var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var currentStoredPath = ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw);
+            var currentDirectory = ResolveLauncherFolder(currentStoredPath, runtimePaths);
+            var configuredFolders = LoadConfiguredInstanceSelectionFolders(sharedConfig, localConfig, runtimePaths)
+                .Where(candidate => !string.Equals(candidate.Directory, folder.Directory, GetPathComparison()))
+                .ToList();
+
+            PersistInstanceSelectionFolders(configuredFolders, runtimePaths);
+
+            if (!string.Equals(currentDirectory, folder.Directory, GetPathComparison()))
+            {
+                RefreshInstanceSelectionSurface();
+                RefreshInstanceSelectionRouteMetadata();
+                AddActivity("移除文件夹记录", $"已从文件夹列表中移除 {folder.Directory}。");
+                return;
+            }
+
+            var fallbackDirectory = ResolveNextInstanceSelectionFolder(configuredFolders, runtimePaths);
+            if (string.Equals(fallbackDirectory, folder.Directory, GetPathComparison()))
+            {
+                RefreshInstanceSelectionSurface();
+                RefreshInstanceSelectionRouteMetadata();
+                AddActivity("移除文件夹记录", $"已移除 {folder.Directory} 的保存记录。当前仍在使用该目录，因此它会继续显示。");
+                return;
+            }
+
+            RefreshSelectedLauncherFolderSmoothly(
+                StoreLauncherFolderPath(fallbackDirectory, runtimePaths),
+                fallbackDirectory,
+                $"已从文件夹列表中移除 {folder.Directory}，并切换到 {fallbackDirectory}。");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("移除文件夹记录失败", ex.Message);
         }
     }
 
@@ -1112,17 +1173,7 @@ internal sealed partial class FrontendShellViewModel
                     folder.Directory,
                     $"已切换实例目录到 {folder.Directory}。");
             }),
-            new ActionCommand(() =>
-            {
-                if (_shellActionService.TryOpenExternalTarget(folder.Directory, out var error))
-                {
-                    AddActivity("打开实例根目录", folder.Directory);
-                }
-                else
-                {
-                    AddFailureActivity("打开实例根目录失败", error ?? folder.Directory);
-                }
-            }));
+            folder.IsPersisted ? new ActionCommand(() => _ = DeleteInstanceSelectionFolderAsync(folder)) : null);
     }
 
     private static InstanceSelectionShortcutEntryViewModel CreateInstanceSelectionShortcutEntry(
@@ -1136,6 +1187,10 @@ internal sealed partial class FrontendShellViewModel
 
     private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task, DateTimeOffset now)
     {
+        var canCancel = (task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null);
+        var canDismiss = task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed;
+        var hasPrimaryAction = canCancel || canDismiss;
+
         return new TaskManagerEntryViewModel(
             task.Title,
             task.State,
@@ -1153,9 +1208,23 @@ internal sealed partial class FrontendShellViewModel
             task.RemainingFileCount?.ToString() ?? "0",
             task.Children.Count,
             task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
-            task.Cancel.CanExecute(null),
+            hasPrimaryAction,
             task.Pause.CanExecute(null),
-            new ActionCommand(() => task.Cancel.Execute(null), () => task.Cancel.CanExecute(null)),
+            new ActionCommand(() =>
+            {
+                if ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null))
+                {
+                    task.Cancel.Execute(null);
+                    return;
+                }
+
+                if (task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed)
+                {
+                    TaskCenter.Remove(task);
+                }
+            }, () =>
+                ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null)) ||
+                task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed),
             new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
     }
 
@@ -1492,6 +1561,28 @@ internal sealed partial class FrontendShellViewModel
         FrontendRuntimePaths runtimePaths,
         string selectedDirectory)
     {
+        var folders = LoadConfiguredInstanceSelectionFolders(sharedConfig, localConfig, runtimePaths).ToList();
+        var seenDirectories = folders
+            .Select(folder => folder.Directory)
+            .ToHashSet(GetPathComparer());
+
+        if (seenDirectories.Add(selectedDirectory))
+        {
+            folders.Insert(0, new InstanceSelectionFolderSnapshot(
+                GetInstanceSelectionDirectoryLabel(selectedDirectory),
+                selectedDirectory,
+                StoreLauncherFolderPath(selectedDirectory, runtimePaths),
+                IsPersisted: false));
+        }
+
+        return folders;
+    }
+
+    private static IReadOnlyList<InstanceSelectionFolderSnapshot> LoadConfiguredInstanceSelectionFolders(
+        IKeyValueFileProvider sharedConfig,
+        IKeyValueFileProvider localConfig,
+        FrontendRuntimePaths runtimePaths)
+    {
         var rawFolders = ReadValue(sharedConfig, "LaunchFolders", string.Empty);
         if (string.IsNullOrWhiteSpace(rawFolders))
         {
@@ -1499,8 +1590,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var folders = new List<InstanceSelectionFolderSnapshot>();
-        var comparer = GetPathComparer();
-        var seenDirectories = new HashSet<string>(comparer);
+        var seenDirectories = new HashSet<string>(GetPathComparer());
         foreach (var rawEntry in rawFolders.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             var folder = ParseInstanceSelectionFolderSnapshot(rawEntry, runtimePaths);
@@ -1510,14 +1600,6 @@ internal sealed partial class FrontendShellViewModel
             }
 
             folders.Add(folder);
-        }
-
-        if (seenDirectories.Add(selectedDirectory))
-        {
-            folders.Insert(0, new InstanceSelectionFolderSnapshot(
-                GetInstanceSelectionDirectoryLabel(selectedDirectory),
-                selectedDirectory,
-                StoreLauncherFolderPath(selectedDirectory, runtimePaths)));
         }
 
         return folders;
@@ -1551,7 +1633,8 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceSelectionFolderSnapshot(
             string.IsNullOrWhiteSpace(label) ? GetInstanceSelectionDirectoryLabel(directory) : label,
             directory,
-            rawPath);
+            rawPath,
+            IsPersisted: true);
     }
 
     private static string SerializeInstanceSelectionFolders(
@@ -1568,6 +1651,26 @@ internal sealed partial class FrontendShellViewModel
                 var storedPath = StoreLauncherFolderPath(folder.Directory, runtimePaths);
                 return $"{label}>{storedPath}";
             }));
+    }
+
+    private void PersistInstanceSelectionFolders(
+        IReadOnlyList<InstanceSelectionFolderSnapshot> folders,
+        FrontendRuntimePaths runtimePaths)
+    {
+        _shellActionService.PersistSharedValue("LaunchFolders", SerializeInstanceSelectionFolders(folders, runtimePaths));
+        _shellActionService.RemoveLocalValues(["LaunchFolders"]);
+    }
+
+    private static string ResolveNextInstanceSelectionFolder(
+        IReadOnlyList<InstanceSelectionFolderSnapshot> configuredFolders,
+        FrontendRuntimePaths runtimePaths)
+    {
+        if (configuredFolders.Count > 0)
+        {
+            return configuredFolders[0].Directory;
+        }
+
+        return ResolveLauncherFolder(FrontendLauncherPathService.DefaultLauncherFolderRaw, runtimePaths);
     }
 
     private static string ResolvePickedLauncherFolderPath(string pickedFolderPath)
@@ -1789,7 +1892,7 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
     bool isSelected,
     string iconPath,
     ActionCommand command,
-    ActionCommand openFolderCommand)
+    ActionCommand? deleteCommand)
 {
     public string Title { get; } = title;
 
@@ -1801,7 +1904,11 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
 
     public ActionCommand Command { get; } = command;
 
-    public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
+    public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
+
+    public string DeleteToolTip => "从列表中移除";
+
+    public ActionCommand? DeleteCommand { get; } = deleteCommand;
 }
 
 internal sealed class InstanceSelectionShortcutEntryViewModel(
@@ -1832,9 +1939,9 @@ internal sealed class TaskManagerEntryViewModel(
     string remainingFilesText,
     int childCount,
     IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
-    bool canCancel,
+    bool hasPrimaryAction,
     bool canPause,
-    ActionCommand cancelCommand,
+    ActionCommand primaryActionCommand,
     ActionCommand pauseCommand)
 {
     private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
@@ -1889,11 +1996,11 @@ internal sealed class TaskManagerEntryViewModel(
 
     public bool HasStageEntries => StageEntries.Count > 0;
 
-    public bool CanCancel { get; } = canCancel;
+    public bool HasPrimaryAction { get; } = hasPrimaryAction;
 
     public bool CanPause { get; } = canPause;
 
-    public ActionCommand CancelCommand { get; } = cancelCommand;
+    public ActionCommand PrimaryActionCommand { get; } = primaryActionCommand;
 
     public ActionCommand PauseCommand { get; } = pauseCommand;
 
@@ -1969,7 +2076,8 @@ internal sealed record DedicatedGenericRouteMetadata(
 internal sealed record InstanceSelectionFolderSnapshot(
     string Label,
     string Directory,
-    string StoredPath);
+    string StoredPath,
+    bool IsPersisted);
 
 internal sealed record InstanceSelectionSnapshot(
     string Name,

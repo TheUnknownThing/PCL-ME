@@ -82,6 +82,11 @@ public partial class TaskModel : ObservableObject
     /// </summary>
     [ObservableProperty] private int? _remainingThreadCount;
 
+    /// <summary>
+    /// 是否已请求取消
+    /// </summary>
+    [ObservableProperty] private bool _isCancelRequested;
+
     private static readonly Action _EmptyAction = (static () => {});
 
     /// <summary>
@@ -94,7 +99,7 @@ public partial class TaskModel : ObservableObject
     /// </summary>
     public RelayCommand Cancel
     {
-        get => field ??= new RelayCommand(OnCancel ?? _EmptyAction, () => OnCancel != null);
+        get => field ??= new RelayCommand(OnCancel ?? _EmptyAction, () => OnCancel != null && !IsCancelRequested);
     } = null!;
 
     /// <summary>
@@ -126,5 +131,10 @@ public partial class TaskModel : ObservableObject
         {
             if (sender is ObservableCollection<TaskModel> c) IsGroup = c.Count > 0;
         };
+    }
+
+    partial void OnIsCancelRequestedChanged(bool value)
+    {
+        Cancel.NotifyCanExecuteChanged();
     }
 }

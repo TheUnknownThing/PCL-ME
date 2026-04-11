@@ -44,7 +44,6 @@
     <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_*.ttf" />
     <AvaloniaResource Include="Assets/icon.ico" />
     <AvaloniaResource Include="Assets/icon.png" />
-    <None Include="Assets/forge-installer.jar" Link="forge-installer.jar" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets/LauncherAssets/**" Link="LauncherAssets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

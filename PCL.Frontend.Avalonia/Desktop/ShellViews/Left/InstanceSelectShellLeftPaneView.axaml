@@ -37,6 +37,9 @@
               <DataTemplate>
                 <controls:PclListItem
                     Margin="0,0,12,0"
+                    AccessoryCommand="{Binding DeleteCommand}"
+                    AccessoryIconData="{Binding DeleteIconData}"
+                    AccessoryToolTip="{Binding DeleteToolTip}"
                     Command="{Binding Command}"
                     Info="{Binding Path}"
                     IsSelected="{Binding IsSelected}"

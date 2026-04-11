@@ -135,7 +135,6 @@ internal sealed partial class FrontendShellViewModel
     private bool _isLaunchMigrationExpanded = true;
     private bool _isLaunchNewsExpanded = true;
     private bool _showLaunchCommunityHint = true;
-    private string? _activeConfirmOverlayMessage;
     private bool _isLaunchInProgress;
     private bool _isLaunchProfileActionInProgress;
     private LaunchProfileSurfaceKind _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
@@ -304,6 +303,8 @@ internal sealed partial class FrontendShellViewModel
         _options = options;
         _shellActionService = shellActionService;
         _shellActionService.ConfirmPresenter = ShowInAppConfirmationAsync;
+        _shellActionService.TextInputPresenter = ShowInAppTextInputAsync;
+        _shellActionService.ChoicePresenter = ShowInAppChoiceAsync;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
