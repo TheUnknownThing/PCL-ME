@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Launch;
 using System.IO;
+using System.Collections.Generic;
 
 namespace PCL.Core.Test.Minecraft;
 
@@ -42,14 +43,15 @@ public sealed class MinecraftLaunchExecutionWorkflowServiceTest
                 AppDataPath: @"D:\.minecraft",
                 WorkingDirectory: @"D:\Instances\Fabric",
                 LaunchArguments: "--demo",
+                EnvironmentVariables: new Dictionary<string, string>(),
                 PrioritySetting: 0));
 
         Assert.AreEqual(@"C:\Java\bin\javaw.exe", result.FileName);
         Assert.AreEqual("--demo", result.Arguments);
         Assert.AreEqual(@"D:\Instances\Fabric", result.WorkingDirectory);
         Assert.IsFalse(result.UseShellExecute);
-        Assert.IsTrue(result.RedirectStandardOutput);
-        Assert.IsTrue(result.RedirectStandardError);
+        Assert.AreEqual(OperatingSystem.IsWindows(), result.RedirectStandardOutput);
+        Assert.AreEqual(OperatingSystem.IsWindows(), result.RedirectStandardError);
         Assert.AreEqual(@"D:\.minecraft", result.AppDataEnvironmentValue);
         Assert.AreEqual(MinecraftLaunchProcessPriorityKind.AboveNormal, result.PriorityKind);
         Assert.AreEqual(@"已启动游戏进程：C:\Java\bin\javaw.exe", result.StartedLogMessage);

@@ -61,6 +61,7 @@ public static class MinecraftLaunchCustomCommandService
             request.WaitForInstanceCommand,
             MinecraftLaunchCustomCommandScope.Instance);
 
+        AppendEnvironmentVariables(scriptLines, request.EnvironmentVariables);
         scriptLines.Add($"\"{request.JavaExecutablePath}\" {request.LaunchArguments}");
         if (OperatingSystem.IsWindows())
         {
@@ -102,6 +103,30 @@ public static class MinecraftLaunchCustomCommandService
                 ? "执行全局自定义命令失败"
                 : "执行实例自定义命令失败"));
     }
+
+    private static void AppendEnvironmentVariables(List<string> scriptLines, IReadOnlyDictionary<string, string> environmentVariables)
+    {
+        foreach (var environmentVariable in environmentVariables)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                scriptLines.Add($"set \"{environmentVariable.Key}={EscapeWindowsEnvironmentValue(environmentVariable.Value)}\"");
+                continue;
+            }
+
+            scriptLines.Add($"export {environmentVariable.Key}={EscapePosixEnvironmentValue(environmentVariable.Value)}");
+        }
+    }
+
+    private static string EscapeWindowsEnvironmentValue(string value)
+    {
+        return value.Replace("\"", "\"\"", StringComparison.Ordinal);
+    }
+
+    private static string EscapePosixEnvironmentValue(string value)
+    {
+        return "'" + value.Replace("'", "'\"'\"'", StringComparison.Ordinal) + "'";
+    }
 }
 
 public sealed record MinecraftLaunchCustomCommandRequest(
@@ -110,6 +135,7 @@ public sealed record MinecraftLaunchCustomCommandRequest(
     string WorkingDirectory,
     string JavaExecutablePath,
     string LaunchArguments,
+    IReadOnlyDictionary<string, string> EnvironmentVariables,
     string? GlobalCommand,
     bool WaitForGlobalCommand,
     string? InstanceCommand,

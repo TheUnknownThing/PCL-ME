@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace PCL.Core.Minecraft.Launch;
 
@@ -51,6 +52,7 @@ public static class MinecraftLaunchExecutionWorkflowService
             RedirectStandardError: shouldRedirectProcessOutput,
             runtimePlan.PathEnvironmentValue,
             runtimePlan.AppDataEnvironmentValue,
+            runtimePlan.EnvironmentVariables,
             runtimePlan.PriorityKind,
             "已启动游戏进程：" + runtimePlan.ExecutablePath,
             "由于取消启动，已强制结束游戏进程");
@@ -85,6 +87,7 @@ public sealed record MinecraftLaunchProcessShellPlan(
     bool RedirectStandardError,
     string PathEnvironmentValue,
     string AppDataEnvironmentValue,
+    IReadOnlyDictionary<string, string> EnvironmentVariables,
     MinecraftLaunchProcessPriorityKind PriorityKind,
     string StartedLogMessage,
     string AbortKillLogMessage);

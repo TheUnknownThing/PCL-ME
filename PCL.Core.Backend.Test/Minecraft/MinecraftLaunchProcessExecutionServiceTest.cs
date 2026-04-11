@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Launch;
 
@@ -45,6 +46,7 @@ public sealed class MinecraftLaunchProcessExecutionServiceTest
                 RedirectStandardError: true,
                 PathEnvironmentValue: @"C:\Windows\System32",
                 AppDataEnvironmentValue: @"C:\Minecraft\.minecraft",
+                EnvironmentVariables: new Dictionary<string, string> { ["XDG_SESSION_TYPE"] = "x11" },
                 PriorityKind: MinecraftLaunchProcessPriorityKind.AboveNormal,
                 StartedLogMessage: "started",
                 AbortKillLogMessage: "aborted"));
@@ -56,6 +58,7 @@ public sealed class MinecraftLaunchProcessExecutionServiceTest
         Assert.IsTrue(result.RedirectStandardError);
         Assert.AreEqual(@"C:\Windows\System32", result.EnvironmentVariables!["Path"]);
         Assert.AreEqual(@"C:\Minecraft\.minecraft", result.EnvironmentVariables["appdata"]);
+        Assert.AreEqual("x11", result.EnvironmentVariables["XDG_SESSION_TYPE"]);
     }
 
     [TestMethod]

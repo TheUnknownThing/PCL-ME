@@ -140,6 +140,7 @@ internal static class AvaloniaSampleFactory
                         WorkingDirectory: @"C:\Minecraft\.minecraft",
                         JavaExecutablePath: @"C:\Java\bin\java.exe",
                         LaunchArguments: "--username DemoPlayer --version 1.20.5",
+                        EnvironmentVariables: new Dictionary<string, string>(),
                         GlobalCommand: "echo preparing",
                         WaitForGlobalCommand: true,
                         InstanceCommand: "echo instance hook",
@@ -154,6 +155,7 @@ internal static class AvaloniaSampleFactory
                     AppDataPath: @"C:\Minecraft\.minecraft",
                     WorkingDirectory: @"C:\Minecraft\.minecraft",
                     LaunchArguments: "--username DemoPlayer --version 1.20.5",
+                    EnvironmentVariables: new Dictionary<string, string>(),
                     PrioritySetting: 0),
                 new MinecraftLaunchWatcherWorkflowRequest(
                     new MinecraftLaunchSessionLogRequest(

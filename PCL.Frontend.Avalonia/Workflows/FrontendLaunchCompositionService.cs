@@ -480,6 +480,7 @@ internal static class FrontendLaunchCompositionService
                 indieDirectory,
                 javaFolder,
                 replaceTime: true);
+        var launchEnvironmentOverrides = BuildLaunchEnvironmentOverrides();
 
         return MinecraftLaunchSessionWorkflowService.BuildStartPlan(
             new MinecraftLaunchSessionStartWorkflowRequest(
@@ -490,6 +491,7 @@ internal static class FrontendLaunchCompositionService
                         indieDirectory,
                         javaExecutablePath,
                         argumentPlan.FinalArguments,
+                        launchEnvironmentOverrides,
                         NullIfWhiteSpace(globalCommand),
                         ReadValue(localConfig, "LaunchAdvanceRunWait", true),
                         NullIfWhiteSpace(instanceCommand),
@@ -504,6 +506,7 @@ internal static class FrontendLaunchCompositionService
                     launcherFolder,
                     indieDirectory,
                     argumentPlan.FinalArguments,
+                    launchEnvironmentOverrides,
                     ReadValue(sharedConfig, "LaunchArgumentPriority", 1)),
                 watcherWorkflowRequest));
     }
@@ -556,6 +559,7 @@ internal static class FrontendLaunchCompositionService
                 RedirectStandardError: true,
                 PathEnvironmentValue: string.Empty,
                 AppDataEnvironmentValue: string.Empty,
+                EnvironmentVariables: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 PriorityKind: MinecraftLaunchProcessPriorityKind.Normal,
                 StartedLogMessage: "缺少 Java 运行时，尚未生成可执行的启动命令。",
                 AbortKillLogMessage: "缺少 Java 运行时，无需终止游戏进程。"),
@@ -575,6 +579,28 @@ internal static class FrontendLaunchCompositionService
             ["is_quick_play_singleplayer"] = false,
             ["is_quick_play_multiplayer"] = false,
             ["is_quick_play_realms"] = false
+        };
+    }
+
+    private static IReadOnlyDictionary<string, string> BuildLaunchEnvironmentOverrides()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var sessionType = Environment.GetEnvironmentVariable("XDG_SESSION_TYPE");
+        var display = Environment.GetEnvironmentVariable("DISPLAY");
+        if (!string.Equals(sessionType, "wayland", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(display))
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["XDG_SESSION_TYPE"] = "x11",
+            ["WAYLAND_DISPLAY"] = string.Empty
         };
     }
 

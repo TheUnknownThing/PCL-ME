@@ -24,7 +24,17 @@ public static class MinecraftLaunchProcessExecutionService
     {
         ArgumentNullException.ThrowIfNull(plan);
 
-        return new ProcessStartRequest(plan.FileName)
+        var environmentVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Path"] = plan.PathEnvironmentValue,
+            ["appdata"] = plan.AppDataEnvironmentValue
+        };
+        foreach (var environmentVariable in plan.EnvironmentVariables)
+        {
+            environmentVariables[environmentVariable.Key] = environmentVariable.Value;
+        }
+
+        var request = new ProcessStartRequest(plan.FileName)
         {
             Arguments = plan.Arguments,
             WorkingDirectory = plan.WorkingDirectory,
@@ -32,12 +42,10 @@ public static class MinecraftLaunchProcessExecutionService
             CreateNoWindow = plan.CreateNoWindow,
             RedirectStandardOutput = plan.RedirectStandardOutput,
             RedirectStandardError = plan.RedirectStandardError,
-            EnvironmentVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["Path"] = plan.PathEnvironmentValue,
-                ["appdata"] = plan.AppDataEnvironmentValue
-            }
+            EnvironmentVariables = environmentVariables
         };
+
+        return request;
     }
 
     public static bool TryApplyPriority(Process process, MinecraftLaunchProcessPriorityKind priorityKind)

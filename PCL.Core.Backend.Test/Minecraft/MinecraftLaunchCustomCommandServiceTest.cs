@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Launch;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace PCL.Core.Test.Minecraft;
 
@@ -16,6 +17,7 @@ public sealed class MinecraftLaunchCustomCommandServiceTest
             WorkingDirectory: @"C:\Minecraft",
             JavaExecutablePath: @"C:\Java\bin\java.exe",
             LaunchArguments: "--demo",
+            EnvironmentVariables: new Dictionary<string, string>(),
             GlobalCommand: "echo global",
             WaitForGlobalCommand: true,
             InstanceCommand: "echo version",
@@ -64,6 +66,7 @@ public sealed class MinecraftLaunchCustomCommandServiceTest
             WorkingDirectory: @"D:\Games\.minecraft",
             JavaExecutablePath: @"D:\Java\bin\java.exe",
             LaunchArguments: "--fullscreen",
+            EnvironmentVariables: new Dictionary<string, string>(),
             GlobalCommand: "",
             WaitForGlobalCommand: false,
             InstanceCommand: null,

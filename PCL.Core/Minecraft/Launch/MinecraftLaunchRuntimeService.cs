@@ -50,6 +50,7 @@ public static class MinecraftLaunchRuntimeService
             request.LaunchArguments,
             string.Join(Path.PathSeparator, pathEntries),
             request.AppDataPath,
+            request.EnvironmentVariables ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
             ResolvePriority(request.PrioritySetting));
     }
 
@@ -98,6 +99,7 @@ public sealed record MinecraftLaunchProcessRequest(
     string AppDataPath,
     string WorkingDirectory,
     string LaunchArguments,
+    IReadOnlyDictionary<string, string>? EnvironmentVariables,
     int PrioritySetting);
 
 public sealed record MinecraftLaunchProcessPlan(
@@ -107,6 +109,7 @@ public sealed record MinecraftLaunchProcessPlan(
     string LaunchArguments,
     string PathEnvironmentValue,
     string AppDataEnvironmentValue,
+    IReadOnlyDictionary<string, string> EnvironmentVariables,
     MinecraftLaunchProcessPriorityKind PriorityKind);
 
 public sealed record MinecraftLaunchWatcherRequest(
