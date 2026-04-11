@@ -1045,59 +1045,29 @@ internal static class FrontendInstanceCompositionService
             return FrontendVersionManifestSummary.Empty;
         }
 
-        return ReadManifestSummaryRecursive(launcherFolder, selectedInstanceName, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static FrontendVersionManifestSummary ReadManifestSummaryRecursive(
-        string launcherFolder,
-        string versionName,
-        ISet<string> visited)
-    {
-        if (!visited.Add(versionName))
-        {
-            return FrontendVersionManifestSummary.Empty;
-        }
-
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
-        {
-            return FrontendVersionManifestSummary.Empty;
-        }
-
-        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-        var root = document.RootElement;
-        var parentVersion = GetString(root, "inheritsFrom");
-        var parentSummary = string.IsNullOrWhiteSpace(parentVersion)
-            ? FrontendVersionManifestSummary.Empty
-            : ReadManifestSummaryRecursive(launcherFolder, parentVersion, visited);
-        var currentLibraries = ParseLibraryNames(root);
-        var allLibraries = parentSummary.LibraryNames.Concat(currentLibraries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var vanillaVersion = TryParseVanillaVersion(FirstNonEmpty(parentVersion, GetString(root, "id")))?.ToString() ?? parentSummary.VanillaVersion;
-
+        var profile = FrontendVersionManifestInspector.ReadProfile(launcherFolder, selectedInstanceName);
         return new FrontendVersionManifestSummary(
-            VanillaVersion: vanillaVersion,
-            VersionType: FirstNonEmpty(GetString(root, "type"), parentSummary.VersionType),
-            HasForge: parentSummary.HasForge || ContainsLibrary(allLibraries, "net.minecraftforge:forge"),
-            ForgeVersion: parentSummary.ForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.minecraftforge:forge"),
-            NeoForgeVersion: parentSummary.NeoForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.neoforged:neoforge"),
-            CleanroomVersion: parentSummary.CleanroomVersion ?? ExtractLibraryVersion(allLibraries, "com.cleanroommc"),
-            FabricVersion: parentSummary.FabricVersion ?? ExtractLibraryVersion(allLibraries, "net.fabricmc:fabric-loader"),
-            LegacyFabricVersion: parentSummary.LegacyFabricVersion ?? ExtractLibraryVersion(allLibraries, "net.legacyfabric"),
-            QuiltVersion: parentSummary.QuiltVersion ?? ExtractLibraryVersion(allLibraries, "org.quiltmc:quilt-loader"),
-            OptiFineVersion: parentSummary.OptiFineVersion ?? ExtractOptiFineVersion(allLibraries),
-            HasLiteLoader: parentSummary.HasLiteLoader || ContainsLibrary(allLibraries, "liteloader"),
-            LiteLoaderVersion: parentSummary.LiteLoaderVersion ?? ExtractLibraryVersion(allLibraries, "com.mumfrey:liteloader"),
-            LabyModVersion: parentSummary.LabyModVersion ?? ExtractLibraryVersion(allLibraries, "net.labymod"),
-            HasLabyMod: parentSummary.HasLabyMod || ContainsLibrary(allLibraries, "labymod"),
-            HasFabricApi: parentSummary.HasFabricApi || ContainsLibrary(allLibraries, "fabric-api"),
-            FabricApiVersion: parentSummary.FabricApiVersion ?? ExtractLibraryVersion(allLibraries, "net.fabricmc.fabric-api:fabric-api"),
-            HasQsl: parentSummary.HasQsl || ContainsLibrary(allLibraries, "quilted-fabric-api") || ContainsLibrary(allLibraries, ":qsl"),
-            QslVersion: parentSummary.QslVersion
-                        ?? ExtractLibraryVersion(allLibraries, "org.quiltmc.quilted-fabric-api")
-                        ?? ExtractLibraryVersion(allLibraries, "org.quiltmc:qsl"),
-            HasOptiFabric: parentSummary.HasOptiFabric || ContainsLibrary(allLibraries, "optifabric"),
-            OptiFabricVersion: parentSummary.OptiFabricVersion ?? ExtractLibraryVersion(allLibraries, "optifabric"),
-            LibraryNames: allLibraries);
+            VanillaVersion: profile.VanillaVersion,
+            VersionType: profile.VersionType,
+            HasForge: profile.HasForge,
+            ForgeVersion: profile.ForgeVersion,
+            NeoForgeVersion: profile.NeoForgeVersion,
+            CleanroomVersion: profile.CleanroomVersion,
+            FabricVersion: profile.FabricVersion,
+            LegacyFabricVersion: profile.LegacyFabricVersion,
+            QuiltVersion: profile.QuiltVersion,
+            OptiFineVersion: profile.OptiFineVersion,
+            HasLiteLoader: profile.HasLiteLoader,
+            LiteLoaderVersion: profile.LiteLoaderVersion,
+            LabyModVersion: profile.LabyModVersion,
+            HasLabyMod: profile.HasLabyMod,
+            HasFabricApi: profile.HasFabricApi,
+            FabricApiVersion: profile.FabricApiVersion,
+            HasQsl: profile.HasQsl,
+            QslVersion: profile.QslVersion,
+            HasOptiFabric: profile.HasOptiFabric,
+            OptiFabricVersion: profile.OptiFabricVersion,
+            LibraryNames: profile.LibraryNames);
     }
 
     private static bool ResolveIsolationEnabled(
@@ -1129,20 +1099,6 @@ internal static class FrontendInstanceCompositionService
             : 2;
     }
 
-    private static IReadOnlyList<string> ParseLibraryNames(JsonElement root)
-    {
-        if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        return libraries.EnumerateArray()
-            .Select(library => GetString(library, "name"))
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Cast<string>()
-            .ToArray();
-    }
-
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
     {
         if (!provider.Exists(key))
@@ -1168,40 +1124,6 @@ internal static class FrontendInstanceCompositionService
         }
     }
 
-    private static bool ContainsLibrary(IEnumerable<string> libraries, string searchText)
-    {
-        return libraries.Any(library => library.Contains(searchText, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string? ExtractLibraryVersion(IEnumerable<string> libraries, string prefix)
-    {
-        var match = libraries.FirstOrDefault(library => library.StartsWith(prefix + ":", StringComparison.OrdinalIgnoreCase));
-        return match?.Split(':').LastOrDefault();
-    }
-
-    private static string? ExtractOptiFineVersion(IEnumerable<string> libraries)
-    {
-        var match = libraries.FirstOrDefault(library => library.Contains("optifine", StringComparison.OrdinalIgnoreCase));
-        return match?.Split(':').LastOrDefault();
-    }
-
-    private static Version? TryParseVanillaVersion(string? rawValue)
-    {
-        if (string.IsNullOrWhiteSpace(rawValue))
-        {
-            return null;
-        }
-
-        var candidate = rawValue.Trim();
-        if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
-        {
-            candidate = candidate[1..];
-        }
-
-        var filtered = new string(candidate.TakeWhile(character => char.IsDigit(character) || character == '.').ToArray());
-        return Version.TryParse(filtered, out var version) ? version : null;
-    }
-
     private static string? FirstNonEmpty(params string?[] values)
     {
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
@@ -1212,36 +1134,6 @@ internal static class FrontendInstanceCompositionService
         return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
-    }
-
-    private static string? GetNestedString(JsonElement element, params string[] path)
-    {
-        foreach (var segment in path)
-        {
-            if (!element.TryGetProperty(segment, out var next))
-            {
-                return null;
-            }
-
-            element = next;
-        }
-
-        return element.ValueKind == JsonValueKind.String ? element.GetString() : null;
-    }
-
-    private static bool? GetNestedBoolean(JsonElement element, params string[] path)
-    {
-        foreach (var segment in path)
-        {
-            if (!element.TryGetProperty(segment, out var next))
-            {
-                return null;
-            }
-
-            element = next;
-        }
-
-        return element.ValueKind is JsonValueKind.True or JsonValueKind.False ? element.GetBoolean() : null;
     }
 
     private static string FormatFileSize(long length)

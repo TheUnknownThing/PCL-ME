@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -1469,71 +1468,11 @@ internal sealed partial class FrontendShellViewModel
             return new InstanceManifestSnapshot("Unknown", null, true);
         }
 
-        try
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-            var root = document.RootElement;
-            var versionLabel = GetString(root, "inheritsFrom")
-                               ?? GetString(root, "id")
-                               ?? "Unknown";
-            var loaderLabel = ResolveLoaderLabel(root);
-            return new InstanceManifestSnapshot(versionLabel, loaderLabel, false);
-        }
-        catch
-        {
-            return new InstanceManifestSnapshot("Unknown", null, true);
-        }
-    }
-
-    private static string? ResolveLoaderLabel(JsonElement root)
-    {
-        if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
-        {
-            return null;
-        }
-
-        var names = libraries.EnumerateArray()
-            .Select(library => GetString(library, "name"))
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Select(name => name!)
-            .ToArray();
-
-        if (names.Any(name => name.Contains("neoforge", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "NeoForge";
-        }
-
-        if (names.Any(name => name.Contains("net.minecraftforge:forge", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Forge";
-        }
-
-        if (names.Any(name => name.Contains("cleanroom", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Cleanroom";
-        }
-
-        if (names.Any(name => name.Contains("net.fabricmc:fabric-loader", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Fabric";
-        }
-
-        if (names.Any(name => name.Contains("org.quiltmc", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Quilt";
-        }
-
-        if (names.Any(name => name.Contains("liteloader", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "LiteLoader";
-        }
-
-        if (names.Any(name => name.Contains("labymod", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "LabyMod";
-        }
-
-        return null;
+        var profile = FrontendVersionManifestInspector.ReadProfileFromManifestPath(manifestPath);
+        return new InstanceManifestSnapshot(
+            profile.VanillaVersion,
+            profile.PrimaryLoaderName,
+            !profile.IsManifestValid);
     }
 
     private static string MapInstanceCategory(int displayType)
@@ -1546,13 +1485,6 @@ internal sealed partial class FrontendShellViewModel
             4 => "较少使用",
             _ => string.Empty
         };
-    }
-
-    private static string? GetString(JsonElement element, string propertyName)
-    {
-        return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
-            ? value.GetString()
-            : null;
     }
 
     private static IReadOnlyList<InstanceSelectionFolderSnapshot> BuildInstanceSelectionFolderSnapshots(

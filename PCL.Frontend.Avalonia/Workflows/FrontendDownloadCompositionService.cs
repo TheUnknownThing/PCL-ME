@@ -266,22 +266,16 @@ internal static class FrontendDownloadCompositionService
 
             try
             {
-                using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-                var root = document.RootElement;
-                var libraries = root.TryGetProperty("libraries", out var librariesElement) && librariesElement.ValueKind == JsonValueKind.Array
-                    ? librariesElement.EnumerateArray()
-                        .Select(item => item.TryGetProperty("name", out var name) ? name.GetString() ?? string.Empty : string.Empty)
-                        .Where(name => !string.IsNullOrWhiteSpace(name))
-                        .ToArray()
-                    : [];
+                var profile = FrontendVersionManifestInspector.ReadProfile(launcherFolder, versionName);
+                var loaderMap = FrontendVersionManifestInspector.CreateLoaderMap(profile);
 
                 results.Add(new LocalManifestEntry(
-                    GetString(root, "id") ?? versionName,
-                    GetString(root, "inheritsFrom") ?? versionName,
-                    GetString(root, "type") ?? "本地版本",
-                    GetDateTime(root, "releaseTime"),
+                    versionName,
+                    profile.VanillaVersion,
+                    profile.VersionType ?? "本地版本",
+                    profile.ReleaseTime,
                     manifestPath,
-                    ExtractLoaders(libraries)));
+                    loaderMap));
             }
             catch
             {
@@ -291,43 +285,6 @@ internal static class FrontendDownloadCompositionService
 
         return results;
     }
-
-    private static Dictionary<string, string> ExtractLoaders(IEnumerable<string> libraries)
-    {
-        var loaders = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var library in libraries)
-        {
-            TryAddLoader(loaders, "forge", library, "net.minecraftforge:forge:");
-            TryAddLoader(loaders, "neoforge", library, "net.neoforged:neoforge:");
-            TryAddLoader(loaders, "cleanroom", library, "com.cleanroommc:");
-            TryAddLoader(loaders, "fabric", library, "net.fabricmc:fabric-loader:");
-            TryAddLoader(loaders, "quilt", library, "org.quiltmc:quilt-loader:");
-            TryAddLoader(loaders, "legacyfabric", library, "net.legacyfabric:");
-            TryAddLoader(loaders, "optifine", library, "optifine:OptiFine:");
-            TryAddLoader(loaders, "liteloader", library, "com.mumfrey:liteloader:");
-            if (!loaders.ContainsKey("labymod") && library.Contains("labymod", StringComparison.OrdinalIgnoreCase))
-            {
-                loaders["labymod"] = library.Split(':').LastOrDefault() ?? "已安装";
-            }
-        }
-
-        return loaders;
-    }
-
-    private static void TryAddLoader(
-        IDictionary<string, string> loaders,
-        string key,
-        string library,
-        string prefix)
-    {
-        if (loaders.ContainsKey(key) || !library.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        loaders[key] = library[prefix.Length..];
-    }
-
     private static IReadOnlyList<FrontendDownloadCatalogEntry> EnsureCatalogEntries(
         IReadOnlyList<FrontendDownloadCatalogEntry> entries,
         string emptyMessage)
