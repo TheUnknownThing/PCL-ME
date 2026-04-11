@@ -275,6 +275,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        AvaloniaHintBus.Show($"正在分析 {selectedEntries.Count} 个收藏项目…", AvaloniaHintTheme.Info);
         AddActivity("批量安装收藏", $"正在为 {targetSnapshot.Name} 分析 {selectedEntries.Count} 个收藏项目。");
         DownloadFavoriteBatchInstallBuildResult result;
         try
@@ -287,6 +288,18 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        if (result.Plans.Count > 0)
+        {
+            var confirmed = await ConfirmDownloadFavoriteBatchInstallAsync(targetSnapshot, result);
+            if (!confirmed)
+            {
+                AddActivity("批量安装收藏", "已取消加入批量安装任务。");
+                return;
+            }
+        }
+
+        AvaloniaHintBus.Show("批量安装已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
+        AddActivity("批量安装收藏", $"{targetSnapshot.Name} • 正在把分析完成的资源加入任务中心。");
         foreach (var plan in result.Plans)
         {
             RegisterDownloadFavoriteBatchInstallTask(plan);
@@ -310,6 +323,24 @@ internal sealed partial class FrontendShellViewModel
         foreach (var skipped in result.Skipped.Take(5))
         {
             AddActivity("批量安装收藏", skipped);
+        }
+    }
+
+    private async Task<bool> ConfirmDownloadFavoriteBatchInstallAsync(
+        InstanceSelectionSnapshot targetSnapshot,
+        DownloadFavoriteBatchInstallBuildResult result)
+    {
+        try
+        {
+            return await _shellActionService.ConfirmAsync(
+                "确认批量安装",
+                BuildDownloadFavoriteBatchInstallConfirmationMessage(targetSnapshot, result),
+                "开始安装");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("批量安装确认失败", ex.Message);
+            return false;
         }
     }
 
@@ -607,7 +638,8 @@ internal sealed partial class FrontendShellViewModel
             var release = SelectPreferredCommunityProjectReleaseForTarget(
                 projectState.Releases.Where(entry => entry.IsDirectDownload && !string.IsNullOrWhiteSpace(entry.Target)),
                 targetComposition.Selection.VanillaVersion,
-                targetSnapshot.LoaderLabel);
+                targetSnapshot.LoaderLabel,
+                favorite.OriginSubpage);
             if (release is null || string.IsNullOrWhiteSpace(release.Target))
             {
                 skipped.Add($"已跳过 {favorite.Title}：没有找到适合 {targetSnapshot.Name} 的可安装版本。");
@@ -638,6 +670,8 @@ internal sealed partial class FrontendShellViewModel
 
             plans.Add(new DownloadFavoriteBatchInstallPlan(
                 favorite.Title,
+                release.Title,
+                string.IsNullOrWhiteSpace(release.Meta) ? release.Info : release.Meta,
                 release.Target!,
                 targetPath,
                 targetSnapshot.Name,
@@ -659,8 +693,9 @@ internal sealed partial class FrontendShellViewModel
             plan.TargetPath,
             ResolveDownloadRequestTimeout(),
             onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {plan.InstanceName}", AvaloniaHintTheme.Info),
-            onCompleted: _ =>
+            onCompleted: downloadedPath =>
             {
+                var installedPath = FinalizeCommunityProjectInstalledArtifact(plan.Route, downloadedPath);
                 Dispatcher.UIThread.Post(() =>
                 {
                     CleanupReplacedDownloadFavoriteResource(plan.ReplacedPath);
@@ -669,7 +704,7 @@ internal sealed partial class FrontendShellViewModel
                         ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
                     }
 
-                    AddActivity("批量安装收藏", $"{plan.Title} -> {plan.TargetPath}");
+                    AddActivity("批量安装收藏", $"{plan.Title} -> {installedPath}");
                     AvaloniaHintBus.Show($"{plan.Title} 已安装到 {plan.InstanceName}", AvaloniaHintTheme.Success);
                 });
             },
@@ -706,9 +741,15 @@ internal sealed partial class FrontendShellViewModel
     private static FrontendCommunityProjectReleaseEntry? SelectPreferredCommunityProjectReleaseForTarget(
         IEnumerable<FrontendCommunityProjectReleaseEntry> releases,
         string? preferredVersion,
-        string? preferredLoader)
+        string? preferredLoader,
+        LauncherFrontendSubpageKey? originSubpage)
     {
         return releases
+            .Where(release => IsCompatibleCommunityProjectInstallRelease(
+                release,
+                preferredVersion,
+                preferredLoader,
+                originSubpage))
             .OrderByDescending(release => ReleaseMatchesExactInstanceVersion(release, NormalizeMinecraftVersion(preferredVersion)))
             .ThenByDescending(release => ReleaseMatchesExactInstanceLoader(release, preferredLoader))
             .ThenByDescending(release => release.PublishedUnixTime)
@@ -848,6 +889,54 @@ internal sealed partial class FrontendShellViewModel
         return new Version(0, 0);
     }
 
+    private static string BuildDownloadFavoriteBatchInstallConfirmationMessage(
+        InstanceSelectionSnapshot targetSnapshot,
+        DownloadFavoriteBatchInstallBuildResult result)
+    {
+        var lines = new List<string>
+        {
+            $"目标实例：{targetSnapshot.Name}",
+            $"准备安装：{result.Plans.Count} 项"
+        };
+
+        if (result.Plans.Count > 0)
+        {
+            lines.Add(string.Empty);
+            lines.Add("将安装的版本：");
+            foreach (var plan in result.Plans.Take(8))
+            {
+                var releaseText = string.IsNullOrWhiteSpace(plan.ReleaseSummary)
+                    ? plan.ReleaseTitle
+                    : $"{plan.ReleaseTitle} | {plan.ReleaseSummary}";
+                lines.Add($"• {plan.Title} -> {releaseText}");
+            }
+
+            if (result.Plans.Count > 8)
+            {
+                lines.Add($"• 以及另外 {result.Plans.Count - 8} 项");
+            }
+        }
+
+        if (result.Skipped.Count > 0)
+        {
+            lines.Add(string.Empty);
+            lines.Add("未安装 / 缺少兼容版本：");
+            foreach (var skipped in result.Skipped.Take(8))
+            {
+                lines.Add($"• {skipped}");
+            }
+
+            if (result.Skipped.Count > 8)
+            {
+                lines.Add($"• 以及另外 {result.Skipped.Count - 8} 项");
+            }
+        }
+
+        lines.Add(string.Empty);
+        lines.Add("确认后会把以上资源加入任务中心。");
+        return string.Join(Environment.NewLine, lines);
+    }
+
     private void QueueDownloadFavoriteIconLoad(InstanceResourceEntryViewModel entry, string? iconUrl)
     {
         if (string.IsNullOrWhiteSpace(iconUrl))
@@ -877,6 +966,8 @@ internal sealed partial class FrontendShellViewModel
 
     private sealed record DownloadFavoriteBatchInstallPlan(
         string Title,
+        string ReleaseTitle,
+        string ReleaseSummary,
         string SourceUrl,
         string TargetPath,
         string InstanceName,

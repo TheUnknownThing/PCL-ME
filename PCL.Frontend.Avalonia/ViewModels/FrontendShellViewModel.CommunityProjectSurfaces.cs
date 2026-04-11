@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -1003,12 +1004,13 @@ internal sealed partial class FrontendShellViewModel
                 targetPath,
                 ResolveDownloadRequestTimeout(),
                 onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {CommunityProjectCurrentInstanceName}", AvaloniaHintTheme.Info),
-                onCompleted: _ =>
+                onCompleted: downloadedPath =>
                 {
+                    var installedPath = FinalizeCommunityProjectInstalledArtifact(_selectedCommunityProjectOriginSubpage, downloadedPath);
                     Dispatcher.UIThread.Post(() =>
                     {
                         ReloadInstanceComposition(initializeAllSurfaces: false);
-                        AddActivity("安装到当前实例", $"{entry.Title} -> {targetPath}");
+                        AddActivity("安装到当前实例", $"{entry.Title} -> {installedPath}");
                         AvaloniaHintBus.Show($"{entry.Title} 已安装到 {CommunityProjectCurrentInstanceName}", AvaloniaHintTheme.Success);
                     });
                 },
@@ -1338,10 +1340,18 @@ internal sealed partial class FrontendShellViewModel
 
     private bool TryGetCommunityProjectInstallRelease(out FrontendCommunityProjectReleaseEntry entry)
     {
+        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
+        var preferredLoader = ResolveSelectedInstanceLoaderLabel();
         var versionGrouping = DetermineCommunityProjectVersionGrouping(_communityProjectState.Releases);
         entry = SelectPreferredCommunityProjectRelease(
             GetVisibleCommunityProjectReleases(versionGrouping)
-                .Where(release => release.IsDirectDownload && !string.IsNullOrWhiteSpace(release.Target)))!;
+                .Where(release => release.IsDirectDownload
+                                  && !string.IsNullOrWhiteSpace(release.Target)
+                                  && IsCompatibleCommunityProjectInstallRelease(
+                                      release,
+                                      preferredVersion,
+                                      preferredLoader,
+                                      _selectedCommunityProjectOriginSubpage)))!;
         return entry is not null;
     }
 
@@ -1378,6 +1388,31 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return release.Loaders.Any(loader => string.Equals(loader, preferredLoader, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsCompatibleCommunityProjectInstallRelease(
+        FrontendCommunityProjectReleaseEntry release,
+        string? preferredVersion,
+        string? preferredLoader,
+        LauncherFrontendSubpageKey? originSubpage)
+    {
+        if (!ReleaseMatchesExactInstanceVersion(release, NormalizeMinecraftVersion(preferredVersion)))
+        {
+            return false;
+        }
+
+        if (!RequiresCommunityProjectInstallLoader(originSubpage))
+        {
+            return true;
+        }
+
+        return ReleaseMatchesExactInstanceLoader(release, preferredLoader);
+    }
+
+    private static bool RequiresCommunityProjectInstallLoader(LauncherFrontendSubpageKey? originSubpage)
+    {
+        return originSubpage is LauncherFrontendSubpageKey.DownloadMod
+            or LauncherFrontendSubpageKey.DownloadShader;
     }
 
     private IEnumerable<FrontendCommunityProjectReleaseEntry> GetVisibleCommunityProjectReleases((bool GroupByDrop, bool FoldOld) versionGrouping)
@@ -1540,6 +1575,184 @@ internal sealed partial class FrontendShellViewModel
         var invalidCharacters = Path.GetInvalidFileNameChars();
         var cleaned = new string(candidate.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
         return string.IsNullOrWhiteSpace(cleaned) ? "community-resource-download" : cleaned;
+    }
+
+    private static string FinalizeCommunityProjectInstalledArtifact(
+        LauncherFrontendSubpageKey? originSubpage,
+        string downloadedPath)
+    {
+        if (originSubpage != LauncherFrontendSubpageKey.DownloadWorld)
+        {
+            return downloadedPath;
+        }
+
+        return ExtractInstalledWorldArchive(downloadedPath);
+    }
+
+    private static string ExtractInstalledWorldArchive(string archivePath)
+    {
+        var extension = Path.GetExtension(archivePath);
+        if (!(string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase)
+              || string.Equals(extension, ".mcworld", StringComparison.OrdinalIgnoreCase))
+            || !File.Exists(archivePath))
+        {
+            return archivePath;
+        }
+
+        var savesDirectory = Path.GetDirectoryName(archivePath)
+            ?? throw new InvalidOperationException("存档安装目录不可用。");
+        string? wrapperDirectory;
+        using (var archive = ZipFile.OpenRead(archivePath))
+        {
+            var effectiveEntries = archive.Entries
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.FullName))
+                .Where(entry => !IsIgnoredWorldArchiveEntry(entry.FullName))
+                .ToArray();
+            if (effectiveEntries.Length == 0)
+            {
+                throw new InvalidOperationException("压缩包中没有可导入的存档内容。");
+            }
+
+            wrapperDirectory = ResolveWorldArchiveWrapperDirectory(effectiveEntries);
+        }
+
+        var finalName = string.IsNullOrWhiteSpace(wrapperDirectory)
+            ? Path.GetFileNameWithoutExtension(archivePath)
+            : wrapperDirectory;
+        var finalDirectory = GetUniqueChildPath(savesDirectory, finalName);
+        Directory.CreateDirectory(finalDirectory);
+        string? finalPath = null;
+        try
+        {
+            using var archive = ZipFile.OpenRead(archivePath);
+            foreach (var entry in archive.Entries
+                         .Where(entry => !string.IsNullOrWhiteSpace(entry.FullName))
+                         .Where(entry => !IsIgnoredWorldArchiveEntry(entry.FullName)))
+            {
+                var relativePath = BuildWorldArchiveRelativePath(entry.FullName, wrapperDirectory);
+                if (string.IsNullOrWhiteSpace(relativePath))
+                {
+                    continue;
+                }
+
+                var targetPath = Path.GetFullPath(Path.Combine(finalDirectory, relativePath));
+                var rootPath = Path.GetFullPath(finalDirectory + Path.DirectorySeparatorChar);
+                if (!targetPath.StartsWith(rootPath, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException($"压缩包中包含不安全的路径：{entry.FullName}");
+                }
+
+                if (entry.FullName.EndsWith("/", StringComparison.Ordinal) || string.IsNullOrEmpty(entry.Name))
+                {
+                    Directory.CreateDirectory(targetPath);
+                    continue;
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+                using var entryStream = entry.Open();
+                using var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                entryStream.CopyTo(targetStream);
+            }
+
+            finalPath = finalDirectory;
+            archive.Dispose();
+            File.Delete(archivePath);
+            return finalPath;
+        }
+        catch (Exception ex)
+        {
+            if (!string.IsNullOrWhiteSpace(finalPath) && Directory.Exists(finalPath))
+            {
+                try
+                {
+                    Directory.Delete(finalPath, recursive: true);
+                }
+                catch
+                {
+                    // Best effort cleanup only.
+                }
+            }
+
+            throw new InvalidOperationException($"存档压缩包下载完成，但自动解压失败：{ex.Message}", ex);
+        }
+    }
+
+    private static bool IsIgnoredWorldArchiveEntry(string fullName)
+    {
+        var normalized = fullName.Replace('\\', '/').Trim('/');
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return true;
+        }
+
+        return normalized.StartsWith("__MACOSX/", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(normalized, "__MACOSX", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(Path.GetFileName(normalized), ".DS_Store", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? ResolveWorldArchiveWrapperDirectory(IEnumerable<ZipArchiveEntry> entries)
+    {
+        string? wrapperDirectory = null;
+        foreach (var entry in entries)
+        {
+            var normalized = entry.FullName.Replace('\\', '/').Trim('/');
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                continue;
+            }
+
+            var firstSeparatorIndex = normalized.IndexOf('/');
+            if (firstSeparatorIndex < 0)
+            {
+                return null;
+            }
+
+            var firstSegment = normalized[..firstSeparatorIndex];
+            if (string.IsNullOrWhiteSpace(firstSegment))
+            {
+                return null;
+            }
+
+            if (wrapperDirectory is null)
+            {
+                wrapperDirectory = firstSegment;
+                continue;
+            }
+
+            if (!string.Equals(wrapperDirectory, firstSegment, StringComparison.Ordinal))
+            {
+                return null;
+            }
+        }
+
+        return wrapperDirectory;
+    }
+
+    private static string? BuildWorldArchiveRelativePath(string fullName, string? wrapperDirectory)
+    {
+        var normalized = fullName.Replace('\\', '/').Trim('/');
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(wrapperDirectory))
+        {
+            if (string.Equals(normalized, wrapperDirectory, StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            var prefix = $"{wrapperDirectory}/";
+            if (normalized.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                normalized = normalized[prefix.Length..];
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(normalized)
+            ? null
+            : normalized.Replace('/', Path.DirectorySeparatorChar);
     }
 
     private async Task CopyCommunityProjectTextAsync(string title, string text, string emptyMessage)
@@ -2168,47 +2381,49 @@ internal sealed class FrontendManagedFileDownloadTask(
             response.EnsureSuccessStatusCode();
 
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-            await using var sourceStream = await response.Content.ReadAsStreamAsync(token);
-            await using var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
-
-            var contentLength = response.Content.Headers.ContentLength;
-            var buffer = new byte[81920];
-            var totalRead = 0L;
-            var lastReportedBytes = 0L;
-            var lastReportedAt = Environment.TickCount64;
-            StateChanged(TaskState.Running, "正在下载文件…");
-            onStarted?.Invoke(targetPath);
-
-            while (true)
+            await using (var sourceStream = await response.Content.ReadAsStreamAsync(token))
+            await using (var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
             {
-                var read = await sourceStream.ReadAsync(buffer, token);
-                if (read <= 0)
+                var contentLength = response.Content.Headers.ContentLength;
+                var buffer = new byte[81920];
+                var totalRead = 0L;
+                var lastReportedBytes = 0L;
+                var lastReportedAt = Environment.TickCount64;
+                StateChanged(TaskState.Running, "正在下载文件…");
+                onStarted?.Invoke(targetPath);
+
+                while (true)
                 {
-                    break;
+                    var read = await sourceStream.ReadAsync(buffer, token);
+                    if (read <= 0)
+                    {
+                        break;
+                    }
+
+                    await targetStream.WriteAsync(buffer.AsMemory(0, read), token);
+                    totalRead += read;
+
+                    var totalLength = contentLength.GetValueOrDefault();
+                    var progress = totalLength > 0
+                        ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
+                        : 0d;
+                    ProgressChanged(progress);
+
+                    var now = Environment.TickCount64;
+                    if (now - lastReportedAt >= 250)
+                    {
+                        var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                        var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
+                        PublishTelemetry(progress, speed);
+                        lastReportedAt = now;
+                        lastReportedBytes = totalRead;
+                        StateChanged(TaskState.Running, $"正在下载 {Path.GetFileName(targetPath)}…");
+                    }
                 }
 
-                await targetStream.WriteAsync(buffer.AsMemory(0, read), token);
-                totalRead += read;
-
-                var totalLength = contentLength.GetValueOrDefault();
-                var progress = totalLength > 0
-                    ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
-                    : 0d;
-                ProgressChanged(progress);
-
-                var now = Environment.TickCount64;
-                if (now - lastReportedAt >= 250)
-                {
-                    var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
-                    var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
-                    PublishTelemetry(progress, speed);
-                    lastReportedAt = now;
-                    lastReportedBytes = totalRead;
-                    StateChanged(TaskState.Running, $"正在下载 {Path.GetFileName(targetPath)}…");
-                }
+                await targetStream.FlushAsync(token);
             }
 
-            await targetStream.FlushAsync(token);
             ProgressChanged(1d);
             PublishTelemetry(1d, 0d, 0);
             StateChanged(TaskState.Success, $"已保存到 {targetPath}");
