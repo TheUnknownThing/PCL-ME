@@ -9,6 +9,17 @@
       <TextBlock Text="{Binding Label}" />
     </DataTemplate>
   </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector="Button.download-resource-entry:pointerover > Border.download-resource-entry-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-entry:pressed > Border.download-resource-entry-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
       <controls:PclSearchBox
@@ -145,7 +156,7 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <Button
-                        Classes="nochrome"
+                        Classes="nochrome download-resource-entry"
                         Margin="0,0,0,2"
                         Padding="0"
                         Background="Transparent"
@@ -155,8 +166,11 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch">
                       <Border
+                          Classes="download-resource-entry-background"
                           Height="64"
                           Background="{DynamicResource ColorBrushSemiTransparent}"
+                          BorderBrush="Transparent"
+                          BorderThickness="1"
                           CornerRadius="4">
                         <Grid ColumnDefinitions="7,50,8,Auto,*,30" RowDefinitions="*,20,18,16,*">
                           <Border
