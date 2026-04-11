@@ -37,25 +37,18 @@
       <Setter Property="Background" Value="{DynamicResource ColorBrush6}" />
     </Style>
 
-    <Style Selector="Button.download-resource-nav-button TextBlock">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush2}" />
-    </Style>
-
-    <Style Selector="Button.download-resource-nav-button Path">
-      <Setter Property="Fill" Value="{DynamicResource ColorBrush2}" />
-    </Style>
-
-    <Style Selector="Button.download-resource-nav-button:disabled TextBlock">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrushGray4}" />
-    </Style>
-
-    <Style Selector="Button.download-resource-nav-button:disabled Path">
-      <Setter Property="Fill" Value="{DynamicResource ColorBrushGray4}" />
-    </Style>
-
     <Style Selector="Button.download-resource-nav-button:disabled">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button Path.chevron-enabled">
+      <Setter Property="Stroke" Value="{DynamicResource ColorBrush3}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button:pointerover Path.chevron-enabled">
+      <Setter Property="Stroke" Value="{DynamicResource ColorBrush4}" />
     </Style>
 
     <Style Selector="Button.download-resource-page-button">
@@ -76,7 +69,7 @@
     </Style>
 
     <Style Selector="Button.download-resource-page-button > Border.page-chip > TextBlock">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
+      <Setter Property="Foreground" Value="{DynamicResource ColorBrush3}" />
     </Style>
 
     <Style Selector="Button.download-resource-page-button:pointerover > Border.page-chip">
@@ -88,7 +81,7 @@
     </Style>
 
     <Style Selector="Button.download-resource-page-button.active > Border.page-chip">
-      <Setter Property="Background" Value="{DynamicResource ColorBrush2}" />
+      <Setter Property="Background" Value="{DynamicResource ColorBrush3}" />
     </Style>
 
     <Style Selector="Button.download-resource-page-button.active > Border.page-chip > TextBlock">
@@ -422,26 +415,40 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard ContentMargin="8,8,8,8" IsVisible="{Binding ShowDownloadResourcePagination}">
+        <controls:PclCard
+            ContentMargin="8,8,8,8"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding ShowDownloadResourcePagination}">
           <controls:PclCard.CardContent>
-            <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="12" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="12" VerticalAlignment="Center">
                 <Button
                     Grid.Column="0"
                     Classes="nochrome download-resource-nav-button"
                     Command="{Binding PreviousDownloadResourcePageCommand}"
-                    IsEnabled="{Binding CanGoToPreviousDownloadResourcePage}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    IsEnabled="{Binding CanGoToPreviousDownloadResourcePage}"
+                    Margin="0,0,4,0">
+                  <Grid Width="9" Height="14">
                     <Path
-                        Width="8"
-                        Height="13"
+                        Classes="chevron-enabled"
+                        Width="9"
+                        Height="14"
                         VerticalAlignment="Center"
+                        IsVisible="{Binding CanGoToPreviousDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
                         Stretch="Uniform"
-                        Data="M7.4,0L6,1.4L2.4,5L6,8.6L7.4,10L2.4,5L7.4,0Z" />
-                    <TextBlock
+                        Data="M7,1 L2,7 L7,13" />
+                    <Path
+                        Width="9"
+                        Height="14"
                         VerticalAlignment="Center"
-                        FontSize="15"
-                        Text="Previous" />
-                  </StackPanel>
+                        Stroke="{DynamicResource ColorBrushGray4}"
+                        IsVisible="{Binding CanNotGoToPreviousDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M7,1 L2,7 L7,13" />
+                  </Grid>
                 </Button>
 
                 <ItemsControl Grid.Column="1" ItemsSource="{Binding DownloadResourcePaginationItems}">
@@ -472,6 +479,7 @@
                             VerticalAlignment="Center"
                             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                             FontSize="15"
+                            Margin="4,0"
                             Text="{Binding Label}"
                             IsVisible="{Binding ShowEllipsis}" />
                       </Grid>
@@ -483,29 +491,31 @@
                     Grid.Column="2"
                     Classes="nochrome download-resource-nav-button"
                     Command="{Binding NextDownloadResourcePageCommand}"
-                    IsEnabled="{Binding CanGoToNextDownloadResourcePage}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontSize="15"
-                        Text="Next" />
+                    IsEnabled="{Binding CanGoToNextDownloadResourcePage}"
+                    Margin="4,0,0,0">
+                  <Grid Width="9" Height="14">
                     <Path
-                        Width="8"
-                        Height="13"
+                        Classes="chevron-enabled"
+                        Width="9"
+                        Height="14"
                         VerticalAlignment="Center"
+                        IsVisible="{Binding CanGoToNextDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
                         Stretch="Uniform"
-                        Data="M0,0L1.4,1.4L5,5L1.4,8.6L0,10L5,5L0,0Z" />
-                  </StackPanel>
+                        Data="M2,1 L7,7 L2,13" />
+                    <Path
+                        Width="9"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        Stroke="{DynamicResource ColorBrushGray4}"
+                        IsVisible="{Binding CanNotGoToNextDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M2,1 L7,7 L2,13" />
+                  </Grid>
                 </Button>
-
-                <TextBlock
-                    Grid.Column="3"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    FontSize="15"
-                    Text="{Binding DownloadResourceResultSummary}"
-                    TextTrimming="CharacterEllipsis" />
             </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>

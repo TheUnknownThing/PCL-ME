@@ -315,6 +315,10 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanGoToNextDownloadResourcePage => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries;
 
+    public bool CanNotGoToPreviousDownloadResourcePage => !CanGoToPreviousDownloadResourcePage;
+
+    public bool CanNotGoToNextDownloadResourcePage => !CanGoToNextDownloadResourcePage;
+
     public string DownloadResourceResultSummary
     {
         get
@@ -680,6 +684,8 @@ internal sealed partial class FrontendShellViewModel
         _nextDownloadResourcePageCommand.NotifyCanExecuteChanged();
         RaisePropertyChanged(nameof(CanGoToPreviousDownloadResourcePage));
         RaisePropertyChanged(nameof(CanGoToNextDownloadResourcePage));
+        RaisePropertyChanged(nameof(CanNotGoToPreviousDownloadResourcePage));
+        RaisePropertyChanged(nameof(CanNotGoToNextDownloadResourcePage));
         RaisePropertyChanged(nameof(DownloadResourceResultSummary));
         RebuildDownloadResourcePaginationItems();
     }
