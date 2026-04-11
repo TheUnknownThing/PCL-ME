@@ -22,6 +22,8 @@ namespace PCL.Frontend.Avalonia.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
+    private static readonly IBrush PromptOverlayDefaultBrush = Brush.Parse("#5A000000");
+    private static readonly IBrush PromptOverlayWarningBrush = Brush.Parse("#8C500000");
     private FrontendShellViewModel? _shellViewModel;
     private CompositionVisual? _gridRootVisual;
     private CompositionVisual? _launchLeftContentHostVisual;
@@ -307,6 +309,12 @@ internal sealed partial class MainWindow : Window
         if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayVisible))
         {
             QueuePromptOverlaySync();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.CurrentPrompt))
+        {
+            UpdatePromptOverlayBackdropBrush();
         }
     }
 
@@ -320,6 +328,11 @@ internal sealed partial class MainWindow : Window
         var shouldShow = _shellViewModel?.IsPromptOverlayVisible == true;
         if (shouldShow == _isPromptOverlayRenderedOpen)
         {
+            if (shouldShow)
+            {
+                UpdatePromptOverlayBackdropBrush();
+            }
+
             return;
         }
 
@@ -328,6 +341,7 @@ internal sealed partial class MainWindow : Window
 
         if (shouldShow)
         {
+            UpdatePromptOverlayBackdropBrush();
             PromptOverlayBackdrop.IsVisible = true;
             PromptOverlayHost.IsVisible = true;
             PromptOverlayHost.IsHitTestVisible = true;
@@ -352,6 +366,17 @@ internal sealed partial class MainWindow : Window
         PromptOverlayBackdrop.IsVisible = false;
         PromptOverlayHost.IsVisible = false;
         PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+    }
+
+    private void UpdatePromptOverlayBackdropBrush()
+    {
+        var isWarning = string.Equals(
+            _shellViewModel?.CurrentPrompt?.Severity,
+            "Warning",
+            StringComparison.OrdinalIgnoreCase);
+        PromptOverlayBackdrop.Background = isWarning
+            ? PromptOverlayWarningBrush
+            : PromptOverlayDefaultBrush;
     }
 
     private void UpdateWindowChromeState()
