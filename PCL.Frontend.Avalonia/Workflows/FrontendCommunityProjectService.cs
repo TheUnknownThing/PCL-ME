@@ -13,7 +13,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendCommunityProjectService
 {
     private const string CompDetailTargetPrefix = "comp-detail:";
-    private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
+    private static readonly string CurseForgeApiKey = FrontendEmbeddedSecrets.GetCurseForgeApiKey();
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry<FrontendCommunityProjectSummary>> SummaryCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly ConcurrentDictionary<string, CacheEntry<FrontendCommunityProjectState>> DetailCache = new(StringComparer.OrdinalIgnoreCase);

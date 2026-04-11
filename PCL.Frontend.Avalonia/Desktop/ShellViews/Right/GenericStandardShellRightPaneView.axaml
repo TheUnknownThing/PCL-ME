@@ -732,6 +732,16 @@
                 TextWrapping="Wrap" />
           </Border>
 
+          <controls:PclCard Margin="0,0,0,15" Header="正在加载主页市场" IsVisible="{Binding ShowHomePageMarketLoadingCard}" ContentMargin="20,18,20,18">
+            <controls:PclCard.CardContent>
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="{Binding HomePageMarketLoadingText}"
+                  TextWrapping="Wrap" />
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+
           <ItemsControl ItemsSource="{Binding HomePageMarketSections}" IsVisible="{Binding HasHomePageMarketSections}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>

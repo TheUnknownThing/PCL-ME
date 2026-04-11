@@ -86,7 +86,7 @@ public static class MinecraftLaunchNativesSyncService
 
                     var relativePath = entryPath.Replace('/', Path.DirectorySeparatorChar);
                     var targetPath = Path.GetFullPath(Path.Combine(targetRoot, relativePath));
-                    if (!targetPath.StartsWith(targetRoot, StringComparison.OrdinalIgnoreCase))
+                    if (!IsPathWithinDirectory(targetPath, targetRoot))
                     {
                         logs.Add("跳过越界路径：" + entryPath);
                         continue;
@@ -180,6 +180,27 @@ public static class MinecraftLaunchNativesSyncService
             ".jnilib" => true,
             _ => false
         };
+    }
+
+    private static bool IsPathWithinDirectory(string path, string directory)
+    {
+        var normalizedDirectory = EnsureTrailingSeparator(Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var normalizedPath = Path.GetFullPath(path);
+        return normalizedPath.StartsWith(normalizedDirectory, GetPathComparison());
+    }
+
+    private static string EnsureTrailingSeparator(string path)
+    {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static StringComparison GetPathComparison()
+    {
+        return OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
     }
 }
 

@@ -30,6 +30,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PCL_SECRET_MS_CLIENT_ID</_Parameter1>
+      <_Parameter2>$([System.Environment]::GetEnvironmentVariable('PCL_MS_CLIENT_ID'))</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PCL_SECRET_CURSEFORGE_API_KEY</_Parameter1>
+      <_Parameter2>$([System.Environment]::GetEnvironmentVariable('PCL_CURSEFORGE_API_KEY'))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_*.ttf" />
     <AvaloniaResource Include="Assets/icon.ico" />
     <AvaloniaResource Include="Assets/icon.png" />

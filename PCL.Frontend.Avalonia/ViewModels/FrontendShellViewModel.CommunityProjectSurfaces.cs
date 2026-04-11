@@ -171,9 +171,13 @@ internal sealed partial class FrontendShellViewModel
 
     public string HomePageMarketSummary => _homePageMarketState.Summary;
 
+    public bool ShowHomePageMarketLoadingCard => _isHomePageMarketLoading;
+
+    public string HomePageMarketLoadingText => _homePageMarketLoadingText;
+
     public bool HasHomePageMarketSections => HomePageMarketSections.Count > 0;
 
-    public bool HasNoHomePageMarketSections => !HasHomePageMarketSections;
+    public bool HasNoHomePageMarketSections => !HasHomePageMarketSections && !_isHomePageMarketLoading;
 
     public bool ShowHomePageMarketWarning => _homePageMarketState.ShowWarning;
 
@@ -1341,23 +1345,24 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshHomePageMarketSurface()
     {
-        _homePageMarketState = FrontendCommunityProjectService.BuildHomePageMarketState(
-            _instanceComposition,
-            _selectedCommunityDownloadSourceIndex);
+        var stateSignature = BuildHomePageMarketStateSignature();
+        var signatureChanged = !string.Equals(_homePageMarketStateSignature, stateSignature, StringComparison.Ordinal);
+        if (_isHomePageMarketLoading && !signatureChanged)
+        {
+            return;
+        }
 
-        ReplaceItems(
-            HomePageMarketSections,
-            _homePageMarketState.Sections.Select(section => new DownloadCatalogSectionViewModel(
-                section.Title,
-                section.Entries.Select(entry => new DownloadCatalogEntryViewModel(
-                    entry.Title,
-                    entry.Info,
-                    entry.Meta,
-                    entry.ActionText,
-                    CreateProjectSectionCommand(entry)))
-                .ToArray())));
+        _homePageMarketStateSignature = stateSignature;
+        if (signatureChanged || _homePageMarketState.Sections.Count == 0)
+        {
+            _homePageMarketState = CreateLoadingHomePageMarketState();
+            ReplaceItems(HomePageMarketSections, []);
+            SetHomePageMarketLoading(true);
+            RaiseHomePageMarketProperties();
+        }
 
-        RaiseHomePageMarketProperties();
+        var refreshVersion = ++_homePageMarketRefreshVersion;
+        _ = LoadHomePageMarketStateAsync(stateSignature, refreshVersion);
     }
 
     private void RaiseCommunityProjectProperties()
@@ -1486,9 +1491,100 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowCommunityProjectContent));
     }
 
+    private async Task LoadHomePageMarketStateAsync(string stateSignature, int refreshVersion)
+    {
+        var instanceComposition = _instanceComposition;
+        var communitySourcePreference = _selectedCommunityDownloadSourceIndex;
+        FrontendHomePageMarketState state;
+        try
+        {
+            state = await Task.Run(() => FrontendCommunityProjectService.BuildHomePageMarketState(
+                instanceComposition,
+                communitySourcePreference));
+        }
+        catch (Exception ex)
+        {
+            state = CreateUnavailableHomePageMarketState(ex.Message);
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (refreshVersion != _homePageMarketRefreshVersion
+                || !string.Equals(stateSignature, _homePageMarketStateSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _homePageMarketState = state;
+            SetHomePageMarketLoading(false);
+            ApplyHomePageMarketState();
+        });
+    }
+
+    private void ApplyHomePageMarketState()
+    {
+        ReplaceItems(
+            HomePageMarketSections,
+            _homePageMarketState.Sections.Select(section => new DownloadCatalogSectionViewModel(
+                section.Title,
+                section.Entries.Select(entry => new DownloadCatalogEntryViewModel(
+                    entry.Title,
+                    entry.Info,
+                    entry.Meta,
+                    entry.ActionText,
+                    CreateProjectSectionCommand(entry)))
+                .ToArray())));
+
+        RaiseHomePageMarketProperties();
+    }
+
+    private FrontendHomePageMarketState CreateLoadingHomePageMarketState()
+    {
+        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
+        return new FrontendHomePageMarketState(
+            string.IsNullOrWhiteSpace(preferredVersion)
+                ? "主页市场正在聚合热门社区资源，请稍候。"
+                : $"主页市场正在围绕 Minecraft {preferredVersion} 聚合热门社区资源，请稍候。",
+            [],
+            string.Empty,
+            false);
+    }
+
+    private FrontendHomePageMarketState CreateUnavailableHomePageMarketState(string errorMessage)
+    {
+        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
+        return new FrontendHomePageMarketState(
+            string.IsNullOrWhiteSpace(preferredVersion)
+                ? "主页市场暂时不可用，请稍后重试。"
+                : $"主页市场暂时无法聚合 Minecraft {preferredVersion} 的社区资源，请稍后重试。",
+            [],
+            errorMessage,
+            true);
+    }
+
+    private string BuildHomePageMarketStateSignature()
+    {
+        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion) ?? string.Empty;
+        return $"{preferredVersion}|{_selectedCommunityDownloadSourceIndex}";
+    }
+
+    private void SetHomePageMarketLoading(bool isLoading)
+    {
+        if (_isHomePageMarketLoading == isLoading)
+        {
+            return;
+        }
+
+        _isHomePageMarketLoading = isLoading;
+        RaisePropertyChanged(nameof(ShowHomePageMarketLoadingCard));
+        RaisePropertyChanged(nameof(HasNoHomePageMarketSections));
+    }
+
     private void RaiseHomePageMarketProperties()
     {
         RaisePropertyChanged(nameof(HomePageMarketSummary));
+        RaisePropertyChanged(nameof(HomePageMarketLoadingText));
+        RaisePropertyChanged(nameof(ShowHomePageMarketLoadingCard));
         RaisePropertyChanged(nameof(HasHomePageMarketSections));
         RaisePropertyChanged(nameof(HasNoHomePageMarketSections));
         RaisePropertyChanged(nameof(ShowHomePageMarketWarning));

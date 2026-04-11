@@ -12,7 +12,7 @@ internal static class FrontendCommunityResourceCatalogService
     private const int SearchPageSize = 40;
     private const int DefaultTargetResultCount = SearchPageSize * 2;
     private const int MaxSearchRoundsPerQuery = 12;
-    private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
+    private static readonly string CurseForgeApiKey = FrontendEmbeddedSecrets.GetCurseForgeApiKey();
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry> Cache = new(StringComparer.Ordinal);
     private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
@@ -247,7 +247,7 @@ internal static class FrontendCommunityResourceCatalogService
         {
             var officialUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: false, offset);
             var mirrorUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: true, offset);
-            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: true);
+            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: false);
             var hits = response["hits"]?.AsArray() ?? [];
             var totalHits = GetInt(response, "total_hits");
 

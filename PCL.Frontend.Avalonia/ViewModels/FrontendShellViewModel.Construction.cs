@@ -229,6 +229,10 @@ internal sealed partial class FrontendShellViewModel
     private int _downloadCatalogRefreshVersion;
     private CancellationTokenSource? _downloadFavoriteRefreshCts;
     private int _downloadFavoriteRefreshVersion;
+    private int _homePageMarketRefreshVersion;
+    private bool _isHomePageMarketLoading;
+    private string _homePageMarketLoadingText = "正在聚合热门社区资源…";
+    private string _homePageMarketStateSignature = string.Empty;
     private bool _isDownloadCatalogLoading;
     private bool _isDownloadFavoriteLoading;
     private bool _isDownloadResourceLoading;

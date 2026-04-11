@@ -854,12 +854,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static string ResolveMicrosoftClientId()
     {
-        var clientId = Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID");
-        if (string.IsNullOrWhiteSpace(clientId))
-        {
-            // Compatibility fallback for local tooling that still exports the unprefixed name.
-            clientId = Environment.GetEnvironmentVariable("MS_CLIENT_ID");
-        }
+        var clientId = FrontendEmbeddedSecrets.GetMicrosoftClientId();
 
         if (string.IsNullOrWhiteSpace(clientId))
         {

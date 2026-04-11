@@ -11,7 +11,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendModpackInstallWorkflowService
 {
     private static readonly UTF8Encoding Utf8NoBom = new(false);
-    private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
+    private static readonly string CurseForgeApiKey = FrontendEmbeddedSecrets.GetCurseForgeApiKey();
 
     public static async Task<FrontendModpackInstallResult> InstallDownloadedArchiveAsync(
         FrontendModpackInstallRequest request,
@@ -439,6 +439,7 @@ internal static class FrontendModpackInstallWorkflowService
         string extractRoot,
         string targetDirectory)
     {
+        var normalizedExtractRoot = NormalizeDirectoryRoot(extractRoot);
         foreach (var source in package.OverrideSources)
         {
             if (string.IsNullOrWhiteSpace(source.RelativePath))
@@ -450,9 +451,9 @@ internal static class FrontendModpackInstallWorkflowService
                 ? string.Empty
                 : NormalizeRelativePath(source.RelativePath);
             var sourcePath = string.IsNullOrWhiteSpace(normalizedRelativePath)
-                ? Path.GetFullPath(extractRoot)
-                : Path.GetFullPath(Path.Combine(extractRoot, normalizedRelativePath));
-            if (!sourcePath.StartsWith(Path.GetFullPath(extractRoot), StringComparison.Ordinal))
+                ? normalizedExtractRoot
+                : Path.GetFullPath(Path.Combine(normalizedExtractRoot, normalizedRelativePath));
+            if (!string.IsNullOrWhiteSpace(normalizedRelativePath) && !IsPathWithinDirectory(sourcePath, normalizedExtractRoot))
             {
                 continue;
             }
@@ -738,14 +739,19 @@ internal static class FrontendModpackInstallWorkflowService
     private static string BuildValidatedTargetPath(string relativePath)
     {
         var normalized = NormalizeRelativePath(relativePath);
-        var combined = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "placeholder", normalized));
-        var expectedRoot = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "placeholder"));
-        if (!combined.StartsWith(expectedRoot, StringComparison.Ordinal))
+        var expectedRoot = NormalizeDirectoryRoot(Path.Combine(Path.GetTempPath(), "placeholder"));
+        if (Path.IsPathRooted(normalized))
         {
             throw new InvalidOperationException($"整合包文件路径超出了实例目录：{relativePath}");
         }
 
-        return normalized;
+        var combined = Path.GetFullPath(Path.Combine(expectedRoot, normalized));
+        if (!IsPathWithinDirectory(combined, expectedRoot))
+        {
+            throw new InvalidOperationException($"整合包文件路径超出了实例目录：{relativePath}");
+        }
+
+        return Path.GetRelativePath(expectedRoot, combined);
     }
 
     private static string NormalizeRelativePath(string relativePath)
@@ -764,6 +770,7 @@ internal static class FrontendModpackInstallWorkflowService
     {
         using var archive = ZipFile.OpenRead(archivePath);
         Directory.CreateDirectory(destinationDirectory);
+        var destinationRoot = NormalizeDirectoryRoot(destinationDirectory);
         var totalEntries = Math.Max(archive.Entries.Count, 1);
 
         for (var index = 0; index < archive.Entries.Count; index += 1)
@@ -779,8 +786,8 @@ internal static class FrontendModpackInstallWorkflowService
                 continue;
             }
 
-            var destinationPath = Path.GetFullPath(Path.Combine(destinationDirectory, normalizedEntryPath.Replace('/', Path.DirectorySeparatorChar)));
-            if (!destinationPath.StartsWith(Path.GetFullPath(destinationDirectory), StringComparison.Ordinal))
+            var destinationPath = Path.GetFullPath(Path.Combine(destinationRoot, normalizedEntryPath.Replace('/', Path.DirectorySeparatorChar)));
+            if (!IsPathWithinDirectory(destinationPath, destinationRoot))
             {
                 throw new InvalidOperationException($"整合包包含非法路径：{entry.FullName}");
             }
@@ -815,6 +822,32 @@ internal static class FrontendModpackInstallWorkflowService
         using var stream = File.OpenRead(filePath);
         var hash = SHA1.HashData(stream);
         return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static string NormalizeDirectoryRoot(string path)
+    {
+        return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+
+    private static bool IsPathWithinDirectory(string path, string directory)
+    {
+        var normalizedDirectory = EnsureTrailingSeparator(NormalizeDirectoryRoot(directory));
+        var normalizedPath = Path.GetFullPath(path);
+        return normalizedPath.StartsWith(normalizedDirectory, GetPathComparison());
+    }
+
+    private static string EnsureTrailingSeparator(string path)
+    {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static StringComparison GetPathComparison()
+    {
+        return OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
     }
 
     private static void CopyDirectoryContents(string sourceDirectory, string targetDirectory)

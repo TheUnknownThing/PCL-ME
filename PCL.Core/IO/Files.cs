@@ -505,7 +505,7 @@ public static class Files {
 
     private static string _GetSafePath(string destDirectory, string entryName) {
         var fullPath = Path.GetFullPath(Path.Combine(destDirectory, entryName));
-        return fullPath.StartsWith(Path.GetFullPath(destDirectory)) ? fullPath : throw new InvalidOperationException($"Invalid path detected: {entryName}");
+        return IsPathWithinDirectory(fullPath, destDirectory) ? fullPath : throw new InvalidOperationException($"Invalid path detected: {entryName}");
     }
 
     private static async Task _CreateDirectoryAsync(string path, CancellationToken cancellationToken) {
@@ -522,7 +522,7 @@ public static class Files {
         long currentEntry = 0;
 
         foreach (ZipEntry entry in zipFile) {
-            var destinationPath = Path.Combine(destDirectory, entry.Name);
+            var destinationPath = _GetSafePath(destDirectory, entry.Name);
             if (entry.IsDirectory) {
                 Directory.CreateDirectory(destinationPath);
                 continue;
@@ -833,7 +833,7 @@ public static class Files {
         var child = Path.GetFullPath(childPath);
 
         return child.StartsWith(
-            baseDir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+            baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar,
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? StringComparison.OrdinalIgnoreCase
                 : StringComparison.Ordinal
