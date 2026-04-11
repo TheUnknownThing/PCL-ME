@@ -507,9 +507,20 @@ internal sealed partial class FrontendShellViewModel
                             ? CreateCommunityProjectReleaseDownloadCommand(entry)
                             : string.IsNullOrWhiteSpace(entry.Target)
                                 ? CreateIntentCommand(entry.Title, entry.Info)
-                                : CreateOpenTargetCommand($"打开文件: {entry.Title}", entry.Target, entry.Target)))
+                                : CreateOpenTargetCommand($"打开文件: {entry.Title}", entry.Target, entry.Target),
+                        GetCommunityProjectReleaseChannelIcon(entry.Channel)))
                     .ToArray()))
             .ToArray();
+    }
+
+    private Bitmap? GetCommunityProjectReleaseChannelIcon(FrontendCommunityProjectReleaseChannel channel)
+    {
+        return channel switch
+        {
+            FrontendCommunityProjectReleaseChannel.Alpha => LoadLauncherBitmap("Images", "Icons", "A.png"),
+            FrontendCommunityProjectReleaseChannel.Beta => LoadLauncherBitmap("Images", "Icons", "B.png"),
+            _ => LoadLauncherBitmap("Images", "Icons", "R.png")
+        };
     }
 
     private bool ShouldExpandCommunityProjectReleaseGroup(string groupTitle)

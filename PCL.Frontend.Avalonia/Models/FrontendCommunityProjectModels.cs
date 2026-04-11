@@ -18,6 +18,13 @@ internal sealed record FrontendCommunityProjectLookupResult(
     IReadOnlyDictionary<string, FrontendCommunityProjectSummary> Projects,
     IReadOnlyList<string> Errors);
 
+internal enum FrontendCommunityProjectReleaseChannel
+{
+    Release,
+    Beta,
+    Alpha
+}
+
 internal sealed record FrontendCommunityProjectReleaseEntry(
     string Title,
     string Info,
@@ -28,7 +35,8 @@ internal sealed record FrontendCommunityProjectReleaseEntry(
     bool IsDirectDownload,
     IReadOnlyList<string> GameVersions,
     IReadOnlyList<string> Loaders,
-    long PublishedUnixTime);
+    long PublishedUnixTime,
+    FrontendCommunityProjectReleaseChannel Channel);
 
 internal sealed record FrontendCommunityProjectState(
     string ProjectId,

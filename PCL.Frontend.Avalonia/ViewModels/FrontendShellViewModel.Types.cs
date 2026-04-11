@@ -730,7 +730,8 @@ internal sealed class DownloadCatalogEntryViewModel(
     string info,
     string meta,
     string actionText,
-    ActionCommand command)
+    ActionCommand command,
+    Bitmap? icon = null)
 {
     public string Title { get; } = title;
 
@@ -741,6 +742,8 @@ internal sealed class DownloadCatalogEntryViewModel(
     public string ActionText { get; } = actionText;
 
     public ActionCommand Command { get; } = command;
+
+    public Bitmap? Icon { get; } = icon;
 
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
 
