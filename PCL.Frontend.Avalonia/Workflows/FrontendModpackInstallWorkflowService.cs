@@ -980,6 +980,11 @@ internal sealed class FrontendManagedModpackInstallTask(
 
     public void Cancel()
     {
+        if (_cancellation.IsCancellationRequested)
+        {
+            return;
+        }
+
         _cancellation.Cancel();
         PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在取消整合包安装…");
     }

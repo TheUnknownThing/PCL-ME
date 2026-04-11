@@ -1136,6 +1136,10 @@ internal sealed partial class FrontendShellViewModel
 
     private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task, DateTimeOffset now)
     {
+        var canCancel = (task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null);
+        var canDismiss = task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed;
+        var hasPrimaryAction = canCancel || canDismiss;
+
         return new TaskManagerEntryViewModel(
             task.Title,
             task.State,
@@ -1153,9 +1157,23 @@ internal sealed partial class FrontendShellViewModel
             task.RemainingFileCount?.ToString() ?? "0",
             task.Children.Count,
             task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
-            task.Cancel.CanExecute(null),
+            hasPrimaryAction,
             task.Pause.CanExecute(null),
-            new ActionCommand(() => task.Cancel.Execute(null), () => task.Cancel.CanExecute(null)),
+            new ActionCommand(() =>
+            {
+                if ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null))
+                {
+                    task.Cancel.Execute(null);
+                    return;
+                }
+
+                if (task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed)
+                {
+                    TaskCenter.Remove(task);
+                }
+            }, () =>
+                ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null)) ||
+                task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed),
             new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
     }
 
@@ -1832,9 +1850,9 @@ internal sealed class TaskManagerEntryViewModel(
     string remainingFilesText,
     int childCount,
     IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
-    bool canCancel,
+    bool hasPrimaryAction,
     bool canPause,
-    ActionCommand cancelCommand,
+    ActionCommand primaryActionCommand,
     ActionCommand pauseCommand)
 {
     private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
@@ -1889,11 +1907,11 @@ internal sealed class TaskManagerEntryViewModel(
 
     public bool HasStageEntries => StageEntries.Count > 0;
 
-    public bool CanCancel { get; } = canCancel;
+    public bool HasPrimaryAction { get; } = hasPrimaryAction;
 
     public bool CanPause { get; } = canPause;
 
-    public ActionCommand CancelCommand { get; } = cancelCommand;
+    public ActionCommand PrimaryActionCommand { get; } = primaryActionCommand;
 
     public ActionCommand PauseCommand { get; } = pauseCommand;
 
