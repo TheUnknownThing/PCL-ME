@@ -232,13 +232,25 @@
               <Border Grid.Row="1" Grid.Column="0" Background="#66A3DC" CornerRadius="2,0,0,2" />
               <Border Grid.Row="1" Grid.Column="1" Background="#B5D5F8" />
               <Border Grid.Row="1" Grid.Column="2" Background="#E0E9F5" CornerRadius="0,2,2,0" />
-              <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="2,4,0,0" Orientation="Horizontal">
-                <TextBlock Foreground="#4083C4" FontSize="16" Text="{Binding UsedRamLabel}" />
-                <TextBlock Foreground="#4083C4" FontSize="16" Text=" / " />
-                <TextBlock Foreground="#4083C4" FontSize="16" Text="{Binding TotalRamLabel}" />
-                <TextBlock Margin="18,0,0,0" Foreground="#4083C4" FontSize="16" Text="游戏分配" />
-                <TextBlock Margin="8,0,0,0" Foreground="#4083C4" FontSize="16" Text="{Binding AllocatedRamLabel}" />
-              </StackPanel>
+              <Grid Grid.Row="2" Grid.ColumnSpan="3" Margin="2,4,0,0" ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="#4083C4"
+                    FontSize="16">
+                  <Run Text="{Binding UsedRamLabel}" />
+                  <Run Text=" / " />
+                  <Run Text="{Binding TotalRamLabel}" />
+                </TextBlock>
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="18,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="#4083C4"
+                    FontSize="16">
+                  <Run Text="游戏分配 " />
+                  <Run Text="{Binding AllocatedRamLabel}" />
+                </TextBlock>
+              </Grid>
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>
