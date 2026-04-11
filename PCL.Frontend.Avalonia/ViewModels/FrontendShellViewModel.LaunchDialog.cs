@@ -11,6 +11,7 @@ internal sealed partial class FrontendShellViewModel
     private CancellationTokenSource? _launchSessionCancellation;
     private Process? _activeLaunchProcess;
     private bool _launchProcessTerminationRequested;
+    private bool _launchDialogHasSuccessfulSession;
     private bool _isLaunchDialogVisible;
     private bool _isLaunchDialogBusy;
     private bool _isLaunchDialogError;
@@ -66,6 +67,7 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogHint = _showLaunchingHint
             ? FrontendLaunchHintService.GetRandomHint(_shellActionService.RuntimePaths)
             : string.Empty;
+        _launchDialogHasSuccessfulSession = false;
         _launchProcessTerminationRequested = false;
         _launchDialogActionText = "取消";
         _isLaunchDialogBusy = true;
@@ -129,9 +131,10 @@ internal sealed partial class FrontendShellViewModel
         _showLaunchDialogProgress = true;
         _showLaunchDialogDownload = false;
         _launchDialogDownloadText = "0 B/s";
-        _isLaunchDialogBusy = true;
+        _launchDialogHasSuccessfulSession = true;
+        _isLaunchDialogBusy = false;
         _isLaunchDialogError = false;
-        _launchDialogActionText = "取消";
+        _launchDialogActionText = "关闭";
         RaiseLaunchDialogProperties();
     }
 
@@ -147,6 +150,7 @@ internal sealed partial class FrontendShellViewModel
         _showLaunchDialogHint = false;
         _showLaunchDialogDownload = false;
         _launchDialogDownloadText = "0 B/s";
+        _launchDialogHasSuccessfulSession = false;
         _isLaunchDialogBusy = false;
         _isLaunchDialogError = isError;
         _launchDialogActionText = "关闭";
@@ -210,6 +214,12 @@ internal sealed partial class FrontendShellViewModel
         {
             _launchSessionCancellation.Cancel();
             SetLaunchDialogStoppedState("正在取消启动", "正在取消启动前任务…", isError: false);
+            return;
+        }
+
+        if (_launchDialogHasSuccessfulSession)
+        {
+            HideLaunchDialog();
             return;
         }
 
