@@ -46,6 +46,7 @@ internal sealed partial class FrontendShellViewModel
     private DownloadResourceFilterOptionViewModel? _selectedDownloadResourceLoaderOption;
     private int _downloadResourcePageIndex;
     private int _downloadResourceTotalPages = 1;
+    private int _downloadResourceTotalEntryCount;
     private bool _downloadResourceHasMoreEntries;
     private bool _downloadResourceSupportsModrinth = true;
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceSourceOptions = [];
@@ -293,7 +294,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowDownloadResourceContent => !_isDownloadResourceLoading;
 
-    public bool ShowDownloadResourcePagination => _downloadResourceTotalPages > 1 || _downloadResourceHasMoreEntries;
+    public bool ShowDownloadResourcePagination => _downloadResourceTotalPages > 1;
 
     public string DownloadResourcePageLabel => _downloadResourceTotalPages <= 0
         ? "0"
@@ -313,7 +314,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanGoToPreviousDownloadResourcePage => _downloadResourcePageIndex > 0;
 
-    public bool CanGoToNextDownloadResourcePage => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries;
+    public bool CanGoToNextDownloadResourcePage => _downloadResourcePageIndex < _downloadResourceTotalPages - 1;
 
     public bool CanNotGoToPreviousDownloadResourcePage => !CanGoToPreviousDownloadResourcePage;
 
@@ -324,8 +325,9 @@ internal sealed partial class FrontendShellViewModel
         get
         {
             var loadedCount = _allDownloadResourceEntries.Count;
-            var shownCount = Math.Min((_downloadResourcePageIndex + 1) * DownloadResourcePageSize, loadedCount);
-            var totalText = _downloadResourceHasMoreEntries ? $"{loadedCount}+" : loadedCount.ToString();
+            var totalCount = _downloadResourceTotalEntryCount > 0 ? _downloadResourceTotalEntryCount : loadedCount;
+            var shownCount = Math.Min((_downloadResourcePageIndex + 1) * DownloadResourcePageSize, totalCount);
+            var totalText = totalCount.ToString();
             return $"Showing {shownCount} of {totalText} results";
         }
     }
@@ -340,6 +342,7 @@ internal sealed partial class FrontendShellViewModel
         ShowDownloadResourceHint = false;
         ShowDownloadResourceInstallModPackAction = false;
         _downloadResourceHasMoreEntries = false;
+        _downloadResourceTotalEntryCount = 0;
         _downloadResourceSupportsModrinth = true;
         _downloadResourceSourceOptions = [];
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
@@ -455,6 +458,7 @@ internal sealed partial class FrontendShellViewModel
         _selectedDownloadResourceLoaderIndex = 0;
         _downloadResourcePageIndex = 0;
         _downloadResourceTotalPages = 1;
+        _downloadResourceTotalEntryCount = 0;
         _downloadResourceHasMoreEntries = false;
         SyncSelectedDownloadResourceOptions();
         UpdateDownloadResourceHint();
@@ -574,16 +578,17 @@ internal sealed partial class FrontendShellViewModel
 
     private void GoToNextDownloadResourcePage()
     {
-        if (_downloadResourcePageIndex < _downloadResourceTotalPages - 1)
+        var nextPageIndex = _downloadResourcePageIndex + 1;
+        if (nextPageIndex < _downloadResourceTotalPages)
         {
-            _downloadResourcePageIndex++;
-            ApplyDownloadResourceFilters(resetPage: false);
-            return;
-        }
+            if (nextPageIndex < GetLoadedDownloadResourcePageCount() || !_downloadResourceHasMoreEntries)
+            {
+                _downloadResourcePageIndex = nextPageIndex;
+                ApplyDownloadResourceFilters(resetPage: false);
+                return;
+            }
 
-        if (_downloadResourceHasMoreEntries)
-        {
-            ScheduleDownloadResourceRefresh(immediate: true, resetPage: false, targetPageIndex: _downloadResourcePageIndex + 1);
+            ScheduleDownloadResourceRefresh(immediate: true, resetPage: false, targetPageIndex: nextPageIndex);
         }
     }
 
@@ -595,8 +600,14 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        _downloadResourcePageIndex = clampedPageIndex;
-        ApplyDownloadResourceFilters(resetPage: false);
+        if (clampedPageIndex < GetLoadedDownloadResourcePageCount() || !_downloadResourceHasMoreEntries)
+        {
+            _downloadResourcePageIndex = clampedPageIndex;
+            ApplyDownloadResourceFilters(resetPage: false);
+            return;
+        }
+
+        ScheduleDownloadResourceRefresh(immediate: true, resetPage: false, targetPageIndex: clampedPageIndex);
     }
 
     private void ApplyDownloadResourceFilters(bool resetPage)
@@ -660,7 +671,9 @@ internal sealed partial class FrontendShellViewModel
         };
 
         var filteredEntries = entries.ToArray();
-        _downloadResourceTotalPages = Math.Max(1, (int)Math.Ceiling(filteredEntries.Length / (double)DownloadResourcePageSize));
+        _downloadResourceTotalPages = _downloadResourceTotalEntryCount > 0
+            ? Math.Max(1, (int)Math.Ceiling(_downloadResourceTotalEntryCount / (double)DownloadResourcePageSize))
+            : Math.Max(1, (int)Math.Ceiling(filteredEntries.Length / (double)DownloadResourcePageSize));
         _downloadResourcePageIndex = Math.Clamp(_downloadResourcePageIndex, 0, _downloadResourceTotalPages - 1);
 
         var pagedEntries = filteredEntries
@@ -695,11 +708,7 @@ internal sealed partial class FrontendShellViewModel
         var knownTotalPages = Math.Max(1, _downloadResourceTotalPages);
         var currentPage = Math.Clamp(_downloadResourcePageIndex + 1, 1, knownTotalPages);
         var pages = new SortedSet<int> { 1, currentPage - 1, currentPage, currentPage + 1 };
-
-        if (!_downloadResourceHasMoreEntries)
-        {
-            pages.Add(knownTotalPages);
-        }
+        pages.Add(knownTotalPages);
 
         pages.RemoveWhere(page => page < 1 || page > knownTotalPages);
 
@@ -724,15 +733,6 @@ internal sealed partial class FrontendShellViewModel
                 isCurrent: targetPage == currentPage,
                 isEllipsis: false));
             previousPage = page;
-        }
-
-        if (_downloadResourceHasMoreEntries)
-        {
-            items.Add(new DownloadResourcePaginationItemViewModel(
-                BuildPaginationDots(Math.Max(1, knownTotalPages - previousPage)),
-                null,
-                false,
-                isEllipsis: true));
         }
 
         ReplaceItems(DownloadResourcePaginationItems, items);
@@ -907,6 +907,7 @@ internal sealed partial class FrontendShellViewModel
 
         _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         _downloadResourceHasMoreEntries = result.State.HasMoreEntries;
+        _downloadResourceTotalEntryCount = result.State.TotalEntryCount;
         DownloadResourceHintText = result.State.HintText;
         // Keep the loading card copy stable until it has fully transitioned out.
         DownloadResourceEmptyStateHintText = string.Empty;
@@ -942,6 +943,11 @@ internal sealed partial class FrontendShellViewModel
     {
         var effectivePageIndex = Math.Max(0, targetPageIndex ?? 0);
         return Math.Max(DownloadResourcePageSize * 2, (effectivePageIndex + 2) * DownloadResourcePageSize);
+    }
+
+    private int GetLoadedDownloadResourcePageCount()
+    {
+        return Math.Max(1, (int)Math.Ceiling(_allDownloadResourceEntries.Count / (double)DownloadResourcePageSize));
     }
 
     private void SetDownloadResourceLoading(bool isLoading)

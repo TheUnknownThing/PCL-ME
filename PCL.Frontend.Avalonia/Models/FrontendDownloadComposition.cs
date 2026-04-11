@@ -68,6 +68,7 @@ internal sealed record FrontendDownloadResourceState(
     bool UseShaderLoaderOptions,
     string HintText,
     IReadOnlyList<FrontendDownloadResourceFilterOption> TagOptions,
+    int TotalEntryCount,
     bool HasMoreEntries,
     IReadOnlyList<FrontendDownloadResourceEntry> Entries);
 
