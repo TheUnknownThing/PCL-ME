@@ -52,6 +52,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HasNoActivePrompts));
                 RaisePropertyChanged(nameof(CurrentPrompt));
                 RaisePropertyChanged(nameof(HasCurrentPrompt));
+                RaisePropertyChanged(nameof(PromptOverlayMessage));
                 RaisePropertyChanged(nameof(IsPromptOverlayVisible));
                 return;
             }
@@ -66,6 +67,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoActivePrompts));
         RaisePropertyChanged(nameof(CurrentPrompt));
         RaisePropertyChanged(nameof(HasCurrentPrompt));
+        RaisePropertyChanged(nameof(PromptOverlayMessage));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);

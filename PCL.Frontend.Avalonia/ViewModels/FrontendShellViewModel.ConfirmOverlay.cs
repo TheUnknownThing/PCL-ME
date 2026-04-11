@@ -56,11 +56,13 @@ internal sealed partial class FrontendShellViewModel
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
+            _activeConfirmOverlayMessage = message;
             ActivePrompts.Insert(0, prompt);
             RaisePropertyChanged(nameof(HasActivePrompts));
             RaisePropertyChanged(nameof(HasNoActivePrompts));
             RaisePropertyChanged(nameof(CurrentPrompt));
             RaisePropertyChanged(nameof(HasCurrentPrompt));
+            RaisePropertyChanged(nameof(PromptOverlayMessage));
             SetPromptOverlayOpen(true);
         });
 
@@ -73,11 +75,13 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                _activeConfirmOverlayMessage = null;
                 ActivePrompts.Remove(prompt);
                 RaisePropertyChanged(nameof(HasActivePrompts));
                 RaisePropertyChanged(nameof(HasNoActivePrompts));
                 RaisePropertyChanged(nameof(CurrentPrompt));
                 RaisePropertyChanged(nameof(HasCurrentPrompt));
+                RaisePropertyChanged(nameof(PromptOverlayMessage));
 
                 if (existingTopPrompt is not null)
                 {
