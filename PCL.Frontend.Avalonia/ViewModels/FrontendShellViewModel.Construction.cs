@@ -442,7 +442,7 @@ internal sealed partial class FrontendShellViewModel
         _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
         _searchDownloadResourceCommand = new ActionCommand(SearchDownloadResource);
         _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
-        _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 1);
+        _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries);
         _manageDownloadFavoriteTargetCommand = new ActionCommand(() => _ = ManageDownloadFavoriteTargetsAsync());
