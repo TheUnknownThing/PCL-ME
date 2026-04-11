@@ -88,6 +88,7 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<DownloadResourceEntryViewModel> _allDownloadResourceEntries = [];
 
     public ObservableCollection<DownloadResourceEntryViewModel> DownloadResourceEntries { get; } = [];
+    public ObservableCollection<DownloadResourcePaginationItemViewModel> DownloadResourcePaginationItems { get; } = [];
 
     public string DownloadResourceSearchQuery
     {
@@ -309,6 +310,21 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand PreviousDownloadResourcePageCommand => _previousDownloadResourcePageCommand;
 
     public ActionCommand NextDownloadResourcePageCommand => _nextDownloadResourcePageCommand;
+
+    public bool CanGoToPreviousDownloadResourcePage => _downloadResourcePageIndex > 0;
+
+    public bool CanGoToNextDownloadResourcePage => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries;
+
+    public string DownloadResourceResultSummary
+    {
+        get
+        {
+            var loadedCount = _allDownloadResourceEntries.Count;
+            var shownCount = Math.Min((_downloadResourcePageIndex + 1) * DownloadResourcePageSize, loadedCount);
+            var totalText = _downloadResourceHasMoreEntries ? $"{loadedCount}+" : loadedCount.ToString();
+            return $"Showing {shownCount} of {totalText} results";
+        }
+    }
 
     private void RefreshDownloadResourceSurface()
     {
@@ -567,6 +583,18 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private void GoToDownloadResourcePage(int pageIndex)
+    {
+        var clampedPageIndex = Math.Clamp(pageIndex, 0, Math.Max(0, _downloadResourceTotalPages - 1));
+        if (clampedPageIndex == _downloadResourcePageIndex)
+        {
+            return;
+        }
+
+        _downloadResourcePageIndex = clampedPageIndex;
+        ApplyDownloadResourceFilters(resetPage: false);
+    }
+
     private void ApplyDownloadResourceFilters(bool resetPage)
     {
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
@@ -650,6 +678,64 @@ internal sealed partial class FrontendShellViewModel
         _firstDownloadResourcePageCommand.NotifyCanExecuteChanged();
         _previousDownloadResourcePageCommand.NotifyCanExecuteChanged();
         _nextDownloadResourcePageCommand.NotifyCanExecuteChanged();
+        RaisePropertyChanged(nameof(CanGoToPreviousDownloadResourcePage));
+        RaisePropertyChanged(nameof(CanGoToNextDownloadResourcePage));
+        RaisePropertyChanged(nameof(DownloadResourceResultSummary));
+        RebuildDownloadResourcePaginationItems();
+    }
+
+    private void RebuildDownloadResourcePaginationItems()
+    {
+        var knownTotalPages = Math.Max(1, _downloadResourceTotalPages);
+        var currentPage = Math.Clamp(_downloadResourcePageIndex + 1, 1, knownTotalPages);
+        var pages = new SortedSet<int> { 1, currentPage - 1, currentPage, currentPage + 1 };
+
+        if (!_downloadResourceHasMoreEntries)
+        {
+            pages.Add(knownTotalPages);
+        }
+
+        pages.RemoveWhere(page => page < 1 || page > knownTotalPages);
+
+        var items = new List<DownloadResourcePaginationItemViewModel>();
+        var previousPage = 0;
+
+        foreach (var page in pages)
+        {
+            if (previousPage > 0 && page - previousPage > 1)
+            {
+                items.Add(new DownloadResourcePaginationItemViewModel(
+                    BuildPaginationDots(page - previousPage - 1),
+                    null,
+                    false,
+                    isEllipsis: true));
+            }
+
+            var targetPage = page;
+            items.Add(new DownloadResourcePaginationItemViewModel(
+                targetPage.ToString(),
+                new ActionCommand(() => GoToDownloadResourcePage(targetPage - 1)),
+                isCurrent: targetPage == currentPage,
+                isEllipsis: false));
+            previousPage = page;
+        }
+
+        if (_downloadResourceHasMoreEntries)
+        {
+            items.Add(new DownloadResourcePaginationItemViewModel(
+                BuildPaginationDots(Math.Max(1, knownTotalPages - previousPage)),
+                null,
+                false,
+                isEllipsis: true));
+        }
+
+        ReplaceItems(DownloadResourcePaginationItems, items);
+    }
+
+    private static string BuildPaginationDots(int hiddenPageCount)
+    {
+        _ = hiddenPageCount;
+        return "...";
     }
 
     private void RaiseDownloadResourceFilterState()

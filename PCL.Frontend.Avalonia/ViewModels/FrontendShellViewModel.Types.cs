@@ -771,6 +771,27 @@ internal sealed class DownloadResourceFilterOptionViewModel(
     public bool IsHeader { get; } = isHeader;
 }
 
+internal sealed class DownloadResourcePaginationItemViewModel(
+    string label,
+    ActionCommand? command,
+    bool isCurrent,
+    bool isEllipsis)
+{
+    public string Label { get; } = label;
+
+    public ActionCommand? Command { get; } = command;
+
+    public bool IsCurrent { get; } = isCurrent;
+
+    public bool IsEllipsis { get; } = isEllipsis;
+
+    public bool ShowPageButton => !IsEllipsis;
+
+    public bool ShowEllipsis => IsEllipsis;
+
+    public bool IsClickable => !IsEllipsis && !IsCurrent && Command is not null;
+}
+
 internal sealed class DownloadResourceEntryViewModel(
     Bitmap? icon,
     string title,
