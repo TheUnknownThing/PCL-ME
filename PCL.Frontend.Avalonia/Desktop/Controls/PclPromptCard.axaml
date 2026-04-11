@@ -18,7 +18,8 @@
       <TextBlock
           Foreground="#4B5968"
           FontSize="15"
-          LineHeight="18"
+          LineHeight="20"
+          Padding="0,1,0,2"
           TextWrapping="Wrap"
           Text="{Binding Message, ElementName=Root}" />
       <ContentPresenter Margin="-12,4,0,0" Content="{Binding OptionsContent, ElementName=Root}" />

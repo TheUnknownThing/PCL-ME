@@ -52,11 +52,11 @@
             VerticalScrollBarVisibility="Auto">
           <TextBlock
               x:Name="MessageTextBlock"
-              Padding="1"
+              Padding="1,1,1,2"
               FontSize="15"
               FontWeight="Normal"
               Foreground="{DynamicResource ColorBrush1}"
-              LineHeight="18"
+              LineHeight="20"
               TextTrimming="None"
               TextWrapping="Wrap" />
         </ScrollViewer>

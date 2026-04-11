@@ -156,7 +156,7 @@ internal sealed partial class FrontendShellViewModel
             prompt.Source.ToString(),
             prompt.Severity.ToString(),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
-            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#256A61"),
+            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#FFF1EA") : Brush.Parse("#EAF7F5"),
             prompt.Options.Select((option, index) => new PromptOptionViewModel(
                 option.Label,

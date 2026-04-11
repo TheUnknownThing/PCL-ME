@@ -42,7 +42,7 @@ internal sealed partial class FrontendShellViewModel
             source: "Action",
             severity: isDanger ? "Warning" : "Info",
             titleBrush: isDanger ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
-            accentBrush: isDanger ? Brush.Parse("#D33232") : Brush.Parse("#256A61"),
+            accentBrush: isDanger ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
             backgroundBrush: isDanger ? Brush.Parse("#FFF1EA") : Brush.Parse("#EAF7F5"),
             options:
             [
