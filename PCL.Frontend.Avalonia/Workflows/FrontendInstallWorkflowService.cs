@@ -223,13 +223,17 @@ internal static class FrontendInstallWorkflowService
         var launcherDirectory = request.LauncherDirectory;
         var targetDirectory = Path.Combine(launcherDirectory, "versions", request.TargetInstanceName);
         Directory.CreateDirectory(targetDirectory);
+        void ReportPrepare(string message) => onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, message);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, "正在写入安装清单并准备安装环境…");
-        var manifestNode = BuildTargetManifest(request);
+        var manifestNode = BuildTargetManifest(request, ReportPrepare);
+        ReportPrepare("正在清理本地缺失依赖引用…");
         RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
         var manifestPath = Path.Combine(targetDirectory, $"{request.TargetInstanceName}.json");
+        ReportPrepare($"正在写入安装清单文件 {Path.GetFileName(manifestPath)}…");
         File.WriteAllText(manifestPath, manifestNode.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
+        ReportPrepare("正在写入实例配置…");
         var instanceConfig = OpenInstanceConfigProvider(targetDirectory);
         instanceConfig.Set("VersionVanillaName", request.MinecraftChoice.Version);
         instanceConfig.Set("VersionArgumentIndieV2", request.UseInstanceIsolation);
@@ -238,6 +242,7 @@ internal static class FrontendInstallWorkflowService
         var modsDirectory = request.UseInstanceIsolation
             ? Path.Combine(targetDirectory, "mods")
             : Path.Combine(launcherDirectory, "mods");
+        ReportPrepare("正在创建实例目录结构…");
         Directory.CreateDirectory(modsDirectory);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在准备受管依赖文件…");
@@ -289,8 +294,11 @@ internal static class FrontendInstallWorkflowService
             repairResult.ReusedFiles);
     }
 
-    private static JsonObject BuildTargetManifest(FrontendInstallApplyRequest request)
+    private static JsonObject BuildTargetManifest(
+        FrontendInstallApplyRequest request,
+        Action<string>? onStatusChanged = null)
     {
+        ReportPrepareStatus(onStatusChanged, $"正在获取 Minecraft {request.MinecraftChoice.Version} 原版清单…");
         var baseManifest = ReadJsonObject(request.MinecraftChoice.ManifestUrl ?? MojangVersionManifestUrl);
         JsonObject targetManifest;
 
@@ -299,6 +307,7 @@ internal static class FrontendInstallWorkflowService
             case FrontendInstallChoiceKind.FabricLoader:
             case FrontendInstallChoiceKind.LegacyFabricLoader:
             case FrontendInstallChoiceKind.QuiltLoader:
+                ReportPrepareStatus(onStatusChanged, $"正在获取 {request.PrimaryLoaderChoice.Title} 安装清单…");
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
                     ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
@@ -306,6 +315,7 @@ internal static class FrontendInstallWorkflowService
                     request.TargetInstanceName);
                 break;
             case FrontendInstallChoiceKind.LabyMod:
+                ReportPrepareStatus(onStatusChanged, "正在获取 LabyMod 安装清单…");
                 targetManifest = ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
                                                ?? throw new InvalidOperationException("缺少 LabyMod 清单地址。"));
                 targetManifest["id"] = request.TargetInstanceName;
@@ -313,12 +323,14 @@ internal static class FrontendInstallWorkflowService
             case FrontendInstallChoiceKind.Forge:
             case FrontendInstallChoiceKind.NeoForge:
             case FrontendInstallChoiceKind.Cleanroom:
+                ReportPrepareStatus(onStatusChanged, $"正在准备 {request.PrimaryLoaderChoice.Title} 安装器…");
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
-                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice),
+                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged),
                     request.TargetInstanceName);
                 break;
             default:
+                ReportPrepareStatus(onStatusChanged, "正在整理原版安装清单…");
                 targetManifest = CloneObject(baseManifest);
                 targetManifest["id"] = request.TargetInstanceName;
                 break;
@@ -326,6 +338,7 @@ internal static class FrontendInstallWorkflowService
 
         if (request.LiteLoaderChoice is not null)
         {
+            ReportPrepareStatus(onStatusChanged, "正在合并 LiteLoader 安装信息…");
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
                 BuildLiteLoaderManifest(request.LiteLoaderChoice),
@@ -334,12 +347,14 @@ internal static class FrontendInstallWorkflowService
 
         if (ShouldInstallOptiFineStandalone(request))
         {
+            ReportPrepareStatus(onStatusChanged, "正在处理 OptiFine 安装信息…");
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
-                BuildStandaloneOptiFineManifest(request),
+                BuildStandaloneOptiFineManifest(request, onStatusChanged),
                 request.TargetInstanceName);
         }
 
+        ReportPrepareStatus(onStatusChanged, "正在生成目标安装清单…");
         targetManifest["id"] = request.TargetInstanceName;
         return targetManifest;
     }
@@ -358,7 +373,8 @@ internal static class FrontendInstallWorkflowService
 
     private static JsonObject BuildForgelikeManifest(
         FrontendInstallApplyRequest request,
-        FrontendInstallChoice loaderChoice)
+        FrontendInstallChoice loaderChoice,
+        Action<string>? onStatusChanged = null)
     {
         ArgumentNullException.ThrowIfNull(loaderChoice);
 
@@ -367,23 +383,29 @@ internal static class FrontendInstallWorkflowService
         var installerPath = CreateTempFile("pcl-forgelike-installer-", ".jar");
         try
         {
+            ReportPrepareStatus(onStatusChanged, $"正在下载 {loaderChoice.Title} 安装器…");
             File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl).GetAwaiter().GetResult());
             using var archive = ZipFile.OpenRead(installerPath);
 
             if (loaderChoice.Kind == FrontendInstallChoiceKind.Forge
                 && !IsModernForgelikeChoice(loaderChoice))
             {
-                return BuildLegacyForgeManifest(archive, request, loaderChoice);
+                ReportPrepareStatus(onStatusChanged, $"正在解析 {loaderChoice.Title} 安装器内容…");
+                return BuildLegacyForgeManifest(archive, request, loaderChoice, onStatusChanged);
             }
 
             var tempRoot = CreateTempDirectory("pcl-forgelike-");
             try
             {
-                EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice);
+                ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
+                EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged);
                 var before = SnapshotVersionDirectories(tempRoot);
+                ReportPrepareStatus(onStatusChanged, $"正在执行 {loaderChoice.Title} 安装器…");
                 RunForgeInstallerHelper(installerPath, tempRoot);
+                ReportPrepareStatus(onStatusChanged, "正在复制安装器生成的支持库…");
                 CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
+                ReportPrepareStatus(onStatusChanged, "正在读取安装器生成的版本清单…");
                 var generatedDirectory = DetectGeneratedVersionDirectory(
                     tempRoot,
                     before,
@@ -411,8 +433,10 @@ internal static class FrontendInstallWorkflowService
     private static JsonObject BuildLegacyForgeManifest(
         ZipArchive archive,
         FrontendInstallApplyRequest request,
-        FrontendInstallChoice loaderChoice)
+        FrontendInstallChoice loaderChoice,
+        Action<string>? onStatusChanged = null)
     {
+        ReportPrepareStatus(onStatusChanged, $"正在读取 {loaderChoice.Title} 安装器配置…");
         var installProfile = ReadJsonObjectFromEntry(archive, "install_profile.json");
         if (installProfile["install"] is null)
         {
@@ -437,6 +461,7 @@ internal static class FrontendInstallWorkflowService
             "libraries",
             DeriveLibraryPathFromName(installPath).Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(libraryOutputPath)!);
+        ReportPrepareStatus(onStatusChanged, $"正在写入 {loaderChoice.Title} 支持库…");
         using (var source = archive.GetEntry(entryPath)?.Open()
                              ?? throw new InvalidOperationException($"旧版 Forge 安装器缺少条目：{entryPath}"))
         using (var output = File.Create(libraryOutputPath))
@@ -492,13 +517,15 @@ internal static class FrontendInstallWorkflowService
         };
     }
 
-    private static JsonObject BuildStandaloneOptiFineManifest(FrontendInstallApplyRequest request)
+    private static JsonObject BuildStandaloneOptiFineManifest(
+        FrontendInstallApplyRequest request,
+        Action<string>? onStatusChanged = null)
     {
         var choice = request.OptiFineChoice
                      ?? throw new InvalidOperationException("缺少 OptiFine 选择项。");
         if (IsModernOptiFineVersion(choice))
         {
-            return BuildModernOptiFineManifest(request, choice);
+            return BuildModernOptiFineManifest(request, choice, onStatusChanged);
         }
 
         return BuildLegacyOptiFineManifest(choice);
@@ -506,7 +533,8 @@ internal static class FrontendInstallWorkflowService
 
     private static JsonObject BuildModernOptiFineManifest(
         FrontendInstallApplyRequest request,
-        FrontendInstallChoice choice)
+        FrontendInstallChoice choice,
+        Action<string>? onStatusChanged = null)
     {
         var installerUrl = choice.DownloadUrl
                            ?? throw new InvalidOperationException("缺少 OptiFine 下载地址。");
@@ -515,9 +543,13 @@ internal static class FrontendInstallWorkflowService
 
         try
         {
+            ReportPrepareStatus(onStatusChanged, "正在下载 OptiFine 安装器…");
             File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl).GetAwaiter().GetResult());
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice);
+            ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged);
+            ReportPrepareStatus(onStatusChanged, "正在执行 OptiFine 安装器…");
             RunOptiFineInstaller(installerPath, tempRoot);
+            ReportPrepareStatus(onStatusChanged, "正在复制 OptiFine 生成的支持库…");
             CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
             var generatedVersion = choice.Metadata?["nameVersion"]?.GetValue<string>();
@@ -532,6 +564,7 @@ internal static class FrontendInstallWorkflowService
                 throw new InvalidOperationException("OptiFine 安装器没有产出可读取的版本清单。");
             }
 
+            ReportPrepareStatus(onStatusChanged, "正在读取 OptiFine 生成的版本清单…");
             return ReadJsonObjectFromFile(manifestPath);
         }
         finally
@@ -581,15 +614,20 @@ internal static class FrontendInstallWorkflowService
         };
     }
 
-    private static void EnsureVanillaVersionFiles(string launcherDirectory, FrontendInstallChoice minecraftChoice)
+    private static void EnsureVanillaVersionFiles(
+        string launcherDirectory,
+        FrontendInstallChoice minecraftChoice,
+        Action<string>? onStatusChanged = null)
     {
         var manifestUrl = minecraftChoice.ManifestUrl
                           ?? throw new InvalidOperationException("缺少 Minecraft 版本清单地址。");
+        ReportPrepareStatus(onStatusChanged, $"正在读取 Minecraft {minecraftChoice.Version} 版本详情…");
         var baseManifest = ReadJsonObject(manifestUrl);
         var versionDirectory = Path.Combine(launcherDirectory, "versions", minecraftChoice.Version);
         Directory.CreateDirectory(versionDirectory);
 
         var manifestPath = Path.Combine(versionDirectory, $"{minecraftChoice.Version}.json");
+        ReportPrepareStatus(onStatusChanged, $"正在写入 Minecraft {minecraftChoice.Version} 原版清单…");
         File.WriteAllText(manifestPath, baseManifest.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
         var jarPath = Path.Combine(versionDirectory, $"{minecraftChoice.Version}.jar");
@@ -604,10 +642,12 @@ internal static class FrontendInstallWorkflowService
             throw new InvalidOperationException("缺少原版客户端下载地址。");
         }
 
+        ReportPrepareStatus(onStatusChanged, $"正在下载 Minecraft {minecraftChoice.Version} 原版客户端…");
         File.WriteAllBytes(jarPath, HttpClient.GetByteArrayAsync(clientUrl).GetAwaiter().GetResult());
         var launcherProfilesPath = Path.Combine(launcherDirectory, "launcher_profiles.json");
         if (!File.Exists(launcherProfilesPath))
         {
+            ReportPrepareStatus(onStatusChanged, "正在初始化 launcher_profiles.json…");
             File.WriteAllText(launcherProfilesPath, "{}", Utf8NoBom);
         }
     }
@@ -1574,6 +1614,14 @@ internal static class FrontendInstallWorkflowService
     {
         return JsonNode.Parse(source.ToJsonString())?.AsObject()
                ?? throw new InvalidOperationException("复制安装清单失败。");
+    }
+
+    private static void ReportPrepareStatus(Action<string>? onStatusChanged, string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            onStatusChanged?.Invoke(message);
+        }
     }
 
     private static string BuildModrinthVersionUrl(string projectId, string minecraftVersion, IReadOnlyList<string>? loaders)

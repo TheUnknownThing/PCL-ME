@@ -29,6 +29,7 @@ internal sealed partial class FrontendShellViewModel
     private string _taskManagerDownloadSpeedText = "0 B/s";
     private string _taskManagerRemainingFilesText = "0";
     private DispatcherTimer? _taskManagerRefreshTimer;
+    private DispatcherTimer? _taskManagerHeartbeatTimer;
     private int _gameLogRecentFileCount;
     private string _gameLogLatestUpdateLabel = "尚未发现日志文件";
 
@@ -364,6 +365,7 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshTaskManagerSurface()
     {
         SyncTaskSubscriptions();
+        var now = DateTimeOffset.UtcNow;
 
         var tasks = TaskCenter.Tasks.ToArray();
         _taskManagerWaitingCount = tasks.Count(task => task.State == TaskState.Waiting);
@@ -377,7 +379,7 @@ internal sealed partial class FrontendShellViewModel
                 .OrderByDescending(task => task.State == TaskState.Running)
                 .ThenByDescending(task => task.State == TaskState.Waiting)
                 .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
-                .Select(CreateTaskManagerEntry));
+                .Select(task => CreateTaskManagerEntry(task, now)));
 
         var primaryTask = tasks
             .OrderByDescending(task => task.State == TaskState.Running)
@@ -394,6 +396,7 @@ internal sealed partial class FrontendShellViewModel
             ? "0 B/s"
             : primaryTask.SpeedText;
         _taskManagerRemainingFilesText = primaryTask?.RemainingFileCount?.ToString() ?? "0";
+        UpdateTaskManagerHeartbeatState();
 
         RaisePropertyChanged(nameof(HasTaskManagerEntries));
         RaisePropertyChanged(nameof(HasNoTaskManagerEntries));
@@ -1131,13 +1134,14 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceSelectionShortcutEntryViewModel(title, description, iconPath, command);
     }
 
-    private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task)
+    private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task, DateTimeOffset now)
     {
         return new TaskManagerEntryViewModel(
             task.Title,
             task.State,
             MapTaskStateLabel(task.State),
             string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
+            BuildTaskActivityText(task, now),
             task.SupportProgress
                 ? (string.IsNullOrWhiteSpace(task.ProgressText)
                     ? $"{Math.Round(task.Progress * 100, 1, MidpointRounding.AwayFromZero)}%"
@@ -1148,14 +1152,14 @@ internal sealed partial class FrontendShellViewModel
             string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText,
             task.RemainingFileCount?.ToString() ?? "0",
             task.Children.Count,
-            task.Children.Select(CreateTaskManagerStageEntry).ToArray(),
+            task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
             task.Cancel.CanExecute(null),
             task.Pause.CanExecute(null),
             new ActionCommand(() => task.Cancel.Execute(null), () => task.Cancel.CanExecute(null)),
             new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
     }
 
-    private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task)
+    private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task, DateTimeOffset now)
     {
         var indicator = task.State switch
         {
@@ -1168,7 +1172,77 @@ internal sealed partial class FrontendShellViewModel
             _ => "·"
         };
         var message = string.IsNullOrWhiteSpace(task.StateMessage) ? task.Title : task.StateMessage;
+        var activityText = BuildStageActivityText(task, now);
+        if (!string.IsNullOrWhiteSpace(activityText))
+        {
+            message = $"{message} • {activityText}";
+        }
+
         return new TaskManagerStageEntryViewModel(indicator, task.Title, message);
+    }
+
+    private static string BuildTaskActivityText(TaskModel task, DateTimeOffset now)
+    {
+        var activeDuration = now - task.StateSince;
+        var recentDuration = now - task.LastUpdatedAt;
+
+        return task.State switch
+        {
+            TaskState.Running => $"已运行 {FormatTaskDuration(now - (task.StartedAt ?? task.StateSince))}，最近更新 {FormatRecentActivity(recentDuration)}",
+            TaskState.Waiting => $"已等待 {FormatTaskDuration(activeDuration)}",
+            TaskState.Success => $"总耗时 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))}",
+            TaskState.Canceled => $"运行 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))} 后已取消",
+            TaskState.Failed => $"运行 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))} 后失败",
+            _ => string.Empty
+        };
+    }
+
+    private static string BuildStageActivityText(TaskModel task, DateTimeOffset now)
+    {
+        return task.State switch
+        {
+            TaskState.Running => $"已持续 {FormatTaskDuration(now - task.StateSince)}",
+            TaskState.Waiting => "等待开始",
+            TaskState.Success => $"耗时 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            TaskState.Canceled => $"已取消，持续 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            TaskState.Failed => $"已失败，持续 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            _ => string.Empty
+        };
+    }
+
+    private static string FormatTaskDuration(TimeSpan duration)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            duration = TimeSpan.Zero;
+        }
+
+        if (duration.TotalHours >= 1d)
+        {
+            return $"{(int)duration.TotalHours} 小时 {duration.Minutes} 分";
+        }
+
+        if (duration.TotalMinutes >= 1d)
+        {
+            return $"{(int)duration.TotalMinutes} 分 {duration.Seconds} 秒";
+        }
+
+        return $"{Math.Max(1, duration.Seconds)} 秒";
+    }
+
+    private static string FormatRecentActivity(TimeSpan duration)
+    {
+        if (duration < TimeSpan.FromSeconds(2))
+        {
+            return "刚刚";
+        }
+
+        if (duration.TotalMinutes >= 1d)
+        {
+            return $"{(int)duration.TotalMinutes} 分钟前";
+        }
+
+        return $"{Math.Max(1, duration.Seconds)} 秒前";
     }
 
     private static string MapTaskStateLabel(TaskState state)
@@ -1249,6 +1323,38 @@ internal sealed partial class FrontendShellViewModel
         _taskManagerRefreshTimer.Tick += (_, _) =>
         {
             _taskManagerRefreshTimer?.Stop();
+            RefreshTaskManagerSurface();
+        };
+    }
+
+    private void UpdateTaskManagerHeartbeatState()
+    {
+        EnsureTaskManagerHeartbeatTimer();
+        if (_taskManagerRunningCount > 0)
+        {
+            _taskManagerHeartbeatTimer!.Start();
+            return;
+        }
+
+        _taskManagerHeartbeatTimer?.Stop();
+    }
+
+    private void EnsureTaskManagerHeartbeatTimer()
+    {
+        if (_taskManagerHeartbeatTimer is not null)
+        {
+            return;
+        }
+
+        _taskManagerHeartbeatTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _taskManagerHeartbeatTimer.Tick += (_, _) =>
+        {
+            if (TaskCenter.Tasks.All(task => task.State != TaskState.Running))
+            {
+                _taskManagerHeartbeatTimer?.Stop();
+                return;
+            }
+
             RefreshTaskManagerSurface();
         };
     }
@@ -1718,6 +1824,7 @@ internal sealed class TaskManagerEntryViewModel(
     TaskState taskState,
     string state,
     string summary,
+    string activityText,
     string progressText,
     double progressValue,
     bool hasProgress,
@@ -1757,6 +1864,10 @@ internal sealed class TaskManagerEntryViewModel(
     public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
 
     public bool ShowSummary => HasSummary && !HasStageEntries;
+
+    public string ActivityText { get; } = activityText;
+
+    public bool HasActivityText => !string.IsNullOrWhiteSpace(ActivityText);
 
     public string ProgressText { get; } = progressText;
 

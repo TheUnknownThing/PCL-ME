@@ -13,6 +13,31 @@ namespace PCL.Core.App.Tasks;
 public partial class TaskModel : ObservableObject
 {
     /// <summary>
+    /// 任务创建时间
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// 当前状态开始时间
+    /// </summary>
+    public DateTimeOffset StateSince { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// 任务开始运行时间
+    /// </summary>
+    public DateTimeOffset? StartedAt { get; set; }
+
+    /// <summary>
+    /// 任务最近一次活动时间
+    /// </summary>
+    public DateTimeOffset LastUpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// 任务结束时间
+    /// </summary>
+    public DateTimeOffset? FinishedAt { get; set; }
+
+    /// <summary>
     /// 任务标题
     /// </summary>
     public required string Title { get; init; }
