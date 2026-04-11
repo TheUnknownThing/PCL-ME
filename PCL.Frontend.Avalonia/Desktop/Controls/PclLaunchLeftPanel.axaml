@@ -400,6 +400,7 @@
             IndicatorBrush="#0B5BCB"
             IsError="{Binding IsLaunchDialogError}"
             IsRunning="{Binding IsLaunchDialogBusy}"
+            IsSuccess="{Binding IsLaunchDialogSuccess}"
             ShowText="False" />
 
         <TextBlock
