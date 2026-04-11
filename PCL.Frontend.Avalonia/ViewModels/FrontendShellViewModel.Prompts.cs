@@ -777,24 +777,39 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             startResult.Process.EnableRaisingEvents = true;
-            startResult.Process.OutputDataReceived += (_, args) =>
+            if (startResult.Process.StartInfo.RedirectStandardOutput)
             {
-                if (!string.IsNullOrWhiteSpace(args.Data))
+                startResult.Process.OutputDataReceived += (_, args) =>
                 {
-                    AppendLaunchLogLine(args.Data);
-                    File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
-                }
-            };
-            startResult.Process.ErrorDataReceived += (_, args) =>
+                    if (!string.IsNullOrWhiteSpace(args.Data))
+                    {
+                        AppendLaunchLogLine(args.Data);
+                        File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
+                    }
+                };
+            }
+
+            if (startResult.Process.StartInfo.RedirectStandardError)
             {
-                if (!string.IsNullOrWhiteSpace(args.Data))
+                startResult.Process.ErrorDataReceived += (_, args) =>
                 {
-                    AppendLaunchLogLine(args.Data);
-                    File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
-                }
-            };
-            startResult.Process.BeginOutputReadLine();
-            startResult.Process.BeginErrorReadLine();
+                    if (!string.IsNullOrWhiteSpace(args.Data))
+                    {
+                        AppendLaunchLogLine(args.Data);
+                        File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
+                    }
+                };
+            }
+
+            if (startResult.Process.StartInfo.RedirectStandardOutput)
+            {
+                startResult.Process.BeginOutputReadLine();
+            }
+
+            if (startResult.Process.StartInfo.RedirectStandardError)
+            {
+                startResult.Process.BeginErrorReadLine();
+            }
 
             await startResult.Process.WaitForExitAsync();
             _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
