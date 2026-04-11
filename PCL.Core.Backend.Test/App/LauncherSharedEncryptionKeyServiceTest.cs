@@ -59,6 +59,39 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
         }
     }
 
+    [TestMethod]
+    public void ResolveOrCreateKeepsLegacyEnvelopeWhenSecretStoreUpgradeFails()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var rootPath = CreateTempDirectory();
+        try
+        {
+            var expectedKey = new byte[] { 8, 6, 4, 2 };
+            var keyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(rootPath);
+            LauncherSecretKeyStorageService.PersistKeyEnvelope(
+                keyPath,
+                LauncherVersionedDataService.Serialize(new LauncherVersionedData(2, expectedKey)));
+
+            var result = LauncherSharedEncryptionKeyService.ResolveOrCreate(
+                rootPath,
+                explicitKeyOverride: null,
+                new ThrowingLauncherPlatformSecretStore());
+
+            CollectionAssert.AreEqual(expectedKey, result);
+            var persistedEnvelope = LauncherSecretKeyStorageService.TryReadPersistedKeyEnvelope(keyPath);
+            Assert.IsNotNull(persistedEnvelope);
+            Assert.AreEqual(2u, LauncherVersionedDataService.Parse(persistedEnvelope!).Version);
+        }
+        finally
+        {
+            DeleteTempDirectory(rootPath);
+        }
+    }
+
     private static string CreateTempDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), $"pcl-ce-tests-{Guid.NewGuid():N}");
@@ -83,5 +116,15 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
         public byte[] ReadSecret(string secretId) => _values[secretId];
 
         public void WriteSecret(string secretId, byte[] secretValue) => _values[secretId] = secretValue;
+    }
+
+    private sealed class ThrowingLauncherPlatformSecretStore : ILauncherPlatformSecretStore
+    {
+        public bool IsSupported => true;
+
+        public byte[] ReadSecret(string secretId) => throw new InvalidOperationException("store unavailable");
+
+        public void WriteSecret(string secretId, byte[] secretValue) =>
+            throw new InvalidOperationException("store unavailable");
     }
 }

@@ -53,11 +53,20 @@ public static class LauncherStoredKeyEnvelopeService
         var platformSecretStore = secretStore ?? new LauncherProcessPlatformSecretStore();
         if (platformSecretStore.IsSupported)
         {
-            var secretId = CreateSecretId(persistedPath);
-            platformSecretStore.WriteSecret(secretId, randomKey);
-            return new LauncherVersionedData(
-                Version: 3,
-                Data: Encoding.UTF8.GetBytes(secretId));
+            try
+            {
+                var secretId = CreateSecretId(persistedPath);
+                platformSecretStore.WriteSecret(secretId, randomKey);
+                return new LauncherVersionedData(
+                    Version: 3,
+                    Data: Encoding.UTF8.GetBytes(secretId));
+            }
+            catch (InvalidOperationException)
+            {
+                return new LauncherVersionedData(
+                    Version: 2,
+                    Data: randomKey);
+            }
         }
 
         if (AllowInsecureFileSecretStorage())
@@ -93,11 +102,18 @@ public static class LauncherStoredKeyEnvelopeService
             return null;
         }
 
-        var secretId = CreateSecretId(persistedPath);
-        platformSecretStore.WriteSecret(secretId, resolvedKey);
-        return new LauncherVersionedData(
-            Version: 3,
-            Data: Encoding.UTF8.GetBytes(secretId));
+        try
+        {
+            var secretId = CreateSecretId(persistedPath);
+            platformSecretStore.WriteSecret(secretId, resolvedKey);
+            return new LauncherVersionedData(
+                Version: 3,
+                Data: Encoding.UTF8.GetBytes(secretId));
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     private static byte[] ReadWindowsProtectedKey(byte[] data)
