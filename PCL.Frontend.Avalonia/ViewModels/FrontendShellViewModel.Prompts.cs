@@ -830,8 +830,36 @@ internal sealed partial class FrontendShellViewModel
     {
         ReloadSetupComposition();
         ReloadInstanceComposition();
-        _launchComposition = FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
-        NormalizeLaunchProfileSurface();
+        ApplyLaunchComposition(
+            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths),
+            normalizeLaunchProfileSurface: true);
+    }
+
+    private async Task RefreshLaunchProfileCompositionAsync()
+    {
+        var refreshVersion = Interlocked.Increment(ref _launchProfileCompositionRefreshVersion);
+        var launchComposition = await Task.Run(() =>
+            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths));
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (refreshVersion != _launchProfileCompositionRefreshVersion)
+            {
+                return;
+            }
+
+            ApplyLaunchComposition(launchComposition, normalizeLaunchProfileSurface: true);
+        });
+    }
+
+    private void ApplyLaunchComposition(FrontendLaunchComposition composition, bool normalizeLaunchProfileSurface)
+    {
+        _launchComposition = composition;
+        if (normalizeLaunchProfileSurface)
+        {
+            NormalizeLaunchProfileSurface();
+        }
+
         var launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         if (!string.Equals(_launchPromptContextKey, launchPromptContextKey, StringComparison.Ordinal))
         {

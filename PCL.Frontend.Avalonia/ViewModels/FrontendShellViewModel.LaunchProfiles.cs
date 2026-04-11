@@ -223,7 +223,7 @@ internal sealed partial class FrontendShellViewModel
             FrontendProfileStorageService.Save(_shellActionService.RuntimePaths, nextDocument);
             LaunchOfflineStatusText = string.Empty;
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
-            RefreshLaunchState();
+            await RefreshLaunchProfileCompositionAsync();
             AddActivity("离线创建", $"已创建离线档案 {userName}。");
         }
         catch (Exception ex)
@@ -337,7 +337,7 @@ internal sealed partial class FrontendShellViewModel
                 FrontendProfileStorageService.ApplyMutation(profileDocument, mutationPlan, out _));
             ResetMicrosoftDeviceFlow();
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
-            RefreshLaunchState();
+            await RefreshLaunchProfileCompositionAsync();
             AddActivity("微软登录", $"已添加微软档案 {profileResponse.UserName}。");
         }
         catch (Exception ex)
@@ -420,7 +420,7 @@ internal sealed partial class FrontendShellViewModel
                 FrontendProfileStorageService.ApplyMutation(profileDocument, authenticateResult.MutationPlan, out _));
             LaunchAuthlibStatusText = string.Empty;
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
-            RefreshLaunchState();
+            await RefreshLaunchProfileCompositionAsync();
             AddActivity("外置登录", $"已添加外置档案 {authenticateResult.Session.ProfileName}。");
         }
         catch (Exception ex)
@@ -537,7 +537,7 @@ internal sealed partial class FrontendShellViewModel
                 string.IsNullOrWhiteSpace(profile.Username) ? "未命名档案" : profile.Username!,
                 BuildProfileChoiceSummary(profile),
                 index == selectedIndex,
-                new ActionCommand(() => SelectLaunchProfileEntry(index)),
+                new ActionCommand(() => _ = SelectLaunchProfileEntryAsync(index)),
                 FrontendIconCatalog.DeleteOutline.Data,
                 "删除档案",
                 new ActionCommand(() => _ = DeleteLaunchProfileAsync(index)))));
@@ -577,7 +577,7 @@ internal sealed partial class FrontendShellViewModel
             FrontendProfileStorageService.Save(
                 _shellActionService.RuntimePaths,
                 FrontendProfileStorageService.DeleteProfile(profileDocument, profileIndex));
-            RefreshLaunchState();
+            await RefreshLaunchProfileCompositionAsync();
             AddActivity("删除档案", $"已删除档案 {profileName}。");
         }
         catch (Exception ex)
@@ -590,8 +590,13 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void SelectLaunchProfileEntry(int selectedIndex)
+    private async Task SelectLaunchProfileEntryAsync(int selectedIndex)
     {
+        if (!TryBeginLaunchProfileAction("切换档案"))
+        {
+            return;
+        }
+
         try
         {
             var profileDocument = FrontendProfileStorageService.Load(_shellActionService.RuntimePaths).Document;
@@ -604,12 +609,16 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.RuntimePaths,
                 FrontendProfileStorageService.SelectProfile(profileDocument, selectedIndex));
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
-            RefreshLaunchState();
+            await RefreshLaunchProfileCompositionAsync();
             AddActivity("切换档案", $"当前档案已切换为 {profileDocument.Profiles[selectedIndex].Username ?? "未命名档案"}。");
         }
         catch (Exception ex)
         {
             AddFailureActivity("切换档案失败", ex.Message);
+        }
+        finally
+        {
+            EndLaunchProfileAction();
         }
     }
 
