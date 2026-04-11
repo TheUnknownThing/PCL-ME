@@ -28,7 +28,9 @@ public class AppPathLayoutTest
             var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: false);
 
             Assert.AreEqual(Path.Combine(root, "app"), layout.DefaultDirectory);
-            Assert.AreEqual(Path.Combine(root, "app", "PCL"), layout.Data);
+            Assert.AreEqual(Path.Combine(root, "app", "PCL"), layout.PortableData);
+            Assert.AreEqual(Path.Combine(root, "local", "PCLCE_Test", "PCL"), layout.Data);
+            Assert.IsFalse(layout.UsesPortableDataDirectory);
             Assert.AreEqual(Path.Combine(root, "roaming", "PCLCE_Test"), layout.SharedData);
             Assert.AreEqual(Path.Combine(root, "local", "PCLCE_Test"), layout.SharedLocalData);
             Assert.AreEqual(Path.Combine(root, "temp", "PCLCE_Test"), layout.Temp);
@@ -37,6 +39,67 @@ public class AppPathLayoutTest
             Assert.IsTrue(Directory.Exists(layout.SharedData));
             Assert.IsTrue(Directory.Exists(layout.SharedLocalData));
             Assert.IsTrue(Directory.Exists(layout.Temp));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [TestMethod]
+    public void Constructor_UsesPortableData_WhenPortableMarkerExists()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var appDirectory = Path.Combine(root, "app");
+            Directory.CreateDirectory(appDirectory);
+            File.WriteAllText(Path.Combine(appDirectory, "PCL.portable"), string.Empty);
+
+            var env = new FakeAppEnvironment(
+                appDirectory,
+                Path.Combine(root, "temp"),
+                new Dictionary<Special, string>
+                {
+                    [Special.ApplicationData] = Path.Combine(root, "roaming"),
+                    [Special.LocalApplicationData] = Path.Combine(root, "local")
+                });
+
+            var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: false);
+
+            Assert.AreEqual(Path.Combine(appDirectory, "PCL"), layout.Data);
+            Assert.IsTrue(layout.UsesPortableDataDirectory);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [TestMethod]
+    public void Constructor_UsesUserScopedData_WhenLegacyPortablePayloadExistsWithoutPortableMarker()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var appDirectory = Path.Combine(root, "app");
+            var portableDataDirectory = Path.Combine(appDirectory, "PCL");
+            Directory.CreateDirectory(portableDataDirectory);
+            File.WriteAllText(Path.Combine(portableDataDirectory, "config.v1.yml"), "SystemDebugAnim: 0");
+
+            var env = new FakeAppEnvironment(
+                appDirectory,
+                Path.Combine(root, "temp"),
+                new Dictionary<Special, string>
+                {
+                    [Special.ApplicationData] = Path.Combine(root, "roaming"),
+                    [Special.LocalApplicationData] = Path.Combine(root, "local")
+                });
+
+            var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: false);
+
+            Assert.AreEqual(Path.Combine(root, "local", "PCLCE_Test", "PCL"), layout.Data);
+            Assert.IsFalse(layout.UsesPortableDataDirectory);
         }
         finally
         {

@@ -16,6 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PCL.Core.Backend.Test</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="../PCL.Core/App/ConfigEnums.cs" Link="App/ConfigEnums.cs" />
     <Compile Include="../PCL.Core/App/Essentials/Launcher*.cs" Link="App/Essentials/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../PCL.Core/App/Tasks/*.cs" Link="App/Tasks/%(Filename)%(Extension)" />

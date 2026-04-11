@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Essentials;
@@ -16,11 +17,12 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
         {
             var expectedKey = new byte[] { 4, 5, 6, 7 };
             var keyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(rootPath);
+            var secretStore = new FakeLauncherPlatformSecretStore();
             var envelope = LauncherVersionedDataService.Serialize(
-                LauncherStoredKeyEnvelopeService.CreateStoredKeyEnvelope(expectedKey));
+                LauncherStoredKeyEnvelopeService.CreateStoredKeyEnvelope(expectedKey, keyPath, secretStore));
             LauncherSecretKeyStorageService.PersistKeyEnvelope(keyPath, envelope);
 
-            var result = LauncherSharedEncryptionKeyService.ResolveOrCreate(rootPath);
+            var result = LauncherSharedEncryptionKeyService.ResolveOrCreate(rootPath, explicitKeyOverride: null, secretStore);
 
             CollectionAssert.AreEqual(expectedKey, result);
         }
@@ -36,7 +38,8 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
         var rootPath = CreateTempDirectory();
         try
         {
-            var result = LauncherSharedEncryptionKeyService.ResolveOrCreate(rootPath);
+            var secretStore = new FakeLauncherPlatformSecretStore();
+            var result = LauncherSharedEncryptionKeyService.ResolveOrCreate(rootPath, explicitKeyOverride: null, secretStore);
 
             Assert.AreEqual(32, result.Length);
             var keyPath = LauncherSecretKeyStorageService.GetPersistedKeyPath(rootPath);
@@ -45,7 +48,9 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
             Assert.IsNotNull(persistedEnvelope);
 
             var persistedKey = LauncherStoredKeyEnvelopeService.ReadKey(
-                LauncherVersionedDataService.Parse(persistedEnvelope!));
+                LauncherVersionedDataService.Parse(persistedEnvelope!),
+                keyPath,
+                secretStore);
             CollectionAssert.AreEqual(result, persistedKey);
         }
         finally
@@ -67,5 +72,16 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
         {
             Directory.Delete(rootPath, true);
         }
+    }
+
+    private sealed class FakeLauncherPlatformSecretStore : ILauncherPlatformSecretStore
+    {
+        private readonly Dictionary<string, byte[]> _values = [];
+
+        public bool IsSupported => true;
+
+        public byte[] ReadSecret(string secretId) => _values[secretId];
+
+        public void WriteSecret(string secretId, byte[] secretValue) => _values[secretId] = secretValue;
     }
 }
