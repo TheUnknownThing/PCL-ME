@@ -88,7 +88,7 @@ internal static class FrontendCommunityResourceCatalogService
             Version = normalizedVersion ?? string.Empty,
             Loader = normalizedLoader
         };
-        var state = BuildState(config, preferredVersion, communitySourcePreference, effectiveQuery, effectiveTargetResultCount);
+        var state = BuildState(config, communitySourcePreference, effectiveQuery, effectiveTargetResultCount);
         return new FrontendCommunityResourceQueryResult(
             state,
             GetMinecraftVersionOptions(
@@ -100,29 +100,14 @@ internal static class FrontendCommunityResourceCatalogService
 
     private static FrontendDownloadResourceState BuildState(
         RouteConfig config,
-        string? preferredVersion,
         int communitySourcePreference,
         FrontendCommunityResourceQuery query,
         int targetResultCount)
     {
-        var effectiveVersion = string.IsNullOrWhiteSpace(query.Version)
-            ? preferredVersion
+        var selectedVersion = string.IsNullOrWhiteSpace(query.Version)
+            ? null
             : query.Version;
-        var versionAwareResult = FetchEntries(config, effectiveVersion, communitySourcePreference, query, targetResultCount);
-        var usedVersionFallback = false;
-
-        if (versionAwareResult.Entries.Count == 0
-            && !string.IsNullOrWhiteSpace(effectiveVersion)
-            && string.IsNullOrWhiteSpace(query.Version))
-        {
-            versionAwareResult = FetchEntries(
-                config,
-                null,
-                communitySourcePreference,
-                query with { Version = string.Empty },
-                targetResultCount);
-            usedVersionFallback = true;
-        }
+        var versionAwareResult = FetchEntries(config, selectedVersion, communitySourcePreference, query, targetResultCount);
 
         var filteredEntries = ApplyFinalClientSideFilters(versionAwareResult.Entries, query)
             .ToArray();
@@ -135,7 +120,7 @@ internal static class FrontendCommunityResourceCatalogService
             config.ModrinthProjectType is not null && config.CurseForgeClassId is not null,
             false,
             config.UseShaderLoaderOptions,
-            BuildHintText(config, effectiveVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback),
+            BuildHintText(config, selectedVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback: false),
             BuildTagOptions(entries),
             versionAwareResult.TotalCount ?? filteredEntries.Length,
             filteredEntries.Length > targetResultCount || versionAwareResult.CanContinue,
