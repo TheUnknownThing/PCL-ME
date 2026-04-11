@@ -379,7 +379,16 @@ internal sealed partial class FrontendShellViewModel
     {
         InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
         var searchedEntries = GetCurrentInstanceResourceSourceEntries()
-            .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, InstanceResourceSearchQuery))
+            .Where(entry => MatchesSearch(
+                entry.Title,
+                entry.Description,
+                entry.Summary,
+                entry.Meta,
+                entry.Authors,
+                entry.Version,
+                entry.Loader,
+                entry.Website,
+                InstanceResourceSearchQuery))
             .ToArray();
         var duplicateTitles = searchedEntries
             .GroupBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
@@ -621,6 +630,12 @@ internal sealed partial class FrontendShellViewModel
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(FrontendInstanceResourceEntry entry)
     {
         var detailCommand = new ActionCommand(() => _ = ShowInstanceResourceDetailsAsync(entry));
+        var websiteCommand = string.IsNullOrWhiteSpace(entry.Website)
+            ? null
+            : CreateOpenTargetCommand(
+                $"打开{InstanceResourceSurfaceTitle}主页: {entry.Title}",
+                entry.Website,
+                entry.Website);
         var openCommand = new ActionCommand(() =>
             OpenInstanceTarget("打开资源文件位置", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。"));
         var toggleCommand = IsInstanceResourceToggleSupported()
@@ -634,7 +649,7 @@ internal sealed partial class FrontendShellViewModel
             "当前没有可删除的资源。"));
 
         return new InstanceResourceEntryViewModel(
-            LoadLauncherBitmap("Images", "Blocks", entry.IconName),
+            LoadInstanceResourceBitmap(entry),
             entry.Title,
             entry.Summary,
             entry.Meta,
@@ -642,10 +657,13 @@ internal sealed partial class FrontendShellViewModel
             openCommand,
             actionToolTip: "打开文件位置",
             isEnabled: entry.IsEnabled,
+            description: entry.Description,
+            website: entry.Website,
             showSelection: true,
             isSelected: _instanceResourceSelectedPaths.Contains(entry.Path),
             selectionChanged: isSelected => HandleInstanceResourceSelectionChanged(entry.Path, isSelected),
             infoCommand: detailCommand,
+            websiteCommand: websiteCommand,
             openCommand: openCommand,
             toggleCommand: toggleCommand,
             deleteCommand: deleteCommand);
@@ -664,9 +682,34 @@ internal sealed partial class FrontendShellViewModel
             lines.Add($"类型: {entry.Meta}");
         }
 
+        if (!string.IsNullOrWhiteSpace(entry.Loader))
+        {
+            lines.Add($"加载器: {entry.Loader}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Version))
+        {
+            lines.Add($"版本: {entry.Version}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Authors))
+        {
+            lines.Add($"作者: {entry.Authors}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Description))
+        {
+            lines.Add($"描述: {entry.Description}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Website))
+        {
+            lines.Add($"相关网站: {entry.Website}");
+        }
+
         if (!string.IsNullOrWhiteSpace(entry.Summary))
         {
-            lines.Add($"摘要: {entry.Summary}");
+            lines.Add($"附加信息: {entry.Summary}");
         }
 
         lines.Add($"路径: {entry.Path}");
@@ -701,6 +744,23 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity($"查看{InstanceResourceSurfaceTitle}详情", entry.Title);
         }
+    }
+
+    private Bitmap? LoadInstanceResourceBitmap(FrontendInstanceResourceEntry entry)
+    {
+        if (entry.IconBytes is not null && entry.IconBytes.Length > 0)
+        {
+            try
+            {
+                using var stream = new MemoryStream(entry.IconBytes, writable: false);
+                return new Bitmap(stream);
+            }
+            catch
+            {
+            }
+        }
+
+        return LoadLauncherBitmap("Images", "Blocks", entry.IconName);
     }
 
     private static string FormatInstanceResourceFileSize(long bytes)

@@ -6,11 +6,11 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <Grid
       x:Name="LayoutRoot"
-      Height="44"
+      MinHeight="64"
       Margin="0,0,0,8"
       Background="{DynamicResource ColorBrushSemiTransparent}"
       ColumnDefinitions="4,34,7,Auto,*,0,4"
-      RowDefinitions="*,20,18,*"
+      RowDefinitions="8,18,18,18,8"
       RenderTransformOrigin="0.5,0.5"
       RenderTransform="scale(1)">
     <Grid.Transitions>
@@ -49,7 +49,7 @@
     <Image
         Grid.Column="1"
         Grid.Row="1"
-        Grid.RowSpan="2"
+        Grid.RowSpan="3"
         Width="34"
         Height="34"
         HorizontalAlignment="Right"
@@ -77,6 +77,23 @@
         Grid.Column="3"
         Grid.ColumnSpan="2"
         Grid.Row="2"
+        Margin="-1,0,3,0"
+        ColumnDefinitions="*">
+      <TextBlock
+          Foreground="{DynamicResource ColorBrushGray2}"
+          FontSize="12"
+          IsVisible="{Binding HasDescription}"
+          Opacity="{Binding ContentOpacity}"
+          Text="{Binding Description}"
+          TextTrimming="CharacterEllipsis"
+          TextWrapping="NoWrap"
+          VerticalAlignment="Center" />
+    </Grid>
+
+    <Grid
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        Grid.Row="3"
         Margin="-1,0,3,0"
         ColumnDefinitions="Auto,*">
       <ItemsControl
@@ -122,7 +139,7 @@
     <StackPanel
         x:Name="ActionStack"
         Grid.Column="5"
-        Grid.RowSpan="4"
+        Grid.RowSpan="5"
         Margin="0,0,5,0"
         HorizontalAlignment="Right"
         VerticalAlignment="Center"
@@ -140,6 +157,17 @@
           IdleBackgroundBrush="#00FFFFFF"
           IsVisible="{Binding HasInfoAction}"
           ToolTip.Tip="详情" />
+      <controls:PclIconButton
+          Width="25"
+          Height="25"
+          Command="{Binding WebsiteCommand}"
+          HoverBackgroundBrush="#184592FF"
+          IconBrush="{DynamicResource ColorBrush5}"
+          IconData="{Binding WebsiteIconData}"
+          IconScale="{Binding WebsiteIconScale}"
+          IdleBackgroundBrush="#00FFFFFF"
+          IsVisible="{Binding HasWebsiteAction}"
+          ToolTip.Tip="打开主页" />
       <controls:PclIconButton
           Width="25"
           Height="25"

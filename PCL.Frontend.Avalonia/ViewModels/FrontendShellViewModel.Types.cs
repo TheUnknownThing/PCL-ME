@@ -1106,10 +1106,13 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ActionCommand actionCommand,
         string actionToolTip = "查看",
         bool isEnabled = true,
+        string description = "",
+        string website = "",
         bool showSelection = false,
         bool isSelected = false,
         Action<bool>? selectionChanged = null,
         ActionCommand? infoCommand = null,
+        ActionCommand? websiteCommand = null,
         ActionCommand? openCommand = null,
         ActionCommand? toggleCommand = null,
         ActionCommand? deleteCommand = null)
@@ -1121,12 +1124,15 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         Path = path;
         ActionCommand = actionCommand;
         ActionToolTip = actionToolTip;
+        Description = description;
+        Website = website;
         ShowSelection = showSelection;
         _isSelected = isSelected;
         _isEnabled = isEnabled;
         _selectionChanged = selectionChanged;
         _primaryCommand = new ActionCommand(ExecutePrimaryAction);
         InfoCommand = infoCommand;
+        WebsiteCommand = websiteCommand;
         OpenCommand = openCommand ?? actionCommand;
         ToggleCommand = toggleCommand;
         DeleteCommand = deleteCommand;
@@ -1142,6 +1148,10 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 
     public string Path { get; }
 
+    public string Description { get; }
+
+    public string Website { get; }
+
     public ActionCommand ActionCommand { get; }
 
     public ActionCommand PrimaryCommand => _primaryCommand;
@@ -1151,6 +1161,8 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     public bool ShowSelection { get; }
 
     public ActionCommand? InfoCommand { get; }
+
+    public ActionCommand? WebsiteCommand { get; }
 
     public ActionCommand? OpenCommand { get; }
 
@@ -1166,17 +1178,23 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 
     public bool HasInfoAction => InfoCommand is not null;
 
+    public bool HasWebsiteAction => WebsiteCommand is not null;
+
     public bool HasOpenAction => OpenCommand is not null;
 
     public bool HasToggleAction => ToggleCommand is not null;
 
     public bool HasDeleteAction => DeleteCommand is not null;
 
-    public bool HasStandardActionStack => HasInfoAction || HasOpenAction || HasToggleAction || HasDeleteAction;
+    public bool HasStandardActionStack => HasInfoAction || HasWebsiteAction || HasOpenAction || HasToggleAction || HasDeleteAction;
 
     public string InfoIconData => FrontendIconCatalog.InfoCircle.Data;
 
     public double InfoIconScale => FrontendIconCatalog.InfoCircle.Scale;
+
+    public string WebsiteIconData => FrontendIconCatalog.Link.Data;
+
+    public double WebsiteIconScale => FrontendIconCatalog.Link.Scale;
 
     public string OpenIconData => FrontendIconCatalog.OpenFolder.Data;
 
@@ -1203,7 +1221,10 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
             var tags = new List<string>();
             if (!string.IsNullOrWhiteSpace(Meta))
             {
-                tags.Add(Meta);
+                foreach (var segment in Meta.Split('•', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                {
+                    tags.Add(segment);
+                }
             }
 
             if (HasToggleAction && !IsEnabledState)
@@ -1216,6 +1237,8 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     }
 
     public bool HasTags => Tags.Count > 0;
+
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
 
     public bool IsSelected
     {

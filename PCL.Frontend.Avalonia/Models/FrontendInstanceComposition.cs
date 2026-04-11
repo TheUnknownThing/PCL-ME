@@ -150,4 +150,10 @@ internal sealed record FrontendInstanceResourceEntry(
     string Meta,
     string Path,
     string IconName,
-    bool IsEnabled = true);
+    bool IsEnabled = true,
+    string Description = "",
+    string Website = "",
+    string Authors = "",
+    string Version = "",
+    string Loader = "",
+    byte[]? IconBytes = null);
