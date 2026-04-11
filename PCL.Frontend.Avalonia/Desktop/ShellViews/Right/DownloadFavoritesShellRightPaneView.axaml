@@ -52,6 +52,12 @@
                   <controls:PclButton
                       MinWidth="110"
                       Margin="0,0,15,0"
+                      Command="{Binding BatchInstallSelectedDownloadFavoritesCommand}"
+                      IsEnabled="{Binding CanBatchInstallSelectedDownloadFavorites}"
+                      Text="批量安装" />
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
                       Command="{Binding FavoriteSelectedDownloadFavoritesToTargetCommand}"
                       IsEnabled="{Binding CanFavoriteSelectedDownloadFavoritesToTarget}"
                       Text="收藏到" />

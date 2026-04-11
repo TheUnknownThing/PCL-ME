@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json.Nodes;
 using Avalonia.Threading;
+using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -35,6 +38,8 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanFavoriteSelectedDownloadFavoritesToTarget => HasSelectedDownloadFavorites;
 
+    public bool CanBatchInstallSelectedDownloadFavorites => HasSelectedDownloadFavorites;
+
     public ActionCommand SelectAllDownloadFavoritesCommand => new(SelectAllDownloadFavorites);
 
     public ActionCommand ClearDownloadFavoriteSelectionCommand => new(ClearDownloadFavoriteSelection);
@@ -42,6 +47,8 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand RemoveSelectedDownloadFavoritesCommand => new(() => _ = RemoveSelectedDownloadFavoritesAsync());
 
     public ActionCommand FavoriteSelectedDownloadFavoritesToTargetCommand => new(() => _ = FavoriteSelectedDownloadFavoritesToTargetAsync());
+
+    public ActionCommand BatchInstallSelectedDownloadFavoritesCommand => new(() => _ = BatchInstallSelectedDownloadFavoritesAsync());
 
     private IReadOnlyList<InstanceResourceEntryViewModel> GetVisibleDownloadFavoriteEntries()
     {
@@ -60,6 +67,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CanSelectAllDownloadFavorites));
         RaisePropertyChanged(nameof(CanRemoveSelectedDownloadFavorites));
         RaisePropertyChanged(nameof(CanFavoriteSelectedDownloadFavoritesToTarget));
+        RaisePropertyChanged(nameof(CanBatchInstallSelectedDownloadFavorites));
     }
 
     private void HandleDownloadFavoriteSelectionChanged(string projectId, bool isSelected)
@@ -252,6 +260,59 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("收藏到", $"已将 {addedCount} 个项目加入 {GetDownloadFavoriteTargetName(target)}。");
     }
 
+    private async Task BatchInstallSelectedDownloadFavoritesAsync()
+    {
+        var selectedEntries = GetSelectedDownloadFavoriteCatalogEntries();
+        if (selectedEntries.Count == 0)
+        {
+            AddActivity("批量安装收藏", "当前没有选中的收藏项目。");
+            return;
+        }
+
+        var targetSnapshot = await PromptForDownloadFavoriteInstallTargetAsync(selectedEntries.Count);
+        if (targetSnapshot is null)
+        {
+            return;
+        }
+
+        AddActivity("批量安装收藏", $"正在为 {targetSnapshot.Name} 分析 {selectedEntries.Count} 个收藏项目。");
+        DownloadFavoriteBatchInstallBuildResult result;
+        try
+        {
+            result = await Task.Run(() => BuildDownloadFavoriteBatchInstallResult(selectedEntries, targetSnapshot));
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("批量安装收藏失败", ex.Message);
+            return;
+        }
+
+        foreach (var plan in result.Plans)
+        {
+            RegisterDownloadFavoriteBatchInstallTask(plan);
+        }
+
+        var summaryParts = new List<string>();
+        if (result.Plans.Count > 0)
+        {
+            summaryParts.Add($"已加入 {result.Plans.Count} 个安装任务");
+        }
+
+        if (result.Skipped.Count > 0)
+        {
+            summaryParts.Add($"跳过 {result.Skipped.Count} 个项目");
+        }
+
+        AddActivity(
+            "批量安装收藏",
+            $"{targetSnapshot.Name} • {(summaryParts.Count == 0 ? "没有可执行的安装任务。" : string.Join("，", summaryParts))}");
+
+        foreach (var skipped in result.Skipped.Take(5))
+        {
+            AddActivity("批量安装收藏", skipped);
+        }
+    }
+
     private async Task<bool> ToggleCommunityProjectFavoriteAsync()
     {
         if (string.IsNullOrWhiteSpace(_communityProjectState.ProjectId))
@@ -344,6 +405,18 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("移出收藏夹", $"{title} 已从 {GetDownloadFavoriteTargetName(target)} 中移出。");
     }
 
+    private IReadOnlyList<FrontendDownloadCatalogEntry> GetSelectedDownloadFavoriteCatalogEntries()
+    {
+        var target = GetSelectedDownloadFavoriteTargetState();
+        return target.Sections
+            .SelectMany(section => section.Entries)
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.Identity)
+                            && _downloadFavoriteSelectedProjectIds.Contains(entry.Identity))
+            .GroupBy(entry => entry.Identity!, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToArray();
+    }
+
     private FrontendDownloadFavoriteTargetState GetSelectedDownloadFavoriteTargetState()
     {
         if (_downloadComposition.Favorites.Targets.Count == 0)
@@ -358,6 +431,40 @@ internal sealed partial class FrontendShellViewModel
     private string GetSelectedDownloadFavoriteTargetName()
     {
         return GetSelectedDownloadFavoriteTargetState().Name;
+    }
+
+    private async Task<InstanceSelectionSnapshot?> PromptForDownloadFavoriteInstallTargetAsync(int selectedCount)
+    {
+        var instances = LoadAvailableDownloadTargetInstances();
+        if (instances.Count == 0)
+        {
+            AddActivity("批量安装收藏", "当前没有可安装的实例。");
+            return null;
+        }
+
+        string? selectedId;
+        try
+        {
+            selectedId = await _shellActionService.PromptForChoiceAsync(
+                "选择安装目标版本",
+                $"批量安装会根据目标实例的 Minecraft 版本与加载器，为这 {selectedCount} 个收藏选择推荐版本。",
+                instances.Select(entry => new PclChoiceDialogOption(
+                    entry.Name,
+                    entry.Name,
+                    entry.Subtitle))
+                    .ToArray(),
+                _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : instances[0].Name,
+                "开始安装");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("选择安装目标失败", ex.Message);
+            return null;
+        }
+
+        return string.IsNullOrWhiteSpace(selectedId)
+            ? null
+            : instances.FirstOrDefault(entry => string.Equals(entry.Name, selectedId, StringComparison.OrdinalIgnoreCase));
     }
 
     private JsonObject GetSelectedDownloadFavoriteTarget(JsonArray root)
@@ -461,6 +568,286 @@ internal sealed partial class FrontendShellViewModel
         return true;
     }
 
+    private DownloadFavoriteBatchInstallBuildResult BuildDownloadFavoriteBatchInstallResult(
+        IReadOnlyList<FrontendDownloadCatalogEntry> selectedEntries,
+        InstanceSelectionSnapshot targetSnapshot)
+    {
+        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, targetSnapshot.Name);
+        if (!targetComposition.Selection.HasSelection)
+        {
+            return new DownloadFavoriteBatchInstallBuildResult([], [$"{targetSnapshot.Name} 当前不可用，无法执行批量安装。"]);
+        }
+
+        var plans = new List<DownloadFavoriteBatchInstallPlan>();
+        var skipped = new List<string>();
+        foreach (var favorite in selectedEntries)
+        {
+            if (string.IsNullOrWhiteSpace(favorite.Identity))
+            {
+                skipped.Add($"已跳过 {favorite.Title}：缺少项目标识。");
+                continue;
+            }
+
+            if (favorite.OriginSubpage is null)
+            {
+                skipped.Add($"已跳过 {favorite.Title}：无法识别资源类型。");
+                continue;
+            }
+
+            if (favorite.OriginSubpage == LauncherFrontendSubpageKey.DownloadPack)
+            {
+                skipped.Add($"已跳过 {favorite.Title}：整合包暂不支持收藏夹批量安装。");
+                continue;
+            }
+
+            var projectState = FrontendCommunityProjectService.GetProjectState(
+                favorite.Identity,
+                targetComposition.Selection.VanillaVersion,
+                _selectedCommunityDownloadSourceIndex);
+            var release = SelectPreferredCommunityProjectReleaseForTarget(
+                projectState.Releases.Where(entry => entry.IsDirectDownload && !string.IsNullOrWhiteSpace(entry.Target)),
+                targetComposition.Selection.VanillaVersion,
+                targetSnapshot.LoaderLabel);
+            if (release is null || string.IsNullOrWhiteSpace(release.Target))
+            {
+                skipped.Add($"已跳过 {favorite.Title}：没有找到适合 {targetSnapshot.Name} 的可安装版本。");
+                continue;
+            }
+
+            var targetDirectory = ResolveCommunityProjectInstallDirectory(targetComposition.Selection, favorite.OriginSubpage.Value);
+            if (string.IsNullOrWhiteSpace(targetDirectory))
+            {
+                skipped.Add($"已跳过 {favorite.Title}：{targetSnapshot.Name} 没有可用的安装目录。");
+                continue;
+            }
+
+            Directory.CreateDirectory(targetDirectory);
+            var targetFileName = SanitizeCommunityProjectReleaseFileName(release.SuggestedFileName, release.Title);
+            var installed = FindInstalledFavoriteResource(targetComposition, favorite.OriginSubpage.Value, favorite, projectState);
+            if (favorite.OriginSubpage != LauncherFrontendSubpageKey.DownloadWorld
+                && installed is not null
+                && !ShouldInstallFavoriteResourceUpdate(installed, targetFileName, release))
+            {
+                skipped.Add($"已跳过 {favorite.Title}：{targetSnapshot.Name} 中已安装相同或更新的版本。");
+                continue;
+            }
+
+            var targetPath = favorite.OriginSubpage == LauncherFrontendSubpageKey.DownloadWorld
+                ? GetUniqueChildPath(targetDirectory, targetFileName)
+                : Path.Combine(targetDirectory, targetFileName);
+
+            plans.Add(new DownloadFavoriteBatchInstallPlan(
+                favorite.Title,
+                release.Target!,
+                targetPath,
+                targetSnapshot.Name,
+                favorite.OriginSubpage.Value,
+                installed is not null && !string.Equals(installed.Path, targetPath, StringComparison.OrdinalIgnoreCase)
+                    ? installed.Path
+                    : null,
+                string.Equals(targetSnapshot.Name, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return new DownloadFavoriteBatchInstallBuildResult(plans, skipped);
+    }
+
+    private void RegisterDownloadFavoriteBatchInstallTask(DownloadFavoriteBatchInstallPlan plan)
+    {
+        TaskCenter.Register(new FrontendManagedFileDownloadTask(
+            $"收藏批量安装：{plan.Title}",
+            plan.SourceUrl,
+            plan.TargetPath,
+            ResolveDownloadRequestTimeout(),
+            onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {plan.InstanceName}", AvaloniaHintTheme.Info),
+            onCompleted: _ =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    CleanupReplacedDownloadFavoriteResource(plan.ReplacedPath);
+                    if (plan.IsCurrentInstanceTarget)
+                    {
+                        ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
+                    }
+
+                    AddActivity("批量安装收藏", $"{plan.Title} -> {plan.TargetPath}");
+                    AvaloniaHintBus.Show($"{plan.Title} 已安装到 {plan.InstanceName}", AvaloniaHintTheme.Success);
+                });
+            },
+            onFailed: message =>
+            {
+                Dispatcher.UIThread.Post(() => AddFailureActivity("批量安装收藏失败", $"{plan.Title} • {message}"));
+            }));
+    }
+
+    private static void CleanupReplacedDownloadFavoriteResource(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+            else if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+        catch
+        {
+            // Keep the newly installed file even if cleanup of the old version fails.
+        }
+    }
+
+    private static FrontendCommunityProjectReleaseEntry? SelectPreferredCommunityProjectReleaseForTarget(
+        IEnumerable<FrontendCommunityProjectReleaseEntry> releases,
+        string? preferredVersion,
+        string? preferredLoader)
+    {
+        return releases
+            .OrderByDescending(release => ReleaseMatchesExactInstanceVersion(release, NormalizeMinecraftVersion(preferredVersion)))
+            .ThenByDescending(release => ReleaseMatchesExactInstanceLoader(release, preferredLoader))
+            .ThenByDescending(release => release.PublishedUnixTime)
+            .ThenBy(release => release.Title, StringComparer.CurrentCultureIgnoreCase)
+            .FirstOrDefault();
+    }
+
+    private static string? ResolveCommunityProjectInstallDirectory(
+        FrontendInstanceSelectionState selection,
+        LauncherFrontendSubpageKey route)
+    {
+        if (!selection.HasSelection)
+        {
+            return null;
+        }
+
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadResourcePack => Path.Combine(selection.IndieDirectory, "resourcepacks"),
+            LauncherFrontendSubpageKey.DownloadShader => Path.Combine(selection.IndieDirectory, "shaderpacks"),
+            LauncherFrontendSubpageKey.DownloadWorld => Path.Combine(selection.IndieDirectory, "saves"),
+            LauncherFrontendSubpageKey.DownloadDataPack => selection.IndieDirectory,
+            _ => Path.Combine(selection.IndieDirectory, "mods")
+        };
+    }
+
+    private static InstalledFavoriteResource? FindInstalledFavoriteResource(
+        FrontendInstanceComposition composition,
+        LauncherFrontendSubpageKey route,
+        FrontendDownloadCatalogEntry favorite,
+        FrontendCommunityProjectState projectState)
+    {
+        if (route == LauncherFrontendSubpageKey.DownloadWorld)
+        {
+            return null;
+        }
+
+        var installedResources = GetInstalledFavoriteResources(composition, route);
+        if (!string.IsNullOrWhiteSpace(projectState.Website))
+        {
+            var websiteMatch = installedResources.FirstOrDefault(entry =>
+                string.Equals(entry.Website, projectState.Website, StringComparison.OrdinalIgnoreCase));
+            if (websiteMatch is not null)
+            {
+                return websiteMatch;
+            }
+        }
+
+        return installedResources.FirstOrDefault(entry =>
+            string.Equals(entry.Title, favorite.Title, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyList<InstalledFavoriteResource> GetInstalledFavoriteResources(
+        FrontendInstanceComposition composition,
+        LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => composition.Mods.Entries
+                .Concat(composition.DisabledMods.Entries)
+                .Select(entry => new InstalledFavoriteResource(entry.Title, entry.Path, entry.Version, entry.Website))
+                .ToArray(),
+            LauncherFrontendSubpageKey.DownloadResourcePack => composition.ResourcePacks.Entries
+                .Select(entry => new InstalledFavoriteResource(entry.Title, entry.Path, entry.Version, entry.Website))
+                .ToArray(),
+            LauncherFrontendSubpageKey.DownloadShader => composition.Shaders.Entries
+                .Select(entry => new InstalledFavoriteResource(entry.Title, entry.Path, entry.Version, entry.Website))
+                .ToArray(),
+            LauncherFrontendSubpageKey.DownloadDataPack => EnumerateDirectoryInstallArtifacts(composition.Selection.IndieDirectory),
+            _ => []
+        };
+    }
+
+    private static InstalledFavoriteResource[] EnumerateDirectoryInstallArtifacts(string directory)
+    {
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var files = Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
+            .Select(path => new InstalledFavoriteResource(
+                Path.GetFileNameWithoutExtension(path),
+                path,
+                string.Empty,
+                string.Empty));
+        var folders = Directory.EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly)
+            .Select(path => new InstalledFavoriteResource(
+                Path.GetFileName(path),
+                path,
+                string.Empty,
+                string.Empty));
+        return files.Concat(folders).ToArray();
+    }
+
+    private static bool ShouldInstallFavoriteResourceUpdate(
+        InstalledFavoriteResource existing,
+        string targetFileName,
+        FrontendCommunityProjectReleaseEntry release)
+    {
+        var existingFileName = Path.GetFileName(existing.Path);
+        if (string.Equals(existingFileName, targetFileName, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var existingVersion = GetComparableFavoriteVersion(existing.Version, existingFileName, existing.Title);
+        var releaseVersion = GetComparableFavoriteVersion(
+            release.Title,
+            release.SuggestedFileName,
+            release.Info,
+            release.Meta);
+        if (existingVersion > new Version(0, 0) && releaseVersion > new Version(0, 0))
+        {
+            return releaseVersion > existingVersion;
+        }
+
+        return true;
+    }
+
+    private static Version GetComparableFavoriteVersion(params string?[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                continue;
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(candidate, @"\d+(?:\.\d+){1,3}");
+            if (match.Success && Version.TryParse(match.Value, out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return new Version(0, 0);
+    }
+
     private void QueueDownloadFavoriteIconLoad(InstanceResourceEntryViewModel entry, string? iconUrl)
     {
         if (string.IsNullOrWhiteSpace(iconUrl))
@@ -487,4 +874,23 @@ internal sealed partial class FrontendShellViewModel
 
         await Dispatcher.UIThread.InvokeAsync(() => entry.ApplyIcon(bitmap));
     }
+
+    private sealed record DownloadFavoriteBatchInstallPlan(
+        string Title,
+        string SourceUrl,
+        string TargetPath,
+        string InstanceName,
+        LauncherFrontendSubpageKey Route,
+        string? ReplacedPath,
+        bool IsCurrentInstanceTarget);
+
+    private sealed record DownloadFavoriteBatchInstallBuildResult(
+        IReadOnlyList<DownloadFavoriteBatchInstallPlan> Plans,
+        IReadOnlyList<string> Skipped);
+
+    private sealed record InstalledFavoriteResource(
+        string Title,
+        string Path,
+        string Version,
+        string Website);
 }

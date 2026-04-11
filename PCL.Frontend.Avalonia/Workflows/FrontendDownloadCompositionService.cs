@@ -229,7 +229,8 @@ internal static class FrontendDownloadCompositionService
                 Identity: project.ProjectId,
                 IconUrl: project.IconUrl,
                 IconPath: project.IconPath,
-                IconName: ResolveFavoriteIconName(project.ProjectType));
+                IconName: ResolveFavoriteIconName(project.ProjectType),
+                OriginSubpage: ResolveFavoriteOriginSubpage(project.ProjectType));
         }
 
         return new FrontendDownloadCatalogEntry(
@@ -239,7 +240,8 @@ internal static class FrontendDownloadCompositionService
             "查看详情",
             FrontendCommunityProjectService.CreateCompDetailTarget(favorite),
             Identity: favorite,
-            IconName: ResolveFavoriteIconName(null));
+            IconName: ResolveFavoriteIconName(null),
+            OriginSubpage: null);
     }
 
     private static IReadOnlyList<FrontendDownloadCatalogSection> BuildFavoriteSections(
@@ -298,6 +300,20 @@ internal static class FrontendDownloadCompositionService
             "光影包" => "GoldBlock.png",
             "世界" => "GrassPath.png",
             _ => "Grass.png"
+        };
+    }
+
+    private static LauncherFrontendSubpageKey? ResolveFavoriteOriginSubpage(string? projectType)
+    {
+        return projectType switch
+        {
+            "Mod" => LauncherFrontendSubpageKey.DownloadMod,
+            "整合包" => LauncherFrontendSubpageKey.DownloadPack,
+            "数据包" => LauncherFrontendSubpageKey.DownloadDataPack,
+            "资源包" => LauncherFrontendSubpageKey.DownloadResourcePack,
+            "光影包" => LauncherFrontendSubpageKey.DownloadShader,
+            "世界" => LauncherFrontendSubpageKey.DownloadWorld,
+            _ => null
         };
     }
 

@@ -57,7 +57,8 @@ internal sealed record FrontendDownloadCatalogEntry(
     string? Identity = null,
     string? IconUrl = null,
     string? IconPath = null,
-    string? IconName = null);
+    string? IconName = null,
+    LauncherFrontendSubpageKey? OriginSubpage = null);
 
 internal sealed record FrontendDownloadFavoriteTargetState(
     string Name,
