@@ -6,6 +6,7 @@ using System.Threading;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using PCL.Core.App.Configuration.Storage;
 
 namespace PCL.Frontend.Avalonia.Workflows;
@@ -915,7 +916,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> GetForgeChoices(string minecraftVersion)
     {
         var root = ReadJsonArray($"https://bmclapi2.bangbang93.com/forge/minecraft/{minecraftVersion.Replace("-", "_", StringComparison.Ordinal)}");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => node is not null)
             .Select(node =>
@@ -947,13 +949,13 @@ internal static class FrontendInstallWorkflowService
                     {
                         ["minecraftVersion"] = minecraftVersion,
                         ["fileVersion"] = fileVersion,
-                        ["hash"] = installerFile["hash"]?.GetValue<string>()
+                        ["hash"] = installerFile["hash"]?.GetValue<string>(),
+                        ["releaseTime"] = ParseCatalogReleaseTime(node["modified"]?.GetValue<string>())?.ToString("O")
                     });
             })
             .Where(choice => choice is not null)
-            .Cast<FrontendInstallChoice>()
-            .Take(36)
-            .ToArray();
+            .Cast<FrontendInstallChoice>(),
+            36);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetNeoForgeChoices(string minecraftVersion)
@@ -965,11 +967,11 @@ internal static class FrontendInstallWorkflowService
         AddNeoForgeChoices(choices, main, FrontendInstallChoiceKind.NeoForge, minecraftVersion);
         AddNeoForgeChoices(choices, legacy, FrontendInstallChoiceKind.NeoForge, minecraftVersion);
 
-        return choices
+        return SortInstallChoicesByVersionDescending(
+            choices
             .GroupBy(choice => choice.Id, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First())
-            .Take(36)
-            .ToArray();
+            .Select(group => group.First()),
+            36);
     }
 
     private static void AddNeoForgeChoices(
@@ -1056,7 +1058,8 @@ internal static class FrontendInstallWorkflowService
         }
 
         var root = ReadJsonArray("https://api.github.com/repos/CleanroomMC/Cleanroom/releases");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => !string.IsNullOrWhiteSpace(node?["tag_name"]?.GetValue<string>()))
             .Select(node =>
@@ -1072,11 +1075,12 @@ internal static class FrontendInstallWorkflowService
                     FileName: $"cleanroom-{tag}-installer.jar",
                     Metadata: new JsonObject
                     {
-                        ["minecraftVersion"] = minecraftVersion
+                        ["minecraftVersion"] = minecraftVersion,
+                        ["releaseTime"] = ParseCatalogReleaseTime(node["published_at"]?.GetValue<string>())?.ToString("O")
                     });
             })
-            .Take(18)
-            .ToArray();
+            .Cast<FrontendInstallChoice>(),
+            18);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetFabricLoaderChoices(string minecraftVersion)
@@ -1098,7 +1102,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> GetQuiltLoaderChoices(string minecraftVersion)
     {
         var root = ReadJsonArray($"https://meta.quiltmc.org/v3/versions/loader/{minecraftVersion}");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => node?["loader"] is JsonObject)
             .Select(node =>
@@ -1114,9 +1119,8 @@ internal static class FrontendInstallWorkflowService
                     Kind: FrontendInstallChoiceKind.QuiltLoader,
                     ManifestUrl: profileUrl);
             })
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version))
-            .Take(18)
-            .ToArray();
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)),
+            18);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetLabyModChoices(string minecraftVersion)
@@ -1164,7 +1168,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> GetOptiFineChoices(string minecraftVersion)
     {
         var root = ReadJsonArray("https://bmclapi2.bangbang93.com/optifine/versionList");
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => string.Equals(node?["mcversion"]?.GetValue<string>(), minecraftVersion, StringComparison.OrdinalIgnoreCase))
             .Select(node =>
@@ -1212,8 +1217,8 @@ internal static class FrontendInstallWorkflowService
                         ["isPreview"] = patch.Contains("pre", StringComparison.OrdinalIgnoreCase)
                     });
             })
-            .Take(24)
-            .ToArray();
+            .Cast<FrontendInstallChoice>(),
+            24);
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetLiteLoaderChoices(string minecraftVersion)
@@ -1324,12 +1329,11 @@ internal static class FrontendInstallWorkflowService
                 .Where(node => node is not null)
                 .Select(ToModrinthChoice)
                 .Where(choice => choice is not null)
-                .Cast<FrontendInstallChoice>()
-                .Take(18)
-                .ToArray();
-            if (choices.Length > 0)
+                .Cast<FrontendInstallChoice>();
+            var orderedChoices = SortInstallChoicesDescending(choices, 18);
+            if (orderedChoices.Count > 0)
             {
-                return choices;
+                return orderedChoices;
             }
         }
 
@@ -1366,7 +1370,11 @@ internal static class FrontendInstallWorkflowService
             Version: title,
             Kind: FrontendInstallChoiceKind.ModFile,
             DownloadUrl: primaryFile["url"]?.GetValue<string>(),
-            FileName: primaryFile["filename"]?.GetValue<string>());
+            FileName: primaryFile["filename"]?.GetValue<string>(),
+            Metadata: new JsonObject
+            {
+                ["releaseTime"] = ParseCatalogReleaseTime(published)?.ToString("O")
+            });
     }
 
     private static IReadOnlyList<FrontendInstallChoice> ReadLoaderChoices(
@@ -1375,7 +1383,8 @@ internal static class FrontendInstallWorkflowService
         string prefix)
     {
         var root = ReadJsonArray(url);
-        return root
+        return SortInstallChoicesByVersionDescending(
+            root
             .Select(node => node as JsonObject)
             .Where(node => node?["loader"] is JsonObject)
             .Select(node =>
@@ -1390,9 +1399,8 @@ internal static class FrontendInstallWorkflowService
                     Kind: kind,
                     ManifestUrl: $"{url.TrimEnd('/')}/{version}/profile/json");
             })
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version))
-            .Take(18)
-            .ToArray();
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)),
+            18);
     }
 
     private static IEnumerable<string> GetVersionCandidates(string minecraftVersion, bool allowFallback)
@@ -1753,6 +1761,206 @@ internal static class FrontendInstallWorkflowService
             "alpha" => "预览版",
             _ => rawValue
         };
+    }
+
+    private static IReadOnlyList<FrontendInstallChoice> SortInstallChoicesDescending(
+        IEnumerable<FrontendInstallChoice> choices,
+        int? maxCount = null)
+    {
+        var ordered = choices.ToList();
+        ordered.Sort(CompareInstallChoicesDescending);
+        if (maxCount is int limit && ordered.Count > limit)
+        {
+            ordered.RemoveRange(limit, ordered.Count - limit);
+        }
+
+        return ordered;
+    }
+
+    private static IReadOnlyList<FrontendInstallChoice> SortInstallChoicesByVersionDescending(
+        IEnumerable<FrontendInstallChoice> choices,
+        int? maxCount = null)
+    {
+        var ordered = choices.ToList();
+        ordered.Sort((left, right) =>
+        {
+            var versionCompare = CompareLooseVersions(right.Version, left.Version);
+            if (versionCompare != 0)
+            {
+                return versionCompare;
+            }
+
+            return CompareInstallChoicesDescending(left, right);
+        });
+
+        if (maxCount is int limit && ordered.Count > limit)
+        {
+            ordered.RemoveRange(limit, ordered.Count - limit);
+        }
+
+        return ordered;
+    }
+
+    private static int CompareInstallChoicesDescending(FrontendInstallChoice? left, FrontendInstallChoice? right)
+    {
+        if (ReferenceEquals(left, right))
+        {
+            return 0;
+        }
+
+        if (left is null)
+        {
+            return 1;
+        }
+
+        if (right is null)
+        {
+            return -1;
+        }
+
+        var leftReleaseTime = GetInstallChoiceReleaseTime(left);
+        var rightReleaseTime = GetInstallChoiceReleaseTime(right);
+        if (leftReleaseTime is not null && rightReleaseTime is not null)
+        {
+            var releaseCompare = rightReleaseTime.Value.CompareTo(leftReleaseTime.Value);
+            if (releaseCompare != 0)
+            {
+                return releaseCompare;
+            }
+        }
+
+        var versionCompare = CompareLooseVersions(right.Version, left.Version);
+        if (versionCompare != 0)
+        {
+            return versionCompare;
+        }
+
+        return string.Compare(right.Title, left.Title, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateTimeOffset? GetInstallChoiceReleaseTime(FrontendInstallChoice choice)
+    {
+        var rawValue = choice.Metadata?["releaseTime"]?.GetValue<string>();
+        return DateTimeOffset.TryParse(rawValue, out var parsed) ? parsed : null;
+    }
+
+    private static int CompareLooseVersions(string? left, string? right)
+    {
+        var (leftCore, leftSuffix) = SplitVersionCoreAndSuffix(left);
+        var (rightCore, rightSuffix) = SplitVersionCoreAndSuffix(right);
+
+        var coreCompare = CompareVersionNumberSequences(
+            ExtractVersionNumbers(leftCore),
+            ExtractVersionNumbers(rightCore));
+        if (coreCompare != 0)
+        {
+            return coreCompare;
+        }
+
+        var stabilityCompare = GetVersionStabilityRank(leftSuffix).CompareTo(GetVersionStabilityRank(rightSuffix));
+        if (stabilityCompare != 0)
+        {
+            return stabilityCompare;
+        }
+
+        var suffixCompare = CompareVersionNumberSequences(
+            ExtractVersionNumbers(leftSuffix),
+            ExtractVersionNumbers(rightSuffix));
+        if (suffixCompare != 0)
+        {
+            return suffixCompare;
+        }
+
+        return string.Compare(
+            NormalizeVersionText(leftSuffix),
+            NormalizeVersionText(rightSuffix),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static (string Core, string Suffix) SplitVersionCoreAndSuffix(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        var match = Regex.Match(
+            rawValue,
+            @"alpha|beta|preview|pre|rc|snapshot|nightly|dev|experimental|test",
+            RegexOptions.IgnoreCase);
+        return !match.Success
+            ? (rawValue, string.Empty)
+            : (rawValue[..match.Index], rawValue[match.Index..]);
+    }
+
+    private static IReadOnlyList<long> ExtractVersionNumbers(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return [];
+        }
+
+        return Regex.Matches(rawValue, @"\d+")
+            .Select(match => long.TryParse(match.Value, out var value) ? value : 0L)
+            .ToArray();
+    }
+
+    private static int CompareVersionNumberSequences(
+        IReadOnlyList<long> left,
+        IReadOnlyList<long> right)
+    {
+        var maxLength = Math.Max(left.Count, right.Count);
+        for (var index = 0; index < maxLength; index++)
+        {
+            var leftValue = index < left.Count ? left[index] : 0L;
+            var rightValue = index < right.Count ? right[index] : 0L;
+            var compare = leftValue.CompareTo(rightValue);
+            if (compare != 0)
+            {
+                return compare;
+            }
+        }
+
+        return 0;
+    }
+
+    private static int GetVersionStabilityRank(string? suffix)
+    {
+        if (string.IsNullOrWhiteSpace(suffix))
+        {
+            return 5;
+        }
+
+        var normalized = suffix.ToLowerInvariant();
+        if (normalized.Contains("rc", StringComparison.Ordinal))
+        {
+            return 4;
+        }
+
+        if (normalized.Contains("preview", StringComparison.Ordinal)
+            || normalized.Contains("pre", StringComparison.Ordinal))
+        {
+            return 3;
+        }
+
+        if (normalized.Contains("beta", StringComparison.Ordinal))
+        {
+            return 2;
+        }
+
+        if (normalized.Contains("alpha", StringComparison.Ordinal))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static string NormalizeVersionText(string? rawValue)
+    {
+        return string.IsNullOrWhiteSpace(rawValue)
+            ? string.Empty
+            : rawValue.Trim().Replace('_', '-');
     }
 
     private static bool IsModernForgelikeChoice(FrontendInstallChoice choice)
