@@ -4,21 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     DataContext="{Binding Shell}">
-  <UserControl.Styles>
-    <Style Selector="Button.install-choice-row">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Button.install-choice-row:pointerover">
-      <Setter Property="Background" Value="#14000000" />
-    </Style>
-  </UserControl.Styles>
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <ScrollViewer
+      x:Name="InstallScrollViewer"
+      VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="12">
-      <StackPanel IsVisible="{Binding ShowDownloadInstallMinecraftCatalog}" Spacing="12">
+      <StackPanel
+          x:Name="MinecraftCatalogStage"
+          Spacing="12">
         <controls:PclCard IsVisible="{Binding ShowDownloadInstallMinecraftCatalogLoading}" ContentMargin="18,16,18,16">
           <controls:PclCard.CardContent>
             <TextBlock
@@ -70,7 +62,9 @@
         </ItemsControl>
       </StackPanel>
 
-      <StackPanel IsVisible="{Binding ShowDownloadInstallSelectionStage}" Spacing="12">
+      <StackPanel
+          x:Name="SelectionStage"
+          Spacing="12">
         <controls:PclCard ContentMargin="13,13,16,13">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto,*">
@@ -213,56 +207,14 @@
                     <ItemsControl ItemsSource="{Binding Choices}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                          <Button
-                              Classes="install-choice-row"
+                          <controls:PclListItem
+                              HorizontalAlignment="Stretch"
+                              Margin="0"
                               Command="{Binding SelectCommand}"
-                              HorizontalAlignment="Stretch">
-                            <Border
-                                Background="{Binding BackgroundBrush}"
-                                BorderBrush="{Binding BorderBrush}"
-                                BorderThickness="0"
-                                CornerRadius="6"
-                                MinHeight="36">
-                              <Grid HorizontalAlignment="Stretch" ColumnDefinitions="4,*,Auto" RowDefinitions="*,Auto,Auto,*">
-                              <Border
-                                  Grid.RowSpan="4"
-                                  Width="4"
-                                  Margin="0,2,8,2"
-                                  Background="{Binding ForegroundBrush}"
-                                  CornerRadius="0,3,3,0"
-                                  IsVisible="{Binding IsSelected}" />
-
-                              <TextBlock
-                                  Grid.Row="1"
-                                  Grid.Column="1"
-                                  Foreground="{Binding ForegroundBrush}"
-                                  FontSize="13"
-                                  Text="{Binding Title}"
-                                  TextTrimming="CharacterEllipsis" />
-                              <TextBlock
-                                  Grid.Row="2"
-                                  Grid.Column="1"
-                                  Foreground="{Binding SummaryBrush}"
-                                  FontSize="11.5"
-                                  Text="{Binding Summary}"
-                                  TextTrimming="CharacterEllipsis" />
-
-                              <Border
-                                  Grid.Column="2"
-                                  Grid.RowSpan="4"
-                                  Margin="8,0,0,0"
-                                  VerticalAlignment="Center"
-                                  Padding="8,3"
-                                  Background="#DDEBFE"
-                                  BorderBrush="#BFD9FF"
-                                  BorderThickness="1"
-                                  CornerRadius="999"
-                                  IsVisible="{Binding IsSelected}">
-                                <TextBlock Foreground="#1370F3" FontSize="11" Text="已选择" />
-                              </Border>
-                              </Grid>
-                            </Border>
-                          </Button>
+                              IconSource="{Binding Icon}"
+                              Info="{Binding Summary}"
+                              IsSelected="{Binding IsSelected}"
+                              Title="{Binding Title}" />
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>

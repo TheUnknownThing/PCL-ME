@@ -413,8 +413,7 @@ public static class LauncherFrontendPageContentService
             Section(
                 "设置",
                 "更新设置",
-                "可调整更新通道和自动检查设置。",
-                "Mirror 酱 CDK 等相关输入也会显示在此页。"),
+                "可调整更新通道和自动检查设置。"),
             Section(
                 "状态",
                 "版本信息",

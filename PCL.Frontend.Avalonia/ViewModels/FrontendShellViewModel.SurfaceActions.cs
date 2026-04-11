@@ -107,7 +107,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task CheckForLauncherUpdatesAsync(bool forceRefresh)
     {
-        var signature = $"{SelectedUpdateChannelIndex}|{MirrorCdk}";
+        var signature = $"{SelectedUpdateChannelIndex}";
         if (_isCheckingUpdate)
         {
             return;
@@ -126,7 +126,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex, MirrorCdk);
+            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex);
             _lastUpdateCheckSignature = signature;
             RaiseUpdateSurfaceProperties();
 
@@ -180,7 +180,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("下载并安装更新失败", error ?? outputPath);
+            AddFailureActivity("下载并安装更新失败", error ?? outputPath);
         }
     }
 
@@ -211,7 +211,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity("查看更新详情失败", openError ?? "当前没有可用的更新详情。");
+        AddFailureActivity("查看更新详情失败", openError ?? "当前没有可用的更新详情。");
     }
 
     private void ResetLaunchSettingsSurface()
@@ -242,7 +242,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-            AddActivity("刷新联机大厅失败", ex.Message);
+            AddFailureActivity("刷新联机大厅失败", ex.Message);
         }
     }
 
@@ -321,7 +321,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             GameLinkNatStatus = "测试失败";
-            AddActivity("测试 NAT 类型失败", ex.Message);
+            AddFailureActivity("测试 NAT 类型失败", ex.Message);
         }
     }
 
@@ -360,7 +360,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("Natayark 账户失败", ex.Message);
+            AddFailureActivity("Natayark 账户失败", ex.Message);
             return;
         }
 
@@ -409,7 +409,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("加入大厅失败", ex.Message);
+            AddFailureActivity("加入大厅失败", ex.Message);
             SyncLobbyRuntimeState(preserveTypedLobbyId: true);
             return;
         }
@@ -438,9 +438,14 @@ internal sealed partial class FrontendShellViewModel
 
         var joined = await LobbyRuntime.JoinLobbyAsync(lobbyId, userName);
         SyncLobbyRuntimeState(preserveTypedLobbyId: !joined);
-        AddActivity(
-            joined ? "加入大厅" : "加入大厅失败",
-            joined ? $"已成功加入大厅 {lobbyId}。" : "运行时未能加入目标大厅，请查看提示信息后重试。");
+        if (joined)
+        {
+            AddActivity("加入大厅", $"已成功加入大厅 {lobbyId}。");
+        }
+        else
+        {
+            AddFailureActivity("加入大厅失败", "运行时未能加入目标大厅，请查看提示信息后重试。");
+        }
     }
 
     private async Task PasteLobbyIdAsync()
@@ -468,7 +473,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("粘贴大厅编号失败", ex.Message);
+            AddFailureActivity("粘贴大厅编号失败", ex.Message);
         }
     }
 
@@ -509,7 +514,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("创建大厅失败", ex.Message);
+            AddFailureActivity("创建大厅失败", ex.Message);
             SyncLobbyRuntimeState(preserveTypedLobbyId: true);
             return;
         }
@@ -539,13 +544,18 @@ internal sealed partial class FrontendShellViewModel
 
         var created = await LobbyRuntime.CreateLobbyAsync(port, GameLinkConnectedUserName);
         SyncLobbyRuntimeState(preserveTypedLobbyId: !created);
-        AddActivity(
-            created ? "创建大厅" : "创建大厅失败",
-            created
-                ? isManualPort
+        if (created)
+        {
+            AddActivity(
+                "创建大厅",
+                isManualPort
                     ? $"已按端口 {port} 创建大厅。"
-                    : $"已为 {worldName} 创建大厅。"
-                : "运行时未能创建大厅，请确认已经登录 Natayark 并开放了局域网端口。");
+                    : $"已为 {worldName} 创建大厅。");
+        }
+        else
+        {
+            AddFailureActivity("创建大厅失败", "运行时未能创建大厅，请确认已经登录 Natayark 并开放了局域网端口。");
+        }
     }
 
     private void RefreshLobbyWorlds()
@@ -570,7 +580,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-            AddActivity("刷新世界列表失败", ex.Message);
+            AddFailureActivity("刷新世界列表失败", ex.Message);
         }
     }
 
@@ -606,7 +616,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             SyncLobbyRuntimeState(preserveTypedLobbyId: true);
-            AddActivity("退出大厅失败", ex.Message);
+            AddFailureActivity("退出大厅失败", ex.Message);
         }
     }
 
@@ -629,7 +639,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("手动输入联机端口失败", ex.Message);
+            AddFailureActivity("手动输入联机端口失败", ex.Message);
             return;
         }
 
@@ -664,7 +674,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("复制虚拟 IP失败", ex.Message);
+            AddFailureActivity("复制虚拟 IP失败", ex.Message);
         }
     }
 
@@ -683,7 +693,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("复制大厅编号失败", ex.Message);
+            AddFailureActivity("复制大厅编号失败", ex.Message);
         }
     }
 
@@ -776,7 +786,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("管理收藏夹失败", ex.Message);
+            AddFailureActivity("管理收藏夹失败", ex.Message);
             return;
         }
 
@@ -803,7 +813,7 @@ internal sealed partial class FrontendShellViewModel
                 await DeleteDownloadFavoriteTargetAsync(root, currentTarget);
                 return;
             default:
-                AddActivity("管理收藏夹失败", $"未识别的收藏夹操作：{actionId}");
+                AddFailureActivity("管理收藏夹失败", $"未识别的收藏夹操作：{actionId}");
                 return;
         }
     }
@@ -1040,7 +1050,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("分享当前收藏夹失败", ex.Message);
+            AddFailureActivity("分享当前收藏夹失败", ex.Message);
         }
     }
 
@@ -1058,7 +1068,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入收藏失败", ex.Message);
+            AddFailureActivity("导入收藏失败", ex.Message);
             return;
         }
 
@@ -1089,7 +1099,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入收藏失败", ex.Message);
+            AddFailureActivity("导入收藏失败", ex.Message);
             return;
         }
 
@@ -1109,7 +1119,7 @@ internal sealed partial class FrontendShellViewModel
             }
             catch (Exception ex)
             {
-                AddActivity("导入收藏失败", ex.Message);
+                AddFailureActivity("导入收藏失败", ex.Message);
                 return;
             }
 
@@ -1152,7 +1162,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("新建收藏夹失败", ex.Message);
+            AddFailureActivity("新建收藏夹失败", ex.Message);
             return;
         }
 
@@ -1179,7 +1189,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("重命名收藏夹失败", ex.Message);
+            AddFailureActivity("重命名收藏夹失败", ex.Message);
             return;
         }
 
@@ -1218,7 +1228,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("删除当前收藏夹失败", ex.Message);
+            AddFailureActivity("删除当前收藏夹失败", ex.Message);
             return;
         }
 
@@ -1293,7 +1303,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("选择下载目录失败", ex.Message);
+            AddFailureActivity("选择下载目录失败", ex.Message);
             return;
         }
 
@@ -1311,13 +1321,13 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!Uri.TryCreate(ToolDownloadUrl, UriKind.Absolute, out var uri))
         {
-            AddActivity("开始下载自定义文件失败", "下载地址无效。");
+            AddFailureActivity("开始下载自定义文件失败", "下载地址无效。");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
         {
-            AddActivity("开始下载自定义文件失败", "请先选择保存目录。");
+            AddFailureActivity("开始下载自定义文件失败", "请先选择保存目录。");
             return;
         }
 
@@ -1340,7 +1350,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("开始下载自定义文件失败", ex.Message);
+            AddFailureActivity("开始下载自定义文件失败", ex.Message);
         }
     }
 
@@ -1395,7 +1405,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开日志目录失败", error ?? logDirectory);
+            AddFailureActivity("打开日志目录失败", error ?? logDirectory);
         }
     }
 
@@ -1461,7 +1471,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入设置失败", ex.Message);
+            AddFailureActivity("导入设置失败", ex.Message);
             return;
         }
 
@@ -1496,7 +1506,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开背景文件夹失败", error ?? folder);
+            AddFailureActivity("打开背景文件夹失败", error ?? folder);
         }
     }
 
@@ -1527,7 +1537,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开音乐文件夹失败", error ?? folder);
+            AddFailureActivity("打开音乐文件夹失败", error ?? folder);
         }
     }
 
@@ -1565,7 +1575,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("更改标题栏图片失败", ex.Message);
+            AddFailureActivity("更改标题栏图片失败", ex.Message);
             return;
         }
 
@@ -1621,7 +1631,7 @@ internal sealed partial class FrontendShellViewModel
         var sourcePath = Path.Combine(LauncherRootDirectory, "Resources", "Custom.xml");
         if (!File.Exists(sourcePath))
         {
-            AddActivity("生成教学文件失败", $"未找到主页教学模板：{sourcePath}");
+            AddFailureActivity("生成教学文件失败", $"未找到主页教学模板：{sourcePath}");
             return;
         }
 
@@ -1669,7 +1679,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("选择皮肤失败", ex.Message);
+            AddFailureActivity("选择皮肤失败", ex.Message);
             return;
         }
 
@@ -1714,7 +1724,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("保存头像失败", ex.Message);
+            AddFailureActivity("保存头像失败", ex.Message);
         }
     }
 
@@ -1802,7 +1812,7 @@ internal sealed partial class FrontendShellViewModel
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 ReloadSetupComposition(initializeAllSurfaces: false);
-                AddActivity("刷新 Java 列表失败", ex.Message);
+                AddFailureActivity("刷新 Java 列表失败", ex.Message);
             });
         }
     }
@@ -1845,7 +1855,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HasFeedbackSections));
             }
 
-            AddActivity("刷新反馈页失败", ex.Message);
+            AddFailureActivity("刷新反馈页失败", ex.Message);
         }
         finally
         {
@@ -1867,7 +1877,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加 Java 失败", ex.Message);
+            AddFailureActivity("添加 Java 失败", ex.Message);
             return;
         }
 
@@ -1880,7 +1890,7 @@ internal sealed partial class FrontendShellViewModel
         var installation = ParseJavaInstallation(selectedPath);
         if (installation is null)
         {
-            AddActivity("添加 Java 失败", $"无法识别所选文件为可用的 Java：{selectedPath}");
+            AddFailureActivity("添加 Java 失败", $"无法识别所选文件为可用的 Java：{selectedPath}");
             return;
         }
 
@@ -2300,7 +2310,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开下载文件夹失败", error ?? folder);
+            AddFailureActivity("打开下载文件夹失败", error ?? folder);
         }
     }
 
@@ -2308,7 +2318,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(OfficialSkinPlayerName))
         {
-            AddActivity("保存正版皮肤失败", "请先填写正版玩家名。");
+            AddFailureActivity("保存正版皮肤失败", "请先填写正版玩家名。");
             return;
         }
 
@@ -2322,7 +2332,7 @@ internal sealed partial class FrontendShellViewModel
                 : null;
             if (string.IsNullOrWhiteSpace(uuid))
             {
-                AddActivity("保存正版皮肤失败", "未找到对应的正版玩家。");
+                AddFailureActivity("保存正版皮肤失败", "未找到对应的正版玩家。");
                 return;
             }
 
@@ -2335,7 +2345,7 @@ internal sealed partial class FrontendShellViewModel
                     && string.Equals(nameElement.GetString(), "textures", StringComparison.Ordinal));
             if (!texturePayload.TryGetProperty("value", out var valueElement))
             {
-                AddActivity("保存正版皮肤失败", "正版档案中未包含皮肤信息。");
+                AddFailureActivity("保存正版皮肤失败", "正版档案中未包含皮肤信息。");
                 return;
             }
 
@@ -2348,7 +2358,7 @@ internal sealed partial class FrontendShellViewModel
                 .GetString();
             if (string.IsNullOrWhiteSpace(textureUrl))
             {
-                AddActivity("保存正版皮肤失败", "正版档案中未包含皮肤下载地址。");
+                AddFailureActivity("保存正版皮肤失败", "正版档案中未包含皮肤下载地址。");
                 return;
             }
 
@@ -2361,11 +2371,11 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (HttpRequestException ex)
         {
-            AddActivity("保存正版皮肤失败", ex.Message);
+            AddFailureActivity("保存正版皮肤失败", ex.Message);
         }
         catch (Exception ex)
         {
-            AddActivity("保存正版皮肤失败", ex.Message);
+            AddFailureActivity("保存正版皮肤失败", ex.Message);
         }
     }
 
@@ -2374,7 +2384,7 @@ internal sealed partial class FrontendShellViewModel
         var url = GetAchievementUrl();
         if (string.IsNullOrWhiteSpace(url))
         {
-            AddActivity("保存成就图片失败", "请先填写有效的成就内容。");
+            AddFailureActivity("保存成就图片失败", "请先填写有效的成就内容。");
             return;
         }
 
@@ -2390,7 +2400,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("保存成就图片失败", ex.Message);
+            AddFailureActivity("保存成就图片失败", ex.Message);
         }
     }
 

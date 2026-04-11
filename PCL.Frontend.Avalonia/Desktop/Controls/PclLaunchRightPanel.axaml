@@ -10,7 +10,7 @@
       <Border x:Name="LaunchCommunityHintHost" IsVisible="False" Background="Transparent">
         <controls:PclCard
             x:Name="LaunchCommunityHintCard"
-            Header="社区版提示"
+            Header="跨平台版提示"
             IsClosable="True"
             CloseCommand="{Binding DismissLaunchCommunityHintCommand}"
             ContentMargin="20,12,20,15">

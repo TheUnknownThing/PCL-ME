@@ -45,7 +45,7 @@ internal static class FrontendToolsCompositionService
             SelectedWorldIndex: 0,
             PolicyEntries:
             [
-                new FrontendToolsSimpleEntry("PCL CE 大厅相关隐私政策", "了解 PCL CE 如何处理您的个人信息"),
+                new FrontendToolsSimpleEntry("PCL-ME 大厅相关隐私政策", "了解 PCL-ME 如何处理您的个人信息"),
                 new FrontendToolsSimpleEntry("Natayark Network 用户协议与隐私政策", "查看 Natayark OpenID 服务条款")
             ],
             PlayerEntries: []);
@@ -64,7 +64,7 @@ internal static class FrontendToolsCompositionService
                 new FrontendToolboxActionDefinition(
                     "memory-optimize",
                     "内存优化",
-                    "内存优化为 PCL CE 特供版，效果加强！\n\n将物理内存占用降低约 1/3，不仅限于 MC！\n如果使用机械硬盘，这可能会导致一小段时间的严重卡顿。\n使用 --memory 参数启动 PCL 可以静默执行内存优化。",
+                    "内存优化为 PCL-ME 特供版，效果加强！\n\n将物理内存占用降低约 1/3，不仅限于 MC！\n如果使用机械硬盘，这可能会导致一小段时间的严重卡顿。\n使用 --memory 参数启动 PCL 可以静默执行内存优化。",
                     100,
                     false),
                 new FrontendToolboxActionDefinition(
@@ -88,7 +88,7 @@ internal static class FrontendToolsCompositionService
                 new FrontendToolboxActionDefinition(
                     "create-shortcut",
                     "创建快捷方式",
-                    "创建一个指向 PCL 社区版可执行文件的快捷方式",
+                    "创建一个指向 PCL-ME 可执行文件的快捷方式",
                     120,
                     false),
                 new FrontendToolboxActionDefinition(

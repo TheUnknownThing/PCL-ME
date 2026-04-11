@@ -88,4 +88,39 @@ public sealed class MinecraftCrashExportWorkflowServiceTest
         Assert.AreEqual(1, result.ExportRequest.SourceFiles.Count);
         Assert.AreEqual("/tmp/a.log", result.ExportRequest.SourceFiles.Single().SourcePath);
     }
+
+    [TestMethod]
+    public void CreatePlanAddsLauncherLogWhenItIsOnlyProvidedAsCurrentLogPath()
+    {
+        var result = MinecraftCrashExportWorkflowService.CreatePlan(new MinecraftCrashExportPlanRequest(
+            Timestamp: new DateTime(2026, 4, 2, 13, 5, 6),
+            ReportDirectory: "/tmp/report",
+            LauncherVersionName: "2.14.5",
+            UniqueAddress: "device-123",
+            SourceFilePaths:
+            [
+                "/tmp/a.log"
+            ],
+            AdditionalSourceFilePaths: null,
+            CurrentLauncherLogFilePath: "/tmp/launcher.log",
+            Environment: new SystemEnvironmentSnapshot(
+                "Windows",
+                new Version(10, 0, 22635, 0),
+                Architecture.X64,
+                true,
+                16UL * 1024 * 1024 * 1024,
+                "AMD Ryzen",
+                []),
+            CurrentAccessToken: null,
+            CurrentUserUuid: null,
+            UserProfilePath: null));
+
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                "/tmp/a.log",
+                "/tmp/launcher.log"
+            },
+            result.ExportRequest.SourceFiles.Select(file => file.SourcePath).ToArray());
+    }
 }

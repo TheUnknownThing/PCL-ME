@@ -2,69 +2,51 @@
 
 <div align="center">
 
-<img src="PCL.Frontend.WPF/Images/icon.ico" alt="Logo" width="80" height="80">
+<img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME logo" width="80" height="80">
 
-# PCL Community Edition
+# PCL-ME
 
-[![Stars](https://img.shields.io/github/stars/PCL-Community/PCL-CE?style=flat&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZD0iTTggLjI1YS43NS43NSAwIDAgMSAuNjczLjQxOGwxLjg4MiAzLjgxNSA0LjIxLjYxMmEuNzUuNzUgMCAwIDEgLjQxNiAxLjI3OWwtMy4wNDYgMi45Ny43MTkgNC4xOTJhLjc1MS43NTEgMCAwIDEtMS4wODguNzkxTDggMTIuMzQ3bC0zLjc2NiAxLjk4YS43NS43NSAwIDAgMS0xLjA4OC0uNzlsLjcyLTQuMTk0TC44MTggNi4zNzRhLjc1Ljc1IDAgMCAxIC40MTYtMS4yOGw0LjIxLS42MTFMNy4zMjcuNjY4QS43NS43NSAwIDAgMSA4IC4yNVoiIGZpbGw9IiNlYWM1NGYiLz48L3N2Zz4=&logoSize=auto&label=stars&labelColor=444444&color=eac54f)](https://github.com/PCL-Community/PCL-CE/)
-![GitHub Release](https://img.shields.io/github/v/release/PCL-Community/PCL-CE?label=release&logo=github)
-[![Issues](https://img.shields.io/github/issues/PCL-Community/PCL-CE?style=flat&label=issues&labelColor=444444&color=1F883D&logo=github)](https://github.com/PCL-Community/PCL-CE/issues)
-[![Pull requests](https://img.shields.io/github/issues-pr/PCL-Community/PCL-CE?style=flat&label=pull%20requests&labelColor=444444&color=1F883D&logo=github)](https://github.com/PCL-Community/PCL-CE/pulls)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/PCL-Community/PCL-CE/build-test.yml)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/PCL-Community/PCL-CE/total)
-[![哔哩哔哩](https://img.shields.io/badge/动态-bilibili-00A4DB?style=flat&labelColor=444444&logo=bilibili)](https://space.bilibili.com/3546847192811755/dynamic) <br />
+Plain Craft Launcher Multiplatform Edition
 
-[社区版下载](https://github.com/PCL-Community/PCL-CE/releases/latest) |
-[上游存储库](https://github.com/Meloong-Git/PCL) |
-[帮助文档库](https://github.com/PCL-Community/PCL2CEHelp)
-
-[提交问题](https://github.com/PCL-Community/PCL-CE/issues/new/choose) |
-[贡献指南](https://github.com/PCL-Community/PCL-CE/wiki/开发指南)
+[下载发行版](https://github.com/TheUnknownThing/PCL-CE/releases/latest) |
+[提交问题](https://github.com/TheUnknownThing/PCL-CE/issues) |
+[贡献指南](CONTRIBUTING.md) |
+[Avalonia 前端文档](PCL.Frontend.Avalonia/README.md)
 
 </div>
 
-PCL CE 是基于 PCL 开源代码二次开发的社区版本，包括了主线暂未制作的功能和改进！
+PCL-ME 是从 PCL-CE 衍生出来的多平台版本。这个仓库已经完全放弃旧的 VB.NET 前端路径，当前以 C# 为主语言，并使用 Avalonia 构建面向 Windows、macOS 和 Linux 的桌面 UI。
 
-社区版的版本号与主线并非严格对应关系，也请不要向官方仓库反馈社区版问题。
+## ✨ 项目特点
 
-欢迎大家来用用看！
+- 当前活跃代码全部为 C#，不再以 VB.NET / WPF 前端为维护方向。
+- 项目运行时与工具链基于 `.NET 10`。
+- 前端 UI 使用 Avalonia，为跨平台提供一致的用户体验与原生性能。
 
-**开发群:** [599620549](https://qm.qq.com/q/PNQA4Md8wc)[✦](https://t.me/+78XW2bUOvKJjMTZl) | **用户 1 群:** [1028074835](https://qm.qq.com/q/qrMGJo8BQQ) | **用户 2 群:** [1070029541](https://qm.qq.com/q/lBywbDMWhG)
+## 平台状态
 
-## 💻 支持平台
-
-| 操作系统 | 支持情况 | 环境要求 |
+| 平台 | 状态 | 说明 |
 |---|---|---|
-| Windows 10 1809 (17763) 或更高 | ✅ 完整支持 | [.NET 10 Desktop Runtime](https://get.dot.net/10) |
-| Windows 8 - Windows 10 1809 (17763) 或更低 | ⚠️ 理论能跑，酌情提供社区支持 | [.NET 10 Desktop Runtime](https://get.dot.net/10) |
-| Windows 7 或更低版本 | ❌ 不支持 | / |
-| macOS / Linux / 其他操作系统 | ⚠️ 仅跨平台开发支持（交叉编译） | [.NET 10 SDK](https://get.dot.net/10) |
+| Windows | ⚠️ 仍未经过充分测试 | 测试仍在继续推进中 |
+| macOS | ✅ 主要目标平台 | 进行充分开发与测试 |
+| Linux | ✅ 主要目标平台 | 进行充分开发与测试 |
 
-**✅ 完整支持**：尽可能提供一切相关支持，但必须确保启动器为最新版本。
+由于该项目的首要目标并非在 Windows 上提供完整支持，因此 Windows 平台的测试和优化仍在进行中，尚未达到稳定状态，并有可能存在未发现的兼容性问题。若你想要在 Windows 上使用 PCL，仍建议使用 PCL 或者 PCL-CE。
 
-**⚠️ 理论能跑，酌情提供社区支持**：PCL CE 应该可以在这些平台上运行，但不保证功能完全可用。你可能需要升级到完整支持的系统版本以获得进一步社区技术支持。
+## 快速开始
 
-**❌ 不支持**：PCL CE 在这些平台的可用性较低，甚至压根打不开。请升级操作系统以使用 PCL CE。
+```bash
+dotnet restore
+dotnet build
+dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+```
 
-**⚠️ 仅跨平台开发支持（交叉编译）**：PCL CE 的源代码可以在 macOS 与 Linux 平台编译，但无法直接运行。作为开发者，你可以在这些平台上进行开发，然后将编译产物转移到 Windows 系统测试。
+建议先从这些目录了解项目：
 
-**注**：    
-社区仅对最新版本的启动器提供支持。    
-取决于部分问题的特殊性（如系统不完整），有时你仍然必须升级操作系统以继续获得支持。    
-PCL CE 始终建议使用最新版本的操作系统以获得最佳体验。    
-你仍然可以尝试在不受支持的系统上使用 PCL CE，但可能会遇到很多额外问题。
+- `PCL.Frontend.Avalonia/`：当前正在维护的桌面前端
+- `PCL.Core/` 与 `PCL.Core.Backend/`：共享启动器与后端逻辑
 
-## 🔒 许可证
+## 许可证
 
-- `PCL.Frontend.WPF/` 使用 [自定义许可证](https://github.com/PCL-Community/PCL-CE/blob/dev/PCL.Frontend.WPF/LICENCE)
-- `其余所有目录` 使用 [Apache License 2.0](https://github.com/PCL-Community/PCL-CE/blob/dev/LICENSE)
-
-## 🌟 统计数据
-![Alt](https://repobeats.axiom.co/api/embed/7780da7a2612e74751bdf872f507efe2ea132b3a.svg "Repobeats analytics image")
-
-[![Star History Chart](https://api.star-history.com/svg?repos=PCL-Community/PCL-CE&type=Date)](https://www.star-history.com/#PCL-Community/PCL-CE&Date)
-
-**此页浏览量**（总计 / 今日）：[![Hits](https://hits.zkitefly.eu.org/?tag=https://github.com/PCL-Community/PCL-CE)](https://hits.zkitefly.eu.org/?tag=https://github.com/PCL-Community/PCL-CE&web=true)
-## ❤️ 贡献者
-
-[![](https://contrib.rocks/image?repo=PCL-Community/PCL-CE)](https://github.com/PCL-Community/PCL-CE/graphs/contributors)
+- `PCL 启动器逻辑` 使用与原始 PCL / PCL-CE 一致的 [自定义许可证指南](https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/LICENCE)。
+- `其他独立逻辑` 使用 [Apache License 2.0](LICENSE)。

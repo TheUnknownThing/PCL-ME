@@ -5,7 +5,7 @@
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
-    Title="Plain Craft Launcher Community Edition"
+    Title="PCL-ME"
     Icon="/Assets/icon.ico"
     Width="900"
     Height="540"
@@ -157,7 +157,7 @@
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
                   Foreground="{DynamicResource ColorBrush2}"
-                  Text="CE" />
+                  Text="ME" />
             </Border>
           </StackPanel>
 

@@ -168,7 +168,7 @@ public sealed class LauncherFrontendNavigationServiceTest
         Assert.AreEqual(LauncherFrontendPageKind.Detail, view.CurrentPage.Kind);
         Assert.AreEqual("下载分区", view.CurrentPage.SidebarGroupTitle);
         Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
-        Assert.AreEqual(LauncherFrontendPageKey.Download, view.BackTarget?.Route?.Page);
+        Assert.AreEqual(LauncherFrontendPageKey.Launch, view.BackTarget?.Route?.Page);
         Assert.IsTrue(view.SidebarEntries.Any());
     }
 }

@@ -4,9 +4,9 @@ Last updated: 2026-04-09
 
 ## Scope
 
-This note records the current research status around Java discovery and Java selection in PCL-CE, plus the next investigation steps. It is intended to preserve context if the conversation gets compressed.
+This note records the current research status around Java discovery and Java selection in PCL-ME, plus the next investigation steps. It is intended to preserve context if the conversation gets compressed.
 
-## Current PCL-CE Findings
+## Current PCL-ME Findings
 
 ### 1. There are currently two Java-selection layers
 
@@ -200,7 +200,7 @@ Observed behavior:
 
 Important implication:
 
-- HMCL has broader and more architecture-conscious multi-platform coverage than the current PCL-CE launch resolver.
+- HMCL has broader and more architecture-conscious multi-platform coverage than the current PCL-ME launch resolver.
 
 ### 3. HMCL caches Java metadata safely
 
@@ -236,7 +236,7 @@ Observed behavior:
 
 Important implication:
 
-- This is stronger than the current PCL-CE host fallback probe, which only parses `java -version` output for major version and assumes Java bitness from the launcher process.
+- This is stronger than the current PCL-ME host fallback probe, which only parses `java -version` output for major version and assumes Java bitness from the launcher process.
 
 ### 5. HMCL separates discovery from compatibility constraints
 
@@ -297,7 +297,7 @@ Its internal tie-breaker chooses:
 Important implication:
 
 - HMCL intentionally prefers the lowest sufficient major, not the newest available Java.
-- That is similar in spirit to PCL-CE's retained manager logic, but HMCL's candidate filtering is much richer.
+- That is similar in spirit to PCL-ME's retained manager logic, but HMCL's candidate filtering is much richer.
 
 ### 7. HMCL keeps explicit user choice distinct from auto mode
 
@@ -345,29 +345,29 @@ Important implication:
 
 ## Current Comparison
 
-### HMCL vs retained PCL-CE `JavaManager`
+### HMCL vs retained PCL-ME `JavaManager`
 
 - Both prefer the lowest sufficient Java major instead of the newest Java.
 - Both have platform-aware discovery work.
 - HMCL is more advanced in architecture compatibility and in special-case constraints.
 - HMCL keeps one authoritative runtime inventory and uses it directly for launch selection.
 
-### HMCL vs current PCL-CE Avalonia launch path
+### HMCL vs current PCL-ME Avalonia launch path
 
 - HMCL: central inventory model plus compatibility-aware selector.
-- PCL-CE Avalonia: config/path resolver plus simple fallback chain.
+- PCL-ME Avalonia: config/path resolver plus simple fallback chain.
 - HMCL: rule-based mandatory/suggested constraints.
-- PCL-CE Avalonia: computes requirements, but current runtime selection does not use them to score/filter auto choice.
+- PCL-ME Avalonia: computes requirements, but current runtime selection does not use them to score/filter auto choice.
 - HMCL: explicit modes remain integrated with central selection logic.
-- PCL-CE Avalonia: `auto` currently falls through to "first enabled / bundled / host".
+- PCL-ME Avalonia: `auto` currently falls through to "first enabled / bundled / host".
 - HMCL: validated recovery after bad selection.
-- PCL-CE Avalonia: limited recovery and weaker metadata for host probe.
+- PCL-ME Avalonia: limited recovery and weaker metadata for host probe.
 
 ## Updated Working Hypothesis
 
-The most promising repair direction for PCL-CE is not to keep expanding the current Avalonia fallback chain. It is to restore launch-time resolution onto a single authoritative Java inventory plus a compatibility-aware selector.
+The most promising repair direction for PCL-ME is not to keep expanding the current Avalonia fallback chain. It is to restore launch-time resolution onto a single authoritative Java inventory plus a compatibility-aware selector.
 
-The retained PCL-CE `JavaManager` is closer to that direction already, but HMCL shows several missing pieces:
+The retained PCL-ME `JavaManager` is closer to that direction already, but HMCL shows several missing pieces:
 
 - richer constraint handling,
 - better architecture compatibility rules,
@@ -380,14 +380,14 @@ The retained PCL-CE `JavaManager` is closer to that direction already, but HMCL 
 
 Compare HMCL's algorithm to:
 
-- PCL-CE retained `JavaManager` logic
-- PCL-CE current Avalonia launch resolver
+- PCL-ME retained `JavaManager` logic
+- PCL-ME current Avalonia launch resolver
 
 Status: completed at a high level
 
 ### Step 3
 
-Turn the comparison into a concrete PCL-CE repair plan.
+Turn the comparison into a concrete PCL-ME repair plan.
 
 Likely implementation direction:
 
@@ -500,8 +500,8 @@ Status: in progress
 
 ## Open Design Questions
 
-- Whether to adapt the retained PCL-CE `JavaManager` directly into the Avalonia launch path, or to create a new launch-oriented selector service that consumes the same runtime inventory.
-- Whether PCL-CE should keep simple min/max version rules first, then add HMCL-style special constraints incrementally.
+- Whether to adapt the retained PCL-ME `JavaManager` directly into the Avalonia launch path, or to create a new launch-oriented selector service that consumes the same runtime inventory.
+- Whether PCL-ME should keep simple min/max version rules first, then add HMCL-style special constraints incrementally.
 - How much HMCL-style architecture compatibility should be mirrored immediately, especially:
   - macOS ARM64 using x64 Java
   - Windows ARM64 using x64/x86 Java

@@ -24,8 +24,7 @@ internal sealed record FrontendSetupLogEntry(
 
 internal sealed record FrontendSetupUpdateState(
     int UpdateChannelIndex,
-    int UpdateModeIndex,
-    string MirrorCdk);
+    int UpdateModeIndex);
 
 internal sealed record FrontendSetupLaunchState(
     int IsolationIndex,

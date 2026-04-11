@@ -14,15 +14,29 @@ jobs:
       matrix:
         include:
           - configuration: Beta
-            architecture: x64
+            runner: ubuntu-latest
+            rid: linux-x64
+            artifact_name: PCL-ME_Beta_linux-x64
           - configuration: Beta
-            architecture: ARM64
+            runner: ubuntu-latest
+            rid: win-x64
+            artifact_name: PCL-ME_Beta_win-x64
+          - configuration: Beta
+            runner: ubuntu-latest
+            rid: win-arm64
+            artifact_name: PCL-ME_Beta_win-arm64
+          - configuration: Beta
+            runner: macos-latest
+            rid: osx-arm64
+            artifact_name: PCL-ME_Beta_osx-arm64
       fail-fast: false
 
     uses: ./.github/workflows/reusable-build.yml
     with:
       configuration: ${{ matrix.configuration }}
-      architecture: ${{ matrix.architecture }}
+      runner: ${{ matrix.runner }}
+      rid: ${{ matrix.rid }}
+      artifact_name: ${{ matrix.artifact_name }}
     secrets: inherit
 
   changelog:
@@ -51,52 +65,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  rename_and_release:
+  upload_release_assets:
     permissions:
       contents: write
-      actions: write
     needs: [build, changelog]
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - configuration: Beta
-            architecture: x64
-          - configuration: Beta
-            architecture: ARM64
+          - artifact_name: PCL-ME_Beta_linux-x64
+          - artifact_name: PCL-ME_Beta_win-x64
+          - artifact_name: PCL-ME_Beta_win-arm64
+          - artifact_name: PCL-ME_Beta_osx-arm64
     steps:
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
-          name: PCL2_CE_${{ matrix.configuration }}_${{ matrix.architecture }}
+          name: ${{ matrix.artifact_name }}
           path: ./artifact
 
-      - name: Rename binaries
-        run: |
-          mv "./artifact/Plain Craft Launcher 2.exe" "PCL2_CE_${{ matrix.configuration }}_${{ matrix.architecture }}.exe"
-
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Sign the binary
-        run: |
-          gpg --detach-sign --armor "PCL2_CE_${{ matrix.configuration }}_${{ matrix.architecture }}.exe"
-
-      - name: Upload binary and signature to Release
+      - name: Upload packaged artifacts to release
         uses: softprops/action-gh-release@v2.2.2
         with:
-          files: |
-            PCL2_CE_${{ matrix.configuration }}_${{ matrix.architecture }}.exe
-            PCL2_CE_${{ matrix.configuration }}_${{ matrix.architecture }}.exe.asc
+          files: artifact/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Trigger MirrorChyanUploading
-        run: |
-          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_uploading.yml -f channel=beta -f arch=${{ matrix.architecture == 'x64' && 'x64' || 'arm64' }}
-          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release_note.yml
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

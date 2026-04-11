@@ -110,7 +110,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("读取配置失败", ex.Message);
+            AddFailureActivity("读取配置失败", ex.Message);
             return;
         }
 
@@ -127,7 +127,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("读取配置失败", ex.Message);
+            AddFailureActivity("读取配置失败", ex.Message);
             return;
         }
 
@@ -190,7 +190,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("保存配置失败", ex.Message);
+            AddFailureActivity("保存配置失败", ex.Message);
             return;
         }
 
@@ -210,11 +210,11 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            AddActivity("保存配置失败", error ?? outputPath);
+            AddFailureActivity("保存配置失败", error ?? outputPath);
         }
         catch (Exception ex)
         {
-            AddActivity("保存配置失败", ex.Message);
+            AddFailureActivity("保存配置失败", ex.Message);
         }
     }
 

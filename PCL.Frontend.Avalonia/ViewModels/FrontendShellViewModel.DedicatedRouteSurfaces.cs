@@ -539,7 +539,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加已有文件夹失败", ex.Message);
+            AddFailureActivity("添加已有文件夹失败", ex.Message);
         }
     }
 
@@ -567,7 +567,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入整合包失败", ex.Message);
+            AddFailureActivity("导入整合包失败", ex.Message);
         }
     }
 
@@ -606,7 +606,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("切换实例收藏状态失败", ex.Message);
+            AddFailureActivity("切换实例收藏状态失败", ex.Message);
         }
     }
 
@@ -657,7 +657,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("删除实例失败", ex.Message);
+            AddFailureActivity("删除实例失败", ex.Message);
         }
     }
 
@@ -811,7 +811,7 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddActivity("打开实例目录失败", error ?? entry.Directory);
+                    AddFailureActivity("打开实例目录失败", error ?? entry.Directory);
                 }
             }),
             new ActionCommand(() => _ = DeleteInstanceSelectionEntryAsync(entry)));
@@ -1117,7 +1117,7 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddActivity("打开实例根目录失败", error ?? folder.Directory);
+                    AddFailureActivity("打开实例根目录失败", error ?? folder.Directory);
                 }
             }));
     }

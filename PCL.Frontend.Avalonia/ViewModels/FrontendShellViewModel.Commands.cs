@@ -14,6 +14,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand LaunchCommand => _launchCommand;
 
+    public ActionCommand CancelLaunchCommand => _cancelLaunchCommand;
+
     public ActionCommand VersionSelectCommand => _versionSelectCommand;
 
     public ActionCommand VersionSetupCommand => _versionSetupCommand;
@@ -55,8 +57,6 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand OpenLogDirectoryCommand => _openLogDirectoryCommand;
 
     public ActionCommand CleanLogsCommand => _cleanLogsCommand;
-
-    public ActionCommand GetMirrorCdkCommand => _getMirrorCdkCommand;
 
     public ActionCommand DownloadUpdateCommand => _downloadUpdateCommand;
 

@@ -298,6 +298,30 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasActivityEntries));
     }
 
+    private void AddFailureActivity(string title, string body)
+    {
+        AddActivity(title, body);
+        AvaloniaHintBus.Show(ComposeFailureHintMessage(title, body), AvaloniaHintTheme.Error);
+    }
+
+    private static string ComposeFailureHintMessage(string title, string body)
+    {
+        var normalizedTitle = (title ?? string.Empty).Trim();
+        var normalizedBody = (body ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedBody))
+        {
+            return string.IsNullOrWhiteSpace(normalizedTitle) ? "操作失败。" : normalizedTitle;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedTitle) ||
+            normalizedBody.StartsWith(normalizedTitle, StringComparison.Ordinal))
+        {
+            return normalizedBody;
+        }
+
+        return $"{normalizedTitle}: {normalizedBody}";
+    }
+
     private void TogglePromptOverlay()
     {
         SetPromptOverlayOpen(!IsPromptOverlayVisible);
@@ -372,7 +396,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (!_launchComposition.PrecheckResult.IsSuccess)
         {
-            AddActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
+            AddFailureActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
             return;
         }
 
@@ -401,7 +425,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!bool.TryParse(rawValue, out var enabled))
         {
-            AddActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
+            AddFailureActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
             return;
         }
 
@@ -455,7 +479,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(argument))
         {
-            AddActivity("追加启动参数失败", "提示中未提供可写入的参数。");
+            AddFailureActivity("追加启动参数失败", "提示中未提供可写入的参数。");
             return;
         }
 
@@ -492,7 +516,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
         {
-            AddActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
+            AddFailureActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
             return;
         }
 
@@ -535,7 +559,7 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                AddActivity("Java 运行时准备失败", ex.Message);
+                AddFailureActivity("Java 运行时准备失败", ex.Message);
             });
         }
     }
@@ -583,7 +607,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity("外部打开失败", "缺少可打开的目标。");
+            AddFailureActivity("外部打开失败", "缺少可打开的目标。");
             return;
         }
 
@@ -593,7 +617,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
+        AddFailureActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
     }
 
     private void UpdateStartupConsentRequest(Func<LauncherStartupConsentRequest, LauncherStartupConsentRequest> updater)
@@ -618,7 +642,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (_launchComposition.SelectedJavaRuntime is null)
         {
-            AddActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
+            AddFailureActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
             return;
         }
 
@@ -630,6 +654,16 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
+            var launchCancellation = new CancellationTokenSource();
+            _launchSessionCancellation = launchCancellation;
+            ShowLaunchDialog();
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                "初始化",
+                0d,
+                showDownload: false,
+                isError: false);
+
             _isLaunchInProgress = true;
             _showLaunchLog = true;
             ClearLaunchLogBuffer();
@@ -641,14 +675,33 @@ internal sealed partial class FrontendShellViewModel
                 AppendLaunchLogLine(line);
             }
 
-            await EnsureLaunchFilesAsync();
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                DisableInstanceFileValidation || !_instanceComposition.Selection.HasSelection
+                    ? "准备启动参数"
+                    : "校验实例文件",
+                DisableInstanceFileValidation || !_instanceComposition.Selection.HasSelection ? 0.18d : 0.06d,
+                showDownload: false,
+                isError: false);
+
+            await EnsureLaunchFilesAsync(launchCancellation.Token);
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                "写入启动脚本",
+                0.88d,
+                showDownload: false,
+                isError: false);
 
             var startResult = _shellActionService.StartLaunchSession(
                 _launchComposition,
                 _instanceComposition.Selection.InstanceDirectory);
+            _activeLaunchProcess = startResult.Process;
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
             ShowLaunchCompletionNotification();
+            SetLaunchDialogLaunchedState();
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
 
@@ -660,17 +713,25 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine("启动已取消。");
             AddActivity("启动已取消", "启动前文件校验或准备步骤已取消。");
+            SetLaunchDialogStoppedState("已取消启动", "启动前文件校验或准备步骤已取消。", isError: false);
         }
         catch (Exception ex)
         {
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine($"启动失败：{ex.Message}");
-            AddActivity("启动失败", ex.Message);
+            AddFailureActivity("启动失败", ex.Message);
+            SetLaunchDialogStoppedState("启动失败", ex.Message, isError: true);
+        }
+        finally
+        {
+            _launchSessionCancellation?.Dispose();
+            _launchSessionCancellation = null;
+            RaiseLaunchSessionProperties();
         }
     }
 
-    private async Task EnsureLaunchFilesAsync()
+    private async Task EnsureLaunchFilesAsync(CancellationToken cancellationToken)
     {
         if (!_instanceComposition.Selection.HasSelection || DisableInstanceFileValidation)
         {
@@ -685,10 +746,12 @@ internal sealed partial class FrontendShellViewModel
             var repairResult = await ExecuteManagedInstanceRepairAsync(
                 $"启动前校验实例文件：{_instanceComposition.Selection.InstanceName}",
                 new FrontendInstanceRepairRequest(
-                _instanceComposition.Selection.LauncherDirectory,
-                _instanceComposition.Selection.InstanceDirectory,
-                _instanceComposition.Selection.InstanceName,
-                ForceCoreRefresh: false));
+                    _instanceComposition.Selection.LauncherDirectory,
+                    _instanceComposition.Selection.InstanceDirectory,
+                    _instanceComposition.Selection.InstanceName,
+                    ForceCoreRefresh: false),
+                ApplyLaunchRepairTelemetry,
+                cancellationToken);
             var completionMessage = $"启动前文件校验完成：下载 {repairResult.DownloadedFiles.Count} 个文件，复用 {repairResult.ReusedFiles.Count} 个文件。";
             AppendLaunchLogLine(completionMessage);
 
@@ -735,7 +798,7 @@ internal sealed partial class FrontendShellViewModel
             _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
             AppendLaunchLogLine($"游戏进程已退出，退出码 {startResult.Process.ExitCode}。");
             AddActivity("游戏进程已结束", $"{LaunchVersionSubtitle} • ExitCode {startResult.Process.ExitCode}");
-            if (startResult.Process.ExitCode != 0)
+            if (startResult.Process.ExitCode != 0 && !_launchProcessTerminationRequested)
             {
                 await Dispatcher.UIThread.InvokeAsync(() => ShowCrashPromptForLaunchFailure(startResult));
             }
@@ -749,10 +812,16 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                _activeLaunchProcess = null;
+                _launchProcessTerminationRequested = false;
                 _isLaunchInProgress = false;
                 RaiseLaunchSessionProperties();
                 RefreshLaunchState();
                 RefreshGameLogSurface();
+                if (IsLaunchDialogVisible)
+                {
+                    HideLaunchDialog();
+                }
             });
         }
     }
@@ -813,6 +882,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchLogText));
         RaisePropertyChanged(nameof(LaunchMigrationLines));
         _launchCommand.NotifyCanExecuteChanged();
+        _cancelLaunchCommand.NotifyCanExecuteChanged();
+        RaiseLaunchDialogProperties();
     }
 
     private void EnsureLaunchPromptLane()
@@ -859,12 +930,7 @@ internal sealed partial class FrontendShellViewModel
 
     private CrashAvaloniaPlan BuildCrashPlanForLaunchFailure(FrontendLaunchStartResult startResult)
     {
-        var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
-            BuildLaunchFailureMessage(startResult),
-            IsManualAnalysis: false,
-            HasDirectFile: true,
-            CanOpenModLoaderSettings: false));
-        var exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(new MinecraftCrashExportPlanRequest(
+        var exportRequest = new MinecraftCrashExportPlanRequest(
             Timestamp: DateTime.Now,
             ReportDirectory: Path.Combine(
                 _shellActionService.RuntimePaths.FrontendTempDirectory,
@@ -890,9 +956,30 @@ internal sealed partial class FrontendShellViewModel
             Environment: GetHostEnvironmentSnapshot(),
             CurrentAccessToken: _launchComposition.SelectedProfile.AccessToken,
             CurrentUserUuid: _launchComposition.SelectedProfile.Uuid,
-            UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)));
+            UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        var analysisResult = MinecraftCrashAnalysisService.Analyze(new MinecraftCrashAnalysisRequest(
+            BuildAnalysisSourcePaths(exportRequest),
+            exportRequest.CurrentLauncherLogFilePath));
+        var resultText = analysisResult.HasKnownReason
+            ? analysisResult.ResultText
+            : $"{analysisResult.ResultText}{Environment.NewLine}{Environment.NewLine}详细信息：{Environment.NewLine}{BuildLaunchFailureMessage(startResult)}";
+        var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
+            resultText,
+            IsManualAnalysis: false,
+            HasDirectFile: analysisResult.HasDirectFile,
+            CanOpenModLoaderSettings: true));
+        var exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(exportRequest);
 
         return new CrashAvaloniaPlan(outputPrompt, exportPlan);
+    }
+
+    private static IReadOnlyList<string> BuildAnalysisSourcePaths(MinecraftCrashExportPlanRequest request)
+    {
+        return request.SourceFilePaths
+            .Concat(request.AdditionalSourceFilePaths ?? [])
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private static string BuildLaunchFailureMessage(FrontendLaunchStartResult startResult)

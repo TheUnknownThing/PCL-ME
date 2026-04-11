@@ -7,8 +7,8 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private const string ToolboxUnsupportedMessage = "为便于维护，社区版中不包含百宝箱功能……";
-    private const string LauncherShortcutDisplayName = "PCL 社区版";
+    private const string ToolboxUnsupportedMessage = "为便于维护，跨平台版中不包含百宝箱功能……";
+    private const string LauncherShortcutDisplayName = "PCL 跨平台版";
     private const string ShortcutDesktopOptionId = "desktop";
     private const string ShortcutStartMenuOptionId = "start-menu";
 
@@ -174,7 +174,7 @@ internal sealed partial class FrontendShellViewModel
         var shortcutTargets = BuildShortcutTargets(LauncherShortcutDisplayName);
         if (shortcutTargets.Count == 0)
         {
-            AddActivity("创建快捷方式失败", "当前系统未提供可用的快捷方式目录。");
+            AddFailureActivity("创建快捷方式失败", "当前系统未提供可用的快捷方式目录。");
             return;
         }
 
@@ -223,7 +223,7 @@ internal sealed partial class FrontendShellViewModel
                 selectedTarget = shortcutTargets.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.Ordinal));
                 if (selectedTarget is null)
                 {
-                    AddActivity("创建快捷方式失败", $"未识别的快捷方式位置: {selectedId}");
+                    AddFailureActivity("创建快捷方式失败", $"未识别的快捷方式位置: {selectedId}");
                     return;
                 }
             }
@@ -234,7 +234,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("创建快捷方式失败", ex.Message);
+            AddFailureActivity("创建快捷方式失败", ex.Message);
         }
     }
 
@@ -345,7 +345,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return luckValue switch
         {
-            100 => "100！100！" + Environment.NewLine + "隐藏主题 欧皇…… 不对，社区版应该没有这玩意……",
+            100 => "100！100！" + Environment.NewLine + "隐藏主题 欧皇…… 不对，跨平台版应该没有这玩意……",
             >= 95 => "差一点就到100了呢...",
             >= 90 => "好评如潮！",
             >= 60 => "还行啦，还行啦",
@@ -381,7 +381,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"{title} 失败", ex.Message);
+            AddFailureActivity($"{title} 失败", ex.Message);
             return null;
         }
     }

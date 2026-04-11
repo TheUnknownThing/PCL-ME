@@ -7,10 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>PCL.Frontend.Avalonia</AssemblyName>
     <RootNamespace>PCL.Frontend.Avalonia</RootNamespace>
-    <AssemblyTitle>Plain Craft Launcher Community Edition</AssemblyTitle>
+    <AssemblyTitle>PCL-ME</AssemblyTitle>
     <Company>PCL Community</Company>
-    <Product>Plain Craft Launcher Community Edition</Product>
-    <Description>Avalonia replacement frontend for Plain Craft Launcher Community Edition.</Description>
+    <Product>PCL-ME</Product>
+    <Description>Cross-platform Avalonia frontend for PCL-ME.</Description>
     <ApplicationIcon>Assets/icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <BuildInParallel>false</BuildInParallel>

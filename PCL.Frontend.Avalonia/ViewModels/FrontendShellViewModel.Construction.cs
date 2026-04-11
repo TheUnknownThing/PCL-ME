@@ -40,6 +40,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _dismissPromptOverlayCommand;
     private readonly ActionCommand _openTaskManagerShortcutCommand;
     private readonly ActionCommand _launchCommand;
+    private readonly ActionCommand _cancelLaunchCommand;
     private readonly ActionCommand _versionSelectCommand;
     private readonly ActionCommand _versionSetupCommand;
     private readonly ActionCommand _toggleLaunchMigrationCommand;
@@ -61,7 +62,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _exportAllLogsCommand;
     private readonly ActionCommand _openLogDirectoryCommand;
     private readonly ActionCommand _cleanLogsCommand;
-    private readonly ActionCommand _getMirrorCdkCommand;
     private readonly ActionCommand _downloadUpdateCommand;
     private readonly ActionCommand _showUpdateDetailCommand;
     private readonly ActionCommand _checkUpdateAgainCommand;
@@ -169,7 +169,6 @@ internal sealed partial class FrontendShellViewModel
     private string _helpSearchQuery = string.Empty;
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
-    private string _mirrorCdk = string.Empty;
     private bool _isCheckingUpdate;
     private string _lastUpdateCheckSignature = string.Empty;
     private bool _isRefreshingFeedback;
@@ -360,6 +359,7 @@ internal sealed partial class FrontendShellViewModel
             "已从右下角快捷入口打开任务中心。",
             RouteNavigationBehavior.Child));
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
+        _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
@@ -376,16 +376,15 @@ internal sealed partial class FrontendShellViewModel
         _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => !_isLaunchProfileActionInProgress);
         _submitAuthlibLaunchProfileCommand = new ActionCommand(() => _ = SubmitAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _useLittleSkinLaunchProfileCommand = new ActionCommand(ApplyLittleSkinLaunchProfilePreset, () => !_isLaunchProfileActionInProgress);
-        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/PCL-Community/PCL2-CE/issues");
+        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/TheUnknownThing/PCL-CE/issues");
         _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
         _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
         _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
         _cleanLogsCommand = new ActionCommand(CleanLauncherLogs);
-        _getMirrorCdkCommand = CreateLinkCommand("获取 Mirror 酱 CDK", "https://mirrorchyan.com/");
         _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
-        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/PCL-Community/PCL2-CE/releases");
+        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/TheUnknownThing/PCL-CE/releases");
         _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
@@ -395,7 +394,7 @@ internal sealed partial class FrontendShellViewModel
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
-        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/PCL-Community/PCL2-CE");
+        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/TheUnknownThing/PCL-CE");
         _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
         _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
         _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);

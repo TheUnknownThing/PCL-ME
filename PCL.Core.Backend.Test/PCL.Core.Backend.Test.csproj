@@ -17,15 +17,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../PCL.Core.Test/App/Launcher*.cs" Link="App/%(Filename)%(Extension)" />
-    <Compile Include="../PCL.Core.Test/Minecraft/Minecraft*.cs" Link="Minecraft/%(Filename)%(Extension)" />
+    <Compile Include="App/**/*.cs" />
+    <Compile Include="Minecraft/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="../PCL.Core.Test/App/SystemEnvironmentInfoTest.cs" />
-    <Compile Remove="../PCL.Core.Test/App/LauncherStartupBootstrapServiceTest.cs" />
-    <Compile Remove="../PCL.Core.Test/Minecraft/MinecraftLaunchRuntimeServiceTest.cs" />
-    <Compile Remove="../PCL.Core.Test/Minecraft/MinecraftLaunchWatcherWorkflowServiceTest.cs" />
+    <Compile Remove="App/SystemEnvironmentInfoTest.cs" />
+    <Compile Remove="App/LauncherStartupBootstrapServiceTest.cs" />
+    <Compile Remove="Minecraft/MinecraftLaunchRuntimeServiceTest.cs" />
+    <Compile Remove="Minecraft/MinecraftLaunchWatcherWorkflowServiceTest.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 ﻿<!-- 这是 PCL 的主页自定义文件。你可以通过修改这个文件来自定义 PCL 主页：添加文本、打开网页、启动游戏，等等。
      如果你倒腾这个文件把 PCL 玩炸了，把这个文件直接删除就行了。
-     下列内容均基于 WPF 框架。你可以在继续之前先尝试自学 XAML 与 WPF 的基础，这能让你更轻松地理解下列内容。
+     下列内容沿用了 PCL 历史上的 XAML 风格主页语法。当前启动器本体已经切换到 C# + Avalonia，但这里的自定义主页格式仍然与旧版教程接近。
      你也可以使用 Ctrl + F 快速查找。例如，若需要改变文本颜色，则搜索 “颜色” 即可。 -->
 
 <local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
@@ -98,7 +98,7 @@
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="此外，PCL 会将文件中的 “花括号 path” 替换为 PCL 可执行文件所在文件夹（{path}），可以用于执行特定程序或加载图片。" />
         <local:MyButton Margin="0,4,0,10" Width="200" Height="35"
-                    Text="打开 PCL-CE 日志" EventType="执行命令" EventData="Log-CE1.log" ToolTip="PCL 社区版的日志文件就在 PCL 文件夹内，且名为 Log-CE1.log" />
+                    Text="打开 PCL-ME 日志" EventType="执行命令" EventData="Log-CE1.log" ToolTip="为兼容旧版工具链，日志文件目前仍默认命名为 Log-CE1.log。" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="就像为游戏指定服务器 IP 一样，你也可以在 EventData 的竖线后为程序添加启动参数。" />
         <local:MyButton Margin="0,4,0,0" Width="200" Height="35"
@@ -113,7 +113,7 @@
         <TextBlock Margin="0,0,0,4"
                     Text="· 打开网页、启动游戏、打开文件：已在上方的卡片中介绍" />
         <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="查看 PCL 源代码" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/blob/main/Plain%20Craft%20Launcher%202/FormMain.xaml.vb"/>
+                    Text="查看 PCL-ME 源代码" EventType="打开网页" EventData="https://github.com/TheUnknownThing/PCL-CE/tree/dev/PCL.Frontend.Avalonia"/>
         <TextBlock Margin="0,0,0,4"
                     Text="· 今日人品、清理垃圾、内存优化、安装整合包：触发对应功能" />
         <TextBlock Margin="0,0,0,4"
@@ -262,7 +262,7 @@
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="如果要实现更复杂的布局，则必须使用 Grid。Grid 可以让按钮们自动适应窗口宽度：随意拉伸 PCL 窗口，按钮大小会自动改变。" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
-                    Text="你可以上网查找 “WPF Grid” 的相关教程，这里仅给出一个例子，不作详细介绍。你可以仅在这个教学卡片的基础上稍作调整，来实现自己的按钮布局。" />
+                    Text="你可以上网查找 “XAML Grid” 的相关教程，这里仅给出一个例子，不作详细介绍。你可以仅在这个教学卡片的基础上稍作调整，来实现自己的按钮布局。" />
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />
@@ -298,7 +298,7 @@
                     Theme="Black" EventType="弹出窗口" EventData="事件|MyIconButton 当然也支持 EventType 和 EventData——要不然介绍它干啥？"
                     LogoScale="1" Logo="M149 873c47 47 101 83 162 109 63 26 130 40 199 40 69 0 136-13 199-40 61-25 115-62 162-109s83-101 109-162c26-63 40-130 40-199 0-69-13-136-40-199-25-61-62-115-109-162-46-46-101-83-162-109C648 13 580 0 511 0s-136 13-199 40c-61 25-115 62-162 109s-83 101-109 162C13 375 0 442 0 511s13 136 40 199c25 61 62 115 109 162zM97 511c0-228 185-414 414-414 228 0 414 185 414 414S740 926 511 926c-228 0-414-185-414-414z M539 244c-8-4-17-7-27-7-9 0-19 2-27 7-16 9-27 27-27 47 0 30 24 54 54 54 30 0 54-24 54-54 0-19-10-37-27-47zM566 732v-284c0-30-24-54-54-54-30 0-54 24-54 54v284c0 30 24 54 54 54 30 0 54-24 54-54z" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="如果只想显示一个图标，不想让它是能按的按钮，可以使用 WPF 自带的 Path 等绘图控件，感兴趣的话可以自行搜索。想偷懒也可以把 MyIconButton 的 IsHitTestVisible 属性改为 False……" />
+                    Text="如果只想显示一个图标，不想让它是能按的按钮，可以使用 XAML 中常见的 Path 等绘图控件，感兴趣的话可以自行搜索。想偷懒也可以把 MyIconButton 的 IsHitTestVisible 属性改为 False……" />
         <Path Margin="0,4,0,0" Width="20" Height="20" HorizontalAlignment="Center"
                     Stretch="Uniform" Fill="{DynamicResource ColorBrush1}"
                     Data="M149 873c47 47 101 83 162 109 63 26 130 40 199 40 69 0 136-13 199-40 61-25 115-62 162-109s83-101 109-162c26-63 40-130 40-199 0-69-13-136-40-199-25-61-62-115-109-162-46-46-101-83-162-109C648 13 580 0 511 0s-136 13-199 40c-61 25-115 62-162 109s-83 101-109 162C13 375 0 442 0 511s13 136 40 199c25 61 62 115 109 162zM97 511c0-228 185-414 414-414 228 0 414 185 414 414S740 926 511 926c-228 0-414-185-414-414z M539 244c-8-4-17-7-27-7-9 0-19 2-27 7-16 9-27 27-27 47 0 30 24 54 54 54 30 0 54-24 54-54 0-19-10-37-27-47zM566 732v-284c0-30-24-54-54-54-30 0-54 24-54 54v284c0 30 24 54 54 54 30 0 54-24 54-54z" />
@@ -379,11 +379,7 @@ local:MyIconButton（图标按钮）：
  - Theme：设置颜色主题，Color（默认）为当前启动器的主题颜色，也可设置为 White、Black、Red
  - EventType、EventData：触发特定事件
 
-默认会声明以下命名空间：
- - xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- - xmlns:sys="clr-namespace:System;assembly=mscorlib"
- - xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- - xmlns:local="clr-namespace:PCL;assembly=Plain Craft Launcher 2"
-除此之外，不能声明其他命名空间。
+当前这套自定义主页格式保持历史兼容写法，一般不需要你手动声明额外命名空间。
+如果你只是想修改卡片内容、按钮事件或布局，直接参考上面的示例即可。
 
 -->

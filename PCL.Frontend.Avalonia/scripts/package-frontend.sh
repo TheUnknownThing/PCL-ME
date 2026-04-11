@@ -6,14 +6,14 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 project_path="${repo_root}/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj"
 artifact_root="${ARTIFACT_ROOT:-${repo_root}/artifacts/frontend-packages}"
 configuration="${CONFIGURATION:-Release}"
-app_name="${APP_NAME:-Plain Craft Launcher Community Edition}"
-bundle_identifier="${BUNDLE_IDENTIFIER:-org.pcl.community.frontend}"
+app_name="${APP_NAME:-PCL-ME}"
+bundle_identifier="${BUNDLE_IDENTIFIER:-org.pcl.me.frontend}"
 app_version="${APP_VERSION:-$(date +%Y.%m.%d)}"
 publish_mode="${PUBLISH_MODE:-self-contained}"
 executable_name="PCL.Frontend.Avalonia"
 mac_launcher_name="PCLLauncher"
-linux_launcher_script="launch-pcl-ce.sh"
-windows_launcher_script="Launch Plain Craft Launcher Community Edition.vbs"
+linux_launcher_script="launch-pcl-me.sh"
+windows_launcher_script="Launch PCL-ME.vbs"
 icon_png="${repo_root}/PCL.Frontend.Avalonia/Assets/icon.png"
 
 default_rids=(osx-arm64 linux-x64 win-x64)
@@ -137,8 +137,8 @@ exec \"\${script_dir}/${executable_name}\" app --host-env true \"\$@\"
   sed \
     -e "s|__APP_NAME__|${app_name}|g" \
     -e "s|__LAUNCHER_SCRIPT__|${linux_launcher_script}|g" \
-    "$desktop_template" > "${package_dir}/Plain Craft Launcher Community Edition.desktop"
-  chmod +x "${package_dir}/${executable_name}" "${package_dir}/${linux_launcher_script}" "${package_dir}/Plain Craft Launcher Community Edition.desktop"
+    "$desktop_template" > "${package_dir}/PCL-ME.desktop"
+  chmod +x "${package_dir}/${executable_name}" "${package_dir}/${linux_launcher_script}" "${package_dir}/PCL-ME.desktop"
   tar -C "$rid_root" -czf "$archive_path" "$(basename "$package_dir")"
   echo "$archive_path"
 }

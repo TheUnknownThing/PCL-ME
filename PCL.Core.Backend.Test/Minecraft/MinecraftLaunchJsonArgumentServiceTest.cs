@@ -31,7 +31,11 @@ public sealed class MinecraftLaunchJsonArgumentServiceTest
                 Is32BitOperatingSystem: false));
 
         CollectionAssert.AreEqual(
-            new[] { "--username", "player", "--demo", "--version", "1.20.5" },
+            OperatingSystem.IsWindows()
+                ? new[] { "--username", "player", "--demo", "--version", "1.20.5" }
+                : OperatingSystem.IsLinux()
+                    ? new[] { "--username", "--linux", "--version", "1.20.5" }
+                    : new[] { "--username", "--version", "1.20.5" },
             (System.Collections.ICollection)result);
     }
 }

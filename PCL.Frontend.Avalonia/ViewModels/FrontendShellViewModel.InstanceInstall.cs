@@ -214,6 +214,7 @@ internal sealed partial class FrontendShellViewModel
 
     private DownloadInstallOptionCardViewModel CreateInstanceInstallOptionCard(string optionTitle, string iconName, string minecraftVersion)
     {
+        var optionIcon = LoadLauncherBitmap("Images", "Blocks", iconName);
         var effectiveChoice = ResolveCachedEffectiveChoice(isExistingInstance: true, optionTitle, minecraftVersion);
         var staticUnavailableReason = GetInstallOptionStaticUnavailableReason(isExistingInstance: true, optionTitle, minecraftVersion);
         var loadError = _instanceInstallOptionLoadErrors.TryGetValue(optionTitle, out var loadErrorText)
@@ -237,13 +238,14 @@ internal sealed partial class FrontendShellViewModel
         var choiceItems = cachedChoices.Select(choice => new DownloadInstallChoiceItemViewModel(
             choice.Title,
             choice.Summary,
+            optionIcon,
             effectiveChoice is not null && string.Equals(choice.Id, effectiveChoice.Id, StringComparison.Ordinal),
             new ActionCommand(() => SelectInstanceInstallOption(optionTitle, choice)))).ToArray();
 
         return new DownloadInstallOptionCardViewModel(
             optionTitle,
             selectionText,
-            hasSelection ? LoadLauncherBitmap("Images", "Blocks", iconName) : null,
+            hasSelection ? optionIcon : null,
             hasSelection,
             !hasSelection,
             canExpand,
