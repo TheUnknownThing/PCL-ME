@@ -298,6 +298,8 @@ internal sealed partial class FrontendShellViewModel
     private bool _suppressInstancePersistence;
     private bool _suppressToolsPersistence;
     private Task _selectedInstanceRefreshTask = Task.CompletedTask;
+    private bool _hasOptimisticLaunchInstanceName;
+    private string _optimisticLaunchInstanceName = string.Empty;
 
     public static FrontendShellViewModel CreateBootstrap(
         AvaloniaCommandOptions options,

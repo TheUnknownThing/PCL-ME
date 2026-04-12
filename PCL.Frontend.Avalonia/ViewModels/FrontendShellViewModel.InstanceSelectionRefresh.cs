@@ -29,8 +29,10 @@ internal sealed partial class FrontendShellViewModel
             !Directory.Exists(Path.Combine(launcherDirectory, "versions", selectedInstanceName)))
         {
             _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
+            selectedInstanceName = string.Empty;
         }
 
+        SetOptimisticLaunchInstanceName(selectedInstanceName);
         RefreshInstanceSelectionSurface();
         RefreshInstanceSelectionRouteMetadata();
 
@@ -43,6 +45,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _shellActionService.PersistLocalValue("LaunchInstanceSelect", instanceName);
         ApplyOptimisticInstanceSelection(instanceName);
+        SetOptimisticLaunchInstanceName(instanceName);
 
         var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
         AddActivity("切换启动实例", $"已切换到 {instanceName}，正在后台刷新实例状态。");
@@ -66,6 +69,53 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
         }
+    }
+
+    private void SetOptimisticLaunchInstanceName(string? instanceName, bool raiseProperties = true)
+    {
+        var normalizedInstanceName = string.IsNullOrWhiteSpace(instanceName)
+            ? "未选择实例"
+            : instanceName.Trim();
+        var previousDisplayName = GetDisplayedLaunchInstanceName();
+        _optimisticLaunchInstanceName = normalizedInstanceName;
+        _hasOptimisticLaunchInstanceName = true;
+
+        if (raiseProperties && !string.Equals(previousDisplayName, GetDisplayedLaunchInstanceName(), StringComparison.Ordinal))
+        {
+            RaiseLaunchInstanceDisplayProperties();
+        }
+    }
+
+    private void ClearOptimisticLaunchInstanceName(bool raiseProperties = true)
+    {
+        if (!_hasOptimisticLaunchInstanceName)
+        {
+            return;
+        }
+
+        var previousDisplayName = GetDisplayedLaunchInstanceName();
+        _optimisticLaunchInstanceName = string.Empty;
+        _hasOptimisticLaunchInstanceName = false;
+
+        if (raiseProperties && !string.Equals(previousDisplayName, GetDisplayedLaunchInstanceName(), StringComparison.Ordinal))
+        {
+            RaiseLaunchInstanceDisplayProperties();
+        }
+    }
+
+    private string GetDisplayedLaunchInstanceName()
+    {
+        return _hasOptimisticLaunchInstanceName
+            ? _optimisticLaunchInstanceName
+            : _launchComposition.InstanceName;
+    }
+
+    private void RaiseLaunchInstanceDisplayProperties()
+    {
+        RaisePropertyChanged(nameof(LaunchVersionSubtitle));
+        RaisePropertyChanged(nameof(LaunchWelcomeBanner));
+        RaisePropertyChanged(nameof(LaunchNewsTitle));
+        RaisePropertyChanged(nameof(LaunchNewsBadgeText));
     }
 
     private async Task RefreshSelectedInstanceStateAsync(int refreshVersion)
@@ -93,8 +143,6 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 _instanceComposition = refreshedState.InstanceComposition;
-                _launchComposition = refreshedState.LaunchComposition;
-                NormalizeLaunchProfileSurface();
                 ReloadToolsComposition();
                 ReloadVersionSavesComposition();
                 ReloadDownloadComposition(includeRemoteState: _downloadCompositionHasRemoteState);
@@ -117,16 +165,7 @@ internal sealed partial class FrontendShellViewModel
                     RefreshActiveRightPaneSurface();
                 }
 
-                var launchPromptContextKey = BuildLaunchPromptContextKey(
-                    _launchComposition,
-                    _instanceComposition.Selection.InstanceDirectory);
-                if (!string.Equals(_launchPromptContextKey, launchPromptContextKey, StringComparison.Ordinal))
-                {
-                    _dismissedLaunchPromptIds.Clear();
-                    _launchPromptContextKey = launchPromptContextKey;
-                }
-
-                RaiseLaunchCompositionProperties();
+                ApplyLaunchComposition(refreshedState.LaunchComposition, normalizeLaunchProfileSurface: true);
             });
         }
         catch (Exception ex)

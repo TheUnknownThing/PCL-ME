@@ -902,6 +902,7 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyLaunchComposition(FrontendLaunchComposition composition, bool normalizeLaunchProfileSurface)
     {
         _launchComposition = composition;
+        ClearOptimisticLaunchInstanceName(raiseProperties: false);
         if (normalizeLaunchProfileSurface)
         {
             NormalizeLaunchProfileSurface();

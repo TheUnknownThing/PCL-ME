@@ -650,6 +650,7 @@ internal sealed partial class FrontendShellViewModel
                 StringComparison.OrdinalIgnoreCase))
         {
             ApplyOptimisticInstanceSelection(entry.Name);
+            SetOptimisticLaunchInstanceName(entry.Name);
             var refreshVersion = System.Threading.Interlocked.Increment(ref _instanceSelectionRefreshVersion);
             QueueSelectedInstanceStateRefresh(refreshVersion);
         }
