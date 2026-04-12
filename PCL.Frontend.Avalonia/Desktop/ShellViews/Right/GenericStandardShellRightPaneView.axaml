@@ -714,6 +714,9 @@
                   </Button>
                   <ComboBox
                       Grid.Column="1"
+                      Margin="0,0,8,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
                       MinWidth="170"
                       ZIndex="1"
                       ItemsSource="{Binding CommunityProjectInstallModeOptions}"
