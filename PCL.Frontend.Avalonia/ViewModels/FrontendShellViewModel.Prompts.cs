@@ -385,8 +385,6 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task HandleLaunchRequestedAsync()
     {
-        RefreshLaunchState();
-
         if (_isLaunchInProgress)
         {
             AddActivity("启动进行中", "当前已经有一个启动会话正在运行。");
@@ -643,20 +641,6 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task StartLaunchAsync()
     {
-        RefreshLaunchState();
-
-        if (_launchComposition.SelectedJavaRuntime is null)
-        {
-            AddFailureActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
-        {
-            AppendLaunchLogLine(_launchComposition.JavaWarningMessage);
-            AddActivity("Java 兼容性检查已忽略", _launchComposition.JavaWarningMessage);
-        }
-
         try
         {
             var launchCancellation = new CancellationTokenSource();
@@ -674,6 +658,20 @@ internal sealed partial class FrontendShellViewModel
             ClearLaunchLogBuffer();
             RaiseLaunchSessionProperties();
             RefreshGameLogSurface();
+
+            await RefreshLaunchCompositionAsync(launchCancellation.Token);
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
+            if (_launchComposition.SelectedJavaRuntime is null)
+            {
+                throw new InvalidOperationException("当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
+            }
+
+            if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
+            {
+                AppendLaunchLogLine(_launchComposition.JavaWarningMessage);
+                AddActivity("Java 兼容性检查已忽略", _launchComposition.JavaWarningMessage);
+            }
 
             foreach (var line in _launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines)
             {
@@ -705,8 +703,16 @@ internal sealed partial class FrontendShellViewModel
             _activeLaunchProcess = startResult.Process;
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
-            ShowLaunchCompletionNotification();
-            SetLaunchDialogLaunchedState();
+            if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
+            {
+                NavigateTo(
+                    new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                    "游戏启动成功后已返回主页。",
+                    RouteNavigationBehavior.Reset);
+            }
+
+            AvaloniaHintBus.Show("游戏启动成功！", AvaloniaHintTheme.Success);
+            HideLaunchDialog();
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
 
@@ -734,6 +740,25 @@ internal sealed partial class FrontendShellViewModel
             _launchSessionCancellation = null;
             RaiseLaunchSessionProperties();
         }
+    }
+
+    private async Task RefreshLaunchCompositionAsync(CancellationToken cancellationToken)
+    {
+        SetLaunchDialogRunningState(
+            "正在启动游戏",
+            "读取启动配置",
+            0.02d,
+            showDownload: false,
+            isError: false);
+
+        var launchComposition = await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
+        }, cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        ApplyLaunchComposition(launchComposition, normalizeLaunchProfileSurface: true);
     }
 
     private async Task EnsureLaunchFilesAsync(CancellationToken cancellationToken)
