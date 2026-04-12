@@ -53,6 +53,7 @@ internal sealed partial class FrontendShellViewModel
     private LauncherFrontendSubpageKey? _selectedCommunityProjectOriginSubpage;
     private string _selectedCommunityProjectVersionFilter = string.Empty;
     private string _selectedCommunityProjectLoaderFilter = string.Empty;
+    private string _selectedCommunityProjectInstallMode = CommunityProjectInstallModeCurrentOnlyValue;
     private readonly List<CommunityProjectNavigationState> _communityProjectNavigationStack = [];
     private Bitmap? _communityProjectIcon;
     private FrontendCommunityProjectState _communityProjectState = new(
@@ -79,6 +80,17 @@ internal sealed partial class FrontendShellViewModel
         [],
         string.Empty,
         false);
+    private const string CommunityProjectInstallModeCurrentOnlyValue = "current-only";
+    private const string CommunityProjectInstallModeWithDependenciesValue = "with-dependencies";
+    private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectModInstallModeOptions =
+    [
+        new DownloadResourceFilterOptionViewModel("仅安装当前模组", CommunityProjectInstallModeCurrentOnlyValue),
+        new DownloadResourceFilterOptionViewModel("安装当前模组和缺失依赖", CommunityProjectInstallModeWithDependenciesValue)
+    ];
+    private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectSingleInstallModeOptions =
+    [
+        new DownloadResourceFilterOptionViewModel("仅安装当前资源", CommunityProjectInstallModeCurrentOnlyValue)
+    ];
 
     public ObservableCollection<CommunityProjectActionButtonViewModel> CommunityProjectActionButtons { get; } = [];
 
@@ -199,17 +211,33 @@ internal sealed partial class FrontendShellViewModel
                 parts.Add(release.Meta);
             }
 
-            var installTarget = GetCommunityProjectInstallTargetSummary();
-            if (!string.IsNullOrWhiteSpace(installTarget))
-            {
-                parts.Add(installTarget);
-            }
-
             return string.Join(" • ", parts);
         }
     }
 
     public ActionCommand InstallCommunityProjectToCurrentInstanceCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
+
+    public ActionCommand ExecuteCommunityProjectInstallSuggestionCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
+
+    public IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectInstallModeOptions =>
+        _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+            ? CommunityProjectModInstallModeOptions
+            : CommunityProjectSingleInstallModeOptions;
+
+    public DownloadResourceFilterOptionViewModel? SelectedCommunityProjectInstallModeOption
+    {
+        get => CommunityProjectInstallModeOptions.FirstOrDefault(option =>
+                   string.Equals(option.FilterValue, _selectedCommunityProjectInstallMode, StringComparison.OrdinalIgnoreCase))
+               ?? CommunityProjectInstallModeOptions.FirstOrDefault();
+        set
+        {
+            var nextValue = value?.FilterValue ?? CommunityProjectInstallModeOptions.FirstOrDefault()?.FilterValue ?? CommunityProjectInstallModeCurrentOnlyValue;
+            if (SetProperty(ref _selectedCommunityProjectInstallMode, nextValue, nameof(SelectedCommunityProjectInstallModeOption)))
+            {
+                RaisePropertyChanged(nameof(CommunityProjectInstallModeOptions));
+            }
+        }
+    }
 
     public bool HasCommunityProjectActionButtons => CommunityProjectActionButtons.Count > 0;
 
@@ -689,14 +717,17 @@ internal sealed partial class FrontendShellViewModel
     {
         var release = GetCurrentCommunityProjectRelease(versionGrouping);
         _communityProjectDependencyReleaseTitle = release?.Title ?? string.Empty;
-        if (release is null || release.Dependencies.Count == 0)
+        var visibleDependencies = release?.Dependencies
+            .Where(entry => entry.Kind != FrontendCommunityProjectDependencyKind.Embedded)
+            .ToArray();
+        if (release is null || visibleDependencies is null || visibleDependencies.Length == 0)
         {
             ReplaceItems(CommunityProjectDependencySections, []);
             return;
         }
 
         var fallbackDependencyIcon = GetCommunityProjectDependencyIcon();
-        var sections = release.Dependencies
+        var sections = visibleDependencies
             .GroupBy(entry => entry.Kind)
             .OrderBy(group => GetCommunityProjectDependencyPriority(group.Key))
             .Select(group => new DownloadCatalogSectionViewModel(
@@ -986,43 +1017,95 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var targetDirectory = ResolveCommunityProjectDownloadStartDirectory();
-        if (string.IsNullOrWhiteSpace(targetDirectory))
-        {
-            AddActivity("安装到当前实例", "当前实例没有可用的安装目录。");
-            return;
-        }
-
         try
         {
-            Directory.CreateDirectory(targetDirectory);
-            var fileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
-            var targetPath = GetUniqueChildPath(targetDirectory, fileName);
-            TaskCenter.Register(new FrontendManagedFileDownloadTask(
-                $"安装资源文件：{entry.Title}",
-                entry.Target,
-                targetPath,
-                ResolveDownloadRequestTimeout(),
-                onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {CommunityProjectCurrentInstanceName}", AvaloniaHintTheme.Info),
-                onCompleted: downloadedPath =>
+            var includeDependencies = ShouldInstallCommunityProjectMissingDependencies();
+            var route = _selectedCommunityProjectOriginSubpage;
+            if (route is null)
+            {
+                AddActivity("安装到当前实例", "当前页面没有可识别的资源类型。");
+                return;
+            }
+
+            AvaloniaHintBus.Show("正在分析建议安装版本…", AvaloniaHintTheme.Info);
+            AddActivity("安装到当前实例", $"{CommunityProjectCurrentInstanceName} • 正在分析 {CommunityProjectTitle} 的安装计划。");
+            var result = await Task.Run(() => BuildCommunityProjectInstallBuildResult(
+                [
+                    new CommunityProjectInstallRootRequest(
+                        _selectedCommunityProjectId,
+                        CommunityProjectTitle,
+                        route.Value,
+                        _communityProjectState,
+                        entry)
+                ],
+                _instanceComposition,
+                ResolveSelectedInstanceLoaderLabel(),
+                includeDependencies));
+
+            if (includeDependencies)
+            {
+                var confirmed = await ConfirmCommunityProjectInstallWithDependenciesAsync(result);
+                if (!confirmed)
                 {
-                    var installedPath = FinalizeCommunityProjectInstalledArtifact(_selectedCommunityProjectOriginSubpage, downloadedPath);
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        ReloadInstanceComposition(initializeAllSurfaces: false);
-                        AddActivity("安装到当前实例", $"{entry.Title} -> {installedPath}");
-                        AvaloniaHintBus.Show($"{entry.Title} 已安装到 {CommunityProjectCurrentInstanceName}", AvaloniaHintTheme.Success);
-                    });
-                },
-                onFailed: message =>
+                    AddActivity("安装到当前实例", "已取消安装当前模组和缺失依赖。");
+                    return;
+                }
+            }
+
+            if (result.Plans.Count == 0)
+            {
+                AddActivity("安装到当前实例", result.Skipped.Count == 0
+                    ? "没有需要加入任务中心的安装项。"
+                    : string.Join("；", result.Skipped.Take(3)));
+                return;
+            }
+
+            AvaloniaHintBus.Show("安装任务已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
+            foreach (var plan in result.Plans)
+            {
+                RegisterCommunityProjectInstallTask(plan, "安装到当前实例");
+            }
+
+            var summaryParts = new List<string> { $"已加入 {result.Plans.Count} 个安装任务" };
+            if (includeDependencies)
+            {
+                var dependencyCount = result.Plans.Count(plan => plan.IsDependency);
+                if (dependencyCount > 0)
                 {
-                    Dispatcher.UIThread.Post(() => AddFailureActivity("安装到当前实例失败", message));
-                }));
-            AddActivity("安装到当前实例", $"{entry.Title} 已加入任务中心。");
+                    summaryParts.Add($"包含 {dependencyCount} 个缺失依赖");
+                }
+            }
+
+            if (result.Skipped.Count > 0)
+            {
+                summaryParts.Add($"跳过 {result.Skipped.Count} 项");
+            }
+
+            AddActivity("安装到当前实例", $"{CommunityProjectCurrentInstanceName} • {string.Join("，", summaryParts)}。");
+            foreach (var skipped in result.Skipped.Take(5))
+            {
+                AddActivity("安装到当前实例", skipped);
+            }
         }
         catch (Exception ex)
         {
             AddFailureActivity("安装到当前实例失败", ex.Message);
+        }
+    }
+
+    private async Task<bool> ConfirmCommunityProjectInstallWithDependenciesAsync(CommunityProjectInstallBuildResult result)
+    {
+        try
+        {
+            return await _shellActionService.ConfirmAsync(
+                "确认安装依赖",
+                BuildCommunityProjectInstallConfirmationMessage(CommunityProjectCurrentInstanceName, result),
+                "开始安装");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("安装确认失败", ex.Message);
+            return false;
         }
     }
 
@@ -1552,21 +1635,13 @@ internal sealed partial class FrontendShellViewModel
         await Dispatcher.UIThread.InvokeAsync(() => entry.ApplyIcon(bitmap));
     }
 
-    private string GetCommunityProjectInstallTargetSummary()
+    private bool ShouldInstallCommunityProjectMissingDependencies()
     {
-        if (!_instanceComposition.Selection.HasSelection)
-        {
-            return string.Empty;
-        }
-
-        return _selectedCommunityProjectOriginSubpage switch
-        {
-            LauncherFrontendSubpageKey.DownloadResourcePack => $"安装到 {CommunityProjectCurrentInstanceName} 的 resourcepacks 文件夹",
-            LauncherFrontendSubpageKey.DownloadShader => $"安装到 {CommunityProjectCurrentInstanceName} 的 shaderpacks 文件夹",
-            LauncherFrontendSubpageKey.DownloadWorld => $"安装到 {CommunityProjectCurrentInstanceName} 的 saves 文件夹",
-            LauncherFrontendSubpageKey.DownloadDataPack => $"安装到 {CommunityProjectCurrentInstanceName} 的实例目录",
-            _ => $"安装到 {CommunityProjectCurrentInstanceName} 的 mods 文件夹"
-        };
+        return _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+               && string.Equals(
+                   SelectedCommunityProjectInstallModeOption?.FilterValue,
+                   CommunityProjectInstallModeWithDependenciesValue,
+                   StringComparison.OrdinalIgnoreCase);
     }
 
     private static string SanitizeCommunityProjectReleaseFileName(string? suggestedFileName, string fallbackTitle)
@@ -2097,6 +2172,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowCommunityProjectInstallSuggestionCard));
         RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionTitle));
         RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionSummary));
+        RaisePropertyChanged(nameof(CommunityProjectInstallModeOptions));
+        RaisePropertyChanged(nameof(SelectedCommunityProjectInstallModeOption));
         RaisePropertyChanged(nameof(HasCommunityProjectActionButtons));
         RaisePropertyChanged(nameof(ShowCommunityProjectFilterCard));
         RaisePropertyChanged(nameof(ShowCommunityProjectVersionFilters));

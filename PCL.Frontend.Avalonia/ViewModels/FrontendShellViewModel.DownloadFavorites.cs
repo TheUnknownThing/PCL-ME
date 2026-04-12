@@ -277,7 +277,7 @@ internal sealed partial class FrontendShellViewModel
 
         AvaloniaHintBus.Show($"正在分析 {selectedEntries.Count} 个收藏项目…", AvaloniaHintTheme.Info);
         AddActivity("批量安装收藏", $"正在为 {targetSnapshot.Name} 分析 {selectedEntries.Count} 个收藏项目。");
-        DownloadFavoriteBatchInstallBuildResult result;
+        CommunityProjectInstallBuildResult result;
         try
         {
             result = await Task.Run(() => BuildDownloadFavoriteBatchInstallResult(selectedEntries, targetSnapshot));
@@ -288,14 +288,11 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (result.Plans.Count > 0)
+        var confirmed = await ConfirmDownloadFavoriteBatchInstallAsync(targetSnapshot, result);
+        if (!confirmed)
         {
-            var confirmed = await ConfirmDownloadFavoriteBatchInstallAsync(targetSnapshot, result);
-            if (!confirmed)
-            {
-                AddActivity("批量安装收藏", "已取消加入批量安装任务。");
-                return;
-            }
+            AddActivity("批量安装收藏", "已取消加入批量安装任务。");
+            return;
         }
 
         AvaloniaHintBus.Show("批量安装已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
@@ -309,6 +306,11 @@ internal sealed partial class FrontendShellViewModel
         if (result.Plans.Count > 0)
         {
             summaryParts.Add($"已加入 {result.Plans.Count} 个安装任务");
+            var dependencyCount = result.Plans.Count(plan => plan.IsDependency);
+            if (dependencyCount > 0)
+            {
+                summaryParts.Add($"包含 {dependencyCount} 个依赖");
+            }
         }
 
         if (result.Skipped.Count > 0)
@@ -328,7 +330,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task<bool> ConfirmDownloadFavoriteBatchInstallAsync(
         InstanceSelectionSnapshot targetSnapshot,
-        DownloadFavoriteBatchInstallBuildResult result)
+        CommunityProjectInstallBuildResult result)
     {
         try
         {
@@ -599,17 +601,17 @@ internal sealed partial class FrontendShellViewModel
         return true;
     }
 
-    private DownloadFavoriteBatchInstallBuildResult BuildDownloadFavoriteBatchInstallResult(
+    private CommunityProjectInstallBuildResult BuildDownloadFavoriteBatchInstallResult(
         IReadOnlyList<FrontendDownloadCatalogEntry> selectedEntries,
         InstanceSelectionSnapshot targetSnapshot)
     {
         var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, targetSnapshot.Name);
         if (!targetComposition.Selection.HasSelection)
         {
-            return new DownloadFavoriteBatchInstallBuildResult([], [$"{targetSnapshot.Name} 当前不可用，无法执行批量安装。"]);
+            return new CommunityProjectInstallBuildResult([], [$"{targetSnapshot.Name} 当前不可用，无法执行批量安装。"]);
         }
 
-        var plans = new List<DownloadFavoriteBatchInstallPlan>();
+        var roots = new List<CommunityProjectInstallRootRequest>();
         var skipped = new List<string>();
         foreach (var favorite in selectedEntries)
         {
@@ -631,64 +633,31 @@ internal sealed partial class FrontendShellViewModel
                 continue;
             }
 
-            var projectState = FrontendCommunityProjectService.GetProjectState(
+            roots.Add(new CommunityProjectInstallRootRequest(
                 favorite.Identity,
-                targetComposition.Selection.VanillaVersion,
-                _selectedCommunityDownloadSourceIndex);
-            var release = SelectPreferredCommunityProjectReleaseForTarget(
-                projectState.Releases.Where(entry => entry.IsDirectDownload && !string.IsNullOrWhiteSpace(entry.Target)),
-                targetComposition.Selection.VanillaVersion,
-                targetSnapshot.LoaderLabel,
-                favorite.OriginSubpage);
-            if (release is null || string.IsNullOrWhiteSpace(release.Target))
-            {
-                skipped.Add($"已跳过 {favorite.Title}：没有找到适合 {targetSnapshot.Name} 的可安装版本。");
-                continue;
-            }
-
-            var targetDirectory = ResolveCommunityProjectInstallDirectory(targetComposition.Selection, favorite.OriginSubpage.Value);
-            if (string.IsNullOrWhiteSpace(targetDirectory))
-            {
-                skipped.Add($"已跳过 {favorite.Title}：{targetSnapshot.Name} 没有可用的安装目录。");
-                continue;
-            }
-
-            Directory.CreateDirectory(targetDirectory);
-            var targetFileName = SanitizeCommunityProjectReleaseFileName(release.SuggestedFileName, release.Title);
-            var installed = FindInstalledFavoriteResource(targetComposition, favorite.OriginSubpage.Value, favorite, projectState);
-            if (favorite.OriginSubpage != LauncherFrontendSubpageKey.DownloadWorld
-                && installed is not null
-                && !ShouldInstallFavoriteResourceUpdate(installed, targetFileName, release))
-            {
-                skipped.Add($"已跳过 {favorite.Title}：{targetSnapshot.Name} 中已安装相同或更新的版本。");
-                continue;
-            }
-
-            var targetPath = favorite.OriginSubpage == LauncherFrontendSubpageKey.DownloadWorld
-                ? GetUniqueChildPath(targetDirectory, targetFileName)
-                : Path.Combine(targetDirectory, targetFileName);
-
-            plans.Add(new DownloadFavoriteBatchInstallPlan(
                 favorite.Title,
-                release.Title,
-                string.IsNullOrWhiteSpace(release.Meta) ? release.Info : release.Meta,
-                release.Target!,
-                targetPath,
-                targetSnapshot.Name,
-                favorite.OriginSubpage.Value,
-                installed is not null && !string.Equals(installed.Path, targetPath, StringComparison.OrdinalIgnoreCase)
-                    ? installed.Path
-                    : null,
-                string.Equals(targetSnapshot.Name, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase)));
+                favorite.OriginSubpage.Value));
         }
 
-        return new DownloadFavoriteBatchInstallBuildResult(plans, skipped);
+        var buildResult = BuildCommunityProjectInstallBuildResult(
+            roots,
+            targetComposition,
+            targetSnapshot.LoaderLabel,
+            includeDependencies: true);
+        return new CommunityProjectInstallBuildResult(
+            buildResult.Plans,
+            skipped.Concat(buildResult.Skipped).ToArray());
     }
 
-    private void RegisterDownloadFavoriteBatchInstallTask(DownloadFavoriteBatchInstallPlan plan)
+    private void RegisterDownloadFavoriteBatchInstallTask(CommunityProjectInstallPlan plan)
+    {
+        RegisterCommunityProjectInstallTask(plan, "批量安装收藏");
+    }
+
+    private void RegisterCommunityProjectInstallTask(CommunityProjectInstallPlan plan, string activityTitle)
     {
         TaskCenter.Register(new FrontendManagedFileDownloadTask(
-            $"收藏批量安装：{plan.Title}",
+            $"{activityTitle}：{plan.Title}",
             plan.SourceUrl,
             plan.TargetPath,
             ResolveDownloadRequestTimeout(),
@@ -704,14 +673,169 @@ internal sealed partial class FrontendShellViewModel
                         ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
                     }
 
-                    AddActivity("批量安装收藏", $"{plan.Title} -> {installedPath}");
+                    AddActivity(activityTitle, $"{plan.Title} -> {installedPath}");
                     AvaloniaHintBus.Show($"{plan.Title} 已安装到 {plan.InstanceName}", AvaloniaHintTheme.Success);
                 });
             },
             onFailed: message =>
             {
-                Dispatcher.UIThread.Post(() => AddFailureActivity("批量安装收藏失败", $"{plan.Title} • {message}"));
+                Dispatcher.UIThread.Post(() => AddFailureActivity($"{activityTitle}失败", $"{plan.Title} • {message}"));
             }));
+    }
+
+    private CommunityProjectInstallBuildResult BuildCommunityProjectInstallBuildResult(
+        IReadOnlyList<CommunityProjectInstallRootRequest> roots,
+        FrontendInstanceComposition targetComposition,
+        string? preferredLoader,
+        bool includeDependencies)
+    {
+        if (!targetComposition.Selection.HasSelection)
+        {
+            return new CommunityProjectInstallBuildResult([], ["目标实例当前不可用。"]);
+        }
+
+        var plans = new List<CommunityProjectInstallPlan>();
+        var skipped = new List<string>();
+        var resolvedResults = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        var resolvingKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var resolvedAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var preferredVersion = targetComposition.Selection.VanillaVersion;
+
+        foreach (var root in roots)
+        {
+            ResolveInstallRoot(root, isDependency: false);
+        }
+
+        return new CommunityProjectInstallBuildResult(plans, skipped);
+
+        bool ResolveInstallRoot(CommunityProjectInstallRootRequest request, bool isDependency)
+        {
+            if (string.IsNullOrWhiteSpace(request.ProjectId))
+            {
+                skipped.Add($"已跳过 {request.Title}：缺少项目标识。");
+                return false;
+            }
+
+            var requestKey = $"{request.Route}:{request.ProjectId}";
+            if (resolvedResults.TryGetValue(requestKey, out var resolved))
+            {
+                return resolved;
+            }
+
+            if (!resolvingKeys.Add(requestKey))
+            {
+                return true;
+            }
+
+            try
+            {
+                var projectState = request.ProjectState ?? FrontendCommunityProjectService.GetProjectState(
+                    request.ProjectId,
+                    preferredVersion,
+                    _selectedCommunityDownloadSourceIndex);
+                var projectTitle = string.IsNullOrWhiteSpace(projectState.Title) ? request.Title : projectState.Title;
+                var projectAlias = BuildCommunityProjectInstallAlias(request.Route, projectTitle, projectState.Website, request.ProjectId);
+                if (!string.IsNullOrWhiteSpace(projectAlias) && resolvedAliases.Contains(projectAlias))
+                {
+                    resolvedResults[requestKey] = true;
+                    return true;
+                }
+
+                var release = request.Release ?? SelectPreferredCommunityProjectReleaseForTarget(
+                    projectState.Releases.Where(entry => entry.IsDirectDownload && !string.IsNullOrWhiteSpace(entry.Target)),
+                    preferredVersion,
+                    preferredLoader,
+                    request.Route);
+                if (release is null || string.IsNullOrWhiteSpace(release.Target))
+                {
+                    skipped.Add($"已跳过 {projectTitle}：没有找到适合 {targetComposition.Selection.InstanceName} 的可安装版本。");
+                    resolvedResults[requestKey] = false;
+                    return false;
+                }
+
+                if (includeDependencies && request.Route == LauncherFrontendSubpageKey.DownloadMod)
+                {
+                    foreach (var dependency in release.Dependencies.Where(ShouldAutoInstallCommunityProjectDependency))
+                    {
+                        var dependencyResolved = ResolveInstallRoot(
+                            new CommunityProjectInstallRootRequest(
+                                dependency.ProjectId,
+                                dependency.Title,
+                                request.Route),
+                            isDependency: true);
+                        if (!dependencyResolved && dependency.Kind == FrontendCommunityProjectDependencyKind.Required)
+                        {
+                            skipped.Add($"已跳过 {projectTitle}：必需依赖 {dependency.Title} 没有可安装版本。");
+                            resolvedResults[requestKey] = false;
+                            return false;
+                        }
+                    }
+                }
+
+                var targetDirectory = ResolveCommunityProjectInstallDirectory(targetComposition.Selection, request.Route);
+                if (string.IsNullOrWhiteSpace(targetDirectory))
+                {
+                    skipped.Add($"已跳过 {projectTitle}：{targetComposition.Selection.InstanceName} 没有可用的安装目录。");
+                    resolvedResults[requestKey] = false;
+                    return false;
+                }
+
+                Directory.CreateDirectory(targetDirectory);
+                var targetFileName = SanitizeCommunityProjectReleaseFileName(release.SuggestedFileName, release.Title);
+                var installed = FindInstalledCommunityProjectResource(targetComposition, request.Route, projectTitle, projectState);
+                if (request.Route != LauncherFrontendSubpageKey.DownloadWorld
+                    && installed is not null
+                    && !ShouldInstallFavoriteResourceUpdate(installed, targetFileName, release))
+                {
+                    skipped.Add($"已跳过 {projectTitle}：{targetComposition.Selection.InstanceName} 中已安装相同或更新的版本。");
+                    if (!string.IsNullOrWhiteSpace(projectAlias))
+                    {
+                        resolvedAliases.Add(projectAlias);
+                    }
+
+                    resolvedResults[requestKey] = true;
+                    return true;
+                }
+
+                var targetPath = ResolveCommunityProjectInstallTargetPath(
+                    targetDirectory,
+                    targetFileName,
+                    request.Route,
+                    installed,
+                    plans);
+                plans.Add(new CommunityProjectInstallPlan(
+                    projectAlias,
+                    string.IsNullOrWhiteSpace(projectState.ProjectId) ? request.ProjectId : projectState.ProjectId,
+                    projectTitle,
+                    release.Title,
+                    string.IsNullOrWhiteSpace(release.Meta) ? release.Info : release.Meta,
+                    release.Target!,
+                    targetPath,
+                    targetComposition.Selection.InstanceName,
+                    request.Route,
+                    installed is not null && !string.Equals(installed.Path, targetPath, StringComparison.OrdinalIgnoreCase)
+                        ? installed.Path
+                        : null,
+                    string.Equals(targetComposition.Selection.InstanceName, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase),
+                    isDependency));
+                if (!string.IsNullOrWhiteSpace(projectAlias))
+                {
+                    resolvedAliases.Add(projectAlias);
+                }
+                resolvedResults[requestKey] = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                skipped.Add($"已跳过 {request.Title}：{ex.Message}");
+                resolvedResults[requestKey] = false;
+                return false;
+            }
+            finally
+            {
+                resolvingKeys.Remove(requestKey);
+            }
+        }
     }
 
     private static void CleanupReplacedDownloadFavoriteResource(string? path)
@@ -782,12 +906,22 @@ internal sealed partial class FrontendShellViewModel
         FrontendDownloadCatalogEntry favorite,
         FrontendCommunityProjectState projectState)
     {
+        return FindInstalledCommunityProjectResource(composition, route, favorite.Title, projectState);
+    }
+
+    private static InstalledFavoriteResource? FindInstalledCommunityProjectResource(
+        FrontendInstanceComposition composition,
+        LauncherFrontendSubpageKey route,
+        string title,
+        FrontendCommunityProjectState projectState)
+    {
         if (route == LauncherFrontendSubpageKey.DownloadWorld)
         {
             return null;
         }
 
         var installedResources = GetInstalledFavoriteResources(composition, route);
+        var projectAlias = BuildCommunityProjectInstallAlias(route, title, projectState.Website, projectState.ProjectId);
         if (!string.IsNullOrWhiteSpace(projectState.Website))
         {
             var websiteMatch = installedResources.FirstOrDefault(entry =>
@@ -799,7 +933,9 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return installedResources.FirstOrDefault(entry =>
-            string.Equals(entry.Title, favorite.Title, StringComparison.OrdinalIgnoreCase));
+            string.Equals(entry.Title, title, StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrWhiteSpace(projectAlias)
+                && string.Equals(entry.InstallAlias, projectAlias, StringComparison.OrdinalIgnoreCase)));
     }
 
     private static IReadOnlyList<InstalledFavoriteResource> GetInstalledFavoriteResources(
@@ -810,13 +946,28 @@ internal sealed partial class FrontendShellViewModel
         {
             LauncherFrontendSubpageKey.DownloadMod => composition.Mods.Entries
                 .Concat(composition.DisabledMods.Entries)
-                .Select(entry => new InstalledFavoriteResource(entry.Title, entry.Path, entry.Version, entry.Website))
+                .Select(entry => new InstalledFavoriteResource(
+                    entry.Title,
+                    entry.Path,
+                    entry.Version,
+                    entry.Website,
+                    BuildCommunityProjectInstallAlias(route, entry.Title, entry.Website, null, entry.Path)))
                 .ToArray(),
             LauncherFrontendSubpageKey.DownloadResourcePack => composition.ResourcePacks.Entries
-                .Select(entry => new InstalledFavoriteResource(entry.Title, entry.Path, entry.Version, entry.Website))
+                .Select(entry => new InstalledFavoriteResource(
+                    entry.Title,
+                    entry.Path,
+                    entry.Version,
+                    entry.Website,
+                    BuildCommunityProjectInstallAlias(route, entry.Title, entry.Website, null, entry.Path)))
                 .ToArray(),
             LauncherFrontendSubpageKey.DownloadShader => composition.Shaders.Entries
-                .Select(entry => new InstalledFavoriteResource(entry.Title, entry.Path, entry.Version, entry.Website))
+                .Select(entry => new InstalledFavoriteResource(
+                    entry.Title,
+                    entry.Path,
+                    entry.Version,
+                    entry.Website,
+                    BuildCommunityProjectInstallAlias(route, entry.Title, entry.Website, null, entry.Path)))
                 .ToArray(),
             LauncherFrontendSubpageKey.DownloadDataPack => EnumerateDirectoryInstallArtifacts(composition.Selection.IndieDirectory),
             _ => []
@@ -835,13 +986,15 @@ internal sealed partial class FrontendShellViewModel
                 Path.GetFileNameWithoutExtension(path),
                 path,
                 string.Empty,
-                string.Empty));
+                string.Empty,
+                BuildCommunityProjectAliasFromName(Path.GetFileNameWithoutExtension(path))));
         var folders = Directory.EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly)
             .Select(path => new InstalledFavoriteResource(
                 Path.GetFileName(path),
                 path,
                 string.Empty,
-                string.Empty));
+                string.Empty,
+                BuildCommunityProjectAliasFromName(Path.GetFileName(path))));
         return files.Concat(folders).ToArray();
     }
 
@@ -891,11 +1044,18 @@ internal sealed partial class FrontendShellViewModel
 
     private static string BuildDownloadFavoriteBatchInstallConfirmationMessage(
         InstanceSelectionSnapshot targetSnapshot,
-        DownloadFavoriteBatchInstallBuildResult result)
+        CommunityProjectInstallBuildResult result)
+    {
+        return BuildCommunityProjectInstallConfirmationMessage(targetSnapshot.Name, result);
+    }
+
+    private static string BuildCommunityProjectInstallConfirmationMessage(
+        string instanceName,
+        CommunityProjectInstallBuildResult result)
     {
         var lines = new List<string>
         {
-            $"目标实例：{targetSnapshot.Name}",
+            $"目标实例：{instanceName}",
             $"准备安装：{result.Plans.Count} 项"
         };
 
@@ -903,17 +1063,14 @@ internal sealed partial class FrontendShellViewModel
         {
             lines.Add(string.Empty);
             lines.Add("将安装的版本：");
-            foreach (var plan in result.Plans.Take(8))
+            foreach (var plan in result.Plans)
             {
                 var releaseText = string.IsNullOrWhiteSpace(plan.ReleaseSummary)
                     ? plan.ReleaseTitle
                     : $"{plan.ReleaseTitle} | {plan.ReleaseSummary}";
-                lines.Add($"• {plan.Title} -> {releaseText}");
-            }
-
-            if (result.Plans.Count > 8)
-            {
-                lines.Add($"• 以及另外 {result.Plans.Count - 8} 项");
+                lines.Add(plan.IsDependency
+                    ? $"• {plan.Title} -> {releaseText}（依赖）"
+                    : $"• {plan.Title} -> {releaseText}");
             }
         }
 
@@ -921,14 +1078,9 @@ internal sealed partial class FrontendShellViewModel
         {
             lines.Add(string.Empty);
             lines.Add("未安装 / 缺少兼容版本：");
-            foreach (var skipped in result.Skipped.Take(8))
+            foreach (var skipped in result.Skipped)
             {
                 lines.Add($"• {skipped}");
-            }
-
-            if (result.Skipped.Count > 8)
-            {
-                lines.Add($"• 以及另外 {result.Skipped.Count - 8} 项");
             }
         }
 
@@ -964,7 +1116,103 @@ internal sealed partial class FrontendShellViewModel
         await Dispatcher.UIThread.InvokeAsync(() => entry.ApplyIcon(bitmap));
     }
 
-    private sealed record DownloadFavoriteBatchInstallPlan(
+    private static bool ShouldAutoInstallCommunityProjectDependency(FrontendCommunityProjectDependencyEntry dependency)
+    {
+        return dependency.Kind is FrontendCommunityProjectDependencyKind.Required
+            or FrontendCommunityProjectDependencyKind.Tool
+            or FrontendCommunityProjectDependencyKind.Include;
+    }
+
+    private static string ResolveCommunityProjectInstallTargetPath(
+        string targetDirectory,
+        string targetFileName,
+        LauncherFrontendSubpageKey route,
+        InstalledFavoriteResource? installed,
+        IEnumerable<CommunityProjectInstallPlan> existingPlans)
+    {
+        if (route == LauncherFrontendSubpageKey.DownloadWorld)
+        {
+            return GetUniqueChildPath(targetDirectory, targetFileName);
+        }
+
+        var preferredPath = installed is not null
+                            && string.Equals(Path.GetFileName(installed.Path), targetFileName, StringComparison.OrdinalIgnoreCase)
+            ? installed.Path
+            : Path.Combine(targetDirectory, targetFileName);
+        var isOccupied = existingPlans.Any(plan => string.Equals(plan.TargetPath, preferredPath, StringComparison.OrdinalIgnoreCase))
+                         || (installed is null && (File.Exists(preferredPath) || Directory.Exists(preferredPath)));
+        return isOccupied ? GetUniqueChildPath(targetDirectory, targetFileName) : preferredPath;
+    }
+
+    private static string BuildCommunityProjectInstallAlias(
+        LauncherFrontendSubpageKey route,
+        string? title,
+        string? website,
+        string? projectId,
+        string? filePath = null)
+    {
+        var alias = FirstNonEmpty(
+            NormalizeCommunityProjectAlias(ExtractCommunityProjectWebsiteSlug(website)),
+            NormalizeCommunityProjectAlias(title),
+            NormalizeCommunityProjectAlias(filePath is null ? null : Path.GetFileNameWithoutExtension(filePath)),
+            NormalizeCommunityProjectAlias(projectId));
+        return string.IsNullOrWhiteSpace(alias) ? string.Empty : $"{route}:{alias}";
+    }
+
+    private static string BuildCommunityProjectAliasFromName(string? value)
+    {
+        return NormalizeCommunityProjectAlias(value);
+    }
+
+    private static string ExtractCommunityProjectWebsiteSlug(string? website)
+    {
+        if (string.IsNullOrWhiteSpace(website)
+            || !Uri.TryCreate(website, UriKind.Absolute, out var uri))
+        {
+            return string.Empty;
+        }
+
+        return uri.Segments
+            .Select(segment => segment.Trim('/'))
+            .Where(segment => !string.IsNullOrWhiteSpace(segment))
+            .LastOrDefault(segment =>
+                !segment.Equals("mod", StringComparison.OrdinalIgnoreCase)
+                && !segment.Equals("plugin", StringComparison.OrdinalIgnoreCase)
+                && !segment.Equals("project", StringComparison.OrdinalIgnoreCase)
+                && !segment.Equals("mc-mods", StringComparison.OrdinalIgnoreCase)
+                && !segment.Equals("texture-packs", StringComparison.OrdinalIgnoreCase)
+                && !segment.Equals("resource-packs", StringComparison.OrdinalIgnoreCase)
+                && !segment.Equals("shader-packs", StringComparison.OrdinalIgnoreCase))
+            ?? string.Empty;
+    }
+
+    private static string NormalizeCommunityProjectAlias(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        normalized = System.Text.RegularExpressions.Regex.Replace(normalized, @"[^\p{L}\p{Nd}]+", " ");
+        var tokens = normalized
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(token => token is not (
+                "mod" or "mods" or "shader" or "shaders" or "resource" or "resources" or
+                "resourcepack" or "resourcepacks" or "resource-pack" or "resource-packs" or
+                "pack" or "packs" or "plugin" or "plugins"))
+            .ToArray();
+        return tokens.Length == 0 ? string.Empty : string.Concat(tokens);
+    }
+
+    private static string FirstNonEmpty(params string?[] values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+    }
+
+    private sealed record CommunityProjectInstallPlan(
+        string InstallAlias,
+        string ProjectId,
         string Title,
         string ReleaseTitle,
         string ReleaseSummary,
@@ -973,15 +1221,24 @@ internal sealed partial class FrontendShellViewModel
         string InstanceName,
         LauncherFrontendSubpageKey Route,
         string? ReplacedPath,
-        bool IsCurrentInstanceTarget);
+        bool IsCurrentInstanceTarget,
+        bool IsDependency);
 
-    private sealed record DownloadFavoriteBatchInstallBuildResult(
-        IReadOnlyList<DownloadFavoriteBatchInstallPlan> Plans,
+    private sealed record CommunityProjectInstallBuildResult(
+        IReadOnlyList<CommunityProjectInstallPlan> Plans,
         IReadOnlyList<string> Skipped);
+
+    private sealed record CommunityProjectInstallRootRequest(
+        string ProjectId,
+        string Title,
+        LauncherFrontendSubpageKey Route,
+        FrontendCommunityProjectState? ProjectState = null,
+        FrontendCommunityProjectReleaseEntry? Release = null);
 
     private sealed record InstalledFavoriteResource(
         string Title,
         string Path,
         string Version,
-        string Website);
+        string Website,
+        string InstallAlias);
 }
