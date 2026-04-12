@@ -22,7 +22,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
     public ResourceEntryCardView()
     {
         InitializeComponent();
-        SelectionBar.Transitions = CreateSelectionBarTransitions();
+        SelectionBar.Transitions = CreateSelectionBarTransitions(isSelecting: true);
 
         DataContextChanged += OnDataContextChanged;
         LayoutRoot.PointerEntered += (_, _) => RefreshVisualState();
@@ -169,6 +169,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
         }
         else
         {
+            SelectionBar.Transitions = CreateSelectionBarTransitions(isSelected);
             SelectionBar.Height = isSelected ? SelectedBarHeight : 0d;
             SelectionBar.Opacity = isSelected ? 1d : 0d;
         }
@@ -176,20 +177,20 @@ internal sealed partial class ResourceEntryCardView : UserControl
         _selectionBarSelectedState = isSelected;
     }
 
-    private static Transitions CreateSelectionBarTransitions()
+    private static Transitions CreateSelectionBarTransitions(bool isSelecting)
     {
         return
         [
             new DoubleTransition
             {
                 Property = Layoutable.HeightProperty,
-                Duration = MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(300)),
-                Easing = new BackEaseOut()
+                Duration = MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(isSelecting ? 300 : 120)),
+                Easing = isSelecting ? new BackEaseOut() : new CubicEaseIn()
             },
             new DoubleTransition
             {
                 Property = Visual.OpacityProperty,
-                Duration = MotionDurations.InteractiveState,
+                Duration = MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(isSelecting ? 30 : 70)),
                 Easing = new CubicEaseOut()
             }
         ];
