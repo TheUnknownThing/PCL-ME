@@ -45,8 +45,11 @@ internal sealed partial class FrontendShellViewModel
     private static readonly FrontendIcon CommunityProjectTranslateIcon = new(
         "M213.333333 640v85.333333a85.333333 85.333333 0 0 0 78.933334 85.12L298.666667 810.666667h128v85.333333H298.666667a170.666667 170.666667 0 0 1-170.666667-170.666667v-85.333333h85.333333z m554.666667-213.333333l187.733333 469.333333h-91.946666l-51.242667-128h-174.506667l-51.157333 128h-91.904L682.666667 426.666667h85.333333z m-42.666667 123.093333L672.128 682.666667h106.325333L725.333333 549.76zM341.333333 85.333333v85.333334h170.666667v298.666666H341.333333v128H256v-128H85.333333V170.666667h170.666667V85.333333h85.333333z m384 42.666667a170.666667 170.666667 0 0 1 170.666667 170.666667v85.333333h-85.333333V298.666667a85.333333 85.333333 0 0 0-85.333334-85.333334h-128V128h128zM256 256H170.666667v128h85.333333V256z m170.666667 0H341.333333v128h85.333334V256z",
         0.82);
-    private static readonly FrontendIcon CommunityProjectFavoriteIcon = new(
+    private static readonly FrontendIcon CommunityProjectFavoriteOutlineIcon = new(
         "M512 896a42.666667 42.666667 0 0 1-30.293333-12.373333l-331.52-331.946667a224.426667 224.426667 0 0 1 0-315.733333 223.573333 223.573333 0 0 1 315.733333 0L512 282.026667l46.08-46.08a223.573333 223.573333 0 0 1 315.733333 0 224.426667 224.426667 0 0 1 0 315.733333l-331.52 331.946667A42.666667 42.666667 0 0 1 512 896zM308.053333 256a136.533333 136.533333 0 0 0-97.28 40.106667 138.24 138.24 0 0 0 0 194.986666L512 792.746667l301.226667-301.653334a138.24 138.24 0 0 0 0-194.986666 141.653333 141.653333 0 0 0-194.56 0l-76.373334 76.8a42.666667 42.666667 0 0 1-60.586666 0L405.333333 296.106667A136.533333 136.533333 0 0 0 308.053333 256z",
+        0.82);
+    private static readonly FrontendIcon CommunityProjectFavoriteFilledIcon = new(
+        "M700.856 155.543c-74.769 0-144.295 72.696-190.046 127.26-45.737-54.576-115.247-127.26-190.056-127.26-134.79 0-244.443 105.78-244.443 235.799 0 77.57 39.278 131.988 70.845 175.713C238.908 694.053 469.62 852.094 479.39 858.757c9.41 6.414 20.424 9.629 31.401 9.629 11.006 0 21.998-3.215 31.398-9.63 9.782-6.662 240.514-164.703 332.238-291.701 31.587-43.724 70.874-98.143 70.874-175.713-0.001-130.02-109.656-235.8-244.445-235.8z m0 0",
         0.82);
 
     private string _selectedCommunityProjectId = string.Empty;
@@ -539,6 +542,7 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<CommunityProjectActionButtonViewModel> BuildCommunityProjectActionButtons()
     {
         var buttons = new List<CommunityProjectActionButtonViewModel>();
+        var isFavorite = IsCommunityProjectFavorite();
         if (!string.IsNullOrWhiteSpace(CommunityProjectWebsite))
         {
             buttons.Add(new CommunityProjectActionButtonViewModel(
@@ -601,9 +605,9 @@ internal sealed partial class FrontendShellViewModel
             new ActionCommand(() => _ = FavoriteCurrentCommunityProjectToTargetAsync())));
         buttons.Add(new CommunityProjectActionButtonViewModel(
             "收藏",
-            CommunityProjectFavoriteIcon.Data,
-            CommunityProjectFavoriteIcon.Scale,
-            IsCommunityProjectFavorite() ? PclIconTextButtonColorState.Highlight : PclIconTextButtonColorState.Normal,
+            isFavorite ? CommunityProjectFavoriteFilledIcon.Data : CommunityProjectFavoriteOutlineIcon.Data,
+            isFavorite ? CommunityProjectFavoriteFilledIcon.Scale : CommunityProjectFavoriteOutlineIcon.Scale,
+            isFavorite ? PclIconTextButtonColorState.Highlight : PclIconTextButtonColorState.Normal,
             new ActionCommand(() => _ = ToggleCommunityProjectFavoriteAsync())));
         return buttons;
     }
