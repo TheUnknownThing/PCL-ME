@@ -502,10 +502,10 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenCrashLogFromPrompt()
     {
-        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
-
         var logPath = _shellActionService.MaterializeCrashLog(_activeCrashPlan);
-        OpenExternalTarget(logPath, "已生成并打开崩溃日志副本。");
+        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
+        RefreshGameLogSurface();
+        AddActivity("查看日志", $"已生成崩溃日志，可在实时日志页点击打开：{logPath}");
     }
 
     private void ExportCrashReportFromPrompt()

@@ -482,7 +482,7 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
+            AddActivity("删除实例", $"实例 {outcome.InstanceName} 已移入回收区：{outcome.TrashDirectory}");
         }
         catch (Exception ex)
         {
