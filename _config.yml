@@ -1,0 +1,39 @@
+title: PCL-ME
+description: Plain Craft Launcher Multiplatform Edition
+theme: minima
+url: "https://theunknownthing.github.io"
+baseurl: "/PCL-CE"
+header_pages:
+  - downloads.md
+  - build-from-source.md
+  - community.md
+exclude:
+  - .codex
+  - .codex-temp
+  - .editorconfig
+  - .gitattributes
+  - .github
+  - .gitignore
+  - .spike-mc
+  - AGENTS.md
+  - CONTRIBUTING.md
+  - GPG-PUBLIC-KEY.asc
+  - LICENCE
+  - LICENSE
+  - Plain Craft Launcher 2.slnx
+  - README.md
+  - README-EN.md
+  - README-ZH_CN.md
+  - README-ZH_TW.md
+  - artifacts
+  - cliff.toml
+  - docs
+  - global.json
+  - mise.toml
+  - PCL.Core
+  - PCL.Core.Backend
+  - PCL.Core.Backend.Test
+  - PCL.Core.Foundation
+  - PCL.Core.Foundation.Test
+  - PCL.Core.SourceGenerators
+  - PCL.Frontend.Avalonia
