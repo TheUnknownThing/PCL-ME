@@ -10,11 +10,11 @@ namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right;
 internal sealed partial class InstanceResourceShellRightPaneView : UserControl
 {
     private const double SelectionActionSpacerExpandedHeight = 80;
-    private const string HiddenSelectionActionTransform = "translate(0px,-10px) scale(0.98)";
-    private const string EnterSelectionActionTransform = "translate(0px,-28px) scale(1.01)";
+    private const string HiddenSelectionActionTransform = "translate(0px,10px) scale(0.985)";
     private const string VisibleSelectionActionTransform = "translate(0px,-25px) scale(1)";
 
     private FrontendShellViewModel? _shellViewModel;
+    private bool _selectionActionCardShown;
     private int _selectionActionAnimationVersion;
 
     public InstanceResourceShellRightPaneView()
@@ -80,52 +80,57 @@ internal sealed partial class InstanceResourceShellRightPaneView : UserControl
     private async Task UpdateSelectionActionCardAsync(bool animated)
     {
         var shouldShow = ShouldShowSelectionActionCard();
+        var wasShown = _selectionActionCardShown;
         var version = ++_selectionActionAnimationVersion;
 
         SelectionActionSpacer.Height = shouldShow ? SelectionActionSpacerExpandedHeight : 0d;
 
         if (!animated)
         {
-            SelectionActionCard.IsVisible = shouldShow;
-            SelectionActionCard.IsHitTestVisible = shouldShow;
-            SelectionActionCard.Opacity = shouldShow ? 1d : 0d;
-            SelectionActionCard.RenderTransform = global::Avalonia.Media.Transformation.TransformOperations.Parse(
-                shouldShow ? VisibleSelectionActionTransform : HiddenSelectionActionTransform);
+            ApplySelectionActionCardState(shouldShow);
             return;
         }
 
-        if (shouldShow)
+        if (shouldShow == wasShown)
         {
-            if (!SelectionActionCard.IsVisible)
+            if (shouldShow && !SelectionActionCard.IsVisible)
             {
-                SelectionActionCard.IsVisible = true;
-                SelectionActionCard.IsHitTestVisible = false;
-                SelectionActionCard.Opacity = 0d;
-                SelectionActionCard.RenderTransform = global::Avalonia.Media.Transformation.TransformOperations.Parse(HiddenSelectionActionTransform);
-                await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+                ApplySelectionActionCardState(true);
             }
 
-            if (version != _selectionActionAnimationVersion || !ShouldShowSelectionActionCard())
+            return;
+        }
+
+        _selectionActionCardShown = shouldShow;
+
+        if (shouldShow)
+        {
+            SelectionActionCard.IsVisible = true;
+            SelectionActionCard.IsHitTestVisible = false;
+            SelectionActionCard.Opacity = 0d;
+            SelectionActionCard.RenderTransform = ParseTransform(HiddenSelectionActionTransform);
+            await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+
+            if (version != _selectionActionAnimationVersion || !_selectionActionCardShown)
             {
                 return;
             }
 
             SelectionActionCard.Opacity = 1d;
-            SelectionActionCard.RenderTransform = global::Avalonia.Media.Transformation.TransformOperations.Parse(EnterSelectionActionTransform);
-            await Task.Delay(MotionDurations.ModalOvershoot);
-            if (version != _selectionActionAnimationVersion || !ShouldShowSelectionActionCard())
+            SelectionActionCard.RenderTransform = ParseTransform(VisibleSelectionActionTransform);
+            await Task.Delay(MotionDurations.QuickState);
+            if (version != _selectionActionAnimationVersion || !_selectionActionCardShown)
             {
                 return;
             }
 
-            SelectionActionCard.RenderTransform = global::Avalonia.Media.Transformation.TransformOperations.Parse(VisibleSelectionActionTransform);
             SelectionActionCard.IsHitTestVisible = true;
             return;
         }
 
         SelectionActionCard.IsHitTestVisible = false;
         SelectionActionCard.Opacity = 0d;
-        SelectionActionCard.RenderTransform = global::Avalonia.Media.Transformation.TransformOperations.Parse(HiddenSelectionActionTransform);
+        SelectionActionCard.RenderTransform = ParseTransform(HiddenSelectionActionTransform);
 
         if (!SelectionActionCard.IsVisible)
         {
@@ -133,11 +138,26 @@ internal sealed partial class InstanceResourceShellRightPaneView : UserControl
         }
 
         await Task.Delay(MotionDurations.QuickState);
-        if (version != _selectionActionAnimationVersion || ShouldShowSelectionActionCard())
+        if (version != _selectionActionAnimationVersion || _selectionActionCardShown)
         {
             return;
         }
 
         SelectionActionCard.IsVisible = false;
+    }
+
+    private void ApplySelectionActionCardState(bool shouldShow)
+    {
+        _selectionActionCardShown = shouldShow;
+        SelectionActionCard.IsVisible = shouldShow;
+        SelectionActionCard.IsHitTestVisible = shouldShow;
+        SelectionActionCard.Opacity = shouldShow ? 1d : 0d;
+        SelectionActionCard.RenderTransform = ParseTransform(
+            shouldShow ? VisibleSelectionActionTransform : HiddenSelectionActionTransform);
+    }
+
+    private static global::Avalonia.Media.Transformation.TransformOperations ParseTransform(string value)
+    {
+        return global::Avalonia.Media.Transformation.TransformOperations.Parse(value);
     }
 }

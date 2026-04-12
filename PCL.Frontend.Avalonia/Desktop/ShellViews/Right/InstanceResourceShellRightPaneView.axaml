@@ -44,7 +44,7 @@
         IsHitTestVisible="False"
         IsVisible="False"
         Opacity="0"
-        RenderTransform="translate(0px,-10px) scale(0.98)"
+        RenderTransform="translate(0px,10px) scale(0.985)"
         RenderTransformOrigin="0.5,1"
         VerticalAlignment="Bottom">
       <controls:PclCard.Transitions>
@@ -64,7 +64,7 @@
               Text="{Binding InstanceResourceSelectionText}" />
           <WrapPanel
               Grid.Row="1"
-              Margin="5,28,5,5"
+              Margin="5,14,5,5"
               HorizontalAlignment="Center">
             <controls:PclIconTextButton
                 x:Name="SelectionEnableButton"
