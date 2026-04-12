@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: 'zh-CN' }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if page.title %}{{ page.title }} | {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+    <meta name="description" content="{{ page.description | default: site.description }}">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  </head>
+  <body>
+    {% assign current_lang = page.lang | default: site.lang | slice: 0, 2 %}
+    {% if current_lang == 'en' %}
+      {% assign home_url = '/en/' %}
+      {% assign downloads_url = '/en/downloads/' %}
+      {% assign build_url = '/en/build-from-source/' %}
+      {% assign community_url = '/en/community/' %}
+      {% assign home_label = 'Home' %}
+      {% assign downloads_label = 'Downloads' %}
+      {% assign build_label = 'Build' %}
+      {% assign community_label = 'Community' %}
+      {% assign footer_text = 'PCL-ME is the multiplatform continuation of PCL-CE.' %}
+      {% assign releases_label = 'Releases' %}
+      {% assign issues_label = 'Issues' %}
+    {% else %}
+      {% assign home_url = '/' %}
+      {% assign downloads_url = '/downloads/' %}
+      {% assign build_url = '/build-from-source/' %}
+      {% assign community_url = '/community/' %}
+      {% assign home_label = '首页' %}
+      {% assign downloads_label = '下载' %}
+      {% assign build_label = '构建' %}
+      {% assign community_label = '社区' %}
+      {% assign footer_text = 'PCL-ME 是 PCL-CE 的多平台延续版本。' %}
+      {% assign releases_label = '发布' %}
+      {% assign issues_label = '问题反馈' %}
+    {% endif %}
+
+    <header class="site-header">
+      <div class="wrap site-header-inner">
+        <a class="brand" href="{{ home_url | relative_url }}">
+          <span class="brand-mark">P</span>
+          <span class="brand-text">
+            <strong>PCL-ME</strong>
+            <small>Plain Craft Launcher Multiplatform Edition</small>
+          </span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="{{ home_url | relative_url }}"{% if page.nav_key == 'home' %} class="active"{% endif %}>{{ home_label }}</a>
+          <a href="{{ downloads_url | relative_url }}"{% if page.nav_key == 'downloads' %} class="active"{% endif %}>{{ downloads_label }}</a>
+          <a href="{{ build_url | relative_url }}"{% if page.nav_key == 'build' %} class="active"{% endif %}>{{ build_label }}</a>
+          <a href="{{ community_url | relative_url }}"{% if page.nav_key == 'community' %} class="active"{% endif %}>{{ community_label }}</a>
+        </nav>
+
+        {% if page.alt_url and page.alt_label %}
+          <a class="language-switch" href="{{ page.alt_url | relative_url }}">{{ page.alt_label }}</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <main>
+      {% if page.hero_title or page.hero_lead %}
+        <section class="hero">
+          <div class="wrap hero-card">
+            {% if page.hero_eyebrow %}
+              <p class="hero-eyebrow">{{ page.hero_eyebrow }}</p>
+            {% endif %}
+            {% if page.hero_title %}
+              <h1>{{ page.hero_title }}</h1>
+            {% endif %}
+            {% if page.hero_lead %}
+              <p class="hero-lead">{{ page.hero_lead }}</p>
+            {% endif %}
+
+            {% if page.primary_action_label or page.secondary_action_label %}
+              <div class="hero-actions">
+                {% if page.primary_action_label and page.primary_action_url %}
+                  <a class="button button-primary" href="{{ page.primary_action_url }}">{{ page.primary_action_label }}</a>
+                {% endif %}
+                {% if page.secondary_action_label and page.secondary_action_url %}
+                  <a class="button button-secondary" href="{{ page.secondary_action_url }}">{{ page.secondary_action_label }}</a>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+
+      <section class="content-section">
+        <div class="wrap content-card markdown-body">
+          {{ content }}
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap site-footer-inner">
+        <p>{{ footer_text }}</p>
+        <div class="footer-links">
+          <a href="https://github.com/TheUnknownThing/PCL-CE">GitHub</a>
+          <a href="https://github.com/TheUnknownThing/PCL-CE/releases/latest">{{ releases_label }}</a>
+          <a href="https://github.com/TheUnknownThing/PCL-CE/issues">{{ issues_label }}</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

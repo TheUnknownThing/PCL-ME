@@ -1,33 +1,45 @@
 ---
-layout: page
-title: Downloads
+layout: default
+title: 下载
+lang: zh-CN
+nav_key: downloads
 permalink: /downloads/
+alt_url: /en/downloads/
+alt_label: English
+description: 下载 PCL-ME 的最新版本并了解当前打包形式。
+hero_eyebrow: 获取构建产物
+hero_title: 下载 PCL-ME
+hero_lead: 建议从 GitHub Releases 获取最新版本。当前发布内容来自 Avalonia 前端的桌面打包流程。
+primary_action_label: 最新版本
+primary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases/latest
+secondary_action_label: 所有发布
+secondary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases
 ---
 
-The recommended way to install PCL-ME is from the latest GitHub release:
+## 推荐下载方式
 
-- [Latest release](https://github.com/TheUnknownThing/PCL-CE/releases/latest)
-- [All releases](https://github.com/TheUnknownThing/PCL-CE/releases)
+- [最新版本](https://github.com/TheUnknownThing/PCL-CE/releases/latest)
+- [全部 Releases](https://github.com/TheUnknownThing/PCL-CE/releases)
 
-## Package Types
+## 打包形式
 
-Current packaged builds are produced from the Avalonia frontend and are intended for desktop use.
+当前产物主要面向桌面平台，由 Avalonia 前端打包脚本生成。
 
-| Platform | Typical package | Notes |
+| 平台 | 常见格式 | 说明 |
 | --- | --- | --- |
-| macOS | `.zip` with `PCL-ME.app` | Starts the Avalonia shell directly |
-| Linux | `.tar.gz` archive | Includes launcher script and desktop entry |
-| Windows | `.zip` archive | Includes a launcher entry point for the Avalonia frontend |
+| macOS | 含 `PCL-ME.app` 的 `.zip` | 直接启动 Avalonia 桌面外壳 |
+| Linux | `.tar.gz` 压缩包 | 包含启动脚本与 `.desktop` 文件 |
+| Windows | `.zip` 压缩包 | 包含用于启动 Avalonia 前端的入口文件 |
 
-## Before You Download
+## 下载前说明
 
-- macOS and Linux are the primary validation targets for this repository.
-- Windows support is still being verified and may have rough edges.
-- Release contents can change as the port continues to stabilize.
+- macOS 与 Linux 是当前主要验证目标。
+- Windows 支持仍在完善中，可能存在尚未覆盖的边缘问题。
+- 随着迁移推进，发布内容与打包细节仍可能调整。
 
-## Looking for Source Code?
+## 想查看源码？
 
-Use the main repository if you want to inspect code, open issues, or track development:
+如果你想查看实现、提交 Issue 或跟踪开发进度，请直接访问仓库主页：
 
-- [Repository](https://github.com/TheUnknownThing/PCL-CE)
-- [Issue tracker](https://github.com/TheUnknownThing/PCL-CE/issues)
+- [仓库主页](https://github.com/TheUnknownThing/PCL-CE)
+- [Issue 列表](https://github.com/TheUnknownThing/PCL-CE/issues)
