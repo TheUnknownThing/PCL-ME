@@ -64,6 +64,7 @@ internal static class FrontendInstanceCompositionService
             HasLabyMod: manifestSummary.HasLabyMod,
             VanillaVersion: vanillaVersion);
         var javaEntries = ParseJavaEntries(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
+        var installManifestSummary = MergeInstallAddonStates(selection, manifestSummary);
         var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
 
         return new FrontendInstanceComposition(
@@ -71,7 +72,7 @@ internal static class FrontendInstanceCompositionService
             BuildOverviewState(selection, manifestSummary, instanceConfig, setupState),
             setupState,
             BuildExportState(selection, manifestSummary),
-            BuildInstallState(selection, manifestSummary),
+            BuildInstallState(selection, installManifestSummary),
             new FrontendInstanceContentState(BuildWorldEntries(selection)),
             new FrontendInstanceScreenshotState(BuildScreenshotEntries(selection)),
             new FrontendInstanceServerState(BuildServerEntries(selection)),
@@ -462,6 +463,94 @@ internal static class FrontendInstanceCompositionService
                 new FrontendInstanceInstallOption("OptiFabric", DisplayInstalled(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion), "OptiFabric.png"),
                 new FrontendInstanceInstallOption("LiteLoader", DisplayInstalled(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion), "Egg.png")
             ]);
+    }
+
+    private static FrontendVersionManifestSummary MergeInstallAddonStates(
+        FrontendInstanceSelectionState selection,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        var modsDirectory = ResolveResourceDirectory(selection, ResourceKind.Mods);
+        if (!Directory.Exists(modsDirectory))
+        {
+            return manifestSummary;
+        }
+
+        var hasFabricApi = manifestSummary.HasFabricApi;
+        string? fabricApiVersion = null;
+        var hasQsl = manifestSummary.HasQsl;
+        string? qslVersion = null;
+        var hasOptiFabric = manifestSummary.HasOptiFabric;
+        string? optiFabricVersion = null;
+
+        foreach (var path in Directory.EnumerateFiles(modsDirectory, "*", SearchOption.TopDirectoryOnly)
+                     .Where(path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)))
+        {
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            var metadata = TryReadLocalModMetadata(path);
+
+            if (!hasFabricApi && IsManagedAddonMod(metadata, fileName, "fabricapi"))
+            {
+                hasFabricApi = true;
+                fabricApiVersion = NormalizeInlineText(metadata?.Version);
+                continue;
+            }
+
+            if (!hasQsl && IsManagedAddonMod(metadata, fileName, "quiltedfabricapi", "qsl"))
+            {
+                hasQsl = true;
+                qslVersion = NormalizeInlineText(metadata?.Version);
+                continue;
+            }
+
+            if (!hasOptiFabric && IsManagedAddonMod(metadata, fileName, "optifabric"))
+            {
+                hasOptiFabric = true;
+                optiFabricVersion = NormalizeInlineText(metadata?.Version);
+            }
+        }
+
+        return manifestSummary with
+        {
+            HasFabricApi = hasFabricApi,
+            FabricApiVersion = FirstNonEmpty(manifestSummary.FabricApiVersion, fabricApiVersion),
+            HasQsl = hasQsl,
+            QslVersion = FirstNonEmpty(manifestSummary.QslVersion, qslVersion),
+            HasOptiFabric = hasOptiFabric,
+            OptiFabricVersion = FirstNonEmpty(manifestSummary.OptiFabricVersion, optiFabricVersion)
+        };
+    }
+
+    private static bool IsManagedAddonMod(
+        RecognizedModMetadata? metadata,
+        string fileNameWithoutExtension,
+        params string[] identifiers)
+    {
+        return MatchesManagedAddonIdentity(metadata?.Identity, identifiers)
+               || MatchesManagedAddonIdentity(metadata?.Title, identifiers)
+               || identifiers.Any(identifier => NormalizeManagedAddonIdentity(fileNameWithoutExtension)
+                   .StartsWith(NormalizeManagedAddonIdentity(identifier), StringComparison.Ordinal));
+    }
+
+    private static bool MatchesManagedAddonIdentity(string? value, IEnumerable<string> identifiers)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = NormalizeManagedAddonIdentity(value);
+        return identifiers.Any(identifier => string.Equals(
+            normalized,
+            NormalizeManagedAddonIdentity(identifier),
+            StringComparison.Ordinal));
+    }
+
+    private static string NormalizeManagedAddonIdentity(string value)
+    {
+        return new string(value
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray());
     }
 
     private static IReadOnlyList<FrontendInstanceDirectoryEntry> BuildWorldEntries(FrontendInstanceSelectionState selection)
