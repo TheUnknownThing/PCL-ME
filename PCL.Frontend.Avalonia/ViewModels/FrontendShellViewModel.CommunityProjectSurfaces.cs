@@ -1219,7 +1219,7 @@ internal sealed partial class FrontendShellViewModel
         {
             selectedId = await _shellActionService.PromptForChoiceAsync(
                 "选择实例",
-                "下载页会根据当前实例的版本与加载器筛选资源，并支持直接安装到该实例。",
+                "根据选择实例筛选推荐模组版本，支持直接安装到该实例。",
                 instances.Select(entry => new PclChoiceDialogOption(
                     entry.Name,
                     entry.Name,

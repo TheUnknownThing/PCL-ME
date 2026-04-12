@@ -676,7 +676,7 @@
 
             <controls:PclCard
                 Margin="0,0,0,15"
-                Header="建议安装版本"
+                Header="推荐版本"
                 IsVisible="{Binding ShowCommunityProjectInstallSuggestionCard}"
                 ContentMargin="20,18,20,18">
               <controls:PclCard.CardContent>
