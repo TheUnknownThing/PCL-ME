@@ -1,18 +1,13 @@
+using System.IO.Compression;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using PCL.Core.Utils;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendVersionManifestInspector
 {
-    private static readonly Regex ReleaseVersionRegex = new(
-        @"(?<!\d)(?<version>1\.\d+(?:\.\d+)?(?:-(?:pre|rc)\d+)?)(?![\d.])",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-
-    private static readonly Regex SnapshotVersionRegex = new(
-        @"(?<!\d)(?<version>\d{2}w\d{2}[a-z])(?![\da-z])",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-
     public static FrontendVersionManifestProfile ReadProfile(string launcherFolder, string versionName)
     {
         if (string.IsNullOrWhiteSpace(launcherFolder) || string.IsNullOrWhiteSpace(versionName))
@@ -66,6 +61,35 @@ internal static class FrontendVersionManifestInspector
         return loaders;
     }
 
+    internal static Version ParseComparableVanillaVersion(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return new Version(9999, 0, 0);
+        }
+
+        var candidate = NormalizeVanillaVersionName(rawValue);
+        if (candidate.StartsWith("1.", StringComparison.OrdinalIgnoreCase))
+        {
+            var segments = candidate.Split([' ', '_', '-', '.'], StringSplitOptions.None);
+            return new Version(
+                ParseLeadingIntegerSegment(segments, 1),
+                0,
+                ParseLeadingIntegerSegment(segments, 2));
+        }
+
+        if (Regex.IsMatch(candidate, "^[2-9][0-9]\\.", RegexOptions.CultureInvariant))
+        {
+            var segments = candidate.Split([' ', '_', '-', '.'], StringSplitOptions.None);
+            return new Version(
+                ParseLeadingIntegerSegment(segments, 0),
+                ParseLeadingIntegerSegment(segments, 1),
+                ParseLeadingIntegerSegment(segments, 2));
+        }
+
+        return new Version(9999, 0, 0);
+    }
+
     private static FrontendVersionManifestProfile ReadProfileRecursive(
         string launcherFolder,
         string versionName,
@@ -95,20 +119,23 @@ internal static class FrontendVersionManifestInspector
                 .Concat(currentLibraries)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            var resolvedVanillaVersion = ResolveVanillaVersion(
-                versionName,
-                root,
-                parentVersion,
-                parentProfile,
-                allLibraries);
-            var parsedVersion = TryParseVanillaVersion(resolvedVanillaVersion) ?? parentProfile.ParsedVanillaVersion;
+            var releaseTime = GetDateTime(root, "releaseTime") ?? parentProfile.ReleaseTime;
+            var versionType = FirstNonEmpty(GetString(root, "type"), parentProfile.VersionType);
+            var vanillaVersion = NormalizeVanillaVersionName(
+                ResolveVanillaVersion(
+                    launcherFolder,
+                    versionName,
+                    root,
+                    parentVersion,
+                    releaseTime,
+                    versionType));
 
             return new FrontendVersionManifestProfile(
                 IsManifestValid: true,
-                VanillaVersion: resolvedVanillaVersion ?? parentProfile.VanillaVersion,
-                ParsedVanillaVersion: parsedVersion,
-                VersionType: FirstNonEmpty(GetString(root, "type"), parentProfile.VersionType),
-                ReleaseTime: GetDateTime(root, "releaseTime") ?? parentProfile.ReleaseTime,
+                VanillaVersion: vanillaVersion,
+                ParsedVanillaVersion: ParseComparableVanillaVersion(vanillaVersion),
+                VersionType: versionType,
+                ReleaseTime: releaseTime,
                 AssetsIndexName: GetNestedString(root, "assetIndex", "id")
                                  ?? GetString(root, "assets")
                                  ?? parentProfile.AssetsIndexName,
@@ -157,24 +184,102 @@ internal static class FrontendVersionManifestInspector
             .ToArray();
     }
 
-    private static string? ResolveVanillaVersion(
+    private static string ResolveVanillaVersion(
+        string launcherFolder,
         string versionName,
         JsonElement root,
         string? parentVersion,
-        FrontendVersionManifestProfile parentProfile,
-        IReadOnlyList<string> allLibraries)
+        DateTime? releaseTime,
+        string? versionType)
     {
-        return NormalizeExplicitVersion(GetString(root, "clientVersion"))
-               ?? GetPatchGameVersion(root)
-               ?? ExtractMinecraftVersionFromArguments(root)
-               ?? NormalizeExplicitVersion(GetString(root, "jar"))
-               ?? NormalizeResolvedVersion(parentVersion)
-               ?? NormalizeResolvedVersion(parentProfile.VanillaVersion)
-               ?? ExtractMinecraftVersionFromDownloads(root)
-               ?? ExtractMinecraftVersionFromLibraries(allLibraries)
-               ?? NormalizeResolvedVersion(GetString(root, "id"))
-               ?? NormalizeResolvedVersion(versionName)
-               ?? NormalizeResolvedVersion(GetJsonTextWithoutLibraries(root));
+        if (releaseTime.HasValue && releaseTime.Value.Year > 2000 && releaseTime.Value.Year < 2013)
+        {
+            return "Old";
+        }
+
+        if (string.Equals(versionType, "pending", StringComparison.OrdinalIgnoreCase))
+        {
+            return "pending";
+        }
+
+        var clientVersion = GetString(root, "clientVersion");
+        if (!string.IsNullOrWhiteSpace(clientVersion))
+        {
+            return clientVersion;
+        }
+
+        var patchVersion = GetPatchGameVersion(root);
+        if (!string.IsNullOrWhiteSpace(patchVersion))
+        {
+            return patchVersion;
+        }
+
+        var argumentsVersion = ExtractMinecraftVersionFromArguments(root);
+        if (!string.IsNullOrWhiteSpace(argumentsVersion))
+        {
+            return argumentsVersion;
+        }
+
+        if (!string.IsNullOrWhiteSpace(parentVersion))
+        {
+            return GetString(root, "jar") ?? parentVersion;
+        }
+
+        var downloadsVersion = TryRegexSeek(
+            root.TryGetProperty("downloads", out var downloads) ? downloads.ToString() : null,
+            RegexPatterns.MinecraftDownloadUrlVersion);
+        if (!string.IsNullOrWhiteSpace(downloadsVersion))
+        {
+            return downloadsVersion;
+        }
+
+        var librariesString = root.TryGetProperty("libraries", out var libraries) ? libraries.ToString() : string.Empty;
+        var forgeVersion = TryRegexSeek(librariesString, RegexPatterns.ForgeLibVersion);
+        if (!string.IsNullOrWhiteSpace(forgeVersion))
+        {
+            return forgeVersion;
+        }
+
+        var optiFineVersion = TryRegexSeek(librariesString, RegexPatterns.OptiFineLibVersion);
+        if (!string.IsNullOrWhiteSpace(optiFineVersion))
+        {
+            return optiFineVersion;
+        }
+
+        var fabricLikeVersion = TryRegexSeek(librariesString, RegexPatterns.FabricLikeLibVersion);
+        if (!string.IsNullOrWhiteSpace(fabricLikeVersion))
+        {
+            return fabricLikeVersion;
+        }
+
+        var jarName = GetString(root, "jar");
+        if (!string.IsNullOrWhiteSpace(jarName))
+        {
+            return jarName;
+        }
+
+        var jarVersionName = TryReadJarVersionName(launcherFolder, versionName);
+        if (!string.IsNullOrWhiteSpace(jarVersionName) && jarVersionName.Length < 32)
+        {
+            return jarVersionName;
+        }
+
+        var idVersion = TryRegexSeek(GetString(root, "id"), RegexPatterns.MinecraftJsonVersion);
+        if (!string.IsNullOrWhiteSpace(idVersion))
+        {
+            return idVersion;
+        }
+
+        var folderVersion = TryRegexSeek(versionName, RegexPatterns.MinecraftJsonVersion);
+        if (!string.IsNullOrWhiteSpace(folderVersion))
+        {
+            return folderVersion;
+        }
+
+        var rawJsonVersion = TryRegexSeek(GetJsonTextWithoutLibraries(root), RegexPatterns.MinecraftJsonVersion);
+        return !string.IsNullOrWhiteSpace(rawJsonVersion)
+            ? rawJsonVersion
+            : "Unknown";
     }
 
     private static bool ContainsLibrary(IEnumerable<string> libraries, string searchText)
@@ -297,7 +402,7 @@ internal static class FrontendVersionManifestInspector
                 continue;
             }
 
-            var version = NormalizeExplicitVersion(GetString(patch, "version"));
+            var version = GetString(patch, "version");
             if (!string.IsNullOrWhiteSpace(version))
             {
                 return version;
@@ -325,162 +430,114 @@ internal static class FrontendVersionManifestInspector
                     continue;
                 }
 
-                var version = NormalizeExplicitVersion(flattenedGameArguments[index + 1]);
+                var version = flattenedGameArguments[index + 1];
                 if (!string.IsNullOrWhiteSpace(version))
                 {
                     return version;
                 }
             }
-        }
 
-        var flattenedArguments = new List<string>();
-        if (argumentsElement.TryGetProperty("game", out var gameSection))
-        {
-            CollectArgumentStrings(gameSection, flattenedArguments);
-        }
-
-        if (argumentsElement.TryGetProperty("jvm", out var jvmSection))
-        {
-            CollectArgumentStrings(jvmSection, flattenedArguments);
-        }
-
-        return flattenedArguments
-            .Where(argument => argument.Contains("labymod", StringComparison.OrdinalIgnoreCase))
-            .Select(NormalizeResolvedVersion)
-            .FirstOrDefault(version => !string.IsNullOrWhiteSpace(version));
-    }
-
-    private static string? ExtractMinecraftVersionFromDownloads(JsonElement root)
-    {
-        return !root.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object
-            ? null
-            : NormalizeResolvedVersion(downloads.ToString());
-    }
-
-    private static string? ExtractMinecraftVersionFromLibraries(IEnumerable<string> libraries)
-    {
-        foreach (var library in libraries)
-        {
-            if (string.IsNullOrWhiteSpace(library))
+            if (argumentsElement.TryGetProperty("jvm", out _))
             {
-                continue;
-            }
-
-            if (!library.Contains("net.fabricmc:intermediary:", StringComparison.OrdinalIgnoreCase) &&
-                !library.Contains("net.minecraftforge:forge:", StringComparison.OrdinalIgnoreCase) &&
-                !library.Contains("optifine", StringComparison.OrdinalIgnoreCase) &&
-                !library.Contains("net.minecraft:", StringComparison.OrdinalIgnoreCase) &&
-                !library.Contains("com.mojang:minecraft:", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            var version = NormalizeResolvedVersion(library);
-            if (!string.IsNullOrWhiteSpace(version))
-            {
-                return version;
+                foreach (var argument in flattenedGameArguments)
+                {
+                    var version = TryRegexSeek(argument, RegexPatterns.LabyModVersion);
+                    if (!string.IsNullOrWhiteSpace(version))
+                    {
+                        return version;
+                    }
+                }
             }
         }
 
         return null;
     }
 
+    private static string? TryReadJarVersionName(string launcherFolder, string versionName)
+    {
+        try
+        {
+            var jarPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.jar");
+            if (!File.Exists(jarPath))
+            {
+                return null;
+            }
+
+            using var fileStream = new FileStream(jarPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var jarArchive = new ZipArchive(fileStream, ZipArchiveMode.Read);
+            var versionJson = jarArchive.GetEntry("version.json");
+            if (versionJson is null)
+            {
+                return null;
+            }
+
+            using var versionJsonStream = new StreamReader(versionJson.Open());
+            using var document = JsonDocument.Parse(versionJsonStream.ReadToEnd());
+            return GetString(document.RootElement, "name");
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static string GetJsonTextWithoutLibraries(JsonElement root)
     {
-        if (root.ValueKind != JsonValueKind.Object)
+        try
+        {
+            var json = JsonNode.Parse(root.GetRawText()) as JsonObject;
+            if (json is null)
+            {
+                return root.ToString();
+            }
+
+            json.Remove("libraries");
+            return json.ToJsonString();
+        }
+        catch
         {
             return root.ToString();
         }
-
-        return string.Join(
-            " ",
-            root.EnumerateObject()
-                .Where(property => !string.Equals(property.Name, "libraries", StringComparison.OrdinalIgnoreCase))
-                .Select(property => property.Value.ToString()));
     }
 
-    private static string? NormalizeExplicitVersion(string? rawValue)
+    private static string NormalizeVanillaVersionName(string? rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))
         {
-            return null;
+            return "Unknown";
         }
 
-        var trimmed = rawValue.Trim();
-        if (string.Equals(trimmed, "Unknown", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        return TryExtractMinecraftVersionToken(trimmed) ?? trimmed;
+        return rawValue.Trim()
+            .Replace("_unobfuscated", string.Empty, StringComparison.Ordinal)
+            .Replace(" Unobfuscated", string.Empty, StringComparison.Ordinal);
     }
 
-    private static string? NormalizeResolvedVersion(string? rawValue)
+    private static int ParseLeadingIntegerSegment(string[] segments, int index)
     {
-        if (string.IsNullOrWhiteSpace(rawValue))
+        if (index < 0 || index >= segments.Length)
         {
-            return null;
+            return 0;
         }
 
-        var trimmed = rawValue.Trim();
-        if (string.Equals(trimmed, "Unknown", StringComparison.OrdinalIgnoreCase))
+        var segment = segments[index];
+        if (string.IsNullOrEmpty(segment))
         {
-            return null;
+            return 0;
         }
 
-        return TryExtractMinecraftVersionToken(trimmed);
+        var digits = new string(segment.TakeWhile(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var value) ? value : 0;
     }
 
-    private static string? TryExtractMinecraftVersionToken(string? rawValue)
+    private static string? TryRegexSeek(string? input, Regex regex)
     {
-        if (string.IsNullOrWhiteSpace(rawValue))
+        if (string.IsNullOrWhiteSpace(input))
         {
             return null;
         }
 
-        var candidate = rawValue.Trim();
-        if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
-        {
-            candidate = candidate[1..];
-        }
-
-        var releaseMatch = ReleaseVersionRegex.Match(candidate);
-        if (releaseMatch.Success)
-        {
-            return releaseMatch.Groups["version"].Value;
-        }
-
-        var snapshotMatch = SnapshotVersionRegex.Match(candidate);
-        if (snapshotMatch.Success)
-        {
-            return snapshotMatch.Groups["version"].Value;
-        }
-
-        return candidate is "pending" or "Old"
-            ? candidate
-            : null;
-    }
-
-    private static Version? TryParseVanillaVersion(string? rawValue)
-    {
-        if (string.IsNullOrWhiteSpace(rawValue))
-        {
-            return null;
-        }
-
-        var candidate = TryExtractMinecraftVersionToken(rawValue) ?? rawValue.Trim();
-        if (candidate.Contains('w', StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
-        {
-            candidate = candidate[1..];
-        }
-
-        var filtered = new string(candidate.TakeWhile(character => char.IsDigit(character) || character == '.').ToArray());
-        return Version.TryParse(filtered, out var version) ? version : null;
+        var match = regex.Match(input);
+        return match.Success ? match.Value : null;
     }
 
     private static string? FirstNonEmpty(params string?[] values)

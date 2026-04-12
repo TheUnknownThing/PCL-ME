@@ -580,16 +580,7 @@ internal static class FrontendModpackInstallWorkflowService
 
         var trimmedVersion = minecraftVersion.Trim();
         provider.Set("VersionVanillaName", trimmedVersion);
-
-        var candidate = trimmedVersion.StartsWith("v", StringComparison.OrdinalIgnoreCase)
-            ? trimmedVersion[1..]
-            : trimmedVersion;
-        var numericPrefix = new string(candidate.TakeWhile(character => char.IsDigit(character) || character == '.').ToArray());
-        if (numericPrefix.Count(character => character == '.') >= 1 &&
-            Version.TryParse(numericPrefix, out var parsedVersion))
-        {
-            provider.Set("VersionVanilla", parsedVersion.ToString());
-        }
+        provider.Set("VersionVanilla", FrontendVersionManifestInspector.ParseComparableVanillaVersion(trimmedVersion).ToString());
     }
 
     private static Dictionary<int, JsonObject> ReadCurseForgeFileMetadata(
