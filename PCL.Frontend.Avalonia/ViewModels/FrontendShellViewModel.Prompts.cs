@@ -391,6 +391,8 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        await AwaitLatestSelectedInstanceRefreshAsync();
+
         if (_isLaunchBlockedByPrompt)
         {
             AddActivity("启动已被提示中止", "请先重新确认启动前提示或调整当前实例设置。");

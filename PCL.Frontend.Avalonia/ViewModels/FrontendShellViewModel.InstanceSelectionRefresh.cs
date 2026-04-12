@@ -36,7 +36,7 @@ internal sealed partial class FrontendShellViewModel
 
         var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
         AddActivity("切换实例目录", activityMessage);
-        _ = RefreshSelectedInstanceStateAsync(refreshVersion);
+        QueueSelectedInstanceStateRefresh(refreshVersion);
     }
 
     private void RefreshSelectedInstanceSmoothly(string instanceName)
@@ -46,7 +46,26 @@ internal sealed partial class FrontendShellViewModel
 
         var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
         AddActivity("切换启动实例", $"已切换到 {instanceName}，正在后台刷新实例状态。");
-        _ = RefreshSelectedInstanceStateAsync(refreshVersion);
+        QueueSelectedInstanceStateRefresh(refreshVersion);
+    }
+
+    private void QueueSelectedInstanceStateRefresh(int refreshVersion)
+    {
+        _selectedInstanceRefreshTask = RefreshSelectedInstanceStateAsync(refreshVersion);
+    }
+
+    private async Task AwaitLatestSelectedInstanceRefreshAsync()
+    {
+        while (true)
+        {
+            var refreshTask = _selectedInstanceRefreshTask;
+            await refreshTask;
+
+            if (ReferenceEquals(refreshTask, _selectedInstanceRefreshTask))
+            {
+                return;
+            }
+        }
     }
 
     private async Task RefreshSelectedInstanceStateAsync(int refreshVersion)

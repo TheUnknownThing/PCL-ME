@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
@@ -296,6 +297,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _suppressSetupPersistence;
     private bool _suppressInstancePersistence;
     private bool _suppressToolsPersistence;
+    private Task _selectedInstanceRefreshTask = Task.CompletedTask;
 
     public static FrontendShellViewModel CreateBootstrap(
         AvaloniaCommandOptions options,
