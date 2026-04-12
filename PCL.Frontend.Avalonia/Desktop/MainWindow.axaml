@@ -59,14 +59,14 @@
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
-      <Setter Property="BorderBrush" Value="#00000000" />
-      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
     </Style>
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected:pointerover">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
-      <Setter Property="BorderBrush" Value="#00000000" />
-      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
     </Style>
 
     <Style Selector="Border.prompt-overlay-choice-item">
@@ -82,12 +82,14 @@
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected Border.prompt-overlay-choice-item">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
-      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
     </Style>
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected:pointerover Border.prompt-overlay-choice-item">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
-      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
     </Style>
   </Window.Styles>
 
