@@ -10,40 +10,38 @@
     <ScrollViewer x:Name="ContentScrollViewer" VerticalScrollBarVisibility="Auto">
       <StackPanel Margin="25,25,25,10" Spacing="15">
         <StackPanel Spacing="15">
-          <controls:PclSearchBox
-              Text="{Binding DownloadFavoriteSearchQuery, Mode=TwoWay}"
-              Watermark="搜索收藏夹内容" />
+          <Grid ColumnDefinitions="*,Auto">
+            <controls:PclSearchBox
+                Text="{Binding DownloadFavoriteSearchQuery, Mode=TwoWay}"
+                Watermark="搜索收藏夹内容" />
 
-          <controls:PclCard ContentMargin="15,8,0,15">
-            <controls:PclCard.CardContent>
-              <StackPanel Spacing="10">
-                <Grid ColumnDefinitions="*,Auto">
+            <controls:PclCard
+                Grid.Column="1"
+                Height="40"
+                Margin="15,0,0,0"
+                ContentMargin="0">
+              <controls:PclCard.CardContent>
+                <StackPanel Orientation="Horizontal">
                   <ComboBox
+                      Height="27"
+                      MinWidth="80"
+                      MaxWidth="160"
+                      Margin="8,5,-1,0"
                       Width="180"
                       HorizontalAlignment="Left"
                       ItemsSource="{Binding DownloadFavoriteTargetOptions}"
-                      SelectedIndex="{Binding SelectedDownloadFavoriteTargetIndex}" />
+                      SelectedIndex="{Binding SelectedDownloadFavoriteTargetIndex}"
+                      VerticalAlignment="Center" />
                   <controls:PclIconButton
                       x:Name="ManageTargetButton"
-                      Grid.Column="1"
-                      Margin="8,0,15,0"
-                      HorizontalAlignment="Right"
+                      Margin="4,0,0,0"
                       Command="{Binding ManageDownloadFavoriteTargetCommand}"
                       ToolTip.Tip="管理"
                       VerticalAlignment="Center" />
-                </Grid>
-
-                <WrapPanel>
-                  <controls:PclButton
-                      MinWidth="110"
-                      Margin="0,0,15,0"
-                      Command="{Binding SelectAllDownloadFavoritesCommand}"
-                      IsEnabled="{Binding CanSelectAllDownloadFavorites}"
-                      Text="全选" />
-                </WrapPanel>
-              </StackPanel>
-            </controls:PclCard.CardContent>
-          </controls:PclCard>
+                </StackPanel>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </Grid>
         </StackPanel>
 
         <Border
@@ -156,6 +154,11 @@
                 Command="{Binding RemoveSelectedDownloadFavoritesCommand}"
                 IsEnabled="{Binding CanRemoveSelectedDownloadFavorites}"
                 Text="移出收藏夹" />
+            <controls:PclIconTextButton
+                x:Name="SelectionSelectAllButton"
+                Command="{Binding SelectAllDownloadFavoritesCommand}"
+                IsEnabled="{Binding CanSelectAllDownloadFavorites}"
+                Text="全选" />
             <controls:PclIconTextButton
                 x:Name="SelectionCancelButton"
                 Command="{Binding ClearDownloadFavoriteSelectionCommand}"

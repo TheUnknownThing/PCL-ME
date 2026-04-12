@@ -45,6 +45,9 @@ internal sealed partial class DownloadFavoritesShellRightPaneView : UserControl
         SelectionFavoriteButton.IconScale = FrontendIconCatalog.FavoriteOutline.Scale;
         SelectionRemoveButton.IconData = FrontendIconCatalog.FavoriteFilled.Data;
         SelectionRemoveButton.IconScale = FrontendIconCatalog.FavoriteFilled.Scale;
+        var selectAllIcon = FrontendIconCatalog.GetSidebarIcon("游戏管理");
+        SelectionSelectAllButton.IconData = selectAllIcon.Data;
+        SelectionSelectAllButton.IconScale = selectAllIcon.Scale;
         SelectionCancelButton.IconData = FrontendIconCatalog.Close.Data;
         SelectionCancelButton.IconScale = 0.8;
     }
