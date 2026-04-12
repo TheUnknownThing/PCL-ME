@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
+using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Models;
+using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -74,6 +76,27 @@ internal sealed partial class FrontendShellViewModel
                 _instanceComposition = refreshedState.InstanceComposition;
                 _launchComposition = refreshedState.LaunchComposition;
                 NormalizeLaunchProfileSurface();
+                ReloadToolsComposition();
+                ReloadVersionSavesComposition();
+                ReloadDownloadComposition(includeRemoteState: _downloadCompositionHasRemoteState);
+
+                var handledSurfaceRefresh = false;
+                if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+                {
+                    RefreshDownloadResourceFiltersForSelectedInstance();
+                    handledSurfaceRefresh = true;
+                }
+
+                if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail)
+                {
+                    ApplyCurrentInstanceCommunityProjectFilters();
+                    handledSurfaceRefresh = true;
+                }
+
+                if (!handledSurfaceRefresh)
+                {
+                    RefreshActiveRightPaneSurface();
+                }
 
                 var launchPromptContextKey = BuildLaunchPromptContextKey(
                     _launchComposition,

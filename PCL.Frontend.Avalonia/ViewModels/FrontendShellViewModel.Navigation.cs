@@ -35,6 +35,7 @@ internal sealed partial class FrontendShellViewModel
         BreadcrumbTrail = string.Join(" / ", shellPlan.Navigation.Breadcrumbs.Select(crumb => crumb.Title));
         SurfaceMeta = $"{shellPlan.Navigation.CurrentPage.Kind} surface • {(shellPlan.Navigation.CurrentPage.SidebarGroupTitle ?? "No sidebar group")} • {(shellPlan.Navigation.ShowsBackButton ? shellPlan.Navigation.BackTarget?.Label ?? "Back available" : "Top-level route")}";
         CanGoBack = shellPlan.Navigation.ShowsBackButton && shellPlan.Navigation.BackTarget is not null;
+        CanGoHome = ResolveHomeRoute() is not null;
 
         ReplaceNavigationEntriesIfChanged(TopLevelEntries, shellPlan.Navigation.TopLevelEntries, NavigationVisualStyle.TopLevel);
         ReplaceNavigationEntriesIfChanged(SidebarEntries, shellPlan.Navigation.SidebarEntries, NavigationVisualStyle.Sidebar);
@@ -557,6 +558,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void NavigateBack()
     {
+        if (TryNavigateBackWithinCommunityProjectDetail())
+        {
+            return;
+        }
+
         if (_currentNavigation is null)
         {
             return;
@@ -573,6 +579,25 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private void NavigateHome()
+    {
+        var resolvedHomeRoute = ResolveHomeRoute();
+        if (resolvedHomeRoute is null)
+        {
+            return;
+        }
+
+        var homeRoute = NormalizeRoute(resolvedHomeRoute);
+        if (homeRoute == _currentRoute)
+        {
+            return;
+        }
+
+        _routeAncestors.Clear();
+        ResetCommunityProjectNavigationStack();
+        ChangeRoute(homeRoute, $"已返回到 {homeRoute.Page}。", ShellNavigationTransitionDirection.Backward);
+    }
+
     private void ChangeRoute(
         LauncherFrontendRoute route,
         string activityMessage,
@@ -581,6 +606,12 @@ internal sealed partial class FrontendShellViewModel
         var previousIsLaunchRoute = IsLaunchRoute;
         var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
         var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
+
+        if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail
+            && route.Page != LauncherFrontendPageKey.CompDetail)
+        {
+            ResetCommunityProjectNavigationStack();
+        }
 
         _currentRoute = route;
         ReloadRouteCompositions(route);
@@ -622,6 +653,21 @@ internal sealed partial class FrontendShellViewModel
         if (_routeAncestors.Count > 0)
         {
             return _routeAncestors[^1];
+        }
+
+        return ResolveDefaultParentRoute(_currentRoute);
+    }
+
+    private LauncherFrontendRoute? ResolveHomeRoute()
+    {
+        if (HasCommunityProjectNavigationHistory && _currentRoute.Page == LauncherFrontendPageKey.CompDetail)
+        {
+            return ResolveDefaultParentRoute(_currentRoute);
+        }
+
+        if (_routeAncestors.Count > 0)
+        {
+            return _routeAncestors[0];
         }
 
         return ResolveDefaultParentRoute(_currentRoute);

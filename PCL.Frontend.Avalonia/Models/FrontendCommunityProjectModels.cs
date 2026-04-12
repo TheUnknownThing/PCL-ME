@@ -10,6 +10,8 @@ internal sealed record FrontendCommunityProjectSummary(
     string? Author,
     string? ProjectType,
     string? Website,
+    string? IconUrl,
+    string? IconPath,
     string UpdatedLabel,
     int DownloadCount,
     int FollowCount);
@@ -25,6 +27,27 @@ internal enum FrontendCommunityProjectReleaseChannel
     Alpha
 }
 
+internal enum FrontendCommunityProjectDependencyKind
+{
+    Embedded,
+    Optional,
+    Required,
+    Tool,
+    Include,
+    Incompatible,
+    Broken
+}
+
+internal sealed record FrontendCommunityProjectDependencyEntry(
+    string ProjectId,
+    string Title,
+    string Summary,
+    string Meta,
+    string? IconUrl,
+    string? IconPath,
+    string? Target,
+    FrontendCommunityProjectDependencyKind Kind);
+
 internal sealed record FrontendCommunityProjectReleaseEntry(
     string Title,
     string Info,
@@ -35,6 +58,7 @@ internal sealed record FrontendCommunityProjectReleaseEntry(
     bool IsDirectDownload,
     IReadOnlyList<string> GameVersions,
     IReadOnlyList<string> Loaders,
+    IReadOnlyList<FrontendCommunityProjectDependencyEntry> Dependencies,
     long PublishedUnixTime,
     FrontendCommunityProjectReleaseChannel Channel);
 

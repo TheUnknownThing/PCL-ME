@@ -117,6 +117,42 @@ internal sealed partial class FrontendShellViewModel
         _ => "搜索资源"
     };
 
+    public string DownloadResourceCurrentInstanceTitle => _instanceComposition.Selection.HasSelection
+        ? _instanceComposition.Selection.InstanceName
+        : "未选择实例";
+
+    public string DownloadResourceCurrentInstanceSummary
+    {
+        get
+        {
+            if (!_instanceComposition.Selection.HasSelection)
+            {
+                return "当前下载页还没有选中实例，无法直接按实例兼容性筛选资源。";
+            }
+
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion))
+            {
+                parts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
+            }
+
+            var loader = ResolveSelectedInstanceLoaderLabel();
+            if (!string.IsNullOrWhiteSpace(loader))
+            {
+                parts.Add(loader);
+            }
+
+            parts.Add("切换实例后，下载页会重新匹配兼容版本。");
+            return string.Join(" • ", parts);
+        }
+    }
+
+    public bool ShowDownloadResourceCurrentInstanceCard => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
+
+    public bool ShowDownloadResourceLoaderFilter => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadWorld;
+
+    public ActionCommand SelectDownloadResourceInstanceCommand => new(() => _ = SelectCommunityProjectInstanceAsync());
+
     public string DownloadResourceLoadingText
     {
         get => _downloadResourceLoadingText;
@@ -364,6 +400,8 @@ internal sealed partial class FrontendShellViewModel
             RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
             RaisePropertyChanged(nameof(DownloadResourceTagOptions));
             RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
+            RaisePropertyChanged(nameof(ShowDownloadResourceCurrentInstanceCard));
+            RaisePropertyChanged(nameof(ShowDownloadResourceLoaderFilter));
             RaisePropertyChanged(nameof(HasDownloadResourceEntries));
             RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
             RaisePropertyChanged(nameof(ShowDownloadResourceLoadingCard));
@@ -390,7 +428,10 @@ internal sealed partial class FrontendShellViewModel
             new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
         ];
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
-        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions();
+        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions(
+            ShouldAutoSyncDownloadResourceFiltersWithInstance()
+                ? ResolveSelectedDownloadResourceVersionFilter()
+                : null);
         _downloadResourceLoaderOptions = useShaderLoaderOptions
             ? BuildDefaultShaderLoaderOptions()
             : BuildDefaultResourceLoaderOptions();
@@ -454,12 +495,20 @@ internal sealed partial class FrontendShellViewModel
         _selectedDownloadResourceSourceIndex = 0;
         _selectedDownloadResourceTagIndex = 0;
         _selectedDownloadResourceSortIndex = 0;
-        _selectedDownloadResourceVersionIndex = 0;
-        _selectedDownloadResourceLoaderIndex = 0;
         _downloadResourcePageIndex = 0;
         _downloadResourceTotalPages = 1;
         _downloadResourceTotalEntryCount = 0;
         _downloadResourceHasMoreEntries = false;
+        if (ShouldAutoSyncDownloadResourceFiltersWithInstance())
+        {
+            ApplyCurrentInstanceDownloadResourceFilterSelection();
+        }
+        else
+        {
+            _selectedDownloadResourceVersionIndex = 0;
+            _selectedDownloadResourceLoaderIndex = 0;
+        }
+
         SyncSelectedDownloadResourceOptions();
         UpdateDownloadResourceHint();
     }
@@ -749,11 +798,15 @@ internal sealed partial class FrontendShellViewModel
         SyncSelectedDownloadResourceOptions();
         RaisePropertyChanged(nameof(DownloadResourceSearchQuery));
         RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
+        RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceTitle));
+        RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceSummary));
+        RaisePropertyChanged(nameof(ShowDownloadResourceCurrentInstanceCard));
         RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
         RaisePropertyChanged(nameof(DownloadResourceTagOptions));
         RaisePropertyChanged(nameof(DownloadResourceSortOptions));
         RaisePropertyChanged(nameof(DownloadResourceVersionOptions));
         RaisePropertyChanged(nameof(DownloadResourceLoaderOptions));
+        RaisePropertyChanged(nameof(ShowDownloadResourceLoaderFilter));
         RaisePropertyChanged(nameof(SelectedDownloadResourceSourceIndex));
         RaisePropertyChanged(nameof(SelectedDownloadResourceTagIndex));
         RaisePropertyChanged(nameof(SelectedDownloadResourceSortIndex));
@@ -894,6 +947,24 @@ internal sealed partial class FrontendShellViewModel
             GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex));
     }
 
+    private void RefreshDownloadResourceFiltersForSelectedInstance()
+    {
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+        {
+            return;
+        }
+
+        if (!ShouldAutoSyncDownloadResourceFiltersWithInstance())
+        {
+            RaiseDownloadResourceFilterState();
+            return;
+        }
+
+        ApplyCurrentInstanceDownloadResourceFilterSelection();
+        RaiseDownloadResourceFilterState();
+        ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
+    }
+
     private void ApplyDownloadResourceQueryResult(
         FrontendCommunityResourceQueryResult result,
         FrontendCommunityResourceQuery query,
@@ -977,10 +1048,10 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultDownloadResourceVersionOptions()
+    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultDownloadResourceVersionOptions(string? preferredVersion = null)
     {
-        return
-        [
+        return MergeFilterOptions(
+            [
             new DownloadResourceFilterOptionViewModel("任意", string.Empty),
             new DownloadResourceFilterOptionViewModel("26.1.1", "26.1.1"),
             new DownloadResourceFilterOptionViewModel("26.1", "26.1"),
@@ -996,7 +1067,9 @@ internal sealed partial class FrontendShellViewModel
             new DownloadResourceFilterOptionViewModel("1.10.2", "1.10.2"),
             new DownloadResourceFilterOptionViewModel("1.8.9", "1.8.9"),
             new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10")
-        ];
+            ],
+            [],
+            preferredVersion);
     }
 
     private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions()
@@ -1037,6 +1110,36 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return 0;
+    }
+
+    private void ApplyCurrentInstanceDownloadResourceFilterSelection()
+    {
+        var preferredVersion = ResolveSelectedDownloadResourceVersionFilter();
+        _downloadResourceVersionOptions = MergeFilterOptions(
+            BuildDefaultDownloadResourceVersionOptions(preferredVersion),
+            DownloadResourceVersionOptions.Skip(1),
+            preferredVersion);
+        _selectedDownloadResourceVersionIndex = FindFilterOptionIndex(DownloadResourceVersionOptions, preferredVersion ?? string.Empty);
+
+        var preferredLoader = ResolveSelectedDownloadResourceLoaderFilter();
+        _selectedDownloadResourceLoaderIndex = ShowDownloadResourceLoaderFilter
+            ? FindFilterOptionIndex(DownloadResourceLoaderOptions, preferredLoader ?? string.Empty)
+            : 0;
+    }
+
+    private string? ResolveSelectedDownloadResourceVersionFilter()
+    {
+        return NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
+    }
+
+    private string? ResolveSelectedDownloadResourceLoaderFilter()
+    {
+        return ResolveSelectedInstanceLoaderLabel();
+    }
+
+    private bool ShouldAutoSyncDownloadResourceFiltersWithInstance()
+    {
+        return _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
     }
 
     private void SyncSelectedDownloadResourceOptions()

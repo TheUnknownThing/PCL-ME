@@ -646,6 +646,73 @@
               </controls:PclCard.CardContent>
             </controls:PclCard>
 
+            <controls:PclCard
+                Margin="0,0,0,15"
+                Header="建议安装版本"
+                IsVisible="{Binding ShowCommunityProjectInstallSuggestionCard}"
+                ContentMargin="20,18,20,18">
+              <controls:PclCard.CardContent>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                  <StackPanel Spacing="5">
+                    <TextBlock
+                        Foreground="#344352"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Text="{Binding CommunityProjectInstallSuggestionTitle}" />
+                    <TextBlock
+                        Foreground="#6B7C8F"
+                        FontSize="11.5"
+                        Text="{Binding CommunityProjectInstallSuggestionSummary}"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                  <controls:PclButton
+                      Grid.Column="1"
+                      Width="126"
+                      Height="35"
+                      ColorType="Highlight"
+                      Command="{Binding InstallCommunityProjectToCurrentInstanceCommand}"
+                      Text="安装到当前实例" />
+                </Grid>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <controls:PclCard
+                Margin="0,0,0,15"
+                Header="{Binding CommunityProjectDependencyCardTitle}"
+                IsVisible="{Binding ShowCommunityProjectDependencyCard}"
+                ContentMargin="18,18,18,12">
+              <controls:PclCard.CardContent>
+                <StackPanel Spacing="0">
+                  <ItemsControl ItemsSource="{Binding CommunityProjectDependencySections}" IsVisible="{Binding HasCommunityProjectDependencySections}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <StackPanel Margin="0,0,0,12" Spacing="8">
+                          <TextBlock
+                              Foreground="#47586D"
+                              FontSize="13.5"
+                              FontWeight="SemiBold"
+                              Text="{Binding Title}" />
+                          <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <controls:PclListItem
+                                    Margin="0,0,0,8"
+                                    Command="{Binding Command}"
+                                    IconSource="{Binding Icon}"
+                                    Info="{Binding CombinedInfo}"
+                                    Title="{Binding Title}" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                </StackPanel>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
             <ItemsControl ItemsSource="{Binding CommunityProjectReleaseGroups}" IsVisible="{Binding HasCommunityProjectReleaseGroups}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>

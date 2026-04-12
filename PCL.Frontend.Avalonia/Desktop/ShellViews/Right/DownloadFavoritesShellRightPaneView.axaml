@@ -3,31 +3,87 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,10" Spacing="15">
-      <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Spacing="15">
         <controls:PclSearchBox
             Text="{Binding DownloadFavoriteSearchQuery, Mode=TwoWay}"
             Watermark="搜索收藏夹内容" />
-        <controls:PclCard Grid.Column="1" Margin="15,0,0,0" ContentMargin="8,6,8,6">
+
+        <controls:PclCard ContentMargin="15,8,0,15">
           <controls:PclCard.CardContent>
-            <Grid ColumnDefinitions="Auto,Auto">
-              <ComboBox
-                  Width="140"
-                  ItemsSource="{Binding DownloadFavoriteTargetOptions}"
-                  SelectedIndex="{Binding SelectedDownloadFavoriteTargetIndex}" />
-              <controls:PclIconButton
-                  x:Name="ManageTargetButton"
-                  Grid.Column="1"
-                  Margin="8,0,0,0"
-                  Command="{Binding ManageDownloadFavoriteTargetCommand}"
-                  ToolTip.Tip="管理"
-                  VerticalAlignment="Center" />
+            <Grid>
+              <StackPanel Spacing="10" IsVisible="{Binding ShowDownloadFavoriteDefaultActions}">
+                <Grid ColumnDefinitions="*,Auto">
+                  <ComboBox
+                      Width="180"
+                      HorizontalAlignment="Left"
+                      ItemsSource="{Binding DownloadFavoriteTargetOptions}"
+                      SelectedIndex="{Binding SelectedDownloadFavoriteTargetIndex}" />
+                  <controls:PclIconButton
+                      x:Name="ManageTargetButton"
+                      Grid.Column="1"
+                      Margin="8,0,15,0"
+                      HorizontalAlignment="Right"
+                      Command="{Binding ManageDownloadFavoriteTargetCommand}"
+                      ToolTip.Tip="管理"
+                      VerticalAlignment="Center" />
+                </Grid>
+
+                <WrapPanel>
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
+                      Command="{Binding SelectAllDownloadFavoritesCommand}"
+                      IsEnabled="{Binding CanSelectAllDownloadFavorites}"
+                      Text="全选" />
+                </WrapPanel>
+              </StackPanel>
+
+              <StackPanel Spacing="10" IsVisible="{Binding ShowDownloadFavoriteBatchActions}">
+                <TextBlock
+                    Foreground="#4B78C2"
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Text="{Binding DownloadFavoriteSelectionText}" />
+                <WrapPanel>
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
+                      Command="{Binding BatchInstallSelectedDownloadFavoritesCommand}"
+                      IsEnabled="{Binding CanBatchInstallSelectedDownloadFavorites}"
+                      Text="批量安装" />
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
+                      Command="{Binding FavoriteSelectedDownloadFavoritesToTargetCommand}"
+                      IsEnabled="{Binding CanFavoriteSelectedDownloadFavoritesToTarget}"
+                      Text="收藏到" />
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
+                      Command="{Binding RemoveSelectedDownloadFavoritesCommand}"
+                      IsEnabled="{Binding CanRemoveSelectedDownloadFavorites}"
+                      Text="移出收藏夹" />
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
+                      Command="{Binding SelectAllDownloadFavoritesCommand}"
+                      IsEnabled="{Binding CanSelectAllDownloadFavorites}"
+                      Text="全选" />
+                  <controls:PclButton
+                      MinWidth="110"
+                      Margin="0,0,15,0"
+                      Command="{Binding ClearDownloadFavoriteSelectionCommand}"
+                      Text="取消选择" />
+                </WrapPanel>
+              </StackPanel>
             </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>
-      </Grid>
+      </StackPanel>
 
       <Border
           Padding="12,10"
@@ -46,18 +102,12 @@
       <ItemsControl ItemsSource="{Binding DownloadFavoriteSections}" IsVisible="{Binding HasDownloadFavoriteSections}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="12,38,12,12">
+            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="20,18,18,18">
               <controls:PclCard.CardContent>
-                <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl ItemsSource="{Binding Items}" Padding="0">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <controls:PclActionSummaryRow
-                          ActionText="{Binding ActionText}"
-                          Command="{Binding Command}"
-                          Info="{Binding Info}"
-                          Meta="{Binding Meta}"
-                          ShowMeta="{Binding HasMeta}"
-                          Title="{Binding Title}" />
+                      <sections:ResourceEntryCardView />
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>

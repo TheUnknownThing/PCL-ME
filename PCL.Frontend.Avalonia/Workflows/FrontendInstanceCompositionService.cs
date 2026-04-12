@@ -23,32 +23,39 @@ internal static class FrontendInstanceCompositionService
 
     public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths)
     {
+        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        return Compose(runtimePaths, selectedInstanceName);
+    }
+
+    public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths, string? selectedInstanceName)
+    {
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
         var launcherDirectory = FrontendLauncherPathService.ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
-        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        var resolvedInstanceName = selectedInstanceName?.Trim() ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (string.IsNullOrWhiteSpace(resolvedInstanceName))
         {
             return CreateEmptyComposition(launcherDirectory);
         }
 
-        var instanceDirectory = Path.Combine(launcherDirectory, "versions", selectedInstanceName);
+        var instanceDirectory = Path.Combine(launcherDirectory, "versions", resolvedInstanceName);
         if (!Directory.Exists(instanceDirectory))
         {
-            return CreateEmptyComposition(launcherDirectory, selectedInstanceName);
+            return CreateEmptyComposition(launcherDirectory, resolvedInstanceName);
         }
 
         var instanceConfig = OpenInstanceConfigProvider(instanceDirectory);
-        var manifestSummary = ReadManifestSummary(launcherDirectory, selectedInstanceName);
+        var manifestSummary = ReadManifestSummary(launcherDirectory, resolvedInstanceName);
         var isIndie = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary);
         var indieDirectory = isIndie ? instanceDirectory : launcherDirectory;
         var vanillaVersion = manifestSummary.VanillaVersion?.ToString() ?? ReadValue(instanceConfig, "VersionVanillaName", "Unknown");
         var selection = new FrontendInstanceSelectionState(
             HasSelection: true,
-            InstanceName: selectedInstanceName,
+            InstanceName: resolvedInstanceName,
             InstanceDirectory: instanceDirectory,
             IndieDirectory: indieDirectory,
             LauncherDirectory: launcherDirectory,

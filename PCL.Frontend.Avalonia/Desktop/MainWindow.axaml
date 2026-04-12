@@ -267,7 +267,7 @@
                     VerticalAlignment="Center"
                     motion:Motion.AnimateOnVisible="True"
                     motion:Motion.OffsetX="-12"
-                    ColumnDefinitions="Auto,*"
+                    ColumnDefinitions="Auto,Auto,*"
                     IsVisible="{Binding ShowInnerNavigation}">
                   <controls:PclIconButton
                       x:Name="BackButton"
@@ -278,8 +278,20 @@
                       IconBrush="#F4FAFF"
                       HoverBackgroundBrush="#32FFFFFF"
                       ToolTip.Tip="返回" />
-                  <TextBlock
+                  <controls:PclIconButton
                       Grid.Column="1"
+                      Width="27"
+                      Height="27"
+                      Margin="8,0,0,0"
+                      VerticalAlignment="Center"
+                      Command="{Binding HomeCommand}"
+                      IconBrush="#F4FAFF"
+                      HoverBackgroundBrush="#32FFFFFF"
+                      IconData="M12 3.172 3 10v10h5v-6h8v6h5V10l-9-6.828zm0-2.5 11 8.344V22h-9v-6h-4v6H1V9.016L12 .672z"
+                      IsVisible="{Binding ShowHomeNavigation}"
+                      ToolTip.Tip="返回主页" />
+                  <TextBlock
+                      Grid.Column="2"
                       Margin="12,0,0,0"
                       VerticalAlignment="Center"
                       Foreground="White"
