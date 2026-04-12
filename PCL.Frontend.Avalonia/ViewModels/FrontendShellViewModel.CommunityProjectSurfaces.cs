@@ -542,7 +542,6 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<CommunityProjectActionButtonViewModel> BuildCommunityProjectActionButtons()
     {
         var buttons = new List<CommunityProjectActionButtonViewModel>();
-        var isFavorite = IsCommunityProjectFavorite();
         if (!string.IsNullOrWhiteSpace(CommunityProjectWebsite))
         {
             buttons.Add(new CommunityProjectActionButtonViewModel(
@@ -603,13 +602,20 @@ internal sealed partial class FrontendShellViewModel
             FrontendIconCatalog.FolderAdd.Scale,
             PclIconTextButtonColorState.Normal,
             new ActionCommand(() => _ = FavoriteCurrentCommunityProjectToTargetAsync())));
-        buttons.Add(new CommunityProjectActionButtonViewModel(
-            "收藏",
-            isFavorite ? CommunityProjectFavoriteFilledIcon.Data : CommunityProjectFavoriteOutlineIcon.Data,
-            isFavorite ? CommunityProjectFavoriteFilledIcon.Scale : CommunityProjectFavoriteOutlineIcon.Scale,
-            isFavorite ? PclIconTextButtonColorState.Highlight : PclIconTextButtonColorState.Normal,
-            new ActionCommand(() => _ = ToggleCommunityProjectFavoriteAsync())));
+        buttons.Add(CreateCommunityProjectFavoriteActionButton());
         return buttons;
+    }
+
+    private CommunityProjectActionButtonViewModel CreateCommunityProjectFavoriteActionButton()
+    {
+        var isFavorite = IsCommunityProjectFavorite();
+        var icon = isFavorite ? CommunityProjectFavoriteFilledIcon : CommunityProjectFavoriteOutlineIcon;
+        return new CommunityProjectActionButtonViewModel(
+            "收藏",
+            icon.Data,
+            icon.Scale,
+            isFavorite ? PclIconTextButtonColorState.Highlight : PclIconTextButtonColorState.Normal,
+            new ActionCommand(() => _ = ToggleCommunityProjectFavoriteAsync()));
     }
 
     private static IReadOnlyList<CommunityProjectFilterButtonViewModel> BuildCommunityProjectFilterButtons(
