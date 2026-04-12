@@ -1,9 +1,18 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendVersionManifestInspector
 {
+    private static readonly Regex ReleaseVersionRegex = new(
+        @"(?<!\d)(?<version>1\.\d+(?:\.\d+)?(?:-(?:pre|rc)\d+)?)(?![\d.])",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+    private static readonly Regex SnapshotVersionRegex = new(
+        @"(?<!\d)(?<version>\d{2}w\d{2}[a-z])(?![\da-z])",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
     public static FrontendVersionManifestProfile ReadProfile(string launcherFolder, string versionName)
     {
         if (string.IsNullOrWhiteSpace(launcherFolder) || string.IsNullOrWhiteSpace(versionName))
@@ -86,12 +95,17 @@ internal static class FrontendVersionManifestInspector
                 .Concat(currentLibraries)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            var rawVersion = FirstNonEmpty(parentVersion, GetString(root, "id"));
-            var parsedVersion = TryParseVanillaVersion(rawVersion) ?? parentProfile.ParsedVanillaVersion;
+            var resolvedVanillaVersion = ResolveVanillaVersion(
+                versionName,
+                root,
+                parentVersion,
+                parentProfile,
+                allLibraries);
+            var parsedVersion = TryParseVanillaVersion(resolvedVanillaVersion) ?? parentProfile.ParsedVanillaVersion;
 
             return new FrontendVersionManifestProfile(
                 IsManifestValid: true,
-                VanillaVersion: parsedVersion?.ToString() ?? parentProfile.VanillaVersion,
+                VanillaVersion: resolvedVanillaVersion ?? parentProfile.VanillaVersion,
                 ParsedVanillaVersion: parsedVersion,
                 VersionType: FirstNonEmpty(GetString(root, "type"), parentProfile.VersionType),
                 ReleaseTime: GetDateTime(root, "releaseTime") ?? parentProfile.ReleaseTime,
@@ -141,6 +155,26 @@ internal static class FrontendVersionManifestInspector
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .Cast<string>()
             .ToArray();
+    }
+
+    private static string? ResolveVanillaVersion(
+        string versionName,
+        JsonElement root,
+        string? parentVersion,
+        FrontendVersionManifestProfile parentProfile,
+        IReadOnlyList<string> allLibraries)
+    {
+        return NormalizeExplicitVersion(GetString(root, "clientVersion"))
+               ?? GetPatchGameVersion(root)
+               ?? ExtractMinecraftVersionFromArguments(root)
+               ?? NormalizeExplicitVersion(GetString(root, "jar"))
+               ?? NormalizeResolvedVersion(parentVersion)
+               ?? NormalizeResolvedVersion(parentProfile.VanillaVersion)
+               ?? ExtractMinecraftVersionFromDownloads(root)
+               ?? ExtractMinecraftVersionFromLibraries(allLibraries)
+               ?? NormalizeResolvedVersion(GetString(root, "id"))
+               ?? NormalizeResolvedVersion(versionName)
+               ?? NormalizeResolvedVersion(GetJsonTextWithoutLibraries(root));
     }
 
     private static bool ContainsLibrary(IEnumerable<string> libraries, string searchText)
@@ -249,7 +283,155 @@ internal static class FrontendVersionManifestInspector
         return match?.Split(':').LastOrDefault();
     }
 
-    private static Version? TryParseVanillaVersion(string? rawValue)
+    private static string? GetPatchGameVersion(JsonElement root)
+    {
+        if (!root.TryGetProperty("patches", out var patches) || patches.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        foreach (var patch in patches.EnumerateArray())
+        {
+            if (!string.Equals(GetString(patch, "id"), "game", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var version = NormalizeExplicitVersion(GetString(patch, "version"));
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                return version;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractMinecraftVersionFromArguments(JsonElement root)
+    {
+        if (!root.TryGetProperty("arguments", out var argumentsElement) || argumentsElement.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        if (argumentsElement.TryGetProperty("game", out var gameArguments))
+        {
+            var flattenedGameArguments = new List<string>();
+            CollectArgumentStrings(gameArguments, flattenedGameArguments);
+            for (var index = 0; index < flattenedGameArguments.Count - 1; index++)
+            {
+                if (!string.Equals(flattenedGameArguments[index], "--fml.mcVersion", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var version = NormalizeExplicitVersion(flattenedGameArguments[index + 1]);
+                if (!string.IsNullOrWhiteSpace(version))
+                {
+                    return version;
+                }
+            }
+        }
+
+        var flattenedArguments = new List<string>();
+        if (argumentsElement.TryGetProperty("game", out var gameSection))
+        {
+            CollectArgumentStrings(gameSection, flattenedArguments);
+        }
+
+        if (argumentsElement.TryGetProperty("jvm", out var jvmSection))
+        {
+            CollectArgumentStrings(jvmSection, flattenedArguments);
+        }
+
+        return flattenedArguments
+            .Where(argument => argument.Contains("labymod", StringComparison.OrdinalIgnoreCase))
+            .Select(NormalizeResolvedVersion)
+            .FirstOrDefault(version => !string.IsNullOrWhiteSpace(version));
+    }
+
+    private static string? ExtractMinecraftVersionFromDownloads(JsonElement root)
+    {
+        return !root.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object
+            ? null
+            : NormalizeResolvedVersion(downloads.ToString());
+    }
+
+    private static string? ExtractMinecraftVersionFromLibraries(IEnumerable<string> libraries)
+    {
+        foreach (var library in libraries)
+        {
+            if (string.IsNullOrWhiteSpace(library))
+            {
+                continue;
+            }
+
+            if (!library.Contains("net.fabricmc:intermediary:", StringComparison.OrdinalIgnoreCase) &&
+                !library.Contains("net.minecraftforge:forge:", StringComparison.OrdinalIgnoreCase) &&
+                !library.Contains("optifine", StringComparison.OrdinalIgnoreCase) &&
+                !library.Contains("net.minecraft:", StringComparison.OrdinalIgnoreCase) &&
+                !library.Contains("com.mojang:minecraft:", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var version = NormalizeResolvedVersion(library);
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                return version;
+            }
+        }
+
+        return null;
+    }
+
+    private static string GetJsonTextWithoutLibraries(JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return root.ToString();
+        }
+
+        return string.Join(
+            " ",
+            root.EnumerateObject()
+                .Where(property => !string.Equals(property.Name, "libraries", StringComparison.OrdinalIgnoreCase))
+                .Select(property => property.Value.ToString()));
+    }
+
+    private static string? NormalizeExplicitVersion(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        var trimmed = rawValue.Trim();
+        if (string.Equals(trimmed, "Unknown", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return TryExtractMinecraftVersionToken(trimmed) ?? trimmed;
+    }
+
+    private static string? NormalizeResolvedVersion(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        var trimmed = rawValue.Trim();
+        if (string.Equals(trimmed, "Unknown", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return TryExtractMinecraftVersionToken(trimmed);
+    }
+
+    private static string? TryExtractMinecraftVersionToken(string? rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))
         {
@@ -257,6 +439,41 @@ internal static class FrontendVersionManifestInspector
         }
 
         var candidate = rawValue.Trim();
+        if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
+        {
+            candidate = candidate[1..];
+        }
+
+        var releaseMatch = ReleaseVersionRegex.Match(candidate);
+        if (releaseMatch.Success)
+        {
+            return releaseMatch.Groups["version"].Value;
+        }
+
+        var snapshotMatch = SnapshotVersionRegex.Match(candidate);
+        if (snapshotMatch.Success)
+        {
+            return snapshotMatch.Groups["version"].Value;
+        }
+
+        return candidate is "pending" or "Old"
+            ? candidate
+            : null;
+    }
+
+    private static Version? TryParseVanillaVersion(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        var candidate = TryExtractMinecraftVersionToken(rawValue) ?? rawValue.Trim();
+        if (candidate.Contains('w', StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
         if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
         {
             candidate = candidate[1..];
