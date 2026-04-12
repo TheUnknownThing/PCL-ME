@@ -67,6 +67,11 @@
               Margin="5,14,5,5"
               HorizontalAlignment="Center">
             <controls:PclIconTextButton
+                x:Name="SelectionSelectAllButton"
+                Command="{Binding SelectAllInstanceResourcesCommand}"
+                IsEnabled="{Binding CanSelectAllInstanceResources}"
+                Text="全选" />
+            <controls:PclIconTextButton
                 x:Name="SelectionEnableButton"
                 Command="{Binding EnableSelectedInstanceResourcesCommand}"
                 IsEnabled="{Binding CanEnableSelectedInstanceResources}"
@@ -78,6 +83,15 @@
                 IsEnabled="{Binding CanDisableSelectedInstanceResources}"
                 IsVisible="{Binding ShowInstanceResourceToggleActions}"
                 Text="禁用" />
+            <controls:PclIconTextButton
+                x:Name="SelectionExportButton"
+                Command="{Binding ExportInstanceResourceInfoCommand}"
+                Text="导出信息" />
+            <controls:PclIconTextButton
+                x:Name="SelectionCheckButton"
+                Command="{Binding CheckInstanceModsCommand}"
+                IsVisible="{Binding ShowInstanceResourceCheckButton}"
+                Text="检查 Mod" />
             <controls:PclIconTextButton
                 x:Name="SelectionDeleteButton"
                 Command="{Binding DeleteSelectedInstanceResourcesCommand}"

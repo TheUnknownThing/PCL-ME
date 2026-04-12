@@ -9,7 +9,8 @@ namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right;
 
 internal sealed partial class InstanceResourceShellRightPaneView : UserControl
 {
-    private const double SelectionActionSpacerExpandedHeight = 80;
+    private const double SelectionActionSpacerMinimumHeight = 80;
+    private const double SelectionActionSpacerPadding = 28;
     private const string HiddenSelectionActionTransform = "translate(0px,10px) scale(0.985)";
     private const string VisibleSelectionActionTransform = "translate(0px,-25px) scale(1)";
 
@@ -22,16 +23,25 @@ internal sealed partial class InstanceResourceShellRightPaneView : UserControl
         InitializeComponent();
 
         ConfigureSelectionActionButtons();
+        SelectionActionCard.SizeChanged += (_, _) => UpdateSelectionActionSpacerHeight();
         DataContextChanged += OnDataContextChanged;
         DetachedFromVisualTree += (_, _) => DetachShellViewModel();
     }
 
     private void ConfigureSelectionActionButtons()
     {
+        var selectAllIcon = FrontendIconCatalog.GetSidebarIcon("游戏管理");
+        SelectionSelectAllButton.IconData = selectAllIcon.Data;
+        SelectionSelectAllButton.IconScale = selectAllIcon.Scale;
         SelectionEnableButton.IconData = FrontendIconCatalog.EnableCircle.Data;
         SelectionEnableButton.IconScale = FrontendIconCatalog.EnableCircle.Scale;
         SelectionDisableButton.IconData = FrontendIconCatalog.DisableCircle.Data;
         SelectionDisableButton.IconScale = FrontendIconCatalog.DisableCircle.Scale;
+        var exportIcon = FrontendIconCatalog.GetSidebarIcon("日志");
+        SelectionExportButton.IconData = exportIcon.Data;
+        SelectionExportButton.IconScale = exportIcon.Scale;
+        SelectionCheckButton.IconData = FrontendIconCatalog.InfoCircle.Data;
+        SelectionCheckButton.IconScale = 0.82;
         SelectionDeleteButton.IconData = FrontendIconCatalog.DeleteOutline.Data;
         SelectionDeleteButton.IconScale = FrontendIconCatalog.DeleteOutline.Scale;
         SelectionCancelButton.IconData = FrontendIconCatalog.Close.Data;
@@ -83,7 +93,7 @@ internal sealed partial class InstanceResourceShellRightPaneView : UserControl
         var wasShown = _selectionActionCardShown;
         var version = ++_selectionActionAnimationVersion;
 
-        SelectionActionSpacer.Height = shouldShow ? SelectionActionSpacerExpandedHeight : 0d;
+        UpdateSelectionActionSpacerHeight();
 
         if (!animated)
         {
@@ -154,6 +164,20 @@ internal sealed partial class InstanceResourceShellRightPaneView : UserControl
         SelectionActionCard.Opacity = shouldShow ? 1d : 0d;
         SelectionActionCard.RenderTransform = ParseTransform(
             shouldShow ? VisibleSelectionActionTransform : HiddenSelectionActionTransform);
+    }
+
+    private void UpdateSelectionActionSpacerHeight()
+    {
+        if (!ShouldShowSelectionActionCard())
+        {
+            SelectionActionSpacer.Height = 0d;
+            return;
+        }
+
+        var measuredHeight = SelectionActionCard.Bounds.Height > 0
+            ? SelectionActionCard.Bounds.Height + SelectionActionSpacerPadding
+            : 0d;
+        SelectionActionSpacer.Height = Math.Max(SelectionActionSpacerMinimumHeight, measuredHeight);
     }
 
     private static global::Avalonia.Media.Transformation.TransformOperations ParseTransform(string value)
