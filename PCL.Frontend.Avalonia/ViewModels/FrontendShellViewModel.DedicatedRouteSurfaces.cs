@@ -16,6 +16,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private readonly HashSet<TaskModel> _observedTaskModels = [];
+    private readonly Dictionary<TaskModel, TaskManagerEntryViewModel> _taskManagerEntryLookup = [];
     private string _instanceSelectionSearchQuery = string.Empty;
     private string _instanceSelectionLauncherDirectory = string.Empty;
     private int _instanceSelectionTotalCount;
@@ -367,24 +368,19 @@ internal sealed partial class FrontendShellViewModel
         var now = DateTimeOffset.UtcNow;
 
         var tasks = TaskCenter.Tasks.ToArray();
+        var orderedTasks = tasks
+            .OrderByDescending(task => task.State == TaskState.Running)
+            .ThenByDescending(task => task.State == TaskState.Waiting)
+            .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
         _taskManagerWaitingCount = tasks.Count(task => task.State == TaskState.Waiting);
         _taskManagerRunningCount = tasks.Count(task => task.State == TaskState.Running);
         _taskManagerFinishedCount = tasks.Count(task => task.State == TaskState.Success || task.State == TaskState.Canceled);
         _taskManagerFailedCount = tasks.Count(task => task.State == TaskState.Failed);
 
-        ReplaceItems(
-            TaskManagerEntries,
-            tasks
-                .OrderByDescending(task => task.State == TaskState.Running)
-                .ThenByDescending(task => task.State == TaskState.Waiting)
-                .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
-                .Select(task => CreateTaskManagerEntry(task, now)));
+        SyncTaskManagerEntries(orderedTasks, now);
 
-        var primaryTask = tasks
-            .OrderByDescending(task => task.State == TaskState.Running)
-            .ThenByDescending(task => task.State == TaskState.Waiting)
-            .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
-            .FirstOrDefault();
+        var primaryTask = orderedTasks.FirstOrDefault();
         _taskManagerActiveTaskTitle = primaryTask?.Title ?? "当前没有活动任务";
         _taskManagerOverallProgress = primaryTask?.SupportProgress == true
             ? Math.Clamp(primaryTask.Progress, 0d, 1d)
@@ -1186,31 +1182,15 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceSelectionShortcutEntryViewModel(title, description, iconPath, command);
     }
 
-    private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task, DateTimeOffset now)
+    private TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task, DateTimeOffset now)
     {
-        var canCancel = (task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null);
-        var canDismiss = task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed;
-        var hasPrimaryAction = canCancel || canDismiss;
+        if (_taskManagerEntryLookup.TryGetValue(task, out var existingEntry))
+        {
+            UpdateTaskManagerEntry(existingEntry, task, now);
+            return existingEntry;
+        }
 
-        return new TaskManagerEntryViewModel(
-            task.Title,
-            task.State,
-            MapTaskStateLabel(task.State),
-            string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
-            BuildTaskActivityText(task, now),
-            task.SupportProgress
-                ? (string.IsNullOrWhiteSpace(task.ProgressText)
-                    ? $"{Math.Round(task.Progress * 100, 1, MidpointRounding.AwayFromZero)}%"
-                    : task.ProgressText)
-                : "无进度信息",
-            task.Progress,
-            task.SupportProgress,
-            string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText,
-            task.RemainingFileCount?.ToString() ?? "0",
-            task.Children.Count,
-            task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
-            hasPrimaryAction,
-            task.Pause.CanExecute(null),
+        var entry = new TaskManagerEntryViewModel(
             new ActionCommand(() =>
             {
                 if ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null))
@@ -1227,6 +1207,80 @@ internal sealed partial class FrontendShellViewModel
                 ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null)) ||
                 task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed),
             new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
+        _taskManagerEntryLookup[task] = entry;
+        UpdateTaskManagerEntry(entry, task, now);
+        return entry;
+    }
+
+    private static void UpdateTaskManagerEntry(TaskManagerEntryViewModel entry, TaskModel task, DateTimeOffset now)
+    {
+        var canCancel = (task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null);
+        var canDismiss = task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed;
+
+        entry.Update(
+            task.Title,
+            task.State,
+            MapTaskStateLabel(task.State),
+            string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
+            BuildTaskActivityText(task, now),
+            task.SupportProgress
+                ? (string.IsNullOrWhiteSpace(task.ProgressText)
+                    ? $"{Math.Round(task.Progress * 100, 1, MidpointRounding.AwayFromZero)}%"
+                    : task.ProgressText)
+                : "无进度信息",
+            task.Progress,
+            task.SupportProgress,
+            string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText,
+            task.RemainingFileCount?.ToString() ?? "0",
+            task.Children.Count,
+            task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
+            canCancel || canDismiss,
+            task.Pause.CanExecute(null));
+    }
+
+    private void SyncTaskManagerEntries(IReadOnlyList<TaskModel> orderedTasks, DateTimeOffset now)
+    {
+        var activeTaskSet = orderedTasks.ToHashSet();
+        foreach (var staleTask in _taskManagerEntryLookup.Keys.Where(task => !activeTaskSet.Contains(task)).ToArray())
+        {
+            _taskManagerEntryLookup.Remove(staleTask);
+        }
+
+        var desiredEntries = orderedTasks
+            .Select(task => CreateTaskManagerEntry(task, now))
+            .ToArray();
+        var desiredEntrySet = desiredEntries.ToHashSet();
+
+        for (var index = TaskManagerEntries.Count - 1; index >= 0; index--)
+        {
+            if (!desiredEntrySet.Contains(TaskManagerEntries[index]))
+            {
+                TaskManagerEntries.RemoveAt(index);
+            }
+        }
+
+        for (var index = 0; index < desiredEntries.Length; index++)
+        {
+            var desiredEntry = desiredEntries[index];
+            if (index < TaskManagerEntries.Count && ReferenceEquals(TaskManagerEntries[index], desiredEntry))
+            {
+                continue;
+            }
+
+            var existingIndex = TaskManagerEntries.IndexOf(desiredEntry);
+            if (existingIndex >= 0)
+            {
+                TaskManagerEntries.Move(existingIndex, index);
+                continue;
+            }
+
+            TaskManagerEntries.Insert(index, desiredEntry);
+        }
+
+        while (TaskManagerEntries.Count > desiredEntries.Length)
+        {
+            TaskManagerEntries.RemoveAt(TaskManagerEntries.Count - 1);
+        }
     }
 
     private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task, DateTimeOffset now)
@@ -1342,6 +1396,7 @@ internal sealed partial class FrontendShellViewModel
             staleTask.PropertyChanged -= OnTaskModelPropertyChanged;
             staleTask.Children.CollectionChanged -= OnTaskChildrenChanged;
             _observedTaskModels.Remove(staleTask);
+            _taskManagerEntryLookup.Remove(staleTask);
         }
 
         foreach (var activeTask in activeTasks)
@@ -1861,22 +1916,8 @@ internal sealed class InstanceSelectionShortcutEntryViewModel(
 }
 
 internal sealed class TaskManagerEntryViewModel(
-    string title,
-    TaskState taskState,
-    string state,
-    string summary,
-    string activityText,
-    string progressText,
-    double progressValue,
-    bool hasProgress,
-    string speedText,
-    string remainingFilesText,
-    int childCount,
-    IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
-    bool hasPrimaryAction,
-    bool canPause,
     ActionCommand primaryActionCommand,
-    ActionCommand pauseCommand)
+    ActionCommand pauseCommand) : ViewModelBase
 {
     private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
     private static readonly IBrush RunningBadgeBorderBrush = Brush.Parse("#CFE0FA");
@@ -1894,45 +1935,60 @@ internal sealed class TaskManagerEntryViewModel(
     private static readonly IBrush CanceledBadgeBorderBrush = Brush.Parse("#D7DCE4");
     private static readonly IBrush CanceledBadgeForegroundBrush = Brush.Parse("#7B8796");
 
-    public string Title { get; } = title;
+    private string _title = string.Empty;
+    private TaskState _taskState;
+    private string _state = string.Empty;
+    private string _summary = string.Empty;
+    private string _activityText = string.Empty;
+    private string _progressText = string.Empty;
+    private double _progressValue;
+    private bool _hasProgress;
+    private string _speedText = string.Empty;
+    private string _remainingFilesText = string.Empty;
+    private int _childCount;
+    private IReadOnlyList<TaskManagerStageEntryViewModel> _stageEntries = [];
+    private bool _hasPrimaryAction;
+    private bool _canPause;
 
-    public TaskState TaskState { get; } = taskState;
+    public string Title => _title;
 
-    public string State { get; } = state;
+    public TaskState TaskState => _taskState;
 
-    public string Summary { get; } = summary;
+    public string State => _state;
+
+    public string Summary => _summary;
 
     public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
 
     public bool ShowSummary => HasSummary && !HasStageEntries;
 
-    public string ActivityText { get; } = activityText;
+    public string ActivityText => _activityText;
 
     public bool HasActivityText => !string.IsNullOrWhiteSpace(ActivityText);
 
-    public string ProgressText { get; } = progressText;
+    public string ProgressText => _progressText;
 
-    public double ProgressValue { get; } = Math.Clamp(progressValue, 0d, 1d) * 100d;
+    public double ProgressValue => _progressValue;
 
-    public bool HasProgress => hasProgress;
+    public bool HasProgress => _hasProgress;
 
-    public string SpeedText { get; } = speedText;
+    public string SpeedText => _speedText;
 
-    public string RemainingFilesText { get; } = remainingFilesText;
+    public string RemainingFilesText => _remainingFilesText;
 
-    public int ChildCount { get; } = childCount;
+    public int ChildCount => _childCount;
 
     public bool HasChildren => ChildCount > 0;
 
     public string ChildrenText => $"子任务 {ChildCount} 项";
 
-    public IReadOnlyList<TaskManagerStageEntryViewModel> StageEntries { get; } = stageEntries;
+    public IReadOnlyList<TaskManagerStageEntryViewModel> StageEntries => _stageEntries;
 
     public bool HasStageEntries => StageEntries.Count > 0;
 
-    public bool HasPrimaryAction { get; } = hasPrimaryAction;
+    public bool HasPrimaryAction => _hasPrimaryAction;
 
-    public bool CanPause { get; } = canPause;
+    public bool CanPause => _canPause;
 
     public ActionCommand PrimaryActionCommand { get; } = primaryActionCommand;
 
@@ -1964,6 +2020,69 @@ internal sealed class TaskManagerEntryViewModel(
         TaskState.Waiting => WaitingBadgeForegroundBrush,
         _ => RunningBadgeForegroundBrush
     };
+
+    public void Update(
+        string title,
+        TaskState taskState,
+        string state,
+        string summary,
+        string activityText,
+        string progressText,
+        double progressValue,
+        bool hasProgress,
+        string speedText,
+        string remainingFilesText,
+        int childCount,
+        IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
+        bool hasPrimaryAction,
+        bool canPause)
+    {
+        SetProperty(ref _title, title, nameof(Title));
+
+        if (SetProperty(ref _taskState, taskState, nameof(TaskState)))
+        {
+            RaisePropertyChanged(nameof(StateBadgeBackgroundBrush));
+            RaisePropertyChanged(nameof(StateBadgeBorderBrush));
+            RaisePropertyChanged(nameof(StateBadgeForegroundBrush));
+        }
+
+        SetProperty(ref _state, state, nameof(State));
+
+        if (SetProperty(ref _summary, summary, nameof(Summary)))
+        {
+            RaisePropertyChanged(nameof(HasSummary));
+            RaisePropertyChanged(nameof(ShowSummary));
+        }
+
+        if (SetProperty(ref _activityText, activityText, nameof(ActivityText)))
+        {
+            RaisePropertyChanged(nameof(HasActivityText));
+        }
+
+        SetProperty(ref _progressText, progressText, nameof(ProgressText));
+        SetProperty(ref _progressValue, Math.Clamp(progressValue, 0d, 1d) * 100d, nameof(ProgressValue));
+        SetProperty(ref _hasProgress, hasProgress, nameof(HasProgress));
+        SetProperty(ref _speedText, speedText, nameof(SpeedText));
+        SetProperty(ref _remainingFilesText, remainingFilesText, nameof(RemainingFilesText));
+
+        if (SetProperty(ref _childCount, childCount, nameof(ChildCount)))
+        {
+            RaisePropertyChanged(nameof(HasChildren));
+            RaisePropertyChanged(nameof(ChildrenText));
+        }
+
+        if (SetProperty(ref _stageEntries, stageEntries, nameof(StageEntries)))
+        {
+            RaisePropertyChanged(nameof(HasStageEntries));
+            RaisePropertyChanged(nameof(ShowSummary));
+        }
+
+        SetProperty(ref _hasPrimaryAction, hasPrimaryAction, nameof(HasPrimaryAction));
+        SetProperty(ref _canPause, canPause, nameof(CanPause));
+
+        PrimaryActionCommand.NotifyCanExecuteChanged();
+        PauseCommand.NotifyCanExecuteChanged();
+    }
 }
 
 internal sealed class TaskManagerStageEntryViewModel(

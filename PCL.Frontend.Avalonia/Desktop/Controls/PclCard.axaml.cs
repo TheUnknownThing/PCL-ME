@@ -741,7 +741,8 @@ internal sealed partial class PclCard : UserControl
 
     private async void OnCloseButtonClick(object? sender, RoutedEventArgs e)
     {
-        if (_isCloseAnimationPending || !ShowCloseButton || CloseCommand?.CanExecute(null) != true)
+        var closeCommand = CloseCommand;
+        if (_isCloseAnimationPending || !ShowCloseButton || closeCommand?.CanExecute(null) != true)
         {
             return;
         }
@@ -752,7 +753,10 @@ internal sealed partial class PclCard : UserControl
             Motion.SetExitOffsetX(this, 0);
             Motion.SetExitOffsetY(this, -10);
             await Motion.PlayExitAsync(this);
-            CloseCommand.Execute(null);
+            if (closeCommand.CanExecute(null))
+            {
+                closeCommand.Execute(null);
+            }
         }
         finally
         {
