@@ -703,8 +703,16 @@ internal sealed partial class FrontendShellViewModel
             _activeLaunchProcess = startResult.Process;
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
-            ShowLaunchCompletionNotification();
-            SetLaunchDialogLaunchedState();
+            if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
+            {
+                NavigateTo(
+                    new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                    "游戏启动成功后已返回主页。",
+                    RouteNavigationBehavior.Reset);
+            }
+
+            AvaloniaHintBus.Show("游戏启动成功！", AvaloniaHintTheme.Success);
+            HideLaunchDialog();
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
 

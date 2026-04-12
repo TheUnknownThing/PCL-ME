@@ -15,7 +15,6 @@ internal sealed partial class FrontendShellViewModel
     private bool _isLaunchDialogVisible;
     private bool _isLaunchDialogBusy;
     private bool _isLaunchDialogError;
-    private bool _isLaunchDialogSuccess;
     private bool _showLaunchDialogProgress = true;
     private bool _showLaunchDialogDownload;
     private bool _showLaunchDialogHint;
@@ -34,8 +33,6 @@ internal sealed partial class FrontendShellViewModel
     public bool IsLaunchDialogBusy => _isLaunchDialogBusy;
 
     public bool IsLaunchDialogError => _isLaunchDialogError;
-
-    public bool IsLaunchDialogSuccess => _isLaunchDialogSuccess;
 
     public bool ShowLaunchDialogProgress => _showLaunchDialogProgress;
 
@@ -75,7 +72,6 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogActionText = "取消";
         _isLaunchDialogBusy = true;
         _isLaunchDialogError = false;
-        _isLaunchDialogSuccess = false;
         _showLaunchDialogHint = _showLaunchingHint && !string.IsNullOrWhiteSpace(_launchDialogHint);
         _showLaunchDialogProgress = true;
         _showLaunchDialogDownload = false;
@@ -125,24 +121,6 @@ internal sealed partial class FrontendShellViewModel
         RaiseLaunchDialogProperties();
     }
 
-    private void SetLaunchDialogLaunchedState()
-    {
-        _launchDialogTitle = "已启动游戏";
-        _launchDialogStage = "等待游戏退出";
-        _launchDialogProgress = 1d;
-        _launchDialogProgressText = "100.00 %";
-        _showLaunchDialogHint = _showLaunchingHint && !string.IsNullOrWhiteSpace(_launchDialogHint);
-        _showLaunchDialogProgress = true;
-        _showLaunchDialogDownload = false;
-        _launchDialogDownloadText = "0 B/s";
-        _launchDialogHasSuccessfulSession = true;
-        _isLaunchDialogBusy = false;
-        _isLaunchDialogError = false;
-        _isLaunchDialogSuccess = true;
-        _launchDialogActionText = "关闭";
-        RaiseLaunchDialogProperties();
-    }
-
     private void SetLaunchDialogStoppedState(string title, string stage, bool isError)
     {
         if (!_isLaunchDialogVisible)
@@ -158,7 +136,6 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogHasSuccessfulSession = false;
         _isLaunchDialogBusy = false;
         _isLaunchDialogError = isError;
-        _isLaunchDialogSuccess = false;
         _launchDialogActionText = "关闭";
         RaiseLaunchDialogProperties();
     }
@@ -254,7 +231,6 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(IsLaunchDialogBusy));
         RaisePropertyChanged(nameof(IsLaunchDialogError));
-        RaisePropertyChanged(nameof(IsLaunchDialogSuccess));
         RaisePropertyChanged(nameof(ShowLaunchDialogProgress));
         RaisePropertyChanged(nameof(ShowLaunchDialogDownload));
         RaisePropertyChanged(nameof(ShowLaunchDialogHint));
