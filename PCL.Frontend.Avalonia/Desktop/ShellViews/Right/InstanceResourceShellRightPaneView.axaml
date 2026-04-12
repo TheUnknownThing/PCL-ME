@@ -2,15 +2,108 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.InstanceResourceShellRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
-  <Grid>
-    <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceResourceContent}">
+  <Grid ClipToBounds="False">
+    <ScrollViewer
+        x:Name="ContentScrollViewer"
+        VerticalScrollBarVisibility="Auto"
+        IsVisible="{Binding ShowInstanceResourceContent}">
       <StackPanel Margin="25,10,25,10" Spacing="15">
         <sections:InstanceResourceHeaderSection />
         <sections:InstanceResourceEntriesSection />
+        <Border
+            x:Name="SelectionActionSpacer"
+            Height="0"
+            Background="Transparent"
+            IsHitTestVisible="False">
+          <Border.Transitions>
+            <Transitions>
+              <DoubleTransition Property="Height" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+            </Transitions>
+          </Border.Transitions>
+        </Border>
       </StackPanel>
     </ScrollViewer>
-    <sections:InstanceResourceEmptyStateSection HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" IsVisible="{Binding ShowInstanceResourceEmptyState}" />
+
+    <sections:InstanceResourceEmptyStateSection
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Margin="40"
+        IsVisible="{Binding ShowInstanceResourceEmptyState}" />
+
+    <controls:PclCard
+        x:Name="SelectionActionCard"
+        MinWidth="420"
+        MaxWidth="780"
+        Margin="25,25,25,0"
+        ContentMargin="0"
+        HorizontalAlignment="Center"
+        IsHitTestVisible="False"
+        IsVisible="False"
+        Opacity="0"
+        RenderTransform="translate(0px,10px) scale(0.985)"
+        RenderTransformOrigin="0.5,1"
+        VerticalAlignment="Bottom">
+      <controls:PclCard.Transitions>
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </controls:PclCard.Transitions>
+      <controls:PclCard.CardContent>
+        <Grid RowDefinitions="Auto,Auto">
+          <TextBlock
+              Margin="9,9,9,0"
+              HorizontalAlignment="Center"
+              Foreground="{DynamicResource ColorBrush2}"
+              FontSize="13"
+              FontWeight="SemiBold"
+              Text="{Binding InstanceResourceSelectionText}" />
+          <WrapPanel
+              Grid.Row="1"
+              Margin="5,14,5,5"
+              HorizontalAlignment="Center">
+            <controls:PclIconTextButton
+                x:Name="SelectionSelectAllButton"
+                Command="{Binding SelectAllInstanceResourcesCommand}"
+                IsEnabled="{Binding CanSelectAllInstanceResources}"
+                Text="全选" />
+            <controls:PclIconTextButton
+                x:Name="SelectionEnableButton"
+                Command="{Binding EnableSelectedInstanceResourcesCommand}"
+                IsEnabled="{Binding CanEnableSelectedInstanceResources}"
+                IsVisible="{Binding ShowInstanceResourceToggleActions}"
+                Text="启用" />
+            <controls:PclIconTextButton
+                x:Name="SelectionDisableButton"
+                Command="{Binding DisableSelectedInstanceResourcesCommand}"
+                IsEnabled="{Binding CanDisableSelectedInstanceResources}"
+                IsVisible="{Binding ShowInstanceResourceToggleActions}"
+                Text="禁用" />
+            <controls:PclIconTextButton
+                x:Name="SelectionExportButton"
+                Command="{Binding ExportInstanceResourceInfoCommand}"
+                Text="导出信息" />
+            <controls:PclIconTextButton
+                x:Name="SelectionCheckButton"
+                Command="{Binding CheckInstanceModsCommand}"
+                IsVisible="{Binding ShowInstanceResourceCheckButton}"
+                Text="检查 Mod" />
+            <controls:PclIconTextButton
+                x:Name="SelectionDeleteButton"
+                Command="{Binding DeleteSelectedInstanceResourcesCommand}"
+                IsEnabled="{Binding CanDeleteSelectedInstanceResources}"
+                Text="删除" />
+            <controls:PclIconTextButton
+                x:Name="SelectionCancelButton"
+                Command="{Binding ClearInstanceResourceSelectionCommand}"
+                Text="取消选择" />
+          </WrapPanel>
+        </Grid>
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
   </Grid>
 </UserControl>

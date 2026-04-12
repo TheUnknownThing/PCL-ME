@@ -150,6 +150,7 @@ internal sealed record FrontendInstanceResourceEntry(
     string Meta,
     string Path,
     string IconName,
+    string Identity = "",
     bool IsEnabled = true,
     string Description = "",
     string Website = "",

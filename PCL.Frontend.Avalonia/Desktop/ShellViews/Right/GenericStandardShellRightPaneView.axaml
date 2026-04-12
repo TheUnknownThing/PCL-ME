@@ -6,7 +6,35 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
+  <UserControl.Resources>
+    <DataTemplate x:Key="CommunityProjectInstallModeOptionTemplate">
+      <TextBlock Text="{Binding Label}" />
+    </DataTemplate>
+  </UserControl.Resources>
   <UserControl.Styles>
+    <Style Selector="Button.install-suggestion-button">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.install-suggestion-button > Border.install-suggestion-background">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="Button.install-suggestion-button:pointerover > Border.install-suggestion-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+    <Style Selector="Button.install-suggestion-button:pressed > Border.install-suggestion-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
     <Style Selector="Border.live-log-surface">
       <Setter Property="Background" Value="#FFFFFFFF" />
       <Setter Property="BorderBrush" Value="#D5E6FD" />
@@ -653,25 +681,37 @@
                 ContentMargin="20,18,20,18">
               <controls:PclCard.CardContent>
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                  <StackPanel Spacing="5">
-                    <TextBlock
-                        Foreground="#344352"
-                        FontSize="13"
-                        FontWeight="SemiBold"
-                        Text="{Binding CommunityProjectInstallSuggestionTitle}" />
-                    <TextBlock
-                        Foreground="#6B7C8F"
-                        FontSize="11.5"
-                        Text="{Binding CommunityProjectInstallSuggestionSummary}"
-                        TextWrapping="Wrap" />
-                  </StackPanel>
-                  <controls:PclButton
+                  <Button
+                      Grid.ColumnSpan="2"
+                      Classes="nochrome install-suggestion-button"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Command="{Binding ExecuteCommunityProjectInstallSuggestionCommand}">
+                    <Border Classes="install-suggestion-background">
+                      <Grid ColumnDefinitions="*,170">
+                        <StackPanel Spacing="5">
+                          <TextBlock
+                              Foreground="#344352"
+                              FontSize="13"
+                              FontWeight="SemiBold"
+                              Text="{Binding CommunityProjectInstallSuggestionTitle}" />
+                          <TextBlock
+                              Foreground="#6B7C8F"
+                              FontSize="11.5"
+                              Text="{Binding CommunityProjectInstallSuggestionSummary}"
+                              TextWrapping="Wrap" />
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </Button>
+                  <ComboBox
                       Grid.Column="1"
-                      Width="126"
-                      Height="35"
-                      ColorType="Highlight"
-                      Command="{Binding InstallCommunityProjectToCurrentInstanceCommand}"
-                      Text="安装到当前实例" />
+                      MinWidth="170"
+                      ZIndex="1"
+                      ItemsSource="{Binding CommunityProjectInstallModeOptions}"
+                      ItemTemplate="{StaticResource CommunityProjectInstallModeOptionTemplate}"
+                      SelectedItem="{Binding SelectedCommunityProjectInstallModeOption}"
+                      SelectionBoxItemTemplate="{StaticResource CommunityProjectInstallModeOptionTemplate}" />
                 </Grid>
               </controls:PclCard.CardContent>
             </controls:PclCard>
