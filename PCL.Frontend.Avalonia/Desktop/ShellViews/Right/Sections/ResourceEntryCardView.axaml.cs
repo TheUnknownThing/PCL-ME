@@ -1,10 +1,7 @@
 using System.ComponentModel;
 using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Layout;
 using Avalonia.Media;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.ViewModels;
@@ -22,7 +19,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
     public ResourceEntryCardView()
     {
         InitializeComponent();
-        SelectionBar.Transitions = CreateSelectionBarTransitions(isSelecting: true);
+        SelectionBarMotion.Initialize(SelectionBar);
 
         DataContextChanged += OnDataContextChanged;
         LayoutRoot.PointerEntered += (_, _) => RefreshVisualState();
@@ -154,46 +151,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
 
     private void ApplySelectionBarState(bool isSelected)
     {
-        if (_selectionBarSelectedState == isSelected)
-        {
-            return;
-        }
-
-        if (_selectionBarSelectedState is null)
-        {
-            var transitions = SelectionBar.Transitions;
-            SelectionBar.Transitions = null;
-            SelectionBar.Height = isSelected ? SelectedBarHeight : 0d;
-            SelectionBar.Opacity = isSelected ? 1d : 0d;
-            SelectionBar.Transitions = transitions;
-        }
-        else
-        {
-            SelectionBar.Transitions = CreateSelectionBarTransitions(isSelected);
-            SelectionBar.Height = isSelected ? SelectedBarHeight : 0d;
-            SelectionBar.Opacity = isSelected ? 1d : 0d;
-        }
-
-        _selectionBarSelectedState = isSelected;
-    }
-
-    private static Transitions CreateSelectionBarTransitions(bool isSelecting)
-    {
-        return
-        [
-            new DoubleTransition
-            {
-                Property = Layoutable.HeightProperty,
-                Duration = MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(isSelecting ? 300 : 120)),
-                Easing = isSelecting ? new BackEaseOut() : new CubicEaseIn()
-            },
-            new DoubleTransition
-            {
-                Property = Visual.OpacityProperty,
-                Duration = MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(isSelecting ? 30 : 70)),
-                Easing = new CubicEaseOut()
-            }
-        ];
+        SelectionBarMotion.Apply(SelectionBar, ref _selectionBarSelectedState, isSelected, SelectedBarHeight);
     }
 
     private static IBrush GetBrush(string resourceKey, string fallback)
