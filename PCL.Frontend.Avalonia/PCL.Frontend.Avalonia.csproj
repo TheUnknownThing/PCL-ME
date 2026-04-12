@@ -30,6 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PCL.Core.Backend.Test</_Parameter1>
+    </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>PCL_SECRET_MS_CLIENT_ID</_Parameter1>
       <_Parameter2>$([System.Environment]::GetEnvironmentVariable('PCL_MS_CLIENT_ID'))</_Parameter2>

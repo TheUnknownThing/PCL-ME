@@ -553,6 +553,7 @@ internal static class FrontendModpackInstallWorkflowService
     {
         var provider = OpenInstanceConfigProvider(request.TargetDirectory);
         provider.Set("VersionArgumentIndieV2", true);
+        PersistKnownMinecraftVersion(provider, package.MinecraftVersion);
         provider.Set("VersionModpackVersion", package.PackageVersion ?? string.Empty);
         provider.Set("VersionModpackSource", request.ProjectSource ?? string.Empty);
         provider.Set("VersionModpackId", request.ProjectId ?? string.Empty);
@@ -568,6 +569,18 @@ internal static class FrontendModpackInstallWorkflowService
         }
 
         provider.Sync();
+    }
+
+    private static void PersistKnownMinecraftVersion(YamlFileProvider provider, string? minecraftVersion)
+    {
+        if (string.IsNullOrWhiteSpace(minecraftVersion))
+        {
+            return;
+        }
+
+        var trimmedVersion = minecraftVersion.Trim();
+        provider.Set("VersionVanillaName", trimmedVersion);
+        provider.Set("VersionVanilla", FrontendVersionManifestInspector.ParseComparableVanillaVersion(trimmedVersion).ToString());
     }
 
     private static Dictionary<int, JsonObject> ReadCurseForgeFileMetadata(
