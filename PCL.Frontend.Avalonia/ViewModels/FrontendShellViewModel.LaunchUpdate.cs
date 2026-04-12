@@ -391,7 +391,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchButtonTitle => _isLaunchInProgress ? "启动中" : "启动游戏";
 
-    public string LaunchVersionSubtitle => _launchComposition.InstanceName;
+    public string LaunchVersionSubtitle => GetDisplayedLaunchInstanceName();
 
     public string LaunchWelcomeBanner => $"当前实例：{LaunchVersionSubtitle}";
 
