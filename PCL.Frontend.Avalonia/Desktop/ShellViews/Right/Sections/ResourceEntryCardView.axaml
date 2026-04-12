@@ -45,13 +45,13 @@
         Grid.Column="0"
         Grid.RowSpan="4"
         Width="5"
-        Height="32"
+        Height="0"
         Margin="-3,0,0,0"
         Background="{DynamicResource ColorBrush3}"
         CornerRadius="2"
         HorizontalAlignment="Left"
         VerticalAlignment="Center"
-        IsVisible="False" />
+        Opacity="0" />
 
     <Image
         Grid.Column="1"

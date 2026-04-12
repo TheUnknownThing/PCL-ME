@@ -1,20 +1,28 @@
 using System.ComponentModel;
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Media;
+using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections;
 
 internal sealed partial class ResourceEntryCardView : UserControl
 {
+    private const double SelectedBarHeight = 32;
+
     private InstanceResourceEntryViewModel? _entryViewModel;
     private bool _isPressed;
+    private bool? _selectionBarSelectedState;
 
     public ResourceEntryCardView()
     {
         InitializeComponent();
+        SelectionBar.Transitions = CreateSelectionBarTransitions();
 
         DataContextChanged += OnDataContextChanged;
         LayoutRoot.PointerEntered += (_, _) => RefreshVisualState();
@@ -42,6 +50,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
         }
 
         _isPressed = false;
+        _selectionBarSelectedState = null;
         RefreshVisualState();
     }
 
@@ -122,7 +131,7 @@ internal sealed partial class ResourceEntryCardView : UserControl
         var isHovered = LayoutRoot.IsPointerOver;
         var showActionStack = entry?.HasStandardActionStack == true && (isHovered || isSelected || entry.ShowSelection is false);
 
-        SelectionBar.IsVisible = isSelected;
+        ApplySelectionBarState(isSelected);
         HoverBackground.Opacity = isHovered || isSelected ? 1.0 : 0.0;
         HoverBackground.Background = isSelected
             ? isHovered
@@ -141,6 +150,49 @@ internal sealed partial class ResourceEntryCardView : UserControl
         ActionStack.Opacity = showActionStack ? 1.0 : 0.0;
         ActionStack.IsHitTestVisible = showActionStack;
         LayoutRoot.ColumnDefinitions[5].Width = showActionStack ? GridLength.Auto : new GridLength(0);
+    }
+
+    private void ApplySelectionBarState(bool isSelected)
+    {
+        if (_selectionBarSelectedState == isSelected)
+        {
+            return;
+        }
+
+        if (_selectionBarSelectedState is null)
+        {
+            var transitions = SelectionBar.Transitions;
+            SelectionBar.Transitions = null;
+            SelectionBar.Height = isSelected ? SelectedBarHeight : 0d;
+            SelectionBar.Opacity = isSelected ? 1d : 0d;
+            SelectionBar.Transitions = transitions;
+        }
+        else
+        {
+            SelectionBar.Height = isSelected ? SelectedBarHeight : 0d;
+            SelectionBar.Opacity = isSelected ? 1d : 0d;
+        }
+
+        _selectionBarSelectedState = isSelected;
+    }
+
+    private static Transitions CreateSelectionBarTransitions()
+    {
+        return
+        [
+            new DoubleTransition
+            {
+                Property = Layoutable.HeightProperty,
+                Duration = MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(300)),
+                Easing = new BackEaseOut()
+            },
+            new DoubleTransition
+            {
+                Property = Visual.OpacityProperty,
+                Duration = MotionDurations.InteractiveState,
+                Easing = new CubicEaseOut()
+            }
+        ];
     }
 
     private static IBrush GetBrush(string resourceKey, string fallback)
