@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Threading;
 using PCL.Core.App.Essentials;
@@ -38,6 +39,8 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanFavoriteSelectedDownloadFavoritesToTarget => HasSelectedDownloadFavorites;
 
+    public bool CanShareSelectedDownloadFavorites => HasSelectedDownloadFavorites;
+
     public bool CanBatchInstallSelectedDownloadFavorites => HasSelectedDownloadFavorites;
 
     public ActionCommand SelectAllDownloadFavoritesCommand => new(SelectAllDownloadFavorites);
@@ -47,6 +50,8 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand RemoveSelectedDownloadFavoritesCommand => new(() => _ = RemoveSelectedDownloadFavoritesAsync());
 
     public ActionCommand FavoriteSelectedDownloadFavoritesToTargetCommand => new(() => _ = FavoriteSelectedDownloadFavoritesToTargetAsync());
+
+    public ActionCommand ShareSelectedDownloadFavoritesCommand => new(() => _ = ShareSelectedDownloadFavoritesAsync());
 
     public ActionCommand BatchInstallSelectedDownloadFavoritesCommand => new(() => _ = BatchInstallSelectedDownloadFavoritesAsync());
 
@@ -67,6 +72,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CanSelectAllDownloadFavorites));
         RaisePropertyChanged(nameof(CanRemoveSelectedDownloadFavorites));
         RaisePropertyChanged(nameof(CanFavoriteSelectedDownloadFavoritesToTarget));
+        RaisePropertyChanged(nameof(CanShareSelectedDownloadFavorites));
         RaisePropertyChanged(nameof(CanBatchInstallSelectedDownloadFavorites));
     }
 
@@ -258,6 +264,32 @@ internal sealed partial class FrontendShellViewModel
 
         PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
         AddActivity("收藏到", $"已将 {addedCount} 个项目加入 {GetDownloadFavoriteTargetName(target)}。");
+    }
+
+    private async Task ShareSelectedDownloadFavoritesAsync()
+    {
+        var selectedIds = GetSelectedDownloadFavoriteCatalogEntries()
+            .Select(entry => entry.Identity)
+            .OfType<string>()
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (selectedIds.Length == 0)
+        {
+            AddActivity("分享所选", "分享了个寂寞啊！");
+            return;
+        }
+
+        try
+        {
+            await _shellActionService.SetClipboardTextAsync(JsonSerializer.Serialize(selectedIds));
+            ClearDownloadFavoriteSelection();
+            AddActivity("分享所选", $"已复制 {selectedIds.Length} 个收藏项目的分享代码。");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("分享所选失败", ex.Message);
+        }
     }
 
     private async Task BatchInstallSelectedDownloadFavoritesAsync()
