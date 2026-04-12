@@ -44,7 +44,7 @@
         IsHitTestVisible="False"
         IsVisible="False"
         Opacity="0"
-        RenderTransform="translateY(-10) scale(0.98)"
+        RenderTransform="translate(0px,-10px) scale(0.98)"
         RenderTransformOrigin="0.5,1"
         VerticalAlignment="Bottom">
       <controls:PclCard.Transitions>

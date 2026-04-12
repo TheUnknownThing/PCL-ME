@@ -10,9 +10,9 @@ namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right;
 internal sealed partial class InstanceResourceShellRightPaneView : UserControl
 {
     private const double SelectionActionSpacerExpandedHeight = 80;
-    private const string HiddenSelectionActionTransform = "translateY(-10) scale(0.98)";
-    private const string EnterSelectionActionTransform = "translateY(-28) scale(1.01)";
-    private const string VisibleSelectionActionTransform = "translateY(-25) scale(1)";
+    private const string HiddenSelectionActionTransform = "translate(0px,-10px) scale(0.98)";
+    private const string EnterSelectionActionTransform = "translate(0px,-28px) scale(1.01)";
+    private const string VisibleSelectionActionTransform = "translate(0px,-25px) scale(1)";
 
     private FrontendShellViewModel? _shellViewModel;
     private int _selectionActionAnimationVersion;
