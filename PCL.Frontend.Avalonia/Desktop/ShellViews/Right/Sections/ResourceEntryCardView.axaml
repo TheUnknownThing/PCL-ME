@@ -44,7 +44,7 @@
         x:Name="SelectionBar"
         Grid.Column="0"
         Grid.RowSpan="4"
-        Width="5"
+        Width="7"
         Height="0"
         Margin="-3,0,0,0"
         Background="{DynamicResource ColorBrush3}"
