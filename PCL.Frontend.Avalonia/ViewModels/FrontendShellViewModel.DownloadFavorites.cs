@@ -734,8 +734,12 @@ internal sealed partial class FrontendShellViewModel
                     preferredVersion,
                     _selectedCommunityDownloadSourceIndex);
                 var projectTitle = string.IsNullOrWhiteSpace(projectState.Title) ? request.Title : projectState.Title;
-                var projectAlias = BuildCommunityProjectInstallAlias(request.Route, projectTitle, projectState.Website, request.ProjectId);
-                if (!string.IsNullOrWhiteSpace(projectAlias) && resolvedAliases.Contains(projectAlias))
+                var projectAliases = BuildCommunityProjectInstallAliases(
+                    request.Route,
+                    projectTitle,
+                    projectState.Website,
+                    filePath: request.Release?.SuggestedFileName);
+                if (projectAliases.Any(resolvedAliases.Contains))
                 {
                     resolvedResults[requestKey] = true;
                     return true;
@@ -788,10 +792,7 @@ internal sealed partial class FrontendShellViewModel
                     && !ShouldInstallFavoriteResourceUpdate(installed, targetFileName, release))
                 {
                     skipped.Add($"已跳过 {projectTitle}：{targetComposition.Selection.InstanceName} 中已安装相同或更新的版本。");
-                    if (!string.IsNullOrWhiteSpace(projectAlias))
-                    {
-                        resolvedAliases.Add(projectAlias);
-                    }
+                    resolvedAliases.UnionWith(projectAliases);
 
                     resolvedResults[requestKey] = true;
                     return true;
@@ -804,7 +805,7 @@ internal sealed partial class FrontendShellViewModel
                     installed,
                     plans);
                 plans.Add(new CommunityProjectInstallPlan(
-                    projectAlias,
+                    projectAliases,
                     string.IsNullOrWhiteSpace(projectState.ProjectId) ? request.ProjectId : projectState.ProjectId,
                     projectTitle,
                     release.Title,
@@ -818,10 +819,7 @@ internal sealed partial class FrontendShellViewModel
                         : null,
                     string.Equals(targetComposition.Selection.InstanceName, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase),
                     isDependency));
-                if (!string.IsNullOrWhiteSpace(projectAlias))
-                {
-                    resolvedAliases.Add(projectAlias);
-                }
+                resolvedAliases.UnionWith(projectAliases);
                 resolvedResults[requestKey] = true;
                 return true;
             }
@@ -921,7 +919,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var installedResources = GetInstalledFavoriteResources(composition, route);
-        var projectAlias = BuildCommunityProjectInstallAlias(route, title, projectState.Website, projectState.ProjectId);
+        var projectAliases = BuildCommunityProjectInstallAliases(route, title, projectState.Website);
         if (!string.IsNullOrWhiteSpace(projectState.Website))
         {
             var websiteMatch = installedResources.FirstOrDefault(entry =>
@@ -934,8 +932,7 @@ internal sealed partial class FrontendShellViewModel
 
         return installedResources.FirstOrDefault(entry =>
             string.Equals(entry.Title, title, StringComparison.OrdinalIgnoreCase)
-            || (!string.IsNullOrWhiteSpace(projectAlias)
-                && string.Equals(entry.InstallAlias, projectAlias, StringComparison.OrdinalIgnoreCase)));
+            || entry.InstallAliases.Any(projectAliases.Contains));
     }
 
     private static IReadOnlyList<InstalledFavoriteResource> GetInstalledFavoriteResources(
@@ -951,7 +948,7 @@ internal sealed partial class FrontendShellViewModel
                     entry.Path,
                     entry.Version,
                     entry.Website,
-                    BuildCommunityProjectInstallAlias(route, entry.Title, entry.Website, null, entry.Path)))
+                    BuildCommunityProjectInstallAliases(route, entry.Title, entry.Website, entry.Identity, entry.Path)))
                 .ToArray(),
             LauncherFrontendSubpageKey.DownloadResourcePack => composition.ResourcePacks.Entries
                 .Select(entry => new InstalledFavoriteResource(
@@ -959,7 +956,7 @@ internal sealed partial class FrontendShellViewModel
                     entry.Path,
                     entry.Version,
                     entry.Website,
-                    BuildCommunityProjectInstallAlias(route, entry.Title, entry.Website, null, entry.Path)))
+                    BuildCommunityProjectInstallAliases(route, entry.Title, entry.Website, entry.Identity, entry.Path)))
                 .ToArray(),
             LauncherFrontendSubpageKey.DownloadShader => composition.Shaders.Entries
                 .Select(entry => new InstalledFavoriteResource(
@@ -967,7 +964,7 @@ internal sealed partial class FrontendShellViewModel
                     entry.Path,
                     entry.Version,
                     entry.Website,
-                    BuildCommunityProjectInstallAlias(route, entry.Title, entry.Website, null, entry.Path)))
+                    BuildCommunityProjectInstallAliases(route, entry.Title, entry.Website, entry.Identity, entry.Path)))
                 .ToArray(),
             LauncherFrontendSubpageKey.DownloadDataPack => EnumerateDirectoryInstallArtifacts(composition.Selection.IndieDirectory),
             _ => []
@@ -987,14 +984,14 @@ internal sealed partial class FrontendShellViewModel
                 path,
                 string.Empty,
                 string.Empty,
-                BuildCommunityProjectAliasFromName(Path.GetFileNameWithoutExtension(path))));
+                BuildCommunityProjectInstallAliases(route: LauncherFrontendSubpageKey.DownloadDataPack, title: Path.GetFileNameWithoutExtension(path), website: null, filePath: path)));
         var folders = Directory.EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly)
             .Select(path => new InstalledFavoriteResource(
                 Path.GetFileName(path),
                 path,
                 string.Empty,
                 string.Empty,
-                BuildCommunityProjectAliasFromName(Path.GetFileName(path))));
+                BuildCommunityProjectInstallAliases(route: LauncherFrontendSubpageKey.DownloadDataPack, title: Path.GetFileName(path), website: null, filePath: path)));
         return files.Concat(folders).ToArray();
     }
 
@@ -1144,24 +1141,20 @@ internal sealed partial class FrontendShellViewModel
         return isOccupied ? GetUniqueChildPath(targetDirectory, targetFileName) : preferredPath;
     }
 
-    private static string BuildCommunityProjectInstallAlias(
+    private static HashSet<string> BuildCommunityProjectInstallAliases(
         LauncherFrontendSubpageKey route,
         string? title,
         string? website,
-        string? projectId,
+        string? identity = null,
         string? filePath = null)
     {
-        var alias = FirstNonEmpty(
-            NormalizeCommunityProjectAlias(ExtractCommunityProjectWebsiteSlug(website)),
-            NormalizeCommunityProjectAlias(title),
-            NormalizeCommunityProjectAlias(filePath is null ? null : Path.GetFileNameWithoutExtension(filePath)),
-            NormalizeCommunityProjectAlias(projectId));
-        return string.IsNullOrWhiteSpace(alias) ? string.Empty : $"{route}:{alias}";
-    }
-
-    private static string BuildCommunityProjectAliasFromName(string? value)
-    {
-        return NormalizeCommunityProjectAlias(value);
+        var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddCommunityProjectInstallAlias(aliases, route, NormalizeCommunityProjectAlias(identity));
+        AddCommunityProjectInstallAlias(aliases, route, NormalizeCommunityProjectAlias(title));
+        AddCommunityProjectInstallAlias(aliases, route, NormalizeCommunityProjectAlias(ExtractCommunityProjectWebsiteSlug(website)));
+        AddCommunityProjectInstallAlias(aliases, route, NormalizeCommunityProjectAlias(ExtractCommunityProjectStemAlias(filePath)));
+        AddCommunityProjectInstallAlias(aliases, route, NormalizeCommunityProjectAlias(filePath is null ? null : Path.GetFileNameWithoutExtension(filePath)));
+        return aliases;
     }
 
     private static string ExtractCommunityProjectWebsiteSlug(string? website)
@@ -1198,11 +1191,74 @@ internal sealed partial class FrontendShellViewModel
         var tokens = normalized
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Where(token => token is not (
-                "mod" or "mods" or "shader" or "shaders" or "resource" or "resources" or
+                "mod" or "mods" or "api" or "library" or "lib" or "shader" or "shaders" or "resource" or "resources" or
                 "resourcepack" or "resourcepacks" or "resource-pack" or "resource-packs" or
-                "pack" or "packs" or "plugin" or "plugins"))
+                "pack" or "packs" or "plugin" or "plugins" or
+                "fabric" or "forge" or "neoforge" or "quilt"))
             .ToArray();
         return tokens.Length == 0 ? string.Empty : string.Concat(tokens);
+    }
+
+    private static string ExtractCommunityProjectStemAlias(string? filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return string.Empty;
+        }
+
+        var stem = Path.GetFileNameWithoutExtension(filePath);
+        if (string.IsNullOrWhiteSpace(stem))
+        {
+            return string.Empty;
+        }
+
+        var tokens = System.Text.RegularExpressions.Regex
+            .Split(stem, @"[^A-Za-z0-9]+")
+            .Where(token => !string.IsNullOrWhiteSpace(token))
+            .ToArray();
+        if (tokens.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var kept = new List<string>();
+        foreach (var token in tokens)
+        {
+            if (LooksLikeVersionToken(token))
+            {
+                break;
+            }
+
+            kept.Add(token);
+        }
+
+        return kept.Count == 0 ? stem : string.Join(' ', kept);
+    }
+
+    private static bool LooksLikeVersionToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return false;
+        }
+
+        if (System.Text.RegularExpressions.Regex.IsMatch(token, @"^\d+$"))
+        {
+            return true;
+        }
+
+        return System.Text.RegularExpressions.Regex.IsMatch(token, @"^\d+(?:[A-Za-z]?\d+)*(?:v\d+)?$");
+    }
+
+    private static void AddCommunityProjectInstallAlias(
+        ISet<string> aliases,
+        LauncherFrontendSubpageKey route,
+        string alias)
+    {
+        if (!string.IsNullOrWhiteSpace(alias))
+        {
+            aliases.Add($"{route}:{alias}");
+        }
     }
 
     private static string FirstNonEmpty(params string?[] values)
@@ -1211,7 +1267,7 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private sealed record CommunityProjectInstallPlan(
-        string InstallAlias,
+        IReadOnlyCollection<string> InstallAliases,
         string ProjectId,
         string Title,
         string ReleaseTitle,
@@ -1240,5 +1296,5 @@ internal sealed partial class FrontendShellViewModel
         string Path,
         string Version,
         string Website,
-        string InstallAlias);
+        IReadOnlyCollection<string> InstallAliases);
 }

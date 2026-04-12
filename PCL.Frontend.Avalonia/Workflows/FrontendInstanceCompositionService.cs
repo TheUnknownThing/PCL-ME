@@ -648,6 +648,7 @@ internal static class FrontendInstanceCompositionService
             Meta: meta,
             Path: file.FullName,
             IconName: iconName,
+            Identity: metadata?.Identity ?? string.Empty,
             IsEnabled: isEnabled,
             Description: NormalizeInlineText(metadata?.Description),
             Website: metadata?.Website ?? string.Empty,
@@ -930,6 +931,7 @@ internal static class FrontendInstanceCompositionService
         var id = GetString(root, "id");
         var contact = root["contact"] as JsonObject;
         return BuildRecognizedModMetadata(
+            Identity: id,
             Title: GetString(root, "name") ?? id,
             Description: GetString(root, "description"),
             Authors: JoinAuthorArray(root["authors"] as JsonArray),
@@ -958,6 +960,7 @@ internal static class FrontendInstanceCompositionService
         }
 
         return BuildRecognizedModMetadata(
+            Identity: GetString(loader, "id"),
             Title: GetString(metadata, "name") ?? GetString(loader, "id"),
             Description: GetString(metadata, "description"),
             Authors: JoinContributors(contributors),
@@ -1004,6 +1007,7 @@ internal static class FrontendInstanceCompositionService
             GetString(metadata, "credits"));
 
         return BuildRecognizedModMetadata(
+            Identity: GetString(metadata, "modid"),
             Title: GetString(metadata, "name") ?? GetString(metadata, "modid"),
             Description: GetString(metadata, "description"),
             Authors: authors,
@@ -1029,6 +1033,7 @@ internal static class FrontendInstanceCompositionService
         }
 
         return BuildRecognizedModMetadata(
+            Identity: ReadTomlValue(modsBlock, "modId"),
             Title: FirstNonEmpty(ReadTomlValue(modsBlock, "displayName"), ReadTomlValue(modsBlock, "modId")),
             Description: ReadTomlValue(modsBlock, "description"),
             Authors: ReadTomlArrayOrString(content, "authors") ?? ReadTomlArrayOrString(modsBlock, "authors"),
@@ -1054,6 +1059,7 @@ internal static class FrontendInstanceCompositionService
 
         var name = GetString(root, "name");
         return BuildRecognizedModMetadata(
+            Identity: name,
             Title: name,
             Description: GetString(root, "description"),
             Authors: GetString(root, "author"),
@@ -1064,6 +1070,7 @@ internal static class FrontendInstanceCompositionService
     }
 
     private static RecognizedModMetadata? BuildRecognizedModMetadata(
+        string? Identity,
         string? Title,
         string? Description,
         string? Authors,
@@ -1081,6 +1088,7 @@ internal static class FrontendInstanceCompositionService
         }
 
         return new RecognizedModMetadata(
+            Identity: Identity?.Trim() ?? string.Empty,
             Title: Title?.Trim() ?? string.Empty,
             Description: Description?.Trim() ?? string.Empty,
             Authors: Authors?.Trim() ?? string.Empty,
@@ -1448,6 +1456,7 @@ internal static class FrontendInstanceCompositionService
     }
 
     private sealed record RecognizedModMetadata(
+        string Identity,
         string Title,
         string Description,
         string Authors,
