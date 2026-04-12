@@ -2,19 +2,11 @@
 layout: default
 title: 社区
 lang: zh-CN
-nav_key: community
 permalink: /community/
-alt_url: /en/community/
-alt_label: English
 description: 参与 PCL-ME 社区、提交 Issue，并了解贡献方向。
-hero_eyebrow: 参与项目
-hero_title: 社区与贡献
-hero_lead: 欢迎通过 Issue、讨论和 Pull Request 参与 PCL-ME。新的界面工作应优先落在 Avalonia 前端中。
-primary_action_label: 提交 Issue
-primary_action_url: https://github.com/TheUnknownThing/PCL-CE/issues
-secondary_action_label: 贡献指南
-secondary_action_url: https://github.com/TheUnknownThing/PCL-CE/blob/dev/CONTRIBUTING.md
 ---
+
+[首页]({{ "/" | relative_url }}) · [下载]({{ "/downloads/" | relative_url }}) · [从源码构建]({{ "/build-from-source/" | relative_url }}) · [社区]({{ "/community/" | relative_url }}) · [English]({{ "/en/community/" | relative_url }})
 
 ## 参与方式
 

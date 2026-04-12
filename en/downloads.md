@@ -2,19 +2,11 @@
 layout: default
 title: Downloads
 lang: en
-nav_key: downloads
 permalink: /en/downloads/
-alt_url: /downloads/
-alt_label: 中文
 description: Download the latest PCL-ME builds and see the current package formats.
-hero_eyebrow: Get the latest builds
-hero_title: Downloads
-hero_lead: The recommended way to install PCL-ME is through GitHub Releases. Current artifacts come from the Avalonia desktop packaging flow.
-primary_action_label: Latest Release
-primary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases/latest
-secondary_action_label: All Releases
-secondary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases
 ---
+
+[Home]({{ "/en/" | relative_url }}) · [Downloads]({{ "/en/downloads/" | relative_url }}) · [Build From Source]({{ "/en/build-from-source/" | relative_url }}) · [Community]({{ "/en/community/" | relative_url }}) · [中文]({{ "/downloads/" | relative_url }})
 
 ## Recommended Download Path
 

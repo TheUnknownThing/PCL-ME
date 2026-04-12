@@ -2,19 +2,11 @@
 layout: default
 title: 从源码构建
 lang: zh-CN
-nav_key: build
 permalink: /build-from-source/
-alt_url: /en/build-from-source/
-alt_label: English
 description: 了解如何使用 .NET 10 从源码构建和运行 PCL-ME。
-hero_eyebrow: 开发与调试
-hero_title: 从源码构建
-hero_lead: 如果你想参与开发或自行运行最新代码，可以直接使用 .NET 10 构建并启动 Avalonia 前端。
-primary_action_label: 查看仓库
-primary_action_url: https://github.com/TheUnknownThing/PCL-CE
-secondary_action_label: Avalonia 前端说明
-secondary_action_url: https://github.com/TheUnknownThing/PCL-CE/blob/dev/PCL.Frontend.Avalonia/README.md
 ---
+
+[首页]({{ "/" | relative_url }}) · [下载]({{ "/downloads/" | relative_url }}) · [从源码构建]({{ "/build-from-source/" | relative_url }}) · [社区]({{ "/community/" | relative_url }}) · [English]({{ "/en/build-from-source/" | relative_url }})
 
 ## 环境要求
 

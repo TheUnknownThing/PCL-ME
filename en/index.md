@@ -2,36 +2,20 @@
 layout: default
 title: PCL-ME
 lang: en
-nav_key: home
 permalink: /en/
-alt_url: /
-alt_label: 中文
 description: PCL-ME is the multiplatform continuation of PCL-CE, built with C#, .NET 10, and Avalonia.
-hero_eyebrow: Multiplatform Minecraft Launcher
-hero_title: PCL-ME
-hero_lead: The multiplatform continuation of PCL-CE, built on C#, .NET 10, and Avalonia for a shared desktop experience across Windows, macOS, and Linux.
-primary_action_label: Download Latest Release
-primary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases/latest
-secondary_action_label: View Repository
-secondary_action_url: https://github.com/TheUnknownThing/PCL-CE
 ---
 
-## Overview
+[Home]({{ "/en/" | relative_url }}) · [Downloads]({{ "/en/downloads/" | relative_url }}) · [Build From Source]({{ "/en/build-from-source/" | relative_url }}) · [Community]({{ "/en/community/" | relative_url }}) · [中文]({{ "/" | relative_url }})
 
-<div class="card-grid">
-  <section class="card">
-    <h3>Unified stack</h3>
-    <p>The active direction is <code>C# + .NET 10 + Avalonia</code>, rather than the legacy WPF and VB.NET frontend.</p>
-  </section>
-  <section class="card">
-    <h3>Desktop on every platform</h3>
-    <p>The same frontend targets Windows, macOS, and Linux, with macOS and Linux currently receiving the most validation focus.</p>
-  </section>
-  <section class="card">
-    <h3>Migration in progress</h3>
-    <p>The repository is steadily moving launcher capabilities into the new desktop frontend and shared core modules.</p>
-  </section>
-</div>
+PCL-ME is the multiplatform continuation of PCL-CE, built on `C# + .NET 10 + Avalonia` for a shared desktop experience across Windows, macOS, and Linux.
+
+## Highlights
+
+- The active direction is C#, not the legacy WPF and VB.NET frontend.
+- The maintained desktop frontend lives in `PCL.Frontend.Avalonia/`.
+- Shared launcher logic mainly lives in `PCL.Core/` and `PCL.Core.Backend/`.
+- The project is still actively migrating and stabilizing.
 
 ## Platform Status
 
@@ -43,18 +27,20 @@ secondary_action_url: https://github.com/TheUnknownThing/PCL-CE
 
 If you need the safest Windows-first experience today, the original PCL or PCL-CE line may still be the better fit while this port continues to mature.
 
-## Quick Links
+## Quick Start
+
+```bash
+dotnet restore
+dotnet build
+dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+```
+
+## Useful Links
 
 - [Downloads]({{ "/en/downloads/" | relative_url }})
 - [Build from source]({{ "/en/build-from-source/" | relative_url }})
 - [GitHub repository](https://github.com/TheUnknownThing/PCL-CE)
 - [Issue tracker](https://github.com/TheUnknownThing/PCL-CE/issues)
-
-## Repository Structure
-
-- `PCL.Frontend.Avalonia/`: actively maintained desktop frontend
-- `PCL.Core/` and `PCL.Core.Backend/`: shared launcher and backend logic
-- Additional projects mainly support infrastructure, tests, and reusable components
 
 ## Documentation
 

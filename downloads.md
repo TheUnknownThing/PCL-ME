@@ -2,19 +2,11 @@
 layout: default
 title: 下载
 lang: zh-CN
-nav_key: downloads
 permalink: /downloads/
-alt_url: /en/downloads/
-alt_label: English
 description: 下载 PCL-ME 的最新版本并了解当前打包形式。
-hero_eyebrow: 获取构建产物
-hero_title: 下载 PCL-ME
-hero_lead: 建议从 GitHub Releases 获取最新版本。当前发布内容来自 Avalonia 前端的桌面打包流程。
-primary_action_label: 最新版本
-primary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases/latest
-secondary_action_label: 所有发布
-secondary_action_url: https://github.com/TheUnknownThing/PCL-CE/releases
 ---
+
+[首页]({{ "/" | relative_url }}) · [下载]({{ "/downloads/" | relative_url }}) · [从源码构建]({{ "/build-from-source/" | relative_url }}) · [社区]({{ "/community/" | relative_url }}) · [English]({{ "/en/downloads/" | relative_url }})
 
 ## 推荐下载方式
 

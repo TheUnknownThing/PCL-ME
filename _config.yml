@@ -1,8 +1,10 @@
 title: PCL-ME
 description: PCL-ME 是 PCL-CE 的多平台延续版本，基于 C#、.NET 10 与 Avalonia 构建。
 lang: zh-CN
+theme: jekyll-theme-cayman
 url: "https://theunknownthing.github.io"
 baseurl: "/PCL-CE"
+show_downloads: false
 exclude:
   - .codex
   - .codex-temp

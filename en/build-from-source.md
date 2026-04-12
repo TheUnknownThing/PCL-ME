@@ -2,19 +2,11 @@
 layout: default
 title: Build From Source
 lang: en
-nav_key: build
 permalink: /en/build-from-source/
-alt_url: /build-from-source/
-alt_label: 中文
 description: Learn how to build and run PCL-ME from source with .NET 10.
-hero_eyebrow: Development and debugging
-hero_title: Build From Source
-hero_lead: If you want to develop PCL-ME or run the latest code locally, you can build the project directly with .NET 10 and start the Avalonia frontend.
-primary_action_label: View Repository
-primary_action_url: https://github.com/TheUnknownThing/PCL-CE
-secondary_action_label: Avalonia Frontend Notes
-secondary_action_url: https://github.com/TheUnknownThing/PCL-CE/blob/dev/PCL.Frontend.Avalonia/README.md
 ---
+
+[Home]({{ "/en/" | relative_url }}) · [Downloads]({{ "/en/downloads/" | relative_url }}) · [Build From Source]({{ "/en/build-from-source/" | relative_url }}) · [Community]({{ "/en/community/" | relative_url }}) · [中文]({{ "/build-from-source/" | relative_url }})
 
 ## Requirements
 
