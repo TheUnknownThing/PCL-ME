@@ -7,7 +7,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendSetupFeedbackService
 {
-    private const string IssuesEndpoint = "https://api.github.com/repos/TheUnknownThing/PCL-CE/issues";
+    private const string IssuesEndpoint = "https://api.github.com/repos/TheUnknownThing/PCL-ME/issues";
     private static readonly HttpClient HttpClient = CreateHttpClient();
 
     private static readonly FeedbackSectionDefinition[] SectionDefinitions =

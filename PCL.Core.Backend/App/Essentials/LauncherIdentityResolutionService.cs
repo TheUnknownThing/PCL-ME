@@ -5,7 +5,7 @@ namespace PCL.Core.App.Essentials;
 
 public static class LauncherIdentityResolutionService
 {
-    private const string DefaultLauncherId = "PCL2-CECE-GOOD-2025";
+    private const string DefaultLauncherId = "PCL-MEDE-FAULT-2026";
 
     public static LauncherIdentityResolutionPlan Resolve(LauncherIdentityResolutionRequest request)
     {
@@ -58,7 +58,7 @@ public static class LauncherIdentityResolutionService
             return trimmed;
         }
 
-        var sample = Convert.ToHexString(SHA512Provider.Instance.ComputeHash($"PCL-CE|{trimmed}|LauncherId")).ToLowerInvariant();
+        var sample = Convert.ToHexString(SHA512Provider.Instance.ComputeHash($"PCL-ME|{trimmed}|LauncherId")).ToLowerInvariant();
         var token = sample.Substring(64, 16).ToUpperInvariant();
         return token
             .Insert(4, "-")

@@ -21,7 +21,7 @@ public sealed class MinecraftLaunchArgumentWorkflowServiceTest
                 ReplacementValues: new Dictionary<string, string>
                 {
                     ["${auth_player_name}"] = "Demo Player",
-                    ["${version_type}"] = "PCL CE",
+                    ["${version_type}"] = "PCL-ME",
                     ["${game_directory}"] = @"C:\Minecraft Instances\Demo"
                 },
                 WorldName: null,
@@ -30,7 +30,7 @@ public sealed class MinecraftLaunchArgumentWorkflowServiceTest
                 HasOptiFine: false));
 
         Assert.AreEqual(
-            "-Dfile.encoding=COMPAT -Dstderr.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Xmx4G -Dos.name=\"Windows 10\" --username \"Demo Player\" --versionType \"PCL CE\" --gameDir \"C:\\Minecraft Instances\\Demo\" --fullscreen --demo --server example.invalid --quickPlayMultiplayer \"play.example.invalid\"",
+            "-Dfile.encoding=COMPAT -Dstderr.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Xmx4G -Dos.name=\"Windows 10\" --username \"Demo Player\" --versionType PCL-ME --gameDir \"C:\\Minecraft Instances\\Demo\" --fullscreen --demo --server example.invalid --quickPlayMultiplayer \"play.example.invalid\"",
             result.FinalArguments);
         Assert.IsFalse(result.ShouldWarnAboutLegacyServerWithOptiFine);
     }

@@ -25,16 +25,16 @@ public class AppPathLayoutTest
                     [Special.LocalApplicationData] = Path.Combine(root, "local")
                 });
 
-            var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: false);
+            var layout = new AppPathLayout(env, "PCLME_Test", ".PCLME_Test", enableDebugOverrides: false);
 
             Assert.AreEqual(Path.Combine(root, "app"), layout.DefaultDirectory);
             Assert.AreEqual(Path.Combine(root, "app", "PCL"), layout.PortableData);
-            Assert.AreEqual(Path.Combine(root, "local", "PCLCE_Test", "PCL"), layout.Data);
+            Assert.AreEqual(Path.Combine(root, "local", "PCLME_Test", "PCL"), layout.Data);
             Assert.IsFalse(layout.UsesPortableDataDirectory);
-            Assert.AreEqual(Path.Combine(root, "roaming", "PCLCE_Test"), layout.SharedData);
-            Assert.AreEqual(Path.Combine(root, "local", "PCLCE_Test"), layout.SharedLocalData);
-            Assert.AreEqual(Path.Combine(root, "temp", "PCLCE_Test"), layout.Temp);
-            Assert.AreEqual(Path.Combine(root, "roaming", ".PCLCE_Test"), layout.OldSharedData);
+            Assert.AreEqual(Path.Combine(root, "roaming", "PCLME_Test"), layout.SharedData);
+            Assert.AreEqual(Path.Combine(root, "local", "PCLME_Test"), layout.SharedLocalData);
+            Assert.AreEqual(Path.Combine(root, "temp", "PCLME_Test"), layout.Temp);
+            Assert.AreEqual(Path.Combine(root, "roaming", ".PCLME_Test"), layout.OldSharedData);
             Assert.IsTrue(Directory.Exists(layout.Data));
             Assert.IsTrue(Directory.Exists(layout.SharedData));
             Assert.IsTrue(Directory.Exists(layout.SharedLocalData));
@@ -65,7 +65,7 @@ public class AppPathLayoutTest
                     [Special.LocalApplicationData] = Path.Combine(root, "local")
                 });
 
-            var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: false);
+            var layout = new AppPathLayout(env, "PCLME_Test", ".PCLME_Test", enableDebugOverrides: false);
 
             Assert.AreEqual(Path.Combine(appDirectory, "PCL"), layout.Data);
             Assert.IsTrue(layout.UsesPortableDataDirectory);
@@ -96,9 +96,9 @@ public class AppPathLayoutTest
                     [Special.LocalApplicationData] = Path.Combine(root, "local")
                 });
 
-            var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: false);
+            var layout = new AppPathLayout(env, "PCLME_Test", ".PCLME_Test", enableDebugOverrides: false);
 
-            Assert.AreEqual(Path.Combine(root, "local", "PCLCE_Test", "PCL"), layout.Data);
+            Assert.AreEqual(Path.Combine(root, "local", "PCLME_Test", "PCL"), layout.Data);
             Assert.IsFalse(layout.UsesPortableDataDirectory);
         }
         finally
@@ -129,7 +129,7 @@ public class AppPathLayoutTest
                     ["PCL_PATH_TEMP"] = Path.Combine(root, "override-temp")
                 });
 
-            var layout = new AppPathLayout(env, "PCLCE_Test", ".PCLCE_Test", enableDebugOverrides: true);
+            var layout = new AppPathLayout(env, "PCLME_Test", ".PCLME_Test", enableDebugOverrides: true);
 
             Assert.AreEqual(Path.Combine(root, "override-data"), layout.Data);
             Assert.AreEqual(Path.Combine(root, "override-shared"), layout.SharedData);

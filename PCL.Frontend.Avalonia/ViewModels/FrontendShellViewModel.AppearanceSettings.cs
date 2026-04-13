@@ -41,7 +41,7 @@ internal sealed partial class FrontendShellViewModel
         "杂志主页（作者：CreeperIsASpy）",
         "PCL GitHub 仪表盘（作者：Deep-Dark-Forest）",
         "Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）",
-        "PCL CE 公告栏",
+        "PCL-ME 公告栏",
         "Minecraft 官方信息流"
     ];
 

@@ -2400,7 +2400,7 @@ internal static class FrontendInstallWorkflowService
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         if (url.Contains("api.github.com", StringComparison.OrdinalIgnoreCase))
         {
-            request.Headers.UserAgent.ParseAdd("PCL-CE-Frontend");
+            request.Headers.UserAgent.ParseAdd("PCL-ME-Frontend");
         }
 
         using var response = HttpClient.Send(request);
@@ -2415,7 +2415,7 @@ internal static class FrontendInstallWorkflowService
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         if (url.Contains("api.github.com", StringComparison.OrdinalIgnoreCase))
         {
-            request.Headers.UserAgent.ParseAdd("PCL-CE-Frontend");
+            request.Headers.UserAgent.ParseAdd("PCL-ME-Frontend");
         }
 
         using var response = HttpClient.Send(request);

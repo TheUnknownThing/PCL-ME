@@ -123,7 +123,7 @@ package_linux() {
   local publish_dir="$2"
   local rid_root="$3"
   local package_dir="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}"
-  local desktop_template="${repo_root}/PCL.Frontend.Avalonia/packaging/pcl-ce.desktop.template"
+  local desktop_template="${repo_root}/PCL.Frontend.Avalonia/packaging/pcl-me.desktop.template"
   local archive_path="${rid_root}/$(basename "$package_dir").tar.gz"
 
   prepare_directory "$package_dir"

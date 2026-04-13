@@ -10,8 +10,8 @@
     {
       "name": "PCL.Core",
       "info": "Copyright © PCL-ME Contributors",
-      "website": "https://github.com/TheUnknownThing/PCL-CE/tree/dev/PCL.Core",
-      "license": "https://github.com/TheUnknownThing/PCL-CE/blob/dev/LICENCE"
+      "website": "https://github.com/TheUnknownThing/PCL-ME/tree/main/PCL.Core.Backend",
+      "license": "https://github.com/TheUnknownThing/PCL-ME/blob/main/LICENSE"
     },
     {
       "name": "Java Launch Wrapper",

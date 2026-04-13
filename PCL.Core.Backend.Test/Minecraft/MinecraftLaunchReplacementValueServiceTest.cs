@@ -15,10 +15,10 @@ public sealed class MinecraftLaunchReplacementValueServiceTest
                 NativesDirectory: @"C:\Minecraft\natives",
                 LibraryDirectory: @"C:\Minecraft\libraries",
                 LibrariesDirectory: @"C:\Minecraft\libraries",
-                LauncherName: "PCLCE",
+                LauncherName: "PCLME",
                 LauncherVersion: "2110",
                 VersionName: "Demo",
-                VersionType: "PCL CE",
+                VersionType: "PCL-ME",
                 GameDirectory: @"C:\Minecraft\instances\demo",
                 AssetsRoot: @"C:\Minecraft\assets",
                 UserProperties: "{}",
@@ -32,7 +32,7 @@ public sealed class MinecraftLaunchReplacementValueServiceTest
                 AssetsIndexName: "8",
                 Classpath: @"C:\libs\a.jar;C:\libs\b.jar"));
 
-        Assert.AreEqual("PCLCE", result.Values["${launcher_name}"]);
+        Assert.AreEqual("PCLME", result.Values["${launcher_name}"]);
         Assert.AreEqual("2110", result.Values["${launcher_version}"]);
         Assert.AreEqual("DemoPlayer", result.Values["${auth_player_name}"]);
         Assert.AreEqual("demo-uuid", result.Values["${auth_uuid}"]);

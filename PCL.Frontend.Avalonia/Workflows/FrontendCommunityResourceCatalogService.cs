@@ -1143,7 +1143,7 @@ internal static class FrontendCommunityResourceCatalogService
         {
             Timeout = TimeSpan.FromSeconds(15)
         };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("PCL-CE-Frontend-Avalonia");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("PCL-ME-Frontend-Avalonia");
         return client;
     }
 

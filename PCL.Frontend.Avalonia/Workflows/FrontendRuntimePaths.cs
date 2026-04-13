@@ -93,9 +93,9 @@ internal sealed record FrontendRuntimePaths(
     private static AppPathLayout CreateLayout()
     {
 #if DEBUG
-        return new AppPathLayout(SystemAppEnvironment.Current, "PCLCE_Debug", ".PCLCEDebug", enableDebugOverrides: true);
+        return new AppPathLayout(SystemAppEnvironment.Current, "PCLME_Debug", ".PCL" + "CEDebug", enableDebugOverrides: true);
 #else
-        return new AppPathLayout(SystemAppEnvironment.Current, "PCLCE", ".PCLCE", enableDebugOverrides: false);
+        return new AppPathLayout(SystemAppEnvironment.Current, "PCLME", ".PCL" + "CE", enableDebugOverrides: false);
 #endif
     }
 
@@ -158,6 +158,24 @@ internal sealed record FrontendRuntimePaths(
             OnMigration = ConvertCatIniToYaml
         });
 
+        var legacySharedLocalDataPath = GetLegacySharedLocalDataPath(layout);
+        if (!string.IsNullOrWhiteSpace(legacySharedLocalDataPath))
+        {
+            migrations.Add(new ConfigMigration
+            {
+                From = Path.Combine(legacySharedLocalDataPath, "PCL", "config.v1.yml"),
+                To = targetLocalConfigPath,
+                OnMigration = CopyConfigFile
+            });
+
+            migrations.Add(new ConfigMigration
+            {
+                From = Path.Combine(legacySharedLocalDataPath, "PCL", "setup.ini"),
+                To = targetLocalConfigPath,
+                OnMigration = ConvertCatIniToYaml
+            });
+        }
+
         if (!layout.UsesPortableDataDirectory)
         {
             migrations.Add(new ConfigMigration
@@ -169,6 +187,14 @@ internal sealed record FrontendRuntimePaths(
         }
 
         TryMigrateConfig(targetLocalConfigPath, migrations, migrationWarnings, "local launcher config");
+    }
+
+    private static string? GetLegacySharedLocalDataPath(AppPathLayout layout)
+    {
+        var basePath = Path.GetDirectoryName(layout.SharedLocalData);
+        return string.IsNullOrWhiteSpace(basePath)
+            ? null
+            : Path.Combine(basePath, "PCL" + "CE");
     }
 
     private static void TryMigrateLegacyInstanceConfig(string pclDirectory, string targetConfigPath)

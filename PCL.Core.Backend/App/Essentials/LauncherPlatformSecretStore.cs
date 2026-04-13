@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
@@ -17,10 +18,12 @@ internal sealed class LauncherProcessPlatformSecretStore : ILauncherPlatformSecr
     private const string LinuxToolName = "secret-tool";
     private const string MacToolName = "security";
     private const string LinuxApplicationAttributeKey = "application";
-    private const string LinuxApplicationAttributeValue = "PCLCE";
+    private const string LinuxApplicationAttributeValue = "PCLME";
     private const string LinuxSecretAttributeKey = "secret-id";
-    private const string SecretLabel = "PCL CE Encryption Key";
-    private const string MacServiceName = "org.pcl.community.pclce.encryption-key";
+    private const string SecretLabel = "PCL-ME Encryption Key";
+    private const string MacServiceName = "org.pcl.community.pclme.encryption-key";
+    private static readonly string[] LegacyLinuxApplicationAttributeValues = ["PCL" + "CE"];
+    private static readonly string[] LegacyMacServiceNames = ["org.pcl.community.pcl" + "ce.encryption-key"];
 
     public bool IsSupported =>
         OperatingSystem.IsMacOS() ? CanResolveCommand(MacToolName) :
@@ -32,26 +35,9 @@ internal sealed class LauncherProcessPlatformSecretStore : ILauncherPlatformSecr
         ArgumentException.ThrowIfNullOrWhiteSpace(secretId);
 
         var base64 = OperatingSystem.IsMacOS()
-            ? RunCommand(
-                MacToolName,
-                [
-                    "find-generic-password",
-                    "-w",
-                    "-a",
-                    secretId,
-                    "-s",
-                    MacServiceName
-                ])
+            ? ReadMacSecret(secretId)
             : OperatingSystem.IsLinux()
-                ? RunCommand(
-                    LinuxToolName,
-                    [
-                        "lookup",
-                        LinuxApplicationAttributeKey,
-                        LinuxApplicationAttributeValue,
-                        LinuxSecretAttributeKey,
-                        secretId
-                    ])
+                ? ReadLinuxSecret(secretId)
                 : throw new PlatformNotSupportedException("Platform secret storage is not supported on this platform.");
 
         try
@@ -116,19 +102,100 @@ internal sealed class LauncherProcessPlatformSecretStore : ILauncherPlatformSecr
 
         try
         {
-            RunCommand(
-                LinuxToolName,
-                [
-                    "clear",
-                    LinuxApplicationAttributeKey,
-                    LinuxApplicationAttributeValue,
-                    LinuxSecretAttributeKey,
-                    secretId
-                ]);
+            foreach (var applicationValue in EnumerateLinuxApplicationAttributeValues())
+            {
+                try
+                {
+                    RunCommand(
+                        LinuxToolName,
+                        [
+                            "clear",
+                            LinuxApplicationAttributeKey,
+                            applicationValue,
+                            LinuxSecretAttributeKey,
+                            secretId
+                        ]);
+                }
+                catch
+                {
+                    // Best effort per namespace.
+                }
+            }
         }
         catch
         {
             // Best effort. Some secret-service implementations simply return a not-found error here.
+        }
+    }
+
+    private static string ReadMacSecret(string secretId)
+    {
+        Exception? lastError = null;
+        foreach (var serviceName in EnumerateMacServiceNames())
+        {
+            try
+            {
+                return RunCommand(
+                    MacToolName,
+                    [
+                        "find-generic-password",
+                        "-w",
+                        "-a",
+                        secretId,
+                        "-s",
+                        serviceName
+                    ]);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw lastError ?? new InvalidOperationException("Stored launcher key payload is unavailable.");
+    }
+
+    private static string ReadLinuxSecret(string secretId)
+    {
+        Exception? lastError = null;
+        foreach (var applicationValue in EnumerateLinuxApplicationAttributeValues())
+        {
+            try
+            {
+                return RunCommand(
+                    LinuxToolName,
+                    [
+                        "lookup",
+                        LinuxApplicationAttributeKey,
+                        applicationValue,
+                        LinuxSecretAttributeKey,
+                        secretId
+                    ]);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw lastError ?? new InvalidOperationException("Stored launcher key payload is unavailable.");
+    }
+
+    private static IEnumerable<string> EnumerateLinuxApplicationAttributeValues()
+    {
+        yield return LinuxApplicationAttributeValue;
+        foreach (var legacyValue in LegacyLinuxApplicationAttributeValues)
+        {
+            yield return legacyValue;
+        }
+    }
+
+    private static IEnumerable<string> EnumerateMacServiceNames()
+    {
+        yield return MacServiceName;
+        foreach (var legacyName in LegacyMacServiceNames)
+        {
+            yield return legacyName;
         }
     }
 

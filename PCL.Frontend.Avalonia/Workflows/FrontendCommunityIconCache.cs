@@ -76,7 +76,7 @@ internal static class FrontendCommunityIconCache
     private static string BuildIconPath(string iconUrl, string? mediaType)
     {
         var extension = ResolveIconExtension(iconUrl, mediaType);
-        var iconDirectory = Path.Combine(Path.GetTempPath(), "PCL-CE", "frontend-resource-icons");
+        var iconDirectory = Path.Combine(Path.GetTempPath(), "PCL-ME", "frontend-resource-icons");
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(iconUrl))).ToLowerInvariant();
         return Path.Combine(iconDirectory, $"{hash}{extension}");
     }

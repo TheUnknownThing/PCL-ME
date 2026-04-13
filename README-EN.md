@@ -16,7 +16,7 @@ Plain Craft Launcher Multiplatform Edition
 
 </div>
 
-PCL-ME is a hard fork of PCL-CE focused on a maintained cross-platform launcher stack. The active application is built with C#, .NET 10, and Avalonia for Windows, macOS, and Linux.
+PCL-ME is a hard fork of the upstream PCL-CE edition, focused on a maintained cross-platform launcher stack. The active application is built with C#, .NET 10, and Avalonia for Windows, macOS, and Linux.
 
 ## Project Layout
 

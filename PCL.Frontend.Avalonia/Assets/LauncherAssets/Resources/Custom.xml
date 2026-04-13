@@ -113,7 +113,7 @@
         <TextBlock Margin="0,0,0,4"
                     Text="· 打开网页、启动游戏、打开文件：已在上方的卡片中介绍" />
         <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="查看 PCL-ME 源代码" EventType="打开网页" EventData="https://github.com/TheUnknownThing/PCL-CE/tree/dev/PCL.Frontend.Avalonia"/>
+                    Text="查看 PCL-ME 源代码" EventType="打开网页" EventData="https://github.com/TheUnknownThing/PCL-ME/tree/main/PCL.Frontend.Avalonia"/>
         <TextBlock Margin="0,0,0,4"
                     Text="· 今日人品、清理垃圾、内存优化、安装整合包：触发对应功能" />
         <TextBlock Margin="0,0,0,4"

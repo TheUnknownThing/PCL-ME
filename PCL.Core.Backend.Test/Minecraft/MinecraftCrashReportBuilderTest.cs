@@ -46,7 +46,7 @@ public sealed class MinecraftCrashReportBuilderTest
         var expected = string.Join(
             "\r\n",
             [
-                "PCL CE 版本：2.14.5 ",
+                "PCL-ME 版本：2.14.5 ",
                 "识别码：device-123",
                 "",
                 "- 档案信息 -",

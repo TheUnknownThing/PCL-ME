@@ -161,7 +161,7 @@ internal static class FrontendSetupCompositionService
         return new FrontendSetupLaunchState(
             IsolationIndex: ReadValue(localConfig, "LaunchArgumentIndieV2", 4),
             WindowTitle: ReadValue(localConfig, "LaunchArgumentTitle", string.Empty),
-            CustomInfo: ReadValue(localConfig, "LaunchArgumentInfo", "PCLCE"),
+            CustomInfo: ReadValue(localConfig, "LaunchArgumentInfo", "PCLME"),
             VisibilityIndex: MapStoredLaunchVisibilityToDisplayIndex(storedVisibility),
             PriorityIndex: ReadValue(sharedConfig, "LaunchArgumentPriority", 1),
             WindowTypeIndex: ReadValue(localConfig, "LaunchArgumentWindowType", 1),

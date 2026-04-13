@@ -6,7 +6,8 @@ namespace PCL.Core.App.Essentials;
 
 public static class LauncherStoredKeyEnvelopeService
 {
-    private static readonly byte[] IdentifyEntropy = Encoding.UTF8.GetBytes("PCL CE Encryption Key");
+    private static readonly byte[] IdentifyEntropy = Encoding.UTF8.GetBytes("PCL-ME Encryption Key");
+    private static readonly byte[] LegacyIdentifyEntropy = Encoding.UTF8.GetBytes("PCL" + " CE Encryption Key");
     private const string InsecureFileStorageOverrideEnvironmentKey = "PCL_ALLOW_INSECURE_FILE_SECRET_STORAGE";
 
     public static byte[] ReadKey(LauncherVersionedData data, string persistedPath)
@@ -123,7 +124,14 @@ public static class LauncherStoredKeyEnvelopeService
             throw new PlatformNotSupportedException("Protected launcher keys are only supported on Windows.");
         }
 
-        return ProtectedData.Unprotect(data, IdentifyEntropy, DataProtectionScope.CurrentUser);
+        try
+        {
+            return ProtectedData.Unprotect(data, IdentifyEntropy, DataProtectionScope.CurrentUser);
+        }
+        catch (CryptographicException)
+        {
+            return ProtectedData.Unprotect(data, LegacyIdentifyEntropy, DataProtectionScope.CurrentUser);
+        }
     }
 
     private static byte[] ReadPlatformStoredKey(byte[] data, ILauncherPlatformSecretStore? secretStore)
@@ -140,7 +148,7 @@ public static class LauncherStoredKeyEnvelopeService
 
     private static string CreateSecretId(string persistedPath)
     {
-        return $"pclce:{Convert.ToHexString(PCL.Core.Utils.Hash.SHA256Provider.Instance.ComputeHash(Path.GetFullPath(persistedPath))).ToLowerInvariant()}";
+        return $"pclme:{Convert.ToHexString(PCL.Core.Utils.Hash.SHA256Provider.Instance.ComputeHash(Path.GetFullPath(persistedPath))).ToLowerInvariant()}";
     }
 
     private static bool AllowInsecureFileSecretStorage()

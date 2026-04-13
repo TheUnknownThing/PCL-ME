@@ -61,7 +61,7 @@ public sealed class LauncherStartupBootstrapServiceTest
             ]));
 
         Assert.AreEqual(UpdateChannel.Release, result.DefaultUpdateChannel);
-        StringAssert.Contains(result.EnvironmentWarningMessage, "PCL CE 在启动时检测到环境问题：");
+        StringAssert.Contains(result.EnvironmentWarningMessage, "PCL-ME 在启动时检测到环境问题：");
         StringAssert.Contains(result.EnvironmentWarningMessage, "- warning one");
         StringAssert.Contains(result.EnvironmentWarningMessage, "- warning two");
     }

@@ -1414,7 +1414,7 @@ internal static class FrontendDownloadRemoteCatalogService
     private static string FetchStringContent(RemoteSource source, TimeSpan timeout)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, source.Url);
-        request.Headers.UserAgent.ParseAdd("PCL-CE-Frontend");
+        request.Headers.UserAgent.ParseAdd("PCL-ME-Frontend");
         using var cts = new CancellationTokenSource(timeout);
         using var response = HttpClient.Send(request, cts.Token);
         response.EnsureSuccessStatusCode();

@@ -105,7 +105,7 @@ internal static class FrontendLaunchCompositionService
             NativesDirectory: nativePathPlan.SearchPath,
             LibraryDirectory: Path.Combine(launcherFolder, "libraries"),
             LibrariesDirectory: Path.Combine(launcherFolder, "libraries"),
-            LauncherName: "PCLCE",
+            LauncherName: "PCLME",
             LauncherVersion: "frontend-avalonia",
             VersionName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName,
             VersionType: versionType,
@@ -925,7 +925,7 @@ internal static class FrontendLaunchCompositionService
     {
         var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(nativesDirectory)))
             .ToLowerInvariant();
-        return Path.Combine("/tmp", $"pclce-natives-{hash[..12]}");
+        return Path.Combine("/tmp", $"pclme-natives-{hash[..12]}");
     }
 
     private static IReadOnlyList<FrontendLaunchArtifactRequirement> BuildRequiredArtifacts(
@@ -1374,13 +1374,13 @@ internal static class FrontendLaunchCompositionService
             return instanceCustomInfo;
         }
 
-        var globalCustomInfo = NullIfWhiteSpace(ReadValue(localConfig, "LaunchArgumentInfo", "PCLCE"));
+        var globalCustomInfo = NullIfWhiteSpace(ReadValue(localConfig, "LaunchArgumentInfo", "PCLME"));
         if (!string.IsNullOrWhiteSpace(globalCustomInfo))
         {
             return globalCustomInfo;
         }
 
-        return manifestSummary.VersionType ?? "PCL CE";
+        return manifestSummary.VersionType ?? "PCL-ME";
     }
 
     private static FrontendRetroWrapperOptions ResolveRetroWrapperOptions(

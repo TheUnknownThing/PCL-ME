@@ -14,10 +14,10 @@ public static class LauncherUpdateLogService
 
         return new LauncherUpdateLogPrompt(
             changelog,
-            $"PCL CE 已更新至 {request.VersionBranchName} {request.VersionBaseName}",
+            $"PCL-ME 已更新至 {request.VersionBranchName} {request.VersionBaseName}",
             "确定",
             "完整更新日志",
-            "https://github.com/PCL-Community/PCL2-CE/releases");
+            "https://github.com/TheUnknownThing/PCL-ME/releases");
     }
 }
 

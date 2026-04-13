@@ -171,7 +171,7 @@ public sealed class LauncherFrontendPageContentServiceTest
                     "Legacy Forge Demo launched successfully.")
                 : null,
             new LauncherFrontendCrashSurfaceData(
-                "PCL-CE-Crash-20260403.zip",
+                "PCL-ME-Crash-20260403.zip",
                 3,
                 true,
                 "/Users/demo/.pcl/logs/PCL.log")));

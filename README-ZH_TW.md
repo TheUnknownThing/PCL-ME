@@ -16,7 +16,7 @@ Plain Craft Launcher Multiplatform Edition
 
 </div>
 
-PCL-ME 是 PCL-CE 的硬分叉版本，現在的目標是維護一套可持續演進的跨平台啟動器程式碼棧。現行主線實作基於 C#、.NET 10 與 Avalonia，面向 Windows、macOS 與 Linux。
+PCL-ME 是上游社群版的硬分叉版本，現在的目標是維護一套可持續演進的跨平台啟動器程式碼棧。現行主線實作基於 C#、.NET 10 與 Avalonia，面向 Windows、macOS 與 Linux。
 
 ## 專案結構
 

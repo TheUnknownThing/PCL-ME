@@ -18,7 +18,7 @@ public class FileNameValidatorTest
     [DataRow(" Test", false)]
     [DataRow("?foo.", false)]
     [DataRow("""\/:*?"<>|""", false)]
-    [DataRow("PCLCE.exe.", false)]
+    [DataRow("PCLME.exe.", false)]
     [DataRow("我落泪情绪零~1.MP3", false)]
     [DataRow("关注洛天依LuoTianyi0712谢谢喵!!!", true)]
     public void TestFileNameValidate(string fileName, bool expected)

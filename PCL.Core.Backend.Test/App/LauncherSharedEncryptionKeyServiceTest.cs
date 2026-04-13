@@ -94,7 +94,7 @@ public sealed class LauncherSharedEncryptionKeyServiceTest
 
     private static string CreateTempDirectory()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"pcl-ce-tests-{Guid.NewGuid():N}");
+        var path = Path.Combine(Path.GetTempPath(), $"pcl-me-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(path);
         return path;
     }

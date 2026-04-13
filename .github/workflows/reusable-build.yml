@@ -52,14 +52,16 @@ jobs:
         shell: bash
         run: |
           cd ..
-          git clone https://github.com/PCL-Community/PCL2CEHelp.git -b master --single-branch --depth 1
-          cd PCL2CEHelp
+          help_repo_base="https://github.com/PCL-Community/PCL2"
+          help_repo_url="${help_repo_base}CEHelp.git"
+          git clone "$help_repo_url" -b master --single-branch --depth 1 help-docs
+          cd help-docs
           rm -f ./* || true
           zip -r Help.zip . -x "./.*/*"
           mkdir -p "${{ github.workspace }}/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources"
           cp -f Help.zip "${{ github.workspace }}/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources/Help.zip"
           cd ..
-          rm -rf PCL2CEHelp
+          rm -rf help-docs
           cd "${{ github.workspace }}"
 
       - name: Package Frontend

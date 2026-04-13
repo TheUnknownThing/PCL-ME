@@ -37,7 +37,7 @@ internal sealed partial class FrontendShellViewModel
                 _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "Heads", "Logo-CE.png"),
                 "查看源代码",
-                CreateLinkCommand("查看仓库源代码", "https://github.com/TheUnknownThing/PCL-CE"))
+                CreateLinkCommand("查看仓库源代码", "https://github.com/TheUnknownThing/PCL-ME"))
         ]);
 
         ReplaceItems(AboutAcknowledgementEntries,

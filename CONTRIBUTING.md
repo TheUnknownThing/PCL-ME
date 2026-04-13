@@ -2,12 +2,12 @@
 
 感谢你愿意参与 PCL-ME。
 
-PCL-ME 是从 PCL-CE 衍生出来的多平台版本，当前主线技术栈是 `C# + .NET 10 + Avalonia`。如果仓库中仍保留旧的 WPF / VB.NET 痕迹，它们只应被视为历史参考，而不是新的开发目标。
+PCL-ME 是从上游社区版衍生出来的多平台版本，当前主线技术栈是 `C# + .NET 10 + Avalonia`。如果仓库中仍保留旧的 WPF / VB.NET 痕迹，它们只应被视为历史参考，而不是新的开发目标。
 
 ## 开始之前
 
 - 先阅读 [README](README.md) 与 [PCL.Frontend.Avalonia/README.md](PCL.Frontend.Avalonia/README.md)。
-- 查看当前 [Issues](https://github.com/TheUnknownThing/PCL-CE/issues)，确认问题或提案是否已经存在。
+- 查看当前 [Issues](https://github.com/TheUnknownThing/PCL-ME/issues)，确认问题或提案是否已经存在。
 - 涉及界面改动时，请优先修改 `PCL.Frontend.Avalonia/`，不要把新功能继续加回旧的 WPF 路线。
 
 ## 本地开发

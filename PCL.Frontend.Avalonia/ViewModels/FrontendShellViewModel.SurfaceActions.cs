@@ -1736,7 +1736,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var client = new HttpClient();
         var userAgent = string.IsNullOrWhiteSpace(ToolDownloadUserAgent)
-            ? "PCL-CE-Avalonia/1.0"
+            ? "PCL-ME-Avalonia/1.0"
             : ToolDownloadUserAgent.Trim();
         client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
         return client;

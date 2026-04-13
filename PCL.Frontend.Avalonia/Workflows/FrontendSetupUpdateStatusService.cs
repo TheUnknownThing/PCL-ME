@@ -9,7 +9,10 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendSetupUpdateStatusService
 {
-    private const string GithubReleaseBaseUrl = "https://github.com/TheUnknownThing/PCL-CE/releases";
+    private const string GithubApiReleasesUrl = "https://api.github.com/repos/TheUnknownThing/PCL-ME/releases?per_page=20";
+    private const string GithubApiVersion = "2022-11-28";
+    private const string GithubApiUserAgent = "PCL-ME-Frontend-Avalonia";
+    private const string GithubReleaseBaseUrl = "https://github.com/TheUnknownThing/PCL-ME/releases";
     private static readonly HttpClient HttpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(10)
@@ -79,7 +82,7 @@ internal static class FrontendSetupUpdateStatusService
                     AvailableUpdateSource: latestVersion.SourceName,
                     AvailableUpdateSha256: latestVersion.Sha256,
                     AvailableUpdateChangelog: latestVersion.Changelog,
-                    AvailableUpdateReleaseUrl: BuildVersionReleaseUrl(latestVersion.VersionName),
+                    AvailableUpdateReleaseUrl: latestVersion.ReleaseUrl,
                     AvailableUpdateDownloadUrl: latestVersion.DownloadUrl);
             }
 
@@ -93,7 +96,7 @@ internal static class FrontendSetupUpdateStatusService
                 AvailableUpdateSource: latestVersion.SourceName,
                 AvailableUpdateSha256: latestVersion.Sha256,
                 AvailableUpdateChangelog: latestVersion.Changelog,
-                AvailableUpdateReleaseUrl: BuildVersionReleaseUrl(currentVersion.VersionName),
+                AvailableUpdateReleaseUrl: latestVersion.ReleaseUrl,
                 AvailableUpdateDownloadUrl: latestVersion.DownloadUrl);
         }
         catch (Exception ex)
@@ -123,65 +126,121 @@ internal static class FrontendSetupUpdateStatusService
         UpdateArchitecture architecture,
         CancellationToken cancellationToken)
     {
-        var sources = new List<Func<CancellationToken, Task<RemoteVersionInfo>>>
-        {
-            token => QueryMinioAsync("Pysio", "https://s3.pysio.online/pcl2-ce/", channel, architecture, token),
-            token => QueryMinioAsync("Naids", "https://staticassets.naids.com/resources/pclce/", channel, architecture, token),
-            token => QueryMinioAsync("GitHub", "https://github.com/PCL-Community/PCL2_CE_Server/raw/main/", channel, architecture, token)
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Get, GithubApiReleasesUrl);
+        request.Headers.Accept.ParseAdd("application/vnd.github+json");
+        request.Headers.UserAgent.ParseAdd(GithubApiUserAgent);
+        request.Headers.Add("X-GitHub-Api-Version", GithubApiVersion);
 
-        List<Exception> failures = [];
-        foreach (var source in sources)
-        {
-            try
-            {
-                return await source(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                failures.Add(ex);
-            }
-        }
-
-        throw failures.Count switch
-        {
-            0 => new InvalidOperationException("没有可用的更新源。"),
-            1 => failures[0],
-            _ => new AggregateException("所有更新源均不可用。", failures)
-        };
-    }
-
-    private static async Task<RemoteVersionInfo> QueryMinioAsync(
-        string sourceName,
-        string baseUrl,
-        UpdateChannel channel,
-        UpdateArchitecture architecture,
-        CancellationToken cancellationToken)
-    {
-        var channelName = channel == UpdateChannel.Beta ? "fr" : "sr";
-        var archName = architecture == UpdateArchitecture.Arm64 ? "arm64" : "x64";
-        var url = $"{baseUrl}apiv2/updates/updates-{channelName}{archName}.json";
-
-        using var response = await HttpClient.GetAsync(url, cancellationToken);
+        using var response = await HttpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var payload = await JsonSerializer.DeserializeAsync<MinioUpdateEnvelope>(stream, cancellationToken: cancellationToken)
-            ?? throw new InvalidOperationException($"{sourceName} 返回了空结果。");
-        var asset = payload.Assets?.FirstOrDefault()
-            ?? throw new InvalidOperationException($"{sourceName} 没有可用更新资源。");
-        if (asset.Version is null || string.IsNullOrWhiteSpace(asset.Version.Name))
+        var releases = await JsonSerializer.DeserializeAsync<IReadOnlyList<GithubRelease>>(stream, cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("GitHub 返回了空结果。");
+        return SelectLatestGithubRelease(releases, channel, ResolveCurrentAssetSuffix(architecture));
+    }
+
+    internal static RemoteVersionInfo SelectLatestGithubRelease(
+        IReadOnlyList<GithubRelease> releases,
+        UpdateChannel channel,
+        string? requiredAssetSuffix)
+    {
+        ArgumentNullException.ThrowIfNull(releases);
+
+        var candidates = releases
+            .Where(release => !release.Draft)
+            .Where(release => channel == UpdateChannel.Beta || !release.Prerelease)
+            .Select(release => new
+            {
+                Release = release,
+                VersionName = TrimVersionPrefix(release.TagName),
+                DownloadUrl = SelectAssetDownloadUrl(release.Assets, requiredAssetSuffix)
+            })
+            .Select(candidate =>
+            {
+                try
+                {
+                    return new
+                    {
+                        candidate.Release,
+                        candidate.VersionName,
+                        Version = SemVer.Parse(candidate.VersionName),
+                        candidate.DownloadUrl
+                    };
+                }
+                catch
+                {
+                    return null;
+                }
+            })
+            .Where(candidate => candidate is not null)
+            .Select(candidate => candidate!)
+            .OrderByDescending(candidate => candidate.Version)
+            .ThenByDescending(candidate => candidate.Release.PublishedAt ?? DateTimeOffset.MinValue)
+            .ToArray();
+
+        var selected = candidates.FirstOrDefault();
+        if (selected is null)
         {
-            throw new InvalidOperationException($"{sourceName} 版本信息不完整。");
+            throw new InvalidOperationException("GitHub 没有可用的更新版本。");
         }
 
         return new RemoteVersionInfo(
-            asset.Version.Name,
-            asset.Version.Code,
-            asset.Sha256 ?? string.Empty,
-            asset.Changelog ?? string.Empty,
-            asset.Downloads?.FirstOrDefault(),
-            sourceName);
+            selected.VersionName,
+            VersionCode: 0,
+            Sha256: string.Empty,
+            Changelog: selected.Release.Body ?? string.Empty,
+            DownloadUrl: selected.DownloadUrl,
+            ReleaseUrl: string.IsNullOrWhiteSpace(selected.Release.HtmlUrl) ? BuildVersionReleaseUrl(selected.VersionName) : selected.Release.HtmlUrl,
+            SourceName: "GitHub");
+    }
+
+    private static string? ResolveCurrentAssetSuffix(UpdateArchitecture architecture)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return architecture == UpdateArchitecture.Arm64 ? "win-arm64" : "win-x64";
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return architecture == UpdateArchitecture.Arm64 ? "osx-arm64" : "osx-x64";
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return architecture == UpdateArchitecture.Arm64 ? "linux-arm64" : "linux-x64";
+        }
+
+        return null;
+    }
+
+    private static string? SelectAssetDownloadUrl(IReadOnlyList<GithubReleaseAsset>? assets, string? requiredAssetSuffix)
+    {
+        if (assets is null || assets.Count == 0)
+        {
+            return null;
+        }
+
+        var archives = assets
+            .Where(asset => !string.IsNullOrWhiteSpace(asset.Name))
+            .Where(asset => !string.IsNullOrWhiteSpace(asset.BrowserDownloadUrl))
+            .Where(asset => asset.Name.StartsWith("PCL-ME-", StringComparison.OrdinalIgnoreCase))
+            .Where(asset =>
+                asset.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+                || asset.Name.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (!string.IsNullOrWhiteSpace(requiredAssetSuffix))
+        {
+            var exactMatch = archives.FirstOrDefault(asset => asset.Name.Contains(requiredAssetSuffix, StringComparison.OrdinalIgnoreCase));
+            if (exactMatch is not null)
+            {
+                return exactMatch.BrowserDownloadUrl;
+            }
+        }
+
+        return archives.FirstOrDefault()?.BrowserDownloadUrl;
     }
 
     private static LocalVersionInfo ReadCurrentVersion()
@@ -259,12 +318,13 @@ internal static class FrontendSetupUpdateStatusService
         int VersionCode,
         bool IsBeta);
 
-    private sealed record RemoteVersionInfo(
+    internal sealed record RemoteVersionInfo(
         string VersionName,
         int VersionCode,
         string Sha256,
         string Changelog,
         string? DownloadUrl,
+        string ReleaseUrl,
         string SourceName);
 
     private sealed record LauncherMetadata(
@@ -275,20 +335,20 @@ internal static class FrontendSetupUpdateStatusService
         [property: JsonPropertyName("suffix")] string? Suffix,
         [property: JsonPropertyName("code")] int Code);
 
-    private sealed record MinioUpdateEnvelope(
-        [property: JsonPropertyName("assets")] IReadOnlyList<MinioUpdateAsset>? Assets);
+    internal sealed record GithubRelease(
+        [property: JsonPropertyName("tag_name")] string TagName,
+        [property: JsonPropertyName("html_url")] string? HtmlUrl,
+        [property: JsonPropertyName("body")] string? Body,
+        [property: JsonPropertyName("draft")] bool Draft,
+        [property: JsonPropertyName("prerelease")] bool Prerelease,
+        [property: JsonPropertyName("published_at")] DateTimeOffset? PublishedAt,
+        [property: JsonPropertyName("assets")] IReadOnlyList<GithubReleaseAsset>? Assets);
 
-    private sealed record MinioUpdateAsset(
-        [property: JsonPropertyName("version")] MinioUpdateAssetVersion? Version,
-        [property: JsonPropertyName("downloads")] IReadOnlyList<string>? Downloads,
-        [property: JsonPropertyName("sha256")] string? Sha256,
-        [property: JsonPropertyName("changelog")] string? Changelog);
-
-    private sealed record MinioUpdateAssetVersion(
+    internal sealed record GithubReleaseAsset(
         [property: JsonPropertyName("name")] string Name,
-        [property: JsonPropertyName("code")] int Code);
+        [property: JsonPropertyName("browser_download_url")] string? BrowserDownloadUrl);
 
-    private enum UpdateChannel
+    internal enum UpdateChannel
     {
         Stable,
         Beta

@@ -80,7 +80,7 @@ public sealed class MinecraftCrashExportServiceTest
 
             Assert.IsFalse(launchScript.Contains(accessToken, StringComparison.Ordinal));
             Assert.IsFalse(rawOutput.Contains(userProfilePath, StringComparison.Ordinal));
-            StringAssert.Contains(environmentReport, "PCL CE 版本：2.14.5");
+            StringAssert.Contains(environmentReport, "PCL-ME 版本：2.14.5");
             StringAssert.Contains(environmentReport, "识别码：device-123");
         }
         finally
