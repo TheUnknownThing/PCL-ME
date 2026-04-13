@@ -1,0 +1,39 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclExtraButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+  <Border
+      x:Name="PanColor"
+      Width="40"
+      Height="40"
+      CornerRadius="20"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)"
+      Background="{DynamicResource ColorBrush3}"
+      BorderBrush="#00000000"
+      BorderThickness="0.001"
+      BoxShadow="0 0 10 0 #33000000">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" />
+        <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        Padding="0">
+      <Border
+          x:Name="IconPathElement"
+          Width="10"
+          Height="10"
+          Background="{DynamicResource ColorBrush8}"
+          CornerRadius="5" />
+    </Button>
+  </Border>
+</UserControl>

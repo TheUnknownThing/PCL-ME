@@ -28,11 +28,7 @@ Public Class Application
     '开始
     Private Sub Application_Startup() '(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)
-            '创建自定义跟踪监听器，用于检测是否存在 Binding 失败
-            PresentationTraceSources.DataBindingSource.Listeners.Add(New BindingErrorTraceListener())
-            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error
-            SecretOnApplicationStart()
+            ModApplicationRuntimeShell.PrepareRuntime()
             '检查参数调用
             Dim startupPlan = LauncherStartupWorkflowService.BuildPlan(
                 New LauncherStartupWorkflowRequest(
@@ -44,38 +40,10 @@ Public Class Application
                     NtInterop.GetCurrentOsVersion(),
                     Not Is32BitSystem,
                     Setup.Get("UiLauncherLogo")))
-            Dim startupCommandPlan = startupPlan.ImmediateCommand
-            Select Case startupCommandPlan.Kind
-                Case LauncherStartupImmediateCommandKind.Invalid
-                    Throw New ArgumentException(startupCommandPlan.InvalidMessage)
-                Case LauncherStartupImmediateCommandKind.SetGpuPreference
-                    '调整显卡设置
-                    Try
-                        ProcessInterop.SetGpuPreference(startupCommandPlan.Argument)
-                        Environment.Exit(ProcessReturnValues.TaskDone)
-                    Catch ex As Exception
-                        Environment.Exit(ProcessReturnValues.Fail)
-                    End Try
-                Case LauncherStartupImmediateCommandKind.OptimizeMemory
-                    '内存优化
-                    Dim Ram = KernelInterop.GetAvailablePhysicalMemoryBytes()
-                    Try
-                        PageToolsTest.MemoryOptimizeInternal(False)
-                    Catch ex As Exception
-                        MsgBox(ex.Message, MsgBoxStyle.Critical, "内存优化失败")
-                        Environment.Exit(-1)
-                    End Try
-                    If KernelInterop.GetAvailablePhysicalMemoryBytes() < Ram Then '避免 ULong 相减出现负数
-                        Environment.Exit(0)
-                    Else
-                        Environment.Exit((KernelInterop.GetAvailablePhysicalMemoryBytes() - Ram) / 1024) '返回清理的内存量（K）
-                    End If
-            End Select
+            ModApplicationStartupShell.ExecuteImmediateCommand(startupPlan.ImmediateCommand)
             '初始化文件结构
             Dim bootstrapResult = startupPlan.Bootstrap
-            For Each directoryPath In bootstrapResult.DirectoriesToCreate
-                Directory.CreateDirectory(directoryPath)
-            Next
+            ModApplicationStartupShell.ApplyBootstrap(bootstrapResult)
 #If False Then
             '检测单例
             Dim ShouldWaitForExit As Boolean = args.Length > 0 AndAlso args(0) = "--wait" '要求等待已有的 PCL 退出
@@ -96,36 +64,8 @@ WaitRetry:
                 Environment.[Exit](ProcessReturnValues.Cancel)
             End If
 #End If
-            '设置 ToolTipService 默认值
-            Dim visualPlan = startupPlan.Visual
-            ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.InitialShowDelayMilliseconds))
-            ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.BetweenShowDelayMilliseconds))
-            ToolTipService.ShowDurationProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.ShowDurationMilliseconds))
-            ToolTipService.PlacementProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(Primitives.PlacementMode.Bottom))
-            ToolTipService.HorizontalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.HorizontalOffset))
-            ToolTipService.VerticalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(visualPlan.TooltipDefaults.VerticalOffset))
-            '设置初始窗口
-            If visualPlan.ShouldShowSplashScreen Then
-                FrmStart = New SplashScreen(visualPlan.SplashScreen.IconPath)
-                FrmStart.Show(False, True)
-            End If
-            '检测异常环境
-            Dim environmentWarningPrompt = startupPlan.EnvironmentWarningPrompt
-            If environmentWarningPrompt IsNot Nothing Then
-                RunStartupPrompt(environmentWarningPrompt)
-            End If
-            '设置初始化
-            For Each configKey In bootstrapResult.ConfigKeysToLoad
-                Setup.Load(configKey)
-            Next
-            Dim updateBranchCfg = Config.Update.UpdateChannelConfig
-            If updateBranchCfg.IsDefault() Then
-                updateBranchCfg.SetValue(CInt(bootstrapResult.DefaultUpdateChannel))
-            End If
-            '删除旧日志
-            For Each oldLogFile In bootstrapResult.LegacyLogFilesToDelete
-                If File.Exists(oldLogFile) Then File.Delete(oldLogFile)
-            Next
+            ModApplicationStartupShell.ApplyVisualPlan(startupPlan.Visual)
+            ModApplicationStartupShell.ApplyEnvironmentWarning(startupPlan.EnvironmentWarningPrompt)
             '计时
             Log("[Start] 第一阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
             ApplicationStartTick = TimeUtils.GetTimeTick()
@@ -135,13 +75,7 @@ WaitRetry:
 #End If
             AniControlEnabled += 1
         Catch ex As Exception
-            Dim FilePath As String = Nothing
-            Try
-                FilePath = ExePathWithName
-            Catch
-            End Try
-            MsgBox(ex.ToString() & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
-            FormMain.EndProgramForce(ProcessReturnValues.Exception)
+            ModApplicationRuntimeShell.HandleInitializationFailure(ex)
         End Try
     End Sub
 
@@ -184,18 +118,5 @@ WaitRetry:
     Private Sub TooltipUnloaded(sender As Object, e As RoutedEventArgs)
         ShowingTooltips.Remove(CType(sender, Border))
     End Sub
-
-    ' 自定义监听器类
-    Public Class BindingErrorTraceListener
-        Inherits TraceListener
-
-        Public Overrides Sub Write(message As String)
-            Log($"警告，检测到 Binding 失败：{message}")
-        End Sub
-
-        Public Overrides Sub WriteLine(message As String)
-            Log($"警告，检测到 Binding 失败：{message}")
-        End Sub
-    End Class
 
 End Class

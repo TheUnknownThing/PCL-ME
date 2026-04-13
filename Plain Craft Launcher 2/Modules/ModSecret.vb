@@ -5,7 +5,6 @@ Imports PCL.Core.UI.Theme
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.Exts
 Imports PCL.Core.Utils.OS
-Imports PCL.Core.Utils.Secret
 
 Friend Module ModSecret
 
@@ -17,17 +16,17 @@ Friend Module ModSecret
     Public Const RegFolder As String = "PCLCE" 'PCL 社区版的注册表与 PCL 的注册表隔离，以防数据冲突
 #End If
     '用于微软登录的 ClientId
-    Public ReadOnly OAuthClientId As String = EnvironmentInterop.GetSecret("MS_CLIENT_ID", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly OAuthClientId As String = Secrets.MSOAuthClientId
     'CurseForge API Key
-    Public ReadOnly CurseForgeAPIKey As String = EnvironmentInterop.GetSecret("CURSEFORGE_API_KEY", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly CurseForgeAPIKey As String = Secrets.CurseForgeAPIKey
     '遥测鉴权密钥
-    Public ReadOnly TelemetryKey As String = EnvironmentInterop.GetSecret("TELEMETRY_KEY", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly TelemetryKey As String = Secrets.TelemetryKey
     'Natayark ID Client Id
-    Public ReadOnly NatayarkClientId As String = EnvironmentInterop.GetSecret("NAID_CLIENT_ID", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly NatayarkClientId As String = Secrets.NatayarkClientId
     'Natayark ID Client Secret，需要经过 PASSWORD HASH 处理（https://uutool.cn/php-password/）
-    Public ReadOnly NatayarkClientSecret As String = EnvironmentInterop.GetSecret("NAID_CLIENT_SECRET", readEnvDebugOnly:=True).ReplaceNullOrEmpty()
+    Public ReadOnly NatayarkClientSecret As String = Secrets.NatayarkClientSecret
     '联机服务根地址
-    Public ReadOnly LinkServers As String() = EnvironmentInterop.GetSecret("LINK_SERVER_ROOT", readEnvDebugOnly:=True).ReplaceNullOrEmpty().Split("|")
+    Public ReadOnly LinkServers As String() = Secrets.LinkServers
 
     Friend Sub SecretOnApplicationStart()
         '提升 UI 线程优先级
@@ -83,7 +82,7 @@ PCL-Community 及其成员与龙腾猫跃无从属关系，且均不会为您的
     ''' 获取设备的短标识码
     ''' </summary>
     Friend Function SecretGetUniqueAddress() As String
-        Return Identify.LauncherId
+        Return LauncherIdentity.LauncherId
     End Function
 
 #End Region

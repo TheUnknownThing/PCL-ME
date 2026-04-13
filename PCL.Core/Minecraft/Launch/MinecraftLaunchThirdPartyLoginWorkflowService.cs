@@ -6,6 +6,36 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
 {
     private const string FailureTitle = "第三方验证失败";
 
+    public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveValidationHttpFailure(string exceptionDetails, string? webResponse)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(exceptionDetails);
+
+        var isTimeout = (exceptionDetails.Contains("超时", StringComparison.Ordinal) ||
+                         exceptionDetails.Contains("imeout", StringComparison.Ordinal)) &&
+                        !exceptionDetails.Contains("403", StringComparison.Ordinal);
+        if (isTimeout)
+        {
+            var failure = GetValidationTimeoutFailure(webResponse);
+            return new MinecraftLaunchThirdPartyLoginFailureResolution(
+                MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped,
+                Failure: failure,
+                WrappedExceptionMessage: failure.WrappedExceptionMessage);
+        }
+
+        return new MinecraftLaunchThirdPartyLoginFailureResolution(
+            MinecraftLaunchThirdPartyLoginFailureResolutionKind.AdvanceToStep,
+            NextStep: MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterValidateFailure());
+    }
+
+    public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveValidationFailure(string details)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(details);
+
+        return new MinecraftLaunchThirdPartyLoginFailureResolution(
+            MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndRethrow,
+            Failure: GetValidationFailure(details));
+    }
+
     public static MinecraftLaunchThirdPartyLoginFailure GetValidationTimeoutFailure(string? webResponse)
     {
         var message = "$登录失败：连接登录服务器超时。" + System.Environment.NewLine +
@@ -30,6 +60,24 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
             null);
     }
 
+    public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveRefreshFailure(string details, bool hasRetriedRefresh)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(details);
+
+        var failure = GetRefreshFailure(details);
+        var nextStep = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshFailure(hasRetriedRefresh);
+        return nextStep.Kind == MinecraftLaunchThirdPartyLoginStepKind.Fail
+            ? new MinecraftLaunchThirdPartyLoginFailureResolution(
+                MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped,
+                NextStep: nextStep,
+                Failure: failure,
+                WrappedExceptionMessage: nextStep.FailureMessage)
+            : new MinecraftLaunchThirdPartyLoginFailureResolution(
+                MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndAdvance,
+                NextStep: nextStep,
+                Failure: failure);
+    }
+
     public static MinecraftLaunchThirdPartyLoginFailure GetLoginHttpFailure(string exceptionDetails, string? responseText)
     {
         var wrappedMessage = TryGetLoginErrorMessage(responseText) ??
@@ -48,6 +96,28 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
             "刷新登录失败: " + exceptionDetails,
             "$第三方验证登录失败" + System.Environment.NewLine + System.Environment.NewLine +
             "详细信息：" + exceptionDetails);
+    }
+
+    public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveLoginHttpFailure(string exceptionDetails, string? responseText)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(exceptionDetails);
+
+        var failure = GetLoginHttpFailure(exceptionDetails, responseText);
+        return new MinecraftLaunchThirdPartyLoginFailureResolution(
+            MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped,
+            Failure: failure,
+            WrappedExceptionMessage: failure.WrappedExceptionMessage);
+    }
+
+    public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveLoginFailure(string exceptionDetails)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(exceptionDetails);
+
+        var failure = GetLoginFailure(exceptionDetails);
+        return new MinecraftLaunchThirdPartyLoginFailureResolution(
+            MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped,
+            Failure: failure,
+            WrappedExceptionMessage: failure.WrappedExceptionMessage);
     }
 
     private static string? TryGetLoginErrorMessage(string? responseText)
@@ -78,3 +148,17 @@ public sealed record MinecraftLaunchThirdPartyLoginFailure(
     string DialogTitle,
     string DialogMessage,
     string? WrappedExceptionMessage);
+
+public sealed record MinecraftLaunchThirdPartyLoginFailureResolution(
+    MinecraftLaunchThirdPartyLoginFailureResolutionKind Kind,
+    MinecraftLaunchThirdPartyLoginStep? NextStep = null,
+    MinecraftLaunchThirdPartyLoginFailure? Failure = null,
+    string? WrappedExceptionMessage = null);
+
+public enum MinecraftLaunchThirdPartyLoginFailureResolutionKind
+{
+    AdvanceToStep = 0,
+    ShowFailureAndAdvance = 1,
+    ShowFailureAndThrowWrapped = 2,
+    ShowFailureAndRethrow = 3
+}

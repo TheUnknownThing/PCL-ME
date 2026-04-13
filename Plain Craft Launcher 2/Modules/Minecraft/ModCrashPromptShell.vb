@@ -26,11 +26,44 @@ Public Module ModCrashPromptShell
         Return Nothing
     End Function
 
+    Public Function ShowOutputPrompt(prompt As MinecraftCrashOutputPrompt,
+                                     directFile As KeyValuePair(Of String, String())?,
+                                     fallbackLogPath As String) As MinecraftCrashPromptResponse
+        If prompt Is Nothing Then Throw New ArgumentNullException(NameOf(prompt))
+        If String.IsNullOrWhiteSpace(fallbackLogPath) Then Throw New ArgumentException("缺少崩溃日志兜底路径。", NameOf(fallbackLogPath))
+
+        FrmMain.ShowWindowToTop()
+        Dim selectedButton = RunOutputPrompt(prompt, Sub() OpenDirectLogFile(directFile, fallbackLogPath))
+        If selectedButton Is Nothing OrElse Not selectedButton.ClosesPrompt Then
+            Return MinecraftCrashPromptResponse.None
+        End If
+
+        Return MinecraftCrashResponseWorkflowService.ResolvePromptResponse(selectedButton.Action)
+    End Function
+
     Private Sub RunOutputPromptAction(action As MinecraftCrashOutputPromptActionKind, onViewLog As Action)
         Select Case action
             Case MinecraftCrashOutputPromptActionKind.ViewLog
                 onViewLog?.Invoke()
         End Select
+    End Sub
+
+    Private Sub OpenDirectLogFile(directFile As KeyValuePair(Of String, String())?, fallbackLogPath As String)
+        If directFile Is Nothing Then Return
+
+        If File.Exists(directFile.Value.Key) Then
+            ShellOnly(directFile.Value.Key)
+        Else
+            WriteFile(fallbackLogPath, Join(directFile.Value.Value, vbCrLf))
+            ShellOnly(fallbackLogPath)
+        End If
+    End Sub
+
+    Public Sub OpenInstanceSettings(version As McInstance)
+        If version Is Nothing Then Throw New ArgumentNullException(NameOf(version))
+
+        PageInstanceLeft.Instance = version
+        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
     End Sub
 
 End Module

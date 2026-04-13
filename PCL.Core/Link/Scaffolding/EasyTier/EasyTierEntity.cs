@@ -179,7 +179,7 @@ public class EasyTierEntity
             .Add("network-name", _lobby.NetworkName)
             .Add("network-secret", _lobby.NetworkSecret)
             //.Add("relay-network-whitelist", _lobby.NetworkName)
-            .Add("machine-id", Utils.Secret.Identify.LauncherId)
+            .Add("machine-id", LauncherIdentity.LauncherId)
             .Add("rpc-portal", _rpcPort.ToString())
             .Add("private-mode", "true")
             .AddFlag("p2p-only");

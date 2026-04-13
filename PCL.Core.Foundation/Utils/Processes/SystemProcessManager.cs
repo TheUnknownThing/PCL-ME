@@ -15,6 +15,19 @@ public sealed class SystemProcessManager : IProcessManager
             CreateNoWindow = request.CreateNoWindow
         };
         if (request.Arguments != null) psi.Arguments = request.Arguments;
+        if (!string.IsNullOrWhiteSpace(request.WorkingDirectory)) psi.WorkingDirectory = request.WorkingDirectory;
+        if (!request.UseShellExecute)
+        {
+            psi.RedirectStandardOutput = request.RedirectStandardOutput;
+            psi.RedirectStandardError = request.RedirectStandardError;
+            if (request.EnvironmentVariables is not null)
+            {
+                foreach (var environmentVariable in request.EnvironmentVariables)
+                {
+                    psi.EnvironmentVariables[environmentVariable.Key] = environmentVariable.Value;
+                }
+            }
+        }
         return Process.Start(psi);
     }
 

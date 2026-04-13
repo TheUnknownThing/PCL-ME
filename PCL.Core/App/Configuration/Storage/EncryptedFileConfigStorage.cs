@@ -3,14 +3,26 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PCL.Core.App;
 using PCL.Core.Logging;
-using PCL.Core.Utils.Secret;
 
 namespace PCL.Core.App.Configuration.Storage;
 
-public class EncryptedFileConfigStorage(ConfigStorage source) : ConfigStorage
+public class EncryptedFileConfigStorage : ConfigStorage
 {
-    public ConfigStorage Source { get; } = source;
+    public EncryptedFileConfigStorage(
+        ConfigStorage source,
+        Func<string?, string>? protect = null,
+        Func<string?, string>? unprotect = null)
+    {
+        Source = source;
+        Protect = protect ?? SecretDataProtection.Protect;
+        Unprotect = unprotect ?? SecretDataProtection.Unprotect;
+    }
+
+    public ConfigStorage Source { get; }
+    public Func<string?, string> Protect { get; }
+    public Func<string?, string> Unprotect { get; }
 
     private static readonly JsonSerializerOptions _SerializerOptions = new()
     {
@@ -35,7 +47,7 @@ public class EncryptedFileConfigStorage(ConfigStorage source) : ConfigStorage
                     if (type == typeof(string)) strValue = value?.ToString() ?? string.Empty;
                     else strValue = JsonSerializer.Serialize(value, _SerializerOptions);
                     // 加密
-                    strValue = EncryptHelper.SecretEncrypt(strValue);
+                    strValue = Protect(strValue);
                     return Source.Access(StorageAction.Set, ref key, ref strValue, argument);
                 }
                 case StorageAction.Get:
@@ -45,7 +57,7 @@ public class EncryptedFileConfigStorage(ConfigStorage source) : ConfigStorage
                     var hasOutput = Source.Access(StorageAction.Get, ref key, ref raw, argument);
                     if (!hasOutput) return false;
                     // 解密
-                    var decrypted = EncryptHelper.SecretDecrypt(raw);
+                    var decrypted = Unprotect(raw);
                     // 反序列化
                     var type = typeof(TValue);
                     if (type == typeof(bool)) Unsafe.As<TValue, bool>(ref value) = decrypted.ToLowerInvariant() is "true" or "1";

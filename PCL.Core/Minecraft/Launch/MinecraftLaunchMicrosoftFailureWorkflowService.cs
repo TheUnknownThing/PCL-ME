@@ -1,0 +1,101 @@
+using System;
+using System.Net;
+
+namespace PCL.Core.Minecraft.Launch;
+
+public static class MinecraftLaunchMicrosoftFailureWorkflowService
+{
+    private static readonly string IpBlockedMessage = "$当前 IP 的登录尝试异常。" + Environment.NewLine +
+                                                      "如果你使用了 VPN 或加速器，请把它们关掉或更换节点后再试！";
+
+    public static MinecraftLaunchMicrosoftFailureResolution ResolveOAuthRefreshFailure(string exceptionMessage)
+    {
+        if (string.IsNullOrWhiteSpace(exceptionMessage))
+        {
+            throw new ArgumentException("异常消息不能为空。", nameof(exceptionMessage));
+        }
+
+        if (exceptionMessage.Contains("must sign in again", StringComparison.OrdinalIgnoreCase) ||
+            exceptionMessage.Contains("password expired", StringComparison.OrdinalIgnoreCase) ||
+            (exceptionMessage.Contains("refresh_token", StringComparison.OrdinalIgnoreCase) &&
+             exceptionMessage.Contains("is not valid", StringComparison.OrdinalIgnoreCase)))
+        {
+            return new MinecraftLaunchMicrosoftFailureResolution(
+                MinecraftLaunchMicrosoftFailureResolutionKind.RequireRelogin);
+        }
+
+        return GetRetryableStepFailure();
+    }
+
+    public static MinecraftLaunchMicrosoftFailureResolution GetRetryableStepFailure(string? stepLabel = null)
+    {
+        return new MinecraftLaunchMicrosoftFailureResolution(
+            MinecraftLaunchMicrosoftFailureResolutionKind.OfferIgnoreAndContinue,
+            StepLabel: stepLabel);
+    }
+
+    public static MinecraftLaunchMicrosoftFailureResolution ResolveXstsFailure(string responseBody)
+    {
+        ArgumentNullException.ThrowIfNull(responseBody);
+
+        var prompt = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt(responseBody);
+        if (prompt is not null)
+        {
+            return new MinecraftLaunchMicrosoftFailureResolution(
+                MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort,
+                Prompt: prompt);
+        }
+
+        return GetRetryableStepFailure("Step 3");
+    }
+
+    public static MinecraftLaunchMicrosoftFailureResolution ResolveMinecraftAccessTokenFailure(HttpStatusCode? statusCode)
+    {
+        return statusCode switch
+        {
+            HttpStatusCode.TooManyRequests => new MinecraftLaunchMicrosoftFailureResolution(
+                MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException,
+                WrappedExceptionMessage: "$登录尝试太过频繁，请等待几分钟后再试！"),
+            HttpStatusCode.Forbidden => new MinecraftLaunchMicrosoftFailureResolution(
+                MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException,
+                WrappedExceptionMessage: IpBlockedMessage),
+            _ => GetRetryableStepFailure("Step 4")
+        };
+    }
+
+    public static MinecraftLaunchAccountDecisionPrompt? TryGetOwnershipFailurePrompt(string responseBody)
+    {
+        ArgumentNullException.ThrowIfNull(responseBody);
+        return MinecraftLaunchMicrosoftProtocolService.HasMinecraftOwnership(responseBody)
+            ? null
+            : MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt();
+    }
+
+    public static MinecraftLaunchMicrosoftFailureResolution ResolveMinecraftProfileFailure(HttpStatusCode? statusCode)
+    {
+        return statusCode switch
+        {
+            HttpStatusCode.TooManyRequests => new MinecraftLaunchMicrosoftFailureResolution(
+                MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException,
+                WrappedExceptionMessage: "$登录尝试太过频繁，请等待几分钟后再试！"),
+            HttpStatusCode.NotFound => new MinecraftLaunchMicrosoftFailureResolution(
+                MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort,
+                Prompt: MinecraftLaunchAccountWorkflowService.GetCreateProfilePrompt()),
+            _ => GetRetryableStepFailure("Step 6")
+        };
+    }
+}
+
+public enum MinecraftLaunchMicrosoftFailureResolutionKind
+{
+    OfferIgnoreAndContinue = 0,
+    RequireRelogin = 1,
+    ShowPromptAndAbort = 2,
+    ThrowWrappedException = 3
+}
+
+public sealed record MinecraftLaunchMicrosoftFailureResolution(
+    MinecraftLaunchMicrosoftFailureResolutionKind Kind,
+    string? StepLabel = null,
+    string? WrappedExceptionMessage = null,
+    MinecraftLaunchAccountDecisionPrompt? Prompt = null);

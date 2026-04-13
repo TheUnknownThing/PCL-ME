@@ -1,11 +1,11 @@
+Imports PCL.Core.Minecraft.Launch
 Imports PCL.Core.UI.Controls
 
 Public Class MyMsgLogin
-    Private Data As JObject
+    Private Data As MinecraftLaunchMicrosoftDeviceCodePromptPlan
     Private UserCode As String '需要用户在网页上输入的设备代码
     Private DeviceCode As String '用于轮询的设备代码
     Private Website As String '验证网页的网址
-    Private OAuthUrl As String = "" 'OAuth 轮询验证地址
 
 
 #Region "弹窗"
@@ -21,8 +21,7 @@ Public Class MyMsgLogin
             Btn3.Name = Btn3.Name & GetUuid()
             MyConverter = Converter
             ShapeLine.StrokeThickness = GetWPFSize(1)
-            Data = Converter.Content
-            OAuthUrl = Converter.AuthUrl
+            Data = CType(Converter.Content, MinecraftLaunchMicrosoftDeviceCodePromptPlan)
             Init()
         Catch ex As Exception
             Log(ex, "正版验证弹窗初始化失败", LogLevel.Hint)
@@ -85,23 +84,13 @@ Public Class MyMsgLogin
     End Sub
 
     Private Sub Init()
-        UserCode = Data("user_code")
-        DeviceCode = Data("device_code")
+        UserCode = Data.UserCode
+        DeviceCode = Data.DeviceCode
         ClipboardSet(DeviceCode)
-        If Data("verification_uri_complete") IsNot Nothing Then 
-            Website = Data("verification_uri_complete")
-            LabCaption.Text = $"登录网页将自动开启，授权码将自动填充。" & vbCrLf & vbCrLf &
-            $"如果网络环境不佳，网页可能一直加载不出来，届时请使用 VPN 并重试。" & vbCrLf &
-            $"如果没有自动填充，请在页面内粘贴此授权码 {UserCode} （将自动复制）" & vbCrLf &
-            $"你也可以用其他设备打开 {Website} 并输入授权码。"
-        Else
-            Website = Data("verification_uri")
-            LabCaption.Text = $"登录网页将自动开启，请在网页中输入授权码 {UserCode}（将自动复制）。" & vbCrLf & vbCrLf &
-            $"如果网络环境不佳，网页可能一直加载不出来，届时请使用 VPN 并重试。" & vbCrLf &
-            $"你也可以用其他设备打开 {Website} 并输入上述授权码。"
-        End If
+        Website = Data.OpenBrowserUrl
+        LabCaption.Text = Data.Message
         '设置 UI
-        LabTitle.Text = "登录 Minecraft"
+        LabTitle.Text = Data.Title
         CustomEventService.SetEventData(Btn1, Website)
         CustomEventService.SetEventData(Btn2, UserCode)
         '启动工作线程
@@ -113,13 +102,13 @@ Public Class MyMsgLogin
         If MyConverter.IsExited Then Return
         OpenWebsite(Website)
         ClipboardSet(UserCode)
-        Thread.Sleep((Data("interval").ToObject(Of Integer) - 1) * 1000)
+        Thread.Sleep(Math.Max(Data.PollIntervalSeconds - 1, 0) * 1000)
         '轮询
         Dim UnknownFailureCount As Integer = 0
         Do While Not MyConverter.IsExited
             Try
                 Dim Result = NetRequestOnce(
-                    "https://login.microsoftonline.com/consumers/oauth2/v2.0/token", "POST",
+                    Data.PollUrl, "POST",
                     "grant_type=urn:ietf:params:oauth:grant-type:device_code" & "&" &
                     "client_id=" & OAuthClientId & "&" &
                     "device_code=" & DeviceCode & "&" &

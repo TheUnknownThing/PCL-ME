@@ -1,0 +1,49 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclLaunchButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+  <Grid Height="54">
+    <Border
+        x:Name="PanFore"
+        CornerRadius="3"
+        BorderThickness="1"
+        RenderTransformOrigin="0.5,0.5"
+        RenderTransform="scale(1)"
+        Background="{DynamicResource ColorBrushHalfWhite}"
+        BorderBrush="{DynamicResource ColorBrush3}">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.12" />
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+          <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+        </Transitions>
+      </Border.Transitions>
+      <Grid Margin="0,3,0,0">
+        <TextBlock
+            x:Name="TitleBlock"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Margin="0,-7,0,0"
+            FontSize="21"
+            Foreground="{DynamicResource ColorBrush3}" />
+        <TextBlock
+            x:Name="SubtitleBlock"
+            Margin="26,0,26,7"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            FontSize="11"
+            Foreground="{DynamicResource ColorBrushGray3}"
+            TextTrimming="CharacterEllipsis" />
+      </Grid>
+    </Border>
+    <Button
+        x:Name="ButtonHost"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        Padding="0" />
+  </Grid>
+</UserControl>

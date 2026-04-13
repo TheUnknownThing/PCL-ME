@@ -7,9 +7,20 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>PCL.Frontend.Spike</AssemblyName>
     <RootNamespace>PCL.Frontend.Spike</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.6" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="..\Plain Craft Launcher 2\Resources\Font.ttf" Link="Assets/Fonts/Font.ttf" />
   </ItemGroup>
 </Project>

@@ -22,6 +22,11 @@ public static class Secrets
     public static string TelemetryKey { get; } = EnvironmentInterop.GetSecret("TELEMETRY_KEY", readEnvDebugOnly: true).ReplaceNullOrEmpty();
 
     /// <summary>
+    /// Sentry DSN
+    /// </summary>
+    public static string SentryDsn { get; } = EnvironmentInterop.GetSecret("SENTRY_DSN", readEnvDebugOnly: true).ReplaceNullOrEmpty();
+
+    /// <summary>
     /// Natayark ID OAuth 的 Client ID
     /// </summary>
     public static string NatayarkClientId { get; } = EnvironmentInterop.GetSecret("NAID_CLIENT_ID", readEnvDebugOnly: true).ReplaceNullOrEmpty();

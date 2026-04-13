@@ -47,6 +47,18 @@ public sealed class MinecraftLaunchShellServiceTest
     }
 
     [TestMethod]
+    public void BuildScriptExportPlanReturnsRevealAndAbortHint()
+    {
+        var result = MinecraftLaunchShellService.BuildScriptExportPlan(
+            "/tmp/Launch.bat");
+
+        Assert.AreEqual("/tmp/Launch.bat", result.TargetPath);
+        Assert.AreEqual("导出启动脚本完成，强制结束启动过程", result.CompletionLogMessage);
+        Assert.AreEqual("导出启动脚本成功！", result.AbortHint);
+        Assert.AreEqual("/tmp/Launch.bat", result.RevealInShellPath);
+    }
+
+    [TestMethod]
     public void GetSupportPromptReturnsDonationPromptAtMilestone()
     {
         var result = MinecraftLaunchShellService.GetSupportPrompt(200);

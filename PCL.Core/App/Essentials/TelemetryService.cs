@@ -23,8 +23,8 @@ public sealed partial class TelemetryService
     private static void _InitSentry()
     {
         Context.Info("开始初始化 Sentry SDK");
-        var dsn = EnvironmentInterop.GetSecret("SENTRY_DSN");
-        if (dsn is null)
+        var dsn = Secrets.SentryDsn;
+        if (string.IsNullOrWhiteSpace(dsn))
         {
             Context.Warn("未找到 Sentry DSN");
             return;
@@ -157,7 +157,7 @@ public sealed partial class TelemetryService
         var telemetry = new TelemetryDeviceEnvironment
         {
             Tag = "Telemetry",
-            Id = Utils.Secret.Identify.LauncherId,
+            Id = LauncherIdentity.LauncherId,
             Os = runtime.OsVersion.Build,
             Is64Bit = runtime.Is64BitOperatingSystem,
             IsArm64 = runtime.OsArchitecture.Equals(Architecture.Arm64),

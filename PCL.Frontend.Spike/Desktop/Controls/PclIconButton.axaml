@@ -1,0 +1,39 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclIconButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+  <Border
+      x:Name="PanBack"
+      Width="28"
+      Height="28"
+      CornerRadius="14"
+      Background="#00FFFFFF"
+      RenderTransformOrigin="0.5,0.5">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+        <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Width="28"
+        Height="28"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        Padding="0">
+      <Border
+          x:Name="ShapeIcon"
+          Width="9"
+          Height="9"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Background="#EAF2FE"
+          CornerRadius="4.5" />
+    </Button>
+  </Border>
+</UserControl>

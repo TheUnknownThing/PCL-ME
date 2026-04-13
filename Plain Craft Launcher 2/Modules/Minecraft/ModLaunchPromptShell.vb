@@ -2,8 +2,10 @@ Imports PCL.Core.Minecraft.Launch
 
 Public Module ModLaunchPromptShell
 
-    Public Function RunMicrosoftDeviceCodeLoginPrompt(prepareJson As JObject) As MicrosoftDeviceCodePromptResult
-        Dim converter As New MyMsgBoxConverter With {.Content = prepareJson, .ForceWait = True, .Type = MyMsgBoxType.Login}
+    Private Function ShowMicrosoftDeviceCodeLoginPrompt(prompt As MinecraftLaunchMicrosoftDeviceCodePromptPlan) As MicrosoftDeviceCodePromptResult
+        If prompt Is Nothing Then Throw New ArgumentNullException(NameOf(prompt))
+
+        Dim converter As New MyMsgBoxConverter With {.Content = prompt, .ForceWait = True, .Type = MyMsgBoxType.Login}
         WaitingMyMsgBox.Add(converter)
         While converter.Result Is Nothing
             Thread.Sleep(100)
@@ -22,6 +24,25 @@ Public Module ModLaunchPromptShell
             MicrosoftDeviceCodePromptResultKind.Succeeded,
             result(0),
             result(1))
+    End Function
+
+    Public Function RunMicrosoftDeviceCodeLoginShell(prompt As MinecraftLaunchMicrosoftDeviceCodePromptPlan) As MicrosoftDeviceCodeShellResult
+        Dim promptResult = ShowMicrosoftDeviceCodeLoginPrompt(prompt)
+        If promptResult.Kind = MicrosoftDeviceCodePromptResultKind.PasswordLoginRequired Then
+            Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetPasswordLoginPrompt())
+            If decision.Decision = MinecraftLaunchAccountDecisionKind.Retry Then
+                Return New MicrosoftDeviceCodeShellResult(MicrosoftDeviceCodeShellResultKind.RetryDeviceCodeLogin)
+            End If
+
+            Throw New Exception("$$")
+        ElseIf promptResult.Kind = MicrosoftDeviceCodePromptResultKind.Failed Then
+            Throw promptResult.Error
+        Else
+            Return New MicrosoftDeviceCodeShellResult(
+                MicrosoftDeviceCodeShellResultKind.Succeeded,
+                promptResult.AccessToken,
+                promptResult.RefreshToken)
+        End If
     End Function
 
     Public Sub RunLaunchPrompt(prompt As MinecraftLaunchPrompt, launchOptions As ModLaunch.McLaunchOptions)
@@ -88,6 +109,11 @@ Public Module ModLaunchPromptShell
         Return selectedOption
     End Function
 
+    Public Sub ShowMicrosoftOwnershipPrompt(prompt As MinecraftLaunchAccountDecisionPrompt)
+        If prompt Is Nothing Then Throw New ArgumentNullException(NameOf(prompt))
+        RunAccountDecisionPrompt(prompt)
+    End Sub
+
     Public Function RunJavaPrompt(prompt As MinecraftLaunchJavaPrompt) As MinecraftLaunchJavaPromptOption
         If prompt Is Nothing OrElse prompt.Options Is Nothing OrElse prompt.Options.Count = 0 Then Throw New ArgumentException("缺少可用的 Java 操作。", NameOf(prompt))
 
@@ -99,6 +125,39 @@ Public Module ModLaunchPromptShell
             If(prompt.Options.Count >= 3, prompt.Options(2).Label, ""))
         If result < 1 OrElse result > prompt.Options.Count Then result = prompt.Options.Count
         Return prompt.Options(result - 1)
+    End Function
+
+    Public Function ShouldIgnoreMicrosoftRefreshFailure(Optional stepLabel As String = Nothing) As Boolean
+        Dim isIgnore As Boolean = False
+        RunInUiWait(Sub()
+                        If Not ModLaunch.IsLaunching Then Exit Sub
+                        Dim decision = RunAccountDecisionPrompt(MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt(stepLabel))
+                        If decision.Decision = MinecraftLaunchAccountDecisionKind.IgnoreAndContinue Then isIgnore = True
+                    End Sub)
+        Return isIgnore
+    End Function
+
+    Public Function TryHandleMicrosoftFailureResolution(resolution As MinecraftLaunchMicrosoftFailureResolution,
+                                                         Optional runPromptInBackground As Boolean = False) As Boolean
+        Select Case resolution.Kind
+            Case MinecraftLaunchMicrosoftFailureResolutionKind.OfferIgnoreAndContinue
+                Return ShouldIgnoreMicrosoftRefreshFailure(resolution.StepLabel)
+            Case MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort
+                If resolution.Prompt Is Nothing Then Throw New InvalidOperationException("缺少微软登录失败提示内容。")
+                If runPromptInBackground Then
+                    RunInNewThread(
+                        Sub()
+                            RunAccountDecisionPrompt(resolution.Prompt)
+                        End Sub, "Login Failed: Account Prompt")
+                Else
+                    RunAccountDecisionPrompt(resolution.Prompt)
+                End If
+                Throw New Exception("$$")
+            Case MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException
+                Throw New Exception(resolution.WrappedExceptionMessage)
+            Case Else
+                Throw New InvalidOperationException("未知的微软登录失败处理结果。")
+        End Select
     End Function
 
     Public Function RunAuthProfileSelectionPrompt(title As String, options As IReadOnlyList(Of MinecraftLaunchAuthProfileOption)) As MinecraftLaunchAuthProfileOption
@@ -119,10 +178,21 @@ Public Module ModLaunchPromptShell
         MyMsgBox(failure.DialogMessage, failure.DialogTitle, IsWarn:=True)
     End Sub
 
+    Public Sub ShowThirdPartyFailureIfPresent(resolution As MinecraftLaunchThirdPartyLoginFailureResolution)
+        If resolution.Failure IsNot Nothing Then
+            ShowThirdPartyLoginFailure(resolution.Failure)
+        End If
+    End Sub
+
     Public Enum MicrosoftDeviceCodePromptResultKind
         Succeeded = 0
         PasswordLoginRequired = 1
         Failed = 2
+    End Enum
+
+    Public Enum MicrosoftDeviceCodeShellResultKind
+        Succeeded = 0
+        RetryDeviceCodeLogin = 1
     End Enum
 
     Public Structure MicrosoftDeviceCodePromptResult
@@ -140,6 +210,20 @@ Public Module ModLaunchPromptShell
         Public AccessToken As String
         Public RefreshToken As String
         Public [Error] As Exception
+    End Structure
+
+    Public Structure MicrosoftDeviceCodeShellResult
+        Public Sub New(kind As MicrosoftDeviceCodeShellResultKind,
+                       Optional accessToken As String = Nothing,
+                       Optional refreshToken As String = Nothing)
+            Me.Kind = kind
+            Me.AccessToken = accessToken
+            Me.RefreshToken = refreshToken
+        End Sub
+
+        Public Kind As MicrosoftDeviceCodeShellResultKind
+        Public AccessToken As String
+        Public RefreshToken As String
     End Structure
 
 End Module

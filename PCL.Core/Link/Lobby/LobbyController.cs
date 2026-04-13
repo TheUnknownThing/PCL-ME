@@ -6,7 +6,6 @@ using PCL.Core.Link.Scaffolding.Client.Requests;
 using PCL.Core.Logging;
 using PCL.Core.Utils.Exts;
 using PCL.Core.Utils.OS;
-using PCL.Core.Utils.Secret;
 using System;
 using System.Linq;
 using System.Net;
@@ -210,7 +209,7 @@ public sealed class LobbyController
         JsonObject data = new()
         {
             ["Tag"] = "Link",
-            ["Id"] = Identify.LauncherId,
+            ["Id"] = LauncherIdentity.LauncherId,
             ["NaidId"] = NaidProfile.Id,
             ["NaidEmail"] = NaidProfile.Email,
             ["NaidLastIp"] = NaidProfile.LastIp,
@@ -223,8 +222,8 @@ public sealed class LobbyController
         try
         {
             HttpContent httpContent = new StringContent(sendData.ToJsonString(), Encoding.UTF8, "application/json");
-            var key = EnvironmentInterop.GetSecret("TelemetryKey");
-            if (key == null)
+            var key = Secrets.TelemetryKey;
+            if (string.IsNullOrWhiteSpace(key))
             {
                 if (RequiresLogin)
                 {

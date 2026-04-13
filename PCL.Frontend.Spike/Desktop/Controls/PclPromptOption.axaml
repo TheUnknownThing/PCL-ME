@@ -1,0 +1,33 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.Controls.PclPromptOption"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+  <Border
+      Padding="12"
+      Background="#F3F8FF"
+      BorderBrush="#D5E6FD"
+      BorderThickness="1"
+      CornerRadius="8">
+    <Button
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalContentAlignment="Left"
+        Padding="0">
+      <StackPanel Spacing="4">
+        <TextBlock
+            Foreground="#343D4A"
+            FontSize="13"
+            FontWeight="SemiBold"
+            Text="{Binding Label, ElementName=Root}" />
+        <TextBlock
+            Foreground="#728091"
+            FontSize="12"
+            TextWrapping="Wrap"
+            Text="{Binding Detail, ElementName=Root}" />
+      </StackPanel>
+    </Button>
+  </Border>
+</UserControl>
