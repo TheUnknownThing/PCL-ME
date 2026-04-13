@@ -1,0 +1,52 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclIconTextButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    MinHeight="27"
+    MaxHeight="27">
+  <Border
+      x:Name="PanBack"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      BorderBrush="{DynamicResource ColorBrush6}"
+      BorderThickness="1"
+      CornerRadius="13.5"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Classes="nochrome"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        VerticalContentAlignment="Stretch"
+        Padding="0">
+      <StackPanel Orientation="Horizontal">
+        <Path
+            x:Name="ShapeIcon"
+            Margin="12,0,0,0"
+            Width="15"
+            Height="15"
+            VerticalAlignment="Center"
+            Stretch="Uniform" />
+        <TextBlock
+            x:Name="LabText"
+            Margin="7,0,12,1"
+            VerticalAlignment="Center"
+            FontSize="13"
+            Text="{Binding Text, ElementName=Root}" />
+      </StackPanel>
+    </Button>
+  </Border>
+</UserControl>

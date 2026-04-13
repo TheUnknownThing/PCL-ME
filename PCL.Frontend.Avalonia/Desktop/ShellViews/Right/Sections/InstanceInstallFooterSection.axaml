@@ -1,0 +1,14 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceInstallFooterSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <Grid ColumnDefinitions="*,Auto">
+    <controls:PclButton
+        Grid.Column="1"
+        Width="120"
+        Margin="16,0,0,0"
+        Command="{Binding ApplyInstanceInstallCommand}"
+        Text="{Binding InstanceInstallApplyButtonText}" />
+  </Grid>
+</UserControl>

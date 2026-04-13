@@ -1,0 +1,110 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclCard"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    x:Name="Root">
+  <Grid ClipToBounds="False">
+    <Border
+        x:Name="CardBorder"
+        Background="{DynamicResource ColorBrushMyCard}"
+        BorderBrush="{DynamicResource ColorBrushTransparent}"
+        BorderThickness="1"
+        BoxShadow="0 6 18 0 #14343D4A"
+        CornerRadius="6">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BoxShadowsTransition Property="BoxShadow" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+      <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Button
+            x:Name="HeaderButton"
+            Classes="nochrome"
+            Grid.Row="0"
+            Margin="0"
+            Padding="0"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            IsVisible="{Binding HasHeader, ElementName=Root}" />
+
+        <TextBlock
+            x:Name="HeaderTextBlock"
+            Grid.Row="0"
+            Margin="15,12,0,0"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            IsVisible="{Binding HasHeader, ElementName=Root}"
+            FontSize="13"
+            Foreground="{DynamicResource ColorBrush1}" />
+
+        <Path
+            x:Name="ChevronPath"
+            Grid.Row="0"
+            Width="10"
+            Height="6"
+            Margin="0,17,16,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            Data="M2,4 l-2,2 10,10 10,-10 -2,-2 -8,8 -8,-8 z"
+            Fill="{DynamicResource ColorBrush1}"
+            RenderTransformOrigin="0.5,0.5"
+            Stretch="Uniform"
+            IsVisible="{Binding ShowChevron, ElementName=Root}" />
+
+        <controls:PclIconButton
+            x:Name="CloseButton"
+            Grid.Row="0"
+            Margin="0,6,6,0"
+            HorizontalAlignment="Right"
+            HoverBackgroundBrush="#1AD7DFEA"
+            IconBrush="#8E99A8"
+            IconScale="0.72"
+            VerticalAlignment="Top"
+            IsVisible="{Binding ShowCloseButton, ElementName=Root}" />
+
+        <ContentPresenter
+            x:Name="HeaderOverlayContentPresenter"
+            Grid.Row="0"
+            Content="{Binding HeaderOverlayContent, ElementName=Root}"
+            IsVisible="{Binding HasHeaderOverlayContent, ElementName=Root}" />
+
+        <Grid
+            x:Name="ContentHost"
+            Grid.Row="1"
+            ClipToBounds="True">
+          <ContentPresenter
+              x:Name="CardContentPresenter"
+              Margin="{Binding EffectiveContentMargin, ElementName=Root}"
+              Content="{Binding CardContent, ElementName=Root}" />
+        </Grid>
+      </Grid>
+    </Border>
+
+    <Border
+        x:Name="HoverOutlineBorder"
+        Background="Transparent"
+        BorderBrush="{DynamicResource ColorBrushTransparent}"
+        BorderThickness="1"
+        CornerRadius="6"
+        IsHitTestVisible="False">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+          <ThicknessTransition Property="BorderThickness" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+    </Border>
+  </Grid>
+</UserControl>

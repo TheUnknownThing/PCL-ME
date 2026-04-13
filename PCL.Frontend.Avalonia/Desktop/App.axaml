@@ -1,0 +1,260 @@
+<Application
+    x:Class="PCL.Frontend.Avalonia.Desktop.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    RequestedThemeVariant="Light">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://PCL.Frontend.Avalonia/Desktop/Styles/ThemeResources.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <GridLength x:Key="SliderPreContentMargin">6</GridLength>
+      <GridLength x:Key="SliderPostContentMargin">6</GridLength>
+      <x:Double x:Key="SliderHorizontalHeight">28</x:Double>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://PCL.Frontend.Avalonia/Desktop/Styles/CustomScroll.axaml" />
+    <StyleInclude Source="avares://PCL.Frontend.Avalonia/Desktop/Styles/CustomTextBlock.axaml" />
+
+    <Style Selector="Window">
+      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.pcl-dialog-overlay">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Border.pcl-dialog-panel">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+      <Setter Property="RenderTransform" Value="scale(0.94)" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.nochrome">
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+              CornerRadius="0"
+              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+              Padding="{TemplateBinding Padding}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.nochrome:focus">
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="Button.nochrome:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="Button.nochrome:pressed">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="Button:pointerover">
+      <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <Style Selector="Button:pressed">
+      <Setter Property="Opacity" Value="0.75" />
+    </Style>
+
+    <Style Selector="ComboBox">
+      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForeground}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="8.5,4" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MaxDropDownHeight" Value="240" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid ColumnDefinitions="*,30" UseLayoutRounding="True">
+            <Border
+                x:Name="Background"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                UseLayoutRounding="True" />
+            <ContentControl
+                x:Name="ContentPresenter"
+                Grid.Column="0"
+                Margin="{TemplateBinding Padding}"
+                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                Content="{TemplateBinding SelectionBoxItem}"
+                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+            <PathIcon
+                x:Name="DropDownGlyph"
+                Grid.Column="1"
+                Width="12"
+                Height="12"
+                Margin="0,0,10,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Foreground="{TemplateBinding Foreground}"
+                IsHitTestVisible="False"
+                UseLayoutRounding="False"
+                Data="M1939 486L2029 576L1024 1581L19 576L109 486L1024 1401L1939 486Z" />
+            <Popup
+                Name="PART_Popup"
+                IsLightDismissEnabled="True"
+                IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}"
+                InheritsTransform="True"
+                MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                MinWidth="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"
+                PlacementTarget="Background"
+                WindowManagerAddShadowHint="False">
+              <Border
+                  x:Name="PopupBorder"
+                  Margin="0,0,1,1"
+                  Padding="1"
+                  HorizontalAlignment="Stretch"
+                  Background="{DynamicResource ComboBoxDropDownBackground}"
+                  BorderBrush="{DynamicResource ComboBoxDropDownBorderBrush}"
+                  BorderThickness="{DynamicResource ComboBoxDropdownBorderThickness}"
+                  BoxShadow="0 2 4 0 #28000000"
+                  ClipToBounds="False"
+                  CornerRadius="3"
+                  UseLayoutRounding="True">
+                <ScrollViewer
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto"
+                    UseLayoutRounding="True">
+                  <ItemsPresenter
+                      Name="PART_ItemsPresenter"
+                      ItemsPanel="{TemplateBinding ItemsPanel}"
+                      UseLayoutRounding="True" />
+                </ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ComboBox:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundPointerOver}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushPointerOver}" />
+    </Style>
+
+    <Style Selector="ComboBox:pressed">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundPressed}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushPressed}" />
+    </Style>
+
+    <Style Selector="ComboBox:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBackgroundBorderBrushFocused}" />
+    </Style>
+
+    <Style Selector="ComboBox:disabled">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForegroundDisabled}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="ComboBoxItem">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="ComboBoxItem /template/ ContentPresenter">
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="{Binding $parent[ComboBox].HorizontalContentAlignment}" />
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFieldForeground}" />
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="5,4,5,4" />
+      <Setter Property="SelectionBrush" Value="{DynamicResource TextFieldSelectionBrush}" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style Selector="TextBox:pointerover">
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackgroundPointerOver}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrushPointerOver}" />
+    </Style>
+
+    <Style Selector="TextBox:focus">
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackgroundFocused}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrushFocused}" />
+    </Style>
+
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackgroundDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrushDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFieldForegroundDisabled}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="Slider">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </Application.Styles>
+</Application>

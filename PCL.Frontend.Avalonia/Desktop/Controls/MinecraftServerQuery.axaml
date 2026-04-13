@@ -1,0 +1,102 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.MinecraftServerQuery"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+    <TextBox
+        Grid.Column="0"
+        Margin="0,0,15,0"
+        Height="30"
+        Padding="8,4"
+        Watermark="输入服务器地址"
+        Text="{Binding MinecraftServerQueryAddress}" />
+    <controls:PclButton
+        Grid.Column="1"
+        Width="60"
+        Command="{Binding QueryMinecraftServerCommand}"
+        Text="查询" />
+
+    <Border
+        Grid.Row="1"
+        Grid.ColumnSpan="2"
+        Margin="0,7,0,0"
+        BorderThickness="2"
+        BorderBrush="{DynamicResource ColorBrush5}"
+        CornerRadius="5"
+        ClipToBounds="True"
+        IsVisible="{Binding HasMinecraftServerQueryResult}">
+      <Border.Background>
+        <ImageBrush
+            Source="{Binding MinecraftServerQueryBackgroundImage}"
+            Stretch="UniformToFill" />
+      </Border.Background>
+      <Grid MinHeight="66">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Image
+              Grid.Column="0"
+              Width="54"
+              Height="54"
+              Margin="6"
+              Source="{Binding MinecraftServerQueryLogo}"
+              Stretch="Uniform" />
+
+          <StackPanel Grid.Column="1" Margin="6" VerticalAlignment="Center" Spacing="2">
+            <TextBlock
+                FontSize="15"
+                Foreground="{Binding MinecraftServerQueryTitleBrush}"
+                Text="{Binding MinecraftServerQueryTitle}"
+                TextWrapping="Wrap" />
+
+            <ItemsControl
+                ItemsSource="{Binding MinecraftServerQueryMotdLines}"
+                IsVisible="{Binding HasMinecraftServerQueryMotd}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <ItemsControl ItemsSource="{Binding Segments}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock
+                            FontSize="14"
+                            FontStyle="{Binding FontStyle}"
+                            FontWeight="{Binding FontWeight}"
+                            Foreground="{Binding ForegroundBrush}"
+                            Text="{Binding Text}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <StackPanel
+              Grid.Column="2"
+              Margin="6"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              ToolTip.Tip="{Binding MinecraftServerQueryPlayerTooltip}">
+            <TextBlock
+                HorizontalAlignment="Right"
+                FontSize="12"
+                Foreground="White"
+                Text="{Binding MinecraftServerQueryPlayerCount}"
+                TextAlignment="Right" />
+            <TextBlock
+                HorizontalAlignment="Right"
+                FontSize="12"
+                Foreground="{Binding MinecraftServerQueryLatencyBrush}"
+                IsVisible="{Binding HasMinecraftServerQueryLatency}"
+                Text="{Binding MinecraftServerQueryLatency}"
+                TextAlignment="Right" />
+          </StackPanel>
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

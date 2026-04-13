@@ -1,0 +1,83 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.DownloadFavoritesShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="15">
+      <Grid ColumnDefinitions="*,Auto">
+        <controls:PclSearchBox
+            Text="{Binding DownloadFavoriteSearchQuery, Mode=TwoWay}"
+            Watermark="搜索收藏夹内容" />
+        <controls:PclCard Grid.Column="1" Margin="15,0,0,0" ContentMargin="8,6,8,6">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto">
+              <ComboBox
+                  Width="140"
+                  ItemsSource="{Binding DownloadFavoriteTargetOptions}"
+                  SelectedIndex="{Binding SelectedDownloadFavoriteTargetIndex}" />
+              <controls:PclIconButton
+                  x:Name="ManageTargetButton"
+                  Grid.Column="1"
+                  Margin="8,0,0,0"
+                  Command="{Binding ManageDownloadFavoriteTargetCommand}"
+                  ToolTip.Tip="管理"
+                  VerticalAlignment="Center" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </Grid>
+
+      <Border
+          Padding="12,10"
+          Background="#FFF8DD"
+          BorderBrush="#F2D777"
+          BorderThickness="1"
+          CornerRadius="4"
+          IsVisible="{Binding ShowDownloadFavoriteWarning}">
+        <TextBlock
+            Foreground="#6E5800"
+            FontSize="12.5"
+            Text="{Binding DownloadFavoriteWarningText}"
+            TextWrapping="Wrap" />
+      </Border>
+
+      <ItemsControl ItemsSource="{Binding DownloadFavoriteSections}" IsVisible="{Binding HasDownloadFavoriteSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="12,38,12,12">
+              <controls:PclCard.CardContent>
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclActionSummaryRow
+                          ActionText="{Binding ActionText}"
+                          Command="{Binding Command}"
+                          Info="{Binding Info}"
+                          Meta="{Binding Meta}"
+                          ShowMeta="{Binding HasMeta}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <controls:PclCard Header="还没有收藏内容" IsVisible="{Binding HasNoDownloadFavoriteSections}" ContentMargin="20,34,20,20">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="9">
+            <TextBlock
+                Foreground="#4B5968"
+                FontSize="13"
+                Text="在资源详细信息界面中可以点击收藏按钮进行收藏。"
+                TextWrapping="Wrap" />
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

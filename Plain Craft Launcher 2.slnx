@@ -8,7 +8,6 @@
     <Platform Name="ARM64" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="PCL.Core\PCL.Core.csproj" Type="C#" />
   <Project Path="PCL.Core.Backend\PCL.Core.Backend.csproj" Type="C#" />
   <Project Path="PCL.Core.Foundation\PCL.Core.Foundation.csproj" Type="C#" />
   <Project Path="PCL.Core.Backend.Test\PCL.Core.Backend.Test.csproj" Type="C#">
@@ -18,9 +17,5 @@
   <Project Path="PCL.Core.Foundation.Test\PCL.Core.Foundation.Test.csproj" Type="C#">
     <Build Solution="*|*" Project="false" />
   </Project>
-  <Project Path="PCL.Core.Test\PCL.Core.Test.csproj" Type="C#">
-    <Build Solution="*|*" Project="false" />
-  </Project>
-  <Project Path="PCL.Frontend.Spike\PCL.Frontend.Spike.csproj" Type="C#" />
-  <Project Path="Plain Craft Launcher 2\Plain Craft Launcher 2.vbproj" Type="VB" />
+  <Project Path="PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" Type="C#" />
 </Solution>

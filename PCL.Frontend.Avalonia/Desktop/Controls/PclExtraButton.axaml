@@ -1,0 +1,52 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclExtraButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    Width="40"
+    Height="40">
+  <Border
+      x:Name="PanColor"
+      Width="40"
+      Height="40"
+      HorizontalAlignment="Center"
+      VerticalAlignment="Center"
+      CornerRadius="20"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)"
+      Background="{DynamicResource ColorBrush3}"
+      BorderBrush="#00000000"
+      BorderThickness="0"
+      BoxShadow="0 0 10 0 #33000000">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Classes="nochrome"
+        FocusAdorner="{x:Null}"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
+        Padding="0">
+      <Path
+          x:Name="IconPathElement"
+          Width="16"
+          Height="16"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Fill="{DynamicResource ColorBrush8}"
+          Stretch="Uniform" />
+    </Button>
+  </Border>
+</UserControl>

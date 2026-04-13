@@ -1,0 +1,51 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclPromptOption"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    motion:Motion.AnimateOnVisible="True"
+    motion:Motion.OffsetY="8">
+  <Border
+      x:Name="OptionBorder"
+      Padding="12"
+      Background="#F3F8FF"
+      BorderBrush="#D5E6FD"
+      BorderThickness="1"
+      CornerRadius="8"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Classes="nochrome"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalContentAlignment="Left"
+        Padding="0">
+      <StackPanel Spacing="4">
+        <TextBlock
+            x:Name="LabelBlock"
+            Foreground="#343D4A"
+            FontSize="13"
+            Text="{Binding Label, ElementName=Root}" />
+        <TextBlock
+            x:Name="DetailBlock"
+            Foreground="#728091"
+            FontSize="12"
+            TextWrapping="Wrap"
+            Text="{Binding Detail, ElementName=Root}" />
+      </StackPanel>
+    </Button>
+  </Border>
+</UserControl>

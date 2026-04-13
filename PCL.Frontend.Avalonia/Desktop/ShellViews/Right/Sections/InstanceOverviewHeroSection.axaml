@@ -1,0 +1,55 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceOverviewHeroSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard ContentMargin="18,18,18,18">
+    <controls:PclCard.CardContent>
+      <Grid ColumnDefinitions="Auto,*">
+        <Image
+            Width="46"
+            Height="46"
+            Margin="0,0,16,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Source="{Binding InstanceOverviewSelectedIcon}"
+            Stretch="Uniform" />
+
+        <StackPanel Grid.Column="1" Spacing="6">
+          <TextBlock
+              Foreground="#343D4A"
+              FontSize="20"
+              Text="{Binding InstanceOverviewName}" />
+          <TextBlock
+              Foreground="#677789"
+              FontSize="13"
+              Text="{Binding InstanceOverviewSubtitle}"
+              TextWrapping="Wrap" />
+          <ItemsControl ItemsSource="{Binding InstanceOverviewDisplayTags}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border
+                    Margin="0,2,8,0"
+                    Padding="8,4"
+                    Background="#F7FAFE"
+                    BorderBrush="#D5E6FD"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                  <TextBlock
+                      Foreground="#4B78C2"
+                      FontSize="11.5"
+                      Text="{Binding .}" />
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Grid>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

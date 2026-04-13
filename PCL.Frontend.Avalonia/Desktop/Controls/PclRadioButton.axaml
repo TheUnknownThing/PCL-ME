@@ -1,0 +1,42 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclRadioButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    MinHeight="27"
+    MaxHeight="27">
+  <Border
+      x:Name="PanBack"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      CornerRadius="13.5"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Classes="nochrome"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        VerticalContentAlignment="Stretch"
+        Padding="0">
+      <TextBlock
+          x:Name="LabText"
+          Margin="12,0,12,0"
+          VerticalAlignment="Center"
+          FontSize="13"
+          Foreground="{DynamicResource ColorBrush3}"
+          Text="{Binding Text, ElementName=Root}" />
+    </Button>
+  </Border>
+</UserControl>

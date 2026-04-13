@@ -8,10 +8,31 @@ public sealed partial class WinMMClock(int fps = 60) : IClock, IDisposable
     private uint _timerId;
     private long _frameIndex;
     private TimeProc? _callback;
+    private int _fps = fps;
     
     public event EventHandler<long>? Tick;
 
-    public int Fps { get; set; } = fps;
+    public int Fps
+    {
+        get => _fps;
+        set
+        {
+            var normalized = Math.Max(1, value);
+            if (_fps == normalized)
+            {
+                return;
+            }
+
+            _fps = normalized;
+            if (!IsRunning)
+            {
+                return;
+            }
+
+            Stop();
+            Start();
+        }
+    }
     
     public bool IsRunning { get; private set; }
     

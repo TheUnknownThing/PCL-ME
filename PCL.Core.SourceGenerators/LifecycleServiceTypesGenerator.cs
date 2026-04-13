@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PCL.Core.SourceGenerators;
 
 [Generator(LanguageNames.CSharp)]
 public class LifecycleServiceTypesGenerator : IIncrementalGenerator
 {
+    private const string LifecycleServiceAttributeType = "PCL.Core.App.IoC.LifecycleServiceAttribute";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // 查找 LifecycleState.cs 文件以获取有效的枚举值
@@ -26,9 +26,10 @@ public class LifecycleServiceTypesGenerator : IIncrementalGenerator
             .Collect();
 
         // 查找带有 LifecycleService 属性的类
-        var serviceClassProvider = context.SyntaxProvider.CreateSyntaxProvider(
-                predicate: static (s, _) => s is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
-                transform: static (ctx, _) => _GetLifecycleServiceInfo(ctx))
+        var serviceClassProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
+                LifecycleServiceAttributeType,
+                static (s, _) => true,
+                static (ctx, _) => _GetLifecycleServiceInfo(ctx))
             .Where(static x => x is not null);
 
         // 收集所有服务信息
@@ -91,50 +92,37 @@ public class LifecycleServiceTypesGenerator : IIncrementalGenerator
         return validStates.Count > 0 ? validStates : null;
     }
 
-    private static LifecycleServiceInfo? _GetLifecycleServiceInfo(GeneratorSyntaxContext context)
+    private static LifecycleServiceInfo? _GetLifecycleServiceInfo(GeneratorAttributeSyntaxContext context)
     {
-        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
+            return null;
 
-        // 查找 LifecycleService 属性
-        var lifecycleAttribute = classDeclaration.AttributeLists
-            .SelectMany(al => al.Attributes)
-            .FirstOrDefault(a => a.Name.ToString().Contains("LifecycleService"));
-
+        var lifecycleAttribute = context.Attributes.FirstOrDefault();
         if (lifecycleAttribute == null)
             return null;
 
-        // 获取语义模型信息
-        var semanticModel = context.SemanticModel;
-        var classSymbol = semanticModel.GetDeclaredSymbol(classDeclaration);
-        if (classSymbol == null)
-            return null;
-
-        // 解析属性参数
         var state = "Unknown";
         var priority = 0;
 
-        if (lifecycleAttribute.ArgumentList?.Arguments.Count > 0)
+        if (lifecycleAttribute.ConstructorArguments.Length > 0)
         {
-            // 解析第一个参数（状态）
-            var firstArg = lifecycleAttribute.ArgumentList.Arguments[0];
-            if (firstArg.Expression is MemberAccessExpressionSyntax memberAccess)
+            var firstArg = lifecycleAttribute.ConstructorArguments[0];
+            if (firstArg.Type is INamedTypeSymbol enumType && firstArg.Value is int enumValue)
             {
-                state = memberAccess.Name.Identifier.ValueText;
+                state = enumType
+                    .GetMembers()
+                    .OfType<IFieldSymbol>()
+                    .FirstOrDefault(member => member.HasConstantValue && Equals(member.ConstantValue, enumValue))
+                    ?.Name ?? state;
             }
 
-            // 查找 Priority 参数（支持命名参数和位置参数）
-            var priorityArg = lifecycleAttribute.ArgumentList.Arguments
-                .FirstOrDefault(arg => arg.NameEquals?.Name.Identifier.ValueText == "Priority");
-
-            // 如果没有找到命名的Priority参数，检查第二个位置参数
-            if (priorityArg == null && lifecycleAttribute.ArgumentList.Arguments.Count > 1)
+            foreach (var namedArg in lifecycleAttribute.NamedArguments)
             {
-                priorityArg = lifecycleAttribute.ArgumentList.Arguments[1];
-            }
-
-            if (priorityArg != null)
-            {
-                priority = _ParsePriorityExpression(priorityArg.Expression, semanticModel);
+                if (namedArg.Key == "Priority" && namedArg.Value.Value is int namedPriority)
+                {
+                    priority = namedPriority;
+                    break;
+                }
             }
         }
 
@@ -143,52 +131,6 @@ public class LifecycleServiceTypesGenerator : IIncrementalGenerator
             classSymbol.Name,
             state,
             priority);
-    }
-
-    private static int _ParsePriorityExpression(ExpressionSyntax expression, SemanticModel semanticModel)
-    {
-        switch (expression)
-        {
-            case LiteralExpressionSyntax literal:
-                if (int.TryParse(literal.Token.ValueText, out var literalValue))
-                    return literalValue;
-                break;
-
-            case MemberAccessExpressionSyntax memberAccess:
-                var memberName = memberAccess.ToString();
-                if (memberName == "int.MaxValue")
-                    return int.MaxValue;
-                if (memberName == "int.MinValue")
-                    return int.MinValue;
-                break;
-
-            case PrefixUnaryExpressionSyntax unary when unary.IsKind(SyntaxKind.UnaryMinusExpression):
-                // 处理负数
-                if (unary.Operand is LiteralExpressionSyntax negLiteral &&
-                    int.TryParse(negLiteral.Token.ValueText, out var negValue))
-                {
-                    return -negValue;
-                }
-                break;
-
-            case BinaryExpressionSyntax binary:
-                // 简单的数学表达式支持
-                var left = _ParsePriorityExpression(binary.Left, semanticModel);
-                var right = _ParsePriorityExpression(binary.Right, semanticModel);
-                    
-                return binary.OperatorToken.Kind() switch
-                {
-                    SyntaxKind.PlusToken => left + right,
-                    SyntaxKind.MinusToken => left - right,
-                    SyntaxKind.AsteriskToken => left * right,
-                    SyntaxKind.SlashToken => right != 0 ? left / right : 0,
-                    _ => 0
-                };
-        }
-
-        // 尝试获取常量值
-        var constantValue = semanticModel.GetConstantValue(expression);
-        return constantValue is { HasValue: true, Value: int intValue } ? intValue : 0;
     }
 
     private static void _Execute(SourceProductionContext context, List<string> validStates, ImmutableArray<LifecycleServiceInfo> services)

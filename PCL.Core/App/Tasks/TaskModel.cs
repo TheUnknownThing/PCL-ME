@@ -37,6 +37,26 @@ public partial class TaskModel : ObservableObject
     /// </summary>
     [ObservableProperty] private double _progress = 0.0;
 
+    /// <summary>
+    /// 任务进度文本
+    /// </summary>
+    [ObservableProperty] private string _progressText = string.Empty;
+
+    /// <summary>
+    /// 任务当前下载速度文本
+    /// </summary>
+    [ObservableProperty] private string _speedText = string.Empty;
+
+    /// <summary>
+    /// 任务剩余文件数量
+    /// </summary>
+    [ObservableProperty] private int? _remainingFileCount;
+
+    /// <summary>
+    /// 任务剩余线程数量
+    /// </summary>
+    [ObservableProperty] private int? _remainingThreadCount;
+
     private static readonly Action _EmptyAction = (static () => {});
 
     /// <summary>

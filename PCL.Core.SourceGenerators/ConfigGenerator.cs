@@ -36,9 +36,14 @@ public sealed class ConfigGenerator : IIncrementalGenerator
             static (ctx, _) => _GetRegisterConfigEventCandidate(ctx)
         ).Where(static m => m is not null);
 
-        var collected = propertyCandidates.Collect()
-            .Combine(groupCandidates.Collect())
-            .Combine(configClassCandidates.Collect());
+        var collectedProperties = propertyCandidates.Collect();
+        var collectedGroups = groupCandidates.Collect();
+        var collectedConfigClasses = configClassCandidates.Collect();
+        var collectedEvents = eventCandidates.Collect();
+
+        var collected = collectedProperties
+            .Combine(collectedGroups)
+            .Combine(collectedConfigClasses);
 
         context.RegisterSourceOutput(collected, static (spc, triple) =>
         {
@@ -73,9 +78,9 @@ public sealed class ConfigGenerator : IIncrementalGenerator
             }
         });
 
-        var serviceInputs = propertyCandidates.Collect()
-            .Combine(groupCandidates.Collect())
-            .Combine(eventCandidates.Collect());
+        var serviceInputs = collectedProperties
+            .Combine(collectedGroups)
+            .Combine(collectedEvents);
         context.RegisterSourceOutput(serviceInputs, static (spc, tuple) =>
         {
             var items = tuple.Left.Left.Cast<ItemModel>().OrderBy(i => i.DeclOrder).ToList();

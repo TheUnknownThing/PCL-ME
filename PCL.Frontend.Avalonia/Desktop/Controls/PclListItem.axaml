@@ -1,0 +1,155 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclListItem"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    Height="42"
+    MinHeight="34">
+  <Grid
+      x:Name="LayoutRoot"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="4" />
+      <ColumnDefinition Width="14" />
+      <ColumnDefinition Width="18" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="12" />
+    </Grid.ColumnDefinitions>
+    <Grid.Transitions>
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Grid.Transitions>
+
+    <Border
+        x:Name="RectBack"
+        Grid.ColumnSpan="7"
+        Margin="0"
+        Background="{DynamicResource ColorBrushEntrySelectedBackground}"
+        BorderBrush="{DynamicResource ColorBrush6}"
+        BorderThickness="1"
+        CornerRadius="4"
+        Opacity="0">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+    </Border>
+
+    <Border
+        x:Name="SelectionBar"
+        Grid.RowSpan="3"
+        Margin="0,7,0,7"
+        Background="{DynamicResource ColorBrush3}"
+        CornerRadius="0,3,3,0"
+        IsVisible="False" />
+
+    <Path
+        x:Name="LogoPath"
+        Grid.Column="2"
+        Width="16"
+        Height="16"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Fill="{DynamicResource ColorBrushGray2}"
+        Stretch="Uniform"
+        IsVisible="False" />
+
+    <Image
+        x:Name="LogoImage"
+        Grid.Column="2"
+        Width="32"
+        Height="32"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Stretch="Uniform"
+        IsVisible="False" />
+
+    <Button
+        x:Name="MainButton"
+        Classes="nochrome"
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        FocusAdorner="{x:Null}"
+        Focusable="False"
+        IsHitTestVisible="False"
+        Padding="0"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        HorizontalContentAlignment="Stretch">
+      <Grid
+          Margin="4,0,0,0"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Center"
+          ColumnDefinitions="*,Auto"
+          RowDefinitions="Auto,Auto">
+        <TextBlock
+            x:Name="TitleBlock"
+            Grid.Row="0"
+            Grid.Column="0"
+            HorizontalAlignment="Left"
+            FontSize="14"
+            Foreground="{DynamicResource ColorBrushGray1}"
+            TextAlignment="Left"
+            TextTrimming="CharacterEllipsis" />
+        <TextBlock
+            x:Name="TitleSuffixBlock"
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="8,0,0,0"
+            HorizontalAlignment="Right"
+            FontSize="12"
+            Foreground="{DynamicResource ColorBrushGray1}"
+            IsVisible="False"
+            Opacity="0.42"
+            TextAlignment="Right"
+            TextTrimming="CharacterEllipsis" />
+        <TextBlock
+            x:Name="InfoBlock"
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Left"
+            FontSize="12"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+            IsVisible="False"
+            TextAlignment="Left"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="NoWrap" />
+      </Grid>
+    </Button>
+
+    <Button
+        x:Name="AccessoryButton"
+        Classes="nochrome"
+        Grid.Column="5"
+        Width="25"
+        Height="25"
+        Margin="0,0,3,0"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        FocusAdorner="{x:Null}"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding AccessoryCommand, ElementName=Root}"
+        IsVisible="False"
+        ToolTip.Tip="{Binding AccessoryToolTip, ElementName=Root}">
+      <Path
+          x:Name="AccessoryPath"
+          Width="12"
+          Height="12"
+          Fill="{DynamicResource ColorBrush5}"
+          Stretch="Uniform" />
+    </Button>
+  </Grid>
+</UserControl>

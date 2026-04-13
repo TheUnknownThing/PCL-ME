@@ -1,0 +1,244 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.InstanceSelectShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="Button.instance-entry">
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Border.instance-entry-shell">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.instance-entry-back">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Border.instance-entry-shell:pointerover">
+      <Setter Property="Background" Value="#F3F8FF" />
+    </Style>
+    <Style Selector="StackPanel.instance-entry-actions">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="RenderTransform" Value="translate(8px,0px)" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.instance-entry-shell:pointerover StackPanel.instance-entry-actions">
+      <Setter Property="IsHitTestVisible" Value="True" />
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="RenderTransform" Value="translate(0px,0px)" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="25,15,25,10" Spacing="0">
+        <StackPanel Margin="0,0,0,12" IsVisible="{Binding HasInstanceSelectionSearchBox}">
+          <controls:PclSearchBox
+              Text="{Binding InstanceSelectionSearchQuery, Mode=TwoWay}"
+              ToolTip.Tip="输入实例名称或 [游戏版本号] [Mod 加载器] 进行搜索"
+              Watermark="搜索游戏实例" />
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding InstanceSelectionGroups}" IsVisible="{Binding HasInstanceSelectionEntries}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard
+                  Margin="4,4,4,18"
+                  Header="{Binding HeaderText}"
+                  HeaderCommand="{Binding ToggleExpandCommand}"
+                  ShowChevron="True"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  motion:Motion.AnimateOnVisible="True"
+                  motion:Motion.InitialOpacity="0"
+                  motion:Motion.OffsetX="0"
+                  motion:Motion.OffsetY="14"
+                  motion:Motion.OvershootTranslation="True"
+                  ContentMargin="20,40,18,2">
+                <controls:PclCard.CardContent>
+                  <ItemsControl ItemsSource="{Binding Entries}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Spacing="0" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border
+                            Classes="instance-entry-shell"
+                            Margin="0,0,0,2"
+                            Padding="6,5">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <Button
+                                Classes="instance-entry nochrome"
+                                Command="{Binding SelectCommand}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                              <Border Classes="instance-entry-back">
+                                <Grid ColumnDefinitions="Auto,*">
+                                  <Image
+                                      Width="24"
+                                      Height="24"
+                                      Margin="0,1,0,0"
+                                      VerticalAlignment="Top"
+                                      Source="{Binding Icon}"
+                                      Stretch="UniformToFill" />
+
+                                  <StackPanel Grid.Column="1" Margin="8,0,0,0" Spacing="1">
+                                    <TextBlock
+                                        Foreground="#3D4653"
+                                        FontSize="13.5"
+                                        Text="{Binding Title}"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <WrapPanel IsVisible="{Binding HasMetadataContent}">
+                                      <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
+                                        <ItemsControl.ItemsPanel>
+                                          <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                          </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                          <DataTemplate>
+                                            <Border
+                                                Margin="0,0,5,1"
+                                                Padding="4,1"
+                                                Background="#EEF1F5"
+                                                CornerRadius="3">
+                                              <TextBlock
+                                                  Foreground="#9AA5B4"
+                                                  FontSize="10.4"
+                                                  Text="{Binding}" />
+                                            </Border>
+                                          </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                      </ItemsControl>
+                                      <TextBlock
+                                          Margin="0,0,0,1"
+                                          Foreground="#8D98A7"
+                                          FontSize="11.2"
+                                          Text="{Binding Subtitle}"
+                                          TextTrimming="CharacterEllipsis"
+                                          IsVisible="{Binding HasSubtitle}" />
+                                    </WrapPanel>
+                                  </StackPanel>
+                                </Grid>
+                              </Border>
+                            </Button>
+
+                            <StackPanel
+                                Classes="instance-entry-actions"
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                VerticalAlignment="Center">
+                              <controls:PclIconButton
+                                  Command="{Binding ToggleFavoriteCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="{Binding FavoriteIconBrush}"
+                                  IconData="{Binding FavoriteIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="收藏 / 取消收藏" />
+                              <controls:PclIconButton
+                                  Command="{Binding OpenFolderCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="#4592FF"
+                                  IconData="{Binding OpenFolderIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="打开实例文件夹" />
+                              <controls:PclIconButton
+                                  Command="{Binding DeleteCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="#4592FF"
+                                  IconData="{Binding DeleteIconData}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="删除实例" />
+                              <controls:PclIconButton
+                                  Command="{Binding OpenSettingsCommand}"
+                                  HoverBackgroundBrush="#184592FF"
+                                  IconBrush="#4592FF"
+                                  IconData="{Binding SettingsIconData}"
+                                  IconScale="{Binding SettingsIconScale}"
+                                  IdleBackgroundBrush="#00FFFFFF"
+                                  ToolTip.Tip="打开实例设置" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border
+            Width="580"
+            MaxWidth="640"
+            Padding="26,18,26,18"
+            Margin="0,28,0,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="#F9FBFF"
+            BorderBrush="#C9D7F0"
+            BorderThickness="1"
+            CornerRadius="7"
+            IsVisible="{Binding HasNoInstanceSelectionEntries}">
+          <StackPanel Spacing="12">
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="#3892FF"
+                FontSize="19"
+                Text="{Binding InstanceSelectionEmptyTitle}" />
+            <Border Height="2" Background="#4A92F2" />
+            <TextBlock
+                Margin="2,10,2,0"
+                Foreground="#697687"
+                FontSize="12.5"
+                Text="{Binding InstanceSelectionEmptyDescription}"
+                TextAlignment="Left"
+                TextWrapping="Wrap" />
+            <StackPanel
+                Margin="0,4,0,0"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="10">
+              <controls:PclButton
+                  Width="126"
+                  Height="35"
+                  ColorType="Highlight"
+                  Command="{Binding OpenInstanceSelectionDownloadCommand}"
+                  IsVisible="{Binding ShowInstanceSelectionEmptyDownloadAction}"
+                  Text="下载游戏" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

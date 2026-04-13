@@ -1,0 +1,31 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceOverviewInfoSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="实例信息" ContentMargin="18,40,18,16">
+    <controls:PclCard.CardContent>
+      <ItemsControl ItemsSource="{Binding InstanceOverviewInfoEntries}" IsVisible="{Binding HasInstanceOverviewInfoEntries}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,*">
+              <TextBlock
+                  Grid.Column="0"
+                  Width="86"
+                  Margin="0,0,18,0"
+                  Foreground="#7D8897"
+                  FontSize="12.5"
+                  Text="{Binding Label}" />
+              <TextBlock
+                  Grid.Column="1"
+                  Foreground="#343D4A"
+                  FontSize="13"
+                  Text="{Binding Value}"
+                  TextWrapping="Wrap" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

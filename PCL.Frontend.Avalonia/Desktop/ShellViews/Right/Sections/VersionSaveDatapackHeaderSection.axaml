@@ -1,0 +1,39 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.VersionSaveDatapackHeaderSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <StackPanel Spacing="15">
+    <controls:PclSearchBox
+        Text="{Binding VersionSaveDatapackSearchQuery, Mode=TwoWay}"
+        Watermark="搜索数据包 名称 / 描述 / 标签" />
+
+    <controls:PclCard ContentMargin="15,8,0,15">
+      <controls:PclCard.CardContent>
+        <WrapPanel>
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+              ColorType="Highlight"
+              Text="打开文件夹" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+              Text="从文件安装" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding DownloadVersionSaveDatapackCommand}"
+              Text="下载新资源" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding ExportVersionSaveDatapackInfoCommand}"
+              Text="导出信息" />
+        </WrapPanel>
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
+  </StackPanel>
+</UserControl>

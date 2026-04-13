@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace PCL.Core.Minecraft.Launch;
 
@@ -43,7 +44,8 @@ public static class MinecraftLaunchLoginProfileWorkflowService
                     LoginName: null,
                     Password: null,
                     ClientToken: null,
-                    RawJson: null));
+                    SkinHeadId: ResolveMicrosoftSkinHeadId(request.ProfileJson, request.ResultUuid),
+                    RawJson: request.ProfileJson));
         }
 
         if (duplicateIndex >= 0)
@@ -66,6 +68,7 @@ public static class MinecraftLaunchLoginProfileWorkflowService
                     LoginName: null,
                     Password: null,
                     ClientToken: null,
+                    SkinHeadId: ResolveMicrosoftSkinHeadId(request.ProfileJson, request.ResultUuid),
                     RawJson: request.ProfileJson));
         }
 
@@ -86,6 +89,7 @@ public static class MinecraftLaunchLoginProfileWorkflowService
                 LoginName: null,
                 Password: null,
                 ClientToken: null,
+                SkinHeadId: ResolveMicrosoftSkinHeadId(request.ProfileJson, request.ResultUuid),
                 RawJson: request.ProfileJson),
             UpdateProfile: null);
     }
@@ -105,6 +109,7 @@ public static class MinecraftLaunchLoginProfileWorkflowService
             request.LoginName,
             request.Password,
             request.ClientToken,
+            SkinHeadId: request.ResultUuid,
             RawJson: null);
 
         return request.IsExistingProfile
@@ -140,6 +145,43 @@ public static class MinecraftLaunchLoginProfileWorkflowService
         }
 
         return -1;
+    }
+
+    private static string ResolveMicrosoftSkinHeadId(string profileJson, string fallbackId)
+    {
+        if (!string.IsNullOrWhiteSpace(profileJson))
+        {
+            try
+            {
+                if (JsonNode.Parse(profileJson) is JsonObject root &&
+                    root["skins"] is JsonArray skins)
+                {
+                    var preferredSkinUrl = skins
+                        .OfType<JsonObject>()
+                        .Where(skin => !string.IsNullOrWhiteSpace(skin["url"]?.ToString()))
+                        .OrderByDescending(skin => string.Equals(skin["state"]?.ToString(), "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                        .Select(skin => skin["url"]!.ToString())
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrWhiteSpace(preferredSkinUrl))
+                    {
+                        var lastSegment = Uri.TryCreate(preferredSkinUrl, UriKind.Absolute, out var uri)
+                            ? uri.Segments.LastOrDefault()?.Trim('/')
+                            : Path.GetFileNameWithoutExtension(preferredSkinUrl);
+                        if (!string.IsNullOrWhiteSpace(lastSegment))
+                        {
+                            return lastSegment;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore malformed profile JSON and fall back to the stable identifier below.
+            }
+        }
+
+        return fallbackId;
     }
 }
 
@@ -182,6 +224,7 @@ public sealed record MinecraftLaunchStoredProfile(
     string? LoginName,
     string? Password,
     string? ClientToken,
+    string? SkinHeadId,
     string? RawJson);
 
 public enum MinecraftLaunchStoredProfileKind

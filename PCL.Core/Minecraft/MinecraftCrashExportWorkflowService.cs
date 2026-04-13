@@ -13,8 +13,14 @@ public static class MinecraftCrashExportWorkflowService
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Environment);
 
-        var sourceFiles = EnumerateSourceFiles(request.SourceFilePaths)
-            .Concat(EnumerateSourceFiles(request.AdditionalSourceFilePaths))
+        IEnumerable<string> sourceFilePaths = EnumerateSourceFiles(request.SourceFilePaths)
+            .Concat(EnumerateSourceFiles(request.AdditionalSourceFilePaths));
+        if (!string.IsNullOrWhiteSpace(request.CurrentLauncherLogFilePath))
+        {
+            sourceFilePaths = sourceFilePaths.Append(request.CurrentLauncherLogFilePath);
+        }
+
+        var sourceFiles = sourceFilePaths
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Select(path => new MinecraftCrashExportFile(path))
             .ToArray();

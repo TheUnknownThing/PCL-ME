@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace PCL.Core.Minecraft.Java.Runtime;
 
@@ -19,9 +20,11 @@ public sealed class ProcessCommandRunner : ICommandRunner
         using var process = Process.Start(psi);
         if (process == null) return new CommandResult(-1, string.Empty, string.Empty);
 
-        var standardOutput = process.StandardOutput.ReadToEnd();
-        var standardError = process.StandardError.ReadToEnd();
+        // Drain both redirected streams concurrently to avoid pipe deadlocks.
+        var standardOutputTask = process.StandardOutput.ReadToEndAsync();
+        var standardErrorTask = process.StandardError.ReadToEndAsync();
         process.WaitForExit();
-        return new CommandResult(process.ExitCode, standardOutput, standardError);
+        Task.WaitAll(standardOutputTask, standardErrorTask);
+        return new CommandResult(process.ExitCode, standardOutputTask.Result, standardErrorTask.Result);
     }
 }

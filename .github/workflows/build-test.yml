@@ -1,4 +1,4 @@
-name: Build (CI)
+name: Build And Test
 
 permissions:
   contents: read
@@ -13,7 +13,6 @@ on:
       - '**/*.md'
       - '**/LICENSE'
       - '**/LICENCE'
-      - 'PCL.Core.Test/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/FUNDING.yml'
   pull_request:
@@ -21,18 +20,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-test:
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
-          - configuration: CI
-            architecture: x64
-          - configuration: CI
-            architecture: ARM64
+          - runner: ubuntu-latest
+          - runner: macos-latest
+          - runner: windows-latest
       fail-fast: false
 
-    uses: ./.github/workflows/reusable-build.yml
-    with:
-      configuration: ${{ matrix.configuration }}
-      architecture: ${{ matrix.architecture }}
-    secrets: inherit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build Avalonia frontend
+        run: dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -c Debug
+
+      - name: Test foundation layer
+        run: dotnet test PCL.Core.Foundation.Test/PCL.Core.Foundation.Test.csproj -c Debug
+
+      - name: Test backend layer
+        run: dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug

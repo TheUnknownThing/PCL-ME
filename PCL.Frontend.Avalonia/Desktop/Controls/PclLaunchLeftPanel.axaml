@@ -1,0 +1,579 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclLaunchLeftPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <Grid Width="300">
+    <Grid
+        x:Name="PanInput"
+        RenderTransformOrigin="0.5,0.5">
+      <Grid.RenderTransform>
+        <ScaleTransform
+            ScaleX="1"
+            ScaleY="1" />
+      </Grid.RenderTransform>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="20" />
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="20" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="10" />
+      </Grid.ColumnDefinitions>
+
+      <Grid
+          Grid.Row="1"
+          Grid.ColumnSpan="5"
+          Margin="20,0"
+          VerticalAlignment="Center">
+        <Grid Margin="18,16,18,14">
+          <StackPanel
+              HorizontalAlignment="Center"
+              IsVisible="{Binding ShowLaunchProfileSummaryCard}"
+              Spacing="8">
+            <Image
+                Width="84"
+                Height="84"
+                Source="{Binding LaunchAvatarImage}"
+                Stretch="Uniform"
+                RenderOptions.BitmapInterpolationMode="None" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="16"
+                Foreground="#343D4A"
+                Text="{Binding LaunchUserName}" />
+            <Border
+                Padding="10,4"
+                HorizontalAlignment="Center"
+                Background="#F2F4F7"
+                CornerRadius="999">
+              <TextBlock
+                  FontSize="12"
+                  Foreground="#727C88"
+                  Text="{Binding LaunchProfileDescription}" />
+            </Border>
+            <Border
+                Margin="0,4,0,0"
+                Padding="6,2"
+                HorizontalAlignment="Center"
+                Background="#FDFDFD"
+                BorderBrush="#14000000"
+                BorderThickness="1"
+                CornerRadius="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <controls:PclIconButton
+                    Command="{Binding AddLaunchProfileCommand}"
+                    IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
+                    IconBrush="#404B5A"
+                    ToolTip.Tip="新建 / 登录" />
+                <controls:PclIconButton
+                    Command="{Binding SelectLaunchProfileCommand}"
+                    IconData="M512 0A512 512 0 1 0 1024 512 512 512 0 0 0 512 0z m0 941.407086A429.407086 429.407086 0 1 1 941.407086 512 429.407086 429.407086 0 0 1 512 941.407086z m235.139657-368.64H264.045714a43.505371 43.505371 0 0 0-31.246628 72.060343l159.305143 166.765714a41.281829 41.281829 0 1 0 59.626057-56.788114l-94.997943-99.474286H747.227429a41.311086 41.311086 0 1 0 0-82.622172zM262.670629 450.940343H745.764571a43.505371 43.505371 0 0 0 31.246629-72.352914l-159.305143-166.765715a41.281829 41.281829 0 1 0-59.713828 57.022172l94.968685 99.474285H262.670629a41.281829 41.281829 0 0 0 0 82.563658z"
+                    IconBrush="#404B5A"
+                    ToolTip.Tip="选择档案" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchProfileChooser}"
+              Spacing="10">
+            <controls:PclButton
+                Height="34"
+                ColorType="Highlight"
+                Command="{Binding CreateOfflineLaunchProfileCommand}"
+                Text="离线创建" />
+            <controls:PclButton
+                Height="34"
+                Command="{Binding LoginMicrosoftLaunchProfileCommand}"
+                Text="微软登录" />
+            <controls:PclButton
+                Height="34"
+                Command="{Binding LoginAuthlibLaunchProfileCommand}"
+                Text="外置登录" />
+            <controls:PclButton
+                Height="34"
+                Command="{Binding SelectLaunchProfileCommand}"
+                IsVisible="{Binding HasLaunchProfileEntries}"
+                Text="选择已有档案" />
+            <controls:PclButton
+                Height="32"
+                Command="{Binding BackLaunchProfileCommand}"
+                IsVisible="{Binding ShowLaunchProfileBackButton}"
+                Text="返回" />
+          </StackPanel>
+
+          <StackPanel
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchProfileSelection}"
+              Spacing="10">
+            <Border
+                Margin="0,2,0,0"
+                Padding="10,6"
+                Background="#EAF2FE"
+                BorderBrush="#260B5BCB"
+                BorderThickness="1"
+                CornerRadius="5">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  FontSize="12.5"
+                  Foreground="#0B5BCB"
+                  Text="{Binding LaunchProfileSelectionHint}"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+            </Border>
+            <ScrollViewer
+                MaxHeight="300"
+                VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding LaunchProfileEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PclListItem
+                        Margin="8,2,10,2"
+                        Command="{Binding Command}"
+                        Info="{Binding Info}"
+                        IsSelected="{Binding IsSelected}"
+                        Title="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="12.5"
+                Foreground="#7D8792"
+                IsVisible="{Binding HasNoLaunchProfileEntries}"
+                Text="当前还没有可用档案。"
+                TextAlignment="Center" />
+            <Border
+                Padding="10,4"
+                HorizontalAlignment="Center"
+                Background="#FDFDFD"
+                BorderBrush="#14000000"
+                BorderThickness="1"
+                CornerRadius="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <controls:PclIconButton
+                    Command="{Binding AddLaunchProfileCommand}"
+                    IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
+                    IconBrush="#404B5A"
+                    ToolTip.Tip="新建 / 登录" />
+              </StackPanel>
+            </Border>
+            <controls:PclButton
+                Width="72"
+                Height="32"
+                HorizontalAlignment="Center"
+                Command="{Binding BackLaunchProfileCommand}"
+                IsVisible="{Binding ShowLaunchProfileBackButton}"
+                Text="返回" />
+          </StackPanel>
+
+          <Grid
+              IsVisible="{Binding ShowLaunchOfflineEditor}"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="17"
+                Foreground="#343D4A"
+                Text="离线创建" />
+            <TextBox
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                Text="{Binding LaunchOfflineUserName}"
+                Watermark="玩家 ID（3 - 16 位）" />
+            <ComboBox
+                Grid.Row="2"
+                Margin="0,8,0,0"
+                ItemsSource="{Binding LaunchOfflineUuidModeOptions}"
+                SelectedIndex="{Binding SelectedLaunchOfflineUuidModeIndex}" />
+            <TextBox
+                Grid.Row="3"
+                Margin="0,8,0,0"
+                IsVisible="{Binding IsLaunchOfflineCustomUuidVisible}"
+                Text="{Binding LaunchOfflineCustomUuid}"
+                Watermark="32 位 UUID（不含连字符）" />
+            <StackPanel
+                Grid.Row="4"
+                Margin="0,8,0,0"
+                Spacing="8">
+              <TextBlock
+                  FontSize="12.5"
+                  Foreground="#C25B46"
+                  IsVisible="{Binding HasLaunchOfflineStatus}"
+                  Text="{Binding LaunchOfflineStatusText}"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,10,*">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Height="34"
+                    Command="{Binding BackLaunchProfileCommand}"
+                    Text="返回" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    Height="34"
+                    ColorType="Highlight"
+                    Command="{Binding SubmitOfflineLaunchProfileCommand}"
+                    Text="创建" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+
+          <StackPanel
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchMicrosoftEditor}"
+              Spacing="9">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="17"
+                Foreground="#343D4A"
+                Text="微软登录" />
+            <TextBlock
+                FontSize="12.5"
+                Foreground="#5E6875"
+                Text="{Binding LaunchMicrosoftStatusText}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <Border
+                Padding="12,10"
+                Background="#F4F7FB"
+                CornerRadius="10"
+                IsVisible="{Binding HasLaunchMicrosoftDeviceCode}">
+              <StackPanel Spacing="4">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="12"
+                    Foreground="#728092"
+                    Text="授权码" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontFamily="Menlo, Monaco, Consolas"
+                    FontSize="20"
+                    Foreground="#0B5BCB"
+                    Text="{Binding LaunchMicrosoftDeviceCode}" />
+              </StackPanel>
+            </Border>
+            <controls:PclButton
+                Height="32"
+                Command="{Binding OpenMicrosoftDeviceLinkCommand}"
+                IsVisible="{Binding HasLaunchMicrosoftVerificationUrl}"
+                Text="重新打开登录网页" />
+            <Grid ColumnDefinitions="*,10,*">
+              <controls:PclButton
+                  Grid.Column="0"
+                  Height="34"
+                  Command="{Binding BackLaunchProfileCommand}"
+                  Text="返回" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  Height="34"
+                  ColorType="Highlight"
+                  Command="{Binding SubmitMicrosoftLaunchProfileCommand}"
+                  Text="{Binding LaunchMicrosoftPrimaryButtonText}" />
+            </Grid>
+          </StackPanel>
+
+          <Grid
+              IsVisible="{Binding ShowLaunchAuthlibEditor}"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="17"
+                Foreground="#343D4A"
+                Text="外置登录" />
+            <TextBox
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                Text="{Binding LaunchAuthlibServer}"
+                Watermark="验证服务器地址" />
+            <Grid
+                Grid.Row="2"
+                Margin="0,8,0,0"
+                ColumnDefinitions="*,10,Auto">
+              <TextBox
+                  Grid.Column="0"
+                  Text="{Binding LaunchAuthlibLoginName}"
+                  Watermark="用户名或邮箱" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  Width="88"
+                  Height="32"
+                  Command="{Binding UseLittleSkinLaunchProfileCommand}"
+                  Text="LittleSkin" />
+            </Grid>
+            <TextBox
+                Grid.Row="3"
+                Margin="0,8,0,0"
+                PasswordChar="●"
+                Text="{Binding LaunchAuthlibPassword}"
+                Watermark="密码" />
+            <StackPanel
+                Grid.Row="4"
+                Margin="0,8,0,0"
+                Spacing="8">
+              <TextBlock
+                  FontSize="12.5"
+                  Foreground="#C25B46"
+                  IsVisible="{Binding HasLaunchAuthlibStatus}"
+                  Text="{Binding LaunchAuthlibStatusText}"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,10,*">
+                <controls:PclButton
+                    Grid.Column="0"
+                    Height="34"
+                    Command="{Binding BackLaunchProfileCommand}"
+                    Text="返回" />
+                <controls:PclButton
+                    Grid.Column="2"
+                    Height="34"
+                    ColorType="Highlight"
+                    Command="{Binding SubmitAuthlibLaunchProfileCommand}"
+                    Text="登录" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+        </Grid>
+      </Grid>
+
+      <Grid Grid.Row="2" Grid.ColumnSpan="5">
+        <controls:PclLaunchButton
+            Height="54"
+            Margin="20,0"
+            Command="{Binding LaunchCommand}"
+            Subtitle="{Binding LaunchVersionSubtitle}"
+            Title="{Binding LaunchButtonTitle}" />
+      </Grid>
+
+      <Grid
+          Grid.Row="3"
+          Grid.Column="2"
+          Grid.ColumnSpan="2"
+          Margin="0,10,10,0"
+          ColumnDefinitions="*,10,*">
+        <controls:PclButton
+            Grid.Column="0"
+            Height="35"
+            Command="{Binding VersionSelectCommand}"
+            Text="版本选择" />
+
+        <controls:PclButton
+            Grid.Column="2"
+            Height="35"
+            Command="{Binding VersionSetupCommand}"
+            Text="版本设置" />
+      </Grid>
+    </Grid>
+
+    <Grid
+        x:Name="PanLaunching"
+        IsVisible="False"
+        Opacity="0"
+        RenderTransformOrigin="0.5,0.5">
+      <Grid.RenderTransform>
+        <ScaleTransform
+            ScaleX="0.8"
+            ScaleY="0.8" />
+      </Grid.RenderTransform>
+      <Grid.RowDefinitions>
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="1" Margin="0,-7,0,0">
+        <controls:PclLoading
+            Height="50"
+            Margin="0,10,0,5"
+            HorizontalAlignment="Center"
+            IndicatorBrush="#0B5BCB"
+            IsError="{Binding IsLaunchDialogError}"
+            IsRunning="{Binding IsLaunchDialogBusy}"
+            ShowText="False" />
+
+        <TextBlock
+            Margin="15,10,15,0"
+            HorizontalAlignment="Center"
+            FontSize="20"
+            Foreground="#304154"
+            Text="{Binding LaunchDialogTitle}" />
+
+        <TextBlock
+            Margin="40,5,40,0"
+            HorizontalAlignment="Center"
+            FontSize="13.5"
+            Foreground="#304154"
+            Text="{Binding LaunchDialogInstanceName}"
+            TextTrimming="CharacterEllipsis" />
+
+        <Grid
+            Height="4"
+            Margin="30,12,30,27"
+            IsVisible="{Binding ShowLaunchDialogProgress}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding LaunchDialogProgressFinishedWidth}" />
+            <ColumnDefinition Width="{Binding LaunchDialogProgressRemainingWidth}" />
+          </Grid.ColumnDefinitions>
+          <Rectangle Grid.Column="0">
+            <Rectangle.Fill>
+              <LinearGradientBrush EndPoint="1,0" StartPoint="0,0">
+                <GradientStop Color="#1F7BFF" Offset="0" />
+                <GradientStop Color="#0B5BCB" Offset="0.6" />
+              </LinearGradientBrush>
+            </Rectangle.Fill>
+          </Rectangle>
+          <Rectangle Grid.Column="1" Fill="#D4DDE8" Opacity="0.6" />
+        </Grid>
+
+        <Grid
+            x:Name="PanLaunchingInfo"
+            HorizontalAlignment="Center">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="15" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <TextBlock
+              Grid.Row="0"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="#7D8792"
+              Opacity="0.5"
+              Text="当前步骤" />
+          <TextBlock
+              Grid.Row="0"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              MaxWidth="160"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="#304154"
+              Text="{Binding LaunchDialogStage}"
+              TextWrapping="Wrap" />
+
+          <TextBlock
+              Grid.Row="1"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="#7D8792"
+              Opacity="0.5"
+              Text="验证方式" />
+          <TextBlock
+              Grid.Row="1"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              MaxWidth="160"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="#304154"
+              Text="{Binding LaunchDialogMethod}"
+              TextWrapping="Wrap" />
+
+          <TextBlock
+              Grid.Row="2"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="#7D8792"
+              IsVisible="{Binding ShowLaunchDialogProgress}"
+              Opacity="0.5"
+              Text="启动进度" />
+          <TextBlock
+              Grid.Row="2"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="#304154"
+              IsVisible="{Binding ShowLaunchDialogProgress}"
+              Text="{Binding LaunchDialogProgressText}" />
+
+          <TextBlock
+              Grid.Row="3"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="#7D8792"
+              IsVisible="{Binding ShowLaunchDialogDownload}"
+              Opacity="0.5"
+              Text="下载速度" />
+          <TextBlock
+              Grid.Row="3"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="#304154"
+              IsVisible="{Binding ShowLaunchDialogDownload}"
+              Text="{Binding LaunchDialogDownloadText}" />
+        </Grid>
+
+        <Grid
+            Width="260"
+            Margin="0,16,0,2"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding ShowLaunchDialogHint}">
+          <Border
+              Margin="0,8,0,0"
+              Padding="11,21,11,10"
+              BorderBrush="#7D8792"
+              BorderThickness="1"
+              CornerRadius="3"
+              Opacity="0.3" />
+          <Border
+              Padding="8,0"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Top"
+              Background="White">
+            <TextBlock
+                FontSize="12.5"
+                Foreground="#7D8792"
+                Opacity="0.6"
+                Text="你知道吗" />
+          </Border>
+          <TextBlock
+              Margin="11,29,11,10"
+              HorizontalAlignment="Center"
+              FontSize="12.5"
+              Foreground="#304154"
+              MaxHeight="54"
+              Text="{Binding LaunchDialogHint}"
+              TextAlignment="Center"
+              TextTrimming="CharacterEllipsis"
+              TextWrapping="Wrap" />
+        </Grid>
+      </StackPanel>
+
+      <controls:PclButton
+          Grid.Row="4"
+          Height="35"
+          Margin="20,0,20,20"
+          VerticalAlignment="Bottom"
+          Command="{Binding CancelLaunchCommand}"
+          Text="{Binding LaunchDialogActionText}" />
+    </Grid>
+  </Grid>
+</UserControl>

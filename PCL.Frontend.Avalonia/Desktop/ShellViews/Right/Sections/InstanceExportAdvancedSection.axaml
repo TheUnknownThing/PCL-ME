@@ -1,0 +1,68 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceExportAdvancedSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="高级选项" ContentMargin="20,12,20,15">
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="12">
+        <Border
+            Padding="12,10"
+            Background="#FFF8DD"
+            BorderBrush="#F2D777"
+            BorderThickness="1"
+            CornerRadius="4"
+            IsVisible="{Binding ShowInstanceExportIncludeWarning}">
+          <TextBlock
+              Foreground="#6E5800"
+              FontSize="12.5"
+              Text="建议仅在无法稳定连接 CurseForge 或 Modrinth 时才打包资源文件。请不要公开发布含资源文件的整合包，这会违反部分 Mod 的使用协议！"
+              TextWrapping="Wrap" />
+        </Border>
+
+        <CheckBox
+            Foreground="#343D4A"
+            Content="打包资源文件，以避免在导入时下载"
+            IsChecked="{Binding InstanceExportIncludeResources}" />
+        <CheckBox
+            Foreground="#343D4A"
+            Content="Modrinth 上传模式"
+            IsChecked="{Binding InstanceExportModrinthMode}" />
+
+        <Border
+            Padding="12,10"
+            Background="#EAF7F4"
+            BorderBrush="#C8E6DF"
+            BorderThickness="1"
+            CornerRadius="4">
+          <TextBlock
+              Foreground="#24534E"
+              FontSize="12.5"
+              Text="配置文件中含有更多高级选项，例如精准控制导出的文件、设置整合包存放位置等。要修改这些选项，请先点击“保存配置”，在编辑配置文件后再导入。"
+              TextWrapping="Wrap" />
+        </Border>
+
+        <Grid ColumnDefinitions="Auto,Auto,Auto">
+          <controls:PclButton
+              Grid.Column="0"
+              MinWidth="140"
+              Margin="0,0,20,0"
+              Command="{Binding ImportInstanceExportConfigCommand}"
+              ColorType="Highlight"
+              Text="读取配置" />
+          <controls:PclButton
+              Grid.Column="1"
+              MinWidth="140"
+              Margin="0,0,20,0"
+              Command="{Binding SaveInstanceExportConfigCommand}"
+              Text="保存配置" />
+          <controls:PclButton
+              Grid.Column="2"
+              MinWidth="140"
+              Command="{Binding OpenInstanceExportGuideCommand}"
+              Text="整合包制作指南" />
+        </Grid>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

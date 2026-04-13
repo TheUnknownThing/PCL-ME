@@ -1,2 +1,10 @@
 [tools]
 dotnet = "10.0.201"
+
+[tasks.launch]
+description = "Build and Launch Avalonia Frontend for PCL-ME"
+run = "dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app"
+
+[tasks.build]
+description = "Build the Solution"
+run = "dotnet build"

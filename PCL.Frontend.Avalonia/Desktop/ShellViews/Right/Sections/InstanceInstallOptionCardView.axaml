@@ -1,0 +1,119 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceInstallOptionCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard
+      Margin="0,0,0,15"
+      Header="{Binding Title}"
+      ShowChevron="{Binding CanExpand}"
+      IsChevronExpanded="{Binding IsExpanded}"
+      HeaderCommand="{Binding ToggleCommand}"
+      ContentMargin="{Binding CardContentMargin}">
+    <controls:PclCard.HeaderOverlayContent>
+      <Grid
+          Height="30"
+          Margin="132,5,15,0"
+          VerticalAlignment="Top"
+          ColumnDefinitions="Auto,*">
+        <Border
+            Width="18"
+            Height="18"
+            Margin="0,0,7,0"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            CornerRadius="5"
+            IsHitTestVisible="False"
+            IsVisible="{Binding ShowIcon}">
+          <Image Source="{Binding Icon}" Stretch="Uniform" Margin="3" />
+        </Border>
+        <TextBlock
+            Grid.Column="1"
+            Margin="0,0,12,0"
+            IsHitTestVisible="False"
+            VerticalAlignment="Center"
+            Foreground="{Binding SelectionForegroundBrush}"
+            FontSize="13"
+            Text="{Binding SelectionText}"
+            TextTrimming="CharacterEllipsis" />
+      </Grid>
+    </controls:PclCard.HeaderOverlayContent>
+    <controls:PclCard.CardContent>
+      <StackPanel IsVisible="{Binding CanExpand}" Spacing="8">
+        <TextBlock
+            IsVisible="{Binding IsLoading}"
+            Margin="0,2,0,8"
+            Foreground="#677789"
+            FontSize="12"
+            Text="{Binding LoadingText}" />
+
+        <TextBlock
+            IsVisible="{Binding ShowEmptyState}"
+            Margin="0,2,0,8"
+            Foreground="#677789"
+            FontSize="12"
+            Text="{Binding EmptyStateText}"
+            TextWrapping="Wrap" />
+
+        <ItemsControl ItemsSource="{Binding Choices}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button
+                  Classes="install-choice-row"
+                  Command="{Binding SelectCommand}"
+                  HorizontalAlignment="Stretch">
+                <Border
+                    Background="{Binding BackgroundBrush}"
+                    BorderBrush="{Binding BorderBrush}"
+                    BorderThickness="0"
+                    CornerRadius="6"
+                    MinHeight="36">
+                  <Grid HorizontalAlignment="Stretch" ColumnDefinitions="4,*,Auto" RowDefinitions="*,Auto,Auto,*">
+                    <Border
+                        Grid.RowSpan="4"
+                        Width="4"
+                        Margin="0,2,8,2"
+                        Background="{Binding ForegroundBrush}"
+                        CornerRadius="0,3,3,0"
+                        IsVisible="{Binding IsSelected}" />
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Foreground="{Binding ForegroundBrush}"
+                        FontSize="13"
+                        Text="{Binding Title}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Foreground="{Binding SummaryBrush}"
+                        FontSize="11.5"
+                        Text="{Binding Summary}"
+                        TextTrimming="CharacterEllipsis" />
+
+                    <Border
+                        Grid.Column="2"
+                        Grid.RowSpan="4"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Padding="8,3"
+                        Background="#DDEBFE"
+                        BorderBrush="#BFD9FF"
+                        BorderThickness="1"
+                        CornerRadius="999"
+                        IsVisible="{Binding IsSelected}">
+                      <TextBlock Foreground="#1370F3" FontSize="11" Text="已选择" />
+                    </Border>
+                  </Grid>
+                </Border>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

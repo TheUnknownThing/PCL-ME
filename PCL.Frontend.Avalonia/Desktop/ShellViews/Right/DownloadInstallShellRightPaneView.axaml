@@ -1,0 +1,295 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.DownloadInstallShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="Button.install-choice-row">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.install-choice-row:pointerover">
+      <Setter Property="Background" Value="#14000000" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,25" Spacing="12">
+      <StackPanel IsVisible="{Binding ShowDownloadInstallMinecraftCatalog}" Spacing="12">
+        <controls:PclCard IsVisible="{Binding ShowDownloadInstallMinecraftCatalogLoading}" ContentMargin="18,16,18,16">
+          <controls:PclCard.CardContent>
+            <TextBlock
+                Foreground="#677789"
+                FontSize="13"
+                Text="{Binding DownloadInstallMinecraftCatalogStatus}"
+                TextWrapping="Wrap" />
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding ShowDownloadInstallMinecraftCatalogEmptyState}" ContentMargin="18,16,18,16">
+          <controls:PclCard.CardContent>
+            <TextBlock
+                Foreground="#677789"
+                FontSize="13"
+                Text="{Binding DownloadInstallMinecraftCatalogStatus}"
+                TextWrapping="Wrap" />
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallMinecraftSections}" IsVisible="{Binding ShowDownloadInstallMinecraftCatalogContent}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard
+                  Margin="0,0,0,15"
+                  Header="{Binding Title}"
+                  ShowChevron="{Binding CanCollapse}"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  HeaderCommand="{Binding ToggleCommand}"
+                  ContentMargin="18,40,18,8">
+                <controls:PclCard.CardContent>
+                    <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclListItem
+                              Margin="0,0,0,2"
+                              Command="{Binding SelectCommand}"
+                              IconSource="{Binding Icon}"
+                              IconScale="1"
+                              Info="{Binding Summary}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding ShowDownloadInstallSelectionStage}" Spacing="12">
+        <controls:PclCard ContentMargin="13,13,16,13">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto,*">
+              <Button
+                  Classes="nochrome"
+                  Width="26"
+                  Height="26"
+                  Padding="0"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  Command="{Binding DownloadInstallBackCommand}"
+                  FocusAdorner="{x:Null}"
+                  CornerRadius="13">
+                <Path
+                    Width="10"
+                    Height="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Fill="#4B78C2"
+                    Stretch="Uniform"
+                    Data="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z" />
+              </Button>
+                <Border
+                  Grid.Column="1"
+                  Width="32"
+                  Height="32"
+                  Margin="12,0,14,0"
+                  VerticalAlignment="Center"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  CornerRadius="6">
+                <Image Source="{Binding DownloadInstallMinecraftIcon}" Stretch="Uniform" Margin="5" />
+              </Border>
+              <TextBox
+                  Grid.Column="2"
+                  Height="30"
+                  Padding="8,4"
+                  VerticalAlignment="Center"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  FontSize="15"
+                  Text="{Binding DownloadInstallName}" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <Border
+            IsVisible="{Binding ShowDownloadInstallNameValidation}"
+            Padding="12,10"
+            Background="#FFF1EA"
+            BorderBrush="#F1C8B6"
+            BorderThickness="1"
+            CornerRadius="4">
+          <TextBlock
+              Foreground="#A94F2B"
+              FontSize="12.5"
+              Text="{Binding DownloadInstallNameValidationMessage}"
+              TextWrapping="Wrap" />
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallHints}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border
+                  Padding="12,10"
+                  Background="{Binding BackgroundBrush}"
+                  BorderBrush="{Binding BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="{Binding ForegroundBrush}"
+                    FontSize="12.5"
+                    Text="{Binding Text}"
+                    TextWrapping="Wrap" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallOptionCards}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard
+                  Margin="0,0,0,15"
+                  Header="{Binding Title}"
+                  ShowChevron="True"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  HeaderCommand="{Binding ToggleCommand}"
+                  ContentMargin="20,40,18,15">
+                <controls:PclCard.HeaderOverlayContent>
+                  <Grid
+                      Height="30"
+                      Margin="132,5,15,0"
+                      VerticalAlignment="Top"
+                      ColumnDefinitions="Auto,*">
+                    <Border
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,7,0"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        CornerRadius="5"
+                        IsHitTestVisible="False"
+                        IsVisible="{Binding ShowIcon}">
+                      <Image Source="{Binding Icon}" Stretch="Uniform" Margin="3" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="0,0,12,0"
+                        IsHitTestVisible="False"
+                        VerticalAlignment="Center"
+                        Foreground="{Binding SelectionForegroundBrush}"
+                        FontSize="13"
+                        Text="{Binding SelectionText}"
+                        TextTrimming="CharacterEllipsis" />
+                  </Grid>
+                </controls:PclCard.HeaderOverlayContent>
+                <controls:PclCard.CardContent>
+                  <StackPanel Spacing="8">
+                    <TextBlock
+                        IsVisible="{Binding IsLoading}"
+                        Margin="0,2,0,8"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="{Binding LoadingText}" />
+
+                    <TextBlock
+                        IsVisible="{Binding ShowEmptyState}"
+                        Margin="0,2,0,8"
+                        Foreground="#677789"
+                        FontSize="12"
+                        Text="{Binding EmptyStateText}"
+                        TextWrapping="Wrap" />
+
+                    <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Button
+                              Classes="install-choice-row"
+                              Command="{Binding SelectCommand}"
+                              HorizontalAlignment="Stretch">
+                            <Border
+                                Background="{Binding BackgroundBrush}"
+                                BorderBrush="{Binding BorderBrush}"
+                                BorderThickness="0"
+                                CornerRadius="6"
+                                MinHeight="36">
+                              <Grid HorizontalAlignment="Stretch" ColumnDefinitions="4,*,Auto" RowDefinitions="*,Auto,Auto,*">
+                              <Border
+                                  Grid.RowSpan="4"
+                                  Width="4"
+                                  Margin="0,2,8,2"
+                                  Background="{Binding ForegroundBrush}"
+                                  CornerRadius="0,3,3,0"
+                                  IsVisible="{Binding IsSelected}" />
+
+                              <TextBlock
+                                  Grid.Row="1"
+                                  Grid.Column="1"
+                                  Foreground="{Binding ForegroundBrush}"
+                                  FontSize="13"
+                                  Text="{Binding Title}"
+                                  TextTrimming="CharacterEllipsis" />
+                              <TextBlock
+                                  Grid.Row="2"
+                                  Grid.Column="1"
+                                  Foreground="{Binding SummaryBrush}"
+                                  FontSize="11.5"
+                                  Text="{Binding Summary}"
+                                  TextTrimming="CharacterEllipsis" />
+
+                              <Border
+                                  Grid.Column="2"
+                                  Grid.RowSpan="4"
+                                  Margin="8,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Padding="8,3"
+                                  Background="#DDEBFE"
+                                  BorderBrush="#BFD9FF"
+                                  BorderThickness="1"
+                                  CornerRadius="999"
+                                  IsVisible="{Binding IsSelected}">
+                                <TextBlock Foreground="#1370F3" FontSize="11" Text="已选择" />
+                              </Border>
+                              </Grid>
+                            </Border>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <controls:PclButton
+                        Width="88"
+                        HorizontalAlignment="Right"
+                        IsVisible="{Binding CanClear}"
+                        Command="{Binding ClearCommand}"
+                        Text="清除选择" />
+                  </StackPanel>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid ColumnDefinitions="*,Auto">
+          <controls:PclButton
+              Grid.Column="1"
+              Width="120"
+              Margin="16,0,0,0"
+              Command="{Binding StartDownloadInstallCommand}"
+              IsEnabled="{Binding CanStartDownloadInstall}"
+              Text="开始安装" />
+        </Grid>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

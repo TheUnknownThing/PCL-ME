@@ -9,14 +9,20 @@ on:
       configuration:
         required: true
         type: string
-      architecture:
+      runner:
+        required: true
+        type: string
+      rid:
+        required: true
+        type: string
+      artifact_name:
         required: true
         type: string
 
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     env:
       LANG: en_US.UTF-8
 
@@ -36,18 +42,21 @@ jobs:
 
       - name: Update Help
         continue-on-error: true
+        shell: bash
         run: |
           cd ..
           git clone https://github.com/PCL-Community/PCL2CEHelp.git -b master --single-branch --depth 1
           cd PCL2CEHelp
           rm -f ./* || true
           zip -r Help.zip . -x "./.*/*"
-          cp -f Help.zip "${{ github.workspace }}/Plain Craft Launcher 2/Resources/Help.zip"
+          mkdir -p "${{ github.workspace }}/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources"
+          cp -f Help.zip "${{ github.workspace }}/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources/Help.zip"
           cd ..
           rm -rf PCL2CEHelp
           cd "${{ github.workspace }}"
 
-      - name: Build Project
+      - name: Package Frontend
+        shell: bash
         env:
           PCL_WRITE_SECRET: '1'
           PCL_MS_CLIENT_ID: ${{ secrets.CLIENT_ID }}
@@ -58,13 +67,15 @@ jobs:
           PCL_LINK_SERVER_ROOT: ${{ secrets.LINK_SERVER_ROOTS }}
           PCL_LOBBY_DEFAULT_SECRET: ${{ secrets.LOBBY_DEFAULT_SECRET }}
           PCL_GITHUB_SHA: ${{ github.sha }}
+          CONFIGURATION: ${{ inputs.configuration }}
+          ARTIFACT_ROOT: ${{ github.workspace }}/artifact
+          APP_VERSION: ${{ env.describe }}
         run: |
-          dotnet publish "Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj" \
-          -p:Configuration=${{ inputs.configuration }} -p:Platform=${{ inputs.architecture }} \
-          -p:DeleteExistingFiles=true -o ./artifact --no-self-contained
+          chmod +x ./PCL.Frontend.Avalonia/scripts/package-frontend.sh
+          ./PCL.Frontend.Avalonia/scripts/package-frontend.sh "${{ inputs.rid }}"
 
       - name: Upload the Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PCL2_CE_${{ inputs.configuration }}_${{ inputs.architecture }}
+          name: ${{ inputs.artifact_name }}
           path: artifact/**

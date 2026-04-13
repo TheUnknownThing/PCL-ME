@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=__APP_NAME__
-Comment=Plain Craft Launcher Community Edition frontend
-Exec=sh -lc 'cd "$(dirname "$1")" && ./__LAUNCHER_SCRIPT__' dummy %k
-Icon=./icon.png
-Terminal=false
-Categories=Game;
-StartupNotify=true

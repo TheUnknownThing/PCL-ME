@@ -108,7 +108,7 @@ public static class LauncherFrontendNavigationService
                 new LauncherFrontendTopLevelPage(
                     LauncherFrontendPageKey.Tools,
                     "工具",
-                    "联机入口、帮助与实验功能。")
+                    "帮助与实验功能。")
             ],
             [
                 new LauncherFrontendSidebarGroup(
@@ -123,7 +123,7 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadShader, "光影包", "安装光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadWorld, "存档", "导入地图与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadCompFavorites, "收藏夹", "查看收藏的资源条目。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "浏览客户端版本。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "选择并安装 Minecraft 版本。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadOptiFine, "OptiFine", "安装 OptiFine。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadForge, "Forge", "安装 Forge。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadNeoForge, "NeoForge", "安装 NeoForge。"),
@@ -141,11 +141,9 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLaunch, "启动", "启动参数与窗口策略。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupUI, "界面", "主题、动画与外观。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupGameManage, "游戏管理", "实例与文件管理策略。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLink, "联机", "联机相关设置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupAbout, "关于", "版本与项目信息。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLog, "日志", "日志与诊断开关。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupFeedback, "反馈", "问题反馈入口。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupGameLink, "游戏联机", "游戏联机与服务配置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupUpdate, "更新", "更新通道与检查策略。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupJava, "Java", "Java 运行时配置。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.SetupLauncherMisc, "启动器杂项", "零散启动器行为设置。")
@@ -154,9 +152,8 @@ public static class LauncherFrontendNavigationService
                     LauncherFrontendPageKey.Tools,
                     "工具分区",
                     [
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsGameLink, "联机大厅", "工具页默认入口。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsLauncherHelp, "帮助", "查看帮助与说明。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsTest, "测试", "实验或调试工具。")
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsTest, "测试", "实验或调试工具。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.ToolsLauncherHelp, "帮助", "查看帮助与说明。")
                     ]),
                 new LauncherFrontendSidebarGroup(
                     LauncherFrontendPageKey.InstanceSetup,
@@ -164,15 +161,14 @@ public static class LauncherFrontendNavigationService
                     [
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionOverall, "概览", "实例总览。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSetup, "设置", "实例专属设置。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionInstall, "修改", "修改 Minecraft 版本与组件。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionExport, "导出", "导出实例或整合包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionWorld, "世界", "查看世界与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionScreenshot, "截图", "浏览截图。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionMod, "Mod", "管理启用的 Mod。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionModDisabled, "已禁用 Mod", "管理已禁用的 Mod。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionResourcePack, "资源包", "管理资源包。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionShader, "光影包", "管理光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionSchematic, "投影", "管理投影与建筑文件。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionInstall, "安装", "安装缺失组件。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.VersionServer, "服务器", "管理服务器入口。")
                     ]),
                 new LauncherFrontendSidebarGroup(
@@ -273,22 +269,55 @@ public static class LauncherFrontendNavigationService
             return null;
         }
 
-        if (request.BackstackDepth > 0)
+        var route = request.ParentRoute ?? ResolveDefaultBackRoute(request.CurrentRoute, currentPage);
+        if (route is null)
         {
-            return new LauncherFrontendBackTarget(
-                LauncherFrontendBackTargetKind.History,
-                Route: null,
-                Label: "返回上一页");
+            return null;
         }
 
-        var route = currentPage.SidebarGroupPage is not null
-            ? new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value)
-            : new LauncherFrontendRoute(LauncherFrontendPageKey.Launch);
-        var label = topLevelEntries.FirstOrDefault(entry => entry.Route.Page == route.Page)?.Title ?? "启动";
         return new LauncherFrontendBackTarget(
             LauncherFrontendBackTargetKind.Route,
             route,
-            $"返回到 {label}");
+            $"返回到 {GetRouteLabel(route, topLevelEntries)}");
+    }
+
+    private static LauncherFrontendRoute? ResolveDefaultBackRoute(
+        LauncherFrontendRoute currentRoute,
+        LauncherFrontendPageResolution currentPage)
+    {
+        return currentRoute.Page switch
+        {
+            LauncherFrontendPageKey.InstanceSelect => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.TaskManager => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.InstanceSetup => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.CompDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Download,
+                LauncherFrontendSubpageKey.DownloadInstall),
+            LauncherFrontendPageKey.HelpDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Tools,
+                LauncherFrontendSubpageKey.ToolsLauncherHelp),
+            LauncherFrontendPageKey.GameLog => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            LauncherFrontendPageKey.VersionSaves => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.InstanceSetup,
+                LauncherFrontendSubpageKey.VersionWorld),
+            LauncherFrontendPageKey.HomePageMarket => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            _ when currentPage.SidebarGroupPage is not null => new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value),
+            _ => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch)
+        };
+    }
+
+    private static string GetRouteLabel(
+        LauncherFrontendRoute route,
+        IReadOnlyList<LauncherFrontendNavigationEntry> topLevelEntries)
+    {
+        var subpageTitle = GetSubpageTitle(route);
+        if (!string.IsNullOrWhiteSpace(subpageTitle))
+        {
+            return subpageTitle!;
+        }
+
+        return topLevelEntries.FirstOrDefault(entry => entry.Route.Page == route.Page)?.Title
+               ?? ResolvePage(route.Page).Title;
     }
 }
 
@@ -354,7 +383,8 @@ public sealed record LauncherFrontendNavigationViewRequest(
     int BackstackDepth = 0,
     bool HasRunningTasks = false,
     bool HasGameLogs = false,
-    string? CurrentPageTitleOverride = null);
+    string? CurrentPageTitleOverride = null,
+    LauncherFrontendRoute? ParentRoute = null);
 
 public sealed record LauncherFrontendNavigationView(
     LauncherFrontendRoute CurrentRoute,

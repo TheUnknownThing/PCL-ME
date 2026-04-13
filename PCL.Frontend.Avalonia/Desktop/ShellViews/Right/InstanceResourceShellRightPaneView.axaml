@@ -1,0 +1,16 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.InstanceResourceShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
+    DataContext="{Binding Shell}">
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceResourceContent}">
+      <StackPanel Margin="25,10,25,10" Spacing="15">
+        <sections:InstanceResourceHeaderSection />
+        <sections:InstanceResourceEntriesSection />
+      </StackPanel>
+    </ScrollViewer>
+    <sections:InstanceResourceEmptyStateSection HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" IsVisible="{Binding ShowInstanceResourceEmptyState}" />
+  </Grid>
+</UserControl>

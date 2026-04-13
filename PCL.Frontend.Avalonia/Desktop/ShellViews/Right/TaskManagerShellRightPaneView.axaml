@@ -1,0 +1,28 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.TaskManagerShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="15">
+      <ItemsControl ItemsSource="{Binding TaskManagerEntries}" IsVisible="{Binding HasTaskManagerEntries}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <sections:TaskManagerTaskCardView />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <StackPanel IsVisible="{Binding HasNoTaskManagerEntries}" Spacing="8">
+        <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前没有活动任务" />
+        <TextBlock
+            Foreground="#7E8FA5"
+            FontSize="12"
+            Text="下载、安装或其他后台流程开始后，这里会自动显示实时进度、速度和剩余文件数量。"
+            TextWrapping="Wrap" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

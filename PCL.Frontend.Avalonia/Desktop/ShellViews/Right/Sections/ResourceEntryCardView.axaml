@@ -1,0 +1,178 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.ResourceEntryCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <Grid
+      x:Name="LayoutRoot"
+      Height="44"
+      Margin="0,0,0,8"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      ColumnDefinitions="4,34,7,Auto,*,0,4"
+      RowDefinitions="*,20,18,*"
+      RenderTransformOrigin="0.5,0.5"
+      RenderTransform="scale(1)">
+    <Grid.Transitions>
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Grid.Transitions>
+
+    <Border
+        x:Name="HoverBackground"
+        Grid.RowSpan="4"
+        Grid.ColumnSpan="7"
+        Background="{DynamicResource ColorBrushEntrySelectedBackground}"
+        BorderBrush="{DynamicResource ColorBrush6}"
+        BorderThickness="1"
+        CornerRadius="4"
+        Opacity="0">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+    </Border>
+
+    <Border
+        x:Name="SelectionBar"
+        Grid.RowSpan="4"
+        Margin="0,6,0,6"
+        Background="{DynamicResource ColorBrush3}"
+        CornerRadius="0,3,3,0"
+        IsVisible="False" />
+
+    <Image
+        Grid.Column="1"
+        Grid.Row="1"
+        Grid.RowSpan="2"
+        Width="34"
+        Height="34"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        Opacity="{Binding ContentOpacity}"
+        Source="{Binding Icon}"
+        Stretch="Uniform" />
+
+    <Grid
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        Grid.Row="1"
+        Margin="0,1,0,0"
+        ColumnDefinitions="*">
+      <TextBlock
+          x:Name="TitleBlock"
+          Foreground="{Binding TitleForeground}"
+          FontSize="14"
+          Opacity="{Binding ContentOpacity}"
+          Text="{Binding Title}"
+          TextTrimming="CharacterEllipsis" />
+    </Grid>
+
+    <Grid
+        Grid.Column="3"
+        Grid.ColumnSpan="2"
+        Grid.Row="2"
+        Margin="-1,0,3,0"
+        ColumnDefinitions="Auto,*">
+      <ItemsControl
+          x:Name="TagList"
+          Grid.Column="0"
+          ItemsSource="{Binding Tags}"
+          IsVisible="{Binding HasTags}"
+          VerticalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border
+                Margin="0,0,4,0"
+                Padding="3,1"
+                Background="#14000000"
+                CornerRadius="3">
+              <TextBlock
+                  Foreground="{DynamicResource ColorBrushGray2}"
+                  FontSize="11"
+                  Text="{Binding .}" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock
+          x:Name="InfoBlock"
+          Grid.Column="1"
+          Margin="0,0,0,1"
+          Foreground="{DynamicResource ColorBrushGray4}"
+          FontSize="12"
+          Opacity="{Binding ContentOpacity}"
+          Text="{Binding Info}"
+          TextTrimming="CharacterEllipsis"
+          TextWrapping="NoWrap"
+          VerticalAlignment="Center" />
+    </Grid>
+
+    <StackPanel
+        x:Name="ActionStack"
+        Grid.Column="5"
+        Grid.RowSpan="4"
+        Margin="0,0,5,0"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        IsHitTestVisible="False"
+        Opacity="0"
+        Orientation="Horizontal">
+      <controls:PclIconButton
+          Width="25"
+          Height="25"
+          Command="{Binding InfoCommand}"
+          HoverBackgroundBrush="#184592FF"
+          IconBrush="{DynamicResource ColorBrush5}"
+          IconData="{Binding InfoIconData}"
+          IconScale="{Binding InfoIconScale}"
+          IdleBackgroundBrush="#00FFFFFF"
+          IsVisible="{Binding HasInfoAction}"
+          ToolTip.Tip="详情" />
+      <controls:PclIconButton
+          Width="25"
+          Height="25"
+          Command="{Binding OpenCommand}"
+          HoverBackgroundBrush="#184592FF"
+          IconBrush="{DynamicResource ColorBrush5}"
+          IconData="{Binding OpenIconData}"
+          IconScale="{Binding OpenIconScale}"
+          IdleBackgroundBrush="#00FFFFFF"
+          IsVisible="{Binding HasOpenAction}"
+          ToolTip.Tip="打开文件位置" />
+      <controls:PclIconButton
+          Width="25"
+          Height="25"
+          Command="{Binding ToggleCommand}"
+          HoverBackgroundBrush="#184592FF"
+          IconBrush="{DynamicResource ColorBrush5}"
+          IconData="{Binding ToggleIconData}"
+          IconScale="{Binding ToggleIconScale}"
+          IdleBackgroundBrush="#00FFFFFF"
+          IsVisible="{Binding HasToggleAction}"
+          ToolTip.Tip="{Binding ToggleToolTip}" />
+      <controls:PclIconButton
+          Width="25"
+          Height="25"
+          Command="{Binding DeleteCommand}"
+          HoverBackgroundBrush="#184592FF"
+          IconBrush="{DynamicResource ColorBrush5}"
+          IconData="{Binding DeleteIconData}"
+          IconScale="{Binding DeleteIconScale}"
+          IdleBackgroundBrush="#00FFFFFF"
+          IsVisible="{Binding HasDeleteAction}"
+          ToolTip.Tip="删除" />
+    </StackPanel>
+  </Grid>
+</UserControl>

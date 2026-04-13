@@ -11,8 +11,8 @@ public static class LauncherStartupMilestoneService
             HiddenThemeNotice: updatedCount >= 99
                 ? new LauncherStartupMilestoneNotice(
                     "提示",
-                    "你已经打开了 99 次 PCL 社区版啦，感谢你长期以来的支持！" + System.Environment.NewLine +
-                    "隐藏主题 铁杆粉 未解锁！社区版不包含隐藏主题！")
+                    "你已经打开了 99 次 PCL 跨平台版啦，感谢你长期以来的支持！" + System.Environment.NewLine +
+                    "隐藏主题 铁杆粉 未解锁！跨平台版不包含隐藏主题！")
                 : null);
     }
 }

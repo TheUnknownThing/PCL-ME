@@ -1,0 +1,58 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.SetupFeedbackShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,25" Spacing="15">
+      <controls:PclCard Header="提交反馈" ContentMargin="20,40,18,22">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="15">
+            <TextBlock
+                Foreground="#4B5968"
+                FontSize="13"
+                Text="在提交反馈之前，先查找一下是否存在重复反馈，如果有重复反馈，那么请不要再次提交反馈，这样会加剧维护者的负担…… 注意：此页面未展示所有反馈，如需查看更多反馈，请前往 GitHub。"
+                TextWrapping="Wrap" />
+            <controls:PclButton
+                Width="140"
+                Height="35"
+                HorizontalAlignment="Left"
+                Command="{Binding OpenFeedbackCommand}"
+                ColorType="Highlight"
+                ContentPadding="13,0"
+                Text="前往反馈" />
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <ItemsControl ItemsSource="{Binding FeedbackSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <controls:PclCard
+                Margin="0,0,0,15"
+                Header="{Binding Title}"
+                ShowChevron="True"
+                IsChevronExpanded="{Binding IsExpanded}"
+                HeaderCommand="{Binding ToggleCommand}"
+                ContentMargin="20,36,18,18">
+              <controls:PclCard.CardContent>
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclListItem
+                          Margin="0,0,0,8"
+                          Command="{Binding Command}"
+                          Info="{Binding Info}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

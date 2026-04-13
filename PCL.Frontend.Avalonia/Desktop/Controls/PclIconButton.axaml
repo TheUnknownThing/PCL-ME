@@ -1,0 +1,45 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclIconButton"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root">
+  <Border
+      x:Name="PanBack"
+      Width="28"
+      Height="28"
+      CornerRadius="14"
+      Background="#00FFFFFF"
+      BorderBrush="Transparent"
+      BorderThickness="0"
+      RenderTransformOrigin="0.5,0.5">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+      </Transitions>
+    </Border.Transitions>
+    <Button
+        x:Name="ButtonHost"
+        Classes="nochrome"
+        Width="28"
+        Height="28"
+        FocusAdorner="{x:Null}"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Command="{Binding Command, ElementName=Root}"
+        Padding="0">
+      <Path
+          x:Name="ShapeIcon"
+          Width="14"
+          Height="14"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Fill="#EAF2FE"
+          RenderTransformOrigin="0.5,0.5"
+          Stretch="Uniform" />
+    </Button>
+  </Border>
+</UserControl>

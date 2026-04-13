@@ -1,0 +1,122 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceSetupServerSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="服务器" ContentMargin="20,40,20,18">
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="12">
+        <Border
+            Padding="12,10"
+            Background="#FFF1EA"
+            BorderBrush="#F1C8B6"
+            BorderThickness="1"
+            CornerRadius="4"
+            IsVisible="{Binding ShowInstanceServerLoginLockedWarning}">
+          <TextBlock
+              Foreground="#A94F2B"
+              FontSize="12.5"
+              Text="当前实例的验证方式已锁定，无法再次更改。请使用要求的验证方式启动游戏。"
+              TextWrapping="Wrap" />
+        </Border>
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,Auto,9,28">
+          <TextBlock
+              Grid.Row="0"
+              Margin="0,0,25,0"
+              VerticalAlignment="Center"
+              Foreground="#343D4A"
+              FontSize="13"
+              Text="限制验证方式" />
+          <ComboBox
+              Grid.Row="0"
+              Grid.Column="1"
+              IsEnabled="{Binding IsInstanceServerLoginEditable}"
+              ItemsSource="{Binding InstanceServerLoginRequireOptions}"
+              SelectedIndex="{Binding SelectedInstanceServerLoginRequireIndex}" />
+
+          <Grid
+              Grid.Row="1"
+              Grid.ColumnSpan="2"
+              Margin="0,8,0,0"
+              IsVisible="{Binding ShowInstanceServerAuthFields}"
+              ColumnDefinitions="Auto,*"
+              RowDefinitions="28,9,28,9,28">
+            <TextBlock
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13"
+                Text="目标验证服务器" />
+            <TextBox
+                Grid.Column="1"
+                IsEnabled="{Binding IsInstanceServerAuthEditable}"
+                Text="{Binding InstanceServerAuthServer}" />
+
+            <TextBlock
+                Grid.Row="2"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13"
+                Text="注册链接" />
+            <TextBox
+                Grid.Row="2"
+                Grid.Column="1"
+                IsEnabled="{Binding IsInstanceServerAuthEditable}"
+                Text="{Binding InstanceServerAuthRegister}" />
+
+            <TextBlock
+                Grid.Row="4"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13"
+                Text="服务器名称" />
+            <TextBox
+                Grid.Row="4"
+                Grid.Column="1"
+                IsEnabled="{Binding IsInstanceServerAuthEditable}"
+                Text="{Binding InstanceServerAuthName}" />
+          </Grid>
+
+          <TextBlock
+              Grid.Row="3"
+              Margin="0,0,25,0"
+              VerticalAlignment="Center"
+              Foreground="#343D4A"
+              FontSize="13"
+              Text="自动进入服务器" />
+          <TextBox
+              Grid.Row="3"
+              Grid.Column="1"
+              Text="{Binding InstanceServerAutoJoin}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,Auto,Auto" IsVisible="{Binding ShowInstanceServerProfileActions}">
+          <controls:PclButton
+              Grid.Column="0"
+              MinWidth="150"
+              Margin="0,0,20,0"
+              ColorType="Highlight"
+              Command="{Binding SetLittleSkinCommand}"
+              IsEnabled="{Binding IsInstanceServerAuthEditable}"
+              Text="设置为 LittleSkin" />
+          <controls:PclButton
+              Grid.Column="1"
+              MinWidth="150"
+              Margin="0,0,20,0"
+              Command="{Binding LockInstanceLoginCommand}"
+              IsEnabled="{Binding CanLockInstanceLogin}"
+              IsVisible="{Binding ShowInstanceServerLockAction}"
+              Text="锁定验证方式" />
+          <controls:PclButton
+              Grid.Column="2"
+              MinWidth="150"
+              Command="{Binding CreateInstanceProfileCommand}"
+              IsEnabled="{Binding CanCreateInstanceProfile}"
+              Text="新建档案" />
+        </Grid>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

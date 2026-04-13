@@ -1,0 +1,461 @@
+<Window
+    x:Class="PCL.Frontend.Avalonia.Desktop.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    Title="PCL-ME"
+    Icon="/Assets/icon.ico"
+    Width="900"
+    Height="540"
+    MinWidth="810"
+    MinHeight="470"
+    Background="Transparent"
+    SystemDecorations="None"
+    TransparencyLevelHint="Transparent"
+    WindowStartupLocation="CenterScreen">
+  <Window.Styles>
+    <Style Selector="Button.chrome">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinWidth" Value="28" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style Selector="Button.flat">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+  </Window.Styles>
+
+  <Grid x:Name="GridRoot">
+    <Grid x:Name="GridResize" Margin="10" RowDefinitions="14,*,14" ColumnDefinitions="14,*,14">
+      <Border x:Name="TopLeft" Grid.Row="0" Grid.Column="0">
+        <Border.Background>
+          <RadialGradientBrush Center="100%,100%" GradientOrigin="100%,100%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="#21000000" Offset="0.43" />
+            <GradientStop Color="#11000000" Offset="0.6" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="TopRight" Grid.Row="0" Grid.Column="2">
+        <Border.Background>
+          <RadialGradientBrush Center="0%,100%" GradientOrigin="0%,100%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="#21000000" Offset="0.43" />
+            <GradientStop Color="#11000000" Offset="0.6" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="BottomLeft" Grid.Row="2" Grid.Column="0">
+        <Border.Background>
+          <RadialGradientBrush Center="100%,0%" GradientOrigin="100%,0%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="#21000000" Offset="0.43" />
+            <GradientStop Color="#11000000" Offset="0.6" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="BottomRight" Grid.Row="2" Grid.Column="2">
+        <Border.Background>
+          <RadialGradientBrush Center="0%,0%" GradientOrigin="0%,0%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="#21000000" Offset="0.43" />
+            <GradientStop Color="#11000000" Offset="0.6" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Top" Grid.Row="0" Grid.Column="1" Height="8" VerticalAlignment="Top">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#00000000" Offset="0" />
+            <GradientStop Color="#11000000" Offset="0.7" />
+            <GradientStop Color="#21000000" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Right" Grid.Row="1" Grid.Column="2" Width="8" HorizontalAlignment="Right">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,0%">
+            <GradientStop Color="#00000000" Offset="0" />
+            <GradientStop Color="#11000000" Offset="0.7" />
+            <GradientStop Color="#21000000" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Bottom" Grid.Row="2" Grid.Column="1" Height="8" VerticalAlignment="Bottom">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,100%" EndPoint="0%,0%">
+            <GradientStop Color="#00000000" Offset="0" />
+            <GradientStop Color="#11000000" Offset="0.7" />
+            <GradientStop Color="#21000000" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Left" Grid.Row="1" Grid.Column="0" Width="8" HorizontalAlignment="Left">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Color="#00000000" Offset="0" />
+            <GradientStop Color="#11000000" Offset="0.7" />
+            <GradientStop Color="#21000000" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+    </Grid>
+
+    <Border x:Name="MainBorder" Margin="18" CornerRadius="15,15,8,8">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="90%,0%" EndPoint="10%,100%">
+          <GradientStop Color="{DynamicResource ColorObjectBg0}" Offset="-0.1" />
+          <GradientStop Color="{DynamicResource ColorObject7}" Offset="0.4" />
+          <GradientStop Color="{DynamicResource ColorObject6}" Offset="1.1" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+
+      <Border x:Name="MainClipBorder" ClipToBounds="True" CornerRadius="6">
+        <Grid RowDefinitions="Auto,*">
+          <StackPanel
+              Margin="19,0,0,0"
+              IsVisible="{Binding ShowWindowBranding}"
+              Orientation="Horizontal"
+              VerticalAlignment="Center"
+              ZIndex="3">
+            <Path
+                Width="48"
+                Height="16"
+                Data="M26,29 v-25 h5 a7,7 180 0 1 0,14 h-5 M61,6.5 a10,11.5 180 1 0 0,18 M68,2.5 v24.5 h12 M98,2"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsHitTestVisible="False"
+                Stretch="Fill"
+                Stroke="White"
+                StrokeThickness="1.9"
+                UseLayoutRounding="False" />
+
+            <Border
+                Width="32"
+                Height="20"
+                Margin="0,0,0,0"
+                Background="White"
+                CornerRadius="5"
+                IsHitTestVisible="False"
+                VerticalAlignment="Center">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush2}"
+                  Text="ME" />
+            </Border>
+          </StackPanel>
+
+          <StackPanel
+              Grid.Row="0"
+              HorizontalAlignment="Right"
+              Margin="0,0,12,0"
+              Orientation="Horizontal"
+              VerticalAlignment="Center"
+              ZIndex="3"
+              Spacing="2">
+            <controls:PclIconButton
+                x:Name="MinimizeButton"
+                Width="28"
+                Height="28"
+                IconBrush="#F4FAFF"
+                HoverBackgroundBrush="#32FFFFFF"
+                Click="MinimizeButton_OnClick" />
+            <controls:PclIconButton
+                x:Name="MaximizeButton"
+                Width="28"
+                Height="28"
+                IsVisible="{Binding ShowMaximizeButton}"
+                IconBrush="#F4FAFF"
+                HoverBackgroundBrush="#32FFFFFF"
+                Click="MaximizeButton_OnClick" />
+            <controls:PclIconButton
+                x:Name="CloseButton"
+                Width="28"
+                Height="28"
+                IconBrush="#F4FAFF"
+                HoverBackgroundBrush="#32FFFFFF"
+                Click="CloseButton_OnClick" />
+          </StackPanel>
+
+          <Border
+              x:Name="NavBackgroundBorder"
+              Grid.Row="0"
+              Height="48"
+              PointerPressed="TitleBar_OnPointerPressed"
+              DoubleTapped="TitleBar_OnDoubleTapped"
+              ZIndex="2">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Color="{DynamicResource ColorObject2}" Offset="0" />
+                <GradientStop Color="{DynamicResource ColorObject3}" Offset="0.5" />
+                <GradientStop Color="{DynamicResource ColorObject2}" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Grid Grid.Column="1">
+                <ItemsControl
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    motion:Motion.AnimateOnVisible="True"
+                    motion:Motion.OffsetY="8"
+                    IsVisible="{Binding ShowTopLevelNavigation}"
+                    ItemsSource="{Binding TopLevelEntries}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclTabButton
+                          Margin="5,0"
+                          Command="{Binding Command}"
+                          IconData="{Binding IconPath}"
+                          IconScale="{Binding IconScale}"
+                          IsSelected="{Binding IsSelected}"
+                          Text="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid
+                    Margin="15,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    motion:Motion.AnimateOnVisible="True"
+                    motion:Motion.OffsetX="-12"
+                    ColumnDefinitions="Auto,*"
+                    IsVisible="{Binding ShowInnerNavigation}">
+                  <controls:PclIconButton
+                      x:Name="BackButton"
+                      Width="27"
+                      Height="27"
+                      VerticalAlignment="Center"
+                      Command="{Binding BackCommand}"
+                      IconBrush="#F4FAFF"
+                      HoverBackgroundBrush="#32FFFFFF"
+                      ToolTip.Tip="返回" />
+                  <TextBlock
+                      Grid.Column="1"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Foreground="White"
+                      FontSize="15"
+                      Text="{Binding TitleBarLabel}" />
+                </Grid>
+              </Grid>
+            </Grid>
+          </Border>
+
+          <Grid Grid.Row="1">
+            <Border
+                x:Name="ShellLeftBackdrop"
+                Width="{Binding CurrentShellLeftPaneWidth}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}"
+                IsHitTestVisible="False">
+              <Border
+                  Width="1"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Stretch"
+                  Background="#14FFFFFF" />
+            </Border>
+
+            <Grid
+                x:Name="LaunchRouteGrid"
+                IsVisible="{Binding IsLaunchRoute}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.InitialOpacity="0"
+                motion:Motion.OffsetX="0"
+                motion:Motion.OffsetY="0"
+                ColumnDefinitions="Auto,*">
+              <Border
+                  x:Name="LaunchLeftHost"
+                  Grid.Column="0"
+                  Width="300"
+                  ClipToBounds="True"
+                  Background="Transparent">
+                <Grid x:Name="LaunchLeftContentHost">
+                  <controls:PclLaunchLeftPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+                </Grid>
+              </Border>
+
+              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
+                <Grid x:Name="LaunchRightContentHost">
+                  <controls:PclLaunchRightPanel x:Name="LaunchRightPanel" />
+                </Grid>
+              </Border>
+            </Grid>
+
+            <Grid
+                x:Name="StandardRouteGrid"
+                IsVisible="{Binding IsStandardShellRoute}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.InitialOpacity="0"
+                motion:Motion.OffsetX="0"
+                motion:Motion.OffsetY="0"
+                ColumnDefinitions="Auto,*">
+              <Border
+                  x:Name="StandardLeftHost"
+                  Grid.Column="0"
+                  IsVisible="{Binding ShowStandardShellLeftPane}"
+                  Width="{Binding StandardShellLeftPaneWidth}"
+                  ClipToBounds="True"
+                  Background="Transparent">
+                <Grid x:Name="StandardLeftContentHost">
+                  <ContentControl
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Content="{Binding CurrentStandardLeftPane}" />
+                </Grid>
+              </Border>
+
+              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
+                <Grid x:Name="StandardRightContentHost">
+                  <controls:PclAnimatedRightPaneHost PaneContent="{Binding CurrentStandardRightPane}" />
+                </Grid>
+              </Border>
+            </Grid>
+
+            <StackPanel
+                Margin="0,0,12,20"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                IsVisible="{Binding ShowBottomRightExtraButtons}"
+                Spacing="10">
+              <ItemsControl ItemsSource="{Binding UtilityEntries}" IsVisible="{Binding ShowBottomRightUtilityEntryButtons}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PclExtraButton
+                        Margin="0,0,0,10"
+                        Command="{Binding Command}"
+                        IconData="{Binding IconPath}"
+                        ToolTip.Tip="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <controls:PclExtraButton
+                  Command="{Binding OpenTaskManagerShortcutCommand}"
+                  IconData="M955 610h-59c-15 0-29 13-29 29v196c0 15-13 29-29 29h-649c-15 0-29-13-29-29v-196c0-15-13-29-29-29h-59c-15 0-29 13-29 29V905c0 43 35 78 78 78h787c43 0 78-35 78-78V640c0-15-13-29-29-29zM492 740c11 11 29 11 41 0l265-265c11-11 11-29 0-41l-41-41c-11-11-29-11-41 0l-110 110c-11 11-33 3-33-13V68C571 53 555 39 541 39h-59c-15 0-29 13-29 29v417c0 17-21 25-33 13l-110-110c-11-11-29-11-41 0L226 433c-11 11-11 29 0 41L492 740z"
+                  IsVisible="{Binding ShowTaskManagerShortcutButton}"
+                  ToolTip.Tip="任务管理" />
+
+              <controls:PclExtraButton
+                  x:Name="PromptQueueButton"
+                  Command="{Binding TogglePromptOverlayCommand}"
+                  IsVisible="{Binding ShowBottomRightPromptQueueButton}"
+                  ToolTip.Tip="提示队列" />
+            </StackPanel>
+
+            <StackPanel
+                x:Name="PanHint"
+                Margin="0,0,28,24"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                IsHitTestVisible="False"
+                Spacing="6"
+                ZIndex="20" />
+
+            <Border
+                x:Name="PromptOverlayBackdrop"
+                IsVisible="False"
+                Classes="pcl-dialog-overlay"
+                Background="#5A000000" />
+
+            <Border
+                x:Name="PromptOverlayHost"
+                IsVisible="False"
+                MinWidth="400"
+                MaxWidth="620"
+                MaxHeight="540"
+                Margin="25"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="#00000000"
+                BorderBrush="#00000000"
+                BorderThickness="0"
+                CornerRadius="7">
+              <Border
+                  x:Name="PromptOverlayPanel"
+                  Classes="pcl-dialog-panel"
+                  Background="{DynamicResource ColorBrushMsgBox}"
+                  BoxShadow="0 2 20 0 #CC3C3C3C"
+                  CornerRadius="7">
+                <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,*">
+                  <TextBlock
+                      Margin="7,-1,70,9"
+                      Foreground="{Binding CurrentPrompt.TitleBrush}"
+                      FontSize="23"
+                      Text="{Binding CurrentPrompt.Title}" />
+
+                  <Rectangle
+                      Grid.Row="1"
+                      Height="2"
+                      Fill="{Binding CurrentPrompt.AccentBrush}" />
+
+                  <Grid Grid.Row="3" RowDefinitions="*,Auto">
+                    <ScrollViewer
+                        Grid.Row="0"
+                        MaxHeight="380"
+                        Padding="7,0,15,17"
+                        VerticalScrollBarVisibility="Auto">
+                      <TextBlock
+                          Margin="1"
+                          Foreground="{DynamicResource ColorBrush1}"
+                          FontSize="15"
+                          LineHeight="18"
+                          Text="{Binding CurrentPrompt.Message}"
+                          TextWrapping="Wrap" />
+                    </ScrollViewer>
+
+                    <ItemsControl
+                        Grid.Row="1"
+                        HorizontalAlignment="Right"
+                        ItemsSource="{Binding CurrentPrompt.Options}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclButton
+                              MinWidth="96"
+                              Margin="12,0,0,0"
+                              ColorType="{Binding ColorType}"
+                              Command="{Binding Command}"
+                              ContentPadding="8,5"
+                              Text="{Binding Label}"
+                              TextMargin="0,-1,0,0" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Grid>
+                </Grid>
+              </Border>
+            </Border>
+          </Grid>
+        </Grid>
+      </Border>
+    </Border>
+  </Grid>
+</Window>

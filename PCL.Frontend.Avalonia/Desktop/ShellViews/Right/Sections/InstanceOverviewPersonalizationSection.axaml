@@ -1,0 +1,71 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceOverviewPersonalizationSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="个性化" ContentMargin="20,40,20,18">
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="15">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28">
+          <TextBlock
+              Grid.Row="0"
+              Margin="0,0,25,0"
+              VerticalAlignment="Center"
+              Foreground="#343D4A"
+              FontSize="13"
+              Text="图标" />
+          <ComboBox
+              Grid.Row="0"
+              Grid.Column="1"
+              SelectedIndex="{Binding SelectedInstanceOverviewIconIndex}"
+              ItemsSource="{Binding InstanceOverviewIconOptions}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <TextBlock
+              Grid.Row="2"
+              Margin="0,0,25,0"
+              VerticalAlignment="Center"
+              Foreground="#343D4A"
+              FontSize="13"
+              Text="分类" />
+          <ComboBox
+              Grid.Row="2"
+              Grid.Column="1"
+              SelectedIndex="{Binding SelectedInstanceOverviewCategoryIndex}"
+              ItemsSource="{Binding InstanceOverviewCategoryOptions}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,Auto,Auto">
+          <controls:PclButton
+              Grid.Column="0"
+              MinWidth="140"
+              Margin="0,0,20,0"
+              Command="{Binding RenameInstanceCommand}"
+              Text="修改实例名" />
+          <controls:PclButton
+              Grid.Column="1"
+              MinWidth="140"
+              Margin="0,0,20,0"
+              Command="{Binding EditInstanceDescriptionCommand}"
+              Text="修改实例描述" />
+          <controls:PclButton
+              Grid.Column="2"
+              MinWidth="140"
+              Command="{Binding ToggleInstanceFavoriteCommand}"
+              Text="{Binding InstanceOverviewFavoriteButtonText}" />
+        </Grid>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

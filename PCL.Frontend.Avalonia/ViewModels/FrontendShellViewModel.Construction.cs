@@ -1,0 +1,530 @@
+using System.IO;
+using System.Text;
+using System.Threading;
+using Avalonia.Threading;
+using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
+using PCL.Frontend.Avalonia.Cli;
+using PCL.Frontend.Avalonia.Models;
+using PCL.Frontend.Avalonia.Workflows;
+using PCL.Frontend.Avalonia.Workflows.Inspection;
+
+namespace PCL.Frontend.Avalonia.ViewModels;
+
+internal sealed partial class FrontendShellViewModel
+{
+    private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
+    private static readonly string LaunchAvatarImageFilePath = GetLauncherAssetPath("Images", "Heads", "PCL-Community.png");
+    private static readonly string LaunchNewsImageFilePath = GetLauncherAssetPath("Images", "Backgrounds", "server_bg.png");
+    private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
+    private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
+    private readonly AvaloniaCommandOptions _options;
+    private readonly FrontendShellActionService _shellActionService;
+    private FrontendShellComposition _shellComposition;
+    private FrontendSetupComposition _setupComposition;
+    private FrontendInstanceComposition _instanceComposition;
+    private FrontendToolsComposition _toolsComposition = new(
+        new FrontendToolsGameLinkState(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, [], 0, [], []),
+        new FrontendToolsHelpState([]),
+        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
+    private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
+    private FrontendSetupFeedbackSnapshot? _feedbackSnapshot;
+    private StartupAvaloniaPlan _startupPlan;
+    private FrontendLaunchComposition _launchComposition;
+    private readonly CrashAvaloniaPlan _crashPlan;
+    private CrashAvaloniaPlan _activeCrashPlan;
+    private readonly Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
+    private readonly List<LauncherFrontendRoute> _routeAncestors = [];
+    private readonly ActionCommand _backCommand;
+    private readonly ActionCommand _togglePromptOverlayCommand;
+    private readonly ActionCommand _dismissPromptOverlayCommand;
+    private readonly ActionCommand _openTaskManagerShortcutCommand;
+    private readonly ActionCommand _launchCommand;
+    private readonly ActionCommand _cancelLaunchCommand;
+    private readonly ActionCommand _versionSelectCommand;
+    private readonly ActionCommand _versionSetupCommand;
+    private readonly ActionCommand _toggleLaunchMigrationCommand;
+    private readonly ActionCommand _toggleLaunchNewsCommand;
+    private readonly ActionCommand _dismissLaunchCommunityHintCommand;
+    private readonly ActionCommand _selectLaunchProfileCommand;
+    private readonly ActionCommand _addLaunchProfileCommand;
+    private readonly ActionCommand _createOfflineLaunchProfileCommand;
+    private readonly ActionCommand _loginMicrosoftLaunchProfileCommand;
+    private readonly ActionCommand _loginAuthlibLaunchProfileCommand;
+    private readonly ActionCommand _backLaunchProfileCommand;
+    private readonly ActionCommand _submitOfflineLaunchProfileCommand;
+    private readonly ActionCommand _submitMicrosoftLaunchProfileCommand;
+    private readonly ActionCommand _openMicrosoftDeviceLinkCommand;
+    private readonly ActionCommand _submitAuthlibLaunchProfileCommand;
+    private readonly ActionCommand _useLittleSkinLaunchProfileCommand;
+    private readonly ActionCommand _openFeedbackCommand;
+    private readonly ActionCommand _exportLogCommand;
+    private readonly ActionCommand _exportAllLogsCommand;
+    private readonly ActionCommand _openLogDirectoryCommand;
+    private readonly ActionCommand _cleanLogsCommand;
+    private readonly ActionCommand _getMirrorCdkCommand;
+    private readonly ActionCommand _downloadUpdateCommand;
+    private readonly ActionCommand _showUpdateDetailCommand;
+    private readonly ActionCommand _checkUpdateAgainCommand;
+    private readonly ActionCommand _openFullChangelogCommand;
+    private readonly ActionCommand _resetGameLinkSettingsCommand;
+    private readonly ActionCommand _resetGameManageSettingsCommand;
+    private readonly ActionCommand _resetLauncherMiscSettingsCommand;
+    private readonly ActionCommand _exportSettingsCommand;
+    private readonly ActionCommand _importSettingsCommand;
+    private readonly ActionCommand _applyProxySettingsCommand;
+    private readonly ActionCommand _addJavaRuntimeCommand;
+    private readonly ActionCommand _selectAutoJavaCommand;
+    private readonly ActionCommand _resetUiSettingsCommand;
+    private readonly ActionCommand _openSnapshotBuildCommand;
+    private readonly ActionCommand _backgroundOpenFolderCommand;
+    private readonly ActionCommand _backgroundRefreshCommand;
+    private readonly ActionCommand _backgroundClearCommand;
+    private readonly ActionCommand _musicOpenFolderCommand;
+    private readonly ActionCommand _musicRefreshCommand;
+    private readonly ActionCommand _musicClearCommand;
+    private readonly ActionCommand _changeLogoImageCommand;
+    private readonly ActionCommand _deleteLogoImageCommand;
+    private readonly ActionCommand _refreshHomepageCommand;
+    private readonly ActionCommand _generateHomepageTutorialFileCommand;
+    private readonly ActionCommand _viewHomepageTutorialCommand;
+    private readonly ActionCommand _openHomepageMarketCommand;
+    private readonly ActionCommand _toggleLaunchAdvancedOptionsCommand;
+    private readonly ActionCommand _acceptGameLinkTermsCommand;
+    private readonly ActionCommand _testLobbyNatCommand;
+    private readonly ActionCommand _loginNatayarkAccountCommand;
+    private readonly ActionCommand _joinLobbyCommand;
+    private readonly ActionCommand _pasteLobbyIdCommand;
+    private readonly ActionCommand _clearLobbyIdCommand;
+    private readonly ActionCommand _createLobbyCommand;
+    private readonly ActionCommand _refreshLobbyWorldsCommand;
+    private readonly ActionCommand _inputLobbyPortCommand;
+    private readonly ActionCommand _copyLobbyVirtualIpCommand;
+    private readonly ActionCommand _copyActiveLobbyIdCommand;
+    private readonly ActionCommand _exitLobbyCommand;
+    private readonly ActionCommand _openLobbyReportCommand;
+    private readonly ActionCommand _openNatayarkPolicyCommand;
+    private readonly ActionCommand _openLobbyPrivacyPolicyCommand;
+    private readonly ActionCommand _disableGameLinkFeatureCommand;
+    private readonly ActionCommand _openGameLinkFaqCommand;
+    private readonly ActionCommand _openEasyTierWebsiteCommand;
+    private readonly ActionCommand _openPysioWebsiteCommand;
+    private readonly ActionCommand _selectDownloadFolderCommand;
+    private readonly ActionCommand _startCustomDownloadCommand;
+    private readonly ActionCommand _openCustomDownloadFolderCommand;
+    private readonly ActionCommand _saveOfficialSkinCommand;
+    private readonly ActionCommand _previewAchievementCommand;
+    private readonly ActionCommand _saveAchievementCommand;
+    private readonly ActionCommand _queryMinecraftServerCommand;
+    private readonly ActionCommand _selectHeadSkinCommand;
+    private readonly ActionCommand _saveHeadCommand;
+    private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
+    private readonly ActionCommand _manageDownloadFavoriteTargetCommand;
+    private readonly ActionCommand _resetInstanceExportOptionsCommand;
+    private readonly ActionCommand _importInstanceExportConfigCommand;
+    private readonly ActionCommand _saveInstanceExportConfigCommand;
+    private readonly ActionCommand _openInstanceExportGuideCommand;
+    private readonly ActionCommand _startInstanceExportCommand;
+    private readonly ActionCommand _setLittleSkinCommand;
+    private readonly ActionCommand _lockInstanceLoginCommand;
+    private readonly ActionCommand _createInstanceProfileCommand;
+    private readonly ActionCommand _openGlobalLaunchSettingsCommand;
+    private readonly ActionCommand _refreshInstanceSelectionCommand;
+    private readonly ActionCommand _clearInstanceSelectionSearchCommand;
+    private readonly ActionCommand _addInstanceSelectionFolderCommand;
+    private readonly ActionCommand _importInstanceSelectionPackCommand;
+    private readonly ActionCommand _openInstanceSelectionDownloadCommand;
+    private readonly ActionCommand _refreshTaskManagerCommand;
+    private readonly ActionCommand _clearFinishedTasksCommand;
+    private readonly ActionCommand _refreshGameLogCommand;
+    private readonly ActionCommand _clearGameLogCommand;
+    private LauncherFrontendRoute _currentRoute;
+    private LauncherFrontendNavigationView? _currentNavigation;
+    private AvaloniaPromptLaneKind _selectedPromptLane;
+    private string _eyebrow = string.Empty;
+    private string _title = string.Empty;
+    private string _description = string.Empty;
+    private string _status = string.Empty;
+    private string _breadcrumbTrail = string.Empty;
+    private string _surfaceMeta = string.Empty;
+    private string _promptInboxTitle = string.Empty;
+    private string _promptInboxSummary = string.Empty;
+    private string _promptEmptyState = string.Empty;
+    private double _standardSidebarAutoWidth = 152;
+    private bool _canGoBack;
+    private bool _isPromptOverlayOpen;
+    private bool _isLaunchMigrationExpanded = true;
+    private bool _isLaunchNewsExpanded = true;
+    private bool _showLaunchCommunityHint = true;
+    private bool _isLaunchInProgress;
+    private bool _isLaunchProfileActionInProgress;
+    private LaunchProfileSurfaceKind _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
+    private bool _pendingLaunchAfterPrompt;
+    private bool _showLaunchLog;
+    private readonly StringBuilder _launchLogBuilder = new();
+    private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
+    private string _launchPromptContextKey = string.Empty;
+    private string _helpSearchQuery = string.Empty;
+    private int _selectedUpdateChannelIndex;
+    private int _selectedUpdateModeIndex;
+    private string _mirrorCdk = string.Empty;
+    private bool _isCheckingUpdate;
+    private string _lastUpdateCheckSignature = string.Empty;
+    private bool _isRefreshingFeedback;
+    private DateTimeOffset _lastFeedbackRefreshUtc;
+    private string _linkUsername = string.Empty;
+    private int _selectedProtocolPreferenceIndex;
+    private bool _preferLowestLatencyPath = true;
+    private bool _tryPunchSymmetricNat = true;
+    private bool _allowIpv6Communication = true;
+    private bool _enableLinkCliOutput;
+    private string _gameLinkAnnouncement = "正在连接到大厅服务器...";
+    private string _gameLinkNatStatus = "点击测试";
+    private string _gameLinkAccountStatus = "点击登录 Natayark 账户";
+    private string _gameLinkLobbyId = string.Empty;
+    private string _gameLinkSessionPing = "-ms";
+    private string _gameLinkSessionId = "尚未创建大厅";
+    private string _gameLinkConnectionType = "连接中";
+    private string _gameLinkConnectedUserName = "未登录";
+    private string _gameLinkConnectedUserType = "大厅访客";
+    private IReadOnlyList<string> _gameLinkWorldOptions = ["未检测到可用存档"];
+    private int _selectedGameLinkWorldIndex;
+    private int _gameLinkSessionPort = 25565;
+    private bool _gameLinkSessionIsHost;
+    private string _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
+    private string _toolDownloadUserAgent = "PCL-CE-Avalonia/1.0";
+    private string _toolDownloadFolder = "/Users/demo/Downloads/PCL";
+    private string _toolDownloadName = "demo-pack.zip";
+    private string _officialSkinPlayerName = "Steve";
+    private string _launchOfflineUserName = string.Empty;
+    private int _selectedLaunchOfflineUuidModeIndex;
+    private string _launchOfflineCustomUuid = string.Empty;
+    private string _launchOfflineStatusText = string.Empty;
+    private string _launchMicrosoftStatusText = "点击下方按钮后，启动器会打开微软登录网页。";
+    private string _launchMicrosoftDeviceCode = string.Empty;
+    private string _launchMicrosoftVerificationUrl = string.Empty;
+    private string _launchAuthlibServer = "https://littleskin.cn/api/yggdrasil";
+    private string _launchAuthlibLoginName = string.Empty;
+    private string _launchAuthlibPassword = string.Empty;
+    private string _launchAuthlibStatusText = string.Empty;
+    private string _achievementBlockId = "diamond_sword";
+    private string _achievementTitle = "Achievement Get!";
+    private string _achievementFirstLine = "Time to Strike!";
+    private string _achievementSecondLine = "PCL Frontend Avalonia";
+    private bool _showAchievementPreview;
+    private int _selectedHeadSizeIndex;
+    private string _selectedHeadSkinPath = "尚未选择皮肤";
+    private string _downloadInstallName = "新的安装方案";
+    private string _downloadCatalogIntroTitle = string.Empty;
+    private string _downloadCatalogIntroBody = string.Empty;
+    private string _downloadCatalogLoadingText = "正在获取版本列表";
+    private string _downloadFavoriteSearchQuery = string.Empty;
+    private int _selectedDownloadFavoriteTargetIndex;
+    private string _downloadFavoriteWarningText = string.Empty;
+    private bool _showDownloadFavoriteWarning;
+    private CancellationTokenSource? _downloadCatalogRefreshCts;
+    private int _downloadCatalogRefreshVersion;
+    private CancellationTokenSource? _downloadFavoriteRefreshCts;
+    private int _downloadFavoriteRefreshVersion;
+    private bool _isDownloadCatalogLoading;
+    private bool _isDownloadFavoriteLoading;
+    private bool _isDownloadResourceLoading;
+    private readonly Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> _downloadResourceRuntimeStates = new();
+    private int _communityProjectRefreshVersion;
+    private bool _isCommunityProjectLoading;
+    private string _communityProjectLoadingText = "正在获取版本列表";
+    private string _selectedCommunityProjectTitleHint = string.Empty;
+    private int _selectedLaunchIsolationIndex = 1;
+    private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
+    private string _launchCustomInfo = "PCL";
+    private int _selectedLaunchVisibilityIndex = 4;
+    private int _selectedLaunchPriorityIndex = 1;
+    private int _selectedLaunchWindowTypeIndex = 1;
+    private string _launchWindowWidth = "854";
+    private string _launchWindowHeight = "480";
+    private bool _useAutomaticRamAllocation = true;
+    private double _customRamAllocation = 3;
+    private double _launchUsedRamGb;
+    private double _launchTotalRamGb;
+    private double _launchAutomaticAllocatedRamGb;
+    private bool _optimizeMemoryBeforeLaunch = true;
+    private bool _isLaunchAdvancedOptionsExpanded;
+    private int _selectedLaunchRendererIndex;
+    private string _launchJvmArguments = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
+    private string _launchGameArguments = string.Empty;
+    private string _launchBeforeCommand = string.Empty;
+    private bool _waitForLaunchBeforeCommand;
+    private bool _disableJavaLaunchWrapper;
+    private bool _disableRetroWrapper;
+    private bool _requireDedicatedGpu = true;
+    private bool _useJavaExecutable;
+    private int _selectedLaunchMicrosoftAuthIndex;
+    private int _selectedLaunchPreferredIpStackIndex;
+    private int _selectedDownloadSourceIndex;
+    private int _selectedVersionSourceIndex;
+    private double _downloadThreadLimit = 63;
+    private double _downloadSpeedLimit = 42;
+    private double _downloadTimeoutSeconds = 8;
+    private bool _autoSelectNewInstance = true;
+    private bool _upgradePartialAuthlib = true;
+    private int _selectedCommunityDownloadSourceIndex = 1;
+    private int _selectedFileNameFormatIndex = 1;
+    private int _selectedModLocalNameStyleIndex;
+    private bool _ignoreQuiltLoader;
+    private bool _notifyReleaseUpdates = true;
+    private bool _notifySnapshotUpdates;
+    private bool _autoSwitchGameLanguageToChinese = true;
+    private bool _detectClipboardResourceLinks = true;
+    private int _selectedSystemActivityIndex;
+    private double _animationFpsLimit = 59;
+    private double _maxRealTimeLogValue = 13;
+    private bool _disableHardwareAcceleration;
+    private bool _enableTelemetry = true;
+    private bool _isLaunchBlockedByPrompt;
+    private bool _enableDoH = true;
+    private int _selectedHttpProxyTypeIndex;
+    private string _httpProxyAddress = string.Empty;
+    private string _httpProxyUsername = string.Empty;
+    private string _httpProxyPassword = string.Empty;
+    private double _debugAnimationSpeed = 30;
+    private bool _skipCopyDuringDownload;
+    private bool _debugModeEnabled;
+    private bool _debugDelayEnabled;
+    private int _selectedDarkModeIndex = 2;
+    private int _selectedLightColorIndex;
+    private int _selectedDarkColorIndex = 1;
+    private double _launcherOpacity = 360;
+    private bool _showLauncherLogo = true;
+    private bool _lockWindowSize;
+    private bool _showLaunchingHint = true;
+    private bool _enableAdvancedMaterial;
+    private double _blurRadius = 14;
+    private double _blurSamplingRate = 65;
+    private int _selectedBlurTypeIndex;
+    private int _selectedGlobalFontIndex;
+    private int _selectedMotdFontIndex = 1;
+    private bool _autoPauseVideo = true;
+    private bool _backgroundColorful = true;
+    private double _musicVolume = 680;
+    private bool _musicRandomPlay = true;
+    private bool _musicAutoStart;
+    private bool _musicStartOnGameLaunch = true;
+    private bool _musicStopOnGameLaunch;
+    private bool _musicEnableSmtc = true;
+    private int _selectedLogoTypeIndex = 1;
+    private bool _logoAlignLeft = true;
+    private string _logoText = "Plain Craft Launcher";
+    private int _selectedHomepageTypeIndex = 1;
+    private string _homepageUrl = "https://example.invalid/homepage.json";
+    private int _selectedHomepagePresetIndex = 14;
+    private string _selectedJavaRuntimeKey = "auto";
+    private bool _suppressSetupPersistence;
+    private bool _suppressInstancePersistence;
+    private bool _suppressToolsPersistence;
+
+    public static FrontendShellViewModel CreateBootstrap(
+        AvaloniaCommandOptions options,
+        FrontendShellActionService shellActionService)
+    {
+        return new FrontendShellViewModel(options, shellActionService);
+    }
+
+    private FrontendShellViewModel(
+        AvaloniaCommandOptions options,
+        FrontendShellActionService shellActionService)
+    {
+        _options = options;
+        _shellActionService = shellActionService;
+        _shellComposition = FrontendShellCompositionService.Compose(options);
+        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
+        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _instanceComposition);
+        ReloadVersionSavesComposition();
+        ReloadDownloadComposition();
+        _startupPlan = new StartupAvaloniaPlan(
+            LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
+            _shellComposition.StartupConsentResult);
+        _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
+        _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
+        _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
+        _activeCrashPlan = _crashPlan;
+        _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
+        _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
+        _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
+        _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
+        _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
+        _openTaskManagerShortcutCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
+            "已从右下角快捷入口打开任务中心。",
+            RouteNavigationBehavior.Child));
+        _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
+        _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
+        _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
+        _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
+        _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
+        _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
+        _dismissLaunchCommunityHintCommand = new ActionCommand(() => ShowLaunchCommunityHint = false);
+        _selectLaunchProfileCommand = new ActionCommand(() => _ = SelectLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _addLaunchProfileCommand = new ActionCommand(() => _ = AddLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _createOfflineLaunchProfileCommand = new ActionCommand(() => _ = CreateOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _loginMicrosoftLaunchProfileCommand = new ActionCommand(() => _ = LoginMicrosoftLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _loginAuthlibLaunchProfileCommand = new ActionCommand(() => _ = LoginAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _backLaunchProfileCommand = new ActionCommand(BackLaunchProfileSurface, () => !_isLaunchProfileActionInProgress);
+        _submitOfflineLaunchProfileCommand = new ActionCommand(() => _ = SubmitOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _submitMicrosoftLaunchProfileCommand = new ActionCommand(() => _ = SubmitMicrosoftLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => !_isLaunchProfileActionInProgress);
+        _submitAuthlibLaunchProfileCommand = new ActionCommand(() => _ = SubmitAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _useLittleSkinLaunchProfileCommand = new ActionCommand(ApplyLittleSkinLaunchProfilePreset, () => !_isLaunchProfileActionInProgress);
+        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/TheUnknownThing/PCL-CE/issues");
+        _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
+        _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
+        _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
+        _cleanLogsCommand = new ActionCommand(CleanLauncherLogs);
+        _getMirrorCdkCommand = CreateLinkCommand("获取 Mirror 酱 CDK", "https://mirrorchyan.com/");
+        _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
+        _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
+        _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
+        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/TheUnknownThing/PCL-CE/releases");
+        _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
+        _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
+        _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
+        _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
+        _importSettingsCommand = new ActionCommand(() => _ = ImportSettingsAsync());
+        _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
+        _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
+        _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
+        _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
+        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/TheUnknownThing/PCL-CE");
+        _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
+        _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
+        _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);
+        _musicOpenFolderCommand = new ActionCommand(OpenMusicFolder);
+        _musicRefreshCommand = new ActionCommand(RefreshMusicAssets);
+        _musicClearCommand = new ActionCommand(ClearMusicAssets);
+        _changeLogoImageCommand = new ActionCommand(() => _ = ChangeLogoImageAsync());
+        _deleteLogoImageCommand = new ActionCommand(DeleteLogoImage);
+        _refreshHomepageCommand = new ActionCommand(RefreshHomepageContent);
+        _generateHomepageTutorialFileCommand = new ActionCommand(GenerateHomepageTutorialFile);
+        _viewHomepageTutorialCommand = new ActionCommand(ViewHomepageTutorial);
+        _openHomepageMarketCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.HomePageMarket),
+            "已打开主页市场。"));
+        _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
+        _acceptGameLinkTermsCommand = new ActionCommand(AcceptGameLinkTerms);
+        _testLobbyNatCommand = new ActionCommand(() => _ = TestLobbyNatAsync());
+        _loginNatayarkAccountCommand = new ActionCommand(() => _ = LoginNatayarkAccountAsync());
+        _joinLobbyCommand = new ActionCommand(JoinLobby);
+        _pasteLobbyIdCommand = new ActionCommand(() => _ = PasteLobbyIdAsync());
+        _clearLobbyIdCommand = new ActionCommand(ClearLobbyId);
+        _createLobbyCommand = new ActionCommand(CreateLobby);
+        _refreshLobbyWorldsCommand = new ActionCommand(RefreshLobbyWorlds);
+        _inputLobbyPortCommand = new ActionCommand(() => _ = InputLobbyPortAsync());
+        _copyLobbyVirtualIpCommand = new ActionCommand(() => _ = CopyLobbyVirtualIpAsync());
+        _copyActiveLobbyIdCommand = new ActionCommand(() => _ = CopyActiveLobbyIdAsync());
+        _exitLobbyCommand = new ActionCommand(() => _ = ExitLobbyAsync());
+        _openLobbyReportCommand = CreateLinkCommand("违法违规举报", "https://qm.qq.com/q/yaubjC6C5y");
+        _openNatayarkPolicyCommand = CreateLinkCommand("Natayark Network 用户协议与隐私政策", "https://account.naids.com/policy");
+        _openLobbyPrivacyPolicyCommand = CreateLinkCommand("大厅隐私协议", "https://www.pclc.cc/privacy/personal-info-brief.html");
+        _disableGameLinkFeatureCommand = new ActionCommand(() => _ = DisableGameLinkFeatureAsync());
+        _openGameLinkFaqCommand = new ActionCommand(() => _ = OpenGameLinkFaqAsync());
+        _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
+        _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
+        _selectDownloadFolderCommand = new ActionCommand(() => _ = SelectDownloadFolderAsync());
+        _startCustomDownloadCommand = new ActionCommand(() => _ = StartCustomDownloadAsync());
+        _openCustomDownloadFolderCommand = new ActionCommand(OpenCustomDownloadFolder);
+        _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
+        _previewAchievementCommand = new ActionCommand(PreviewAchievement);
+        _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
+        _queryMinecraftServerCommand = new ActionCommand(() => _ = QueryMinecraftServerAsync());
+        _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());
+        _saveHeadCommand = new ActionCommand(() => _ = SaveHeadAsync());
+        _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
+        _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
+        _searchDownloadResourceCommand = new ActionCommand(SearchDownloadResource);
+        _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
+        _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 1);
+        _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
+        _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries);
+        _manageDownloadFavoriteTargetCommand = new ActionCommand(() => _ = ManageDownloadFavoriteTargetsAsync());
+        _resetInstanceExportOptionsCommand = new ActionCommand(ResetInstanceExportOptions);
+        _importInstanceExportConfigCommand = new ActionCommand(() => _ = ImportInstanceExportConfigAsync());
+        _saveInstanceExportConfigCommand = new ActionCommand(() => _ = SaveInstanceExportConfigAsync());
+        _openInstanceExportGuideCommand = new ActionCommand(() => _ = OpenInstanceExportGuideAsync());
+        _startInstanceExportCommand = new ActionCommand(StartInstanceExport);
+        _setLittleSkinCommand = new ActionCommand(() =>
+        {
+            SelectedInstanceServerLoginRequireIndex = 2;
+            InstanceServerAuthServer = "https://littleskin.cn/api/yggdrasil";
+            InstanceServerAuthRegister = "https://littleskin.cn/auth/register";
+            InstanceServerAuthName = "LittleSkin";
+            AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
+        });
+        _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
+        _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());
+        _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
+        _refreshInstanceSelectionCommand = new ActionCommand(RefreshInstanceSelectionSurface);
+        _clearInstanceSelectionSearchCommand = new ActionCommand(() => InstanceSelectionSearchQuery = string.Empty);
+        _addInstanceSelectionFolderCommand = new ActionCommand(() => _ = AddInstanceSelectionFolderAsync());
+        _importInstanceSelectionPackCommand = new ActionCommand(() => _ = ImportInstanceSelectionPackAsync());
+        _openInstanceSelectionDownloadCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+            "已从实例选择页打开下载页面。"));
+        _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
+        _clearFinishedTasksCommand = new ActionCommand(() =>
+        {
+            TaskCenter.RemoveFinished();
+            RefreshTaskManagerSurface();
+            RefreshShell("已清理所有已结束任务。");
+        });
+        _refreshGameLogCommand = new ActionCommand(RefreshGameLogSurface);
+        _clearGameLogCommand = new ActionCommand(ClearGameLogSurface);
+
+        ScenarioLabel = $"Scenario: {options.Scenario}";
+        EnvironmentLabel = _shellComposition.EnvironmentLabel;
+        InputLabel = _shellComposition.InputLabel;
+
+        _promptCatalog = BuildPromptCatalog(options.Scenario);
+        PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
+        PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
+        PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);
+        InitializeAboutEntries();
+        InitializeFeedbackSections();
+        ApplyToolsComposition(_toolsComposition);
+        InitializeDownloadInstallSurface();
+        ApplySetupComposition(_setupComposition);
+        ApplyInstanceComposition(_instanceComposition);
+        InitializeStepOneSurfaces();
+        InitializePromptLanes();
+        RefreshHelpTopics();
+        RefreshShell("Shell initialized from portable frontend contracts.");
+        _ = WarmPortableJavaSearchAsync();
+        if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
+    }
+
+    private async Task WarmPortableJavaSearchAsync()
+    {
+        try
+        {
+            await FrontendJavaInventoryService.WarmPortableJavaScanCacheAsync();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_currentRoute.Page == LauncherFrontendPageKey.Setup
+                    && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupJava)
+                {
+                    ReloadSetupComposition(initializeAllSurfaces: false);
+                }
+
+                RefreshLaunchState();
+                RefreshShell("Portable Java search cache refreshed.");
+            });
+        }
+        catch
+        {
+            // Java search warm-up is best-effort and should never block shell startup.
+        }
+    }
+
+}

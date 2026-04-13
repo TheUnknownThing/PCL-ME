@@ -1,0 +1,33 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclLaunchRightPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel
+        Margin="25,25,25,10"
+        Spacing="15">
+      <Border x:Name="LaunchCommunityHintHost" IsVisible="False" Background="Transparent">
+        <controls:PclCard
+            x:Name="LaunchCommunityHintCard"
+            Header="跨平台版提示"
+            IsClosable="True"
+            CloseCommand="{Binding DismissLaunchCommunityHintCommand}"
+            ContentMargin="20,12,20,15">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="2">
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchCommunityHintPrimaryText}" />
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchCommunityHintSecondaryText}" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

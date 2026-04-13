@@ -1,0 +1,27 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclPromptCard"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    motion:Motion.AnimateOnVisible="True"
+    motion:Motion.OffsetY="12">
+  <Border
+      BorderBrush="#E7EDF6"
+      BorderThickness="0,0,0,1"
+      Padding="7,0,7,18">
+    <StackPanel Spacing="10">
+      <TextBlock
+          Foreground="{DynamicResource ColorBrush1}"
+          FontSize="16"
+          Text="{Binding Title, ElementName=Root}" />
+      <TextBlock
+          Foreground="#4B5968"
+          FontSize="15"
+          LineHeight="18"
+          TextWrapping="Wrap"
+          Text="{Binding Message, ElementName=Root}" />
+      <ContentPresenter Margin="-12,4,0,0" Content="{Binding OptionsContent, ElementName=Root}" />
+    </StackPanel>
+  </Border>
+</UserControl>

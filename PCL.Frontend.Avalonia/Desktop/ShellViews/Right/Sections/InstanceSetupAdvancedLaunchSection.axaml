@@ -1,0 +1,109 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceSetupAdvancedLaunchSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="高级启动选项" ContentMargin="20,40,20,18">
+    <controls:PclCard.CardContent>
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,100,9,28,9,28,9,64,Auto">
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="#343D4A"
+            FontSize="13"
+            Text="渲染器" />
+        <ComboBox
+            Grid.Row="0"
+            Grid.Column="1"
+            ItemsSource="{Binding InstanceRendererOptions}"
+            SelectedIndex="{Binding SelectedInstanceRendererIndex}" />
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="0,0,25,0"
+            VerticalAlignment="Top"
+            Foreground="#343D4A"
+            FontSize="13"
+            Text="JVM 参数头部" />
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="1"
+            AcceptsReturn="True"
+            Text="{Binding InstanceLaunchJvmArguments}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top" />
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="#343D4A"
+            FontSize="13"
+            Text="游戏参数尾部" />
+        <TextBox
+            Grid.Row="4"
+            Grid.Column="1"
+            Text="{Binding InstanceLaunchGameArguments}" />
+
+        <TextBlock
+            Grid.Row="6"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="#343D4A"
+            FontSize="13"
+            Text="Classpath 头部附加" />
+        <TextBox
+            Grid.Row="6"
+            Grid.Column="1"
+            Text="{Binding InstanceClasspathHead}" />
+
+        <TextBlock
+            Grid.Row="8"
+            Margin="0,0,25,3"
+            VerticalAlignment="Top"
+            Foreground="#343D4A"
+            FontSize="13"
+            Text="启动前执行命令" />
+        <TextBox
+            Grid.Row="8"
+            Grid.Column="1"
+            AcceptsReturn="True"
+            Text="{Binding InstanceLaunchBeforeCommand}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top" />
+
+        <StackPanel Grid.Row="9" Grid.ColumnSpan="2" Margin="0,8,0,0" Spacing="4">
+          <CheckBox
+              Foreground="#343D4A"
+              Content="等待命令执行完成后再继续启动"
+              IsChecked="{Binding WaitForInstanceLaunchBeforeCommand}" />
+          <CheckBox
+              Foreground="#343D4A"
+              Content="忽略 Java 兼容性警告"
+              IsChecked="{Binding IgnoreInstanceJavaCompatibilityWarning}" />
+          <CheckBox
+              Foreground="#343D4A"
+              Content="关闭文件校验"
+              IsChecked="{Binding DisableInstanceFileValidation}" />
+          <CheckBox
+              Foreground="#343D4A"
+              Content="跟随启动器网络代理设置"
+              IsChecked="{Binding FollowInstanceLauncherProxy}" />
+          <CheckBox
+              Foreground="#343D4A"
+              Content="禁用 Java Launch Wrapper"
+              IsChecked="{Binding DisableInstanceJavaLaunchWrapper}" />
+          <CheckBox
+              Foreground="#343D4A"
+              Content="禁用 RetroWrapper"
+              IsChecked="{Binding DisableInstanceRetroWrapper}" />
+          <CheckBox
+              Foreground="#343D4A"
+              Content="使用调试级别 log4j 配置文件"
+              IsChecked="{Binding UseInstanceDebugLog4jConfig}" />
+        </StackPanel>
+      </Grid>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>
