@@ -4,9 +4,7 @@
 
 <img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME logo" width="80" height="80">
 
-# PCL-ME
-
-Plain Craft Launcher Multiplatform Edition
+# PCL Multiplatform Edition
 
 [Releases](https://github.com/TheUnknownThing/PCL-ME/releases/latest) |
 [Issues](https://github.com/TheUnknownThing/PCL-ME/issues) |
