@@ -88,7 +88,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _refreshHomepageCommand;
     private readonly ActionCommand _generateHomepageTutorialFileCommand;
     private readonly ActionCommand _viewHomepageTutorialCommand;
-    private readonly ActionCommand _openHomepageMarketCommand;
     private readonly ActionCommand _toggleLaunchAdvancedOptionsCommand;
     private readonly ActionCommand _openPysioWebsiteCommand;
     private readonly ActionCommand _selectDownloadFolderCommand;
@@ -196,10 +195,6 @@ internal sealed partial class FrontendShellViewModel
     private int _downloadCatalogRefreshVersion;
     private CancellationTokenSource? _downloadFavoriteRefreshCts;
     private int _downloadFavoriteRefreshVersion;
-    private int _homePageMarketRefreshVersion;
-    private bool _isHomePageMarketLoading;
-    private string _homePageMarketLoadingText = "正在聚合热门社区资源…";
-    private string _homePageMarketStateSignature = string.Empty;
     private bool _isDownloadCatalogLoading;
     private bool _isDownloadFavoriteLoading;
     private bool _isDownloadResourceLoading;
@@ -387,9 +382,6 @@ internal sealed partial class FrontendShellViewModel
         _refreshHomepageCommand = new ActionCommand(RefreshHomepageContent);
         _generateHomepageTutorialFileCommand = new ActionCommand(GenerateHomepageTutorialFile);
         _viewHomepageTutorialCommand = new ActionCommand(ViewHomepageTutorial);
-        _openHomepageMarketCommand = new ActionCommand(() => NavigateTo(
-            new LauncherFrontendRoute(LauncherFrontendPageKey.HomePageMarket),
-            "已打开主页市场。"));
         _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
         _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
         _selectDownloadFolderCommand = new ActionCommand(() => _ = SelectDownloadFolderAsync());

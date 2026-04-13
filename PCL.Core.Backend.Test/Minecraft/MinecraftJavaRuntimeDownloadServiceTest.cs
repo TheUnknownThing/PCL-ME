@@ -59,37 +59,49 @@ public sealed class MinecraftJavaRuntimeDownloadServiceTest
     [TestMethod]
     public void BuildDownloadPlanSkipsIgnoredHashesAndPreventsPathTraversal()
     {
-        var result = MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(new MinecraftJavaRuntimeDownloadPlanRequest(
-            """
-            {
-              "files": {
-                "bin/java": {
-                  "downloads": {
-                    "raw": {
-                      "url": "https://example.invalid/bin/java",
-                      "size": 123,
-                      "sha1": "keep-me"
-                    }
-                  }
-                },
-                "legal/java.base/LICENSE": {
-                  "downloads": {
-                    "raw": {
-                      "url": "https://example.invalid/license",
-                      "size": 456,
-                      "sha1": "skip-me"
+        var runtimeBaseDirectory = Path.Combine(Path.GetTempPath(), "pcl-java-runtime-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var result = MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(new MinecraftJavaRuntimeDownloadPlanRequest(
+                """
+                {
+                  "files": {
+                    "bin/java": {
+                      "downloads": {
+                        "raw": {
+                          "url": "https://example.invalid/bin/java",
+                          "size": 123,
+                          "sha1": "keep-me"
+                        }
+                      }
+                    },
+                    "legal/java.base/LICENSE": {
+                      "downloads": {
+                        "raw": {
+                          "url": "https://example.invalid/license",
+                          "size": 456,
+                          "sha1": "skip-me"
+                        }
+                      }
                     }
                   }
                 }
-              }
-            }
-            """,
-            "/tmp/pcl-java-runtime",
-            ["skip-me"]));
+                """,
+                runtimeBaseDirectory,
+                ["skip-me"]));
 
-        Assert.AreEqual(1, result.Files.Count);
-        Assert.AreEqual("bin/java", result.Files[0].RelativePath);
-        Assert.AreEqual("/tmp/pcl-java-runtime/bin/java", result.Files[0].TargetPath);
+            Assert.AreEqual(1, result.Files.Count);
+            Assert.AreEqual("bin/java", result.Files[0].RelativePath);
+            Assert.AreEqual(Path.GetFullPath(runtimeBaseDirectory), result.RuntimeBaseDirectory);
+            Assert.AreEqual(Path.Combine(Path.GetFullPath(runtimeBaseDirectory), "bin", "java"), result.Files[0].TargetPath);
+        }
+        finally
+        {
+            if (Directory.Exists(runtimeBaseDirectory))
+            {
+                Directory.Delete(runtimeBaseDirectory, true);
+            }
+        }
     }
 
     [TestMethod]
@@ -120,23 +132,34 @@ public sealed class MinecraftJavaRuntimeDownloadServiceTest
     [TestMethod]
     public void BuildDownloadPlanRejectsPathsOutsideRuntimeDirectory()
     {
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(new MinecraftJavaRuntimeDownloadPlanRequest(
-                """
-                {
-                  "files": {
-                    "../escape.txt": {
-                      "downloads": {
-                        "raw": {
-                          "url": "https://example.invalid/escape.txt",
-                          "size": 1,
-                          "sha1": "escape"
+        var runtimeBaseDirectory = Path.Combine(Path.GetTempPath(), "pcl-java-runtime-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                MinecraftJavaRuntimeDownloadService.BuildDownloadPlan(new MinecraftJavaRuntimeDownloadPlanRequest(
+                    """
+                    {
+                      "files": {
+                        "../escape.txt": {
+                          "downloads": {
+                            "raw": {
+                              "url": "https://example.invalid/escape.txt",
+                              "size": 1,
+                              "sha1": "escape"
+                            }
+                          }
                         }
                       }
                     }
-                  }
-                }
-                """,
-                "/tmp/pcl-java-runtime")));
+                    """,
+                    runtimeBaseDirectory)));
+        }
+        finally
+        {
+            if (Directory.Exists(runtimeBaseDirectory))
+            {
+                Directory.Delete(runtimeBaseDirectory, true);
+            }
+        }
     }
 }

@@ -187,8 +187,7 @@ public static class LauncherFrontendNavigationService
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.CompDetail, "资源下载", "查看资源工程详情。", LauncherFrontendPageKind.Detail, SidebarGroupPage: LauncherFrontendPageKey.Download),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HelpDetail, "帮助详情", "查看帮助条目详情。", LauncherFrontendPageKind.Detail, SidebarGroupPage: LauncherFrontendPageKey.Tools),
                 new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.GameLog, "实时日志", "查看启动日志与输出。", LauncherFrontendPageKind.Utility),
-                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.VersionSaves, "存档管理", "查看单个存档的详细页面。", LauncherFrontendPageKind.Secondary, SidebarGroupPage: LauncherFrontendPageKey.VersionSaves),
-                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.HomePageMarket, "主页市场", "主页市场与推荐入口。", LauncherFrontendPageKind.Detail, SidebarGroupPage: LauncherFrontendPageKey.Download)
+                new LauncherFrontendSecondaryPage(LauncherFrontendPageKey.VersionSaves, "存档管理", "查看单个存档的详细页面。", LauncherFrontendPageKind.Secondary, SidebarGroupPage: LauncherFrontendPageKey.VersionSaves)
             ]
         );
     }
@@ -300,7 +299,6 @@ public static class LauncherFrontendNavigationService
             LauncherFrontendPageKey.VersionSaves => new LauncherFrontendRoute(
                 LauncherFrontendPageKey.InstanceSetup,
                 LauncherFrontendSubpageKey.VersionWorld),
-            LauncherFrontendPageKey.HomePageMarket => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
             _ when currentPage.SidebarGroupPage is not null => new LauncherFrontendRoute(currentPage.SidebarGroupPage.Value),
             _ => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch)
         };
@@ -460,8 +458,7 @@ public enum LauncherFrontendPageKey
     CompDetail = 8,
     HelpDetail = 9,
     GameLog = 10,
-    VersionSaves = 12,
-    HomePageMarket = 13
+    VersionSaves = 12
 }
 
 public enum LauncherFrontendSubpageKey

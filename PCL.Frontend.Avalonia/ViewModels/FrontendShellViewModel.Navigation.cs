@@ -694,7 +694,6 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPageKey.VersionSaves => new LauncherFrontendRoute(
                 LauncherFrontendPageKey.InstanceSetup,
                 LauncherFrontendSubpageKey.VersionWorld),
-            LauncherFrontendPageKey.HomePageMarket => new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
             _ => null
         };
     }
@@ -792,7 +791,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowTaskManagerSurface));
         RaisePropertyChanged(nameof(ShowGameLogSurface));
         RaisePropertyChanged(nameof(ShowCompDetailSurface));
-        RaisePropertyChanged(nameof(ShowHomePageMarketSurface));
         RaisePropertyChanged(nameof(ShowHelpDetailSurface));
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
@@ -842,9 +840,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasCommunityProjectDescription));
         RaisePropertyChanged(nameof(HasCommunityProjectSections));
         RaisePropertyChanged(nameof(HasNoCommunityProjectSections));
-        RaisePropertyChanged(nameof(HasHomePageMarketSections));
-        RaisePropertyChanged(nameof(HasNoHomePageMarketSections));
-
         switch (CurrentStandardRightPaneDescriptor?.Kind)
         {
             case StandardShellRightPaneKind.SetupAbout:

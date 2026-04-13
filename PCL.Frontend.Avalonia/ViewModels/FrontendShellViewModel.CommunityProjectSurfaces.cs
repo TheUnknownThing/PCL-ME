@@ -78,11 +78,6 @@ internal sealed partial class FrontendShellViewModel
         [],
         string.Empty,
         false);
-    private FrontendHomePageMarketState _homePageMarketState = new(
-        "主页市场会聚合实时社区资源，方便直接浏览热门内容。",
-        [],
-        string.Empty,
-        false);
     private const string CommunityProjectInstallModeCurrentOnlyValue = "current-only";
     private const string CommunityProjectInstallModeWithDependenciesValue = "with-dependencies";
     private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectModInstallModeOptions =
@@ -107,11 +102,7 @@ internal sealed partial class FrontendShellViewModel
 
     public ObservableCollection<DownloadCatalogSectionViewModel> CommunityProjectSections { get; } = [];
 
-    public ObservableCollection<DownloadCatalogSectionViewModel> HomePageMarketSections { get; } = [];
-
     public bool ShowCompDetailSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.CompDetail;
-
-    public bool ShowHomePageMarketSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.HomePageMarket;
 
     public string CommunityProjectTitle => _communityProjectState.Title;
 
@@ -282,20 +273,6 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowCommunityProjectWarning => _communityProjectState.ShowWarning;
 
     public string CommunityProjectWarningText => _communityProjectState.WarningText;
-
-    public string HomePageMarketSummary => _homePageMarketState.Summary;
-
-    public bool ShowHomePageMarketLoadingCard => _isHomePageMarketLoading;
-
-    public string HomePageMarketLoadingText => _homePageMarketLoadingText;
-
-    public bool HasHomePageMarketSections => HomePageMarketSections.Count > 0;
-
-    public bool HasNoHomePageMarketSections => !HasHomePageMarketSections && !_isHomePageMarketLoading;
-
-    public bool ShowHomePageMarketWarning => _homePageMarketState.ShowWarning;
-
-    public string HomePageMarketWarningText => _homePageMarketState.WarningText;
 
     public void OpenCommunityProjectDetail(
         string projectId,
@@ -541,6 +518,10 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<CommunityProjectActionButtonViewModel> BuildCommunityProjectActionButtons()
     {
+        var isFavorite = IsCommunityProjectFavorite();
+        var favoriteIcon = isFavorite
+            ? FrontendIconCatalog.FavoriteFilled
+            : FrontendIconCatalog.FavoriteOutline;
         var buttons = new List<CommunityProjectActionButtonViewModel>();
         if (!string.IsNullOrWhiteSpace(CommunityProjectWebsite))
         {
@@ -2135,28 +2116,6 @@ internal sealed partial class FrontendShellViewModel
         return match.Success ? match.Value : null;
     }
 
-    private void RefreshHomePageMarketSurface()
-    {
-        var stateSignature = BuildHomePageMarketStateSignature();
-        var signatureChanged = !string.Equals(_homePageMarketStateSignature, stateSignature, StringComparison.Ordinal);
-        if (_isHomePageMarketLoading && !signatureChanged)
-        {
-            return;
-        }
-
-        _homePageMarketStateSignature = stateSignature;
-        if (signatureChanged || _homePageMarketState.Sections.Count == 0)
-        {
-            _homePageMarketState = CreateLoadingHomePageMarketState();
-            ReplaceItems(HomePageMarketSections, []);
-            SetHomePageMarketLoading(true);
-            RaiseHomePageMarketProperties();
-        }
-
-        var refreshVersion = ++_homePageMarketRefreshVersion;
-        _ = LoadHomePageMarketStateAsync(stateSignature, refreshVersion);
-    }
-
     private void RaiseCommunityProjectProperties()
     {
         RaisePropertyChanged(nameof(CommunityProjectTitle));
@@ -2291,106 +2250,6 @@ internal sealed partial class FrontendShellViewModel
         _isCommunityProjectLoading = isLoading;
         RaisePropertyChanged(nameof(ShowCommunityProjectLoadingCard));
         RaisePropertyChanged(nameof(ShowCommunityProjectContent));
-    }
-
-    private async Task LoadHomePageMarketStateAsync(string stateSignature, int refreshVersion)
-    {
-        var instanceComposition = _instanceComposition;
-        var communitySourcePreference = _selectedCommunityDownloadSourceIndex;
-        FrontendHomePageMarketState state;
-        try
-        {
-            state = await Task.Run(() => FrontendCommunityProjectService.BuildHomePageMarketState(
-                instanceComposition,
-                communitySourcePreference));
-        }
-        catch (Exception ex)
-        {
-            state = CreateUnavailableHomePageMarketState(ex.Message);
-        }
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            if (refreshVersion != _homePageMarketRefreshVersion
-                || !string.Equals(stateSignature, _homePageMarketStateSignature, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            _homePageMarketState = state;
-            SetHomePageMarketLoading(false);
-            ApplyHomePageMarketState();
-        });
-    }
-
-    private void ApplyHomePageMarketState()
-    {
-        ReplaceItems(
-            HomePageMarketSections,
-            _homePageMarketState.Sections.Select(section => new DownloadCatalogSectionViewModel(
-                section.Title,
-                section.Entries.Select(entry => new DownloadCatalogEntryViewModel(
-                    entry.Title,
-                    entry.Info,
-                    entry.Meta,
-                    entry.ActionText,
-                    CreateProjectSectionCommand(entry)))
-                .ToArray())));
-
-        RaiseHomePageMarketProperties();
-    }
-
-    private FrontendHomePageMarketState CreateLoadingHomePageMarketState()
-    {
-        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
-        return new FrontendHomePageMarketState(
-            string.IsNullOrWhiteSpace(preferredVersion)
-                ? "主页市场正在聚合热门社区资源，请稍候。"
-                : $"主页市场正在围绕 Minecraft {preferredVersion} 聚合热门社区资源，请稍候。",
-            [],
-            string.Empty,
-            false);
-    }
-
-    private FrontendHomePageMarketState CreateUnavailableHomePageMarketState(string errorMessage)
-    {
-        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion);
-        return new FrontendHomePageMarketState(
-            string.IsNullOrWhiteSpace(preferredVersion)
-                ? "主页市场暂时不可用，请稍后重试。"
-                : $"主页市场暂时无法聚合 Minecraft {preferredVersion} 的社区资源，请稍后重试。",
-            [],
-            errorMessage,
-            true);
-    }
-
-    private string BuildHomePageMarketStateSignature()
-    {
-        var preferredVersion = NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion) ?? string.Empty;
-        return $"{preferredVersion}|{_selectedCommunityDownloadSourceIndex}";
-    }
-
-    private void SetHomePageMarketLoading(bool isLoading)
-    {
-        if (_isHomePageMarketLoading == isLoading)
-        {
-            return;
-        }
-
-        _isHomePageMarketLoading = isLoading;
-        RaisePropertyChanged(nameof(ShowHomePageMarketLoadingCard));
-        RaisePropertyChanged(nameof(HasNoHomePageMarketSections));
-    }
-
-    private void RaiseHomePageMarketProperties()
-    {
-        RaisePropertyChanged(nameof(HomePageMarketSummary));
-        RaisePropertyChanged(nameof(HomePageMarketLoadingText));
-        RaisePropertyChanged(nameof(ShowHomePageMarketLoadingCard));
-        RaisePropertyChanged(nameof(HasHomePageMarketSections));
-        RaisePropertyChanged(nameof(HasNoHomePageMarketSections));
-        RaisePropertyChanged(nameof(ShowHomePageMarketWarning));
-        RaisePropertyChanged(nameof(HomePageMarketWarningText));
     }
 
     private static string FormatCompactCount(int value)

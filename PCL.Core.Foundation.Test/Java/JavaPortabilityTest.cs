@@ -62,7 +62,7 @@ public class JavaPortabilityTest
     [TestMethod]
     public void PathEnvironmentScanner_UsesRuntimeSeparatorAndExecutableNames()
     {
-        var root = CreateTempDirectory();
+        var root = "pcl-java-path-test-" + Guid.NewGuid().ToString("N");
         try
         {
             var pathA = Path.Combine(root, "path-a");
@@ -120,23 +120,29 @@ public class JavaPortabilityTest
     [TestMethod]
     public async Task JavaManager_UsesStorageAndEvaluator()
     {
+        var root = CreateTempDirectory();
+        var storedJavaPath = Path.Combine(root, "stored", "java");
+        var scannedJavaPath = Path.Combine(root, "scan", "java");
+
+        try
+        {
         var storage = new FakeJavaStorage(
         [
             new JavaStorageItem
             {
-                Path = "/stored/java",
+                Path = storedJavaPath,
                 IsEnable = false,
                 Source = JavaSource.ManualAdded
             }
         ]);
         var parser = new FakeJavaParser(
-            new JavaInstallation("/stored", new Version(17, 0, 1), JavaBrandType.OpenJDK, MachineType.AMD64, true, false, "java", null, "javac"),
-            new JavaInstallation("/scan", new Version(21, 0, 2), JavaBrandType.EclipseTemurin, MachineType.AMD64, true, false, "java", null, "javac"));
+            new JavaInstallation(Path.GetDirectoryName(storedJavaPath)!, new Version(17, 0, 1), JavaBrandType.OpenJDK, MachineType.AMD64, true, false, Path.GetFileName(storedJavaPath), null, "javac"),
+            new JavaInstallation(Path.GetDirectoryName(scannedJavaPath)!, new Version(21, 0, 2), JavaBrandType.EclipseTemurin, MachineType.AMD64, true, false, Path.GetFileName(scannedJavaPath), null, "javac"));
         var manager = new JavaManager(
             parser,
             storage,
             new FixedEvaluator(true),
-            new FixedScanner("/scan/java"));
+            new FixedScanner(scannedJavaPath));
 
         manager.ReadConfig();
         await manager.ScanJavaAsync(force: true);
@@ -144,7 +150,12 @@ public class JavaPortabilityTest
         Assert.AreEqual(2, manager.GetSortedJavaList().Count);
         Assert.IsNotNull(storage.SavedItems);
         Assert.AreEqual(2, storage.SavedItems.Length);
-        Assert.IsTrue(manager.Exist("/scan/java"));
+        Assert.IsTrue(manager.Exist(scannedJavaPath));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
     }
 
     private static string CreateTempDirectory()
@@ -237,8 +248,8 @@ public class JavaPortabilityTest
         {
             return javaExePath switch
             {
-                "/stored/java" => storedInstallation,
-                "/scan/java" => scannedInstallation,
+                var path when string.Equals(path, storedInstallation.JavaExePath, StringComparison.OrdinalIgnoreCase) => storedInstallation,
+                var path when string.Equals(path, scannedInstallation.JavaExePath, StringComparison.OrdinalIgnoreCase) => scannedInstallation,
                 _ => null
             };
         }

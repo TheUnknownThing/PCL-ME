@@ -80,7 +80,6 @@ internal sealed partial class FrontendShellViewModel
         || ShowTaskManagerSurface
         || ShowGameLogSurface
         || ShowCompDetailSurface
-        || ShowHomePageMarketSurface
         || ShowHelpDetailSurface;
 
     public bool ShowGenericCompatibilitySurface => !HasDedicatedGenericRouteSurface;
@@ -178,7 +177,6 @@ internal sealed partial class FrontendShellViewModel
         RefreshTaskManagerSurface();
         RefreshGameLogSurface();
         RefreshCompDetailSurface();
-        RefreshHomePageMarketSurface();
         RefreshHelpDetailSurface();
     }
 
@@ -197,9 +195,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case LauncherFrontendPageKey.CompDetail:
                 RefreshCompDetailSurface();
-                break;
-            case LauncherFrontendPageKey.HomePageMarket:
-                RefreshHomePageMarketSurface();
                 break;
             case LauncherFrontendPageKey.HelpDetail:
                 RefreshHelpDetailSurface();
@@ -251,17 +246,6 @@ internal sealed partial class FrontendShellViewModel
                         new LauncherFrontendPageFact("状态", CommunityProjectStatus),
                         new LauncherFrontendPageFact("最近更新", CommunityProjectUpdatedLabel),
                         new LauncherFrontendPageFact("下载量", CommunityProjectDownloadCountLabel)
-                    ]);
-                return true;
-            case LauncherFrontendPageKey.HomePageMarket:
-                metadata = new DedicatedGenericRouteMetadata(
-                    "主页市场",
-                    "主页市场会聚合热门社区资源分区，直接展示当前可访问来源的实时榜单，而不是继续复用普通下载概览。",
-                    [
-                        new LauncherFrontendPageFact("聚合分区", HomePageMarketSections.Count.ToString()),
-                        new LauncherFrontendPageFact("首选来源", _selectedCommunityDownloadSourceIndex == 0 ? "镜像优先" : "官方优先"),
-                        new LauncherFrontendPageFact("当前实例", _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : "未选择实例"),
-                        new LauncherFrontendPageFact("兼容版本", string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion) ? "未指定" : _instanceComposition.Selection.VanillaVersion)
                     ]);
                 return true;
             case LauncherFrontendPageKey.HelpDetail:

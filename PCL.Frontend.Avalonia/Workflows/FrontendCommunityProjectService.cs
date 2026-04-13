@@ -17,7 +17,6 @@ internal static class FrontendCommunityProjectService
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry<FrontendCommunityProjectSummary>> SummaryCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly ConcurrentDictionary<string, CacheEntry<FrontendCommunityProjectState>> DetailCache = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly ConcurrentDictionary<string, CacheEntry<FrontendHomePageMarketState>> MarketCache = new(StringComparer.OrdinalIgnoreCase);
 
     public static string CreateCompDetailTarget(string projectId)
     {
@@ -177,92 +176,6 @@ internal static class FrontendCommunityProjectService
         }
 
         DetailCache[cacheKey] = new CacheEntry<FrontendCommunityProjectState>(state, DateTimeOffset.UtcNow);
-        return state;
-    }
-
-    public static FrontendHomePageMarketState BuildHomePageMarketState(
-        FrontendInstanceComposition instanceComposition,
-        int communitySourcePreference)
-    {
-        var preferredVersion = ResolvePreferredMinecraftVersion(instanceComposition);
-        var cacheKey = $"{preferredVersion}|{communitySourcePreference}";
-        if (TryGetFresh(MarketCache, cacheKey, out var cached))
-        {
-            return cached;
-        }
-
-        var requests = new[]
-        {
-            new FrontendHomePageMarketSectionRequest(LauncherFrontendSubpageKey.DownloadMod, "热门 Mod", 5),
-            new FrontendHomePageMarketSectionRequest(LauncherFrontendSubpageKey.DownloadPack, "热门整合包", 4),
-            new FrontendHomePageMarketSectionRequest(LauncherFrontendSubpageKey.DownloadResourcePack, "热门资源包", 4),
-            new FrontendHomePageMarketSectionRequest(LauncherFrontendSubpageKey.DownloadShader, "热门光影包", 4)
-        };
-
-        var sections = new List<FrontendDownloadCatalogSection>();
-        var warnings = new List<string>();
-        foreach (var request in requests)
-        {
-            try
-            {
-                var result = FrontendCommunityResourceCatalogService.QueryResources(
-                    request.Route,
-                    new FrontendCommunityResourceQuery(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
-                    instanceComposition,
-                    communitySourcePreference);
-                if (!string.IsNullOrWhiteSpace(result.State.HintText))
-                {
-                    warnings.Add(result.State.HintText);
-                }
-
-                var entries = result.State.Entries
-                    .Take(request.Limit)
-                    .Select(entry => new FrontendDownloadCatalogEntry(
-                        entry.Title,
-                        entry.Info,
-                        BuildMarketMeta(entry),
-                        "打开页面",
-                        entry.TargetPath))
-                    .ToArray();
-                if (entries.Length == 0)
-                {
-                    entries =
-                    [
-                        new FrontendDownloadCatalogEntry(
-                            "暂无实时结果",
-                            $"{request.Title} 目前没有可展示的实时社区条目。",
-                            "请稍后重试",
-                            "查看详情",
-                            null)
-                    ];
-                }
-
-                sections.Add(new FrontendDownloadCatalogSection(request.Title, entries));
-            }
-            catch (Exception ex)
-            {
-                warnings.Add($"{request.Title} 加载失败：{ex.Message}");
-                sections.Add(new FrontendDownloadCatalogSection(
-                    request.Title,
-                    [
-                        new FrontendDownloadCatalogEntry(
-                            "加载失败",
-                            ex.Message,
-                            "实时市场暂不可用",
-                            "查看详情",
-                            null)
-                    ]));
-            }
-        }
-
-        var state = new FrontendHomePageMarketState(
-            string.IsNullOrWhiteSpace(preferredVersion)
-                ? "主页市场会聚合热门社区资源，方便直接浏览当前 Mod、整合包、资源包与光影趋势。"
-                : $"主页市场优先围绕 Minecraft {preferredVersion} 聚合热门社区资源，方便直接浏览当前 Mod、整合包、资源包与光影趋势。",
-            sections,
-            string.Join(" ", warnings.Distinct(StringComparer.Ordinal)),
-            warnings.Count > 0);
-        MarketCache[cacheKey] = new CacheEntry<FrontendHomePageMarketState>(state, DateTimeOffset.UtcNow);
         return state;
     }
 
@@ -1057,33 +970,6 @@ internal static class FrontendCommunityProjectService
 
         value = default!;
         return false;
-    }
-
-    private static string ResolvePreferredMinecraftVersion(FrontendInstanceComposition instanceComposition)
-    {
-        var candidate = NormalizeMinecraftVersion(instanceComposition.Selection.VanillaVersion);
-        return string.IsNullOrWhiteSpace(candidate) ? string.Empty : candidate;
-    }
-
-    private static string BuildMarketMeta(FrontendDownloadResourceEntry entry)
-    {
-        var parts = new List<string> { entry.Source };
-        if (!string.IsNullOrWhiteSpace(entry.Version))
-        {
-            parts.Add(entry.Version);
-        }
-
-        if (!string.IsNullOrWhiteSpace(entry.Loader))
-        {
-            parts.Add(entry.Loader);
-        }
-
-        if (entry.DownloadCount > 0)
-        {
-            parts.Add($"{FormatCompactCount(entry.DownloadCount)} 下载");
-        }
-
-        return string.Join(" • ", parts);
     }
 
     private static string BuildCompatibilitySummary(

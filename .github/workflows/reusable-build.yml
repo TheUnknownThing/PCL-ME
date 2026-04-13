@@ -87,5 +87,5 @@ jobs:
           name: ${{ inputs.artifact_name }}
           if-no-files-found: error
           path: |
-            artifact/**/*.zip
-            artifact/**/*.tar.gz
+            artifact/*/PCL-ME-*.zip
+            artifact/*/PCL-ME-*.tar.gz

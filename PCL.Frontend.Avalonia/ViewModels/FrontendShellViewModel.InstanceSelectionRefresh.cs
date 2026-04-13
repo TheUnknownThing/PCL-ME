@@ -25,6 +25,7 @@ internal sealed partial class FrontendShellViewModel
 
         var localConfig = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        var effectiveSelectedInstanceName = selectedInstanceName;
         if (!string.IsNullOrWhiteSpace(selectedInstanceName) &&
             !Directory.Exists(Path.Combine(launcherDirectory, "versions", selectedInstanceName)))
         {

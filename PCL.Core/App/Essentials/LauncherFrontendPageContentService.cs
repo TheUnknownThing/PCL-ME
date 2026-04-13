@@ -29,8 +29,6 @@ public static class LauncherFrontendPageContentService
                 BuildDownloadContent(request, promptTotal, visibleUtilityCount, selectedLaneTitle),
             LauncherFrontendPageKey.CompDetail =>
                 BuildCompDetailContent(request, promptTotal, visibleUtilityCount),
-            LauncherFrontendPageKey.HomePageMarket =>
-                BuildHomePageMarketContent(request, promptTotal, visibleUtilityCount),
             LauncherFrontendPageKey.Setup =>
                 BuildSetupContent(request, promptTotal),
             LauncherFrontendPageKey.Tools =>
@@ -248,23 +246,6 @@ public static class LauncherFrontendPageContentService
                 "详情",
                 "当前页面",
                 "这里会显示选中资源的说明、版本信息和相关入口。"));
-    }
-
-    private static LauncherFrontendPageContent BuildHomePageMarketContent(
-        LauncherFrontendPageContentRequest request,
-        int promptTotal,
-        int visibleUtilityCount)
-    {
-        return BuildDetailPageContent(
-            request,
-            "主页市场页面",
-            "查看推荐内容与相关入口。",
-            promptTotal,
-            visibleUtilityCount,
-            Section(
-                "推荐",
-                "当前页面",
-                "这里会显示主页市场的推荐内容与可选入口。"));
     }
 
     private static LauncherFrontendPageContent BuildSetupContent(

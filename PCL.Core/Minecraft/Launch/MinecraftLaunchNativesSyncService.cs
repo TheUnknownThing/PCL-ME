@@ -34,19 +34,10 @@ public static class MinecraftLaunchNativesSyncService
                 logs.Add("排除规则：" + string.Join(", ", archiveRequest.ExtractExcludes));
             }
 
-            ZipArchive archive;
             try
             {
-                archive = new ZipArchive(new FileStream(archivePath, FileMode.Open, FileAccess.Read, FileShare.Read));
-            }
-            catch (InvalidDataException exception)
-            {
-                TryDeleteCorruptedArchive(archivePath);
-                throw new InvalidDataException($"无法打开 Natives 文件（{archivePath}），该文件可能已损坏，请重新尝试启动游戏", exception);
-            }
-
-            using (archive)
-            {
+                using var archiveStream = new FileStream(archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var archive = new ZipArchive(archiveStream, ZipArchiveMode.Read);
                 foreach (var entry in archive.Entries)
                 {
                     var entryPath = entry.FullName.Replace('\\', '/');
@@ -130,6 +121,11 @@ public static class MinecraftLaunchNativesSyncService
                     sourceStream.CopyTo(targetStream);
                     logs.Add("已解压：" + targetPath);
                 }
+            }
+            catch (InvalidDataException exception)
+            {
+                TryDeleteCorruptedArchive(archivePath);
+                throw new InvalidDataException($"无法打开 Natives 文件（{archivePath}），该文件可能已损坏，请重新尝试启动游戏", exception);
             }
         }
 

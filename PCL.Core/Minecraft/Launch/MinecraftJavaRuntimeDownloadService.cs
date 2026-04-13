@@ -87,7 +87,7 @@ public static class MinecraftJavaRuntimeDownloadService
                 continue;
             }
 
-            var relativePath = file.Key.Replace('\\', '/');
+            var relativePath = NormalizeRelativePath(file.Key);
             var targetPath = CombineRuntimePath(baseDirectory, relativePath);
             if (!IsPathWithinDirectory(targetPath, baseDirectory))
             {
@@ -184,6 +184,49 @@ public static class MinecraftJavaRuntimeDownloadService
         return path.StartsWith(normalized, StringComparison.OrdinalIgnoreCase);
     }
 
+    private static string NormalizeRelativePath(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            throw new InvalidOperationException("Java manifest 包含空文件路径。");
+        }
+
+        var normalized = relativePath.Replace('\\', '/');
+        if (normalized.StartsWith("/", StringComparison.Ordinal) || IsWindowsStyleAbsolutePath(normalized))
+        {
+            throw new InvalidOperationException($"Java manifest 包含越界路径：{relativePath}");
+        }
+
+        var segments = new List<string>();
+        foreach (var segment in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == ".")
+            {
+                continue;
+            }
+
+            if (segment == "..")
+            {
+                if (segments.Count == 0)
+                {
+                    throw new InvalidOperationException($"Java manifest 包含越界路径：{relativePath}");
+                }
+
+                segments.RemoveAt(segments.Count - 1);
+                continue;
+            }
+
+            segments.Add(segment);
+        }
+
+        if (segments.Count == 0)
+        {
+            throw new InvalidOperationException($"Java manifest 包含空文件路径：{relativePath}");
+        }
+
+        return string.Join("/", segments);
+    }
+
     private static bool IsWindowsStyleAbsolutePath(string path)
     {
         return path.Length >= 3 &&
@@ -191,6 +234,7 @@ public static class MinecraftJavaRuntimeDownloadService
                path[1] == ':' &&
                (path[2] == '\\' || path[2] == '/');
     }
+
 }
 
 public sealed record MinecraftJavaRuntimeSelectionRequest(

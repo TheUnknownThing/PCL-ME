@@ -99,7 +99,6 @@ public sealed class LauncherFrontendPageContentServiceTest
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadMod),
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadForge),
                 new LauncherFrontendRoute(LauncherFrontendPageKey.CompDetail),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.HomePageMarket),
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupAbout),
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupFeedback),

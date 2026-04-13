@@ -1,5 +1,3 @@
-using PCL.Core.App.Essentials;
-
 namespace PCL.Frontend.Avalonia.Models;
 
 internal sealed record FrontendCommunityProjectSummary(
@@ -81,14 +79,3 @@ internal sealed record FrontendCommunityProjectState(
     IReadOnlyList<FrontendDownloadCatalogEntry> Links,
     string WarningText,
     bool ShowWarning);
-
-internal sealed record FrontendHomePageMarketState(
-    string Summary,
-    IReadOnlyList<FrontendDownloadCatalogSection> Sections,
-    string WarningText,
-    bool ShowWarning);
-
-internal sealed record FrontendHomePageMarketSectionRequest(
-    LauncherFrontendSubpageKey Route,
-    string Title,
-    int Limit);

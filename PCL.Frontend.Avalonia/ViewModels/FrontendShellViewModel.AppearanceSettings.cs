@@ -40,7 +40,6 @@ internal sealed partial class FrontendShellViewModel
         "每日整合包推荐（作者：wkea）",
         "Minecraft 皮肤推荐（作者：wkea）",
         "OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）",
-        "PCL 主页市场（作者：凌云）",
         "PCL 新闻速报（作者：Joker2184）",
         "PCL 新功能说明书（作者：WForst-Breeze）",
         "杂志主页（作者：CreeperIsASpy）",

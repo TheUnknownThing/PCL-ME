@@ -108,8 +108,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ViewHomepageTutorialCommand => _viewHomepageTutorialCommand;
 
-    public ActionCommand OpenHomepageMarketCommand => _openHomepageMarketCommand;
-
     public ActionCommand ToggleLaunchAdvancedOptionsCommand => _toggleLaunchAdvancedOptionsCommand;
 
     public ActionCommand OpenPysioWebsiteCommand => _openPysioWebsiteCommand;

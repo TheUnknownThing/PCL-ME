@@ -96,8 +96,8 @@ jobs:
         with:
           tag_name: ${{ inputs.release_tag || github.event.release.tag_name }}
           files: |
-            artifact/**/*.zip
-            artifact/**/*.tar.gz
+            artifact/*/PCL-ME-*.zip
+            artifact/*/PCL-ME-*.tar.gz
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
