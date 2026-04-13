@@ -1,7 +1,7 @@
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 
-namespace PCL.Frontend.Spike.Workflows;
+namespace PCL.Frontend.Spike.Workflows.Inspection;
 
 internal static class SpikeInputResolver
 {

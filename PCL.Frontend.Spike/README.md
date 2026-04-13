@@ -25,6 +25,8 @@ The project now has two complementary faces:
 - the spike now also renders route-specific page facts and sections from portable frontend page-content contracts instead of generic placeholder cards
 - the spike can also derive best-effort host-backed startup, launch, and crash inputs with `--host-env true`
 - the spike can now also boot a real desktop shell from those same portable contracts with `app`
+- the desktop shell now also executes prompt-command actions through frontend adapters instead of only recording prompt intents
+- the desktop shell now also scopes startup, launch, and crash prompt lanes to their actual lifecycle triggers instead of showing all prompt lanes at boot
 - frontend concerns can be modeled as prompt decisions, file-work summaries, and process or shell transcripts without pulling workflow policy back into the launcher
 
 ## Commands
@@ -89,11 +91,13 @@ Current desktop shell behavior:
 - startup, launch, and crash prompt lanes are rendered from `LauncherFrontendPromptService`
 - route-specific center-pane facts and sections are rendered from `LauncherFrontendPageContentService`
 - route switching, shell back-navigation, and prompt dismissal stay in the frontend layer without copying WPF event flow
-- the activity feed records prompt decisions and route changes so contract-driven behavior can be reviewed visually
+- startup prompts now appear at boot, launch prompts appear from a launch attempt, and crash prompts appear from an explicit crash event trigger
+- prompt choices now drive config persistence, route changes, crash export/log actions, Java runtime materialization, launch abort/continue state, and shell exit behavior
+- the activity feed still records those actions so contract-driven behavior can be reviewed visually
 
 The desktop shell is intentionally still a migration scaffold, not a full launcher:
 
-- it renders portable shell surfaces and prompt intents
+- it renders portable shell surfaces and prompt-driven actions
 - it now renders portable page-level summaries for launch, setup, tools, logs, and instance routes
 - it still does not implement live backend execution or full page-specific production data
 - it keeps policy in backend services and limits the frontend to composition, routing, and prompt interaction
@@ -131,4 +135,33 @@ The desktop shell is intentionally still a migration scaffold, not a full launch
 - the spike is still a prototype shell, not a user-facing replacement launcher
 - the new desktop shell now has a portable page-content seam, but many page-specific production contracts are still incomplete
 - live launch request execution, real Java transfer networking, and crash save-picker or Explorer behavior still live in the real launcher
+- launch-page state is still largely sample-backed even though prompt-command execution is now real inside the shell
 - the spike can now derive best-effort host-backed inputs, but it still does not source full live launcher state or perform real login/network execution against the current machine
+
+## Troubleshooting
+
+### Fonts are extremely small on `niri` + Wayland
+
+The desktop shell currently relies on Avalonia's default Linux screen-scaling detection:
+
+- [SpikeDesktopHost.cs](./Desktop/SpikeDesktopHost.cs) only calls `UsePlatformDetect()` and does not override Linux scale handling
+- [App.axaml](./Desktop/App.axaml) and the desktop views use many fixed font sizes such as `11`, `12`, `13`, and `14`
+
+That combination is usually fine on macOS because Retina displays report a comfortable logical scale automatically, but on Linux the effective scale can depend on what Avalonia receives from the compositor. Avalonia still has open upstream Linux scaling issues, so on `niri` + Wayland it may end up rendering at scale `1.0`, which makes the fixed font sizes look tiny on HiDPI displays.
+
+Mitigation:
+
+1. Find the output name with `niri msg outputs`. Typical names look like `eDP-1`, `DP-1`, or `HDMI-A-1`.
+2. Start the spike with an explicit Avalonia scale override:
+
+```bash
+AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5' dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app
+```
+
+If you use multiple monitors, set each one explicitly:
+
+```bash
+AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project PCL.Frontend.Spike/PCL.Frontend.Spike.csproj -- app
+```
+
+You can persist the same override in your shell profile or launcher script if you always run the frontend on the same display layout.

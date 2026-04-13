@@ -50,7 +50,9 @@ internal sealed partial class PclExtraButton : UserControl
         };
 
         RefreshVisualState();
-        IconPathElement.IsVisible = !string.IsNullOrWhiteSpace(IconData);
+        var hasIcon = !string.IsNullOrWhiteSpace(IconData);
+        IconPathElement.IsVisible = hasIcon;
+        IconPathElement.Data = hasIcon ? Geometry.Parse(IconData) : null;
     }
 
     public string IconData
@@ -73,6 +75,7 @@ internal sealed partial class PclExtraButton : UserControl
         {
             var data = change.GetNewValue<string>();
             IconPathElement.IsVisible = !string.IsNullOrWhiteSpace(data);
+            IconPathElement.Data = string.IsNullOrWhiteSpace(data) ? null : Geometry.Parse(data);
         }
     }
 

@@ -85,6 +85,10 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedUpdateChannelIndex, clampedValue))
             {
                 AddActivity("切换更新通道", UpdateChannelOptions[clampedValue]);
+                if (IsSetupUpdateSurface)
+                {
+                    _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
+                }
             }
         }
     }
@@ -120,21 +124,21 @@ internal sealed partial class FrontendShellViewModel
         ? new Bitmap(UpdateOptionalIconFilePath)
         : null;
 
-    public bool ShowAvailableUpdateCard => _updateSurfaceState == UpdateSurfaceState.Available;
+    public bool ShowAvailableUpdateCard => _updateStatus.SurfaceState == UpdateSurfaceState.Available;
 
-    public bool ShowCurrentVersionCard => _updateSurfaceState == UpdateSurfaceState.Latest;
+    public bool ShowCurrentVersionCard => _updateStatus.SurfaceState != UpdateSurfaceState.Available;
 
     public bool ShowOptionalUpdateCard => false;
 
-    public string AvailableUpdateName => "PCL CE 2.14.0";
+    public string AvailableUpdateName => _updateStatus.AvailableUpdateName;
 
-    public string AvailableUpdatePublisher => "by PCL-Community";
+    public string AvailableUpdatePublisher => _updateStatus.AvailableUpdatePublisher;
 
-    public string AvailableUpdateSummary => "PCL CE 2.14.0 带来了让人眼前一亮的新设计和 Pigeon 智能的多项功能，同时还带来了令人愉快的跨实例工作方式，助你提高工作效率。";
+    public string AvailableUpdateSummary => _updateStatus.AvailableUpdateSummary;
 
-    public string CurrentVersionName => "PCL CE 2.13.4";
+    public string CurrentVersionName => _updateStatus.CurrentVersionName;
 
-    public string CurrentVersionDescription => ShowCurrentVersionCard ? "已是最新版本" : "正在检查更新...";
+    public string CurrentVersionDescription => _updateStatus.CurrentVersionDescription;
 
     public string OptionalUpdateName => "AquaCL 3.0.0";
 
@@ -344,25 +348,23 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _useJavaExecutable, value);
     }
 
-    public string LaunchUserName => _launchPlan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
-        ? authPlayerName
-        : "DemoPlayer";
+    public string LaunchUserName => _launchComposition.SelectedProfile.UserName;
 
-    public string LaunchAuthLabel => _launchPlan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft
-        ? "正版验证"
-        : "外置验证";
+    public string LaunchAuthLabel => _launchComposition.SelectedProfile.AuthLabel;
 
     public string LaunchButtonTitle => "启动游戏";
 
-    public string LaunchVersionSubtitle => _launchPlan.ReplacementPlan.Values.TryGetValue("${version_name}", out var versionName)
-        ? versionName
-        : "Demo Instance";
+    public string LaunchVersionSubtitle => _launchComposition.InstanceName;
 
-    public string LaunchWelcomeBanner => "欢迎使用新闻主页";
+    public string LaunchWelcomeBanner => $"当前实例：{LaunchVersionSubtitle}";
 
-    public string LaunchMigrationHeadline => "新特性与迁移";
+    public string LaunchMigrationHeadline => "启动状态";
 
-    public string LaunchNewsTitle => "最新快照版 - 25w20a";
+    public string LaunchNewsTitle => $"启动概览 - {LaunchVersionSubtitle}";
+
+    public string LaunchNewsBadgeText => LaunchVersionSubtitle;
+
+    public string LaunchNewsSectionTitle => "启动状态";
 
     public string LaunchCommunityHintPrimaryText => "你正在使用 PCL 社区版！此版本为独立开发和维护，与官方版本维护路线不同，体验有所出入。";
 
@@ -392,8 +394,10 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> LaunchMigrationLines =>
     [
-        "新的主页内容区会优先展示信息卡片，并逐步替换旧的调试式布局。",
-        "后续将继续接入原始主页渲染路径，而不是在 MainWindow 里手写所有内容。"
+        $"档案：{_launchComposition.SelectedProfile.IdentityLabel}",
+        $"Java：{GetLaunchJavaRuntimeLabel()}",
+        $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : _launchComposition.PrecheckResult.FailureMessage ?? "未通过")}",
+        $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}"
     ];
 
     public Bitmap? LaunchAvatarImage => File.Exists(LaunchAvatarImageFilePath)

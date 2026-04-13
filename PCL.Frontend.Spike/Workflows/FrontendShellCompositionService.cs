@@ -1,8 +1,8 @@
-using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.Workflows.Inspection;
 
 namespace PCL.Frontend.Spike.Workflows;
 
@@ -10,20 +10,13 @@ internal static class FrontendShellCompositionService
 {
     public static FrontendShellComposition Compose(SpikeCommandOptions options)
     {
-        var replayInputs = SpikeInputStore.LoadShellInputs(options.InputRoot);
-        if (replayInputs is not null)
+        var replayComposition = FrontendInspectionShellCompositionService.TryComposeReplay(options);
+        if (replayComposition is not null)
         {
-            var startupConsentRequest = replayInputs.StartupInputs.StartupConsentRequest;
-            return new FrontendShellComposition(
-                replayInputs.StartupInputs.StartupWorkflowRequest,
-                startupConsentRequest,
-                LauncherStartupConsentService.Evaluate(startupConsentRequest),
-                replayInputs.NavigationRequest,
-                "Replay-backed shell inputs",
-                $"Input root: {options.InputRoot}");
+            return replayComposition;
         }
 
-        var paths = FrontendRuntimePathSet.Resolve();
+        var paths = FrontendRuntimePaths.Resolve();
         var sharedConfig = new JsonFileProvider(paths.SharedConfigPath);
         var localConfig = new YamlFileProvider(paths.LocalConfigPath);
 
@@ -46,7 +39,7 @@ internal static class FrontendShellCompositionService
     }
 
     private static LauncherStartupWorkflowRequest BuildStartupWorkflowRequest(
-        FrontendRuntimePathSet paths,
+        FrontendRuntimePaths paths,
         YamlFileProvider localConfig)
     {
         return new LauncherStartupWorkflowRequest(
@@ -61,7 +54,7 @@ internal static class FrontendShellCompositionService
     }
 
     private static LauncherMainWindowStartupWorkflowRequest BuildMainWindowRequest(
-        FrontendRuntimePathSet paths,
+        FrontendRuntimePaths paths,
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
@@ -81,7 +74,7 @@ internal static class FrontendShellCompositionService
                 paths.SharedConfigPath));
     }
 
-    private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(FrontendRuntimePathSet paths)
+    private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(FrontendRuntimePaths paths)
     {
         var hasGameLogs = File.Exists(Path.Combine(paths.ExecutableDirectory, "PCL", "LatestLaunch.bat")) ||
                           Directory.Exists(Path.Combine(paths.LauncherAppDataDirectory, "Log"));
@@ -147,48 +140,5 @@ internal static class FrontendShellCompositionService
 #else
         return LauncherStartupSpecialBuildKind.None;
 #endif
-    }
-
-    private sealed record FrontendRuntimePathSet(
-        string ExecutableDirectory,
-        string TempDirectory,
-        string LauncherAppDataDirectory,
-        string SharedConfigDirectory,
-        string SharedConfigPath,
-        string LocalConfigPath)
-    {
-        public static FrontendRuntimePathSet Resolve()
-        {
-            var layout = CreateLayout();
-            return new FrontendRuntimePathSet(
-                Path.GetDirectoryName(Environment.ProcessPath!) ?? Environment.CurrentDirectory,
-                layout.Temp,
-                GetLauncherAppDataDirectory(),
-                layout.SharedData,
-                Path.Combine(layout.SharedData, "config.v1.json"),
-                Path.Combine(layout.Data, "config.v1.yml"));
-        }
-
-        private static AppPathLayout CreateLayout()
-        {
-#if DEBUG
-            return new AppPathLayout(SystemAppEnvironment.Current, "PCLCE_Debug", ".PCLCEDebug", enableDebugOverrides: true);
-#else
-            return new AppPathLayout(SystemAppEnvironment.Current, "PCLCE", ".PCLCE", enableDebugOverrides: false);
-#endif
-        }
-
-        private static string GetLauncherAppDataDirectory()
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PCL");
-            }
-
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".config",
-                "PCL");
-        }
     }
 }

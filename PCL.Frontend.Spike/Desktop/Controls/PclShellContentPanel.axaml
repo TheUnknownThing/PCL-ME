@@ -3401,7 +3401,7 @@
 
         <controls:PclCard Header="启动选项" ContentMargin="20,40,20,18">
           <controls:PclCard.CardContent>
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,Auto,9,28,9,28">
               <TextBlock
                   Grid.Row="0"
                   Margin="0,0,25,0"
@@ -3412,8 +3412,8 @@
               <ComboBox
                   Grid.Row="0"
                   Grid.Column="1"
-                  ItemsSource="{Binding LaunchIsolationOptions}"
-                  SelectedIndex="{Binding SelectedLaunchIsolationIndex}" />
+                  ItemsSource="{Binding InstanceIsolationOptions}"
+                  SelectedIndex="{Binding SelectedInstanceIsolationIndex}" />
 
               <TextBlock
                   Grid.Row="2"
@@ -3425,13 +3425,14 @@
               <TextBox
                   Grid.Row="2"
                   Grid.Column="1"
-                  Text="{Binding LaunchWindowTitleSetting}" />
+                  Text="{Binding InstanceWindowTitleSetting}" />
 
               <CheckBox
                   Grid.Row="4"
                   Grid.ColumnSpan="2"
                   Foreground="#343D4A"
-                  Content="默认窗口标题" />
+                  Content="默认窗口标题"
+                  IsChecked="{Binding UseDefaultInstanceWindowTitle}" />
 
               <TextBlock
                   Grid.Row="6"
@@ -3443,14 +3444,21 @@
               <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,Auto">
                 <TextBox
                     Grid.Column="0"
-                    Text="{Binding LaunchCustomInfoSetting}" />
-                <ComboBox
-                    Grid.Column="1"
-                    Margin="12,0,0,0"
-                    Width="180"
-                    ItemsSource="{Binding InstanceJavaOptions}"
-                    SelectedIndex="{Binding SelectedInstanceJavaIndex}" />
+                    Text="{Binding InstanceCustomInfoSetting}" />
               </Grid>
+
+              <TextBlock
+                  Grid.Row="8"
+                  Margin="0,0,25,0"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13"
+                  Text="游戏 Java" />
+              <ComboBox
+                  Grid.Row="8"
+                  Grid.Column="1"
+                  ItemsSource="{Binding InstanceJavaOptions}"
+                  SelectedIndex="{Binding SelectedInstanceJavaIndex}" />
             </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>
@@ -3463,7 +3471,8 @@
                   Background="#FFF8DD"
                   BorderBrush="#F2D777"
                   BorderThickness="1"
-                  CornerRadius="4">
+                  CornerRadius="4"
+                  IsVisible="{Binding ShowInstance32BitJavaWarning}">
                 <TextBlock
                     Foreground="#6E5800"
                     FontSize="12.5"
@@ -3488,31 +3497,43 @@
               <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
                 <RadioButton
                     Grid.Row="0"
-                    Content="自动配置"
+                    Content="跟随全局设置"
                     GroupName="instance-ram"
-                    IsChecked="{Binding UseAutomaticRamAllocation}" />
+                    IsChecked="{Binding UseGlobalInstanceRamAllocation}" />
                 <RadioButton
                     Grid.Row="1"
+                    Content="自动配置"
+                    GroupName="instance-ram"
+                    IsChecked="{Binding UseAutomaticInstanceRamAllocation}" />
+                <RadioButton
+                    Grid.Row="2"
                     Content="自定义"
                     GroupName="instance-ram"
-                    IsChecked="{Binding UseCustomRamAllocation}" />
-                <StackPanel Grid.Row="1" Grid.Column="1" Margin="18,0,0,0" Spacing="6">
+                    IsChecked="{Binding UseCustomInstanceRamAllocation}" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="18,0,0,0" Spacing="6">
                   <Slider
                       Minimum="1"
-                      Maximum="16"
-                      Value="{Binding CustomRamAllocation}" />
+                      Maximum="32"
+                      IsEnabled="{Binding IsInstanceCustomRamAllocationEnabled}"
+                      Value="{Binding InstanceCustomRamAllocation}" />
                   <TextBlock
                       Foreground="#4B5968"
                       FontSize="12.5"
-                      Text="{Binding CustomRamAllocationLabel}" />
+                      Text="{Binding InstanceCustomRamAllocationLabel}" />
                 </StackPanel>
-                <CheckBox
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    Margin="18,6,0,0"
+              </Grid>
+
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="28">
+                <TextBlock
+                    Margin="0,0,25,0"
+                    VerticalAlignment="Center"
                     Foreground="#343D4A"
-                    Content="启动游戏前进行内存优化"
-                    IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
+                    FontSize="13"
+                    Text="启动游戏前进行内存优化" />
+                <ComboBox
+                    Grid.Column="1"
+                    ItemsSource="{Binding InstanceMemoryOptimizeOptions}"
+                    SelectedIndex="{Binding SelectedInstanceMemoryOptimizeIndex}" />
               </Grid>
 
               <Border
@@ -3535,16 +3556,16 @@
                     <TextBlock
                         Foreground="#2F8F45"
                         FontSize="16"
-                        Text="{Binding UsedRamLabel}" />
+                        Text="{Binding InstanceUsedRamLabel}" />
                     <TextBlock
                         Foreground="#4B5968"
                         FontSize="16"
-                        Text="{Binding TotalRamLabel}" />
+                        Text="{Binding InstanceTotalRamLabel}" />
                   </StackPanel>
                   <TextBlock
                       Foreground="#4C78C2"
                       FontSize="16"
-                      Text="{Binding AllocatedRamLabel}" />
+                      Text="{Binding InstanceAllocatedRamLabel}" />
                 </StackPanel>
               </Border>
             </StackPanel>
@@ -3554,6 +3575,19 @@
         <controls:PclCard Header="服务器" ContentMargin="20,40,20,18">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="12">
+              <Border
+                  Padding="12,10"
+                  Background="#FFF1EA"
+                  BorderBrush="#F1C8B6"
+                  BorderThickness="1"
+                  CornerRadius="4"
+                  IsVisible="{Binding ShowInstanceServerLoginLockedWarning}">
+                <TextBlock
+                    Foreground="#A94F2B"
+                    FontSize="12.5"
+                    Text="当前实例的验证方式已锁定，无法再次更改。请使用要求的验证方式启动游戏。"
+                    TextWrapping="Wrap" />
+              </Border>
               <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,28,28,28,9,28">
                 <TextBlock
                     Grid.Row="0"
@@ -3639,6 +3673,7 @@
                     MinWidth="150"
                     Margin="0,0,20,0"
                     Command="{Binding LockInstanceLoginCommand}"
+                    IsEnabled="{Binding CanLockInstanceLogin}"
                     Text="锁定验证方式" />
                 <controls:PclButton
                     Grid.Column="2"
@@ -3663,8 +3698,8 @@
               <ComboBox
                   Grid.Row="0"
                   Grid.Column="1"
-                  ItemsSource="{Binding LaunchRendererOptions}"
-                  SelectedIndex="{Binding SelectedLaunchRendererIndex}" />
+                  ItemsSource="{Binding InstanceRendererOptions}"
+                  SelectedIndex="{Binding SelectedInstanceRendererIndex}" />
 
               <TextBlock
                   Grid.Row="2"
@@ -3677,7 +3712,7 @@
                   Grid.Row="2"
                   Grid.Column="1"
                   AcceptsReturn="True"
-                  Text="{Binding LaunchJvmArguments}"
+                  Text="{Binding InstanceLaunchJvmArguments}"
                   TextWrapping="Wrap"
                   VerticalContentAlignment="Top" />
 
@@ -3691,7 +3726,7 @@
               <TextBox
                   Grid.Row="4"
                   Grid.Column="1"
-                  Text="{Binding LaunchGameArguments}" />
+                  Text="{Binding InstanceLaunchGameArguments}" />
 
               <TextBlock
                   Grid.Row="6"
@@ -3716,7 +3751,7 @@
                   Grid.Row="8"
                   Grid.Column="1"
                   AcceptsReturn="True"
-                  Text="{Binding LaunchBeforeCommand}"
+                  Text="{Binding InstanceLaunchBeforeCommand}"
                   TextWrapping="Wrap"
                   VerticalContentAlignment="Top" />
 
@@ -3724,31 +3759,31 @@
                 <CheckBox
                     Foreground="#343D4A"
                     Content="等待命令执行完成后再继续启动"
-                    IsChecked="{Binding WaitForLaunchBeforeCommand}" />
+                    IsChecked="{Binding WaitForInstanceLaunchBeforeCommand}" />
                 <CheckBox
                     Foreground="#343D4A"
                     Content="忽略 Java 兼容性警告"
-                    IsChecked="{Binding IgnoreJavaCompatibilityWarning}" />
+                    IsChecked="{Binding IgnoreInstanceJavaCompatibilityWarning}" />
                 <CheckBox
                     Foreground="#343D4A"
                     Content="关闭文件校验"
-                    IsChecked="{Binding DisableFileValidation}" />
+                    IsChecked="{Binding DisableInstanceFileValidation}" />
                 <CheckBox
                     Foreground="#343D4A"
                     Content="跟随启动器网络代理设置"
-                    IsChecked="{Binding FollowLauncherProxy}" />
+                    IsChecked="{Binding FollowInstanceLauncherProxy}" />
                 <CheckBox
                     Foreground="#343D4A"
                     Content="禁用 Java Launch Wrapper"
-                    IsChecked="{Binding DisableJavaLaunchWrapper}" />
+                    IsChecked="{Binding DisableInstanceJavaLaunchWrapper}" />
                 <CheckBox
                     Foreground="#343D4A"
                     Content="禁用 RetroWrapper"
-                    IsChecked="{Binding DisableRetroWrapper}" />
+                    IsChecked="{Binding DisableInstanceRetroWrapper}" />
                 <CheckBox
                     Foreground="#343D4A"
                     Content="使用调试级别 log4j 配置文件"
-                    IsChecked="{Binding UseDebugLog4jConfig}" />
+                    IsChecked="{Binding UseInstanceDebugLog4jConfig}" />
               </StackPanel>
             </Grid>
           </controls:PclCard.CardContent>

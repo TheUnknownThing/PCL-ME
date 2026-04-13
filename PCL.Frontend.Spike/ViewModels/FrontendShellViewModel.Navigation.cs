@@ -131,7 +131,20 @@ internal sealed partial class FrontendShellViewModel
 
         _routeHistory.Add(_currentRoute);
         _currentRoute = route;
+        if (route.Page == LauncherFrontendPageKey.Setup)
+        {
+            ReloadSetupComposition();
+        }
+        else if (route.Page == LauncherFrontendPageKey.InstanceSetup)
+        {
+            ReloadInstanceComposition();
+        }
+
         RefreshShell(activityMessage);
+        if (route.Page == LauncherFrontendPageKey.Setup && route.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
     }
 
     private void NavigateBack()
@@ -146,14 +159,40 @@ internal sealed partial class FrontendShellViewModel
             var previousRoute = _routeHistory[^1];
             _routeHistory.RemoveAt(_routeHistory.Count - 1);
             _currentRoute = previousRoute;
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                ReloadSetupComposition();
+            }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
+            {
+                ReloadInstanceComposition();
+            }
+
             RefreshShell("Returned to the previous shell route.");
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+            {
+                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+            }
             return;
         }
 
         if (_currentNavigation.BackTarget?.Route is { } backRoute)
         {
             _currentRoute = backRoute;
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                ReloadSetupComposition();
+            }
+            else if (_currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
+            {
+                ReloadInstanceComposition();
+            }
+
             RefreshShell($"Followed shell back target to {backRoute.Page}.");
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+            {
+                _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+            }
         }
     }
 
@@ -236,6 +275,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowAvailableUpdateCard));
         RaisePropertyChanged(nameof(ShowCurrentVersionCard));
         RaisePropertyChanged(nameof(ShowOptionalUpdateCard));
+        RaisePropertyChanged(nameof(AvailableUpdateName));
+        RaisePropertyChanged(nameof(AvailableUpdatePublisher));
+        RaisePropertyChanged(nameof(AvailableUpdateSummary));
+        RaisePropertyChanged(nameof(CurrentVersionName));
         RaisePropertyChanged(nameof(CurrentVersionDescription));
     }
 }

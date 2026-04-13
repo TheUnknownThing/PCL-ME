@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using Avalonia.Media.Imaging;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -105,11 +106,20 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ToggleInstanceFavoriteCommand => new(ToggleInstanceFavorite);
 
-    public ActionCommand OpenInstanceFolderCommand => new(() => AddActivity("实例文件夹", "/Users/demo/.pcl/instances/Modern Fabric Demo"));
+    public ActionCommand OpenInstanceFolderCommand => new(() =>
+        OpenInstanceTarget("实例文件夹", _instanceComposition.Selection.InstanceDirectory, "当前未选择实例。"));
 
-    public ActionCommand OpenInstanceSavesFolderCommand => new(() => AddActivity("存档文件夹", "/Users/demo/.pcl/instances/Modern Fabric Demo/saves"));
+    public ActionCommand OpenInstanceSavesFolderCommand => new(() =>
+        OpenInstanceTarget(
+            "存档文件夹",
+            _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
+            "当前实例没有存档目录。"));
 
-    public ActionCommand OpenInstanceModsFolderCommand => new(() => AddActivity("Mod 文件夹", "/Users/demo/.pcl/instances/Modern Fabric Demo/mods"));
+    public ActionCommand OpenInstanceModsFolderCommand => new(() =>
+        OpenInstanceTarget(
+            "Mod 文件夹",
+            ResolveCurrentInstanceResourceDirectory("mods"),
+            "当前实例没有 Mod 目录。"));
 
     public ActionCommand ExportInstanceScriptCommand => new(() => AddActivity("导出启动脚本", "Would export a launcher script for the current instance."));
 
@@ -125,30 +135,23 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeInstanceOverviewSurface()
     {
-        InstanceOverviewName = "Modern Fabric Demo";
-        InstanceOverviewSubtitle = "Fabric 0.16.9 / Minecraft 1.21.1 / 独立实例";
-        _selectedInstanceOverviewIconIndex = 0;
-        _selectedInstanceOverviewCategoryIndex = 2;
-        _isInstanceOverviewStarred = true;
+        var overview = _instanceComposition.Overview;
+        InstanceOverviewName = overview.Name;
+        InstanceOverviewSubtitle = overview.Subtitle;
+        _selectedInstanceOverviewIconIndex = Math.Clamp(overview.IconIndex, 0, InstanceOverviewIconOptions.Count - 1);
+        _selectedInstanceOverviewCategoryIndex = Math.Clamp(overview.CategoryIndex, 0, InstanceOverviewCategoryOptions.Count - 1);
+        _isInstanceOverviewStarred = overview.IsStarred;
 
-        ReplaceItems(InstanceOverviewDisplayTags,
-        [
-            "Fabric",
-            "支持 Mod",
-            "已收藏"
-        ]);
+        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags);
+        ReplaceItems(
+            InstanceOverviewInfoEntries,
+            overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(entry.Label, entry.Value)));
 
-        ReplaceItems(InstanceOverviewInfoEntries,
-        [
-            new KeyValueEntryViewModel("实例版本", "Minecraft 1.21.1"),
-            new KeyValueEntryViewModel("安装方式", "自动安装 / Fabric"),
-            new KeyValueEntryViewModel("版本隔离", "已开启"),
-            new KeyValueEntryViewModel("Java", "Temurin 21.0.4 64 位"),
-            new KeyValueEntryViewModel("上次启动", "2026-04-04 11:42"),
-            new KeyValueEntryViewModel("实例位置", "/Users/demo/.pcl/instances/Modern Fabric Demo")
-        ]);
-
-        RefreshInstanceOverviewSelectionState();
+        InstanceOverviewSelectedIcon = LoadInstanceBitmap(
+            overview.IconPath,
+            "Images",
+            "Blocks",
+            InstanceOverviewIconOptions[_selectedInstanceOverviewIconIndex].FilterValue);
     }
 
     private void RefreshInstanceOverviewSurface()
@@ -172,27 +175,44 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceOverviewSelectionState()
     {
-        var iconName = InstanceOverviewIconOptions[SelectedInstanceOverviewIconIndex].FilterValue;
-        InstanceOverviewSelectedIcon = LoadLauncherBitmap("Images", "Blocks", iconName);
+        var overview = _instanceComposition.Overview;
+        if (SelectedInstanceOverviewIconIndex == overview.IconIndex)
+        {
+            InstanceOverviewSelectedIcon = LoadInstanceBitmap(
+                overview.IconPath,
+                "Images",
+                "Blocks",
+                InstanceOverviewIconOptions[SelectedInstanceOverviewIconIndex].FilterValue);
+        }
+        else if (SelectedInstanceOverviewIconIndex == 0)
+        {
+            InstanceOverviewSelectedIcon = LoadInstanceBitmap(
+                overview.IconPath,
+                "Images",
+                "Blocks",
+                "Grass.png");
+        }
+        else
+        {
+            var iconName = InstanceOverviewIconOptions[SelectedInstanceOverviewIconIndex].FilterValue;
+            InstanceOverviewSelectedIcon = LoadLauncherBitmap("Images", "Blocks", iconName);
+        }
+
         RaisePropertyChanged(nameof(InstanceOverviewCategoryLabel));
     }
 
     private void ToggleInstanceFavorite()
     {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("收藏实例", "当前未选择实例。");
+            return;
+        }
+
         _isInstanceOverviewStarred = !_isInstanceOverviewStarred;
-        ReplaceItems(InstanceOverviewDisplayTags,
-        _isInstanceOverviewStarred
-            ? [
-                "Fabric",
-                "支持 Mod",
-                "已收藏"
-            ]
-            : [
-                "Fabric",
-                "支持 Mod",
-                "常规实例"
-            ]);
+        _shellActionService.PersistInstanceValue(_instanceComposition.Selection.InstanceDirectory, "IsStar", _isInstanceOverviewStarred);
+        ReloadInstanceComposition();
         RaisePropertyChanged(nameof(InstanceOverviewFavoriteButtonText));
-        AddActivity(_isInstanceOverviewStarred ? "加入收藏夹" : "移出收藏夹", InstanceOverviewName);
+        AddActivity(_isInstanceOverviewStarred ? "加入收藏夹" : "移出收藏夹", _instanceComposition.Selection.InstanceName);
     }
 }

@@ -3,6 +3,7 @@ using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
+using PCL.Frontend.Spike.Workflows.Inspection;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -20,9 +21,13 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
-    private readonly FrontendShellComposition _shellComposition;
-    private readonly StartupSpikePlan _startupPlan;
-    private readonly LaunchSpikePlan _launchPlan;
+    private readonly FrontendShellActionService _shellActionService;
+    private FrontendShellComposition _shellComposition;
+    private FrontendSetupComposition _setupComposition;
+    private FrontendInstanceComposition _instanceComposition;
+    private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
+    private StartupSpikePlan _startupPlan;
+    private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
     private readonly IReadOnlyList<HelpTopicViewModel> _allHelpTopics;
@@ -130,7 +135,8 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
     private string _mirrorCdk = string.Empty;
-    private UpdateSurfaceState _updateSurfaceState = UpdateSurfaceState.Available;
+    private bool _isCheckingUpdate;
+    private string _lastUpdateCheckSignature = string.Empty;
     private string _linkUsername = string.Empty;
     private int _selectedProtocolPreferenceIndex;
     private bool _preferLowestLatencyPath = true;
@@ -208,6 +214,7 @@ internal sealed partial class FrontendShellViewModel
     private double _maxRealTimeLogValue = 13;
     private bool _disableHardwareAcceleration;
     private bool _enableTelemetry = true;
+    private bool _isLaunchBlockedByPrompt;
     private bool _enableDoH = true;
     private int _selectedHttpProxyTypeIndex;
     private string _httpProxyAddress = string.Empty;
@@ -240,70 +247,79 @@ internal sealed partial class FrontendShellViewModel
     private bool _musicEnableSmtc = true;
     private int _selectedLogoTypeIndex = 1;
     private bool _logoAlignLeft = true;
-    private string _logoText = "Point Cloud Library";
+    private string _logoText = "Plain Craft Launcher";
     private int _selectedHomepageTypeIndex = 1;
     private string _homepageUrl = "https://example.invalid/homepage.json";
     private int _selectedHomepagePresetIndex = 14;
     private string _selectedJavaRuntimeKey = "auto";
+    private bool _suppressSetupPersistence;
+    private bool _suppressInstancePersistence;
 
-    public static FrontendShellViewModel CreateBootstrap(SpikeCommandOptions options)
+    public static FrontendShellViewModel CreateBootstrap(
+        SpikeCommandOptions options,
+        FrontendShellActionService shellActionService)
     {
-        return new FrontendShellViewModel(options);
+        return new FrontendShellViewModel(options, shellActionService);
     }
 
-    private FrontendShellViewModel(SpikeCommandOptions options)
+    private FrontendShellViewModel(
+        SpikeCommandOptions options,
+        FrontendShellActionService shellActionService)
     {
+        _shellActionService = shellActionService;
         _shellComposition = FrontendShellCompositionService.Compose(options);
+        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
+        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
-        _launchPlan = SpikeSampleFactory.BuildLaunchPlan(SpikeInputResolver.ResolveLaunchInputs(options), options.SaveBatchPath);
-        _crashPlan = SpikeSampleFactory.BuildCrashPlan(SpikeInputResolver.ResolveCrashInputs(options));
+        _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
+        _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
         _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
-        _launchCommand = new ActionCommand(() => AddActivity("Launch requested.", $"Would start {LaunchVersionSubtitle}."));
+        _launchCommand = new ActionCommand(HandleLaunchRequested);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
         _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
         _dismissLaunchCommunityHintCommand = new ActionCommand(() => ShowLaunchCommunityHint = false);
-        _openFeedbackCommand = CreateIntentCommand("打开反馈入口", "Would open the GitHub issue tracker surface.");
-        _exportLogCommand = CreateIntentCommand("导出日志", "Would export the current launcher log bundle.");
-        _exportAllLogsCommand = CreateIntentCommand("导出全部日志", "Would export the complete launcher log archive.");
-        _openLogDirectoryCommand = CreateIntentCommand("打开日志目录", "Would reveal the launcher log directory.");
-        _cleanLogsCommand = CreateIntentCommand("清理历史日志", "Would remove archived launcher logs.");
+        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/PCL-Community/PCL2-CE/issues");
+        _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
+        _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
+        _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
+        _cleanLogsCommand = new ActionCommand(CleanLauncherLogs);
         _getMirrorCdkCommand = CreateLinkCommand("获取 Mirror 酱 CDK", "https://mirrorchyan.com/");
-        _downloadUpdateCommand = CreateIntentCommand("下载并安装更新", "Would start the launcher self-update workflow.");
-        _showUpdateDetailCommand = CreateIntentCommand("查看更新详情", "Would open the markdown changelog dialog for the selected launcher update.");
-        _checkUpdateAgainCommand = new ActionCommand(CycleUpdateSurfaceState);
+        _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
+        _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
+        _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
         _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/PCL-Community/PCL2-CE/releases");
         _downloadOptionalUpdateCommand = CreateIntentCommand("下载可选更新", "Would start the optional AquaCL upgrade flow.");
         _showOptionalUpdateDetailCommand = CreateIntentCommand("查看 AquaCL 更新详情", "Would open the optional upgrade changelog surface.");
         _resetGameLinkSettingsCommand = new ActionCommand(ResetGameLinkSurface);
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
-        _exportSettingsCommand = CreateIntentCommand("导出设置", "Would export the shared launcher configuration to a JSON file.");
-        _importSettingsCommand = CreateIntentCommand("导入设置", "Would import a shared launcher configuration and request a restart.");
-        _applyProxySettingsCommand = CreateIntentCommand("应用代理信息", "Would persist the custom HTTP proxy address, username, and password.");
+        _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
+        _importSettingsCommand = new ActionCommand(() => _ = ImportSettingsAsync());
+        _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
         _addJavaRuntimeCommand = new ActionCommand(AddJavaRuntime);
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
         _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/PCL-Community/PCL2-CE");
-        _backgroundOpenFolderCommand = CreateIntentCommand("打开背景文件夹", "Would open the launcher background asset directory.");
-        _backgroundRefreshCommand = CreateIntentCommand("刷新背景内容", "Would reload launcher background images or videos.");
-        _backgroundClearCommand = CreateIntentCommand("清空背景内容", "Would remove custom background assets.");
-        _musicOpenFolderCommand = CreateIntentCommand("打开音乐文件夹", "Would open the launcher music asset directory.");
-        _musicRefreshCommand = CreateIntentCommand("刷新背景音乐", "Would reload launcher background music.");
-        _musicClearCommand = CreateIntentCommand("清空背景音乐", "Would remove custom background music files.");
-        _changeLogoImageCommand = CreateIntentCommand("更改标题栏图片", "Would choose a custom title bar image.");
-        _deleteLogoImageCommand = CreateIntentCommand("清空标题栏图片", "Would remove the custom title bar image.");
-        _refreshHomepageCommand = CreateIntentCommand("刷新主页", "Would reload the current homepage source.");
-        _generateHomepageTutorialFileCommand = CreateIntentCommand("生成教学文件", "Would create a sample homepage tutorial file.");
-        _viewHomepageTutorialCommand = CreateIntentCommand("查看主页教程", "Would open the homepage customization tutorial.");
-        _openHomepageMarketCommand = CreateIntentCommand("前往主页市场", "Would open the launcher homepage market.");
+        _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
+        _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
+        _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);
+        _musicOpenFolderCommand = new ActionCommand(OpenMusicFolder);
+        _musicRefreshCommand = new ActionCommand(RefreshMusicAssets);
+        _musicClearCommand = new ActionCommand(ClearMusicAssets);
+        _changeLogoImageCommand = new ActionCommand(() => _ = ChangeLogoImageAsync());
+        _deleteLogoImageCommand = new ActionCommand(DeleteLogoImage);
+        _refreshHomepageCommand = new ActionCommand(RefreshHomepageContent);
+        _generateHomepageTutorialFileCommand = new ActionCommand(GenerateHomepageTutorialFile);
+        _viewHomepageTutorialCommand = new ActionCommand(ViewHomepageTutorial);
+        _openHomepageMarketCommand = CreateLinkCommand("前往主页市场", "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Homepage.Market/Custom.xaml");
         _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
         _acceptGameLinkTermsCommand = new ActionCommand(AcceptGameLinkTerms);
         _testLobbyNatCommand = new ActionCommand(TestLobbyNat);
@@ -352,7 +368,7 @@ internal sealed partial class FrontendShellViewModel
             InstanceServerAuthName = "LittleSkin";
             AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
         });
-        _lockInstanceLoginCommand = CreateIntentCommand("锁定验证方式", "Would lock the instance login requirement.");
+        _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = CreateIntentCommand("新建档案", "Would create a new instance-specific login profile.");
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
 
@@ -362,27 +378,22 @@ internal sealed partial class FrontendShellViewModel
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
         _allHelpTopics = CreateHelpTopics();
+        PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
+        PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
-        InitializeLogEntries();
-        InitializeUpdateSurface();
-        InitializeLaunchSettingsSurface();
         InitializeToolsGameLinkSurface();
         InitializeToolsTestSurface();
         InitializeDownloadInstallSurface();
-        InitializeInstanceOverviewSurface();
-        InitializeInstanceExportSurface();
-        InitializeInstanceInstallSurface();
-        InitializeInstanceContentSurfaces();
-        InitializeInstanceSetupSurface();
-        InitializeGameLinkSurface();
-        InitializeGameManageSurface();
-        InitializeLauncherMiscSurface();
-        InitializeJavaSurface();
-        InitializeUiSurface();
+        ApplySetupComposition(_setupComposition);
+        ApplyInstanceComposition(_instanceComposition);
         InitializePromptLanes();
         RefreshHelpTopics();
         RefreshShell("Shell initialized from portable frontend contracts.");
+        if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
+        }
     }
 
 }

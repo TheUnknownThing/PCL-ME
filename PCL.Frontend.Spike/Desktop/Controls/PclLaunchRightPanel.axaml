@@ -14,10 +14,10 @@
           BoxShadow="0 2 10 0 #10000000">
         <Grid Margin="18,0" ColumnDefinitions="Auto,*">
           <TextBlock
+              x:Name="LaunchBannerIcon"
               VerticalAlignment="Center"
               Foreground="#4A4A4A"
-              FontSize="16"
-              Text="▣" />
+              FontSize="16" />
           <TextBlock
               Grid.Column="1"
               Margin="10,0,0,0"
@@ -36,11 +36,11 @@
         <controls:PclCard.CardContent>
           <Grid>
             <controls:PclIconButton
+                x:Name="DismissLaunchCommunityHintButton"
                 Margin="0,-28,-8,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-                Command="{Binding DismissLaunchCommunityHintCommand}"
-                IconData="M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z" />
+                Command="{Binding DismissLaunchCommunityHintCommand}" />
             <StackPanel Spacing="2">
               <TextBlock
                   FontSize="13.5"
@@ -114,7 +114,7 @@
                   <TextBlock
                       Foreground="White"
                       FontSize="24"
-                      Text="25w20a" />
+                      Text="{Binding LaunchNewsBadgeText}" />
                 </Border>
               </Grid>
             </Border>
@@ -124,7 +124,7 @@
                 Foreground="#1370F3"
                 FontSize="28"
                 FontWeight="Bold"
-                Text="新特性" />
+                Text="{Binding LaunchNewsSectionTitle}" />
 
             <ItemsControl ItemsSource="{Binding SurfaceSections}">
               <ItemsControl.ItemTemplate>

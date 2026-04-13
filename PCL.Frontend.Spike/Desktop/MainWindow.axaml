@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
-    Title="Point Cloud Library CE"
+    Title="Plain Craft Launcher ME"
     Width="1158"
     Height="648"
     MinWidth="980"
@@ -29,12 +29,12 @@
     </Style>
   </Window.Styles>
 
-  <Grid Margin="10">
+  <Grid>
     <Border
         Background="#FBFBFD"
-        BorderBrush="#9FC0F9"
-        BorderThickness="1"
-        CornerRadius="6"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        CornerRadius="0"
         ClipToBounds="True">
       <Grid RowDefinitions="48,*">
         <Border
@@ -50,7 +50,7 @@
                   Foreground="White"
                   FontSize="18"
                   FontWeight="SemiLight"
-                  Text="Point Cloud Library" />
+                  Text="Plain Craft Launcher" />
               <Border
                   Grid.Column="1"
                   Margin="10,0,0,0"
@@ -101,9 +101,9 @@
                   ColumnDefinitions="Auto,*"
                   IsVisible="{Binding ShowInnerNavigation}">
                 <controls:PclIconButton
+                    x:Name="BackButton"
                     VerticalAlignment="Center"
                     Command="{Binding BackCommand}"
-                    IconData="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z"
                     ToolTip.Tip="返回" />
                 <TextBlock
                     Grid.Column="1"
@@ -122,13 +122,13 @@
                 VerticalAlignment="Center"
                 Spacing="4">
               <controls:PclIconButton
-                  IconData="M0,6 h15 v2 h-15 z"
+                  x:Name="MinimizeButton"
                   Click="MinimizeButton_OnClick" />
               <controls:PclIconButton
-                  IconData="M0,0 v14 h14 v-14 z M2,2 h10 v10 h-10 z"
+                  x:Name="MaximizeButton"
                   Click="MaximizeButton_OnClick" />
               <controls:PclIconButton
-                  IconData="M2,0 L0,2 6,8 0,14 2,16 8,10 14,16 16,14 10,8 16,2 14,0 8,6 z"
+                  x:Name="CloseButton"
                   Click="CloseButton_OnClick" />
             </StackPanel>
           </Grid>
@@ -182,8 +182,8 @@
             </ItemsControl>
 
             <controls:PclExtraButton
+                x:Name="PromptQueueButton"
                 Command="{Binding TogglePromptOverlayCommand}"
-                IconData="M1008 704V192c0-53-43-96-96-96H112C59 96 16 139 16 192v512c0 53 43 96 96 96h160v176l176-176h464c53 0 96-43 96-96z M240 384h544v64H240v-64z M240 256h544v64H240V256z M240 512h384v64H240v-64z"
                 ToolTip.Tip="提示队列" />
           </StackPanel>
 

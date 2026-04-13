@@ -23,7 +23,7 @@ public static class LauncherFrontendNavigationService
             : request.CurrentPageTitleOverride!;
         var sidebarGroupPage = currentPage.SidebarGroupPage ?? request.CurrentRoute.Page;
         var sidebarGroup = Catalog.SidebarGroups.FirstOrDefault(group => group.Page == sidebarGroupPage);
-        var showsBackButton = currentPage.Kind != LauncherFrontendPageKind.TopLevel || request.BackstackDepth > 0;
+        var showsBackButton = currentPage.Kind != LauncherFrontendPageKind.TopLevel;
         var topLevelEntries = Catalog.TopLevelPages.Select(page => new LauncherFrontendNavigationEntry(
             page.Page.ToString(),
             page.Title,
@@ -123,16 +123,16 @@ public static class LauncherFrontendNavigationService
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadShader, "光影包", "安装光影资源。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadWorld, "存档", "导入地图与存档。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadCompFavorites, "收藏夹", "查看收藏的资源条目。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "客户端", "浏览客户端版本。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadClient, "Minecraft", "浏览客户端版本。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadOptiFine, "OptiFine", "安装 OptiFine。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadForge, "Forge", "安装 Forge。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadNeoForge, "NeoForge", "安装 NeoForge。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadCleanroom, "Cleanroom", "安装 Cleanroom。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadFabric, "Fabric", "安装 Fabric。"),
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadLegacyFabric, "Legacy Fabric", "安装 Legacy Fabric。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadQuilt, "Quilt", "安装 Quilt。"),
                         new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadLiteLoader, "LiteLoader", "安装 LiteLoader。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadLabyMod, "LabyMod", "安装 LabyMod。"),
-                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadLegacyFabric, "Legacy Fabric", "安装 Legacy Fabric。")
+                        new LauncherFrontendSidebarItem(LauncherFrontendSubpageKey.DownloadLabyMod, "LabyMod", "安装 LabyMod。")
                     ]),
                 new LauncherFrontendSidebarGroup(
                     LauncherFrontendPageKey.Setup,

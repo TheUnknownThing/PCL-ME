@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using PCL.Frontend.Spike.Icons;
 
 namespace PCL.Frontend.Spike.Desktop;
 
@@ -10,6 +11,11 @@ internal sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        BackButton.IconData = FrontendIconCatalog.Back.Data;
+        MinimizeButton.IconData = FrontendIconCatalog.Minimize.Data;
+        MaximizeButton.IconData = FrontendIconCatalog.Maximize.Data;
+        CloseButton.IconData = FrontendIconCatalog.Close.Data;
+        PromptQueueButton.IconData = FrontendIconCatalog.PromptQueue.Data;
     }
 
     private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)

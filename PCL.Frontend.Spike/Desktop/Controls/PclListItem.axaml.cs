@@ -163,6 +163,7 @@ internal sealed partial class PclListItem : UserControl
     {
         var hasIcon = !string.IsNullOrWhiteSpace(data);
         LogoPath.IsVisible = hasIcon;
+        LogoPath.Data = hasIcon ? Geometry.Parse(data) : null;
     }
 
     private void UpdateInfo(string info)
@@ -176,6 +177,7 @@ internal sealed partial class PclListItem : UserControl
     {
         var hasAccessory = !string.IsNullOrWhiteSpace(AccessoryIconData) && AccessoryCommand is not null;
         AccessoryButton.IsVisible = hasAccessory;
+        AccessoryPath.Data = hasAccessory ? Geometry.Parse(AccessoryIconData) : null;
     }
 
     private void ApplyIconScale(double scale)
@@ -192,8 +194,8 @@ internal sealed partial class PclListItem : UserControl
         SelectionBar.IsVisible = IsSelected;
         TitleBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#404040");
         InfoBlock.Foreground = IsSelected ? Brush.Parse("#4B78C2") : Brush.Parse("#7D8897");
-        LogoPath.Background = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#737373");
-        AccessoryPath.Background = _isHovered ? Brush.Parse("#4890F5") : Brush.Parse("#96C0F9");
+        LogoPath.Fill = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#737373");
+        AccessoryPath.Fill = _isHovered ? Brush.Parse("#4890F5") : Brush.Parse("#96C0F9");
         RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);
     }
 }

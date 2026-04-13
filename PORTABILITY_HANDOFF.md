@@ -7,7 +7,12 @@ The portability phase has crossed an important boundary:
 - the portable backend is real
 - the replacement frontend shell is real
 - frontend migration Phase 1 is complete as of 2026-04-04
-- the next major frontend task is Phase 2 prompt-command execution
+- frontend migration Phase 2 prompt-command execution is complete as of 2026-04-04
+- frontend migration Phase 3 launch-state integration is complete as of 2026-04-04
+- frontend migration Phase 4A setup-page model migration is complete as of 2026-04-04
+- frontend migration Phase 4B instance-page model migration is complete as of 2026-04-04
+- frontend migration Phase 5 frontend-adapter cleanup and spike separation is complete as of 2026-04-04
+- the next major frontend task is Phase 4C download-page model migration
 
 The repo is therefore in this state:
 
@@ -220,41 +225,72 @@ What this means in practice:
 - encrypted startup count is now read through a backend-facing runtime service instead of being hard-coded
 - replay inputs via `InputRoot` still work for inspection scenarios
 
+### Phase 3 is done
+
+The original Phase 3 target was:
+
+- replace launch-page sample labels, Java summaries, login summaries, and prompt lanes with real launch planning results
+- source launch readiness from runtime profile/config/instance state
+- keep the copied launch page layouts intact while swapping the state source underneath them
+
+That work is now implemented for the `app` path when the frontend is not running from replay inputs.
+
+Important files:
+
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
+- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
+- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchButton.axaml`
+- `PCL.Frontend.Spike/Desktop/Controls/PclButton.axaml`
+
+What this means in practice:
+
+- the launch page now reads selected instance, launcher folder, selected profile, Java state, and launch count from real runtime files
+- launch precheck prompts are now built from runtime-backed launch requests instead of the old launch fixture path
+- launch summary data now includes real resolution, classpath, replacement-value, and prerun planning state
+- copied launch-pane labels now reflect runtime-composed state instead of placeholder snapshot strings
+- the copied left launch controls are interactive again after the custom-control hit-testing fix
+
+Important caveat:
+
+- `app --input-root ...` still intentionally uses replay-backed launch inputs for inspection scenarios
+
 ### The biggest current truth
 
-The frontend shell bootstrap is no longer mostly fixture-driven.
+The frontend shell bootstrap and launch route are no longer mostly fixture-driven.
 
 The remaining spike-heavy areas are now:
 
-- prompt command execution
-- launch-page runtime state
-- crash/launch/sample plan injection used by non-shell surfaces
-- route-local page fixtures
+- crash/launch replay plan injection used by inspection flows
+- route-local page fixtures outside the completed launch/setup/instance families
+- spike-only tooling that still sits beside reusable frontend adapters
 
 ## What Still Isn’t Done
 
-### 1. Prompt command execution
-
-Prompt rendering is portable and Phase 1 shell composition is real.
-
-Prompt action handling is still mostly spike behavior:
-
-- command clicks often only write to the activity feed
-- they do not yet consistently trigger real persistence, launch continuation, abort, export, or route logic
-
-This is now the active Phase 2 frontend task.
-
-### 2. Page-specific production data
+### 1. Page-specific production data
 
 Many copied pages still use hard-coded view-model state even when their visuals are already good.
 
 The main remaining data gaps are:
 
-- setup page data binding to real config/runtime state
-- instance page binding to real profile and file state
 - download route binding to real search/catalog/install planning state
 - `VersionSaves` subpages
 - richer tool widgets
+
+### 2. Launch cutover beyond composition
+
+Phase 3 made the launch route runtime-backed inside the replacement frontend boundary.
+
+The remaining launch-side work is now outside that composition step:
+
+- full launcher cutover beyond frontend-side composition and prompt handling
+- replacing replay/sample launch execution paths where the spike still uses them intentionally
+- continuing to separate reusable launch adapters from inspection-only helpers
 
 ### 3. Secret/auth portability boundary
 
@@ -292,29 +328,104 @@ Start from:
 
 Do not replace this with new fixtures.
 
-### Step 2: wire prompt commands to real backend and shell actions
+### Step 2: Phase 2 is complete, preserve the new prompt lifecycle and command adapters
 
-Use the existing `LauncherFrontendPromptCommandKind` contract and turn it into:
+The prompt system now does the Phase 2 job:
 
-- route changes
-- persisted consent/settings changes
-- launch continue/abort decisions
-- crash export/log actions
-- Java download decisions
+- startup prompts persist consent and telemetry decisions
+- launch prompts are created only from a launch attempt
+- crash prompts are created only from an explicit crash event trigger
+- crash export/log actions and Java materialization actions execute through frontend adapters
 
-### Step 3: feed the launch page from real launch workflow services
+Important files:
 
-The launch route should become the first page where the shell is backed by real runtime planning, not fixture summaries.
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendRuntimePaths.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
 
-That means wiring:
+Important caveat:
 
-- login state
-- precheck prompts
-- Java requirement state
-- Java download prompts
-- launch readiness summaries
+- Phase 2 does not make launch or crash workflows fully live; it makes prompt-command execution real inside the replacement shell boundary
 
+### Step 3: Phase 3 is complete, preserve the runtime launch composition path
+
+The launch route now reads runtime-backed launch state through the dedicated composition layer.
+
+Start from:
+
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+
+Do not regress this by reintroducing launch-route fixtures for the normal `app` path.
+
+Important caveat:
+
+- replay mode through `InputRoot` is still intentionally sample-backed
 ### Step 4: replace route-local fixture values page family by page family
+
+Current state:
+
+1. setup pages are complete as Phase 4A
+2. instance pages are complete as Phase 4B
+3. download pages and version-saves pages remain unfinished Phase 4 slices
+4. adapter cleanup and spike separation is complete as Phase 5
+
+Phase 4A delivered:
+
+- real setup-page composition through:
+  - `PCL.Frontend.Spike/Models/FrontendSetupComposition.cs`
+  - `PCL.Frontend.Spike/Workflows/FrontendSetupCompositionService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SetupComposition.cs`
+- real setup-page persistence and shell-side actions through:
+  - `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
+- runtime-backed setup/update status through:
+  - `PCL.Frontend.Spike/Models/FrontendSetupUpdateStatus.cs`
+  - `PCL.Frontend.Spike/Workflows/FrontendSetupUpdateStatusService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+
+What this means in practice:
+
+- copied setup surfaces now read and persist real shared, local, and protected launcher configuration
+- copied setup commands for logs, config export/import, proxy apply, background/music asset folders, title-bar image, homepage tutorial file, and update detail/download targets now perform real shell/file actions
+- copied `设置/更新` cards now resolve current-version metadata and live latest-version status from the existing update-source family instead of fixture toggles
+
+Important caveat for the next engineer:
+
+- the hidden optional AquaCL card remains dormant copied UI and is not part of the completed 4A setup slice
+- the WPF-style in-place self-update patch-and-restart installer flow has not been ported into the Avalonia shell; 4A stops at real status, changelog, and download-target composition
+
+Phase 4B delivered:
+
+- real instance-page composition through:
+  - `PCL.Frontend.Spike/Models/FrontendInstanceComposition.cs`
+  - `PCL.Frontend.Spike/Workflows/FrontendInstanceCompositionService.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceComposition.cs`
+- runtime-backed instance page state and persistence through:
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceSetup.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceExport.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceInstall.cs`
+  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceContent.cs`
+  - `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
+- instance persistence and config migration through:
+  - `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+
+What this means in practice:
+
+- copied `实例/概览`, `实例/设置`, `实例/导出`, `实例/安装`, `实例/世界`, `实例/截图`, `实例/服务器`, `实例/Mod`, `实例/已禁用 Mod`, `实例/资源包`, `实例/光影包`, and `实例/投影原理图` now compose their state from real launcher files and instance config
+- the instance setup page now persists per-instance values to `versions/<instance>/PCL/config.v1.yml` instead of reusing global launch settings
+- the overview favorite/category/icon selectors now persist instance metadata and the content pages now enumerate real saves, screenshots, servers, and resource folders
+- legacy `versions/<instance>/PCL/Setup.ini` is migrated forward when instance config is missing
+- LabyMod-specific resource folders are respected when opening resource directories
+
+Important caveat for the next engineer:
+
+- 4B is complete as a page-model migration milestone, not as a full production action cutover
+- several instance-page buttons still intentionally route to placeholder activity/intention handlers, such as rename, description edit, script export, dry-run/test launch, delete/reset flows, export config import/save, add-server, file-picker installs, and profile creation
+- treat those remaining gaps as adapter/action follow-up work, not as a reason to reintroduce fixture page state
 
 Recommended order:
 
@@ -323,6 +434,29 @@ Recommended order:
 3. download pages
 4. version-saves pages
 5. denser tool widgets
+
+Phase 5 delivered:
+
+- inspection-only sample, replay, and execution helpers now live under:
+  - `PCL.Frontend.Spike/Workflows/Inspection/*`
+- runtime-facing frontend composition now reaches inspection behavior through dedicated inspection composition services:
+  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionShellCompositionService.cs`
+  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionLaunchCompositionService.cs`
+  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionCrashCompositionService.cs`
+- reusable frontend composition and view-model construction no longer call raw spike factories or input resolvers directly on the normal app path
+
+What this means in practice:
+
+- replay and host-environment inspection flows remain available, but are explicitly scoped to the inspection workflow area
+- runtime shell, launch, and crash composition now depend on a narrower frontend-side adapter boundary instead of sample/replay helper internals
+- setup and instance page-model migration work can continue without re-entangling inspection tooling with the main frontend architecture
+
+Recommended next order from this checkpoint:
+
+1. download pages
+2. version-saves pages
+3. denser tool widgets
+4. remaining adapter/action follow-up on placeholder instance/tool/download buttons
 
 ### Step 5: preserve the copied UI work
 
@@ -365,6 +499,22 @@ These are the most relevant recent frontend checkpoints:
 - `36784278` `feat: copy instance content spike surfaces`
 - `8c58b28b` `feat: copy instance resource spike surfaces`
 - `f2754dc2` `docs: refresh frontend migration status`
+- `805b0a62` `refactor: add frontend shell action adapters`
+- `6624be02` `feat: execute frontend prompt commands`
+- `c2c139ed` `fix: auto-open startup prompt inbox`
+- `5caaa14e` `fix: scope prompt lanes to runtime events`
+- `568df5d1` `Compose runtime launch state for frontend phase 3`
+- `5ab8497e` `Bind copied launch pane text to runtime state`
+- `b009b0f7` `Fix copied launch controls hit testing`
+- `5f2daad3` `feat: compose runtime-backed setup surfaces`
+- `cdb115de` `feat: wire setup validation commands`
+- `3dc19bcf` `feat: wire setup file management actions`
+- `f4387d21` `feat: compose real setup update status`
+- `127dac06` `feat: add runtime instance composition layer`
+- `e6753070` `feat: wire runtime-backed instance shell surfaces`
+- `b079434d` `fix: honor labymod instance resource folders`
+- `fb4c56c5` `refactor: isolate inspection-only spike workflows`
+- `40467f7d` `refactor: add frontend inspection composition boundary`
 
 ## Files To Read First
 
@@ -381,8 +531,10 @@ If you are picking this up cold, read these first:
 
 - `PCL.Frontend.Spike/Desktop/App.axaml.cs`
 - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeInputResolver.cs`
-- `PCL.Frontend.Spike/Workflows/SpikeSampleFactory.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendInstanceCompositionService.cs`
+- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
 
 ### Real UI reference
 
@@ -410,7 +562,7 @@ The repo is already past the “portability spike” stage.
 The next milestone is:
 
 - real backend-driven frontend state
-- real prompt action execution
 - real page models behind the copied Avalonia UI
+- continued removal of route-local fixtures outside the already-migrated launch route and completed setup family
 
 That is the correct continuation point for both the frontend migration plan and the broader portability effort.

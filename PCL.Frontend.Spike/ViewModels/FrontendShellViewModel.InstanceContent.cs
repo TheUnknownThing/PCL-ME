@@ -1,6 +1,9 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
+using PCL.Frontend.Spike.Models;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -14,19 +17,37 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceWorldSearchQuery
     {
         get => _instanceWorldSearchQuery;
-        set => SetProperty(ref _instanceWorldSearchQuery, value);
+        set
+        {
+            if (SetProperty(ref _instanceWorldSearchQuery, value))
+            {
+                RefreshInstanceWorldEntries();
+            }
+        }
     }
 
     public string InstanceServerSearchQuery
     {
         get => _instanceServerSearchQuery;
-        set => SetProperty(ref _instanceServerSearchQuery, value);
+        set
+        {
+            if (SetProperty(ref _instanceServerSearchQuery, value))
+            {
+                RefreshInstanceServerEntries();
+            }
+        }
     }
 
     public string InstanceResourceSearchQuery
     {
         get => _instanceResourceSearchQuery;
-        set => SetProperty(ref _instanceResourceSearchQuery, value);
+        set
+        {
+            if (SetProperty(ref _instanceResourceSearchQuery, value))
+            {
+                RefreshInstanceResourceEntries();
+            }
+        }
     }
 
     public string InstanceResourceSurfaceTitle
@@ -95,22 +116,31 @@ internal sealed partial class FrontendShellViewModel
         or LauncherFrontendSubpageKey.VersionModDisabled;
 
     public ActionCommand OpenInstanceWorldFolderCommand => new(() =>
-        AddActivity("打开存档文件夹", "/Users/demo/.pcl/instances/Modern Fabric Demo/saves"));
+        OpenInstanceTarget(
+            "打开存档文件夹",
+            _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
+            "当前实例没有存档目录。"));
 
     public ActionCommand PasteInstanceWorldClipboardCommand => new(() =>
         AddActivity("粘贴剪贴板文件", "Would import save files from the clipboard into the current instance."));
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
-        AddActivity("打开截图文件夹", "/Users/demo/.pcl/instances/Modern Fabric Demo/screenshots"));
+        OpenInstanceTarget(
+            "打开截图文件夹",
+            _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "screenshots") : string.Empty,
+            "当前实例没有截图目录。"));
 
     public ActionCommand RefreshInstanceServerCommand => new(() =>
-        AddActivity("刷新服务器信息", "Would reload the instance server list from servers.dat."));
+    {
+        ReloadInstanceComposition();
+        AddActivity("刷新服务器信息", "已重新扫描当前实例中的服务器列表。");
+    });
 
     public ActionCommand AddInstanceServerCommand => new(() =>
         AddActivity("添加新服务器", "Would open the add-server dialog for the current instance."));
 
     public ActionCommand OpenInstanceResourceFolderCommand => new(() =>
-        AddActivity("打开资源文件夹", $"/Users/demo/.pcl/instances/Modern Fabric Demo/{GetInstanceResourceFolderName()}"));
+        OpenInstanceTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
 
     public ActionCommand InstallInstanceResourceFromFileCommand => new(() =>
         AddActivity("从文件安装资源", $"{InstanceResourceSurfaceTitle} • Would open a local file picker."));
@@ -132,29 +162,11 @@ internal sealed partial class FrontendShellViewModel
         _instanceWorldSearchQuery = string.Empty;
         _instanceServerSearchQuery = string.Empty;
         _instanceResourceSearchQuery = string.Empty;
-        _instanceResourceSurfaceTitle = "Mod";
+        _instanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
 
-        ReplaceItems(InstanceWorldEntries,
-        [
-            new SimpleListEntryViewModel("Demo Survival World", "主世界存档 • 最近打开于 2026-04-04 11:32", new ActionCommand(() => AddActivity("查看存档", "Demo Survival World"))),
-            new SimpleListEntryViewModel("Creative Test Flat", "创造测试地图 • 含建筑样板与命令方块", new ActionCommand(() => AddActivity("查看存档", "Creative Test Flat"))),
-            new SimpleListEntryViewModel("Redstone Benchmark", "红石性能测试存档 • 仅本地保留", new ActionCommand(() => AddActivity("查看存档", "Redstone Benchmark")))
-        ]);
-
-        ReplaceItems(InstanceScreenshotEntries,
-        [
-            CreateInstanceScreenshotEntry("2026-04-04_11.42.18.png", "主界面广场截图 • 1920×1080", LoadLauncherBitmap("Images", "Backgrounds", "server_bg.png")),
-            CreateInstanceScreenshotEntry("2026-04-02_21.15.04.png", "仓库区夜景截图 • 1920×1080", LoadLauncherBitmap("Images", "Backgrounds", "server_bg.png")),
-            CreateInstanceScreenshotEntry("2026-03-29_18.07.33.png", "工业区俯视截图 • 1920×1080", LoadLauncherBitmap("Images", "Backgrounds", "server_bg.png"))
-        ]);
-
-        ReplaceItems(InstanceServerEntries,
-        [
-            new InstanceServerEntryViewModel("PCL CE Demo", "play.pclce.example:25565", "在线 • 23ms", new ActionCommand(() => AddActivity("查看服务器", "PCL CE Demo"))),
-            new InstanceServerEntryViewModel("Fabric Snapshot Test", "snapshot.fabric.example:25570", "维护中 • 上次在线 2 小时前", new ActionCommand(() => AddActivity("查看服务器", "Fabric Snapshot Test"))),
-            new InstanceServerEntryViewModel("LittleSkin Auth Arena", "arena.littleskin.example:25575", "需第三方验证", new ActionCommand(() => AddActivity("查看服务器", "LittleSkin Auth Arena")))
-        ]);
-
+        RefreshInstanceWorldEntries();
+        RefreshInstanceScreenshotEntries();
+        RefreshInstanceServerEntries();
         RefreshInstanceResourceEntries();
     }
 
@@ -198,23 +210,87 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private InstanceScreenshotEntryViewModel CreateInstanceScreenshotEntry(string title, string info, Bitmap? image)
+    private InstanceScreenshotEntryViewModel CreateInstanceScreenshotEntry(string title, string info, string path, Bitmap? image)
     {
         return new InstanceScreenshotEntryViewModel(
             image,
             title,
             info,
-            new ActionCommand(() => AddActivity("打开截图", title)));
+            new ActionCommand(() => OpenInstanceTarget("打开截图", path, "当前截图文件不存在。")));
     }
 
     private void RefreshInstanceResourceEntries()
     {
-        if (!IsInstanceResourceSurface)
-        {
-            return;
-        }
+        InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
+        ReplaceItems(
+            InstanceResourceEntries,
+            GetCurrentInstanceResourceState().Entries
+                .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, InstanceResourceSearchQuery))
+                .Select(entry => CreateInstanceResourceEntry(entry.Title, entry.Summary, entry.Meta, entry.IconName, entry.Path)));
+    }
 
-        InstanceResourceSurfaceTitle = _currentRoute.Subpage switch
+    private InstanceResourceEntryViewModel CreateInstanceResourceEntry(string title, string info, string meta, string iconName, string path)
+    {
+        return new InstanceResourceEntryViewModel(
+            LoadLauncherBitmap("Images", "Blocks", iconName),
+            title,
+            info,
+            meta,
+            new ActionCommand(() => OpenInstanceTarget("查看资源", path, $"{InstanceResourceSurfaceTitle} 项目不存在。")));
+    }
+
+    private void RefreshInstanceWorldEntries()
+    {
+        ReplaceItems(
+            InstanceWorldEntries,
+            _instanceComposition.World.Entries
+                .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Path, InstanceWorldSearchQuery))
+                .Select(entry => new SimpleListEntryViewModel(
+                    entry.Title,
+                    entry.Summary,
+                    new ActionCommand(() => OpenInstanceTarget("查看存档", entry.Path, "当前存档目录不存在。")))));
+    }
+
+    private void RefreshInstanceScreenshotEntries()
+    {
+        ReplaceItems(
+            InstanceScreenshotEntries,
+            _instanceComposition.Screenshot.Entries.Select(entry => CreateInstanceScreenshotEntry(
+                entry.Title,
+                entry.Summary,
+                entry.Path,
+                LoadInstanceBitmap(entry.Path, "Images", "Backgrounds", "server_bg.png"))));
+    }
+
+    private void RefreshInstanceServerEntries()
+    {
+        ReplaceItems(
+            InstanceServerEntries,
+            _instanceComposition.Server.Entries
+                .Where(entry => MatchesSearch(entry.Title, entry.Address, entry.Status, InstanceServerSearchQuery))
+                .Select(entry => new InstanceServerEntryViewModel(
+                    entry.Title,
+                    entry.Address,
+                    entry.Status,
+                    new ActionCommand(() => AddActivity("查看服务器", $"{entry.Title} • {entry.Address}")))));
+    }
+
+    private FrontendInstanceResourceState GetCurrentInstanceResourceState()
+    {
+        return _currentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.VersionMod => _instanceComposition.Mods,
+            LauncherFrontendSubpageKey.VersionModDisabled => _instanceComposition.DisabledMods,
+            LauncherFrontendSubpageKey.VersionResourcePack => _instanceComposition.ResourcePacks,
+            LauncherFrontendSubpageKey.VersionShader => _instanceComposition.Shaders,
+            LauncherFrontendSubpageKey.VersionSchematic => _instanceComposition.Schematics,
+            _ => _instanceComposition.Mods
+        };
+    }
+
+    private string ResolveInstanceResourceSurfaceTitle()
+    {
+        return _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.VersionMod => "Mod",
             LauncherFrontendSubpageKey.VersionModDisabled => "已禁用 Mod",
@@ -223,55 +299,37 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.VersionSchematic => "投影原理图",
             _ => "资源"
         };
-
-        _instanceResourceSearchQuery = string.Empty;
-
-        ReplaceItems(InstanceResourceEntries, _currentRoute.Subpage switch
-        {
-            LauncherFrontendSubpageKey.VersionMod =>
-            [
-                CreateInstanceResourceEntry("Sodium", "现代性能优化模组，主打渲染加速与更稳定的帧率。", "已启用 • Fabric • 1.21.1", "Fabric.png"),
-                CreateInstanceResourceEntry("Create", "大型机械与物流科技模组，保留原版风味的自动化体验。", "已启用 • Forge 兼容桥接", "Anvil.png"),
-                CreateInstanceResourceEntry("JourneyMap", "地图与路标模组，提供地表和洞穴实时浏览。", "可更新 • 发现新版本", "Grass.png")
-            ],
-            LauncherFrontendSubpageKey.VersionModDisabled =>
-            [
-                CreateInstanceResourceEntry("OptiFine", "当前被停用的图形增强模组。", "已禁用 • 与当前模组集兼容性较差", "GrassPath.png"),
-                CreateInstanceResourceEntry("Not Enough Crashes", "错误捕获模组，当前手动禁用。", "已禁用 • 可随时恢复", "RedstoneBlock.png")
-            ],
-            LauncherFrontendSubpageKey.VersionResourcePack =>
-            [
-                CreateInstanceResourceEntry("Faithful 32x", "经典高清材质包，保留原版风格。", "已启用 • 本地资源包", "Grass.png"),
-                CreateInstanceResourceEntry("Fresh Animations", "实体动作增强资源包，需要实体模型支持。", "未启用 • 可切换", "Egg.png")
-            ],
-            LauncherFrontendSubpageKey.VersionShader =>
-            [
-                CreateInstanceResourceEntry("Complementary Reimagined", "当前实例使用中的主光影方案。", "已启用 • 兼容 Iris", "Quilt.png"),
-                CreateInstanceResourceEntry("BSL Shaders", "额外收藏的备用光影。", "未启用 • 可切换", "RedstoneLampOn.png")
-            ],
-            LauncherFrontendSubpageKey.VersionSchematic => [],
-            _ => []
-        });
     }
 
-    private InstanceResourceEntryViewModel CreateInstanceResourceEntry(string title, string info, string meta, string iconName)
+    private string GetCurrentInstanceResourceDirectory()
     {
-        return new InstanceResourceEntryViewModel(
-            LoadLauncherBitmap("Images", "Blocks", iconName),
-            title,
-            info,
-            meta,
-            new ActionCommand(() => AddActivity("查看资源", $"{InstanceResourceSurfaceTitle} • {title}")));
-    }
-
-    private string GetInstanceResourceFolderName()
-    {
-        return _currentRoute.Subpage switch
+        var folderName = _currentRoute.Subpage switch
         {
             LauncherFrontendSubpageKey.VersionResourcePack => "resourcepacks",
             LauncherFrontendSubpageKey.VersionShader => "shaderpacks",
             LauncherFrontendSubpageKey.VersionSchematic => "schematics",
             _ => "mods"
         };
+
+        return ResolveCurrentInstanceResourceDirectory(folderName);
+    }
+
+    private static bool MatchesSearch(params string[] values)
+    {
+        if (values.Length == 0)
+        {
+            return true;
+        }
+
+        var query = values[^1];
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return true;
+        }
+
+        return values
+            .Take(values.Length - 1)
+            .Any(value => !string.IsNullOrWhiteSpace(value)
+                && value.Contains(query, StringComparison.OrdinalIgnoreCase));
     }
 }
