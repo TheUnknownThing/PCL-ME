@@ -28,6 +28,10 @@ jobs:
             rid: linux-x64
             artifact_name: PCL-ME_Release_linux-x64
           - configuration: Release
+            runner: ubuntu-24.04-arm
+            rid: linux-arm64
+            artifact_name: PCL-ME_Release_linux-arm64
+          - configuration: Release
             runner: ubuntu-latest
             rid: win-x64
             artifact_name: PCL-ME_Release_win-x64
