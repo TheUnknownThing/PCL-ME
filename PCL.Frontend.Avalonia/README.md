@@ -61,6 +61,6 @@ AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project PCL.
 
 ## 许可证
 
-本目录下的 UI 内容遵循仓库根目录中的 [../LICENCE](../LICENCE) 自定义许可证。
+本目录下的 UI 内容遵循本目录中的 [LICENSE](LICENSE) 自定义许可证。
 
 仓库中位于此前端 UI 层之外的启动器相关逻辑遵循 [../LICENSE](../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。

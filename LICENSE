@@ -4,7 +4,7 @@ This repository uses a split license model.
 
 Scope summary:
 
-1. UI contents under `PCL.Frontend.Avalonia/` follow the custom license in `LICENCE` and are not granted under the Apache terms below unless a file states otherwise.
+1. UI contents under `PCL.Frontend.Avalonia/` follow the custom license in `PCL.Frontend.Avalonia/LICENSE` and are not granted under the Apache terms below unless a file states otherwise.
 2. All other launcher-related logic in this repository follows the Apache License 2.0 below unless a file or subdirectory states otherwise.
 
 The Apache License 2.0 text follows.

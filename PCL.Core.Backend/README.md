@@ -29,4 +29,4 @@ dotnet test PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.cs
 
 这个后端项目遵循 [../LICENSE](../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
 
-`PCL.Frontend.Avalonia/` 下的前端 UI 层则单独遵循 [../LICENCE](../LICENCE)。
+`PCL.Frontend.Avalonia/` 下的前端 UI 层则单独遵循 [../PCL.Frontend.Avalonia/LICENSE](../PCL.Frontend.Avalonia/LICENSE)。

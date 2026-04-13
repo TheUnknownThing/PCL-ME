@@ -45,7 +45,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 
 PCL-ME uses a split license model:
 
-- UI contents under `PCL.Frontend.Avalonia/` follow the custom license in [LICENCE](LICENCE).
+- UI contents under `PCL.Frontend.Avalonia/` follow the custom license in [PCL.Frontend.Avalonia/LICENSE](PCL.Frontend.Avalonia/LICENSE).
 - All other launcher-related logic in this repository follows [Apache License 2.0](LICENSE), unless a file states otherwise.
 
 If you are unsure which terms apply to a file, start with the folder it lives in and then check the nearest license notice in that subtree.

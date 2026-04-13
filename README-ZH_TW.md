@@ -45,7 +45,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 
 PCL-ME 採用分層授權模型：
 
-- `PCL.Frontend.Avalonia/` 下的 UI 內容遵循倉庫根目錄中的 [LICENCE](LICENCE) 自訂授權。
+- `PCL.Frontend.Avalonia/` 下的 UI 內容遵循 [PCL.Frontend.Avalonia/LICENSE](PCL.Frontend.Avalonia/LICENSE) 自訂授權。
 - 本倉庫中其餘啟動器相關邏輯遵循 [Apache License 2.0](LICENSE)，除非某個檔案或子目錄另有說明。
 
 如果你不確定某個檔案適用哪套條款，請先看它所在目錄，再檢查該目錄附近的授權說明。
