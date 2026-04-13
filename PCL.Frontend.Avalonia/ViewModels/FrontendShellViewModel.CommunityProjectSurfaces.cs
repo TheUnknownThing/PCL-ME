@@ -380,7 +380,7 @@ internal sealed partial class FrontendShellViewModel
             _communityProjectState = new FrontendCommunityProjectState(
                 string.Empty,
                 "未选择工程",
-                "先从收藏夹或市场条目进入，才能查看对应工程详情。",
+                "先从收藏夹或资源条目进入，才能查看对应工程详情。",
                 string.Empty,
                 "未指定来源",
                 null,
@@ -1158,6 +1158,7 @@ internal sealed partial class FrontendShellViewModel
             taskTitle,
             new FrontendModpackInstallRequest(
                 entry.Target!,
+                null,
                 archivePath,
                 launcherDirectory,
                 instanceName,
@@ -1239,9 +1240,9 @@ internal sealed partial class FrontendShellViewModel
         RefreshSelectedInstanceSmoothly(selectedId);
     }
 
-    private async Task<string?> PromptForCommunityProjectInstanceNameAsync(string versionsDirectory)
+    private async Task<string?> PromptForCommunityProjectInstanceNameAsync(string versionsDirectory, string? suggestion = null)
     {
-        var suggestion = BuildCommunityProjectInstanceNameSuggestion();
+        suggestion ??= BuildCommunityProjectInstanceNameSuggestion();
         while (true)
         {
             var input = await _shellActionService.PromptForTextAsync(
@@ -1385,7 +1386,7 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<InstanceSelectionSnapshot> LoadAvailableDownloadTargetInstances()
     {
         var runtimePaths = _shellActionService.RuntimePaths;
-        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
         var launcherDirectory = ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
@@ -1857,7 +1858,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
+            var provider = _shellActionService.RuntimePaths.OpenSharedConfigProvider();
             var raw = provider.Exists("CompFavorites")
                 ? SafeReadSharedValue(provider, "CompFavorites", "[]")
                 : "[]";

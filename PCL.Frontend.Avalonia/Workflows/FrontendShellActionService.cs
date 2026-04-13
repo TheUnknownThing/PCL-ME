@@ -44,7 +44,7 @@ internal sealed class FrontendShellActionService(
         var debugAnimationSpeed = 9d;
         if (File.Exists(runtimePaths.SharedConfigPath))
         {
-            var provider = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var provider = runtimePaths.OpenSharedConfigProvider();
             if (provider.Exists("UiAniFPS"))
             {
                 animationFpsLimit = provider.Get<int>("UiAniFPS");
@@ -77,7 +77,7 @@ internal sealed class FrontendShellActionService(
     public void PersistLocalValue<T>(string key, T value)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(RuntimePaths.LocalConfigPath)!);
-        var provider = new YamlFileProvider(RuntimePaths.LocalConfigPath);
+        var provider = RuntimePaths.OpenLocalConfigProvider();
         provider.Set(key, value);
         provider.Sync();
     }
@@ -85,7 +85,7 @@ internal sealed class FrontendShellActionService(
     public void PersistSharedValue<T>(string key, T value)
     {
         Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
-        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        var provider = RuntimePaths.OpenSharedConfigProvider();
         provider.Set(key, value);
         provider.Sync();
     }
@@ -93,7 +93,7 @@ internal sealed class FrontendShellActionService(
     public void PersistProtectedSharedValue(string key, string value)
     {
         Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
-        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        var provider = RuntimePaths.OpenSharedConfigProvider();
         provider.Set(key, ProtectSharedValue(value));
         provider.Sync();
     }
@@ -101,7 +101,7 @@ internal sealed class FrontendShellActionService(
     public void RemoveLocalValues(IEnumerable<string> keys)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(RuntimePaths.LocalConfigPath)!);
-        var provider = new YamlFileProvider(RuntimePaths.LocalConfigPath);
+        var provider = RuntimePaths.OpenLocalConfigProvider();
         foreach (var key in keys)
         {
             provider.Remove(key);
@@ -113,7 +113,7 @@ internal sealed class FrontendShellActionService(
     public void RemoveSharedValues(IEnumerable<string> keys)
     {
         Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
-        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        var provider = RuntimePaths.OpenSharedConfigProvider();
         foreach (var key in keys)
         {
             provider.Remove(key);
@@ -126,7 +126,7 @@ internal sealed class FrontendShellActionService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
 
-        var provider = OpenInstanceConfigProvider(instanceDirectory);
+        var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
         provider.Set(key, value);
         provider.Sync();
     }
@@ -135,7 +135,7 @@ internal sealed class FrontendShellActionService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
 
-        var provider = OpenInstanceConfigProvider(instanceDirectory);
+        var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
         foreach (var key in keys)
         {
             provider.Remove(key);
@@ -766,7 +766,7 @@ internal sealed class FrontendShellActionService(
 
         if (!string.IsNullOrWhiteSpace(instanceDirectory))
         {
-            var provider = OpenInstanceConfigProvider(instanceDirectory);
+            var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
             var currentInstanceLaunchCount = provider.Exists("VersionLaunchCount")
                 ? provider.Get<int>("VersionLaunchCount")
                 : 0;
@@ -777,7 +777,7 @@ internal sealed class FrontendShellActionService(
 
     private T ReadLocalValue<T>(string key, T fallback)
     {
-        var provider = new YamlFileProvider(RuntimePaths.LocalConfigPath);
+        var provider = RuntimePaths.OpenLocalConfigProvider();
         return provider.Exists(key)
             ? provider.Get<T>(key)
             : fallback;
@@ -785,7 +785,7 @@ internal sealed class FrontendShellActionService(
 
     private T ReadSharedValue<T>(string key, T fallback)
     {
-        var provider = new JsonFileProvider(RuntimePaths.SharedConfigPath);
+        var provider = RuntimePaths.OpenSharedConfigProvider();
         return provider.Exists(key)
             ? provider.Get<T>(key)
             : fallback;
@@ -814,40 +814,6 @@ internal sealed class FrontendShellActionService(
         }
 
         return desktop.MainWindow;
-    }
-
-    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
-    {
-        var pclDirectory = Path.Combine(instanceDirectory, "PCL");
-        var configPath = Path.Combine(pclDirectory, "config.v1.yml");
-        if (!File.Exists(configPath))
-        {
-            var legacyPath = Path.Combine(pclDirectory, "Setup.ini");
-            if (File.Exists(legacyPath))
-            {
-                Directory.CreateDirectory(pclDirectory);
-                var provider = new YamlFileProvider(configPath);
-                foreach (var line in File.ReadLines(legacyPath))
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        continue;
-                    }
-
-                    var splitIndex = line.IndexOf(':');
-                    if (splitIndex <= 0)
-                    {
-                        continue;
-                    }
-
-                    provider.Set(line[..splitIndex], line[(splitIndex + 1)..]);
-                }
-
-                provider.Sync();
-            }
-        }
-
-        return new YamlFileProvider(configPath);
     }
 
     private static string GetUniqueDirectoryPath(string directoryPath)

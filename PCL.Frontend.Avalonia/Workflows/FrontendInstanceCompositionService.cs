@@ -23,15 +23,15 @@ internal static class FrontendInstanceCompositionService
 
     public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths)
     {
-        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
         return Compose(runtimePaths, selectedInstanceName);
     }
 
     public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths, string? selectedInstanceName)
     {
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
-        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
         var launcherDirectory = FrontendLauncherPathService.ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
@@ -48,7 +48,7 @@ internal static class FrontendInstanceCompositionService
             return CreateEmptyComposition(launcherDirectory, resolvedInstanceName);
         }
 
-        var instanceConfig = OpenInstanceConfigProvider(instanceDirectory);
+        var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
         var manifestSummary = ReadManifestSummary(launcherDirectory, resolvedInstanceName);
         var isIndie = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary);
         var indieDirectory = isIndie ? instanceDirectory : launcherDirectory;
@@ -1719,40 +1719,6 @@ internal static class FrontendInstanceCompositionService
         }
 
         return Path.Combine(selection.IndieDirectory, "labymod-neo", "fabric", selection.VanillaVersion, folderName);
-    }
-
-    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
-    {
-        var pclDirectory = Path.Combine(instanceDirectory, "PCL");
-        var configPath = Path.Combine(pclDirectory, "config.v1.yml");
-        if (!File.Exists(configPath))
-        {
-            var legacyPath = Path.Combine(pclDirectory, "Setup.ini");
-            if (File.Exists(legacyPath))
-            {
-                Directory.CreateDirectory(pclDirectory);
-                var provider = new YamlFileProvider(configPath);
-                foreach (var line in File.ReadLines(legacyPath))
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        continue;
-                    }
-
-                    var splitIndex = line.IndexOf(':');
-                    if (splitIndex <= 0)
-                    {
-                        continue;
-                    }
-
-                    provider.Set(line[..splitIndex], line[(splitIndex + 1)..]);
-                }
-
-                provider.Sync();
-            }
-        }
-
-        return new YamlFileProvider(configPath);
     }
 
     private static FrontendVersionManifestSummary ReadManifestSummary(string launcherFolder, string selectedInstanceName)

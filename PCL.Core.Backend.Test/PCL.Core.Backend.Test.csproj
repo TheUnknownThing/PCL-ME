@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
-    <ProjectReference Include="..\PCL.Core.Foundation\PCL.Core.Foundation.csproj" />
     <ProjectReference Include="..\PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" />
   </ItemGroup>
 </Project>

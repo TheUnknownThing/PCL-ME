@@ -75,16 +75,12 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool HasDedicatedGenericRouteSurface =>
-        ShowInstanceSelectSurface
-        || ShowTaskManagerSurface
-        || ShowGameLogSurface
+    public bool HasSharedRouteSurface =>
+        ShowGameLogSurface
         || ShowCompDetailSurface
         || ShowHelpDetailSurface;
 
-    public bool ShowGenericCompatibilitySurface => !HasDedicatedGenericRouteSurface;
-
-    public bool ShowInstanceSelectSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.InstanceSelect;
+    public bool ShowSharedRouteFallbackSurface => !HasSharedRouteSurface;
 
     public bool HasInstanceSelectionEntries => InstanceSelectionEntries.Count > 0;
 
@@ -267,8 +263,8 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshInstanceSelectionSurface()
     {
         var runtimePaths = _shellActionService.RuntimePaths;
-        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var launcherDirectory = ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
@@ -493,8 +489,8 @@ internal sealed partial class FrontendShellViewModel
 
             var runtimePaths = _shellActionService.RuntimePaths;
             var resolvedFolderPath = ResolvePickedLauncherFolderPath(pickedFolderPath);
-            var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
-            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var localConfig = runtimePaths.OpenLocalConfigProvider();
+            var sharedConfig = runtimePaths.OpenSharedConfigProvider();
             var currentFolderPath = ResolveLauncherFolder(
                 ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
                 runtimePaths);
@@ -536,23 +532,92 @@ internal sealed partial class FrontendShellViewModel
                 "整合包文件",
                 "*.zip",
                 "*.mrpack",
-                "*.rar",
-                "*.7z");
+                "*.rar");
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
                 AddActivity("导入整合包", "未选择任何整合包文件。");
                 return;
             }
 
-            AddActivity("导入整合包", $"已选择 {Path.GetFileName(sourcePath)}，后续可在下载页面继续安装流程。");
-            NavigateTo(
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-                $"已准备导入整合包 {Path.GetFileName(sourcePath)}。");
+            await StartInstanceSelectionPackInstallAsync(sourcePath);
         }
         catch (Exception ex)
         {
             AddFailureActivity("导入整合包失败", ex.Message);
         }
+    }
+
+    private async Task StartInstanceSelectionPackInstallAsync(string sourcePath)
+    {
+        var launcherDirectory = string.IsNullOrWhiteSpace(_instanceSelectionLauncherDirectory)
+            ? ResolveLauncherFolder(
+                ReadValue(_shellActionService.RuntimePaths.OpenLocalConfigProvider(), "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+                _shellActionService.RuntimePaths)
+            : _instanceSelectionLauncherDirectory;
+        var versionsDirectory = Path.Combine(launcherDirectory, "versions");
+        Directory.CreateDirectory(versionsDirectory);
+
+        string? instanceName;
+        try
+        {
+            var suggestion = SanitizeInstallDirectoryName(FrontendModpackInstallWorkflowService.SuggestInstanceName(sourcePath));
+            instanceName = await PromptForCommunityProjectInstanceNameAsync(versionsDirectory, suggestion);
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("输入实例名称失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(instanceName))
+        {
+            AddActivity("导入整合包", "没有输入实例名称。");
+            return;
+        }
+
+        var extension = Path.GetExtension(sourcePath);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            extension = ".zip";
+        }
+
+        var normalizedExtension = extension.ToLowerInvariant();
+        var targetDirectory = Path.Combine(versionsDirectory, instanceName);
+        var archivePath = Path.Combine(targetDirectory, $"原始整合包{normalizedExtension}");
+        var taskTitle = $"整合包安装：{instanceName}";
+
+        TaskCenter.Register(new FrontendManagedModpackInstallTask(
+            taskTitle,
+            new FrontendModpackInstallRequest(
+                SourceUrl: null,
+                SourceArchivePath: sourcePath,
+                ArchivePath: archivePath,
+                LauncherDirectory: launcherDirectory,
+                InstanceName: instanceName,
+                TargetDirectory: targetDirectory,
+                ProjectId: null,
+                ProjectSource: null,
+                IconPath: null,
+                ProjectDescription: null,
+                CommunitySourcePreference: SelectedCommunityDownloadSourceIndex),
+            ResolveDownloadRequestTimeout(),
+            onCompleted: result =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    HandleCommunityProjectModpackInstalled(result);
+                });
+            },
+            onFailed: message =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    AddFailureActivity("导入整合包失败", message);
+                });
+            }));
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
+            $"{taskTitle} 已加入任务中心。");
     }
 
     private async Task DeleteInstanceSelectionFolderAsync(InstanceSelectionFolderSnapshot folder)
@@ -577,8 +642,8 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var runtimePaths = _shellActionService.RuntimePaths;
-            var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
-            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var localConfig = runtimePaths.OpenLocalConfigProvider();
+            var sharedConfig = runtimePaths.OpenSharedConfigProvider();
             var currentStoredPath = ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw);
             var currentDirectory = ResolveLauncherFolder(currentStoredPath, runtimePaths);
             var configuredFolders = LoadConfiguredInstanceSelectionFolders(sharedConfig, localConfig, runtimePaths)
@@ -751,7 +816,7 @@ internal sealed partial class FrontendShellViewModel
             return null;
         }
 
-        var instanceConfig = OpenInstanceConfigProvider(directory);
+        var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(directory);
         var manifestPath = Path.Combine(directory, $"{name}.json");
         var manifest = ParseInstanceManifest(manifestPath);
         var tags = new List<string>();
@@ -1466,40 +1531,6 @@ internal sealed partial class FrontendShellViewModel
 
             RefreshTaskManagerSurface();
         };
-    }
-
-    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
-    {
-        var pclDirectory = Path.Combine(instanceDirectory, "PCL");
-        var configPath = Path.Combine(pclDirectory, "config.v1.yml");
-        if (!File.Exists(configPath))
-        {
-            var legacyPath = Path.Combine(pclDirectory, "Setup.ini");
-            if (File.Exists(legacyPath))
-            {
-                Directory.CreateDirectory(pclDirectory);
-                var provider = new YamlFileProvider(configPath);
-                foreach (var line in File.ReadLines(legacyPath))
-                {
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        continue;
-                    }
-
-                    var splitIndex = line.IndexOf(':');
-                    if (splitIndex <= 0)
-                    {
-                        continue;
-                    }
-
-                    provider.Set(line[..splitIndex], line[(splitIndex + 1)..]);
-                }
-
-                provider.Sync();
-            }
-        }
-
-        return new YamlFileProvider(configPath);
     }
 
     private static InstanceManifestSnapshot ParseInstanceManifest(string manifestPath)

@@ -12,7 +12,7 @@ internal static class FrontendToolsCompositionService
 
     public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths)
     {
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         return new FrontendToolsComposition(
             BuildHelpState(runtimePaths),
             BuildTestState(sharedConfig, runtimePaths));

@@ -324,7 +324,7 @@ internal sealed partial class FrontendShellViewModel
 
     private JsonArray LoadDownloadFavoriteTargetRoot()
     {
-        var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
+        var provider = _shellActionService.RuntimePaths.OpenSharedConfigProvider();
         var rawFavorites = provider.Exists("CompFavorites")
             ? SafeReadFavoriteJson(provider)
             : "[]";
@@ -1322,7 +1322,8 @@ internal sealed partial class FrontendShellViewModel
 
             if (parserType is null)
             {
-                parserType = TryLoadAssembly("PCL.Core.Foundation")?.GetType(typeName, throwOnError: false)
+                parserType = TryLoadAssembly("PCL.Core.Backend")?.GetType(typeName, throwOnError: false)
+                             ?? TryLoadAssembly("PCL.Core.Foundation")?.GetType(typeName, throwOnError: false)
                              ?? TryLoadAssembly("PCL.Core")?.GetType(typeName, throwOnError: false);
             }
 
@@ -1480,7 +1481,7 @@ internal sealed partial class FrontendShellViewModel
     {
         try
         {
-            var provider = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+            var provider = _shellActionService.RuntimePaths.OpenLocalConfigProvider();
             var rawJson = provider.Exists("LaunchArgumentJavaUser")
                 ? provider.Get<string>("LaunchArgumentJavaUser")
                 : "[]";

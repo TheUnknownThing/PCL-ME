@@ -41,8 +41,8 @@ internal static class FrontendLaunchCompositionService
             return replayComposition;
         }
 
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
-        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
 
         var launcherFolder = FrontendLauncherPathService.ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
@@ -52,9 +52,9 @@ internal static class FrontendLaunchCompositionService
             ? Path.Combine(launcherFolder, "versions")
             : Path.Combine(launcherFolder, "versions", selectedInstanceName);
         var instanceConfig = Directory.Exists(instancePath)
-            ? OpenInstanceConfigProvider(instancePath)
+            ? FrontendRuntimePaths.OpenInstanceConfigProvider(instancePath)
             : null;
-        var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName);
+        var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName, instanceConfig);
         var indieDirectory = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary)
             ? instancePath
             : launcherFolder;
@@ -221,6 +221,7 @@ internal static class FrontendLaunchCompositionService
             selectedProfile,
             selectedJavaRuntime,
             javaSelection.WarningMessage,
+            javaSelection.CompatibilityPrompt,
             launchCount,
             precheckRequest,
             precheckResult,
@@ -293,6 +294,7 @@ internal static class FrontendLaunchCompositionService
                 null,
                 null,
                 plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft),
+            null,
             null,
             null,
             10,
@@ -1176,9 +1178,10 @@ internal static class FrontendLaunchCompositionService
         var recommendedMajorVersion = manifestSummary.MojangRecommendedMajorVersion
                                      ?? manifestSummary.JsonRequiredMajorVersion
                                      ?? 8;
+        var inferredReleaseTime = InferJavaRequirementReleaseTime(manifestSummary.VanillaVersion);
         return new MinecraftLaunchJavaWorkflowRequest(
             IsVersionInfoValid: manifestSummary.IsVersionInfoValid,
-            ReleaseTime: manifestSummary.ReleaseTime ?? DateTime.Now,
+            ReleaseTime: manifestSummary.ReleaseTime ?? inferredReleaseTime ?? DateTime.Now,
             VanillaVersion: manifestSummary.VanillaVersion ?? new Version(1, 20, 1),
             HasOptiFine: manifestSummary.HasOptiFine,
             HasForge: manifestSummary.HasForgeLike,
@@ -1279,25 +1282,32 @@ internal static class FrontendLaunchCompositionService
         var ignoreJavaCompatibilityWarning = instanceConfig is not null &&
                                             ReadValue(instanceConfig, "VersionAdvanceJava", false);
         var javaEntries = FrontendJavaInventoryService.ParseAvailableRuntimes(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
+        MinecraftLaunchPrompt? compatibilityPrompt = null;
 
         if (!string.IsNullOrWhiteSpace(selectedJavaPath))
         {
             var selectedRuntime = ResolveConfiguredRuntime(javaEntries, selectedJavaPath, javaWorkflow);
-            if (selectedRuntime is not null &&
-                ShouldUseConfiguredRuntime(selectedRuntime, manifestSummary, javaWorkflow, ignoreJavaCompatibilityWarning))
+            if (selectedRuntime is not null)
             {
-                return new FrontendJavaSelectionResult(
-                    ToRuntimeSummary(selectedRuntime),
-                    ignoreJavaCompatibilityWarning && !IsCompatibleWithWorkflow(selectedRuntime, manifestSummary, javaWorkflow)
-                        ? BuildIgnoredJavaCompatibilityWarning(selectedRuntime, javaWorkflow)
-                        : null);
+                var isCompatible = IsCompatibleWithWorkflow(selectedRuntime, manifestSummary, javaWorkflow);
+                if (ShouldUseConfiguredRuntime(selectedRuntime, manifestSummary, javaWorkflow, ignoreJavaCompatibilityWarning))
+                {
+                    return new FrontendJavaSelectionResult(
+                        ToRuntimeSummary(selectedRuntime),
+                        ignoreJavaCompatibilityWarning && !isCompatible
+                            ? BuildIgnoredJavaCompatibilityWarning(selectedRuntime, javaWorkflow)
+                            : null,
+                        CompatibilityPrompt: null);
+                }
+
+                compatibilityPrompt = BuildJavaCompatibilityPrompt(selectedRuntime, javaWorkflow);
             }
         }
 
         var autoEntry = SelectCompatibleRuntime(javaEntries, manifestSummary, javaWorkflow);
         if (autoEntry is not null)
         {
-            return new FrontendJavaSelectionResult(ToRuntimeSummary(autoEntry), null);
+            return new FrontendJavaSelectionResult(ToRuntimeSummary(autoEntry), null, compatibilityPrompt);
         }
 
         var bundledJava = OperatingSystem.IsWindows()
@@ -1309,13 +1319,16 @@ internal static class FrontendLaunchCompositionService
                 javaWorkflow,
                 fallbackDisplayName: $"Java {javaWorkflow.RecommendedMajorVersion}") is { } bundledRuntime)
         {
-            return new FrontendJavaSelectionResult(bundledRuntime, null);
+            return new FrontendJavaSelectionResult(bundledRuntime, null, compatibilityPrompt);
         }
 
-        return new FrontendJavaSelectionResult(ProbeHostJavaRuntime(manifestSummary, javaWorkflow), null);
+        return new FrontendJavaSelectionResult(ProbeHostJavaRuntime(manifestSummary, javaWorkflow), null, compatibilityPrompt);
     }
 
-    private static FrontendVersionManifestSummary ReadManifestSummary(string launcherFolder, string selectedInstanceName)
+    private static FrontendVersionManifestSummary ReadManifestSummary(
+        string launcherFolder,
+        string selectedInstanceName,
+        YamlFileProvider? instanceConfig)
     {
         if (string.IsNullOrWhiteSpace(selectedInstanceName))
         {
@@ -1323,10 +1336,22 @@ internal static class FrontendLaunchCompositionService
         }
 
         var profile = FrontendVersionManifestInspector.ReadProfile(launcherFolder, selectedInstanceName);
+        var storedVersionName = instanceConfig is null
+            ? null
+            : NullIfWhiteSpace(ReadValue(instanceConfig, "VersionVanillaName", string.Empty));
+        var fallbackVersion = TryParseVanillaVersion(storedVersionName)
+                              ?? TryParseVanillaVersion(selectedInstanceName);
+        var fallbackReleaseTime = instanceConfig is null
+            ? null
+            : TryParseReleaseTime(ReadValue(instanceConfig, "ReleaseTime", string.Empty));
+        var effectiveVersion = profile.ParsedVanillaVersion ?? fallbackVersion;
+        var effectiveReleaseTime = profile.ReleaseTime
+                                   ?? fallbackReleaseTime
+                                   ?? InferJavaRequirementReleaseTime(effectiveVersion);
         return new FrontendVersionManifestSummary(
-            IsVersionInfoValid: profile.IsManifestValid,
-            ReleaseTime: profile.ReleaseTime,
-            VanillaVersion: profile.ParsedVanillaVersion,
+            IsVersionInfoValid: profile.IsManifestValid || effectiveVersion is not null || effectiveReleaseTime is not null,
+            ReleaseTime: effectiveReleaseTime,
+            VanillaVersion: effectiveVersion,
             VersionType: profile.VersionType,
             AssetsIndexName: profile.AssetsIndexName,
             Libraries: ReadManifestLibraries(launcherFolder, selectedInstanceName),
@@ -1858,23 +1883,7 @@ internal static class FrontendLaunchCompositionService
 
     private static bool IsLibraryAllowedOnCurrentPlatform(JsonElement library, MachineType runtimeArchitecture)
     {
-        if (!library.TryGetProperty("rules", out var rules) || rules.ValueKind != JsonValueKind.Array)
-        {
-            return true;
-        }
-
-        var allowed = false;
-        foreach (var rule in rules.EnumerateArray())
-        {
-            if (!RuleMatchesCurrentPlatform(rule, runtimeArchitecture))
-            {
-                continue;
-            }
-
-            allowed = !string.Equals(GetString(rule, "action"), "disallow", StringComparison.OrdinalIgnoreCase);
-        }
-
-        return allowed;
+        return FrontendLibraryArtifactResolver.IsLibraryAllowed(library, runtimeArchitecture);
     }
 
     private static bool IsLibraryAllowedOnCurrentPlatform(JsonElement library)
@@ -1933,31 +1942,45 @@ internal static class FrontendLaunchCompositionService
         MachineType runtimeArchitecture,
         out NativeArchiveDownloadInfo nativeArchive)
     {
-        nativeArchive = null!;
-        LibraryDownloadInfo download;
-        if (IsDedicatedNativeLibrary(library))
+        if (!FrontendLibraryArtifactResolver.TryResolveNativeArchiveDownload(
+                library,
+                launcherFolder,
+                runtimeArchitecture,
+                out var resolved))
         {
-            if (!TryResolveEffectiveArtifactDownload(library, launcherFolder, runtimeArchitecture, out download))
-            {
-                return false;
-            }
-        }
-        else
-        {
-            var entryName = ResolveNativeEntryName(library, runtimeArchitecture);
-            if (string.IsNullOrWhiteSpace(entryName) ||
-                !TryResolveLibraryDownload(library, entryName, launcherFolder, out download))
-            {
-                return false;
-            }
+            nativeArchive = null!;
+            return false;
         }
 
         nativeArchive = new NativeArchiveDownloadInfo(
-            download.TargetPath,
-            download.DownloadUrl,
-            download.Sha1,
-            GetExtractExcludes(library));
+            resolved.TargetPath,
+            resolved.DownloadUrl,
+            resolved.Sha1,
+            resolved.ExtractExcludes);
         return true;
+    }
+
+    private static bool TryResolveNativeArchiveReplacementDownload(
+        JsonElement library,
+        string? entryName,
+        string launcherFolder,
+        MachineType runtimeArchitecture,
+        out LibraryDownloadInfo download)
+    {
+        download = null!;
+        var libraryName = GetString(library, "name");
+        if (string.IsNullOrWhiteSpace(libraryName))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(entryName) &&
+            TryResolveArtifactReplacementDownload($"{libraryName}:{entryName}", launcherFolder, runtimeArchitecture, out download))
+        {
+            return true;
+        }
+
+        return TryResolveArtifactReplacementDownload(libraryName, launcherFolder, runtimeArchitecture, out download);
     }
 
     private static bool TryResolveLibraryDownload(
@@ -1994,6 +2017,12 @@ internal static class FrontendLaunchCompositionService
         {
             if (!downloads.TryGetProperty("artifact", out downloadEntry) || downloadEntry.ValueKind != JsonValueKind.Object)
             {
+                if (downloads.TryGetProperty("classifiers", out var classifiers) &&
+                    classifiers.ValueKind == JsonValueKind.Object)
+                {
+                    return false;
+                }
+
                 return TryResolveLegacyLibraryDownloadWithoutDownloads(library, entryName, launcherFolder, out download);
             }
         }
@@ -2069,12 +2098,18 @@ internal static class FrontendLaunchCompositionService
         MachineType runtimeArchitecture,
         out LibraryDownloadInfo download)
     {
-        if (TryResolveArtifactReplacementDownload(library, launcherFolder, runtimeArchitecture, out download))
+        if (!FrontendLibraryArtifactResolver.TryResolveArtifactDownload(
+                library,
+                launcherFolder,
+                runtimeArchitecture,
+                out var resolved))
         {
-            return true;
+            download = null!;
+            return false;
         }
 
-        return TryResolveLibraryDownload(library, "artifact", launcherFolder, out download);
+        download = new LibraryDownloadInfo(resolved.TargetPath, resolved.DownloadUrl, resolved.Sha1);
+        return true;
     }
 
     private static bool TryResolveArtifactReplacementDownload(
@@ -2513,13 +2548,7 @@ internal static class FrontendLaunchCompositionService
 
     private static string BuildLibraryUrl(JsonElement library, string relativePath)
     {
-        var baseUrl = GetString(library, "url");
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            baseUrl = "https://libraries.minecraft.net/";
-        }
-
-        return $"{baseUrl.TrimEnd('/')}/{relativePath.Replace('\\', '/')}";
+        return FrontendLibraryArtifactResolver.BuildLibraryUrl(library, relativePath);
     }
 
     private static string NormalizeSelectedJavaPath(string rawValue)
@@ -2877,11 +2906,6 @@ internal static class FrontendLaunchCompositionService
         }
 
         return null;
-    }
-
-    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
-    {
-        return new YamlFileProvider(Path.Combine(instanceDirectory, "PCL", "config.v1.yml"));
     }
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
@@ -3295,6 +3319,36 @@ internal static class FrontendLaunchCompositionService
         return $"已按实例设置忽略 Java 兼容性检查，当前使用 {runtimeLabel}。推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}";
     }
 
+    private static MinecraftLaunchPrompt BuildJavaCompatibilityPrompt(
+        FrontendStoredJavaRuntime runtime,
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+    {
+        var runtimeLabel = string.IsNullOrWhiteSpace(runtime.DisplayName)
+            ? Path.GetFileName(Path.GetDirectoryName(runtime.ExecutablePath)) ?? runtime.ExecutablePath
+            : runtime.DisplayName;
+
+        return new MinecraftLaunchPrompt(
+            $"你手动选择的 Java {runtimeLabel} 与当前 Minecraft 版本不兼容。{Environment.NewLine}" +
+            $"推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}{Environment.NewLine}" +
+            $"你可以改用兼容 Java，或为当前实例强制忽略兼容性检查后继续启动。",
+            "所选 Java 不兼容",
+            [
+                new MinecraftLaunchPromptButton(
+                    "强制使用当前 Java",
+                    [
+                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.PersistInstanceJavaCompatibilityIgnored),
+                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)
+                    ]),
+                new MinecraftLaunchPromptButton(
+                    "改用兼容 Java",
+                    [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)]),
+                new MinecraftLaunchPromptButton(
+                    "取消启动",
+                    [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Abort)])
+            ],
+            IsWarning: true);
+    }
+
     private static FrontendStoredJavaRuntime? SelectCompatibleRuntime(
         IEnumerable<FrontendStoredJavaRuntime> runtimes,
         FrontendVersionManifestSummary manifestSummary,
@@ -3356,6 +3410,31 @@ internal static class FrontendLaunchCompositionService
         }
 
         return runtime.Architecture == GetPreferredMachineType();
+    }
+
+    private static DateTime? InferJavaRequirementReleaseTime(Version? vanillaVersion)
+    {
+        if (vanillaVersion is null)
+        {
+            return null;
+        }
+
+        if (vanillaVersion >= new Version(1, 20, 5))
+        {
+            return new DateTime(2024, 4, 2);
+        }
+
+        if (vanillaVersion >= new Version(1, 18))
+        {
+            return new DateTime(2021, 11, 16);
+        }
+
+        if (vanillaVersion >= new Version(1, 17))
+        {
+            return new DateTime(2021, 5, 11);
+        }
+
+        return new DateTime(2011, 11, 18);
     }
 
     private static bool ShouldForceX86Java(FrontendVersionManifestSummary manifestSummary)
@@ -3453,7 +3532,8 @@ internal static class FrontendLaunchCompositionService
 
     private readonly record struct FrontendJavaSelectionResult(
         FrontendJavaRuntimeSummary? Runtime,
-        string? WarningMessage);
+        string? WarningMessage,
+        MinecraftLaunchPrompt? CompatibilityPrompt);
 
     private readonly record struct FrontendRetroWrapperOptions(
         bool UseRetroWrapper,
@@ -3562,6 +3642,27 @@ internal static class FrontendLaunchCompositionService
         return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
+    private static Version? TryParseVanillaVersion(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        var match = System.Text.RegularExpressions.Regex.Match(rawValue.Trim(), @"\d+(?:\.\d+){1,3}");
+        if (!match.Success || !Version.TryParse(match.Value, out var version))
+        {
+            return null;
+        }
+
+        return version.Major > 99 ? null : version;
+    }
+
+    private static DateTime? TryParseReleaseTime(string? rawValue)
+    {
+        return DateTime.TryParse(rawValue, out var releaseTime) ? releaseTime : null;
+    }
+
     private static bool IsAscii(string value)
     {
         return value.All(character => character <= sbyte.MaxValue);
@@ -3580,38 +3681,7 @@ internal static class FrontendLaunchCompositionService
 
     private static string DeriveLibraryPathFromName(string libraryName, string? classifier = null)
     {
-        var segments = libraryName.Split(':', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length < 3)
-        {
-            return libraryName.Replace(':', Path.DirectorySeparatorChar);
-        }
-
-        var groupPath = segments[0].Replace('.', Path.DirectorySeparatorChar);
-        var artifact = segments[1];
-        var version = segments[2];
-        var effectiveClassifier = string.IsNullOrWhiteSpace(classifier)
-            ? (segments.Length >= 4 ? segments[3] : null)
-            : classifier;
-        var extension = "jar";
-
-        if (segments.Length >= 5 && !string.IsNullOrWhiteSpace(segments[4]))
-        {
-            extension = segments[4];
-        }
-
-        if (!string.IsNullOrWhiteSpace(effectiveClassifier))
-        {
-            ParseLibraryCoordinateExtension(ref effectiveClassifier, ref extension);
-        }
-
-        ParseLibraryCoordinateExtension(ref version, ref extension);
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            return libraryName.Replace(':', Path.DirectorySeparatorChar);
-        }
-
-        var classifierSuffix = string.IsNullOrWhiteSpace(effectiveClassifier) ? string.Empty : "-" + effectiveClassifier;
-        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifierSuffix}.{extension}");
+        return FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(libraryName, classifier);
     }
 
     private static void ParseLibraryCoordinateExtension(ref string? value, ref string extension)

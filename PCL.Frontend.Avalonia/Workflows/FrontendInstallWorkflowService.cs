@@ -235,7 +235,7 @@ internal static class FrontendInstallWorkflowService
         File.WriteAllText(manifestPath, manifestNode.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
         ReportPrepare("正在写入实例配置…");
-        var instanceConfig = OpenInstanceConfigProvider(targetDirectory);
+        var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(targetDirectory);
         instanceConfig.Set("VersionVanillaName", request.MinecraftChoice.Version);
         instanceConfig.Set("VersionArgumentIndieV2", request.UseInstanceIsolation);
         instanceConfig.Sync();
@@ -444,7 +444,7 @@ internal static class FrontendInstallWorkflowService
         var libraryOutputPath = Path.Combine(
             request.LauncherDirectory,
             "libraries",
-            DeriveLibraryPathFromName(installPath).Replace('/', Path.DirectorySeparatorChar));
+            FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(installPath).Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(libraryOutputPath)!);
         ReportPrepareStatus(onStatusChanged, $"正在写入 {loaderChoice.Title} 支持库…");
         using (var source = archive.GetEntry(entryPath)?.Open()
@@ -572,7 +572,7 @@ internal static class FrontendInstallWorkflowService
         var mainArtifact = GetArtifactDescriptor(installProfile["path"]);
         if (!string.IsNullOrWhiteSpace(mainArtifact))
         {
-            var relativePath = DeriveLibraryPathFromName(mainArtifact);
+            var relativePath = FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(mainArtifact);
             TryCopyInstallerEntryToFile(
                 archive,
                 "maven/" + relativePath.Replace('\\', '/'),
@@ -1118,7 +1118,7 @@ internal static class FrontendInstallWorkflowService
     {
         return Path.Combine(
             librariesDirectory,
-            DeriveLibraryPathFromName(descriptor).Replace('/', Path.DirectorySeparatorChar));
+            FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(descriptor).Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static string GetRequiredString(JsonObject source, string key, string errorMessage)
@@ -1136,7 +1136,9 @@ internal static class FrontendInstallWorkflowService
         }
 
         var descriptor = GetArtifactDescriptor(library["name"]);
-        return string.IsNullOrWhiteSpace(descriptor) ? null : DeriveLibraryPathFromName(descriptor);
+        return string.IsNullOrWhiteSpace(descriptor)
+            ? null
+            : FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(descriptor).Replace('\\', '/');
     }
 
     private static string? ResolveLibraryArtifactUrl(JsonObject library, string relativePath)
@@ -1147,13 +1149,9 @@ internal static class FrontendInstallWorkflowService
             return string.IsNullOrWhiteSpace(explicitArtifactUrl) ? null : explicitArtifactUrl;
         }
 
-        var baseUrl = library["url"]?.GetValue<string>();
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            baseUrl = "https://libraries.minecraft.net/";
-        }
-
-        return $"{baseUrl.TrimEnd('/')}/{relativePath}";
+        return FrontendLibraryArtifactResolver.BuildLibraryUrl(
+            library["url"]?.GetValue<string>(),
+            relativePath);
     }
 
     private static string? GetLibraryArtifactSha1(JsonObject library)
@@ -2374,7 +2372,7 @@ internal static class FrontendInstallWorkflowService
                     var name = library["name"]?.GetValue<string>();
                     if (!string.IsNullOrWhiteSpace(name))
                     {
-                        path = DeriveLibraryPathFromName(name);
+                        path = FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(name);
                     }
                 }
 
@@ -2399,13 +2397,6 @@ internal static class FrontendInstallWorkflowService
         Directory.CreateDirectory(Path.Combine(runtimeDirectory, "resourcepacks"));
         Directory.CreateDirectory(Path.Combine(runtimeDirectory, "mods"));
         Directory.CreateDirectory(Path.Combine(instanceDirectory, "PCL"));
-    }
-
-    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
-    {
-        var pclDirectory = Path.Combine(instanceDirectory, "PCL");
-        Directory.CreateDirectory(pclDirectory);
-        return new YamlFileProvider(Path.Combine(pclDirectory, "config.v1.yml"));
     }
 
     private static JsonObject ReadJsonObject(string url)
@@ -2866,61 +2857,6 @@ internal static class FrontendInstallWorkflowService
         return parts.Length >= 2
                && int.TryParse(parts[1], out var minor)
                && minor >= 14;
-    }
-
-    private static string DeriveLibraryPathFromName(string name, string? classifier = null)
-    {
-        var parts = name.Split(':', StringSplitOptions.TrimEntries);
-        if (parts.Length < 3)
-        {
-            throw new InvalidOperationException($"无法从库名称推导路径：{name}");
-        }
-
-        var groupPath = parts[0].Replace('.', '/');
-        var artifact = parts[1];
-        var version = parts[2];
-        var resolvedClassifier = classifier;
-        var extension = "jar";
-
-        if (parts.Length > 4 && !string.IsNullOrWhiteSpace(parts[4]))
-        {
-            extension = parts[4];
-        }
-
-        if (parts.Length > 3)
-        {
-            var suffix = parts[3];
-            ParseExtensionSuffix(ref suffix, ref extension);
-            if (!string.IsNullOrWhiteSpace(suffix))
-            {
-                resolvedClassifier = suffix;
-            }
-        }
-
-        ParseExtensionSuffix(ref version, ref extension);
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            throw new InvalidOperationException($"无法从库名称推导路径：{name}");
-        }
-
-        var classifierSegment = string.IsNullOrWhiteSpace(resolvedClassifier) ? string.Empty : "-" + resolvedClassifier;
-        return $"{groupPath}/{artifact}/{version}/{artifact}-{version}{classifierSegment}.{extension}";
-    }
-
-    private static void ParseExtensionSuffix(ref string value, ref string extension)
-    {
-        var extensionIndex = value.IndexOf('@');
-        if (extensionIndex < 0)
-        {
-            return;
-        }
-
-        if (extensionIndex < value.Length - 1)
-        {
-            extension = value[(extensionIndex + 1)..];
-        }
-
-        value = value[..extensionIndex];
     }
 
     private static string CreateTempFile(string prefix, string extension)

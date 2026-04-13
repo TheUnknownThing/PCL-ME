@@ -1559,7 +1559,7 @@ internal sealed partial class FrontendShellViewModel
 
     private string ResolveDownloadLauncherFolder()
     {
-        var provider = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+        var provider = _shellActionService.RuntimePaths.OpenLocalConfigProvider();
         var rawValue = FrontendLauncherPathService.DefaultLauncherFolderRaw;
 
         if (provider.Exists("LaunchFolderSelect"))

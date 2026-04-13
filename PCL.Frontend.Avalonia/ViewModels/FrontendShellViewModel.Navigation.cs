@@ -785,9 +785,8 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(IsLaunchRoute));
         RaisePropertyChanged(nameof(IsStandardShellRoute));
-        RaisePropertyChanged(nameof(HasDedicatedGenericRouteSurface));
-        RaisePropertyChanged(nameof(ShowGenericCompatibilitySurface));
-        RaisePropertyChanged(nameof(ShowInstanceSelectSurface));
+        RaisePropertyChanged(nameof(HasSharedRouteSurface));
+        RaisePropertyChanged(nameof(ShowSharedRouteFallbackSurface));
         RaisePropertyChanged(nameof(ShowTaskManagerSurface));
         RaisePropertyChanged(nameof(ShowGameLogSurface));
         RaisePropertyChanged(nameof(ShowCompDetailSurface));

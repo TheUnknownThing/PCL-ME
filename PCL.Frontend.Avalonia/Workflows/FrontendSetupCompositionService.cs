@@ -14,8 +14,8 @@ internal static class FrontendSetupCompositionService
 
     public static FrontendSetupComposition Compose(FrontendRuntimePaths paths)
     {
-        var sharedConfig = new JsonFileProvider(paths.SharedConfigPath);
-        var localConfig = new YamlFileProvider(paths.LocalConfigPath);
+        var sharedConfig = paths.OpenSharedConfigProvider();
+        var localConfig = paths.OpenLocalConfigProvider();
 
         return new FrontendSetupComposition(
             BuildAboutState(),

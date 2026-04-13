@@ -53,6 +53,19 @@ public sealed class LauncherFrontendPromptServiceTest
                     "Precheck",
                     [new MinecraftLaunchPromptButton("继续", [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])])
             ]);
+        var javaCompatibilityPrompt = new MinecraftLaunchPrompt(
+            "Selected Java is incompatible.",
+            "Java Compatibility",
+            [
+                new MinecraftLaunchPromptButton(
+                    "强制启动",
+                    [
+                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.PersistInstanceJavaCompatibilityIgnored),
+                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)
+                    ]),
+                new MinecraftLaunchPromptButton("改用兼容 Java", [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])
+            ],
+            IsWarning: true);
         var supportPrompt = new MinecraftLaunchPrompt(
             "Support us",
             "Support",
@@ -66,14 +79,22 @@ public sealed class LauncherFrontendPromptServiceTest
             ],
             DownloadTarget: "java-21");
 
-        var prompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(precheck, supportPrompt, javaPrompt);
+        var prompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(precheck, supportPrompt, javaCompatibilityPrompt, javaPrompt);
 
-        Assert.AreEqual(3, prompts.Count);
+        Assert.AreEqual(4, prompts.Count);
         Assert.AreEqual(LauncherFrontendPromptSource.LaunchPrecheck, prompts[0].Source);
-        Assert.AreEqual(LauncherFrontendPromptCommandKind.OpenUrl, prompts[1].Options[0].Commands[0].Kind);
-        Assert.AreEqual(LauncherFrontendPromptSource.LaunchJavaDownload, prompts[2].Source);
-        Assert.AreEqual("java-21", prompts[2].Options[0].Commands[0].Value);
-        Assert.AreEqual(LauncherFrontendPromptCommandKind.AbortLaunch, prompts[2].Options[1].Commands[0].Kind);
+        Assert.AreEqual(LauncherFrontendPromptSource.LaunchJavaCompatibility, prompts[1].Source);
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored,
+                LauncherFrontendPromptCommandKind.ContinueFlow
+            },
+            prompts[1].Options[0].Commands.Select(command => command.Kind).ToArray());
+        Assert.AreEqual(LauncherFrontendPromptCommandKind.OpenUrl, prompts[2].Options[0].Commands[0].Kind);
+        Assert.AreEqual(LauncherFrontendPromptSource.LaunchJavaDownload, prompts[3].Source);
+        Assert.AreEqual("java-21", prompts[3].Options[0].Commands[0].Value);
+        Assert.AreEqual(LauncherFrontendPromptCommandKind.AbortLaunch, prompts[3].Options[1].Commands[0].Kind);
     }
 
     [TestMethod]

@@ -13,7 +13,7 @@ internal static class FrontendDownloadCompositionService
         FrontendRuntimePaths runtimePaths,
         FrontendInstanceComposition instanceComposition)
     {
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
             new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
@@ -26,7 +26,7 @@ internal static class FrontendDownloadCompositionService
         FrontendInstanceComposition instanceComposition,
         FrontendVersionSavesComposition versionSavesComposition)
     {
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
         var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
         var communitySourcePreference = ReadValue(sharedConfig, "ToolDownloadMod", 1);
@@ -44,7 +44,7 @@ internal static class FrontendDownloadCompositionService
         LauncherFrontendSubpageKey route,
         CancellationToken cancellationToken = default)
     {
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
         var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
         return FrontendDownloadRemoteCatalogService.LoadCatalogStateAsync(
@@ -61,7 +61,7 @@ internal static class FrontendDownloadCompositionService
         string lazyLoadToken,
         CancellationToken cancellationToken = default)
     {
-        var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
         var versionSourceIndex = ReadValue(sharedConfig, "ToolDownloadVersion", 1);
         return FrontendDownloadRemoteCatalogService.LoadCatalogSectionEntriesAsync(
@@ -79,7 +79,7 @@ internal static class FrontendDownloadCompositionService
         return Task.Run(() =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var sharedConfig = runtimePaths.OpenSharedConfigProvider();
             var communitySourcePreference = ReadValue(sharedConfig, "ToolDownloadMod", 1);
             return BuildFavoritesState(sharedConfig, communitySourcePreference);
         }, cancellationToken);

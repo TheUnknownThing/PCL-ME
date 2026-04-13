@@ -121,7 +121,7 @@ internal static class FrontendCommunityProjectService
             return new FrontendCommunityProjectState(
                 string.Empty,
                 "未选择工程",
-                "先从收藏夹或市场条目进入，才能查看对应工程详情。",
+                "先从收藏夹或资源条目进入，才能查看对应工程详情。",
                 string.Empty,
                 "未指定来源",
                 null,

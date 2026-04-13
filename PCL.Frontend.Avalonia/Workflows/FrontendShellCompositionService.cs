@@ -18,8 +18,8 @@ internal static class FrontendShellCompositionService
         }
 
         var paths = FrontendRuntimePaths.Resolve(platformAdapter);
-        var sharedConfig = new JsonFileProvider(paths.SharedConfigPath);
-        var localConfig = new YamlFileProvider(paths.LocalConfigPath);
+        var sharedConfig = paths.OpenSharedConfigProvider();
+        var localConfig = paths.OpenLocalConfigProvider();
 
         var startupWorkflowRequest = BuildStartupWorkflowRequest(paths, localConfig);
         var mainWindowRequest = BuildMainWindowRequest(paths, sharedConfig, localConfig);

@@ -23,7 +23,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _shellActionService.PersistLocalValue("LaunchFolderSelect", storedFolderPath);
 
-        var localConfig = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+        var localConfig = _shellActionService.RuntimePaths.OpenLocalConfigProvider();
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
         var effectiveSelectedInstanceName = selectedInstanceName;
         if (!string.IsNullOrWhiteSpace(selectedInstanceName) &&

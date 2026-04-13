@@ -166,7 +166,7 @@ internal sealed partial class FrontendShellViewModel
         string? suggestedStartFolder = null;
         try
         {
-            var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
+            var provider = _shellActionService.RuntimePaths.OpenSharedConfigProvider();
             if (provider.Exists(InstanceExportConfigCacheKey))
             {
                 var cachedPath = provider.Get<string>(InstanceExportConfigCacheKey);

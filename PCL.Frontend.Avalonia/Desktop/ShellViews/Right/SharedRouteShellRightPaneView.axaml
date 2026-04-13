@@ -1,0 +1,757 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.SharedRouteShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
+    DataContext="{Binding Shell}">
+  <UserControl.Resources>
+    <DataTemplate x:Key="CommunityProjectInstallModeOptionTemplate">
+      <TextBlock Text="{Binding Label}" />
+    </DataTemplate>
+  </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector="Button.install-suggestion-button">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.install-suggestion-button > Border.install-suggestion-background">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="Button.install-suggestion-button:pointerover > Border.install-suggestion-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+    <Style Selector="Button.install-suggestion-button:pressed > Border.install-suggestion-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+    <Style Selector="Border.live-log-surface">
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="#D5E6FD" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="{x:Static animation:MotionDurations.InteractiveState}" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.live-log-surface.pointerover">
+      <Setter Property="BorderBrush" Value="#CFE0FA" />
+    </Style>
+    <Style Selector="Border.live-log-surface.focused">
+      <Setter Property="BorderBrush" Value="#96C0F9" />
+    </Style>
+    <Style Selector="Border.live-log-surface.focused.pointerover">
+      <Setter Property="BorderBrush" Value="#96C0F9" />
+    </Style>
+    <Style Selector="TextBox.live-log-console">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="SelectionBrush" Value="#E8F1FF" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
+    </Style>
+    <Style Selector="TextBox.live-log-console:pointerover">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
+    </Style>
+    <Style Selector="TextBox.live-log-console:focus">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
+    </Style>
+    <Style Selector="TextBox.live-log-console:focus:pointerover">
+      <Setter Property="Foreground" Value="#343D4A" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CaretBrush" Value="#343D4A" />
+    </Style>
+    <Style Selector="TextBox.live-log-console /template/ Border">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="TextBox.live-log-console /template/ ScrollViewer#PART_ScrollViewer">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox.live-log-console /template/ TextPresenter">
+      <Setter Property="TextElement.Foreground" Value="#343D4A" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Grid>
+      <StackPanel Margin="25,25,25,10" Spacing="15">
+        <StackPanel IsVisible="{Binding ShowGameLogSurface}" Spacing="14">
+          <WrapPanel>
+            <controls:PclButton
+                Width="92"
+                Height="35"
+                Margin="0,0,10,0"
+                ColorType="Highlight"
+                Command="{Binding RefreshGameLogCommand}"
+                Text="刷新" />
+            <controls:PclButton
+                Width="92"
+                Height="35"
+                Margin="0,0,10,0"
+                Command="{Binding ExportLogCommand}"
+                Text="导出日志" />
+            <controls:PclButton
+                Width="120"
+                Height="35"
+                Margin="0,0,10,0"
+                Command="{Binding OpenLogDirectoryCommand}"
+                Text="打开日志目录" />
+            <controls:PclButton
+                Width="108"
+                Height="35"
+                Command="{Binding ClearGameLogCommand}"
+                ColorType="Red"
+                Text="清空缓存" />
+          </WrapPanel>
+
+          <Grid ColumnDefinitions="*,*">
+            <Border
+                Padding="12,10"
+                Background="#F7FAFE"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="4">
+              <StackPanel Spacing="4">
+                <TextBlock Foreground="#7D8897" FontSize="11.5" Text="实时输出行数" />
+                <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogLiveLineCount}" />
+              </StackPanel>
+            </Border>
+            <Border
+                Grid.Column="1"
+                Margin="10,0,0,0"
+                Padding="12,10"
+                Background="#F7FAFE"
+                BorderBrush="#D5E6FD"
+                BorderThickness="1"
+                CornerRadius="4">
+              <StackPanel Spacing="4">
+                <TextBlock Foreground="#7D8897" FontSize="11.5" Text="最近日志文件" />
+                <TextBlock Foreground="#2B4260" FontSize="18" Text="{Binding GameLogRecentFileCount}" />
+                <TextBlock Foreground="#7A8794" FontSize="11" Text="{Binding GameLogLatestUpdateLabel}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <StackPanel IsVisible="{Binding ShowGameLogLiveOutput}" Spacing="8">
+            <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前会话输出" />
+            <Border
+                x:Name="LiveLogSurface"
+                Classes="live-log-surface">
+              <TextBox
+                  x:Name="LiveLogConsole"
+                  Classes="live-log-console"
+                  Height="320"
+                  AcceptsReturn="True"
+                  FontFamily="{DynamicResource LaunchFontFamily}"
+                  FontSize="12.5"
+                  GotFocus="LiveLogConsole_OnGotFocus"
+                  IsReadOnly="True"
+                  LostFocus="LiveLogConsole_OnLostFocus"
+                  PointerEntered="LiveLogConsole_OnPointerEntered"
+                  PointerExited="LiveLogConsole_OnPointerExited"
+                  Text="{Binding LaunchLogText}"
+                  VerticalContentAlignment="Top"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  TextWrapping="Wrap" />
+            </Border>
+          </StackPanel>
+
+          <StackPanel IsVisible="{Binding HasGameLogFiles}" Spacing="8">
+            <TextBlock Foreground="#47586D" FontSize="13.5" Text="最近生成的日志文件" />
+            <ItemsControl ItemsSource="{Binding GameLogFileEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclListItem
+                      Margin="0,0,0,8"
+                      Command="{Binding Command}"
+                      Info="{Binding Info}"
+                      Title="{Binding Title}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <StackPanel IsVisible="{Binding ShowGameLogEmptyState}" Spacing="8">
+            <TextBlock Foreground="#47586D" FontSize="13.5" Text="还没有可展示的日志" />
+            <TextBlock
+                Foreground="#4B5968"
+                FontSize="13"
+                Text="启动一次游戏、触发崩溃恢复，或者刷新日志目录后，这里就会出现实时输出和最近的日志文件。"
+                TextWrapping="Wrap" />
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding ShowCompDetailSurface}" Spacing="0">
+          <controls:PclCard Margin="0,0,0,25" ContentMargin="22,20,20,20">
+            <controls:PclCard.CardContent>
+              <StackPanel Spacing="8">
+                <Border
+                    Height="64"
+                    Background="{DynamicResource ColorBrushSemiTransparent}"
+                    CornerRadius="4">
+                  <Grid ColumnDefinitions="7,50,8,Auto,*,24" RowDefinitions="*,20,18,16,*">
+                    <Border
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        Grid.RowSpan="3"
+                        Width="50"
+                        Height="50"
+                        ClipToBounds="True"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        CornerRadius="6">
+                      <Grid>
+                        <Image
+                            Width="50"
+                            Height="50"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            ClipToBounds="True"
+                            IsVisible="{Binding HasCommunityProjectIcon}"
+                            Source="{Binding CommunityProjectIcon}"
+                            Stretch="UniformToFill" />
+                        <Border
+                            Margin="0,0,4,4"
+                            Padding="4,1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Background="#D90B5BCB"
+                            CornerRadius="3">
+                          <TextBlock
+                              Foreground="White"
+                              FontSize="9.5"
+                              Text="{Binding CommunityProjectSourceBadgeText}" />
+                        </Border>
+                      </Grid>
+                    </Border>
+
+                    <TextBlock
+                        Grid.Column="3"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="1"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="14"
+                        Text="{Binding CommunityProjectTitle}"
+                        TextTrimming="CharacterEllipsis" />
+
+                    <StackPanel
+                        Grid.Column="3"
+                        Grid.Row="2"
+                        Margin="-1,0,1,0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding HasCommunityProjectCategoryTags}">
+                      <ItemsControl ItemsSource="{Binding CommunityProjectCategoryTags}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border
+                                Margin="0,0,3,0"
+                                Padding="3,1"
+                                Background="#11000000"
+                                CornerRadius="3">
+                              <TextBlock
+                                  Foreground="#868686"
+                                  FontSize="11"
+                                  Text="{Binding}" />
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+
+                    <TextBlock
+                        Grid.Column="4"
+                        Grid.Row="2"
+                        Margin="0,0,3,0.5"
+                        VerticalAlignment="Center"
+                        Foreground="#7D8897"
+                        FontSize="12"
+                        Text="{Binding CommunityProjectIntroDescription}"
+                        TextTrimming="CharacterEllipsis" />
+
+                    <Grid
+                        Grid.Column="3"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="3"
+                        VerticalAlignment="Center"
+                        ColumnDefinitions="Auto,Auto,0.25*,Auto,Auto,0.25*,Auto,Auto,0.25*,Auto,Auto,0.25*">
+                      <Path
+                          Grid.Column="0"
+                          Height="11"
+                          Fill="#8C99A6"
+                          Stretch="Uniform"
+                          Data="M940.4 463.7L773.3 174.2c-17.3-30-49.2-48.4-83.8-48.4H340.2c-34.6 0-66.5 18.5-83.8 48.4L89.2 463.7c-17.3 30-17.3 66.9 0 96.8L256.4 850c17.3 30 49.2 48.4 83.8 48.4h349.2c34.6 0 66.5-18.5 83.8-48.4l167.2-289.5c17.3-29.9 17.3-66.8 0-96.8z m-94.6 96.8L725.9 768.1c-17.3 30-49.2 48.4-83.8 48.4H387.5c-34.6 0-66.5-18.5-83.8-48.4L183.9 560.5c-17.3-30-17.3-66.9 0-96.8l119.8-207.5c17.3-30 49.2-48.4 83.8-48.4h254.6c34.6 0 66.5 18.5 83.8 48.4l119.8 207.5c17.3 30 17.3 66.9 0.1 96.8z M522.3 321.2c-2.5-0.1-5-0.2-7.5-0.2-119.9 0-214 110.3-186.3 235 15.8 70.9 71.5 126.6 142.4 142.4 17.5 3.9 34.7 5.4 51.4 4.7 102.1-3.9 183.6-87.9 183.6-191 0.1-103-81.5-187-183.6-190.9z m68.6 269.1c-18.5 18-43 28.9-68.6 30.7l-6 0.3c-30.2 0.4-58.6-11.4-79.7-33-19.5-20.1-30.7-47-30.9-75-0.3-29.6 11.1-57.4 32-78.3 20.6-20.6 48-32 77.2-32 2.5 0 5 0.1 7.5 0.3 26.7 1.8 51.5 13.2 70.5 32.5 19.6 20 30.8 46.9 31.2 74.9 0.2 30.2-11.5 58.6-33.2 79.6z" />
+                      <TextBlock
+                          Grid.Column="1"
+                          Margin="4,0,2,0"
+                          VerticalAlignment="Center"
+                          Foreground="#8C99A6"
+                          FontSize="12"
+                          Text="{Binding CommunityProjectCompatibilitySummary}"
+                          TextTrimming="CharacterEllipsis" />
+
+                      <Path
+                          Grid.Column="3"
+                          Height="10.5"
+                          Fill="#8C99A6"
+                          Stretch="Uniform"
+                          Data="M955 610h-59c-15 0-29 13-29 29v196c0 15-13 29-29 29h-649c-15 0-29-13-29-29v-196c0-15-13-29-29-29h-59c-15 0-29 13-29 29V905c0 43 35 78 78 78h787c43 0 78-35 78-78V640c0-15-13-29-29-29zM492 740c11 11 29 11 41 0l265-265c11-11 11-29 0-41l-41-41c-11-11-29-11-41 0l-110 110c-11 11-33 3-33-13V68C571 53 555 39 541 39h-59c-15 0-29 13-29 29v417c0 17-21 25-33 13l-110-110c-11-11-29-11-41 0L226 433c-11 11-11 29 0 41L492 740z" />
+                      <TextBlock
+                          Grid.Column="4"
+                          Margin="5,0,2,0"
+                          VerticalAlignment="Center"
+                          Foreground="#8C99A6"
+                          FontSize="12"
+                          Text="{Binding CommunityProjectDownloadCountLabel}"
+                          TextTrimming="CharacterEllipsis" />
+
+                      <Path
+                          Grid.Column="6"
+                          Height="11.5"
+                          Margin="0,0,1,0"
+                          Fill="#8C99A6"
+                          Stretch="Uniform"
+                          Data="M810 403l-39 39c-10 10-28 10-39 0l-162-162v412c0 15-12 28-28 28h-56c-15 0-28-12-28-28v-412l-162 162c-10 10-28 10-39 0l-39-39c-10-10-10-28 0-39l278-278c10-10 28-10 39 0l278 278c10 10 10 28 0 39zM568 946h-112v-112h112v112z" />
+                      <TextBlock
+                          Grid.Column="7"
+                          Margin="5,0,2,0"
+                          VerticalAlignment="Center"
+                          Foreground="#8C99A6"
+                          FontSize="12"
+                          Text="{Binding CommunityProjectUpdatedLabel}"
+                          TextTrimming="CharacterEllipsis" />
+
+                      <Path
+                          Grid.Column="9"
+                          Height="11.5"
+                          Fill="#8C99A6"
+                          Stretch="Uniform"
+                          Data="M511 143c-203 0-369 165-369 369 0 203 165 369 369 369s369-165 369-369c0-203-165-369-369-369z m0 673c-29 0-68-59-89-159l178 0c-20 100-59 159-89 159z m-98-224c-2-24-3-51-3-79 0-29 1-57 4-83l197 0c2 25 4 53 4 83 0 28-1 54-3 79l-198-0z m98-383c29 0 67 58 88 156l-177-0c20-98 59-155 88-155z m164 221l128 0c7 26 11 54 11 82 0 27-3 54-10 80l-129-0c2-26 3-52 3-79 0-28-1-56-4-83z m101-64l-110-0c-7-37-16-72-28-102-4-11-9-22-15-33 66 25 121 74 155 135z m-376-135c-5 10-10 21-15 33-12 30-21 64-28 102l-110-0c34-60 89-109 154-134z m-181 199l128 0c-2 27-3 54-3 83 0 27 1 53 3 79l-127-0v6c-8-27-12-55-12-85-0-29 3-57 11-83z m24 227l112 0c7 38 16 74 29 105 4 11 9 22 15 33-67-26-122-76-156-139zM621 795c5-10 10-21 15-33 12-30 22-66 29-105l111 0c-34 62-89 111-156 137z" />
+                      <TextBlock
+                          Grid.Column="10"
+                          Margin="5,0,2,0"
+                          VerticalAlignment="Center"
+                          Foreground="#8C99A6"
+                          FontSize="12"
+                          Text="{Binding CommunityProjectSource}"
+                          TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                  </Grid>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding CommunityProjectActionButtons}" IsVisible="{Binding HasCommunityProjectActionButtons}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclIconTextButton
+                          Margin="0,0,4,4"
+                          Command="{Binding Command}"
+                          ColorType="{Binding ColorType}"
+                          IconData="{Binding IconData}"
+                          IconScale="{Binding IconScale}"
+                          Text="{Binding Text}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+
+          <controls:PclCard
+              Margin="0,0,0,8"
+              ContentMargin="20,20,20,17"
+              HorizontalAlignment="Center"
+              IsVisible="{Binding ShowCommunityProjectLoadingCard}"
+              VerticalAlignment="Center">
+            <controls:PclCard.CardContent>
+              <controls:PclLoading
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Text="{Binding CommunityProjectLoadingText}" />
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+
+          <StackPanel IsVisible="{Binding ShowCommunityProjectContent}" Spacing="0">
+            <Border
+                Margin="0,0,0,15"
+                Padding="12,10"
+                Background="#FFF8DD"
+                BorderBrush="#F2D777"
+                BorderThickness="1"
+                CornerRadius="4"
+                IsVisible="{Binding ShowCommunityProjectWarning}">
+              <TextBlock
+                  Foreground="#6E5800"
+                  FontSize="12.5"
+                  Text="{Binding CommunityProjectWarningText}"
+                  TextWrapping="Wrap" />
+            </Border>
+
+            <controls:PclCard Margin="0,0,0,15" IsVisible="{Binding ShowCommunityProjectFilterCard}" ContentMargin="0,0,0,0">
+              <controls:PclCard.CardContent>
+                <StackPanel>
+                  <Grid Margin="10,10,10,5" ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding ShowCommunityProjectVersionFilters}">
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="2,4,0,0"
+                        VerticalAlignment="Top"
+                        Foreground="#343D4A"
+                        FontSize="13"
+                        Text="实例筛选：" />
+                    <ItemsControl
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding CommunityProjectVersionFilterButtons}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclRadioButton
+                              Margin="2,0,2,0"
+                              Command="{Binding Command}"
+                              IsChecked="{Binding IsChecked}"
+                              Text="{Binding Text}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Grid>
+
+                  <Grid Margin="10,5,10,10" ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding ShowCommunityProjectLoaderFilters}">
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="2,4,0,0"
+                        VerticalAlignment="Top"
+                        Foreground="#343D4A"
+                        FontSize="13"
+                        Text="模组加载器筛选：" />
+                    <ItemsControl
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding CommunityProjectLoaderFilterButtons}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclRadioButton
+                              Margin="2,0,2,0"
+                              Command="{Binding Command}"
+                              IsChecked="{Binding IsChecked}"
+                              Text="{Binding Text}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Grid>
+                </StackPanel>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <controls:PclCard
+                Margin="0,0,0,15"
+                Header="推荐版本"
+                IsVisible="{Binding ShowCommunityProjectInstallSuggestionCard}"
+                ContentMargin="20,18,20,18">
+              <controls:PclCard.CardContent>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                  <Button
+                      Grid.ColumnSpan="2"
+                      Classes="nochrome install-suggestion-button"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Command="{Binding ExecuteCommunityProjectInstallSuggestionCommand}">
+                    <Border Classes="install-suggestion-background">
+                      <Grid ColumnDefinitions="*,170">
+                        <StackPanel Spacing="5">
+                          <TextBlock
+                              Foreground="#344352"
+                              FontSize="13"
+                              FontWeight="SemiBold"
+                              Text="{Binding CommunityProjectInstallSuggestionTitle}" />
+                          <TextBlock
+                              Foreground="#6B7C8F"
+                              FontSize="11.5"
+                              Text="{Binding CommunityProjectInstallSuggestionSummary}"
+                              TextWrapping="Wrap" />
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </Button>
+                  <ComboBox
+                      Grid.Column="1"
+                      Margin="0,0,8,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      MinWidth="170"
+                      ZIndex="1"
+                      ItemsSource="{Binding CommunityProjectInstallModeOptions}"
+                      ItemTemplate="{StaticResource CommunityProjectInstallModeOptionTemplate}"
+                      SelectedItem="{Binding SelectedCommunityProjectInstallModeOption}"
+                      SelectionBoxItemTemplate="{StaticResource CommunityProjectInstallModeOptionTemplate}" />
+                </Grid>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <controls:PclCard
+                Margin="0,0,0,15"
+                Header="{Binding CommunityProjectDependencyCardTitle}"
+                IsVisible="{Binding ShowCommunityProjectDependencyCard}"
+                ContentMargin="18,18,18,12">
+              <controls:PclCard.CardContent>
+                <StackPanel Spacing="0">
+                  <ItemsControl ItemsSource="{Binding CommunityProjectDependencySections}" IsVisible="{Binding HasCommunityProjectDependencySections}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <StackPanel Margin="0,0,0,12" Spacing="8">
+                          <TextBlock
+                              Foreground="#47586D"
+                              FontSize="13.5"
+                              FontWeight="SemiBold"
+                              Text="{Binding Title}" />
+                          <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <controls:PclListItem
+                                    Margin="0,0,0,8"
+                                    Command="{Binding Command}"
+                                    IconSource="{Binding Icon}"
+                                    Info="{Binding CombinedInfo}"
+                                    Title="{Binding Title}" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                </StackPanel>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <ItemsControl ItemsSource="{Binding CommunityProjectReleaseGroups}" IsVisible="{Binding HasCommunityProjectReleaseGroups}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="{Binding IsExpanded}" ContentMargin="18,38,18,12">
+                    <controls:PclCard.CardContent>
+                      <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <controls:PclListItem
+                                Margin="0,0,0,8"
+                                Command="{Binding Command}"
+                                IconSource="{Binding Icon}"
+                                Info="{Binding CombinedInfo}"
+                                Title="{Binding Title}" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </controls:PclCard.CardContent>
+                  </controls:PclCard>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <controls:PclCard Margin="0,0,0,15" Header="还没有可展示的版本" IsVisible="{Binding HasNoCommunityProjectReleaseGroups}" ContentMargin="20,18,20,18">
+              <controls:PclCard.CardContent>
+                <TextBlock
+                    Foreground="#4B5968"
+                    FontSize="13"
+                    Text="该工程暂时没有返回可展示的版本文件信息。"
+                    TextWrapping="Wrap" />
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <ItemsControl ItemsSource="{Binding CommunityProjectSections}" IsVisible="{Binding HasCommunityProjectSections}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="18,18,18,12">
+                    <controls:PclCard.CardContent>
+                      <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <controls:PclListItem
+                                Margin="0,0,0,8"
+                                Command="{Binding Command}"
+                                IconSource="{Binding Icon}"
+                                Info="{Binding CombinedInfo}"
+                                Title="{Binding Title}" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </controls:PclCard.CardContent>
+                  </controls:PclCard>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding ShowHelpDetailSurface}" Spacing="0">
+          <ItemsControl ItemsSource="{Binding HelpDetailSections}" IsVisible="{Binding HasHelpDetailSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="18,18,18,16">
+                  <controls:PclCard.CardContent>
+                    <StackPanel Spacing="12">
+                      <ItemsControl ItemsSource="{Binding Lines}" IsVisible="{Binding HasLines}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*">
+                              <TextBlock
+                                  VerticalAlignment="Top"
+                                  Foreground="#1370F3"
+                                  FontSize="16"
+                                  Text="•" />
+                              <TextBlock
+                                  Grid.Column="1"
+                                  Margin="10,0,0,0"
+                                  Foreground="#45586A"
+                                  FontSize="13.5"
+                                  Text="{Binding}"
+                                  TextWrapping="Wrap" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+
+                      <ItemsControl ItemsSource="{Binding Actions}" IsVisible="{Binding HasActions}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <controls:PclListItem
+                                Margin="0,0,0,8"
+                                Command="{Binding Command}"
+                                Info="{Binding Info}"
+                                Title="{Binding Title}" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <controls:PclCard Margin="0,0,0,15" Header="暂无详情内容" IsVisible="{Binding HasNoHelpDetailSections}" ContentMargin="20,18,20,18">
+            <controls:PclCard.CardContent>
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="当前帮助条目没有可显示的详情内容。"
+                  TextWrapping="Wrap" />
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding ShowSharedRouteFallbackSurface}" Spacing="14">
+          <Border
+              Padding="12,10"
+              Background="#F7FAFE"
+              BorderBrush="#D5E6FD"
+              BorderThickness="1"
+              CornerRadius="4">
+            <StackPanel Spacing="8">
+              <TextBlock
+                  Foreground="#1370F3"
+                  FontSize="12"
+                  Text="{Binding Eyebrow}" />
+              <TextBlock
+                  Foreground="#4B5968"
+                  FontSize="13"
+                  Text="{Binding Description}"
+                  TextWrapping="Wrap" />
+              <TextBlock
+                  Foreground="#404040"
+                  FontSize="11.5"
+                  Text="{Binding BreadcrumbTrail}"
+                  TextWrapping="Wrap" />
+              <TextBlock
+                  Foreground="#7D8897"
+                  FontSize="11"
+                  Text="{Binding SurfaceMeta}"
+                  TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding SurfaceSections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="20,16,20,18">
+                <controls:PclCard.CardContent>
+                  <StackPanel Spacing="10">
+                    <TextBlock
+                        Foreground="{Binding AccentBrush}"
+                        FontSize="12"
+                        Text="{Binding Eyebrow}" />
+                    <ItemsControl ItemsSource="{Binding Lines}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid Margin="0,0,0,8" ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                VerticalAlignment="Top"
+                                Foreground="{Binding AccentBrush}"
+                                FontSize="16"
+                                Text="•" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                Foreground="{Binding ForegroundBrush}"
+                                FontSize="13.5"
+                                Text="{Binding Text}"
+                                TextWrapping="Wrap" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        </StackPanel>
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

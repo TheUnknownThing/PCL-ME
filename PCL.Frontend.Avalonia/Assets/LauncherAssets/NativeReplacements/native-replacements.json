@@ -1,5 +1,29 @@
 {
   "linux-arm64": {
+    "org.lwjgl.lwjgl:lwjgl-platform:2.9.2-nightly-20140822:natives-linux": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-linux-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-linux-arm64/lwjgl2-natives-2.9.3-linux-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-linux-arm64/lwjgl2-natives-2.9.3-linux-arm64.jar",
+        "sha1": "c47df34b6a0414b2d9972f602d0c85191129d69c"
+      }
+    },
+    "org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209:natives-linux": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-linux-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-linux-arm64/lwjgl2-natives-2.9.3-linux-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-linux-arm64/lwjgl2-natives-2.9.3-linux-arm64.jar",
+        "sha1": "c47df34b6a0414b2d9972f602d0c85191129d69c"
+      }
+    },
+    "net.java.jinput:jinput-platform:2.0.5:natives-linux": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-linux-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-linux-arm64/lwjgl2-natives-2.9.3-linux-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-linux-arm64/lwjgl2-natives-2.9.3-linux-arm64.jar",
+        "sha1": "c47df34b6a0414b2d9972f602d0c85191129d69c"
+      }
+    },
     "org.lwjgl:lwjgl:3.3.1": {
       "name": "org.lwjgl:lwjgl:3.3.2",
       "artifact": {
@@ -318,6 +342,42 @@
         "path": "org/lwjgl/lwjgl-vma/3.4.1/lwjgl-vma-3.4.1-natives-linux-arm64.jar",
         "url": "https://repo1.maven.org/maven2/org/lwjgl/lwjgl-vma/3.4.1/lwjgl-vma-3.4.1-natives-linux-arm64.jar",
         "sha1": "de40d43c5947c4a4f91376af8f2c00e5396cc109"
+      }
+    }
+  },
+  "macos-arm64": {
+    "org.lwjgl.lwjgl:lwjgl-platform:2.9.2-nightly-20140822:natives-osx": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-rc1-osx-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-osx-arm64/lwjgl2-natives-2.9.3-rc1-osx-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-osx-arm64/lwjgl2-natives-2.9.3-rc1-osx-arm64.jar",
+        "sha1": "042ef2024a9a4054952c496c9ebcdb83345dabe0"
+      }
+    },
+    "org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209:natives-osx": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-rc1-osx-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-osx-arm64/lwjgl2-natives-2.9.3-rc1-osx-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-osx-arm64/lwjgl2-natives-2.9.3-rc1-osx-arm64.jar",
+        "sha1": "042ef2024a9a4054952c496c9ebcdb83345dabe0"
+      }
+    }
+  },
+  "windows-arm64": {
+    "org.lwjgl.lwjgl:lwjgl-platform:2.9.2-nightly-20140822:natives-windows": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-rc1-windows-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-windows-arm64/lwjgl2-natives-2.9.3-rc1-windows-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-windows-arm64/lwjgl2-natives-2.9.3-rc1-windows-arm64.jar",
+        "sha1": "e0948a3692856d47854f3cd5a698d5c0233606d7"
+      }
+    },
+    "org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209:natives-windows": {
+      "name": "org.glavo.hmcl:lwjgl2-natives:2.9.3-rc1-windows-arm64",
+      "artifact": {
+        "path": "org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-windows-arm64/lwjgl2-natives-2.9.3-rc1-windows-arm64.jar",
+        "url": "https://repo1.maven.org/maven2/org/glavo/hmcl/lwjgl2-natives/2.9.3-rc1-windows-arm64/lwjgl2-natives-2.9.3-rc1-windows-arm64.jar",
+        "sha1": "e0948a3692856d47854f3cd5a698d5c0233606d7"
       }
     }
   }

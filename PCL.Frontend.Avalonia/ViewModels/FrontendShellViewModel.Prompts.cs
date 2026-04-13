@@ -274,6 +274,9 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPromptCommandKind.PersistSetting:
                 PersistPromptSetting(command.Value);
                 break;
+            case LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored:
+                PersistJavaCompatibilityOverride();
+                break;
             case LauncherFrontendPromptCommandKind.ClosePrompt:
                 AddActivity("关闭提示", "当前提示已标记为完成。");
                 break;
@@ -375,6 +378,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPromptCommandKind.AppendLaunchArgument => $"Append launch arg ({command.Value ?? "n/a"})",
             LauncherFrontendPromptCommandKind.PersistSetting => $"Persist setting ({command.Value ?? "n/a"})",
             LauncherFrontendPromptCommandKind.DownloadJavaRuntime => $"Download Java ({command.Value ?? "n/a"})",
+            LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored => "Persist Java compatibility override",
             LauncherFrontendPromptCommandKind.ClosePrompt => "Close prompt",
             LauncherFrontendPromptCommandKind.ViewGameLog => "Open game log",
             LauncherFrontendPromptCommandKind.OpenInstanceSettings => "Open instance settings",
@@ -405,6 +409,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        _dismissedLaunchPromptIds.Clear();
         EnsureLaunchPromptLane();
         if (_promptCatalog[AvaloniaPromptLaneKind.Launch].Count > 0)
         {
@@ -478,6 +483,21 @@ internal sealed partial class FrontendShellViewModel
             string.IsNullOrWhiteSpace(rawValue)
                 ? "已关闭非 ASCII 游戏路径提示。"
                 : $"已保存设置: {rawValue}");
+    }
+
+    private void PersistJavaCompatibilityOverride()
+    {
+        var instanceDirectory = _instanceComposition.Selection.InstanceDirectory;
+        if (string.IsNullOrWhiteSpace(instanceDirectory))
+        {
+            AddFailureActivity("无法强制启动", "当前没有可写入设置的实例。");
+            return;
+        }
+
+        _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceJava", true);
+        IgnoreInstanceJavaCompatibilityWarning = true;
+        RefreshLaunchState();
+        AddActivity("已启用 Java 强制启动", "当前实例后续将忽略 Java 兼容性检查，继续使用你手动选择的 Java。");
     }
 
     private void AppendPromptLaunchArgument(string? argument)
@@ -967,6 +987,7 @@ internal sealed partial class FrontendShellViewModel
         var launchPrompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(
             _launchComposition.PrecheckResult,
             _launchComposition.SupportPrompt,
+            _launchComposition.JavaCompatibilityPrompt,
             GetPendingJavaPrompt());
         _promptCatalog[AvaloniaPromptLaneKind.Launch] = launchPrompts
             .Where(prompt => !_dismissedLaunchPromptIds.Contains(prompt.Id))

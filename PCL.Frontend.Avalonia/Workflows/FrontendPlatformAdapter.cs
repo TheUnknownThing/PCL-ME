@@ -44,8 +44,9 @@ internal sealed class FrontendPlatformAdapter
 
         try
         {
-            using var process = Process.Start(BuildOpenTargetStartInfo(target));
-            if (process is null)
+            var startInfo = BuildOpenTargetStartInfo(target);
+            using var process = Process.Start(startInfo);
+            if (!IsSuccessfulStart(startInfo, process))
             {
                 error = "系统未返回可用的打开进程。";
                 return false;
@@ -72,8 +73,9 @@ internal sealed class FrontendPlatformAdapter
 
         try
         {
-            using var process = Process.Start(BuildRevealTargetStartInfo(target));
-            if (process is null)
+            var startInfo = BuildRevealTargetStartInfo(target);
+            using var process = Process.Start(startInfo);
+            if (!IsSuccessfulStart(startInfo, process))
             {
                 error = "系统未返回可用的定位进程。";
                 return false;
@@ -247,6 +249,12 @@ internal sealed class FrontendPlatformAdapter
 
         startInfo.ArgumentList.Add(isDirectory ? fullTargetPath : Path.GetDirectoryName(fullTargetPath) ?? fullTargetPath);
         return startInfo;
+    }
+
+    internal static bool IsSuccessfulStart(ProcessStartInfo startInfo, Process? process)
+    {
+        ArgumentNullException.ThrowIfNull(startInfo);
+        return process is not null || startInfo.UseShellExecute;
     }
 }
 

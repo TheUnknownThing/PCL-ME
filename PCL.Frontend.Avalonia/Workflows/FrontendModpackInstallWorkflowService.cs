@@ -136,24 +136,64 @@ internal static class FrontendModpackInstallWorkflowService
         }
     }
 
+    public static string SuggestInstanceName(string archivePath)
+    {
+        var fallbackName = Path.GetFileNameWithoutExtension(archivePath);
+        if (string.IsNullOrWhiteSpace(archivePath) || !File.Exists(archivePath))
+        {
+            return fallbackName;
+        }
+
+        try
+        {
+            using var archive = OpenArchiveRead(archivePath);
+            var (kind, baseFolder) = DetectPackageKind(archive);
+            var entryPath = kind switch
+            {
+                FrontendModpackPackageKind.Modrinth => baseFolder + "modrinth.index.json",
+                FrontendModpackPackageKind.CurseForge => baseFolder + "manifest.json",
+                FrontendModpackPackageKind.Mcbbs => ResolveMcbbsMetadataEntryPath(archive, baseFolder),
+                _ => null
+            };
+            if (string.IsNullOrWhiteSpace(entryPath))
+            {
+                return fallbackName;
+            }
+
+            var root = ReadJsonObjectFromEntry(archive, entryPath);
+            var packageName = root["name"]?.GetValue<string>()?.Trim();
+            return string.IsNullOrWhiteSpace(packageName) ? fallbackName : packageName;
+        }
+        catch
+        {
+            return fallbackName;
+        }
+    }
+
     private static FrontendModpackPackage InspectPackage(
         string archivePath,
         int communitySourcePreference,
         HttpClient httpClient,
         CancellationToken cancelToken)
     {
-        using var archive = ZipFile.OpenRead(archivePath);
+        using var archive = OpenArchiveRead(archivePath);
         var (kind, baseFolder) = DetectPackageKind(archive);
         return kind switch
         {
             FrontendModpackPackageKind.Modrinth => BuildModrinthPackage(archive, baseFolder),
             FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference, httpClient, cancelToken),
-            _ => throw new InvalidOperationException("仅支持自动安装 Modrinth 和 CurseForge 整合包。")
+            FrontendModpackPackageKind.Mcbbs => BuildMcbbsPackage(archive, baseFolder),
+            _ => throw new InvalidOperationException("仅支持自动安装 PCL 标准、Modrinth 和 CurseForge 整合包。")
         };
     }
 
     private static (FrontendModpackPackageKind Kind, string BaseFolder) DetectPackageKind(ZipArchive archive)
     {
+        if (archive.GetEntry("mcbbs.packmeta") is not null)
+        {
+            return (FrontendModpackPackageKind.Mcbbs, string.Empty);
+        }
+
         if (archive.GetEntry("modrinth.index.json") is not null)
         {
             return (FrontendModpackPackageKind.Modrinth, string.Empty);
@@ -164,7 +204,7 @@ internal static class FrontendModpackInstallWorkflowService
             var rootManifest = ReadJsonObjectFromEntry(archive, "manifest.json");
             return rootManifest["addons"] is null
                 ? (FrontendModpackPackageKind.CurseForge, string.Empty)
-                : (FrontendModpackPackageKind.Unknown, string.Empty);
+                : (FrontendModpackPackageKind.Mcbbs, string.Empty);
         }
 
         foreach (var entry in archive.Entries)
@@ -176,6 +216,11 @@ internal static class FrontendModpackInstallWorkflowService
             }
 
             var baseFolder = parts[0] + "/";
+            if (string.Equals(parts[1], "mcbbs.packmeta", StringComparison.OrdinalIgnoreCase))
+            {
+                return (FrontendModpackPackageKind.Mcbbs, baseFolder);
+            }
+
             if (string.Equals(parts[1], "modrinth.index.json", StringComparison.OrdinalIgnoreCase))
             {
                 return (FrontendModpackPackageKind.Modrinth, baseFolder);
@@ -189,7 +234,7 @@ internal static class FrontendModpackInstallWorkflowService
             var manifest = ReadJsonObjectFromEntry(archive, entry.FullName);
             return manifest["addons"] is null
                 ? (FrontendModpackPackageKind.CurseForge, baseFolder)
-                : (FrontendModpackPackageKind.Unknown, baseFolder);
+                : (FrontendModpackPackageKind.Mcbbs, baseFolder);
         }
 
         return (FrontendModpackPackageKind.Unknown, string.Empty);
@@ -252,7 +297,10 @@ internal static class FrontendModpackInstallWorkflowService
             dependencies["neoforge"]?.GetValue<string>() ?? dependencies["neo-forge"]?.GetValue<string>(),
             dependencies["fabric-loader"]?.GetValue<string>(),
             dependencies["quilt-loader"]?.GetValue<string>(),
+            null,
             root["versionId"]?.GetValue<string>(),
+            null,
+            null,
             [
                 new FrontendModpackOverrideSource(baseFolder + "overrides"),
                 new FrontendModpackOverrideSource(baseFolder + "client-overrides")
@@ -378,9 +426,76 @@ internal static class FrontendModpackInstallWorkflowService
             neoForgeVersion,
             fabricVersion,
             quiltVersion,
+            null,
             root["version"]?.GetValue<string>(),
+            null,
+            null,
             [new FrontendModpackOverrideSource(effectiveOverridesPath)],
             files);
+    }
+
+    private static FrontendModpackPackage BuildMcbbsPackage(ZipArchive archive, string baseFolder)
+    {
+        var root = ReadJsonObjectFromEntry(archive, ResolveMcbbsMetadataEntryPath(archive, baseFolder));
+        if (root["addons"] is not JsonArray addons)
+        {
+            throw new InvalidOperationException("该 PCL 标准整合包未提供游戏版本附加信息，无法安装。");
+        }
+
+        var addonVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in addons)
+        {
+            if (entry is not JsonObject addon)
+            {
+                continue;
+            }
+
+            var id = addon["id"]?.GetValue<string>()?.Trim();
+            var version = addon["version"]?.GetValue<string>()?.Trim();
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
+            {
+                continue;
+            }
+
+            addonVersions[id] = version;
+        }
+
+        if (!addonVersions.TryGetValue("game", out var minecraftVersion) || string.IsNullOrWhiteSpace(minecraftVersion))
+        {
+            throw new InvalidOperationException("该 PCL 标准整合包未提供游戏版本信息，无法安装。");
+        }
+
+        var launchInfo = root["launchInfo"] as JsonObject;
+        return new FrontendModpackPackage(
+            FrontendModpackPackageKind.Mcbbs,
+            minecraftVersion,
+            addonVersions.TryGetValue("forge", out var forgeVersion) ? forgeVersion : null,
+            addonVersions.TryGetValue("neoforge", out var neoForgeVersion) ? neoForgeVersion : null,
+            addonVersions.TryGetValue("fabric", out var fabricVersion) ? fabricVersion : null,
+            addonVersions.TryGetValue("quilt", out var quiltVersion) ? quiltVersion : null,
+            addonVersions.TryGetValue("optifine", out var optiFineVersion) ? optiFineVersion : null,
+            root["version"]?.GetValue<string>(),
+            ReadJoinedText(launchInfo?["javaArgument"]),
+            ReadJoinedText(launchInfo?["launchArgument"]),
+            [new FrontendModpackOverrideSource(baseFolder + "overrides")],
+            []);
+    }
+
+    private static string ResolveMcbbsMetadataEntryPath(ZipArchive archive, string baseFolder)
+    {
+        var packMetaPath = baseFolder + "mcbbs.packmeta";
+        if (archive.GetEntry(packMetaPath) is not null)
+        {
+            return packMetaPath;
+        }
+
+        var manifestPath = baseFolder + "manifest.json";
+        if (archive.GetEntry(manifestPath) is not null)
+        {
+            return manifestPath;
+        }
+
+        throw new InvalidOperationException($"整合包缺少关键文件：{packMetaPath}");
     }
 
     private static FrontendInstallApplyRequest BuildInstallRequest(
@@ -393,6 +508,7 @@ internal static class FrontendModpackInstallWorkflowService
             ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion) ??
             ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion) ??
             ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion);
+        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion);
 
         return new FrontendInstallApplyRequest(
             request.LauncherDirectory,
@@ -400,7 +516,7 @@ internal static class FrontendModpackInstallWorkflowService
             minecraftChoice,
             primaryChoice,
             LiteLoaderChoice: null,
-            OptiFineChoice: null,
+            OptiFineChoice: optiFineChoice,
             FabricApiChoice: null,
             LegacyFabricApiChoice: null,
             QslChoice: null,
@@ -551,13 +667,22 @@ internal static class FrontendModpackInstallWorkflowService
 
     private static void FinalizeInstalledInstance(FrontendModpackPackage package, FrontendModpackInstallRequest request)
     {
-        var provider = OpenInstanceConfigProvider(request.TargetDirectory);
+        var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(request.TargetDirectory);
         provider.Set("VersionArgumentIndieV2", true);
         PersistKnownMinecraftVersion(provider, package.MinecraftVersion);
         provider.Set("VersionModpackVersion", package.PackageVersion ?? string.Empty);
         provider.Set("VersionModpackSource", request.ProjectSource ?? string.Empty);
         provider.Set("VersionModpackId", request.ProjectId ?? string.Empty);
         provider.Set("CustomInfo", request.ProjectDescription ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(package.LaunchJvmArguments))
+        {
+            provider.Set("VersionAdvanceJvm", package.LaunchJvmArguments);
+        }
+
+        if (!string.IsNullOrWhiteSpace(package.LaunchGameArguments))
+        {
+            provider.Set("VersionAdvanceGame", package.LaunchGameArguments);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.IconPath) && File.Exists(request.IconPath))
         {
@@ -781,7 +906,7 @@ internal static class FrontendModpackInstallWorkflowService
         Action<double>? onProgress,
         CancellationToken cancelToken)
     {
-        using var archive = ZipFile.OpenRead(archivePath);
+        using var archive = OpenArchiveRead(archivePath);
         Directory.CreateDirectory(destinationDirectory);
         var destinationRoot = NormalizeDirectoryRoot(destinationDirectory);
         var totalEntries = Math.Max(archive.Entries.Count, 1);
@@ -820,6 +945,22 @@ internal static class FrontendModpackInstallWorkflowService
         }
     }
 
+    private static ZipArchive OpenArchiveRead(string archivePath)
+    {
+        try
+        {
+            return ZipFile.OpenRead(archivePath);
+        }
+        catch (InvalidDataException ex) when (archivePath.EndsWith(".rar", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试。", ex);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidOperationException("打开整合包文件失败，文件可能损坏或为不支持的压缩包格式。", ex);
+        }
+    }
+
     private static JsonObject ReadJsonObjectFromEntry(ZipArchive archive, string entryPath)
     {
         using var stream = archive.GetEntry(entryPath)?.Open()
@@ -828,6 +969,21 @@ internal static class FrontendModpackInstallWorkflowService
         var content = reader.ReadToEnd();
         return JsonNode.Parse(content)?.AsObject()
                ?? throw new InvalidOperationException($"无法解析整合包内的 JSON 文件：{entryPath}");
+    }
+
+    private static string? ReadJoinedText(JsonNode? node)
+    {
+        if (node is not JsonArray array)
+        {
+            return null;
+        }
+
+        var values = array
+            .Select(entry => entry?.GetValue<string>()?.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .ToArray();
+        return values.Length == 0 ? null : string.Join(" ", values);
     }
 
     private static string ComputeSha1(string filePath)
@@ -880,13 +1036,6 @@ internal static class FrontendModpackInstallWorkflowService
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             File.Copy(file, destinationPath, true);
         }
-    }
-
-    private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
-    {
-        var pclDirectory = Path.Combine(instanceDirectory, "PCL");
-        Directory.CreateDirectory(pclDirectory);
-        return new YamlFileProvider(Path.Combine(pclDirectory, "config.v1.yml"));
     }
 
     private static void ReportStatus(
@@ -1011,10 +1160,8 @@ internal sealed class FrontendManagedModpackInstallTask(
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(request.ArchivePath)!);
-            PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在下载整合包文件…");
             onStarted?.Invoke(request.ArchivePath);
-
-            await DownloadArchiveAsync(token, requestTimeout).ConfigureAwait(false);
+            await PrepareArchiveAsync(token, requestTimeout).ConfigureAwait(false);
 
             var result = await FrontendModpackInstallWorkflowService.InstallDownloadedArchiveAsync(
                 request,
@@ -1040,10 +1187,29 @@ internal sealed class FrontendManagedModpackInstallTask(
         }
     }
 
-    private async Task DownloadArchiveAsync(CancellationToken token, TimeSpan timeout)
+    private async Task PrepareArchiveAsync(CancellationToken token, TimeSpan timeout)
+    {
+        if (!string.IsNullOrWhiteSpace(request.SourceArchivePath))
+        {
+            PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在复制整合包文件…");
+            await CopyArchiveAsync(request.SourceArchivePath!, token).ConfigureAwait(false);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.SourceUrl))
+        {
+            PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在下载整合包文件…");
+            await DownloadArchiveAsync(request.SourceUrl!, token, timeout).ConfigureAwait(false);
+            return;
+        }
+
+        throw new InvalidOperationException("缺少整合包来源。");
+    }
+
+    private async Task DownloadArchiveAsync(string sourceUrl, CancellationToken token, TimeSpan timeout)
     {
         using var client = CreateDownloadHttpClient(timeout);
-        using var response = await client.GetAsync(request.SourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         await using var sourceStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
@@ -1094,6 +1260,39 @@ internal sealed class FrontendManagedModpackInstallTask(
                 "0 B/s",
                 1,
                 null));
+    }
+
+    private async Task CopyArchiveAsync(string sourcePath, CancellationToken token)
+    {
+        await using var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, true);
+        await using var targetStream = new FileStream(request.ArchivePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
+
+        var totalLength = sourceStream.Length;
+        var buffer = new byte[81920];
+        long totalRead = 0;
+
+        while (true)
+        {
+            var read = await sourceStream.ReadAsync(buffer, token).ConfigureAwait(false);
+            if (read <= 0)
+            {
+                break;
+            }
+
+            await targetStream.WriteAsync(buffer.AsMemory(0, read), token).ConfigureAwait(false);
+            totalRead += read;
+
+            var progress = totalLength > 0
+                ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
+                : 1d;
+            PublishProgress(progress * 0.35);
+            PublishTelemetry(
+                new PCL.Core.App.Tasks.TaskTelemetrySnapshot(
+                    $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
+                    "0 B/s",
+                    1,
+                    null));
+        }
     }
 
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
@@ -1161,7 +1360,8 @@ internal sealed class FrontendManagedModpackInstallTask(
 }
 
 internal sealed record FrontendModpackInstallRequest(
-    string SourceUrl,
+    string? SourceUrl,
+    string? SourceArchivePath,
     string ArchivePath,
     string LauncherDirectory,
     string InstanceName,
@@ -1192,7 +1392,10 @@ internal sealed record FrontendModpackPackage(
     string? NeoForgeVersion,
     string? FabricVersion,
     string? QuiltVersion,
+    string? OptiFineVersion,
     string? PackageVersion,
+    string? LaunchJvmArguments,
+    string? LaunchGameArguments,
     IReadOnlyList<FrontendModpackOverrideSource> OverrideSources,
     IReadOnlyList<FrontendModpackFilePlan> Files);
 
@@ -1229,5 +1432,6 @@ internal enum FrontendModpackPackageKind
 {
     Unknown,
     CurseForge,
-    Modrinth
+    Modrinth,
+    Mcbbs
 }

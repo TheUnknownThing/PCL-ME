@@ -20,7 +20,9 @@ internal sealed class App : Application
     public override void Initialize()
     {
         var platformAdapter = new FrontendPlatformAdapter();
-        FrontendShellActionService.ApplyStoredAnimationPreferences(FrontendRuntimePaths.Resolve(platformAdapter));
+        var runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
+        FrontendLoggingBootstrap.Initialize(runtimePaths);
+        FrontendShellActionService.ApplyStoredAnimationPreferences(runtimePaths);
         AvaloniaXamlLoader.Load(this);
         ShellPaneTemplateRegistry.Register(this);
     }
@@ -30,6 +32,7 @@ internal sealed class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var platformAdapter = new FrontendPlatformAdapter();
+            desktop.Exit += OnDesktopExit;
             var shellActionService = new FrontendShellActionService(
                 FrontendRuntimePaths.Resolve(platformAdapter),
                 platformAdapter,
@@ -49,5 +52,10 @@ internal sealed class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        FrontendLoggingBootstrap.Dispose();
     }
 }

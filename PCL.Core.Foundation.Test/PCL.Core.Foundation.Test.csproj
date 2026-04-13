@@ -30,6 +30,6 @@
     <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PCL.Core.Foundation\PCL.Core.Foundation.csproj" />
+    <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
   </ItemGroup>
 </Project>

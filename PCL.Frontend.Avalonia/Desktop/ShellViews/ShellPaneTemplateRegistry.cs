@@ -15,7 +15,7 @@ internal static class ShellPaneTemplateRegistry
         RegisterTemplate<StandardShellNavigationListPaneViewModel, StandardShellNavigationListPaneView>,
         RegisterTemplate<InstanceSelectShellLeftPaneViewModel, InstanceSelectShellLeftPaneView>,
         RegisterTemplate<TaskManagerShellLeftPaneViewModel, TaskManagerShellLeftPaneView>,
-        RegisterTemplate<GenericStandardShellRightPaneViewModel, GenericStandardShellRightPaneView>,
+        RegisterTemplate<SharedRouteShellRightPaneViewModel, SharedRouteShellRightPaneView>,
         RegisterTemplate<InstanceSelectShellRightPaneViewModel, InstanceSelectShellRightPaneView>,
         RegisterTemplate<TaskManagerShellRightPaneViewModel, TaskManagerShellRightPaneView>,
         RegisterTemplate<DownloadInstallShellRightPaneViewModel, DownloadInstallShellRightPaneView>,
@@ -49,7 +49,7 @@ internal static class ShellPaneTemplateRegistry
     private static readonly IReadOnlyDictionary<StandardShellRightPaneKind, Func<FrontendShellViewModel, StandardShellRightPaneDescriptor, ShellRightPaneViewModel>> RightPaneFactories =
         new Dictionary<StandardShellRightPaneKind, Func<FrontendShellViewModel, StandardShellRightPaneDescriptor, ShellRightPaneViewModel>>
         {
-            [StandardShellRightPaneKind.Generic] = static (shell, descriptor) => new GenericStandardShellRightPaneViewModel(shell, descriptor),
+            [StandardShellRightPaneKind.Generic] = static (shell, descriptor) => new SharedRouteShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.DownloadInstall] = static (shell, descriptor) => new DownloadInstallShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.DownloadCatalog] = static (shell, descriptor) => new DownloadCatalogShellRightPaneViewModel(shell, descriptor),
             [StandardShellRightPaneKind.DownloadResource] = static (shell, descriptor) => new DownloadResourceShellRightPaneViewModel(shell, descriptor),
@@ -95,7 +95,7 @@ internal static class ShellPaneTemplateRegistry
             return factory(shell, descriptor);
         }
 
-        return new GenericStandardShellRightPaneViewModel(shell, descriptor);
+        return new SharedRouteShellRightPaneViewModel(shell, descriptor);
     }
 
     private static void RegisterTemplate<TViewModel, TView>(Application application)

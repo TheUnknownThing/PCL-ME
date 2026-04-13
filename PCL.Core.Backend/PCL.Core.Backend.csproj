@@ -6,34 +6,118 @@
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Humanizer.Core.zh-CN" Version="3.0.1" />
+    <PackageReference Include="LiteDB" Version="5.0.21" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="System.Management" Version="10.0.3" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.3" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>PCL.Core.Backend.Test</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PCL.Core.Foundation.Test</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../PCL.Core/App/ConfigEnums.cs" Link="App/ConfigEnums.cs" />
-    <Compile Include="../PCL.Core/App/Essentials/Launcher*.cs" Link="App/Essentials/%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="../PCL.Core/App/Tasks/*.cs" Link="App/Tasks/%(Filename)%(Extension)" />
+    <Compile Include="../PCL.Core.Foundation/**/*.cs"
+             Exclude="../PCL.Core.Foundation/bin/**;../PCL.Core.Foundation/obj/**;../PCL.Core.Foundation/publish/**;../PCL.Core.Foundation/**/*.g.cs"
+             Link="Foundation/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="App/ConfigEnums.cs" />
+    <Compile Include="App/Essentials/LauncherDataProtectionService.cs" />
+    <Compile Include="App/Essentials/LauncherFrontendNavigationService.cs" />
+    <Compile Include="App/Essentials/LauncherFrontendPageContentService.cs" />
+    <Compile Include="App/Essentials/LauncherFrontendPromptService.cs" />
+    <Compile Include="App/Essentials/LauncherFrontendRuntimeStateService.cs" />
+    <Compile Include="App/Essentials/LauncherIdentityResolutionService.cs" />
+    <Compile Include="App/Essentials/LauncherIdentityRuntimeService.cs" />
+    <Compile Include="App/Essentials/LauncherIdentityStorageService.cs" />
+    <Compile Include="App/Essentials/LauncherLegacyIdentityService.cs" />
+    <Compile Include="App/Essentials/LauncherLegacySecretResolutionService.cs" />
+    <Compile Include="App/Essentials/LauncherPlatformSecretStore.cs" />
+    <Compile Include="App/Essentials/LauncherSecretKeyResolutionService.cs" />
+    <Compile Include="App/Essentials/LauncherSecretKeyStorageService.cs" />
+    <Compile Include="App/Essentials/LauncherSharedEncryptionKeyService.cs" />
+    <Compile Include="App/Essentials/LauncherStoredKeyEnvelopeService.cs" />
+    <Compile Include="App/Essentials/LauncherVersionedDataService.cs" />
+    <Compile Include="App/Essentials/LauncherMainWindowStartupWorkflowService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupBootstrapRequest.cs" />
+    <Compile Include="App/Essentials/LauncherStartupBootstrapResult.cs" />
+    <Compile Include="App/Essentials/LauncherStartupBootstrapService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupCommandService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupConsentRequest.cs" />
+    <Compile Include="App/Essentials/LauncherStartupConsentResult.cs" />
+    <Compile Include="App/Essentials/LauncherStartupConsentService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupEnvironmentWarningRequest.cs" />
+    <Compile Include="App/Essentials/LauncherStartupEnvironmentWarningService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupMilestoneService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupPreparationService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupPrompt.cs" />
+    <Compile Include="App/Essentials/LauncherStartupShellService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupVersionIsolationMigrationService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupVisualService.cs" />
+    <Compile Include="App/Essentials/LauncherStartupWorkflowService.cs" />
+    <Compile Include="App/Essentials/LauncherUpdateLogService.cs" />
+    <Compile Include="App/Essentials/LauncherVersionTransitionService.cs" />
+    <Compile Include="App/Essentials/LauncherVersionTransitionWorkflowService.cs" />
+    <Compile Include="App/Tasks/ITask.cs" />
+    <Compile Include="App/Tasks/ITaskCancelable.cs" />
+    <Compile Include="App/Tasks/ITaskGroup.cs" />
+    <Compile Include="App/Tasks/ITaskPausable.cs" />
+    <Compile Include="App/Tasks/ITaskProgressive.cs" />
+    <Compile Include="App/Tasks/ITaskTelemetry.cs" />
+    <Compile Include="App/Tasks/TaskCenter.cs" />
+    <Compile Include="App/Tasks/TaskModel.cs" />
+    <Compile Include="App/Tasks/TaskState.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftJavaRuntimeDownloadService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftJavaRuntimeDownloadSessionService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftJavaRuntimeDownloadWorkflowService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchArgumentWorkflowService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchClasspathService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchGameArgumentService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJavaPromptService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJavaRequirementService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJavaSelectionWorkflowService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJavaWrapperService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJavaWorkflowService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJsonArgumentService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchLoginRequirement.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchPrecheckRequest.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchPrecheckResult.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchPrecheckService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchProfileKind.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchPrompt.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchJvmArgumentService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchReplacementValueService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchResolutionService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchRetroWrapperService.cs" />
     <Compile Include="../PCL.Core/Minecraft/Launch/*.cs" Link="Minecraft/Launch/%(Filename)%(Extension)" />
-    <Compile Include="../PCL.Core/Minecraft/MinecraftCrash*.cs" Link="Minecraft/%(Filename)%(Extension)" />
-    <Compile Include="../PCL.Core/Minecraft/MinecraftLauncherProfilesFileService.cs" Link="Minecraft/MinecraftLauncherProfilesFileService.cs" />
-    <Compile Include="../PCL.Core/Utils/OS/SystemEnvironmentSnapshot.cs" Link="Utils/OS/SystemEnvironmentSnapshot.cs" />
-    <Compile Include="../PCL.Core/Utils/OS/SystemGpuInfo.cs" Link="Utils/OS/SystemGpuInfo.cs" />
-    <Compile Include="../PCL.Core/Utils/Secret/WindowsLegacyCpuIdProvider.cs" Link="Utils/Secret/WindowsLegacyCpuIdProvider.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PCL.Core.Foundation\PCL.Core.Foundation.csproj" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.cs" />
+    <Compile Include="Minecraft/MinecraftCrashEnvironmentReportRequest.cs" />
+    <Compile Include="Minecraft/MinecraftCrashExportArchiveService.cs" />
+    <Compile Include="Minecraft/MinecraftCrashExportFile.cs" />
+    <Compile Include="Minecraft/MinecraftCrashExportRequest.cs" />
+    <Compile Include="Minecraft/MinecraftCrashExportResult.cs" />
+    <Compile Include="Minecraft/MinecraftCrashExportService.cs" />
+    <Compile Include="Minecraft/MinecraftCrashExportWorkflowService.cs" />
+    <Compile Include="Minecraft/MinecraftCrashReportBuilder.cs" />
+    <Compile Include="Minecraft/MinecraftCrashResponseWorkflowService.cs" />
+    <Compile Include="Minecraft/MinecraftCrashWorkflowService.cs" />
+    <Compile Include="Minecraft/MinecraftLauncherProfilesFileService.cs" />
+    <Compile Include="Utils/OS/SystemEnvironmentSnapshot.cs" />
+    <Compile Include="Utils/OS/SystemGpuInfo.cs" />
+    <Compile Include="Utils/Secret/WindowsLegacyCpuIdProvider.cs" />
   </ItemGroup>
 </Project>

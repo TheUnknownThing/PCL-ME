@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
+using PCL.Core.Utils;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -16,7 +17,7 @@ internal static class FrontendInstanceRepairService
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var osKey = GetOsKey();
+        var runtimeArchitecture = FrontendLibraryArtifactResolver.GetCurrentRuntimeArchitecture();
         var filePlans = new Dictionary<string, FrontendInstanceRepairFilePlan>(StringComparer.OrdinalIgnoreCase);
         var downloadedFiles = new List<string>();
         var reusedFiles = new List<string>();
@@ -32,7 +33,7 @@ internal static class FrontendInstanceRepairService
         foreach (var (versionName, root) in manifestDocuments)
         {
             AddClientDownload(filePlans, root, request.LauncherDirectory, versionName, request.ForceCoreRefresh);
-            AddLibraryDownloads(filePlans, root, request.LauncherDirectory, osKey, request.ForceCoreRefresh);
+            AddLibraryDownloads(filePlans, root, request.LauncherDirectory, runtimeArchitecture, request.ForceCoreRefresh);
 
             if (effectiveAssetIndex is null &&
                 root.TryGetProperty("assetIndex", out var assetIndex) &&
@@ -125,7 +126,7 @@ internal static class FrontendInstanceRepairService
         IDictionary<string, FrontendInstanceRepairFilePlan> filePlans,
         JsonElement root,
         string launcherDirectory,
-        string osKey,
+        MachineType runtimeArchitecture,
         bool forceDownload)
     {
         if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
@@ -135,14 +136,13 @@ internal static class FrontendInstanceRepairService
 
         foreach (var library in libraries.EnumerateArray())
         {
-            if (!IsLibraryAllowed(library, osKey))
+            if (!FrontendLibraryArtifactResolver.IsLibraryAllowed(library, runtimeArchitecture))
             {
                 continue;
             }
 
-            var name = GetString(library, "name");
-            AddArtifactDownload(filePlans, library, launcherDirectory, forceDownload);
-            AddNativeDownload(filePlans, library, launcherDirectory, osKey, name, forceDownload);
+            AddArtifactDownload(filePlans, library, launcherDirectory, runtimeArchitecture, forceDownload);
+            AddNativeDownload(filePlans, library, launcherDirectory, runtimeArchitecture, forceDownload);
         }
     }
 
@@ -150,13 +150,25 @@ internal static class FrontendInstanceRepairService
         IDictionary<string, FrontendInstanceRepairFilePlan> filePlans,
         JsonElement library,
         string launcherDirectory,
+        MachineType runtimeArchitecture,
         bool forceDownload)
     {
-        if (!TryGetLibraryDownload(library, "artifact", launcherDirectory, out var filePlan))
+        if (!FrontendLibraryArtifactResolver.TryResolveArtifactDownload(
+                library,
+                launcherDirectory,
+                runtimeArchitecture,
+                out var resolved))
         {
             return;
         }
 
+        var filePlan = new FrontendInstanceRepairFilePlan(
+            resolved.TargetPath,
+            string.IsNullOrWhiteSpace(resolved.DownloadUrl) ? [] : [resolved.DownloadUrl],
+            resolved.Sha1,
+            resolved.Size,
+            false,
+            FrontendInstanceRepairFileGroup.Libraries);
         var shouldForceDownload = (forceDownload || filePlan.ForceDownload) && filePlan.Urls.Count > 0;
         AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = shouldForceDownload });
     }
@@ -165,51 +177,25 @@ internal static class FrontendInstanceRepairService
         IDictionary<string, FrontendInstanceRepairFilePlan> filePlans,
         JsonElement library,
         string launcherDirectory,
-        string osKey,
-        string? libraryName,
+        MachineType runtimeArchitecture,
         bool forceDownload)
     {
-        if (!library.TryGetProperty("natives", out var natives) || natives.ValueKind != JsonValueKind.Object)
+        if (!FrontendLibraryArtifactResolver.TryResolveNativeArchiveDownload(
+                library,
+                launcherDirectory,
+                runtimeArchitecture,
+                out var resolved))
         {
             return;
         }
 
-        if (!natives.TryGetProperty(osKey, out var classifierValue) || classifierValue.ValueKind != JsonValueKind.String)
-        {
-            return;
-        }
-
-        var classifier = classifierValue.GetString()?.Replace("${arch}", Environment.Is64BitOperatingSystem ? "64" : "32", StringComparison.Ordinal);
-        if (string.IsNullOrWhiteSpace(classifier))
-        {
-            return;
-        }
-
-        if (!TryGetLibraryDownload(library, classifier, launcherDirectory, out var filePlan))
-        {
-            if (!string.IsNullOrWhiteSpace(libraryName))
-            {
-                var derivedPath = DeriveLibraryPathFromName(libraryName, classifier);
-                var derivedUrl = BuildLibraryUrl(library, derivedPath);
-                if (string.IsNullOrWhiteSpace(derivedUrl))
-                {
-                    return;
-                }
-
-                filePlan = new FrontendInstanceRepairFilePlan(
-                    Path.Combine(launcherDirectory, "libraries", derivedPath.Replace('/', Path.DirectorySeparatorChar)),
-                    [derivedUrl],
-                    null,
-                    null,
-                    forceDownload,
-                    FrontendInstanceRepairFileGroup.Libraries);
-            }
-            else
-            {
-                return;
-            }
-        }
-
+        var filePlan = new FrontendInstanceRepairFilePlan(
+            resolved.TargetPath,
+            string.IsNullOrWhiteSpace(resolved.DownloadUrl) ? [] : [resolved.DownloadUrl],
+            resolved.Sha1,
+            resolved.Size,
+            false,
+            FrontendInstanceRepairFileGroup.Libraries);
         var shouldForceDownload = (forceDownload || filePlan.ForceDownload) && filePlan.Urls.Count > 0;
         AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = shouldForceDownload });
     }

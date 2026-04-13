@@ -11,6 +11,7 @@ internal sealed record FrontendLaunchComposition(
     FrontendLaunchProfileSummary SelectedProfile,
     FrontendJavaRuntimeSummary? SelectedJavaRuntime,
     string? JavaWarningMessage,
+    MinecraftLaunchPrompt? JavaCompatibilityPrompt,
     int LaunchCount,
     MinecraftLaunchPrecheckRequest PrecheckRequest,
     MinecraftLaunchPrecheckResult PrecheckResult,
