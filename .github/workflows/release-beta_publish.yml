@@ -23,19 +23,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - configuration: Beta
+          - configuration: Release
             runner: ubuntu-latest
             rid: linux-x64
             artifact_name: PCL-ME_Beta_linux-x64
-          - configuration: Beta
+          - configuration: Release
             runner: ubuntu-latest
             rid: win-x64
             artifact_name: PCL-ME_Beta_win-x64
-          - configuration: Beta
+          - configuration: Release
             runner: ubuntu-latest
             rid: win-arm64
             artifact_name: PCL-ME_Beta_win-arm64
-          - configuration: Beta
+          - configuration: Release
             runner: macos-latest
             rid: osx-arm64
             artifact_name: PCL-ME_Beta_osx-arm64

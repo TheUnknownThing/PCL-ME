@@ -1,10 +1,10 @@
 {
   "name": "PCL-ME",
   "version": {
-    "base": "2.14.5",
+    "base": "1.0.0",
     "upstream": "2.12.1",
-    "suffix": "beta.1.2147483647",
-    "code": 511
+    "suffix": "alpha.1",
+    "code": 1
   },
   "licenses": [
     {
