@@ -6,7 +6,7 @@ permalink: /en/community/
 description: Join the PCL-ME community, report issues, and understand where contributions should go.
 ---
 
-[Home]({{ "/en/" | relative_url }}) · [Downloads]({{ "/en/downloads/" | relative_url }}) · [Build From Source]({{ "/en/build-from-source/" | relative_url }}) · [Community]({{ "/en/community/" | relative_url }}) · [中文]({{ "/community/" | relative_url }})
+[Home]({{ "/en/" | relative_url }}) · [Downloads]({{ "/en/downloads/" | relative_url }}) · [Build From Source]({{ "/en/build-from-source/" | relative_url }}) · [Community]({{ "/en/community/" | relative_url }}) · [简体中文]({{ "/community/" | relative_url }}) · [繁體中文]({{ "/zh-tw/community/" | relative_url }})
 
 ## Get Involved
 
@@ -18,6 +18,7 @@ description: Join the PCL-ME community, report issues, and understand where cont
 
 - New UI changes should target `PCL.Frontend.Avalonia/`.
 - The active stack is `C# + .NET 10 + Avalonia`.
+- The legacy VB.NET / WPF frontend is no longer the maintained direction in this repository.
 - Cross-platform validation details are especially helpful in pull requests.
 
 ## When Reporting Problems

@@ -6,7 +6,7 @@ permalink: /community/
 description: 参与 PCL-ME 社区、提交 Issue，并了解贡献方向。
 ---
 
-[首页]({{ "/" | relative_url }}) · [下载]({{ "/downloads/" | relative_url }}) · [从源码构建]({{ "/build-from-source/" | relative_url }}) · [社区]({{ "/community/" | relative_url }}) · [English]({{ "/en/community/" | relative_url }})
+[首页]({{ "/" | relative_url }}) · [下载]({{ "/downloads/" | relative_url }}) · [从源码构建]({{ "/build-from-source/" | relative_url }}) · [社区]({{ "/community/" | relative_url }}) · [English]({{ "/en/community/" | relative_url }}) · [繁體中文]({{ "/zh-tw/community/" | relative_url }})
 
 ## 参与方式
 
@@ -18,6 +18,7 @@ description: 参与 PCL-ME 社区、提交 Issue，并了解贡献方向。
 
 - 新的界面改动应优先提交到 `PCL.Frontend.Avalonia/`。
 - 当前主线技术栈是 `C# + .NET 10 + Avalonia`。
+- 当前仓库不再以旧版 VB.NET / WPF 前端为维护方向。
 - Pull Request 中附带跨平台验证信息会很有帮助。
 
 ## 反馈问题时建议附带
