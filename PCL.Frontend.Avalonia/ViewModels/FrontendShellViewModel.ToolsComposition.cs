@@ -29,7 +29,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadToolsComposition()
     {
-        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _instanceComposition));
+        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths));
     }
 
     private void PersistToolsSetting(string? propertyName)
@@ -174,7 +174,7 @@ internal sealed partial class FrontendShellViewModel
         var shortcutTargets = BuildShortcutTargets(LauncherShortcutDisplayName);
         if (shortcutTargets.Count == 0)
         {
-            AddActivity("创建快捷方式失败", "当前系统未提供可用的快捷方式目录。");
+            AddFailureActivity("创建快捷方式失败", "当前系统未提供可用的快捷方式目录。");
             return;
         }
 
@@ -223,7 +223,7 @@ internal sealed partial class FrontendShellViewModel
                 selectedTarget = shortcutTargets.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.Ordinal));
                 if (selectedTarget is null)
                 {
-                    AddActivity("创建快捷方式失败", $"未识别的快捷方式位置: {selectedId}");
+                    AddFailureActivity("创建快捷方式失败", $"未识别的快捷方式位置: {selectedId}");
                     return;
                 }
             }
@@ -234,7 +234,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("创建快捷方式失败", ex.Message);
+            AddFailureActivity("创建快捷方式失败", ex.Message);
         }
     }
 
@@ -381,7 +381,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"{title} 失败", ex.Message);
+            AddFailureActivity($"{title} 失败", ex.Message);
             return null;
         }
     }

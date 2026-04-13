@@ -88,21 +88,16 @@
             <controls:PclButton
                 Height="34"
                 ColorType="Highlight"
-                Command="{Binding CreateOfflineLaunchProfileCommand}"
-                Text="离线创建" />
-            <controls:PclButton
-                Height="34"
                 Command="{Binding LoginMicrosoftLaunchProfileCommand}"
                 Text="微软登录" />
             <controls:PclButton
                 Height="34"
-                Command="{Binding LoginAuthlibLaunchProfileCommand}"
-                Text="外置登录" />
+                Command="{Binding CreateOfflineLaunchProfileCommand}"
+                Text="离线创建" />
             <controls:PclButton
                 Height="34"
-                Command="{Binding SelectLaunchProfileCommand}"
-                IsVisible="{Binding HasLaunchProfileEntries}"
-                Text="选择已有档案" />
+                Command="{Binding LoginAuthlibLaunchProfileCommand}"
+                Text="外置登录" />
             <controls:PclButton
                 Height="32"
                 Command="{Binding BackLaunchProfileCommand}"
@@ -136,6 +131,9 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <controls:PclListItem
+                        AccessoryCommand="{Binding AccessoryCommand}"
+                        AccessoryIconData="{Binding AccessoryIconData}"
+                        AccessoryToolTip="{Binding AccessoryToolTip}"
                         Margin="8,2,10,2"
                         Command="{Binding Command}"
                         Info="{Binding Info}"

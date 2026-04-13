@@ -8,6 +8,9 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchJsonArgumentService
 {
+    private static readonly IReadOnlyDictionary<string, bool> EmptyFeatures =
+        new Dictionary<string, bool>(StringComparer.Ordinal);
+
     public static IReadOnlyList<string> ExtractValues(MinecraftLaunchJsonArgumentRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -114,10 +117,21 @@ public static class MinecraftLaunchJsonArgumentService
 
             if (rule.TryGetProperty("features", out var featuresRule) && featuresRule.ValueKind == JsonValueKind.Object)
             {
-                isRightRule &= !featuresRule.TryGetProperty("is_demo_user", out _);
-                if (featuresRule.EnumerateObject().Any(property => property.Name.Contains("quick_play", StringComparison.Ordinal)))
+                var featureStates = request.Features ?? EmptyFeatures;
+                foreach (var property in featuresRule.EnumerateObject())
                 {
-                    isRightRule = false;
+                    var expectedState = property.Value.ValueKind switch
+                    {
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        _ => false
+                    };
+                    var actualState = featureStates.TryGetValue(property.Name, out var value) && value;
+                    if (actualState != expectedState)
+                    {
+                        isRightRule = false;
+                        break;
+                    }
                 }
             }
 
@@ -164,4 +178,5 @@ public static class MinecraftLaunchJsonArgumentService
 public sealed record MinecraftLaunchJsonArgumentRequest(
     IReadOnlyList<string> SectionJsons,
     string OperatingSystemVersion,
-    bool Is32BitOperatingSystem);
+    bool Is32BitOperatingSystem,
+    IReadOnlyDictionary<string, bool>? Features = null);

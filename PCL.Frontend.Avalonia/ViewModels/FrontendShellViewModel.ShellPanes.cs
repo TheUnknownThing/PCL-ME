@@ -97,35 +97,18 @@ internal sealed partial class FrontendShellViewModel
             return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Sidebar, "standard-sidebar");
         }
 
-        if (HasStandardShellSummaryPaneContent())
-        {
-            return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Summary, "standard-summary");
-        }
-
-        return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.Empty, "standard-empty");
+        return new StandardShellLeftPaneDescriptor(StandardShellLeftPaneKind.None, $"{_currentRoute.Page.ToString().ToLowerInvariant()}-full-width");
     }
 
-    private ShellLeftPaneViewModel ResolveStandardLeftPane(StandardShellLeftPaneDescriptor descriptor)
+    private ShellLeftPaneViewModel? ResolveStandardLeftPane(StandardShellLeftPaneDescriptor descriptor)
     {
         return descriptor.Kind switch
         {
-            StandardShellLeftPaneKind.None => new StandardShellEmptyPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.Sidebar => new StandardShellNavigationListPaneViewModel(this, descriptor),
-            StandardShellLeftPaneKind.Summary => new StandardShellSummaryPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.InstanceSelection => new InstanceSelectShellLeftPaneViewModel(this, descriptor),
             StandardShellLeftPaneKind.TaskManager => new TaskManagerShellLeftPaneViewModel(this, descriptor),
-            _ => new StandardShellEmptyPaneViewModel(this, descriptor)
+            _ => null
         };
-    }
-
-    private bool HasStandardShellSummaryPaneContent()
-    {
-        return !string.IsNullOrWhiteSpace(Eyebrow)
-            || !string.IsNullOrWhiteSpace(Title)
-            || !string.IsNullOrWhiteSpace(Description)
-            || !string.IsNullOrWhiteSpace(BreadcrumbTrail)
-            || !string.IsNullOrWhiteSpace(SurfaceMeta)
-            || HasSurfaceFacts;
     }
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)

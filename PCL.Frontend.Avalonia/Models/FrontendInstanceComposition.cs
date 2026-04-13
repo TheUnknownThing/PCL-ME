@@ -71,7 +71,9 @@ internal sealed record FrontendInstanceSetupState(
     string GameArguments,
     string ClasspathHead,
     string PreLaunchCommand,
+    string EnvironmentVariables,
     bool WaitForPreLaunchCommand,
+    int ForceX11OnWaylandMode,
     bool IgnoreJavaCompatibilityWarning,
     bool DisableFileValidation,
     bool FollowLauncherProxy,
@@ -148,4 +150,11 @@ internal sealed record FrontendInstanceResourceEntry(
     string Meta,
     string Path,
     string IconName,
-    bool IsEnabled = true);
+    string Identity = "",
+    bool IsEnabled = true,
+    string Description = "",
+    string Website = "",
+    string Authors = "",
+    string Version = "",
+    string Loader = "",
+    byte[]? IconBytes = null);

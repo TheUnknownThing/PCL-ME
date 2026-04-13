@@ -110,12 +110,6 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string MirrorCdk
-    {
-        get => _mirrorCdk;
-        set => SetProperty(ref _mirrorCdk, value);
-    }
-
     public Bitmap? UpdateAvailableIcon => File.Exists(UpdateAvailableIconFilePath)
         ? new Bitmap(UpdateAvailableIconFilePath)
         : null;
@@ -330,10 +324,22 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _launchBeforeCommand, value);
     }
 
+    public string LaunchEnvironmentVariables
+    {
+        get => _launchEnvironmentVariables;
+        set => SetProperty(ref _launchEnvironmentVariables, value);
+    }
+
     public bool WaitForLaunchBeforeCommand
     {
         get => _waitForLaunchBeforeCommand;
         set => SetProperty(ref _waitForLaunchBeforeCommand, value);
+    }
+
+    public bool ForceX11OnWaylandForLaunch
+    {
+        get => _forceX11OnWaylandForLaunch;
+        set => SetProperty(ref _forceX11OnWaylandForLaunch, value);
     }
 
     public bool DisableJavaLaunchWrapper
@@ -385,7 +391,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchButtonTitle => _isLaunchInProgress ? "启动中" : "启动游戏";
 
-    public string LaunchVersionSubtitle => _launchComposition.InstanceName;
+    public string LaunchVersionSubtitle => GetDisplayedLaunchInstanceName();
 
     public string LaunchWelcomeBanner => $"当前实例：{LaunchVersionSubtitle}";
 
@@ -409,9 +415,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowLaunchLog => _showLaunchLog;
 
-    public string LaunchLogText => _launchLogBuilder.Length == 0
-        ? "正在等待启动日志输出。"
-        : _launchLogBuilder.ToString();
+    public string LaunchLogText => _launchLogVisibleText;
 
     public bool IsLaunchMigrationExpanded
     {

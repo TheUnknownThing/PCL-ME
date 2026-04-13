@@ -36,10 +36,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<SimpleListEntryViewModel> LogEntries { get; } = [];
 
-    public ObservableCollection<SimpleListEntryViewModel> GameLinkPolicyEntries { get; } = [];
-
-    public ObservableCollection<SimpleListEntryViewModel> GameLinkPlayerEntries { get; } = [];
-
     public ObservableCollection<ToolboxActionViewModel> ToolboxActions { get; } = [];
 
     public ObservableCollection<SurfaceNoticeViewModel> DownloadInstallHints { get; } = [];
@@ -54,7 +50,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<DownloadCatalogSectionViewModel> DownloadCatalogSections { get; } = [];
 
-    public ObservableCollection<DownloadCatalogSectionViewModel> DownloadFavoriteSections { get; } = [];
+    public ObservableCollection<DownloadFavoriteSectionViewModel> DownloadFavoriteSections { get; } = [];
 
     public ObservableCollection<KeyValueEntryViewModel> VersionSaveInfoEntries { get; } = [];
 
@@ -166,6 +162,8 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowInnerNavigation => CanGoBack;
 
+    public bool ShowHomeNavigation => CanGoHome;
+
     public bool IsContextModeRoute => _currentNavigation?.ShowsBackButton ?? false;
 
     public bool ShowWindowBranding => !IsContextModeRoute;
@@ -191,8 +189,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public PromptCardViewModel? CurrentPrompt => ActivePrompts.Count > 0 ? ActivePrompts[0] : null;
 
     public bool HasCurrentPrompt => CurrentPrompt is not null;
-
-    public bool IsPromptOverlayVisible => HasActivePrompts && _isPromptOverlayOpen;
 
     public bool HasSidebarEntries => SidebarEntries.Count > 0;
 
@@ -270,6 +266,19 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
                 _backCommand.NotifyCanExecuteChanged();
                 RaisePropertyChanged(nameof(ShowTopLevelNavigation));
                 RaisePropertyChanged(nameof(ShowInnerNavigation));
+            }
+        }
+    }
+
+    public bool CanGoHome
+    {
+        get => _canGoHome;
+        private set
+        {
+            if (SetProperty(ref _canGoHome, value))
+            {
+                _homeCommand.NotifyCanExecuteChanged();
+                RaisePropertyChanged(nameof(ShowHomeNavigation));
             }
         }
     }

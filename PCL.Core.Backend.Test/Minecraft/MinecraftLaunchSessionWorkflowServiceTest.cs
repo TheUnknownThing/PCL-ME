@@ -1,4 +1,5 @@
 using System.IO;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Launch;
 
@@ -19,6 +20,7 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                         WorkingDirectory: @"D:\Instances\Demo",
                         JavaExecutablePath: @"C:\Java\bin\java.exe",
                         LaunchArguments: "--demo",
+                        EnvironmentVariables: new Dictionary<string, string>(),
                         GlobalCommand: "echo global",
                         WaitForGlobalCommand: true,
                         InstanceCommand: "echo instance",
@@ -33,6 +35,7 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                     AppDataPath: @"D:\Minecraft\.minecraft",
                     WorkingDirectory: @"D:\Instances\Demo",
                     LaunchArguments: "--demo",
+                    EnvironmentVariables: new Dictionary<string, string>(),
                     PrioritySetting: 0),
                 new MinecraftLaunchWatcherWorkflowRequest(
                     new MinecraftLaunchSessionLogRequest(
@@ -84,6 +87,7 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                         WorkingDirectory: @"D:\Instances\Demo",
                         JavaExecutablePath: @"C:\Java\bin\java.exe",
                         LaunchArguments: "--demo",
+                        EnvironmentVariables: new Dictionary<string, string>(),
                         GlobalCommand: null,
                         WaitForGlobalCommand: false,
                         InstanceCommand: null,
@@ -98,6 +102,7 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                     AppDataPath: @"D:\Minecraft\.minecraft",
                     WorkingDirectory: @"D:\Instances\Demo",
                     LaunchArguments: "--demo",
+                    EnvironmentVariables: new Dictionary<string, string>(),
                     PrioritySetting: 1),
                 new MinecraftLaunchWatcherWorkflowRequest(
                     new MinecraftLaunchSessionLogRequest(

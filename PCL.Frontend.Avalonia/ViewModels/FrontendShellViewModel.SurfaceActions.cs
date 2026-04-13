@@ -22,14 +22,6 @@ internal sealed partial class FrontendShellViewModel
 {
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
-        if (_currentRoute.Page == LauncherFrontendPageKey.Setup
-            && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLink
-            && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
-        {
-            ResetGameLinkSurface();
-            return;
-        }
-
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             ResetDownloadInstallSurface();
@@ -60,12 +52,6 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameLink) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
-        {
-            ResetGameLinkSurface();
-            return;
-        }
-
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetGameManageSurface();
@@ -90,12 +76,6 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsGameLink) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
-        {
-            RefreshToolsGameLinkSurface();
-            return;
-        }
-
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshToolsTestSurface();
@@ -107,7 +87,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task CheckForLauncherUpdatesAsync(bool forceRefresh)
     {
-        var signature = $"{SelectedUpdateChannelIndex}|{MirrorCdk}";
+        var signature = $"{SelectedUpdateChannelIndex}";
         if (_isCheckingUpdate)
         {
             return;
@@ -126,7 +106,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex, MirrorCdk);
+            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex);
             _lastUpdateCheckSignature = signature;
             RaiseUpdateSurfaceProperties();
 
@@ -180,7 +160,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("下载并安装更新失败", error ?? outputPath);
+            AddFailureActivity("下载并安装更新失败", error ?? outputPath);
         }
     }
 
@@ -211,7 +191,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity("查看更新详情失败", openError ?? "当前没有可用的更新详情。");
+        AddFailureActivity("查看更新详情失败", openError ?? "当前没有可用的更新详情。");
     }
 
     private void ResetLaunchSettingsSurface()
@@ -220,30 +200,6 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.RemoveSharedValues(LaunchSharedResetKeys);
         ReloadSetupComposition();
         AddActivity("重置启动设置", "启动选项、内存与高级启动参数已恢复到当前启动器的默认配置。");
-    }
-
-    private void RefreshToolsGameLinkSurface()
-    {
-        _ = RefreshToolsGameLinkSurfaceAsync();
-    }
-
-    private async Task RefreshToolsGameLinkSurfaceAsync()
-    {
-        ReloadToolsComposition();
-        ResetGameLinkSessionRuntimeState();
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-
-        try
-        {
-            await EnsureLobbyServiceInitializedAsync(refreshWorlds: true);
-            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-            AddActivity("刷新联机大厅", "联机大厅页面已从运行时与当前配置重新加载。");
-        }
-        catch (Exception ex)
-        {
-            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-            AddActivity("刷新联机大厅失败", ex.Message);
-        }
     }
 
     private void RefreshToolsTestSurface()
@@ -265,485 +221,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HeadPreviewSize));
         ResetMinecraftServerQuerySurface();
         AddActivity("刷新测试工具页", "测试页表单与工具按钮已从当前启动器配置重新加载。");
-    }
-
-    private void AcceptGameLinkTerms()
-    {
-        _shellActionService.PersistSharedValue("LinkEula", true);
-        ReloadToolsComposition();
-        RefreshToolsGameLinkSurface();
-        AddActivity("同意联机大厅条款", "大厅说明与条款已写入当前启动器配置。");
-    }
-
-    private async Task TestLobbyNatAsync()
-    {
-        GameLinkNatStatus = "正在测试";
-
-        try
-        {
-            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
-                .Where(item => item.OperationalStatus == OperationalStatus.Up
-                    && item.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .ToArray();
-            var supportsIpv4 = interfaces.Any(item => item.Supports(NetworkInterfaceComponent.IPv4));
-            var supportsIpv6 = interfaces.Any(item => item.Supports(NetworkInterfaceComponent.IPv6));
-            GameLinkNatStatus = interfaces.Length == 0
-                ? "未检测到网络"
-                : supportsIpv4 && supportsIpv6
-                    ? "IPv4 / IPv6 已就绪"
-                    : supportsIpv4
-                        ? "IPv4 已就绪"
-                        : supportsIpv6
-                            ? "IPv6 已就绪"
-                            : "需要进一步诊断";
-
-            List<string> lines =
-            [
-                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                $"界面状态: {GameLinkNatStatus}",
-                $"启用 IPv6 设置: {(AllowIpv6Communication ? "是" : "否")}",
-                $"低延迟优先: {(PreferLowestLatencyPath ? "是" : "否")}",
-                $"对称 NAT 猜测: {(TryPunchSymmetricNat ? "是" : "否")}",
-                string.Empty,
-                "活动网络接口",
-                .. interfaces.Length == 0
-                    ? ["- 未检测到处于联通状态的网络接口。"]
-                    : interfaces.SelectMany(DescribeInterface)
-            ];
-            var result = await ShowToolboxConfirmationAsync("测试 NAT 类型", string.Join(Environment.NewLine, lines));
-            if (result is null)
-            {
-                return;
-            }
-
-            AddActivity("测试 NAT 类型", $"检测结果：{GameLinkNatStatus}");
-        }
-        catch (Exception ex)
-        {
-            GameLinkNatStatus = "测试失败";
-            AddActivity("测试 NAT 类型失败", ex.Message);
-        }
-    }
-
-    private async Task LoginNatayarkAccountAsync()
-    {
-        if (HasConfiguredGameLinkIdentity())
-        {
-            var shouldLogout = await _shellActionService.ConfirmAsync(
-                "退出 Natayark 账户",
-                "这会清除当前保存的大厅显示名与 Natayark 登录令牌。要继续吗？",
-                "退出",
-                isDanger: true);
-            if (!shouldLogout)
-            {
-                return;
-            }
-
-            _shellActionService.RemoveSharedValues(["LinkUsername", "LinkNaidRefreshToken", "LinkNaidRefreshExpiresAt"]);
-            ReloadSetupComposition();
-            ReloadToolsComposition();
-            ResetGameLinkSessionRuntimeState();
-            SyncLobbyRuntimeState(preserveTypedLobbyId: false);
-            AddActivity("Natayark 账户", "已清除当前保存的大厅身份信息。");
-            return;
-        }
-
-        string? userName;
-        try
-        {
-            userName = await _shellActionService.PromptForTextAsync(
-                "Natayark 账户",
-                "输入一个大厅显示名。创建或加入大厅时会优先使用它。",
-                LinkUsername,
-                "保存",
-                "输入大厅显示名");
-        }
-        catch (Exception ex)
-        {
-            AddActivity("Natayark 账户失败", ex.Message);
-            return;
-        }
-
-        if (userName is null)
-        {
-            AddActivity("Natayark 账户", "已取消输入大厅显示名。");
-            return;
-        }
-
-        userName = userName.Trim();
-        if (string.IsNullOrWhiteSpace(userName))
-        {
-            AddActivity("Natayark 账户", "大厅显示名不能为空。");
-            return;
-        }
-
-        _shellActionService.PersistSharedValue("LinkUsername", userName);
-        ReloadSetupComposition();
-        ReloadToolsComposition();
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-        AddActivity("Natayark 账户", $"已保存大厅显示名：{userName}");
-    }
-
-    private void JoinLobby()
-    {
-        _ = JoinLobbyAsync();
-    }
-
-    private async Task JoinLobbyAsync()
-    {
-        if (!EnsureGameLinkTermsAccepted("加入大厅"))
-        {
-            return;
-        }
-
-        var lobbyId = GameLinkLobbyId.Trim();
-        if (string.IsNullOrWhiteSpace(lobbyId))
-        {
-            AddActivity("加入大厅", "请先输入朋友发送给你的大厅编号。");
-            return;
-        }
-
-        try
-        {
-            await EnsureLobbyServiceInitializedAsync(refreshWorlds: false);
-        }
-        catch (Exception ex)
-        {
-            AddActivity("加入大厅失败", ex.Message);
-            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
-            return;
-        }
-
-        if (!CanStartLobbyOperation("加入大厅"))
-        {
-            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
-            return;
-        }
-
-        _gameLinkSessionIsHost = false;
-        _gameLinkSessionPort = 25565;
-
-        var userName = ResolveGameLinkDisplayUserName();
-        GameLinkLobbyId = lobbyId;
-        GameLinkAnnouncement = $"正在加入大厅 {lobbyId}。";
-        GameLinkSessionId = lobbyId;
-        GameLinkSessionPing = "-ms";
-        GameLinkConnectionType = "正在加入 EasyTier 大厅";
-        GameLinkConnectedUserName = userName;
-        GameLinkConnectedUserType = "大厅访客";
-        ReplaceItems(
-            GameLinkPlayerEntries,
-            [new SimpleListEntryViewModel(userName, "当前设备 • 正在连接", new ActionCommand(() => AddActivity("查看大厅成员", userName)))]);
-        RaiseToolsGameLinkProperties();
-
-        var joined = await LobbyRuntime.JoinLobbyAsync(lobbyId, userName);
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !joined);
-        AddActivity(
-            joined ? "加入大厅" : "加入大厅失败",
-            joined ? $"已成功加入大厅 {lobbyId}。" : "运行时未能加入目标大厅，请查看提示信息后重试。");
-    }
-
-    private async Task PasteLobbyIdAsync()
-    {
-        try
-        {
-            var clipboardText = await _shellActionService.ReadClipboardTextAsync();
-            if (string.IsNullOrWhiteSpace(clipboardText))
-            {
-                AddActivity("粘贴大厅编号", "剪贴板中没有可用文本。");
-                return;
-            }
-
-            var lobbyId = clipboardText
-                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-                .FirstOrDefault()?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(lobbyId))
-            {
-                AddActivity("粘贴大厅编号", "剪贴板中的内容不是可识别的大厅编号。");
-                return;
-            }
-
-            GameLinkLobbyId = lobbyId;
-            AddActivity("粘贴大厅编号", GameLinkLobbyId);
-        }
-        catch (Exception ex)
-        {
-            AddActivity("粘贴大厅编号失败", ex.Message);
-        }
-    }
-
-    private void ClearLobbyId()
-    {
-        GameLinkLobbyId = string.Empty;
-        AddActivity("清除大厅编号", "Lobby code input cleared.");
-    }
-
-    private void CreateLobby()
-    {
-        if (!EnsureGameLinkTermsAccepted("创建大厅"))
-        {
-            return;
-        }
-
-        if (GameLinkWorldOptions.Count == 0)
-        {
-            AddActivity("创建大厅", "当前没有可用于创建大厅的存档。");
-            return;
-        }
-
-        var worldName = GameLinkWorldOptions[SelectedGameLinkWorldIndex];
-        if (string.Equals(worldName, "未检测到可用存档", StringComparison.Ordinal))
-        {
-            AddActivity("创建大厅", "当前没有可用于创建大厅的存档。");
-            return;
-        }
-
-        _ = CreateLobbyAsync(ResolveSelectedGameLinkPort(), worldName, isManualPort: false);
-    }
-
-    private async Task CreateLobbyAsync(int port, string worldName, bool isManualPort)
-    {
-        try
-        {
-            await EnsureLobbyServiceInitializedAsync(refreshWorlds: false);
-        }
-        catch (Exception ex)
-        {
-            AddActivity("创建大厅失败", ex.Message);
-            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
-            return;
-        }
-
-        if (!CanStartLobbyOperation("创建大厅"))
-        {
-            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
-            return;
-        }
-
-        _gameLinkSessionIsHost = true;
-        _gameLinkSessionPort = port;
-        GameLinkSessionPing = "-ms";
-        GameLinkConnectionType = "正在创建 EasyTier 大厅";
-        GameLinkConnectedUserName = ResolveGameLinkDisplayUserName();
-        GameLinkConnectedUserType = "大厅房主";
-        GameLinkAnnouncement = isManualPort
-            ? $"正在根据端口 {port} 创建大厅。"
-            : $"正在为 {worldName} 创建大厅。";
-        ReplaceItems(
-            GameLinkPlayerEntries,
-            [
-                new SimpleListEntryViewModel(GameLinkConnectedUserName, "大厅房主 • 正在启动", new ActionCommand(() => AddActivity("查看大厅成员", GameLinkConnectedUserName))),
-                new SimpleListEntryViewModel("等待好友加入", "大厅成员槽位 • 空闲", new ActionCommand(() => AddActivity("查看大厅成员", "等待好友加入")))
-            ]);
-        RaiseToolsGameLinkProperties();
-
-        var created = await LobbyRuntime.CreateLobbyAsync(port, GameLinkConnectedUserName);
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !created);
-        AddActivity(
-            created ? "创建大厅" : "创建大厅失败",
-            created
-                ? isManualPort
-                    ? $"已按端口 {port} 创建大厅。"
-                    : $"已为 {worldName} 创建大厅。"
-                : "运行时未能创建大厅，请确认已经登录 Natayark 并开放了局域网端口。");
-    }
-
-    private void RefreshLobbyWorlds()
-    {
-        _ = RefreshLobbyWorldsAsync();
-    }
-
-    private async Task RefreshLobbyWorldsAsync()
-    {
-        ReloadToolsComposition();
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-
-        try
-        {
-            await EnsureLobbyServiceInitializedAsync(refreshWorlds: true);
-            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-            var selectedWorld = GameLinkWorldOptions.Count > 0
-                ? GameLinkWorldOptions[SelectedGameLinkWorldIndex]
-                : "未检测到可用存档";
-            AddActivity("刷新世界列表", selectedWorld);
-        }
-        catch (Exception ex)
-        {
-            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
-            AddActivity("刷新世界列表失败", ex.Message);
-        }
-    }
-
-    private async Task ExitLobbyAsync()
-    {
-        if (!IsLobbyState(LobbyRuntime.CurrentState, "Connected", "Creating", "Joining", "Leaving")
-            && string.IsNullOrWhiteSpace(LobbyRuntime.CurrentLobbyCode))
-        {
-            AddActivity("退出大厅", "当前没有正在进行的大厅会话。");
-            return;
-        }
-
-        var confirmed = await _shellActionService.ConfirmAsync(
-            "确认退出大厅",
-            _gameLinkSessionIsHost
-                ? "你当前是大厅创建者。退出后当前大厅会自动解散。"
-                : "退出后当前大厅连接将被断开。",
-            "退出",
-            isDanger: true);
-        if (!confirmed)
-        {
-            return;
-        }
-
-        try
-        {
-            await LobbyRuntime.LeaveLobbyAsync();
-            ReloadToolsComposition();
-            ResetGameLinkSessionRuntimeState();
-            SyncLobbyRuntimeState(preserveTypedLobbyId: false);
-            AddActivity("退出大厅", "当前大厅会话已退出。");
-        }
-        catch (Exception ex)
-        {
-            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
-            AddActivity("退出大厅失败", ex.Message);
-        }
-    }
-
-    private async Task InputLobbyPortAsync()
-    {
-        if (!EnsureGameLinkTermsAccepted("手动输入联机端口"))
-        {
-            return;
-        }
-
-        string? input;
-        try
-        {
-            input = await _shellActionService.PromptForTextAsync(
-                "手动输入联机端口",
-                "请输入已经在 Minecraft 中开放的局域网端口。",
-                _gameLinkSessionPort.ToString(),
-                "创建",
-                "1024 - 65535");
-        }
-        catch (Exception ex)
-        {
-            AddActivity("手动输入联机端口失败", ex.Message);
-            return;
-        }
-
-        if (input is null)
-        {
-            AddActivity("手动输入联机端口", "已取消输入端口。");
-            return;
-        }
-
-        if (!int.TryParse(input.Trim(), out var port) || port < 1024 || port > 65535)
-        {
-            AddActivity("手动输入联机端口", "端口必须为 1024 到 65535 之间的整数。");
-            return;
-        }
-
-        await CreateLobbyAsync(port, $"手动端口 {port}", isManualPort: true);
-    }
-
-    private async Task CopyLobbyVirtualIpAsync()
-    {
-        var endpoint = BuildGameLinkVirtualIp();
-        if (string.IsNullOrWhiteSpace(endpoint))
-        {
-            AddActivity("复制虚拟 IP", "当前还没有可复制的大厅地址。");
-            return;
-        }
-
-        try
-        {
-            await _shellActionService.SetClipboardTextAsync(endpoint);
-            AddActivity("复制虚拟 IP", $"{endpoint}（当前为大厅运行时的本地转发地址）");
-        }
-        catch (Exception ex)
-        {
-            AddActivity("复制虚拟 IP失败", ex.Message);
-        }
-    }
-
-    private async Task CopyActiveLobbyIdAsync()
-    {
-        if (string.IsNullOrWhiteSpace(GameLinkSessionId) || string.Equals(GameLinkSessionId, "尚未创建大厅", StringComparison.Ordinal))
-        {
-            AddActivity("复制大厅编号", "尚未生成大厅编号。");
-            return;
-        }
-
-        try
-        {
-            await _shellActionService.SetClipboardTextAsync(GameLinkSessionId);
-            AddActivity("复制大厅编号", GameLinkSessionId);
-        }
-        catch (Exception ex)
-        {
-            AddActivity("复制大厅编号失败", ex.Message);
-        }
-    }
-
-    private async Task DisableGameLinkFeatureAsync()
-    {
-        var confirmed = await _shellActionService.ConfirmAsync(
-            "停用联机功能",
-            "要撤销大厅协议授权并清除当前保存的联机身份信息吗？",
-            "停用",
-            isDanger: true);
-        if (!confirmed)
-        {
-            return;
-        }
-
-        _shellActionService.RemoveSharedValues(["LinkEula", "LinkUsername", "LinkNaidRefreshToken", "LinkNaidRefreshExpiresAt"]);
-        if (IsLobbyState(LobbyRuntime.CurrentState, "Connected", "Creating", "Joining", "Leaving"))
-        {
-            await LobbyRuntime.LeaveLobbyAsync();
-        }
-        ReloadSetupComposition();
-        ReloadToolsComposition();
-        ResetGameLinkSessionRuntimeState();
-        SyncLobbyRuntimeState(preserveTypedLobbyId: false);
-        AddActivity("停用联机功能", "已撤销大厅授权，并清除当前保存的联机身份信息。");
-    }
-
-    private void OpenGameLinkFaq() => _ = OpenGameLinkFaqAsync();
-
-    private async Task OpenGameLinkFaqAsync()
-    {
-        string[] lines =
-        [
-            "如何创建大厅？",
-            "1. 先在设置页完成 EasyTier / 联机相关选项。",
-            "2. 在工具 - 联机页选择世界后点击“创建”，或使用“手动输入”直接填写局域网端口。",
-            "3. 创建完成后复制大厅编号发送给朋友。",
-            string.Empty,
-            "如何加入大厅？",
-            "1. 将朋友发送给你的大厅编号粘贴到输入框。",
-            "2. 点击“加入”后，页面会直接接入大厅运行时并等待连接完成。",
-            string.Empty,
-            "NAT 测试为什么会导出诊断？",
-            "NAT 测试会导出当前网络诊断信息，便于检查网卡、地址和相关设置。",
-            string.Empty,
-            "虚拟 IP 现在复制的是什么？",
-            "当前复制的是大厅运行时暴露的本地转发地址，可在多人游戏列表没有自动显示局域网会话时手动连接。",
-            string.Empty,
-            "相关链接：",
-            "- Natayark Network 用户协议与隐私政策: https://account.naids.com/policy",
-            "- 大厅隐私协议: https://www.pclc.cc/privacy/personal-info-brief.html",
-            "- EasyTier 工具官网: https://easytier.cn/"
-        ];
-        var result = await ShowToolboxConfirmationAsync("P2P 联机常见问题", string.Join(Environment.NewLine, lines));
-        if (result is null)
-        {
-            return;
-        }
-
-        AddActivity("常见问题解答", "已显示联机常见问题。");
     }
 
     private void ManageDownloadFavoriteTargets() => _ = ManageDownloadFavoriteTargetsAsync();
@@ -776,7 +253,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("管理收藏夹失败", ex.Message);
+            AddFailureActivity("管理收藏夹失败", ex.Message);
             return;
         }
 
@@ -803,7 +280,7 @@ internal sealed partial class FrontendShellViewModel
                 await DeleteDownloadFavoriteTargetAsync(root, currentTarget);
                 return;
             default:
-                AddActivity("管理收藏夹失败", $"未识别的收藏夹操作：{actionId}");
+                AddFailureActivity("管理收藏夹失败", $"未识别的收藏夹操作：{actionId}");
                 return;
         }
     }
@@ -831,158 +308,6 @@ internal sealed partial class FrontendShellViewModel
         SetLaunchProfileSurface(LaunchProfileSurfaceKind.AuthlibEditor);
         AddActivity("新建档案", $"已跳转到启动页，为 {_instanceComposition.Selection.InstanceName} 创建第三方验证档案。");
         return Task.CompletedTask;
-    }
-
-    private void RaiseToolsGameLinkProperties()
-    {
-        RaisePropertyChanged(nameof(GameLinkAnnouncement));
-        RaisePropertyChanged(nameof(GameLinkNatStatus));
-        RaisePropertyChanged(nameof(GameLinkAccountStatus));
-        RaisePropertyChanged(nameof(GameLinkLobbyId));
-        RaisePropertyChanged(nameof(GameLinkSessionPing));
-        RaisePropertyChanged(nameof(GameLinkSessionId));
-        RaisePropertyChanged(nameof(GameLinkConnectionType));
-        RaisePropertyChanged(nameof(GameLinkConnectedUserName));
-        RaisePropertyChanged(nameof(GameLinkConnectedUserType));
-        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
-        RaisePropertyChanged(nameof(GameLinkWorldOptions));
-        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
-    }
-
-    private void ResetGameLinkSessionRuntimeState()
-    {
-        _gameLinkSessionPort = 25565;
-        _gameLinkSessionIsHost = false;
-    }
-
-    private bool EnsureGameLinkTermsAccepted(string actionName)
-    {
-        if (HasAcceptedGameLinkTerms())
-        {
-            return true;
-        }
-
-        AddActivity(actionName, "请先阅读并同意联机大厅说明与条款。");
-        return false;
-    }
-
-    private bool HasAcceptedGameLinkTerms()
-    {
-        var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
-        if (provider.Exists("LinkEula"))
-        {
-            try
-            {
-                return provider.Get<bool>("LinkEula");
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        return false;
-    }
-
-    private bool HasConfiguredGameLinkIdentity()
-    {
-        return !string.IsNullOrWhiteSpace(LinkUsername)
-            || HasStoredNatayarkRefreshToken()
-            || !string.IsNullOrWhiteSpace(LobbyRuntime.NatayarkUsername);
-    }
-
-    private string ResolveGameLinkDisplayUserName()
-    {
-        if (!string.IsNullOrWhiteSpace(LinkUsername))
-        {
-            return LinkUsername.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(LobbyRuntime.NatayarkUsername))
-        {
-            return LobbyRuntime.NatayarkUsername!.Trim();
-        }
-
-        return string.IsNullOrWhiteSpace(Environment.UserName) ? "当前设备" : Environment.UserName;
-    }
-
-    private bool CanStartLobbyOperation(string actionName)
-    {
-        return LobbyRuntime.CurrentState switch
-        {
-            "Connected" => HandleBusyState("请先退出当前大厅后再继续。"),
-            "Creating" => HandleBusyState("大厅正在创建中，请稍候再试。"),
-            "Joining" => HandleBusyState("大厅正在连接中，请稍候再试。"),
-            "Leaving" => HandleBusyState("大厅正在退出中，请稍候再试。"),
-            "Initializing" => HandleBusyState("联机运行时仍在初始化，请稍候再试。"),
-            _ => true
-        };
-
-        bool HandleBusyState(string message)
-        {
-            AddActivity(actionName, message);
-            return false;
-        }
-    }
-
-    private int ResolveSelectedGameLinkPort()
-    {
-        if (SelectedGameLinkWorldIndex >= 0 && SelectedGameLinkWorldIndex < GameLinkWorldOptions.Count)
-        {
-            var currentOption = GameLinkWorldOptions[SelectedGameLinkWorldIndex];
-            var lastSeparator = currentOption.LastIndexOf(" - ", StringComparison.Ordinal);
-            if (lastSeparator >= 0 && int.TryParse(currentOption[(lastSeparator + 3)..], out var parsedPort))
-            {
-                return parsedPort;
-            }
-        }
-
-        return 25565;
-    }
-
-    private string BuildGameLinkVirtualIp()
-    {
-        if (string.IsNullOrWhiteSpace(GameLinkSessionId) || string.Equals(GameLinkSessionId, "尚未创建大厅", StringComparison.Ordinal))
-        {
-            return string.Empty;
-        }
-
-        var port = LobbyRuntime.ResolveRuntimeLobbyPort();
-        return $"127.0.0.1:{Math.Max(1, port)}";
-    }
-
-    private static IEnumerable<string> DescribeInterface(NetworkInterface networkInterface)
-    {
-        yield return $"- {networkInterface.Name} ({networkInterface.NetworkInterfaceType})";
-
-        IPInterfaceProperties? properties = null;
-        try
-        {
-            properties = networkInterface.GetIPProperties();
-        }
-        catch
-        {
-        }
-
-        if (properties is null)
-        {
-            yield return "  - 无法读取接口地址";
-            yield break;
-        }
-
-        var addresses = properties.UnicastAddresses
-            .Select(item => item.Address.ToString())
-            .ToArray();
-        if (addresses.Length == 0)
-        {
-            yield return "  - 地址: 无";
-            yield break;
-        }
-
-        foreach (var address in addresses)
-        {
-            yield return $"  - 地址: {address}";
-        }
     }
 
     private static string SafeReadFavoriteJson(JsonFileProvider provider)
@@ -1040,7 +365,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("分享当前收藏夹失败", ex.Message);
+            AddFailureActivity("分享当前收藏夹失败", ex.Message);
         }
     }
 
@@ -1058,7 +383,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入收藏失败", ex.Message);
+            AddFailureActivity("导入收藏失败", ex.Message);
             return;
         }
 
@@ -1089,7 +414,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入收藏失败", ex.Message);
+            AddFailureActivity("导入收藏失败", ex.Message);
             return;
         }
 
@@ -1109,7 +434,7 @@ internal sealed partial class FrontendShellViewModel
             }
             catch (Exception ex)
             {
-                AddActivity("导入收藏失败", ex.Message);
+                AddFailureActivity("导入收藏失败", ex.Message);
                 return;
             }
 
@@ -1152,7 +477,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("新建收藏夹失败", ex.Message);
+            AddFailureActivity("新建收藏夹失败", ex.Message);
             return;
         }
 
@@ -1179,7 +504,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("重命名收藏夹失败", ex.Message);
+            AddFailureActivity("重命名收藏夹失败", ex.Message);
             return;
         }
 
@@ -1218,7 +543,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("删除当前收藏夹失败", ex.Message);
+            AddFailureActivity("删除当前收藏夹失败", ex.Message);
             return;
         }
 
@@ -1293,7 +618,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("选择下载目录失败", ex.Message);
+            AddFailureActivity("选择下载目录失败", ex.Message);
             return;
         }
 
@@ -1311,13 +636,13 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!Uri.TryCreate(ToolDownloadUrl, UriKind.Absolute, out var uri))
         {
-            AddActivity("开始下载自定义文件失败", "下载地址无效。");
+            AddFailureActivity("开始下载自定义文件失败", "下载地址无效。");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
         {
-            AddActivity("开始下载自定义文件失败", "请先选择保存目录。");
+            AddFailureActivity("开始下载自定义文件失败", "请先选择保存目录。");
             return;
         }
 
@@ -1340,7 +665,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("开始下载自定义文件失败", ex.Message);
+            AddFailureActivity("开始下载自定义文件失败", ex.Message);
         }
     }
 
@@ -1395,7 +720,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开日志目录失败", error ?? logDirectory);
+            AddFailureActivity("打开日志目录失败", error ?? logDirectory);
         }
     }
 
@@ -1461,7 +786,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入设置失败", ex.Message);
+            AddFailureActivity("导入设置失败", ex.Message);
             return;
         }
 
@@ -1496,7 +821,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开背景文件夹失败", error ?? folder);
+            AddFailureActivity("打开背景文件夹失败", error ?? folder);
         }
     }
 
@@ -1527,7 +852,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开音乐文件夹失败", error ?? folder);
+            AddFailureActivity("打开音乐文件夹失败", error ?? folder);
         }
     }
 
@@ -1565,7 +890,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("更改标题栏图片失败", ex.Message);
+            AddFailureActivity("更改标题栏图片失败", ex.Message);
             return;
         }
 
@@ -1621,7 +946,7 @@ internal sealed partial class FrontendShellViewModel
         var sourcePath = Path.Combine(LauncherRootDirectory, "Resources", "Custom.xml");
         if (!File.Exists(sourcePath))
         {
-            AddActivity("生成教学文件失败", $"未找到主页教学模板：{sourcePath}");
+            AddFailureActivity("生成教学文件失败", $"未找到主页教学模板：{sourcePath}");
             return;
         }
 
@@ -1669,7 +994,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("选择皮肤失败", ex.Message);
+            AddFailureActivity("选择皮肤失败", ex.Message);
             return;
         }
 
@@ -1714,7 +1039,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("保存头像失败", ex.Message);
+            AddFailureActivity("保存头像失败", ex.Message);
         }
     }
 
@@ -1753,13 +1078,6 @@ internal sealed partial class FrontendShellViewModel
         InitializeDownloadInstallSurface();
         RaisePropertyChanged(nameof(DownloadInstallName));
         AddActivity("刷新自动安装页", "自动安装选项已重新载入。");
-    }
-
-    private void ResetGameLinkSurface()
-    {
-        _shellActionService.RemoveSharedValues(GameLinkResetKeys);
-        ReloadSetupComposition();
-        AddActivity("重置联机设置", "联机设置已恢复到当前启动器的默认配置。");
     }
 
     private void ResetGameManageSurface()
@@ -1802,7 +1120,7 @@ internal sealed partial class FrontendShellViewModel
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 ReloadSetupComposition(initializeAllSurfaces: false);
-                AddActivity("刷新 Java 列表失败", ex.Message);
+                AddFailureActivity("刷新 Java 列表失败", ex.Message);
             });
         }
     }
@@ -1845,7 +1163,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HasFeedbackSections));
             }
 
-            AddActivity("刷新反馈页失败", ex.Message);
+            AddFailureActivity("刷新反馈页失败", ex.Message);
         }
         finally
         {
@@ -1867,7 +1185,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加 Java 失败", ex.Message);
+            AddFailureActivity("添加 Java 失败", ex.Message);
             return;
         }
 
@@ -1880,7 +1198,7 @@ internal sealed partial class FrontendShellViewModel
         var installation = ParseJavaInstallation(selectedPath);
         if (installation is null)
         {
-            AddActivity("添加 Java 失败", $"无法识别所选文件为可用的 Java：{selectedPath}");
+            AddFailureActivity("添加 Java 失败", $"无法识别所选文件为可用的 Java：{selectedPath}");
             return;
         }
 
@@ -2300,7 +1618,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity("打开下载文件夹失败", error ?? folder);
+            AddFailureActivity("打开下载文件夹失败", error ?? folder);
         }
     }
 
@@ -2308,7 +1626,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(OfficialSkinPlayerName))
         {
-            AddActivity("保存正版皮肤失败", "请先填写正版玩家名。");
+            AddFailureActivity("保存正版皮肤失败", "请先填写正版玩家名。");
             return;
         }
 
@@ -2322,7 +1640,7 @@ internal sealed partial class FrontendShellViewModel
                 : null;
             if (string.IsNullOrWhiteSpace(uuid))
             {
-                AddActivity("保存正版皮肤失败", "未找到对应的正版玩家。");
+                AddFailureActivity("保存正版皮肤失败", "未找到对应的正版玩家。");
                 return;
             }
 
@@ -2335,7 +1653,7 @@ internal sealed partial class FrontendShellViewModel
                     && string.Equals(nameElement.GetString(), "textures", StringComparison.Ordinal));
             if (!texturePayload.TryGetProperty("value", out var valueElement))
             {
-                AddActivity("保存正版皮肤失败", "正版档案中未包含皮肤信息。");
+                AddFailureActivity("保存正版皮肤失败", "正版档案中未包含皮肤信息。");
                 return;
             }
 
@@ -2348,7 +1666,7 @@ internal sealed partial class FrontendShellViewModel
                 .GetString();
             if (string.IsNullOrWhiteSpace(textureUrl))
             {
-                AddActivity("保存正版皮肤失败", "正版档案中未包含皮肤下载地址。");
+                AddFailureActivity("保存正版皮肤失败", "正版档案中未包含皮肤下载地址。");
                 return;
             }
 
@@ -2361,11 +1679,11 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (HttpRequestException ex)
         {
-            AddActivity("保存正版皮肤失败", ex.Message);
+            AddFailureActivity("保存正版皮肤失败", ex.Message);
         }
         catch (Exception ex)
         {
-            AddActivity("保存正版皮肤失败", ex.Message);
+            AddFailureActivity("保存正版皮肤失败", ex.Message);
         }
     }
 
@@ -2374,7 +1692,7 @@ internal sealed partial class FrontendShellViewModel
         var url = GetAchievementUrl();
         if (string.IsNullOrWhiteSpace(url))
         {
-            AddActivity("保存成就图片失败", "请先填写有效的成就内容。");
+            AddFailureActivity("保存成就图片失败", "请先填写有效的成就内容。");
             return;
         }
 
@@ -2390,7 +1708,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("保存成就图片失败", ex.Message);
+            AddFailureActivity("保存成就图片失败", ex.Message);
         }
     }
 

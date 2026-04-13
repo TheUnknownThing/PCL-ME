@@ -24,6 +24,9 @@ internal sealed partial class PclLoading : UserControl
     public static readonly StyledProperty<bool> IsErrorProperty =
         AvaloniaProperty.Register<PclLoading, bool>(nameof(IsError), false);
 
+    public static readonly StyledProperty<bool> IsSuccessProperty =
+        AvaloniaProperty.Register<PclLoading, bool>(nameof(IsSuccess), false);
+
     public static readonly StyledProperty<IBrush?> IndicatorBrushProperty =
         AvaloniaProperty.Register<PclLoading, IBrush?>(nameof(IndicatorBrush));
 
@@ -49,6 +52,8 @@ internal sealed partial class PclLoading : UserControl
     private const double MiddlePower = 3d;
     private const double HiddenErrorScale = 0.6d;
     private const double VisibleErrorScale = 1d;
+    private const double HiddenSuccessScale = 0.72d;
+    private const double VisibleSuccessScale = 1d;
 
     private readonly DispatcherTimer _animationTimer = new() { Interval = AnimationTickInterval };
     private readonly Stopwatch _animationStopwatch = new();
@@ -57,6 +62,7 @@ internal sealed partial class PclLoading : UserControl
     private TranslateTransform LeftDebrisTranslateTransform => (TranslateTransform)((TransformGroup)LeftDebris.RenderTransform!).Children[1]!;
     private TranslateTransform RightDebrisTranslateTransform => (TranslateTransform)((TransformGroup)RightDebris.RenderTransform!).Children[1]!;
     private ScaleTransform ErrorGlyphScaleTransform => (ScaleTransform)ErrorGlyph.RenderTransform!;
+    private ScaleTransform SuccessGlyphScaleTransform => (ScaleTransform)SuccessGlyph.RenderTransform!;
 
     public PclLoading()
     {
@@ -93,6 +99,12 @@ internal sealed partial class PclLoading : UserControl
         set => SetValue(IsErrorProperty, value);
     }
 
+    public bool IsSuccess
+    {
+        get => GetValue(IsSuccessProperty);
+        set => SetValue(IsSuccessProperty, value);
+    }
+
     public IBrush? IndicatorBrush
     {
         get => GetValue(IndicatorBrushProperty);
@@ -108,12 +120,17 @@ internal sealed partial class PclLoading : UserControl
             RefreshText();
         }
 
-        if (change.Property == IndicatorBrushProperty || change.Property == IsErrorProperty)
+        if (change.Property == IndicatorBrushProperty
+            || change.Property == IsErrorProperty
+            || change.Property == IsSuccessProperty
+            || change.Property == IsRunningProperty)
         {
             RefreshVisualState();
         }
 
-        if (change.Property == IsRunningProperty || change.Property == IsErrorProperty)
+        if (change.Property == IsRunningProperty
+            || change.Property == IsErrorProperty
+            || change.Property == IsSuccessProperty)
         {
             SyncAnimationState();
         }
@@ -151,11 +168,28 @@ internal sealed partial class PclLoading : UserControl
 
     private void ConfigureTransitions()
     {
+        PickaxeHost.Transitions =
+        [
+            CreateDoubleTransition(OpacityProperty, ErrorGlyphDuration, StandardEase)
+        ];
+        FloorLine.Transitions =
+        [
+            CreateDoubleTransition(OpacityProperty, ErrorGlyphDuration, StandardEase)
+        ];
         ErrorGlyph.Transitions =
         [
             CreateDoubleTransition(OpacityProperty, ErrorGlyphDuration, StandardEase)
         ];
         ErrorGlyphScaleTransform.Transitions =
+        [
+            CreateDoubleTransition(ScaleTransform.ScaleXProperty, ErrorGlyphDuration, BounceEase),
+            CreateDoubleTransition(ScaleTransform.ScaleYProperty, ErrorGlyphDuration, BounceEase)
+        ];
+        SuccessGlyph.Transitions =
+        [
+            CreateDoubleTransition(OpacityProperty, ErrorGlyphDuration, StandardEase)
+        ];
+        SuccessGlyphScaleTransform.Transitions =
         [
             CreateDoubleTransition(ScaleTransform.ScaleXProperty, ErrorGlyphDuration, BounceEase),
             CreateDoubleTransition(ScaleTransform.ScaleYProperty, ErrorGlyphDuration, BounceEase)
@@ -171,16 +205,23 @@ internal sealed partial class PclLoading : UserControl
     private void RefreshVisualState()
     {
         var brush = IsError ? ErrorBrush : IndicatorBrush ?? GetBrush("ColorBrush3", "#1370F3");
+        var isSuccess = IsSuccess && !IsError;
         PickaxePath.Stroke = brush;
         LeftDebris.Fill = brush;
         RightDebris.Fill = brush;
         FloorLine.Fill = brush;
         LabelText.Foreground = brush;
+        PickaxeHost.Opacity = isSuccess ? 0d : 1d;
+        FloorLine.Opacity = isSuccess ? 0d : 1d;
         ErrorGlyph.Fill = ErrorBrush;
         ErrorGlyph.Opacity = IsError ? 1d : 0d;
         ErrorGlyphScaleTransform.ScaleX = IsError ? VisibleErrorScale : HiddenErrorScale;
         ErrorGlyphScaleTransform.ScaleY = IsError ? VisibleErrorScale : HiddenErrorScale;
-        if (!IsError && !_animationTimer.IsEnabled)
+        SuccessGlyph.Fill = brush;
+        SuccessGlyph.Opacity = isSuccess ? 1d : 0d;
+        SuccessGlyphScaleTransform.ScaleX = isSuccess ? VisibleSuccessScale : HiddenSuccessScale;
+        SuccessGlyphScaleTransform.ScaleY = isSuccess ? VisibleSuccessScale : HiddenSuccessScale;
+        if ((!IsError && !_animationTimer.IsEnabled) || isSuccess)
         {
             ResetStrikeVisuals();
         }
@@ -199,7 +240,7 @@ internal sealed partial class PclLoading : UserControl
 
     private void SyncAnimationState()
     {
-        var shouldAnimate = VisualRoot is not null && IsRunning && !IsError;
+        var shouldAnimate = VisualRoot is not null && IsRunning && !IsError && !IsSuccess;
         if (shouldAnimate)
         {
             StartAnimationLoop();

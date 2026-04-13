@@ -6,8 +6,6 @@ internal enum StandardShellLeftPaneKind
 {
     None = 0,
     Sidebar = 1,
-    Summary = 2,
-    Empty = 3,
     InstanceSelection = 4,
     TaskManager = 5
 }
@@ -20,7 +18,6 @@ internal enum StandardShellRightPaneKind
     SetupFeedback = 3,
     SetupLog = 4,
     SetupUpdate = 5,
-    SetupGameLink = 6,
     SetupGameManage = 7,
     SetupLauncherMisc = 8,
     SetupJava = 9,
@@ -29,7 +26,6 @@ internal enum StandardShellRightPaneKind
     DownloadCatalog = 12,
     DownloadResource = 13,
     DownloadFavorites = 14,
-    ToolsGameLink = 15,
     ToolsHelp = 16,
     ToolsTest = 17,
     VersionSaveInfo = 18,

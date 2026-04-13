@@ -153,19 +153,7 @@ internal static class FrontendProfileStorageService
         MinecraftLaunchProfileDocument document,
         int profileIndex)
     {
-        ArgumentNullException.ThrowIfNull(document);
-
-        var profiles = document.Profiles.ToList();
-        if (profileIndex < 0 || profileIndex >= profiles.Count)
-        {
-            return document;
-        }
-
-        profiles.RemoveAt(profileIndex);
-        var lastUsed = profiles.Count == 0
-            ? 0
-            : Math.Clamp(document.LastUsedProfile, 0, profiles.Count - 1);
-        return new MinecraftLaunchProfileDocument(lastUsed, profiles);
+        return MinecraftLaunchProfileStorageService.DeleteProfile(document, profileIndex);
     }
 
     private static void TryMigrateLegacyProfiles(FrontendRuntimePaths runtimePaths, string targetProfilesPath)

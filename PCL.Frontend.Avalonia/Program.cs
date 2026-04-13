@@ -12,6 +12,12 @@ public partial class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length == 0)
+        {
+            AvaloniaDesktopHost.Run(CreateDefaultAppOptions());
+            return;
+        }
+
         var parseResult = AvaloniaCommandParser.Parse(args);
         if (parseResult.ShowHelp)
         {
@@ -45,6 +51,24 @@ public partial class Program
         {
             Console.WriteLine(JsonSerializer.Serialize(payload, CreateJsonOptions()));
         }
+    }
+
+    private static AvaloniaCommandOptions CreateDefaultAppOptions()
+    {
+        return new AvaloniaCommandOptions(
+            AvaloniaCommandKind.App,
+            Scenario: "modern-fabric",
+            Mode: AvaloniaOutputMode.Plan,
+            Format: AvaloniaOutputFormat.Json,
+            UseHostEnvironment: false,
+            JavaPromptDecision: PCL.Core.Minecraft.Launch.MinecraftLaunchJavaPromptDecision.Download,
+            JavaDownloadState: AvaloniaJavaDownloadSessionState.Finished,
+            CrashAction: PCL.Core.Minecraft.MinecraftCrashOutputPromptActionKind.ExportReport,
+            ForceCjkFontWarning: false,
+            SaveBatchPath: null,
+            WorkspaceRoot: null,
+            InputRoot: null,
+            ExportArchivePath: null);
     }
 
     private static object BuildPayload(AvaloniaCommandOptions options)

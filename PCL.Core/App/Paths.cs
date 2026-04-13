@@ -24,6 +24,16 @@ public static class Paths
     public static string Data { get => _layout.Data; set => _layout.Data = value; }
 
     /// <summary>
+    /// Portable data directory under the executable root.
+    /// </summary>
+    public static string PortableData => _layout.PortableData;
+
+    /// <summary>
+    /// Whether the application is currently using portable local-state storage.
+    /// </summary>
+    public static bool UsesPortableDataDirectory => _layout.UsesPortableDataDirectory;
+
+    /// <summary>
     /// Shared synchronized data directory.
     /// </summary>
     public static string SharedData { get => _layout.SharedData; set => _layout.SharedData = value; }

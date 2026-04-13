@@ -33,16 +33,6 @@ internal sealed class StandardShellNavigationListPaneViewModel(
     StandardShellLeftPaneDescriptor descriptor)
     : ShellLeftPaneViewModel(shell, descriptor);
 
-internal sealed class StandardShellSummaryPaneViewModel(
-    FrontendShellViewModel shell,
-    StandardShellLeftPaneDescriptor descriptor)
-    : ShellLeftPaneViewModel(shell, descriptor);
-
-internal sealed class StandardShellEmptyPaneViewModel(
-    FrontendShellViewModel shell,
-    StandardShellLeftPaneDescriptor descriptor)
-    : ShellLeftPaneViewModel(shell, descriptor);
-
 internal sealed class InstanceSelectShellLeftPaneViewModel(
     FrontendShellViewModel shell,
     StandardShellLeftPaneDescriptor descriptor)

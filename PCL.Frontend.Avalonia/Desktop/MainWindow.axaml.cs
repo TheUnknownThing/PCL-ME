@@ -22,6 +22,8 @@ namespace PCL.Frontend.Avalonia.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
+    private static readonly IBrush PromptOverlayDefaultBrush = Brush.Parse("#5A000000");
+    private static readonly IBrush PromptOverlayWarningBrush = Brush.Parse("#8C500000");
     private FrontendShellViewModel? _shellViewModel;
     private CompositionVisual? _gridRootVisual;
     private CompositionVisual? _launchLeftContentHostVisual;
@@ -46,7 +48,6 @@ internal sealed partial class MainWindow : Window
         MinimizeButton.IconData = FrontendIconCatalog.Minimize.Data;
         MaximizeButton.IconData = FrontendIconCatalog.Maximize.Data;
         CloseButton.IconData = FrontendIconCatalog.Close.Data;
-        PromptQueueButton.IconData = FrontendIconCatalog.PromptQueue.Data;
 
         if (!OperatingSystem.IsMacOS())
         {
@@ -254,6 +255,12 @@ internal sealed partial class MainWindow : Window
     {
         _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
 
+        if (_shellViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (e.Handled || e.Key != Key.Escape || _shellViewModel is null)
         {
             return;
@@ -308,6 +315,19 @@ internal sealed partial class MainWindow : Window
         if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayVisible))
         {
             QueuePromptOverlaySync();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayWarning))
+        {
+            UpdatePromptOverlayBackdropBrush();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayTextInput)
+            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList))
+        {
+            QueuePromptOverlayFocus();
         }
     }
 
@@ -316,11 +336,21 @@ internal sealed partial class MainWindow : Window
         Dispatcher.UIThread.Post(() => _ = SyncPromptOverlayAsync(), DispatcherPriority.Render);
     }
 
+    private void QueuePromptOverlayFocus()
+    {
+        Dispatcher.UIThread.Post(() => _ = FocusPromptOverlayPrimaryControlAsync(), DispatcherPriority.Input);
+    }
+
     private async Task SyncPromptOverlayAsync()
     {
         var shouldShow = _shellViewModel?.IsPromptOverlayVisible == true;
         if (shouldShow == _isPromptOverlayRenderedOpen)
         {
+            if (shouldShow)
+            {
+                UpdatePromptOverlayBackdropBrush();
+            }
+
             return;
         }
 
@@ -329,6 +359,7 @@ internal sealed partial class MainWindow : Window
 
         if (shouldShow)
         {
+            UpdatePromptOverlayBackdropBrush();
             PromptOverlayBackdrop.IsVisible = true;
             PromptOverlayHost.IsVisible = true;
             PromptOverlayHost.IsHitTestVisible = true;
@@ -337,6 +368,7 @@ internal sealed partial class MainWindow : Window
                 PromptOverlayBackdrop,
                 PromptOverlayPanel,
                 () => version == _promptOverlayAnimationVersion && _isPromptOverlayRenderedOpen);
+            QueuePromptOverlayFocus();
             return;
         }
 
@@ -353,6 +385,37 @@ internal sealed partial class MainWindow : Window
         PromptOverlayBackdrop.IsVisible = false;
         PromptOverlayHost.IsVisible = false;
         PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+    }
+
+    private async Task FocusPromptOverlayPrimaryControlAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+
+        if (_shellViewModel?.ShowPromptOverlayTextInput == true && PromptOverlayInputTextBox.IsVisible)
+        {
+            PromptOverlayInputTextBox.Focus();
+            PromptOverlayInputTextBox.SelectionStart = 0;
+            PromptOverlayInputTextBox.SelectionEnd = PromptOverlayInputTextBox.Text?.Length ?? 0;
+            return;
+        }
+
+        if (_shellViewModel?.ShowPromptOverlayChoiceList == true && PromptOverlayChoiceListBox.IsVisible)
+        {
+            PromptOverlayChoiceListBox.Focus();
+        }
+    }
+
+    private void UpdatePromptOverlayBackdropBrush()
+    {
+        var isWarning = _shellViewModel?.IsPromptOverlayWarning == true;
+        PromptOverlayBackdrop.Background = isWarning
+            ? PromptOverlayWarningBrush
+            : PromptOverlayDefaultBrush;
+    }
+
+    private void PromptOverlayChoiceListBox_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        _shellViewModel?.ConfirmPromptOverlayChoice();
     }
 
     private void UpdateWindowChromeState()

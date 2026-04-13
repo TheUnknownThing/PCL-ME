@@ -66,9 +66,20 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = Math.Clamp(value, 0, DownloadFavoriteTargetOptions.Count - 1);
-            if (SetProperty(ref _selectedDownloadFavoriteTargetIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
+            if (!SetProperty(ref _selectedDownloadFavoriteTargetIndex, nextValue))
+            {
+                return;
+            }
+
+            if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
             {
                 RefreshDownloadFavoriteSurface();
+            }
+
+            if (ShowCompDetailSurface)
+            {
+                RebuildCommunityProjectSurfaceCollections();
+                RaiseCommunityProjectProperties();
             }
         }
     }

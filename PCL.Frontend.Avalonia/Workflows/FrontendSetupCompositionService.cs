@@ -20,9 +20,8 @@ internal static class FrontendSetupCompositionService
         return new FrontendSetupComposition(
             BuildAboutState(),
             BuildLogState(paths),
-            BuildUpdateState(paths, sharedConfig, localConfig),
+            BuildUpdateState(sharedConfig, localConfig),
             BuildLaunchState(sharedConfig, localConfig),
-            BuildGameLinkState(sharedConfig),
             BuildGameManageState(sharedConfig),
             BuildLauncherMiscState(paths, sharedConfig, localConfig),
             BuildJavaState(sharedConfig, localConfig),
@@ -144,14 +143,12 @@ internal static class FrontendSetupCompositionService
     }
 
     private static FrontendSetupUpdateState BuildUpdateState(
-        FrontendRuntimePaths paths,
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
         return new FrontendSetupUpdateState(
             UpdateChannelIndex: ReadValue(localConfig, "SystemUpdateChannel", 0),
-            UpdateModeIndex: ReadValue(localConfig, "SystemSystemUpdate", 1),
-            MirrorCdk: ReadProtectedValue(paths, "SystemMirrorChyanKey"));
+            UpdateModeIndex: ReadValue(localConfig, "SystemSystemUpdate", 1));
     }
 
     private static FrontendSetupLaunchState BuildLaunchState(
@@ -177,24 +174,15 @@ internal static class FrontendSetupCompositionService
             JvmArguments: ReadValue(localConfig, "LaunchAdvanceJvm", "-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Djdk.lang.Process.allowAmbiguousCommands=true -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true"),
             GameArguments: ReadValue(localConfig, "LaunchAdvanceGame", string.Empty),
             BeforeCommand: ReadValue(localConfig, "LaunchAdvanceRun", string.Empty),
+            EnvironmentVariables: ReadValue(localConfig, "LaunchAdvanceEnvironmentVariables", string.Empty),
             WaitForBeforeCommand: ReadValue(localConfig, "LaunchAdvanceRunWait", true),
+            ForceX11OnWayland: ReadValue(localConfig, "LaunchAdvanceForceX11OnWayland", false),
             DisableJavaLaunchWrapper: ReadValue(localConfig, "LaunchAdvanceDisableJLW", true),
             DisableRetroWrapper: ReadValue(sharedConfig, "LaunchAdvanceDisableRW", false),
             RequireDedicatedGpu: ReadValue(sharedConfig, "LaunchAdvanceGraphicCard", true),
             UseJavaExecutable: ReadValue(sharedConfig, "LaunchAdvanceNoJavaw", false),
             MicrosoftAuthIndex: ReadValue(sharedConfig, "LoginMsAuthType", 1),
             PreferredIpStackIndex: ReadValue(sharedConfig, "LaunchPreferredIpStack", 1));
-    }
-
-    private static FrontendSetupGameLinkState BuildGameLinkState(JsonFileProvider sharedConfig)
-    {
-        return new FrontendSetupGameLinkState(
-            Username: ReadValue(sharedConfig, "LinkUsername", string.Empty),
-            ProtocolPreferenceIndex: ReadValue(sharedConfig, "LinkProtocolPreference", 0),
-            PreferLowestLatencyPath: ReadValue(sharedConfig, "LinkLatencyFirstMode", true),
-            TryPunchSymmetricNat: ReadValue(sharedConfig, "LinkTryPunchSym", true),
-            AllowIpv6Communication: ReadValue(sharedConfig, "LinkEnableIPv6", true),
-            EnableCliOutput: ReadValue(sharedConfig, "LinkEnableCliOutput", false));
     }
 
     private static FrontendSetupGameManageState BuildGameManageState(JsonFileProvider sharedConfig)

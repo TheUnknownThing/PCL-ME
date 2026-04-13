@@ -1,4 +1,7 @@
+using System.IO.Compression;
+using System.Text.Json.Nodes;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using fNbt;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.Minecraft;
@@ -14,35 +17,45 @@ internal static class FrontendInstanceCompositionService
     private static readonly string[] DisabledModExtensions = [".disabled", ".old"];
     private static readonly string[] ArchiveExtensions = [".zip", ".rar", ".7z"];
     private static readonly string[] SchematicExtensions = [".litematic", ".nbt", ".schematic", ".schem"];
+    private static readonly Regex TomlQuotedValueRegex = new("\"(?<value>(?:\\\\.|[^\"\\\\])*)\"", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex TomlSingleQuotedValueRegex = new("'(?<value>[^']*)'", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private const int MaxEmbeddedIconBytes = 2 * 1024 * 1024;
 
     public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths)
+    {
+        var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        return Compose(runtimePaths, selectedInstanceName);
+    }
+
+    public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths, string? selectedInstanceName)
     {
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
         var launcherDirectory = FrontendLauncherPathService.ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
-        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        var resolvedInstanceName = selectedInstanceName?.Trim() ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (string.IsNullOrWhiteSpace(resolvedInstanceName))
         {
             return CreateEmptyComposition(launcherDirectory);
         }
 
-        var instanceDirectory = Path.Combine(launcherDirectory, "versions", selectedInstanceName);
+        var instanceDirectory = Path.Combine(launcherDirectory, "versions", resolvedInstanceName);
         if (!Directory.Exists(instanceDirectory))
         {
-            return CreateEmptyComposition(launcherDirectory, selectedInstanceName);
+            return CreateEmptyComposition(launcherDirectory, resolvedInstanceName);
         }
 
         var instanceConfig = OpenInstanceConfigProvider(instanceDirectory);
-        var manifestSummary = ReadManifestSummary(launcherDirectory, selectedInstanceName);
+        var manifestSummary = ReadManifestSummary(launcherDirectory, resolvedInstanceName);
         var isIndie = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary);
         var indieDirectory = isIndie ? instanceDirectory : launcherDirectory;
         var vanillaVersion = manifestSummary.VanillaVersion?.ToString() ?? ReadValue(instanceConfig, "VersionVanillaName", "Unknown");
         var selection = new FrontendInstanceSelectionState(
             HasSelection: true,
-            InstanceName: selectedInstanceName,
+            InstanceName: resolvedInstanceName,
             InstanceDirectory: instanceDirectory,
             IndieDirectory: indieDirectory,
             LauncherDirectory: launcherDirectory,
@@ -51,6 +64,7 @@ internal static class FrontendInstanceCompositionService
             HasLabyMod: manifestSummary.HasLabyMod,
             VanillaVersion: vanillaVersion);
         var javaEntries = ParseJavaEntries(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
+        var installManifestSummary = MergeInstallAddonStates(selection, manifestSummary);
         var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
 
         return new FrontendInstanceComposition(
@@ -58,7 +72,7 @@ internal static class FrontendInstanceCompositionService
             BuildOverviewState(selection, manifestSummary, instanceConfig, setupState),
             setupState,
             BuildExportState(selection, manifestSummary),
-            BuildInstallState(selection, manifestSummary),
+            BuildInstallState(selection, installManifestSummary),
             new FrontendInstanceContentState(BuildWorldEntries(selection)),
             new FrontendInstanceScreenshotState(BuildScreenshotEntries(selection)),
             new FrontendInstanceServerState(BuildServerEntries(selection)),
@@ -116,7 +130,9 @@ internal static class FrontendInstanceCompositionService
             GameArguments: string.Empty,
             ClasspathHead: string.Empty,
             PreLaunchCommand: string.Empty,
+            EnvironmentVariables: string.Empty,
             WaitForPreLaunchCommand: true,
+            ForceX11OnWaylandMode: 0,
             IgnoreJavaCompatibilityWarning: false,
             DisableFileValidation: false,
             FollowLauncherProxy: false,
@@ -333,7 +349,9 @@ internal static class FrontendInstanceCompositionService
             GameArguments: ReadValue(instanceConfig, "VersionAdvanceGame", string.Empty),
             ClasspathHead: ReadValue(instanceConfig, "VersionAdvanceClasspathHead", string.Empty),
             PreLaunchCommand: ReadValue(instanceConfig, "VersionAdvanceRun", string.Empty),
+            EnvironmentVariables: ReadValue(instanceConfig, "VersionAdvanceEnvironmentVariables", string.Empty),
             WaitForPreLaunchCommand: ReadValue(instanceConfig, "VersionAdvanceRunWait", true),
+            ForceX11OnWaylandMode: Math.Clamp(ReadValue(instanceConfig, "VersionAdvanceForceX11OnWayland", 0), 0, 2),
             IgnoreJavaCompatibilityWarning: ReadValue(instanceConfig, "VersionAdvanceJava", false),
             DisableFileValidation: ReadValue(instanceConfig, "VersionAdvanceAssetsV2", false),
             FollowLauncherProxy: ReadValue(instanceConfig, "VersionAdvanceUseProxyV2", false),
@@ -447,6 +465,94 @@ internal static class FrontendInstanceCompositionService
             ]);
     }
 
+    private static FrontendVersionManifestSummary MergeInstallAddonStates(
+        FrontendInstanceSelectionState selection,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        var modsDirectory = ResolveResourceDirectory(selection, ResourceKind.Mods);
+        if (!Directory.Exists(modsDirectory))
+        {
+            return manifestSummary;
+        }
+
+        var hasFabricApi = manifestSummary.HasFabricApi;
+        string? fabricApiVersion = null;
+        var hasQsl = manifestSummary.HasQsl;
+        string? qslVersion = null;
+        var hasOptiFabric = manifestSummary.HasOptiFabric;
+        string? optiFabricVersion = null;
+
+        foreach (var path in Directory.EnumerateFiles(modsDirectory, "*", SearchOption.TopDirectoryOnly)
+                     .Where(path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)))
+        {
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            var metadata = TryReadLocalModMetadata(path);
+
+            if (!hasFabricApi && IsManagedAddonMod(metadata, fileName, "fabricapi"))
+            {
+                hasFabricApi = true;
+                fabricApiVersion = NormalizeInlineText(metadata?.Version);
+                continue;
+            }
+
+            if (!hasQsl && IsManagedAddonMod(metadata, fileName, "quiltedfabricapi", "qsl"))
+            {
+                hasQsl = true;
+                qslVersion = NormalizeInlineText(metadata?.Version);
+                continue;
+            }
+
+            if (!hasOptiFabric && IsManagedAddonMod(metadata, fileName, "optifabric"))
+            {
+                hasOptiFabric = true;
+                optiFabricVersion = NormalizeInlineText(metadata?.Version);
+            }
+        }
+
+        return manifestSummary with
+        {
+            HasFabricApi = hasFabricApi,
+            FabricApiVersion = FirstNonEmpty(manifestSummary.FabricApiVersion, fabricApiVersion),
+            HasQsl = hasQsl,
+            QslVersion = FirstNonEmpty(manifestSummary.QslVersion, qslVersion),
+            HasOptiFabric = hasOptiFabric,
+            OptiFabricVersion = FirstNonEmpty(manifestSummary.OptiFabricVersion, optiFabricVersion)
+        };
+    }
+
+    private static bool IsManagedAddonMod(
+        RecognizedModMetadata? metadata,
+        string fileNameWithoutExtension,
+        params string[] identifiers)
+    {
+        return MatchesManagedAddonIdentity(metadata?.Identity, identifiers)
+               || MatchesManagedAddonIdentity(metadata?.Title, identifiers)
+               || identifiers.Any(identifier => NormalizeManagedAddonIdentity(fileNameWithoutExtension)
+                   .StartsWith(NormalizeManagedAddonIdentity(identifier), StringComparison.Ordinal));
+    }
+
+    private static bool MatchesManagedAddonIdentity(string? value, IEnumerable<string> identifiers)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = NormalizeManagedAddonIdentity(value);
+        return identifiers.Any(identifier => string.Equals(
+            normalized,
+            NormalizeManagedAddonIdentity(identifier),
+            StringComparison.Ordinal));
+    }
+
+    private static string NormalizeManagedAddonIdentity(string value)
+    {
+        return new string(value
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray());
+    }
+
     private static IReadOnlyList<FrontendInstanceDirectoryEntry> BuildWorldEntries(FrontendInstanceSelectionState selection)
     {
         var savesDirectory = Path.Combine(selection.IndieDirectory, "saves");
@@ -542,17 +648,14 @@ internal static class FrontendInstanceCompositionService
     {
         return kind switch
         {
-            ResourceKind.Mods => BuildFileResourceEntries(
+            ResourceKind.Mods => BuildModResourceEntries(
                 ResolveResourceDirectory(selection, kind),
-                recursive: false,
                 fileFilter: path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
-                metaPrefix: "已启用",
-                defaultIconName: DetermineInstallIconNameFromExtension("mods", selection)),
-            ResourceKind.DisabledMods => BuildFileResourceEntries(
+                defaultIconName: DetermineInstallIconNameFromExtension("mods", selection),
+                isEnabled: true),
+            ResourceKind.DisabledMods => BuildModResourceEntries(
                 ResolveResourceDirectory(selection, ResourceKind.Mods),
-                recursive: false,
                 fileFilter: path => DisabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
-                metaPrefix: "已禁用",
                 defaultIconName: "RedstoneBlock.png",
                 isEnabled: false),
             ResourceKind.ResourcePacks => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), "资源包", "Grass.png"),
@@ -565,6 +668,25 @@ internal static class FrontendInstanceCompositionService
                 defaultIconName: "CommandBlock.png"),
             _ => []
         };
+    }
+
+    private static IReadOnlyList<FrontendInstanceResourceEntry> BuildModResourceEntries(
+        string directory,
+        Func<string, bool> fileFilter,
+        string defaultIconName,
+        bool isEnabled)
+    {
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        return Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
+            .Where(fileFilter)
+            .Select(path => new FileInfo(path))
+            .OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(file => BuildModResourceEntry(directory, file, defaultIconName, isEnabled))
+            .ToArray();
     }
 
     private static IReadOnlyList<FrontendInstanceResourceEntry> BuildFileResourceEntries(
@@ -593,6 +715,36 @@ internal static class FrontendInstanceCompositionService
                 IconName: defaultIconName,
                 IsEnabled: isEnabled))
             .ToArray();
+    }
+
+    private static FrontendInstanceResourceEntry BuildModResourceEntry(
+        string directory,
+        FileInfo file,
+        string defaultIconName,
+        bool isEnabled)
+    {
+        var metadata = TryReadLocalModMetadata(file.FullName);
+        var title = !string.IsNullOrWhiteSpace(metadata?.Title)
+            ? metadata.Title!
+            : GetFallbackModTitle(file.Name);
+        var summary = BuildModSummary(file, metadata);
+        var meta = BuildModMeta(file, metadata);
+        var iconName = DetermineModIconName(metadata?.Loader, defaultIconName);
+
+        return new FrontendInstanceResourceEntry(
+            Title: title,
+            Summary: summary,
+            Meta: meta,
+            Path: file.FullName,
+            IconName: iconName,
+            Identity: metadata?.Identity ?? string.Empty,
+            IsEnabled: isEnabled,
+            Description: NormalizeInlineText(metadata?.Description),
+            Website: metadata?.Website ?? string.Empty,
+            Authors: metadata?.Authors ?? string.Empty,
+            Version: metadata?.Version ?? string.Empty,
+            Loader: metadata?.Loader ?? string.Empty,
+            IconBytes: metadata?.IconBytes);
     }
 
     private static IReadOnlyList<FrontendInstanceResourceEntry> BuildFolderAndArchiveEntries(string directory, string metaPrefix, string iconName)
@@ -833,6 +985,575 @@ internal static class FrontendInstanceCompositionService
         };
     }
 
+    private static RecognizedModMetadata? TryReadLocalModMetadata(string path)
+    {
+        try
+        {
+            using var archive = ZipFile.OpenRead(path);
+            return TryReadFabricModMetadata(archive)
+                ?? TryReadQuiltModMetadata(archive)
+                ?? TryReadForgeModMetadata(archive, neoforge: true)
+                ?? TryReadForgeModMetadata(archive, neoforge: false)
+                ?? TryReadForgeLegacyMetadata(archive)
+                ?? TryReadLiteLoaderMetadata(archive);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static RecognizedModMetadata? TryReadFabricModMetadata(ZipArchive archive)
+    {
+        var entry = FindArchiveEntry(archive, "fabric.mod.json");
+        if (entry is null)
+        {
+            return null;
+        }
+
+        var root = ReadJsonObject(entry);
+        if (root is null)
+        {
+            return null;
+        }
+
+        var id = GetString(root, "id");
+        var contact = root["contact"] as JsonObject;
+        return BuildRecognizedModMetadata(
+            Identity: id,
+            Title: GetString(root, "name") ?? id,
+            Description: GetString(root, "description"),
+            Authors: JoinAuthorArray(root["authors"] as JsonArray),
+            Version: GetString(root, "version"),
+            Website: GetString(contact, "homepage"),
+            Loader: "Fabric",
+            IconBytes: TryReadEmbeddedIconBytes(archive, ReadIconReference(root["icon"])));
+    }
+
+    private static RecognizedModMetadata? TryReadQuiltModMetadata(ZipArchive archive)
+    {
+        var entry = FindArchiveEntry(archive, "quilt.mod.json");
+        if (entry is null)
+        {
+            return null;
+        }
+
+        var root = ReadJsonObject(entry);
+        var loader = root?["quilt_loader"] as JsonObject;
+        var metadata = loader?["metadata"] as JsonObject;
+        var contributors = metadata?["contributors"] as JsonObject;
+        var contact = metadata?["contact"] as JsonObject;
+        if (loader is null)
+        {
+            return null;
+        }
+
+        return BuildRecognizedModMetadata(
+            Identity: GetString(loader, "id"),
+            Title: GetString(metadata, "name") ?? GetString(loader, "id"),
+            Description: GetString(metadata, "description"),
+            Authors: JoinContributors(contributors),
+            Version: GetString(loader, "version"),
+            Website: GetString(contact, "homepage"),
+            Loader: "Quilt",
+            IconBytes: TryReadEmbeddedIconBytes(archive, ReadIconReference(metadata?["icon"])));
+    }
+
+    private static RecognizedModMetadata? TryReadForgeLegacyMetadata(ZipArchive archive)
+    {
+        var entry = FindArchiveEntry(archive, "mcmod.info");
+        if (entry is null)
+        {
+            return null;
+        }
+
+        JsonObject? metadata = null;
+        try
+        {
+            var node = JsonNode.Parse(ReadArchiveEntryText(entry));
+            metadata = node switch
+            {
+                JsonArray array when array.Count > 0 => array[0] as JsonObject,
+                JsonObject obj when obj["modList"] is JsonArray list && list.Count > 0 => list[0] as JsonObject,
+                JsonObject obj => obj,
+                _ => null
+            };
+        }
+        catch
+        {
+            metadata = null;
+        }
+
+        if (metadata is null)
+        {
+            return null;
+        }
+
+        var authors = FirstNonEmpty(
+            GetString(metadata, "author"),
+            JoinJsonArray(metadata["authors"] as JsonArray),
+            JoinJsonArray(metadata["authorList"] as JsonArray),
+            GetString(metadata, "credits"));
+
+        return BuildRecognizedModMetadata(
+            Identity: GetString(metadata, "modid"),
+            Title: GetString(metadata, "name") ?? GetString(metadata, "modid"),
+            Description: GetString(metadata, "description"),
+            Authors: authors,
+            Version: GetString(metadata, "version"),
+            Website: FirstNonEmpty(GetString(metadata, "url"), GetString(metadata, "updateUrl")),
+            Loader: "Forge",
+            IconBytes: TryReadEmbeddedIconBytes(archive, GetString(metadata, "logoFile")));
+    }
+
+    private static RecognizedModMetadata? TryReadForgeModMetadata(ZipArchive archive, bool neoforge)
+    {
+        var entry = FindArchiveEntry(archive, neoforge ? "META-INF/neoforge.mods.toml" : "META-INF/mods.toml");
+        if (entry is null)
+        {
+            return null;
+        }
+
+        var content = ReadArchiveEntryText(entry);
+        var modsBlock = ReadFirstModsTomlBlock(content);
+        if (string.IsNullOrWhiteSpace(modsBlock))
+        {
+            return null;
+        }
+
+        return BuildRecognizedModMetadata(
+            Identity: ReadTomlValue(modsBlock, "modId"),
+            Title: FirstNonEmpty(ReadTomlValue(modsBlock, "displayName"), ReadTomlValue(modsBlock, "modId")),
+            Description: ReadTomlValue(modsBlock, "description"),
+            Authors: ReadTomlArrayOrString(content, "authors") ?? ReadTomlArrayOrString(modsBlock, "authors"),
+            Version: ReadTomlValue(modsBlock, "version"),
+            Website: ReadTomlValue(modsBlock, "displayURL"),
+            Loader: neoforge ? "NeoForge" : "Forge",
+            IconBytes: TryReadEmbeddedIconBytes(archive, ReadTomlValue(content, "logoFile")));
+    }
+
+    private static RecognizedModMetadata? TryReadLiteLoaderMetadata(ZipArchive archive)
+    {
+        var entry = FindArchiveEntry(archive, "litemod.json");
+        if (entry is null)
+        {
+            return null;
+        }
+
+        var root = ReadJsonObject(entry);
+        if (root is null)
+        {
+            return null;
+        }
+
+        var name = GetString(root, "name");
+        return BuildRecognizedModMetadata(
+            Identity: name,
+            Title: name,
+            Description: GetString(root, "description"),
+            Authors: GetString(root, "author"),
+            Version: GetString(root, "version"),
+            Website: FirstNonEmpty(GetString(root, "updateURI"), GetString(root, "checkUpdateUrl")),
+            Loader: "LiteLoader",
+            IconBytes: null);
+    }
+
+    private static RecognizedModMetadata? BuildRecognizedModMetadata(
+        string? Identity,
+        string? Title,
+        string? Description,
+        string? Authors,
+        string? Version,
+        string? Website,
+        string? Loader,
+        byte[]? IconBytes)
+    {
+        if (string.IsNullOrWhiteSpace(Title)
+            && string.IsNullOrWhiteSpace(Description)
+            && string.IsNullOrWhiteSpace(Version)
+            && string.IsNullOrWhiteSpace(Loader))
+        {
+            return null;
+        }
+
+        return new RecognizedModMetadata(
+            Identity: Identity?.Trim() ?? string.Empty,
+            Title: Title?.Trim() ?? string.Empty,
+            Description: Description?.Trim() ?? string.Empty,
+            Authors: Authors?.Trim() ?? string.Empty,
+            Version: Version?.Trim() ?? string.Empty,
+            Website: Website?.Trim() ?? string.Empty,
+            Loader: Loader?.Trim() ?? string.Empty,
+            IconBytes: IconBytes);
+    }
+
+    private static string BuildModSummary(FileInfo file, RecognizedModMetadata? metadata)
+    {
+        var segments = new List<string>();
+        AddIfNotEmpty(segments, metadata?.Authors);
+        AddIfNotEmpty(segments, GetWebsiteLabel(metadata?.Website));
+
+        if (segments.Count == 0)
+        {
+            segments.Add($"{file.LastWriteTime:yyyy/MM/dd HH:mm} • {FormatFileSize(file.Length)}");
+        }
+
+        return string.Join(" • ", segments);
+    }
+
+    private static string BuildModMeta(FileInfo file, RecognizedModMetadata? metadata)
+    {
+        var segments = new List<string>();
+        AddIfNotEmpty(segments, metadata?.Loader);
+        AddIfNotEmpty(segments, metadata?.Version);
+
+        if (segments.Count == 0)
+        {
+            var extension = GetModContainerExtension(file.Name);
+            AddIfNotEmpty(segments, string.IsNullOrWhiteSpace(extension) ? "Mod" : extension.ToUpperInvariant());
+        }
+
+        return string.Join(" • ", segments);
+    }
+
+    private static string DetermineModIconName(string? loader, string fallback)
+    {
+        return loader switch
+        {
+            "Fabric" => "Fabric.png",
+            "Quilt" => "Quilt.png",
+            "NeoForge" => "NeoForge.png",
+            "Forge" => "Anvil.png",
+            _ => fallback
+        };
+    }
+
+    private static string GetFallbackModTitle(string fileName)
+    {
+        var normalizedName = RemoveTrailingSuffix(fileName, ".disabled");
+        normalizedName = RemoveTrailingSuffix(normalizedName, ".old");
+        return Path.GetFileNameWithoutExtension(normalizedName);
+    }
+
+    private static string GetModContainerExtension(string fileName)
+    {
+        var normalizedName = RemoveTrailingSuffix(fileName, ".disabled");
+        normalizedName = RemoveTrailingSuffix(normalizedName, ".old");
+        return Path.GetExtension(normalizedName).TrimStart('.');
+    }
+
+    private static string RemoveTrailingSuffix(string value, string suffix)
+    {
+        return value.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+            ? value[..^suffix.Length]
+            : value;
+    }
+
+    private static string GetWebsiteLabel(string? website)
+    {
+        if (string.IsNullOrWhiteSpace(website))
+        {
+            return string.Empty;
+        }
+
+        return Uri.TryCreate(website, UriKind.Absolute, out var uri)
+            ? uri.Host
+            : website;
+    }
+
+    private static string NormalizeInlineText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return Regex.Replace(value.Trim(), @"\s+", " ");
+    }
+
+    private static JsonObject? ReadJsonObject(ZipArchiveEntry entry)
+    {
+        try
+        {
+            return JsonNode.Parse(ReadArchiveEntryText(entry)) as JsonObject;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string ReadArchiveEntryText(ZipArchiveEntry entry)
+    {
+        using var stream = entry.Open();
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
+    private static string? GetString(JsonObject? root, string key)
+    {
+        return root?[key]?.GetValue<string>();
+    }
+
+    private static string JoinAuthorArray(JsonArray? authors)
+    {
+        if (authors is null || authors.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var values = authors
+            .Select(node => node switch
+            {
+                JsonValue value => value.TryGetValue<string>(out var text) ? text : string.Empty,
+                JsonObject obj => GetString(obj, "name") ?? string.Empty,
+                _ => string.Empty
+            })
+            .Where(value => !string.IsNullOrWhiteSpace(value));
+        return string.Join(", ", values);
+    }
+
+    private static string JoinJsonArray(JsonArray? values)
+    {
+        if (values is null || values.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Join(", ", values
+            .Select(node => node?.ToString())
+            .Where(value => !string.IsNullOrWhiteSpace(value)));
+    }
+
+    private static string JoinContributors(JsonObject? contributors)
+    {
+        if (contributors is null || contributors.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Join(", ", contributors
+            .Select(pair => string.IsNullOrWhiteSpace(pair.Value?.ToString())
+                ? pair.Key
+                : $"{pair.Key} ({pair.Value})"));
+    }
+
+    private static string? ReadIconReference(JsonNode? node)
+    {
+        return node switch
+        {
+            JsonValue value when value.TryGetValue<string>(out var icon) => icon,
+            JsonObject objectValue => objectValue
+                .OrderByDescending(pair => int.TryParse(pair.Key, out var size) ? size : 0)
+                .Select(pair => pair.Value?.ToString())
+                .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)),
+            _ => null
+        };
+    }
+
+    private static byte[]? TryReadEmbeddedIconBytes(ZipArchive archive, string? entryPath)
+    {
+        if (string.IsNullOrWhiteSpace(entryPath))
+        {
+            return null;
+        }
+
+        var iconEntry = FindArchiveEntry(archive, entryPath);
+        if (iconEntry is null)
+        {
+            return null;
+        }
+
+        if (iconEntry.Length <= 0 || iconEntry.Length > MaxEmbeddedIconBytes)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = iconEntry.Open();
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return memory.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static ZipArchiveEntry? FindArchiveEntry(ZipArchive archive, string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return null;
+        }
+
+        var normalized = relativePath.Replace('\\', '/').TrimStart('/');
+        var direct = archive.Entries.FirstOrDefault(entry =>
+            string.Equals(entry.FullName.Replace('\\', '/'), normalized, StringComparison.OrdinalIgnoreCase));
+        if (direct is not null)
+        {
+            return direct;
+        }
+
+        var fileName = Path.GetFileName(normalized);
+        return archive.Entries.FirstOrDefault(entry =>
+            string.Equals(Path.GetFileName(entry.FullName), fileName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string ReadFirstModsTomlBlock(string content)
+    {
+        const string sectionHeader = "[[mods]]";
+        var sectionStart = content.IndexOf(sectionHeader, StringComparison.OrdinalIgnoreCase);
+        if (sectionStart < 0)
+        {
+            return string.Empty;
+        }
+
+        var nextSectionMatch = Regex.Match(content[(sectionStart + sectionHeader.Length)..], @"(?m)^\s*\[");
+        var sectionEnd = nextSectionMatch.Success
+            ? sectionStart + sectionHeader.Length + nextSectionMatch.Index
+            : content.Length;
+        return content[sectionStart..sectionEnd];
+    }
+
+    private static string? ReadTomlValue(string content, string key)
+    {
+        var raw = ReadTomlRawValue(content, key);
+        return string.IsNullOrWhiteSpace(raw) ? null : ParseTomlScalar(raw);
+    }
+
+    private static string? ReadTomlArrayOrString(string content, string key)
+    {
+        var raw = ReadTomlRawValue(content, key);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        raw = raw.Trim();
+        if (raw[0] != '[')
+        {
+            return ParseTomlScalar(raw);
+        }
+
+        var values = new List<string>();
+        foreach (Match match in TomlQuotedValueRegex.Matches(raw))
+        {
+            values.Add(UnescapeTomlString(match.Groups["value"].Value));
+        }
+
+        foreach (Match match in TomlSingleQuotedValueRegex.Matches(raw))
+        {
+            values.Add(match.Groups["value"].Value);
+        }
+
+        return values.Count == 0 ? null : string.Join(", ", values);
+    }
+
+    private static string? ReadTomlRawValue(string content, string key)
+    {
+        var matcher = Regex.Match(content, $@"(?m)^\s*{Regex.Escape(key)}\s*=");
+        if (!matcher.Success)
+        {
+            return null;
+        }
+
+        var start = matcher.Index + matcher.Length;
+        while (start < content.Length && (content[start] == ' ' || content[start] == '\t'))
+        {
+            start++;
+        }
+
+        if (start >= content.Length)
+        {
+            return null;
+        }
+
+        if (content.AsSpan(start).StartsWith("\"\"\"".AsSpan(), StringComparison.Ordinal))
+        {
+            var endIndex = content.IndexOf("\"\"\"", start + 3, StringComparison.Ordinal);
+            return endIndex < 0 ? content[start..] : content[start..(endIndex + 3)];
+        }
+
+        if (content.AsSpan(start).StartsWith("'''".AsSpan(), StringComparison.Ordinal))
+        {
+            var endIndex = content.IndexOf("'''", start + 3, StringComparison.Ordinal);
+            return endIndex < 0 ? content[start..] : content[start..(endIndex + 3)];
+        }
+
+        var lineEnd = content.IndexOfAny(['\r', '\n'], start);
+        return lineEnd < 0 ? content[start..] : content[start..lineEnd];
+    }
+
+    private static string? ParseTomlScalar(string raw)
+    {
+        raw = raw.Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        if (raw.StartsWith("\"\"\"", StringComparison.Ordinal))
+        {
+            var endIndex = raw.LastIndexOf("\"\"\"", StringComparison.Ordinal);
+            if (endIndex > 2)
+            {
+                return raw[3..endIndex];
+            }
+        }
+
+        if (raw.StartsWith("'''", StringComparison.Ordinal))
+        {
+            var endIndex = raw.LastIndexOf("'''", StringComparison.Ordinal);
+            if (endIndex > 2)
+            {
+                return raw[3..endIndex];
+            }
+        }
+
+        var quoted = TomlQuotedValueRegex.Match(raw);
+        if (quoted.Success)
+        {
+            return UnescapeTomlString(quoted.Groups["value"].Value);
+        }
+
+        var singleQuoted = TomlSingleQuotedValueRegex.Match(raw);
+        if (singleQuoted.Success)
+        {
+            return singleQuoted.Groups["value"].Value;
+        }
+
+        var commentIndex = raw.IndexOf('#');
+        if (commentIndex >= 0)
+        {
+            raw = raw[..commentIndex];
+        }
+
+        return raw.Trim().TrimEnd(',');
+    }
+
+    private static string UnescapeTomlString(string value)
+    {
+        return value
+            .Replace("\\n", "\n", StringComparison.Ordinal)
+            .Replace("\\t", "\t", StringComparison.Ordinal)
+            .Replace("\\r", "\r", StringComparison.Ordinal)
+            .Replace("\\\"", "\"", StringComparison.Ordinal)
+            .Replace("\\\\", "\\", StringComparison.Ordinal);
+    }
+
+    private sealed record RecognizedModMetadata(
+        string Identity,
+        string Title,
+        string Description,
+        string Authors,
+        string Version,
+        string Website,
+        string Loader,
+        byte[]? IconBytes);
+
     private static string? ResolveOverviewIconPath(
         FrontendInstanceSelectionState selection,
         FrontendVersionManifestSummary manifestSummary,
@@ -1041,59 +1762,29 @@ internal static class FrontendInstanceCompositionService
             return FrontendVersionManifestSummary.Empty;
         }
 
-        return ReadManifestSummaryRecursive(launcherFolder, selectedInstanceName, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static FrontendVersionManifestSummary ReadManifestSummaryRecursive(
-        string launcherFolder,
-        string versionName,
-        ISet<string> visited)
-    {
-        if (!visited.Add(versionName))
-        {
-            return FrontendVersionManifestSummary.Empty;
-        }
-
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
-        {
-            return FrontendVersionManifestSummary.Empty;
-        }
-
-        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-        var root = document.RootElement;
-        var parentVersion = GetString(root, "inheritsFrom");
-        var parentSummary = string.IsNullOrWhiteSpace(parentVersion)
-            ? FrontendVersionManifestSummary.Empty
-            : ReadManifestSummaryRecursive(launcherFolder, parentVersion, visited);
-        var currentLibraries = ParseLibraryNames(root);
-        var allLibraries = parentSummary.LibraryNames.Concat(currentLibraries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var vanillaVersion = TryParseVanillaVersion(FirstNonEmpty(parentVersion, GetString(root, "id")))?.ToString() ?? parentSummary.VanillaVersion;
-
+        var profile = FrontendVersionManifestInspector.ReadProfile(launcherFolder, selectedInstanceName);
         return new FrontendVersionManifestSummary(
-            VanillaVersion: vanillaVersion,
-            VersionType: FirstNonEmpty(GetString(root, "type"), parentSummary.VersionType),
-            HasForge: parentSummary.HasForge || ContainsLibrary(allLibraries, "net.minecraftforge:forge"),
-            ForgeVersion: parentSummary.ForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.minecraftforge:forge"),
-            NeoForgeVersion: parentSummary.NeoForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.neoforged:neoforge"),
-            CleanroomVersion: parentSummary.CleanroomVersion ?? ExtractLibraryVersion(allLibraries, "com.cleanroommc"),
-            FabricVersion: parentSummary.FabricVersion ?? ExtractLibraryVersion(allLibraries, "net.fabricmc:fabric-loader"),
-            LegacyFabricVersion: parentSummary.LegacyFabricVersion ?? ExtractLibraryVersion(allLibraries, "net.legacyfabric"),
-            QuiltVersion: parentSummary.QuiltVersion ?? ExtractLibraryVersion(allLibraries, "org.quiltmc:quilt-loader"),
-            OptiFineVersion: parentSummary.OptiFineVersion ?? ExtractOptiFineVersion(allLibraries),
-            HasLiteLoader: parentSummary.HasLiteLoader || ContainsLibrary(allLibraries, "liteloader"),
-            LiteLoaderVersion: parentSummary.LiteLoaderVersion ?? ExtractLibraryVersion(allLibraries, "com.mumfrey:liteloader"),
-            LabyModVersion: parentSummary.LabyModVersion ?? ExtractLibraryVersion(allLibraries, "net.labymod"),
-            HasLabyMod: parentSummary.HasLabyMod || ContainsLibrary(allLibraries, "labymod"),
-            HasFabricApi: parentSummary.HasFabricApi || ContainsLibrary(allLibraries, "fabric-api"),
-            FabricApiVersion: parentSummary.FabricApiVersion ?? ExtractLibraryVersion(allLibraries, "net.fabricmc.fabric-api:fabric-api"),
-            HasQsl: parentSummary.HasQsl || ContainsLibrary(allLibraries, "quilted-fabric-api") || ContainsLibrary(allLibraries, ":qsl"),
-            QslVersion: parentSummary.QslVersion
-                        ?? ExtractLibraryVersion(allLibraries, "org.quiltmc.quilted-fabric-api")
-                        ?? ExtractLibraryVersion(allLibraries, "org.quiltmc:qsl"),
-            HasOptiFabric: parentSummary.HasOptiFabric || ContainsLibrary(allLibraries, "optifabric"),
-            OptiFabricVersion: parentSummary.OptiFabricVersion ?? ExtractLibraryVersion(allLibraries, "optifabric"),
-            LibraryNames: allLibraries);
+            VanillaVersion: profile.VanillaVersion,
+            VersionType: profile.VersionType,
+            HasForge: profile.HasForge,
+            ForgeVersion: profile.ForgeVersion,
+            NeoForgeVersion: profile.NeoForgeVersion,
+            CleanroomVersion: profile.CleanroomVersion,
+            FabricVersion: profile.FabricVersion,
+            LegacyFabricVersion: profile.LegacyFabricVersion,
+            QuiltVersion: profile.QuiltVersion,
+            OptiFineVersion: profile.OptiFineVersion,
+            HasLiteLoader: profile.HasLiteLoader,
+            LiteLoaderVersion: profile.LiteLoaderVersion,
+            LabyModVersion: profile.LabyModVersion,
+            HasLabyMod: profile.HasLabyMod,
+            HasFabricApi: profile.HasFabricApi,
+            FabricApiVersion: profile.FabricApiVersion,
+            HasQsl: profile.HasQsl,
+            QslVersion: profile.QslVersion,
+            HasOptiFabric: profile.HasOptiFabric,
+            OptiFabricVersion: profile.OptiFabricVersion,
+            LibraryNames: profile.LibraryNames);
     }
 
     private static bool ResolveIsolationEnabled(
@@ -1125,20 +1816,6 @@ internal static class FrontendInstanceCompositionService
             : 2;
     }
 
-    private static IReadOnlyList<string> ParseLibraryNames(JsonElement root)
-    {
-        if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        return libraries.EnumerateArray()
-            .Select(library => GetString(library, "name"))
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Cast<string>()
-            .ToArray();
-    }
-
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
     {
         if (!provider.Exists(key))
@@ -1164,40 +1841,6 @@ internal static class FrontendInstanceCompositionService
         }
     }
 
-    private static bool ContainsLibrary(IEnumerable<string> libraries, string searchText)
-    {
-        return libraries.Any(library => library.Contains(searchText, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string? ExtractLibraryVersion(IEnumerable<string> libraries, string prefix)
-    {
-        var match = libraries.FirstOrDefault(library => library.StartsWith(prefix + ":", StringComparison.OrdinalIgnoreCase));
-        return match?.Split(':').LastOrDefault();
-    }
-
-    private static string? ExtractOptiFineVersion(IEnumerable<string> libraries)
-    {
-        var match = libraries.FirstOrDefault(library => library.Contains("optifine", StringComparison.OrdinalIgnoreCase));
-        return match?.Split(':').LastOrDefault();
-    }
-
-    private static Version? TryParseVanillaVersion(string? rawValue)
-    {
-        if (string.IsNullOrWhiteSpace(rawValue))
-        {
-            return null;
-        }
-
-        var candidate = rawValue.Trim();
-        if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
-        {
-            candidate = candidate[1..];
-        }
-
-        var filtered = new string(candidate.TakeWhile(character => char.IsDigit(character) || character == '.').ToArray());
-        return Version.TryParse(filtered, out var version) ? version : null;
-    }
-
     private static string? FirstNonEmpty(params string?[] values)
     {
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
@@ -1208,36 +1851,6 @@ internal static class FrontendInstanceCompositionService
         return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
-    }
-
-    private static string? GetNestedString(JsonElement element, params string[] path)
-    {
-        foreach (var segment in path)
-        {
-            if (!element.TryGetProperty(segment, out var next))
-            {
-                return null;
-            }
-
-            element = next;
-        }
-
-        return element.ValueKind == JsonValueKind.String ? element.GetString() : null;
-    }
-
-    private static bool? GetNestedBoolean(JsonElement element, params string[] path)
-    {
-        foreach (var segment in path)
-        {
-            if (!element.TryGetProperty(segment, out var next))
-            {
-                return null;
-            }
-
-            element = next;
-        }
-
-        return element.ValueKind is JsonValueKind.True or JsonValueKind.False ? element.GetBoolean() : null;
     }
 
     private static string FormatFileSize(long length)

@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using PCL.Core.Logging;
 
@@ -18,8 +19,20 @@ public static class TaskCenter
     public static ObservableCollection<TaskModel> Tasks { get; } = [];
 
     private static readonly ConditionalWeakTable<ITask, TaskModel> _ModelMap = [];
+    private static SynchronizationContext? _SynchronizationContext;
 
-    private static TaskModel _InitModel(ITask instance)
+    private static void RunOnContext(SynchronizationContext? context, Action action)
+    {
+        if (context is null || ReferenceEquals(SynchronizationContext.Current, context))
+        {
+            action();
+            return;
+        }
+
+        context.Post(static state => ((Action)state!).Invoke(), action);
+    }
+
+    private static TaskModel _InitModel(ITask instance, SynchronizationContext? context)
     {
         // ReSharper disable SuspiciousTypeConversion.Global
         var cancelable = instance as ITaskCancelable;
@@ -28,13 +41,46 @@ public static class TaskCenter
         var telemetry = instance as ITaskTelemetry;
         // ReSharper restore SuspiciousTypeConversion.Global
 
-        var model = new TaskModel
+        TaskModel? model = null;
+        model = new TaskModel
         {
             Title = instance.Title,
             SupportProgress = progressive != null,
-            OnCancel = cancelable == null ? null : (() => cancelable.Cancel()),
-            OnPause = pausable == null ? null : (() => pausable.Pause()),
+            OnCancel = cancelable == null
+                ? null
+                : (() =>
+                {
+                    RunOnContext(context, () => model!.IsCancelRequested = true);
+                    try
+                    {
+                        cancelable.Cancel();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogWrapper.Warn(ex, "TaskCenter", $"{instance.Title}: cancel failed");
+                        RunOnContext(context, () =>
+                        {
+                            model!.IsCancelRequested = false;
+                            model!.StateMessage = $"取消失败：{ex.Message}";
+                            TouchModel(model, updateStateSince: false);
+                        });
+                    }
+                }),
+            OnPause = pausable == null
+                ? null
+                : (() =>
+                {
+                    try
+                    {
+                        pausable.Pause();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogWrapper.Warn(ex, "TaskCenter", $"{instance.Title}: pause failed");
+                    }
+                })
         };
+        TouchModel(model, updateStateSince: false);
 
         if (telemetry != null)
         {
@@ -45,8 +91,17 @@ public static class TaskCenter
         instance.StateChanged += (state, message) =>
         {
             LogWrapper.Trace("TaskCenter", $"{instance.Title}: state changed ({state}): {message}");
-            model.State = state;
-            model.StateMessage = message;
+            RunOnContext(context, () =>
+            {
+                model.State = state;
+                model.StateMessage = message;
+                if (state is TaskState.Success or TaskState.Canceled or TaskState.Failed)
+                {
+                    model.IsCancelRequested = false;
+                }
+
+                TouchModel(model, state);
+            });
         };
 
         // progress event
@@ -54,13 +109,24 @@ public static class TaskCenter
         {
             progressive.ProgressChanged += progress =>
             {
-                model.Progress = Math.Clamp(progress, 0.0, 1.0);
+                RunOnContext(context, () =>
+                {
+                    model.Progress = Math.Clamp(progress, 0.0, 1.0);
+                    TouchModel(model, updateStateSince: false);
+                });
             };
         }
 
         if (telemetry != null)
         {
-            telemetry.TelemetryChanged += snapshot => ApplyTelemetry(model, snapshot);
+            telemetry.TelemetryChanged += snapshot =>
+            {
+                RunOnContext(context, () =>
+                {
+                    ApplyTelemetry(model, snapshot);
+                    TouchModel(model, updateStateSince: false);
+                });
+            };
         }
 
         // group events
@@ -68,13 +134,24 @@ public static class TaskCenter
         {
             group.AddTask += task =>
             {
-                var taskModel = _InitModel(task);
-                _ModelMap.Add(task, taskModel);
-                model.Children.Add(taskModel);
+                RunOnContext(context, () =>
+                {
+                    var taskModel = _InitModel(task, context);
+                    _ModelMap.Add(task, taskModel);
+                    model.Children.Add(taskModel);
+                    TouchModel(model, updateStateSince: false);
+                });
             };
             group.RemoveTask += task =>
             {
-                if (_ModelMap.TryGetValue(task, out var taskModel)) model.Children.Remove(taskModel);
+                RunOnContext(context, () =>
+                {
+                    if (_ModelMap.TryGetValue(task, out var taskModel))
+                    {
+                        model.Children.Remove(taskModel);
+                        TouchModel(model, updateStateSince: false);
+                    }
+                });
             };
         }
 
@@ -89,6 +166,32 @@ public static class TaskCenter
         model.RemainingThreadCount = snapshot.RemainingThreadCount;
     }
 
+    private static void TouchModel(TaskModel model, TaskState? state = null, bool updateStateSince = true)
+    {
+        var now = DateTimeOffset.UtcNow;
+        model.LastUpdatedAt = now;
+
+        if (state is null)
+        {
+            return;
+        }
+
+        if (updateStateSince)
+        {
+            model.StateSince = now;
+        }
+
+        if (state == TaskState.Running)
+        {
+            model.StartedAt ??= now;
+            model.FinishedAt = null;
+        }
+        else if (state is TaskState.Success or TaskState.Canceled or TaskState.Failed)
+        {
+            model.FinishedAt ??= now;
+        }
+    }
+
     /// <summary>
     /// 注册响应式任务实例
     /// </summary>
@@ -96,8 +199,10 @@ public static class TaskCenter
     /// <param name="start">是否立即启动该实例</param>
     public static void Register(ITask instance, bool start = true)
     {
-        var model = _InitModel(instance);
-        Tasks.Add(model);
+        var synchronizationContext = SynchronizationContext.Current;
+        _SynchronizationContext ??= synchronizationContext;
+        var model = _InitModel(instance, synchronizationContext);
+        RunOnContext(synchronizationContext, () => Tasks.Add(model));
 
         if (start)
         {
@@ -108,11 +213,23 @@ public static class TaskCenter
                 catch (Exception ex)
                 {
                     LogWrapper.Warn(ex, "TaskCenter", $"{instance.Title}: exception thrown");
-                    model.State = TaskState.Failed;
-                    model.StateMessage = ex.Message;
+                    RunOnContext(synchronizationContext, () =>
+                    {
+                        model.State = TaskState.Failed;
+                        model.StateMessage = ex.Message;
+                        TouchModel(model, TaskState.Failed);
+                    });
                 }
             });
         }
+    }
+
+    /// <summary>
+    /// 移除指定任务
+    /// </summary>
+    public static void Remove(TaskModel model)
+    {
+        RunOnContext(_SynchronizationContext, () => Tasks.Remove(model));
     }
 
     /// <summary>
@@ -121,6 +238,6 @@ public static class TaskCenter
     public static void RemoveFinished()
     {
         foreach (var model in Tasks.Where(x => x.State > TaskState.Running).ToList())
-            Tasks.Remove(model);
+            Remove(model);
     }
 }

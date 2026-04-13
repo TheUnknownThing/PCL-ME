@@ -5,7 +5,6 @@ internal sealed record FrontendSetupComposition(
     FrontendSetupLogState Log,
     FrontendSetupUpdateState Update,
     FrontendSetupLaunchState Launch,
-    FrontendSetupGameLinkState GameLink,
     FrontendSetupGameManageState GameManage,
     FrontendSetupLauncherMiscState LauncherMisc,
     FrontendSetupJavaState Java,
@@ -24,8 +23,7 @@ internal sealed record FrontendSetupLogEntry(
 
 internal sealed record FrontendSetupUpdateState(
     int UpdateChannelIndex,
-    int UpdateModeIndex,
-    string MirrorCdk);
+    int UpdateModeIndex);
 
 internal sealed record FrontendSetupLaunchState(
     int IsolationIndex,
@@ -43,21 +41,15 @@ internal sealed record FrontendSetupLaunchState(
     string JvmArguments,
     string GameArguments,
     string BeforeCommand,
+    string EnvironmentVariables,
     bool WaitForBeforeCommand,
+    bool ForceX11OnWayland,
     bool DisableJavaLaunchWrapper,
     bool DisableRetroWrapper,
     bool RequireDedicatedGpu,
     bool UseJavaExecutable,
     int MicrosoftAuthIndex,
     int PreferredIpStackIndex);
-
-internal sealed record FrontendSetupGameLinkState(
-    string Username,
-    int ProtocolPreferenceIndex,
-    bool PreferLowestLatencyPath,
-    bool TryPunchSymmetricNat,
-    bool AllowIpv6Communication,
-    bool EnableCliOutput);
 
 internal sealed record FrontendSetupGameManageState(
     int DownloadSourceIndex,

@@ -156,4 +156,74 @@ public sealed class MinecraftLaunchProfileStorageServiceTest
         Assert.AreEqual("offline", profiles[2]!["type"]!.GetValue<string>());
         Assert.IsNull(profiles[2]!["accessToken"]);
     }
+
+    [TestMethod]
+    public void DeleteProfileKeepsCurrentSelectionWhenDeletingEarlierEntry()
+    {
+        var document = new MinecraftLaunchProfileDocument(
+            2,
+            [
+                CreateProfile("Offline-A"),
+                CreateProfile("Offline-B"),
+                CreateProfile("Offline-C")
+            ]);
+
+        var result = MinecraftLaunchProfileStorageService.DeleteProfile(document, 0);
+
+        Assert.AreEqual(1, result.LastUsedProfile);
+        Assert.AreEqual(2, result.Profiles.Count);
+        Assert.AreEqual("Offline-C", result.Profiles[result.LastUsedProfile].Username);
+    }
+
+    [TestMethod]
+    public void DeleteProfileSelectsNearestRemainingEntryWhenDeletingCurrentSelection()
+    {
+        var document = new MinecraftLaunchProfileDocument(
+            1,
+            [
+                CreateProfile("Offline-A"),
+                CreateProfile("Offline-B"),
+                CreateProfile("Offline-C")
+            ]);
+
+        var result = MinecraftLaunchProfileStorageService.DeleteProfile(document, 1);
+
+        Assert.AreEqual(1, result.LastUsedProfile);
+        Assert.AreEqual(2, result.Profiles.Count);
+        Assert.AreEqual("Offline-C", result.Profiles[result.LastUsedProfile].Username);
+    }
+
+    [TestMethod]
+    public void DeleteProfileReturnsZeroSelectionWhenRemovingLastProfile()
+    {
+        var document = new MinecraftLaunchProfileDocument(
+            0,
+            [
+                CreateProfile("Offline-A")
+            ]);
+
+        var result = MinecraftLaunchProfileStorageService.DeleteProfile(document, 0);
+
+        Assert.AreEqual(0, result.LastUsedProfile);
+        Assert.AreEqual(0, result.Profiles.Count);
+    }
+
+    private static MinecraftLaunchPersistedProfile CreateProfile(string userName)
+    {
+        return new MinecraftLaunchPersistedProfile(
+            MinecraftLaunchStoredProfileKind.Offline,
+            Uuid: $"{userName}-uuid",
+            Username: userName,
+            Desc: null,
+            SkinHeadId: null,
+            Expires: 0,
+            Server: null,
+            ServerName: null,
+            AccessToken: null,
+            RefreshToken: null,
+            LoginName: null,
+            Password: null,
+            ClientToken: null,
+            RawJson: null);
+    }
 }

@@ -6,10 +6,20 @@ permissions:
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to publish assets to
+        required: true
+        type: string
+      source_ref:
+        description: Git ref to build from. Defaults to release_tag.
+        required: false
+        type: string
 
 jobs:
   build:
-    if: ${{ github.event.release.prerelease }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.prerelease }}
     strategy:
       matrix:
         include:
@@ -34,6 +44,7 @@ jobs:
     uses: ./.github/workflows/reusable-build.yml
     with:
       configuration: ${{ matrix.configuration }}
+      source_ref: ${{ inputs.source_ref || inputs.release_tag || github.event.release.tag_name }}
       runner: ${{ matrix.runner }}
       rid: ${{ matrix.rid }}
       artifact_name: ${{ matrix.artifact_name }}
@@ -44,12 +55,13 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     continue-on-error: true
-    if: ${{ github.event.release.prerelease }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.prerelease }}
     steps:
       - name: Checkout all
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ inputs.source_ref || inputs.release_tag || github.event.release.tag_name }}
 
       - name: Install git-cliff
         uses: taiki-e/install-action@git-cliff
@@ -60,7 +72,7 @@ jobs:
       - name: Add changelog to release
         uses: softprops/action-gh-release@v2.5.0
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ inputs.release_tag || github.event.release.tag_name }}
           body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,24 +81,23 @@ jobs:
     permissions:
       contents: write
     needs: [build, changelog]
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.prerelease }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - artifact_name: PCL-ME_Beta_linux-x64
-          - artifact_name: PCL-ME_Beta_win-x64
-          - artifact_name: PCL-ME_Beta_win-arm64
-          - artifact_name: PCL-ME_Beta_osx-arm64
     steps:
-      - name: Download Build Artifact
+      - name: Download packaged artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
+          pattern: PCL-ME_Beta_*
           path: ./artifact
+          merge-multiple: true
 
       - name: Upload packaged artifacts to release
-        uses: softprops/action-gh-release@v2.2.2
+        uses: softprops/action-gh-release@v2.5.0
         with:
-          files: artifact/**/*
+          tag_name: ${{ inputs.release_tag || github.event.release.tag_name }}
+          files: |
+            artifact/**/*.zip
+            artifact/**/*.tar.gz
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

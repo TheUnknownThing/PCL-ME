@@ -13,6 +13,31 @@ namespace PCL.Core.App.Tasks;
 public partial class TaskModel : ObservableObject
 {
     /// <summary>
+    /// 任务创建时间
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// 当前状态开始时间
+    /// </summary>
+    public DateTimeOffset StateSince { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// 任务开始运行时间
+    /// </summary>
+    public DateTimeOffset? StartedAt { get; set; }
+
+    /// <summary>
+    /// 任务最近一次活动时间
+    /// </summary>
+    public DateTimeOffset LastUpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// 任务结束时间
+    /// </summary>
+    public DateTimeOffset? FinishedAt { get; set; }
+
+    /// <summary>
     /// 任务标题
     /// </summary>
     public required string Title { get; init; }
@@ -57,6 +82,11 @@ public partial class TaskModel : ObservableObject
     /// </summary>
     [ObservableProperty] private int? _remainingThreadCount;
 
+    /// <summary>
+    /// 是否已请求取消
+    /// </summary>
+    [ObservableProperty] private bool _isCancelRequested;
+
     private static readonly Action _EmptyAction = (static () => {});
 
     /// <summary>
@@ -69,7 +99,7 @@ public partial class TaskModel : ObservableObject
     /// </summary>
     public RelayCommand Cancel
     {
-        get => field ??= new RelayCommand(OnCancel ?? _EmptyAction, () => OnCancel != null);
+        get => field ??= new RelayCommand(OnCancel ?? _EmptyAction, () => OnCancel != null && !IsCancelRequested);
     } = null!;
 
     /// <summary>
@@ -101,5 +131,10 @@ public partial class TaskModel : ObservableObject
         {
             if (sender is ObservableCollection<TaskModel> c) IsGroup = c.Count > 0;
         };
+    }
+
+    partial void OnIsCancelRequestedChanged(bool value)
+    {
+        Cancel.NotifyCanExecuteChanged();
     }
 }

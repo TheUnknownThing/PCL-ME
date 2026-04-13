@@ -9,6 +9,9 @@ on:
       configuration:
         required: true
         type: string
+      source_ref:
+        required: true
+        type: string
       runner:
         required: true
         type: string
@@ -29,11 +32,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
 
       - name: Set Describe
         run: |
           describe=`git describe --tags --always`
           echo "describe=$describe" >> $GITHUB_ENV
+          source_sha=`git rev-parse HEAD`
+          echo "source_sha=$source_sha" >> $GITHUB_ENV
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
@@ -66,7 +73,7 @@ jobs:
           PCL_NAID_CLIENT_SECRET: ${{ secrets.NAID_CLIENT_SECRET }}
           PCL_LINK_SERVER_ROOT: ${{ secrets.LINK_SERVER_ROOTS }}
           PCL_LOBBY_DEFAULT_SECRET: ${{ secrets.LOBBY_DEFAULT_SECRET }}
-          PCL_GITHUB_SHA: ${{ github.sha }}
+          PCL_GITHUB_SHA: ${{ env.source_sha }}
           CONFIGURATION: ${{ inputs.configuration }}
           ARTIFACT_ROOT: ${{ github.workspace }}/artifact
           APP_VERSION: ${{ env.describe }}
@@ -78,4 +85,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
-          path: artifact/**
+          if-no-files-found: error
+          path: |
+            artifact/**/*.zip
+            artifact/**/*.tar.gz

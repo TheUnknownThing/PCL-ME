@@ -115,6 +115,39 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
         }
     }
 
+    [TestMethod]
+    public void SyncSkipsEntriesThatEscapeTargetDirectory()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-natives-escape-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            var archivePath = Path.Combine(root, "native.zip");
+            CreateArchive(archivePath, ("../natives-escape.dll", "escape"), ("safe.dll", "safe"));
+
+            var targetDirectory = Path.Combine(root, "natives");
+            Directory.CreateDirectory(targetDirectory);
+
+            var result = MinecraftLaunchNativesSyncService.Sync(
+                new MinecraftLaunchNativesSyncRequest(
+                    targetDirectory,
+                    [new MinecraftLaunchNativeArchive(archivePath, [])],
+                    LogSkippedFiles: true));
+
+            Assert.IsTrue(File.Exists(Path.Combine(targetDirectory, "safe.dll")));
+            Assert.IsFalse(File.Exists(Path.Combine(root, "natives-escape.dll")));
+            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("跳过越界路径：../natives-escape.dll", StringComparison.Ordinal)));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, true);
+            }
+        }
+    }
+
     private static void CreateArchive(string archivePath, params (string path, string content)[] entries)
     {
         using var archive = ZipFile.Open(archivePath, ZipArchiveMode.Create);

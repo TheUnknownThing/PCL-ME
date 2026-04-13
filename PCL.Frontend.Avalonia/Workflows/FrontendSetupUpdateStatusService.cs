@@ -51,7 +51,6 @@ internal static class FrontendSetupUpdateStatusService
 
     public static async Task<FrontendSetupUpdateStatus> QueryAsync(
         int selectedUpdateChannelIndex,
-        string mirrorCdk,
         CancellationToken cancellationToken = default)
     {
         var currentVersion = ReadCurrentVersion();
@@ -62,7 +61,7 @@ internal static class FrontendSetupUpdateStatusService
             var architecture = RuntimeInformation.OSArchitecture == Architecture.Arm64
                 ? UpdateArchitecture.Arm64
                 : UpdateArchitecture.X64;
-            var latestVersion = await QueryLatestVersionAsync(channel, architecture, mirrorCdk, cancellationToken);
+            var latestVersion = await QueryLatestVersionAsync(channel, architecture, cancellationToken);
             var currentSemVer = SemVer.Parse(currentVersion.VersionName);
             var latestSemVer = SemVer.Parse(latestVersion.VersionName);
             var hasUpdate = latestSemVer > currentSemVer
@@ -122,18 +121,14 @@ internal static class FrontendSetupUpdateStatusService
     private static async Task<RemoteVersionInfo> QueryLatestVersionAsync(
         UpdateChannel channel,
         UpdateArchitecture architecture,
-        string mirrorCdk,
         CancellationToken cancellationToken)
     {
-        var sources = new List<Func<CancellationToken, Task<RemoteVersionInfo>>>();
-        if (OperatingSystem.IsWindows() && !string.IsNullOrWhiteSpace(mirrorCdk))
+        var sources = new List<Func<CancellationToken, Task<RemoteVersionInfo>>>
         {
-            sources.Add(token => QueryMirrorChyanAsync(channel, architecture, mirrorCdk, token));
-        }
-
-        sources.Add(token => QueryMinioAsync("Pysio", "https://s3.pysio.online/pcl2-ce/", channel, architecture, token));
-        sources.Add(token => QueryMinioAsync("Naids", "https://staticassets.naids.com/resources/pclce/", channel, architecture, token));
-        sources.Add(token => QueryMinioAsync("GitHub", "https://github.com/PCL-Community/PCL2_CE_Server/raw/main/", channel, architecture, token));
+            token => QueryMinioAsync("Pysio", "https://s3.pysio.online/pcl2-ce/", channel, architecture, token),
+            token => QueryMinioAsync("Naids", "https://staticassets.naids.com/resources/pclce/", channel, architecture, token),
+            token => QueryMinioAsync("GitHub", "https://github.com/PCL-Community/PCL2_CE_Server/raw/main/", channel, architecture, token)
+        };
 
         List<Exception> failures = [];
         foreach (var source in sources)
@@ -154,33 +149,6 @@ internal static class FrontendSetupUpdateStatusService
             1 => failures[0],
             _ => new AggregateException("所有更新源均不可用。", failures)
         };
-    }
-
-    private static async Task<RemoteVersionInfo> QueryMirrorChyanAsync(
-        UpdateChannel channel,
-        UpdateArchitecture architecture,
-        string mirrorCdk,
-        CancellationToken cancellationToken)
-    {
-        var url = $"https://mirrorchyan.com/api/resources/PCL2-CE/latest?cdk={Uri.EscapeDataString(mirrorCdk)}&os=win&arch={architecture.ToApiValue()}&channel={channel.ToApiValue()}";
-        using var response = await HttpClient.GetAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var payload = await JsonSerializer.DeserializeAsync<MirrorChyanResponse>(stream, cancellationToken: cancellationToken)
-            ?? throw new InvalidOperationException("MirrorChyan 返回了空结果。");
-        if (payload.Code != 0 || payload.Data is null || string.IsNullOrWhiteSpace(payload.Data.VersionName))
-        {
-            throw new InvalidOperationException("MirrorChyan 未返回可用版本信息。");
-        }
-
-        return new RemoteVersionInfo(
-            payload.Data.VersionName,
-            payload.Data.VersionNumber,
-            payload.Data.Sha256 ?? string.Empty,
-            payload.Data.ReleaseNote ?? string.Empty,
-            payload.Data.Url,
-            "MirrorChyan");
     }
 
     private static async Task<RemoteVersionInfo> QueryMinioAsync(
@@ -307,17 +275,6 @@ internal static class FrontendSetupUpdateStatusService
         [property: JsonPropertyName("suffix")] string? Suffix,
         [property: JsonPropertyName("code")] int Code);
 
-    private sealed record MirrorChyanResponse(
-        [property: JsonPropertyName("code")] int Code,
-        [property: JsonPropertyName("data")] MirrorChyanVersionData? Data);
-
-    private sealed record MirrorChyanVersionData(
-        [property: JsonPropertyName("version_name")] string VersionName,
-        [property: JsonPropertyName("version_number")] int VersionNumber,
-        [property: JsonPropertyName("sha256")] string? Sha256,
-        [property: JsonPropertyName("release_note")] string? ReleaseNote,
-        [property: JsonPropertyName("url")] string? Url);
-
     private sealed record MinioUpdateEnvelope(
         [property: JsonPropertyName("assets")] IReadOnlyList<MinioUpdateAsset>? Assets);
 
@@ -343,13 +300,4 @@ internal static class FrontendSetupUpdateStatusService
         Arm64
     }
 
-    private static string ToApiValue(this UpdateChannel channel)
-    {
-        return channel == UpdateChannel.Beta ? "beta" : "stable";
-    }
-
-    private static string ToApiValue(this UpdateArchitecture architecture)
-    {
-        return architecture == UpdateArchitecture.Arm64 ? "arm64" : "x64";
-    }
 }

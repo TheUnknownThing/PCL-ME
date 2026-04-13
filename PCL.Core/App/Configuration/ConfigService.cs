@@ -159,14 +159,40 @@ public sealed partial class ConfigService
             () => // local config file
             {
                 // try migrate
-                if (!File.Exists(LocalConfigPath)) _TryMigrate(LocalConfigPath, [
-                    new ConfigMigration
+                if (!File.Exists(LocalConfigPath))
+                {
+                    var migrations = new List<ConfigMigration>();
+                    var portableConfigPath = Path.Combine(Paths.PortableData, "config.v1.yml");
+                    if (!Paths.UsesPortableDataDirectory &&
+                        !PathsEqual(LocalConfigPath, portableConfigPath))
+                    {
+                        migrations.Add(new ConfigMigration
+                        {
+                            From = portableConfigPath,
+                            To = LocalConfigPath,
+                            OnMigration = SharedJsonMigration
+                        });
+                    }
+
+                    migrations.Add(new ConfigMigration
                     {
                         From = Path.Combine(Paths.Data, "setup.ini"),
                         To = LocalConfigPath,
                         OnMigration = CatIniMigration
+                    });
+
+                    if (!Paths.UsesPortableDataDirectory)
+                    {
+                        migrations.Add(new ConfigMigration
+                        {
+                            From = Path.Combine(Paths.PortableData, "setup.ini"),
+                            To = LocalConfigPath,
+                            OnMigration = CatIniMigration
+                        });
                     }
-                ]);
+
+                    _TryMigrate(LocalConfigPath, migrations);
+                }
                 // load
                 var fileProvider = new YamlFileProvider(LocalConfigPath);
                 _localConfigProvider = new FileConfigStorage(fileProvider);
@@ -216,6 +242,17 @@ public sealed partial class ConfigService
             }
             yamlProvider.Sync();
         }
+    }
+
+    private static bool PathsEqual(string left, string right)
+    {
+        var comparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return string.Equals(
+            Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            comparison);
     }
 
     private static void _TryMigrate(string target, IEnumerable<ConfigMigration> migrations)

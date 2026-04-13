@@ -92,6 +92,23 @@
         </Path.RenderTransform>
       </Path>
 
+      <Path
+          x:Name="SuccessGlyph"
+          Width="26"
+          Height="26"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Data="F1 M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm-76.7 643.5L255.9 528.1l60.3-60.3 119.1 119.1 272.5-272.5 60.3 60.3-332.8 332.8z"
+          Opacity="0"
+          Stretch="Uniform"
+          RenderTransformOrigin="0.5,0.5">
+        <Path.RenderTransform>
+          <ScaleTransform
+              ScaleX="0.72"
+              ScaleY="0.72" />
+        </Path.RenderTransform>
+      </Path>
+
       <Rectangle
           x:Name="FloorLine"
           Width="25"

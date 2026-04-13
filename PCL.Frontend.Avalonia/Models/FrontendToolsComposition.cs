@@ -1,24 +1,8 @@
 namespace PCL.Frontend.Avalonia.Models;
 
 internal sealed record FrontendToolsComposition(
-    FrontendToolsGameLinkState GameLink,
     FrontendToolsHelpState Help,
     FrontendToolsTestState Test);
-
-internal sealed record FrontendToolsGameLinkState(
-    string Announcement,
-    string NatStatus,
-    string AccountStatus,
-    string LobbyId,
-    string SessionPing,
-    string SessionId,
-    string ConnectionType,
-    string ConnectedUserName,
-    string ConnectedUserType,
-    IReadOnlyList<string> WorldOptions,
-    int SelectedWorldIndex,
-    IReadOnlyList<FrontendToolsSimpleEntry> PolicyEntries,
-    IReadOnlyList<FrontendToolsSimpleEntry> PlayerEntries);
 
 internal sealed record FrontendToolsSimpleEntry(
     string Title,

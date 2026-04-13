@@ -9,8 +9,116 @@
       <TextBlock Text="{Binding Label}" />
     </DataTemplate>
   </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector="Button.download-resource-entry:pointerover > Border.download-resource-entry-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-entry:pressed > Border.download-resource-entry-background">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="6,0" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush7}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button:pressed">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button:disabled">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button Path.chevron-enabled">
+      <Setter Property="Stroke" Value="{DynamicResource ColorBrush3}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-nav-button:pointerover Path.chevron-enabled">
+      <Setter Property="Stroke" Value="{DynamicResource ColorBrush4}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinWidth" Value="32" />
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button > Border.page-chip">
+      <Setter Property="Width" Value="32" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button > Border.page-chip > TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource ColorBrush3}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button:pointerover > Border.page-chip">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush7}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button:pressed > Border.page-chip">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush6}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button.active > Border.page-chip">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush3}" />
+    </Style>
+
+    <Style Selector="Button.download-resource-page-button.active > Border.page-chip > TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource ColorBrushWhite}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
+      <controls:PclCard
+          Header="当前实例"
+          IsVisible="{Binding ShowDownloadResourceCurrentInstanceCard}"
+          ContentMargin="20,18,20,18">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="5">
+              <TextBlock
+                  Foreground="#344352"
+                  FontSize="13"
+                  Text="{Binding DownloadResourceCurrentInstanceTitle}" />
+              <TextBlock
+                  Foreground="#6B7C8F"
+                  FontSize="11.5"
+                  Text="{Binding DownloadResourceCurrentInstanceSummary}"
+                  TextWrapping="Wrap" />
+            </StackPanel>
+            <controls:PclButton
+                Grid.Column="1"
+                Width="96"
+                Height="35"
+                Command="{Binding SelectDownloadResourceInstanceCommand}"
+                Text="切换实例" />
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
       <controls:PclSearchBox
           x:Name="SearchRow"
           SearchCommand="{Binding SearchDownloadResourceCommand}"
@@ -109,11 +217,13 @@
                 VerticalAlignment="Center"
                 Foreground="#343D4A"
                 FontSize="13"
+                IsVisible="{Binding ShowDownloadResourceLoaderFilter}"
                 Text="加载器" />
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="3"
                 x:Name="DownloadResourceLoaderComboBox"
+                IsVisible="{Binding ShowDownloadResourceLoaderFilter}"
                 ItemsSource="{Binding DownloadResourceLoaderOptions}"
                 ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
                 SelectedItem="{Binding SelectedDownloadResourceLoaderOption}"
@@ -145,7 +255,7 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <Button
-                        Classes="nochrome"
+                        Classes="nochrome download-resource-entry"
                         Margin="0,0,0,2"
                         Padding="0"
                         Background="Transparent"
@@ -155,8 +265,11 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch">
                       <Border
+                          Classes="download-resource-entry-background"
                           Height="64"
                           Background="{DynamicResource ColorBrushSemiTransparent}"
+                          BorderBrush="Transparent"
+                          BorderThickness="1"
                           CornerRadius="4">
                         <Grid ColumnDefinitions="7,50,8,Auto,*,30" RowDefinitions="*,20,18,16,*">
                           <Border
@@ -322,41 +435,121 @@
                     Text="{Binding DownloadResourceEmptyStateText}"
                     TextWrapping="Wrap" />
                 <TextBlock
+                    IsVisible="{Binding ShowDownloadResourceEmptyStateHint}"
                     Foreground="#96A2B1"
                     FontSize="12"
-                    Text="{Binding DownloadResourceLoadingText}"
+                    Text="{Binding DownloadResourceEmptyStateHintText}"
                     TextWrapping="Wrap" />
               </StackPanel>
             </StackPanel>
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard ContentMargin="10,10,10,10" IsVisible="{Binding ShowDownloadResourcePagination}">
+        <controls:PclCard
+            ContentMargin="8,8,8,8"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding ShowDownloadResourcePagination}">
           <controls:PclCard.CardContent>
-            <StackPanel Orientation="Horizontal" Height="23" HorizontalAlignment="Center">
-              <controls:PclIconButton
-                  Command="{Binding FirstDownloadResourcePageCommand}"
-                  IconBrush="#63758B"
-                  HoverBackgroundBrush="#2A0B5BCB"
-                  IconData="M496.213333 329.856L315.306667 510.848l180.992 181.077333a42.666667 42.666667 0 1 1-60.330667 60.330667l-211.2-211.2a42.453333 42.453333 0 0 1-11.818667-22.613333l-0.597333-5.034667v-5.034667a42.496 42.496 0 0 1 12.373333-27.648l211.2-211.2a42.666667 42.666667 0 0 1 60.373334 60.330667z m298.666667 0l-180.949333 180.992 180.992 181.077333a42.666667 42.666667 0 1 1-60.330667 60.330667l-211.2-211.2a42.453333 42.453333 0 0 1-11.818667-22.613333l-0.597333-5.034667v-5.034667a42.496 42.496 0 0 1 12.373333-27.648l211.2-211.2a42.666667 42.666667 0 0 1 60.373334 60.330667z" />
-              <controls:PclIconButton
-                  Margin="5,0,5,0"
-                  Command="{Binding PreviousDownloadResourcePageCommand}"
-                  IconBrush="#63758B"
-                  HoverBackgroundBrush="#2A0B5BCB"
-                  IconData="M650.752 278.357333l-241.322667 241.365334 241.322667 241.365333a42.666667 42.666667 0 1 1-60.330667 60.330667l-271.530666-271.530667a42.453333 42.453333 0 0 1-11.818667-22.613333l-0.597333-5.034667v-5.034667a42.496 42.496 0 0 1 12.416-27.648l271.530666-271.530666a42.666667 42.666667 0 0 1 60.330667 60.330666z" />
-              <TextBlock
-                  Margin="8,0,13,0"
-                  VerticalAlignment="Center"
-                  Foreground="#4B5968"
-                  FontSize="13.5"
-                  Text="{Binding DownloadResourcePageLabel}" />
-              <controls:PclIconButton
-                  Command="{Binding NextDownloadResourcePageCommand}"
-                  IconBrush="#63758B"
-                  HoverBackgroundBrush="#2A0B5BCB"
-                  IconData="M404.309333 278.357333l241.322667 241.365334-241.322667 241.365333a42.666667 42.666667 0 1 0 60.330667 60.330667l271.530667-271.530667a42.453333 42.453333 0 0 0 11.818666-22.613333l0.597334-5.034667v-5.034667a42.496 42.496 0 0 0-12.416-27.648L464.64 218.026667a42.666667 42.666667 0 0 0-60.330667 60.330666z" />
-            </StackPanel>
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" VerticalAlignment="Center">
+                <Button
+                    Grid.Column="0"
+                    Classes="nochrome download-resource-nav-button"
+                    Command="{Binding FirstDownloadResourcePageCommand}"
+                    IsEnabled="{Binding CanGoToPreviousDownloadResourcePage}"
+                    Margin="0,0,4,0">
+                  <Grid Width="14" Height="14">
+                    <Path
+                        Classes="chevron-enabled"
+                        Width="14"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding CanGoToPreviousDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M12,1 L7,7 L12,13 M7,1 L2,7 L7,13" />
+                    <Path
+                        Width="14"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        Stroke="{DynamicResource ColorBrushGray4}"
+                        IsVisible="{Binding CanNotGoToPreviousDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M12,1 L7,7 L12,13 M7,1 L2,7 L7,13" />
+                  </Grid>
+                </Button>
+
+                <Button
+                    Grid.Column="1"
+                    Classes="nochrome download-resource-nav-button"
+                    Command="{Binding PreviousDownloadResourcePageCommand}"
+                    IsEnabled="{Binding CanGoToPreviousDownloadResourcePage}"
+                    Margin="4,0,0,0">
+                  <Grid Width="9" Height="14">
+                    <Path
+                        Classes="chevron-enabled"
+                        Width="9"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding CanGoToPreviousDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M7,1 L2,7 L7,13" />
+                    <Path
+                        Width="9"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        Stroke="{DynamicResource ColorBrushGray4}"
+                        IsVisible="{Binding CanNotGoToPreviousDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M7,1 L2,7 L7,13" />
+                  </Grid>
+                </Button>
+
+                <TextBlock
+                    Grid.Column="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrush3}"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Text="{Binding DownloadResourcePageLabel}" />
+
+                <Button
+                    Grid.Column="3"
+                    Classes="nochrome download-resource-nav-button"
+                    Command="{Binding NextDownloadResourcePageCommand}"
+                    IsEnabled="{Binding CanGoToNextDownloadResourcePage}"
+                    Margin="4,0,0,0">
+                  <Grid Width="9" Height="14">
+                    <Path
+                        Classes="chevron-enabled"
+                        Width="9"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding CanGoToNextDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M2,1 L7,7 L2,13" />
+                    <Path
+                        Width="9"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        Stroke="{DynamicResource ColorBrushGray4}"
+                        IsVisible="{Binding CanNotGoToNextDownloadResourcePage}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round"
+                        Stretch="Uniform"
+                        Data="M2,1 L7,7 L2,13" />
+                  </Grid>
+                </Button>
+            </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>
       </StackPanel>

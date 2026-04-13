@@ -273,7 +273,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("安装数据包失败", ex.Message);
+            AddFailureActivity("安装数据包失败", ex.Message);
             return;
         }
 

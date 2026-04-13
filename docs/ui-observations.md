@@ -34,3 +34,5 @@ Have not been implemented yet, see image for reference:<br>
     [x] Open Instance Settings: Selects the instance and opens the instance settings page for the instance.<br>
 [x] After clicking on an instance the selection page shuold close and revert to the main page.<br>
 [x] Instance selection seems to be very slow. Investigate why and fix it.<br>
+[ ] There is an excessively LHS dock sliding in and out when this section is entered and exited.
+[ ] Toggling to and from instance folders with no instances does not trigger animation in both ends.

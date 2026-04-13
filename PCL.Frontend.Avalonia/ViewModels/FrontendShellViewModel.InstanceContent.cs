@@ -379,7 +379,16 @@ internal sealed partial class FrontendShellViewModel
     {
         InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
         var searchedEntries = GetCurrentInstanceResourceSourceEntries()
-            .Where(entry => MatchesSearch(entry.Title, entry.Summary, entry.Meta, InstanceResourceSearchQuery))
+            .Where(entry => MatchesSearch(
+                entry.Title,
+                entry.Description,
+                entry.Summary,
+                entry.Meta,
+                entry.Authors,
+                entry.Version,
+                entry.Loader,
+                entry.Website,
+                InstanceResourceSearchQuery))
             .ToArray();
         var duplicateTitles = searchedEntries
             .GroupBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
@@ -621,6 +630,12 @@ internal sealed partial class FrontendShellViewModel
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(FrontendInstanceResourceEntry entry)
     {
         var detailCommand = new ActionCommand(() => _ = ShowInstanceResourceDetailsAsync(entry));
+        var websiteCommand = string.IsNullOrWhiteSpace(entry.Website)
+            ? null
+            : CreateOpenTargetCommand(
+                $"打开{InstanceResourceSurfaceTitle}主页: {entry.Title}",
+                entry.Website,
+                entry.Website);
         var openCommand = new ActionCommand(() =>
             OpenInstanceTarget("打开资源文件位置", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。"));
         var toggleCommand = IsInstanceResourceToggleSupported()
@@ -634,7 +649,7 @@ internal sealed partial class FrontendShellViewModel
             "当前没有可删除的资源。"));
 
         return new InstanceResourceEntryViewModel(
-            LoadLauncherBitmap("Images", "Blocks", entry.IconName),
+            LoadInstanceResourceBitmap(entry),
             entry.Title,
             entry.Summary,
             entry.Meta,
@@ -642,10 +657,13 @@ internal sealed partial class FrontendShellViewModel
             openCommand,
             actionToolTip: "打开文件位置",
             isEnabled: entry.IsEnabled,
+            description: entry.Description,
+            website: entry.Website,
             showSelection: true,
             isSelected: _instanceResourceSelectedPaths.Contains(entry.Path),
             selectionChanged: isSelected => HandleInstanceResourceSelectionChanged(entry.Path, isSelected),
             infoCommand: detailCommand,
+            websiteCommand: websiteCommand,
             openCommand: openCommand,
             toggleCommand: toggleCommand,
             deleteCommand: deleteCommand);
@@ -664,9 +682,34 @@ internal sealed partial class FrontendShellViewModel
             lines.Add($"类型: {entry.Meta}");
         }
 
+        if (!string.IsNullOrWhiteSpace(entry.Loader))
+        {
+            lines.Add($"加载器: {entry.Loader}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Version))
+        {
+            lines.Add($"版本: {entry.Version}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Authors))
+        {
+            lines.Add($"作者: {entry.Authors}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Description))
+        {
+            lines.Add($"描述: {entry.Description}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Website))
+        {
+            lines.Add($"相关网站: {entry.Website}");
+        }
+
         if (!string.IsNullOrWhiteSpace(entry.Summary))
         {
-            lines.Add($"摘要: {entry.Summary}");
+            lines.Add($"附加信息: {entry.Summary}");
         }
 
         lines.Add($"路径: {entry.Path}");
@@ -701,6 +744,23 @@ internal sealed partial class FrontendShellViewModel
         {
             AddActivity($"查看{InstanceResourceSurfaceTitle}详情", entry.Title);
         }
+    }
+
+    private Bitmap? LoadInstanceResourceBitmap(FrontendInstanceResourceEntry entry)
+    {
+        if (entry.IconBytes is not null && entry.IconBytes.Length > 0)
+        {
+            try
+            {
+                using var stream = new MemoryStream(entry.IconBytes, writable: false);
+                return new Bitmap(stream);
+            }
+            catch
+            {
+            }
+        }
+
+        return LoadLauncherBitmap("Images", "Blocks", entry.IconName);
     }
 
     private static string FormatInstanceResourceFileSize(long bytes)
@@ -927,7 +987,7 @@ internal sealed partial class FrontendShellViewModel
             ApplyInstanceServerErrorState(entry, "服务器地址为空。");
             if (addActivity)
             {
-                AddActivity("刷新服务器信息失败", $"{entry.Title} • 服务器地址为空。");
+                AddFailureActivity("刷新服务器信息失败", $"{entry.Title} • 服务器地址为空。");
             }
 
             return;
@@ -956,7 +1016,7 @@ internal sealed partial class FrontendShellViewModel
             ApplyInstanceServerErrorState(entry, ex.Message);
             if (addActivity)
             {
-                AddActivity("刷新服务器信息失败", $"{entry.Title} • {ex.Message}");
+                AddFailureActivity("刷新服务器信息失败", $"{entry.Title} • {ex.Message}");
             }
         }
     }
@@ -1027,7 +1087,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("复制服务器地址失败", ex.Message);
+            AddFailureActivity("复制服务器地址失败", ex.Message);
         }
     }
 
@@ -1058,7 +1118,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("连接服务器失败", ex.Message);
+            AddFailureActivity("连接服务器失败", ex.Message);
         }
     }
 
@@ -1077,7 +1137,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("粘贴剪贴板文件失败", ex.Message);
+            AddFailureActivity("粘贴剪贴板文件失败", ex.Message);
             return;
         }
 
@@ -1130,7 +1190,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加新服务器失败", ex.Message);
+            AddFailureActivity("添加新服务器失败", ex.Message);
             return;
         }
 
@@ -1156,7 +1216,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            AddFailureActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
             return;
         }
 
@@ -1176,7 +1236,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加新服务器失败", $"无法更新当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            AddFailureActivity("添加新服务器失败", $"无法更新当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
             return;
         }
 
@@ -1185,13 +1245,13 @@ internal sealed partial class FrontendShellViewModel
             var clonedServerList = (NbtList)serverList.Clone();
             if (!TryWriteInstanceServerList(serversPath, clonedServerList))
             {
-                AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+                AddFailureActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
                 return;
             }
         }
         catch
         {
-            AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+            AddFailureActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
             return;
         }
 
@@ -1271,7 +1331,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("从文件安装资源失败", ex.Message);
+            AddFailureActivity("从文件安装资源失败", ex.Message);
             return;
         }
 
@@ -1371,7 +1431,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (failedEntries.Count > 0)
         {
-            AddActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
+            AddFailureActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
         }
 
         return Task.CompletedTask;
@@ -1454,7 +1514,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (failedEntries.Count > 0)
         {
-            AddActivity("删除资源失败", string.Join(Environment.NewLine, failedEntries));
+            AddFailureActivity("删除资源失败", string.Join(Environment.NewLine, failedEntries));
         }
     }
 

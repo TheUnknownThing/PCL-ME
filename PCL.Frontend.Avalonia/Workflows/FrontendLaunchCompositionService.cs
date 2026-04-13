@@ -361,21 +361,23 @@ internal static class FrontendLaunchCompositionService
                 new MinecraftLaunchLegacyGameArgumentRequest(
                     legacyMinecraftArguments,
                     UseRetroWrapper: retroWrapperOptions.UseRetroWrapper,
-                    manifestSummary.HasForge || manifestSummary.HasLiteLoader,
+                    manifestSummary.HasForgeLike || manifestSummary.HasLiteLoader,
                     manifestSummary.HasOptiFine)).Arguments;
         }
 
         var modernGameSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "game");
         if (modernGameSections.Count > 0)
         {
+            var launchArgumentFeatures = BuildLaunchArgumentFeatures(localConfig);
             arguments += " " + MinecraftLaunchGameArgumentService.BuildModernPlan(
                 new MinecraftLaunchModernGameArgumentRequest(
                     MinecraftLaunchJsonArgumentService.ExtractValues(
                         new MinecraftLaunchJsonArgumentRequest(
                             modernGameSections,
                             Environment.OSVersion.Version.ToString(),
-                            runtimeArchitecture == MachineType.I386)),
-                    manifestSummary.HasForge || manifestSummary.HasLiteLoader,
+                            runtimeArchitecture == MachineType.I386,
+                            launchArgumentFeatures)),
+                    manifestSummary.HasForgeLike || manifestSummary.HasLiteLoader,
                     manifestSummary.HasOptiFine)).Arguments;
         }
 
@@ -478,6 +480,7 @@ internal static class FrontendLaunchCompositionService
                 indieDirectory,
                 javaFolder,
                 replaceTime: true);
+        var launchEnvironmentOverrides = BuildLaunchEnvironmentOverrides(localConfig, instanceConfig);
 
         return MinecraftLaunchSessionWorkflowService.BuildStartPlan(
             new MinecraftLaunchSessionStartWorkflowRequest(
@@ -488,6 +491,7 @@ internal static class FrontendLaunchCompositionService
                         indieDirectory,
                         javaExecutablePath,
                         argumentPlan.FinalArguments,
+                        launchEnvironmentOverrides,
                         NullIfWhiteSpace(globalCommand),
                         ReadValue(localConfig, "LaunchAdvanceRunWait", true),
                         NullIfWhiteSpace(instanceCommand),
@@ -502,6 +506,7 @@ internal static class FrontendLaunchCompositionService
                     launcherFolder,
                     indieDirectory,
                     argumentPlan.FinalArguments,
+                    launchEnvironmentOverrides,
                     ReadValue(sharedConfig, "LaunchArgumentPriority", 1)),
                 watcherWorkflowRequest));
     }
@@ -554,10 +559,138 @@ internal static class FrontendLaunchCompositionService
                 RedirectStandardError: true,
                 PathEnvironmentValue: string.Empty,
                 AppDataEnvironmentValue: string.Empty,
+                EnvironmentVariables: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 PriorityKind: MinecraftLaunchProcessPriorityKind.Normal,
                 StartedLogMessage: "缺少 Java 运行时，尚未生成可执行的启动命令。",
                 AbortKillLogMessage: "缺少 Java 运行时，无需终止游戏进程。"),
             MinecraftLaunchWatcherWorkflowService.BuildPlan(watcherWorkflowRequest));
+    }
+
+    private static IReadOnlyDictionary<string, bool> BuildLaunchArgumentFeatures(YamlFileProvider localConfig)
+    {
+        var windowMode = ReadValue(localConfig, "LaunchArgumentWindowType", (int)GameWindowSizeMode.Default);
+        var hasCustomResolution = windowMode is (int)GameWindowSizeMode.Launcher or (int)GameWindowSizeMode.Custom;
+
+        return new Dictionary<string, bool>(StringComparer.Ordinal)
+        {
+            ["has_custom_resolution"] = hasCustomResolution,
+            ["is_demo_user"] = false,
+            ["has_quick_plays_support"] = false,
+            ["is_quick_play_singleplayer"] = false,
+            ["is_quick_play_multiplayer"] = false,
+            ["is_quick_play_realms"] = false
+        };
+    }
+
+    private static IReadOnlyDictionary<string, string> BuildLaunchEnvironmentOverrides(
+        YamlFileProvider localConfig,
+        YamlFileProvider? instanceConfig)
+    {
+        var environmentVariables = ParseLaunchEnvironmentVariables(
+            ReadValue(localConfig, "LaunchAdvanceEnvironmentVariables", string.Empty));
+        if (instanceConfig is not null)
+        {
+            MergeEnvironmentVariables(
+                environmentVariables,
+                ParseLaunchEnvironmentVariables(ReadValue(instanceConfig, "VersionAdvanceEnvironmentVariables", string.Empty)));
+        }
+
+        if (ShouldForceX11OnWayland(localConfig, instanceConfig))
+        {
+            environmentVariables["XDG_SESSION_TYPE"] = "x11";
+            environmentVariables["WAYLAND_DISPLAY"] = string.Empty;
+        }
+
+        return environmentVariables;
+    }
+
+    private static Dictionary<string, string> ParseLaunchEnvironmentVariables(string rawValue)
+    {
+        var environmentVariables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return environmentVariables;
+        }
+
+        foreach (var rawLine in rawValue.Replace("\r", string.Empty).Split('\n'))
+        {
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (line.StartsWith("export ", StringComparison.OrdinalIgnoreCase))
+            {
+                line = line[7..].TrimStart();
+            }
+
+            var separatorIndex = line.IndexOf('=');
+            var key = separatorIndex >= 0
+                ? line[..separatorIndex].Trim()
+                : line;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                continue;
+            }
+
+            var value = separatorIndex >= 0
+                ? line[(separatorIndex + 1)..]
+                : string.Empty;
+            environmentVariables[key] = value;
+        }
+
+        return environmentVariables;
+    }
+
+    private static void MergeEnvironmentVariables(
+        IDictionary<string, string> target,
+        IReadOnlyDictionary<string, string> overrides)
+    {
+        foreach (var (key, value) in overrides)
+        {
+            target[key] = value;
+        }
+    }
+
+    private static bool ShouldForceX11OnWayland(
+        YamlFileProvider localConfig,
+        YamlFileProvider? instanceConfig)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return false;
+        }
+
+        var isEnabled = ResolveForceX11OnWayland(localConfig, instanceConfig);
+        if (!isEnabled)
+        {
+            return false;
+        }
+
+        var sessionType = Environment.GetEnvironmentVariable("XDG_SESSION_TYPE");
+        var display = Environment.GetEnvironmentVariable("DISPLAY");
+        return string.Equals(sessionType, "wayland", StringComparison.OrdinalIgnoreCase) &&
+               !string.IsNullOrWhiteSpace(display);
+    }
+
+    private static bool ResolveForceX11OnWayland(
+        YamlFileProvider localConfig,
+        YamlFileProvider? instanceConfig)
+    {
+        var globalEnabled = ReadValue(localConfig, "LaunchAdvanceForceX11OnWayland", false);
+        if (instanceConfig is null)
+        {
+            return globalEnabled;
+        }
+
+        var instanceMode = Math.Clamp(ReadValue(instanceConfig, "VersionAdvanceForceX11OnWayland", 0), 0, 2);
+        return instanceMode switch
+        {
+            1 => true,
+            2 => false,
+            _ => globalEnabled
+        };
     }
 
     private static MinecraftLaunchResolutionRequest BuildResolutionRequest(
@@ -575,7 +708,7 @@ internal static class FrontendLaunchCompositionService
             GameVersionDrop = ResolveGameVersionDrop(manifestSummary.VanillaVersion),
             JavaMajorVersion = selectedJavaRuntime?.MajorVersion ?? javaWorkflow.RecommendedMajorVersion,
             HasOptiFine = manifestSummary.HasOptiFine,
-            HasForge = manifestSummary.HasForge
+            HasForge = manifestSummary.HasForgeLike
         };
     }
 
@@ -1027,10 +1160,10 @@ internal static class FrontendLaunchCompositionService
             ReleaseTime: manifestSummary.ReleaseTime ?? fallback.ReleaseTime,
             VanillaVersion: manifestSummary.VanillaVersion ?? fallback.VanillaVersion,
             HasOptiFine: manifestSummary.HasOptiFine,
-            HasForge: manifestSummary.HasForge,
+            HasForge: manifestSummary.HasForgeLike,
             ForgeVersion: manifestSummary.ForgeVersion,
             HasCleanroom: manifestSummary.HasCleanroom,
-            HasFabric: manifestSummary.HasFabric,
+            HasFabric: manifestSummary.HasFabricLike,
             HasLiteLoader: manifestSummary.HasLiteLoader,
             HasLabyMod: manifestSummary.HasLabyMod,
             JsonRequiredMajorVersion: manifestSummary.JsonRequiredMajorVersion ?? fallback.JsonRequiredMajorVersion,
@@ -1048,10 +1181,10 @@ internal static class FrontendLaunchCompositionService
             ReleaseTime: manifestSummary.ReleaseTime ?? DateTime.Now,
             VanillaVersion: manifestSummary.VanillaVersion ?? new Version(1, 20, 1),
             HasOptiFine: manifestSummary.HasOptiFine,
-            HasForge: manifestSummary.HasForge,
+            HasForge: manifestSummary.HasForgeLike,
             ForgeVersion: manifestSummary.ForgeVersion,
             HasCleanroom: manifestSummary.HasCleanroom,
-            HasFabric: manifestSummary.HasFabric,
+            HasFabric: manifestSummary.HasFabricLike,
             HasLiteLoader: manifestSummary.HasLiteLoader,
             HasLabyMod: manifestSummary.HasLabyMod,
             JsonRequiredMajorVersion: manifestSummary.JsonRequiredMajorVersion ?? recommendedMajorVersion,
@@ -1189,8 +1322,27 @@ internal static class FrontendLaunchCompositionService
             return FrontendVersionManifestSummary.Empty;
         }
 
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        return ReadManifestSummaryRecursive(launcherFolder, selectedInstanceName, visited);
+        var profile = FrontendVersionManifestInspector.ReadProfile(launcherFolder, selectedInstanceName);
+        return new FrontendVersionManifestSummary(
+            IsVersionInfoValid: profile.IsManifestValid,
+            ReleaseTime: profile.ReleaseTime,
+            VanillaVersion: profile.ParsedVanillaVersion,
+            VersionType: profile.VersionType,
+            AssetsIndexName: profile.AssetsIndexName,
+            Libraries: ReadManifestLibraries(launcherFolder, selectedInstanceName),
+            HasOptiFine: profile.HasOptiFine,
+            HasForge: profile.HasForge,
+            ForgeVersion: profile.ForgeVersion,
+            NeoForgeVersion: profile.NeoForgeVersion,
+            HasCleanroom: profile.HasCleanroom,
+            HasFabric: profile.HasFabric,
+            LegacyFabricVersion: profile.LegacyFabricVersion,
+            QuiltVersion: profile.QuiltVersion,
+            HasLiteLoader: profile.HasLiteLoader,
+            HasLabyMod: profile.HasLabyMod,
+            JsonRequiredMajorVersion: profile.JsonRequiredMajorVersion,
+            MojangRecommendedMajorVersion: profile.MojangRecommendedMajorVersion,
+            MojangRecommendedComponent: profile.MojangRecommendedComponent);
     }
 
     private static bool ResolveIsolationEnabled(
@@ -1212,9 +1364,9 @@ internal static class FrontendLaunchCompositionService
 
     private static bool IsModable(FrontendVersionManifestSummary manifestSummary)
     {
-        return manifestSummary.HasForge
+        return manifestSummary.HasForgeLike
                || manifestSummary.HasCleanroom
-               || manifestSummary.HasFabric
+               || manifestSummary.HasFabricLike
                || manifestSummary.HasLiteLoader
                || manifestSummary.HasLabyMod
                || manifestSummary.HasOptiFine;
@@ -1627,52 +1779,45 @@ internal static class FrontendLaunchCompositionService
             : vanillaVersion.Major * 10 + vanillaVersion.Minor;
     }
 
-    private static FrontendVersionManifestSummary ReadManifestSummaryRecursive(
+    private static IReadOnlyList<MinecraftLaunchClasspathLibrary> ReadManifestLibraries(
+        string launcherFolder,
+        string selectedInstanceName)
+    {
+        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        {
+            return [];
+        }
+
+        return ReadManifestLibrariesRecursive(
+            launcherFolder,
+            selectedInstanceName,
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyList<MinecraftLaunchClasspathLibrary> ReadManifestLibrariesRecursive(
         string launcherFolder,
         string versionName,
         ISet<string> visited)
     {
         if (!visited.Add(versionName))
         {
-            return FrontendVersionManifestSummary.Empty;
+            return [];
         }
 
         var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
         if (!File.Exists(manifestPath))
         {
-            return FrontendVersionManifestSummary.Empty;
+            return [];
         }
 
         using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
         var root = document.RootElement;
         var parentVersion = GetString(root, "inheritsFrom");
-        var parentSummary = string.IsNullOrWhiteSpace(parentVersion)
-            ? FrontendVersionManifestSummary.Empty
-            : ReadManifestSummaryRecursive(launcherFolder, parentVersion, visited);
+        var parentLibraries = string.IsNullOrWhiteSpace(parentVersion)
+            ? []
+            : ReadManifestLibrariesRecursive(launcherFolder, parentVersion, visited);
         var currentLibraries = ParseLibraries(root, launcherFolder);
-        var allLibraries = parentSummary.Libraries.Concat(currentLibraries).ToArray();
-        var currentId = GetString(root, "id");
-        var vanillaVersionText = FirstNonEmpty(parentVersion, currentId);
-
-        return new FrontendVersionManifestSummary(
-            IsVersionInfoValid: true,
-            ReleaseTime: GetDateTime(root, "releaseTime") ?? parentSummary.ReleaseTime,
-            VanillaVersion: TryParseVanillaVersion(vanillaVersionText) ?? parentSummary.VanillaVersion,
-            VersionType: FirstNonEmpty(GetString(root, "type"), parentSummary.VersionType),
-            AssetsIndexName: GetNestedString(root, "assetIndex", "id") ??
-                             GetString(root, "assets") ??
-                             parentSummary.AssetsIndexName,
-            Libraries: allLibraries,
-            HasOptiFine: parentSummary.HasOptiFine || ContainsLibrary(allLibraries, "optifine"),
-            HasForge: parentSummary.HasForge || ContainsLibrary(allLibraries, "net.minecraftforge:forge"),
-            ForgeVersion: parentSummary.ForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.minecraftforge:forge"),
-            HasCleanroom: parentSummary.HasCleanroom || ContainsLibrary(allLibraries, "com.cleanroommc"),
-            HasFabric: parentSummary.HasFabric || ContainsLibrary(allLibraries, "net.fabricmc:fabric-loader"),
-            HasLiteLoader: parentSummary.HasLiteLoader || ContainsLibrary(allLibraries, "liteloader"),
-            HasLabyMod: parentSummary.HasLabyMod || ContainsLibrary(allLibraries, "labymod"),
-            JsonRequiredMajorVersion: GetNestedInt(root, "javaVersion", "majorVersion") ?? parentSummary.JsonRequiredMajorVersion,
-            MojangRecommendedMajorVersion: GetNestedInt(root, "javaVersion", "majorVersion") ?? parentSummary.MojangRecommendedMajorVersion,
-            MojangRecommendedComponent: GetNestedString(root, "javaVersion", "component") ?? parentSummary.MojangRecommendedComponent);
+        return parentLibraries.Concat(currentLibraries).ToArray();
     }
 
     private static MinecraftLaunchClasspathLibrary[] ParseLibraries(JsonElement root, string launcherFolder)
@@ -3433,27 +3578,6 @@ internal static class FrontendLaunchCompositionService
         return match?.Name?.Split(':').LastOrDefault();
     }
 
-    private static Version? TryParseVanillaVersion(string? rawValue)
-    {
-        if (string.IsNullOrWhiteSpace(rawValue))
-        {
-            return null;
-        }
-
-        var candidate = rawValue.Trim();
-        if (candidate.StartsWith("v", StringComparison.OrdinalIgnoreCase))
-        {
-            candidate = candidate[1..];
-        }
-
-        var filtered = new string(candidate
-            .TakeWhile(character => char.IsDigit(character) || character == '.')
-            .ToArray());
-        return Version.TryParse(filtered, out var version)
-            ? version
-            : null;
-    }
-
     private static string DeriveLibraryPathFromName(string libraryName, string? classifier = null)
     {
         var segments = libraryName.Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -3468,8 +3592,47 @@ internal static class FrontendLaunchCompositionService
         var effectiveClassifier = string.IsNullOrWhiteSpace(classifier)
             ? (segments.Length >= 4 ? segments[3] : null)
             : classifier;
+        var extension = "jar";
+
+        if (segments.Length >= 5 && !string.IsNullOrWhiteSpace(segments[4]))
+        {
+            extension = segments[4];
+        }
+
+        if (!string.IsNullOrWhiteSpace(effectiveClassifier))
+        {
+            ParseLibraryCoordinateExtension(ref effectiveClassifier, ref extension);
+        }
+
+        ParseLibraryCoordinateExtension(ref version, ref extension);
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return libraryName.Replace(':', Path.DirectorySeparatorChar);
+        }
+
         var classifierSuffix = string.IsNullOrWhiteSpace(effectiveClassifier) ? string.Empty : "-" + effectiveClassifier;
-        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifierSuffix}.jar");
+        return Path.Combine(groupPath, artifact, version, $"{artifact}-{version}{classifierSuffix}.{extension}");
+    }
+
+    private static void ParseLibraryCoordinateExtension(ref string? value, ref string extension)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var extensionIndex = value.IndexOf('@');
+        if (extensionIndex < 0)
+        {
+            return;
+        }
+
+        if (extensionIndex < value.Length - 1)
+        {
+            extension = value[(extensionIndex + 1)..];
+        }
+
+        value = value[..extensionIndex];
     }
 
     private static string? FirstNonEmpty(params string?[] values)
@@ -3552,14 +3715,23 @@ internal static class FrontendLaunchCompositionService
         bool HasOptiFine,
         bool HasForge,
         string? ForgeVersion,
+        string? NeoForgeVersion,
         bool HasCleanroom,
         bool HasFabric,
+        string? LegacyFabricVersion,
+        string? QuiltVersion,
         bool HasLiteLoader,
         bool HasLabyMod,
         int? JsonRequiredMajorVersion,
         int? MojangRecommendedMajorVersion,
         string? MojangRecommendedComponent)
     {
+        public bool HasForgeLike => HasForge || !string.IsNullOrWhiteSpace(NeoForgeVersion);
+
+        public bool HasFabricLike => HasFabric
+                                     || !string.IsNullOrWhiteSpace(LegacyFabricVersion)
+                                     || !string.IsNullOrWhiteSpace(QuiltVersion);
+
         public static FrontendVersionManifestSummary Empty { get; } = new(
             false,
             null,
@@ -3570,8 +3742,11 @@ internal static class FrontendLaunchCompositionService
             false,
             false,
             null,
+            null,
             false,
             false,
+            null,
+            null,
             false,
             false,
             null,

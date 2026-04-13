@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using PCL.Frontend.Avalonia.Desktop.Animation;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -42,19 +43,23 @@ internal sealed partial class PclListItem : UserControl
         AvaloniaProperty.Register<PclListItem, ICommand?>(nameof(AccessoryCommand));
 
     private bool _isPressed;
+    private bool? _selectionBarSelectedState;
 
     public PclListItem()
     {
         InitializeComponent();
+        SelectionBarMotion.Initialize(SelectionBar);
 
         AttachedToVisualTree += (_, _) =>
         {
             UpdateAccessory();
+            _selectionBarSelectedState = null;
             RefreshVisualState();
         };
         DataContextChanged += (_, _) =>
         {
             UpdateAccessory();
+            _selectionBarSelectedState = null;
             RefreshVisualState();
         };
         LayoutRoot.PropertyChanged += OnLayoutRootPropertyChanged;
@@ -194,6 +199,8 @@ internal sealed partial class PclListItem : UserControl
         else if (change.Property == HeightProperty)
         {
             RefreshIconLayout();
+            _selectionBarSelectedState = null;
+            RefreshVisualState();
         }
         else if (change.Property == IsSelectedProperty)
         {
@@ -245,7 +252,8 @@ internal sealed partial class PclListItem : UserControl
         var iconColumnWidth = isCompactLayout ? 18 : 22;
         LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
         LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(iconColumnWidth) : new GridLength(6);
-        MainButton.Margin = new Thickness(4, 0, 0, 0);
+        var textOffset = LogoImage.IsVisible ? 12 : 4;
+        MainButton.Margin = new Thickness(textOffset, 0, 0, 0);
         TitleBlock.Margin = new Thickness(0, 0, 0, isCompactLayout ? 0 : 2);
     }
 
@@ -327,6 +335,16 @@ internal sealed partial class PclListItem : UserControl
         return Brush.Parse(fallback);
     }
 
+    private double GetSelectionBarHeight()
+    {
+        var layoutHeight = Bounds.Height > 0
+            ? Bounds.Height
+            : double.IsNaN(Height)
+                ? MinHeight
+                : Height;
+        return Math.Max(0d, layoutHeight - 14d);
+    }
+
     private void RefreshVisualState()
     {
         var isHovered = LayoutRoot.IsPointerOver;
@@ -342,7 +360,7 @@ internal sealed partial class PclListItem : UserControl
             : isHovered
                 ? GetBrush("ColorBrush6", "#D5E6FD")
                 : GetBrush("ColorBrush7", "#E0EAFD");
-        SelectionBar.IsVisible = IsSelected;
+        SelectionBarMotion.Apply(SelectionBar, ref _selectionBarSelectedState, IsSelected, GetSelectionBarHeight());
         TitleBlock.Foreground = IsSelected
             ? GetBrush("ColorBrush3", "#1370F3")
             : GetBrush("ColorBrushGray1", "#404040");

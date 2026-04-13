@@ -53,13 +53,22 @@ internal sealed record FrontendDownloadCatalogEntry(
     string ActionText,
     string? Target,
     FrontendDownloadCatalogEntryActionKind ActionKind = FrontendDownloadCatalogEntryActionKind.OpenTarget,
-    string? SuggestedFileName = null);
+    string? SuggestedFileName = null,
+    string? Identity = null,
+    string? IconUrl = null,
+    string? IconPath = null,
+    string? IconName = null,
+    LauncherFrontendSubpageKey? OriginSubpage = null);
+
+internal sealed record FrontendDownloadFavoriteTargetState(
+    string Name,
+    string Id,
+    IReadOnlyList<FrontendDownloadCatalogSection> Sections);
 
 internal sealed record FrontendDownloadFavoritesState(
-    IReadOnlyList<string> Targets,
+    IReadOnlyList<FrontendDownloadFavoriteTargetState> Targets,
     string WarningText,
-    bool ShowWarning,
-    IReadOnlyList<FrontendDownloadCatalogSection> Sections);
+    bool ShowWarning);
 
 internal sealed record FrontendDownloadResourceState(
     string SurfaceTitle,
@@ -68,6 +77,7 @@ internal sealed record FrontendDownloadResourceState(
     bool UseShaderLoaderOptions,
     string HintText,
     IReadOnlyList<FrontendDownloadResourceFilterOption> TagOptions,
+    int TotalEntryCount,
     bool HasMoreEntries,
     IReadOnlyList<FrontendDownloadResourceEntry> Entries);
 

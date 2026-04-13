@@ -6,8 +6,8 @@
   <controls:PclCard
       Margin="0,0,0,15"
       Header="{Binding Title}"
-      IsClosable="{Binding CanCancel}"
-      CloseCommand="{Binding CancelCommand}"
+      IsClosable="{Binding HasPrimaryAction}"
+      CloseCommand="{Binding PrimaryActionCommand}"
       ContentMargin="25,40,15,10">
     <controls:PclCard.HeaderOverlayContent>
       <Border
@@ -32,6 +32,13 @@
             FontSize="11.5"
             IsVisible="{Binding ShowSummary}"
             Text="{Binding Summary}"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Foreground="#8A96A8"
+            FontSize="10.5"
+            IsVisible="{Binding HasActivityText}"
+            Text="{Binding ActivityText}"
             TextWrapping="Wrap" />
 
         <StackPanel IsVisible="{Binding HasProgress}" Spacing="4">

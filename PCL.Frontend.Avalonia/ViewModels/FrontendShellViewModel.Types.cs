@@ -322,12 +322,15 @@ internal sealed class DownloadInstallMinecraftChoiceViewModel(
 internal sealed class DownloadInstallChoiceItemViewModel(
     string title,
     string summary,
+    Bitmap? icon,
     bool isSelected,
     ActionCommand selectCommand)
 {
     public string Title { get; } = title;
 
     public string Summary { get; } = summary;
+
+    public Bitmap? Icon { get; } = icon;
 
     public bool IsSelected { get; } = isSelected;
 
@@ -727,8 +730,16 @@ internal sealed class DownloadCatalogEntryViewModel(
     string info,
     string meta,
     string actionText,
-    ActionCommand command)
+    ActionCommand command,
+    Bitmap? icon = null,
+    string? iconUrl = null)
+    : INotifyPropertyChanged
 {
+    private Bitmap? _icon = icon;
+    private int _iconLoadStarted;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public string Title { get; } = title;
 
     public string Info { get; } = info;
@@ -739,9 +750,57 @@ internal sealed class DownloadCatalogEntryViewModel(
 
     public ActionCommand Command { get; } = command;
 
+    public Bitmap? Icon
+    {
+        get => _icon;
+        private set
+        {
+            if (ReferenceEquals(_icon, value))
+            {
+                return;
+            }
+
+            _icon = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasIcon));
+        }
+    }
+
+    public string? IconUrl { get; } = iconUrl;
+
+    public bool HasIcon => Icon is not null;
+
     public bool HasMeta => !string.IsNullOrWhiteSpace(Meta);
 
     public string CombinedInfo => string.Join(" • ", new[] { Info, Meta }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+    public bool TryBeginIconLoad()
+    {
+        return !string.IsNullOrWhiteSpace(IconUrl)
+               && Interlocked.CompareExchange(ref _iconLoadStarted, 1, 0) == 0;
+    }
+
+    public void ApplyIcon(Bitmap? icon)
+    {
+        if (icon is not null)
+        {
+            Icon = icon;
+        }
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
+
+internal sealed class DownloadFavoriteSectionViewModel(
+    string title,
+    IReadOnlyList<InstanceResourceEntryViewModel> items)
+{
+    public string Title { get; } = title;
+
+    public IReadOnlyList<InstanceResourceEntryViewModel> Items { get; } = items;
 }
 
 internal sealed class CommunityProjectReleaseGroupViewModel(
@@ -766,6 +825,27 @@ internal sealed class DownloadResourceFilterOptionViewModel(
     public string FilterValue { get; } = filterValue;
 
     public bool IsHeader { get; } = isHeader;
+}
+
+internal sealed class DownloadResourcePaginationItemViewModel(
+    string label,
+    ActionCommand? command,
+    bool isCurrent,
+    bool isEllipsis)
+{
+    public string Label { get; } = label;
+
+    public ActionCommand? Command { get; } = command;
+
+    public bool IsCurrent { get; } = isCurrent;
+
+    public bool IsEllipsis { get; } = isEllipsis;
+
+    public bool ShowPageButton => !IsEllipsis;
+
+    public bool ShowEllipsis => IsEllipsis;
+
+    public bool IsClickable => !IsEllipsis && !IsCurrent && Command is not null;
 }
 
 internal sealed class DownloadResourceEntryViewModel(
@@ -1067,6 +1147,7 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     private static readonly IBrush SelectedTitleForeground = Brush.Parse("#1370F3");
     private readonly Action<bool>? _selectionChanged;
     private readonly ActionCommand _primaryCommand;
+    private Bitmap? _icon;
     private bool _isSelected;
     private bool _isEnabled;
 
@@ -1079,33 +1160,43 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ActionCommand actionCommand,
         string actionToolTip = "查看",
         bool isEnabled = true,
+        string description = "",
+        string website = "",
         bool showSelection = false,
         bool isSelected = false,
         Action<bool>? selectionChanged = null,
         ActionCommand? infoCommand = null,
+        ActionCommand? websiteCommand = null,
         ActionCommand? openCommand = null,
         ActionCommand? toggleCommand = null,
         ActionCommand? deleteCommand = null)
     {
-        Icon = icon;
+        _icon = icon;
         Title = title;
         Info = info;
         Meta = meta;
         Path = path;
         ActionCommand = actionCommand;
         ActionToolTip = actionToolTip;
+        Description = description;
+        Website = website;
         ShowSelection = showSelection;
         _isSelected = isSelected;
         _isEnabled = isEnabled;
         _selectionChanged = selectionChanged;
         _primaryCommand = new ActionCommand(ExecutePrimaryAction);
         InfoCommand = infoCommand;
+        WebsiteCommand = websiteCommand;
         OpenCommand = openCommand ?? actionCommand;
         ToggleCommand = toggleCommand;
         DeleteCommand = deleteCommand;
     }
 
-    public Bitmap? Icon { get; }
+    public Bitmap? Icon
+    {
+        get => _icon;
+        private set => SetProperty(ref _icon, value);
+    }
 
     public string Title { get; }
 
@@ -1114,6 +1205,10 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     public string Meta { get; }
 
     public string Path { get; }
+
+    public string Description { get; }
+
+    public string Website { get; }
 
     public ActionCommand ActionCommand { get; }
 
@@ -1124,6 +1219,8 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     public bool ShowSelection { get; }
 
     public ActionCommand? InfoCommand { get; }
+
+    public ActionCommand? WebsiteCommand { get; }
 
     public ActionCommand? OpenCommand { get; }
 
@@ -1139,17 +1236,23 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 
     public bool HasInfoAction => InfoCommand is not null;
 
+    public bool HasWebsiteAction => WebsiteCommand is not null;
+
     public bool HasOpenAction => OpenCommand is not null;
 
     public bool HasToggleAction => ToggleCommand is not null;
 
     public bool HasDeleteAction => DeleteCommand is not null;
 
-    public bool HasStandardActionStack => HasInfoAction || HasOpenAction || HasToggleAction || HasDeleteAction;
+    public bool HasStandardActionStack => HasInfoAction || HasWebsiteAction || HasOpenAction || HasToggleAction || HasDeleteAction;
 
     public string InfoIconData => FrontendIconCatalog.InfoCircle.Data;
 
     public double InfoIconScale => FrontendIconCatalog.InfoCircle.Scale;
+
+    public string WebsiteIconData => FrontendIconCatalog.Link.Data;
+
+    public double WebsiteIconScale => FrontendIconCatalog.Link.Scale;
 
     public string OpenIconData => FrontendIconCatalog.OpenFolder.Data;
 
@@ -1176,7 +1279,10 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
             var tags = new List<string>();
             if (!string.IsNullOrWhiteSpace(Meta))
             {
-                tags.Add(Meta);
+                foreach (var segment in Meta.Split('•', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                {
+                    tags.Add(segment);
+                }
             }
 
             if (HasToggleAction && !IsEnabledState)
@@ -1189,6 +1295,8 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     }
 
     public bool HasTags => Tags.Count > 0;
+
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
 
     public bool IsSelected
     {
@@ -1240,6 +1348,14 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         if (ActionCommand.CanExecute(null))
         {
             ActionCommand.Execute(null);
+        }
+    }
+
+    public void ApplyIcon(Bitmap? icon)
+    {
+        if (icon is not null)
+        {
+            Icon = icon;
         }
     }
 }

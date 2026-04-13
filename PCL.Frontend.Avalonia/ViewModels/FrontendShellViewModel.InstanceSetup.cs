@@ -34,7 +34,9 @@ internal sealed partial class FrontendShellViewModel
     private string _instanceLaunchJvmArguments = string.Empty;
     private string _instanceLaunchGameArguments = string.Empty;
     private string _instanceLaunchBeforeCommand = string.Empty;
+    private string _instanceEnvironmentVariables = string.Empty;
     private bool _waitForInstanceLaunchBeforeCommand = true;
+    private int _selectedInstanceForceX11OnWaylandIndex;
     private bool _ignoreInstanceJavaCompatibilityWarning;
     private bool _disableInstanceFileValidation;
     private bool _followInstanceLauncherProxy;
@@ -71,6 +73,13 @@ internal sealed partial class FrontendShellViewModel
         "软渲染（llvmpipe）",
         "DirectX12（d3d12）",
         "Vulkan（zink）"
+    ];
+
+    public IReadOnlyList<string> InstanceForceX11OnWaylandOptions { get; } =
+    [
+        "跟随全局设置",
+        "强制 X11",
+        "系统默认"
     ];
 
     public IReadOnlyList<string> InstanceJavaOptions => _instanceJavaOptionEntries
@@ -275,10 +284,22 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _instanceLaunchBeforeCommand, value);
     }
 
+    public string InstanceEnvironmentVariables
+    {
+        get => _instanceEnvironmentVariables;
+        set => SetProperty(ref _instanceEnvironmentVariables, value);
+    }
+
     public bool WaitForInstanceLaunchBeforeCommand
     {
         get => _waitForInstanceLaunchBeforeCommand;
         set => SetProperty(ref _waitForInstanceLaunchBeforeCommand, value);
+    }
+
+    public int SelectedInstanceForceX11OnWaylandIndex
+    {
+        get => _selectedInstanceForceX11OnWaylandIndex;
+        set => SetProperty(ref _selectedInstanceForceX11OnWaylandIndex, Math.Clamp(value, 0, InstanceForceX11OnWaylandOptions.Count - 1));
     }
 
     public bool IgnoreInstanceJavaCompatibilityWarning
@@ -348,7 +369,9 @@ internal sealed partial class FrontendShellViewModel
         _instanceLaunchGameArguments = setup.GameArguments;
         _instanceClasspathHead = setup.ClasspathHead;
         _instanceLaunchBeforeCommand = setup.PreLaunchCommand;
+        _instanceEnvironmentVariables = setup.EnvironmentVariables;
         _waitForInstanceLaunchBeforeCommand = setup.WaitForPreLaunchCommand;
+        _selectedInstanceForceX11OnWaylandIndex = Math.Clamp(setup.ForceX11OnWaylandMode, 0, InstanceForceX11OnWaylandOptions.Count - 1);
         _ignoreInstanceJavaCompatibilityWarning = setup.IgnoreJavaCompatibilityWarning;
         _disableInstanceFileValidation = setup.DisableFileValidation;
         _followInstanceLauncherProxy = setup.FollowLauncherProxy;
@@ -405,7 +428,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceLaunchGameArguments));
         RaisePropertyChanged(nameof(InstanceClasspathHead));
         RaisePropertyChanged(nameof(InstanceLaunchBeforeCommand));
+        RaisePropertyChanged(nameof(InstanceEnvironmentVariables));
         RaisePropertyChanged(nameof(WaitForInstanceLaunchBeforeCommand));
+        RaisePropertyChanged(nameof(InstanceForceX11OnWaylandOptions));
+        RaisePropertyChanged(nameof(SelectedInstanceForceX11OnWaylandIndex));
         RaisePropertyChanged(nameof(IgnoreInstanceJavaCompatibilityWarning));
         RaisePropertyChanged(nameof(DisableInstanceFileValidation));
         RaisePropertyChanged(nameof(FollowInstanceLauncherProxy));

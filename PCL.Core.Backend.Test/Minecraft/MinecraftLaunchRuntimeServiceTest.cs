@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Launch;
 using System.IO;
+using System.Collections.Generic;
 
 namespace PCL.Core.Test.Minecraft;
 
@@ -19,6 +20,7 @@ public sealed class MinecraftLaunchRuntimeServiceTest
             AppDataPath: @"D:\.minecraft",
             WorkingDirectory: @"D:\Instances\Fabric",
             LaunchArguments: "--demo",
+            EnvironmentVariables: new Dictionary<string, string>(),
             PrioritySetting: 0));
 
         Assert.AreEqual(@"C:\Java\bin\java.exe", result.ExecutablePath);
@@ -42,6 +44,7 @@ public sealed class MinecraftLaunchRuntimeServiceTest
             AppDataPath: @"/tmp/.minecraft",
             WorkingDirectory: @"/tmp/instance",
             LaunchArguments: "--width 1280",
+            EnvironmentVariables: new Dictionary<string, string>(),
             PrioritySetting: 2));
 
         Assert.AreEqual(@"/usr/bin/java", result.ExecutablePath);

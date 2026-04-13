@@ -5,18 +5,6 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
-  <UserControl.Styles>
-    <Style Selector="Button.install-choice-row">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Button.install-choice-row:pointerover">
-      <Setter Property="Background" Value="#14000000" />
-    </Style>
-  </UserControl.Styles>
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <StackPanel Margin="25,10,25,75" Spacing="0">

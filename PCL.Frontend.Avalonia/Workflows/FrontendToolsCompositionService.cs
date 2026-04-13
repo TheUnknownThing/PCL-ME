@@ -10,45 +10,12 @@ internal static class FrontendToolsCompositionService
 {
     private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
 
-    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths, FrontendInstanceComposition instanceComposition)
+    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths)
     {
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         return new FrontendToolsComposition(
-            BuildGameLinkState(sharedConfig, instanceComposition),
             BuildHelpState(runtimePaths),
             BuildTestState(sharedConfig, runtimePaths));
-    }
-
-    private static FrontendToolsGameLinkState BuildGameLinkState(JsonFileProvider sharedConfig, FrontendInstanceComposition instanceComposition)
-    {
-        var configuredUserName = ReadValue(sharedConfig, "LinkUsername", string.Empty).Trim();
-        var hasAcceptedTerms = ReadValue(sharedConfig, "LinkEula", false);
-        var worldOptions = BuildWorldOptions(instanceComposition);
-
-        var announcement = hasAcceptedTerms
-            ? worldOptions.Count == 0
-                ? "尚未检测到可用于创建大厅的世界，请先确认当前实例中存在可分享的存档。"
-                : $"已检测到 {worldOptions.Count} 个可用于创建大厅的世界。"
-            : "请先阅读并同意联机大厅说明与条款。";
-
-        return new FrontendToolsGameLinkState(
-            Announcement: announcement,
-            NatStatus: "点击测试",
-            AccountStatus: string.IsNullOrWhiteSpace(configuredUserName) ? "点击登录 Natayark 账户" : configuredUserName,
-            LobbyId: string.Empty,
-            SessionPing: "-ms",
-            SessionId: "尚未创建大厅",
-            ConnectionType: hasAcceptedTerms ? "未连接" : "等待授权",
-            ConnectedUserName: string.IsNullOrWhiteSpace(configuredUserName) ? "未登录" : configuredUserName,
-            ConnectedUserType: string.IsNullOrWhiteSpace(configuredUserName) ? "大厅访客" : "已配置用户名",
-            WorldOptions: worldOptions.Count == 0 ? ["未检测到可用存档"] : worldOptions,
-            SelectedWorldIndex: 0,
-            PolicyEntries:
-            [
-                new FrontendToolsSimpleEntry("PCL-ME 大厅相关隐私政策", "了解 PCL-ME 如何处理您的个人信息"),
-                new FrontendToolsSimpleEntry("Natayark Network 用户协议与隐私政策", "查看 Natayark OpenID 服务条款")
-            ],
-            PlayerEntries: []);
     }
 
     private static FrontendToolsTestState BuildTestState(JsonFileProvider sharedConfig, FrontendRuntimePaths runtimePaths)
@@ -171,13 +138,6 @@ internal static class FrontendToolsCompositionService
         }
 
         return new FrontendToolsHelpState(entries);
-    }
-
-    private static IReadOnlyList<string> BuildWorldOptions(FrontendInstanceComposition instanceComposition)
-    {
-        return instanceComposition.World.Entries
-            .Select((entry, index) => $"{entry.Title} - {25565 + index}")
-            .ToArray();
     }
 
     private static IReadOnlyList<string> ReadHelpIgnorePatterns(FrontendRuntimePaths runtimePaths)

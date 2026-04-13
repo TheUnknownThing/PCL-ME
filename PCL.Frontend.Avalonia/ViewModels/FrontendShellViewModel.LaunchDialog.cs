@@ -11,6 +11,7 @@ internal sealed partial class FrontendShellViewModel
     private CancellationTokenSource? _launchSessionCancellation;
     private Process? _activeLaunchProcess;
     private bool _launchProcessTerminationRequested;
+    private bool _launchDialogHasSuccessfulSession;
     private bool _isLaunchDialogVisible;
     private bool _isLaunchDialogBusy;
     private bool _isLaunchDialogError;
@@ -66,6 +67,7 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogHint = _showLaunchingHint
             ? FrontendLaunchHintService.GetRandomHint(_shellActionService.RuntimePaths)
             : string.Empty;
+        _launchDialogHasSuccessfulSession = false;
         _launchProcessTerminationRequested = false;
         _launchDialogActionText = "取消";
         _isLaunchDialogBusy = true;
@@ -119,22 +121,6 @@ internal sealed partial class FrontendShellViewModel
         RaiseLaunchDialogProperties();
     }
 
-    private void SetLaunchDialogLaunchedState()
-    {
-        _launchDialogTitle = "已启动游戏";
-        _launchDialogStage = "等待游戏退出";
-        _launchDialogProgress = 1d;
-        _launchDialogProgressText = "100.00 %";
-        _showLaunchDialogHint = _showLaunchingHint && !string.IsNullOrWhiteSpace(_launchDialogHint);
-        _showLaunchDialogProgress = true;
-        _showLaunchDialogDownload = false;
-        _launchDialogDownloadText = "0 B/s";
-        _isLaunchDialogBusy = true;
-        _isLaunchDialogError = false;
-        _launchDialogActionText = "取消";
-        RaiseLaunchDialogProperties();
-    }
-
     private void SetLaunchDialogStoppedState(string title, string stage, bool isError)
     {
         if (!_isLaunchDialogVisible)
@@ -147,6 +133,7 @@ internal sealed partial class FrontendShellViewModel
         _showLaunchDialogHint = false;
         _showLaunchDialogDownload = false;
         _launchDialogDownloadText = "0 B/s";
+        _launchDialogHasSuccessfulSession = false;
         _isLaunchDialogBusy = false;
         _isLaunchDialogError = isError;
         _launchDialogActionText = "关闭";
@@ -210,6 +197,12 @@ internal sealed partial class FrontendShellViewModel
         {
             _launchSessionCancellation.Cancel();
             SetLaunchDialogStoppedState("正在取消启动", "正在取消启动前任务…", isError: false);
+            return;
+        }
+
+        if (_launchDialogHasSuccessfulSession)
+        {
+            HideLaunchDialog();
             return;
         }
 

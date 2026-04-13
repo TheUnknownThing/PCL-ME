@@ -296,7 +296,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("修改实例名失败", ex.Message);
+            AddFailureActivity("修改实例名失败", ex.Message);
         }
     }
 
@@ -340,7 +340,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("修改实例描述失败", ex.Message);
+            AddFailureActivity("修改实例描述失败", ex.Message);
         }
     }
 
@@ -372,7 +372,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导出启动脚本失败", ex.Message);
+            AddFailureActivity("导出启动脚本失败", ex.Message);
         }
     }
 
@@ -415,7 +415,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("补全文件失败", ex.Message);
+            AddFailureActivity("补全文件失败", ex.Message);
         }
     }
 
@@ -449,7 +449,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("重置实例失败", ex.Message);
+            AddFailureActivity("重置实例失败", ex.Message);
         }
     }
 
@@ -482,11 +482,11 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
+            AddActivity("删除实例", $"实例 {outcome.InstanceName} 已移入回收区：{outcome.TrashDirectory}");
         }
         catch (Exception ex)
         {
-            AddActivity("删除实例失败", ex.Message);
+            AddFailureActivity("删除实例失败", ex.Message);
         }
     }
 
@@ -515,7 +515,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("修补核心失败", ex.Message);
+            AddFailureActivity("修补核心失败", ex.Message);
             return;
         }
 
@@ -538,7 +538,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("修补核心失败", ex.Message);
+            AddFailureActivity("修补核心失败", ex.Message);
         }
     }
 

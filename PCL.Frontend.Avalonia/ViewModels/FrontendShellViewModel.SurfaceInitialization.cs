@@ -46,7 +46,6 @@ internal sealed partial class FrontendShellViewModel
             new AboutEntryViewModel("MC 百科", "提供了 Mod 名称的中文翻译和更多相关信息！", LoadLauncherBitmap("Images", "Heads", "wiki.png"), "打开百科", CreateLinkCommand("打开 MC 百科", "https://www.mcmod.cn")),
             new AboutEntryViewModel("Pysio @ Akaere Network", "提供了 PCL-ME 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), "转到博客", CreateLinkCommand("打开 Pysio 博客", "https://www.pysio.online")),
             new AboutEntryViewModel("云默安 @ 至远光辉", "提供了 PCL-ME 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), "打开网站", CreateLinkCommand("打开至远光辉", "https://www.zyghit.cn")),
-            new AboutEntryViewModel("EasyTier", "提供了联机模块", LoadLauncherBitmap("Images", "Heads", "EasyTier.png"), "打开网站", CreateLinkCommand("打开 EasyTier", "https://easytier.cn")),
             new AboutEntryViewModel("z0z0r4", "提供了 MCIM 中国 Mod 下载镜像源和帮助库图床！", LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
             new AboutEntryViewModel("00ll00", "提供了 Java Launch Wrapper 和一些重要服务支持！", LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
             new AboutEntryViewModel("Patrick", "设计并制作了 PCL 图标，让龙猫从做图标的水深火热中得到了解脱……", LoadLauncherBitmap("Images", "Heads", "Patrick.png"), null, null),
@@ -70,7 +69,6 @@ internal sealed partial class FrontendShellViewModel
     {
         _selectedUpdateChannelIndex = Math.Clamp(_setupComposition.Update.UpdateChannelIndex, 0, UpdateChannelOptions.Count - 1);
         _selectedUpdateModeIndex = Math.Clamp(_setupComposition.Update.UpdateModeIndex, 0, UpdateModeOptions.Count - 1);
-        _mirrorCdk = _setupComposition.Update.MirrorCdk;
     }
 
     private void InitializeLaunchSettingsSurface()
@@ -103,50 +101,15 @@ internal sealed partial class FrontendShellViewModel
         _launchJvmArguments = _setupComposition.Launch.JvmArguments;
         _launchGameArguments = _setupComposition.Launch.GameArguments;
         _launchBeforeCommand = _setupComposition.Launch.BeforeCommand;
+        _launchEnvironmentVariables = _setupComposition.Launch.EnvironmentVariables;
         _waitForLaunchBeforeCommand = _setupComposition.Launch.WaitForBeforeCommand;
+        _forceX11OnWaylandForLaunch = _setupComposition.Launch.ForceX11OnWayland;
         _disableJavaLaunchWrapper = _setupComposition.Launch.DisableJavaLaunchWrapper;
         _disableRetroWrapper = _setupComposition.Launch.DisableRetroWrapper;
         _requireDedicatedGpu = _setupComposition.Launch.RequireDedicatedGpu;
         _useJavaExecutable = _setupComposition.Launch.UseJavaExecutable;
         _selectedLaunchMicrosoftAuthIndex = _setupComposition.Launch.MicrosoftAuthIndex;
         _selectedLaunchPreferredIpStackIndex = _setupComposition.Launch.PreferredIpStackIndex;
-    }
-
-    private void InitializeToolsGameLinkSurface()
-    {
-        var gameLinkState = _toolsComposition.GameLink;
-        _gameLinkWorldOptions = gameLinkState.WorldOptions;
-        _gameLinkAnnouncement = gameLinkState.Announcement;
-        _gameLinkNatStatus = gameLinkState.NatStatus;
-        _gameLinkAccountStatus = gameLinkState.AccountStatus;
-        _gameLinkLobbyId = gameLinkState.LobbyId;
-        _gameLinkSessionPing = gameLinkState.SessionPing;
-        _gameLinkSessionId = gameLinkState.SessionId;
-        _gameLinkConnectionType = gameLinkState.ConnectionType;
-        _gameLinkConnectedUserName = gameLinkState.ConnectedUserName;
-        _gameLinkConnectedUserType = gameLinkState.ConnectedUserType;
-        _selectedGameLinkWorldIndex = Math.Clamp(gameLinkState.SelectedWorldIndex, 0, GameLinkWorldOptions.Count - 1);
-
-        ReplaceItems(
-            GameLinkPolicyEntries,
-            gameLinkState.PolicyEntries.Select(entry =>
-                new SimpleListEntryViewModel(
-                    entry.Title,
-                    entry.Summary,
-                    string.Equals(entry.Title, "PCL-ME 大厅相关隐私政策", StringComparison.Ordinal)
-                        ? _openLobbyPrivacyPolicyCommand
-                        : _openNatayarkPolicyCommand)));
-
-        ReplaceItems(
-            GameLinkPlayerEntries,
-            gameLinkState.PlayerEntries.Select(entry =>
-                new SimpleListEntryViewModel(
-                    entry.Title,
-                    entry.Summary,
-                    new ActionCommand(() => AddActivity("查看大厅成员", entry.Title)))));
-
-        InitializeLobbyRuntimeBridge();
-        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
     }
 
     private void InitializeToolsTestSurface()
@@ -318,12 +281,10 @@ internal sealed partial class FrontendShellViewModel
         EnsureDownloadCompositionRemoteStateLoaded();
         ShowDownloadFavoriteWarning = _downloadComposition.Favorites.ShowWarning;
         DownloadFavoriteWarningText = _downloadComposition.Favorites.WarningText;
-        var selectedTarget = SelectedDownloadFavoriteTargetIndex >= 0 && SelectedDownloadFavoriteTargetIndex < DownloadFavoriteTargetOptions.Count
-            ? DownloadFavoriteTargetOptions[SelectedDownloadFavoriteTargetIndex]
-            : string.Empty;
-        var sections = _downloadComposition.Favorites.Sections
-            .Where(section => string.IsNullOrWhiteSpace(selectedTarget) || string.Equals(section.Title, selectedTarget, StringComparison.OrdinalIgnoreCase))
-            .Select(section => new DownloadCatalogSectionViewModel(
+        var selectedTarget = GetSelectedDownloadFavoriteTargetState();
+        SyncDownloadFavoriteSelectionTarget(selectedTarget.Id);
+        var visibleEntries = selectedTarget.Sections
+            .Select(section => new DownloadFavoriteSectionViewModel(
                 section.Title,
                 section.Entries
                     .Where(item =>
@@ -331,31 +292,54 @@ internal sealed partial class FrontendShellViewModel
                         || item.Title.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase)
                         || item.Info.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase)
                         || item.Meta.Contains(DownloadFavoriteSearchQuery, StringComparison.OrdinalIgnoreCase))
-                    .Select(item => new DownloadCatalogEntryViewModel(
-                        item.Title,
-                        item.Info,
-                        item.Meta,
-                        item.ActionText,
-                        string.IsNullOrWhiteSpace(item.Target)
-                            ? CreateIntentCommand($"收藏夹条目: {item.Title}", item.Info)
-                            : CreateDownloadFavoriteCommand(item)))
+                    .Select(CreateDownloadFavoriteEntryViewModel)
                     .ToArray()))
             .Where(section => section.Items.Count > 0)
             .ToArray();
 
-        ReplaceItems(DownloadFavoriteSections, sections);
+        _downloadFavoriteSelectedProjectIds.IntersectWith(
+            visibleEntries
+                .SelectMany(section => section.Items)
+                .Select(entry => entry.Path)
+                .Where(path => !string.IsNullOrWhiteSpace(path)));
+
+        ReplaceItems(DownloadFavoriteSections, visibleEntries);
         RaisePropertyChanged(nameof(HasDownloadFavoriteSections));
         RaisePropertyChanged(nameof(HasNoDownloadFavoriteSections));
+        RaiseDownloadFavoriteSelectionProperties();
     }
 
-    private void InitializeGameLinkSurface()
+    private InstanceResourceEntryViewModel CreateDownloadFavoriteEntryViewModel(FrontendDownloadCatalogEntry entry)
     {
-        _linkUsername = _setupComposition.GameLink.Username;
-        _selectedProtocolPreferenceIndex = _setupComposition.GameLink.ProtocolPreferenceIndex;
-        _preferLowestLatencyPath = _setupComposition.GameLink.PreferLowestLatencyPath;
-        _tryPunchSymmetricNat = _setupComposition.GameLink.TryPunchSymmetricNat;
-        _allowIpv6Communication = _setupComposition.GameLink.AllowIpv6Communication;
-        _enableLinkCliOutput = _setupComposition.GameLink.EnableCliOutput;
+        var projectId = entry.Identity ?? string.Empty;
+        var actionCommand = string.IsNullOrWhiteSpace(entry.Target)
+            ? CreateIntentCommand($"收藏夹条目: {entry.Title}", entry.Info)
+            : CreateDownloadFavoriteCommand(entry);
+        var icon = LoadCachedBitmapFromPath(entry.IconPath);
+        if (icon is null && !string.IsNullOrWhiteSpace(entry.IconName))
+        {
+            icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
+        }
+
+        var viewModel = new InstanceResourceEntryViewModel(
+            icon: icon,
+            title: entry.Title,
+            info: entry.Info,
+            meta: entry.Meta,
+            path: projectId,
+            actionCommand: actionCommand,
+            actionToolTip: "查看详情",
+            isEnabled: true,
+            description: entry.Info,
+            showSelection: true,
+            isSelected: !string.IsNullOrWhiteSpace(projectId) && _downloadFavoriteSelectedProjectIds.Contains(projectId),
+            selectionChanged: isSelected => HandleDownloadFavoriteSelectionChanged(projectId, isSelected),
+            infoCommand: actionCommand,
+            deleteCommand: string.IsNullOrWhiteSpace(projectId)
+                ? null
+                : new ActionCommand(() => _ = RemoveDownloadFavoriteAsync(projectId, entry.Title)));
+        QueueDownloadFavoriteIconLoad(viewModel, entry.IconUrl);
+        return viewModel;
     }
 
     private void InitializeGameManageSurface()
@@ -717,7 +701,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(entry.Target))
         {
-            AddActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
+            AddFailureActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
             return;
         }
 
@@ -738,7 +722,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+            AddFailureActivity($"选择保存位置失败: {entry.Title}", ex.Message);
             return;
         }
 
@@ -827,19 +811,9 @@ internal sealed partial class FrontendShellViewModel
             }
             else
             {
-                AddActivity($"{title} 失败", error ?? detail);
+                AddFailureActivity($"{title} 失败", error ?? detail);
             }
         });
     }
 
-    private void RefreshGameLinkWorldOptions()
-    {
-        var options = _instanceComposition.World.Entries
-            .Select((entry, index) => $"{entry.Title} - {25565 + index}")
-            .ToArray();
-        _gameLinkWorldOptions = options.Length == 0
-            ? ["未检测到可用存档"]
-            : options;
-        _selectedGameLinkWorldIndex = Math.Clamp(_selectedGameLinkWorldIndex, 0, _gameLinkWorldOptions.Count - 1);
-    }
 }

@@ -13,8 +13,6 @@ internal static class ShellPaneTemplateRegistry
     private static readonly IReadOnlyList<Action<Application>> TemplateRegistrations =
     [
         RegisterTemplate<StandardShellNavigationListPaneViewModel, StandardShellNavigationListPaneView>,
-        RegisterTemplate<StandardShellSummaryPaneViewModel, StandardShellSummaryPaneView>,
-        RegisterTemplate<StandardShellEmptyPaneViewModel, StandardShellEmptyPaneView>,
         RegisterTemplate<InstanceSelectShellLeftPaneViewModel, InstanceSelectShellLeftPaneView>,
         RegisterTemplate<TaskManagerShellLeftPaneViewModel, TaskManagerShellLeftPaneView>,
         RegisterTemplate<GenericStandardShellRightPaneViewModel, GenericStandardShellRightPaneView>,

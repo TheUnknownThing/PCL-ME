@@ -261,7 +261,7 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddActivity($"{title} 失败", $"未找到帮助条目：{eventData}");
+                    AddFailureActivity($"{title} 失败", $"未找到帮助条目：{eventData}");
                 }
 
                 return;
@@ -290,7 +290,7 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddActivity($"{title} 失败", "帮助动作缺少可执行的目标。");
+                    AddFailureActivity($"{title} 失败", "帮助动作缺少可执行的目标。");
                 }
 
                 return;
@@ -301,7 +301,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(eventData))
         {
-            AddActivity($"{title} 失败", "没有可复制的文本。");
+            AddFailureActivity($"{title} 失败", "没有可复制的文本。");
             return;
         }
 
@@ -312,7 +312,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"{title} 失败", ex.Message);
+            AddFailureActivity($"{title} 失败", ex.Message);
         }
     }
 
@@ -320,7 +320,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!Uri.TryCreate(eventData, UriKind.Absolute, out var uri))
         {
-            AddActivity($"{title} 失败", "下载地址无效。");
+            AddFailureActivity($"{title} 失败", "下载地址无效。");
             return;
         }
 
@@ -338,7 +338,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity($"{title} 失败", ex.Message);
+            AddFailureActivity($"{title} 失败", ex.Message);
         }
     }
 
@@ -360,7 +360,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity($"{title} 失败", "帮助动作缺少目标地址。");
+            AddFailureActivity($"{title} 失败", "帮助动作缺少目标地址。");
             return;
         }
 
@@ -370,7 +370,7 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddActivity($"{title} 失败", error ?? target);
+            AddFailureActivity($"{title} 失败", error ?? target);
         }
     }
 

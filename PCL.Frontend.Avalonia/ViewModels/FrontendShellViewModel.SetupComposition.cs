@@ -21,7 +21,9 @@ internal sealed partial class FrontendShellViewModel
         "LaunchAdvanceJvm",
         "LaunchAdvanceGame",
         "LaunchAdvanceRun",
+        "LaunchAdvanceEnvironmentVariables",
         "LaunchAdvanceRunWait",
+        "LaunchAdvanceForceX11OnWayland",
         "LaunchAdvanceDisableJLW"
     ];
 
@@ -36,16 +38,6 @@ internal sealed partial class FrontendShellViewModel
         "LoginMsAuthType",
         "LaunchPreferredIpStack",
         "LaunchArgumentJavaSelect"
-    ];
-
-    private static readonly string[] GameLinkResetKeys =
-    [
-        "LinkUsername",
-        "LinkProtocolPreference",
-        "LinkLatencyFirstMode",
-        "LinkTryPunchSym",
-        "LinkEnableIPv6",
-        "LinkEnableCliOutput"
     ];
 
     private static readonly string[] GameManageResetKeys =
@@ -99,11 +91,6 @@ internal sealed partial class FrontendShellViewModel
         "SystemSystemUpdate"
     ];
 
-    private static readonly string[] UpdateProtectedResetKeys =
-    [
-        "SystemMirrorChyanKey"
-    ];
-
     private static readonly string[] UiLocalResetKeys =
     [
         "UiLauncherLogo",
@@ -141,11 +128,9 @@ internal sealed partial class FrontendShellViewModel
         "UiHiddenSetupGameManage",
         "UiHiddenSetupJava",
         "UiHiddenSetupUpdate",
-        "UiHiddenSetupGameLink",
         "UiHiddenSetupAbout",
         "UiHiddenSetupFeedback",
         "UiHiddenSetupLog",
-        "UiHiddenToolsGameLink",
         "UiHiddenToolsHelp",
         "UiHiddenToolsTest",
         "UiHiddenVersionEdit",
@@ -182,7 +167,6 @@ internal sealed partial class FrontendShellViewModel
                 InitializeLogEntries();
                 InitializeUpdateSurface();
                 InitializeLaunchSettingsSurface();
-                InitializeGameLinkSurface();
                 InitializeGameManageSurface();
                 InitializeLauncherMiscSurface();
                 InitializeJavaSurface();
@@ -224,10 +208,6 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendSubpageKey.SetupUpdate:
                 InitializeUpdateSurface();
                 break;
-            case LauncherFrontendSubpageKey.SetupLink:
-            case LauncherFrontendSubpageKey.SetupGameLink:
-                InitializeGameLinkSurface();
-                break;
             case LauncherFrontendSubpageKey.SetupGameManage:
                 InitializeGameManageSurface();
                 break;
@@ -263,17 +243,7 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendSubpageKey.SetupUpdate:
                 RaisePropertyChanged(nameof(SelectedUpdateChannelIndex));
                 RaisePropertyChanged(nameof(SelectedUpdateModeIndex));
-                RaisePropertyChanged(nameof(MirrorCdk));
                 RaiseUpdateSurfaceProperties();
-                break;
-            case LauncherFrontendSubpageKey.SetupLink:
-            case LauncherFrontendSubpageKey.SetupGameLink:
-                RaisePropertyChanged(nameof(LinkUsername));
-                RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
-                RaisePropertyChanged(nameof(PreferLowestLatencyPath));
-                RaisePropertyChanged(nameof(TryPunchSymmetricNat));
-                RaisePropertyChanged(nameof(AllowIpv6Communication));
-                RaisePropertyChanged(nameof(EnableLinkCliOutput));
                 break;
             case LauncherFrontendSubpageKey.SetupGameManage:
                 RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
@@ -397,7 +367,9 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(LaunchJvmArguments));
                 RaisePropertyChanged(nameof(LaunchGameArguments));
                 RaisePropertyChanged(nameof(LaunchBeforeCommand));
+                RaisePropertyChanged(nameof(LaunchEnvironmentVariables));
                 RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
+                RaisePropertyChanged(nameof(ForceX11OnWaylandForLaunch));
                 RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
                 RaisePropertyChanged(nameof(DisableRetroWrapper));
                 RaisePropertyChanged(nameof(RequireDedicatedGpu));
@@ -422,9 +394,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedUpdateModeIndex):
                 _shellActionService.PersistLocalValue("SystemSystemUpdate", SelectedUpdateModeIndex);
-                break;
-            case nameof(MirrorCdk):
-                _shellActionService.PersistProtectedSharedValue("SystemMirrorChyanKey", MirrorCdk);
                 break;
             case nameof(SelectedLaunchIsolationIndex):
                 _shellActionService.PersistLocalValue("LaunchArgumentIndieV2", SelectedLaunchIsolationIndex);
@@ -478,8 +447,14 @@ internal sealed partial class FrontendShellViewModel
             case nameof(LaunchBeforeCommand):
                 _shellActionService.PersistLocalValue("LaunchAdvanceRun", LaunchBeforeCommand);
                 break;
+            case nameof(LaunchEnvironmentVariables):
+                _shellActionService.PersistLocalValue("LaunchAdvanceEnvironmentVariables", LaunchEnvironmentVariables);
+                break;
             case nameof(WaitForLaunchBeforeCommand):
                 _shellActionService.PersistLocalValue("LaunchAdvanceRunWait", WaitForLaunchBeforeCommand);
+                break;
+            case nameof(ForceX11OnWaylandForLaunch):
+                _shellActionService.PersistLocalValue("LaunchAdvanceForceX11OnWayland", ForceX11OnWaylandForLaunch);
                 break;
             case nameof(DisableJavaLaunchWrapper):
                 _shellActionService.PersistLocalValue("LaunchAdvanceDisableJLW", DisableJavaLaunchWrapper);
@@ -498,24 +473,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedLaunchPreferredIpStackIndex):
                 _shellActionService.PersistSharedValue("LaunchPreferredIpStack", SelectedLaunchPreferredIpStackIndex);
-                break;
-            case nameof(LinkUsername):
-                _shellActionService.PersistSharedValue("LinkUsername", LinkUsername);
-                break;
-            case nameof(SelectedProtocolPreferenceIndex):
-                _shellActionService.PersistSharedValue("LinkProtocolPreference", SelectedProtocolPreferenceIndex);
-                break;
-            case nameof(PreferLowestLatencyPath):
-                _shellActionService.PersistSharedValue("LinkLatencyFirstMode", PreferLowestLatencyPath);
-                break;
-            case nameof(TryPunchSymmetricNat):
-                _shellActionService.PersistSharedValue("LinkTryPunchSym", TryPunchSymmetricNat);
-                break;
-            case nameof(AllowIpv6Communication):
-                _shellActionService.PersistSharedValue("LinkEnableIPv6", AllowIpv6Communication);
-                break;
-            case nameof(EnableLinkCliOutput):
-                _shellActionService.PersistSharedValue("LinkEnableCliOutput", EnableLinkCliOutput);
                 break;
             case nameof(SelectedDownloadSourceIndex):
                 _shellActionService.PersistSharedValue("ToolDownloadSource", SelectedDownloadSourceIndex);
@@ -720,7 +677,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasFeedbackSections));
         RaisePropertyChanged(nameof(SelectedUpdateChannelIndex));
         RaisePropertyChanged(nameof(SelectedUpdateModeIndex));
-        RaisePropertyChanged(nameof(MirrorCdk));
         RaiseUpdateSurfaceProperties();
         RaisePropertyChanged(nameof(SelectedLaunchIsolationIndex));
         RaisePropertyChanged(nameof(LaunchWindowTitleSetting));
@@ -748,19 +704,15 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchJvmArguments));
         RaisePropertyChanged(nameof(LaunchGameArguments));
         RaisePropertyChanged(nameof(LaunchBeforeCommand));
+        RaisePropertyChanged(nameof(LaunchEnvironmentVariables));
         RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
+        RaisePropertyChanged(nameof(ForceX11OnWaylandForLaunch));
         RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
         RaisePropertyChanged(nameof(DisableRetroWrapper));
         RaisePropertyChanged(nameof(RequireDedicatedGpu));
         RaisePropertyChanged(nameof(UseJavaExecutable));
         RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
         RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
-        RaisePropertyChanged(nameof(LinkUsername));
-        RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
-        RaisePropertyChanged(nameof(PreferLowestLatencyPath));
-        RaisePropertyChanged(nameof(TryPunchSymmetricNat));
-        RaisePropertyChanged(nameof(AllowIpv6Communication));
-        RaisePropertyChanged(nameof(EnableLinkCliOutput));
         RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
         RaisePropertyChanged(nameof(SelectedVersionSourceIndex));
         RaisePropertyChanged(nameof(DownloadThreadLimit));

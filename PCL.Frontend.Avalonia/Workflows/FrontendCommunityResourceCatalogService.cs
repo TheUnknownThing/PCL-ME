@@ -12,7 +12,7 @@ internal static class FrontendCommunityResourceCatalogService
     private const int SearchPageSize = 40;
     private const int DefaultTargetResultCount = SearchPageSize * 2;
     private const int MaxSearchRoundsPerQuery = 12;
-    private static readonly string CurseForgeApiKey = Environment.GetEnvironmentVariable("CURSEFORGE_API_KEY") ?? string.Empty;
+    private static readonly string CurseForgeApiKey = FrontendEmbeddedSecrets.GetCurseForgeApiKey();
     private static readonly HttpClient HttpClient = CreateHttpClient();
     private static readonly ConcurrentDictionary<string, CacheEntry> Cache = new(StringComparer.Ordinal);
     private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
@@ -77,17 +77,7 @@ internal static class FrontendCommunityResourceCatalogService
             normalizedVersion ?? "*",
             normalizedLoader,
             effectiveTargetResultCount);
-        if (Cache.TryGetValue(cacheKey, out var cacheEntry)
-            && DateTimeOffset.UtcNow - cacheEntry.CreatedAt < TimeSpan.FromMinutes(10))
-        {
-            return new FrontendCommunityResourceQueryResult(
-                cacheEntry.State,
-                GetMinecraftVersionOptions(
-                    preferredVersion,
-                    normalizedVersion,
-                    cacheEntry.State.Entries.SelectMany(entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions)),
-                GetSourceOptions(config));
-        }
+        _ = cacheKey;
 
         var effectiveQuery = query with
         {
@@ -98,8 +88,7 @@ internal static class FrontendCommunityResourceCatalogService
             Version = normalizedVersion ?? string.Empty,
             Loader = normalizedLoader
         };
-        var state = BuildState(config, preferredVersion, communitySourcePreference, effectiveQuery, effectiveTargetResultCount);
-        Cache[cacheKey] = new CacheEntry(state, DateTimeOffset.UtcNow);
+        var state = BuildState(config, communitySourcePreference, effectiveQuery, effectiveTargetResultCount);
         return new FrontendCommunityResourceQueryResult(
             state,
             GetMinecraftVersionOptions(
@@ -111,29 +100,14 @@ internal static class FrontendCommunityResourceCatalogService
 
     private static FrontendDownloadResourceState BuildState(
         RouteConfig config,
-        string? preferredVersion,
         int communitySourcePreference,
         FrontendCommunityResourceQuery query,
         int targetResultCount)
     {
-        var effectiveVersion = string.IsNullOrWhiteSpace(query.Version)
-            ? preferredVersion
+        var selectedVersion = string.IsNullOrWhiteSpace(query.Version)
+            ? null
             : query.Version;
-        var versionAwareResult = FetchEntries(config, effectiveVersion, communitySourcePreference, query, targetResultCount);
-        var usedVersionFallback = false;
-
-        if (versionAwareResult.Entries.Count == 0
-            && !string.IsNullOrWhiteSpace(effectiveVersion)
-            && string.IsNullOrWhiteSpace(query.Version))
-        {
-            versionAwareResult = FetchEntries(
-                config,
-                null,
-                communitySourcePreference,
-                query with { Version = string.Empty },
-                targetResultCount);
-            usedVersionFallback = true;
-        }
+        var versionAwareResult = FetchEntries(config, selectedVersion, communitySourcePreference, query, targetResultCount);
 
         var filteredEntries = ApplyFinalClientSideFilters(versionAwareResult.Entries, query)
             .ToArray();
@@ -146,8 +120,9 @@ internal static class FrontendCommunityResourceCatalogService
             config.ModrinthProjectType is not null && config.CurseForgeClassId is not null,
             false,
             config.UseShaderLoaderOptions,
-            BuildHintText(config, effectiveVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback),
+            BuildHintText(config, selectedVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback: false),
             BuildTagOptions(entries),
+            versionAwareResult.TotalCount ?? filteredEntries.Length,
             filteredEntries.Length > targetResultCount || versionAwareResult.CanContinue,
             entries);
     }
@@ -176,6 +151,7 @@ internal static class FrontendCommunityResourceCatalogService
 
         var entries = new List<FrontendDownloadResourceEntry>();
         var errors = new List<string>();
+        var sourceTotalCountMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         for (var round = 0; round < maxSearchRounds; round++)
         {
@@ -192,7 +168,7 @@ internal static class FrontendCommunityResourceCatalogService
                 {
                     "Modrinth" => FetchModrinthEntries(config, preferredVersion, communitySourcePreference, query, state.Offset),
                     "CurseForge" => FetchCurseForgeEntries(config, preferredVersion, communitySourcePreference, query, state.Offset),
-                    _ => new SourceFetchResult([], "未知社区来源。", 0, false)
+                    _ => new SourceFetchResult([], "未知社区来源。", 0, null, false)
                 }))
                 .ToArray();
 
@@ -206,6 +182,11 @@ internal static class FrontendCommunityResourceCatalogService
                 if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
                 {
                     errors.Add(result.ErrorMessage!);
+                }
+
+                if (result.TotalCount is > 0)
+                {
+                    sourceTotalCountMap[state.SourceName] = result.TotalCount.Value;
                 }
 
                 if (result.Entries.Count > 0)
@@ -227,9 +208,16 @@ internal static class FrontendCommunityResourceCatalogService
             }
         }
 
+        int? totalCount = null;
+        if (sourceStates.Count > 0 && sourceStates.All(state => sourceTotalCountMap.ContainsKey(state.SourceName)))
+        {
+            totalCount = sourceStates.Sum(state => sourceTotalCountMap[state.SourceName]);
+        }
+
         return new FetchResult(
             entries,
             errors.Distinct(StringComparer.Ordinal).ToArray(),
+            totalCount,
             sourceStates.Any(state => state.HasMoreEntries));
     }
 
@@ -244,7 +232,7 @@ internal static class FrontendCommunityResourceCatalogService
         {
             var officialUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: false, offset);
             var mirrorUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: true, offset);
-            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: true);
+            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: false);
             var hits = response["hits"]?.AsArray() ?? [];
             var totalHits = GetInt(response, "total_hits");
 
@@ -259,11 +247,11 @@ internal static class FrontendCommunityResourceCatalogService
             var receivedCount = hits.Count;
             var hasMoreEntries = receivedCount > 0
                 && (totalHits <= 0 || offset + receivedCount < totalHits);
-            return new SourceFetchResult(entries, null, receivedCount, hasMoreEntries);
+            return new SourceFetchResult(entries, null, receivedCount, totalHits > 0 ? totalHits : null, hasMoreEntries);
         }
         catch (Exception ex)
         {
-            return new SourceFetchResult([], $"Modrinth 暂时不可用：{ex.Message}", 0, false);
+            return new SourceFetchResult([], $"Modrinth 暂时不可用：{ex.Message}", 0, null, false);
         }
     }
 
@@ -296,11 +284,11 @@ internal static class FrontendCommunityResourceCatalogService
             var receivedCount = resultCount > 0 ? resultCount : data.Count;
             var hasMoreEntries = receivedCount > 0
                 && (totalCount <= 0 || currentIndex + receivedCount < totalCount);
-            return new SourceFetchResult(entries, null, receivedCount, hasMoreEntries);
+            return new SourceFetchResult(entries, null, receivedCount, totalCount > 0 ? totalCount : null, hasMoreEntries);
         }
         catch (Exception ex)
         {
-            return new SourceFetchResult([], $"CurseForge 暂时不可用：{ex.Message}", 0, false);
+            return new SourceFetchResult([], $"CurseForge 暂时不可用：{ex.Message}", 0, null, false);
         }
     }
 
@@ -1517,12 +1505,14 @@ internal static class FrontendCommunityResourceCatalogService
     private sealed record FetchResult(
         IReadOnlyList<FrontendDownloadResourceEntry> Entries,
         IReadOnlyList<string> SourceErrors,
+        int? TotalCount,
         bool CanContinue);
 
     private sealed record SourceFetchResult(
         IReadOnlyList<FrontendDownloadResourceEntry> Entries,
         string? ErrorMessage,
         int ReceivedCount,
+        int? TotalCount,
         bool HasMoreEntries);
 
     private sealed record RequestCandidate(string Url, bool UseCurseForgeApiKey);

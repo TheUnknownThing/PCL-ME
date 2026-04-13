@@ -112,12 +112,12 @@ public static class LauncherFrontendRuntimeStateService
         }
 
         var storedKey = LauncherVersionedDataService.Parse(persistedEnvelope);
-        return ReadStoredKey(storedKey);
+        return ReadStoredKey(storedKey, persistedKeyPath);
     }
 
-    private static byte[] ReadStoredKey(LauncherVersionedData data)
+    private static byte[] ReadStoredKey(LauncherVersionedData data, string persistedKeyPath)
     {
-        return LauncherStoredKeyEnvelopeService.ReadKey(data);
+        return LauncherStoredKeyEnvelopeService.ReadKey(data, persistedKeyPath);
     }
 
     private static string? TryResolveLegacyDecryptKey()

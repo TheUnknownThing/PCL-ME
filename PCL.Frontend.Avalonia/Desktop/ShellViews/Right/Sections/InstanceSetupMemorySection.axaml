@@ -80,43 +80,13 @@
               SelectedIndex="{Binding SelectedInstanceMemoryOptimizeIndex}" />
         </Grid>
 
-        <Border
-            Padding="12,12"
-            Background="#F7FAFE"
-            BorderBrush="#D5E6FD"
-            BorderThickness="1"
-            CornerRadius="6">
-          <StackPanel Spacing="8">
-            <Grid Height="6">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{Binding InstanceUsedRamBarWidth}" />
-                <ColumnDefinition Width="{Binding InstanceAllocatedRamBarWidth}" />
-                <ColumnDefinition Width="{Binding InstanceFreeRamBarWidth}" />
-              </Grid.ColumnDefinitions>
-              <Border Grid.Column="0" Background="#58C86F" CornerRadius="3,0,0,3" />
-              <Border Grid.Column="1" Background="#86B6FF" />
-              <Border Grid.Column="2" Background="#D5DCE5" CornerRadius="0,3,3,0" />
-            </Grid>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBlock
-                  Foreground="#4B5968"
-                  FontSize="12"
-                  Text="已使用内存" />
-              <TextBlock
-                  Foreground="#2F8F45"
-                  FontSize="16"
-                  Text="{Binding InstanceUsedRamLabel}" />
-              <TextBlock
-                  Foreground="#4B5968"
-                  FontSize="16"
-                  Text="{Binding InstanceTotalRamLabel}" />
-            </StackPanel>
-            <TextBlock
-                Foreground="#4C78C2"
-                FontSize="16"
-                Text="{Binding InstanceAllocatedRamLabel}" />
-          </StackPanel>
-        </Border>
+        <controls:PclMemorySummary
+            UsedBarWidth="{Binding InstanceUsedRamBarWidth}"
+            AllocatedBarWidth="{Binding InstanceAllocatedRamBarWidth}"
+            FreeBarWidth="{Binding InstanceFreeRamBarWidth}"
+            UsedRamLabel="{Binding InstanceUsedRamLabel}"
+            TotalRamLabel="{Binding InstanceTotalRamLabel}"
+            AllocatedRamLabel="{Binding InstanceAllocatedRamLabel}" />
       </StackPanel>
     </controls:PclCard.CardContent>
   </controls:PclCard>

@@ -3,13 +3,15 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
-    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    ClipToBounds="False">
   <Grid
       x:Name="LayoutRoot"
       Height="44"
-      Margin="0,0,0,8"
+      Margin="3,0,3,6"
       Background="{DynamicResource ColorBrushSemiTransparent}"
-      ColumnDefinitions="4,34,7,Auto,*,0,4"
+      ClipToBounds="False"
+      ColumnDefinitions="6,34,7,Auto,*,0,4"
       RowDefinitions="*,20,18,*"
       RenderTransformOrigin="0.5,0.5"
       RenderTransform="scale(1)">
@@ -40,11 +42,16 @@
 
     <Border
         x:Name="SelectionBar"
+        Grid.Column="0"
         Grid.RowSpan="4"
-        Margin="0,6,0,6"
+        Width="4"
+        Height="0"
+        Margin="-3,0,0,0"
         Background="{DynamicResource ColorBrush3}"
-        CornerRadius="0,3,3,0"
-        IsVisible="False" />
+        CornerRadius="2"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Center"
+        Opacity="0" />
 
     <Image
         Grid.Column="1"
@@ -140,6 +147,17 @@
           IdleBackgroundBrush="#00FFFFFF"
           IsVisible="{Binding HasInfoAction}"
           ToolTip.Tip="详情" />
+      <controls:PclIconButton
+          Width="25"
+          Height="25"
+          Command="{Binding WebsiteCommand}"
+          HoverBackgroundBrush="#184592FF"
+          IconBrush="{DynamicResource ColorBrush5}"
+          IconData="{Binding WebsiteIconData}"
+          IconScale="{Binding WebsiteIconScale}"
+          IdleBackgroundBrush="#00FFFFFF"
+          IsVisible="{Binding HasWebsiteAction}"
+          ToolTip.Tip="打开主页" />
       <controls:PclIconButton
           Width="25"
           Height="25"

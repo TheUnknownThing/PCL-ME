@@ -94,8 +94,6 @@ internal sealed partial class FrontendShellViewModel
         ReloadToolsComposition();
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
-        RaisePropertyChanged(nameof(GameLinkWorldOptions));
-        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
     }
 
     private void InitializeActiveInstanceSurface()
@@ -253,8 +251,21 @@ internal sealed partial class FrontendShellViewModel
             case nameof(InstanceLaunchBeforeCommand):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceRun", InstanceLaunchBeforeCommand);
                 break;
+            case nameof(InstanceEnvironmentVariables):
+                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceEnvironmentVariables", InstanceEnvironmentVariables);
+                break;
             case nameof(WaitForInstanceLaunchBeforeCommand):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceRunWait", WaitForInstanceLaunchBeforeCommand);
+                break;
+            case nameof(SelectedInstanceForceX11OnWaylandIndex):
+                if (SelectedInstanceForceX11OnWaylandIndex == 0)
+                {
+                    _shellActionService.RemoveInstanceValues(instanceDirectory, ["VersionAdvanceForceX11OnWayland"]);
+                }
+                else
+                {
+                    _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceForceX11OnWayland", SelectedInstanceForceX11OnWaylandIndex);
+                }
                 break;
             case nameof(IgnoreInstanceJavaCompatibilityWarning):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceJava", IgnoreInstanceJavaCompatibilityWarning);
@@ -291,9 +302,10 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenInstanceTarget(string activity, string? target, string emptyState)
     {
+        var failureTitle = $"{activity}失败";
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity(activity, emptyState);
+            AddFailureActivity(failureTitle, emptyState);
             return;
         }
 
@@ -307,14 +319,15 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity(activity, error ?? target);
+        AddFailureActivity(failureTitle, error ?? target);
     }
 
     private void OpenInstanceDirectoryTarget(string activity, string? target, string emptyState)
     {
+        var failureTitle = $"{activity}失败";
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity(activity, emptyState);
+            AddFailureActivity(failureTitle, emptyState);
             return;
         }
 
@@ -324,7 +337,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity(activity, ex.Message);
+            AddFailureActivity(failureTitle, ex.Message);
             return;
         }
 

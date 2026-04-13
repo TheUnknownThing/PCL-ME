@@ -217,29 +217,13 @@
                   IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
             </Grid>
 
-            <Grid RowDefinitions="Auto,4,Auto">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{Binding UsedRamBarWidth}" />
-                <ColumnDefinition Width="{Binding AllocatedRamBarWidth}" />
-                <ColumnDefinition Width="{Binding FreeRamBarWidth}" />
-              </Grid.ColumnDefinitions>
-              <TextBlock
-                  Grid.ColumnSpan="3"
-                  Margin="2,0,0,5"
-                  Foreground="#7D8897"
-                  FontSize="11"
-                  Text="已使用内存 / 已安装内存" />
-              <Border Grid.Row="1" Grid.Column="0" Background="#66A3DC" CornerRadius="2,0,0,2" />
-              <Border Grid.Row="1" Grid.Column="1" Background="#B5D5F8" />
-              <Border Grid.Row="1" Grid.Column="2" Background="#E0E9F5" CornerRadius="0,2,2,0" />
-              <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="2,4,0,0" Orientation="Horizontal">
-                <TextBlock Foreground="#4083C4" FontSize="16" Text="{Binding UsedRamLabel}" />
-                <TextBlock Foreground="#4083C4" FontSize="16" Text=" / " />
-                <TextBlock Foreground="#4083C4" FontSize="16" Text="{Binding TotalRamLabel}" />
-                <TextBlock Margin="18,0,0,0" Foreground="#4083C4" FontSize="16" Text="游戏分配" />
-                <TextBlock Margin="8,0,0,0" Foreground="#4083C4" FontSize="16" Text="{Binding AllocatedRamLabel}" />
-              </StackPanel>
-            </Grid>
+            <controls:PclMemorySummary
+                UsedBarWidth="{Binding UsedRamBarWidth}"
+                AllocatedBarWidth="{Binding AllocatedRamBarWidth}"
+                FreeBarWidth="{Binding FreeRamBarWidth}"
+                UsedRamLabel="{Binding UsedRamLabel}"
+                TotalRamLabel="{Binding TotalRamLabel, StringFormat=' / {0}'}"
+                AllocatedRamLabel="{Binding AllocatedRamLabel}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
@@ -266,7 +250,7 @@
                   SelectedIndex="{Binding SelectedLaunchRendererIndex}" />
             </Grid>
 
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto,9,Auto,9,Auto">
               <TextBlock
                   VerticalAlignment="Top"
                   Foreground="#343D4A"
@@ -315,6 +299,47 @@
                     Foreground="#343D4A"
                     Content="等待命令执行完成后再继续启动"
                     IsChecked="{Binding WaitForLaunchBeforeCommand}" />
+              </StackPanel>
+
+              <TextBlock
+                  Grid.Row="6"
+                  VerticalAlignment="Top"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,4,25,0"
+                  Text="环境变量" />
+              <StackPanel Grid.Row="6" Grid.Column="1" Spacing="6">
+                <TextBox
+                    MinHeight="92"
+                    Padding="8,6"
+                    AcceptsReturn="True"
+                    Text="{Binding LaunchEnvironmentVariables}"
+                    TextWrapping="Wrap"
+                    VerticalContentAlignment="Top" />
+                <TextBlock
+                    Foreground="#677789"
+                    FontSize="12"
+                    Text="每行一个 KEY=VALUE，实例设置中的同名变量会覆盖这里的值。"
+                    TextWrapping="Wrap" />
+              </StackPanel>
+
+              <TextBlock
+                  Grid.Row="8"
+                  VerticalAlignment="Top"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Margin="0,4,25,0"
+                  Text="Linux 显示后端" />
+              <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
+                <CheckBox
+                    Foreground="#343D4A"
+                    Content="Wayland 会话下强制使用 X11 启动"
+                    IsChecked="{Binding ForceX11OnWaylandForLaunch}" />
+                <TextBlock
+                    Foreground="#677789"
+                    FontSize="12"
+                    Text="仅在 Linux Wayland 会话且当前存在 X11 DISPLAY 时生效。"
+                    TextWrapping="Wrap" />
               </StackPanel>
             </Grid>
 

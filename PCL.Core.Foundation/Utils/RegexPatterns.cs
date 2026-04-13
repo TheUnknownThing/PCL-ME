@@ -8,13 +8,6 @@ namespace PCL.Core.Utils;
 public static partial class RegexPatterns
 {
     /// <summary>
-    /// 陶瓦联机 ID。
-    /// </summary>
-    public static readonly Regex TerracottaId = _TerracottaId();
-    [GeneratedRegex("([0-9A-Z]{5}-){4}[0-9A-Z]{5}", RegexOptions.IgnoreCase)]
-    private static partial Regex _TerracottaId();
-
-    /// <summary>
     /// 换行符，包括 <c>\r\n</c> <c>\n</c> <c>\r</c> 三种。
     /// </summary>
     public static readonly Regex NewLine = _NewLine();
@@ -81,14 +74,6 @@ public static partial class RegexPatterns
     public static readonly Regex MotdCode = _MotdCode();
     [GeneratedRegex("(§[0-9a-fk-oAr]|#[0-9A-Fa-f]{6})")]
     private static partial Regex _MotdCode();
-
-    public static readonly Regex BroadcastMotd = _BroadcastMotd();
-    [GeneratedRegex(@"\[MOTD\](.*?)\[/MOTD\]", RegexOptions.Compiled)]
-    private static partial Regex _BroadcastMotd();
-
-    public static readonly Regex BroadcastAd = _BroadcastAd();
-    [GeneratedRegex(@"\[AD\](.*?)\[/AD\]", RegexOptions.Compiled)]
-    private static partial Regex _BroadcastAd();
 
     /// <summary>
     /// 匹配 Minecraft 正常版本号，如 1.20.4、1.19.3 等。

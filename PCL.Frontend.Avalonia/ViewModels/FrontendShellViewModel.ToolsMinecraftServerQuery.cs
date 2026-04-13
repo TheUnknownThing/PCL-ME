@@ -240,7 +240,7 @@ internal sealed partial class FrontendShellViewModel
             }
 
             ApplyMinecraftServerQueryErrorState(ex.Message);
-            AddActivity("查询 Minecraft 服务器失败", ex.Message);
+            AddFailureActivity("查询 Minecraft 服务器失败", ex.Message);
         }
         finally
         {

@@ -8,7 +8,7 @@
     <StackPanel Margin="25,25,25,10" Spacing="15">
       <controls:PclCard ContentMargin="20,15,20,15">
         <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28,7,28">
+          <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28">
             <TextBlock
                 Grid.Row="0"
                 Margin="0,0,25,0"
@@ -39,27 +39,6 @@
                 ItemsSource="{Binding UpdateModeOptions}"
                 SelectedIndex="{Binding SelectedUpdateModeIndex}" />
 
-            <TextBlock
-                Grid.Row="4"
-                Margin="0,0,25,0"
-                VerticalAlignment="Center"
-                Foreground="#343D4A"
-                FontSize="13.5"
-                Text="Mirror 酱 CDK" />
-            <TextBox
-                Grid.Row="4"
-                Grid.Column="1"
-                Height="28"
-                Padding="8,4"
-                Text="{Binding MirrorCdk}"
-                Watermark="可选的高速下载 CDK" />
-            <controls:PclButton
-                Grid.Row="4"
-                Grid.Column="3"
-                Height="28"
-                Command="{Binding GetMirrorCdkCommand}"
-                ColorType="Highlight"
-                Text="获取 CDK" />
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>

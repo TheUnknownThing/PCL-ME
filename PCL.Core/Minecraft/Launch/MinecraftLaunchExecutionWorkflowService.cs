@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace PCL.Core.Minecraft.Launch;
 
@@ -40,16 +41,18 @@ public static class MinecraftLaunchExecutionWorkflowService
         ArgumentNullException.ThrowIfNull(request);
 
         var runtimePlan = MinecraftLaunchRuntimeService.BuildProcessPlan(request);
+        var shouldRedirectProcessOutput = OperatingSystem.IsWindows();
         return new MinecraftLaunchProcessShellPlan(
             runtimePlan.ExecutablePath,
             runtimePlan.LaunchArguments,
             runtimePlan.WorkingDirectory,
             runtimePlan.CreateNoWindow,
             UseShellExecute: false,
-            RedirectStandardOutput: true,
-            RedirectStandardError: true,
+            RedirectStandardOutput: shouldRedirectProcessOutput,
+            RedirectStandardError: shouldRedirectProcessOutput,
             runtimePlan.PathEnvironmentValue,
             runtimePlan.AppDataEnvironmentValue,
+            runtimePlan.EnvironmentVariables,
             runtimePlan.PriorityKind,
             "已启动游戏进程：" + runtimePlan.ExecutablePath,
             "由于取消启动，已强制结束游戏进程");
@@ -84,6 +87,7 @@ public sealed record MinecraftLaunchProcessShellPlan(
     bool RedirectStandardError,
     string PathEnvironmentValue,
     string AppDataEnvironmentValue,
+    IReadOnlyDictionary<string, string> EnvironmentVariables,
     MinecraftLaunchProcessPriorityKind PriorityKind,
     string StartedLogMessage,
     string AbortKillLogMessage);

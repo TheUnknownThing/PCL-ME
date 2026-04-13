@@ -52,7 +52,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HasNoActivePrompts));
                 RaisePropertyChanged(nameof(CurrentPrompt));
                 RaisePropertyChanged(nameof(HasCurrentPrompt));
-                RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+                RaisePromptOverlayPresentationProperties();
                 return;
             }
 
@@ -66,7 +66,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasNoActivePrompts));
         RaisePropertyChanged(nameof(CurrentPrompt));
         RaisePropertyChanged(nameof(HasCurrentPrompt));
-        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+        RaisePromptOverlayPresentationProperties();
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);
         PromptInboxTitle = $"{selectedLane.Title}提示";
@@ -154,7 +154,7 @@ internal sealed partial class FrontendShellViewModel
             prompt.Source.ToString(),
             prompt.Severity.ToString(),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
-            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#256A61"),
+            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#FFF1EA") : Brush.Parse("#EAF7F5"),
             prompt.Options.Select((option, index) => new PromptOptionViewModel(
                 option.Label,
@@ -298,8 +298,37 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasActivityEntries));
     }
 
+    private void AddFailureActivity(string title, string body)
+    {
+        AddActivity(title, body);
+        AvaloniaHintBus.Show(ComposeFailureHintMessage(title, body), AvaloniaHintTheme.Error);
+    }
+
+    private static string ComposeFailureHintMessage(string title, string body)
+    {
+        var normalizedTitle = (title ?? string.Empty).Trim();
+        var normalizedBody = (body ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedBody))
+        {
+            return string.IsNullOrWhiteSpace(normalizedTitle) ? "操作失败。" : normalizedTitle;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedTitle) ||
+            normalizedBody.StartsWith(normalizedTitle, StringComparison.Ordinal))
+        {
+            return normalizedBody;
+        }
+
+        return $"{normalizedTitle}: {normalizedBody}";
+    }
+
     private void TogglePromptOverlay()
     {
+        if (HasPromptOverlayInlineDialog)
+        {
+            return;
+        }
+
         SetPromptOverlayOpen(!IsPromptOverlayVisible);
     }
 
@@ -356,13 +385,13 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task HandleLaunchRequestedAsync()
     {
-        RefreshLaunchState();
-
         if (_isLaunchInProgress)
         {
             AddActivity("启动进行中", "当前已经有一个启动会话正在运行。");
             return;
         }
+
+        await AwaitLatestSelectedInstanceRefreshAsync();
 
         if (_isLaunchBlockedByPrompt)
         {
@@ -372,7 +401,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (!_launchComposition.PrecheckResult.IsSuccess)
         {
-            AddActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
+            AddFailureActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
             return;
         }
 
@@ -401,7 +430,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!bool.TryParse(rawValue, out var enabled))
         {
-            AddActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
+            AddFailureActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
             return;
         }
 
@@ -455,7 +484,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(argument))
         {
-            AddActivity("追加启动参数失败", "提示中未提供可写入的参数。");
+            AddFailureActivity("追加启动参数失败", "提示中未提供可写入的参数。");
             return;
         }
 
@@ -475,10 +504,10 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenCrashLogFromPrompt()
     {
-        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
-
         var logPath = _shellActionService.MaterializeCrashLog(_activeCrashPlan);
-        OpenExternalTarget(logPath, "已生成并打开崩溃日志副本。");
+        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
+        RefreshGameLogSurface();
+        AddActivity("查看日志", $"已生成崩溃日志，可在实时日志页点击打开：{logPath}");
     }
 
     private void ExportCrashReportFromPrompt()
@@ -492,7 +521,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
         {
-            AddActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
+            AddFailureActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
             return;
         }
 
@@ -535,7 +564,7 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                AddActivity("Java 运行时准备失败", ex.Message);
+                AddFailureActivity("Java 运行时准备失败", ex.Message);
             });
         }
     }
@@ -583,7 +612,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity("外部打开失败", "缺少可打开的目标。");
+            AddFailureActivity("外部打开失败", "缺少可打开的目标。");
             return;
         }
 
@@ -593,7 +622,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
+        AddFailureActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
     }
 
     private void UpdateStartupConsentRequest(Func<LauncherStartupConsentRequest, LauncherStartupConsentRequest> updater)
@@ -614,20 +643,6 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task StartLaunchAsync()
     {
-        RefreshLaunchState();
-
-        if (_launchComposition.SelectedJavaRuntime is null)
-        {
-            AddActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
-        {
-            AppendLaunchLogLine(_launchComposition.JavaWarningMessage);
-            AddActivity("Java 兼容性检查已忽略", _launchComposition.JavaWarningMessage);
-        }
-
         try
         {
             var launchCancellation = new CancellationTokenSource();
@@ -642,9 +657,23 @@ internal sealed partial class FrontendShellViewModel
 
             _isLaunchInProgress = true;
             _showLaunchLog = true;
-            _launchLogBuilder.Clear();
+            ClearLaunchLogBuffer();
             RaiseLaunchSessionProperties();
             RefreshGameLogSurface();
+
+            await RefreshLaunchCompositionAsync(launchCancellation.Token);
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
+            if (_launchComposition.SelectedJavaRuntime is null)
+            {
+                throw new InvalidOperationException("当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
+            }
+
+            if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
+            {
+                AppendLaunchLogLine(_launchComposition.JavaWarningMessage);
+                AddActivity("Java 兼容性检查已忽略", _launchComposition.JavaWarningMessage);
+            }
 
             foreach (var line in _launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines)
             {
@@ -676,8 +705,16 @@ internal sealed partial class FrontendShellViewModel
             _activeLaunchProcess = startResult.Process;
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
-            ShowLaunchCompletionNotification();
-            SetLaunchDialogLaunchedState();
+            if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
+            {
+                NavigateTo(
+                    new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                    "游戏启动成功后已返回主页。",
+                    RouteNavigationBehavior.Reset);
+            }
+
+            AvaloniaHintBus.Show("游戏启动成功！", AvaloniaHintTheme.Success);
+            HideLaunchDialog();
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
 
@@ -696,7 +733,7 @@ internal sealed partial class FrontendShellViewModel
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine($"启动失败：{ex.Message}");
-            AddActivity("启动失败", ex.Message);
+            AddFailureActivity("启动失败", ex.Message);
             SetLaunchDialogStoppedState("启动失败", ex.Message, isError: true);
         }
         finally
@@ -705,6 +742,25 @@ internal sealed partial class FrontendShellViewModel
             _launchSessionCancellation = null;
             RaiseLaunchSessionProperties();
         }
+    }
+
+    private async Task RefreshLaunchCompositionAsync(CancellationToken cancellationToken)
+    {
+        SetLaunchDialogRunningState(
+            "正在启动游戏",
+            "读取启动配置",
+            0.02d,
+            showDownload: false,
+            isError: false);
+
+        var launchComposition = await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
+        }, cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        ApplyLaunchComposition(launchComposition, normalizeLaunchProfileSurface: true);
     }
 
     private async Task EnsureLaunchFilesAsync(CancellationToken cancellationToken)
@@ -751,24 +807,39 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             startResult.Process.EnableRaisingEvents = true;
-            startResult.Process.OutputDataReceived += (_, args) =>
+            if (startResult.Process.StartInfo.RedirectStandardOutput)
             {
-                if (!string.IsNullOrWhiteSpace(args.Data))
+                startResult.Process.OutputDataReceived += (_, args) =>
                 {
-                    AppendLaunchLogLine(args.Data);
-                    File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
-                }
-            };
-            startResult.Process.ErrorDataReceived += (_, args) =>
+                    if (!string.IsNullOrWhiteSpace(args.Data))
+                    {
+                        AppendLaunchLogLine(args.Data);
+                        File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
+                    }
+                };
+            }
+
+            if (startResult.Process.StartInfo.RedirectStandardError)
             {
-                if (!string.IsNullOrWhiteSpace(args.Data))
+                startResult.Process.ErrorDataReceived += (_, args) =>
                 {
-                    AppendLaunchLogLine(args.Data);
-                    File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
-                }
-            };
-            startResult.Process.BeginOutputReadLine();
-            startResult.Process.BeginErrorReadLine();
+                    if (!string.IsNullOrWhiteSpace(args.Data))
+                    {
+                        AppendLaunchLogLine(args.Data);
+                        File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
+                    }
+                };
+            }
+
+            if (startResult.Process.StartInfo.RedirectStandardOutput)
+            {
+                startResult.Process.BeginOutputReadLine();
+            }
+
+            if (startResult.Process.StartInfo.RedirectStandardError)
+            {
+                startResult.Process.BeginErrorReadLine();
+            }
 
             await startResult.Process.WaitForExitAsync();
             _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
@@ -806,8 +877,37 @@ internal sealed partial class FrontendShellViewModel
     {
         ReloadSetupComposition();
         ReloadInstanceComposition();
-        _launchComposition = FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
-        NormalizeLaunchProfileSurface();
+        ApplyLaunchComposition(
+            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths),
+            normalizeLaunchProfileSurface: true);
+    }
+
+    private async Task RefreshLaunchProfileCompositionAsync()
+    {
+        var refreshVersion = Interlocked.Increment(ref _launchProfileCompositionRefreshVersion);
+        var launchComposition = await Task.Run(() =>
+            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths));
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (refreshVersion != _launchProfileCompositionRefreshVersion)
+            {
+                return;
+            }
+
+            ApplyLaunchComposition(launchComposition, normalizeLaunchProfileSurface: true);
+        });
+    }
+
+    private void ApplyLaunchComposition(FrontendLaunchComposition composition, bool normalizeLaunchProfileSurface)
+    {
+        _launchComposition = composition;
+        ClearOptimisticLaunchInstanceName(raiseProperties: false);
+        if (normalizeLaunchProfileSurface)
+        {
+            NormalizeLaunchProfileSurface();
+        }
+
         var launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         if (!string.Equals(_launchPromptContextKey, launchPromptContextKey, StringComparison.Ordinal))
         {
@@ -823,13 +923,7 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
-            if (_launchLogBuilder.Length > 0)
-            {
-                _launchLogBuilder.AppendLine();
-            }
-
-            _launchLogBuilder.Append(line);
-            RaisePropertyChanged(nameof(LaunchLogText));
+            AppendLaunchLogEntry(line);
             RaiseGameLogSurfaceProperties();
             if (!_showLaunchLog)
             {

@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -17,6 +16,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private readonly HashSet<TaskModel> _observedTaskModels = [];
+    private readonly Dictionary<TaskModel, TaskManagerEntryViewModel> _taskManagerEntryLookup = [];
     private string _instanceSelectionSearchQuery = string.Empty;
     private string _instanceSelectionLauncherDirectory = string.Empty;
     private int _instanceSelectionTotalCount;
@@ -29,6 +29,7 @@ internal sealed partial class FrontendShellViewModel
     private string _taskManagerDownloadSpeedText = "0 B/s";
     private string _taskManagerRemainingFilesText = "0";
     private DispatcherTimer? _taskManagerRefreshTimer;
+    private DispatcherTimer? _taskManagerHeartbeatTimer;
     private int _gameLogRecentFileCount;
     private string _gameLogLatestUpdateLabel = "尚未发现日志文件";
 
@@ -154,11 +155,11 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoGameLogFiles => !HasGameLogFiles;
 
-    public bool ShowGameLogLiveOutput => _launchLogBuilder.Length > 0;
+    public bool ShowGameLogLiveOutput => HasLaunchLogLines;
 
     public bool ShowGameLogEmptyState => !ShowGameLogLiveOutput && HasNoGameLogFiles;
 
-    public int GameLogLiveLineCount => CountLaunchLogLines();
+    public int GameLogLiveLineCount => _launchLogLines.Count;
 
     public int GameLogRecentFileCount => _gameLogRecentFileCount;
 
@@ -364,26 +365,22 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshTaskManagerSurface()
     {
         SyncTaskSubscriptions();
+        var now = DateTimeOffset.UtcNow;
 
         var tasks = TaskCenter.Tasks.ToArray();
+        var orderedTasks = tasks
+            .OrderByDescending(task => task.State == TaskState.Running)
+            .ThenByDescending(task => task.State == TaskState.Waiting)
+            .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
         _taskManagerWaitingCount = tasks.Count(task => task.State == TaskState.Waiting);
         _taskManagerRunningCount = tasks.Count(task => task.State == TaskState.Running);
         _taskManagerFinishedCount = tasks.Count(task => task.State == TaskState.Success || task.State == TaskState.Canceled);
         _taskManagerFailedCount = tasks.Count(task => task.State == TaskState.Failed);
 
-        ReplaceItems(
-            TaskManagerEntries,
-            tasks
-                .OrderByDescending(task => task.State == TaskState.Running)
-                .ThenByDescending(task => task.State == TaskState.Waiting)
-                .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
-                .Select(CreateTaskManagerEntry));
+        SyncTaskManagerEntries(orderedTasks, now);
 
-        var primaryTask = tasks
-            .OrderByDescending(task => task.State == TaskState.Running)
-            .ThenByDescending(task => task.State == TaskState.Waiting)
-            .ThenBy(task => task.Title, StringComparer.CurrentCultureIgnoreCase)
-            .FirstOrDefault();
+        var primaryTask = orderedTasks.FirstOrDefault();
         _taskManagerActiveTaskTitle = primaryTask?.Title ?? "当前没有活动任务";
         _taskManagerOverallProgress = primaryTask?.SupportProgress == true
             ? Math.Clamp(primaryTask.Progress, 0d, 1d)
@@ -394,6 +391,7 @@ internal sealed partial class FrontendShellViewModel
             ? "0 B/s"
             : primaryTask.SpeedText;
         _taskManagerRemainingFilesText = primaryTask?.RemainingFileCount?.ToString() ?? "0";
+        UpdateTaskManagerHeartbeatState();
 
         RaisePropertyChanged(nameof(HasTaskManagerEntries));
         RaisePropertyChanged(nameof(HasNoTaskManagerEntries));
@@ -436,6 +434,7 @@ internal sealed partial class FrontendShellViewModel
         var recentFiles = candidateFiles
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log")))
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log")))
+            .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.FrontendArtifactDirectory, "crash-logs")))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Where(File.Exists)
             .Select(path => new FileInfo(path))
@@ -526,8 +525,9 @@ internal sealed partial class FrontendShellViewModel
                 configuredFolders.Add(new InstanceSelectionFolderSnapshot(
                     GetInstanceSelectionDirectoryLabel(resolvedFolderPath),
                     resolvedFolderPath,
-                    StoreLauncherFolderPath(resolvedFolderPath, runtimePaths)));
-                _shellActionService.PersistSharedValue("LaunchFolders", SerializeInstanceSelectionFolders(configuredFolders, runtimePaths));
+                    StoreLauncherFolderPath(resolvedFolderPath, runtimePaths),
+                    IsPersisted: true));
+                PersistInstanceSelectionFolders(configuredFolders, runtimePaths);
             }
 
             RefreshSelectedLauncherFolderSmoothly(
@@ -539,7 +539,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("添加已有文件夹失败", ex.Message);
+            AddFailureActivity("添加已有文件夹失败", ex.Message);
         }
     }
 
@@ -567,7 +567,67 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("导入整合包失败", ex.Message);
+            AddFailureActivity("导入整合包失败", ex.Message);
+        }
+    }
+
+    private async Task DeleteInstanceSelectionFolderAsync(InstanceSelectionFolderSnapshot folder)
+    {
+        if (!folder.IsPersisted)
+        {
+            AddActivity("移除文件夹记录", "当前文件夹未保存到列表中。");
+            return;
+        }
+
+        var confirmed = await _shellActionService.ConfirmAsync(
+            "移除文件夹确认",
+            $"确定要从文件夹列表中移除 {folder.Directory} 吗？{Environment.NewLine}该操作只会删除列表记录，不会删除磁盘上的文件。",
+            "从列表移除",
+            isDanger: false);
+        if (!confirmed)
+        {
+            AddActivity("移除文件夹记录", "已取消移除。");
+            return;
+        }
+
+        try
+        {
+            var runtimePaths = _shellActionService.RuntimePaths;
+            var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
+            var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var currentStoredPath = ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw);
+            var currentDirectory = ResolveLauncherFolder(currentStoredPath, runtimePaths);
+            var configuredFolders = LoadConfiguredInstanceSelectionFolders(sharedConfig, localConfig, runtimePaths)
+                .Where(candidate => !string.Equals(candidate.Directory, folder.Directory, GetPathComparison()))
+                .ToList();
+
+            PersistInstanceSelectionFolders(configuredFolders, runtimePaths);
+
+            if (!string.Equals(currentDirectory, folder.Directory, GetPathComparison()))
+            {
+                RefreshInstanceSelectionSurface();
+                RefreshInstanceSelectionRouteMetadata();
+                AddActivity("移除文件夹记录", $"已从文件夹列表中移除 {folder.Directory}。");
+                return;
+            }
+
+            var fallbackDirectory = ResolveNextInstanceSelectionFolder(configuredFolders, runtimePaths);
+            if (string.Equals(fallbackDirectory, folder.Directory, GetPathComparison()))
+            {
+                RefreshInstanceSelectionSurface();
+                RefreshInstanceSelectionRouteMetadata();
+                AddActivity("移除文件夹记录", $"已移除 {folder.Directory} 的保存记录。当前仍在使用该目录，因此它会继续显示。");
+                return;
+            }
+
+            RefreshSelectedLauncherFolderSmoothly(
+                StoreLauncherFolderPath(fallbackDirectory, runtimePaths),
+                fallbackDirectory,
+                $"已从文件夹列表中移除 {folder.Directory}，并切换到 {fallbackDirectory}。");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("移除文件夹记录失败", ex.Message);
         }
     }
 
@@ -586,8 +646,9 @@ internal sealed partial class FrontendShellViewModel
                 StringComparison.OrdinalIgnoreCase))
         {
             ApplyOptimisticInstanceSelection(entry.Name);
+            SetOptimisticLaunchInstanceName(entry.Name);
             var refreshVersion = System.Threading.Interlocked.Increment(ref _instanceSelectionRefreshVersion);
-            _ = RefreshSelectedInstanceStateAsync(refreshVersion);
+            QueueSelectedInstanceStateRefresh(refreshVersion);
         }
 
         NavigateTo(
@@ -606,7 +667,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddActivity("切换实例收藏状态失败", ex.Message);
+            AddFailureActivity("切换实例收藏状态失败", ex.Message);
         }
     }
 
@@ -653,17 +714,17 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            OpenInstanceTarget("实例回收区", outcome.TrashDirectory, "回收区目录不存在。");
+            AddActivity("删除实例", $"实例 {outcome.InstanceName} 已移入回收区：{outcome.TrashDirectory}");
         }
         catch (Exception ex)
         {
-            AddActivity("删除实例失败", ex.Message);
+            AddFailureActivity("删除实例失败", ex.Message);
         }
     }
 
     private void ClearGameLogSurface()
     {
-        _launchLogBuilder.Clear();
+        ClearLaunchLogBuffer();
         RaiseGameLogSurfaceProperties();
         AddActivity("清空实时日志", "已清空当前会话输出缓存。");
     }
@@ -675,26 +736,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(GameLogLiveLineCount));
         RaisePropertyChanged(nameof(GameLogRecentFileCount));
         RaisePropertyChanged(nameof(GameLogLatestUpdateLabel));
-        RaisePropertyChanged(nameof(LaunchLogText));
-    }
-
-    private int CountLaunchLogLines()
-    {
-        if (_launchLogBuilder.Length == 0)
-        {
-            return 0;
-        }
-
-        var lineCount = 1;
-        for (var index = 0; index < _launchLogBuilder.Length; index++)
-        {
-            if (_launchLogBuilder[index] == '\n')
-            {
-                lineCount++;
-            }
-        }
-
-        return lineCount;
     }
 
     private static IEnumerable<string> EnumerateLogDirectoryFiles(string directory)
@@ -831,7 +872,7 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddActivity("打开实例目录失败", error ?? entry.Directory);
+                    AddFailureActivity("打开实例目录失败", error ?? entry.Directory);
                 }
             }),
             new ActionCommand(() => _ = DeleteInstanceSelectionEntryAsync(entry)));
@@ -1129,17 +1170,7 @@ internal sealed partial class FrontendShellViewModel
                     folder.Directory,
                     $"已切换实例目录到 {folder.Directory}。");
             }),
-            new ActionCommand(() =>
-            {
-                if (_shellActionService.TryOpenExternalTarget(folder.Directory, out var error))
-                {
-                    AddActivity("打开实例根目录", folder.Directory);
-                }
-                else
-                {
-                    AddActivity("打开实例根目录失败", error ?? folder.Directory);
-                }
-            }));
+            folder.IsPersisted ? new ActionCommand(() => _ = DeleteInstanceSelectionFolderAsync(folder)) : null);
     }
 
     private static InstanceSelectionShortcutEntryViewModel CreateInstanceSelectionShortcutEntry(
@@ -1151,13 +1182,47 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceSelectionShortcutEntryViewModel(title, description, iconPath, command);
     }
 
-    private static TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task)
+    private TaskManagerEntryViewModel CreateTaskManagerEntry(TaskModel task, DateTimeOffset now)
     {
-        return new TaskManagerEntryViewModel(
+        if (_taskManagerEntryLookup.TryGetValue(task, out var existingEntry))
+        {
+            UpdateTaskManagerEntry(existingEntry, task, now);
+            return existingEntry;
+        }
+
+        var entry = new TaskManagerEntryViewModel(
+            new ActionCommand(() =>
+            {
+                if ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null))
+                {
+                    task.Cancel.Execute(null);
+                    return;
+                }
+
+                if (task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed)
+                {
+                    TaskCenter.Remove(task);
+                }
+            }, () =>
+                ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null)) ||
+                task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed),
+            new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
+        _taskManagerEntryLookup[task] = entry;
+        UpdateTaskManagerEntry(entry, task, now);
+        return entry;
+    }
+
+    private static void UpdateTaskManagerEntry(TaskManagerEntryViewModel entry, TaskModel task, DateTimeOffset now)
+    {
+        var canCancel = (task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null);
+        var canDismiss = task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed;
+
+        entry.Update(
             task.Title,
             task.State,
             MapTaskStateLabel(task.State),
             string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
+            BuildTaskActivityText(task, now),
             task.SupportProgress
                 ? (string.IsNullOrWhiteSpace(task.ProgressText)
                     ? $"{Math.Round(task.Progress * 100, 1, MidpointRounding.AwayFromZero)}%"
@@ -1168,14 +1233,57 @@ internal sealed partial class FrontendShellViewModel
             string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText,
             task.RemainingFileCount?.ToString() ?? "0",
             task.Children.Count,
-            task.Children.Select(CreateTaskManagerStageEntry).ToArray(),
-            task.Cancel.CanExecute(null),
-            task.Pause.CanExecute(null),
-            new ActionCommand(() => task.Cancel.Execute(null), () => task.Cancel.CanExecute(null)),
-            new ActionCommand(() => task.Pause.Execute(null), () => task.Pause.CanExecute(null)));
+            task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
+            canCancel || canDismiss,
+            task.Pause.CanExecute(null));
     }
 
-    private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task)
+    private void SyncTaskManagerEntries(IReadOnlyList<TaskModel> orderedTasks, DateTimeOffset now)
+    {
+        var activeTaskSet = orderedTasks.ToHashSet();
+        foreach (var staleTask in _taskManagerEntryLookup.Keys.Where(task => !activeTaskSet.Contains(task)).ToArray())
+        {
+            _taskManagerEntryLookup.Remove(staleTask);
+        }
+
+        var desiredEntries = orderedTasks
+            .Select(task => CreateTaskManagerEntry(task, now))
+            .ToArray();
+        var desiredEntrySet = desiredEntries.ToHashSet();
+
+        for (var index = TaskManagerEntries.Count - 1; index >= 0; index--)
+        {
+            if (!desiredEntrySet.Contains(TaskManagerEntries[index]))
+            {
+                TaskManagerEntries.RemoveAt(index);
+            }
+        }
+
+        for (var index = 0; index < desiredEntries.Length; index++)
+        {
+            var desiredEntry = desiredEntries[index];
+            if (index < TaskManagerEntries.Count && ReferenceEquals(TaskManagerEntries[index], desiredEntry))
+            {
+                continue;
+            }
+
+            var existingIndex = TaskManagerEntries.IndexOf(desiredEntry);
+            if (existingIndex >= 0)
+            {
+                TaskManagerEntries.Move(existingIndex, index);
+                continue;
+            }
+
+            TaskManagerEntries.Insert(index, desiredEntry);
+        }
+
+        while (TaskManagerEntries.Count > desiredEntries.Length)
+        {
+            TaskManagerEntries.RemoveAt(TaskManagerEntries.Count - 1);
+        }
+    }
+
+    private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task, DateTimeOffset now)
     {
         var indicator = task.State switch
         {
@@ -1188,7 +1296,77 @@ internal sealed partial class FrontendShellViewModel
             _ => "·"
         };
         var message = string.IsNullOrWhiteSpace(task.StateMessage) ? task.Title : task.StateMessage;
+        var activityText = BuildStageActivityText(task, now);
+        if (!string.IsNullOrWhiteSpace(activityText))
+        {
+            message = $"{message} • {activityText}";
+        }
+
         return new TaskManagerStageEntryViewModel(indicator, task.Title, message);
+    }
+
+    private static string BuildTaskActivityText(TaskModel task, DateTimeOffset now)
+    {
+        var activeDuration = now - task.StateSince;
+        var recentDuration = now - task.LastUpdatedAt;
+
+        return task.State switch
+        {
+            TaskState.Running => $"已运行 {FormatTaskDuration(now - (task.StartedAt ?? task.StateSince))}，最近更新 {FormatRecentActivity(recentDuration)}",
+            TaskState.Waiting => $"已等待 {FormatTaskDuration(activeDuration)}",
+            TaskState.Success => $"总耗时 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))}",
+            TaskState.Canceled => $"运行 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))} 后已取消",
+            TaskState.Failed => $"运行 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))} 后失败",
+            _ => string.Empty
+        };
+    }
+
+    private static string BuildStageActivityText(TaskModel task, DateTimeOffset now)
+    {
+        return task.State switch
+        {
+            TaskState.Running => $"已持续 {FormatTaskDuration(now - task.StateSince)}",
+            TaskState.Waiting => "等待开始",
+            TaskState.Success => $"耗时 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            TaskState.Canceled => $"已取消，持续 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            TaskState.Failed => $"已失败，持续 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            _ => string.Empty
+        };
+    }
+
+    private static string FormatTaskDuration(TimeSpan duration)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            duration = TimeSpan.Zero;
+        }
+
+        if (duration.TotalHours >= 1d)
+        {
+            return $"{(int)duration.TotalHours} 小时 {duration.Minutes} 分";
+        }
+
+        if (duration.TotalMinutes >= 1d)
+        {
+            return $"{(int)duration.TotalMinutes} 分 {duration.Seconds} 秒";
+        }
+
+        return $"{Math.Max(1, duration.Seconds)} 秒";
+    }
+
+    private static string FormatRecentActivity(TimeSpan duration)
+    {
+        if (duration < TimeSpan.FromSeconds(2))
+        {
+            return "刚刚";
+        }
+
+        if (duration.TotalMinutes >= 1d)
+        {
+            return $"{(int)duration.TotalMinutes} 分钟前";
+        }
+
+        return $"{Math.Max(1, duration.Seconds)} 秒前";
     }
 
     private static string MapTaskStateLabel(TaskState state)
@@ -1218,6 +1396,7 @@ internal sealed partial class FrontendShellViewModel
             staleTask.PropertyChanged -= OnTaskModelPropertyChanged;
             staleTask.Children.CollectionChanged -= OnTaskChildrenChanged;
             _observedTaskModels.Remove(staleTask);
+            _taskManagerEntryLookup.Remove(staleTask);
         }
 
         foreach (var activeTask in activeTasks)
@@ -1273,6 +1452,38 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
+    private void UpdateTaskManagerHeartbeatState()
+    {
+        EnsureTaskManagerHeartbeatTimer();
+        if (_taskManagerRunningCount > 0)
+        {
+            _taskManagerHeartbeatTimer!.Start();
+            return;
+        }
+
+        _taskManagerHeartbeatTimer?.Stop();
+    }
+
+    private void EnsureTaskManagerHeartbeatTimer()
+    {
+        if (_taskManagerHeartbeatTimer is not null)
+        {
+            return;
+        }
+
+        _taskManagerHeartbeatTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _taskManagerHeartbeatTimer.Tick += (_, _) =>
+        {
+            if (TaskCenter.Tasks.All(task => task.State != TaskState.Running))
+            {
+                _taskManagerHeartbeatTimer?.Stop();
+                return;
+            }
+
+            RefreshTaskManagerSurface();
+        };
+    }
+
     private static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
     {
         var pclDirectory = Path.Combine(instanceDirectory, "PCL");
@@ -1314,71 +1525,11 @@ internal sealed partial class FrontendShellViewModel
             return new InstanceManifestSnapshot("Unknown", null, true);
         }
 
-        try
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-            var root = document.RootElement;
-            var versionLabel = GetString(root, "inheritsFrom")
-                               ?? GetString(root, "id")
-                               ?? "Unknown";
-            var loaderLabel = ResolveLoaderLabel(root);
-            return new InstanceManifestSnapshot(versionLabel, loaderLabel, false);
-        }
-        catch
-        {
-            return new InstanceManifestSnapshot("Unknown", null, true);
-        }
-    }
-
-    private static string? ResolveLoaderLabel(JsonElement root)
-    {
-        if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
-        {
-            return null;
-        }
-
-        var names = libraries.EnumerateArray()
-            .Select(library => GetString(library, "name"))
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Select(name => name!)
-            .ToArray();
-
-        if (names.Any(name => name.Contains("neoforge", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "NeoForge";
-        }
-
-        if (names.Any(name => name.Contains("net.minecraftforge:forge", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Forge";
-        }
-
-        if (names.Any(name => name.Contains("cleanroom", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Cleanroom";
-        }
-
-        if (names.Any(name => name.Contains("net.fabricmc:fabric-loader", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Fabric";
-        }
-
-        if (names.Any(name => name.Contains("org.quiltmc", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "Quilt";
-        }
-
-        if (names.Any(name => name.Contains("liteloader", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "LiteLoader";
-        }
-
-        if (names.Any(name => name.Contains("labymod", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "LabyMod";
-        }
-
-        return null;
+        var profile = FrontendVersionManifestInspector.ReadProfileFromManifestPath(manifestPath);
+        return new InstanceManifestSnapshot(
+            profile.VanillaVersion,
+            profile.PrimaryLoaderName,
+            !profile.IsManifestValid);
     }
 
     private static string MapInstanceCategory(int displayType)
@@ -1393,18 +1544,33 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string? GetString(JsonElement element, string propertyName)
-    {
-        return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
-            ? value.GetString()
-            : null;
-    }
-
     private static IReadOnlyList<InstanceSelectionFolderSnapshot> BuildInstanceSelectionFolderSnapshots(
         IKeyValueFileProvider sharedConfig,
         IKeyValueFileProvider localConfig,
         FrontendRuntimePaths runtimePaths,
         string selectedDirectory)
+    {
+        var folders = LoadConfiguredInstanceSelectionFolders(sharedConfig, localConfig, runtimePaths).ToList();
+        var seenDirectories = folders
+            .Select(folder => folder.Directory)
+            .ToHashSet(GetPathComparer());
+
+        if (seenDirectories.Add(selectedDirectory))
+        {
+            folders.Insert(0, new InstanceSelectionFolderSnapshot(
+                GetInstanceSelectionDirectoryLabel(selectedDirectory),
+                selectedDirectory,
+                StoreLauncherFolderPath(selectedDirectory, runtimePaths),
+                IsPersisted: false));
+        }
+
+        return folders;
+    }
+
+    private static IReadOnlyList<InstanceSelectionFolderSnapshot> LoadConfiguredInstanceSelectionFolders(
+        IKeyValueFileProvider sharedConfig,
+        IKeyValueFileProvider localConfig,
+        FrontendRuntimePaths runtimePaths)
     {
         var rawFolders = ReadValue(sharedConfig, "LaunchFolders", string.Empty);
         if (string.IsNullOrWhiteSpace(rawFolders))
@@ -1413,8 +1579,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var folders = new List<InstanceSelectionFolderSnapshot>();
-        var comparer = GetPathComparer();
-        var seenDirectories = new HashSet<string>(comparer);
+        var seenDirectories = new HashSet<string>(GetPathComparer());
         foreach (var rawEntry in rawFolders.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             var folder = ParseInstanceSelectionFolderSnapshot(rawEntry, runtimePaths);
@@ -1424,14 +1589,6 @@ internal sealed partial class FrontendShellViewModel
             }
 
             folders.Add(folder);
-        }
-
-        if (seenDirectories.Add(selectedDirectory))
-        {
-            folders.Insert(0, new InstanceSelectionFolderSnapshot(
-                GetInstanceSelectionDirectoryLabel(selectedDirectory),
-                selectedDirectory,
-                StoreLauncherFolderPath(selectedDirectory, runtimePaths)));
         }
 
         return folders;
@@ -1465,7 +1622,8 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceSelectionFolderSnapshot(
             string.IsNullOrWhiteSpace(label) ? GetInstanceSelectionDirectoryLabel(directory) : label,
             directory,
-            rawPath);
+            rawPath,
+            IsPersisted: true);
     }
 
     private static string SerializeInstanceSelectionFolders(
@@ -1482,6 +1640,26 @@ internal sealed partial class FrontendShellViewModel
                 var storedPath = StoreLauncherFolderPath(folder.Directory, runtimePaths);
                 return $"{label}>{storedPath}";
             }));
+    }
+
+    private void PersistInstanceSelectionFolders(
+        IReadOnlyList<InstanceSelectionFolderSnapshot> folders,
+        FrontendRuntimePaths runtimePaths)
+    {
+        _shellActionService.PersistSharedValue("LaunchFolders", SerializeInstanceSelectionFolders(folders, runtimePaths));
+        _shellActionService.RemoveLocalValues(["LaunchFolders"]);
+    }
+
+    private static string ResolveNextInstanceSelectionFolder(
+        IReadOnlyList<InstanceSelectionFolderSnapshot> configuredFolders,
+        FrontendRuntimePaths runtimePaths)
+    {
+        if (configuredFolders.Count > 0)
+        {
+            return configuredFolders[0].Directory;
+        }
+
+        return ResolveLauncherFolder(FrontendLauncherPathService.DefaultLauncherFolderRaw, runtimePaths);
     }
 
     private static string ResolvePickedLauncherFolderPath(string pickedFolderPath)
@@ -1703,7 +1881,7 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
     bool isSelected,
     string iconPath,
     ActionCommand command,
-    ActionCommand openFolderCommand)
+    ActionCommand? deleteCommand)
 {
     public string Title { get; } = title;
 
@@ -1715,7 +1893,11 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
 
     public ActionCommand Command { get; } = command;
 
-    public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
+    public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
+
+    public string DeleteToolTip => "从列表中移除";
+
+    public ActionCommand? DeleteCommand { get; } = deleteCommand;
 }
 
 internal sealed class InstanceSelectionShortcutEntryViewModel(
@@ -1734,21 +1916,8 @@ internal sealed class InstanceSelectionShortcutEntryViewModel(
 }
 
 internal sealed class TaskManagerEntryViewModel(
-    string title,
-    TaskState taskState,
-    string state,
-    string summary,
-    string progressText,
-    double progressValue,
-    bool hasProgress,
-    string speedText,
-    string remainingFilesText,
-    int childCount,
-    IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
-    bool canCancel,
-    bool canPause,
-    ActionCommand cancelCommand,
-    ActionCommand pauseCommand)
+    ActionCommand primaryActionCommand,
+    ActionCommand pauseCommand) : ViewModelBase
 {
     private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
     private static readonly IBrush RunningBadgeBorderBrush = Brush.Parse("#CFE0FA");
@@ -1766,43 +1935,62 @@ internal sealed class TaskManagerEntryViewModel(
     private static readonly IBrush CanceledBadgeBorderBrush = Brush.Parse("#D7DCE4");
     private static readonly IBrush CanceledBadgeForegroundBrush = Brush.Parse("#7B8796");
 
-    public string Title { get; } = title;
+    private string _title = string.Empty;
+    private TaskState _taskState;
+    private string _state = string.Empty;
+    private string _summary = string.Empty;
+    private string _activityText = string.Empty;
+    private string _progressText = string.Empty;
+    private double _progressValue;
+    private bool _hasProgress;
+    private string _speedText = string.Empty;
+    private string _remainingFilesText = string.Empty;
+    private int _childCount;
+    private IReadOnlyList<TaskManagerStageEntryViewModel> _stageEntries = [];
+    private bool _hasPrimaryAction;
+    private bool _canPause;
 
-    public TaskState TaskState { get; } = taskState;
+    public string Title => _title;
 
-    public string State { get; } = state;
+    public TaskState TaskState => _taskState;
 
-    public string Summary { get; } = summary;
+    public string State => _state;
+
+    public string Summary => _summary;
 
     public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
 
     public bool ShowSummary => HasSummary && !HasStageEntries;
 
-    public string ProgressText { get; } = progressText;
+    public string ActivityText => _activityText;
 
-    public double ProgressValue { get; } = Math.Clamp(progressValue, 0d, 1d) * 100d;
+    public bool HasActivityText => !string.IsNullOrWhiteSpace(ActivityText);
 
-    public bool HasProgress => hasProgress;
+    public string ProgressText => _progressText;
 
-    public string SpeedText { get; } = speedText;
+    public double ProgressValue => _progressValue;
 
-    public string RemainingFilesText { get; } = remainingFilesText;
+    public bool HasProgress => _hasProgress;
 
-    public int ChildCount { get; } = childCount;
+    public string SpeedText => _speedText;
+
+    public string RemainingFilesText => _remainingFilesText;
+
+    public int ChildCount => _childCount;
 
     public bool HasChildren => ChildCount > 0;
 
     public string ChildrenText => $"子任务 {ChildCount} 项";
 
-    public IReadOnlyList<TaskManagerStageEntryViewModel> StageEntries { get; } = stageEntries;
+    public IReadOnlyList<TaskManagerStageEntryViewModel> StageEntries => _stageEntries;
 
     public bool HasStageEntries => StageEntries.Count > 0;
 
-    public bool CanCancel { get; } = canCancel;
+    public bool HasPrimaryAction => _hasPrimaryAction;
 
-    public bool CanPause { get; } = canPause;
+    public bool CanPause => _canPause;
 
-    public ActionCommand CancelCommand { get; } = cancelCommand;
+    public ActionCommand PrimaryActionCommand { get; } = primaryActionCommand;
 
     public ActionCommand PauseCommand { get; } = pauseCommand;
 
@@ -1832,6 +2020,69 @@ internal sealed class TaskManagerEntryViewModel(
         TaskState.Waiting => WaitingBadgeForegroundBrush,
         _ => RunningBadgeForegroundBrush
     };
+
+    public void Update(
+        string title,
+        TaskState taskState,
+        string state,
+        string summary,
+        string activityText,
+        string progressText,
+        double progressValue,
+        bool hasProgress,
+        string speedText,
+        string remainingFilesText,
+        int childCount,
+        IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
+        bool hasPrimaryAction,
+        bool canPause)
+    {
+        SetProperty(ref _title, title, nameof(Title));
+
+        if (SetProperty(ref _taskState, taskState, nameof(TaskState)))
+        {
+            RaisePropertyChanged(nameof(StateBadgeBackgroundBrush));
+            RaisePropertyChanged(nameof(StateBadgeBorderBrush));
+            RaisePropertyChanged(nameof(StateBadgeForegroundBrush));
+        }
+
+        SetProperty(ref _state, state, nameof(State));
+
+        if (SetProperty(ref _summary, summary, nameof(Summary)))
+        {
+            RaisePropertyChanged(nameof(HasSummary));
+            RaisePropertyChanged(nameof(ShowSummary));
+        }
+
+        if (SetProperty(ref _activityText, activityText, nameof(ActivityText)))
+        {
+            RaisePropertyChanged(nameof(HasActivityText));
+        }
+
+        SetProperty(ref _progressText, progressText, nameof(ProgressText));
+        SetProperty(ref _progressValue, Math.Clamp(progressValue, 0d, 1d) * 100d, nameof(ProgressValue));
+        SetProperty(ref _hasProgress, hasProgress, nameof(HasProgress));
+        SetProperty(ref _speedText, speedText, nameof(SpeedText));
+        SetProperty(ref _remainingFilesText, remainingFilesText, nameof(RemainingFilesText));
+
+        if (SetProperty(ref _childCount, childCount, nameof(ChildCount)))
+        {
+            RaisePropertyChanged(nameof(HasChildren));
+            RaisePropertyChanged(nameof(ChildrenText));
+        }
+
+        if (SetProperty(ref _stageEntries, stageEntries, nameof(StageEntries)))
+        {
+            RaisePropertyChanged(nameof(HasStageEntries));
+            RaisePropertyChanged(nameof(ShowSummary));
+        }
+
+        SetProperty(ref _hasPrimaryAction, hasPrimaryAction, nameof(HasPrimaryAction));
+        SetProperty(ref _canPause, canPause, nameof(CanPause));
+
+        PrimaryActionCommand.NotifyCanExecuteChanged();
+        PauseCommand.NotifyCanExecuteChanged();
+    }
 }
 
 internal sealed class TaskManagerStageEntryViewModel(
@@ -1878,7 +2129,8 @@ internal sealed record DedicatedGenericRouteMetadata(
 internal sealed record InstanceSelectionFolderSnapshot(
     string Label,
     string Directory,
-    string StoredPath);
+    string StoredPath,
+    bool IsPersisted);
 
 internal sealed record InstanceSelectionSnapshot(
     string Name,

@@ -10,85 +10,41 @@
 
     <controls:PclCard ContentMargin="15,8,0,15">
       <controls:PclCard.CardContent>
-        <Grid>
-          <WrapPanel IsVisible="{Binding ShowInstanceResourceDefaultActions}">
-            <controls:PclButton
-                MinWidth="110"
-                Margin="0,7,15,0"
-                Command="{Binding OpenInstanceResourceFolderCommand}"
-                ColorType="Highlight"
-                Text="打开文件夹" />
-            <controls:PclButton
-                MinWidth="110"
-                Margin="0,7,15,0"
-                Command="{Binding InstallInstanceResourceFromFileCommand}"
-                Text="从文件安装" />
-            <controls:PclButton
-                MinWidth="110"
-                Margin="0,7,15,0"
-                Command="{Binding DownloadInstanceResourceCommand}"
-                Text="{Binding InstanceResourceDownloadButtonText}" />
-            <controls:PclButton
-                MinWidth="110"
-                Margin="0,7,15,0"
-                Command="{Binding SelectAllInstanceResourcesCommand}"
-                IsEnabled="{Binding CanSelectAllInstanceResources}"
-                Text="全选" />
-            <controls:PclButton
-                MinWidth="110"
-                Margin="0,7,15,0"
-                Command="{Binding ExportInstanceResourceInfoCommand}"
-                Text="导出信息" />
-            <controls:PclButton
-                MinWidth="110"
-                Margin="0,7,15,0"
-                Command="{Binding CheckInstanceModsCommand}"
-                IsVisible="{Binding ShowInstanceResourceCheckButton}"
-                Text="检查 Mod" />
-          </WrapPanel>
-
-          <StackPanel IsVisible="{Binding ShowInstanceResourceBatchActions}">
-            <TextBlock
-                Margin="0,7,15,0"
-                Foreground="#4B78C2"
-                FontSize="13"
-                FontWeight="SemiBold"
-                Text="{Binding InstanceResourceSelectionText}" />
-            <WrapPanel>
-              <controls:PclButton
-                  MinWidth="110"
-                  Margin="0,7,15,0"
-                  Command="{Binding EnableSelectedInstanceResourcesCommand}"
-                  IsEnabled="{Binding CanEnableSelectedInstanceResources}"
-                  IsVisible="{Binding ShowInstanceResourceToggleActions}"
-                  Text="启用" />
-              <controls:PclButton
-                  MinWidth="110"
-                  Margin="0,7,15,0"
-                  Command="{Binding DisableSelectedInstanceResourcesCommand}"
-                  IsEnabled="{Binding CanDisableSelectedInstanceResources}"
-                  IsVisible="{Binding ShowInstanceResourceToggleActions}"
-                  Text="禁用" />
-              <controls:PclButton
-                  MinWidth="110"
-                  Margin="0,7,15,0"
-                  Command="{Binding DeleteSelectedInstanceResourcesCommand}"
-                  IsEnabled="{Binding CanDeleteSelectedInstanceResources}"
-                  Text="删除" />
-              <controls:PclButton
-                  MinWidth="110"
-                  Margin="0,7,15,0"
-                  Command="{Binding SelectAllInstanceResourcesCommand}"
-                  IsEnabled="{Binding CanSelectAllInstanceResources}"
-                  Text="全选" />
-              <controls:PclButton
-                  MinWidth="110"
-                  Margin="0,7,15,0"
-                  Command="{Binding ClearInstanceResourceSelectionCommand}"
-                  Text="取消选择" />
-            </WrapPanel>
-          </StackPanel>
-        </Grid>
+        <WrapPanel>
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding OpenInstanceResourceFolderCommand}"
+              ColorType="Highlight"
+              Text="打开文件夹" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding InstallInstanceResourceFromFileCommand}"
+              Text="从文件安装" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding DownloadInstanceResourceCommand}"
+              Text="{Binding InstanceResourceDownloadButtonText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding SelectAllInstanceResourcesCommand}"
+              IsEnabled="{Binding CanSelectAllInstanceResources}"
+              Text="全选" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding ExportInstanceResourceInfoCommand}"
+              Text="导出信息" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding CheckInstanceModsCommand}"
+              IsVisible="{Binding ShowInstanceResourceCheckButton}"
+              Text="检查 Mod" />
+        </WrapPanel>
       </controls:PclCard.CardContent>
     </controls:PclCard>
   </StackPanel>

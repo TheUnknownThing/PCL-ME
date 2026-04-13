@@ -119,62 +119,6 @@ public static partial class Config
         /// 更新分支。
         /// </summary>
         [ConfigItem<UpdateChannel>("SystemUpdateChannel", UpdateChannel.Release, ConfigSource.Local)] public partial UpdateChannel UpdateChannel { get; set; }
-            
-        /// <summary>
-        /// Mirror 酱 CDK。
-        /// </summary>
-        [ConfigItem<string>("SystemMirrorChyanKey", "", ConfigSource.SharedEncrypt)] public partial string MirrorChyanKey { get; set; }
-    }
-
-    /// <summary>
-    /// 联机大厅配置。
-    /// </summary>
-    [ConfigGroup("Link")] partial class LinkConfigGroup
-    {
-        /// <summary>
-        /// 大厅用户名。
-        /// </summary>
-        [ConfigItem<string>("LinkUsername", "")] public partial string Username { get; set; }
-
-        /// <summary>
-        /// 中继方式。
-        /// </summary>
-        [ConfigItem<LinkRelayBehavior>("LinkRelayType", LinkRelayBehavior.Default)] public partial LinkRelayBehavior RelayType { get; set; }
-
-        /// <summary>
-        /// 中继服务器类型 (社区/自有)。
-        /// </summary>
-        [ConfigItem<int>("LinkServerType", 1)] public partial int ServerType { get; set; }
-
-        /// <summary>
-        /// 延迟优先模式。
-        /// </summary>
-        [ConfigItem<bool>("LinkLatencyFirstMode", true)] public partial bool UseLatencyFirstMode { get; set; }
-
-        /// <summary>
-        /// 自定义中继服务器。
-        /// </summary>
-        [ConfigItem<string>("LinkRelayServer", "")] public partial string CustomRelayServer { get; set; }
-
-        /// <summary>
-        /// 传输协议优先策略。
-        /// </summary>
-        [ConfigItem<LinkProtocolPreference>("LinkProtocolPreference", LinkProtocolPreference.Tcp)] public partial LinkProtocolPreference ProtocolPreference { get; set; }
-
-        /// <summary>
-        /// 尝试使用端口猜测打通对称性 NAT。
-        /// </summary>
-        [ConfigItem<bool>("LinkTryPunchSym", true)] public partial bool TryPunchSym { get; set; }
-
-        /// <summary>
-        /// 启用 IPv6。
-        /// </summary>
-        [ConfigItem<bool>("LinkEnableIPv6", true)] public partial bool EnableIPv6 { get; set; }
-        
-        /// <summary>
-        /// 在日志中输出 Cli 信息以用于调试。
-        /// </summary>
-        [ConfigItem<bool>("LinkEnableCliOutput", false)] public partial bool EnableCliOutput { get; set; }
     }
 
     /// <summary>
@@ -415,13 +359,11 @@ public static partial class Config
             [ConfigItem<bool>("UiHiddenSetupGameManage", false, ConfigSource.Local)] public partial bool SetupGameManage { get; set; }
             [ConfigItem<bool>("UiHiddenSetupJava", false, ConfigSource.Local)] public partial bool SetupJava { get; set; }
             [ConfigItem<bool>("UiHiddenSetupUpdate", false, ConfigSource.Local)] public partial bool SetupUpdate { get; set; }
-            [ConfigItem<bool>("UiHiddenSetupGameLink", false, ConfigSource.Local)] public partial bool SetupGameLink { get; set; } // 新增
             [ConfigItem<bool>("UiHiddenSetupAbout", false, ConfigSource.Local)] public partial bool SetupAbout { get; set; } // 修正名称
             [ConfigItem<bool>("UiHiddenSetupFeedback", false, ConfigSource.Local)] public partial bool SetupFeedback { get; set; } // 修正名称
             [ConfigItem<bool>("UiHiddenSetupLog", false, ConfigSource.Local)] public partial bool SetupLog { get; set; } // 修正名称
 
             // 子页面 工具
-            [ConfigItem<bool>("UiHiddenToolsGameLink", false, ConfigSource.Local)] public partial bool ToolsGameLink { get; set; } // 新增
             [ConfigItem<bool>("UiHiddenToolsHelp", false, ConfigSource.Local)] public partial bool ToolsHelp { get; set; } // 新增
             [ConfigItem<bool>("UiHiddenToolsTest", false, ConfigSource.Local)] public partial bool ToolsTest { get; set; } // 新增
 
@@ -484,9 +426,19 @@ public static partial class Config
         [ConfigItem<string>("LaunchAdvanceRun", "", ConfigSource.Local)] public partial string PreLaunchCommand { get; set; }
 
         /// <summary>
+        /// 启动环境变量。
+        /// </summary>
+        [ConfigItem<string>("LaunchAdvanceEnvironmentVariables", "", ConfigSource.Local)] public partial string EnvironmentVariables { get; set; }
+
+        /// <summary>
         /// 是否等待预启动指令完成。
         /// </summary>
         [ConfigItem<bool>("LaunchAdvanceRunWait", true, ConfigSource.Local)] public partial bool PreLaunchCommandWait { get; set; }
+
+        /// <summary>
+        /// Wayland 会话下强制使用 X11。
+        /// </summary>
+        [ConfigItem<bool>("LaunchAdvanceForceX11OnWayland", false, ConfigSource.Local)] public partial bool ForceX11OnWayland { get; set; }
 
         /// <summary>
         /// 禁用 Java Launch Wrapper。
@@ -583,8 +535,10 @@ public static partial class Config
         [ConfigItem<bool>("VersionAdvanceJava", false)] public partial ArgConfig<bool> IgnoreJavaCompatibility { get; }
         [ConfigItem<bool>("VersionAdvanceDisableJlw", false)] public partial ArgConfig<bool> DisableJlwObsolete { get; }
         [ConfigItem<string>("VersionAdvanceRun", "")] public partial ArgConfig<string> PreLaunchCommand { get; }
+        [ConfigItem<string>("VersionAdvanceEnvironmentVariables", "")] public partial ArgConfig<string> EnvironmentVariables { get; }
         [ConfigItem<string>("VersionAdvanceClasspathHead", "")] public partial ArgConfig<string> ClasspathHead { get; }
         [ConfigItem<bool>("VersionAdvanceRunWait", true)] public partial ArgConfig<bool> PreLaunchCommandWait { get; }
+        [ConfigItem<int>("VersionAdvanceForceX11OnWayland", 0)] public partial ArgConfig<int> ForceX11OnWayland { get; }
         [ConfigItem<bool>("VersionAdvanceDisableJLW", false)] public partial ArgConfig<bool> DisableJlw { get; }
         [ConfigItem<bool>("VersionAdvanceUseProxyV2", false)] public partial ArgConfig<bool> UseProxy { get; }
         [ConfigItem<bool>("VersionAdvanceDisableRW", false)] public partial ArgConfig<bool> DisableRw { get; }
