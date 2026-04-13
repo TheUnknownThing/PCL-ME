@@ -1,6 +1,7 @@
 ﻿Imports System.IO.Compression
 Imports System.Text.Json.Nodes
 Imports PCL.Core.App
+Imports PCL.Core.Minecraft
 Imports PCL.Core.UI
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.Exts
@@ -155,20 +156,7 @@ Public Module ModMinecraft
     Public Sub McFolderLauncherProfilesJsonCreate(Folder As String)
         Try
             If File.Exists(Folder & "launcher_profiles.json") Then Return
-            Dim ResultJson As String =
-"{
-    ""profiles"":  {
-        ""PCL"": {
-            ""icon"": ""Grass"",
-            ""name"": ""PCL"",
-            ""lastVersionId"": ""latest-release"",
-            ""type"": ""latest-release"",
-            ""lastUsed"": """ & Date.Now.ToString("yyyy'-'MM'-'dd") & "T" & Date.Now.ToString("HH':'mm':'ss") & ".0000Z""
-        }
-    },
-    ""selectedProfile"": ""PCL"",
-    ""clientToken"": ""23323323323323323323323323323333""
-}"
+            Dim ResultJson As String = MinecraftLauncherProfilesFileService.CreateDefaultProfilesJson(Date.Now)
             WriteFile(Folder & "launcher_profiles.json", ResultJson, Encoding:=Encoding.GetEncoding("GB18030"))
             Log("[Minecraft] 已创建 launcher_profiles.json：" & Folder)
         Catch ex As Exception

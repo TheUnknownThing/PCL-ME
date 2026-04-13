@@ -1,6 +1,7 @@
 ﻿Imports PCL.Core.App
 Imports PCL.Core.App.Essentials
 Imports PCL.Core.App.IoC
+Imports PCL.Core.Logging
 
 Module Program
 
@@ -18,6 +19,10 @@ Module Program
 #End If
         Console.WriteLine("Welcome to Plain Craft Launcher 2 Community Edition!")
         'Preloading tasks
+        LogRuntimeHooks.FatalDialogPresenter =
+            Sub(message, caption)
+                MsgBox(message, MsgBoxStyle.Critical, caption)
+            End Sub
         ApplicationService.Loading =
             Function()
                 Dim app As New Application()

@@ -1,6 +1,4 @@
-﻿using System.Security.AccessControl;
-
-namespace PCL.Core.IO;
+﻿namespace PCL.Core.IO;
 
 using System;
 using System.Collections.Generic;
@@ -11,6 +9,8 @@ using System.Threading.Tasks;
 using Logging;
 
 public static class Directories {
+    private static readonly IDirectoryPermissionService _permissionService = DirectoryPermissionServiceProvider.Current;
+
     /// <summary>
     /// 异步检查是否拥有对指定文件夹的读写权限。
     /// 如果文件夹不存在或没有权限，返回 false，不修改文件系统。
@@ -34,41 +34,7 @@ public static class Directories {
                 return false;
             }
 
-            // 检查目录访问权限
-            var directoryInfo = new DirectoryInfo(path);
-            var security = await Task.Run(() => directoryInfo.GetAccessControl(), cancellationToken);
-            var rules = security.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
-
-            // 检查当前用户是否有读写权限，优先考虑拒绝规则
-            var currentUser = System.Security.Principal.WindowsIdentity.GetCurrent();
-            var principal = new System.Security.Principal.WindowsPrincipal(currentUser);
-
-            var isDenied = false;
-            var isAllowed = false;
-
-            foreach (FileSystemAccessRule rule in rules) {
-                if (!rule.FileSystemRights.HasFlag(FileSystemRights.Write))
-                    continue;
-
-                // 检查规则是否适用于当前用户或其组
-                if (principal.IsInRole(rule.IdentityReference.Value)) {
-                    if (rule.AccessControlType == AccessControlType.Deny) {
-                        isDenied = true;
-                        break; // 拒绝优先，直接返回
-                    }
-                    if (rule.AccessControlType == AccessControlType.Allow) {
-                        isAllowed = true;
-                    }
-                }
-            }
-
-            if (isDenied || !isAllowed) {
-                return false;
-            }
-
-            // 尝试枚举目录内容以确认实际访问能力
-            await Task.Run(() => Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly).Any(), cancellationToken);
-            return true;
+            return await _permissionService.HasWriteAccessAsync(path, cancellationToken).ConfigureAwait(false);
         } catch (OperationCanceledException) {
             LogWrapper.Warn("权限检查被取消");
             return false;
@@ -102,20 +68,10 @@ public static class Directories {
         }
 
         try {
-            var directoryInfo = new DirectoryInfo(path);
-            var security = await Task.Run(() => directoryInfo.GetAccessControl(), cancellationToken);
-            var rules = security.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
-
-            var hasAccess = rules.Cast<FileSystemAccessRule>()
-                .Any(rule => rule.FileSystemRights.HasFlag(FileSystemRights.Write) &&
-                             rule.AccessControlType == AccessControlType.Allow);
-
+            var hasAccess = await _permissionService.HasWriteAccessAsync(path, cancellationToken).ConfigureAwait(false);
             if (!hasAccess) {
                 throw new UnauthorizedAccessException($"没有对文件夹 {path} 的写权限");
             }
-
-            // 确认实际访问能力
-            await Task.Run(() => Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly).Any(), cancellationToken);
         } catch (UnauthorizedAccessException) {
             throw;
         } catch (OperationCanceledException) {

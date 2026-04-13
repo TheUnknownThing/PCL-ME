@@ -1,8 +1,10 @@
 ﻿Imports PCL.Core.Logging
+Imports PCL.Core.Minecraft
 Imports PCL.Core.UI
 Imports PCL.Core.Utils
 Imports PCL.Core.Utils.Codecs
 Imports PCL.Core.Utils.Exts
+Imports PCL.Core.Utils.OS
 
 Public Class CrashAnalyzer
 
@@ -882,6 +884,16 @@ NextStack:
 
     '4：根据原因输出信息
     Private OutputFiles As New List(Of String)
+    Private Sub OpenDirectLogFile()
+        If DirectFile Is Nothing Then Return
+        If File.Exists(DirectFile.Value.Key) Then
+            ShellOnly(DirectFile.Value.Key)
+        Else
+            Dim FilePath As String = PathTemp & "Crash.txt"
+            WriteFile(FilePath, Join(DirectFile.Value.Value, vbCrLf))
+            ShellOnly(FilePath)
+        End If
+    End Sub
     ''' <summary>
     ''' 弹出崩溃弹窗，并指导导出崩溃报告。
     ''' </summary>
@@ -889,89 +901,48 @@ NextStack:
         '弹窗提示
         FrmMain.ShowWindowToTop()
         Dim resultText = GetAnalyzeResult(IsHandAnalyze)
-        '确定是否是加载器版本不兼容问题
-        Dim isModLoaderIncompatible = _version IsNot Nothing AndAlso resultText.StartsWith("Mod 加载器版本与 Mod 不兼容")
-        Select Case MyMsgBox(resultText, If(IsHandAnalyze, "错误报告分析结果", "Minecraft 出现错误"),
-            "确定", 
-            If(IsHandAnalyze OrElse DirectFile Is Nothing, "", If(isModLoaderIncompatible, "前往修改", "查看日志")),
-            If(IsHandAnalyze, "", "导出错误报告"),
-            Button2Action:=If(IsHandAnalyze OrElse DirectFile Is Nothing OrElse isModLoaderIncompatible, Nothing,
-            Sub()
-                '弹窗选择：查看日志
-                If File.Exists(DirectFile.Value.Key) Then
-                    ShellOnly(DirectFile.Value.Key)
-                Else
-                    Dim FilePath As String = PathTemp & "Crash.txt"
-                    WriteFile(FilePath, Join(DirectFile.Value.Value, vbCrLf))
-                    ShellOnly(FilePath)
-                End If
-            End Sub))
-            Case 2
+        Dim prompt = MinecraftCrashWorkflowService.BuildOutputPrompt(
+            New MinecraftCrashOutputPromptRequest(
+                resultText,
+                IsHandAnalyze,
+                DirectFile IsNot Nothing,
+                _version IsNot Nothing))
+        Dim selectedButton = ModCrashPromptShell.RunOutputPrompt(prompt, AddressOf OpenDirectLogFile)
+        If selectedButton Is Nothing OrElse Not selectedButton.ClosesPrompt Then Return
+
+        Select Case selectedButton.Action
+            Case MinecraftCrashOutputPromptActionKind.OpenInstanceSettings
                 '弹窗选择：前往修改
                 PageInstanceLeft.Instance = _version
                 RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.VersionInstall))
-            Case 3
+            Case MinecraftCrashOutputPromptActionKind.ExportReport
                 '弹窗选择：导出错误报告
                 Dim FileAddress As String = Nothing
                 Try
-                    '获取文件路径
-                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", "错误报告-" & Date.Now.ToString("G").Replace("/", "-").Replace(":", ".").Replace(" ", "_") & ".zip", "Minecraft 错误报告(*.zip)|*.zip"))
-                    If String.IsNullOrEmpty(FileAddress) Then Return
-                    Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
-                    If File.Exists(FileAddress) Then File.Delete(FileAddress)
                     '输出诊断信息
                     FeedbackInfo()
-                    '复制文件
-                    If ExtraFiles IsNot Nothing Then OutputFiles.AddRange(ExtraFiles)
-                    For Each OutputFile In OutputFiles
-                        Dim FileName As String = GetFileNameFromPath(OutputFile)
-                        Dim FileEncoding As Encoding = Nothing
-                        Select Case FileName
-                            Case "LatestLaunch.bat"
-                                FileName = "启动脚本.bat"
-                            Case "RawOutput.log"
-                                FileName = "游戏崩溃前的输出.txt"
-                                FileEncoding = Encoding.UTF8
-                        End Select
-                        If LogWrapper.CurrentLogger.CurrentLogFiles.Last().AfterLast("\") = FileName Then
-                            FileName = "PCL 启动器日志.txt"
-                            FileEncoding = Encoding.UTF8
-                        End If
-                        If File.Exists(OutputFile) Then
-                            If FileEncoding Is Nothing Then FileEncoding = EncodingDetector.DetectEncoding(ReadFileBytes(OutputFile))
-                            Dim FileContent As String = ReadFile(OutputFile, FileEncoding)
-                            FileContent = FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*"))
-                            FileContent = FilterUserName(FileContent, "*")
-                            WriteFile(TempFolder & "Report\" & FileName, FileContent, Encoding:=FileEncoding)
-                            Log($"[Crash] 导出文件：{FileName}，编码：{FileEncoding.HeaderName}")
-                        End If
-                    Next
-                    '输出环境与启动信息
-                    Dim EnvInfo As String = Nothing
-                    Dim McLauncherLog As String = Nothing
-                    McLauncherLog = ReadFile(TempFolder & "Report\PCL 启动器日志.txt").AfterLast("[Launch] ~ 基础参数 ~").BeforeFirst("开始 Minecraft 日志监控")
-                    Dim LaunchScript As String = ReadFile(TempFolder & "Report\启动脚本.bat")
-                    EnvInfo += $"PCL CE 版本：{VersionBaseName} {vbCrLf}"
-                    EnvInfo += $"识别码：{UniqueAddress}{vbCrLf}"
-                    EnvInfo += $"{vbCrLf}- 档案信息 -{vbCrLf}"
-                    EnvInfo += $"档案名称：{McLauncherLog.Between("玩家用户名：", "[").TrimEnd("[").Trim()} (验证方式：{McLauncherLog.Between("验证方式：", "[").TrimEnd("[").Trim()}){vbCrLf}"
-                    EnvInfo += $"{vbCrLf}- 实例信息 -{vbCrLf}"
-                    EnvInfo += $"选定的 Java 虚拟机：{McLauncherLog.Between("Java 信息：", "[").TrimEnd("[").Trim()}{vbCrLf}"
-                    EnvInfo += $"Log4j2 NoLookups：{Not LaunchScript.ContainsF("-Dlog4j2.formatMsgNoLookups=false")}{vbCrLf}"
-                    EnvInfo += $"MC 文件夹：{McLauncherLog.Between("MC 文件夹：", "[").TrimEnd("[").Trim()}{vbCrLf}"
-                    EnvInfo += $"{vbCrLf}- 环境信息 -{vbCrLf}"
-                    EnvInfo += $"操作系统：{OSInfo}（64 位：{Not Is32BitSystem}, ARM64: {IsArm64System}）{vbCrLf}"
-                    EnvInfo += $"CPU：{CPUName}{vbCrLf}"
-                    EnvInfo += $"内存分配 (分配的内存 / 已安装物理内存)：{McLauncherLog.Between("分配的内存：", "[").TrimEnd("[").Trim()} / {Math.Round(SystemMemorySize / 1024, 2)} GB ({SystemMemorySize} MB){vbCrLf}"
-                    For Each GPU In GPUs
-                        EnvInfo += $"显卡 {GPUs.IndexOf(GPU)}：{GPU.Name} ({If(GPU.Memory >= 4095, ">= " & GPU.Memory, GPU.Memory)} MB, {GPU.DriverVersion})"
-                        EnvInfo += vbCrLf
-                    Next
-                    File.CreateText(TempFolder & "Report\环境与启动信息.txt").Close()
-                    WriteFile(TempFolder & "Report\环境与启动信息.txt", EnvInfo, Encoding:=Encoding.UTF8)
-                    '导出报告
-                    Compression.ZipFile.CreateFromDirectory(TempFolder & "Report\", FileAddress)
-                    DeleteDirectory(TempFolder & "Report\")
+                    Dim currentLauncherLogPath As String = Nothing
+                    If LogWrapper.CurrentLogger.CurrentLogFiles.Any Then currentLauncherLogPath = LogWrapper.CurrentLogger.CurrentLogFiles.Last()
+                    Dim exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(
+                        New MinecraftCrashExportPlanRequest(
+                            Date.Now,
+                            TempFolder & "Report\",
+                            VersionBaseName,
+                            UniqueAddress,
+                            OutputFiles,
+                            ExtraFiles,
+                            currentLauncherLogPath,
+                            SystemEnvironmentInfo.GetSnapshot(),
+                            McLoginLoader.Output.AccessToken,
+                            McLoginLoader.Output.Uuid,
+                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
+                    '获取文件路径
+                    RunInUiWait(Sub() FileAddress = SystemDialogs.SelectSaveFile("选择保存位置", exportPlan.SuggestedArchiveName, "Minecraft 错误报告(*.zip)|*.zip"))
+                    If String.IsNullOrEmpty(FileAddress) Then Return
+                    MinecraftCrashExportArchiveService.CreateArchive(
+                        New MinecraftCrashExportArchiveRequest(
+                            FileAddress,
+                            exportPlan.ExportRequest))
                     Hint("错误报告已导出！", HintType.Finish)
                 Catch ex As Exception
                     Log(ex, "导出错误报告失败", LogLevel.Feedback)

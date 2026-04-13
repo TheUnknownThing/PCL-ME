@@ -9,4 +9,6 @@ using System.Windows.Markup;
 [assembly:XmlnsDefinition("https://ce.pclc.cc/core/utils/validate", "PCL.Core.Utils.Validate")]
 [assembly:XmlnsPrefix("https://ce.pclc.cc/core/utils/validate", "val")]
 
+[assembly: InternalsVisibleTo("PCL.Core.Test")]
+
 [assembly: DisableRuntimeMarshalling]

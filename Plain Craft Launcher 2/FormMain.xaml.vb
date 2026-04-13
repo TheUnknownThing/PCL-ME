@@ -3,6 +3,7 @@ Imports System.Runtime.InteropServices
 Imports System.Windows.Interop
 Imports System.Windows.Media.Effects
 Imports PCL.Core.App
+Imports PCL.Core.App.Essentials
 Imports PCL.Core.App.IoC
 Imports PCL.Core.Logging
 Imports PCL.Core.UI
@@ -12,6 +13,8 @@ Imports PCL.Core.Utils.OS
 
 Public Class FormMain
 
+    Private ReadOnly _startupWorkflowPlan As LauncherMainWindowStartupWorkflowPlan
+
 #Region "基础"
 
     '更新日志
@@ -19,15 +22,12 @@ Public Class FormMain
         RunInNewThread(
             Sub()
                 Dim ChangelogFile = $"{PathTemp}CEUpdateLog.md"
-                Dim Changelog As String
+                Dim changelog As String = Nothing
                 If File.Exists(ChangelogFile) Then
-                    Changelog = ReadFile(ChangelogFile)
-                Else
-                    Changelog = "欢迎使用呀~"
+                    changelog = ReadFile(ChangelogFile)
                 End If
-                If MyMsgBoxMarkdown(Changelog, "PCL CE 已更新至 " & VersionBranchName & " " & VersionBaseName, "确定", "完整更新日志") = 2 Then
-                    OpenWebsite("https://github.com/PCL-Community/PCL2-CE/releases")
-                End If
+                Dim prompt = LauncherUpdateLogService.BuildPrompt(New LauncherUpdateLogRequest(changelog, VersionBranchName, VersionBaseName))
+                ModUpdateLogShell.ShowUpdateLog(prompt)
             End Sub, "UpdateLog Output")
     End Sub
 
@@ -53,18 +53,23 @@ Public Class FormMain
             '触发降级
             DowngradeSub(LastVersion)
         End If
+        _startupWorkflowPlan = LauncherMainWindowStartupWorkflowService.BuildPlan(New LauncherMainWindowStartupWorkflowRequest(
+            Not Setup.IsUnset("LaunchArgumentIndieV2"),
+            Not Setup.IsUnset("LaunchArgumentIndie"),
+            If(Setup.IsUnset("LaunchArgumentIndie"), 0, CInt(Setup.Get("LaunchArgumentIndie"))),
+            Not Setup.IsUnset("WindowHeight"),
+            CInt(Setup.GetDefault("LaunchArgumentIndie")),
+            CInt(Setup.GetDefault("LaunchArgumentIndieV2")),
+            GetStartupSpecialBuildKind(),
+            Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT") IsNot Nothing,
+            Setup.Get("SystemEula"),
+            Config.System.TelemetryConfig.IsDefault(),
+            Setup.Get("SystemCount")))
         '版本隔离设置迁移
-        If Setup.IsUnset("LaunchArgumentIndieV2") Then
-            If Not Setup.IsUnset("LaunchArgumentIndie") Then
-                Log("[Start] 从老 PCL 迁移版本隔离")
-                Setup.Set("LaunchArgumentIndieV2", Setup.Get("LaunchArgumentIndie"))
-            ElseIf Not Setup.IsUnset("WindowHeight") Then
-                Log("[Start] 从老 PCL 升级，但此前未调整版本隔离，使用老的版本隔离默认值")
-                Setup.Set("LaunchArgumentIndieV2", Setup.GetDefault("LaunchArgumentIndie"))
-            Else
-                Log("[Start] 全新的 PCL，使用新的版本隔离默认值")
-                Setup.Set("LaunchArgumentIndieV2", Setup.GetDefault("LaunchArgumentIndieV2"))
-            End If
+        Dim versionIsolationMigration = _startupWorkflowPlan.VersionIsolationMigration
+        If versionIsolationMigration.ShouldStoreVersionIsolationV2 Then
+            Setup.Set("LaunchArgumentIndieV2", versionIsolationMigration.VersionIsolationV2Value)
+            Log(versionIsolationMigration.LogMessage)
         End If
         Setup.Load("UiLauncherTheme")
         '注册拖拽事件（不能直接加 Handles，否则没用；#6340）
@@ -190,54 +195,9 @@ Public Class FormMain
         RunInNewThread(
             Sub()
                 Try
-                    '特殊版本提示
-#If DEBUG Or DEBUGCI Then
-                    If Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT") Is Nothing Then
-#If DEBUG Then
-                        Const hint = "当前运行的 PCL 社区版为 Debug 版本。" & vbCrLf &
-                                     "该版本仅适合开发者调试运行，可能会有严重的性能下降以及各种奇怪的网络问题。" & vbCrLf &
-                                     vbCrLf &
-                                     "非开发者用户使用该版本造成的一切问题均不被社区支持，相关 issue 可能会被直接关闭。" & vbCrLf &
-                                     "除非您是开发者，否则请立即删除该版本，并下载最新稳定版使用。"
-#Else
-                        Const hint = "当前运行的 PCL 社区版为 CI 自动构建版本。" & vbCrLf &
-                                     "该版本包含最新的漏洞修复、优化和新特性，但性能和稳定性较差，不适合日常使用和制作整合包。" & vbCrLf &
-                                     vbCrLf &
-                                     "除非社区开发者要求或您自己想要这么做，否则请下载最新稳定版使用。"
-#End If
-                        MyMsgBox($"{hint}{vbCrLf}{vbCrLf}可以添加 PCL_DISABLE_DEBUG_HINT 环境变量 (任意值) 来隐藏这个提示。",
-                                 "特殊版本提示", "我清楚我在做什么", "打开最新版下载页并退出", IsWarn:=True,
-                                 Button2Action:=Sub()
-                                                    OpenWebsite("https://github.com/PCL-Community/PCL2-CE/releases/latest")
-                                                    EndProgram(False)
-                                                End Sub)
-                    End If
-#End If
-                    'EULA 提示
-                    If Not Setup.Get("SystemEula") Then
-                        Select Case MyMsgBox("在使用 PCL 前，请同意 PCL 的用户协议与免责声明。", "协议授权", "同意", "拒绝", "查看用户协议与免责声明",
-                                Button3Action:=Sub() OpenWebsite("https://shimo.im/docs/rGrd8pY8xWkt6ryW"))
-                            Case 1
-                                Setup.Set("SystemEula", True)
-                            Case 2
-                                EndProgram(False)
-                        End Select
-                    End If
-                    '遥测提示
-                    If Config.System.TelemetryConfig.IsDefault() Then
-                        Dim selection = MyMsgBox("启用遥测数据收集后，启动器将会收集并上报错误与设备环境信息，这可以帮助开发者修复潜在的问题、更好的进行规划和开发。" & vbCrLf &
-                                             "若启用此功能，我们将会收集以下信息：" & vbCrLf & vbCrLf &
-                                             "- 启动器内出现的错误" & vbCrLf &
-                                             "- 启动器版本信息与识别码" & vbCrLf &
-                                             "- Windows 系统版本与架构" & vbCrLf &
-                                             "- 已安装的物理内存大小" & vbCrLf &
-                                             "- NAT 与 IPv6 支持情况" & vbCrLf &
-                                             "- 是否使用过官方版 PCL、HMCL 或 BakaXL" & vbCrLf & vbCrLf &
-                                             "这些数据均不与你关联，我们也绝不会向第三方出售数据。" & vbCrLf &
-                                             "如果不希望启用遥测，可以选择拒绝。这不会影响其他功能的正常使用，但可能会影响开发者修复潜在 Bug。" & vbCrLf &
-                                             "你可以随时在启动器设置中调整这项设置。", "启用遥测数据收集", "同意", "拒绝")
-                        Config.System.TelemetryConfig.SetValue(selection = 1, forceNewValue:=True)
-                    End If
+                    For Each prompt In _startupWorkflowPlan.Consent.Prompts
+                        If Not ModStartupPromptShell.RunStartupPrompt(prompt, Sub() EndProgram(False)) Then Exit For
+                    Next
                 Catch ex As Exception
                     Log(ex, "初始弹窗提示运行失败", LogLevel.Feedback)
                 End Try
@@ -254,99 +214,107 @@ Public Class FormMain
             Catch ex As Exception
                 Log(ex, "初始化加载池运行失败", LogLevel.Feedback)
             End Try
-            GetSystemInfo()
         End Sub, "Start Loader", ThreadPriority.BelowNormal)
 
         Log("[Start] 第三阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
     End Sub
+
+    Private Shared Function GetStartupSpecialBuildKind() As LauncherStartupSpecialBuildKind
+#If DEBUG Then
+        Return LauncherStartupSpecialBuildKind.Debug
+#ElseIf DEBUGCI Then
+        Return LauncherStartupSpecialBuildKind.Ci
+#Else
+        Return LauncherStartupSpecialBuildKind.None
+#End If
+    End Function
+
     '根据打开次数触发的事件
     Private Sub RunCountSub()
-        Setup.Set("SystemCount", Setup.Get("SystemCount") + 1)
-        If Setup.Get("SystemCount") >= 99 Then
-            If ThemeUnlock(6, False) Then
-                MyMsgBox("你已经打开了 99 次 PCL 社区版啦，感谢你长期以来的支持！" & vbCrLf &
-                         "隐藏主题 铁杆粉 未解锁！社区版不包含隐藏主题！", "提示")
-            End If
+        Dim milestoneResult = _startupWorkflowPlan.Milestone
+        Setup.Set("SystemCount", milestoneResult.UpdatedCount)
+        If milestoneResult.ShouldAttemptUnlockHiddenTheme AndAlso ThemeUnlock(6, False) Then
+            MyMsgBox(milestoneResult.HiddenThemeNotice.Message, milestoneResult.HiddenThemeNotice.Title)
         End If
     End Sub
     '升级与降级事件
     Private Sub UpgradeSub(LastVersionCode As Integer)
         Log("[Start] 版本号从 " & LastVersionCode & " 升高到 " & VersionCode)
-        Setup.Set("SystemLastVersionReg", VersionCode)
-        '检查有记录的最高版本号
-        Dim LowerVersionCode As Integer
-#If BETA Then
-        LowerVersionCode = Setup.Get("SystemHighestBetaVersionReg")
-        If LowerVersionCode < VersionCode Then
-            Setup.Set("SystemHighestBetaVersionReg", VersionCode)
-            Log("[Start] 最高版本号从 " & LowerVersionCode & " 升高到 " & VersionCode)
-        End If
-#Else
-        LowerVersionCode = Setup.Get("SystemHighestAlphaVersionReg")
-        If LowerVersionCode < VersionCode Then
-            Setup.Set("SystemHighestAlphaVersionReg", VersionCode)
-            Log("[Start] 最高版本号从 " & LowerVersionCode & " 升高到 " & VersionCode)
-        End If
-#End If
-        '被移除的窗口设置选项
-        If Setup.Get("LaunchArgumentWindowType") = 5 Then Setup.Set("LaunchArgumentWindowType", 1)
-        '修改主题设置项名称
-        If LowerVersionCode <= 207 Then
-            Dim UnlockedTheme As New List(Of String) From {"2"}
-            UnlockedTheme.AddRange(New List(Of String)(Setup.Get("UiLauncherThemeHide").ToString.Split("|")))
-            UnlockedTheme.AddRange(New List(Of String)(Setup.Get("UiLauncherThemeHide2").ToString.Split("|")))
-            Setup.Set("UiLauncherThemeHide2", Join(UnlockedTheme.Distinct.ToList, "|"))
-        End If
-        '重置欧皇彩
-        If LastVersionCode <= 115 AndAlso Setup.Get("UiLauncherThemeHide2").ToString.Split("|").Contains("13") Then
-            Dim UnlockedTheme As New List(Of String)(Setup.Get("UiLauncherThemeHide2").ToString.Split("|"))
-            UnlockedTheme.Remove("13")
-            Setup.Set("UiLauncherThemeHide2", Join(UnlockedTheme, "|"))
-            MyMsgBox("由于新版 PCL 修改了欧皇彩的解锁方式，你需要重新解锁欧皇彩。" & vbCrLf &
-                     "多谢各位的理解啦！", "重新解锁提醒")
-        End If
-        '重置滑稽彩
-        If LastVersionCode <= 152 AndAlso Setup.Get("UiLauncherThemeHide2").ToString.Split("|").Contains("12") Then
-            Dim UnlockedTheme As New List(Of String)(Setup.Get("UiLauncherThemeHide2").ToString.Split("|"))
-            UnlockedTheme.Remove("12")
-            Setup.Set("UiLauncherThemeHide2", Join(UnlockedTheme, "|"))
-            MyMsgBox("由于新版 PCL 修改了滑稽彩的解锁方式，你需要重新解锁滑稽彩。" & vbCrLf &
-                     "多谢各位的理解啦！", "重新解锁提醒")
-        End If
-        '移动自定义皮肤
-        If LastVersionCode <= 161 AndAlso File.Exists(ExePath & "PCL\CustomSkin.png") AndAlso Not File.Exists(PathAppdata & "CustomSkin.png") Then
-            CopyFile(ExePath & "PCL\CustomSkin.png", PathAppdata & "CustomSkin.png")
-            Log("[Start] 已移动离线自定义皮肤 (162)")
-        End If
-        If LastVersionCode <= 263 AndAlso File.Exists(PathTemp & "CustomSkin.png") AndAlso Not File.Exists(PathAppdata & "CustomSkin.png") Then
-            CopyFile(PathTemp & "CustomSkin.png", PathAppdata & "CustomSkin.png")
-            Log("[Start] 已移动离线自定义皮肤 (264)")
-        End If
-        '解除帮助页面的隐藏
-        If LastVersionCode <= 205 Then
-            Config.Preference.Hide.SetupAbout = False
-            Log("[Start] 已解除帮助页面的隐藏")
-        End If
-        '迁移旧版用户档案
-        If LastVersionCode <= 368 Then
-            RunInNewThread(Sub() MigrateOldProfile())
-        End If
-        'Mod 命名设置迁移
-        If Not Setup.IsUnset("ToolDownloadTranslate") AndAlso Setup.IsUnset("ToolDownloadTranslateV2") Then
-            Setup.Set("ToolDownloadTranslateV2", Setup.Get("ToolDownloadTranslate") + 1)
-            Log("[Start] 已从老版本迁移 Mod 命名设置")
-        End If
-        '更新后展示社区版提示
-        ShowCEAnnounce()
-        '输出更新日志
-        If LastVersionCode <= 0 Then Return
-        If LowerVersionCode >= VersionCode Then Return
-        ShowUpdateLog()
+        ApplyVersionTransition(LastVersionCode)
     End Sub
     Private Sub DowngradeSub(LastVersionCode As Integer)
         Log("[Start] 版本号从 " & LastVersionCode & " 降低到 " & VersionCode)
-        Setup.Set("SystemLastVersionReg", VersionCode)
+        ApplyVersionTransition(LastVersionCode)
     End Sub
+
+    Private Sub ApplyVersionTransition(lastVersionCode As Integer)
+        Dim workflowPlan = LauncherVersionTransitionWorkflowService.BuildPlan(New LauncherVersionTransitionWorkflowRequest(
+            New LauncherVersionTransitionRequest(
+                lastVersionCode,
+                VersionCode,
+                IsBetaBuild(),
+                GetHighestRecordedVersionCode(),
+                CInt(Setup.Get("LaunchArgumentWindowType")),
+                If(Setup.IsUnset("UiLauncherThemeHide"), Nothing, Setup.Get("UiLauncherThemeHide").ToString()),
+                If(Setup.IsUnset("UiLauncherThemeHide2"), Nothing, Setup.Get("UiLauncherThemeHide2").ToString()),
+                File.Exists(ExePath & "PCL\CustomSkin.png"),
+                File.Exists(PathTemp & "CustomSkin.png"),
+                File.Exists(PathAppdata & "CustomSkin.png"),
+                Not Setup.IsUnset("ToolDownloadTranslate"),
+                Not Setup.IsUnset("ToolDownloadTranslateV2"),
+                If(Setup.IsUnset("ToolDownloadTranslate"), 0, CInt(Setup.Get("ToolDownloadTranslate")))),
+            ExePath & "PCL\CustomSkin.png",
+            PathTemp & "CustomSkin.png",
+            PathAppdata & "CustomSkin.png"))
+
+        For Each settingWrite In workflowPlan.SettingWrites
+            Setup.Set(settingWrite.Key, settingWrite.Value)
+        Next
+        If workflowPlan.HighestVersionLogMessage IsNot Nothing Then
+            Log(workflowPlan.HighestVersionLogMessage)
+        End If
+        For Each notice In workflowPlan.Transition.Notices
+            MyMsgBox(notice.Message, notice.Title)
+        Next
+
+        If workflowPlan.CustomSkinMigration IsNot Nothing Then
+            CopyFile(workflowPlan.CustomSkinMigration.SourcePath, workflowPlan.CustomSkinMigration.TargetPath)
+            Log(workflowPlan.CustomSkinMigration.LogMessage)
+        End If
+
+        If workflowPlan.Transition.ShouldUnhideSetupAbout Then
+            Config.Preference.Hide.SetupAbout = False
+            Log(workflowPlan.SetupAboutUnhideLogMessage)
+        End If
+        If workflowPlan.Transition.ShouldMigrateOldProfile Then
+            RunInNewThread(Sub() MigrateOldProfile())
+        End If
+        If workflowPlan.ModNameMigrationLogMessage IsNot Nothing Then
+            Log(workflowPlan.ModNameMigrationLogMessage)
+        End If
+        If workflowPlan.Transition.ShouldShowCommunityAnnouncement Then
+            ShowCEAnnounce()
+        End If
+        If workflowPlan.Transition.ShouldShowUpdateLog Then
+            ShowUpdateLog()
+        End If
+    End Sub
+
+    Private Shared Function GetHighestRecordedVersionCode() As Integer
+#If BETA Then
+        Return Setup.Get("SystemHighestBetaVersionReg")
+#Else
+        Return Setup.Get("SystemHighestAlphaVersionReg")
+#End If
+    End Function
+
+    Private Shared Function IsBetaBuild() As Boolean
+#If BETA Then
+        Return True
+#Else
+        Return False
+#End If
+    End Function
 
 #End Region
 

@@ -92,9 +92,20 @@
         <Resource Include="UI\Assets\*" />
         <Resource Include="UI\Assets\Shaders\*.ps" />
     </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="App\ConfigEnums.cs" />
+        <Compile Remove="App\Essentials\Launcher*.cs" />
+        <Compile Remove="Minecraft\Launch\*.cs" />
+        <Compile Remove="Minecraft\MinecraftCrash*.cs" />
+        <Compile Remove="Minecraft\MinecraftLauncherProfilesFileService.cs" />
+        <Compile Remove="Utils\OS/SystemEnvironmentSnapshot.cs" />
+        <Compile Remove="Utils\OS/SystemGpuInfo.cs" />
+    </ItemGroup>
     <!-- 项目自定义源生成器 -->
     <ItemGroup>
         <AdditionalFiles Include="App\IoC\LifecycleState.cs" />
+        <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
+        <ProjectReference Include="..\PCL.Core.Foundation\PCL.Core.Foundation.csproj" />
         <ProjectReference Include="..\PCL.Core.SourceGenerators\PCL.Core.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 </Project>

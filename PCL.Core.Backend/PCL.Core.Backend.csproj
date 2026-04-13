@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>PCL.Core.Backend</AssemblyName>
+    <RootNamespace>PCL.Core</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../PCL.Core/App/ConfigEnums.cs" Link="App/ConfigEnums.cs" />
+    <Compile Include="../PCL.Core/App/Essentials/Launcher*.cs" Link="App/Essentials/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../PCL.Core/Minecraft/Launch/*.cs" Link="Minecraft/Launch/%(Filename)%(Extension)" />
+    <Compile Include="../PCL.Core/Minecraft/MinecraftCrash*.cs" Link="Minecraft/%(Filename)%(Extension)" />
+    <Compile Include="../PCL.Core/Minecraft/MinecraftLauncherProfilesFileService.cs" Link="Minecraft/MinecraftLauncherProfilesFileService.cs" />
+    <Compile Include="../PCL.Core/Utils/OS/SystemEnvironmentSnapshot.cs" Link="Utils/OS/SystemEnvironmentSnapshot.cs" />
+    <Compile Include="../PCL.Core/Utils/OS/SystemGpuInfo.cs" Link="Utils/OS/SystemGpuInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PCL.Core.Foundation\PCL.Core.Foundation.csproj" />
+  </ItemGroup>
+</Project>

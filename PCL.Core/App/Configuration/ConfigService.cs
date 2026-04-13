@@ -248,6 +248,7 @@ public sealed partial class ConfigService
     private static void _Start()
     {
         if (IsInitialized) return;
+        ConfigStorageRuntimeHooks.Install();
 #if TRACE
         var timer = new Stopwatch();
         timer.Start();

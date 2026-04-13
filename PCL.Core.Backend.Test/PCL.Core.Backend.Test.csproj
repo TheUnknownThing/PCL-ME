@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.1.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../PCL.Core.Test/App/Launcher*.cs" Link="App/%(Filename)%(Extension)" />
+    <Compile Include="../PCL.Core.Test/Minecraft/Minecraft*.cs" Link="Minecraft/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="../PCL.Core.Test/App/SystemEnvironmentInfoTest.cs" />
+    <Compile Remove="../PCL.Core.Test/App/LauncherStartupBootstrapServiceTest.cs" />
+    <Compile Remove="../PCL.Core.Test/Minecraft/MinecraftLaunchRuntimeServiceTest.cs" />
+    <Compile Remove="../PCL.Core.Test/Minecraft/MinecraftLaunchWatcherWorkflowServiceTest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
+    <ProjectReference Include="..\PCL.Core.Foundation\PCL.Core.Foundation.csproj" />
+  </ItemGroup>
+</Project>

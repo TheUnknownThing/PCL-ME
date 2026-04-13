@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using PCL.Core.Utils.OS;
 
 namespace PCL.Core.App.Tools;
 
@@ -17,8 +18,9 @@ public sealed partial class DependencyCheckService
     private static async Task _Start()
     {
         Context.Info("开始环境检查……");
+        var runtime = SystemRuntimeInfoSourceProvider.Current.GetSnapshot();
 
-        if (RuntimeInformation.OSArchitecture.Equals(Architecture.Arm64))
+        if (runtime.OsArchitecture.Equals(Architecture.Arm64))
             await _CheckAndAsk("Microsoft.D3DMappingLayers", "OpenGL 兼容包", "9nqpsl29bfff")
                 .ConfigureAwait(false);
 
