@@ -1,3 +1,14 @@
+PCL-ME Repository License Notice
+
+This repository uses a split license model.
+
+Scope summary:
+
+1. UI contents under `PCL.Frontend.Avalonia/` follow the custom license in `LICENCE` and are not granted under the Apache terms below unless a file states otherwise.
+2. All other launcher-related logic in this repository follows the Apache License 2.0 below unless a file or subdirectory states otherwise.
+
+The Apache License 2.0 text follows.
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -180,19 +191,13 @@
       To apply the Apache License to your work, attach the following
       boilerplate notice, with the fields enclosed by brackets "[]"
       replaced with your own identifying information. (Don't include
-      the brackets!)  The text should be enclosed in the appropriate
+      the brackets!) The text should be enclosed in the appropriate
       comment syntax for the file format. We also recommend that a
       file or class name and description of purpose be included on the
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2025 PCL Community
-
-   SPECIAL CONTENT: PCL launcher logic
-
-   Licensed under some custom terms discribed in the 'https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/LICENCE' file.
-
-   ALL THE OTHER DIRECTORIES AND FILES
+   Copyright 2026 PCL-ME contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

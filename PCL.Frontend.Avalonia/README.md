@@ -1,86 +1,41 @@
 # PCL.Frontend.Avalonia
 
-`PCL.Frontend.Avalonia` 是当前仓库正在维护的桌面前端。它是 PCL-ME 的 C# + Avalonia UI。
+`PCL.Frontend.Avalonia` 是 PCL-ME 当前正在维护的桌面前端。这里包含现行 Avalonia 应用、UI 资源、前端组合逻辑，以及用于发布桌面应用的前端入口。
 
-## 当前状态
+## 范围
 
-- 该项目是当前仓库中的正式前端实现
-- 它可以作为 `.NET 10` 桌面应用正常构建和运行
-- 提供 macOS、Linux、Windows 的打包脚本
+这个项目主要包含：
 
-## 前置要求
+- Avalonia 视图与控件
+- 样式、图标、字体与其他前端资源
+- 前端 ViewModel 与 UI 组合逻辑
+- 前端应用的桌面打包脚本与启动入口
 
-- 来自 [`../global.json`](../global.json) 的 .NET SDK `10.0.100`
-- 已完成还原的仓库工作区
-- 若要打包：
-  - 需要 `zip`、`tar`、`sed`、`dotnet`
-  - 在 macOS 上还需要 `iconutil` 和 `sips`
-
-## 快速开始
+## 构建
 
 在仓库根目录运行：
 
 ```bash
 dotnet restore
 dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj
-```
-
-不带参数运行时，会直接启动桌面应用。也可以显式使用 `app` 启动：
-
-```bash
 dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-如果只想查看当前保留的命令入口：
+常用命令：
 
-```bash
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- help
-```
-
-## 支持的命令
-
-- `app`
-- `help`
-
-`app` 支持的参数：
-
-- `--scenario modern-fabric|legacy-forge`
-- `--force-cjk-font-warning true|false`
-
-默认行为：
-
-- 不带参数：启动桌面应用
-- `app`：启动桌面应用
-- 默认场景：`modern-fabric`
+- `dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app`
+- `dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- help`
+- `./PCL.Frontend.Avalonia/scripts/package-frontend.sh`
 
 ## 打包
 
-在仓库根目录使用打包脚本：
+打包脚本会为受支持的桌面目标发布前端构建，并将产物写入 `artifacts/frontend-packages/`。
+
+例如：
 
 ```bash
-./PCL.Frontend.Avalonia/scripts/package-frontend.sh
+APP_VERSION=2026.04.14 ./PCL.Frontend.Avalonia/scripts/package-frontend.sh osx-arm64
 ```
-
-默认值：
-
-- 目标 RID：`osx-arm64`、`linux-x64`、`win-x64`
-- 输出目录：`artifacts/frontend-packages/`
-- 发布模式：self-contained
-
-如果需要覆盖版本号或目标列表：
-
-```bash
-APP_VERSION=2026.04.13 ./PCL.Frontend.Avalonia/scripts/package-frontend.sh osx-arm64
-```
-
-各平台打包行为：
-
-- macOS：生成 `PCL-ME.app` 和 zip 压缩包
-- Linux：生成包含已发布前端、启动脚本、图标和 `.desktop` 文件的 tarball
-- Windows：生成包含已发布前端和 `Launch PCL-ME.vbs` 的 zip 压缩包
-
-所有打包出来的启动器现在都会通过受支持的 `app` 入口启动 Avalonia 应用。
 
 ## 故障排查
 
@@ -98,8 +53,14 @@ niri msg outputs
 AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5' dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-如果你有配置有多块显示器：
+如果你配置了多块显示器：
 
 ```bash
 AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
+
+## 许可证
+
+本目录下的 UI 内容遵循仓库根目录中的 [../LICENCE](../LICENCE) 自定义许可证。
+
+仓库中位于此前端 UI 层之外的启动器相关逻辑遵循 [../LICENSE](../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
