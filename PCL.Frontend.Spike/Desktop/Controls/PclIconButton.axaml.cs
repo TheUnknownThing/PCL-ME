@@ -15,9 +15,15 @@ internal sealed partial class PclIconButton : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclIconButton, ICommand?>(nameof(Command));
 
-    private static readonly IBrush IdleFill = Brush.Parse("#EAF2FE");
-    private static readonly IBrush HoverBack = Brush.Parse("#32FFFFFF");
-    private static readonly IBrush IdleBack = Brush.Parse("#00FFFFFF");
+    public static readonly StyledProperty<IBrush> IconBrushProperty =
+        AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(IconBrush), Brush.Parse("#404040"));
+
+    public static readonly StyledProperty<IBrush> HoverBackgroundBrushProperty =
+        AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(HoverBackgroundBrush), Brush.Parse("#32EAF2FE"));
+
+    public static readonly StyledProperty<IBrush> IdleBackgroundBrushProperty =
+        AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(IdleBackgroundBrush), Brush.Parse("#00FFFFFF"));
+
     private bool _isHovered;
     private bool _isPressed;
     private DispatcherTimer? _releaseBounceTimer;
@@ -70,6 +76,24 @@ internal sealed partial class PclIconButton : UserControl
         set => SetValue(CommandProperty, value);
     }
 
+    public IBrush IconBrush
+    {
+        get => GetValue(IconBrushProperty);
+        set => SetValue(IconBrushProperty, value);
+    }
+
+    public IBrush HoverBackgroundBrush
+    {
+        get => GetValue(HoverBackgroundBrushProperty);
+        set => SetValue(HoverBackgroundBrushProperty, value);
+    }
+
+    public IBrush IdleBackgroundBrush
+    {
+        get => GetValue(IdleBackgroundBrushProperty);
+        set => SetValue(IdleBackgroundBrushProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -77,6 +101,12 @@ internal sealed partial class PclIconButton : UserControl
         if (change.Property == IconDataProperty)
         {
             UpdateIcon(change.GetNewValue<string>());
+        }
+        else if (change.Property == IconBrushProperty ||
+                 change.Property == HoverBackgroundBrushProperty ||
+                 change.Property == IdleBackgroundBrushProperty)
+        {
+            RefreshVisualState();
         }
     }
 
@@ -89,8 +119,8 @@ internal sealed partial class PclIconButton : UserControl
 
     private void RefreshVisualState()
     {
-        ShapeIcon.Fill = IdleFill;
-        PanBack.Background = _isHovered ? HoverBack : IdleBack;
+        ShapeIcon.Fill = IconBrush;
+        PanBack.Background = _isHovered ? HoverBackgroundBrush : IdleBackgroundBrush;
         PanBack.Opacity = 1.0;
         PanBack.RenderTransform = _isPressed ? new ScaleTransform(0.8, 0.8) : new ScaleTransform(1, 1);
     }

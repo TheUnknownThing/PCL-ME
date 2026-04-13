@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -25,9 +26,39 @@ internal sealed partial class PclPromptLaneChip : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclPromptLaneChip, ICommand?>(nameof(Command));
 
+    private bool _isHovered;
+    private bool _isPressed;
+
     public PclPromptLaneChip()
     {
         InitializeComponent();
+
+        ButtonHost.PointerEntered += (_, _) =>
+        {
+            _isHovered = true;
+            RefreshState();
+        };
+        ButtonHost.PointerExited += (_, _) =>
+        {
+            _isHovered = false;
+            _isPressed = false;
+            RefreshState();
+        };
+        ButtonHost.PointerPressed += (_, args) =>
+        {
+            if (args.GetCurrentPoint(ButtonHost).Properties.IsLeftButtonPressed)
+            {
+                _isPressed = true;
+                RefreshState();
+            }
+        };
+        ButtonHost.PointerReleased += (_, _) =>
+        {
+            _isPressed = false;
+            RefreshState();
+        };
+
+        RefreshState();
     }
 
     public string Title
@@ -64,5 +95,18 @@ internal sealed partial class PclPromptLaneChip : UserControl
     {
         get => GetValue(CommandProperty);
         set => SetValue(CommandProperty, value);
+    }
+
+    private void RefreshState()
+    {
+        ChipBorder.Opacity = _isPressed ? 0.88 : 1.0;
+        ChipBorder.RenderTransform = _isPressed
+            ? new ScaleTransform(0.97, 0.97)
+            : _isHovered
+                ? new ScaleTransform(1.02, 1.02)
+                : new ScaleTransform(1, 1);
+        var foreground = ForegroundBrush ?? Brush.Parse("#256A61");
+        TitleBlock.Foreground = foreground;
+        CountBlock.Foreground = foreground;
     }
 }

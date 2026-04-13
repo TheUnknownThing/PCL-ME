@@ -1,10 +1,16 @@
 using System.IO.Compression;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
 using PCL.Core.App.Configuration.Storage;
+using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft.Java;
+using PCL.Core.Minecraft.Java.Parser;
+using PCL.Core.Minecraft.Java.Runtime;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -13,67 +19,81 @@ internal sealed partial class FrontendShellViewModel
 {
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
-        if (IsDownloadInstallSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
-        {
-            ResetDownloadInstallSurface();
-            return;
-        }
-
-        if (IsDownloadResourceSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
-        {
-            ResetDownloadResourceFilters();
-            return;
-        }
-
-        if (IsSetupLaunchSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
-        {
-            ResetLaunchSettingsSurface();
-            return;
-        }
-
-        if (IsSetupUpdateSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
-        {
-            _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
-            return;
-        }
-
-        if (IsSetupGameLinkSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (_currentRoute.Page == LauncherFrontendPageKey.Setup
+            && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupLink
+            && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetGameLinkSurface();
             return;
         }
 
-        if (IsSetupGameManageSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            ResetDownloadInstallSurface();
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            ResetDownloadResourceFilters();
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLaunch) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetLaunchSettingsSurface();
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupFeedback) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        {
+            _ = RefreshFeedbackSectionsAsync(forceRefresh: true);
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameLink) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        {
+            ResetGameLinkSurface();
+            return;
+        }
+
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetGameManageSurface();
             return;
         }
 
-        if (IsSetupLauncherMiscSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLauncherMisc) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetLauncherMiscSurface();
             return;
         }
 
-        if (IsSetupJavaSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupJava) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshJavaSurface();
             return;
         }
 
-        if (IsSetupUiSurface && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUi) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
         {
             ResetUiSurface();
             return;
         }
 
-        if (IsToolsGameLinkSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsGameLink) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshToolsGameLinkSurface();
             return;
         }
 
-        if (IsToolsTestSurface && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
         {
             RefreshToolsTestSurface();
             return;
@@ -205,10 +225,26 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshToolsGameLinkSurface()
     {
+        _ = RefreshToolsGameLinkSurfaceAsync();
+    }
+
+    private async Task RefreshToolsGameLinkSurfaceAsync()
+    {
         ReloadToolsComposition();
         ResetGameLinkSessionRuntimeState();
-        RaiseToolsGameLinkProperties();
-        AddActivity("刷新联机大厅", "联机大厅页面已从当前实例与配置重新加载。");
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
+
+        try
+        {
+            await EnsureLobbyServiceInitializedAsync(refreshWorlds: true);
+            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
+            AddActivity("刷新联机大厅", "联机大厅页面已从运行时与当前配置重新加载。");
+        }
+        catch (Exception ex)
+        {
+            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
+            AddActivity("刷新联机大厅失败", ex.Message);
+        }
     }
 
     private void RefreshToolsTestSurface()
@@ -234,6 +270,7 @@ internal sealed partial class FrontendShellViewModel
     private void AcceptGameLinkTerms()
     {
         _shellActionService.PersistSharedValue("LinkEula", true);
+        ReloadToolsComposition();
         RefreshToolsGameLinkSurface();
         AddActivity("同意联机大厅条款", "大厅说明与条款已写入当前启动器配置。");
     }
@@ -291,7 +328,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var shouldLogout = await _shellActionService.ConfirmAsync(
                 "退出 Natayark 账户",
-                "当前 replacement shell 已保存一个大厅显示身份。要继续吗？",
+                "这会清除当前保存的大厅显示名与 Natayark 登录令牌。要继续吗？",
                 "退出",
                 isDanger: true);
             if (!shouldLogout)
@@ -303,7 +340,7 @@ internal sealed partial class FrontendShellViewModel
             ReloadSetupComposition();
             ReloadToolsComposition();
             ResetGameLinkSessionRuntimeState();
-            RaiseToolsGameLinkProperties();
+            SyncLobbyRuntimeState(preserveTypedLobbyId: false);
             AddActivity("Natayark 账户", "已清除当前前端记录的大厅身份信息。");
             return;
         }
@@ -313,7 +350,7 @@ internal sealed partial class FrontendShellViewModel
         {
             userName = await _shellActionService.PromptForTextAsync(
                 "Natayark 账户",
-                "当前 replacement shell 先保存一个大厅显示名，用于替代尚未迁入的网页登录流程。",
+                "当前桌面壳层暂未迁入网页登录流程。你可以先保存一个大厅显示名，创建或加入大厅时会优先使用它。",
                 LinkUsername,
                 "保存",
                 "输入大厅显示名");
@@ -340,11 +377,16 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.PersistSharedValue("LinkUsername", userName);
         ReloadSetupComposition();
         ReloadToolsComposition();
-        RaiseToolsGameLinkProperties();
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
         AddActivity("Natayark 账户", $"已保存大厅显示名：{userName}");
     }
 
     private void JoinLobby()
+    {
+        _ = JoinLobbyAsync();
+    }
+
+    private async Task JoinLobbyAsync()
     {
         if (!EnsureGameLinkTermsAccepted("加入大厅"))
         {
@@ -358,37 +400,44 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        try
+        {
+            await EnsureLobbyServiceInitializedAsync(refreshWorlds: false);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("加入大厅失败", ex.Message);
+            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
+            return;
+        }
+
+        if (!CanStartLobbyOperation("加入大厅"))
+        {
+            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
+            return;
+        }
+
         _gameLinkSessionIsHost = false;
         _gameLinkSessionPort = 25565;
 
         var userName = ResolveGameLinkDisplayUserName();
         GameLinkLobbyId = lobbyId;
-        GameLinkAnnouncement = $"已生成加入大厅 {lobbyId} 的 replacement shell 会话记录。";
+        GameLinkAnnouncement = $"正在加入大厅 {lobbyId}。";
         GameLinkSessionId = lobbyId;
-        GameLinkSessionPing = $"{24 + Math.Abs(lobbyId.GetHashCode()) % 19}ms";
-        GameLinkConnectionType = "P2P 联调会话";
+        GameLinkSessionPing = "-ms";
+        GameLinkConnectionType = "正在加入 EasyTier 大厅";
         GameLinkConnectedUserName = userName;
         GameLinkConnectedUserType = "大厅访客";
-        ReplaceItems(GameLinkPlayerEntries,
-        [
-            new SimpleListEntryViewModel("PCL-Community", "大厅房主 • 在线", new ActionCommand(() => AddActivity("查看大厅成员", "PCL-Community"))),
-            new SimpleListEntryViewModel(userName, $"当前设备 • 已加入大厅 • 延迟 {GameLinkSessionPing}", new ActionCommand(() => AddActivity("查看大厅成员", userName)))
-        ]);
-        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
-        var reportPath = WriteGameLinkArtifact(
-            "sessions",
-            $"{SanitizeFileSegment(lobbyId)}-join.txt",
-            [
-                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                $"大厅编号: {lobbyId}",
-                $"用户: {userName}",
-                $"连接方式: {GameLinkConnectionType}",
-                $"联调地址: {BuildGameLinkVirtualIp()}",
-                string.Empty,
-                "当前前端已经不再停留在纯活动日志占位状态。",
-                "后续真正的 EasyTier / Lobby 运行时接管将继续在 launch cutover 与后端迁移中完成。"
-            ]);
-        OpenInstanceTarget("加入大厅", reportPath, "大厅会话记录不存在。");
+        ReplaceItems(
+            GameLinkPlayerEntries,
+            [new SimpleListEntryViewModel(userName, "当前设备 • 正在连接", new ActionCommand(() => AddActivity("查看大厅成员", userName)))]);
+        RaiseToolsGameLinkProperties();
+
+        var joined = await LobbyRuntime.JoinLobbyAsync(lobbyId, userName);
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !joined);
+        AddActivity(
+            joined ? "加入大厅" : "加入大厅失败",
+            joined ? $"已成功加入大厅 {lobbyId}。" : "运行时未能加入目标大厅，请查看提示信息后重试。");
     }
 
     private async Task PasteLobbyIdAsync()
@@ -446,49 +495,86 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        _ = CreateLobbyAsync(ResolveSelectedGameLinkPort(), worldName, isManualPort: false);
+    }
+
+    private async Task CreateLobbyAsync(int port, string worldName, bool isManualPort)
+    {
+        try
+        {
+            await EnsureLobbyServiceInitializedAsync(refreshWorlds: false);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("创建大厅失败", ex.Message);
+            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
+            return;
+        }
+
+        if (!CanStartLobbyOperation("创建大厅"))
+        {
+            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
+            return;
+        }
+
         _gameLinkSessionIsHost = true;
-        _gameLinkSessionPort = ResolveSelectedGameLinkPort();
-        GameLinkSessionId = $"U/{DateTime.Now:MMdd}-{_gameLinkSessionPort:00000}-{SelectedGameLinkWorldIndex + 1:0000}-CE";
-        GameLinkLobbyId = GameLinkSessionId;
-        GameLinkAnnouncement = "大厅创建完成，可以复制大厅编号发给朋友。";
-        GameLinkSessionPing = $"{20 + (_gameLinkSessionPort % 11)}ms";
-        GameLinkConnectionType = "EasyTier 中继";
+        _gameLinkSessionPort = port;
+        GameLinkSessionPing = "-ms";
+        GameLinkConnectionType = "正在创建 EasyTier 大厅";
         GameLinkConnectedUserName = ResolveGameLinkDisplayUserName();
         GameLinkConnectedUserType = "大厅房主";
-        ReplaceItems(GameLinkPlayerEntries,
-        [
-            new SimpleListEntryViewModel(GameLinkConnectedUserName, "大厅房主 • 已准备就绪", new ActionCommand(() => AddActivity("查看大厅成员", GameLinkConnectedUserName))),
-            new SimpleListEntryViewModel("等待好友加入", "大厅成员槽位 • 空闲", new ActionCommand(() => AddActivity("查看大厅成员", "等待好友加入")))
-        ]);
-        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
-        var reportPath = WriteGameLinkArtifact(
-            "sessions",
-            $"{SanitizeFileSegment(GameLinkSessionId)}-host.txt",
+        GameLinkAnnouncement = isManualPort
+            ? $"正在根据端口 {port} 创建大厅。"
+            : $"正在为 {worldName} 创建大厅。";
+        ReplaceItems(
+            GameLinkPlayerEntries,
             [
-                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                $"大厅编号: {GameLinkSessionId}",
-                $"用户: {GameLinkConnectedUserName}",
-                $"世界: {worldName}",
-                $"局域网端口: {_gameLinkSessionPort}",
-                $"联调地址: {BuildGameLinkVirtualIp()}",
-                string.Empty,
-                "当前前端已把大厅创建动作改成可见文件输出，方便 reviewer 直接检查 replacement shell 的实际行为。"
+                new SimpleListEntryViewModel(GameLinkConnectedUserName, "大厅房主 • 正在启动", new ActionCommand(() => AddActivity("查看大厅成员", GameLinkConnectedUserName))),
+                new SimpleListEntryViewModel("等待好友加入", "大厅成员槽位 • 空闲", new ActionCommand(() => AddActivity("查看大厅成员", "等待好友加入")))
             ]);
-        OpenInstanceTarget("创建大厅", reportPath, "大厅创建记录不存在。");
+        RaiseToolsGameLinkProperties();
+
+        var created = await LobbyRuntime.CreateLobbyAsync(port, GameLinkConnectedUserName);
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !created);
+        AddActivity(
+            created ? "创建大厅" : "创建大厅失败",
+            created
+                ? isManualPort
+                    ? $"已按端口 {port} 创建大厅。"
+                    : $"已为 {worldName} 创建大厅。"
+                : "运行时未能创建大厅，请确认已经登录 Natayark 并开放了局域网端口。");
     }
 
     private void RefreshLobbyWorlds()
     {
+        _ = RefreshLobbyWorldsAsync();
+    }
+
+    private async Task RefreshLobbyWorldsAsync()
+    {
         ReloadToolsComposition();
-        ResetGameLinkSessionRuntimeState();
-        RaisePropertyChanged(nameof(GameLinkWorldOptions));
-        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
-        AddActivity("刷新世界列表", GameLinkWorldOptions[SelectedGameLinkWorldIndex]);
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
+
+        try
+        {
+            await EnsureLobbyServiceInitializedAsync(refreshWorlds: true);
+            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
+            var selectedWorld = GameLinkWorldOptions.Count > 0
+                ? GameLinkWorldOptions[SelectedGameLinkWorldIndex]
+                : "未检测到可用存档";
+            AddActivity("刷新世界列表", selectedWorld);
+        }
+        catch (Exception ex)
+        {
+            SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
+            AddActivity("刷新世界列表失败", ex.Message);
+        }
     }
 
     private async Task ExitLobbyAsync()
     {
-        if (string.IsNullOrWhiteSpace(GameLinkSessionId) || string.Equals(GameLinkSessionId, "尚未创建大厅", StringComparison.Ordinal))
+        if (!IsLobbyState(LobbyRuntime.CurrentState, "Connected", "Creating", "Joining", "Leaving")
+            && string.IsNullOrWhiteSpace(LobbyRuntime.CurrentLobbyCode))
         {
             AddActivity("退出大厅", "当前没有正在进行的大厅会话。");
             return;
@@ -497,8 +583,8 @@ internal sealed partial class FrontendShellViewModel
         var confirmed = await _shellActionService.ConfirmAsync(
             "确认退出大厅",
             _gameLinkSessionIsHost
-                ? "你当前是大厅创建者。退出后当前 replacement shell 会关闭这次大厅会话记录。"
-                : "退出后当前大厅状态会恢复到配置基线。",
+                ? "你当前是大厅创建者。退出后当前大厅会自动解散。"
+                : "退出后当前大厅连接将被断开。",
             "退出",
             isDanger: true);
         if (!confirmed)
@@ -506,22 +592,19 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var reportPath = WriteGameLinkArtifact(
-            "sessions",
-            $"{SanitizeFileSegment(GameLinkSessionId)}-closed.txt",
-            [
-                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                $"大厅编号: {GameLinkSessionId}",
-                $"退出角色: {(_gameLinkSessionIsHost ? "大厅房主" : "大厅访客")}",
-                $"联调地址: {BuildGameLinkVirtualIp()}",
-                string.Empty,
-                "大厅状态已在 replacement shell 中复位。"
-            ]);
-
-        ReloadToolsComposition();
-        ResetGameLinkSessionRuntimeState();
-        RaiseToolsGameLinkProperties();
-        AddActivity("退出大厅", reportPath);
+        try
+        {
+            await LobbyRuntime.LeaveLobbyAsync();
+            ReloadToolsComposition();
+            ResetGameLinkSessionRuntimeState();
+            SyncLobbyRuntimeState(preserveTypedLobbyId: false);
+            AddActivity("退出大厅", "当前大厅会话已退出。");
+        }
+        catch (Exception ex)
+        {
+            SyncLobbyRuntimeState(preserveTypedLobbyId: true);
+            AddActivity("退出大厅失败", ex.Message);
+        }
     }
 
     private async Task InputLobbyPortAsync()
@@ -559,35 +642,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        _gameLinkSessionIsHost = true;
-        _gameLinkSessionPort = port;
-        GameLinkSessionId = $"U/{DateTime.Now:MMdd}-{port:00000}-MANUAL-CE";
-        GameLinkLobbyId = GameLinkSessionId;
-        GameLinkAnnouncement = $"已根据手动输入的端口 {port} 创建大厅。";
-        GameLinkSessionPing = $"{20 + (port % 11)}ms";
-        GameLinkConnectionType = "EasyTier 中继";
-        GameLinkConnectedUserName = ResolveGameLinkDisplayUserName();
-        GameLinkConnectedUserType = "大厅房主";
-        ReplaceItems(GameLinkPlayerEntries,
-        [
-            new SimpleListEntryViewModel(GameLinkConnectedUserName, "大厅房主 • 已准备就绪", new ActionCommand(() => AddActivity("查看大厅成员", GameLinkConnectedUserName))),
-            new SimpleListEntryViewModel("等待好友加入", "大厅成员槽位 • 空闲", new ActionCommand(() => AddActivity("查看大厅成员", "等待好友加入")))
-        ]);
-        RaisePropertyChanged(nameof(GameLinkPlayerListTitle));
-
-        var reportPath = WriteGameLinkArtifact(
-            "sessions",
-            $"{SanitizeFileSegment(GameLinkSessionId)}-manual-port.txt",
-            [
-                $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                $"大厅编号: {GameLinkSessionId}",
-                $"用户: {GameLinkConnectedUserName}",
-                $"手动端口: {port}",
-                $"联调地址: {BuildGameLinkVirtualIp()}",
-                string.Empty,
-                "当前 replacement shell 使用手动端口直接生成了可检查的大厅会话记录。"
-            ]);
-        OpenInstanceTarget("手动输入联机端口", reportPath, "手动联机会话记录不存在。");
+        await CreateLobbyAsync(port, $"手动端口 {port}", isManualPort: true);
     }
 
     private async Task CopyLobbyVirtualIpAsync()
@@ -602,7 +657,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             await _shellActionService.SetClipboardTextAsync(endpoint);
-            AddActivity("复制虚拟 IP", $"{endpoint}（当前为 replacement shell 的联调地址）");
+            AddActivity("复制虚拟 IP", $"{endpoint}（当前为大厅运行时的本地转发地址）");
         }
         catch (Exception ex)
         {
@@ -642,10 +697,14 @@ internal sealed partial class FrontendShellViewModel
         }
 
         _shellActionService.RemoveSharedValues(["LinkEula", "LinkUsername", "LinkNaidRefreshToken", "LinkNaidRefreshExpiresAt"]);
+        if (IsLobbyState(LobbyRuntime.CurrentState, "Connected", "Creating", "Joining", "Leaving"))
+        {
+            await LobbyRuntime.LeaveLobbyAsync();
+        }
         ReloadSetupComposition();
         ReloadToolsComposition();
         ResetGameLinkSessionRuntimeState();
-        RaiseToolsGameLinkProperties();
+        SyncLobbyRuntimeState(preserveTypedLobbyId: false);
         AddActivity("停用联机功能", "已撤销大厅授权，并清除当前前端记录的联机身份信息。");
     }
 
@@ -664,13 +723,13 @@ internal sealed partial class FrontendShellViewModel
                 string.Empty,
                 "## 如何加入大厅？",
                 "1. 将朋友发送给你的大厅编号粘贴到输入框。",
-                "2. 点击“加入”后，replacement shell 会生成一份会话记录，方便你检查当前联机参数。",
+                "2. 点击“加入”后，页面会直接接入大厅运行时并等待连接完成。",
                 string.Empty,
                 "## NAT 测试为什么会导出诊断？",
                 "真正的 EasyTier NAT 运行时尚未完全迁入当前前端，所以这里先导出跨平台诊断信息，帮助 reviewer 检查网络接口与设置。",
                 string.Empty,
                 "## 虚拟 IP 现在复制的是什么？",
-                "当前复制的是 replacement shell 的联调地址，用于在真正的联机运行时接管前，保留原版按钮的可检查行为。",
+                "当前复制的是大厅运行时暴露的本地转发地址，可在多人游戏列表没有自动显示局域网会话时手动连接。",
                 string.Empty,
                 "相关链接：",
                 "- Natayark Network 用户协议与隐私政策: https://account.naids.com/policy",
@@ -805,22 +864,7 @@ internal sealed partial class FrontendShellViewModel
 
     private bool EnsureGameLinkTermsAccepted(string actionName)
     {
-        var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
-        var hasAcceptedTerms = false;
-
-        if (provider.Exists("LinkEula"))
-        {
-            try
-            {
-                hasAcceptedTerms = provider.Get<bool>("LinkEula");
-            }
-            catch
-            {
-                hasAcceptedTerms = false;
-            }
-        }
-
-        if (hasAcceptedTerms)
+        if (HasAcceptedGameLinkTerms())
         {
             return true;
         }
@@ -829,10 +873,29 @@ internal sealed partial class FrontendShellViewModel
         return false;
     }
 
+    private bool HasAcceptedGameLinkTerms()
+    {
+        var provider = new JsonFileProvider(_shellActionService.RuntimePaths.SharedConfigPath);
+        if (provider.Exists("LinkEula"))
+        {
+            try
+            {
+                return provider.Get<bool>("LinkEula");
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     private bool HasConfiguredGameLinkIdentity()
     {
         return !string.IsNullOrWhiteSpace(LinkUsername)
-            || !string.Equals(GameLinkAccountStatus, "点击登录 Natayark 账户", StringComparison.Ordinal);
+            || HasStoredNatayarkRefreshToken()
+            || !string.IsNullOrWhiteSpace(LobbyRuntime.NatayarkUsername);
     }
 
     private string ResolveGameLinkDisplayUserName()
@@ -842,13 +905,31 @@ internal sealed partial class FrontendShellViewModel
             return LinkUsername.Trim();
         }
 
-        if (!string.Equals(GameLinkAccountStatus, "点击登录 Natayark 账户", StringComparison.Ordinal)
-            && !string.IsNullOrWhiteSpace(GameLinkAccountStatus))
+        if (!string.IsNullOrWhiteSpace(LobbyRuntime.NatayarkUsername))
         {
-            return GameLinkAccountStatus.Trim();
+            return LobbyRuntime.NatayarkUsername!.Trim();
         }
 
         return string.IsNullOrWhiteSpace(Environment.UserName) ? "当前设备" : Environment.UserName;
+    }
+
+    private bool CanStartLobbyOperation(string actionName)
+    {
+        return LobbyRuntime.CurrentState switch
+        {
+            "Connected" => HandleBusyState("请先退出当前大厅后再继续。"),
+            "Creating" => HandleBusyState("大厅正在创建中，请稍候再试。"),
+            "Joining" => HandleBusyState("大厅正在连接中，请稍候再试。"),
+            "Leaving" => HandleBusyState("大厅正在退出中，请稍候再试。"),
+            "Initializing" => HandleBusyState("联机运行时仍在初始化，请稍候再试。"),
+            _ => true
+        };
+
+        bool HandleBusyState(string message)
+        {
+            AddActivity(actionName, message);
+            return false;
+        }
     }
 
     private int ResolveSelectedGameLinkPort()
@@ -873,7 +954,8 @@ internal sealed partial class FrontendShellViewModel
             return string.Empty;
         }
 
-        return $"127.0.0.1:{_gameLinkSessionPort}";
+        var port = LobbyRuntime.ResolveRuntimeLobbyPort();
+        return $"127.0.0.1:{Math.Max(1, port)}";
     }
 
     private string WriteGameLinkArtifact(string folderName, string fileName, IReadOnlyList<string> lines)
@@ -1428,6 +1510,52 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("刷新 Java 列表", "Java 列表已按当前启动器配置重新载入。");
     }
 
+    private async Task RefreshFeedbackSectionsAsync(bool forceRefresh)
+    {
+        if (_isRefreshingFeedback)
+        {
+            return;
+        }
+
+        if (!forceRefresh
+            && _feedbackSnapshot is not null
+            && DateTimeOffset.UtcNow - _lastFeedbackRefreshUtc < TimeSpan.FromMinutes(5))
+        {
+            return;
+        }
+
+        _isRefreshingFeedback = true;
+        try
+        {
+            var snapshot = await FrontendSetupFeedbackService.QueryAsync();
+            _feedbackSnapshot = snapshot;
+            _lastFeedbackRefreshUtc = snapshot.FetchedAtUtc;
+            ApplyFeedbackSnapshot(snapshot);
+            RaisePropertyChanged(nameof(HasFeedbackSections));
+            AddActivity("刷新反馈页", $"已同步 {snapshot.Sections.Sum(section => section.Entries.Count)} 条 GitHub 反馈。");
+        }
+        catch (Exception ex)
+        {
+            if (_feedbackSnapshot is null)
+            {
+                ReplaceItems(FeedbackSections,
+                [
+                    CreateFeedbackSection("加载失败", true,
+                    [
+                        CreateSimpleEntry("无法获取反馈列表", ex.Message)
+                    ])
+                ]);
+                RaisePropertyChanged(nameof(HasFeedbackSections));
+            }
+
+            AddActivity("刷新反馈页失败", ex.Message);
+        }
+        finally
+        {
+            _isRefreshingFeedback = false;
+        }
+    }
+
     private void AddJavaRuntime()
     {
         var javaPath = _shellActionService.GetDefaultJavaDetectionCandidates()
@@ -1470,9 +1598,173 @@ internal sealed partial class FrontendShellViewModel
             tags,
             isEnabled,
             new ActionCommand(() => SelectJavaRuntime(key)),
-            CreateIntentCommand($"打开 Java 文件夹: {title}", folder),
-            CreateIntentCommand($"查看 Java 详情: {title}", $"{title} • {folder} • {string.Join(" / ", tags)}"),
+            new ActionCommand(() => OpenJavaRuntimeFolder(title, folder)),
+            new ActionCommand(() => OpenJavaRuntimeDetail(key, title, folder, tags)),
             new ActionCommand(() => ToggleJavaEnabled(key)));
+    }
+
+    private void OpenJavaRuntimeFolder(string title, string folder)
+    {
+        OpenInstanceTarget($"打开 Java 文件夹: {title}", folder, "当前 Java 目录不存在。");
+    }
+
+    private void OpenJavaRuntimeDetail(string key, string title, string folder, IReadOnlyList<string> tags)
+    {
+        if (string.IsNullOrWhiteSpace(key) || !File.Exists(key))
+        {
+            AddActivity($"查看 Java 详情: {title}", "此 Java 不可用，请刷新列表。");
+            return;
+        }
+
+        var installation = ParseJavaInstallation(key);
+        var detailDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "java-details");
+        Directory.CreateDirectory(detailDirectory);
+        var detailPath = Path.Combine(detailDirectory, $"{SanitizeFileSegment(title)}.md");
+        var sourceLabel = ResolveJavaSourceLabel(key);
+        var detail = installation is null
+            ? $$"""
+                # {{title}}
+
+                - 路径: `{{key}}`
+                - 目录: `{{folder}}`
+                - 来源: {{sourceLabel}}
+                - 当前标签: {{string.Join(" / ", tags)}}
+                - 默认 Java: {{(_selectedJavaRuntimeKey == key ? "是" : "否")}}
+
+                无法进一步解析该 Java 的详细元数据，请确认文件仍然可执行。
+                """
+            : $$"""
+                # {{title}}
+
+                - 类型: {{(installation.IsJre ? "JRE" : "JDK")}}
+                - 版本: {{installation.Version}}
+                - 主版本: {{installation.MajorVersion}}
+                - 架构: {{installation.Architecture}} ({{(installation.Is64Bit ? "64 Bit" : "32 Bit")}})
+                - 品牌: {{installation.Brand}}
+                - 来源: {{sourceLabel}}
+                - 默认 Java: {{(_selectedJavaRuntimeKey == key ? "是" : "否")}}
+                - 已启用: {{(JavaRuntimeEntries.FirstOrDefault(item => item.Key == key)?.IsEnabled == true ? "是" : "否")}}
+                - 可用性: {{(installation.IsStillAvailable ? "可用" : "不可用")}}
+                - 可执行文件: `{{installation.JavaExePath}}`
+                - 目录: `{{installation.JavaFolder}}`
+                """;
+        File.WriteAllText(detailPath, detail, new UTF8Encoding(false));
+        OpenInstanceTarget($"查看 Java 详情: {title}", detailPath, "Java 详情文件不存在。");
+    }
+
+    private static JavaInstallation? ParseJavaInstallation(string javaExecutablePath)
+    {
+        var parsers = new List<IJavaParser>
+        {
+            new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner())
+        };
+        if (TryCreatePeHeaderParser() is { } peHeaderParser)
+        {
+            parsers.Add(peHeaderParser);
+        }
+
+        var parser = new CompositeJavaParser([.. parsers]);
+        return parser.Parse(javaExecutablePath);
+    }
+
+    private static IJavaParser? TryCreatePeHeaderParser()
+    {
+        const string assemblyName = "PCL.Core";
+        const string typeName = "PCL.Core.Minecraft.Java.Parser.PeHeaderParser";
+
+        try
+        {
+            var assembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(candidate => string.Equals(candidate.GetName().Name, assemblyName, StringComparison.Ordinal))
+                ?? TryLoadPclCoreAssembly();
+            var parserType = assembly?.GetType(typeName, throwOnError: false);
+            if (parserType is null || !typeof(IJavaParser).IsAssignableFrom(parserType))
+            {
+                return null;
+            }
+
+            return Activator.CreateInstance(parserType) as IJavaParser;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Assembly? TryLoadPclCoreAssembly()
+    {
+        var candidateRoots = new[]
+        {
+            AppContext.BaseDirectory,
+            Environment.CurrentDirectory
+        };
+        var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var root in candidateRoots.Where(path => !string.IsNullOrWhiteSpace(path)))
+        {
+            foreach (var directory in EnumerateParentDirectories(root))
+            {
+                var directPath = Path.Combine(directory, "PCL.Core.dll");
+                if (seenPaths.Add(directPath) && File.Exists(directPath))
+                {
+                    try
+                    {
+                        return AssemblyLoadContext.Default.LoadFromAssemblyPath(directPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                var binDirectory = Path.Combine(directory, "PCL.Core", "bin");
+                if (!Directory.Exists(binDirectory))
+                {
+                    continue;
+                }
+
+                foreach (var buildPath in Directory.EnumerateFiles(binDirectory, "PCL.Core.dll", SearchOption.AllDirectories)
+                             .OrderByDescending(path => File.GetLastWriteTimeUtc(path))
+                             .Take(8))
+                {
+                    if (!seenPaths.Add(buildPath))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        return AssemblyLoadContext.Default.LoadFromAssemblyPath(buildPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string> EnumerateParentDirectories(string startPath)
+    {
+        var current = new DirectoryInfo(Path.GetFullPath(startPath));
+        while (current is not null)
+        {
+            yield return current.FullName;
+            current = current.Parent;
+        }
+    }
+
+    private string ResolveJavaSourceLabel(string key)
+    {
+        var item = LoadStoredJavaItems().FirstOrDefault(candidate =>
+            string.Equals(candidate.Path, key, StringComparison.OrdinalIgnoreCase));
+        return item?.Source switch
+        {
+            JavaSource.AutoInstalled => "自动安装",
+            JavaSource.ManualAdded => "手动添加",
+            _ => "自动扫描"
+        };
     }
 
     private void SelectJavaRuntime(string key)

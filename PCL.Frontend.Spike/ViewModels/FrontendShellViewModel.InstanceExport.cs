@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -77,7 +78,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceExportSurface()
     {
-        if (!IsInstanceExportSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceExport))
         {
             return;
         }

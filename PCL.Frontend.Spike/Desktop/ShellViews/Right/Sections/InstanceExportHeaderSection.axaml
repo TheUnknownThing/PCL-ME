@@ -1,0 +1,49 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections.InstanceExportHeaderSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
+  <StackPanel Spacing="15">
+    <Border
+        Padding="12,10"
+        Background="#FFF8DD"
+        BorderBrush="#F2D777"
+        BorderThickness="1"
+        CornerRadius="4"
+        IsVisible="{Binding ShowInstanceExportOptiFineWarning}">
+      <TextBlock
+          Foreground="#6E5800"
+          FontSize="12.5"
+          Text="受 Modrinth 整合包规范限制，导出的整合包中不会包含 OptiFine。"
+          TextWrapping="Wrap" />
+    </Border>
+
+    <controls:PclCard ContentMargin="20,18,20,18">
+      <controls:PclCard.CardContent>
+        <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="28">
+          <TextBlock
+              Grid.Column="0"
+              Margin="0,0,20,0"
+              VerticalAlignment="Center"
+              Foreground="#343D4A"
+              FontSize="13"
+              Text="整合包名称" />
+          <TextBox
+              Grid.Column="1"
+              Margin="0,0,12,0"
+              Text="{Binding InstanceExportName}" />
+          <TextBlock
+              Grid.Column="2"
+              Margin="18,0,20,0"
+              VerticalAlignment="Center"
+              Foreground="#343D4A"
+              FontSize="13"
+              Text="整合包版本" />
+          <TextBox
+              Grid.Column="3"
+              Text="{Binding InstanceExportVersion}" />
+        </Grid>
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
+  </StackPanel>
+</UserControl>

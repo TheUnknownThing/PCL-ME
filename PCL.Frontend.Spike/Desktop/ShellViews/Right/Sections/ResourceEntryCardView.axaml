@@ -1,0 +1,56 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.Sections.ResourceEntryCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
+  <Grid Margin="0,0,0,12" ColumnDefinitions="Auto,*,Auto">
+    <Border
+        Width="42"
+        Height="42"
+        Margin="0,0,12,0"
+        Background="#F7FAFE"
+        BorderBrush="#D5E6FD"
+        BorderThickness="1"
+        CornerRadius="6">
+      <Image
+          Width="28"
+          Height="28"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Source="{Binding Icon}"
+          Stretch="Uniform" />
+    </Border>
+
+    <StackPanel Grid.Column="1" Margin="0,0,12,0" Spacing="3">
+      <TextBlock
+          Foreground="#343D4A"
+          FontSize="13.5"
+          FontWeight="SemiBold"
+          Text="{Binding Title}" />
+      <TextBlock
+          Foreground="#677789"
+          FontSize="12.5"
+          Text="{Binding Info}"
+          TextWrapping="Wrap" />
+      <Border
+          Padding="8,4"
+          Background="#F7FAFE"
+          BorderBrush="#D5E6FD"
+          BorderThickness="1"
+          CornerRadius="4">
+        <TextBlock
+            Foreground="#4B78C2"
+            FontSize="11.5"
+            Text="{Binding Meta}" />
+      </Border>
+    </StackPanel>
+
+    <controls:PclButton
+        Grid.Column="2"
+        Width="96"
+        Height="35"
+        VerticalAlignment="Center"
+        Command="{Binding ActionCommand}"
+        Text="查看" />
+  </Grid>
+</UserControl>

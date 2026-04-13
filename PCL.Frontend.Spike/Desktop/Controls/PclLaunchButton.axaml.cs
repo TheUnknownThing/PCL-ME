@@ -98,8 +98,6 @@ internal sealed partial class PclLaunchButton : UserControl
         PanFore.Opacity = _isPressed ? 0.9 : 1.0;
         PanFore.RenderTransform = _isPressed
             ? new ScaleTransform(0.955, 0.955)
-            : _isHovered
-                ? new ScaleTransform(0.99, 0.99)
-                : new ScaleTransform(1, 1);
+            : new ScaleTransform(1, 1);
     }
 }

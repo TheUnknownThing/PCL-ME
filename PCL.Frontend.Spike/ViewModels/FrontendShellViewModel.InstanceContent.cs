@@ -7,6 +7,7 @@ using fNbt;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -75,7 +76,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasNoInstanceResourceEntries => !HasInstanceResourceEntries;
 
-    public bool ShowInstanceResourceUnsupportedState => IsInstanceResourceSurface
+    public bool ShowInstanceResourceUnsupportedState => IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource)
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSchematic
         && HasNoInstanceResourceEntries;
 
@@ -169,27 +170,27 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceContentSurfaces()
     {
-        if (IsInstanceWorldSurface)
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceWorld))
         {
             RaisePropertyChanged(nameof(InstanceWorldSearchQuery));
             RaisePropertyChanged(nameof(HasInstanceWorldEntries));
             RaisePropertyChanged(nameof(HasNoInstanceWorldEntries));
         }
 
-        if (IsInstanceScreenshotSurface)
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceScreenshot))
         {
             RaisePropertyChanged(nameof(HasInstanceScreenshotEntries));
             RaisePropertyChanged(nameof(HasNoInstanceScreenshotEntries));
         }
 
-        if (IsInstanceServerSurface)
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceServer))
         {
             RaisePropertyChanged(nameof(InstanceServerSearchQuery));
             RaisePropertyChanged(nameof(HasInstanceServerEntries));
             RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
         }
 
-        if (IsInstanceResourceSurface)
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource))
         {
             RefreshInstanceResourceEntries();
             RaisePropertyChanged(nameof(InstanceResourceSearchQuery));

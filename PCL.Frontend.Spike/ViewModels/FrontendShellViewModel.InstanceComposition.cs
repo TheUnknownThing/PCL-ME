@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
 
@@ -27,18 +28,26 @@ internal sealed partial class FrontendShellViewModel
         "Cleanroom.png"
     ];
 
-    private void ApplyInstanceComposition(FrontendInstanceComposition composition)
+    private void ApplyInstanceComposition(FrontendInstanceComposition composition, bool initializeAllSurfaces = true)
     {
         _instanceComposition = composition;
         _suppressInstancePersistence = true;
         try
         {
-            InitializeInstanceOverviewSurface();
-            InitializeInstanceExportSurface();
-            InitializeInstanceInstallSurface();
-            InitializeInstanceContentSurfaces();
-            InitializeInstanceSetupSurface();
-            RaiseInstanceSurfaceProperties();
+            if (initializeAllSurfaces)
+            {
+                InitializeInstanceOverviewSurface();
+                InitializeInstanceExportSurface();
+                InitializeInstanceInstallSurface();
+                InitializeInstanceContentSurfaces();
+                InitializeInstanceSetupSurface();
+                RaiseInstanceSurfaceProperties();
+            }
+            else
+            {
+                InitializeActiveInstanceSurface();
+                RefreshActiveInstanceSurface();
+            }
         }
         finally
         {
@@ -46,14 +55,86 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void ReloadInstanceComposition()
+    private void ReloadInstanceComposition(bool reloadDependentCompositions = true, bool initializeAllSurfaces = true)
     {
-        ApplyInstanceComposition(FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths));
+        ApplyInstanceComposition(
+            FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths),
+            initializeAllSurfaces);
+
+        if (!reloadDependentCompositions)
+        {
+            return;
+        }
+
         ReloadToolsComposition();
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         RaisePropertyChanged(nameof(GameLinkWorldOptions));
         RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
+    }
+
+    private void InitializeActiveInstanceSurface()
+    {
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.VersionOverall:
+                InitializeInstanceOverviewSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionSetup:
+                InitializeInstanceSetupSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionExport:
+                InitializeInstanceExportSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionInstall:
+                InitializeInstanceInstallSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionWorld:
+            case LauncherFrontendSubpageKey.VersionScreenshot:
+            case LauncherFrontendSubpageKey.VersionServer:
+            case LauncherFrontendSubpageKey.VersionMod:
+            case LauncherFrontendSubpageKey.VersionModDisabled:
+            case LauncherFrontendSubpageKey.VersionResourcePack:
+            case LauncherFrontendSubpageKey.VersionShader:
+            case LauncherFrontendSubpageKey.VersionSchematic:
+                InitializeInstanceContentSurfaces();
+                break;
+            default:
+                InitializeInstanceOverviewSurface();
+                break;
+        }
+    }
+
+    private void RefreshActiveInstanceSurface()
+    {
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.VersionOverall:
+                RefreshInstanceOverviewSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionSetup:
+                RefreshInstanceSetupSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionExport:
+                RefreshInstanceExportSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionInstall:
+                RefreshInstanceInstallSurface();
+                break;
+            case LauncherFrontendSubpageKey.VersionWorld:
+            case LauncherFrontendSubpageKey.VersionScreenshot:
+            case LauncherFrontendSubpageKey.VersionServer:
+            case LauncherFrontendSubpageKey.VersionMod:
+            case LauncherFrontendSubpageKey.VersionModDisabled:
+            case LauncherFrontendSubpageKey.VersionResourcePack:
+            case LauncherFrontendSubpageKey.VersionShader:
+            case LauncherFrontendSubpageKey.VersionSchematic:
+                RefreshInstanceContentSurfaces();
+                break;
+            default:
+                RefreshInstanceOverviewSurface();
+                break;
+        }
     }
 
     private void PersistInstanceSetting(string? propertyName)

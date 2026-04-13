@@ -2,6 +2,8 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Desktop.Controls;
+using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -45,50 +47,6 @@ internal sealed partial class FrontendShellViewModel
             new AboutEntryViewModel("Hao_Tian", "在 PCL 内测中找出了一大堆没人想得到的诡异 Bug，有非同寻常的 Bug 体质", LoadLauncherBitmap("Images", "Heads", "Hao_Tian.jpg"), null, null),
             new AboutEntryViewModel("Minecraft 中文论坛", "虽然已经关站了，但感谢此前提供了 MCBBS 镜像源……", LoadLauncherBitmap("Images", "Heads", "MCBBS.png"), null, null),
             new AboutEntryViewModel("PCL 内群的各位", "感谢内群的沙雕网友们这么久以来对龙猫和 PCL 的支持与鼓励！", LoadLauncherBitmap("Images", "Heads", "PCL2.png"), null, null)
-        ]);
-    }
-
-    private void InitializeFeedbackSections()
-    {
-        ReplaceItems(FeedbackSections,
-        [
-            CreateFeedbackSection("正在处理", false,
-            [
-                CreateSimpleEntry("前端迁移右侧页面复制", "继续将设置与工具页从通用摘要卡片替换成原始页面结构。"),
-                CreateSimpleEntry("路由感知壳层对齐", "让 Avalonia 右侧内容区按当前子页面切换而不是统一模板。")
-            ]),
-            CreateFeedbackSection("等待处理", false,
-            [
-                CreateSimpleEntry("下载页自动安装面板", "等待更细的安装器展示合同后继续贴近 PageDownloadInstall。")
-            ]),
-            CreateFeedbackSection("等待", false,
-            [
-                CreateSimpleEntry("实例页资源面板", "等实例详情数据面完成后再复制资源包、光影包与服务器区块。")
-            ]),
-            CreateFeedbackSection("暂停", false,
-            [
-                CreateSimpleEntry("主题与动画设置细节", "当前先保留为后续界面页深入复制任务。")
-            ]),
-            CreateFeedbackSection("在即", false,
-            [
-                CreateSimpleEntry("帮助页搜索交互", "优先补齐搜索框、结果区与帮助列表卡片布局。")
-            ]),
-            CreateFeedbackSection("已完成", true,
-            [
-                CreateSimpleEntry("主壳顶栏对齐", "已切换为更接近原版的顶栏标签与返回标题模式。")
-            ]),
-            CreateFeedbackSection("已拒绝", true,
-            [
-                CreateSimpleEntry("重新设计迁移视觉语言", "当前迁移阶段不接受脱离原版控件语义的重新设计。")
-            ]),
-            CreateFeedbackSection("已忽略", true,
-            [
-                CreateSimpleEntry("把后端工作流搬回前端", "保持策略在后端，前端只负责组合与意图收集。")
-            ]),
-            CreateFeedbackSection("重复", true,
-            [
-                CreateSimpleEntry("用更多通用卡片替代原页面", "这和当前迁移规则冲突，继续复制原布局会更合适。")
-            ])
         ]);
     }
 
@@ -168,6 +126,9 @@ internal sealed partial class FrontendShellViewModel
                     entry.Title,
                     entry.Summary,
                     new ActionCommand(() => AddActivity("查看大厅成员", entry.Title)))));
+
+        InitializeLobbyRuntimeBridge();
+        SyncLobbyRuntimeState(preserveTypedLobbyId: !string.IsNullOrWhiteSpace(_gameLinkLobbyId));
     }
 
     private void InitializeToolsTestSurface()
@@ -216,7 +177,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(DownloadCatalogIntroActions, []);
         ReplaceItems(DownloadCatalogSections, []);
 
-        if (!IsDownloadCatalogSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadCatalog))
         {
             return;
         }
@@ -254,7 +215,7 @@ internal sealed partial class FrontendShellViewModel
     {
         ReplaceItems(DownloadFavoriteSections, []);
 
-        if (!IsDownloadFavoritesSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
         {
             return;
         }
@@ -281,7 +242,7 @@ internal sealed partial class FrontendShellViewModel
                         item.ActionText,
                         string.IsNullOrWhiteSpace(item.Target)
                             ? CreateIntentCommand($"收藏夹条目: {item.Title}", item.Info)
-                            : CreateOpenTargetCommand($"打开收藏夹条目: {item.Title}", item.Target, item.Target)))
+                            : CreateDownloadFavoriteCommand(item)))
                     .ToArray()))
             .Where(section => section.Items.Count > 0)
             .ToArray();
@@ -401,7 +362,8 @@ internal sealed partial class FrontendShellViewModel
                 string.IsNullOrWhiteSpace(query)
                 || topic.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || topic.Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || topic.GroupTitle.Contains(query, StringComparison.OrdinalIgnoreCase))
+                || topic.GroupTitle.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || topic.Keywords.Contains(query, StringComparison.OrdinalIgnoreCase))
             .OrderBy(topic => string.Equals(topic.GroupTitle, "指南", StringComparison.Ordinal) ? 0 : 1)
             .ThenBy(topic => topic.GroupTitle, StringComparer.Ordinal)
             .ThenBy(topic => topic.Title, StringComparer.Ordinal)
@@ -515,6 +477,16 @@ internal sealed partial class FrontendShellViewModel
     private ActionCommand CreateIntentCommand(string title, string detail)
     {
         return new ActionCommand(() => AddActivity(title, detail));
+    }
+
+    private ActionCommand CreateDownloadFavoriteCommand(FrontendDownloadCatalogEntry entry)
+    {
+        if (FrontendCommunityProjectService.TryParseCompDetailTarget(entry.Target, out var projectId))
+        {
+            return new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title));
+        }
+
+        return CreateOpenTargetCommand($"打开收藏夹条目: {entry.Title}", entry.Target!, entry.Target!);
     }
 
     private ActionCommand CreateOpenTargetCommand(string title, string target, string detail)

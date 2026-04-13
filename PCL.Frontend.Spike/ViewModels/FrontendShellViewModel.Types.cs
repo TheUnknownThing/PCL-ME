@@ -455,6 +455,7 @@ internal sealed class HelpTopicViewModel(
     string groupTitle,
     string title,
     string summary,
+    string keywords,
     ActionCommand command)
 {
     public string GroupTitle { get; } = groupTitle;
@@ -462,6 +463,8 @@ internal sealed class HelpTopicViewModel(
     public string Title { get; } = title;
 
     public string Summary { get; } = summary;
+
+    public string Keywords { get; } = keywords;
 
     public ActionCommand Command { get; } = command;
 }

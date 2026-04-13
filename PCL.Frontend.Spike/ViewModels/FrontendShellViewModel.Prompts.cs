@@ -35,7 +35,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void SelectPromptLane(SpikePromptLaneKind lane, bool updateActivity = true)
+    private void SelectPromptLane(SpikePromptLaneKind lane, bool updateActivity = true, bool raiseCollectionState = true)
     {
         if (_promptCatalog[lane].Count == 0)
         {
@@ -62,12 +62,15 @@ internal sealed partial class FrontendShellViewModel
 
         var selectedLane = PromptLanes.First(item => item.Kind == lane);
         PromptInboxTitle = $"{selectedLane.Title}提示";
-        PromptInboxSummary = selectedLane.Summary;
+       PromptInboxSummary = selectedLane.Summary;
         PromptEmptyState = $"当前没有待处理的{selectedLane.Title}提示。";
         var pageContent = BuildPageContent(BuildShellPlan());
-        ReplaceItems(SurfaceFacts, pageContent.Facts.Select((fact, index) => CreateSurfaceFact(fact, index)));
-        ReplaceItems(SurfaceSections, pageContent.Sections.Select((section, index) => CreateSurfaceSection(section, index)));
-        RaiseCollectionStateProperties();
+        ReplaceSurfaceFactsIfChanged(pageContent.Facts);
+        ReplaceSurfaceSectionsIfChanged(pageContent.Sections);
+        if (raiseCollectionState)
+        {
+            RaiseCollectionStateProperties();
+        }
 
         if (updateActivity)
         {
@@ -581,6 +584,7 @@ internal sealed partial class FrontendShellViewModel
             _showLaunchLog = true;
             _launchLogBuilder.Clear();
             RaiseLaunchSessionProperties();
+            RefreshGameLogSurface();
 
             foreach (var line in _launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines)
             {
@@ -645,6 +649,7 @@ internal sealed partial class FrontendShellViewModel
                 _isLaunchInProgress = false;
                 RaiseLaunchSessionProperties();
                 RefreshLaunchState();
+                RefreshGameLogSurface();
             });
         }
     }
@@ -675,6 +680,7 @@ internal sealed partial class FrontendShellViewModel
 
             _launchLogBuilder.Append(line);
             RaisePropertyChanged(nameof(LaunchLogText));
+            RaiseGameLogSurfaceProperties();
             if (!_showLaunchLog)
             {
                 _showLaunchLog = true;

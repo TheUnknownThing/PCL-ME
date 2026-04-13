@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Models;
 using PCL.Frontend.Spike.Workflows;
 
@@ -168,22 +169,30 @@ internal sealed partial class FrontendShellViewModel
         "UiLightColor"
     ];
 
-    private void ApplySetupComposition(FrontendSetupComposition composition)
+    private void ApplySetupComposition(FrontendSetupComposition composition, bool initializeAllSurfaces = true)
     {
         _setupComposition = composition;
         _suppressSetupPersistence = true;
         try
         {
-            InitializeAboutEntries();
-            InitializeLogEntries();
-            InitializeUpdateSurface();
-            InitializeLaunchSettingsSurface();
-            InitializeGameLinkSurface();
-            InitializeGameManageSurface();
-            InitializeLauncherMiscSurface();
-            InitializeJavaSurface();
-            InitializeUiSurface();
-            RaiseSetupSurfaceProperties();
+            if (initializeAllSurfaces)
+            {
+                InitializeAboutEntries();
+                InitializeLogEntries();
+                InitializeUpdateSurface();
+                InitializeLaunchSettingsSurface();
+                InitializeGameLinkSurface();
+                InitializeGameManageSurface();
+                InitializeLauncherMiscSurface();
+                InitializeJavaSurface();
+                InitializeUiSurface();
+                RaiseSetupSurfaceProperties();
+            }
+            else
+            {
+                InitializeActiveSetupSurface();
+                RaiseActiveSetupSurfaceProperties();
+            }
         }
         finally
         {
@@ -191,9 +200,204 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void ReloadSetupComposition()
+    private void ReloadSetupComposition(bool initializeAllSurfaces = true)
     {
-        ApplySetupComposition(FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths));
+        ApplySetupComposition(
+            FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths),
+            initializeAllSurfaces);
+    }
+
+    private void InitializeActiveSetupSurface()
+    {
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.SetupAbout:
+                InitializeAboutEntries();
+                break;
+            case LauncherFrontendSubpageKey.SetupFeedback:
+                InitializeFeedbackSections();
+                break;
+            case LauncherFrontendSubpageKey.SetupLog:
+                InitializeLogEntries();
+                break;
+            case LauncherFrontendSubpageKey.SetupUpdate:
+                InitializeUpdateSurface();
+                break;
+            case LauncherFrontendSubpageKey.SetupLink:
+            case LauncherFrontendSubpageKey.SetupGameLink:
+                InitializeGameLinkSurface();
+                break;
+            case LauncherFrontendSubpageKey.SetupGameManage:
+                InitializeGameManageSurface();
+                break;
+            case LauncherFrontendSubpageKey.SetupLauncherMisc:
+                InitializeLauncherMiscSurface();
+                break;
+            case LauncherFrontendSubpageKey.SetupJava:
+                InitializeJavaSurface();
+                break;
+            case LauncherFrontendSubpageKey.SetupUI:
+                InitializeUiSurface();
+                break;
+            case LauncherFrontendSubpageKey.SetupLaunch:
+            default:
+                InitializeLaunchSettingsSurface();
+                break;
+        }
+    }
+
+    private void RaiseActiveSetupSurfaceProperties()
+    {
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.SetupAbout:
+                RaisePropertyChanged(nameof(HasAboutProjectEntries));
+                RaisePropertyChanged(nameof(HasAboutAcknowledgementEntries));
+                break;
+            case LauncherFrontendSubpageKey.SetupFeedback:
+                RaisePropertyChanged(nameof(HasFeedbackSections));
+                break;
+            case LauncherFrontendSubpageKey.SetupLog:
+                break;
+            case LauncherFrontendSubpageKey.SetupUpdate:
+                RaisePropertyChanged(nameof(SelectedUpdateChannelIndex));
+                RaisePropertyChanged(nameof(SelectedUpdateModeIndex));
+                RaisePropertyChanged(nameof(MirrorCdk));
+                RaiseUpdateSurfaceProperties();
+                break;
+            case LauncherFrontendSubpageKey.SetupLink:
+            case LauncherFrontendSubpageKey.SetupGameLink:
+                RaisePropertyChanged(nameof(LinkUsername));
+                RaisePropertyChanged(nameof(SelectedProtocolPreferenceIndex));
+                RaisePropertyChanged(nameof(PreferLowestLatencyPath));
+                RaisePropertyChanged(nameof(TryPunchSymmetricNat));
+                RaisePropertyChanged(nameof(AllowIpv6Communication));
+                RaisePropertyChanged(nameof(EnableLinkCliOutput));
+                break;
+            case LauncherFrontendSubpageKey.SetupGameManage:
+                RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
+                RaisePropertyChanged(nameof(SelectedVersionSourceIndex));
+                RaisePropertyChanged(nameof(DownloadThreadLimit));
+                RaisePropertyChanged(nameof(DownloadThreadLimitLabel));
+                RaisePropertyChanged(nameof(DownloadSpeedLimit));
+                RaisePropertyChanged(nameof(DownloadSpeedLimitLabel));
+                RaisePropertyChanged(nameof(AutoSelectNewInstance));
+                RaisePropertyChanged(nameof(UpgradePartialAuthlib));
+                RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
+                RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
+                RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
+                RaisePropertyChanged(nameof(IgnoreQuiltLoader));
+                RaisePropertyChanged(nameof(NotifyReleaseUpdates));
+                RaisePropertyChanged(nameof(NotifySnapshotUpdates));
+                RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
+                RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
+                break;
+            case LauncherFrontendSubpageKey.SetupLauncherMisc:
+                RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
+                RaisePropertyChanged(nameof(AnimationFpsLimit));
+                RaisePropertyChanged(nameof(AnimationFpsLabel));
+                RaisePropertyChanged(nameof(MaxRealTimeLogValue));
+                RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
+                RaisePropertyChanged(nameof(DisableHardwareAcceleration));
+                RaisePropertyChanged(nameof(EnableTelemetry));
+                RaisePropertyChanged(nameof(EnableDoH));
+                RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
+                RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
+                RaisePropertyChanged(nameof(IsNoHttpProxySelected));
+                RaisePropertyChanged(nameof(IsSystemHttpProxySelected));
+                RaisePropertyChanged(nameof(IsCustomHttpProxySelected));
+                RaisePropertyChanged(nameof(HttpProxyAddress));
+                RaisePropertyChanged(nameof(HttpProxyUsername));
+                RaisePropertyChanged(nameof(HttpProxyPassword));
+                RaisePropertyChanged(nameof(DebugAnimationSpeed));
+                RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
+                RaisePropertyChanged(nameof(SkipCopyDuringDownload));
+                RaisePropertyChanged(nameof(DebugModeEnabled));
+                RaisePropertyChanged(nameof(DebugDelayEnabled));
+                break;
+            case LauncherFrontendSubpageKey.SetupJava:
+                RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
+                RaisePropertyChanged(nameof(IsAutoJavaSelected));
+                break;
+            case LauncherFrontendSubpageKey.SetupUI:
+                RaisePropertyChanged(nameof(SelectedDarkModeIndex));
+                RaisePropertyChanged(nameof(SelectedLightColorIndex));
+                RaisePropertyChanged(nameof(SelectedDarkColorIndex));
+                RaisePropertyChanged(nameof(LauncherOpacity));
+                RaisePropertyChanged(nameof(LauncherOpacityLabel));
+                RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
+                RaisePropertyChanged(nameof(LockWindowSizeSetting));
+                RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
+                RaisePropertyChanged(nameof(EnableAdvancedMaterial));
+                RaisePropertyChanged(nameof(BlurRadius));
+                RaisePropertyChanged(nameof(BlurRadiusLabel));
+                RaisePropertyChanged(nameof(BlurSamplingRate));
+                RaisePropertyChanged(nameof(BlurSamplingRateLabel));
+                RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
+                RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
+                RaisePropertyChanged(nameof(SelectedMotdFontIndex));
+                RaisePropertyChanged(nameof(AutoPauseVideo));
+                RaisePropertyChanged(nameof(BackgroundColorful));
+                RaisePropertyChanged(nameof(MusicVolume));
+                RaisePropertyChanged(nameof(MusicVolumeLabel));
+                RaisePropertyChanged(nameof(MusicRandomPlay));
+                RaisePropertyChanged(nameof(MusicAutoStart));
+                RaisePropertyChanged(nameof(MusicStartOnGameLaunch));
+                RaisePropertyChanged(nameof(MusicStopOnGameLaunch));
+                RaisePropertyChanged(nameof(MusicEnableSmtc));
+                RaisePropertyChanged(nameof(SelectedLogoTypeIndex));
+                RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
+                RaisePropertyChanged(nameof(IsLogoTypeDefaultSelected));
+                RaisePropertyChanged(nameof(IsLogoTypeTextSelected));
+                RaisePropertyChanged(nameof(IsLogoTypeImageSelected));
+                RaisePropertyChanged(nameof(IsLogoLeftVisible));
+                RaisePropertyChanged(nameof(LogoAlignLeft));
+                RaisePropertyChanged(nameof(IsLogoTextVisible));
+                RaisePropertyChanged(nameof(LogoTextValue));
+                RaisePropertyChanged(nameof(IsLogoImageActionsVisible));
+                RaisePropertyChanged(nameof(SelectedHomepageTypeIndex));
+                RaisePropertyChanged(nameof(IsHomepageBlankSelected));
+                RaisePropertyChanged(nameof(IsHomepagePresetSelected));
+                RaisePropertyChanged(nameof(IsHomepageLocalSelected));
+                RaisePropertyChanged(nameof(IsHomepageNetSelected));
+                RaisePropertyChanged(nameof(IsHomepageLocalActionsVisible));
+                RaisePropertyChanged(nameof(IsHomepageNetVisible));
+                RaisePropertyChanged(nameof(HomepageUrl));
+                RaisePropertyChanged(nameof(IsHomepagePresetVisible));
+                RaisePropertyChanged(nameof(SelectedHomepagePresetIndex));
+                break;
+            case LauncherFrontendSubpageKey.SetupLaunch:
+            default:
+                RaisePropertyChanged(nameof(SelectedLaunchIsolationIndex));
+                RaisePropertyChanged(nameof(LaunchWindowTitleSetting));
+                RaisePropertyChanged(nameof(LaunchCustomInfoSetting));
+                RaisePropertyChanged(nameof(SelectedLaunchVisibilityIndex));
+                RaisePropertyChanged(nameof(SelectedLaunchPriorityIndex));
+                RaisePropertyChanged(nameof(SelectedLaunchWindowTypeIndex));
+                RaisePropertyChanged(nameof(IsCustomLaunchWindowSizeVisible));
+                RaisePropertyChanged(nameof(LaunchWindowWidth));
+                RaisePropertyChanged(nameof(LaunchWindowHeight));
+                RaisePropertyChanged(nameof(UseAutomaticRamAllocation));
+                RaisePropertyChanged(nameof(UseCustomRamAllocation));
+                RaisePropertyChanged(nameof(IsCustomRamAllocationEnabled));
+                RaisePropertyChanged(nameof(CustomRamAllocation));
+                RaisePropertyChanged(nameof(CustomRamAllocationLabel));
+                RaisePropertyChanged(nameof(AllocatedRamLabel));
+                RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+                RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
+                RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
+                RaisePropertyChanged(nameof(LaunchJvmArguments));
+                RaisePropertyChanged(nameof(LaunchGameArguments));
+                RaisePropertyChanged(nameof(LaunchBeforeCommand));
+                RaisePropertyChanged(nameof(WaitForLaunchBeforeCommand));
+                RaisePropertyChanged(nameof(DisableJavaLaunchWrapper));
+                RaisePropertyChanged(nameof(DisableRetroWrapper));
+                RaisePropertyChanged(nameof(RequireDedicatedGpu));
+                RaisePropertyChanged(nameof(UseJavaExecutable));
+                RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
+                RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
+                break;
+        }
     }
 
     private void PersistSetupSetting(string? propertyName)

@@ -1,0 +1,176 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.SetupUpdateShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="15">
+      <controls:PclCard ContentMargin="20,15,20,15">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28,7,28">
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13.5"
+                Text="更新通道" />
+            <ComboBox
+                Grid.Row="0"
+                Grid.Column="1"
+                Grid.ColumnSpan="3"
+                Height="28"
+                ItemsSource="{Binding UpdateChannelOptions}"
+                SelectedIndex="{Binding SelectedUpdateChannelIndex}" />
+
+            <TextBlock
+                Grid.Row="2"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13.5"
+                Text="自动更新设置" />
+            <ComboBox
+                Grid.Row="2"
+                Grid.Column="1"
+                Grid.ColumnSpan="3"
+                Height="28"
+                ItemsSource="{Binding UpdateModeOptions}"
+                SelectedIndex="{Binding SelectedUpdateModeIndex}" />
+
+            <TextBlock
+                Grid.Row="4"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="#343D4A"
+                FontSize="13.5"
+                Text="Mirror 酱 CDK" />
+            <TextBox
+                Grid.Row="4"
+                Grid.Column="1"
+                Height="28"
+                Padding="8,4"
+                Text="{Binding MirrorCdk}"
+                Watermark="可选的高速下载 CDK" />
+            <controls:PclButton
+                Grid.Row="4"
+                Grid.Column="3"
+                Height="28"
+                Command="{Binding GetMirrorCdkCommand}"
+                ColorType="Highlight"
+                Text="获取 CDK" />
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard IsVisible="{Binding ShowAvailableUpdateCard}" ContentMargin="20,20,20,20">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="50,10,*,85" RowDefinitions="29,1,20,8,Auto,10,Auto">
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Width="50"
+                Height="50"
+                CornerRadius="12"
+                ClipToBounds="True">
+              <Image Source="{Binding UpdateAvailableIcon}" Stretch="UniformToFill" />
+            </Border>
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                VerticalAlignment="Bottom"
+                Foreground="#343D4A"
+                FontSize="20"
+                FontWeight="Bold"
+                Text="{Binding AvailableUpdateName}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                VerticalAlignment="Top"
+                Foreground="#677789"
+                FontSize="14"
+                Text="{Binding AvailableUpdatePublisher}" />
+            <controls:PclButton
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="3"
+                Width="85"
+                Height="30"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Command="{Binding DownloadUpdateCommand}"
+                ColorType="Highlight"
+                Text="下载并安装" />
+            <TextBlock
+                Grid.Row="4"
+                Grid.ColumnSpan="4"
+                Foreground="#4B5968"
+                FontSize="13"
+                Text="{Binding AvailableUpdateSummary}"
+                TextWrapping="Wrap" />
+            <Button
+                Grid.Row="6"
+                Grid.ColumnSpan="4"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Command="{Binding ShowUpdateDetailCommand}">
+              <TextBlock
+                  Foreground="#1370F3"
+                  FontSize="12.5"
+                  Text="有关此更新的更多信息..." />
+            </Button>
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard IsVisible="{Binding ShowCurrentVersionCard}" ContentMargin="20,20,20,20">
+        <controls:PclCard.CardContent>
+          <Grid ColumnDefinitions="50,10,*,80,10,100" RowDefinitions="29,1,20">
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Width="50"
+                Height="50"
+                CornerRadius="12"
+                ClipToBounds="True">
+              <Image Source="{Binding UpdateCurrentIcon}" Stretch="UniformToFill" />
+            </Border>
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                VerticalAlignment="Bottom"
+                Foreground="#343D4A"
+                FontSize="20"
+                FontWeight="Bold"
+                Text="{Binding CurrentVersionName}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                VerticalAlignment="Top"
+                Foreground="#677789"
+                FontSize="14"
+                Text="{Binding CurrentVersionDescription}" />
+            <controls:PclButton
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="3"
+                Command="{Binding CheckUpdateAgainCommand}"
+                ColorType="Highlight"
+                Text="再次检查" />
+            <controls:PclButton
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="5"
+                Command="{Binding OpenFullChangelogCommand}"
+                Text="查看更新日志" />
+          </Grid>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

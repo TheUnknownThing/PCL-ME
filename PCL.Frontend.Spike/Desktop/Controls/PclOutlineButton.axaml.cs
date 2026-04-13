@@ -85,5 +85,6 @@ internal sealed partial class PclOutlineButton : UserControl
         PanFore.RenderTransform = _isPressed
             ? new ScaleTransform(0.955, 0.955)
             : new ScaleTransform(1, 1);
+        LabText.Foreground = PanFore.BorderBrush;
     }
 }

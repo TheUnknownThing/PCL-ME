@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Media.Transformation;
 using System.Windows.Input;
 
 namespace PCL.Frontend.Spike.Desktop.Controls;
@@ -27,8 +26,6 @@ internal sealed partial class PclCard : UserControl
     public static readonly StyledProperty<ICommand?> HeaderCommandProperty =
         AvaloniaProperty.Register<PclCard, ICommand?>(nameof(HeaderCommand));
 
-    private static readonly BoxShadows IdleShadow = BoxShadows.Parse("0 2 10 0 #12000000");
-    private static readonly BoxShadows HoverShadow = BoxShadows.Parse("0 4 14 0 #19000000");
     private bool _isHovered;
 
     public PclCard()
@@ -80,6 +77,15 @@ internal sealed partial class PclCard : UserControl
 
     public bool IsContentVisible => !ShowChevron || IsChevronExpanded;
 
+    public Thickness EffectiveContentMargin
+    {
+        get
+        {
+            // TODO: May require special margin where header is present.
+            return ContentMargin;
+        }
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -88,6 +94,7 @@ internal sealed partial class PclCard : UserControl
         {
             HeaderTextBlock.Text = change.GetNewValue<string>() ?? string.Empty;
             RaisePropertyChanged(HasHeaderProperty, false, HasHeader);
+            RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
         }
         else if (change.Property == IsChevronExpandedProperty)
         {
@@ -100,6 +107,10 @@ internal sealed partial class PclCard : UserControl
         {
             RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
         }
+        else if (change.Property == ContentMarginProperty)
+        {
+            RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
+        }
     }
 
     private static readonly DirectProperty<PclCard, bool> HasHeaderProperty =
@@ -107,6 +118,9 @@ internal sealed partial class PclCard : UserControl
 
     private static readonly DirectProperty<PclCard, bool> IsContentVisibleProperty =
         AvaloniaProperty.RegisterDirect<PclCard, bool>(nameof(IsContentVisible), x => x.IsContentVisible);
+
+    private static readonly DirectProperty<PclCard, Thickness> EffectiveContentMarginProperty =
+        AvaloniaProperty.RegisterDirect<PclCard, Thickness>(nameof(EffectiveContentMargin), x => x.EffectiveContentMargin);
 
     private void OnPointerEntered(object? sender, PointerEventArgs e)
     {
@@ -122,7 +136,16 @@ internal sealed partial class PclCard : UserControl
 
     private void RefreshState()
     {
-        CardShadow.BoxShadow = _isHovered ? HoverShadow : IdleShadow;
+        CardShadow.Background = _isHovered
+            ? Brush.Parse("#0B5BCB")
+            : Brush.Parse("#343D4A");
+        CardShadow.Opacity = _isHovered ? 0.3 : 0.1;
+        CardBorder.BorderBrush = _isHovered
+            ? Brush.Parse("#28D5E6FD")
+            : Brush.Parse("#00FFFFFF");
+        CardBorder.Background = _isHovered
+            ? Brush.Parse("#E6FFFFFF")
+            : Brush.Parse("#CDFFFFFF");
         HeaderTextBlock.Foreground = _isHovered
             ? Brush.Parse("#0B5BCB")
             : Brush.Parse("#343D4A");

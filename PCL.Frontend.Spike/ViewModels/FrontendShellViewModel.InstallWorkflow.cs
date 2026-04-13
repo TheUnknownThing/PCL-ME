@@ -108,6 +108,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var currentVersion = GetEffectiveMinecraftVersion(isExistingInstance);
+            var currentVersionId = currentVersion.Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
             var choices = FrontendInstallWorkflowService.GetMinecraftChoices(currentVersion);
             var selectedId = isExistingInstance ? _instanceInstallMinecraftChoice?.Id : _downloadInstallMinecraftChoice?.Id;
             var result = await _shellActionService.PromptForChoiceAsync(
@@ -125,7 +126,11 @@ internal sealed partial class FrontendShellViewModel
             if (isExistingInstance)
             {
                 _instanceInstallMinecraftChoice = selectedChoice;
-                ResetManagedSelections(_instanceInstallSelections);
+                if (!string.Equals(currentVersionId, selectedChoice.Version, StringComparison.OrdinalIgnoreCase))
+                {
+                    ClearManagedSelections(_instanceInstallSelections);
+                }
+
                 InstanceInstallMinecraftVersion = $"Minecraft {selectedChoice.Version}";
                 InstanceInstallMinecraftIcon = LoadLauncherBitmap("Images", "Blocks", "Grass.png");
                 InitializeInstanceInstallSurface();
@@ -134,7 +139,11 @@ internal sealed partial class FrontendShellViewModel
             else
             {
                 _downloadInstallMinecraftChoice = selectedChoice;
-                ResetManagedSelections(_downloadInstallSelections);
+                if (!string.Equals(currentVersionId, selectedChoice.Version, StringComparison.OrdinalIgnoreCase))
+                {
+                    ClearManagedSelections(_downloadInstallSelections);
+                }
+
                 DownloadInstallMinecraftVersion = $"Minecraft {selectedChoice.Version}";
                 DownloadInstallMinecraftIcon = LoadLauncherBitmap("Images", "Blocks", "Grass.png");
                 InitializeDownloadInstallSurface();
@@ -151,7 +160,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
         {
-            AddActivity($"选择安装项: {optionTitle}", "这一项仍依赖旧安装器处理，当前迁移切片先保留原卡片结构并明确提示。");
+            AddActivity($"选择安装项: {optionTitle}", "当前壳层尚未为这一项接入安装实现；这里不会再回退到旧安装器。");
             return;
         }
 
@@ -318,6 +327,15 @@ internal sealed partial class FrontendShellViewModel
     {
         try
         {
+            var unresolvedSelections = GetUnresolvedManagedSelections(isExistingInstance);
+            if (unresolvedSelections.Count > 0)
+            {
+                AddActivity(
+                    activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"),
+                    $"以下安装项当前无法映射到受支持的安装矩阵：{string.Join("、", unresolvedSelections)}。请重新选择或清除后再继续。");
+                return;
+            }
+
             var minecraftChoice = ResolveEffectiveMinecraftChoice(isExistingInstance);
             var minecraftVersion = minecraftChoice.Version;
             var primaryChoice = ResolveEffectivePrimaryChoice(isExistingInstance, minecraftVersion);
@@ -476,6 +494,55 @@ internal sealed partial class FrontendShellViewModel
         return selections.TryGetValue(optionTitle, out var value) ? value : "未安装";
     }
 
+    private string GetBaselineMinecraftVersion(bool isExistingInstance)
+    {
+        var version = isExistingInstance ? _instanceInstallBaselineMinecraftVersion : _downloadInstallBaselineMinecraftVersion;
+        return version.Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
+    }
+
+    private bool HasInstallMinecraftVersionChanged(bool isExistingInstance)
+    {
+        return !string.Equals(
+            GetEffectiveMinecraftVersion(isExistingInstance),
+            isExistingInstance ? _instanceInstallBaselineMinecraftVersion : _downloadInstallBaselineMinecraftVersion,
+            StringComparison.Ordinal);
+    }
+
+    private IReadOnlyList<string> GetUnresolvedManagedSelections(bool isExistingInstance)
+    {
+        var minecraftVersion = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
+        return ManagedPrimaryInstallTitles
+            .Concat(ManagedAddonInstallTitles)
+            .Distinct(StringComparer.Ordinal)
+            .Where(optionTitle => IsManagedSelectionUnresolved(isExistingInstance, optionTitle, minecraftVersion))
+            .ToArray();
+    }
+
+    private bool IsManagedSelectionUnresolved(bool isExistingInstance, string optionTitle, string minecraftVersion)
+    {
+        var state = GetEditableSelectionState(isExistingInstance, optionTitle);
+        if (state.SelectedChoice is not null || state.IsExplicitlyCleared)
+        {
+            return false;
+        }
+
+        if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
+        {
+            return false;
+        }
+
+        return HasBaselineInstallSelection(isExistingInstance, optionTitle)
+               && ResolveEffectiveChoice(isExistingInstance, optionTitle, minecraftVersion) is null;
+    }
+
+    private bool HasBaselineInstallSelection(bool isExistingInstance, string optionTitle)
+    {
+        var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
+        return !string.IsNullOrWhiteSpace(baselineText)
+               && !string.Equals(baselineText, "未安装", StringComparison.Ordinal)
+               && !string.Equals(baselineText, "可以添加", StringComparison.Ordinal);
+    }
+
     private bool ComputeHasInstanceInstallChanges()
     {
         if (_instanceInstallMinecraftChoice is not null
@@ -503,11 +570,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceInstallApplyButtonText));
     }
 
-    private static void ResetManagedSelections(IDictionary<string, FrontendEditableInstallSelection> selections)
+    private static void ClearManagedSelections(IDictionary<string, FrontendEditableInstallSelection> selections)
     {
         foreach (var key in selections.Keys.ToArray())
         {
-            selections[key] = FrontendEditableInstallSelection.Unchanged;
+            selections[key] = FrontendEditableInstallSelection.Cleared;
         }
     }
 }

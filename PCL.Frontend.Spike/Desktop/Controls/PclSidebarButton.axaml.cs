@@ -119,7 +119,11 @@ internal sealed partial class PclSidebarButton : UserControl
                 ? HoverBorder
                 : IdleBorder;
         PanBack.Opacity = _isPressed ? 0.92 : 1.0;
-        PanBack.RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);
+        PanBack.RenderTransform = _isPressed
+            ? new ScaleTransform(0.985, 0.985)
+            : _isHovered
+                ? new ScaleTransform(1.01, 1.01)
+                : new ScaleTransform(1, 1);
 
         TitleBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#404040");
         SummaryBlock.Foreground = IsSelected ? Brush.Parse("#4B5968") : Brush.Parse("#7D8897");

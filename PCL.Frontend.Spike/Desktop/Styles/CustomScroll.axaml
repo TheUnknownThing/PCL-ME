@@ -1,0 +1,64 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="ScrollBar:vertical">
+    <Setter Property="AllowAutoHide" Value="False" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{DynamicResource ColorBrushTransparent}" UseLayoutRounding="False">
+          <Grid RowDefinitions="Auto,*,Auto">
+            <Track
+                Grid.Row="1"
+                IsDirectionReversed="True"
+                Maximum="{TemplateBinding Maximum}"
+                Minimum="{TemplateBinding Minimum}"
+                Orientation="{TemplateBinding Orientation}"
+                Value="{TemplateBinding Value, Mode=TwoWay}"
+                ViewportSize="{TemplateBinding ViewportSize}">
+              <Track.DecreaseButton>
+                <RepeatButton
+                    Name="PART_PageUpButton"
+                    Classes="repeattrack"
+                    Background="Transparent"
+                    Focusable="False" />
+              </Track.DecreaseButton>
+              <Track.IncreaseButton>
+                <RepeatButton
+                    Name="PART_PageDownButton"
+                    Classes="repeattrack"
+                    Background="Transparent"
+                    Focusable="False" />
+              </Track.IncreaseButton>
+              <Thumb Name="thumb">
+                <Thumb.Template>
+                  <ControlTemplate>
+                    <Panel>
+                      <Border
+                          Name="ThumbBarVertical"
+                          Width="4"
+                          Margin="2"
+                          HorizontalAlignment="Right"
+                          Background="{DynamicResource ColorBrush4}"
+                          CornerRadius="8"
+                          Opacity="0.5">
+                        <Border.Transitions>
+                          <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.15" />
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                          </Transitions>
+                        </Border.Transitions>
+                      </Border>
+                    </Panel>
+                  </ControlTemplate>
+                </Thumb.Template>
+              </Thumb>
+            </Track>
+          </Grid>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+
+  <Style Selector="ScrollBar Border#ThumbBarVertical:pointerover">
+    <Setter Property="Opacity" Value="0.9" />
+    <Setter Property="Background" Value="{DynamicResource ColorBrush3}" />
+  </Style>
+</Styles>

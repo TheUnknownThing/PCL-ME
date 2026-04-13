@@ -32,7 +32,7 @@ Each slice should end with:
 - a manual test list
 - visible real behavior in the running launcher
 
-## Current Status As Of 2026-04-04
+## Current Status As Of 2026-04-05
 
 Completed:
 
@@ -46,6 +46,7 @@ Completed:
 
 Recent checkpoints:
 
+- `c21e1e7d` `feat: package frontend launcher builds`
 - `74be91e1` `feat: wire frontend install selection flow`
 - `5e51a2be` `feat: add frontend install workflow primitives`
 - `1aa6abfb` `feat: repair instance files from portable manifests`
@@ -72,7 +73,9 @@ What that means today:
 - Track 2 shell-action parity is now effectively complete for the migrated tool/download/instance surfaces
 - Track 1 route parity is effectively complete in the current frontend branch
 - Track 4 adapter implementation is now in place for migrated shell actions, runtime path conventions, shortcut/script materialization, and protected key envelope decoding
-- the remaining work is now mostly Track 5 WPF responsibility removal plus Track 6 packaging and multi-platform validation
+- Track 5 WPF workflow removal is effectively complete for the copied install and launch-adjacent surfaces
+- Track 6 packaging infrastructure now exists for `osx-arm64`, `linux-x64`, and `win-x64`, with packaged launcher entry points instead of raw publish-folder-only output
+- the remaining Track 6 gap is now real host-matrix validation for Windows and Linux packaged runs, plus wider packaged-workflow verification beyond the macOS startup smoke pass
 
 ## Repo Boundaries
 
@@ -369,7 +372,7 @@ Status on 2026-04-04:
 - the migrated repair flow now reuses valid installer-local libraries during forced refreshes instead of trying to redownload mismatched remote artifacts, which removes the Cleanroom failure hit during the first real-instance pass
 - the temporary verification instances were removed after inspection so the real launcher folder returned to its prior state
 - a forced Cleanroom `RunRepair + ForceCoreRefresh` pass moved past the earlier local-library error and into the wider core-refresh workload; that long-running asset-heavy pass was not waited through to final completion during this checkpoint
-- Track 5 no longer has a known WPF-owned install-family gap, so next work should move to Track 6 packaging and broader platform validation unless a new fallback path is discovered
+- Track 5 no longer has a known WPF-owned install-family gap, and Track 6 packaging is now in place, so next work should focus on broader packaged-platform validation unless a new fallback path is discovered
 
 ## Track 6. Multi-Platform Packaging And Validation
 
@@ -399,6 +402,31 @@ Status on 2026-04-04:
 ### Suggested slice size
 
 - one platform or one packaging subsystem per commit
+
+### Status on 2026-04-05
+
+Completed in this track:
+
+- `PCL.Frontend.Spike` now carries packaging metadata, the copied launcher icon, and published launcher assets so packaged builds keep using the real copied images, help archive, homepage template, and `metadata.json`
+- `PCL.Frontend.Spike/scripts/package-frontend.sh` now publishes and packages `osx-arm64`, `linux-x64`, and `win-x64` outputs under `artifacts/frontend-packages/`
+- macOS packaging now emits `Plain Craft Launcher Community Edition.app` with an internal `PCLLauncher` stub that starts the Avalonia shell through `app --host-env true`
+- Linux packaging now emits a tarball with the published frontend, copied launcher icon, `launch-pcl-ce.sh`, and a `.desktop` launcher entry
+- Windows packaging now emits a zip archive with the published frontend plus `Launch Plain Craft Launcher Community Edition.vbs` as a launcher entry point that preserves the CLI binary behavior
+- packaged startup no longer depends on repo-relative `Plain Craft Launcher 2/...` paths because the frontend now resolves copied launcher assets from `LauncherAssets/` in publish output
+
+Manual verification completed on this track:
+
+1. `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS on 2026-04-05 after the packaging changes landed.
+2. `./PCL.Frontend.Spike/scripts/package-frontend.sh` produced fresh `osx-arm64`, `linux-x64`, and `win-x64` package artifacts under `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages`.
+3. The packaged macOS launcher stub at `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCLLauncher` started the packaged frontend process as `/Users/theunknownthing/PCL-CE/artifacts/frontend-packages/osx-arm64/Plain Craft Launcher Community Edition.app/Contents/MacOS/PCL.Frontend.Spike app --host-env true`.
+4. That macOS packaged startup smoke test exited without the earlier `metadata.json` startup failure once the copied launcher assets were included in publish output.
+5. The packaged Linux output contains `launch-pcl-ce.sh` plus `Plain Craft Launcher Community Edition.desktop`, and the packaged Windows output contains `Launch Plain Craft Launcher Community Edition.vbs`.
+
+Track 6 status:
+
+- packaging implementation is now in place in the current frontend branch
+- macOS packaged startup has been smoke-verified locally on 2026-04-05
+- Windows and Linux packaged runtime validation is still required before this track can be called fully closed
 
 ## Recommended Order
 
@@ -459,6 +487,10 @@ Why fourth:
 Expected reviewer test:
 
 - install the packaged app, validate startup/navigation/persistence, and complete one real launch on the target OS
+
+Status on 2026-04-05:
+
+- packaging implementation landed in `c21e1e7d`; the next owner should focus on Windows and Linux packaged-host validation rather than another packaging-structure rewrite
 
 ## Definition Of Done For Each Slice
 

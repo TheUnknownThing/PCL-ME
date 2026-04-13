@@ -1,40 +1,97 @@
 <Application
     x:Class="PCL.Frontend.Spike.Desktop.App"
     xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    RequestedThemeVariant="Light">
   <Application.Resources>
-    <FontFamily x:Key="LaunchFontFamily">avares://PCL.Frontend.Spike/Assets/Fonts#PCL English</FontFamily>
-    <SolidColorBrush x:Key="ColorBrush1">#343D4A</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush2">#0B5BCB</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush3">#1370F3</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush4">#4890F5</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush5">#96C0F9</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush6">#D5E6FD</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush7">#E0EAFD</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrush8">#EAF2FE</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushGray1">#404040</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushGray2">#737373</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushGray3">#8C8C8C</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushGray4">#A6A6A6</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushHalfWhite">#55FFFFFF</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01EAF2FE</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushTransparentBackground">#D2FBFBFB</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushBackground">#FBFBFB</SolidColorBrush>
-    <SolidColorBrush x:Key="ColorBrushWhite">#FFFFFF</SolidColorBrush>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://PCL.Frontend.Spike/Desktop/Styles/Colors.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+
+      <FontFamily x:Key="LaunchFontFamily">avares://PCL.Frontend.Spike/Assets/Fonts/Font.ttf#PCL English, Microsoft YaHei UI, Meiryo UI, Noto Sans CJK SC, sans-serif</FontFamily>
+
+      <SolidColorBrush x:Key="ComboBoxBackground">#55FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBackgroundDisabled">#FFEBEBEB</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused">#FFFFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused">#FF1370F3</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused">#FF96C0F9</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBorderBrush">#FF96C0F9</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver">#FF4890F5</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed">#FF1370F3</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled">#FFCCCCCC</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxForeground">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxForegroundDisabled">#FFA6A6A6</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxForegroundFocused">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground">#FF748396</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundFocusedPressed">#FF748396</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground">#FF5E6E82</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxEditableDropDownGlyphForeground">#FF5E6E82</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundDisabled">#FFA8B5C5</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused">#FF1370F3</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocusedPressed">#FF0B5BCB</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground">#FFFFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownForeground">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush">#FF96C0F9</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed">#FFE0EAFD</SolidColorBrush>
+      <Thickness x:Key="ComboBoxDropdownBorderThickness">1</Thickness>
+
+      <SolidColorBrush x:Key="ComboBoxItemForeground">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundPressed">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled">#FFA6A6A6</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelected">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedDisabled">#FFA6A6A6</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackground">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#FFEAF2FE</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#FFD5E6FD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundDisabled">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#FFD5E6FD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedUnfocused">#FFD5E6FD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed">#FFBFD9FC</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver">#FFDDEBFD</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedDisabled">#FFF0F0F0</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrush">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushPointerOver">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushPressed">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushDisabled">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelected">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedUnfocused">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPointerOver">#00FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedDisabled">#00FFFFFF</SolidColorBrush>
+
+      <SolidColorBrush x:Key="TextFieldBackground">#55FFFFFF</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBackgroundFocused">#FFE0EAFD</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBackgroundDisabled">#FFEBEBEB</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBorderBrush">#FF96C0F9</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBorderBrushPointerOver">#FF4890F5</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBorderBrushFocused">#FF1370F3</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldBorderBrushDisabled">#FFCCCCCC</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldForeground">#FF343D4A</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldForegroundDisabled">#FFA6A6A6</SolidColorBrush>
+      <SolidColorBrush x:Key="TextFieldSelectionBrush">#FF1370F3</SolidColorBrush>
+    </ResourceDictionary>
   </Application.Resources>
 
   <Application.Styles>
     <FluentTheme />
+    <StyleInclude Source="avares://PCL.Frontend.Spike/Desktop/Styles/CustomScroll.axaml" />
+    <StyleInclude Source="avares://PCL.Frontend.Spike/Desktop/Styles/CustomTextBlock.axaml" />
 
     <Style Selector="Window">
       <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
       <Setter Property="Background" Value="Transparent" />
-    </Style>
-
-    <Style Selector="TextBlock">
-      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
-      <Setter Property="FontSize" Value="13" />
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
     </Style>
 
     <Style Selector="Button">
@@ -46,12 +103,194 @@
       </Setter>
     </Style>
 
+    <Style Selector="Button.nochrome">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+              CornerRadius="0"
+              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+              Padding="{TemplateBinding Padding}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.nochrome:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="Button.nochrome:pressed">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
     <Style Selector="Button:pointerover">
       <Setter Property="Opacity" Value="0.9" />
     </Style>
 
     <Style Selector="Button:pressed">
       <Setter Property="Opacity" Value="0.75" />
+    </Style>
+
+    <Style Selector="ComboBox">
+      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForeground}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="8.5,4" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MaxDropDownHeight" Value="240" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid ColumnDefinitions="*,30" UseLayoutRounding="True">
+            <Border
+                x:Name="Background"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                UseLayoutRounding="True" />
+            <ContentControl
+                x:Name="ContentPresenter"
+                Grid.Column="0"
+                Margin="{TemplateBinding Padding}"
+                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                Content="{TemplateBinding SelectionBoxItem}"
+                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+            <PathIcon
+                x:Name="DropDownGlyph"
+                Grid.Column="1"
+                Width="12"
+                Height="12"
+                Margin="0,0,10,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Foreground="{TemplateBinding Foreground}"
+                IsHitTestVisible="False"
+                UseLayoutRounding="False"
+                Data="M1939 486L2029 576L1024 1581L19 576L109 486L1024 1401L1939 486Z" />
+            <Popup
+                Name="PART_Popup"
+                IsLightDismissEnabled="True"
+                IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}"
+                InheritsTransform="True"
+                MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                MinWidth="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"
+                PlacementTarget="Background"
+                WindowManagerAddShadowHint="False">
+              <Border
+                  x:Name="PopupBorder"
+                  Margin="0,0,1,1"
+                  Padding="1"
+                  HorizontalAlignment="Stretch"
+                  Background="{DynamicResource ComboBoxDropDownBackground}"
+                  BorderBrush="{DynamicResource ComboBoxDropDownBorderBrush}"
+                  BorderThickness="{DynamicResource ComboBoxDropdownBorderThickness}"
+                  BoxShadow="0 2 4 0 #28000000"
+                  ClipToBounds="False"
+                  CornerRadius="3"
+                  UseLayoutRounding="True">
+                <ScrollViewer
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto"
+                    UseLayoutRounding="True">
+                  <ItemsPresenter
+                      Name="PART_ItemsPresenter"
+                      ItemsPanel="{TemplateBinding ItemsPanel}"
+                      UseLayoutRounding="True" />
+                </ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ComboBox:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundPointerOver}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushPointerOver}" />
+    </Style>
+
+    <Style Selector="ComboBox:pressed">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundPressed}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushPressed}" />
+    </Style>
+
+    <Style Selector="ComboBox:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBackgroundBorderBrushFocused}" />
+    </Style>
+
+    <Style Selector="ComboBox:disabled">
+      <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrushDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxForegroundDisabled}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="ComboBoxItem">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="ComboBoxItem /template/ ContentPresenter">
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="{Binding $parent[ComboBox].HorizontalContentAlignment}" />
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFieldForeground}" />
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="5,4,5,4" />
+      <Setter Property="SelectionBrush" Value="{DynamicResource TextFieldSelectionBrush}" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style Selector="TextBox:pointerover">
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackgroundPointerOver}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrushPointerOver}" />
+    </Style>
+
+    <Style Selector="TextBox:focus">
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackgroundFocused}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrushFocused}" />
+    </Style>
+
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Background" Value="{DynamicResource TextFieldBackgroundDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TextFieldBorderBrushDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFieldForegroundDisabled}" />
+      <Setter Property="Opacity" Value="1" />
     </Style>
   </Application.Styles>
 </Application>

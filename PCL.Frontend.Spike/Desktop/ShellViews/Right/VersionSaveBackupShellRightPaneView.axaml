@@ -1,0 +1,84 @@
+<UserControl
+    x:Class="PCL.Frontend.Spike.Desktop.ShellViews.Right.VersionSaveBackupShellRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls"
+    DataContext="{Binding Shell}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,10" Spacing="15">
+      <controls:PclCard ContentMargin="15,8,0,15">
+        <controls:PclCard.CardContent>
+          <WrapPanel>
+            <controls:PclButton
+                MinWidth="110"
+                Margin="0,7,15,0"
+                Command="{Binding OpenVersionSaveFolderCommand}"
+                ColorType="Highlight"
+                Text="打开存档文件夹" />
+            <controls:PclButton
+                MinWidth="110"
+                Margin="0,7,15,0"
+                Command="{Binding CreateVersionSaveBackupCommand}"
+                Text="创建" />
+            <controls:PclButton
+                MinWidth="110"
+                Margin="0,7,15,0"
+                Command="{Binding CleanVersionSaveBackupCommand}"
+                Text="清理无用记录" />
+          </WrapPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="备份列表" ContentMargin="20,40,18,20" IsVisible="{Binding HasVersionSaveBackupEntries}">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding VersionSaveBackupEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+                  <StackPanel Margin="0,0,18,0" Spacing="3">
+                    <TextBlock
+                        Foreground="#343D4A"
+                        FontSize="13.5"
+                        FontWeight="SemiBold"
+                        Text="{Binding Title}" />
+                    <TextBlock
+                        Foreground="#677789"
+                        FontSize="12.5"
+                        Text="{Binding Info}"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                  <controls:PclButton
+                      Grid.Column="1"
+                      Width="96"
+                      Height="35"
+                      VerticalAlignment="Center"
+                      Command="{Binding Command}"
+                      Text="查看" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard IsVisible="{Binding HasNoVersionSaveBackupEntries}" ContentMargin="20,17,20,17">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="10">
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="#4B5968"
+                FontSize="19"
+                Text="暂时没有备份" />
+            <Border Height="2" Background="#D5E6FD" />
+            <TextBlock
+                Foreground="#677789"
+                FontSize="12.5"
+                Text="存档备份和存档是绑定的，删除存档备份也会没有 :("
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

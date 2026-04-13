@@ -1,4 +1,5 @@
 using PCL.Frontend.Spike.Models;
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -325,7 +326,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshInstanceSetupSurface()
     {
-        if (!IsInstanceSetupSurface)
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceSetup))
         {
             return;
         }

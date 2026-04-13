@@ -3,7 +3,8 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Spike.Desktop.Controls">
-  <Grid Width="300">
+  <Grid
+      Width="300">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition />
@@ -41,13 +42,13 @@
         <TextBlock
             HorizontalAlignment="Center"
             Foreground="#343D4A"
-            FontSize="23"
+          FontSize="18"
             FontWeight="Light"
             Text="{Binding LaunchUserName}" />
         <TextBlock
             HorizontalAlignment="Center"
             Foreground="#B3B3B3"
-            FontSize="14"
+          FontSize="12.5"
             Text="{Binding LaunchAuthLabel}" />
       </StackPanel>
     </Grid>
@@ -61,20 +62,23 @@
           Title="{Binding LaunchButtonTitle}" />
     </Grid>
 
-    <controls:PclButton
+    <Grid
         Grid.Row="3"
         Grid.Column="2"
-        Height="35"
+        Grid.ColumnSpan="2"
         Margin="0,10,10,0"
-        Command="{Binding VersionSelectCommand}"
-        Text="版本选择" />
+        ColumnDefinitions="*,10,*">
+      <controls:PclButton
+          Grid.Column="0"
+          Height="35"
+          Command="{Binding VersionSelectCommand}"
+          Text="版本选择" />
 
-    <controls:PclButton
-        Grid.Row="3"
-        Grid.Column="3"
-        Height="35"
-        Margin="0,10,10,0"
-        Command="{Binding VersionSetupCommand}"
-        Text="版本设置" />
+      <controls:PclButton
+          Grid.Column="2"
+          Height="35"
+          Command="{Binding VersionSetupCommand}"
+          Text="版本设置" />
+    </Grid>
   </Grid>
 </UserControl>

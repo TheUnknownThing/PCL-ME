@@ -42,27 +42,32 @@ internal sealed partial class PclListItem : UserControl
     {
         InitializeComponent();
 
-        MainButton.PointerEntered += (_, _) =>
+        LayoutRoot.PointerEntered += (_, _) =>
         {
             _isHovered = true;
             RefreshVisualState();
         };
-        MainButton.PointerExited += (_, _) =>
+        LayoutRoot.PointerExited += (_, _) =>
         {
             _isHovered = false;
             _isPressed = false;
             RefreshVisualState();
         };
-        MainButton.PointerPressed += (_, args) =>
+        LayoutRoot.PointerPressed += (_, args) =>
         {
-            if (args.GetCurrentPoint(MainButton).Properties.IsLeftButtonPressed)
+            if (args.GetCurrentPoint(LayoutRoot).Properties.IsLeftButtonPressed && !IsPointerOverAccessory(args))
             {
                 _isPressed = true;
                 RefreshVisualState();
             }
         };
-        MainButton.PointerReleased += (_, _) =>
+        LayoutRoot.PointerReleased += (_, args) =>
         {
+            if (_isPressed && args.InitialPressMouseButton == MouseButton.Left && !IsPointerOverAccessory(args))
+            {
+                ExecuteCommand(Command);
+            }
+
             _isPressed = false;
             RefreshVisualState();
         };
@@ -177,6 +182,8 @@ internal sealed partial class PclListItem : UserControl
     {
         var hasAccessory = !string.IsNullOrWhiteSpace(AccessoryIconData) && AccessoryCommand is not null;
         AccessoryButton.IsVisible = hasAccessory;
+        AccessoryButton.IsHitTestVisible = hasAccessory && (IsSelected || _isHovered);
+        AccessoryButton.Opacity = hasAccessory && (IsSelected || _isHovered) ? 1.0 : 0.0;
         AccessoryPath.Data = hasAccessory ? Geometry.Parse(AccessoryIconData) : null;
     }
 
@@ -185,17 +192,44 @@ internal sealed partial class PclListItem : UserControl
         LogoPath.RenderTransform = new ScaleTransform(scale, scale);
     }
 
+    private bool IsPointerOverAccessory(PointerEventArgs args)
+    {
+        if (!AccessoryButton.IsVisible || !AccessoryButton.IsHitTestVisible)
+        {
+            return false;
+        }
+
+        var position = args.GetPosition(AccessoryButton);
+        return position.X >= 0 &&
+               position.Y >= 0 &&
+               position.X <= AccessoryButton.Bounds.Width &&
+               position.Y <= AccessoryButton.Bounds.Height;
+    }
+
+    private static void ExecuteCommand(ICommand? command)
+    {
+        if (command?.CanExecute(null) == true)
+        {
+            command.Execute(null);
+        }
+    }
+
     private void RefreshVisualState()
     {
         var showHighlight = IsSelected || _isHovered;
         RectBack.Opacity = showHighlight ? 1.0 : 0.0;
-        RectBack.Background = IsSelected ? Brush.Parse("#EAF2FE") : Brush.Parse("#F4F8FE");
-        RectBack.BorderBrush = IsSelected ? Brush.Parse("#D5E6FD") : Brush.Parse("#EDF3FC");
+        RectBack.Background = IsSelected
+            ? _isHovered
+                ? Brush.Parse("#DDEBFE")
+                : Brush.Parse("#EAF2FE")
+            : Brush.Parse("#E2EEFE");
         SelectionBar.IsVisible = IsSelected;
         TitleBlock.Foreground = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#404040");
         InfoBlock.Foreground = IsSelected ? Brush.Parse("#4B78C2") : Brush.Parse("#7D8897");
         LogoPath.Fill = IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#737373");
         AccessoryPath.Fill = _isHovered ? Brush.Parse("#4890F5") : Brush.Parse("#96C0F9");
+        AccessoryButton.IsHitTestVisible = AccessoryButton.IsVisible && (IsSelected || _isHovered);
+        AccessoryButton.Opacity = AccessoryButton.IsVisible && (IsSelected || _isHovered) ? 1.0 : 0.0;
         RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);
     }
 }

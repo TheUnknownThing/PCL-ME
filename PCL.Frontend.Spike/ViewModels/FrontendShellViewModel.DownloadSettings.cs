@@ -1,3 +1,5 @@
+using PCL.Frontend.Spike.ViewModels.ShellPanes;
+
 namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
@@ -33,7 +35,7 @@ internal sealed partial class FrontendShellViewModel
         get => _downloadFavoriteSearchQuery;
         set
         {
-            if (SetProperty(ref _downloadFavoriteSearchQuery, value) && IsDownloadFavoritesSurface)
+            if (SetProperty(ref _downloadFavoriteSearchQuery, value) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
             {
                 RefreshDownloadFavoriteSurface();
             }
@@ -48,7 +50,7 @@ internal sealed partial class FrontendShellViewModel
         set
         {
             var nextValue = Math.Clamp(value, 0, DownloadFavoriteTargetOptions.Count - 1);
-            if (SetProperty(ref _selectedDownloadFavoriteTargetIndex, nextValue) && IsDownloadFavoritesSurface)
+            if (SetProperty(ref _selectedDownloadFavoriteTargetIndex, nextValue) && IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadFavorites))
             {
                 RefreshDownloadFavoriteSurface();
             }

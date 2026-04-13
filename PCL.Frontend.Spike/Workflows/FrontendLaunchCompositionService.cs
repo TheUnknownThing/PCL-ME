@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Runtime.InteropServices;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
@@ -30,9 +31,6 @@ internal static class FrontendLaunchCompositionService
 
         var sharedConfig = new JsonFileProvider(runtimePaths.SharedConfigPath);
         var localConfig = new YamlFileProvider(runtimePaths.LocalConfigPath);
-        var inspectionDefaults = FrontendInspectionLaunchCompositionService.CreateRuntimeDefaults(options.Scenario);
-        var scenarioDefaults = inspectionDefaults.ScenarioDefaults;
-        var hostJavaInputs = inspectionDefaults.HostJavaInputs;
 
         var launcherFolder = ResolveLauncherFolder(ReadValue(localConfig, "LaunchFolderSelect", "$.minecraft\\"), runtimePaths);
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
@@ -47,12 +45,12 @@ internal static class FrontendLaunchCompositionService
             : launcherFolder;
         var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName);
         var selectedProfile = ReadSelectedProfile(runtimePaths);
-        var javaWorkflowRequest = BuildJavaWorkflowRequest(scenarioDefaults.JavaWorkflowRequest, manifestSummary);
+        var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
         var selectedJavaRuntime = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, javaWorkflow);
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
             localConfig,
-            scenarioDefaults.ResolutionRequest,
+            CreateRuntimeResolutionFallback(),
             manifestSummary,
             selectedJavaRuntime,
             javaWorkflow));
@@ -155,8 +153,8 @@ internal static class FrontendLaunchCompositionService
             HasMicrosoftProfile: selectedProfile.HasMicrosoftProfile,
             IsRestrictedFeatureAllowed: true);
         var precheckResult = MinecraftLaunchPrecheckService.Evaluate(precheckRequest);
-        var manifestPlan = BuildJavaRuntimeManifestPlan(hostJavaInputs, launcherFolder, javaWorkflow);
-        var transferPlan = BuildJavaRuntimeTransferPlan(hostJavaInputs, launcherFolder, manifestPlan);
+        var manifestPlan = BuildJavaRuntimeManifestPlan(javaWorkflow);
+        var transferPlan = BuildJavaRuntimeTransferPlan(launcherFolder, manifestPlan);
 
         return new FrontendLaunchComposition(
             options.Scenario,
@@ -519,6 +517,44 @@ internal static class FrontendLaunchCompositionService
             MojangRecommendedComponent: manifestSummary.MojangRecommendedComponent ?? fallback.MojangRecommendedComponent);
     }
 
+    private static MinecraftLaunchJavaWorkflowRequest CreateRuntimeJavaWorkflowFallback(FrontendVersionManifestSummary manifestSummary)
+    {
+        var recommendedMajorVersion = manifestSummary.MojangRecommendedMajorVersion
+                                     ?? manifestSummary.JsonRequiredMajorVersion
+                                     ?? 8;
+        return new MinecraftLaunchJavaWorkflowRequest(
+            IsVersionInfoValid: manifestSummary.IsVersionInfoValid,
+            ReleaseTime: manifestSummary.ReleaseTime ?? DateTime.Now,
+            VanillaVersion: manifestSummary.VanillaVersion ?? new Version(1, 20, 1),
+            HasOptiFine: manifestSummary.HasOptiFine,
+            HasForge: manifestSummary.HasForge,
+            ForgeVersion: manifestSummary.ForgeVersion,
+            HasCleanroom: manifestSummary.HasCleanroom,
+            HasFabric: manifestSummary.HasFabric,
+            HasLiteLoader: manifestSummary.HasLiteLoader,
+            HasLabyMod: manifestSummary.HasLabyMod,
+            JsonRequiredMajorVersion: manifestSummary.JsonRequiredMajorVersion ?? recommendedMajorVersion,
+            MojangRecommendedMajorVersion: recommendedMajorVersion,
+            MojangRecommendedComponent: manifestSummary.MojangRecommendedComponent ?? "jre-legacy");
+    }
+
+    private static MinecraftLaunchResolutionRequest CreateRuntimeResolutionFallback()
+    {
+        return new MinecraftLaunchResolutionRequest(
+            WindowMode: (int)GameWindowSizeMode.Default,
+            LauncherWindowWidth: null,
+            LauncherWindowHeight: null,
+            LauncherTitleBarHeight: 0,
+            CustomWidth: 854,
+            CustomHeight: 480,
+            GameVersionDrop: 0,
+            JavaMajorVersion: 8,
+            JavaRevision: 0,
+            HasOptiFine: false,
+            HasForge: false,
+            DpiScale: 1);
+    }
+
     private static FrontendLaunchProfileSummary ReadSelectedProfile(FrontendRuntimePaths runtimePaths)
     {
         var profilesPath = Path.Combine(runtimePaths.LauncherAppDataDirectory, "profiles.json");
@@ -776,8 +812,6 @@ internal static class FrontendLaunchCompositionService
     }
 
     private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
-        JavaRuntimeSpikeInputs hostJavaInputs,
-        string launcherFolder,
         MinecraftLaunchJavaWorkflowPlan javaWorkflow)
     {
         if (string.IsNullOrWhiteSpace(javaWorkflow.MissingJavaPrompt.DownloadTarget))
@@ -787,29 +821,26 @@ internal static class FrontendLaunchCompositionService
 
         try
         {
+            var liveIndexJson = TryDownloadUtf8String(MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().AllUrls);
+            if (string.IsNullOrWhiteSpace(liveIndexJson))
+            {
+                return null;
+            }
+
             return MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
                 new MinecraftJavaRuntimeManifestRequestPlanRequest(
-                    hostJavaInputs.IndexJson,
-                    hostJavaInputs.PlatformKey,
+                    liveIndexJson,
+                    ResolveJavaRuntimePlatformKey(),
                     javaWorkflow.MissingJavaPrompt.DownloadTarget,
                     MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
         }
         catch
         {
-            var liveIndexJson = TryDownloadUtf8String(MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().AllUrls);
-            return string.IsNullOrWhiteSpace(liveIndexJson)
-                ? null
-                : MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
-                    new MinecraftJavaRuntimeManifestRequestPlanRequest(
-                        liveIndexJson,
-                        hostJavaInputs.PlatformKey,
-                        javaWorkflow.MissingJavaPrompt.DownloadTarget,
-                        MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
+            return null;
         }
     }
 
     private static MinecraftJavaRuntimeDownloadTransferPlan? BuildJavaRuntimeTransferPlan(
-        JavaRuntimeSpikeInputs hostJavaInputs,
         string launcherFolder,
         MinecraftJavaRuntimeManifestRequestPlan? manifestPlan)
     {
@@ -821,9 +852,7 @@ internal static class FrontendLaunchCompositionService
         var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
             launcherFolder,
             manifestPlan.Selection.ComponentKey);
-        var manifestJson = manifestPlan.RequestUrls.AllUrls.Any(url => url.Contains("example.invalid", StringComparison.OrdinalIgnoreCase))
-            ? TryDownloadUtf8String(manifestPlan.RequestUrls.AllUrls)
-            : TryDownloadUtf8String(manifestPlan.RequestUrls.AllUrls) ?? hostJavaInputs.ManifestJson;
+        var manifestJson = TryDownloadUtf8String(manifestPlan.RequestUrls.AllUrls);
         if (string.IsNullOrWhiteSpace(manifestJson))
         {
             return null;
@@ -833,7 +862,7 @@ internal static class FrontendLaunchCompositionService
             new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                 manifestJson,
                 runtimeBaseDirectory,
-                hostJavaInputs.IgnoredSha1Hashes,
+                Array.Empty<string>(),
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
         var existingRelativePaths = workflowPlan.Files
             .Where(file => File.Exists(file.TargetPath))
@@ -861,6 +890,30 @@ internal static class FrontendLaunchCompositionService
         }
 
         return null;
+    }
+
+    private static string ResolveJavaRuntimePlatformKey()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.Arm64 => "windows-arm64",
+                Architecture.X86 => "windows-x86",
+                _ => "windows-x64"
+            };
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+                ? "mac-os-arm64"
+                : "mac-os";
+        }
+
+        return RuntimeInformation.ProcessArchitecture == Architecture.X86
+            ? "linux-i386"
+            : "linux";
     }
 
     private static string ResolveLauncherFolder(string rawValue, FrontendRuntimePaths runtimePaths)
