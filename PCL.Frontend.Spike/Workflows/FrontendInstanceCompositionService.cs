@@ -8,13 +8,7 @@ namespace PCL.Frontend.Spike.Workflows;
 
 internal static class FrontendInstanceCompositionService
 {
-    private static readonly string LauncherRootDirectory = Path.GetFullPath(Path.Combine(
-        AppContext.BaseDirectory,
-        "..",
-        "..",
-        "..",
-        "..",
-        "Plain Craft Launcher 2"));
+    private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
     private static readonly string[] ScreenshotPatterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp", "*.tiff"];
     private static readonly string[] EnabledModExtensions = [".jar", ".litemod"];
     private static readonly string[] DisabledModExtensions = [".disabled", ".old"];
@@ -156,7 +150,10 @@ internal static class FrontendInstanceCompositionService
     {
         var isStarred = ReadValue(instanceConfig, "IsStar", false);
         var categoryIndex = MapInstanceCategoryIndex(ReadValue(instanceConfig, "DisplayType", 0));
-        var customInfo = ReadValue(instanceConfig, "CustomInfo", string.Empty);
+        var customInfo = ReadValue(
+            instanceConfig,
+            "VersionArgumentInfo",
+            ReadValue(instanceConfig, "CustomInfo", string.Empty));
         var launchCount = ReadValue(instanceConfig, "VersionLaunchCount", 0);
         var modpackVersion = ReadValue(instanceConfig, "VersionModpackVersion", string.Empty);
         var infoEntries = new List<FrontendInstanceInfoEntry>();
@@ -410,7 +407,7 @@ internal static class FrontendInstanceCompositionService
                 new FrontendInstanceInstallOption("LabyMod", DisplayVersion(manifestSummary.LabyModVersion), "LabyMod.png"),
                 new FrontendInstanceInstallOption("OptiFine", DisplayVersion(manifestSummary.OptiFineVersion), "GrassPath.png"),
                 new FrontendInstanceInstallOption("OptiFabric", DisplayInstalled(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion), "OptiFabric.png"),
-                new FrontendInstanceInstallOption("LiteLoader", manifestSummary.HasLiteLoader ? "已安装" : "未安装", "Egg.png")
+                new FrontendInstanceInstallOption("LiteLoader", DisplayInstalled(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion), "Egg.png")
             ]);
     }
 
@@ -882,7 +879,7 @@ internal static class FrontendInstanceCompositionService
 
         return Path.Combine(
             LauncherRootDirectory,
-            "images",
+            "Images",
             "Blocks",
             DetermineInstallIconName(manifestSummary));
     }
@@ -939,7 +936,7 @@ internal static class FrontendInstanceCompositionService
             return null;
         }
 
-        return Path.Combine(LauncherRootDirectory, "images", "Blocks", fileName);
+        return Path.Combine(LauncherRootDirectory, "Images", "Blocks", fileName);
     }
 
     private static int MapInstanceCategoryIndex(int storedValue)
@@ -1106,6 +1103,7 @@ internal static class FrontendInstanceCompositionService
             QuiltVersion: parentSummary.QuiltVersion ?? ExtractLibraryVersion(allLibraries, "org.quiltmc:quilt-loader"),
             OptiFineVersion: parentSummary.OptiFineVersion ?? ExtractOptiFineVersion(allLibraries),
             HasLiteLoader: parentSummary.HasLiteLoader || ContainsLibrary(allLibraries, "liteloader"),
+            LiteLoaderVersion: parentSummary.LiteLoaderVersion ?? ExtractLibraryVersion(allLibraries, "com.mumfrey:liteloader"),
             LabyModVersion: parentSummary.LabyModVersion ?? ExtractLibraryVersion(allLibraries, "net.labymod"),
             HasLabyMod: parentSummary.HasLabyMod || ContainsLibrary(allLibraries, "labymod"),
             HasFabricApi: parentSummary.HasFabricApi || ContainsLibrary(allLibraries, "fabric-api"),
@@ -1290,6 +1288,7 @@ internal static class FrontendInstanceCompositionService
         string? QuiltVersion,
         string? OptiFineVersion,
         bool HasLiteLoader,
+        string? LiteLoaderVersion,
         string? LabyModVersion,
         bool HasLabyMod,
         bool HasFabricApi,
@@ -1311,6 +1310,7 @@ internal static class FrontendInstanceCompositionService
             QuiltVersion: null,
             OptiFineVersion: null,
             HasLiteLoader: false,
+            LiteLoaderVersion: null,
             LabyModVersion: null,
             HasLabyMod: false,
             HasFabricApi: false,

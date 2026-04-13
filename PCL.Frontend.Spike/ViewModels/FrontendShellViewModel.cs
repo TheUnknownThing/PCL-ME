@@ -47,6 +47,14 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<DownloadCatalogSectionViewModel> DownloadFavoriteSections { get; } = [];
 
+    public ObservableCollection<KeyValueEntryViewModel> VersionSaveInfoEntries { get; } = [];
+
+    public ObservableCollection<KeyValueEntryViewModel> VersionSaveSettingEntries { get; } = [];
+
+    public ObservableCollection<SimpleListEntryViewModel> VersionSaveBackupEntries { get; } = [];
+
+    public ObservableCollection<InstanceResourceEntryViewModel> VersionSaveDatapackEntries { get; } = [];
+
     public ObservableCollection<SurfaceNoticeViewModel> InstanceInstallHints { get; } = [];
 
     public ObservableCollection<DownloadInstallOptionViewModel> InstanceInstallOptions { get; } = [];
@@ -230,6 +238,15 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
     public bool IsToolsTestSurface => _currentRoute.Page == LauncherFrontendPageKey.Tools
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.ToolsTest;
 
+    public bool IsVersionSaveInfoSurface => _currentRoute.Page == LauncherFrontendPageKey.VersionSaves
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSavesInfo;
+
+    public bool IsVersionSaveBackupSurface => _currentRoute.Page == LauncherFrontendPageKey.VersionSaves
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSavesBackup;
+
+    public bool IsVersionSaveDatapackSurface => _currentRoute.Page == LauncherFrontendPageKey.VersionSaves
+        && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionSavesDatapack;
+
     public bool IsInstanceOverviewSurface => _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
         && _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionOverall;
 
@@ -276,6 +293,9 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         && !IsToolsGameLinkSurface
         && !IsToolsHelpSurface
         && !IsToolsTestSurface
+        && !IsVersionSaveInfoSurface
+        && !IsVersionSaveBackupSurface
+        && !IsVersionSaveDatapackSurface
         && !IsInstanceOverviewSurface
         && !IsInstanceSetupSurface
         && !IsInstanceExportSurface

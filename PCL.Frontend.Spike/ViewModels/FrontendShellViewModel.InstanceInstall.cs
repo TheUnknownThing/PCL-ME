@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media.Imaging;
+using PCL.Frontend.Spike.Workflows;
 
 namespace PCL.Frontend.Spike.ViewModels;
 
@@ -39,26 +40,26 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("修改实例安装目标", $"{InstanceInstallSelectionTitle} • {InstanceInstallSelectionSummary}"));
 
     public ActionCommand EditInstanceInstallMinecraftCommand => new(() =>
-        AddActivity("修改 Minecraft 版本", InstanceInstallMinecraftVersion));
+        _ = EditInstallMinecraftAsync(isExistingInstance: true));
 
     private void InitializeInstanceInstallSurface()
     {
+        EnsureInstanceInstallEditableState();
         var installState = _instanceComposition.Install;
         InstanceInstallSelectionTitle = installState.SelectionTitle;
         InstanceInstallSelectionSummary = installState.SelectionSummary;
-        InstanceInstallMinecraftVersion = installState.MinecraftVersion;
+        InstanceInstallMinecraftVersion = _instanceInstallMinecraftChoice is null
+            ? installState.MinecraftVersion
+            : $"Minecraft {_instanceInstallMinecraftChoice.Version}";
         InstanceInstallMinecraftIcon = LoadLauncherBitmap("Images", "Blocks", installState.MinecraftIconName);
 
         ReplaceItems(
             InstanceInstallHints,
-            installState.Hints.Select(hint => CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
+            GetEffectiveInstallHints(isExistingInstance: true).Select(hint => CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
 
         ReplaceItems(
             InstanceInstallOptions,
-            installState.Options.Select(option => CreateDownloadInstallOption(
-                option.Title,
-                option.Selection,
-                LoadLauncherBitmap("Images", "Blocks", option.IconName))));
+            installState.Options.Select(option => CreateInstallOptionViewModel(isExistingInstance: true, option.Title, option.IconName)));
     }
 
     private void RefreshInstanceInstallSurface()

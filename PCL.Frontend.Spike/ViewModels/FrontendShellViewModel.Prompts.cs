@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
@@ -163,6 +164,11 @@ internal sealed partial class FrontendShellViewModel
 
         if (option.ClosesPrompt)
         {
+            if (lane == SpikePromptLaneKind.Launch)
+            {
+                _dismissedLaunchPromptIds.Add(promptId);
+            }
+
             _promptCatalog[lane].RemoveAll(prompt => prompt.Id == promptId);
             RebuildPromptLanes();
             SyncPromptLaneState();
@@ -173,6 +179,15 @@ internal sealed partial class FrontendShellViewModel
             }
 
             AddActivity("Prompt closed.", $"{promptId} was dismissed from the {lane} lane.");
+
+            if (lane == SpikePromptLaneKind.Launch &&
+                _pendingLaunchAfterPrompt &&
+                !_isLaunchBlockedByPrompt &&
+                _promptCatalog[SpikePromptLaneKind.Launch].Count == 0)
+            {
+                _pendingLaunchAfterPrompt = false;
+                _ = StartLaunchAsync();
+            }
         }
     }
 
@@ -192,7 +207,7 @@ internal sealed partial class FrontendShellViewModel
                 ExportCrashReportFromPrompt();
                 break;
             case LauncherFrontendPromptCommandKind.DownloadJavaRuntime:
-                DownloadJavaRuntimeFromPrompt();
+                _ = DownloadJavaRuntimeFromPromptAsync();
                 break;
             case LauncherFrontendPromptCommandKind.OpenUrl:
                 OpenExternalTarget(command.Value, "已根据提示打开外部链接。");
@@ -298,8 +313,16 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private void HandleLaunchRequested()
+    private async Task HandleLaunchRequestedAsync()
     {
+        RefreshLaunchState();
+
+        if (_isLaunchInProgress)
+        {
+            AddActivity("启动进行中", "当前已经有一个前端启动会话正在运行。");
+            return;
+        }
+
         if (_isLaunchBlockedByPrompt)
         {
             AddActivity("启动已被提示中止", "请先重新确认启动前提示或调整当前实例设置。");
@@ -315,12 +338,15 @@ internal sealed partial class FrontendShellViewModel
         EnsureLaunchPromptLane();
         if (_promptCatalog[SpikePromptLaneKind.Launch].Count > 0)
         {
+            _pendingLaunchAfterPrompt = true;
             RebuildPromptLanes();
             SetPromptOverlayOpen(true);
             SelectPromptLane(SpikePromptLaneKind.Launch, updateActivity: false);
+            AddActivity("启动前提示待处理", $"{LaunchVersionSubtitle} 还有 {_promptCatalog[SpikePromptLaneKind.Launch].Count} 个提示需要确认。");
+            return;
         }
 
-        AddActivity("Launch requested.", $"Would start {LaunchVersionSubtitle}.");
+        await StartLaunchAsync();
     }
 
     private void AcceptPromptConsent()
@@ -350,7 +376,7 @@ internal sealed partial class FrontendShellViewModel
         if (lane == SpikePromptLaneKind.Launch)
         {
             _isLaunchBlockedByPrompt = false;
-            AddActivity("继续启动流程", "启动前提示已放行，启动按钮恢复可用。");
+            AddActivity("继续启动流程", _pendingLaunchAfterPrompt ? "启动前提示已放行，前端将继续当前启动。" : "启动前提示已放行，启动按钮恢复可用。");
             return;
         }
 
@@ -360,6 +386,7 @@ internal sealed partial class FrontendShellViewModel
     private void AbortLaunchFromPrompt()
     {
         _isLaunchBlockedByPrompt = true;
+        _pendingLaunchAfterPrompt = false;
         AddActivity("已中止启动流程", "启动提示要求返回处理，当前启动动作已被阻止。");
     }
 
@@ -420,7 +447,7 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("崩溃报告已导出", $"{exportResult.ArchivePath} • {exportResult.ArchivedFileCount} 个文件已归档。");
     }
 
-    private void DownloadJavaRuntimeFromPrompt()
+    private async Task DownloadJavaRuntimeFromPromptAsync()
     {
         if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
         {
@@ -428,28 +455,42 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var installResult = _shellActionService.MaterializeJavaRuntime(
-            _launchComposition.JavaRuntimeManifestPlan,
-            _launchComposition.JavaRuntimeTransferPlan);
-        _launchComposition = _launchComposition with
+        AddActivity("Java 运行时准备中", "正在后台下载并注册 Java 运行时。");
+
+        try
         {
-            SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
-                Path.Combine(
-                    installResult.RuntimeDirectory,
-                    "bin",
-                    OperatingSystem.IsWindows() ? "java.exe" : "java"),
-                $"Java {installResult.VersionName}",
-                _launchComposition.JavaWorkflow.RecommendedMajorVersion,
-                IsEnabled: true,
-                Is64Bit: Environment.Is64BitOperatingSystem)
-        };
-        RaiseLaunchCompositionProperties();
-        RegisterMaterializedJavaRuntime(installResult);
-        _isLaunchBlockedByPrompt = false;
-        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
-        AddActivity(
-            "Java 运行时已准备",
-            $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+            var installResult = await Task.Run(() => _shellActionService.MaterializeJavaRuntime(
+                _launchComposition.JavaRuntimeManifestPlan,
+                _launchComposition.JavaRuntimeTransferPlan));
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _launchComposition = _launchComposition with
+                {
+                    SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
+                        _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
+                        $"Java {installResult.VersionName}",
+                        _launchComposition.JavaWorkflow.RecommendedMajorVersion,
+                        IsEnabled: true,
+                        Is64Bit: Environment.Is64BitOperatingSystem)
+                };
+                RaiseLaunchCompositionProperties();
+                RegisterMaterializedJavaRuntime(installResult);
+                _isLaunchBlockedByPrompt = false;
+                _pendingLaunchAfterPrompt = false;
+                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
+                AddActivity(
+                    "Java 运行时已准备",
+                    $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+            });
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                AddActivity("Java 运行时准备失败", ex.Message);
+            });
+        }
     }
 
     private void RegisterMaterializedJavaRuntime(FrontendJavaRuntimeInstallResult installResult)
@@ -524,6 +565,133 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
+    private async Task StartLaunchAsync()
+    {
+        RefreshLaunchState();
+
+        if (_launchComposition.SelectedJavaRuntime is null)
+        {
+            AddActivity("启动失败", "当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
+            return;
+        }
+
+        try
+        {
+            _isLaunchInProgress = true;
+            _showLaunchLog = true;
+            _launchLogBuilder.Clear();
+            RaiseLaunchSessionProperties();
+
+            foreach (var line in _launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines)
+            {
+                AppendLaunchLogLine(line);
+            }
+
+            var startResult = _shellActionService.StartLaunchSession(
+                _launchComposition,
+                _instanceComposition.Selection.InstanceDirectory);
+            AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
+            AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
+
+            _ = MonitorLaunchSessionAsync(startResult);
+        }
+        catch (Exception ex)
+        {
+            _isLaunchInProgress = false;
+            RaiseLaunchSessionProperties();
+            AppendLaunchLogLine($"启动失败：{ex.Message}");
+            AddActivity("启动失败", ex.Message);
+        }
+    }
+
+    private async Task MonitorLaunchSessionAsync(FrontendLaunchStartResult startResult)
+    {
+        try
+        {
+            startResult.Process.EnableRaisingEvents = true;
+            startResult.Process.OutputDataReceived += (_, args) =>
+            {
+                if (!string.IsNullOrWhiteSpace(args.Data))
+                {
+                    AppendLaunchLogLine(args.Data);
+                    File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
+                }
+            };
+            startResult.Process.ErrorDataReceived += (_, args) =>
+            {
+                if (!string.IsNullOrWhiteSpace(args.Data))
+                {
+                    AppendLaunchLogLine(args.Data);
+                    File.AppendAllText(startResult.RawOutputLogPath, args.Data + Environment.NewLine, new System.Text.UTF8Encoding(false));
+                }
+            };
+            startResult.Process.BeginOutputReadLine();
+            startResult.Process.BeginErrorReadLine();
+
+            await startResult.Process.WaitForExitAsync();
+            _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
+            AppendLaunchLogLine($"游戏进程已退出，退出码 {startResult.Process.ExitCode}。");
+            AddActivity("游戏进程已结束", $"{LaunchVersionSubtitle} • ExitCode {startResult.Process.ExitCode}");
+        }
+        catch (Exception ex)
+        {
+            AppendLaunchLogLine($"会话监控异常：{ex.Message}");
+            AddActivity("会话监控异常", ex.Message);
+        }
+        finally
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _isLaunchInProgress = false;
+                RaiseLaunchSessionProperties();
+                RefreshLaunchState();
+            });
+        }
+    }
+
+    private void RefreshLaunchState()
+    {
+        ReloadSetupComposition();
+        ReloadInstanceComposition();
+        _launchComposition = FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
+        var launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
+        if (!string.Equals(_launchPromptContextKey, launchPromptContextKey, StringComparison.Ordinal))
+        {
+            _dismissedLaunchPromptIds.Clear();
+            _launchPromptContextKey = launchPromptContextKey;
+        }
+
+        RaiseLaunchCompositionProperties();
+    }
+
+    private void AppendLaunchLogLine(string line)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_launchLogBuilder.Length > 0)
+            {
+                _launchLogBuilder.AppendLine();
+            }
+
+            _launchLogBuilder.Append(line);
+            RaisePropertyChanged(nameof(LaunchLogText));
+            if (!_showLaunchLog)
+            {
+                _showLaunchLog = true;
+                RaisePropertyChanged(nameof(ShowLaunchLog));
+            }
+        });
+    }
+
+    private void RaiseLaunchSessionProperties()
+    {
+        RaisePropertyChanged(nameof(LaunchButtonTitle));
+        RaisePropertyChanged(nameof(ShowLaunchLog));
+        RaisePropertyChanged(nameof(LaunchLogText));
+        RaisePropertyChanged(nameof(LaunchMigrationLines));
+        _launchCommand.NotifyCanExecuteChanged();
+    }
+
     private void EnsureLaunchPromptLane()
     {
         var launchPrompts = LauncherFrontendPromptService.BuildLaunchPromptQueue(
@@ -531,8 +699,21 @@ internal sealed partial class FrontendShellViewModel
             _launchComposition.SupportPrompt,
             GetPendingJavaPrompt());
         _promptCatalog[SpikePromptLaneKind.Launch] = launchPrompts
+            .Where(prompt => !_dismissedLaunchPromptIds.Contains(prompt.Id))
             .Select(prompt => CreatePromptCard(SpikePromptLaneKind.Launch, prompt))
             .ToList();
+    }
+
+    private static string BuildLaunchPromptContextKey(
+        FrontendLaunchComposition launchComposition,
+        string? instanceDirectory)
+    {
+        return string.Join(
+            "|",
+            instanceDirectory ?? string.Empty,
+            launchComposition.InstanceName,
+            launchComposition.SelectedProfile.Kind,
+            launchComposition.SelectedProfile.UserName);
     }
 
     private void EnsureCrashPromptLane()

@@ -49,6 +49,11 @@ internal sealed partial class FrontendShellViewModel
     private void ReloadInstanceComposition()
     {
         ApplyInstanceComposition(FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths));
+        ReloadToolsComposition();
+        ReloadVersionSavesComposition();
+        ReloadDownloadComposition();
+        RaisePropertyChanged(nameof(GameLinkWorldOptions));
+        RaisePropertyChanged(nameof(SelectedGameLinkWorldIndex));
     }
 
     private void PersistInstanceSetting(string? propertyName)

@@ -15,8 +15,10 @@ internal sealed record FrontendRuntimePaths(
 
     public string FrontendTempDirectory => Path.Combine(TempDirectory, "frontend-artifacts");
 
-    public static FrontendRuntimePaths Resolve()
+    public static FrontendRuntimePaths Resolve(FrontendPlatformAdapter platformAdapter)
     {
+        ArgumentNullException.ThrowIfNull(platformAdapter);
+
         var layout = CreateLayout();
         return new FrontendRuntimePaths(
             Path.GetDirectoryName(Environment.ProcessPath!) ?? Environment.CurrentDirectory,
@@ -25,7 +27,7 @@ internal sealed record FrontendRuntimePaths(
             layout.SharedData,
             Path.Combine(layout.SharedData, "config.v1.json"),
             Path.Combine(layout.Data, "config.v1.yml"),
-            GetLauncherAppDataDirectory());
+            platformAdapter.GetLauncherAppDataDirectory());
     }
 
     private static AppPathLayout CreateLayout()
@@ -35,18 +37,5 @@ internal sealed record FrontendRuntimePaths(
 #else
         return new AppPathLayout(SystemAppEnvironment.Current, "PCLCE", ".PCLCE", enableDebugOverrides: false);
 #endif
-    }
-
-    private static string GetLauncherAppDataDirectory()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PCL");
-        }
-
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".config",
-            "PCL");
     }
 }

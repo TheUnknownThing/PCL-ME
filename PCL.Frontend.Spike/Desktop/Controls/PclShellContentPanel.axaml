@@ -444,6 +444,33 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
+        <controls:PclCard Header="Minecraft" ContentMargin="20,40,18,15">
+          <controls:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Border
+                  Width="18"
+                  Height="18"
+                  Margin="0,0,7,0"
+                  VerticalAlignment="Center">
+                <Image Source="{Binding DownloadInstallMinecraftIcon}" Stretch="Uniform" />
+              </Border>
+              <TextBlock
+                  Grid.Column="1"
+                  VerticalAlignment="Center"
+                  Foreground="#343D4A"
+                  FontSize="13.5"
+                  Text="{Binding DownloadInstallMinecraftVersion}"
+                  TextTrimming="CharacterEllipsis" />
+              <controls:PclButton
+                  Grid.Column="2"
+                  Width="72"
+                  Margin="10,0,0,0"
+                  Command="{Binding EditDownloadInstallMinecraftCommand}"
+                  Text="修改" />
+            </Grid>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
         <ItemsControl ItemsSource="{Binding DownloadInstallOptions}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -469,6 +496,7 @@
                           Grid.Column="2"
                           Width="72"
                           Margin="10,0,0,0"
+                          IsEnabled="{Binding CanClear}"
                           Command="{Binding ClearCommand}"
                           Text="清除" />
                     </Grid>
@@ -476,19 +504,21 @@
                     <TextBlock
                         Foreground="#677789"
                         FontSize="12"
-                        Text="保留原版自动安装页的版本列表层级与当前选择信息展示，后续继续把安装器明细填回这个区块。"
+                        Text="{Binding DetailText}"
                         TextWrapping="Wrap" />
 
                     <Grid ColumnDefinitions="Auto,Auto">
                       <controls:PclButton
                           Grid.Column="0"
                           Width="88"
+                          IsEnabled="{Binding CanSelect}"
                           Command="{Binding SelectCommand}"
-                          Text="选择版本" />
+                          Text="{Binding SelectText}" />
                       <controls:PclButton
                           Grid.Column="1"
                           Width="88"
                           Margin="10,0,0,0"
+                          IsEnabled="{Binding CanClear}"
                           Command="{Binding ClearCommand}"
                           Text="清除选择" />
                     </Grid>
@@ -498,6 +528,21 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock
+              VerticalAlignment="Center"
+              Foreground="#6B7C8E"
+              FontSize="12.5"
+              Text="继续沿用原版自动安装页的命名卡与组件卡结构，并在当前壳层直接写入真实安装清单。"
+              TextWrapping="Wrap" />
+          <controls:PclButton
+              Grid.Column="1"
+              Width="120"
+              Margin="16,0,0,0"
+              Command="{Binding StartDownloadInstallCommand}"
+              Text="开始安装" />
+        </Grid>
       </StackPanel>
 
       <StackPanel Margin="25,10,25,25" IsVisible="{Binding IsDownloadCatalogSurface}" Spacing="15">
@@ -4084,19 +4129,21 @@
                     <TextBlock
                         Foreground="#677789"
                         FontSize="12"
-                        Text="继续沿用原版实例安装页的单卡片版本选择结构，后续可以直接把更细的安装合同填进这一层。"
+                        Text="{Binding DetailText}"
                         TextWrapping="Wrap" />
 
                     <Grid ColumnDefinitions="Auto,Auto">
                       <controls:PclButton
                           Grid.Column="0"
                           Width="88"
+                          IsEnabled="{Binding CanSelect}"
                           Command="{Binding SelectCommand}"
-                          Text="选择版本" />
+                          Text="{Binding SelectText}" />
                       <controls:PclButton
                           Grid.Column="1"
                           Width="88"
                           Margin="10,0,0,0"
+                          IsEnabled="{Binding CanClear}"
                           Command="{Binding ClearCommand}"
                           Text="清除选择" />
                     </Grid>
@@ -4106,6 +4153,297 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock
+              VerticalAlignment="Center"
+              Foreground="#6B7C8E"
+              FontSize="12.5"
+              Text="继续沿用原版实例安装页的操作位置，并在当前壳层直接写入实例安装清单与补全结果。"
+              TextWrapping="Wrap" />
+          <controls:PclButton
+              Grid.Column="1"
+              Width="120"
+              Margin="16,0,0,0"
+              Command="{Binding ApplyInstanceInstallCommand}"
+              Text="{Binding InstanceInstallApplyButtonText}" />
+        </Grid>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsVersionSaveInfoSurface}" Spacing="15">
+        <controls:PclCard Header="存档详细信息" ContentMargin="18,40,18,16">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding VersionSaveInfoEntries}" IsVisible="{Binding HasVersionSaveInfoEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
+                    <TextBlock
+                        Foreground="#7D8897"
+                        FontSize="12.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Foreground="#343D4A"
+                        FontSize="13"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="存档设置" ContentMargin="18,40,18,16" IsVisible="{Binding HasVersionSaveSettingEntries}">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding VersionSaveSettingEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
+                    <TextBlock
+                        Foreground="#7D8897"
+                        FontSize="12.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Foreground="#343D4A"
+                        FontSize="13"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsVersionSaveBackupSurface}" Spacing="15">
+        <controls:PclCard ContentMargin="15,8,0,15">
+          <controls:PclCard.CardContent>
+            <WrapPanel>
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding OpenVersionSaveFolderCommand}"
+                  ColorType="Highlight"
+                  Text="打开存档文件夹" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding CreateVersionSaveBackupCommand}"
+                  Text="创建" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding CleanVersionSaveBackupCommand}"
+                  Text="清理无用记录" />
+            </WrapPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header="备份列表" ContentMargin="20,40,18,20" IsVisible="{Binding HasVersionSaveBackupEntries}">
+          <controls:PclCard.CardContent>
+            <ItemsControl ItemsSource="{Binding VersionSaveBackupEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+                    <StackPanel Margin="0,0,18,0" Spacing="3">
+                      <TextBlock
+                          Foreground="#343D4A"
+                          FontSize="13.5"
+                          FontWeight="SemiBold"
+                          Text="{Binding Title}" />
+                      <TextBlock
+                          Foreground="#677789"
+                          FontSize="12.5"
+                          Text="{Binding Info}"
+                          TextWrapping="Wrap" />
+                    </StackPanel>
+                    <controls:PclButton
+                        Grid.Column="1"
+                        Width="96"
+                        Height="35"
+                        VerticalAlignment="Center"
+                        Command="{Binding Command}"
+                        Text="查看" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding HasNoVersionSaveBackupEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="暂时没有备份" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="存档备份和存档是绑定的，删除存档备份也会没有 :("
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+      </StackPanel>
+
+      <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsVersionSaveDatapackSurface}" Spacing="15">
+        <Border
+            Height="40"
+            Padding="12,0"
+            Background="#F8FBFF"
+            BorderBrush="#D5E6FD"
+            BorderThickness="1"
+            CornerRadius="5">
+          <TextBox
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="0"
+              FontSize="13.5"
+              Text="{Binding VersionSaveDatapackSearchQuery}"
+              VerticalContentAlignment="Center"
+              Watermark="搜索数据包 名称 / 描述 / 标签" />
+        </Border>
+
+        <controls:PclCard ContentMargin="15,8,0,15">
+          <controls:PclCard.CardContent>
+            <WrapPanel>
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+                  ColorType="Highlight"
+                  Text="打开文件夹" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+                  Text="从文件安装" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding DownloadVersionSaveDatapackCommand}"
+                  Text="下载新资源" />
+              <controls:PclButton
+                  MinWidth="110"
+                  Margin="0,7,15,0"
+                  Command="{Binding ExportVersionSaveDatapackInfoCommand}"
+                  Text="导出信息" />
+            </WrapPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding HasVersionSaveDatapackEntries}">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <controls:PclButton
+                  Width="110"
+                  HorizontalAlignment="Right"
+                  Text="排序：资源名称" />
+
+              <ItemsControl ItemsSource="{Binding VersionSaveDatapackEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Grid Margin="0,0,0,12" ColumnDefinitions="Auto,*,Auto">
+                      <Border
+                          Width="42"
+                          Height="42"
+                          Margin="0,0,12,0"
+                          Background="#F7FAFE"
+                          BorderBrush="#D5E6FD"
+                          BorderThickness="1"
+                          CornerRadius="6">
+                        <Image
+                            Width="28"
+                            Height="28"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Source="{Binding Icon}"
+                            Stretch="Uniform" />
+                      </Border>
+
+                      <StackPanel Grid.Column="1" Margin="0,0,12,0" Spacing="3">
+                        <TextBlock
+                            Foreground="#343D4A"
+                            FontSize="13.5"
+                            FontWeight="SemiBold"
+                            Text="{Binding Title}" />
+                        <TextBlock
+                            Foreground="#677789"
+                            FontSize="12.5"
+                            Text="{Binding Info}"
+                            TextWrapping="Wrap" />
+                        <Border
+                            Padding="8,4"
+                            Background="#F7FAFE"
+                            BorderBrush="#D5E6FD"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                          <TextBlock
+                              Foreground="#4B78C2"
+                              FontSize="11.5"
+                              Text="{Binding Meta}" />
+                        </Border>
+                      </StackPanel>
+
+                      <controls:PclButton
+                          Grid.Column="2"
+                          Width="96"
+                          Height="35"
+                          VerticalAlignment="Center"
+                          Command="{Binding ActionCommand}"
+                          Text="查看" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard IsVisible="{Binding HasNoVersionSaveDatapackEntries}" ContentMargin="20,17,20,17">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="10">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  Foreground="#4B5968"
+                  FontSize="19"
+                  Text="尚未安装数据包" />
+              <Border Height="2" Background="#D5E6FD" />
+              <TextBlock
+                  Foreground="#677789"
+                  FontSize="12.5"
+                  Text="你可以从已经下载好的文件安装数据包。数据包需要放置在存档的 datapacks 文件夹中才能生效。"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+              <WrapPanel HorizontalAlignment="Center">
+                <controls:PclButton
+                    MinWidth="130"
+                    Margin="5,0"
+                    Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+                    ColorType="Highlight"
+                    Text="从文件安装" />
+                <controls:PclButton
+                    MinWidth="130"
+                    Margin="5,0"
+                    Command="{Binding DownloadVersionSaveDatapackCommand}"
+                    Text="下载新数据包" />
+                <controls:PclButton
+                    MinWidth="130"
+                    Margin="5,0"
+                    Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+                    Text="打开文件夹" />
+              </WrapPanel>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
       </StackPanel>
 
       <StackPanel Margin="25,10,25,10" IsVisible="{Binding IsInstanceWorldSurface}" Spacing="15">

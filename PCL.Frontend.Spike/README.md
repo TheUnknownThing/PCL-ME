@@ -2,7 +2,7 @@
 
 `PCL.Frontend.Spike` is the current replacement-shell prototype for the extracted startup / launch / crash workflow layer.
 
-It targets plain `net8.0`, references `PCL.Core.Backend`, and intentionally avoids WPF or Windows-only frontend code.
+It targets plain `net10.0`, references `PCL.Core.Backend`, and intentionally avoids WPF or Windows-only frontend code.
 
 The project now has two complementary faces:
 
@@ -101,6 +101,33 @@ The desktop shell is intentionally still a migration scaffold, not a full launch
 - it now renders portable page-level summaries for launch, setup, tools, logs, and instance routes
 - it still does not implement live backend execution or full page-specific production data
 - it keeps policy in backend services and limits the frontend to composition, routing, and prompt interaction
+
+## Packaging
+
+The frontend now has a Track 6 packaging script that reuses the existing launcher icon and emits packaged builds for macOS, Linux, and Windows from the Avalonia project:
+
+- `./PCL.Frontend.Spike/scripts/package-frontend.sh`
+- default targets: `osx-arm64`, `linux-x64`, `win-x64`
+- output root: `artifacts/frontend-packages/`
+
+Typical usage:
+
+```bash
+./PCL.Frontend.Spike/scripts/package-frontend.sh
+```
+
+Override the defaults when needed:
+
+```bash
+APP_VERSION=2026.04.05 ./PCL.Frontend.Spike/scripts/package-frontend.sh osx-arm64
+```
+
+Packaging notes:
+
+- macOS packaging emits `Plain Craft Launcher Community Edition.app` plus a zip archive, and the app bundle launches the Avalonia shell with `app --host-env true`
+- Linux packaging emits a tarball with the published frontend, a copied launcher icon, a launcher shell script, and a `.desktop` file that resolves relative to the extracted package folder
+- Windows packaging emits a zip archive of the published frontend directory plus a `Launch Plain Craft Launcher Community Edition.vbs` entry point that starts the Avalonia shell without changing the CLI binary behavior
+- the script defaults to self-contained publish output; set `PUBLISH_MODE=framework-dependent` to switch modes
 
 ## Execute mode outputs
 

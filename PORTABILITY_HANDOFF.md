@@ -2,567 +2,493 @@
 
 ## Executive Summary
 
-The portability phase has crossed an important boundary:
+Status as of 2026-04-04:
 
 - the portable backend is real
-- the replacement frontend shell is real
-- frontend migration Phase 1 is complete as of 2026-04-04
-- frontend migration Phase 2 prompt-command execution is complete as of 2026-04-04
-- frontend migration Phase 3 launch-state integration is complete as of 2026-04-04
-- frontend migration Phase 4A setup-page model migration is complete as of 2026-04-04
-- frontend migration Phase 4B instance-page model migration is complete as of 2026-04-04
-- frontend migration Phase 5 frontend-adapter cleanup and spike separation is complete as of 2026-04-04
-- the next major frontend task is Phase 4C download-page model migration
+- the Avalonia replacement shell is real
+- copied launcher UI exists for most major routes in `PCL.Frontend.Spike`
+- startup, prompt, launch, setup, instance, download, and version-saves composition are now partially or mostly runtime-backed
+- the tools route family now has a dedicated runtime composition path
+- instance resource/server/export surfaces now perform several real file, clipboard, and archive actions from the replacement shell
+- instance overview actions now perform real rename, description, trash, patch, and artifact-export flows from the replacement shell
+- instance overview launch-adjacent actions now start a real replacement-shell test launch and export the actual generated launch script instead of launch-context placeholders
+- instance overview recovery actions now repair and reset the selected instance by reusing portable manifest downloads for core files, libraries, natives, asset indexes, and missing assets
+- download resource/detail routes no longer fall back to sample primary content for their main lists
+- toolbox test page continues moving from intent-only buttons to real shell/file outputs, and memory optimization now exports explicit diagnostics instead of a pure intent log
+- tools/game-link actions now use real prompt, clipboard, config, FAQ, and exported session/diagnostic behavior instead of synthetic activity-only output
+- download modpack install now copies a local pack into the launcher `versions` folder from the replacement shell
+- the repo is past the “can this work outside WPF?” stage
+- the new goal is a fully working multi-platform PCL-CE launcher, not a longer-lived spike
 
-The repo is therefore in this state:
+The important change in direction is this:
 
-- safe to continue frontend migration now
-- safe to continue backend cleanup in parallel now
-- not yet ready for frontend cutover
-- no longer blocked on “can a non-WPF shell exist?”
+- future work should be planned as small, user-verifiable launcher slices
+- each slice should end in something a reviewer can click through and test in the running shell
+- frontend work should keep copying the existing launcher, not redesign it
 
-## The Repo As It Actually Exists
+## Final Goal
 
-Use this map as the current source of truth.
+The final target is:
+
+- a fully working PCL-CE launcher frontend that can replace the legacy WPF shell
+- backed by portable services and explicit OS adapters
+- able to run on Windows, macOS, and Linux
+- while preserving the current launcher’s page structure, controls, labels, and interaction model as closely as practical
+
+In concrete terms, “done” means:
+
+- the Avalonia shell can boot, navigate, configure, download, launch, diagnose, and manage instances with real behavior
+- the remaining WPF-specific logic is either deleted or reduced to platform-specific adapter implementations
+- cross-platform differences are isolated behind backend or shell action services instead of page-local UI code
+- reviewers can validate real launcher behavior from the desktop app without depending on replay-only spike paths
+
+## Current Repo Map
 
 ### `PCL.Core.Foundation`
 
-- portable primitives and low-level support code
-- the cleanest portability layer in the repo
+- portable primitives and low-level support
 - no WPF ownership
 
 ### `PCL.Core`
 
-- the main source tree
-- contains portable services, adapters, configuration, UI infrastructure, and remaining Windows-specific compatibility code
-- this is where the real implementation still lives
+- main implementation tree
+- contains portable services plus remaining Windows-specific compatibility code
+- most new backend work still lands here
 
 ### `PCL.Core.Backend`
 
-- a `net8.0` portable projection of files linked from `PCL.Core`
-- this is not a separate backend codebase with independent source files
-- it is the portable subset of the `PCL.Core` implementation packaged as a backend-facing project
-
-Key implication:
-
-- when you add portable backend behavior, you will often still edit files under `PCL.Core`, not under a parallel `PCL.Core.Backend` source tree
+- portable linked projection of backend-safe code from `PCL.Core`
+- not a separate implementation tree
 
 ### `PCL.Frontend.Spike`
 
-- the current replacement-frontend proving ground
+- current replacement frontend
 - contains:
-  - CLI inspection and replay flows
-  - an Avalonia desktop shell
-  - copied launcher-style UI for many routes
-- currently the best place to wire real backend logic into a non-WPF frontend
+  - Avalonia desktop shell
+  - CLI inspection/replay tooling
+  - copied launcher UI
+  - frontend-side composition and shell action adapters
 
 ### `Plain Craft Launcher 2`
 
-- the legacy WPF shell
-- still the visual source of truth
-- still owns a lot of runtime glue and platform behavior
-- should keep shrinking toward shell-only responsibilities
+- legacy WPF frontend
+- still the visual and behavioral source of truth
+- should keep shrinking as parity moves into the portable frontend
 
-## What Is Already Portable And Real
+## What Is Already In Good Shape
 
-### Startup and shell contracts
-
-The frontend already has real portable seams for:
+These areas are no longer the primary risk:
 
 - startup workflow planning
-- startup bootstrap directory and config preparation
-- immediate startup shell actions
-- startup consent and milestone decisions
-- top-level navigation, sidebar composition, breadcrumbs, and utility surfaces
-- prompt queue generation
-- page-surface summary generation
+- shell navigation contracts
+- prompt rendering and prompt command execution
+- launch readiness composition
+- setup page runtime composition and persistence
+- instance page runtime composition and persistence
+- download page runtime composition
+- version-saves runtime composition
+- tools route runtime composition
+- frontend adapter cleanup between runtime composition and inspection-only spike helpers
 
-Important files:
+Important frontend-side files:
 
-- `PCL.Core/App/Essentials/LauncherStartupWorkflowService.cs`
-- `PCL.Core/App/Essentials/LauncherStartupBootstrapService.cs`
-- `PCL.Core/App/Essentials/LauncherStartupShellService.cs`
-- `PCL.Core/App/Essentials/LauncherMainWindowStartupWorkflowService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendNavigationService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendPromptService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendPageContentService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendDownloadCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendToolsCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendVersionSavesCompositionService.cs`
+- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.*.cs`
+- `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
 
-### Launch, login, Java, and crash workflows
+Important backend-side directories:
 
-Portable services already exist for:
-
-- launch precheck and prompt generation
-- launch argument planning
-- classpath and replacement-value planning
-- prerun file planning
-- session startup and watcher planning
-- Microsoft login planning and execution
-- Authlib and third-party login planning and execution
-- Java runtime selection, prompting, and download planning
-- Java transfer-session planning
-- crash export, archive, prompt, and response workflows
-
-Important directory:
-
+- `PCL.Core/App/Essentials`
 - `PCL.Core/Minecraft/Launch`
-
-### Secret and identity progress
-
-The repo already has meaningful portability progress around identity and protected data:
-
-- launcher identity resolution and runtime resolution
-- legacy identity fallback behavior
-- secret-key resolution and storage services
-- versioned launcher data parsing
-- data protection runtime routing
-- Windows device identity isolation
-
-Important files:
-
-- `PCL.Core/App/Essentials/LauncherIdentityResolutionService.cs`
-- `PCL.Core/App/Essentials/LauncherIdentityRuntimeService.cs`
-- `PCL.Core/App/Essentials/LauncherLegacyIdentityService.cs`
-- `PCL.Core/App/Essentials/LauncherSecretKeyResolutionService.cs`
-- `PCL.Core/App/Essentials/LauncherVersionedDataService.cs`
-- `PCL.Core/Utils/Secret/WindowsDeviceIdentityProvider.cs`
-
-### Test coverage
-
-There is now substantial regression coverage for the portable service layer.
-
-Important test locations:
-
-- `PCL.Core.Test/App`
-- `PCL.Core.Test/Minecraft`
+- `PCL.Core.Test`
 - `PCL.Core.Backend.Test`
 
-## What The Avalonia Frontend Already Does Well
-
-The current desktop shell in `PCL.Frontend.Spike` is much more than a blank shell.
-
-### It already consumes real portable shell contracts for:
-
-- route topology
-- sidebar grouping
-- utility-button visibility
-- prompt queue structure
-- summary page content
-
-### It already copies the WPF launcher visually for many routes
-
-Copied or near-copied surfaces currently exist for:
-
-- launch shell framing
-- top chrome and back-title behavior
-- grouped non-launch sidebar navigation
-- `设置/关于`
-- `设置/反馈`
-- `设置/日志`
-- `设置/更新`
-- `设置/游戏联机`
-- `设置/游戏管理`
-- `设置/启动器杂项`
-- `设置/Java`
-- `设置/界面`
-- `下载/自动安装`
-- download resource list routes
-- `工具/联机大厅`
-- `工具/帮助`
-- `工具/测试`
-- `实例/概览`
-- `实例/设置`
-- `实例/导出`
-- `实例/安装`
-- `实例/世界`
-- `实例/截图`
-- `实例/服务器`
-- `实例/Mod`
-- `实例/已禁用 Mod`
-- `实例/资源包`
-- `实例/光影包`
-- `实例/投影原理图`
+## What Still Separates The Project From A Real Cutover
 
-The main UI work lives in:
+The main remaining gaps are no longer “UI exists” gaps. They are “real behavior and cross-platform replacement” gaps.
 
-- `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchLeftPanel.axaml`
-- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.*.cs`
+### 1. Launch execution is not yet end-to-end replacement-shell ready
 
-## Frontend Migration Status
+The frontend can compose real launch state, but cutover still needs:
 
-### Phase 1 is done
+- full replacement-shell launch execution parity
+- stronger session/process integration
+- fewer frontend-side placeholder artifact materializations
 
-The original Phase 1 target was:
+### 2. Several tool and utility actions are still placeholders
 
-- replace spike bootstrap inputs with real shell inputs
-- stop creating most shell state from `SpikeSampleFactory`
-- start building `LauncherFrontendShellRequest` and related requests from real runtime state
+The visible Track 2 buttons on migrated tool/download/instance surfaces are now mostly backed by real shell actions.
 
-That work is now implemented.
+The main remaining gap in this area is now:
 
-Important files:
+- launch execution is still exported as context/report artifacts rather than full replacement-shell process orchestration
 
-- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
-- `PCL.Frontend.Spike/Models/FrontendShellComposition.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Navigation.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
-- `PCL.Core.Backend/PCL.Core.Backend.csproj`
+### 3. Cross-platform adapter coverage is incomplete
 
-Important commits:
+The new shell must explicitly own:
 
-- `4ef0a3f9` `Add runtime shell composition layer`
-- `0447d15d` `Use runtime shell composition in frontend bootstrap`
-- `aff946ea` `Expose frontend runtime state in backend slice`
-- `e23deb6c` `Use backend runtime state in shell composition`
+- file picker behavior
+- folder opening behavior
+- URL opening behavior
+- shortcut creation strategy
+- protected storage behavior
+- path conventions
+- launcher packaging/update behavior
 
-What this means in practice:
+This is the area most likely to diverge across Windows, macOS, and Linux.
 
-- shell startup requests now come from real launcher paths and persisted config files
-- consent and version-isolation migration inputs now mirror the WPF startup construction path
-- shell utility visibility now has real runtime state for game logs and running tasks
-- encrypted startup count is now read through a backend-facing runtime service instead of being hard-coded
-- replay inputs via `InputRoot` still work for inspection scenarios
+### 4. WPF still owns part of the real launcher behavior
 
-### Phase 3 is done
+The remaining work is not just frontend polish. It is a transfer of runtime responsibilities away from WPF page logic.
 
-The original Phase 3 target was:
+## Working Rules For Future Frontend Engineers
 
-- replace launch-page sample labels, Java summaries, login summaries, and prompt lanes with real launch planning results
-- source launch readiness from runtime profile/config/instance state
-- keep the copied launch page layouts intact while swapping the state source underneath them
+These rules should be treated as mandatory.
 
-That work is now implemented for the `app` path when the frontend is not running from replay inputs.
+### Visual rule
 
-Important files:
+- copy the existing launcher UI
+- reuse the existing grouping, spacing, icons, labels, and control semantics
+- do not redesign a page because a backend contract is missing
 
-- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
-- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
-- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchRightPanel.axaml`
-- `PCL.Frontend.Spike/Desktop/Controls/PclLaunchButton.axaml`
-- `PCL.Frontend.Spike/Desktop/Controls/PclButton.axaml`
+### Architecture rule
 
-What this means in practice:
+- policy belongs in backend services
+- the frontend may compose data, route, bind controls, and call shell/OS adapters
+- the frontend should not reimplement launcher policy from WPF event code
 
-- the launch page now reads selected instance, launcher folder, selected profile, Java state, and launch count from real runtime files
-- launch precheck prompts are now built from runtime-backed launch requests instead of the old launch fixture path
-- launch summary data now includes real resolution, classpath, replacement-value, and prerun planning state
-- copied launch-pane labels now reflect runtime-composed state instead of placeholder snapshot strings
-- the copied left launch controls are interactive again after the custom-control hit-testing fix
+### Verification rule
 
-Important caveat:
+Every meaningful frontend checkpoint should end with:
 
-- `app --input-root ...` still intentionally uses replay-backed launch inputs for inspection scenarios
+- a successful build
+- a short list of manual steps a reviewer can perform in the running shell
+- behavior that is visible in real files, folders, config, or launcher state
 
-### The biggest current truth
+### Scope rule
 
-The frontend shell bootstrap and launch route are no longer mostly fixture-driven.
+- prefer one route family or one behavior family per checkpoint
+- avoid giant “parity” batches that are hard to inspect
 
-The remaining spike-heavy areas are now:
+## Recommended Migration Plan
 
-- crash/launch replay plan injection used by inspection flows
-- route-local page fixtures outside the completed launch/setup/instance families
-- spike-only tooling that still sits beside reusable frontend adapters
+The active frontend plan is now organized around small, testable slices rather than one large phase bucket.
 
-## What Still Isn’t Done
+### Step 0. Preserve the current baseline
 
-### 1. Page-specific production data
+Goal:
 
-Many copied pages still use hard-coded view-model state even when their visuals are already good.
+- keep the current replacement shell buildable and navigable while further work lands
 
-The main remaining data gaps are:
+Done when:
 
-- download route binding to real search/catalog/install planning state
-- `VersionSaves` subpages
-- richer tool widgets
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passes
+- the shell opens and major route groups still render
 
-### 2. Launch cutover beyond composition
+Manual verification:
 
-Phase 3 made the launch route runtime-backed inside the replacement frontend boundary.
+- open the app
+- navigate launch, setup, download, tools, instance, and version-saves routes
+- confirm the copied layouts still render and route changes still work
 
-The remaining launch-side work is now outside that composition step:
+### Step 1. Finish route-model parity
 
-- full launcher cutover beyond frontend-side composition and prompt handling
-- replacing replay/sample launch execution paths where the spike still uses them intentionally
-- continuing to separate reusable launch adapters from inspection-only helpers
+Goal:
 
-### 3. Secret/auth portability boundary
+- every major right-pane route should be backed by a route-local runtime composition model
 
-This area is improved, but still deserves caution:
+Priority targets:
 
-- `PCL.Core/Utils/Secret/*`
-- encrypted profile/config call sites
+- remaining tool pages
+- remaining instance action surfaces
+- any download/detail subroutes still using placeholder-only state
 
-This remains one of the main backend-side risks for cutover.
+Done when:
 
-### 4. WPF shell glue reduction
+- route-local placeholder collections are removed or clearly isolated
+- each major route family has a dedicated composition path
 
-The WPF shell is much thinner than before, but the final cutover still depends on continuing to reduce and isolate:
+Status on 2026-04-04:
 
-- startup glue
-- prompt wiring
-- route and page thread coordination
-- windowing and platform event glue
+- tools route family: done for Track 1
+- instance resource/server/export/overview surfaces are now runtime-backed and no longer Track 1 blockers
+- download resource/detail routes no longer keep sample-driven primary content for their main lists
+- Track 1 route parity is effectively complete in the current frontend branch; the next owner should stay focused on Track 2 and Track 3 work
 
-Important files:
+Manual verification:
 
-- `Plain Craft Launcher 2/Application.xaml.vb`
-- `Plain Craft Launcher 2/FormMain.xaml.vb`
+- use real launcher files/config and confirm each route shows live data
+- change the source files, refresh the route, and confirm the view updates
 
-## Recommended Frontend Workstream
+### Step 2. Finish shell action parity
 
-This is the recommended order for the next frontend engineer.
+Goal:
 
-### Step 1: Phase 1 is complete, use the existing shell composition layer
+- replace remaining activity-feed-only actions with real shell behavior where practical
 
-Start from:
+Track 2 status on 2026-04-04:
 
-- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
+- the current frontend branch now has a dedicated shell-action pass for the previously missing game-link, toolbox/head export, favorites management, instance-profile-template, and download modpack install buttons
+- recent frontend checkpoints for this handoff:
+  - `7fad5b40` `feat: wire frontend track2 shell actions`
+  - `5b0ac628` `feat: report toolbox memory diagnostics`
+  - `ef3c0b92` `feat: wire instance overview runtime actions`
+  - `f5d2a521` `feat: wire toolbox shell actions`
+- the next owner should only return to Track 2 if a newly discovered copied button still falls back to pure intent logging
+- otherwise the recommended next step is Step 3: launch-path cutover
 
-Do not replace this with new fixtures.
+Examples:
 
-### Step 2: Phase 2 is complete, preserve the new prompt lifecycle and command adapters
+- open folder
+- import/export
+- file installation
+- maintenance actions
+- tool outputs
 
-The prompt system now does the Phase 2 job:
+Done when:
 
-- startup prompts persist consent and telemetry decisions
-- launch prompts are created only from a launch attempt
-- crash prompts are created only from an explicit crash event trigger
-- crash export/log actions and Java materialization actions execute through frontend adapters
+- clicking a button performs a visible shell or file action instead of only adding a log line
 
-Important files:
+Manual verification:
 
-- `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendRuntimePaths.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+- click each migrated button
+- confirm a file, folder, archive, config change, or external target actually appears
 
-Important caveat:
+### Step 3. Finish launch-path cutover
 
-- Phase 2 does not make launch or crash workflows fully live; it makes prompt-command execution real inside the replacement shell boundary
+Goal:
 
-### Step 3: Phase 3 is complete, preserve the runtime launch composition path
+- make the replacement shell capable of real end-to-end launcher use for normal launching
 
-The launch route now reads runtime-backed launch state through the dedicated composition layer.
+Done when:
 
-Start from:
+- the normal app path launches real instances using replacement-shell orchestration
+- prompt flow, Java flow, and launch session flow behave as expected from the new shell
 
-- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
-- `PCL.Frontend.Spike/Models/FrontendLaunchComposition.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Prompts.cs`
+Status on 2026-04-04:
 
-Do not regress this by reintroducing launch-route fixtures for the normal `app` path.
+- complete in `codex/frontend-track3-launch-cutover`
+- the normal Avalonia app path now launches the real macOS instance at `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft/versions/1.21.10`
+- launch prompts now continue correctly without recreating the same prompt in the same attempt
+- Java discovery now prefers real installed runtimes such as `/opt/homebrew/opt/openjdk/bin/java` instead of the macOS `/usr/bin/java` stub
+- missing-Java prompt flow still works when no executable runtime is selected, and prompt-triggered download now runs without freezing the UI thread
+- replacement-shell launch artifacts now record the real launch command and session summary under `~/.config/PCL`
 
-Important caveat:
+Manual verification:
 
-- replay mode through `InputRoot` is still intentionally sample-backed
-### Step 4: replace route-local fixture values page family by page family
+- select a real instance
+- satisfy prompts
+- launch the game
+- verify logs, process state, and post-launch shell behavior
 
-Current state:
+Verified on 2026-04-04:
 
-1. setup pages are complete as Phase 4A
-2. instance pages are complete as Phase 4B
-3. download pages and version-saves pages remain unfinished Phase 4 slices
-4. adapter cleanup and spike separation is complete as Phase 5
+- launched `Minecraft 1.21.10` from the Avalonia shell
+- confirmed `~/.config/PCL/LatestLaunch.bat` used `/opt/homebrew/opt/openjdk/bin/java`
+- confirmed prompt flow advanced through startup and launch prompts and opened the real game window
+- confirmed session log creation at `~/.config/PCL/Log/session-20260404-233003.log`
 
-Phase 4A delivered:
+### Step 4. Isolate cross-platform adapters
 
-- real setup-page composition through:
-  - `PCL.Frontend.Spike/Models/FrontendSetupComposition.cs`
-  - `PCL.Frontend.Spike/Workflows/FrontendSetupCompositionService.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SetupComposition.cs`
-- real setup-page persistence and shell-side actions through:
-  - `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.SurfaceActions.cs`
-- runtime-backed setup/update status through:
-  - `PCL.Frontend.Spike/Models/FrontendSetupUpdateStatus.cs`
-  - `PCL.Frontend.Spike/Workflows/FrontendSetupUpdateStatusService.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.LaunchUpdate.cs`
+Goal:
 
-What this means in practice:
+- separate portable workflow logic from OS-specific shell behavior
 
-- copied setup surfaces now read and persist real shared, local, and protected launcher configuration
-- copied setup commands for logs, config export/import, proxy apply, background/music asset folders, title-bar image, homepage tutorial file, and update detail/download targets now perform real shell/file actions
-- copied `设置/更新` cards now resolve current-version metadata and live latest-version status from the existing update-source family instead of fixture toggles
+Expected adapter areas:
 
-Important caveat for the next engineer:
+- open file
+- open folder
+- save file
+- shortcut creation
+- protected data
+- clipboard integration
+- external URL/process opening
 
-- the hidden optional AquaCL card remains dormant copied UI and is not part of the completed 4A setup slice
-- the WPF-style in-place self-update patch-and-restart installer flow has not been ported into the Avalonia shell; 4A stops at real status, changelog, and download-target composition
+Done when:
 
-Phase 4B delivered:
+- platform differences are isolated behind explicit services
+- frontend view-model code no longer assumes Windows-only behavior
 
-- real instance-page composition through:
-  - `PCL.Frontend.Spike/Models/FrontendInstanceComposition.cs`
-  - `PCL.Frontend.Spike/Workflows/FrontendInstanceCompositionService.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceComposition.cs`
-- runtime-backed instance page state and persistence through:
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceOverview.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceSetup.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceExport.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceInstall.cs`
-  - `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.InstanceContent.cs`
-  - `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- instance persistence and config migration through:
-  - `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+Status on 2026-04-04:
 
-What this means in practice:
+- complete in `codex/frontend-track4-adapters` at the implementation level
+- launcher app-data path selection, external target opening, shortcut creation, command script extension selection, Unix executable marking, and default Java path hints now route through `PCL.Frontend.Spike/Workflows/FrontendPlatformAdapter.cs`
+- open-file/open-folder picker and clipboard behavior continue to route through `PCL.Frontend.Spike/Workflows/FrontendShellActionService.cs`
+- stored launcher key envelope decoding now routes through `PCL.Core/App/Essentials/LauncherStoredKeyEnvelopeService.cs` instead of frontend-local Windows-only decode branches
+- migrated frontend view-model code no longer carries inline platform branches for shortcut creation, exported launch script naming, or default Java path selection
 
-- copied `实例/概览`, `实例/设置`, `实例/导出`, `实例/安装`, `实例/世界`, `实例/截图`, `实例/服务器`, `实例/Mod`, `实例/已禁用 Mod`, `实例/资源包`, `实例/光影包`, and `实例/投影原理图` now compose their state from real launcher files and instance config
-- the instance setup page now persists per-instance values to `versions/<instance>/PCL/config.v1.yml` instead of reusing global launch settings
-- the overview favorite/category/icon selectors now persist instance metadata and the content pages now enumerate real saves, screenshots, servers, and resource folders
-- legacy `versions/<instance>/PCL/Setup.ini` is migrated forward when instance config is missing
-- LabyMod-specific resource folders are respected when opening resource directories
+Manual verification:
 
-Important caveat for the next engineer:
+- run the same shell actions on Windows, macOS, and Linux
+- confirm equivalent user-visible behavior
 
-- 4B is complete as a page-model migration milestone, not as a full production action cutover
-- several instance-page buttons still intentionally route to placeholder activity/intention handlers, such as rename, description edit, script export, dry-run/test launch, delete/reset flows, export config import/save, add-server, file-picker installs, and profile creation
-- treat those remaining gaps as adapter/action follow-up work, not as a reason to reintroduce fixture page state
+Verified on 2026-04-04:
 
-Recommended order:
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS
+- an ad hoc verification harness against the built frontend assembly resolved launcher app data to `~/.config/PCL`
+- the same harness created a real `.command` shortcut file and confirmed executable Unix mode bits
+- the same harness marked an exported script file executable on macOS
+- the same harness successfully opened a real local folder through the explicit external-target adapter path
+- Windows and Linux runtime verification are still needed before the full adapter matrix can be called closed
 
-1. setup pages
-2. instance pages
-3. download pages
-4. version-saves pages
-5. denser tool widgets
+### Step 5. Replace WPF-owned launcher behaviors
 
-Phase 5 delivered:
+Goal:
 
-- inspection-only sample, replay, and execution helpers now live under:
-  - `PCL.Frontend.Spike/Workflows/Inspection/*`
-- runtime-facing frontend composition now reaches inspection behavior through dedicated inspection composition services:
-  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionShellCompositionService.cs`
-  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionLaunchCompositionService.cs`
-  - `PCL.Frontend.Spike/Workflows/Inspection/FrontendInspectionCrashCompositionService.cs`
-- reusable frontend composition and view-model construction no longer call raw spike factories or input resolvers directly on the normal app path
+- migrate remaining runtime-critical behaviors out of WPF page logic
 
-What this means in practice:
+Likely targets:
 
-- replay and host-environment inspection flows remain available, but are explicitly scoped to the inspection workflow area
-- runtime shell, launch, and crash composition now depend on a narrower frontend-side adapter boundary instead of sample/replay helper internals
-- setup and instance page-model migration work can continue without re-entangling inspection tooling with the main frontend architecture
+- launch-adjacent shell glue
+- download/install execution glue
+- instance maintenance actions
+- update/packaging flows
 
-Recommended next order from this checkpoint:
+Status on 2026-04-04:
 
-1. download pages
-2. version-saves pages
-3. denser tool widgets
-4. remaining adapter/action follow-up on placeholder instance/tool/download buttons
+- instance overview `测试游戏` now routes into the real replacement-shell launch flow instead of writing a test-context artifact
+- instance overview `导出启动脚本` now writes the real generated launch script content from the portable session plan
+- instance overview `补全文件` and `重置实例` now execute a portable manifest-driven repair path that refreshes the client jar, libraries, natives, asset index, and missing assets without falling back to WPF
+- recent Track 5 checkpoints for the managed install workflow slice:
+  - `5e51a2be` `feat: add frontend install workflow primitives`
+  - `74be91e1` `feat: wire frontend install selection flow`
+  - `2a9b74a0` `feat: add frontend unmanaged install workflow`
+  - `99c6f076` `fix: finish track 5 installer migration`
 
-### Step 5: preserve the copied UI work
+Verified on 2026-04-05:
 
-When wiring data:
+- `dotnet build PCL.Frontend.Spike/PCL.Frontend.Spike.csproj` passed on macOS after wiring the copied install cards to the new workflow
+- the frontend now owns the copied download/instance install selection flow for Minecraft, Fabric, Legacy Fabric, Quilt, LabyMod, Fabric API, Legacy Fabric API, and QFAPI / QSL through `FrontendInstallWorkflowService` and the shell dialog adapters
+- a real verification pass against `/Users/theunknownthing/Library/Application Support/SJMCL/minecraft` created a temporary `versions/codex-track5-verify/codex-track5-verify.json`, first as Fabric with `mods/fabric-api-0.138.4+1.21.10.jar`, then reapplied the same instance as Quilt with `mods/quilted-fabric-api-11.0.0-alpha.3+0.102.0-1.21.jar`
+- the managed install workflow reused 4,397 existing files on the first apply and 4,478 existing files on the second apply while switching the loader manifest and managed addon jar without falling back to WPF code
+- the temporary verification instance was removed after inspection so the real launcher folder was not left with extra test clutter
+- the frontend now also owns the copied unmanaged installer family for Forge, NeoForge, Cleanroom, LiteLoader, OptiFine, and OptiFabric, including the legacy compatibility rules copied from `PageDownloadInstall.xaml.vb`
+- a second real verification pass against the same launcher directory created temporary instances for `Forge 1.21.1`, `NeoForge 1.21.1`, `Cleanroom 1.12.2`, `LiteLoader 1.12.2`, and `Fabric 1.20.1 + OptiFine + OptiFabric`; those instances wrote the migrated manifests, produced the expected loader libraries, and in the Fabric case wrote `mods/optifabric-1.14.3.jar` plus `mods/OptiFine_1.20.1_HD_U_I5.jar`
+- the Forge-family manifest cleanup now strips missing local-only artifacts, OptiFabric choices now resolve from the live OptiFabric file feed instead of the dead Modrinth slug, and instance repair now reuses valid installer-local libraries instead of force-redownloading the wrong remote artifact
+- the temporary unmanaged-installer verification instances were removed after inspection so the real launcher folder was not left with extra test clutter
+- a forced Cleanroom `RunRepair + ForceCoreRefresh` pass progressed past the earlier local-library failure and into the broader core refresh workload; that long-running asset-heavy pass was not waited through to final completion during this checkpoint
+- the copied install family no longer has a known WPF-owned Track 5 gap; next work should move to Track 6 packaging and broader platform validation unless a new fallback surface is discovered
 
-- keep the copied Avalonia layouts
-- replace the data source underneath them
-- do not redesign pages during data integration
+Done when:
 
-## Recommended Backend Workstream
+- WPF no longer owns the behavior needed for normal day-to-day launcher use
 
-The backend engineer should focus on making the frontend integration easier and less guess-based.
+Manual verification:
 
-### Provide or extend contracts for:
+- complete normal launcher workflows without falling back to WPF-specific pages or codepaths
 
-- richer setup page data
-- richer instance page data
-- download catalog and install state
-- version-saves data
-- prompt command execution and persistence seams
+### Step 6. Package and validate multi-platform launcher builds
 
-### Continue cleanup in:
+Goal:
 
-- `PCL.Core/Utils/Secret`
-- Windows-only leakage inside `PCL.Core`
-- the remaining WPF shell glue in `Plain Craft Launcher 2`
+- ship the replacement launcher as a real application on all supported platforms
 
-## Recent Checkpoint Commits
+Done when:
 
-These are the most relevant recent frontend checkpoints:
+- Windows, macOS, and Linux builds are produced
+- basic launcher workflows pass on all three
 
-- `4ef0a3f9` `Add runtime shell composition layer`
-- `0447d15d` `Use runtime shell composition in frontend bootstrap`
-- `aff946ea` `Expose frontend runtime state in backend slice`
-- `e23deb6c` `Use backend runtime state in shell composition`
-- `b1f23fdc` `feat: copy instance overview spike surface`
-- `570f9ae0` `feat: copy instance export spike surface`
-- `552b7de9` `feat: copy instance settings spike surface`
-- `a50d5388` `feat: copy instance install spike surface`
-- `36784278` `feat: copy instance content spike surfaces`
-- `8c58b28b` `feat: copy instance resource spike surfaces`
-- `f2754dc2` `docs: refresh frontend migration status`
-- `805b0a62` `refactor: add frontend shell action adapters`
-- `6624be02` `feat: execute frontend prompt commands`
-- `c2c139ed` `fix: auto-open startup prompt inbox`
-- `5caaa14e` `fix: scope prompt lanes to runtime events`
-- `568df5d1` `Compose runtime launch state for frontend phase 3`
-- `5ab8497e` `Bind copied launch pane text to runtime state`
-- `b009b0f7` `Fix copied launch controls hit testing`
-- `5f2daad3` `feat: compose runtime-backed setup surfaces`
-- `cdb115de` `feat: wire setup validation commands`
-- `3dc19bcf` `feat: wire setup file management actions`
-- `f4387d21` `feat: compose real setup update status`
-- `127dac06` `feat: add runtime instance composition layer`
-- `e6753070` `feat: wire runtime-backed instance shell surfaces`
-- `b079434d` `fix: honor labymod instance resource folders`
+Manual verification:
+
+- install and launch the packaged app on each platform
+- validate startup, navigation, config persistence, download flows, instance management, and a real game launch
+
+## Immediate Next Engineering Slices
+
+The next engineers should not take “finish the launcher” as one task. They should take one of these.
+
+### Slice A. Launch execution cutover spike-to-real pass
+
+Scope:
+
+- move from runtime-backed launch composition to runtime-backed launch execution
+
+Reviewer can verify by:
+
+- launching a real instance from the replacement shell
+- checking game process, logs, and shell state
+
+### Slice B. Cross-platform adapter matrix
+
+Scope:
+
+- document and implement platform-specific shell behavior behind service boundaries
+
+Reviewer can verify by:
+
+- running the same shell actions on at least two platforms and comparing outcomes
+
+Status on 2026-04-04:
+
+- implementation landed in `4a065f15` `refactor: isolate frontend platform adapters`
+- the next owner should treat remaining work here as validation on additional hosts, not another large frontend adapter rewrite
+
+### Slice C. Remove remaining WPF workflow ownership
+
+Scope:
+
+- launch-adjacent shell glue
+- download/install execution glue that still depends on legacy codepaths
+- remaining WPF-owned day-to-day workflows
+
+Reviewer can verify by:
+
+- completing the target workflow entirely from the replacement shell without falling back to WPF-only behavior
+
+## Current Recommended Definition Of “Frontend Done”
+
+The frontend migration should be considered complete only when all of the following are true:
+
+- the Avalonia shell is the primary launcher UI
+- major launcher workflows work from the replacement shell
+- cross-platform shell behavior is explicit and tested
+- WPF is no longer needed for normal operation
+- the copied launcher design language is preserved
+- runtime behavior is backed by portable services and adapters, not spike fixtures
+
+## Suggested Commit Style
+
+Keep frontend commits small and reviewable.
+
+Good examples:
+
+- `feat: wire tool test downloads to real shell actions`
+- `feat: migrate instance overview actions to runtime adapters`
+- `refactor: isolate cross-platform shell open/save adapters`
+- `docs: refresh frontend cutover checklist`
+
+Avoid:
+
+- giant mixed commits that change multiple route families and platform concerns at once
+
+## Latest Frontend Checkpoints
+
+- `1aa6abfb` `feat: repair instance files from portable manifests`
+- `b7e11a0a` `feat: cut over instance launch-side overview actions`
+- `4a065f15` `refactor: isolate frontend platform adapters`
+- `7fad5b40` `feat: wire frontend track2 shell actions`
+- `5b0ac628` `feat: report toolbox memory diagnostics`
+- `ef3c0b92` `feat: wire instance overview runtime actions`
+- `91228f81` `feat: add frontend shell dialog adapters`
 - `fb4c56c5` `refactor: isolate inspection-only spike workflows`
 - `40467f7d` `refactor: add frontend inspection composition boundary`
-
-## Files To Read First
-
-If you are picking this up cold, read these first:
-
-### Architecture and shell seams
-
-- `PCL.Core/App/Essentials/LauncherFrontendNavigationService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendPromptService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendPageContentService.cs`
-- `PCL.Core/App/Essentials/LauncherStartupWorkflowService.cs`
-
-### Frontend bootstrap and state
-
-- `PCL.Frontend.Spike/Desktop/App.axaml.cs`
-- `PCL.Frontend.Spike/ViewModels/FrontendShellViewModel.Construction.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendShellCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendLaunchCompositionService.cs`
-- `PCL.Frontend.Spike/Workflows/FrontendInstanceCompositionService.cs`
-- `PCL.Core/App/Essentials/LauncherFrontendRuntimeStateService.cs`
-
-### Real UI reference
-
-- `PCL.Frontend.Spike/Desktop/Controls/PclShellContentPanel.axaml`
-- `Plain Craft Launcher 2/Pages/*`
-
-### Backend coverage
-
-- `PCL.Core.Test/App/*`
-- `PCL.Core.Test/Minecraft/*`
-- `PCL.Core.Backend.Test/*`
-
-## Rules For The Next Engineer
-
-- copy the existing launcher UI; do not redesign it
-- do not move policy out of backend services into the frontend
-- treat `PCL.Core.Backend` as a projection of `PCL.Core`, not a second independent implementation tree
-- when a copied page still shows fixture data, replace the data source before changing the visuals
-- when a page needs data the backend does not expose yet, add the contract instead of rebuilding WPF logic in the frontend
+- `c32d72b1` `docs: mark frontend phase 5 complete`
+- `311b88b3` `feat: wire save detail and download surfaces`
+- `af689e45` `feat: wire instance resource and export actions`
+- `f5d2a521` `feat: wire toolbox shell actions`
 
 ## Bottom Line
 
-The repo is already past the “portability spike” stage.
+The correct continuation point is no longer “prove another frontend slice can render.”
 
-The next milestone is:
+The correct continuation point is:
 
-- real backend-driven frontend state
-- real page models behind the copied Avalonia UI
-- continued removal of route-local fixtures outside the already-migrated launch route and completed setup family
-
-That is the correct continuation point for both the frontend migration plan and the broader portability effort.
+- keep each copied route family truly usable
+- cut over real launcher workflows
+- isolate cross-platform adapters
+- remove the remaining WPF dependency for normal use

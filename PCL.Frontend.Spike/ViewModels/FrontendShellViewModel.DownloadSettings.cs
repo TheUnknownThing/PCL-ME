@@ -40,12 +40,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public IReadOnlyList<string> DownloadFavoriteTargetOptions { get; } =
-    [
-        "默认收藏夹",
-        "整合包收藏",
-        "建筑与材质"
-    ];
+    public IReadOnlyList<string> DownloadFavoriteTargetOptions => _downloadFavoriteTargetOptions;
 
     public int SelectedDownloadFavoriteTargetIndex
     {

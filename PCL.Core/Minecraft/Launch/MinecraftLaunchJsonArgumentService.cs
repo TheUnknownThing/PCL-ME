@@ -89,7 +89,7 @@ public static class MinecraftLaunchJsonArgumentService
                     if (string.Equals(osName, "unknown", StringComparison.Ordinal))
                     {
                     }
-                    else if (string.Equals(osName, "windows", StringComparison.Ordinal))
+                    else if (string.Equals(osName, GetCurrentOperatingSystemName(), StringComparison.Ordinal))
                     {
                         if (osRule.TryGetProperty("version", out var versionProperty))
                         {
@@ -138,6 +138,26 @@ public static class MinecraftLaunchJsonArgumentService
         }
 
         return required;
+    }
+
+    private static string GetCurrentOperatingSystemName()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return "windows";
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return "osx";
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return "linux";
+        }
+
+        return "unknown";
     }
 }
 

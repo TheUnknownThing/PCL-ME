@@ -218,14 +218,7 @@ internal static class FrontendSetupUpdateStatusService
 
     private static LocalVersionInfo ReadCurrentVersion()
     {
-        var metadataPath = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..",
-            "..",
-            "..",
-            "..",
-            "Plain Craft Launcher 2",
-            "metadata.json"));
+        var metadataPath = FrontendLauncherAssetLocator.GetPath("metadata.json");
         if (!File.Exists(metadataPath))
         {
             throw new FileNotFoundException("未找到启动器版本元数据。", metadataPath);

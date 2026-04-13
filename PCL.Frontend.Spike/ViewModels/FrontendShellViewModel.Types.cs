@@ -250,7 +250,11 @@ internal sealed class DownloadInstallOptionViewModel(
     string title,
     string selection,
     Bitmap? icon,
+    string detailText,
+    string selectText,
+    bool canSelect,
     ActionCommand selectCommand,
+    bool canClear,
     ActionCommand clearCommand)
 {
     public string Title { get; } = title;
@@ -259,7 +263,15 @@ internal sealed class DownloadInstallOptionViewModel(
 
     public Bitmap? Icon { get; } = icon;
 
+    public string DetailText { get; } = detailText;
+
+    public string SelectText { get; } = selectText;
+
+    public bool CanSelect { get; } = canSelect;
+
     public ActionCommand SelectCommand { get; } = selectCommand;
+
+    public bool CanClear { get; } = canClear;
 
     public ActionCommand ClearCommand { get; } = clearCommand;
 }

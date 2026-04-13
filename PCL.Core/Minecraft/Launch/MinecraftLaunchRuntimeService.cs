@@ -64,7 +64,8 @@ public static class MinecraftLaunchRuntimeService
                 : request.GlobalWindowTitleTemplate ?? string.Empty;
 
         var separator = request.JavaFolder.Contains('\\') ? '\\' : Path.DirectorySeparatorChar;
-        var jstackPath = request.JavaFolder.TrimEnd('\\', '/') + separator + "jstack.exe";
+        var jstackFileName = OperatingSystem.IsWindows() ? "jstack.exe" : "jstack";
+        var jstackPath = request.JavaFolder.TrimEnd('\\', '/') + separator + jstackFileName;
 
         return new MinecraftLaunchWatcherPlan(
             rawWindowTitle,

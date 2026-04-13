@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Spike.Cli;
 using PCL.Frontend.Spike.Models;
@@ -9,28 +10,26 @@ namespace PCL.Frontend.Spike.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private static readonly string LauncherRootDirectory = Path.GetFullPath(Path.Combine(
-        AppContext.BaseDirectory,
-        "..",
-        "..",
-        "..",
-        "..",
-        "Plain Craft Launcher 2"));
+    private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
     private static readonly string LaunchAvatarImageFilePath = GetLauncherAssetPath("Images", "Heads", "PCL-Community.png");
     private static readonly string LaunchNewsImageFilePath = GetLauncherAssetPath("Images", "Backgrounds", "server_bg.png");
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateOptionalIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
+    private readonly SpikeCommandOptions _options;
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
     private FrontendInstanceComposition _instanceComposition;
+    private FrontendToolsComposition _toolsComposition = new(
+        new FrontendToolsGameLinkState(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, [], 0, [], []),
+        new FrontendToolsHelpState([]),
+        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
     private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
     private StartupSpikePlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
     private readonly CrashSpikePlan _crashPlan;
     private readonly Dictionary<SpikePromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
-    private readonly IReadOnlyList<HelpTopicViewModel> _allHelpTopics;
     private readonly List<LauncherFrontendRoute> _routeHistory = [];
     private readonly ActionCommand _backCommand;
     private readonly ActionCommand _togglePromptOverlayCommand;
@@ -131,6 +130,12 @@ internal sealed partial class FrontendShellViewModel
     private bool _isLaunchMigrationExpanded = true;
     private bool _isLaunchNewsExpanded = true;
     private bool _showLaunchCommunityHint = true;
+    private bool _isLaunchInProgress;
+    private bool _pendingLaunchAfterPrompt;
+    private bool _showLaunchLog;
+    private readonly StringBuilder _launchLogBuilder = new();
+    private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
+    private string _launchPromptContextKey = string.Empty;
     private string _helpSearchQuery = string.Empty;
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
@@ -152,7 +157,10 @@ internal sealed partial class FrontendShellViewModel
     private string _gameLinkConnectionType = "连接中";
     private string _gameLinkConnectedUserName = "未登录";
     private string _gameLinkConnectedUserType = "大厅访客";
+    private IReadOnlyList<string> _gameLinkWorldOptions = ["未检测到可用存档"];
     private int _selectedGameLinkWorldIndex;
+    private int _gameLinkSessionPort = 25565;
+    private bool _gameLinkSessionIsHost;
     private string _toolDownloadUrl = "https://example.invalid/files/demo-pack.zip";
     private string _toolDownloadUserAgent = "PCL-CE-Spike/1.0";
     private string _toolDownloadFolder = "/Users/demo/Downloads/PCL";
@@ -254,6 +262,7 @@ internal sealed partial class FrontendShellViewModel
     private string _selectedJavaRuntimeKey = "auto";
     private bool _suppressSetupPersistence;
     private bool _suppressInstancePersistence;
+    private bool _suppressToolsPersistence;
 
     public static FrontendShellViewModel CreateBootstrap(
         SpikeCommandOptions options,
@@ -266,21 +275,26 @@ internal sealed partial class FrontendShellViewModel
         SpikeCommandOptions options,
         FrontendShellActionService shellActionService)
     {
+        _options = options;
         _shellActionService = shellActionService;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _instanceComposition);
+        ReloadVersionSavesComposition();
+        ReloadDownloadComposition();
         _startupPlan = new StartupSpikePlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
+        _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
         _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
         _currentRoute = _shellComposition.NavigationRequest.CurrentRoute;
         _selectedPromptLane = SpikePromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _togglePromptOverlayCommand = new ActionCommand(TogglePromptOverlay);
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
-        _launchCommand = new ActionCommand(HandleLaunchRequested);
+        _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
@@ -322,43 +336,43 @@ internal sealed partial class FrontendShellViewModel
         _openHomepageMarketCommand = CreateLinkCommand("前往主页市场", "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Homepage.Market/Custom.xaml");
         _toggleLaunchAdvancedOptionsCommand = new ActionCommand(() => IsLaunchAdvancedOptionsExpanded = !IsLaunchAdvancedOptionsExpanded);
         _acceptGameLinkTermsCommand = new ActionCommand(AcceptGameLinkTerms);
-        _testLobbyNatCommand = new ActionCommand(TestLobbyNat);
-        _loginNatayarkAccountCommand = new ActionCommand(LoginNatayarkAccount);
+        _testLobbyNatCommand = new ActionCommand(() => _ = TestLobbyNatAsync());
+        _loginNatayarkAccountCommand = new ActionCommand(() => _ = LoginNatayarkAccountAsync());
         _joinLobbyCommand = new ActionCommand(JoinLobby);
-        _pasteLobbyIdCommand = new ActionCommand(PasteLobbyId);
+        _pasteLobbyIdCommand = new ActionCommand(() => _ = PasteLobbyIdAsync());
         _clearLobbyIdCommand = new ActionCommand(ClearLobbyId);
         _createLobbyCommand = new ActionCommand(CreateLobby);
         _refreshLobbyWorldsCommand = new ActionCommand(RefreshLobbyWorlds);
-        _inputLobbyPortCommand = CreateIntentCommand("手动输入联机端口", "Would allow manual LAN port entry before creating the lobby.");
-        _copyLobbyVirtualIpCommand = CreateIntentCommand("复制虚拟 IP", "Would copy the current EasyTier virtual IP for the active lobby.");
-        _copyActiveLobbyIdCommand = new ActionCommand(() => AddActivity("复制大厅编号", string.IsNullOrWhiteSpace(GameLinkSessionId) ? "尚未生成大厅编号。" : GameLinkSessionId));
-        _exitLobbyCommand = new ActionCommand(ExitLobby);
+        _inputLobbyPortCommand = new ActionCommand(() => _ = InputLobbyPortAsync());
+        _copyLobbyVirtualIpCommand = new ActionCommand(() => _ = CopyLobbyVirtualIpAsync());
+        _copyActiveLobbyIdCommand = new ActionCommand(() => _ = CopyActiveLobbyIdAsync());
+        _exitLobbyCommand = new ActionCommand(() => _ = ExitLobbyAsync());
         _openLobbyReportCommand = CreateLinkCommand("违法违规举报", "https://qm.qq.com/q/yaubjC6C5y");
         _openNatayarkPolicyCommand = CreateLinkCommand("Natayark Network 用户协议与隐私政策", "https://account.naids.com/policy");
         _openLobbyPrivacyPolicyCommand = CreateLinkCommand("大厅隐私协议", "https://www.pclc.cc/privacy/personal-info-brief.html");
-        _disableGameLinkFeatureCommand = CreateIntentCommand("停用联机功能", "Would disable the PCL CE lobby feature for this launcher profile.");
-        _openGameLinkFaqCommand = CreateIntentCommand("常见问题解答", "Would open the P2P 联机常见问题帮助条目.");
+        _disableGameLinkFeatureCommand = new ActionCommand(() => _ = DisableGameLinkFeatureAsync());
+        _openGameLinkFaqCommand = new ActionCommand(OpenGameLinkFaq);
         _openEasyTierWebsiteCommand = CreateLinkCommand("EasyTier 工具官网", "https://easytier.cn/");
         _openPysioWebsiteCommand = CreateLinkCommand("Pysio's Home", "https://pysio.online/");
-        _selectDownloadFolderCommand = new ActionCommand(SelectDownloadFolder);
-        _startCustomDownloadCommand = new ActionCommand(StartCustomDownload);
-        _openCustomDownloadFolderCommand = CreateIntentCommand("打开下载文件夹", "Would reveal the selected custom download directory.");
+        _selectDownloadFolderCommand = new ActionCommand(() => _ = SelectDownloadFolderAsync());
+        _startCustomDownloadCommand = new ActionCommand(() => _ = StartCustomDownloadAsync());
+        _openCustomDownloadFolderCommand = new ActionCommand(OpenCustomDownloadFolder);
         _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
         _previewAchievementCommand = new ActionCommand(PreviewAchievement);
-        _saveAchievementCommand = CreateIntentCommand("保存成就图片", "Would save the generated achievement preview as an image.");
-        _selectHeadSkinCommand = new ActionCommand(SelectHeadSkin);
-        _saveHeadCommand = CreateIntentCommand("保存头像", "Would export the generated avatar head image.");
+        _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
+        _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());
+        _saveHeadCommand = new ActionCommand(() => _ = SaveHeadAsync());
         _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
         _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
         _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
         _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
         _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1);
-        _manageDownloadFavoriteTargetCommand = CreateIntentCommand("管理收藏夹", "Would open the favorite-target management dialog.");
+        _manageDownloadFavoriteTargetCommand = new ActionCommand(ManageDownloadFavoriteTargets);
         _resetInstanceExportOptionsCommand = new ActionCommand(ResetInstanceExportOptions);
-        _importInstanceExportConfigCommand = CreateIntentCommand("读取配置", "Would import an instance export configuration file.");
-        _saveInstanceExportConfigCommand = CreateIntentCommand("保存配置", "Would save the current instance export configuration to disk.");
-        _openInstanceExportGuideCommand = CreateIntentCommand("整合包制作指南", "Would open the instance export guide.");
+        _importInstanceExportConfigCommand = new ActionCommand(() => _ = ImportInstanceExportConfigAsync());
+        _saveInstanceExportConfigCommand = new ActionCommand(SaveInstanceExportConfig);
+        _openInstanceExportGuideCommand = new ActionCommand(OpenInstanceExportGuide);
         _startInstanceExportCommand = new ActionCommand(StartInstanceExport);
         _setLittleSkinCommand = new ActionCommand(() =>
         {
@@ -369,7 +383,7 @@ internal sealed partial class FrontendShellViewModel
             AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
         });
         _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
-        _createInstanceProfileCommand = CreateIntentCommand("新建档案", "Would create a new instance-specific login profile.");
+        _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
 
         ScenarioLabel = $"Scenario: {options.Scenario}";
@@ -377,13 +391,12 @@ internal sealed partial class FrontendShellViewModel
         InputLabel = _shellComposition.InputLabel;
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
-        _allHelpTopics = CreateHelpTopics();
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
+        PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
-        InitializeToolsGameLinkSurface();
-        InitializeToolsTestSurface();
+        ApplyToolsComposition(_toolsComposition);
         InitializeDownloadInstallSurface();
         ApplySetupComposition(_setupComposition);
         ApplyInstanceComposition(_instanceComposition);

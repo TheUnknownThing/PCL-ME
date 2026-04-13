@@ -18,9 +18,14 @@ public static class MinecraftLaunchExecutionWorkflowService
             throw new ArgumentException("自定义命令工作目录不能为空。", nameof(request));
         }
 
+        var fileName = OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh";
+        var arguments = OperatingSystem.IsWindows()
+            ? $"/c \"{request.Command}\""
+            : $"-lc \"{request.Command.Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
+
         return new MinecraftLaunchCustomCommandShellPlan(
-            FileName: "cmd.exe",
-            Arguments: $"/c \"{request.Command}\"",
+            FileName: fileName,
+            Arguments: arguments,
             WorkingDirectory: request.WorkingDirectory,
             UseShellExecute: false,
             CreateNoWindow: true,

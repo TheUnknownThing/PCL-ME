@@ -1,8 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Tasks;
 using PCL.Core.Utils.Secret;
@@ -11,8 +9,6 @@ namespace PCL.Core.App.Essentials;
 
 public static class LauncherFrontendRuntimeStateService
 {
-    private static readonly byte[] IdentifyEntropy = Encoding.UTF8.GetBytes("PCL CE Encryption Key");
-
     public static bool HasRunningTasks()
     {
         return TaskCenter.Tasks.Any(task => task.State is TaskState.Waiting or TaskState.Running);
@@ -121,22 +117,7 @@ public static class LauncherFrontendRuntimeStateService
 
     private static byte[] ReadStoredKey(LauncherVersionedData data)
     {
-        return data.Version switch
-        {
-            1 => ReadWindowsProtectedKey(data.Data),
-            2 => data.Data,
-            _ => throw new NotSupportedException("Unsupported key version")
-        };
-    }
-
-    private static byte[] ReadWindowsProtectedKey(byte[] data)
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            throw new PlatformNotSupportedException("ProtectedData-backed launcher keys are only supported on Windows.");
-        }
-
-        return ProtectedData.Unprotect(data, IdentifyEntropy, DataProtectionScope.CurrentUser);
+        return LauncherStoredKeyEnvelopeService.ReadKey(data);
     }
 
     private static string? TryResolveLegacyDecryptKey()

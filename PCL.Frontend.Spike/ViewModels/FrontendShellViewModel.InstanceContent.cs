@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Avalonia.Media.Imaging;
+using fNbt;
 using PCL.Core.App.Essentials;
+using PCL.Core.Minecraft;
 using PCL.Frontend.Spike.Models;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -121,8 +124,7 @@ internal sealed partial class FrontendShellViewModel
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
             "当前实例没有存档目录。"));
 
-    public ActionCommand PasteInstanceWorldClipboardCommand => new(() =>
-        AddActivity("粘贴剪贴板文件", "Would import save files from the clipboard into the current instance."));
+    public ActionCommand PasteInstanceWorldClipboardCommand => new(() => _ = PasteInstanceWorldClipboardAsync());
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
         OpenInstanceTarget(
@@ -136,26 +138,21 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("刷新服务器信息", "已重新扫描当前实例中的服务器列表。");
     });
 
-    public ActionCommand AddInstanceServerCommand => new(() =>
-        AddActivity("添加新服务器", "Would open the add-server dialog for the current instance."));
+    public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerFromClipboardAsync());
 
     public ActionCommand OpenInstanceResourceFolderCommand => new(() =>
         OpenInstanceTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
 
-    public ActionCommand InstallInstanceResourceFromFileCommand => new(() =>
-        AddActivity("从文件安装资源", $"{InstanceResourceSurfaceTitle} • Would open a local file picker."));
+    public ActionCommand InstallInstanceResourceFromFileCommand => new(() => _ = InstallInstanceResourceFromFileAsync());
 
-    public ActionCommand DownloadInstanceResourceCommand => new(() =>
-        AddActivity("下载新资源", $"{InstanceResourceSurfaceTitle} • Would jump to the download surface.")); 
+    public ActionCommand DownloadInstanceResourceCommand => new(DownloadInstanceResource);
 
     public ActionCommand SelectAllInstanceResourcesCommand => new(() =>
         AddActivity("全选资源", $"{InstanceResourceSurfaceTitle} • Would toggle select-all for the current list."));
 
-    public ActionCommand ExportInstanceResourceInfoCommand => new(() =>
-        AddActivity("导出资源信息", $"{InstanceResourceSurfaceTitle} • Would export detailed item metadata."));
+    public ActionCommand ExportInstanceResourceInfoCommand => new(ExportInstanceResourceInfo);
 
-    public ActionCommand CheckInstanceModsCommand => new(() =>
-        AddActivity("检查 Mod", "Would run duplicate, dependency, and compatibility checks for installed mods."));
+    public ActionCommand CheckInstanceModsCommand => new(CheckInstanceMods);
 
     private void InitializeInstanceContentSurfaces()
     {
@@ -248,7 +245,7 @@ internal sealed partial class FrontendShellViewModel
                 .Select(entry => new SimpleListEntryViewModel(
                     entry.Title,
                     entry.Summary,
-                    new ActionCommand(() => OpenInstanceTarget("查看存档", entry.Path, "当前存档目录不存在。")))));
+                    new ActionCommand(() => OpenVersionSaveDetails(entry.Path)))));
     }
 
     private void RefreshInstanceScreenshotEntries()
@@ -272,7 +269,254 @@ internal sealed partial class FrontendShellViewModel
                     entry.Title,
                     entry.Address,
                     entry.Status,
-                    new ActionCommand(() => AddActivity("查看服务器", $"{entry.Title} • {entry.Address}")))));
+                    new ActionCommand(() => ViewInstanceServer(entry)))));
+    }
+
+    private async Task PasteInstanceWorldClipboardAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("粘贴剪贴板文件", "当前未选择实例。");
+            return;
+        }
+
+        string? clipboardText;
+        try
+        {
+            clipboardText = await _shellActionService.ReadClipboardTextAsync();
+        }
+        catch (Exception ex)
+        {
+            AddActivity("粘贴剪贴板文件失败", ex.Message);
+            return;
+        }
+
+        var sourcePaths = ParseClipboardPaths(clipboardText)
+            .Where(path => File.Exists(path) || Directory.Exists(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (sourcePaths.Length == 0)
+        {
+            AddActivity("粘贴剪贴板文件", "剪贴板中没有可导入的文件或文件夹路径。");
+            return;
+        }
+
+        var savesDirectory = Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves");
+        Directory.CreateDirectory(savesDirectory);
+
+        var importedTargets = new List<string>();
+        foreach (var sourcePath in sourcePaths)
+        {
+            var targetPath = GetUniqueChildPath(savesDirectory, Path.GetFileName(sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)));
+            if (Directory.Exists(sourcePath))
+            {
+                CopyDirectory(sourcePath, targetPath);
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+                File.Copy(sourcePath, targetPath, overwrite: false);
+            }
+
+            importedTargets.Add(targetPath);
+        }
+
+        ReloadInstanceComposition();
+        AddActivity("粘贴剪贴板文件", string.Join(Environment.NewLine, importedTargets));
+    }
+
+    private async Task AddInstanceServerFromClipboardAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("添加新服务器", "当前未选择实例。");
+            return;
+        }
+
+        string? clipboardText;
+        try
+        {
+            clipboardText = await _shellActionService.ReadClipboardTextAsync();
+        }
+        catch (Exception ex)
+        {
+            AddActivity("添加新服务器失败", ex.Message);
+            return;
+        }
+
+        if (!TryParseClipboardServer(clipboardText, out var name, out var address))
+        {
+            AddActivity("添加新服务器", "请先复制服务器地址，或复制“名称|地址”后再试。");
+            return;
+        }
+
+        var serversPath = Path.Combine(_instanceComposition.Selection.IndieDirectory, "servers.dat");
+        var file = File.Exists(serversPath)
+            ? new NbtFile(serversPath)
+            : new NbtFile(new NbtCompound
+            {
+                new NbtList("servers", NbtTagType.Compound)
+            });
+        var serverList = file.RootTag.Get<NbtList>("servers")
+            ?? new NbtList("servers", NbtTagType.Compound);
+        if (serverList.ListType == NbtTagType.Unknown)
+        {
+            serverList.ListType = NbtTagType.Compound;
+        }
+
+        serverList.Add(new NbtCompound
+        {
+            new NbtString("name", name),
+            new NbtString("ip", address)
+        });
+
+        if (file.RootTag.Get<NbtList>("servers") is null)
+        {
+            file.RootTag.Add(serverList);
+        }
+
+        try
+        {
+            file.SaveToFile(serversPath, NbtCompression.None);
+        }
+        catch
+        {
+            AddActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+            return;
+        }
+
+        ReloadInstanceComposition();
+        AddActivity("添加新服务器", $"{name} • {address}");
+    }
+
+    private async Task InstallInstanceResourceFromFileAsync()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("从文件安装资源", "当前未选择实例。");
+            return;
+        }
+
+        var (typeName, patterns) = ResolveInstanceResourcePickerOptions();
+
+        string? sourcePath;
+        try
+        {
+            sourcePath = await _shellActionService.PickOpenFileAsync($"选择{InstanceResourceSurfaceTitle}文件", typeName, patterns);
+        }
+        catch (Exception ex)
+        {
+            AddActivity("从文件安装资源失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            AddActivity("从文件安装资源", "已取消选择资源文件。");
+            return;
+        }
+
+        var targetDirectory = GetCurrentInstanceResourceDirectory();
+        Directory.CreateDirectory(targetDirectory);
+        var targetPath = GetUniqueChildPath(targetDirectory, Path.GetFileName(sourcePath));
+        File.Copy(sourcePath, targetPath, overwrite: false);
+
+        ReloadInstanceComposition();
+        AddActivity("从文件安装资源", $"{sourcePath} -> {targetPath}");
+    }
+
+    private void DownloadInstanceResource()
+    {
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Download, ResolveInstanceDownloadSubpage()),
+            $"{InstanceResourceSurfaceTitle} 页面已跳转到下载页。");
+    }
+
+    private void ExportInstanceResourceInfo()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("导出资源信息", "当前未选择实例。");
+            return;
+        }
+
+        var entries = GetCurrentInstanceResourceState().Entries;
+        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-resources");
+        Directory.CreateDirectory(exportDirectory);
+        var outputPath = Path.Combine(
+            exportDirectory,
+            $"{_instanceComposition.Selection.InstanceName}-{ResolveInstanceResourceExportSlug()}-info.txt");
+        var lines = entries.Count == 0
+            ? [$"{InstanceResourceSurfaceTitle} 列表为空。"]
+            : entries.Select(entry => $"{entry.Title} | {entry.Meta} | {entry.Summary} | {entry.Path}").ToArray();
+        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
+        OpenInstanceTarget("导出资源信息", outputPath, "导出文件不存在。");
+    }
+
+    private void CheckInstanceMods()
+    {
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity("检查 Mod", "当前未选择实例。");
+            return;
+        }
+
+        var enabledMods = _instanceComposition.Mods.Entries;
+        var disabledMods = _instanceComposition.DisabledMods.Entries;
+        var duplicateGroups = enabledMods
+            .Concat(disabledMods)
+            .GroupBy(entry => entry.Title, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-mod-checks");
+        Directory.CreateDirectory(exportDirectory);
+        var outputPath = Path.Combine(exportDirectory, $"{_instanceComposition.Selection.InstanceName}-mod-check.txt");
+        var lines = new List<string>
+        {
+            $"实例: {_instanceComposition.Selection.InstanceName}",
+            $"启用 Mod: {enabledMods.Count}",
+            $"已禁用 Mod: {disabledMods.Count}",
+            $"重复名称: {duplicateGroups.Length}",
+            string.Empty
+        };
+
+        if (duplicateGroups.Length == 0)
+        {
+            lines.Add("未检测到重复名称的 Mod 文件。");
+        }
+        else
+        {
+            lines.Add("重复名称的 Mod:");
+            foreach (var group in duplicateGroups)
+            {
+                lines.Add($"- {group.Key}");
+                foreach (var entry in group)
+                {
+                    lines.Add($"  {entry.Meta} | {entry.Summary} | {entry.Path}");
+                }
+            }
+        }
+
+        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
+        OpenInstanceTarget("检查 Mod", outputPath, "检查结果不存在。");
+    }
+
+    private void ViewInstanceServer(FrontendInstanceServerEntry entry)
+    {
+        var exportDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "instance-servers");
+        Directory.CreateDirectory(exportDirectory);
+        var safeName = string.Concat(entry.Title.Select(character => Path.GetInvalidFileNameChars().Contains(character) ? '_' : character));
+        var outputPath = Path.Combine(exportDirectory, $"{safeName}.txt");
+        var lines = new[]
+        {
+            $"名称: {entry.Title}",
+            $"地址: {entry.Address}",
+            $"状态: {entry.Status}"
+        };
+        File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
+        OpenInstanceTarget("查看服务器", outputPath, "服务器详情文件不存在。");
     }
 
     private FrontendInstanceResourceState GetCurrentInstanceResourceState()
@@ -312,6 +556,132 @@ internal sealed partial class FrontendShellViewModel
         };
 
         return ResolveCurrentInstanceResourceDirectory(folderName);
+    }
+
+    private (string TypeName, string[] Patterns) ResolveInstanceResourcePickerOptions()
+    {
+        return _currentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.VersionResourcePack => ("资源包文件", ["*.zip", "*.rar"]),
+            LauncherFrontendSubpageKey.VersionShader => ("光影文件", ["*.zip", "*.rar"]),
+            LauncherFrontendSubpageKey.VersionSchematic => ("投影原理图文件", ["*.litematic", "*.schem", "*.schematic", "*.nbt"]),
+            _ => ("Mod 文件", ["*.jar", "*.disabled", "*.old"])
+        };
+    }
+
+    private LauncherFrontendSubpageKey ResolveInstanceDownloadSubpage()
+    {
+        return _currentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.VersionResourcePack => LauncherFrontendSubpageKey.DownloadResourcePack,
+            LauncherFrontendSubpageKey.VersionShader => LauncherFrontendSubpageKey.DownloadShader,
+            LauncherFrontendSubpageKey.VersionSchematic => LauncherFrontendSubpageKey.DownloadMod,
+            _ => LauncherFrontendSubpageKey.DownloadMod
+        };
+    }
+
+    private string ResolveInstanceResourceExportSlug()
+    {
+        return _currentRoute.Subpage switch
+        {
+            LauncherFrontendSubpageKey.VersionMod => "mods",
+            LauncherFrontendSubpageKey.VersionModDisabled => "mods-disabled",
+            LauncherFrontendSubpageKey.VersionResourcePack => "resourcepacks",
+            LauncherFrontendSubpageKey.VersionShader => "shaderpacks",
+            LauncherFrontendSubpageKey.VersionSchematic => "schematics",
+            _ => "resources"
+        };
+    }
+
+    private static IEnumerable<string> ParseClipboardPaths(string? clipboardText)
+    {
+        if (string.IsNullOrWhiteSpace(clipboardText))
+        {
+            return [];
+        }
+
+        return clipboardText
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim().Trim('"'))
+            .Where(line => !string.IsNullOrWhiteSpace(line));
+    }
+
+    private static bool TryParseClipboardServer(string? clipboardText, out string name, out string address)
+    {
+        name = "Minecraft服务器";
+        address = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(clipboardText))
+        {
+            return false;
+        }
+
+        var lines = clipboardText
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToArray();
+        if (lines.Length == 0)
+        {
+            return false;
+        }
+
+        if (lines.Length >= 2)
+        {
+            name = lines[0];
+            address = lines[1];
+            return true;
+        }
+
+        var singleLine = lines[0];
+        var split = singleLine.Split('|', 2, StringSplitOptions.TrimEntries);
+        if (split.Length == 2)
+        {
+            name = string.IsNullOrWhiteSpace(split[0]) ? "Minecraft服务器" : split[0];
+            address = split[1];
+            return !string.IsNullOrWhiteSpace(address);
+        }
+
+        address = singleLine;
+        return true;
+    }
+
+    private static string GetUniqueChildPath(string directory, string fileOrFolderName)
+    {
+        var candidate = Path.Combine(directory, fileOrFolderName);
+        if (!File.Exists(candidate) && !Directory.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        var baseName = Path.GetFileNameWithoutExtension(fileOrFolderName);
+        var extension = Path.GetExtension(fileOrFolderName);
+        var suffix = 1;
+        while (true)
+        {
+            candidate = Path.Combine(directory, $"{baseName}-{suffix}{extension}");
+            if (!File.Exists(candidate) && !Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            suffix++;
+        }
+    }
+
+    private static void CopyDirectory(string sourceDirectory, string targetDirectory)
+    {
+        Directory.CreateDirectory(targetDirectory);
+        foreach (var file in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.TopDirectoryOnly))
+        {
+            var targetPath = Path.Combine(targetDirectory, Path.GetFileName(file));
+            File.Copy(file, targetPath, overwrite: false);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(sourceDirectory, "*", SearchOption.TopDirectoryOnly))
+        {
+            CopyDirectory(directory, Path.Combine(targetDirectory, Path.GetFileName(directory)));
+        }
     }
 
     private static bool MatchesSearch(params string[] values)

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 
 namespace PCL.Frontend.Spike.ViewModels;
@@ -245,94 +247,72 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        switch (_currentRoute.Subpage)
+        if (_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var runtimeState))
         {
-            case LauncherFrontendSubpageKey.DownloadMod:
-                ConfigureDownloadResourceSurface(
-                    "Mod",
-                    supportsModrinth: true,
-                    showInstallModPackAction: false,
-                    useShaderLoader: false,
-                    BuildModTagOptions(),
-                    [
-                        CreateDownloadResourceEntry("Sodium", "现代性能优化模组，专注于渲染效率和稳定帧率。", "CurseForge", "1.21.1", "Fabric", ["性能优化", "实用"], "查看详情", "Fabric.png", 982, 224, 8, 10),
-                        CreateDownloadResourceEntry("Create", "大型机械与物流科技模组，保留原版风味的自动化体验。", "Modrinth", "1.20.1", "Forge", ["科技", "自动化", "管道与物流"], "查看详情", "Anvil.png", 875, 212, 7, 9),
-                        CreateDownloadResourceEntry("Biomes O' Plenty", "提供大量额外生物群系与地形生成内容。", "CurseForge", "1.20.1", "NeoForge", ["生物群系", "世界元素"], "查看详情", "Grass.png", 620, 168, 6, 7),
-                        CreateDownloadResourceEntry("Waystones", "增加可共享的传送路标，适合多人联机与生存整合。", "CurseForge", "1.21.1", "Fabric", ["运输", "实用"], "查看详情", "CobbleStone.png", 515, 146, 5, 8),
-                        CreateDownloadResourceEntry("Alex's Mobs", "加入生态更丰富的生物与冒险掉落内容。", "Modrinth", "1.20.6", "Forge", ["生物", "冒险"], "查看详情", "Egg.png", 430, 126, 4, 6)
-                    ]);
-                break;
-            case LauncherFrontendSubpageKey.DownloadPack:
-                ConfigureDownloadResourceSurface(
-                    "整合包",
-                    supportsModrinth: true,
-                    showInstallModPackAction: true,
-                    useShaderLoader: false,
-                    BuildPackTagOptions(),
-                    [
-                        CreateDownloadResourceEntry("All The Mods 9", "大型现代整合包，适合长期生存与自动化路线。", "CurseForge", "1.20.1", "Forge", ["大型整合", "科技"], "查看详情", "CommandBlock.png", 910, 255, 9, 10),
-                        CreateDownloadResourceEntry("Better MC", "偏探索与原版改良的综合整合包。", "Modrinth", "1.20.1", "Fabric", ["探索", "原版改良"], "查看详情", "Grass.png", 804, 233, 8, 9),
-                        CreateDownloadResourceEntry("FTB Skies Expert", "空岛主题的任务型整合包，强调推进路线。", "CurseForge", "1.19.2", "Forge", ["空岛", "任务", "FTB"], "查看详情", "GoldBlock.png", 688, 194, 7, 8),
-                        CreateDownloadResourceEntry("RLCraft", "硬核生存与冒险路线的经典整合包。", "CurseForge", "1.12.2", "Forge", ["硬核", "冒险"], "查看详情", "RedstoneBlock.png", 661, 188, 6, 7),
-                        CreateDownloadResourceEntry("Fabulously Optimized", "轻量化性能整合包，面向新版 Fabric 环境。", "Modrinth", "1.21.1", "Fabric", ["轻量整合", "性能优化"], "查看详情", "Fabric.png", 580, 171, 5, 6)
-                    ]);
-                break;
-            case LauncherFrontendSubpageKey.DownloadDataPack:
-                ConfigureDownloadResourceSurface(
-                    "数据包",
-                    supportsModrinth: true,
-                    showInstallModPackAction: false,
-                    useShaderLoader: false,
-                    BuildDataPackTagOptions(),
-                    [
-                        CreateDownloadResourceEntry("Incendium", "重做下界结构与挑战内容的大型冒险数据包。", "Modrinth", "1.21.1", string.Empty, ["冒险", "世界元素"], "查看详情", "RedstoneLampOn.png", 574, 180, 8, 10),
-                        CreateDownloadResourceEntry("BlazeandCave's Advancements Pack", "为原版加入大量进度与挑战路线。", "CurseForge", "1.20.6", string.Empty, ["游戏机制", "冒险"], "查看详情", "GoldBlock.png", 441, 143, 7, 9),
-                        CreateDownloadResourceEntry("Mob Captains", "强化生物遭遇与掉落循环的玩法增强数据包。", "Modrinth", "1.20.1", string.Empty, ["生物", "装备与工具"], "查看详情", "Egg.png", 396, 112, 6, 8),
-                        CreateDownloadResourceEntry("Terralith Compatibility Bundle", "为地形与结构包提供联动支持。", "CurseForge", "1.21.1", string.Empty, ["支持库", "世界元素"], "查看详情", "Grass.png", 321, 101, 5, 7)
-                    ]);
-                break;
-            case LauncherFrontendSubpageKey.DownloadResourcePack:
-                ConfigureDownloadResourceSurface(
-                    "资源包",
-                    supportsModrinth: true,
-                    showInstallModPackAction: false,
-                    useShaderLoader: false,
-                    BuildResourcePackTagOptions(),
-                    [
-                        CreateDownloadResourceEntry("Faithful 32x", "经典写实增强资源包，保持原版辨识度。", "CurseForge", "1.21.1", "Fabric", ["原版风", "32x"], "查看详情", "Grass.png", 923, 281, 9, 10),
-                        CreateDownloadResourceEntry("ModernArch", "现代写实风资源包，适合建筑展示。", "Modrinth", "1.20.1", "OptiFine", ["现代风", "128x"], "查看详情", "GoldBlock.png", 612, 202, 8, 9),
-                        CreateDownloadResourceEntry("Vanilla Tweaks", "轻量化原版改良合集，支持按模块组合下载。", "CurseForge", "1.21.1", string.Empty, ["原版风", "改良"], "查看详情", "CobbleStone.png", 570, 178, 7, 8),
-                        CreateDownloadResourceEntry("Fresh Animations", "为原版生物提供更细致的动作表现。", "Modrinth", "1.21.1", "Fabric", ["含实体", "改良"], "查看详情", "Egg.png", 488, 165, 6, 7)
-                    ]);
-                break;
-            case LauncherFrontendSubpageKey.DownloadShader:
-                ConfigureDownloadResourceSurface(
-                    "光影包",
-                    supportsModrinth: true,
-                    showInstallModPackAction: false,
-                    useShaderLoader: true,
-                    BuildShaderTagOptions(),
-                    [
-                        CreateDownloadResourceEntry("Complementary Reimagined", "平衡性能与效果的热门综合光影。", "CurseForge", "1.21.1", "Iris", ["原版风", "中"], "查看详情", "RedstoneLampOn.png", 1012, 296, 9, 10),
-                        CreateDownloadResourceEntry("BSL Shaders", "偏暖色氛围的经典光影方案。", "CurseForge", "1.20.1", "OptiFine", ["幻想风", "中"], "查看详情", "RedstoneBlock.png", 874, 241, 8, 9),
-                        CreateDownloadResourceEntry("Sildur's Vibrant Shaders", "兼顾低配与高画质档位的常见选择。", "Modrinth", "1.20.6", "OptiFine", ["彩色光照", "低"], "查看详情", "RedstoneLampOff.png", 761, 214, 7, 8),
-                        CreateDownloadResourceEntry("Photon Shader", "注重清晰体积光和反射表现的现代光影。", "Modrinth", "1.21.1", "Iris", ["反射", "高"], "查看详情", "CommandBlock.png", 504, 149, 6, 7)
-                    ]);
-                break;
-            case LauncherFrontendSubpageKey.DownloadWorld:
-                ConfigureDownloadResourceSurface(
-                    "世界",
-                    supportsModrinth: false,
-                    showInstallModPackAction: false,
-                    useShaderLoader: false,
-                    BuildWorldTagOptions(),
-                    [
-                        CreateDownloadResourceEntry("Terra Swoop Force", "高完成度多人竞速地图。", "CurseForge", "1.21.1", string.Empty, ["小游戏", "跑酷"], "查看详情", "GrassPath.png", 608, 190, 8, 10),
-                        CreateDownloadResourceEntry("Diversity 3", "包含解谜、跑酷、战斗等多章节挑战。", "CurseForge", "1.20.1", string.Empty, ["解谜", "冒险"], "查看详情", "CommandBlock.png", 552, 177, 7, 9),
-                        CreateDownloadResourceEntry("OneBlock Survival", "经典的渐进式空岛生存地图。", "CurseForge", "1.21.1", string.Empty, ["生存", "创造"], "查看详情", "CobbleStone.png", 481, 151, 6, 8),
-                        CreateDownloadResourceEntry("Modded Sky Realm", "面向整合包环境的世界预设。", "CurseForge", "1.12.2", "Forge", ["Mod 世界"], "查看详情", "Egg.png", 302, 96, 5, 6)
-                    ]);
-                break;
+            DownloadResourceSurfaceTitle = runtimeState.SurfaceTitle;
+            DownloadResourceLoadingText = runtimeState.HintText;
+            DownloadResourceEmptyStateText = $"没有找到符合条件的{runtimeState.SurfaceTitle.Replace(" 列表", string.Empty)}条目。";
+            DownloadResourceHintText = runtimeState.HintText;
+            ShowDownloadResourceInstallModPackAction = runtimeState.ShowInstallModPackAction;
+            _downloadResourceSupportsModrinth = runtimeState.SupportsSecondarySource;
+            _downloadResourceSourceOptions = runtimeState.SupportsSecondarySource
+                ? [
+                    new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("当前实例", "当前实例"),
+                    new DownloadResourceFilterOptionViewModel("当前启动器", "当前启动器")
+                ]
+                : [
+                    new DownloadResourceFilterOptionViewModel("全部", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("当前实例", "当前实例"),
+                    new DownloadResourceFilterOptionViewModel("当前启动器", "当前启动器")
+                ];
+            _downloadResourceTagOptions = runtimeState.TagOptions
+                .Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue))
+                .ToArray();
+            _downloadResourceLoaderOptions = runtimeState.UseShaderLoaderOptions
+                ? [
+                    new DownloadResourceFilterOptionViewModel("任意加载器", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine"),
+                    new DownloadResourceFilterOptionViewModel("Iris", "Iris")
+                ]
+                : [
+                    new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+                    new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
+                    new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
+                    new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
+                    new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
+                ];
+            _allDownloadResourceEntries = runtimeState.Entries
+                .Select(entry =>
+                {
+                    Bitmap? icon = null;
+                    if (!string.IsNullOrWhiteSpace(entry.IconName))
+                    {
+                        icon = LoadLauncherBitmap("Images", "Blocks", entry.IconName);
+                    }
+
+                    return new DownloadResourceEntryViewModel(
+                        icon,
+                        entry.Title,
+                        entry.Info,
+                        entry.Source,
+                        entry.Version,
+                        entry.Loader,
+                        entry.Tags,
+                        entry.DownloadCount,
+                        entry.FollowCount,
+                        entry.ReleaseRank,
+                        entry.UpdateRank,
+                        entry.ActionText,
+                        string.IsNullOrWhiteSpace(entry.TargetPath)
+                            ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
+                            : new ActionCommand(() => OpenInstanceTarget($"查看资源: {entry.Title}", entry.TargetPath, "目标文件不存在。")));
+                })
+                .ToArray();
+            ResetDownloadResourceFilterState();
+            RaiseDownloadResourceFilterState();
+            ApplyDownloadResourceFilters(resetPage: true);
+            return;
         }
 
         RaiseDownloadResourceFilterState();
@@ -405,7 +385,74 @@ internal sealed partial class FrontendShellViewModel
 
     private void InstallDownloadResourceModPack()
     {
-        AddActivity("安装整合包", "Would install the selected modpack into the current Minecraft folder.");
+        if (!IsDownloadResourceSurface || _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack)
+        {
+            AddActivity("安装整合包", "当前页面没有可安装的整合包。");
+            return;
+        }
+
+        var visibleEntry = DownloadResourceEntries.FirstOrDefault();
+        if (visibleEntry is null)
+        {
+            AddActivity("安装整合包", "当前筛选结果中没有可安装的整合包。");
+            return;
+        }
+
+        if (!_downloadComposition.ResourceStates.TryGetValue(_currentRoute.Subpage, out var resourceState))
+        {
+            AddActivity("安装整合包", "当前整合包列表尚未完成运行时组合。");
+            return;
+        }
+
+        var sourceEntry = resourceState.Entries.FirstOrDefault(entry =>
+            string.Equals(entry.Title, visibleEntry.Title, StringComparison.Ordinal)
+            && string.Equals(entry.Source, visibleEntry.Source, StringComparison.Ordinal));
+        if (sourceEntry is null || string.IsNullOrWhiteSpace(sourceEntry.TargetPath) || !Directory.Exists(sourceEntry.TargetPath))
+        {
+            AddActivity("安装整合包", "当前置顶整合包缺少可复制的本地实例目录。");
+            return;
+        }
+
+        try
+        {
+            var launcherFolder = ResolveDownloadLauncherFolder();
+            var versionsDirectory = Path.Combine(launcherFolder, "versions");
+            Directory.CreateDirectory(versionsDirectory);
+
+            var targetName = string.IsNullOrWhiteSpace(DownloadInstallName)
+                ? visibleEntry.Title
+                : DownloadInstallName.Trim();
+            var targetDirectory = GetUniqueInstallDirectoryPath(Path.Combine(
+                versionsDirectory,
+                SanitizeInstallDirectoryName(targetName)));
+
+            CopyDirectory(sourceEntry.TargetPath, targetDirectory);
+
+            var summaryDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "download-installs");
+            Directory.CreateDirectory(summaryDirectory);
+            var summaryPath = Path.Combine(summaryDirectory, $"{Path.GetFileName(targetDirectory)}.txt");
+            File.WriteAllText(
+                summaryPath,
+                string.Join(Environment.NewLine,
+                [
+                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                    $"来源整合包: {visibleEntry.Title}",
+                    $"源目录: {sourceEntry.TargetPath}",
+                    $"目标目录: {targetDirectory}",
+                    $"当前下载安装名: {DownloadInstallName}"
+                ]),
+                new UTF8Encoding(false));
+
+            ReloadDownloadComposition();
+            InitializeDownloadInstallSurface();
+            RefreshDownloadResourceSurface();
+            RaisePropertyChanged(nameof(DownloadInstallName));
+            OpenInstanceTarget("安装整合包", targetDirectory, "新安装的整合包目录不存在。");
+        }
+        catch (Exception ex)
+        {
+            AddActivity("安装整合包失败", ex.Message);
+        }
     }
 
     private void GoToFirstDownloadResourcePage()
@@ -753,4 +800,63 @@ internal sealed partial class FrontendShellViewModel
             actionText,
             new ActionCommand(() => AddActivity($"下载资源操作: {title}", $"{source} • {version} • {string.Join(" / ", tags)}")));
     }
+
+    private string ResolveDownloadLauncherFolder()
+    {
+        var provider = new YamlFileProvider(_shellActionService.RuntimePaths.LocalConfigPath);
+        var rawValue = "$.minecraft\\";
+
+        if (provider.Exists("LaunchFolderSelect"))
+        {
+            try
+            {
+                rawValue = provider.Get<string>("LaunchFolderSelect");
+            }
+            catch
+            {
+                rawValue = "$.minecraft\\";
+            }
+        }
+
+        var normalized = string.IsNullOrWhiteSpace(rawValue)
+            ? "$.minecraft\\"
+            : rawValue.Trim();
+        normalized = normalized.Replace(
+            "$",
+            EnsureTrailingSeparator(_shellActionService.RuntimePaths.ExecutableDirectory),
+            StringComparison.Ordinal);
+        return Path.GetFullPath(normalized);
+    }
+
+    private static string EnsureTrailingSeparator(string path)
+    {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static string SanitizeInstallDirectoryName(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var cleaned = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? "ImportedModPack" : cleaned;
+    }
+
+    private static string GetUniqueInstallDirectoryPath(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath))
+        {
+            return directoryPath;
+        }
+
+        for (var suffix = 1; ; suffix++)
+        {
+            var candidate = $"{directoryPath}-{suffix}";
+            if (!Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+    }
+
 }
