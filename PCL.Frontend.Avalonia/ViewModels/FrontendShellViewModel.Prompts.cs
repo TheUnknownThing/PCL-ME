@@ -153,9 +153,15 @@ internal sealed partial class FrontendShellViewModel
             prompt.Message,
             prompt.Source.ToString(),
             prompt.Severity.ToString(),
-            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
-            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#D33232") : Brush.Parse("#0B5BCB"),
-            prompt.Severity == LauncherFrontendPromptSeverity.Warning ? Brush.Parse("#FFF1EA") : Brush.Parse("#EAF7F5"),
+            prompt.Severity == LauncherFrontendPromptSeverity.Warning
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrushRedLight", "#D33232")
+                : FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB"),
+            prompt.Severity == LauncherFrontendPromptSeverity.Warning
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrushRedLight", "#D33232")
+                : FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB"),
+            prompt.Severity == LauncherFrontendPromptSeverity.Warning
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticDangerBackground", "#FFF1EA")
+                : FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticInfoBackground", "#EDF5FF"),
             prompt.Options.Select((option, index) => new PromptOptionViewModel(
                 option.Label,
                 string.Empty,
@@ -277,6 +283,9 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored:
                 PersistJavaCompatibilityOverride();
                 break;
+            case LauncherFrontendPromptCommandKind.IgnoreJavaCompatibilityOnce:
+                IgnoreJavaCompatibilityWarningOnce();
+                break;
             case LauncherFrontendPromptCommandKind.ClosePrompt:
                 AddActivity("关闭提示", "当前提示已标记为完成。");
                 break;
@@ -350,11 +359,13 @@ internal sealed partial class FrontendShellViewModel
         if (_isPromptOverlayOpen == isOpen)
         {
             RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+            NotifyTopLevelNavigationInteractionChanged();
             return;
         }
 
         _isPromptOverlayOpen = isOpen;
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+        NotifyTopLevelNavigationInteractionChanged();
     }
 
     private static string DescribePromptOption(LauncherFrontendPromptOption option)
@@ -379,6 +390,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPromptCommandKind.PersistSetting => $"Persist setting ({command.Value ?? "n/a"})",
             LauncherFrontendPromptCommandKind.DownloadJavaRuntime => $"Download Java ({command.Value ?? "n/a"})",
             LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored => "Persist Java compatibility override",
+            LauncherFrontendPromptCommandKind.IgnoreJavaCompatibilityOnce => "Ignore Java compatibility once",
             LauncherFrontendPromptCommandKind.ClosePrompt => "Close prompt",
             LauncherFrontendPromptCommandKind.ViewGameLog => "Open game log",
             LauncherFrontendPromptCommandKind.OpenInstanceSettings => "Open instance settings",
@@ -396,6 +408,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         await AwaitLatestSelectedInstanceRefreshAsync();
+        RefreshLaunchState();
 
         if (_isLaunchBlockedByPrompt)
         {
@@ -460,7 +473,8 @@ internal sealed partial class FrontendShellViewModel
 
     private void AbortLaunchFromPrompt()
     {
-        _isLaunchBlockedByPrompt = true;
+        _isLaunchBlockedByPrompt = false;
+        _ignoreJavaCompatibilityWarningOnce = false;
         _pendingLaunchAfterPrompt = false;
         AddActivity("已中止启动流程", "启动提示要求返回处理，当前启动动作已被阻止。");
     }
@@ -498,6 +512,12 @@ internal sealed partial class FrontendShellViewModel
         IgnoreInstanceJavaCompatibilityWarning = true;
         RefreshLaunchState();
         AddActivity("已启用 Java 强制启动", "当前实例后续将忽略 Java 兼容性检查，继续使用你手动选择的 Java。");
+    }
+
+    private void IgnoreJavaCompatibilityWarningOnce()
+    {
+        _ignoreJavaCompatibilityWarningOnce = true;
+        AddActivity("已为本次启动忽略 Java 检查", "当前启动将继续使用你手动选择的 Java，不会修改实例设置。");
     }
 
     private void AppendPromptLaunchArgument(string? argument)
@@ -681,6 +701,9 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             RefreshGameLogSurface();
 
+            await EnsureSelectedLaunchProfileReadyForLaunchAsync(launchCancellation.Token);
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
             await RefreshLaunchCompositionAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
 
@@ -773,14 +796,46 @@ internal sealed partial class FrontendShellViewModel
             showDownload: false,
             isError: false);
 
+        var ignoreJavaCompatibilityWarningOnce = _ignoreJavaCompatibilityWarningOnce;
+        _ignoreJavaCompatibilityWarningOnce = false;
         var launchComposition = await Task.Run(() =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths);
+            return FrontendLaunchCompositionService.Compose(
+                _options,
+                _shellActionService.RuntimePaths,
+                ignoreJavaCompatibilityWarningOnce);
         }, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
         ApplyLaunchComposition(launchComposition, normalizeLaunchProfileSurface: true);
+    }
+
+    private async Task EnsureSelectedLaunchProfileReadyForLaunchAsync(CancellationToken cancellationToken)
+    {
+        var result = await RefreshSelectedLaunchProfileCoreAsync(
+            cancellationToken,
+            forceRefresh: false,
+            onStatusChanged: stage => SetLaunchDialogRunningState(
+                "正在启动游戏",
+                stage,
+                0.03d,
+                showDownload: false,
+                isError: false));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!result.WasChecked)
+        {
+            return;
+        }
+
+        if (result.ShouldInvalidateAvatarCache)
+        {
+            InvalidateLaunchAvatarCache(_launchComposition.SelectedProfile);
+        }
+
+        AppendLaunchLogLine(result.Message);
+        AddActivity("启动前账号检查", result.Message);
     }
 
     private async Task EnsureLaunchFilesAsync(CancellationToken cancellationToken)
@@ -1046,10 +1101,7 @@ internal sealed partial class FrontendShellViewModel
                 startResult.SessionSummaryPath,
                 Path.Combine(_launchComposition.InstancePath, "logs", "latest.log")
             ],
-            CurrentLauncherLogFilePath: Path.Combine(
-                _shellActionService.RuntimePaths.LauncherAppDataDirectory,
-                "Log",
-                "PCL.log"),
+            CurrentLauncherLogFilePath: _shellActionService.RuntimePaths.ResolveCurrentLauncherLogFilePath(),
             Environment: GetHostEnvironmentSnapshot(),
             CurrentAccessToken: _launchComposition.SelectedProfile.AccessToken,
             CurrentUserUuid: _launchComposition.SelectedProfile.Uuid,
@@ -1216,6 +1268,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchAvatarImage));
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
+        RaisePropertyChanged(nameof(CanRefreshLaunchProfile));
         RaisePropertyChanged(nameof(HasSelectedLaunchProfile));
         RaisePropertyChanged(nameof(ShowLaunchProfileSetupActions));
         RaisePropertyChanged(nameof(LaunchProfileHint));
@@ -1227,6 +1280,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchNewsBadgeText));
         RaisePropertyChanged(nameof(LaunchNewsSectionTitle));
         RaisePropertyChanged(nameof(LaunchMigrationLines));
+        _refreshLaunchProfileCommand.NotifyCanExecuteChanged();
     }
 
     private LauncherFrontendCrashSurfaceData BuildCrashSurfaceData()

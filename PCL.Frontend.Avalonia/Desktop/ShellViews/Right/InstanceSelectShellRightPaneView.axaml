@@ -4,60 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
   <UserControl.Styles>
-    <Style Selector="Button.instance-entry">
-      <Setter Property="FocusAdorner" Value="{x:Null}" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="HorizontalAlignment" Value="Stretch" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Border.instance-entry-shell">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="HorizontalAlignment" Value="Stretch" />
-      <Setter Property="Transitions">
-        <Transitions>
-          <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
-        </Transitions>
-      </Setter>
-    </Style>
-    <Style Selector="Border.instance-entry-back">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="HorizontalAlignment" Value="Stretch" />
-    </Style>
-    <Style Selector="Border.instance-entry-selected-back">
-      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
-      <Setter Property="CornerRadius" Value="4" />
-    </Style>
-    <Style Selector="Border.instance-entry-shell:pointerover Border.instance-entry-selected-back">
-      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedHoverBackground}" />
-    </Style>
-    <Style Selector="Border.instance-entry-shell:pointerover">
-      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
-    </Style>
-    <Style Selector="StackPanel.instance-entry-actions">
-      <Setter Property="IsHitTestVisible" Value="False" />
-      <Setter Property="Opacity" Value="0" />
-      <Setter Property="RenderTransform" Value="translate(8px,0px)" />
-      <Setter Property="Transitions">
-        <Transitions>
-          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
-          <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
-        </Transitions>
-      </Setter>
-    </Style>
-    <Style Selector="Border.instance-entry-shell:pointerover StackPanel.instance-entry-actions">
-      <Setter Property="IsHitTestVisible" Value="True" />
-      <Setter Property="Opacity" Value="1" />
-      <Setter Property="RenderTransform" Value="translate(0px,0px)" />
-    </Style>
   </UserControl.Styles>
 
   <Grid>
@@ -94,112 +43,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <Border
-                            Classes="instance-entry-shell"
-                            Margin="0,0,0,2"
-                            Padding="6,5">
-                          <Grid ColumnDefinitions="*,Auto">
-                            <Border
-                                Classes="instance-entry-selected-back"
-                                Grid.ColumnSpan="2"
-                                IsHitTestVisible="False"
-                                IsVisible="{Binding IsSelected}" />
-                            <Button
-                                Classes="instance-entry nochrome"
-                                Command="{Binding SelectCommand}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch">
-                              <Border Classes="instance-entry-back">
-                                <Grid ColumnDefinitions="Auto,*">
-                                  <Image
-                                      Width="24"
-                                      Height="24"
-                                      Margin="0,1,0,0"
-                                      VerticalAlignment="Top"
-                                      Source="{Binding Icon}"
-                                      Stretch="UniformToFill" />
-
-                                  <StackPanel Grid.Column="1" Margin="8,0,0,0" Spacing="1">
-                                    <TextBlock
-                                        Foreground="#3D4653"
-                                        FontSize="13.5"
-                                        Text="{Binding Title}"
-                                        TextTrimming="CharacterEllipsis" />
-
-                                    <WrapPanel IsVisible="{Binding HasMetadataContent}">
-                                      <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
-                                        <ItemsControl.ItemsPanel>
-                                          <ItemsPanelTemplate>
-                                            <WrapPanel />
-                                          </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                          <DataTemplate>
-                                            <Border
-                                                Margin="0,0,5,1"
-                                                Padding="4,1"
-                                                Background="#EEF1F5"
-                                                CornerRadius="3">
-                                              <TextBlock
-                                                  Foreground="#9AA5B4"
-                                                  FontSize="10.4"
-                                                  Text="{Binding}" />
-                                            </Border>
-                                          </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                      </ItemsControl>
-                                      <TextBlock
-                                          Margin="0,0,0,1"
-                                          Foreground="#8D98A7"
-                                          FontSize="11.2"
-                                          Text="{Binding Subtitle}"
-                                          TextTrimming="CharacterEllipsis"
-                                          IsVisible="{Binding HasSubtitle}" />
-                                    </WrapPanel>
-                                  </StackPanel>
-                                </Grid>
-                              </Border>
-                            </Button>
-
-                            <StackPanel
-                                Classes="instance-entry-actions"
-                                Grid.Column="1"
-                                Margin="8,0,0,0"
-                                Orientation="Horizontal"
-                                Spacing="2"
-                                VerticalAlignment="Center">
-                              <controls:PclIconButton
-                                  Command="{Binding ToggleFavoriteCommand}"
-                                  HoverBackgroundBrush="#184592FF"
-                                  IconBrush="{Binding FavoriteIconBrush}"
-                                  IconData="{Binding FavoriteIconData}"
-                                  IdleBackgroundBrush="#00FFFFFF"
-                                  ToolTip.Tip="收藏 / 取消收藏" />
-                              <controls:PclIconButton
-                                  Command="{Binding OpenFolderCommand}"
-                                  HoverBackgroundBrush="#184592FF"
-                                  IconBrush="#4592FF"
-                                  IconData="{Binding OpenFolderIconData}"
-                                  IdleBackgroundBrush="#00FFFFFF"
-                                  ToolTip.Tip="打开实例文件夹" />
-                              <controls:PclIconButton
-                                  Command="{Binding DeleteCommand}"
-                                  HoverBackgroundBrush="#184592FF"
-                                  IconBrush="#4592FF"
-                                  IconData="{Binding DeleteIconData}"
-                                  IdleBackgroundBrush="#00FFFFFF"
-                                  ToolTip.Tip="删除实例" />
-                              <controls:PclIconButton
-                                  Command="{Binding OpenSettingsCommand}"
-                                  HoverBackgroundBrush="#184592FF"
-                                  IconBrush="#4592FF"
-                                  IconData="{Binding SettingsIconData}"
-                                  IconScale="{Binding SettingsIconScale}"
-                                  IdleBackgroundBrush="#00FFFFFF"
-                                  ToolTip.Tip="打开实例设置" />
-                            </StackPanel>
-                          </Grid>
-                        </Border>
+                        <sections:InstanceSelectEntryCardView />
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
@@ -216,21 +60,21 @@
             Margin="0,28,0,0"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Background="#F9FBFF"
-            BorderBrush="#C9D7F0"
+            Background="{DynamicResource ColorBrush8}"
+            BorderBrush="{DynamicResource ColorBrush6}"
             BorderThickness="1"
             CornerRadius="7"
             IsVisible="{Binding HasNoInstanceSelectionEntries}">
           <StackPanel Spacing="12">
             <TextBlock
                 HorizontalAlignment="Center"
-                Foreground="#3892FF"
+                Foreground="{DynamicResource ColorBrush3}"
                 FontSize="19"
                 Text="{Binding InstanceSelectionEmptyTitle}" />
-            <Border Height="2" Background="#4A92F2" />
+            <Border Height="2" Background="{DynamicResource ColorBrush4}" />
             <TextBlock
                 Margin="2,10,2,0"
-                Foreground="#697687"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="12.5"
                 Text="{Binding InstanceSelectionEmptyDescription}"
                 TextAlignment="Left"

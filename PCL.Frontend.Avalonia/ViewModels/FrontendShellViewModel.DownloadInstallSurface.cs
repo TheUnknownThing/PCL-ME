@@ -113,7 +113,7 @@ internal sealed partial class FrontendShellViewModel
                 ReplaceItems(
                     DownloadInstallHints,
                     GetEffectiveInstallHints(isExistingInstance: false).Select(hint =>
-                        CreateNoticeStrip(hint, "#FFF1EA", "#F1C8B6", "#A94F2B")));
+                        CreateDangerNoticeStrip(hint)));
                 SyncDownloadInstallOptionCards(BuildDownloadInstallOptionCards());
             }
         }

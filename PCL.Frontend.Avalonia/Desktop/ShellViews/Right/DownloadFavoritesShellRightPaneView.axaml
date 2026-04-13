@@ -46,13 +46,13 @@
 
         <Border
             Padding="12,10"
-            Background="#FFF8DD"
-            BorderBrush="#F2D777"
+            Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+            BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
             BorderThickness="1"
             CornerRadius="4"
             IsVisible="{Binding ShowDownloadFavoriteWarning}">
           <TextBlock
-              Foreground="#6E5800"
+              Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
               FontSize="12.5"
               Text="{Binding DownloadFavoriteWarningText}"
               TextWrapping="Wrap" />
@@ -80,7 +80,7 @@
           <controls:PclCard.CardContent>
             <StackPanel Spacing="9">
               <TextBlock
-                  Foreground="#4B5968"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="13"
                   Text="在资源详细信息界面中可以点击收藏按钮进行收藏。"
                   TextWrapping="Wrap" />

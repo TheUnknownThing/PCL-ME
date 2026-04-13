@@ -27,6 +27,7 @@
                       <controls:PclListItem
                           Margin="0,0,0,8"
                           Command="{Binding Command}"
+                          IconSource="{Binding Icon}"
                           Info="{Binding Summary}"
                           Title="{Binding Title}" />
                     </DataTemplate>
@@ -47,6 +48,7 @@
                   <controls:PclListItem
                       Margin="0,0,0,8"
                       Command="{Binding Command}"
+                      IconSource="{Binding Icon}"
                       Info="{Binding Summary}"
                       Title="{Binding Title}" />
                 </DataTemplate>
@@ -54,7 +56,7 @@
             </ItemsControl>
 
             <TextBlock
-                Foreground="#677789"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="13"
                 IsVisible="{Binding HasNoHelpSearchResults}"
                 Text="没有找到匹配的帮助条目。"

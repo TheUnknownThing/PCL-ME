@@ -9,8 +9,6 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private static readonly IBrush PromptOverlayDefaultTitleBrush = Brush.Parse("#0B5BCB");
-    private static readonly IBrush PromptOverlayWarningTitleBrush = Brush.Parse("#D33232");
     private static readonly IReadOnlyList<PromptOptionViewModel> EmptyPromptOverlayOptions = [];
     private static readonly IReadOnlyList<PclChoiceDialogOption> EmptyPromptOverlayChoices = [];
 
@@ -23,9 +21,13 @@ internal sealed partial class FrontendShellViewModel
 
     public string PromptOverlayTitle => _activePromptOverlayDialog?.Title ?? CurrentPrompt?.Title ?? string.Empty;
 
-    public IBrush PromptOverlayTitleBrush => _activePromptOverlayDialog?.TitleBrush ?? CurrentPrompt?.TitleBrush ?? PromptOverlayDefaultTitleBrush;
+    public IBrush PromptOverlayTitleBrush => _activePromptOverlayDialog?.TitleBrush
+        ?? CurrentPrompt?.TitleBrush
+        ?? FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB");
 
-    public IBrush PromptOverlayAccentBrush => _activePromptOverlayDialog?.AccentBrush ?? CurrentPrompt?.AccentBrush ?? PromptOverlayDefaultTitleBrush;
+    public IBrush PromptOverlayAccentBrush => _activePromptOverlayDialog?.AccentBrush
+        ?? CurrentPrompt?.AccentBrush
+        ?? FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB");
 
     public string PromptOverlayMessage => _activePromptOverlayDialog?.Message ?? CurrentPrompt?.Message ?? string.Empty;
 
@@ -297,7 +299,9 @@ internal sealed partial class FrontendShellViewModel
         IReadOnlyList<PromptOptionViewModel> options,
         IReadOnlyList<PclChoiceDialogOption>? choiceOptions = null)
     {
-        var titleBrush = isDanger ? PromptOverlayWarningTitleBrush : PromptOverlayDefaultTitleBrush;
+        var titleBrush = isDanger
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushRedLight", "#D33232")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB");
         return new PromptOverlayDialogState(
             kind,
             title,
@@ -334,6 +338,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowPromptOverlayChoiceList));
         RaisePropertyChanged(nameof(ShowPromptOverlayMessage));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
+        NotifyTopLevelNavigationInteractionChanged();
         RaisePropertyChanged(nameof(IsPromptOverlayWarning));
         RaisePropertyChanged(nameof(PromptOverlayInputText));
         RaisePropertyChanged(nameof(PromptOverlayInputPlaceholderText));

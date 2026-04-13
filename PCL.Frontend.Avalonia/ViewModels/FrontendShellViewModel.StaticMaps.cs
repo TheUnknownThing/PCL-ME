@@ -6,6 +6,7 @@ using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -99,33 +100,33 @@ internal sealed partial class FrontendShellViewModel
             NavigationVisualStyle.TopLevel when isSelected => new NavigationPalette(
                 Brushes.White,
                 Brushes.White,
-                Brush.Parse("#1370F3"),
-                Brush.Parse("#1370F3")),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3")),
             NavigationVisualStyle.Sidebar when isSelected => new NavigationPalette(
-                Brush.Parse("#EAF2FE"),
-                Brush.Parse("#D5E6FD"),
-                Brush.Parse("#343D4A"),
-                Brush.Parse("#1370F3")),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush6", "#D5E6FD"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush1", "#343D4A"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3")),
             NavigationVisualStyle.Utility when isSelected => new NavigationPalette(
-                Brush.Parse("#1370F3"),
-                Brush.Parse("#1370F3"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3"),
                 Brushes.White,
-                Brush.Parse("#EAF2FE")),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush8", "#EAF2FE")),
             NavigationVisualStyle.TopLevel => new NavigationPalette(
-                Brush.Parse("#01EAF2FE"),
-                Brush.Parse("#01EAF2FE"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent", "#01EAF2FE"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent", "#01EAF2FE"),
                 Brushes.White,
-                Brush.Parse("#FFFFFF")),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushWhite", "#FFFFFF")),
             NavigationVisualStyle.Sidebar => new NavigationPalette(
-                Brush.Parse("#01FFFFFF"),
-                Brush.Parse("#01FFFFFF"),
-                Brush.Parse("#404040"),
-                Brush.Parse("#D5E6FD")),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushTransparent", "#01FFFFFF"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushTransparent", "#01FFFFFF"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrushGray1", "#404040"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush6", "#D5E6FD")),
             _ => new NavigationPalette(
-                Brush.Parse("#1370F3"),
-                Brush.Parse("#1370F3"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3"),
+                FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3"),
                 Brushes.White,
-                Brush.Parse("#EAF2FE"))
+                FrontendThemeResourceResolver.GetBrush("ColorBrush8", "#EAF2FE"))
         };
     }
 

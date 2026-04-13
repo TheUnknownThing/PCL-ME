@@ -140,7 +140,7 @@ internal static class FrontendVersionManifestInspector
                                  ?? GetString(root, "assets")
                                  ?? parentProfile.AssetsIndexName,
                 HasForge: parentProfile.HasForge || ContainsLibrary(allLibraries, "net.minecraftforge:forge"),
-                ForgeVersion: parentProfile.ForgeVersion ?? ExtractLibraryVersion(allLibraries, "net.minecraftforge:forge"),
+                ForgeVersion: parentProfile.ForgeVersion ?? ExtractForgeVersion(allLibraries),
                 NeoForgeVersion: parentProfile.NeoForgeVersion ?? ExtractNeoForgeVersion(root, allLibraries),
                 CleanroomVersion: parentProfile.CleanroomVersion ?? ExtractLibraryVersion(allLibraries, "com.cleanroommc"),
                 FabricVersion: parentProfile.FabricVersion ?? ExtractLibraryVersion(allLibraries, "net.fabricmc:fabric-loader"),
@@ -233,13 +233,14 @@ internal static class FrontendVersionManifestInspector
             return downloadsVersion;
         }
 
-        var librariesString = root.TryGetProperty("libraries", out var libraries) ? libraries.ToString() : string.Empty;
-        var forgeVersion = TryRegexSeek(librariesString, RegexPatterns.ForgeLibVersion);
-        if (!string.IsNullOrWhiteSpace(forgeVersion))
+        var libraryNames = ParseLibraryNames(root);
+        var forgeGameVersion = ExtractForgeGameVersion(libraryNames);
+        if (!string.IsNullOrWhiteSpace(forgeGameVersion))
         {
-            return forgeVersion;
+            return forgeGameVersion;
         }
 
+        var librariesString = root.TryGetProperty("libraries", out var libraries) ? libraries.ToString() : string.Empty;
         var optiFineVersion = TryRegexSeek(librariesString, RegexPatterns.OptiFineLibVersion);
         if (!string.IsNullOrWhiteSpace(optiFineVersion))
         {
@@ -290,7 +291,56 @@ internal static class FrontendVersionManifestInspector
     private static string? ExtractLibraryVersion(IEnumerable<string> libraries, string prefix)
     {
         var match = libraries.FirstOrDefault(library => library.StartsWith(prefix + ":", StringComparison.OrdinalIgnoreCase));
-        return match?.Split(':').LastOrDefault();
+        if (string.IsNullOrWhiteSpace(match))
+        {
+            return null;
+        }
+
+        var segments = match.Split(':', StringSplitOptions.TrimEntries);
+        return segments.Length >= 3 && !string.IsNullOrWhiteSpace(segments[2])
+            ? segments[2]
+            : null;
+    }
+
+    private static string? ExtractForgeVersion(IEnumerable<string> libraries)
+    {
+        return ExtractForgeCoordinate(libraries).ForgeVersion;
+    }
+
+    private static string? ExtractForgeGameVersion(IEnumerable<string> libraries)
+    {
+        return ExtractForgeCoordinate(libraries).GameVersion;
+    }
+
+    private static (string? GameVersion, string? ForgeVersion) ExtractForgeCoordinate(IEnumerable<string> libraries)
+    {
+        var match = libraries.FirstOrDefault(library => library.StartsWith("net.minecraftforge:forge:", StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(match))
+        {
+            return (null, null);
+        }
+
+        var segments = match.Split(':', StringSplitOptions.TrimEntries);
+        if (segments.Length < 3 || string.IsNullOrWhiteSpace(segments[2]))
+        {
+            return (null, null);
+        }
+
+        var coordinateVersion = segments[2];
+
+        var separatorIndex = coordinateVersion.IndexOf('-', StringComparison.Ordinal);
+        if (separatorIndex <= 0 || separatorIndex >= coordinateVersion.Length - 1)
+        {
+            return (coordinateVersion, coordinateVersion);
+        }
+
+        var gameVersion = coordinateVersion[..separatorIndex];
+        var forgeVersionWithSuffix = coordinateVersion[(separatorIndex + 1)..];
+        var forgeVersion = forgeVersionWithSuffix.Split('-', 2, StringSplitOptions.TrimEntries)[0];
+
+        return (
+            string.IsNullOrWhiteSpace(gameVersion) ? null : gameVersion,
+            string.IsNullOrWhiteSpace(forgeVersion) ? null : forgeVersion);
     }
 
     private static string? ExtractNeoForgeVersion(JsonElement root, IEnumerable<string> libraries)

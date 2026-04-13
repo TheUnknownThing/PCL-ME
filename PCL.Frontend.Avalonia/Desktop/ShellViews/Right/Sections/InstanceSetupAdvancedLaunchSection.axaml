@@ -10,7 +10,7 @@
             Grid.Row="0"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="渲染器" />
         <ComboBox
@@ -23,7 +23,7 @@
             Grid.Row="2"
             Margin="0,0,25,0"
             VerticalAlignment="Top"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="JVM 参数头部" />
         <TextBox
@@ -38,7 +38,7 @@
             Grid.Row="4"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="游戏参数尾部" />
         <TextBox
@@ -50,7 +50,7 @@
             Grid.Row="6"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="Classpath 头部附加" />
         <TextBox
@@ -62,7 +62,7 @@
             Grid.Row="8"
             Margin="0,0,25,3"
             VerticalAlignment="Top"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="启动前执行命令" />
         <TextBox
@@ -77,7 +77,7 @@
             Grid.Row="10"
             Margin="0,0,25,3"
             VerticalAlignment="Top"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="环境变量" />
         <StackPanel Grid.Row="10" Grid.Column="1" Spacing="6">
@@ -87,7 +87,7 @@
               TextWrapping="Wrap"
               VerticalContentAlignment="Top" />
           <TextBlock
-              Foreground="#677789"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12"
               Text="每行一个 KEY=VALUE；同名变量会覆盖全局高级启动选项中的值。"
               TextWrapping="Wrap" />
@@ -98,7 +98,7 @@
             <TextBlock
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
                 Text="Linux 显示后端" />
             <ComboBox
@@ -107,36 +107,36 @@
                 SelectedIndex="{Binding SelectedInstanceForceX11OnWaylandIndex}" />
           </Grid>
           <TextBlock
-              Foreground="#677789"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12"
               Text="仅在 Linux Wayland 会话且当前存在 X11 DISPLAY 时生效。"
               TextWrapping="Wrap" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="等待命令执行完成后再继续启动"
               IsChecked="{Binding WaitForInstanceLaunchBeforeCommand}" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="忽略 Java 兼容性警告"
               IsChecked="{Binding IgnoreInstanceJavaCompatibilityWarning}" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="关闭文件校验"
               IsChecked="{Binding DisableInstanceFileValidation}" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="跟随启动器网络代理设置"
               IsChecked="{Binding FollowInstanceLauncherProxy}" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="禁用 Java Launch Wrapper"
               IsChecked="{Binding DisableInstanceJavaLaunchWrapper}" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="禁用 RetroWrapper"
               IsChecked="{Binding DisableInstanceRetroWrapper}" />
           <CheckBox
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               Content="使用调试级别 log4j 配置文件"
               IsChecked="{Binding UseInstanceDebugLog4jConfig}" />
         </StackPanel>

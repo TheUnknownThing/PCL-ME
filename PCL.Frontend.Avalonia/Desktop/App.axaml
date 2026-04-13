@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
-    RequestedThemeVariant="Light">
+    RequestedThemeVariant="Default">
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -145,7 +145,7 @@
                 Margin="0,0,10,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
-                Foreground="{TemplateBinding Foreground}"
+                Foreground="{DynamicResource ComboBoxDropDownGlyphForeground}"
                 IsHitTestVisible="False"
                 UseLayoutRounding="False"
                 Data="M1939 486L2029 576L1024 1581L19 576L109 486L1024 1401L1939 486Z" />
@@ -166,7 +166,7 @@
                   Background="{DynamicResource ComboBoxDropDownBackground}"
                   BorderBrush="{DynamicResource ComboBoxDropDownBorderBrush}"
                   BorderThickness="{DynamicResource ComboBoxDropdownBorderThickness}"
-                  BoxShadow="0 2 4 0 #28000000"
+                  BoxShadow="{DynamicResource ColorShadowComboBoxPopup}"
                   ClipToBounds="False"
                   CornerRadius="3"
                   UseLayoutRounding="True">
@@ -207,12 +207,76 @@
       <Setter Property="Opacity" Value="1" />
     </Style>
 
+    <Style Selector="ComboBox /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxDropDownGlyphForeground}" />
+    </Style>
+
+    <Style Selector="ComboBox:focus /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxDropDownGlyphForegroundFocused}" />
+    </Style>
+
+    <Style Selector="ComboBox:pressed /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxDropDownGlyphForegroundFocusedPressed}" />
+    </Style>
+
+    <Style Selector="ComboBox:disabled /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxDropDownGlyphForegroundDisabled}" />
+    </Style>
+
     <Style Selector="ComboBoxItem">
       <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForeground}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="8,4" />
       <Setter Property="MinHeight" Value="26" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundPointerOver}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundPointerOver}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushPointerOver}" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:pressed">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundPressed}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundPressed}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushPressed}" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundDisabled}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushDisabled}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundSelected}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundSelected}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushSelected}" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundSelectedPointerOver}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundSelectedPointerOver}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushSelectedPointerOver}" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected:pressed">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundSelectedPressed}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundSelectedPressed}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushSelectedPressed}" />
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource ComboBoxItemForegroundSelectedDisabled}" />
+      <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundSelectedDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxItemBorderBrushSelectedDisabled}" />
+      <Setter Property="Opacity" Value="1" />
     </Style>
 
     <Style Selector="ComboBoxItem /template/ ContentPresenter">

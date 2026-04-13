@@ -3,7 +3,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -33,6 +35,18 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclListItem, ICommand?>(nameof(Command));
 
+    public static readonly StyledProperty<string> ItemToolTipProperty =
+        AvaloniaProperty.Register<PclListItem, string>(nameof(ItemToolTip), string.Empty);
+
+    public static readonly StyledProperty<string> SecondaryAccessoryIconDataProperty =
+        AvaloniaProperty.Register<PclListItem, string>(nameof(SecondaryAccessoryIconData), string.Empty);
+
+    public static readonly StyledProperty<string> SecondaryAccessoryToolTipProperty =
+        AvaloniaProperty.Register<PclListItem, string>(nameof(SecondaryAccessoryToolTip), string.Empty);
+
+    public static readonly StyledProperty<ICommand?> SecondaryAccessoryCommandProperty =
+        AvaloniaProperty.Register<PclListItem, ICommand?>(nameof(SecondaryAccessoryCommand));
+
     public static readonly StyledProperty<string> AccessoryIconDataProperty =
         AvaloniaProperty.Register<PclListItem, string>(nameof(AccessoryIconData), string.Empty);
 
@@ -42,8 +56,14 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<ICommand?> AccessoryCommandProperty =
         AvaloniaProperty.Register<PclListItem, ICommand?>(nameof(AccessoryCommand));
 
+    public static readonly StyledProperty<bool> AccessoryIsSpinningProperty =
+        AvaloniaProperty.Register<PclListItem, bool>(nameof(AccessoryIsSpinning));
+
     private bool _isPressed;
     private bool? _selectionBarSelectedState;
+    private bool _isAppearanceSubscribed;
+    private DispatcherTimer? _accessorySpinTimer;
+    private double _accessorySpinAngle;
 
     public PclListItem()
     {
@@ -52,15 +72,23 @@ internal sealed partial class PclListItem : UserControl
 
         AttachedToVisualTree += (_, _) =>
         {
-            UpdateAccessory();
+            SubscribeAppearance();
+            UpdateToolTip(ItemToolTip);
+            UpdateAccessories();
+            UpdateAccessorySpinState();
             _selectionBarSelectedState = null;
             RefreshVisualState();
+            QueueRefreshVisualState();
         };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
         DataContextChanged += (_, _) =>
         {
-            UpdateAccessory();
+            UpdateToolTip(ItemToolTip);
+            UpdateAccessories();
+            UpdateAccessorySpinState();
             _selectionBarSelectedState = null;
             RefreshVisualState();
+            QueueRefreshVisualState();
         };
         LayoutRoot.PropertyChanged += OnLayoutRootPropertyChanged;
         LayoutRoot.PointerExited += (_, _) =>
@@ -92,7 +120,9 @@ internal sealed partial class PclListItem : UserControl
         UpdateInfo(Info);
         UpdateIcon(IconData);
         UpdateIconSource(IconSource);
-        UpdateAccessory();
+        UpdateToolTip(ItemToolTip);
+        UpdateAccessories();
+        UpdateAccessorySpinState();
         ApplyIconScale(IconScale);
         RefreshVisualState();
     }
@@ -145,6 +175,30 @@ internal sealed partial class PclListItem : UserControl
         set => SetValue(CommandProperty, value);
     }
 
+    public string ItemToolTip
+    {
+        get => GetValue(ItemToolTipProperty);
+        set => SetValue(ItemToolTipProperty, value);
+    }
+
+    public string SecondaryAccessoryIconData
+    {
+        get => GetValue(SecondaryAccessoryIconDataProperty);
+        set => SetValue(SecondaryAccessoryIconDataProperty, value);
+    }
+
+    public string SecondaryAccessoryToolTip
+    {
+        get => GetValue(SecondaryAccessoryToolTipProperty);
+        set => SetValue(SecondaryAccessoryToolTipProperty, value);
+    }
+
+    public ICommand? SecondaryAccessoryCommand
+    {
+        get => GetValue(SecondaryAccessoryCommandProperty);
+        set => SetValue(SecondaryAccessoryCommandProperty, value);
+    }
+
     public string AccessoryIconData
     {
         get => GetValue(AccessoryIconDataProperty);
@@ -161,6 +215,12 @@ internal sealed partial class PclListItem : UserControl
     {
         get => GetValue(AccessoryCommandProperty);
         set => SetValue(AccessoryCommandProperty, value);
+    }
+
+    public bool AccessoryIsSpinning
+    {
+        get => GetValue(AccessoryIsSpinningProperty);
+        set => SetValue(AccessoryIsSpinningProperty, value);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -206,9 +266,21 @@ internal sealed partial class PclListItem : UserControl
         {
             RefreshVisualState();
         }
-        else if (change.Property == AccessoryIconDataProperty || change.Property == AccessoryCommandProperty)
+        else if (change.Property == ItemToolTipProperty)
         {
-            UpdateAccessory();
+            UpdateToolTip(change.GetNewValue<string>());
+        }
+        else if (change.Property == SecondaryAccessoryIconDataProperty
+                 || change.Property == SecondaryAccessoryCommandProperty
+                 || change.Property == AccessoryIconDataProperty
+                 || change.Property == AccessoryCommandProperty
+                 || change.Property == AccessoryIsSpinningProperty)
+        {
+            UpdateAccessories();
+            if (change.Property == AccessoryIsSpinningProperty)
+            {
+                UpdateAccessorySpinState();
+            }
         }
     }
 
@@ -221,6 +293,9 @@ internal sealed partial class PclListItem : UserControl
                LogoPath is not null &&
                LogoImage is not null &&
                MainButton is not null &&
+               AccessoryHost is not null &&
+               SecondaryAccessoryButton is not null &&
+               SecondaryAccessoryPath is not null &&
                AccessoryButton is not null &&
                AccessoryPath is not null;
     }
@@ -271,14 +346,49 @@ internal sealed partial class PclListItem : UserControl
         TitleSuffixBlock.Text = hasSuffix ? suffix : string.Empty;
     }
 
-    private void UpdateAccessory()
+    private void UpdateToolTip(string toolTip)
     {
+        ToolTip.SetTip(LayoutRoot, string.IsNullOrWhiteSpace(toolTip) ? null : toolTip);
+    }
+
+    private void UpdateAccessories()
+    {
+        var hasSecondaryAccessory = !string.IsNullOrWhiteSpace(SecondaryAccessoryIconData) && SecondaryAccessoryCommand is not null;
         var hasAccessory = !string.IsNullOrWhiteSpace(AccessoryIconData) && AccessoryCommand is not null;
+        var hasAnyAccessory = hasSecondaryAccessory || hasAccessory;
+        AccessoryHost.IsVisible = hasAnyAccessory;
+        SecondaryAccessoryButton.IsVisible = hasSecondaryAccessory;
         AccessoryButton.IsVisible = hasAccessory;
-        var isHovered = LayoutRoot.IsPointerOver;
-        AccessoryButton.IsHitTestVisible = hasAccessory && (IsSelected || isHovered);
-        AccessoryButton.Opacity = hasAccessory && (IsSelected || isHovered) ? 1.0 : 0.0;
+        SecondaryAccessoryPath.Data = hasSecondaryAccessory ? Geometry.Parse(SecondaryAccessoryIconData) : null;
         AccessoryPath.Data = hasAccessory ? Geometry.Parse(AccessoryIconData) : null;
+    }
+
+    private void UpdateAccessorySpinState()
+    {
+        if (!AccessoryIsSpinning)
+        {
+            _accessorySpinTimer?.Stop();
+            _accessorySpinTimer = null;
+            _accessorySpinAngle = 0;
+            return;
+        }
+
+        _accessorySpinTimer ??= new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(16)
+        };
+        _accessorySpinTimer.Tick -= OnAccessorySpinTick;
+        _accessorySpinTimer.Tick += OnAccessorySpinTick;
+        if (!_accessorySpinTimer.IsEnabled)
+        {
+            _accessorySpinTimer.Start();
+        }
+    }
+
+    private void OnAccessorySpinTick(object? sender, EventArgs e)
+    {
+        _accessorySpinAngle = (_accessorySpinAngle + 18) % 360;
+        RefreshVisualState();
     }
 
     private void ApplyIconScale(double scale)
@@ -289,16 +399,22 @@ internal sealed partial class PclListItem : UserControl
 
     private bool IsPointerOverAccessory(PointerEventArgs args)
     {
-        if (!AccessoryButton.IsVisible || !AccessoryButton.IsHitTestVisible)
+        return IsPointerOverButton(AccessoryButton, args) ||
+               IsPointerOverButton(SecondaryAccessoryButton, args);
+    }
+
+    private static bool IsPointerOverButton(Button button, PointerEventArgs args)
+    {
+        if (!button.IsVisible || !button.IsHitTestVisible)
         {
             return false;
         }
 
-        var position = args.GetPosition(AccessoryButton);
+        var position = args.GetPosition(button);
         return position.X >= 0 &&
                position.Y >= 0 &&
-               position.X <= AccessoryButton.Bounds.Width &&
-               position.Y <= AccessoryButton.Bounds.Height;
+               position.X <= button.Bounds.Width &&
+               position.Y <= button.Bounds.Height;
     }
 
     private static void ExecuteCommand(ICommand? command)
@@ -324,15 +440,50 @@ internal sealed partial class PclListItem : UserControl
         RefreshVisualState();
     }
 
-    private IBrush GetBrush(string resourceKey, string fallback)
+    private IBrush GetBrush(string resourceKey)
     {
-        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
-            resource is IBrush brush)
+        return FrontendThemeResourceResolver.GetBrush(resourceKey);
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
         {
-            return brush;
+            return;
         }
 
-        return Brush.Parse(fallback);
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+        _accessorySpinTimer?.Stop();
+        _accessorySpinTimer = null;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                UpdateToolTip(ItemToolTip);
+                UpdateAccessories();
+                RefreshVisualState();
+            },
+            DispatcherPriority.Render);
     }
 
     private double GetSelectionBarHeight()
@@ -352,29 +503,36 @@ internal sealed partial class PclListItem : UserControl
         RectBack.Opacity = showHighlight ? 1.0 : 0.0;
         RectBack.Background = IsSelected
             ? isHovered
-                ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
-                : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
-            : GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE");
+                ? GetBrush("ColorBrushEntrySelectedHoverBackground")
+                : GetBrush("ColorBrushEntrySelectedBackground")
+            : GetBrush("ColorBrushEntryHoverBackground");
         RectBack.BorderBrush = IsSelected
-            ? GetBrush("ColorBrush6", "#D5E6FD")
-            : isHovered
-                ? GetBrush("ColorBrush6", "#D5E6FD")
-                : GetBrush("ColorBrush7", "#E0EAFD");
+            ? GetBrush("ColorBrush6")
+            : GetBrush("ColorBrushTransparent");
         SelectionBarMotion.Apply(SelectionBar, ref _selectionBarSelectedState, IsSelected, GetSelectionBarHeight());
         TitleBlock.Foreground = IsSelected
-            ? GetBrush("ColorBrush3", "#1370F3")
-            : GetBrush("ColorBrushGray1", "#404040");
+            ? GetBrush("ColorBrush3")
+            : GetBrush("ColorBrushGray1");
         InfoBlock.Foreground = IsSelected
-            ? GetBrush("ColorBrushEntrySecondarySelected", "#4B78C2")
-            : GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
+            ? GetBrush("ColorBrushEntrySecondarySelected")
+            : GetBrush("ColorBrushEntrySecondaryIdle");
         LogoPath.Fill = IsSelected
-            ? GetBrush("ColorBrush3", "#1370F3")
-            : GetBrush("ColorBrushGray2", "#737373");
-        AccessoryPath.Fill = isHovered
-            ? GetBrush("ColorBrush4", "#4890F5")
-            : GetBrush("ColorBrush5", "#96C0F9");
-        AccessoryButton.IsHitTestVisible = AccessoryButton.IsVisible && (IsSelected || isHovered);
-        AccessoryButton.Opacity = AccessoryButton.IsVisible && (IsSelected || isHovered) ? 1.0 : 0.0;
+            ? GetBrush("ColorBrush3")
+            : GetBrush("ColorBrushGray2");
+        AccessoryButton.RenderTransform = new RotateTransform(_accessorySpinAngle, 0, 0);
+        AccessoryPath.Fill = !AccessoryButton.IsEnabled
+            ? GetBrush("ColorBrush5")
+            : isHovered
+                ? GetBrush("ColorBrush4")
+                : GetBrush("ColorBrush5");
+        SecondaryAccessoryPath.Fill = isHovered
+            ? GetBrush("ColorBrush4")
+            : GetBrush("ColorBrush5");
+        var showAccessories = IsSelected || isHovered;
+        AccessoryButton.IsHitTestVisible = AccessoryButton.IsEnabled && AccessoryButton.IsVisible && showAccessories;
+        AccessoryButton.Opacity = AccessoryButton.IsVisible && showAccessories ? 1.0 : 0.0;
+        SecondaryAccessoryButton.IsHitTestVisible = SecondaryAccessoryButton.IsVisible && showAccessories;
+        SecondaryAccessoryButton.Opacity = SecondaryAccessoryButton.IsVisible && showAccessories ? 1.0 : 0.0;
         RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);
     }
 }

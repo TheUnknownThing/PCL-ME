@@ -38,6 +38,13 @@ public static class MinecraftLaunchJavaRequirementService
             maxVersion = new Version(1, 8, 999, 999);
         }
 
+        if (request.IsVersionInfoValid &&
+            request.VanillaVersion is not null &&
+            request.VanillaVersion <= new Version(12, 999, 999))
+        {
+            maxVersion = Min(maxVersion, new Version(1, 8, 999, 999));
+        }
+
         var recommendedMajorVersion = request.MojangRecommendedMajorVersion;
         var recommendedComponent = string.IsNullOrWhiteSpace(request.MojangRecommendedComponent)
             ? null
@@ -102,6 +109,7 @@ public static class MinecraftLaunchJavaRequirementService
         if (request.HasCleanroom)
         {
             minVersion = Max(minVersion, new Version(21, 0, 0, 0));
+            maxVersion = MaximumVersion;
         }
 
         if (request.HasFabric && request.IsVersionInfoValid && request.VanillaVersion is not null)

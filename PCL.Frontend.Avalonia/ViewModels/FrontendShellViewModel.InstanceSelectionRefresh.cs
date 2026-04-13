@@ -16,6 +16,11 @@ internal sealed partial class FrontendShellViewModel
 {
     private int _instanceSelectionRefreshVersion;
 
+    private string ReadRememberedLaunchInstanceName(YamlFileProvider localConfig)
+    {
+        return ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+    }
+
     private void RefreshSelectedLauncherFolderSmoothly(
         string storedFolderPath,
         string launcherDirectory,
@@ -24,22 +29,14 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.PersistLocalValue("LaunchFolderSelect", storedFolderPath);
 
         var localConfig = _shellActionService.RuntimePaths.OpenLocalConfigProvider();
-        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
-        var effectiveSelectedInstanceName = selectedInstanceName;
-        if (!string.IsNullOrWhiteSpace(selectedInstanceName) &&
-            !Directory.Exists(Path.Combine(launcherDirectory, "versions", selectedInstanceName)))
-        {
-            _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
-            selectedInstanceName = string.Empty;
-        }
-
+        var selectedInstanceName = ReadRememberedLaunchInstanceName(localConfig);
         SetOptimisticLaunchInstanceName(selectedInstanceName);
         RefreshInstanceSelectionSurface();
         RefreshInstanceSelectionRouteMetadata();
 
         var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
         AddActivity("切换实例目录", activityMessage);
-        QueueSelectedInstanceStateRefresh(refreshVersion);
+        QueueSelectedInstanceStateRefresh(refreshVersion, suppressInstanceSelectionSurfaceRefresh: true);
     }
 
     private void RefreshSelectedInstanceSmoothly(string instanceName)
@@ -53,9 +50,13 @@ internal sealed partial class FrontendShellViewModel
         QueueSelectedInstanceStateRefresh(refreshVersion);
     }
 
-    private void QueueSelectedInstanceStateRefresh(int refreshVersion)
+    private void QueueSelectedInstanceStateRefresh(
+        int refreshVersion,
+        bool suppressInstanceSelectionSurfaceRefresh = false)
     {
-        _selectedInstanceRefreshTask = RefreshSelectedInstanceStateAsync(refreshVersion);
+        _selectedInstanceRefreshTask = RefreshSelectedInstanceStateAsync(
+            refreshVersion,
+            suppressInstanceSelectionSurfaceRefresh);
     }
 
     private async Task AwaitLatestSelectedInstanceRefreshAsync()
@@ -119,7 +120,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchNewsBadgeText));
     }
 
-    private async Task RefreshSelectedInstanceStateAsync(int refreshVersion)
+    private async Task RefreshSelectedInstanceStateAsync(
+        int refreshVersion,
+        bool suppressInstanceSelectionSurfaceRefresh)
     {
         try
         {
@@ -127,8 +130,9 @@ internal sealed partial class FrontendShellViewModel
 
             var runtimePaths = _shellActionService.RuntimePaths;
             var options = _options;
+            var loadMode = ResolveInstanceCompositionLoadMode(_currentRoute);
             var refreshedState = await Task.Run(() => new DeferredInstanceSelectionRefreshState(
-                FrontendInstanceCompositionService.Compose(runtimePaths),
+                FrontendInstanceCompositionService.Compose(runtimePaths, loadMode),
                 FrontendLaunchCompositionService.Compose(options, runtimePaths)));
 
             if (refreshVersion != Volatile.Read(ref _instanceSelectionRefreshVersion))
@@ -144,6 +148,7 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 _instanceComposition = refreshedState.InstanceComposition;
+                _instanceCompositionLoadMode = loadMode;
                 ReloadToolsComposition();
                 ReloadVersionSavesComposition();
                 ReloadDownloadComposition(includeRemoteState: _downloadCompositionHasRemoteState);
@@ -163,7 +168,15 @@ internal sealed partial class FrontendShellViewModel
 
                 if (!handledSurfaceRefresh)
                 {
-                    RefreshActiveRightPaneSurface();
+                    if (suppressInstanceSelectionSurfaceRefresh
+                        && IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceSelection))
+                    {
+                        RefreshInstanceSelectionRouteMetadata();
+                    }
+                    else
+                    {
+                        RefreshActiveRightPaneSurface();
+                    }
                 }
 
                 ApplyLaunchComposition(refreshedState.LaunchComposition, normalizeLaunchProfileSurface: true);

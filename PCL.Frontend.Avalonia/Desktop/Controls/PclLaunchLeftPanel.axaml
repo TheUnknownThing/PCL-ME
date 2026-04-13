@@ -38,44 +38,44 @@
               IsVisible="{Binding ShowLaunchProfileSummaryCard}"
               Spacing="8">
             <Image
-                Width="84"
-                Height="84"
+                Width="72"
+                Height="72"
                 Source="{Binding LaunchAvatarImage}"
                 Stretch="Uniform"
                 RenderOptions.BitmapInterpolationMode="None" />
             <TextBlock
                 HorizontalAlignment="Center"
                 FontSize="16"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Text="{Binding LaunchUserName}" />
             <Border
                 Padding="10,4"
                 HorizontalAlignment="Center"
-                Background="#F2F4F7"
+                Background="{DynamicResource ColorBrushGray7}"
                 CornerRadius="999">
               <TextBlock
                   FontSize="12"
-                  Foreground="#727C88"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   Text="{Binding LaunchProfileDescription}" />
             </Border>
             <Border
                 Margin="0,4,0,0"
                 Padding="6,2"
                 HorizontalAlignment="Center"
-                Background="#FDFDFD"
-                BorderBrush="#14000000"
+                Background="{DynamicResource ColorBrushBackground}"
+                BorderBrush="{DynamicResource ColorBrushLaunchProfileTagBorder}"
                 BorderThickness="1"
                 CornerRadius="6">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <controls:PclIconButton
                     Command="{Binding AddLaunchProfileCommand}"
                     IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
-                    IconBrush="#404B5A"
+                    IconBrush="{DynamicResource ColorBrush1}"
                     ToolTip.Tip="新建 / 登录" />
                 <controls:PclIconButton
                     Command="{Binding SelectLaunchProfileCommand}"
                     IconData="M512 0A512 512 0 1 0 1024 512 512 512 0 0 0 512 0z m0 941.407086A429.407086 429.407086 0 1 1 941.407086 512 429.407086 429.407086 0 0 1 512 941.407086z m235.139657-368.64H264.045714a43.505371 43.505371 0 0 0-31.246628 72.060343l159.305143 166.765714a41.281829 41.281829 0 1 0 59.626057-56.788114l-94.997943-99.474286H747.227429a41.311086 41.311086 0 1 0 0-82.622172zM262.670629 450.940343H745.764571a43.505371 43.505371 0 0 0 31.246629-72.352914l-159.305143-166.765715a41.281829 41.281829 0 1 0-59.713828 57.022172l94.968685 99.474285H262.670629a41.281829 41.281829 0 0 0 0 82.563658z"
-                    IconBrush="#404B5A"
+                    IconBrush="{DynamicResource ColorBrush1}"
                     ToolTip.Tip="选择档案" />
               </StackPanel>
             </Border>
@@ -112,14 +112,14 @@
             <Border
                 Margin="0,2,0,0"
                 Padding="10,6"
-                Background="#EAF2FE"
-                BorderBrush="#260B5BCB"
+                Background="{DynamicResource ColorBrush8}"
+                BorderBrush="{DynamicResource ColorBrush6}"
                 BorderThickness="1"
                 CornerRadius="5">
               <TextBlock
                   HorizontalAlignment="Center"
                   FontSize="12.5"
-                  Foreground="#0B5BCB"
+                  Foreground="{DynamicResource ColorBrush2}"
                   Text="{Binding LaunchProfileSelectionHint}"
                   TextAlignment="Center"
                   TextWrapping="Wrap" />
@@ -133,11 +133,15 @@
                     <controls:PclListItem
                         AccessoryCommand="{Binding AccessoryCommand}"
                         AccessoryIconData="{Binding AccessoryIconData}"
+                        AccessoryIsSpinning="{Binding AccessoryIsSpinning}"
                         AccessoryToolTip="{Binding AccessoryToolTip}"
                         Margin="8,2,10,2"
                         Command="{Binding Command}"
                         Info="{Binding Info}"
                         IsSelected="{Binding IsSelected}"
+                        SecondaryAccessoryCommand="{Binding SecondaryAccessoryCommand}"
+                        SecondaryAccessoryIconData="{Binding SecondaryAccessoryIconData}"
+                        SecondaryAccessoryToolTip="{Binding SecondaryAccessoryToolTip}"
                         Title="{Binding Title}" />
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -146,22 +150,22 @@
             <TextBlock
                 HorizontalAlignment="Center"
                 FontSize="12.5"
-                Foreground="#7D8792"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 IsVisible="{Binding HasNoLaunchProfileEntries}"
                 Text="当前还没有可用档案。"
                 TextAlignment="Center" />
             <Border
                 Padding="10,4"
                 HorizontalAlignment="Center"
-                Background="#FDFDFD"
-                BorderBrush="#14000000"
+                Background="{DynamicResource ColorBrushBackground}"
+                BorderBrush="{DynamicResource ColorBrushLaunchProfileTagBorder}"
                 BorderThickness="1"
                 CornerRadius="6">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <controls:PclIconButton
                     Command="{Binding AddLaunchProfileCommand}"
                     IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
-                    IconBrush="#404B5A"
+                    IconBrush="{DynamicResource ColorBrush1}"
                     ToolTip.Tip="新建 / 登录" />
               </StackPanel>
             </Border>
@@ -180,7 +184,7 @@
             <TextBlock
                 HorizontalAlignment="Center"
                 FontSize="17"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Text="离线创建" />
             <TextBox
                 Grid.Row="1"
@@ -204,7 +208,7 @@
                 Spacing="8">
               <TextBlock
                   FontSize="12.5"
-                  Foreground="#C25B46"
+                  Foreground="{DynamicResource ColorBrushLaunchStatusError}"
                   IsVisible="{Binding HasLaunchOfflineStatus}"
                   Text="{Binding LaunchOfflineStatusText}"
                   TextWrapping="Wrap" />
@@ -231,30 +235,30 @@
             <TextBlock
                 HorizontalAlignment="Center"
                 FontSize="17"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Text="微软登录" />
             <TextBlock
                 FontSize="12.5"
-                Foreground="#5E6875"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 Text="{Binding LaunchMicrosoftStatusText}"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <Border
                 Padding="12,10"
-                Background="#F4F7FB"
+                Background="{DynamicResource ColorBrush8}"
                 CornerRadius="10"
                 IsVisible="{Binding HasLaunchMicrosoftDeviceCode}">
               <StackPanel Spacing="4">
                 <TextBlock
                     HorizontalAlignment="Center"
                     FontSize="12"
-                    Foreground="#728092"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     Text="授权码" />
                 <TextBlock
                     HorizontalAlignment="Center"
                     FontFamily="Menlo, Monaco, Consolas"
                     FontSize="20"
-                    Foreground="#0B5BCB"
+                    Foreground="{DynamicResource ColorBrush2}"
                     Text="{Binding LaunchMicrosoftDeviceCode}" />
               </StackPanel>
             </Border>
@@ -284,7 +288,7 @@
             <TextBlock
                 HorizontalAlignment="Center"
                 FontSize="17"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Text="外置登录" />
             <TextBox
                 Grid.Row="1"
@@ -318,7 +322,7 @@
                 Spacing="8">
               <TextBlock
                   FontSize="12.5"
-                  Foreground="#C25B46"
+                  Foreground="{DynamicResource ColorBrushLaunchStatusError}"
                   IsVisible="{Binding HasLaunchAuthlibStatus}"
                   Text="{Binding LaunchAuthlibStatusText}"
                   TextWrapping="Wrap" />
@@ -392,7 +396,7 @@
             Height="50"
             Margin="0,10,0,5"
             HorizontalAlignment="Center"
-            IndicatorBrush="#0B5BCB"
+            IndicatorBrush="{DynamicResource ColorBrush2}"
             IsError="{Binding IsLaunchDialogError}"
             IsRunning="{Binding IsLaunchDialogBusy}"
             ShowText="False" />
@@ -401,14 +405,14 @@
             Margin="15,10,15,0"
             HorizontalAlignment="Center"
             FontSize="20"
-            Foreground="#304154"
+            Foreground="{DynamicResource ColorBrush1}"
             Text="{Binding LaunchDialogTitle}" />
 
         <TextBlock
             Margin="40,5,40,0"
             HorizontalAlignment="Center"
             FontSize="13.5"
-            Foreground="#304154"
+            Foreground="{DynamicResource ColorBrush1}"
             Text="{Binding LaunchDialogInstanceName}"
             TextTrimming="CharacterEllipsis" />
 
@@ -423,12 +427,12 @@
           <Rectangle Grid.Column="0">
             <Rectangle.Fill>
               <LinearGradientBrush EndPoint="1,0" StartPoint="0,0">
-                <GradientStop Color="#1F7BFF" Offset="0" />
-                <GradientStop Color="#0B5BCB" Offset="0.6" />
+                <GradientStop Color="{DynamicResource ColorObject3}" Offset="0" />
+                <GradientStop Color="{DynamicResource ColorObject2}" Offset="0.6" />
               </LinearGradientBrush>
             </Rectangle.Fill>
           </Rectangle>
-          <Rectangle Grid.Column="1" Fill="#D4DDE8" Opacity="0.6" />
+          <Rectangle Grid.Column="1" Fill="{DynamicResource ColorBrush6}" Opacity="0.6" />
         </Grid>
 
         <Grid
@@ -454,7 +458,7 @@
               Margin="0,0,0,5"
               HorizontalAlignment="Right"
               FontSize="12.5"
-              Foreground="#7D8792"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               Opacity="0.5"
               Text="当前步骤" />
           <TextBlock
@@ -464,7 +468,7 @@
               MaxWidth="160"
               HorizontalAlignment="Left"
               FontSize="12.5"
-              Foreground="#304154"
+              Foreground="{DynamicResource ColorBrush1}"
               Text="{Binding LaunchDialogStage}"
               TextWrapping="Wrap" />
 
@@ -474,7 +478,7 @@
               Margin="0,0,0,5"
               HorizontalAlignment="Right"
               FontSize="12.5"
-              Foreground="#7D8792"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               Opacity="0.5"
               Text="验证方式" />
           <TextBlock
@@ -484,7 +488,7 @@
               MaxWidth="160"
               HorizontalAlignment="Left"
               FontSize="12.5"
-              Foreground="#304154"
+              Foreground="{DynamicResource ColorBrush1}"
               Text="{Binding LaunchDialogMethod}"
               TextWrapping="Wrap" />
 
@@ -494,7 +498,7 @@
               Margin="0,0,0,5"
               HorizontalAlignment="Right"
               FontSize="12.5"
-              Foreground="#7D8792"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               IsVisible="{Binding ShowLaunchDialogProgress}"
               Opacity="0.5"
               Text="启动进度" />
@@ -504,7 +508,7 @@
               Margin="0,0,0,5"
               HorizontalAlignment="Left"
               FontSize="12.5"
-              Foreground="#304154"
+              Foreground="{DynamicResource ColorBrush1}"
               IsVisible="{Binding ShowLaunchDialogProgress}"
               Text="{Binding LaunchDialogProgressText}" />
 
@@ -514,7 +518,7 @@
               Margin="0,0,0,5"
               HorizontalAlignment="Right"
               FontSize="12.5"
-              Foreground="#7D8792"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               IsVisible="{Binding ShowLaunchDialogDownload}"
               Opacity="0.5"
               Text="下载速度" />
@@ -524,7 +528,7 @@
               Margin="0,0,0,5"
               HorizontalAlignment="Left"
               FontSize="12.5"
-              Foreground="#304154"
+              Foreground="{DynamicResource ColorBrush1}"
               IsVisible="{Binding ShowLaunchDialogDownload}"
               Text="{Binding LaunchDialogDownloadText}" />
         </Grid>
@@ -537,7 +541,7 @@
           <Border
               Margin="0,8,0,0"
               Padding="11,21,11,10"
-              BorderBrush="#7D8792"
+              BorderBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
               BorderThickness="1"
               CornerRadius="3"
               Opacity="0.3" />
@@ -545,10 +549,10 @@
               Padding="8,0"
               HorizontalAlignment="Center"
               VerticalAlignment="Top"
-              Background="White">
+              Background="{DynamicResource ColorBrushBackground}">
             <TextBlock
                 FontSize="12.5"
-                Foreground="#7D8792"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 Opacity="0.6"
                 Text="你知道吗" />
           </Border>
@@ -556,7 +560,7 @@
               Margin="11,29,11,10"
               HorizontalAlignment="Center"
               FontSize="12.5"
-              Foreground="#304154"
+              Foreground="{DynamicResource ColorBrush1}"
               MaxHeight="54"
               Text="{Binding LaunchDialogHint}"
               TextAlignment="Center"

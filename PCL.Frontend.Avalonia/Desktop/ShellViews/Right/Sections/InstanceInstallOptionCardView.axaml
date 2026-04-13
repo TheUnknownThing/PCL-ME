@@ -45,14 +45,14 @@
         <TextBlock
             IsVisible="{Binding IsLoading}"
             Margin="0,2,0,8"
-            Foreground="#677789"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12"
             Text="{Binding LoadingText}" />
 
         <TextBlock
             IsVisible="{Binding ShowEmptyState}"
             Margin="0,2,0,8"
-            Foreground="#677789"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12"
             Text="{Binding EmptyStateText}"
             TextWrapping="Wrap" />

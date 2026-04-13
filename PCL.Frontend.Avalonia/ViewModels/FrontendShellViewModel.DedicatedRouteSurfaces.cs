@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -167,15 +168,6 @@ internal sealed partial class FrontendShellViewModel
         SyncTaskSubscriptions();
     }
 
-    private void RefreshDedicatedGenericRouteSurface()
-    {
-        RefreshInstanceSelectionSurface();
-        RefreshTaskManagerSurface();
-        RefreshGameLogSurface();
-        RefreshCompDetailSurface();
-        RefreshHelpDetailSurface();
-    }
-
     private void RefreshCurrentDedicatedGenericRouteSurface()
     {
         switch (_currentRoute.Page)
@@ -268,7 +260,7 @@ internal sealed partial class FrontendShellViewModel
         var launcherDirectory = ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
-        var selectedInstance = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        var selectedInstance = ReadRememberedLaunchInstanceName(localConfig);
         var versionsDirectory = Path.Combine(launcherDirectory, "versions");
         _instanceSelectionLauncherDirectory = launcherDirectory;
 
@@ -395,6 +387,7 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshGameLogSurface()
     {
         var runtimePaths = _shellActionService.RuntimePaths;
+        var preferredLauncherLogPath = runtimePaths.ResolveCurrentLauncherLogFilePath();
         var candidateFiles = FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
                 runtimePaths.LauncherAppDataDirectory,
                 _shellActionService.PlatformAdapter)
@@ -406,7 +399,7 @@ internal sealed partial class FrontendShellViewModel
             [
                 Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "RawOutput.log"),
                 Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "latest.log"),
-                Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
+                preferredLauncherLogPath ?? Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
                 Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "RawOutput.log"),
                 Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "latest.log"),
                 Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "PCL.log")
@@ -439,23 +432,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasGameLogFiles));
         RaisePropertyChanged(nameof(HasNoGameLogFiles));
         RefreshDynamicUtilityEntries();
-    }
-
-    private void SelectInstanceForLaunch(string instanceName)
-    {
-        if (string.IsNullOrWhiteSpace(instanceName))
-        {
-            return;
-        }
-
-        if (_instanceComposition.Selection.HasSelection &&
-            string.Equals(_instanceComposition.Selection.InstanceName, instanceName, System.StringComparison.OrdinalIgnoreCase))
-        {
-            ApplyOptimisticInstanceSelection(instanceName);
-            return;
-        }
-
-        RefreshSelectedInstanceSmoothly(instanceName);
     }
 
     private void SelectInstanceAndCloseSelection(InstanceSelectionSnapshot entry)
@@ -678,6 +654,29 @@ internal sealed partial class FrontendShellViewModel
         {
             AddFailureActivity("移除文件夹记录失败", ex.Message);
         }
+    }
+
+    private void OpenInstanceSelectionFolder(InstanceSelectionFolderSnapshot folder)
+    {
+        if (string.IsNullOrWhiteSpace(folder.Directory))
+        {
+            AddFailureActivity("打开文件夹失败", "缺少可打开的文件夹路径。");
+            return;
+        }
+
+        if (!Directory.Exists(folder.Directory))
+        {
+            AddFailureActivity("打开文件夹失败", $"文件夹不存在：{folder.Directory}");
+            return;
+        }
+
+        if (_shellActionService.TryRevealExternalTarget(folder.Directory, out var error))
+        {
+            AddActivity("打开文件夹", folder.Directory);
+            return;
+        }
+
+        AddFailureActivity("打开文件夹失败", error ?? folder.Directory);
     }
 
     private void OpenInstanceSelectionEntry(InstanceSelectionSnapshot entry)
@@ -1219,6 +1218,7 @@ internal sealed partial class FrontendShellViewModel
                     folder.Directory,
                     $"已切换实例目录到 {folder.Directory}。");
             }),
+            new ActionCommand(() => OpenInstanceSelectionFolder(folder)),
             folder.IsPersisted ? new ActionCommand(() => _ = DeleteInstanceSelectionFolderAsync(folder)) : null);
     }
 
@@ -1830,7 +1830,7 @@ internal sealed class InstanceSelectEntryViewModel(
         ? FrontendIconCatalog.FavoriteFilled.Data
         : FrontendIconCatalog.FavoriteOutline.Data;
 
-    public IBrush FavoriteIconBrush => Brush.Parse("#4592FF");
+    public IBrush FavoriteIconBrush => FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3");
 
     public string OpenFolderIconData => FrontendIconCatalog.FolderOutline.Data;
 
@@ -1896,6 +1896,7 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
     bool isSelected,
     string iconPath,
     ActionCommand command,
+    ActionCommand openFolderCommand,
     ActionCommand? deleteCommand)
 {
     public string Title { get; } = title;
@@ -1907,6 +1908,12 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
     public string IconPath { get; } = iconPath;
 
     public ActionCommand Command { get; } = command;
+
+    public string OpenFolderIconData => FrontendIconCatalog.OpenFolder.Data;
+
+    public string OpenFolderToolTip => "打开对应文件夹";
+
+    public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
 
     public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
 
@@ -1934,22 +1941,6 @@ internal sealed class TaskManagerEntryViewModel(
     ActionCommand primaryActionCommand,
     ActionCommand pauseCommand) : ViewModelBase
 {
-    private static readonly IBrush RunningBadgeBackgroundBrush = Brush.Parse("#EDF5FF");
-    private static readonly IBrush RunningBadgeBorderBrush = Brush.Parse("#CFE0FA");
-    private static readonly IBrush RunningBadgeForegroundBrush = Brush.Parse("#5B87DA");
-    private static readonly IBrush WaitingBadgeBackgroundBrush = Brush.Parse("#F4F7FB");
-    private static readonly IBrush WaitingBadgeBorderBrush = Brush.Parse("#DAE3F0");
-    private static readonly IBrush WaitingBadgeForegroundBrush = Brush.Parse("#7E8FA5");
-    private static readonly IBrush SuccessBadgeBackgroundBrush = Brush.Parse("#EEF9F1");
-    private static readonly IBrush SuccessBadgeBorderBrush = Brush.Parse("#CBE8D4");
-    private static readonly IBrush SuccessBadgeForegroundBrush = Brush.Parse("#3D9B5A");
-    private static readonly IBrush FailedBadgeBackgroundBrush = Brush.Parse("#FFF0F0");
-    private static readonly IBrush FailedBadgeBorderBrush = Brush.Parse("#F1C8C8");
-    private static readonly IBrush FailedBadgeForegroundBrush = Brush.Parse("#D05B5B");
-    private static readonly IBrush CanceledBadgeBackgroundBrush = Brush.Parse("#F5F6F8");
-    private static readonly IBrush CanceledBadgeBorderBrush = Brush.Parse("#D7DCE4");
-    private static readonly IBrush CanceledBadgeForegroundBrush = Brush.Parse("#7B8796");
-
     private string _title = string.Empty;
     private TaskState _taskState;
     private string _state = string.Empty;
@@ -2011,29 +2002,29 @@ internal sealed class TaskManagerEntryViewModel(
 
     public IBrush StateBadgeBackgroundBrush => TaskState switch
     {
-        TaskState.Success => SuccessBadgeBackgroundBrush,
-        TaskState.Failed => FailedBadgeBackgroundBrush,
-        TaskState.Canceled => CanceledBadgeBackgroundBrush,
-        TaskState.Waiting => WaitingBadgeBackgroundBrush,
-        _ => RunningBadgeBackgroundBrush
+        TaskState.Success => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticSuccessBackground", "#EAF7F4"),
+        TaskState.Failed => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticErrorBackground", "#FFF0F0"),
+        TaskState.Canceled => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralBackground", "#F4F7FB"),
+        TaskState.Waiting => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralBackground", "#F4F7FB"),
+        _ => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticInfoBackground", "#EDF5FF")
     };
 
     public IBrush StateBadgeBorderBrush => TaskState switch
     {
-        TaskState.Success => SuccessBadgeBorderBrush,
-        TaskState.Failed => FailedBadgeBorderBrush,
-        TaskState.Canceled => CanceledBadgeBorderBrush,
-        TaskState.Waiting => WaitingBadgeBorderBrush,
-        _ => RunningBadgeBorderBrush
+        TaskState.Success => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticSuccessBorder", "#C8E6DF"),
+        TaskState.Failed => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticErrorBorder", "#F1C8C8"),
+        TaskState.Canceled => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralBorder", "#DAE3F0"),
+        TaskState.Waiting => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralBorder", "#DAE3F0"),
+        _ => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticInfoBorder", "#CFE0FA")
     };
 
     public IBrush StateBadgeForegroundBrush => TaskState switch
     {
-        TaskState.Success => SuccessBadgeForegroundBrush,
-        TaskState.Failed => FailedBadgeForegroundBrush,
-        TaskState.Canceled => CanceledBadgeForegroundBrush,
-        TaskState.Waiting => WaitingBadgeForegroundBrush,
-        _ => RunningBadgeForegroundBrush
+        TaskState.Success => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticSuccessForeground", "#24534E"),
+        TaskState.Failed => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticErrorForeground", "#D05B5B"),
+        TaskState.Canceled => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralForeground", "#7E8FA5"),
+        TaskState.Waiting => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralForeground", "#7E8FA5"),
+        _ => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticInfoForeground", "#5B87DA")
     };
 
     public void Update(
@@ -2105,12 +2096,6 @@ internal sealed class TaskManagerStageEntryViewModel(
     string title,
     string message)
 {
-    private static readonly IBrush RunningIndicatorBrush = Brush.Parse("#4F86E9");
-    private static readonly IBrush WaitingIndicatorBrush = Brush.Parse("#9AA8B8");
-    private static readonly IBrush SuccessIndicatorBrush = Brush.Parse("#4F86E9");
-    private static readonly IBrush FailedIndicatorBrush = Brush.Parse("#D05B5B");
-    private static readonly IBrush CanceledIndicatorBrush = Brush.Parse("#9AA8B8");
-
     public string Indicator { get; } = indicator;
 
     public string Title { get; } = title;
@@ -2127,11 +2112,11 @@ internal sealed class TaskManagerStageEntryViewModel(
     {
         return Indicator switch
         {
-            "✓" => SuccessIndicatorBrush,
-            "×" => FailedIndicatorBrush,
-            "···" => WaitingIndicatorBrush,
-            _ when Indicator.EndsWith('%') => RunningIndicatorBrush,
-            _ => CanceledIndicatorBrush
+            "✓" => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticSuccessForeground", "#24534E"),
+            "×" => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticErrorForeground", "#D05B5B"),
+            "···" => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralForeground", "#7E8FA5"),
+            _ when Indicator.EndsWith('%') => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticInfoForeground", "#5B87DA"),
+            _ => FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticNeutralForeground", "#7E8FA5")
         };
     }
 }

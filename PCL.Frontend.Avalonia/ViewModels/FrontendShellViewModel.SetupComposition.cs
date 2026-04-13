@@ -152,7 +152,9 @@ internal sealed partial class FrontendShellViewModel
         "UiLockWindowSize",
         "UiDarkMode",
         "UiDarkColor",
-        "UiLightColor"
+        "UiLightColor",
+        "UiLightColorCustom",
+        "UiDarkColorCustom"
     ];
 
     private void ApplySetupComposition(FrontendSetupComposition composition, bool initializeAllSurfaces = true)
@@ -183,6 +185,8 @@ internal sealed partial class FrontendShellViewModel
         {
             _suppressSetupPersistence = false;
         }
+
+        ApplyCurrentAppearanceSettings();
     }
 
     private void ReloadSetupComposition(bool initializeAllSurfaces = true)
@@ -296,6 +300,18 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(SelectedDarkModeIndex));
                 RaisePropertyChanged(nameof(SelectedLightColorIndex));
                 RaisePropertyChanged(nameof(SelectedDarkColorIndex));
+                RaisePropertyChanged(nameof(IsThemeColorSwitchSupported));
+                RaisePropertyChanged(nameof(IsThemeColorSwitchUnsupportedNoticeVisible));
+                RaisePropertyChanged(nameof(IsLightCustomThemeColorEditorVisible));
+                RaisePropertyChanged(nameof(IsDarkCustomThemeColorEditorVisible));
+                RaisePropertyChanged(nameof(IsAnyCustomThemeColorEditorVisible));
+                RaisePropertyChanged(nameof(CustomThemeColorInputHint));
+                RaisePropertyChanged(nameof(CustomLightThemeColorHex));
+                RaisePropertyChanged(nameof(CustomDarkThemeColorHex));
+                RaisePropertyChanged(nameof(CustomLightThemePreviewBrush));
+                RaisePropertyChanged(nameof(CustomDarkThemePreviewBrush));
+                RaisePropertyChanged(nameof(IsLightCustomThemeColorInvalid));
+                RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
                 RaisePropertyChanged(nameof(LauncherOpacity));
                 RaisePropertyChanged(nameof(LauncherOpacityLabel));
                 RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
@@ -556,12 +572,21 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedDarkModeIndex):
                 _shellActionService.PersistSharedValue("UiDarkMode", SelectedDarkModeIndex);
+                ApplyCurrentAppearanceSettings();
                 break;
             case nameof(SelectedLightColorIndex):
                 _shellActionService.PersistSharedValue("UiLightColor", SelectedLightColorIndex);
+                ApplyCurrentAppearanceSettings();
                 break;
             case nameof(SelectedDarkColorIndex):
                 _shellActionService.PersistSharedValue("UiDarkColor", SelectedDarkColorIndex);
+                ApplyCurrentAppearanceSettings();
+                break;
+            case nameof(CustomLightThemeColorHex):
+                PersistCustomThemeColor("UiLightColorCustom", CustomLightThemeColorHex);
+                break;
+            case nameof(CustomDarkThemeColorHex):
+                PersistCustomThemeColor("UiDarkColorCustom", CustomDarkThemeColorHex);
                 break;
             case nameof(LauncherOpacity):
                 _shellActionService.PersistLocalValue("UiLauncherTransparent", (int)Math.Round(LauncherOpacity));
@@ -670,6 +695,27 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
+    private void ApplyCurrentAppearanceSettings()
+    {
+        _shellActionService.ApplyAppearance(
+            SelectedDarkModeIndex,
+            SelectedLightColorIndex,
+            SelectedDarkColorIndex,
+            CustomLightThemeColorHex,
+            CustomDarkThemeColorHex);
+    }
+
+    private void PersistCustomThemeColor(string key, string rawValue)
+    {
+        if (!FrontendAppearanceService.TryParseCustomThemeColor(rawValue, out var color))
+        {
+            return;
+        }
+
+        _shellActionService.PersistSharedValue(key, FrontendAppearanceService.FormatCustomThemeColor(color));
+        ApplyCurrentAppearanceSettings();
+    }
+
     private void RaiseSetupSurfaceProperties()
     {
         RaisePropertyChanged(nameof(HasAboutProjectEntries));
@@ -757,6 +803,18 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedDarkModeIndex));
         RaisePropertyChanged(nameof(SelectedLightColorIndex));
         RaisePropertyChanged(nameof(SelectedDarkColorIndex));
+        RaisePropertyChanged(nameof(IsThemeColorSwitchSupported));
+        RaisePropertyChanged(nameof(IsThemeColorSwitchUnsupportedNoticeVisible));
+        RaisePropertyChanged(nameof(IsLightCustomThemeColorEditorVisible));
+        RaisePropertyChanged(nameof(IsDarkCustomThemeColorEditorVisible));
+        RaisePropertyChanged(nameof(IsAnyCustomThemeColorEditorVisible));
+        RaisePropertyChanged(nameof(CustomThemeColorInputHint));
+        RaisePropertyChanged(nameof(CustomLightThemeColorHex));
+        RaisePropertyChanged(nameof(CustomDarkThemeColorHex));
+        RaisePropertyChanged(nameof(CustomLightThemePreviewBrush));
+        RaisePropertyChanged(nameof(CustomDarkThemePreviewBrush));
+        RaisePropertyChanged(nameof(IsLightCustomThemeColorInvalid));
+        RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
         RaisePropertyChanged(nameof(LauncherOpacity));
         RaisePropertyChanged(nameof(LauncherOpacityLabel));
         RaisePropertyChanged(nameof(ShowLauncherLogoSetting));

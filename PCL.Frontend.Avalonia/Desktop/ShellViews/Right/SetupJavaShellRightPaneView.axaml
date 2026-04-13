@@ -24,8 +24,8 @@
           <StackPanel Spacing="12">
             <Border
                 Padding="14,12"
-                Background="#F8FBFF"
-                BorderBrush="#D5E6FD"
+                Background="{DynamicResource ColorBrush8}"
+                BorderBrush="{DynamicResource ColorBrush6}"
                 BorderThickness="1"
                 CornerRadius="5">
               <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
@@ -36,14 +36,14 @@
                     Command="{Binding SelectAutoJavaCommand}" />
                 <TextBlock
                     Grid.Column="1"
-                    Foreground="#343D4A"
+                    Foreground="{DynamicResource ColorBrush1}"
                     FontSize="14"
                     Text="自动选择" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="0,3,0,0"
-                    Foreground="#677789"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
                     Text="Java 选择自动挡，依据游戏需要自动选择合适的 Java。"
                     TextWrapping="Wrap" />
@@ -56,8 +56,8 @@
                   <Border
                       Margin="0,0,0,10"
                       Padding="14,12"
-                      Background="#FBFDFF"
-                      BorderBrush="#DCE9FB"
+                      Background="{DynamicResource ColorBrushBackground}"
+                      BorderBrush="{DynamicResource ColorBrush6}"
                       BorderThickness="1"
                       CornerRadius="5">
                     <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
@@ -96,7 +96,7 @@
                           Grid.Row="1"
                           Grid.Column="1"
                           Margin="0,3,0,0"
-                          Foreground="#677789"
+                          Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                           FontSize="12"
                           Text="{Binding Info}"
                           TextWrapping="Wrap" />
@@ -111,12 +111,12 @@
                             <Border
                                 Margin="0,0,8,0"
                                 Padding="8,3"
-                                Background="#EAF2FE"
-                                BorderBrush="#D5E6FD"
+                                Background="{DynamicResource ColorBrush8}"
+                                BorderBrush="{DynamicResource ColorBrush6}"
                                 BorderThickness="1"
                                 CornerRadius="10">
                               <TextBlock
-                                  Foreground="#4B78C2"
+                                  Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
                                   FontSize="11"
                                   Text="{Binding .}" />
                             </Border>

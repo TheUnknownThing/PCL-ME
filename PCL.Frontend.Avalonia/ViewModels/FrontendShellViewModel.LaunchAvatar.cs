@@ -50,6 +50,25 @@ internal sealed partial class FrontendShellViewModel
         });
     }
 
+    private void InvalidateLaunchAvatarCache(FrontendLaunchProfileSummary profile)
+    {
+        var headId = ResolveLaunchAvatarSkinHeadId(profile);
+        if (string.IsNullOrWhiteSpace(headId))
+        {
+            return;
+        }
+
+        var headCachePath = GetLaunchAvatarHeadCachePath(headId);
+        var skinCachePath = GetLaunchAvatarSkinCachePath(headId);
+        TryDeleteFile(headCachePath);
+        TryDeleteFile(skinCachePath);
+
+        if (string.Equals(_launchAvatarImagePath, headCachePath, StringComparison.Ordinal))
+        {
+            SetLaunchAvatarImagePath(LaunchAvatarFallbackImagePath);
+        }
+    }
+
     private void SetLaunchAvatarImagePath(string? path)
     {
         var nextPath = !string.IsNullOrWhiteSpace(path) && File.Exists(path)

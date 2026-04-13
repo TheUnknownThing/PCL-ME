@@ -92,6 +92,19 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
     }
 
     [TestMethod]
+    public void EvaluateCapsLegacyVanillaToJava8()
+    {
+        var result = MinecraftLaunchJavaRequirementService.Evaluate(CreateRequirementRequest() with
+        {
+            IsVersionInfoValid = true,
+            ReleaseTime = new DateTime(2013, 9, 19),
+            VanillaVersion = new Version(6, 0, 4)
+        });
+
+        Assert.AreEqual(new Version(1, 8, 999, 999), result.MaximumVersion);
+    }
+
+    [TestMethod]
     public void EvaluateRequiresJava17ForModernFabric()
     {
         var result = MinecraftLaunchJavaRequirementService.Evaluate(CreateRequirementRequest() with

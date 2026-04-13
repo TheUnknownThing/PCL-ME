@@ -21,14 +21,36 @@ internal static class FrontendInstanceCompositionService
     private static readonly Regex TomlSingleQuotedValueRegex = new("'(?<value>[^']*)'", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private const int MaxEmbeddedIconBytes = 2 * 1024 * 1024;
 
+    internal enum LoadMode
+    {
+        Lightweight = 0,
+        InstallAware = 1,
+        Full = 2
+    }
+
     public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths)
     {
         var localConfig = runtimePaths.OpenLocalConfigProvider();
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
-        return Compose(runtimePaths, selectedInstanceName);
+        return Compose(runtimePaths, selectedInstanceName, LoadMode.Full);
+    }
+
+    public static FrontendInstanceComposition Compose(
+        FrontendRuntimePaths runtimePaths,
+        LoadMode loadMode)
+    {
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
+        return Compose(runtimePaths, selectedInstanceName, loadMode);
     }
 
     public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths, string? selectedInstanceName)
+        => Compose(runtimePaths, selectedInstanceName, LoadMode.Full);
+
+    public static FrontendInstanceComposition Compose(
+        FrontendRuntimePaths runtimePaths,
+        string? selectedInstanceName,
+        LoadMode loadMode)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var localConfig = runtimePaths.OpenLocalConfigProvider();
@@ -64,23 +86,44 @@ internal static class FrontendInstanceCompositionService
             HasLabyMod: manifestSummary.HasLabyMod,
             VanillaVersion: vanillaVersion);
         var javaEntries = ParseJavaEntries(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
-        var installManifestSummary = MergeInstallAddonStates(selection, manifestSummary);
+        var installManifestSummary = MergeInstallAddonStates(
+            selection,
+            manifestSummary,
+            includeMetadataFallback: loadMode >= LoadMode.InstallAware);
         var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
+        var exportState = loadMode == LoadMode.Full
+            ? BuildExportState(selection, manifestSummary)
+            : CreatePlaceholderExportState(selection, manifestSummary);
+        var modEntries = loadMode == LoadMode.Full
+            ? BuildResourceEntries(selection, ResourceKind.Mods)
+            : [];
+        var disabledModEntries = loadMode == LoadMode.Full
+            ? BuildResourceEntries(selection, ResourceKind.DisabledMods)
+            : [];
+        var resourcePackEntries = loadMode == LoadMode.Full
+            ? BuildResourceEntries(selection, ResourceKind.ResourcePacks)
+            : [];
+        var shaderEntries = loadMode == LoadMode.Full
+            ? BuildResourceEntries(selection, ResourceKind.Shaders)
+            : [];
+        var schematicEntries = loadMode == LoadMode.Full
+            ? BuildResourceEntries(selection, ResourceKind.Schematics)
+            : [];
 
         return new FrontendInstanceComposition(
             selection,
             BuildOverviewState(selection, manifestSummary, instanceConfig, setupState),
             setupState,
-            BuildExportState(selection, manifestSummary),
+            exportState,
             BuildInstallState(selection, installManifestSummary),
             new FrontendInstanceContentState(BuildWorldEntries(selection)),
             new FrontendInstanceScreenshotState(BuildScreenshotEntries(selection)),
             new FrontendInstanceServerState(BuildServerEntries(selection)),
-            new FrontendInstanceResourceState(BuildResourceEntries(selection, ResourceKind.Mods)),
-            new FrontendInstanceResourceState(BuildResourceEntries(selection, ResourceKind.DisabledMods)),
-            new FrontendInstanceResourceState(BuildResourceEntries(selection, ResourceKind.ResourcePacks)),
-            new FrontendInstanceResourceState(BuildResourceEntries(selection, ResourceKind.Shaders)),
-            new FrontendInstanceResourceState(BuildResourceEntries(selection, ResourceKind.Schematics)));
+            new FrontendInstanceResourceState(modEntries),
+            new FrontendInstanceResourceState(disabledModEntries),
+            new FrontendInstanceResourceState(resourcePackEntries),
+            new FrontendInstanceResourceState(shaderEntries),
+            new FrontendInstanceResourceState(schematicEntries));
     }
 
     private static FrontendInstanceComposition CreateEmptyComposition(string launcherDirectory, string instanceName = "未选择实例")
@@ -367,6 +410,7 @@ internal static class FrontendInstanceCompositionService
         var resourcePackEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.ResourcePacks), ArchiveExtensions, allowDirectories: true, recursive: false);
         var shaderEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.Shaders), ArchiveExtensions, allowDirectories: true, recursive: false);
         var schematicEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.Schematics), SchematicExtensions, allowDirectories: false, recursive: true);
+        var disabledModEntries = BuildResourceEntries(selection, ResourceKind.DisabledMods);
         var saveEntries = BuildExportWorldOptions(selection);
         var screenshotEntries = BuildScreenshotEntries(selection);
         var replayEntries = BuildFolderEntries(Path.Combine(selection.IndieDirectory, "replay_recordings"), [".mcpr"], allowDirectories: false, recursive: false);
@@ -392,7 +436,7 @@ internal static class FrontendInstanceCompositionService
                 "模组",
                 selection.IsModable,
                 [
-                    CreateExportOption("已禁用的 Mod", $"{BuildResourceEntries(selection, ResourceKind.DisabledMods).Count} 项", BuildResourceEntries(selection, ResourceKind.DisabledMods).Count > 0),
+                    CreateExportOption("已禁用的 Mod", $"{disabledModEntries.Count} 项", disabledModEntries.Count > 0),
                     CreateExportOption("整合包重要数据", Directory.Exists(Path.Combine(selection.IndieDirectory, "config")) ? "检测到 config 文件夹" : "未检测到 config 文件夹", Directory.Exists(Path.Combine(selection.IndieDirectory, "config"))),
                     CreateExportOption("Mod 设置", Directory.Exists(Path.Combine(selection.IndieDirectory, "config")) ? "检测到配置目录" : "未检测到配置目录", Directory.Exists(Path.Combine(selection.IndieDirectory, "config")))
                 ]),
@@ -419,6 +463,19 @@ internal static class FrontendInstanceCompositionService
             ModrinthMode: false,
             HasOptiFine: !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion),
             OptionGroups: groups);
+    }
+
+    private static FrontendInstanceExportState CreatePlaceholderExportState(
+        FrontendInstanceSelectionState selection,
+        FrontendVersionManifestSummary manifestSummary)
+    {
+        return new FrontendInstanceExportState(
+            selection.InstanceName,
+            ReadVersionFallback(selection.InstanceDirectory),
+            IncludeResources: false,
+            ModrinthMode: false,
+            HasOptiFine: !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion),
+            OptionGroups: []);
     }
 
     private static FrontendInstanceInstallState BuildInstallState(
@@ -467,7 +524,8 @@ internal static class FrontendInstanceCompositionService
 
     private static FrontendVersionManifestSummary MergeInstallAddonStates(
         FrontendInstanceSelectionState selection,
-        FrontendVersionManifestSummary manifestSummary)
+        FrontendVersionManifestSummary manifestSummary,
+        bool includeMetadataFallback)
     {
         var modsDirectory = ResolveResourceDirectory(selection, ResourceKind.Mods);
         if (!Directory.Exists(modsDirectory))
@@ -482,30 +540,59 @@ internal static class FrontendInstanceCompositionService
         var hasOptiFabric = manifestSummary.HasOptiFabric;
         string? optiFabricVersion = null;
 
-        foreach (var path in Directory.EnumerateFiles(modsDirectory, "*", SearchOption.TopDirectoryOnly)
-                     .Where(path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)))
-        {
-            var fileName = Path.GetFileNameWithoutExtension(path);
-            var metadata = TryReadLocalModMetadata(path);
+        var modFiles = Directory.EnumerateFiles(modsDirectory, "*", SearchOption.TopDirectoryOnly)
+            .Where(path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
+            .Select(path => new
+            {
+                Path = path,
+                FileName = Path.GetFileNameWithoutExtension(path),
+                NormalizedFileName = NormalizeManagedAddonIdentity(Path.GetFileNameWithoutExtension(path))
+            })
+            .ToArray();
 
-            if (!hasFabricApi && IsManagedAddonMod(metadata, fileName, "fabricapi"))
+        foreach (var file in modFiles)
+        {
+            if (!hasFabricApi && LooksLikeManagedAddonFromFileName(file.NormalizedFileName, "fabricapi"))
             {
                 hasFabricApi = true;
-                fabricApiVersion = NormalizeInlineText(metadata?.Version);
-                continue;
             }
 
-            if (!hasQsl && IsManagedAddonMod(metadata, fileName, "quiltedfabricapi", "qsl"))
+            if (!hasQsl && LooksLikeManagedAddonFromFileName(file.NormalizedFileName, "quiltedfabricapi", "qsl"))
             {
                 hasQsl = true;
-                qslVersion = NormalizeInlineText(metadata?.Version);
-                continue;
             }
 
-            if (!hasOptiFabric && IsManagedAddonMod(metadata, fileName, "optifabric"))
+            if (!hasOptiFabric && LooksLikeManagedAddonFromFileName(file.NormalizedFileName, "optifabric"))
             {
                 hasOptiFabric = true;
-                optiFabricVersion = NormalizeInlineText(metadata?.Version);
+            }
+        }
+
+        if (includeMetadataFallback && (!hasFabricApi || !hasQsl || !hasOptiFabric))
+        {
+            foreach (var file in modFiles)
+            {
+                var metadata = TryReadLocalModMetadata(file.Path);
+
+                if (!hasFabricApi && IsManagedAddonMod(metadata, file.FileName, "fabricapi"))
+                {
+                    hasFabricApi = true;
+                    fabricApiVersion = NormalizeInlineText(metadata?.Version);
+                    continue;
+                }
+
+                if (!hasQsl && IsManagedAddonMod(metadata, file.FileName, "quiltedfabricapi", "qsl"))
+                {
+                    hasQsl = true;
+                    qslVersion = NormalizeInlineText(metadata?.Version);
+                    continue;
+                }
+
+                if (!hasOptiFabric && IsManagedAddonMod(metadata, file.FileName, "optifabric"))
+                {
+                    hasOptiFabric = true;
+                    optiFabricVersion = NormalizeInlineText(metadata?.Version);
+                }
             }
         }
 
@@ -529,6 +616,13 @@ internal static class FrontendInstanceCompositionService
                || MatchesManagedAddonIdentity(metadata?.Title, identifiers)
                || identifiers.Any(identifier => NormalizeManagedAddonIdentity(fileNameWithoutExtension)
                    .StartsWith(NormalizeManagedAddonIdentity(identifier), StringComparison.Ordinal));
+    }
+
+    private static bool LooksLikeManagedAddonFromFileName(string normalizedFileName, params string[] identifiers)
+    {
+        return identifiers.Any(identifier => normalizedFileName.StartsWith(
+            NormalizeManagedAddonIdentity(identifier),
+            StringComparison.Ordinal));
     }
 
     private static bool MatchesManagedAddonIdentity(string? value, IEnumerable<string> identifiers)

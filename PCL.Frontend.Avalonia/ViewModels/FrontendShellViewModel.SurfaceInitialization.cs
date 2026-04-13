@@ -396,8 +396,12 @@ internal sealed partial class FrontendShellViewModel
     private void InitializeUiSurface()
     {
         _selectedDarkModeIndex = _setupComposition.Ui.DarkModeIndex;
-        _selectedLightColorIndex = _setupComposition.Ui.LightColorIndex;
-        _selectedDarkColorIndex = _setupComposition.Ui.DarkColorIndex;
+        _selectedLightColorIndex = FrontendAppearanceService.NormalizeThemeColorIndex(_setupComposition.Ui.LightColorIndex, ThemeColorOptions.Count);
+        _selectedDarkColorIndex = FrontendAppearanceService.NormalizeThemeColorIndex(_setupComposition.Ui.DarkColorIndex, ThemeColorOptions.Count);
+        CustomLightThemeColorHex = _setupComposition.Ui.LightCustomColorHex;
+        CustomDarkThemeColorHex = _setupComposition.Ui.DarkCustomColorHex;
+        SeedCustomThemeColorIfNeeded(isDarkPalette: false, _selectedLightColorIndex, 0);
+        SeedCustomThemeColorIfNeeded(isDarkPalette: true, _selectedDarkColorIndex, 0);
         _launcherOpacity = _setupComposition.Ui.LauncherOpacity;
         _showLauncherLogo = _setupComposition.Ui.ShowLauncherLogo;
         _lockWindowSize = _setupComposition.Ui.LockWindowSize;
@@ -497,7 +501,69 @@ internal sealed partial class FrontendShellViewModel
             entry.Title,
             entry.Summary,
             entry.Keywords,
+            ResolveHelpTopicIcon(entry),
             new ActionCommand(() => OpenHelpTopic(entry)));
+    }
+
+    private static Bitmap? ResolveHelpTopicIcon(FrontendToolsHelpEntry entry)
+    {
+        var customIcon = ResolveHelpTopicCustomIcon(entry.Logo);
+        if (customIcon is not null)
+        {
+            return customIcon;
+        }
+
+        if (entry.IsEvent)
+        {
+            return string.Equals(entry.EventType, "弹出窗口", StringComparison.OrdinalIgnoreCase)
+                ? LoadLauncherBitmap("Images", "Blocks", "GrassPath.png")
+                : LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png");
+        }
+
+        return LoadLauncherBitmap("Images", "Blocks", "Grass.png");
+    }
+
+    private static Bitmap? ResolveHelpTopicCustomIcon(string? rawLogo)
+    {
+        if (string.IsNullOrWhiteSpace(rawLogo))
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(rawLogo, UriKind.Absolute, out var uri))
+        {
+            if (uri.IsFile)
+            {
+                return LoadCachedBitmapFromPath(uri.LocalPath);
+            }
+
+            if (!string.Equals(uri.Scheme, "pack", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+        }
+
+        var normalizedPath = rawLogo
+            .Replace("pack://application:,,,/", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar)
+            .TrimStart(Path.DirectorySeparatorChar);
+
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+        {
+            return null;
+        }
+
+        if (Path.IsPathRooted(normalizedPath))
+        {
+            return LoadCachedBitmapFromPath(normalizedPath);
+        }
+
+        var pathSegments = normalizedPath
+            .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+        return pathSegments.Length == 0
+            ? null
+            : LoadCachedBitmapFromPath(GetLauncherAssetPath(pathSegments));
     }
 
     private static bool HelpEntryMatchesQuery(FrontendToolsHelpEntry entry, string query)
@@ -550,17 +616,59 @@ internal sealed partial class FrontendShellViewModel
 
     private SurfaceNoticeViewModel CreateNoticeStrip(
         string text,
-        string background,
-        string border,
-        string foreground,
+        string backgroundResourceKey,
+        string backgroundFallback,
+        string borderResourceKey,
+        string borderFallback,
+        string foregroundResourceKey,
+        string foregroundFallback,
         Thickness? margin = null)
     {
         return new SurfaceNoticeViewModel(
             text,
-            Brush.Parse(background),
-            Brush.Parse(border),
-            Brush.Parse(foreground),
+            FrontendThemeResourceResolver.GetBrush(backgroundResourceKey, backgroundFallback),
+            FrontendThemeResourceResolver.GetBrush(borderResourceKey, borderFallback),
+            FrontendThemeResourceResolver.GetBrush(foregroundResourceKey, foregroundFallback),
             margin ?? default);
+    }
+
+    private SurfaceNoticeViewModel CreateWarningNoticeStrip(string text, Thickness? margin = null)
+    {
+        return CreateNoticeStrip(
+            text,
+            "ColorBrushSemanticWarningBackground",
+            "#FFF8DD",
+            "ColorBrushSemanticWarningBorder",
+            "#F2D777",
+            "ColorBrushSemanticWarningForeground",
+            "#6E5800",
+            margin);
+    }
+
+    private SurfaceNoticeViewModel CreateDangerNoticeStrip(string text, Thickness? margin = null)
+    {
+        return CreateNoticeStrip(
+            text,
+            "ColorBrushSemanticDangerBackground",
+            "#FFF1EA",
+            "ColorBrushSemanticDangerBorder",
+            "#F1C8B6",
+            "ColorBrushSemanticDangerForeground",
+            "#A94F2B",
+            margin);
+    }
+
+    private SurfaceNoticeViewModel CreateSuccessNoticeStrip(string text, Thickness? margin = null)
+    {
+        return CreateNoticeStrip(
+            text,
+            "ColorBrushSemanticSuccessBackground",
+            "#EAF7F4",
+            "ColorBrushSemanticSuccessBorder",
+            "#C8E6DF",
+            "ColorBrushSemanticSuccessForeground",
+            "#24534E",
+            margin);
     }
 
     private DownloadInstallOptionViewModel CreateDownloadInstallOption(

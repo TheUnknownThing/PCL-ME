@@ -9,9 +9,9 @@
     <Border
         x:Name="CardBorder"
         Background="{DynamicResource ColorBrushMyCard}"
-        BorderBrush="{DynamicResource ColorBrushTransparent}"
+        BorderBrush="{DynamicResource ColorBrushMyCardEdge}"
         BorderThickness="1"
-        BoxShadow="0 6 18 0 #14343D4A"
+        BoxShadow="{DynamicResource ColorShadowCardBase}"
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
@@ -24,6 +24,15 @@
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <Border Grid.RowSpan="2" CornerRadius="6" IsHitTestVisible="False">
+          <Border.Background>
+            <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+              <GradientStop Color="{DynamicResource ColorObjectMyCardSheenStart}" Offset="0" />
+              <GradientStop Color="{DynamicResource ColorObjectMyCardSheenEnd}" Offset="0.58" />
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
 
         <Button
             x:Name="HeaderButton"
@@ -68,8 +77,8 @@
             Grid.Row="0"
             Margin="0,6,6,0"
             HorizontalAlignment="Right"
-            HoverBackgroundBrush="#1AD7DFEA"
-            IconBrush="#8E99A8"
+            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+            IconBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
             IconScale="0.72"
             VerticalAlignment="Top"
             IsVisible="{Binding ShowCloseButton, ElementName=Root}" />

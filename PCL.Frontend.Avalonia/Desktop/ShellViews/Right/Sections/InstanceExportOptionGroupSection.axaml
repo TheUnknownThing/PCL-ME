@@ -5,11 +5,11 @@
   <StackPanel Margin="0,0,0,2">
     <CheckBox
         MinHeight="26"
-        Foreground="#343D4A"
+        Foreground="{DynamicResource ColorBrush1}"
         IsChecked="{Binding Header.IsChecked}">
       <TextBlock TextWrapping="Wrap">
         <Run Text="{Binding Header.Title}" />
-        <Run Foreground="#7D8897" Text="{Binding Header.InlineDescription}" />
+        <Run Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" Text="{Binding Header.InlineDescription}" />
       </TextBlock>
     </CheckBox>
 
@@ -19,11 +19,11 @@
           <CheckBox
               MinHeight="26"
               Margin="30,0,0,0"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               IsChecked="{Binding IsChecked}">
             <TextBlock TextWrapping="Wrap">
               <Run Text="{Binding Title}" />
-              <Run Foreground="#7D8897" Text="{Binding InlineDescription}" />
+              <Run Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" Text="{Binding InlineDescription}" />
             </TextBlock>
           </CheckBox>
         </DataTemplate>

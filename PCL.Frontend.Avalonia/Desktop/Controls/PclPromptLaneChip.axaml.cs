@@ -105,7 +105,7 @@ internal sealed partial class PclPromptLaneChip : UserControl
             : _isHovered
                 ? new ScaleTransform(1.02, 1.02)
                 : new ScaleTransform(1, 1);
-        var foreground = ForegroundBrush ?? Brush.Parse("#0B5BCB");
+        var foreground = ForegroundBrush ?? FrontendThemeResourceResolver.GetBrush("ColorBrush2");
         TitleBlock.Foreground = foreground;
         CountBlock.Foreground = foreground;
     }

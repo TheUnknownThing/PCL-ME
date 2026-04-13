@@ -4,6 +4,8 @@ using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -23,10 +25,24 @@ internal sealed partial class PclSidebarButton : UserControl
 
     private bool _isHovered;
     private bool _isPressed;
+    private bool _isAppearanceSubscribed;
 
     public PclSidebarButton()
     {
         InitializeComponent();
+
+        AttachedToVisualTree += (_, _) =>
+        {
+            SubscribeAppearance();
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
+        DataContextChanged += (_, _) =>
+        {
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
 
         ButtonHost.PointerEntered += (_, _) =>
         {
@@ -102,18 +118,18 @@ internal sealed partial class PclSidebarButton : UserControl
 
     private void RefreshVisualState()
     {
-        var idleBrush = GetBrush("ColorBrushSemiTransparent", "#01FFFFFF");
+        var idleBrush = GetBrush("ColorBrushSemiTransparent");
         PanBack.Background = IsSelected
             ? _isHovered
-                ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
-                : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
+                ? GetBrush("ColorBrushEntrySelectedHoverBackground")
+                : GetBrush("ColorBrushEntrySelectedBackground")
             : _isHovered
-                ? GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE")
+                ? GetBrush("ColorBrushEntryHoverBackground")
                 : idleBrush;
         PanBack.BorderBrush = IsSelected
-            ? GetBrush("ColorBrush6", "#D5E6FD")
+            ? GetBrush("ColorBrush6")
             : _isHovered
-                ? GetBrush("ColorBrush7", "#E0EAFD")
+                ? GetBrush("ColorBrush7")
                 : idleBrush;
         PanBack.Opacity = _isPressed ? 0.92 : 1.0;
         PanBack.RenderTransform = _isPressed
@@ -123,25 +139,51 @@ internal sealed partial class PclSidebarButton : UserControl
                 : new ScaleTransform(1, 1);
 
         TitleBlock.Foreground = IsSelected
-            ? GetBrush("ColorBrush3", "#1370F3")
-            : GetBrush("ColorBrushGray1", "#404040");
+            ? GetBrush("ColorBrush3")
+            : GetBrush("ColorBrushGray1");
         SummaryBlock.Foreground = IsSelected
-            ? GetBrush("ColorBrushEntrySecondarySelected", "#4B78C2")
-            : GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
+            ? GetBrush("ColorBrushEntrySecondarySelected")
+            : GetBrush("ColorBrushEntrySecondaryIdle");
         ChevronBlock.Foreground = IsSelected
-            ? GetBrush("ColorBrush3", "#1370F3")
-            : GetBrush("ColorBrushEntryChevronIdle", "#A6B8CF");
+            ? GetBrush("ColorBrush3")
+            : GetBrush("ColorBrushEntryChevronIdle");
         SelectionBar.IsVisible = IsSelected;
     }
 
-    private IBrush GetBrush(string resourceKey, string fallback)
+    private IBrush GetBrush(string resourceKey)
     {
-        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
-            resource is IBrush brush)
+        return FrontendThemeResourceResolver.GetBrush(resourceKey);
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
         {
-            return brush;
+            return;
         }
 
-        return Brush.Parse(fallback);
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
     }
 }

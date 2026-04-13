@@ -44,7 +44,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 Useful entry points:
 
 - `PCL.Frontend.Avalonia/`: active desktop frontend
-- `PCL.Core/` and `PCL.Core.Backend/`: shared launcher/backend logic
+- `PCL.Core.Backend/`: active shared launcher/backend logic and foundation services
 
 ## License
 

@@ -284,8 +284,10 @@ internal static class FrontendSetupCompositionService
     {
         return new FrontendSetupUiState(
             DarkModeIndex: ReadValue(sharedConfig, "UiDarkMode", 2),
-            LightColorIndex: ReadValue(sharedConfig, "UiLightColor", 1),
-            DarkColorIndex: ReadValue(sharedConfig, "UiDarkColor", 1),
+            LightColorIndex: ReadValue(sharedConfig, "UiLightColor", 0),
+            DarkColorIndex: ReadValue(sharedConfig, "UiDarkColor", 0),
+            LightCustomColorHex: ReadValue(sharedConfig, "UiLightColorCustom", string.Empty),
+            DarkCustomColorHex: ReadValue(sharedConfig, "UiDarkColorCustom", string.Empty),
             LauncherOpacity: ReadValue(localConfig, "UiLauncherTransparent", 600),
             ShowLauncherLogo: ReadValue(localConfig, "UiLauncherLogo", true),
             LockWindowSize: ReadValue(sharedConfig, "UiLockWindowSize", false),

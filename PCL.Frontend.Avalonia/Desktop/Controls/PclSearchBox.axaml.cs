@@ -4,16 +4,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
 internal sealed partial class PclSearchBox : UserControl
 {
-    private static readonly IBrush IdleBackgroundBrush = Brush.Parse("#F8FBFF");
-    private static readonly IBrush IdleBorderBrush = Brush.Parse("#D5E6FD");
-    private static readonly IBrush HoverBackgroundBrush = Brush.Parse("#F2F7FF");
-    private static readonly IBrush HoverBorderBrush = Brush.Parse("#B7CDEE");
-
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<PclSearchBox, string>(nameof(Text), string.Empty);
 
@@ -30,11 +27,28 @@ internal sealed partial class PclSearchBox : UserControl
         AvaloniaProperty.Register<PclSearchBox, ICommand?>(nameof(SearchCommand));
 
     private bool _isHovered;
+    private bool _isAppearanceSubscribed;
 
     public PclSearchBox()
     {
         InitializeComponent();
 
+        AttachedToVisualTree += (_, _) =>
+        {
+            SubscribeAppearance();
+            RefreshClearButtonState();
+            RefreshLayoutMetrics();
+            RefreshChrome();
+            QueueRefreshChrome();
+        };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
+        DataContextChanged += (_, _) =>
+        {
+            RefreshClearButtonState();
+            RefreshLayoutMetrics();
+            RefreshChrome();
+            QueueRefreshChrome();
+        };
         PointerEntered += OnPointerEntered;
         PointerExited += OnPointerExited;
         SearchTextBox.GotFocus += OnSearchTextBoxFocusChanged;
@@ -148,7 +162,43 @@ internal sealed partial class PclSearchBox : UserControl
     private void RefreshChrome()
     {
         var isActive = _isHovered || SearchTextBox.IsFocused;
-        SearchRowBorder.Background = isActive ? HoverBackgroundBrush : IdleBackgroundBrush;
-        SearchRowBorder.BorderBrush = isActive ? HoverBorderBrush : IdleBorderBrush;
+        SearchRowBorder.Background = isActive
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush8")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
+        SearchRowBorder.BorderBrush = isActive
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush6")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrush6");
+    }
+
+    private void QueueRefreshChrome()
+    {
+        Dispatcher.UIThread.Post(RefreshChrome, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshChrome, DispatcherPriority.Render);
     }
 }

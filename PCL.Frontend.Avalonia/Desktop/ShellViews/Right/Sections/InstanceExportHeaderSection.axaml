@@ -7,13 +7,13 @@
     <Border
         Margin="0,15,0,0"
         Padding="12,10"
-        Background="#FFF8DD"
-        BorderBrush="#F2D777"
+        Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+        BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
         BorderThickness="1"
         CornerRadius="4"
         IsVisible="{Binding ShowInstanceExportOptiFineWarning}">
       <TextBlock
-          Foreground="#6E5800"
+          Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
           FontSize="12.5"
           Text="受 Modrinth 整合包规范限制，导出的整合包中不会包含 OptiFine。"
           TextWrapping="Wrap" />
@@ -26,7 +26,7 @@
               Grid.Column="0"
               Margin="0,0,20,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="整合包名称" />
           <TextBox
@@ -36,7 +36,7 @@
               Grid.Column="2"
               Margin="30,0,20,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="整合包版本" />
           <TextBox

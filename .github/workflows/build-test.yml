@@ -43,7 +43,7 @@ jobs:
         run: dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -c Debug
 
       - name: Test foundation layer
-        run: dotnet test PCL.Core.Foundation.Test/PCL.Core.Foundation.Test.csproj -c Debug
+        run: dotnet test PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj -c Debug
 
       - name: Test backend layer
         run: dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug

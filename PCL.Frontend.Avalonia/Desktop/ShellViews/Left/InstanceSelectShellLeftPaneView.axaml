@@ -23,13 +23,13 @@
       <Setter Property="Foreground" Value="{DynamicResource ColorBrush3}" />
     </Style>
   </UserControl.Styles>
-  <Border Background="#F4F5F8">
+  <Border Background="{DynamicResource ColorBrushBackground}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <StackPanel Margin="0,12,0,0">
         <StackPanel>
           <TextBlock
               Margin="13,5,5,3"
-              Foreground="#A7AFBA"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12"
               Text="文件夹列表" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionFolderEntries}" IsVisible="{Binding HasInstanceSelectionFolders}">
@@ -43,6 +43,10 @@
                     Command="{Binding Command}"
                     Info="{Binding Path}"
                     IsSelected="{Binding IsSelected}"
+                    ItemToolTip="{Binding Path}"
+                    SecondaryAccessoryCommand="{Binding OpenFolderCommand}"
+                    SecondaryAccessoryIconData="{Binding OpenFolderIconData}"
+                    SecondaryAccessoryToolTip="{Binding OpenFolderToolTip}"
                     Title="{Binding Title}" />
               </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -52,7 +56,7 @@
         <StackPanel Margin="0,12,0,0">
           <TextBlock
               Margin="13,5,5,3"
-              Foreground="#A7AFBA"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12"
               Text="快捷操作" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionShortcutEntries}">
@@ -64,7 +68,7 @@
                     Command="{Binding Command}">
                   <Border
                       Classes="shortcut-back"
-                      Background="#00000000"
+                      Background="{DynamicResource ColorBrushTransparent}"
                       CornerRadius="4">
                     <Grid Margin="10,0,10,0" ColumnDefinitions="18,16,*" MinHeight="36">
                       <Path
@@ -74,13 +78,13 @@
                           Height="18"
                           VerticalAlignment="Center"
                           Data="{Binding IconPath}"
-                          Fill="#737373"
+                          Fill="{DynamicResource ColorBrushGray2}"
                           Stretch="Uniform" />
                       <TextBlock
                           Classes="shortcut-text"
                           Grid.Column="2"
                           VerticalAlignment="Center"
-                          Foreground="#404040"
+                          Foreground="{DynamicResource ColorBrushGray1}"
                           FontSize="13.5"
                           Text="{Binding Title}" />
                     </Grid>

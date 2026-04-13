@@ -32,8 +32,8 @@
   <Border
       x:Name="SearchRowBorder"
       Height="40"
-      Background="#F8FBFF"
-      BorderBrush="#D5E6FD"
+      Background="{DynamicResource ColorBrushHalfWhite}"
+      BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="1"
       CornerRadius="5">
     <Border.Transitions>
@@ -62,7 +62,7 @@
           Margin="14,0,0,0"
           HorizontalAlignment="Left"
           VerticalAlignment="Center"
-          Fill="#7B8EA5"
+          Fill="{DynamicResource ColorBrushEntrySecondaryIdle}"
           Stretch="Uniform"
           Data="M15.5,14H14.71L14.43,13.73A6.471,6.471 0 0,0 16,9.5A6.5,6.5 0 1,0 9.5,16A6.471,6.471 0 0,0 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14A4.5,4.5 0 1,1 14,9.5A4.5,4.5 0 0,1 9.5,14Z" />
 
@@ -71,11 +71,11 @@
           Margin="0,0,10,0"
           HorizontalAlignment="Right"
           VerticalAlignment="Center"
-          HoverBackgroundBrush="#14000000"
-          IconBrush="#63758B"
+          HoverBackgroundBrush="{DynamicResource ColorBrush8}"
+          IconBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
           IconData="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
           IconScale="0.75"
-          IdleBackgroundBrush="#00FFFFFF"
+          IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           Opacity="0">
         <controls:PclIconButton.Transitions>
           <Transitions>

@@ -33,7 +33,7 @@
                 <controls:PclCard.CardContent>
                   <StackPanel Spacing="12">
                     <TextBlock
-                        Foreground="#677789"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                         FontSize="12.5"
                         Text="{Binding Address}" />
 
@@ -153,12 +153,12 @@
         <StackPanel Spacing="10">
           <TextBlock
               HorizontalAlignment="Center"
-              Foreground="#4B5968"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="19"
               Text="暂时没有服务器" />
-          <Border Height="2" Background="#D5E6FD" />
+          <Border Height="2" Background="{DynamicResource ColorBrush6}" />
           <TextBlock
-              Foreground="#677789"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12.5"
               Text="暂时没有找到服务器，在游戏内添加服务器或点击下方按钮添加新服务器"
               TextAlignment="Center"

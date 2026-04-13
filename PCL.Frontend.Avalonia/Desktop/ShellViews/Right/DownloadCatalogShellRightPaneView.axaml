@@ -14,7 +14,7 @@
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <TextBlock
-                Foreground="#4B5968"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="13"
                 Text="{Binding DownloadCatalogIntroBody}"
                 TextWrapping="Wrap" />

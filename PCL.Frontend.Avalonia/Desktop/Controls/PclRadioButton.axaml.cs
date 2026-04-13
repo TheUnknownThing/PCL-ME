@@ -87,8 +87,8 @@ internal sealed partial class PclRadioButton : UserControl
     {
         if (!IsEnabled)
         {
-            PanBack.Background = Brush.Parse("#01EAF2FE");
-            LabText.Foreground = Brush.Parse("#CCCCCC");
+            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
+            LabText.Foreground = FrontendThemeResourceResolver.GetBrush("ColorBrushGray5");
             PanBack.RenderTransform = new ScaleTransform(1, 1);
             return;
         }
@@ -96,18 +96,18 @@ internal sealed partial class PclRadioButton : UserControl
         if (IsChecked)
         {
             PanBack.Background = _isPressed
-                ? Brush.Parse("#0F66DB")
-                : Brush.Parse("#1370F3");
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrush2")
+                : FrontendThemeResourceResolver.GetBrush("ColorBrush3");
             LabText.Foreground = Brushes.White;
         }
         else
         {
             PanBack.Background = _isPressed
-                ? Brush.Parse("#D5E6FD")
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrush6")
                 : _isHovered
-                    ? Brush.Parse("#E0EAFD")
-                    : Brush.Parse("#01EAF2FE");
-            LabText.Foreground = Brush.Parse("#1370F3");
+                    ? FrontendThemeResourceResolver.GetBrush("ColorBrush7")
+                    : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
+            LabText.Foreground = FrontendThemeResourceResolver.GetBrush("ColorBrush3");
         }
 
         PanBack.RenderTransform = _isPressed

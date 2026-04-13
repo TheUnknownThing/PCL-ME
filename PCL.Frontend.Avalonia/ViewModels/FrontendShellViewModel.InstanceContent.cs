@@ -51,6 +51,12 @@ internal sealed partial class FrontendShellViewModel
     private InstanceResourceSortMethod _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
     private readonly HashSet<string> _instanceResourceSelectedPaths = new(StringComparer.OrdinalIgnoreCase);
     private bool _suppressInstanceResourceSelectionChanged;
+    private bool _hasInstanceResourceRefreshSnapshot;
+    private LauncherFrontendSubpageKey _instanceResourceRefreshSubpage;
+    private IReadOnlyList<FrontendInstanceResourceEntry>? _instanceResourceRefreshSourceEntries;
+    private string _instanceResourceRefreshSearchQuery = string.Empty;
+    private InstanceResourceFilter _instanceResourceRefreshFilter = InstanceResourceFilter.All;
+    private InstanceResourceSortMethod _instanceResourceRefreshSortMethod = InstanceResourceSortMethod.ResourceName;
 
     public string InstanceWorldSearchQuery
     {
@@ -378,7 +384,13 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshInstanceResourceEntries()
     {
         InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
-        var searchedEntries = GetCurrentInstanceResourceSourceEntries()
+        var sourceEntries = GetCurrentInstanceResourceSourceEntries();
+        if (!ShouldRefreshInstanceResourceEntries(sourceEntries))
+        {
+            return;
+        }
+
+        var searchedEntries = sourceEntries
             .Where(entry => MatchesSearch(
                 entry.Title,
                 entry.Description,
@@ -409,6 +421,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(
             InstanceResourceEntries,
             visibleEntries.Select(CreateInstanceResourceEntry));
+        CaptureInstanceResourceRefreshSnapshot(sourceEntries);
 
         RaisePropertyChanged(nameof(HasInstanceResourceEntries));
         RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
@@ -435,6 +448,30 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceResourceEmptyDescription));
         RaisePropertyChanged(nameof(InstanceResourceEmptyDownloadButtonText));
         RaiseInstanceResourceSelectionProperties();
+    }
+
+    private bool ShouldRefreshInstanceResourceEntries(IReadOnlyList<FrontendInstanceResourceEntry> sourceEntries)
+    {
+        if (!_hasInstanceResourceRefreshSnapshot)
+        {
+            return true;
+        }
+
+        return _instanceResourceRefreshSubpage != _currentRoute.Subpage
+               || !ReferenceEquals(_instanceResourceRefreshSourceEntries, sourceEntries)
+               || !string.Equals(_instanceResourceRefreshSearchQuery, InstanceResourceSearchQuery, StringComparison.Ordinal)
+               || _instanceResourceRefreshFilter != _instanceResourceFilter
+               || _instanceResourceRefreshSortMethod != _instanceResourceSortMethod;
+    }
+
+    private void CaptureInstanceResourceRefreshSnapshot(IReadOnlyList<FrontendInstanceResourceEntry> sourceEntries)
+    {
+        _hasInstanceResourceRefreshSnapshot = true;
+        _instanceResourceRefreshSubpage = _currentRoute.Subpage;
+        _instanceResourceRefreshSourceEntries = sourceEntries;
+        _instanceResourceRefreshSearchQuery = InstanceResourceSearchQuery;
+        _instanceResourceRefreshFilter = _instanceResourceFilter;
+        _instanceResourceRefreshSortMethod = _instanceResourceSortMethod;
     }
 
     private IEnumerable<FrontendInstanceResourceEntry> ApplyInstanceResourceFilter(

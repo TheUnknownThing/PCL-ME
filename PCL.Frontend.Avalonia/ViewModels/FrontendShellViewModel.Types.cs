@@ -334,13 +334,21 @@ internal sealed class DownloadInstallChoiceItemViewModel(
 
     public bool IsSelected { get; } = isSelected;
 
-    public IBrush BackgroundBrush { get; } = isSelected ? Brush.Parse("#EAF2FE") : Brush.Parse("#F7F9FC");
+    public IBrush BackgroundBrush { get; } = isSelected
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrushGray8", "#F7F9FC");
 
-    public IBrush BorderBrush { get; } = isSelected ? Brush.Parse("#BFD9FF") : Brush.Parse("#E1E7EF");
+    public IBrush BorderBrush { get; } = isSelected
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrush6", "#BFD9FF")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrushGray7", "#E1E7EF");
 
-    public IBrush ForegroundBrush { get; } = isSelected ? Brush.Parse("#1370F3") : Brush.Parse("#343D4A");
+    public IBrush ForegroundBrush { get; } = isSelected
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrush1", "#343D4A");
 
-    public IBrush SummaryBrush { get; } = isSelected ? Brush.Parse("#4B78C2") : Brush.Parse("#7D8897");
+    public IBrush SummaryBrush { get; } = isSelected
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySecondarySelected", "#4B78C2")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
 
     public ActionCommand SelectCommand { get; } = selectCommand;
 }
@@ -407,7 +415,9 @@ internal sealed class DownloadInstallOptionCardViewModel(
         }
     }
 
-    public IBrush SelectionForegroundBrush => UseMutedSelectionStyle ? Brush.Parse("#8C99A8") : Brush.Parse("#343D4A");
+    public IBrush SelectionForegroundBrush => UseMutedSelectionStyle
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrushGray3", "#8C99A8")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrush1", "#343D4A");
 
     public bool CanExpand
     {
@@ -1142,9 +1152,6 @@ internal sealed class InstanceServerEntryViewModel(
 
 internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 {
-    private static readonly IBrush ActiveTitleForeground = Brush.Parse("#343D4A");
-    private static readonly IBrush InactiveTitleForeground = Brush.Parse("#7D8897");
-    private static readonly IBrush SelectedTitleForeground = Brush.Parse("#1370F3");
     private readonly Action<bool>? _selectionChanged;
     private readonly ActionCommand _primaryCommand;
     private Bitmap? _icon;
@@ -1332,10 +1339,10 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     public double ContentOpacity => IsEnabledState ? 1.0 : 0.56;
 
     public IBrush TitleForeground => IsSelected && IsEnabledState
-        ? SelectedTitleForeground
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3")
         : IsEnabledState
-            ? ActiveTitleForeground
-            : InactiveTitleForeground;
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush1", "#343D4A")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
 
     private void ExecutePrimaryAction()
     {
@@ -1365,6 +1372,7 @@ internal sealed class HelpTopicViewModel(
     string title,
     string summary,
     string keywords,
+    Bitmap? icon,
     ActionCommand command)
 {
     public string GroupTitle { get; } = groupTitle;
@@ -1374,6 +1382,8 @@ internal sealed class HelpTopicViewModel(
     public string Summary { get; } = summary;
 
     public string Keywords { get; } = keywords;
+
+    public Bitmap? Icon { get; } = icon;
 
     public ActionCommand Command { get; } = command;
 }
@@ -1432,7 +1442,9 @@ internal sealed class JavaRuntimeEntryViewModel(
 
     public double TitleOpacity => IsEnabled ? 1.0 : 0.48;
 
-    public IBrush TitleForeground => IsEnabled ? Brush.Parse("#343D4A") : Brush.Parse("#7D8897");
+    public IBrush TitleForeground => IsEnabled
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrush1", "#343D4A")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySecondaryIdle", "#7D8897");
 }
 
 internal sealed class UiFeatureToggleGroupViewModel(string title, IReadOnlyList<UiFeatureToggleItemViewModel> items)
@@ -1541,11 +1553,17 @@ internal sealed class PromptLaneViewModel(
         }
     }
 
-    public IBrush BackgroundBrush => IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#01EAF2FE");
+    public IBrush BackgroundBrush => IsSelected
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent", "#01EAF2FE");
 
-    public IBrush BorderBrush => IsSelected ? Brush.Parse("#1370F3") : Brush.Parse("#D5E6FD");
+    public IBrush BorderBrush => IsSelected
+        ? FrontendThemeResourceResolver.GetBrush("ColorBrush3", "#1370F3")
+        : FrontendThemeResourceResolver.GetBrush("ColorBrush6", "#D5E6FD");
 
-    public IBrush ForegroundBrush => IsSelected ? Brushes.White : Brush.Parse("#404040");
+    public IBrush ForegroundBrush => IsSelected
+        ? Brushes.White
+        : FrontendThemeResourceResolver.GetBrush("ColorBrushGray1", "#404040");
 }
 
 internal sealed class PromptCardViewModel(

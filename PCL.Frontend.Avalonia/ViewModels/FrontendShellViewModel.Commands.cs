@@ -38,6 +38,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand LoginAuthlibLaunchProfileCommand => _loginAuthlibLaunchProfileCommand;
 
+    public ActionCommand RefreshLaunchProfileCommand => _refreshLaunchProfileCommand;
+
     public ActionCommand BackLaunchProfileCommand => _backLaunchProfileCommand;
 
     public ActionCommand SubmitOfflineLaunchProfileCommand => _submitOfflineLaunchProfileCommand;

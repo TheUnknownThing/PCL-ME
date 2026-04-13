@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -26,21 +27,26 @@ internal sealed partial class PclTabButton : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclTabButton, ICommand?>(nameof(Command));
 
-    private static readonly IBrush SelectedBackground = Brush.Parse("#FFFFFF");
-    private static readonly IBrush HoverBackground = Brush.Parse("#32EAF2FE");
-    private static readonly IBrush PressedBackground = Brush.Parse("#78EAF2FE");
-    private static readonly IBrush IdleBackground = Brush.Parse("#01EAF2FE");
-    private static readonly IBrush SelectedForeground = Brush.Parse("#1370F3");
-    private static readonly IBrush IdleForeground = Brushes.White;
     private bool _isHovered;
     private bool _isPressed;
+    private bool _isAppearanceSubscribed;
 
     public PclTabButton()
     {
         InitializeComponent();
 
-        DataContextChanged += (_, _) => RefreshVisualState();
-        AttachedToVisualTree += (_, _) => RefreshVisualState();
+        DataContextChanged += (_, _) =>
+        {
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        AttachedToVisualTree += (_, _) =>
+        {
+            SubscribeAppearance();
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
 
         ButtonHost.PointerEntered += (_, _) =>
         {
@@ -140,19 +146,53 @@ internal sealed partial class PclTabButton : UserControl
 
     private void RefreshVisualState()
     {
-        var foreground = IsSelected ? SelectedForeground : IdleForeground;
+        var foreground = IsSelected
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarSelectedForeground")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarForeground");
         var background = IsSelected
-            ? SelectedBackground
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarSelectionBackground")
             : _isPressed
-                ? PressedBackground
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarHoverBackground")
                 : _isHovered
-                    ? HoverBackground
-                    : IdleBackground;
+                    ? FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarHoverBackground")
+                    : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
 
         PanBack.Background = background;
         ShapeLogo.Fill = foreground;
         LabText.Foreground = foreground;
         PanBack.Opacity = 1.0;
         PanBack.RenderTransform = TransformOperations.Parse("scale(1)");
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
     }
 }

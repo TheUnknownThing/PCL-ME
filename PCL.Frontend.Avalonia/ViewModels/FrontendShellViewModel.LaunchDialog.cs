@@ -84,6 +84,7 @@ internal sealed partial class FrontendShellViewModel
         {
             _isLaunchDialogVisible = true;
             RaisePropertyChanged(nameof(IsLaunchDialogVisible));
+            NotifyTopLevelNavigationInteractionChanged();
         }
 
         RaiseLaunchDialogProperties();
@@ -98,6 +99,7 @@ internal sealed partial class FrontendShellViewModel
 
         _isLaunchDialogVisible = false;
         RaisePropertyChanged(nameof(IsLaunchDialogVisible));
+        NotifyTopLevelNavigationInteractionChanged();
         RaiseLaunchDialogProperties();
     }
 

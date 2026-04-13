@@ -38,6 +38,10 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowLaunchAuthlibEditor => GetEffectiveLaunchProfileSurface() == LaunchProfileSurfaceKind.AuthlibEditor;
 
+    public bool CanRefreshLaunchProfile => _launchComposition.SelectedProfile.Kind is MinecraftLaunchProfileKind.Microsoft or MinecraftLaunchProfileKind.Auth;
+
+    public bool IsLaunchProfileRefreshInProgress => _isLaunchProfileRefreshInProgress;
+
     public bool ShowLaunchProfileBackButton => GetEffectiveLaunchProfileSurface() switch
     {
         LaunchProfileSurfaceKind.Summary => false,
@@ -187,6 +191,57 @@ internal sealed partial class FrontendShellViewModel
         LaunchAuthlibStatusText = string.Empty;
         SetLaunchProfileSurface(LaunchProfileSurfaceKind.AuthlibEditor);
         return Task.CompletedTask;
+    }
+
+    private async Task RefreshSelectedLaunchProfileAsync()
+    {
+        if (!TryBeginLaunchProfileAction("刷新档案"))
+        {
+            return;
+        }
+
+        try
+        {
+            _isLaunchProfileRefreshInProgress = true;
+            RefreshLaunchProfileEntries();
+            RaiseLaunchProfileSurfaceProperties();
+            NotifyLaunchProfileCommandsChanged();
+            var result = await RefreshSelectedLaunchProfileCoreAsync(
+                CancellationToken.None,
+                forceRefresh: true);
+            if (!result.WasChecked)
+            {
+                AddActivity("刷新档案", result.Message);
+                return;
+            }
+
+            if (result.ShouldInvalidateAvatarCache)
+            {
+                InvalidateLaunchAvatarCache(_launchComposition.SelectedProfile);
+            }
+
+            await RefreshLaunchProfileCompositionAsync();
+            AddActivity("刷新档案", result.Message);
+            AvaloniaHintBus.Show(result.Message, AvaloniaHintTheme.Success);
+        }
+        catch (OperationCanceledException)
+        {
+            AddActivity("刷新档案", "档案刷新已取消。");
+        }
+        catch (Exception ex)
+        {
+            var message = GetLaunchProfileFriendlyError(ex);
+            AddFailureActivity("刷新档案失败", message);
+            AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error);
+        }
+        finally
+        {
+            _isLaunchProfileRefreshInProgress = false;
+            RefreshLaunchProfileEntries();
+            RaiseLaunchProfileSurfaceProperties();
+            NotifyLaunchProfileCommandsChanged();
+            EndLaunchProfileAction();
+        }
     }
 
     private void BackLaunchProfileSurface()
@@ -508,12 +563,306 @@ internal sealed partial class FrontendShellViewModel
         _createOfflineLaunchProfileCommand.NotifyCanExecuteChanged();
         _loginMicrosoftLaunchProfileCommand.NotifyCanExecuteChanged();
         _loginAuthlibLaunchProfileCommand.NotifyCanExecuteChanged();
+        _refreshLaunchProfileCommand.NotifyCanExecuteChanged();
         _backLaunchProfileCommand.NotifyCanExecuteChanged();
         _submitOfflineLaunchProfileCommand.NotifyCanExecuteChanged();
         _submitMicrosoftLaunchProfileCommand.NotifyCanExecuteChanged();
         _openMicrosoftDeviceLinkCommand.NotifyCanExecuteChanged();
         _submitAuthlibLaunchProfileCommand.NotifyCanExecuteChanged();
         _useLittleSkinLaunchProfileCommand.NotifyCanExecuteChanged();
+    }
+
+    private async Task<LaunchProfileRefreshResult> RefreshSelectedLaunchProfileCoreAsync(
+        CancellationToken cancellationToken,
+        bool forceRefresh = false,
+        Action<string>? onStatusChanged = null)
+    {
+        if (!TryGetSelectedStoredLaunchProfile(out var profileDocument, out var selectedProfileIndex, out var selectedProfile))
+        {
+            return new LaunchProfileRefreshResult(false, "当前还没有可用档案。");
+        }
+
+        return selectedProfile.Kind switch
+        {
+            MinecraftLaunchStoredProfileKind.Microsoft => await RefreshMicrosoftLaunchProfileAsync(
+                profileDocument,
+                selectedProfileIndex,
+                selectedProfile,
+                cancellationToken,
+                forceRefresh,
+                onStatusChanged),
+            MinecraftLaunchStoredProfileKind.Authlib => await RefreshAuthlibLaunchProfileAsync(
+                profileDocument,
+                selectedProfileIndex,
+                selectedProfile,
+                cancellationToken,
+                forceRefresh,
+                onStatusChanged),
+            _ => new LaunchProfileRefreshResult(false, "当前档案不需要刷新。")
+        };
+    }
+
+    private async Task<LaunchProfileRefreshResult> RefreshMicrosoftLaunchProfileAsync(
+        MinecraftLaunchProfileDocument profileDocument,
+        int selectedProfileIndex,
+        MinecraftLaunchPersistedProfile selectedProfile,
+        CancellationToken cancellationToken,
+        bool forceRefresh,
+        Action<string>? onStatusChanged)
+    {
+        if (!forceRefresh &&
+            !string.IsNullOrWhiteSpace(selectedProfile.AccessToken))
+        {
+            try
+            {
+                onStatusChanged?.Invoke("校验微软档案会话");
+                await SendLaunchProfileRequestAsync(
+                    MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(selectedProfile.AccessToken),
+                    cancellationToken);
+                return new LaunchProfileRefreshResult(true, $"已确认微软档案 {selectedProfile.Username ?? "未命名档案"} 仍然有效。");
+            }
+            catch (LaunchProfileRequestException)
+            {
+                // Follow HMCL's flow: validate first, then refresh when the current token is no longer accepted.
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedProfile.RefreshToken))
+        {
+            throw new InvalidOperationException("当前微软档案缺少刷新令牌，请重新登录。");
+        }
+
+        var clientId = ResolveMicrosoftClientId();
+        onStatusChanged?.Invoke("刷新微软账号状态");
+
+        string oauthRefreshJson;
+        try
+        {
+            oauthRefreshJson = await SendLaunchProfileRequestAsync(
+                MinecraftLaunchMicrosoftRequestWorkflowService.BuildOAuthRefreshRequest(selectedProfile.RefreshToken, clientId),
+                cancellationToken);
+        }
+        catch (LaunchProfileRequestException ex)
+        {
+            var resolution = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveOAuthRefreshFailure(GetLaunchProfileFriendlyError(ex));
+            if (resolution.Kind == MinecraftLaunchMicrosoftFailureResolutionKind.RequireRelogin)
+            {
+                throw new InvalidOperationException("当前微软档案登录已失效，请重新登录。");
+            }
+
+            throw new InvalidOperationException($"刷新微软档案失败：{GetLaunchProfileFriendlyError(ex)}");
+        }
+
+        var oauthTokens = MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(oauthRefreshJson);
+
+        onStatusChanged?.Invoke("获取 Xbox Live 令牌");
+        var xboxLiveResponseJson = await SendLaunchProfileRequestAsync(
+            MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(oauthTokens.AccessToken),
+            cancellationToken);
+
+        string xstsResponseJson;
+        try
+        {
+            onStatusChanged?.Invoke("获取 Xbox 安全令牌");
+            xstsResponseJson = await SendLaunchProfileRequestAsync(
+                MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(
+                    MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(xboxLiveResponseJson)),
+                cancellationToken);
+        }
+        catch (LaunchProfileRequestException ex)
+        {
+            var prompt = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt(ex.ResponseBody);
+            if (prompt is not null)
+            {
+                throw new InvalidOperationException(prompt.Message);
+            }
+
+            throw new InvalidOperationException($"刷新微软档案失败：{GetLaunchProfileFriendlyError(ex)}");
+        }
+
+        var xstsResponse = MinecraftLaunchMicrosoftProtocolService.ParseXstsTokenResponseJson(xstsResponseJson);
+
+        onStatusChanged?.Invoke("获取 Minecraft 访问令牌");
+        var minecraftAccessTokenJson = await SendLaunchProfileRequestAsync(
+            MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(
+                xstsResponse.UserHash,
+                xstsResponse.Token),
+            cancellationToken);
+        var minecraftAccessToken = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftAccessTokenResponseJson(minecraftAccessTokenJson);
+
+        onStatusChanged?.Invoke("校验 Minecraft 购买状态");
+        var ownershipJson = await SendLaunchProfileRequestAsync(
+            MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(minecraftAccessToken),
+            cancellationToken);
+        if (!MinecraftLaunchMicrosoftProtocolService.HasMinecraftOwnership(ownershipJson))
+        {
+            throw new InvalidOperationException(MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt().Message);
+        }
+
+        string profileJson;
+        try
+        {
+            onStatusChanged?.Invoke("同步 Minecraft 玩家档案");
+            profileJson = await SendLaunchProfileRequestAsync(
+                MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(minecraftAccessToken),
+                cancellationToken);
+        }
+        catch (LaunchProfileRequestException ex) when (ex.StatusCode == (int)HttpStatusCode.NotFound)
+        {
+            throw new InvalidOperationException(MinecraftLaunchAccountWorkflowService.GetCreateProfilePrompt().Message);
+        }
+
+        var profileResponse = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftProfileResponseJson(profileJson);
+        var mutationPlan = MinecraftLaunchLoginProfileWorkflowService.ResolveMicrosoftProfileMutation(
+            new MinecraftLaunchMicrosoftProfileMutationRequest(
+                IsCreatingProfile: false,
+                SelectedProfileIndex: selectedProfileIndex,
+                profileDocument.Profiles.Select(ToStoredProfile).ToArray(),
+                profileResponse.Uuid,
+                profileResponse.UserName,
+                minecraftAccessToken,
+                oauthTokens.RefreshToken,
+                profileResponse.ProfileJson));
+
+        FrontendProfileStorageService.Save(
+            _shellActionService.RuntimePaths,
+            FrontendProfileStorageService.ApplyMutation(profileDocument, mutationPlan, out _));
+
+        return new LaunchProfileRefreshResult(true, $"已刷新微软档案 {profileResponse.UserName}。", ShouldInvalidateAvatarCache: true);
+    }
+
+    private async Task<LaunchProfileRefreshResult> RefreshAuthlibLaunchProfileAsync(
+        MinecraftLaunchProfileDocument profileDocument,
+        int selectedProfileIndex,
+        MinecraftLaunchPersistedProfile selectedProfile,
+        CancellationToken cancellationToken,
+        bool forceRefresh,
+        Action<string>? onStatusChanged)
+    {
+        var serverBaseUrl = NormalizeAuthlibServerBaseUrl(selectedProfile.Server ?? LaunchAuthlibServer);
+        if (!Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out _))
+        {
+            throw new InvalidOperationException("当前外置档案缺少有效的验证服务器地址，请重新登录。");
+        }
+
+        if (!forceRefresh &&
+            !string.IsNullOrWhiteSpace(selectedProfile.AccessToken) &&
+            !string.IsNullOrWhiteSpace(selectedProfile.ClientToken))
+        {
+            try
+            {
+                onStatusChanged?.Invoke("校验外置档案会话");
+                await SendLaunchProfileRequestAsync(
+                    MinecraftLaunchAuthlibRequestWorkflowService.BuildValidateRequest(
+                        serverBaseUrl,
+                        selectedProfile.AccessToken,
+                        selectedProfile.ClientToken),
+                    cancellationToken);
+                return new LaunchProfileRefreshResult(true, $"已确认外置档案 {selectedProfile.Username ?? "未命名档案"} 仍然有效。");
+            }
+            catch (LaunchProfileRequestException)
+            {
+                // Continue with refresh/authenticate fallback when the cached token is no longer accepted.
+            }
+        }
+
+        var hasRefreshableSession = !string.IsNullOrWhiteSpace(selectedProfile.AccessToken) &&
+                                    !string.IsNullOrWhiteSpace(selectedProfile.ClientToken);
+        if (hasRefreshableSession)
+        {
+            var accessToken = selectedProfile.AccessToken!;
+            var clientToken = selectedProfile.ClientToken!;
+            try
+            {
+                onStatusChanged?.Invoke("刷新外置档案会话");
+                var refreshJson = await SendLaunchProfileRequestAsync(
+                    MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
+                        serverBaseUrl,
+                        accessToken,
+                        clientToken),
+                    cancellationToken);
+                var metadataJson = await TryReadAuthlibMetadataJsonAsync(serverBaseUrl, cancellationToken);
+                var serverName = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(metadataJson);
+                var refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
+                    new MinecraftLaunchAuthlibRefreshWorkflowRequest(
+                        refreshJson,
+                        selectedProfileIndex,
+                        serverBaseUrl,
+                        serverName,
+                        selectedProfile.LoginName ?? string.Empty,
+                        selectedProfile.Password ?? string.Empty));
+                if (!string.IsNullOrWhiteSpace(selectedProfile.Uuid) &&
+                    !string.Equals(refreshResult.Session.ProfileId, selectedProfile.Uuid, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException("外置档案刷新后返回了不同的角色，请重新登录该档案。");
+                }
+
+                FrontendProfileStorageService.Save(
+                    _shellActionService.RuntimePaths,
+                    FrontendProfileStorageService.ApplyMutation(profileDocument, refreshResult.MutationPlan, out _));
+                return new LaunchProfileRefreshResult(true, $"已刷新外置档案 {refreshResult.Session.ProfileName}。", ShouldInvalidateAvatarCache: true);
+            }
+            catch (LaunchProfileRequestException ex)
+            {
+                if (IsAuthlibCredentialExpired(ex.ResponseBody))
+                {
+                    throw new InvalidOperationException("当前外置档案登录已失效，请重新登录。");
+                }
+
+                throw new InvalidOperationException($"刷新外置档案失败：{GetLaunchProfileFriendlyError(ex)}");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedProfile.LoginName) || string.IsNullOrWhiteSpace(selectedProfile.Password))
+        {
+            throw new InvalidOperationException("当前外置档案缺少完整会话信息，请重新登录。");
+        }
+
+        onStatusChanged?.Invoke("重新登录外置档案");
+        var authenticateJson = await SendLaunchProfileRequestAsync(
+            MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
+                serverBaseUrl,
+                selectedProfile.LoginName,
+                selectedProfile.Password),
+            cancellationToken);
+        var authenticatePlan = MinecraftLaunchAuthlibLoginWorkflowService.PlanAuthenticate(
+            new MinecraftLaunchAuthlibAuthenticatePlanRequest(
+                ForceReselectProfile: false,
+                CachedProfileId: selectedProfile.Uuid,
+                AuthenticateResponseJson: authenticateJson));
+        if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.Fail)
+        {
+            throw new InvalidOperationException((authenticatePlan.FailureMessage ?? "外置登录失败。").TrimStart('$'));
+        }
+
+        if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.PromptForSelection &&
+            string.IsNullOrWhiteSpace(authenticatePlan.SelectedProfileId))
+        {
+            throw new InvalidOperationException("该外置账户包含多个角色，无法自动确认当前角色，请重新登录该档案。");
+        }
+
+        var selectedProfileId = authenticatePlan.SelectedProfileId
+                                ?? authenticatePlan.PromptOptions.FirstOrDefault()?.Id;
+        if (string.IsNullOrWhiteSpace(selectedProfileId))
+        {
+            throw new InvalidOperationException("该外置账户下没有可用角色。");
+        }
+
+        var metadataResponseJson = await TryReadAuthlibMetadataJsonAsync(serverBaseUrl, cancellationToken);
+        var authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
+            new MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
+                authenticatePlan,
+                metadataResponseJson,
+                IsExistingProfile: true,
+                SelectedProfileIndex: selectedProfileIndex,
+                serverBaseUrl,
+                selectedProfile.LoginName,
+                selectedProfile.Password,
+                selectedProfileId));
+        FrontendProfileStorageService.Save(
+            _shellActionService.RuntimePaths,
+            FrontendProfileStorageService.ApplyMutation(profileDocument, authenticateResult.MutationPlan, out _));
+        return new LaunchProfileRefreshResult(true, $"已重新登录外置档案 {authenticateResult.Session.ProfileName}。", ShouldInvalidateAvatarCache: true);
     }
 
     private void SetLaunchProfileSurface(LaunchProfileSurfaceKind surface)
@@ -538,10 +887,23 @@ internal sealed partial class FrontendShellViewModel
                 BuildProfileChoiceSummary(profile),
                 index == selectedIndex,
                 new ActionCommand(() => _ = SelectLaunchProfileEntryAsync(index)),
+                index == selectedIndex && IsRefreshableLaunchProfile(profile)
+                    ? FrontendIconCatalog.Refresh.Data
+                    : string.Empty,
+                index == selectedIndex && IsRefreshableLaunchProfile(profile) && IsLaunchProfileRefreshInProgress,
+                "刷新档案",
+                index == selectedIndex && IsRefreshableLaunchProfile(profile)
+                    ? _refreshLaunchProfileCommand
+                    : null,
                 FrontendIconCatalog.DeleteOutline.Data,
                 "删除档案",
                 new ActionCommand(() => _ = DeleteLaunchProfileAsync(index)))));
         RaisePropertyChanged(nameof(HasLaunchProfileEntries));
+    }
+
+    private static bool IsRefreshableLaunchProfile(MinecraftLaunchPersistedProfile profile)
+    {
+        return profile.Kind is MinecraftLaunchStoredProfileKind.Microsoft or MinecraftLaunchStoredProfileKind.Authlib;
     }
 
     private async Task DeleteLaunchProfileAsync(int profileIndex)
@@ -672,6 +1034,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasLaunchMicrosoftDeviceCode));
         RaisePropertyChanged(nameof(HasLaunchMicrosoftVerificationUrl));
         RaisePropertyChanged(nameof(HasLaunchAuthlibStatus));
+        RaisePropertyChanged(nameof(IsLaunchProfileRefreshInProgress));
     }
 
     private void PopulateAuthlibDefaults()
@@ -725,12 +1088,13 @@ internal sealed partial class FrontendShellViewModel
         return uuid;
     }
 
-    private async Task<string> TryReadAuthlibMetadataJsonAsync(string serverBaseUrl)
+    private async Task<string> TryReadAuthlibMetadataJsonAsync(string serverBaseUrl, CancellationToken cancellationToken = default)
     {
         try
         {
             return await SendLaunchProfileRequestAsync(
-                MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(serverBaseUrl));
+                MinecraftLaunchAuthlibRequestWorkflowService.BuildMetadataRequest(serverBaseUrl),
+                cancellationToken);
         }
         catch
         {
@@ -793,7 +1157,9 @@ internal sealed partial class FrontendShellViewModel
         throw new TimeoutException("等待微软登录确认超时，请重新发起登录。");
     }
 
-    private async Task<string> SendLaunchProfileRequestAsync(MinecraftLaunchHttpRequestPlan plan)
+    private async Task<string> SendLaunchProfileRequestAsync(
+        MinecraftLaunchHttpRequestPlan plan,
+        CancellationToken cancellationToken = default)
     {
         using var client = CreateLaunchProfileHttpClient();
         using var request = new HttpRequestMessage(new HttpMethod(plan.Method), plan.Url);
@@ -818,14 +1184,38 @@ internal sealed partial class FrontendShellViewModel
                 string.IsNullOrWhiteSpace(plan.ContentType) ? "application/json" : plan.ContentType);
         }
 
-        using var response = await client.SendAsync(request);
-        var responseBody = await response.Content.ReadAsStringAsync();
+        using var response = await client.SendAsync(request, cancellationToken);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             throw new LaunchProfileRequestException(plan.Url, (int)response.StatusCode, responseBody);
         }
 
         return responseBody;
+    }
+
+    private bool TryGetSelectedStoredLaunchProfile(
+        out MinecraftLaunchProfileDocument document,
+        out int selectedProfileIndex,
+        out MinecraftLaunchPersistedProfile selectedProfile)
+    {
+        document = FrontendProfileStorageService.Load(_shellActionService.RuntimePaths).Document;
+        if (document.Profiles.Count == 0)
+        {
+            selectedProfileIndex = 0;
+            selectedProfile = null!;
+            return false;
+        }
+
+        selectedProfileIndex = GetSelectedProfileIndex(document);
+        if (selectedProfileIndex < 0 || selectedProfileIndex >= document.Profiles.Count)
+        {
+            selectedProfile = null!;
+            return false;
+        }
+
+        selectedProfile = document.Profiles[selectedProfileIndex];
+        return true;
     }
 
     private HttpClient CreateLaunchProfileHttpClient()
@@ -988,6 +1378,22 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private static bool IsAuthlibCredentialExpired(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            return false;
+        }
+
+        var error = TryReadJsonField(responseBody, "error");
+        var message = TryReadJsonField(responseBody, "errorMessage")
+                      ?? TryReadJsonField(responseBody, "message");
+
+        return string.Equals(error, "ForbiddenOperationException", StringComparison.OrdinalIgnoreCase) ||
+               (!string.IsNullOrWhiteSpace(message) &&
+                message.Contains("Invalid token", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string GetLaunchProfileFriendlyError(Exception exception)
     {
         if (exception is LaunchProfileRequestException requestException)
@@ -1014,6 +1420,11 @@ internal sealed partial class FrontendShellViewModel
 
         public string ResponseBody { get; } = responseBody;
     }
+
+    private sealed record LaunchProfileRefreshResult(
+        bool WasChecked,
+        string Message,
+        bool ShouldInvalidateAvatarCache = false);
 }
 
 internal sealed class LaunchProfileEntryViewModel(
@@ -1022,8 +1433,12 @@ internal sealed class LaunchProfileEntryViewModel(
     bool isSelected,
     ActionCommand command,
     string accessoryIconData,
+    bool accessoryIsSpinning,
     string accessoryToolTip,
-    ActionCommand? accessoryCommand)
+    ActionCommand? accessoryCommand,
+    string secondaryAccessoryIconData,
+    string secondaryAccessoryToolTip,
+    ActionCommand? secondaryAccessoryCommand)
 {
     public string Title { get; } = title;
 
@@ -1035,9 +1450,17 @@ internal sealed class LaunchProfileEntryViewModel(
 
     public string AccessoryIconData { get; } = accessoryIconData;
 
+    public bool AccessoryIsSpinning { get; } = accessoryIsSpinning;
+
     public string AccessoryToolTip { get; } = accessoryToolTip;
 
     public ActionCommand? AccessoryCommand { get; } = accessoryCommand;
+
+    public string SecondaryAccessoryIconData { get; } = secondaryAccessoryIconData;
+
+    public string SecondaryAccessoryToolTip { get; } = secondaryAccessoryToolTip;
+
+    public ActionCommand? SecondaryAccessoryCommand { get; } = secondaryAccessoryCommand;
 }
 
 internal enum LaunchProfileSurfaceKind

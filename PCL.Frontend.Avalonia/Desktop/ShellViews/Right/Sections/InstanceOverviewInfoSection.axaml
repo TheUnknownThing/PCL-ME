@@ -13,12 +13,12 @@
                   Grid.Column="0"
                   Width="86"
                   Margin="0,0,18,0"
-                  Foreground="#7D8897"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12.5"
                   Text="{Binding Label}" />
               <TextBlock
                   Grid.Column="1"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13"
                   Text="{Binding Value}"
                   TextWrapping="Wrap" />

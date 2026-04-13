@@ -11,7 +11,7 @@
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28,9,28,9,28,9,28,9,28">
             <TextBlock
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="默认版本隔离" />
@@ -24,7 +24,7 @@
             <TextBlock
                 Grid.Row="2"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="游戏窗口标题" />
@@ -38,7 +38,7 @@
             <TextBlock
                 Grid.Row="4"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="自定义信息" />
@@ -52,7 +52,7 @@
             <TextBlock
                 Grid.Row="6"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="启动器可见性" />
@@ -66,7 +66,7 @@
             <TextBlock
                 Grid.Row="8"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="进程优先级" />
@@ -80,7 +80,7 @@
             <TextBlock
                 Grid.Row="10"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="窗口大小" />
@@ -101,7 +101,7 @@
                   Grid.Column="3"
                   VerticalAlignment="Center"
                   HorizontalAlignment="Center"
-                  Foreground="#677789"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="15"
                   IsVisible="{Binding IsCustomLaunchWindowSizeVisible}"
                   Text="×" />
@@ -117,7 +117,7 @@
             <TextBlock
                 Grid.Row="12"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="正版验证方式" />
@@ -132,7 +132,7 @@
             <TextBlock
                 Grid.Row="14"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="IP 协议偏好" />
@@ -151,12 +151,12 @@
           <StackPanel Spacing="12">
             <Border
                 Padding="12,10"
-                Background="#FFF8DD"
-                BorderBrush="#F2D777"
+                Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
                 BorderThickness="1"
                 CornerRadius="4">
               <TextBlock
-                  Foreground="#6E5800"
+                  Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"
                   Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！"
                   TextWrapping="Wrap" />
@@ -164,13 +164,13 @@
 
             <Border
                 Padding="12,10"
-                Background="#FFF8DD"
-                BorderBrush="#F2D777"
+                Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
                 BorderThickness="1"
                 CornerRadius="4"
                 IsVisible="{Binding ShowRamAllocationWarning}">
               <TextBlock
-                  Foreground="#6E5800"
+                  Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"
                   Text="你给游戏分配的内存过多，这可能引发游戏崩溃。建议优先考虑自动分配。"
                   TextWrapping="Wrap" />
@@ -184,7 +184,7 @@
                   Grid.Column="1"
                   Margin="12,0,0,0"
                   VerticalAlignment="Center"
-                  Foreground="#677789"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12.5"
                   Text="根据安装的 Mod 量与电脑剩余内存，动态调整为游戏分配的内存。"
                   TextWrapping="Wrap" />
@@ -204,7 +204,7 @@
                     Grid.Column="1"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    Foreground="#677789"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
                     Text="{Binding CustomRamAllocationLabel}" />
               </Grid>
@@ -212,7 +212,7 @@
               <CheckBox
                   Grid.Row="4"
                   Grid.ColumnSpan="2"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="启动游戏前进行内存优化"
                   IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
             </Grid>
@@ -239,7 +239,7 @@
             <Grid ColumnDefinitions="Auto,*">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="渲染器" />
@@ -253,7 +253,7 @@
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto,9,Auto,9,Auto">
               <TextBlock
                   VerticalAlignment="Top"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="JVM 参数头部" />
@@ -269,7 +269,7 @@
               <TextBlock
                   Grid.Row="2"
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="游戏参数尾部" />
@@ -283,7 +283,7 @@
               <TextBlock
                   Grid.Row="4"
                   VerticalAlignment="Top"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="启动前执行命令" />
@@ -296,7 +296,7 @@
                     TextWrapping="Wrap"
                     VerticalContentAlignment="Top" />
                 <CheckBox
-                    Foreground="#343D4A"
+                    Foreground="{DynamicResource ColorBrush1}"
                     Content="等待命令执行完成后再继续启动"
                     IsChecked="{Binding WaitForLaunchBeforeCommand}" />
               </StackPanel>
@@ -304,7 +304,7 @@
               <TextBlock
                   Grid.Row="6"
                   VerticalAlignment="Top"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="环境变量" />
@@ -317,7 +317,7 @@
                     TextWrapping="Wrap"
                     VerticalContentAlignment="Top" />
                 <TextBlock
-                    Foreground="#677789"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
                     Text="每行一个 KEY=VALUE，实例设置中的同名变量会覆盖这里的值。"
                     TextWrapping="Wrap" />
@@ -326,17 +326,17 @@
               <TextBlock
                   Grid.Row="8"
                   VerticalAlignment="Top"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="Linux 显示后端" />
               <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
                 <CheckBox
-                    Foreground="#343D4A"
+                    Foreground="{DynamicResource ColorBrush1}"
                     Content="Wayland 会话下强制使用 X11 启动"
                     IsChecked="{Binding ForceX11OnWaylandForLaunch}" />
                 <TextBlock
-                    Foreground="#677789"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
                     Text="仅在 Linux Wayland 会话且当前存在 X11 DISPLAY 时生效。"
                     TextWrapping="Wrap" />
@@ -345,31 +345,31 @@
 
             <StackPanel Spacing="8">
               <CheckBox
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="禁用 Java Launch Wrapper"
                   IsChecked="{Binding DisableJavaLaunchWrapper}" />
               <CheckBox
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="禁用 RetroWrapper"
                   IsChecked="{Binding DisableRetroWrapper}" />
               <CheckBox
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="要求 Java 使用高性能显卡"
                   IsChecked="{Binding RequireDedicatedGpu}" />
               <CheckBox
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="使用 java.exe 而不是 javaw.exe"
                   IsChecked="{Binding UseJavaExecutable}" />
             </StackPanel>
 
             <Border
                 Padding="12,10"
-                Background="#EAF2FE"
-                BorderBrush="#D5E6FD"
+                Background="{DynamicResource ColorBrush8}"
+                BorderBrush="{DynamicResource ColorBrush6}"
                 BorderThickness="1"
                 CornerRadius="4">
               <TextBlock
-                  Foreground="#4068A8"
+                  Foreground="{DynamicResource ColorBrush2}"
                   FontSize="12.5"
                   Text="你还可以在实例独立设置中找到更多高级启动选项。"
                   TextWrapping="Wrap" />
@@ -387,14 +387,14 @@
           Command="{Binding VersionSetupCommand}">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock
-              Foreground="#1370F3"
+              Foreground="{DynamicResource ColorBrush3}"
               FontSize="13.5"
               Text="实例独立设置" />
           <Path
               Width="10"
               Height="10"
               VerticalAlignment="Center"
-              Fill="#1370F3"
+              Fill="{DynamicResource ColorBrush3}"
               Stretch="Uniform"
               Data="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z" />
         </StackPanel>

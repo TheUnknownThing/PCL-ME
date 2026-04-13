@@ -1,119 +1,469 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Default">
-      <SolidColorBrush x:Key="ColorBrush1">#343D4A</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush2">#0B5BCB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush3">#1370F3</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush4">#4890F5</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush5">#96C0F9</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush6">#D5E6FD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush7">#E0EAFD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush8">#EAF2FE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBg0">#96C0F9</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBg1">#BEE0EAFD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntryHoverBackground">#E2EEFE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySelectedBackground">#EAF2FE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySelectedHoverBackground">#DDEBFE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected">#4B78C2</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle">#7D8897</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntryChevronIdle">#A6B8CF</SolidColorBrush>
+      <Color x:Key="BaseColor_Neutral950Alpha07">#11000000</Color>
+      <Color x:Key="BaseColor_Neutral940Alpha13">#21000000</Color>
+      <Color x:Key="BaseColor_Neutral930Alpha20">#33000000</Color>
+      <Color x:Key="BaseColor_Neutral920Alpha35">#5A000000</Color>
+      <Color x:Key="BaseColor_Neutral910">#FF000000</Color>
+      <Color x:Key="BaseColor_Neutral900Alpha90">#E50A0A0A</Color>
+      <Color x:Key="BaseColor_Neutral890">#FF202325</Color>
+      <Color x:Key="BaseColor_Neutral880Alpha59">#96262626</Color>
+      <Color x:Key="BaseColor_Neutral870Alpha80">#CC2B2B2B</Color>
+      <Color x:Key="BaseColor_Neutral860Alpha75">#C02E2E2E</Color>
+      <Color x:Key="BaseColor_Neutral850">#FF2F2F2F</Color>
+      <Color x:Key="BaseColor_Neutral840Alpha71">#B4363636</Color>
+      <Color x:Key="BaseColor_Neutral830Alpha80">#CC3C3C3C</Color>
+      <Color x:Key="BaseColor_Neutral820">#FF3B4041</Color>
+      <Color x:Key="BaseColor_Neutral810Alpha00">#00434343</Color>
+      <Color x:Key="BaseColor_Neutral800">#FF45484F</Color>
+      <Color x:Key="BaseColor_Neutral790Alpha41">#68484E52</Color>
+      <Color x:Key="BaseColor_Neutral780Alpha33">#555A5A5A</Color>
+      <Color x:Key="BaseColor_Neutral770">#FF5A5A5A</Color>
+      <Color x:Key="BaseColor_Neutral760">#FF5D6567</Color>
+      <Color x:Key="BaseColor_Neutral750">#FF737373</Color>
+      <Color x:Key="BaseColor_Neutral740">#FF8C8C8C</Color>
+      <Color x:Key="BaseColor_Neutral730">#FFA6A6A6</Color>
+      <Color x:Key="BaseColor_Neutral720">#FFCCCCCC</Color>
+      <Color x:Key="BaseColor_Neutral710">#FFD8D8D8</Color>
+      <Color x:Key="BaseColor_Neutral700">#FFEBEBEB</Color>
+      <Color x:Key="BaseColor_Neutral690">#FFF5F5F5</Color>
+      <Color x:Key="BaseColor_Neutral680Alpha82">#D2FBFBFB</Color>
+      <Color x:Key="BaseColor_Neutral670Alpha00">#00FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral660Alpha08">#14FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral650Alpha13">#22FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral640Alpha20">#32FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral630Alpha27">#46FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral620Alpha33">#55FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral610Alpha40">#66FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral600Alpha73">#BBFFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral590Alpha90">#E5FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral580Alpha95">#F1FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral570">#FFFFFFFF</Color>
+      <Color x:Key="BaseColor_Blue950">#FF09141C</Color>
+      <Color x:Key="BaseColor_Blue940">#FF13212B</Color>
+      <Color x:Key="BaseColor_Blue930">#FF2A313B</Color>
+      <Color x:Key="BaseColor_Blue920">#FF22344C</Color>
+      <Color x:Key="BaseColor_Blue910Alpha08">#14343D4A</Color>
+      <Color x:Key="BaseColor_Blue900">#FF343D4A</Color>
+      <Color x:Key="BaseColor_Blue890">#FF4C5968</Color>
+      <Color x:Key="BaseColor_Blue880">#FF45648C</Color>
+      <Color x:Key="BaseColor_Blue870">#FF0B5BCB</Color>
+      <Color x:Key="BaseColor_Blue860">#FF5E6E82</Color>
+      <Color x:Key="BaseColor_Blue850">#FF697A8C</Color>
+      <Color x:Key="BaseColor_Blue840">#FF1370F3</Color>
+      <Color x:Key="BaseColor_Blue830Alpha84">#D70A8EFC</Color>
+      <Color x:Key="BaseColor_Blue820">#FF748396</Color>
+      <Color x:Key="BaseColor_Blue810">#FF4B78C2</Color>
+      <Color x:Key="BaseColor_Blue800Alpha84">#D7259BFC</Color>
+      <Color x:Key="BaseColor_Blue790">#FF7E8FA5</Color>
+      <Color x:Key="BaseColor_Blue780">#FF5B87DA</Color>
+      <Color x:Key="BaseColor_Blue770">#FF4890F5</Color>
+      <Color x:Key="BaseColor_Blue760">#FFA6B8CF</Color>
+      <Color x:Key="BaseColor_Blue750Alpha23">#3AB8C1CA</Color>
+      <Color x:Key="BaseColor_Blue740">#FF96C0F9</Color>
+      <Color x:Key="BaseColor_Blue730">#FFC2CBD7</Color>
+      <Color x:Key="BaseColor_Blue720Alpha47">#78B7D3F5</Color>
+      <Color x:Key="BaseColor_Blue710">#FFBFD9FC</Color>
+      <Color x:Key="BaseColor_Blue700">#FFD5E6FD</Color>
+      <Color x:Key="BaseColor_Blue690Alpha75">#BEE0EAFD</Color>
+      <Color x:Key="BaseColor_Blue680">#FFE0EAFD</Color>
+      <Color x:Key="BaseColor_Blue670Alpha00">#01EAF2FE</Color>
+      <Color x:Key="BaseColor_Blue660Alpha82">#D2F1F4F7</Color>
+      <Color x:Key="BaseColor_Blue650">#FFEDF5FF</Color>
+      <Color x:Key="BaseColor_Cyan950">#FF24534E</Color>
+      <Color x:Key="BaseColor_Cyan940">#FF41555E</Color>
+      <Color x:Key="BaseColor_Cyan930">#FF159E95</Color>
+      <Color x:Key="BaseColor_Cyan920">#FF50DED4</Color>
+      <Color x:Key="BaseColor_Cyan910">#FF33BBFF</Color>
+      <Color x:Key="BaseColor_Cyan900Alpha10">#1A66CCFF</Color>
+      <Color x:Key="BaseColor_Cyan890Alpha15">#2666CCFF</Color>
+      <Color x:Key="BaseColor_Cyan880">#FF66CCFF</Color>
+      <Color x:Key="BaseColor_Green950">#FF213B33</Color>
+      <Color x:Key="BaseColor_Green940">#FF467466</Color>
+      <Color x:Key="BaseColor_Green930Alpha84">#D71DA01D</Color>
+      <Color x:Key="BaseColor_Green920Alpha84">#D721B121</Color>
+      <Color x:Key="BaseColor_Green910">#FF9AD3C4</Color>
+      <Color x:Key="BaseColor_Green900">#FFC8E6DF</Color>
+      <Color x:Key="BaseColor_Green890">#FFEAF7F4</Color>
+      <Color x:Key="BaseColor_Yellow950">#FF4A4021</Color>
+      <Color x:Key="BaseColor_Yellow940">#FF6E5800</Color>
+      <Color x:Key="BaseColor_Yellow930">#FFFFD34D</Color>
+      <Color x:Key="BaseColor_Yellow920">#FFEACB6E</Color>
+      <Color x:Key="BaseColor_Yellow910">#FFF2D777</Color>
+      <Color x:Key="BaseColor_Yellow900">#FFFFF5C9</Color>
+      <Color x:Key="BaseColor_Yellow890">#FFFFF8DD</Color>
+      <Color x:Key="BaseColor_Orange950">#FF8A7436</Color>
+      <Color x:Key="BaseColor_Orange940">#FFA17720</Color>
+      <Color x:Key="BaseColor_Orange930">#FFA94F2B</Color>
+      <Color x:Key="BaseColor_Orange920">#FFF1C8B6</Color>
+      <Color x:Key="BaseColor_Orange910">#FFFFF1EA</Color>
+      <Color x:Key="BaseColor_Red950Alpha55">#8C500000</Color>
+      <Color x:Key="BaseColor_Red940">#FF49292B</Color>
+      <Color x:Key="BaseColor_Red930">#FF8A5849</Color>
+      <Color x:Key="BaseColor_Red920">#FFCE2111</Color>
+      <Color x:Key="BaseColor_Red910">#FF8D595D</Color>
+      <Color x:Key="BaseColor_Red900Alpha84">#D7FF2B00</Color>
+      <Color x:Key="BaseColor_Red890">#FFD33232</Color>
+      <Color x:Key="BaseColor_Red880">#FFC25B46</Color>
+      <Color x:Key="BaseColor_Red870">#FFD05B5B</Color>
+      <Color x:Key="BaseColor_Red860">#FFFF4D4D</Color>
+      <Color x:Key="BaseColor_Red850">#FFFF6B6B</Color>
+      <Color x:Key="BaseColor_Red840">#FFF0A1A1</Color>
+      <Color x:Key="BaseColor_Red830">#FFF1C8C8</Color>
+      <Color x:Key="BaseColor_Red820Alpha50">#80FBDDDD</Color>
+      <Color x:Key="BaseColor_Red810">#FFFFF0F0</Color>
+      <SolidColorBrush x:Key="ColorBrush1" Color="{DynamicResource BaseColor_Blue900}" />
+      <SolidColorBrush x:Key="ColorBrush2" Color="{DynamicResource BaseColor_Blue870}" />
+      <SolidColorBrush x:Key="ColorBrush3" Color="{DynamicResource BaseColor_Blue840}" />
+      <SolidColorBrush x:Key="ColorBrush4" Color="{DynamicResource BaseColor_Blue770}" />
+      <SolidColorBrush x:Key="ColorBrush5" Color="{DynamicResource BaseColor_Blue740}" />
+      <SolidColorBrush x:Key="ColorBrush6" Color="{DynamicResource BaseColor_Blue700}" />
+      <SolidColorBrush x:Key="ColorBrush7" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrush8" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushBg0" Color="{DynamicResource BaseColor_Blue740}" />
+      <SolidColorBrush x:Key="ColorBrushBg1" Color="{DynamicResource BaseColor_Blue690Alpha75}" />
+      <SolidColorBrush x:Key="ColorBrushEntryHoverBackground" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedBackground" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedHoverBackground" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected" Color="{DynamicResource BaseColor_Blue810}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle" Color="{DynamicResource BaseColor_Blue820}" />
+      <SolidColorBrush x:Key="ColorBrushEntryChevronIdle" Color="{DynamicResource BaseColor_Blue760}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarBackground" Color="{DynamicResource BaseColor_Blue870}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarForeground" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarHoverBackground" Color="{DynamicResource BaseColor_Neutral640Alpha20}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarSelectionBackground" Color="{DynamicResource BaseColor_Neutral630Alpha27}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarSelectedForeground" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarBadgeBackground" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarBadgeForeground" Color="{DynamicResource BaseColor_Blue870}" />
 
-      <Color x:Key="ColorObject1">#343D4A</Color>
-      <Color x:Key="ColorObject2">#0B5BCB</Color>
-      <Color x:Key="ColorObject3">#1370F3</Color>
-      <Color x:Key="ColorObject4">#4890F5</Color>
-      <Color x:Key="ColorObject5">#96C0F9</Color>
-      <Color x:Key="ColorObject6">#D5E6FD</Color>
-      <Color x:Key="ColorObject7">#E0EAFD</Color>
-      <Color x:Key="ColorObject8">#EAF2FE</Color>
-      <Color x:Key="ColorObjectBg0">#96C0F9</Color>
-      <Color x:Key="ColorObjectBg1">#BEE0EAFD</Color>
+      <StaticResource x:Key="ColorObject1" ResourceKey="BaseColor_Blue900" />
+      <StaticResource x:Key="ColorObject2" ResourceKey="BaseColor_Blue870" />
+      <StaticResource x:Key="ColorObject3" ResourceKey="BaseColor_Blue840" />
+      <StaticResource x:Key="ColorObject4" ResourceKey="BaseColor_Blue770" />
+      <StaticResource x:Key="ColorObject5" ResourceKey="BaseColor_Blue740" />
+      <StaticResource x:Key="ColorObject6" ResourceKey="BaseColor_Blue700" />
+      <StaticResource x:Key="ColorObject7" ResourceKey="BaseColor_Blue680" />
+      <StaticResource x:Key="ColorObject8" ResourceKey="BaseColor_Blue680" />
+      <StaticResource x:Key="ColorObjectBg0" ResourceKey="BaseColor_Blue740" />
+      <StaticResource x:Key="ColorObjectBg1" ResourceKey="BaseColor_Blue690Alpha75" />
 
-      <SolidColorBrush x:Key="ColorBrushGray1">#404040</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray2">#737373</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray3">#8C8C8C</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray4">#A6A6A6</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray5">#CCCCCC</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray6">#EBEBEB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray7">#F0F0F0</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray8">#F5F5F5</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushGray1" Color="{DynamicResource BaseColor_Neutral820}" />
+      <SolidColorBrush x:Key="ColorBrushGray2" Color="{DynamicResource BaseColor_Neutral750}" />
+      <SolidColorBrush x:Key="ColorBrushGray3" Color="{DynamicResource BaseColor_Neutral740}" />
+      <SolidColorBrush x:Key="ColorBrushGray4" Color="{DynamicResource BaseColor_Neutral730}" />
+      <SolidColorBrush x:Key="ColorBrushGray5" Color="{DynamicResource BaseColor_Neutral720}" />
+      <SolidColorBrush x:Key="ColorBrushGray6" Color="{DynamicResource BaseColor_Neutral700}" />
+      <SolidColorBrush x:Key="ColorBrushGray7" Color="{DynamicResource BaseColor_Neutral700}" />
+      <SolidColorBrush x:Key="ColorBrushGray8" Color="{DynamicResource BaseColor_Neutral690}" />
 
-      <SolidColorBrush x:Key="ColorBrushRedBack">#80FBDDDD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushRedLight">#D33232</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushRedDark">#CE2111</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushHalfWhite">#55FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushSemiWhite">#BBFFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushWhite">#FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushTransparent">#00FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01EAF2FE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar">#F1FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushToolTip">#E5FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMsgBox">#FBFBFB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMsgBoxText">#5C5C5C</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMemory">#000000</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCard">#D2FBFBFB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardMouseOver">#D2F1F4F7</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardBorderMouseOver">#78B7D3F5</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushTransparentBackground">#CDFFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBackground">#FBFBFB</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushRedBack" Color="{DynamicResource BaseColor_Red820Alpha50}" />
+      <SolidColorBrush x:Key="ColorBrushRedLight" Color="{DynamicResource BaseColor_Red890}" />
+      <SolidColorBrush x:Key="ColorBrushRedDark" Color="{DynamicResource BaseColor_Red920}" />
+      <SolidColorBrush x:Key="ColorBrushHalfWhite" Color="{DynamicResource BaseColor_Neutral620Alpha33}" />
+      <SolidColorBrush x:Key="ColorBrushSemiWhite" Color="{DynamicResource BaseColor_Neutral600Alpha73}" />
+      <SolidColorBrush x:Key="ColorBrushWhite" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushTransparent" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushSemiTransparent" Color="{DynamicResource BaseColor_Blue670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="{DynamicResource BaseColor_Neutral580Alpha95}" />
+      <SolidColorBrush x:Key="ColorBrushToolTip" Color="{DynamicResource BaseColor_Neutral590Alpha90}" />
+      <SolidColorBrush x:Key="ColorBrushMsgBox" Color="{DynamicResource BaseColor_Neutral690}" />
+      <SolidColorBrush x:Key="ColorBrushMsgBoxText" Color="{DynamicResource BaseColor_Neutral770}" />
+      <SolidColorBrush x:Key="ColorBrushMemory" Color="{DynamicResource BaseColor_Neutral910}" />
+      <SolidColorBrush x:Key="ColorBrushMyCard" Color="{DynamicResource BaseColor_Neutral680Alpha82}" />
+      <SolidColorBrush x:Key="ColorBrushMyCardMouseOver" Color="{DynamicResource BaseColor_Blue660Alpha82}" />
+      <SolidColorBrush x:Key="ColorBrushMyCardBorderMouseOver" Color="{DynamicResource BaseColor_Blue720Alpha47}" />
+      <SolidColorBrush x:Key="ColorBrushMyCardEdge" Color="{DynamicResource BaseColor_Neutral610Alpha40}" />
+      <SolidColorBrush x:Key="ColorBrushTransparentBackground" Color="{DynamicResource BaseColor_Neutral680Alpha82}" />
+      <SolidColorBrush x:Key="ColorBrushBackground" Color="{DynamicResource BaseColor_Neutral690}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticWarningBackground" Color="{DynamicResource BaseColor_Yellow890}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticWarningBorder" Color="{DynamicResource BaseColor_Yellow910}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticWarningForeground" Color="{DynamicResource BaseColor_Yellow940}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticDangerBackground" Color="{DynamicResource BaseColor_Orange910}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticDangerBorder" Color="{DynamicResource BaseColor_Orange920}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticDangerForeground" Color="{DynamicResource BaseColor_Orange930}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticErrorBackground" Color="{DynamicResource BaseColor_Red810}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticErrorBorder" Color="{DynamicResource BaseColor_Red830}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticErrorForeground" Color="{DynamicResource BaseColor_Red870}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticSuccessBackground" Color="{DynamicResource BaseColor_Green890}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticSuccessBorder" Color="{DynamicResource BaseColor_Green900}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticSuccessForeground" Color="{DynamicResource BaseColor_Cyan950}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticInfoBackground" Color="{DynamicResource BaseColor_Blue650}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticInfoBorder" Color="{DynamicResource BaseColor_Blue700}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticInfoForeground" Color="{DynamicResource BaseColor_Blue780}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticNeutralBackground" Color="{DynamicResource BaseColor_Blue650}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticNeutralBorder" Color="{DynamicResource BaseColor_Blue700}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticNeutralForeground" Color="{DynamicResource BaseColor_Blue790}" />
+      <SolidColorBrush x:Key="ColorBrushPromptOverlayBackdrop" Color="{DynamicResource BaseColor_Neutral920Alpha35}" />
+      <SolidColorBrush x:Key="ColorBrushPromptOverlayWarningBackdrop" Color="{DynamicResource BaseColor_Red950Alpha55}" />
+      <SolidColorBrush x:Key="ColorBrushShellDividerHighlight" Color="{DynamicResource BaseColor_Neutral660Alpha08}" />
+      <SolidColorBrush x:Key="ColorBrushShellPaneOverlay" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushPromptOverlayChoiceSummary" Color="{DynamicResource BaseColor_Blue850}" />
+      <SolidColorBrush x:Key="ColorBrushLaunchProfileTagBorder" Color="{DynamicResource BaseColor_Neutral950Alpha07}" />
+      <SolidColorBrush x:Key="ColorBrushLaunchStatusError" Color="{DynamicResource BaseColor_Red880}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewCardBackground" Color="{DynamicResource BaseColor_Neutral850}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewCardBorder" Color="{DynamicResource BaseColor_Neutral770}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewBadgeBackground" Color="{DynamicResource BaseColor_Orange940}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewBadgeBorder" Color="{DynamicResource BaseColor_Yellow920}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewBadgeForeground" Color="{DynamicResource BaseColor_Yellow900}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewTitle" Color="{DynamicResource BaseColor_Yellow930}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewFirstLine" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewSecondLine" Color="{DynamicResource BaseColor_Neutral710}" />
+
+      <StaticResource x:Key="ColorObjectTransparent" ResourceKey="BaseColor_Neutral670Alpha00" />
+      <StaticResource x:Key="ColorObjectWindowResizeShadowSoft" ResourceKey="BaseColor_Neutral950Alpha07" />
+      <StaticResource x:Key="ColorObjectWindowResizeShadowStrong" ResourceKey="BaseColor_Neutral940Alpha13" />
+
+      <BoxShadows x:Key="ColorShadowComboBoxPopup">0 2 4 0 #28000000</BoxShadows>
+      <BoxShadows x:Key="ColorShadowHintPopup">0 6 18 0 #28000000</BoxShadows>
+      <BoxShadows x:Key="ColorShadowPromptPanel">0 2 20 0 #CC3C3C3C</BoxShadows>
+      <BoxShadows x:Key="ColorShadowExtraButton">0 0 10 0 #33000000</BoxShadows>
+      <BoxShadows x:Key="ColorShadowCardBase">0 6 18 0 #14343D4A</BoxShadows>
+
+      <x:String x:Key="ThemeColorLightSampleText">#159E95</x:String>
+      <x:String x:Key="ThemeColorDarkSampleText">#50DED4</x:String>
+
+      <StaticResource x:Key="ColorObjectHintInfoStart" ResourceKey="BaseColor_Blue800Alpha84" />
+      <StaticResource x:Key="ColorObjectHintInfoEnd" ResourceKey="BaseColor_Blue830Alpha84" />
+      <StaticResource x:Key="ColorObjectHintSuccessStart" ResourceKey="BaseColor_Green920Alpha84" />
+      <StaticResource x:Key="ColorObjectHintSuccessEnd" ResourceKey="BaseColor_Green930Alpha84" />
+      <StaticResource x:Key="ColorObjectHintErrorStart" ResourceKey="BaseColor_Red900Alpha84" />
+      <StaticResource x:Key="ColorObjectHintErrorEnd" ResourceKey="BaseColor_Red900Alpha84" />
+      <StaticResource x:Key="ColorObjectMyCardSheenStart" ResourceKey="BaseColor_Neutral650Alpha13" />
+      <StaticResource x:Key="ColorObjectMyCardSheenEnd" ResourceKey="BaseColor_Neutral670Alpha00" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
-      <SolidColorBrush x:Key="ColorBrush1">#EBEBEB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush2">#66CCFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush3">#33BBFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush4">#4890F5</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush5">#96C0F9</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush6">#486B7C</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush7">#41555E</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrush8">#3B4041</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBg0">#96C0F9</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBg1">#BE5A5A5A</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntryHoverBackground">#E2EEFE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySelectedBackground">#EAF2FE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySelectedHoverBackground">#DDEBFE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected">#4B78C2</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle">#7D8897</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushEntryChevronIdle">#A6B8CF</SolidColorBrush>
+      <Color x:Key="BaseColor_Neutral950Alpha07">#11000000</Color>
+      <Color x:Key="BaseColor_Neutral940Alpha13">#21000000</Color>
+      <Color x:Key="BaseColor_Neutral930Alpha20">#33000000</Color>
+      <Color x:Key="BaseColor_Neutral920Alpha35">#5A000000</Color>
+      <Color x:Key="BaseColor_Neutral910">#FF000000</Color>
+      <Color x:Key="BaseColor_Neutral900Alpha90">#E50A0A0A</Color>
+      <Color x:Key="BaseColor_Neutral890">#FF202325</Color>
+      <Color x:Key="BaseColor_Neutral880Alpha59">#96262626</Color>
+      <Color x:Key="BaseColor_Neutral870Alpha80">#CC2B2B2B</Color>
+      <Color x:Key="BaseColor_Neutral860Alpha75">#C02E2E2E</Color>
+      <Color x:Key="BaseColor_Neutral850">#FF2F2F2F</Color>
+      <Color x:Key="BaseColor_Neutral840Alpha71">#B4363636</Color>
+      <Color x:Key="BaseColor_Neutral830Alpha80">#CC3C3C3C</Color>
+      <Color x:Key="BaseColor_Neutral820">#FF3B4041</Color>
+      <Color x:Key="BaseColor_Neutral810Alpha00">#00434343</Color>
+      <Color x:Key="BaseColor_Neutral800">#FF45484F</Color>
+      <Color x:Key="BaseColor_Neutral790Alpha41">#68484E52</Color>
+      <Color x:Key="BaseColor_Neutral780Alpha33">#555A5A5A</Color>
+      <Color x:Key="BaseColor_Neutral770">#FF5A5A5A</Color>
+      <Color x:Key="BaseColor_Neutral760">#FF5D6567</Color>
+      <Color x:Key="BaseColor_Neutral750">#FF737373</Color>
+      <Color x:Key="BaseColor_Neutral740">#FF8C8C8C</Color>
+      <Color x:Key="BaseColor_Neutral730">#FFA6A6A6</Color>
+      <Color x:Key="BaseColor_Neutral720">#FFCCCCCC</Color>
+      <Color x:Key="BaseColor_Neutral710">#FFD8D8D8</Color>
+      <Color x:Key="BaseColor_Neutral700">#FFEBEBEB</Color>
+      <Color x:Key="BaseColor_Neutral690">#FFF5F5F5</Color>
+      <Color x:Key="BaseColor_Neutral680Alpha82">#D2FBFBFB</Color>
+      <Color x:Key="BaseColor_Neutral670Alpha00">#00FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral660Alpha08">#14FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral650Alpha13">#22FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral640Alpha20">#32FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral630Alpha27">#46FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral620Alpha33">#55FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral610Alpha40">#66FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral600Alpha73">#BBFFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral590Alpha90">#E5FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral580Alpha95">#F1FFFFFF</Color>
+      <Color x:Key="BaseColor_Neutral570">#FFFFFFFF</Color>
+      <Color x:Key="BaseColor_Blue950">#FF09141C</Color>
+      <Color x:Key="BaseColor_Blue940">#FF13212B</Color>
+      <Color x:Key="BaseColor_Blue930">#FF2A313B</Color>
+      <Color x:Key="BaseColor_Blue920">#FF22344C</Color>
+      <Color x:Key="BaseColor_Blue910Alpha08">#14343D4A</Color>
+      <Color x:Key="BaseColor_Blue900">#FF343D4A</Color>
+      <Color x:Key="BaseColor_Blue890">#FF4C5968</Color>
+      <Color x:Key="BaseColor_Blue880">#FF45648C</Color>
+      <Color x:Key="BaseColor_Blue870">#FF0B5BCB</Color>
+      <Color x:Key="BaseColor_Blue860">#FF5E6E82</Color>
+      <Color x:Key="BaseColor_Blue850">#FF697A8C</Color>
+      <Color x:Key="BaseColor_Blue840">#FF1370F3</Color>
+      <Color x:Key="BaseColor_Blue830Alpha84">#D70A8EFC</Color>
+      <Color x:Key="BaseColor_Blue820">#FF748396</Color>
+      <Color x:Key="BaseColor_Blue810">#FF4B78C2</Color>
+      <Color x:Key="BaseColor_Blue800Alpha84">#D7259BFC</Color>
+      <Color x:Key="BaseColor_Blue790">#FF7E8FA5</Color>
+      <Color x:Key="BaseColor_Blue780">#FF5B87DA</Color>
+      <Color x:Key="BaseColor_Blue770">#FF4890F5</Color>
+      <Color x:Key="BaseColor_Blue760">#FFA6B8CF</Color>
+      <Color x:Key="BaseColor_Blue750Alpha23">#3AB8C1CA</Color>
+      <Color x:Key="BaseColor_Blue740">#FF96C0F9</Color>
+      <Color x:Key="BaseColor_Blue730">#FFC2CBD7</Color>
+      <Color x:Key="BaseColor_Blue720Alpha47">#78B7D3F5</Color>
+      <Color x:Key="BaseColor_Blue710">#FFBFD9FC</Color>
+      <Color x:Key="BaseColor_Blue700">#FFD5E6FD</Color>
+      <Color x:Key="BaseColor_Blue690Alpha75">#BEE0EAFD</Color>
+      <Color x:Key="BaseColor_Blue680">#FFE0EAFD</Color>
+      <Color x:Key="BaseColor_Blue670Alpha00">#01EAF2FE</Color>
+      <Color x:Key="BaseColor_Blue660Alpha82">#D2F1F4F7</Color>
+      <Color x:Key="BaseColor_Blue650">#FFEDF5FF</Color>
+      <Color x:Key="BaseColor_Cyan950">#FF24534E</Color>
+      <Color x:Key="BaseColor_Cyan940">#FF41555E</Color>
+      <Color x:Key="BaseColor_Cyan930">#FF159E95</Color>
+      <Color x:Key="BaseColor_Cyan920">#FF50DED4</Color>
+      <Color x:Key="BaseColor_Cyan910">#FF33BBFF</Color>
+      <Color x:Key="BaseColor_Cyan900Alpha10">#1A66CCFF</Color>
+      <Color x:Key="BaseColor_Cyan890Alpha15">#2666CCFF</Color>
+      <Color x:Key="BaseColor_Cyan880">#FF66CCFF</Color>
+      <Color x:Key="BaseColor_Green950">#FF213B33</Color>
+      <Color x:Key="BaseColor_Green940">#FF467466</Color>
+      <Color x:Key="BaseColor_Green930Alpha84">#D71DA01D</Color>
+      <Color x:Key="BaseColor_Green920Alpha84">#D721B121</Color>
+      <Color x:Key="BaseColor_Green910">#FF9AD3C4</Color>
+      <Color x:Key="BaseColor_Green900">#FFC8E6DF</Color>
+      <Color x:Key="BaseColor_Green890">#FFEAF7F4</Color>
+      <Color x:Key="BaseColor_Yellow950">#FF4A4021</Color>
+      <Color x:Key="BaseColor_Yellow940">#FF6E5800</Color>
+      <Color x:Key="BaseColor_Yellow930">#FFFFD34D</Color>
+      <Color x:Key="BaseColor_Yellow920">#FFEACB6E</Color>
+      <Color x:Key="BaseColor_Yellow910">#FFF2D777</Color>
+      <Color x:Key="BaseColor_Yellow900">#FFFFF5C9</Color>
+      <Color x:Key="BaseColor_Yellow890">#FFFFF8DD</Color>
+      <Color x:Key="BaseColor_Orange950">#FF8A7436</Color>
+      <Color x:Key="BaseColor_Orange940">#FFA17720</Color>
+      <Color x:Key="BaseColor_Orange930">#FFA94F2B</Color>
+      <Color x:Key="BaseColor_Orange920">#FFF1C8B6</Color>
+      <Color x:Key="BaseColor_Orange910">#FFFFF1EA</Color>
+      <Color x:Key="BaseColor_Red950Alpha55">#8C500000</Color>
+      <Color x:Key="BaseColor_Red940">#FF49292B</Color>
+      <Color x:Key="BaseColor_Red930">#FF8A5849</Color>
+      <Color x:Key="BaseColor_Red920">#FFCE2111</Color>
+      <Color x:Key="BaseColor_Red910">#FF8D595D</Color>
+      <Color x:Key="BaseColor_Red900Alpha84">#D7FF2B00</Color>
+      <Color x:Key="BaseColor_Red890">#FFD33232</Color>
+      <Color x:Key="BaseColor_Red880">#FFC25B46</Color>
+      <Color x:Key="BaseColor_Red870">#FFD05B5B</Color>
+      <Color x:Key="BaseColor_Red860">#FFFF4D4D</Color>
+      <Color x:Key="BaseColor_Red850">#FFFF6B6B</Color>
+      <Color x:Key="BaseColor_Red840">#FFF0A1A1</Color>
+      <Color x:Key="BaseColor_Red830">#FFF1C8C8</Color>
+      <Color x:Key="BaseColor_Red820Alpha50">#80FBDDDD</Color>
+      <Color x:Key="BaseColor_Red810">#FFFFF0F0</Color>
+      <SolidColorBrush x:Key="ColorBrush1" Color="{DynamicResource BaseColor_Neutral700}" />
+      <SolidColorBrush x:Key="ColorBrush2" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="ColorBrush3" Color="{DynamicResource BaseColor_Cyan910}" />
+      <SolidColorBrush x:Key="ColorBrush4" Color="{DynamicResource BaseColor_Blue770}" />
+      <SolidColorBrush x:Key="ColorBrush5" Color="{DynamicResource BaseColor_Blue740}" />
+      <SolidColorBrush x:Key="ColorBrush6" Color="{DynamicResource BaseColor_Neutral790Alpha41}" />
+      <SolidColorBrush x:Key="ColorBrush7" Color="{DynamicResource BaseColor_Cyan940}" />
+      <SolidColorBrush x:Key="ColorBrush8" Color="{DynamicResource BaseColor_Neutral820}" />
+      <SolidColorBrush x:Key="ColorBrushBg0" Color="{DynamicResource BaseColor_Blue740}" />
+      <SolidColorBrush x:Key="ColorBrushBg1" Color="{DynamicResource BaseColor_Neutral840Alpha71}" />
+      <SolidColorBrush x:Key="ColorBrushEntryHoverBackground" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedBackground" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySelectedHoverBackground" Color="{DynamicResource BaseColor_Blue680}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected" Color="{DynamicResource BaseColor_Blue810}" />
+      <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle" Color="{DynamicResource BaseColor_Blue820}" />
+      <SolidColorBrush x:Key="ColorBrushEntryChevronIdle" Color="{DynamicResource BaseColor_Blue760}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarBackground" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarForeground" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarHoverBackground" Color="{DynamicResource BaseColor_Cyan900Alpha10}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarSelectionBackground" Color="{DynamicResource BaseColor_Cyan890Alpha15}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarSelectedForeground" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarBadgeBackground" Color="{DynamicResource BaseColor_Blue940}" />
+      <SolidColorBrush x:Key="ColorBrushTitleBarBadgeForeground" Color="{DynamicResource BaseColor_Cyan880}" />
 
-      <Color x:Key="ColorObject1">#EBEBEB</Color>
-      <Color x:Key="ColorObject2">#66CCFF</Color>
-      <Color x:Key="ColorObject3">#33BBFF</Color>
-      <Color x:Key="ColorObject4">#4890F5</Color>
-      <Color x:Key="ColorObject5">#96C0F9</Color>
-      <Color x:Key="ColorObject6">#5D6567</Color>
-      <Color x:Key="ColorObject7">#45484F</Color>
-      <Color x:Key="ColorObject8">#3B4041</Color>
-      <Color x:Key="ColorObjectBg0">#96C0F9</Color>
-      <Color x:Key="ColorObjectBg1">#BE5A5A5A</Color>
+      <StaticResource x:Key="ColorObject1" ResourceKey="BaseColor_Neutral700" />
+      <StaticResource x:Key="ColorObject2" ResourceKey="BaseColor_Cyan880" />
+      <StaticResource x:Key="ColorObject3" ResourceKey="BaseColor_Cyan910" />
+      <StaticResource x:Key="ColorObject4" ResourceKey="BaseColor_Blue770" />
+      <StaticResource x:Key="ColorObject5" ResourceKey="BaseColor_Blue740" />
+      <StaticResource x:Key="ColorObject6" ResourceKey="BaseColor_Neutral760" />
+      <StaticResource x:Key="ColorObject7" ResourceKey="BaseColor_Neutral800" />
+      <StaticResource x:Key="ColorObject8" ResourceKey="BaseColor_Neutral820" />
+      <StaticResource x:Key="ColorObjectBg0" ResourceKey="BaseColor_Blue740" />
+      <StaticResource x:Key="ColorObjectBg1" ResourceKey="BaseColor_Neutral840Alpha71" />
 
-      <SolidColorBrush x:Key="ColorBrushGray1">#F5F5F5</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray2">#F0F0F0</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray3">#EBEBEB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray4">#CCCCCC</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray5">#A6A6A6</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray6">#8C8C8C</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray7">#737373</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushGray8">#404040</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushGray1" Color="{DynamicResource BaseColor_Neutral690}" />
+      <SolidColorBrush x:Key="ColorBrushGray2" Color="{DynamicResource BaseColor_Neutral700}" />
+      <SolidColorBrush x:Key="ColorBrushGray3" Color="{DynamicResource BaseColor_Neutral700}" />
+      <SolidColorBrush x:Key="ColorBrushGray4" Color="{DynamicResource BaseColor_Neutral720}" />
+      <SolidColorBrush x:Key="ColorBrushGray5" Color="{DynamicResource BaseColor_Neutral730}" />
+      <SolidColorBrush x:Key="ColorBrushGray6" Color="{DynamicResource BaseColor_Neutral740}" />
+      <SolidColorBrush x:Key="ColorBrushGray7" Color="{DynamicResource BaseColor_Neutral750}" />
+      <SolidColorBrush x:Key="ColorBrushGray8" Color="{DynamicResource BaseColor_Neutral820}" />
 
-      <SolidColorBrush x:Key="ColorBrushRedBack">#80FBDDDD</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushRedLight">#D33232</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushRedDark">#CE2111</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushHalfWhite">#555A5A5A</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushSemiWhite">#BBFFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushWhite">#FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushTransparent">#00434343</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01EAF2FE</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar">#EB2B2B2B</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushToolTip">#E50A0A0A</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMsgBox">#2B2B2B</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMsgBoxText">#EBEBEB</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMemory">#FFFFFF</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCard">#EB2B2B2B</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardMouseOver">#F526292D</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushMyCardBorderMouseOver">#5C9EC3EA</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushTransparentBackground">#EB2B2B2B</SolidColorBrush>
-      <SolidColorBrush x:Key="ColorBrushBackground">#202325</SolidColorBrush>
+      <SolidColorBrush x:Key="ColorBrushRedBack" Color="{DynamicResource BaseColor_Red820Alpha50}" />
+      <SolidColorBrush x:Key="ColorBrushRedLight" Color="{DynamicResource BaseColor_Red850}" />
+      <SolidColorBrush x:Key="ColorBrushRedDark" Color="{DynamicResource BaseColor_Red860}" />
+      <SolidColorBrush x:Key="ColorBrushHalfWhite" Color="{DynamicResource BaseColor_Neutral780Alpha33}" />
+      <SolidColorBrush x:Key="ColorBrushSemiWhite" Color="{DynamicResource BaseColor_Neutral600Alpha73}" />
+      <SolidColorBrush x:Key="ColorBrushWhite" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushTransparent" Color="{DynamicResource BaseColor_Neutral810Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushSemiTransparent" Color="{DynamicResource BaseColor_Blue670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="{DynamicResource BaseColor_Neutral860Alpha75}" />
+      <SolidColorBrush x:Key="ColorBrushToolTip" Color="{DynamicResource BaseColor_Neutral900Alpha90}" />
+      <SolidColorBrush x:Key="ColorBrushMsgBox" Color="{DynamicResource BaseColor_Neutral850}" />
+      <SolidColorBrush x:Key="ColorBrushMsgBoxText" Color="{DynamicResource BaseColor_Neutral700}" />
+      <SolidColorBrush x:Key="ColorBrushMemory" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushMyCard" Color="{DynamicResource BaseColor_Neutral880Alpha59}" />
+      <SolidColorBrush x:Key="ColorBrushMyCardMouseOver" Color="{DynamicResource BaseColor_Neutral840Alpha71}" />
+      <SolidColorBrush x:Key="ColorBrushMyCardBorderMouseOver" Color="{DynamicResource BaseColor_Blue750Alpha23}" />
+      <SolidColorBrush x:Key="ColorBrushMyCardEdge" Color="{DynamicResource BaseColor_Neutral640Alpha20}" />
+      <SolidColorBrush x:Key="ColorBrushTransparentBackground" Color="{DynamicResource BaseColor_Neutral880Alpha59}" />
+      <SolidColorBrush x:Key="ColorBrushBackground" Color="{DynamicResource BaseColor_Neutral890}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticWarningBackground" Color="{DynamicResource BaseColor_Yellow950}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticWarningBorder" Color="{DynamicResource BaseColor_Orange950}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticWarningForeground" Color="{DynamicResource BaseColor_Yellow910}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticDangerBackground" Color="{DynamicResource BaseColor_Red940}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticDangerBorder" Color="{DynamicResource BaseColor_Red930}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticDangerForeground" Color="{DynamicResource BaseColor_Orange920}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticErrorBackground" Color="{DynamicResource BaseColor_Red940}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticErrorBorder" Color="{DynamicResource BaseColor_Red910}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticErrorForeground" Color="{DynamicResource BaseColor_Red840}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticSuccessBackground" Color="{DynamicResource BaseColor_Green950}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticSuccessBorder" Color="{DynamicResource BaseColor_Green940}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticSuccessForeground" Color="{DynamicResource BaseColor_Green910}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticInfoBackground" Color="{DynamicResource BaseColor_Blue920}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticInfoBorder" Color="{DynamicResource BaseColor_Blue880}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticInfoForeground" Color="{DynamicResource BaseColor_Blue740}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticNeutralBackground" Color="{DynamicResource BaseColor_Blue930}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticNeutralBorder" Color="{DynamicResource BaseColor_Blue890}" />
+      <SolidColorBrush x:Key="ColorBrushSemanticNeutralForeground" Color="{DynamicResource BaseColor_Blue730}" />
+      <SolidColorBrush x:Key="ColorBrushPromptOverlayBackdrop" Color="{DynamicResource BaseColor_Neutral920Alpha35}" />
+      <SolidColorBrush x:Key="ColorBrushPromptOverlayWarningBackdrop" Color="{DynamicResource BaseColor_Red950Alpha55}" />
+      <SolidColorBrush x:Key="ColorBrushShellDividerHighlight" Color="{DynamicResource BaseColor_Neutral660Alpha08}" />
+      <SolidColorBrush x:Key="ColorBrushShellPaneOverlay" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushPromptOverlayChoiceSummary" Color="{DynamicResource BaseColor_Blue850}" />
+      <SolidColorBrush x:Key="ColorBrushLaunchProfileTagBorder" Color="{DynamicResource BaseColor_Neutral950Alpha07}" />
+      <SolidColorBrush x:Key="ColorBrushLaunchStatusError" Color="{DynamicResource BaseColor_Red880}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewCardBackground" Color="{DynamicResource BaseColor_Neutral850}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewCardBorder" Color="{DynamicResource BaseColor_Neutral770}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewBadgeBackground" Color="{DynamicResource BaseColor_Orange940}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewBadgeBorder" Color="{DynamicResource BaseColor_Yellow920}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewBadgeForeground" Color="{DynamicResource BaseColor_Yellow900}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewTitle" Color="{DynamicResource BaseColor_Yellow930}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewFirstLine" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="ColorBrushAchievementPreviewSecondLine" Color="{DynamicResource BaseColor_Neutral710}" />
+
+      <StaticResource x:Key="ColorObjectTransparent" ResourceKey="BaseColor_Neutral670Alpha00" />
+      <StaticResource x:Key="ColorObjectWindowResizeShadowSoft" ResourceKey="BaseColor_Neutral950Alpha07" />
+      <StaticResource x:Key="ColorObjectWindowResizeShadowStrong" ResourceKey="BaseColor_Neutral940Alpha13" />
+
+      <BoxShadows x:Key="ColorShadowComboBoxPopup">0 2 4 0 #28000000</BoxShadows>
+      <BoxShadows x:Key="ColorShadowHintPopup">0 6 18 0 #28000000</BoxShadows>
+      <BoxShadows x:Key="ColorShadowPromptPanel">0 2 20 0 #CC3C3C3C</BoxShadows>
+      <BoxShadows x:Key="ColorShadowExtraButton">0 0 10 0 #33000000</BoxShadows>
+      <BoxShadows x:Key="ColorShadowCardBase">0 6 18 0 #14343D4A</BoxShadows>
+
+      <x:String x:Key="ThemeColorLightSampleText">#159E95</x:String>
+      <x:String x:Key="ThemeColorDarkSampleText">#50DED4</x:String>
+
+      <StaticResource x:Key="ColorObjectHintInfoStart" ResourceKey="BaseColor_Blue800Alpha84" />
+      <StaticResource x:Key="ColorObjectHintInfoEnd" ResourceKey="BaseColor_Blue830Alpha84" />
+      <StaticResource x:Key="ColorObjectHintSuccessStart" ResourceKey="BaseColor_Green920Alpha84" />
+      <StaticResource x:Key="ColorObjectHintSuccessEnd" ResourceKey="BaseColor_Green930Alpha84" />
+      <StaticResource x:Key="ColorObjectHintErrorStart" ResourceKey="BaseColor_Red900Alpha84" />
+      <StaticResource x:Key="ColorObjectHintErrorEnd" ResourceKey="BaseColor_Red900Alpha84" />
+      <StaticResource x:Key="ColorObjectMyCardSheenStart" ResourceKey="BaseColor_Neutral650Alpha13" />
+      <StaticResource x:Key="ColorObjectMyCardSheenEnd" ResourceKey="BaseColor_Neutral670Alpha00" />
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

@@ -8,13 +8,13 @@
       <StackPanel Spacing="12">
         <Border
             Padding="12,10"
-            Background="#FFF1EA"
-            BorderBrush="#F1C8B6"
+            Background="{DynamicResource ColorBrushSemanticDangerBackground}"
+            BorderBrush="{DynamicResource ColorBrushSemanticDangerBorder}"
             BorderThickness="1"
             CornerRadius="4"
             IsVisible="{Binding ShowInstanceServerLoginLockedWarning}">
           <TextBlock
-              Foreground="#A94F2B"
+              Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
               FontSize="12.5"
               Text="当前实例的验证方式已锁定，无法再次更改。请使用要求的验证方式启动游戏。"
               TextWrapping="Wrap" />
@@ -24,7 +24,7 @@
               Grid.Row="0"
               Margin="0,0,25,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="限制验证方式" />
           <ComboBox
@@ -44,7 +44,7 @@
             <TextBlock
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
                 Text="目标验证服务器" />
             <TextBox
@@ -56,7 +56,7 @@
                 Grid.Row="2"
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
                 Text="注册链接" />
             <TextBox
@@ -69,7 +69,7 @@
                 Grid.Row="4"
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
                 Text="服务器名称" />
             <TextBox
@@ -83,7 +83,7 @@
               Grid.Row="3"
               Margin="0,0,25,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="自动进入服务器" />
           <TextBox

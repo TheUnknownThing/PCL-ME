@@ -5,74 +5,74 @@
 
   <FontFamily x:Key="LaunchFontFamily">avares://PCL.Frontend.Avalonia/Assets/Fonts#HarmonyOS Sans, Microsoft YaHei UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Source Han Sans CN, WenQuanYi Micro Hei, sans-serif</FontFamily>
 
-  <SolidColorBrush x:Key="ComboBoxBackground">#55FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBackgroundPressed">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBackgroundDisabled">#FFEBEBEB</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused">#FFFFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused">#FF1370F3</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused">#FF96C0F9</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBorderBrush">#FF96C0F9</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver">#FF4890F5</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBorderBrushPressed">#FF1370F3</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled">#FFCCCCCC</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxForeground">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxForegroundDisabled">#FFA6A6A6</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxForegroundFocused">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground">#FF748396</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundFocusedPressed">#FF748396</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground">#FF5E6E82</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxEditableDropDownGlyphForeground">#FF5E6E82</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundDisabled">#FFA8B5C5</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused">#FF1370F3</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocusedPressed">#FF0B5BCB</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownBackground">#FFFFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownForeground">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush">#FF96C0F9</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed">#FFE0EAFD</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxBackground" Color="{DynamicResource BaseColor_Neutral620Alpha33}" />
+  <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="{DynamicResource BaseColor_Neutral700}" />
+  <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="{DynamicResource BaseColor_Neutral570}" />
+  <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused" Color="{DynamicResource BaseColor_Blue840}" />
+  <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused" Color="{DynamicResource BaseColor_Blue740}" />
+  <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{DynamicResource BaseColor_Blue740}" />
+  <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{DynamicResource BaseColor_Blue770}" />
+  <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="{DynamicResource BaseColor_Blue840}" />
+  <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled" Color="{DynamicResource BaseColor_Neutral720}" />
+  <SolidColorBrush x:Key="ComboBoxForeground" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="{DynamicResource BaseColor_Neutral730}" />
+  <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="{DynamicResource BaseColor_Blue820}" />
+  <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundFocusedPressed" Color="{DynamicResource BaseColor_Blue820}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="{DynamicResource BaseColor_Blue860}" />
+  <SolidColorBrush x:Key="ComboBoxEditableDropDownGlyphForeground" Color="{DynamicResource BaseColor_Blue860}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundDisabled" Color="{DynamicResource BaseColor_Blue760}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused" Color="{DynamicResource BaseColor_Blue840}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocusedPressed" Color="{DynamicResource BaseColor_Blue870}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{DynamicResource BaseColor_Neutral570}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{DynamicResource BaseColor_Blue740}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed" Color="{DynamicResource BaseColor_Blue680}" />
   <Thickness x:Key="ComboBoxDropdownBorderThickness">1</Thickness>
 
-  <SolidColorBrush x:Key="ComboBoxItemForeground">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundPressed">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled">#FFA6A6A6</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundSelected">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedDisabled">#FFA6A6A6</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackground">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#FFEAF2FE</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#FFD5E6FD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundDisabled">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#FFD5E6FD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedUnfocused">#FFD5E6FD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed">#FFBFD9FC</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver">#FFDDEBFD</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedDisabled">#FFF0F0F0</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrush">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushPointerOver">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushPressed">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushDisabled">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelected">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedUnfocused">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPointerOver">#00FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedDisabled">#00FFFFFF</SolidColorBrush>
+  <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled" Color="{DynamicResource BaseColor_Neutral730}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedDisabled" Color="{DynamicResource BaseColor_Neutral730}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackground" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="{DynamicResource BaseColor_Blue700}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundDisabled" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{DynamicResource BaseColor_Blue700}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedUnfocused" Color="{DynamicResource BaseColor_Blue700}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="{DynamicResource BaseColor_Blue710}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedDisabled" Color="{DynamicResource BaseColor_Neutral700}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrush" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushPointerOver" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushPressed" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushDisabled" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelected" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedUnfocused" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPointerOver" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+  <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedDisabled" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
 
-  <SolidColorBrush x:Key="TextFieldBackground">#55FFFFFF</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBackgroundPointerOver">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBackgroundFocused">#FFE0EAFD</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBackgroundDisabled">#FFEBEBEB</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBorderBrush">#FF96C0F9</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBorderBrushPointerOver">#FF4890F5</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBorderBrushFocused">#FF1370F3</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldBorderBrushDisabled">#FFCCCCCC</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldForeground">#FF343D4A</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldForegroundDisabled">#FFA6A6A6</SolidColorBrush>
-  <SolidColorBrush x:Key="TextFieldSelectionBrush">#FF1370F3</SolidColorBrush>
+  <SolidColorBrush x:Key="TextFieldBackground" Color="{DynamicResource BaseColor_Neutral620Alpha33}" />
+  <SolidColorBrush x:Key="TextFieldBackgroundPointerOver" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="TextFieldBackgroundFocused" Color="{DynamicResource BaseColor_Blue680}" />
+  <SolidColorBrush x:Key="TextFieldBackgroundDisabled" Color="{DynamicResource BaseColor_Neutral700}" />
+  <SolidColorBrush x:Key="TextFieldBorderBrush" Color="{DynamicResource BaseColor_Blue740}" />
+  <SolidColorBrush x:Key="TextFieldBorderBrushPointerOver" Color="{DynamicResource BaseColor_Blue770}" />
+  <SolidColorBrush x:Key="TextFieldBorderBrushFocused" Color="{DynamicResource BaseColor_Blue840}" />
+  <SolidColorBrush x:Key="TextFieldBorderBrushDisabled" Color="{DynamicResource BaseColor_Neutral720}" />
+  <SolidColorBrush x:Key="TextFieldForeground" Color="{DynamicResource BaseColor_Blue900}" />
+  <SolidColorBrush x:Key="TextFieldForegroundDisabled" Color="{DynamicResource BaseColor_Neutral730}" />
+  <SolidColorBrush x:Key="TextFieldSelectionBrush" Color="{DynamicResource BaseColor_Blue840}" />
 </ResourceDictionary>

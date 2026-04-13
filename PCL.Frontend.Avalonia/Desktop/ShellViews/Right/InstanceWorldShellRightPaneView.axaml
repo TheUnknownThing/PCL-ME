@@ -47,11 +47,11 @@
                   <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
                     <StackPanel Margin="0,0,18,0" Spacing="3">
                       <TextBlock
-                          Foreground="#343D4A"
+                          Foreground="{DynamicResource ColorBrush1}"
                           FontSize="13.5"
                           Text="{Binding Title}" />
                       <TextBlock
-                          Foreground="#677789"
+                          Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                           FontSize="12.5"
                           Text="{Binding Info}"
                           TextWrapping="Wrap" />
@@ -77,12 +77,12 @@
         <StackPanel Spacing="10">
           <TextBlock
               HorizontalAlignment="Center"
-              Foreground="#4B5968"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="19"
               Text="暂时没有存档文件" />
-          <Border Height="2" Background="#D5E6FD" />
+          <Border Height="2" Background="{DynamicResource ColorBrush6}" />
           <TextBlock
-              Foreground="#677789"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12.5"
               Text="可以在此处查看当前实例的存档"
               TextAlignment="Center"

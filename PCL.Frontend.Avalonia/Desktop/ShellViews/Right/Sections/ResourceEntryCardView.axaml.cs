@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections;
@@ -132,16 +133,14 @@ internal sealed partial class ResourceEntryCardView : UserControl
         HoverBackground.Opacity = isHovered || isSelected ? 1.0 : 0.0;
         HoverBackground.Background = isSelected
             ? isHovered
-                ? GetBrush("ColorBrushEntrySelectedHoverBackground", "#DDEBFE")
-                : GetBrush("ColorBrushEntrySelectedBackground", "#EAF2FE")
+                ? GetBrush("ColorBrushEntrySelectedHoverBackground")
+                : GetBrush("ColorBrushEntrySelectedBackground")
             : _isPressed && isHovered
-                ? GetBrush("ColorBrush6", "#D5E6FD")
-                : GetBrush("ColorBrushEntryHoverBackground", "#E2EEFE");
+                ? GetBrush("ColorBrush6")
+                : GetBrush("ColorBrushEntryHoverBackground");
         HoverBackground.BorderBrush = isSelected
-            ? GetBrush("ColorBrush6", "#D5E6FD")
-            : isHovered
-                ? GetBrush("ColorBrush6", "#D5E6FD")
-                : GetBrush("ColorBrush7", "#E0EAFD");
+            ? GetBrush("ColorBrush6")
+            : GetBrush("ColorBrushTransparent");
         LayoutRoot.RenderTransform = _isPressed && isHovered ? new ScaleTransform(0.996, 0.996) : new ScaleTransform(1, 1);
 
         ActionStack.Opacity = showActionStack ? 1.0 : 0.0;
@@ -154,14 +153,8 @@ internal sealed partial class ResourceEntryCardView : UserControl
         SelectionBarMotion.Apply(SelectionBar, ref _selectionBarSelectedState, isSelected, SelectedBarHeight);
     }
 
-    private static IBrush GetBrush(string resourceKey, string fallback)
+    private static IBrush GetBrush(string resourceKey)
     {
-        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
-            resource is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brush.Parse(fallback);
+        return FrontendThemeResourceResolver.GetBrush(resourceKey);
     }
 }

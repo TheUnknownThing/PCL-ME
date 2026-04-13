@@ -186,6 +186,9 @@ public static class LauncherFrontendPromptService
                 MinecraftLaunchPromptActionKind.PersistInstanceJavaCompatibilityIgnored => new LauncherFrontendPromptCommand(
                     LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored,
                     action.Value),
+                MinecraftLaunchPromptActionKind.IgnoreJavaCompatibilityOnce => new LauncherFrontendPromptCommand(
+                    LauncherFrontendPromptCommandKind.IgnoreJavaCompatibilityOnce,
+                    action.Value),
                 _ => throw new ArgumentOutOfRangeException(nameof(action), action.Kind, "Unknown launch prompt action.")
             }).ToArray());
     }
@@ -279,8 +282,9 @@ public enum LauncherFrontendPromptCommandKind
     PersistSetting = 8,
     DownloadJavaRuntime = 9,
     PersistInstanceJavaCompatibilityIgnored = 10,
-    ClosePrompt = 11,
-    ViewGameLog = 12,
-    OpenInstanceSettings = 13,
-    ExportCrashReport = 14
+    IgnoreJavaCompatibilityOnce = 11,
+    ClosePrompt = 12,
+    ViewGameLog = 13,
+    OpenInstanceSettings = 14,
+    ExportCrashReport = 15
 }

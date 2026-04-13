@@ -44,7 +44,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 建議先從這些目錄了解專案：
 
 - `PCL.Frontend.Avalonia/`：目前正在維護的桌面前端
-- `PCL.Core/` 與 `PCL.Core.Backend/`：共用啟動器與後端邏輯
+- `PCL.Core.Backend/`：目前仍在使用的共用啟動器與後端邏輯
 
 ## 授權條款
 

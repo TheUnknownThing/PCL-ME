@@ -17,11 +17,11 @@
 
         <StackPanel Grid.Column="1" Spacing="6">
           <TextBlock
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="20"
               Text="{Binding InstanceOverviewName}" />
           <TextBlock
-              Foreground="#677789"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="13"
               Text="{Binding InstanceOverviewSubtitle}"
               TextWrapping="Wrap" />
@@ -36,12 +36,12 @@
                 <Border
                     Margin="0,2,8,0"
                     Padding="8,4"
-                    Background="#F7FAFE"
-                    BorderBrush="#D5E6FD"
+                    Background="{DynamicResource ColorBrush8}"
+                    BorderBrush="{DynamicResource ColorBrush6}"
                     BorderThickness="1"
                     CornerRadius="4">
                   <TextBlock
-                      Foreground="#4B78C2"
+                      Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
                       FontSize="11.5"
                       Text="{Binding .}" />
                 </Border>

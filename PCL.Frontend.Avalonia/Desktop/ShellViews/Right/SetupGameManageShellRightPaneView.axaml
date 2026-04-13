@@ -11,7 +11,7 @@
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,Auto,Auto,Auto,Auto,27">
             <TextBlock
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="文件下载源" />
@@ -24,7 +24,7 @@
             <TextBlock
                 Grid.Row="2"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="版本列表源" />
@@ -38,7 +38,7 @@
             <TextBlock
                 Grid.Row="4"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="最大线程数" />
@@ -52,7 +52,7 @@
                   Grid.Column="1"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
-                  Foreground="#677789"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12"
                   Text="{Binding DownloadThreadLimitLabel}" />
             </Grid>
@@ -60,7 +60,7 @@
             <TextBlock
                 Grid.Row="5"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="速度限制" />
@@ -74,7 +74,7 @@
                   Grid.Column="1"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
-                  Foreground="#677789"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12"
                   Text="{Binding DownloadSpeedLimitLabel}" />
             </Grid>
@@ -82,7 +82,7 @@
             <TextBlock
                 Grid.Row="6"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="下载超时" />
@@ -96,7 +96,7 @@
                   Grid.Column="1"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
-                  Foreground="#677789"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12"
                   Text="{Binding DownloadTimeoutLabel}" />
             </Grid>
@@ -104,7 +104,7 @@
             <TextBlock
                 Grid.Row="7"
                 VerticalAlignment="Top"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,5,25,5"
                 Text="目标文件夹" />
@@ -112,7 +112,7 @@
                 Grid.Row="7"
                 Grid.Column="1"
                 Margin="0,5"
-                Foreground="#8A93A0"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="12"
                 Text="请在 启动 → 实例选择 → 文件夹列表 中更改下载目标文件夹。在某个文件夹或游戏实例上右键，即可选择打开对应文件夹。"
                 TextWrapping="Wrap" />
@@ -120,19 +120,19 @@
             <TextBlock
                 Grid.Row="8"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="安装行为" />
             <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,*">
               <CheckBox
                   Grid.Column="0"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="安装新实例后自动选定该实例"
                   IsChecked="{Binding AutoSelectNewInstance}" />
               <CheckBox
                   Grid.Column="1"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="升级部分版本的 Authlib"
                   IsChecked="{Binding UpgradePartialAuthlib}" />
             </Grid>
@@ -146,7 +146,7 @@
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,28">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="下载源" />
@@ -159,7 +159,7 @@
               <TextBlock
                   Grid.Row="2"
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="文件名格式" />
@@ -173,7 +173,7 @@
               <TextBlock
                   Grid.Row="4"
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="Mod 管理样式" />
@@ -186,7 +186,7 @@
             </Grid>
 
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="不显示 Quilt 加载器"
                 IsChecked="{Binding IgnoreQuiltLoader}" />
           </StackPanel>
@@ -198,25 +198,25 @@
           <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22,8,22">
             <TextBlock
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="游戏更新提示" />
             <CheckBox
                 Grid.Column="1"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="正式版更新提示"
                 IsChecked="{Binding NotifyReleaseUpdates}" />
             <CheckBox
                 Grid.Column="2"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="测试版更新提示"
                 IsChecked="{Binding NotifySnapshotUpdates}" />
 
             <TextBlock
                 Grid.Row="2"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="游戏语言" />
@@ -224,14 +224,14 @@
                 Grid.Row="2"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="自动设置为中文"
                 IsChecked="{Binding AutoSwitchGameLanguageToChinese}" />
 
             <CheckBox
                 Grid.Row="4"
                 Grid.ColumnSpan="3"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="识别跳转剪贴板中的社区资源链接"
                 IsChecked="{Binding DetectClipboardResourceLinks}" />
           </Grid>

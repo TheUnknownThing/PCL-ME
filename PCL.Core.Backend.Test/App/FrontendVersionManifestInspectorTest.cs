@@ -57,6 +57,48 @@ public sealed class FrontendVersionManifestInspectorTest
     }
 
     [TestMethod]
+    public void ReadProfile_UsesForgeLibraryCoordinateGameVersionForModernVersions()
+    {
+        using var workspace = new TempLauncherWorkspace();
+        workspace.WriteManifest(
+            "26.1.2-Forge_64.0.0",
+            new JsonObject
+            {
+                ["id"] = "custom-forge-pack",
+                ["libraries"] = new JsonArray(
+                    CreateLibrary("net.minecraftforge:forge:26.1.2-64.0.0"))
+            });
+
+        var profile = FrontendVersionManifestInspector.ReadProfile(workspace.LauncherFolder, "26.1.2-Forge_64.0.0");
+
+        Assert.IsTrue(profile.IsManifestValid);
+        Assert.AreEqual("26.1.2", profile.VanillaVersion);
+        Assert.AreEqual(new Version(26, 1, 2), profile.ParsedVanillaVersion);
+        Assert.AreEqual("64.0.0", profile.ForgeVersion);
+    }
+
+    [TestMethod]
+    public void ReadProfile_IgnoresForgeLibraryClassifierWhenResolvingVersions()
+    {
+        using var workspace = new TempLauncherWorkspace();
+        workspace.WriteManifest(
+            "26.1.2-Forge_64.0.0-universal",
+            new JsonObject
+            {
+                ["id"] = "custom-forge-pack",
+                ["libraries"] = new JsonArray(
+                    CreateLibrary("net.minecraftforge:forge:26.1.2-64.0.0:universal"))
+            });
+
+        var profile = FrontendVersionManifestInspector.ReadProfile(workspace.LauncherFolder, "26.1.2-Forge_64.0.0-universal");
+
+        Assert.IsTrue(profile.IsManifestValid);
+        Assert.AreEqual("26.1.2", profile.VanillaVersion);
+        Assert.AreEqual(new Version(26, 1, 2), profile.ParsedVanillaVersion);
+        Assert.AreEqual("64.0.0", profile.ForgeVersion);
+    }
+
+    [TestMethod]
     public void ReadProfile_UsesExplicitClientVersionBeforeFallbacks()
     {
         using var workspace = new TempLauncherWorkspace();

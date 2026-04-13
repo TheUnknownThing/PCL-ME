@@ -12,7 +12,7 @@
   <Project Path="PCL.Core.Backend.Test\PCL.Core.Backend.Test.csproj" Type="C#">
     <Build Solution="*|*" Project="false" />
   </Project>
-  <Project Path="PCL.Core.Foundation.Test\PCL.Core.Foundation.Test.csproj" Type="C#">
+  <Project Path="PCL.Core.Backend.Foundation.Test\PCL.Core.Backend.Foundation.Test.csproj" Type="C#">
     <Build Solution="*|*" Project="false" />
   </Project>
   <Project Path="PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" Type="C#" />

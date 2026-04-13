@@ -135,28 +135,54 @@
       </Grid>
     </Button>
 
-    <Button
-        x:Name="AccessoryButton"
-        Classes="nochrome"
+    <StackPanel
+        x:Name="AccessoryHost"
         Grid.Column="5"
-        Width="25"
-        Height="25"
         Margin="0,0,3,0"
         HorizontalAlignment="Right"
         VerticalAlignment="Center"
-        FocusAdorner="{x:Null}"
-        Background="Transparent"
-        BorderBrush="Transparent"
-        BorderThickness="0"
-        Command="{Binding AccessoryCommand, ElementName=Root}"
-        IsVisible="False"
-        ToolTip.Tip="{Binding AccessoryToolTip, ElementName=Root}">
-      <Path
-          x:Name="AccessoryPath"
-          Width="12"
-          Height="12"
-          Fill="{DynamicResource ColorBrush5}"
-          Stretch="Uniform" />
-    </Button>
+        Orientation="Horizontal"
+        Spacing="2"
+        IsVisible="False">
+      <Button
+          x:Name="SecondaryAccessoryButton"
+          Classes="nochrome"
+          Width="25"
+          Height="25"
+          FocusAdorner="{x:Null}"
+          Background="Transparent"
+          BorderBrush="Transparent"
+          BorderThickness="0"
+          Command="{Binding SecondaryAccessoryCommand, ElementName=Root}"
+          IsVisible="False"
+          ToolTip.Tip="{Binding SecondaryAccessoryToolTip, ElementName=Root}">
+        <Path
+            x:Name="SecondaryAccessoryPath"
+            Width="12"
+            Height="12"
+            Fill="{DynamicResource ColorBrush5}"
+            Stretch="Uniform" />
+      </Button>
+
+      <Button
+          x:Name="AccessoryButton"
+          Classes="nochrome"
+          Width="25"
+          Height="25"
+          FocusAdorner="{x:Null}"
+          Background="Transparent"
+          BorderBrush="Transparent"
+          BorderThickness="0"
+          Command="{Binding AccessoryCommand, ElementName=Root}"
+          IsVisible="False"
+          ToolTip.Tip="{Binding AccessoryToolTip, ElementName=Root}">
+        <Path
+            x:Name="AccessoryPath"
+            Width="12"
+            Height="12"
+            Fill="{DynamicResource ColorBrush5}"
+            Stretch="Uniform" />
+      </Button>
+    </StackPanel>
   </Grid>
 </UserControl>

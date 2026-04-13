@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Avalonia.Animation;
 using Avalonia;
@@ -10,9 +11,13 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.ViewModels;
 using System.Numerics;
@@ -22,8 +27,14 @@ namespace PCL.Frontend.Avalonia.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
-    private static readonly IBrush PromptOverlayDefaultBrush = Brush.Parse("#5A000000");
-    private static readonly IBrush PromptOverlayWarningBrush = Brush.Parse("#8C500000");
+    private readonly IBrush _defaultMainBackgroundBrush;
+    private readonly IBrush _defaultTitleBarBackgroundBrush;
+    private Color? _darkMainBackgroundBaseColor;
+    private IBrush? _darkMainBackgroundBrush;
+    private const int PromptOverlayMessageRowIndex = 3;
+    private const int PromptOverlayChoiceRowIndex = 5;
+    private static readonly GridLength PromptOverlayFlexibleRowHeight = new(1, GridUnitType.Star);
+    private static readonly GridLength PromptOverlayHiddenRowHeight = new(0);
     private FrontendShellViewModel? _shellViewModel;
     private CompositionVisual? _gridRootVisual;
     private CompositionVisual? _launchLeftContentHostVisual;
@@ -38,7 +49,10 @@ internal sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _defaultMainBackgroundBrush = MainBorder.Background ?? Brushes.Transparent;
+        _defaultTitleBarBackgroundBrush = NavBackgroundBorder.Background ?? Brushes.Transparent;
         ConfigureShellDividerTransitions();
+        UpdatePromptOverlayRowHeights();
         PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
         PromptOverlayBackdrop.IsVisible = false;
         PromptOverlayHost.IsVisible = false;
@@ -64,6 +78,8 @@ internal sealed partial class MainWindow : Window
         GridRoot.Opacity = 0;
         AvaloniaHintBus.OnShow += OnHintWrapperShow;
         MotionDurations.Changed += OnMotionDurationsChanged;
+        ActualThemeVariantChanged += OnActualThemeVariantChanged;
+        ResourcesChanged += OnWindowResourcesChanged;
 
         Opened += (_, _) =>
         {
@@ -76,6 +92,8 @@ internal sealed partial class MainWindow : Window
         KeyUp += OnWindowKeyUp;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
+        ApplyMainBackgroundBrush();
+        ApplyTitleBarBackgroundBrush();
         UpdateWindowChromeState();
     }
 
@@ -225,6 +243,8 @@ internal sealed partial class MainWindow : Window
     {
         AvaloniaHintBus.OnShow -= OnHintWrapperShow;
         MotionDurations.Changed -= OnMotionDurationsChanged;
+        ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+        ResourcesChanged -= OnWindowResourcesChanged;
         Closed -= OnWindowClosed;
         Deactivated -= OnWindowDeactivated;
         KeyDown -= OnWindowKeyDown;
@@ -283,6 +303,18 @@ internal sealed partial class MainWindow : Window
         _shellViewModel?.UpdateKeyboardModifiers(KeyModifiers.None);
     }
 
+    private void OnActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        ApplyMainBackgroundBrush();
+        ApplyTitleBarBackgroundBrush();
+    }
+
+    private void OnWindowResourcesChanged(object? sender, ResourcesChangedEventArgs e)
+    {
+        ApplyMainBackgroundBrush();
+        ApplyTitleBarBackgroundBrush();
+    }
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         if (_shellViewModel is not null)
@@ -300,6 +332,7 @@ internal sealed partial class MainWindow : Window
             _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
         }
 
+        UpdatePromptOverlayRowHeights();
         QueuePromptOverlaySync();
     }
 
@@ -314,6 +347,7 @@ internal sealed partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayVisible))
         {
+            UpdatePromptOverlayRowHeights();
             QueuePromptOverlaySync();
             return;
         }
@@ -325,8 +359,10 @@ internal sealed partial class MainWindow : Window
         }
 
         if (e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayTextInput)
-            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList))
+            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList)
+            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayMessage))
         {
+            UpdatePromptOverlayRowHeights();
             QueuePromptOverlayFocus();
         }
     }
@@ -343,6 +379,8 @@ internal sealed partial class MainWindow : Window
 
     private async Task SyncPromptOverlayAsync()
     {
+        UpdatePromptOverlayRowHeights();
+
         var shouldShow = _shellViewModel?.IsPromptOverlayVisible == true;
         if (shouldShow == _isPromptOverlayRenderedOpen)
         {
@@ -409,8 +447,56 @@ internal sealed partial class MainWindow : Window
     {
         var isWarning = _shellViewModel?.IsPromptOverlayWarning == true;
         PromptOverlayBackdrop.Background = isWarning
-            ? PromptOverlayWarningBrush
-            : PromptOverlayDefaultBrush;
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushPromptOverlayWarningBackdrop")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushPromptOverlayBackdrop");
+    }
+
+    private void ApplyMainBackgroundBrush()
+    {
+        if (ActualThemeVariant == ThemeVariant.Dark)
+        {
+            var darkBaseColor = FrontendThemeResourceResolver.GetColor("ColorObjectBg0");
+            if (_darkMainBackgroundBrush is null || _darkMainBackgroundBaseColor != darkBaseColor)
+            {
+                _darkMainBackgroundBaseColor = darkBaseColor;
+                _darkMainBackgroundBrush = CreateDarkShellBackgroundBrush(darkBaseColor);
+            }
+
+            MainBorder.Background = _darkMainBackgroundBrush;
+            return;
+        }
+
+        MainBorder.Background = _defaultMainBackgroundBrush;
+    }
+
+    private void ApplyTitleBarBackgroundBrush()
+    {
+        if (ActualThemeVariant == ThemeVariant.Dark)
+        {
+            NavBackgroundBorder.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarBackground");
+            return;
+        }
+
+        NavBackgroundBorder.Background = _defaultTitleBarBackgroundBrush;
+    }
+
+    private void UpdatePromptOverlayRowHeights()
+    {
+        if (PromptOverlayContentGrid.RowDefinitions.Count <= PromptOverlayChoiceRowIndex)
+        {
+            return;
+        }
+
+        var showMessage = _shellViewModel?.ShowPromptOverlayMessage == true;
+        var showTextInput = _shellViewModel?.ShowPromptOverlayTextInput == true;
+        var showChoiceList = _shellViewModel?.ShowPromptOverlayChoiceList == true;
+
+        PromptOverlayContentGrid.RowDefinitions[PromptOverlayMessageRowIndex].Height = showMessage
+            ? showChoiceList || showTextInput ? GridLength.Auto : PromptOverlayFlexibleRowHeight
+            : PromptOverlayHiddenRowHeight;
+        PromptOverlayContentGrid.RowDefinitions[PromptOverlayChoiceRowIndex].Height = showChoiceList
+            ? PromptOverlayFlexibleRowHeight
+            : PromptOverlayHiddenRowHeight;
     }
 
     private void PromptOverlayChoiceListBox_OnDoubleTapped(object? sender, TappedEventArgs e)
@@ -425,6 +511,63 @@ internal sealed partial class MainWindow : Window
         MainBorder.Margin = isMaximized ? new Thickness(0) : new Thickness(18);
         MainBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(15, 15, 8, 8);
         MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
+    }
+
+    private static IBrush CreateDarkShellBackgroundBrush(Color baseColor)
+    {
+        const int textureSize = 512;
+        var pixels = new byte[textureSize * textureSize * 4];
+        var baseBlue = baseColor.B / 255d;
+        var baseGreen = baseColor.G / 255d;
+        var baseRed = baseColor.R / 255d;
+
+        for (var y = 0; y < textureSize; y++)
+        {
+            var normalizedY = textureSize == 1 ? 0d : y / (double)(textureSize - 1);
+            var linearRgb = 1d - normalizedY;
+            var linearFactor = (0.85d + (0.15d * linearRgb)) * 0.25;
+
+            for (var x = 0; x < textureSize; x++)
+            {
+                var normalizedX = textureSize == 1 ? 0.5d : x / (double)(textureSize - 1);
+                var ellipseDistance = Math.Sqrt(
+                    Math.Pow((normalizedX - 0.5d) / 0.5d, 2) +
+                    Math.Pow(normalizedY, 2));
+                var radialRgb = Math.Clamp(1d - (ellipseDistance / 1.2d), 0d, 1d);
+                var radialFactor = 0.6d + (0.4d * radialRgb);
+                var blendFactor = radialFactor * linearFactor;
+                var blue = (byte)Math.Clamp(Math.Round(255d * baseBlue * blendFactor), byte.MinValue, byte.MaxValue);
+                var green = (byte)Math.Clamp(Math.Round(255d * baseGreen * blendFactor), byte.MinValue, byte.MaxValue);
+                var red = (byte)Math.Clamp(Math.Round(255d * baseRed * blendFactor), byte.MinValue, byte.MaxValue);
+
+                var pixelIndex = ((y * textureSize) + x) * 4;
+                pixels[pixelIndex] = blue;
+                pixels[pixelIndex + 1] = green;
+                pixels[pixelIndex + 2] = red;
+                pixels[pixelIndex + 3] = byte.MaxValue;
+            }
+        }
+
+        var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+        try
+        {
+            var bitmap = new Bitmap(
+                PixelFormat.Bgra8888,
+                AlphaFormat.Opaque,
+                handle.AddrOfPinnedObject(),
+                new PixelSize(textureSize, textureSize),
+                new global::Avalonia.Vector(96, 96),
+                textureSize * 4);
+
+            return new ImageBrush(bitmap)
+            {
+                Stretch = Stretch.Fill
+            };
+        }
+        finally
+        {
+            handle.Free();
+        }
     }
 
     private void OnHintWrapperShow(string message, AvaloniaHintTheme theme)
@@ -559,7 +702,7 @@ internal sealed partial class MainWindow : Window
             Padding = new Thickness(14, 6, 14, 6),
             Opacity = 0,
             RenderTransform = new TranslateTransform(48, 0),
-            BoxShadow = BoxShadows.Parse("0 6 18 0 #28000000")
+            BoxShadow = FrontendThemeResourceResolver.GetBoxShadows("ColorShadowHintPopup")
         };
         border.Transitions = CreateHintTransitions();
         border.Child = new TextBlock
@@ -597,12 +740,14 @@ internal sealed partial class MainWindow : Window
 
     private static void ApplyHintTheme(Border border, AvaloniaHintTheme theme)
     {
-        var (start, end) = theme switch
+        var (startKey, endKey) = theme switch
         {
-            AvaloniaHintTheme.Success => (Color.Parse("#D721B121"), Color.Parse("#D71DA01D")),
-            AvaloniaHintTheme.Error => (Color.Parse("#D7FF350B"), Color.Parse("#D7FF2B00")),
-            _ => (Color.Parse("#D7259BFC"), Color.Parse("#D70A8EFC"))
+            AvaloniaHintTheme.Success => ("ColorObjectHintSuccessStart", "ColorObjectHintSuccessEnd"),
+            AvaloniaHintTheme.Error => ("ColorObjectHintErrorStart", "ColorObjectHintErrorEnd"),
+            _ => ("ColorObjectHintInfoStart", "ColorObjectHintInfoEnd")
         };
+        var start = FrontendThemeResourceResolver.GetColor(startKey);
+        var end = FrontendThemeResourceResolver.GetColor(endKey);
         border.Background = new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
@@ -633,12 +778,23 @@ internal sealed partial class MainWindow : Window
         }
 
         var leftOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? -50f : 50f;
-
         if (transition.AnimateLeftPane)
         {
             StartRouteAnimation(leftVisual, leftOffset);
         }
 
+        PlayRightPaneRouteTransition(transition);
+    }
+
+    private void PlayRightPaneRouteTransition(ShellNavigationTransitionEventArgs transition)
+    {
+        if (!transition.AnimateRightPane)
+        {
+            return;
+        }
+
+        // Standard right panes animate through PclAnimatedRightPaneHost, which preserves the
+        // top-to-bottom card reveal. Only the launch pane needs a separate route animation here.
         if (transition.IsLaunchRoute)
         {
             // The launch right pane is a text-heavy card. Animate the control itself to avoid

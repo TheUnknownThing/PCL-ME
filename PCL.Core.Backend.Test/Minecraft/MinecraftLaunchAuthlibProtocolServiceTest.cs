@@ -42,6 +42,19 @@ public sealed class MinecraftLaunchAuthlibProtocolServiceTest
     }
 
     [TestMethod]
+    public void BuildRefreshRequestJsonIncludesClientTokenAndOmitsSelectedProfileWhenNotProvided()
+    {
+        var json = MinecraftLaunchAuthlibProtocolService.BuildRefreshRequestJson(
+            "access-token",
+            "client-token");
+
+        StringAssert.Contains(json, "\"accessToken\":\"access-token\"");
+        StringAssert.Contains(json, "\"clientToken\":\"client-token\"");
+        StringAssert.Contains(json, "\"requestUser\":true");
+        Assert.IsFalse(json.Contains("selectedProfile", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
     public void ParseAuthenticateResponseJsonExtractsAvailableProfilesAndSelectedProfile()
     {
         const string json = """

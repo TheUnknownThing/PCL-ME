@@ -30,7 +30,6 @@ internal sealed partial class PclLoading : UserControl
     public static readonly StyledProperty<IBrush?> IndicatorBrushProperty =
         AvaloniaProperty.Register<PclLoading, IBrush?>(nameof(IndicatorBrush));
 
-    private static readonly IBrush ErrorBrush = Brush.Parse("#D33232");
     private static TimeSpan AnimationTickInterval => MotionDurations.FrameInterval;
     private static TimeSpan StrikeLeadIn => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(250));
     private static TimeSpan StrikeDownDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(500));
@@ -204,7 +203,7 @@ internal sealed partial class PclLoading : UserControl
 
     private void RefreshVisualState()
     {
-        var brush = IsError ? ErrorBrush : IndicatorBrush ?? GetBrush("ColorBrush3", "#1370F3");
+        var brush = IsError ? GetBrush("ColorBrushRedLight") : IndicatorBrush ?? GetBrush("ColorBrush3");
         var isSuccess = IsSuccess && !IsError;
         PickaxePath.Stroke = brush;
         LeftDebris.Fill = brush;
@@ -213,7 +212,7 @@ internal sealed partial class PclLoading : UserControl
         LabelText.Foreground = brush;
         PickaxeHost.Opacity = isSuccess ? 0d : 1d;
         FloorLine.Opacity = isSuccess ? 0d : 1d;
-        ErrorGlyph.Fill = ErrorBrush;
+        ErrorGlyph.Fill = GetBrush("ColorBrushRedLight");
         ErrorGlyph.Opacity = IsError ? 1d : 0d;
         ErrorGlyphScaleTransform.ScaleX = IsError ? VisibleErrorScale : HiddenErrorScale;
         ErrorGlyphScaleTransform.ScaleY = IsError ? VisibleErrorScale : HiddenErrorScale;
@@ -375,14 +374,8 @@ internal sealed partial class PclLoading : UserControl
             * Math.Cos((period - 3.5d) * Math.PI * Math.Pow(1d - remaining, 1.5d));
     }
 
-    private static IBrush GetBrush(string resourceKey, string fallback)
+    private static IBrush GetBrush(string resourceKey)
     {
-        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
-            resource is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brush.Parse(fallback);
+        return FrontendThemeResourceResolver.GetBrush(resourceKey);
     }
 }

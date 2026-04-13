@@ -19,13 +19,13 @@
         </Border>
         <Grid Grid.Column="1" RowDefinitions="Auto,2,Auto">
           <TextBlock
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13.5"
               Text="{Binding InstanceInstallSelectionTitle}"
               TextTrimming="CharacterEllipsis" />
           <TextBlock
               Grid.Row="2"
-              Foreground="#7D8897"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="11.5"
               Text="{Binding InstanceInstallSelectionSummary}"
               TextTrimming="CharacterEllipsis" />

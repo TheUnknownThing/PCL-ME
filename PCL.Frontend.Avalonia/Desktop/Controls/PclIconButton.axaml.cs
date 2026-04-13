@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -16,20 +17,24 @@ internal sealed partial class PclIconButton : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclIconButton, ICommand?>(nameof(Command));
 
-    public static readonly StyledProperty<IBrush> IconBrushProperty =
-        AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(IconBrush), Brush.Parse("#404040"));
+    public static readonly StyledProperty<IBrush?> IconBrushProperty =
+        AvaloniaProperty.Register<PclIconButton, IBrush?>(
+            nameof(IconBrush));
 
-    public static readonly StyledProperty<IBrush> HoverBackgroundBrushProperty =
-        AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(HoverBackgroundBrush), Brush.Parse("#32EAF2FE"));
+    public static readonly StyledProperty<IBrush?> HoverBackgroundBrushProperty =
+        AvaloniaProperty.Register<PclIconButton, IBrush?>(
+            nameof(HoverBackgroundBrush));
 
-    public static readonly StyledProperty<IBrush> IdleBackgroundBrushProperty =
-        AvaloniaProperty.Register<PclIconButton, IBrush>(nameof(IdleBackgroundBrush), Brush.Parse("#00FFFFFF"));
+    public static readonly StyledProperty<IBrush?> IdleBackgroundBrushProperty =
+        AvaloniaProperty.Register<PclIconButton, IBrush?>(
+            nameof(IdleBackgroundBrush));
 
     public static readonly StyledProperty<double> IconScaleProperty =
         AvaloniaProperty.Register<PclIconButton, double>(nameof(IconScale), 1.0);
 
     private bool _isHovered;
     private bool _isPressed;
+    private bool _isAppearanceSubscribed;
     private DispatcherTimer? _releaseBounceTimer;
 
     public event EventHandler<RoutedEventArgs>? Click;
@@ -37,6 +42,19 @@ internal sealed partial class PclIconButton : UserControl
     public PclIconButton()
     {
         InitializeComponent();
+
+        AttachedToVisualTree += (_, _) =>
+        {
+            SubscribeAppearance();
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
+        DataContextChanged += (_, _) =>
+        {
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
 
         ButtonHost.PointerEntered += (_, _) =>
         {
@@ -80,19 +98,19 @@ internal sealed partial class PclIconButton : UserControl
         set => SetValue(CommandProperty, value);
     }
 
-    public IBrush IconBrush
+    public IBrush? IconBrush
     {
         get => GetValue(IconBrushProperty);
         set => SetValue(IconBrushProperty, value);
     }
 
-    public IBrush HoverBackgroundBrush
+    public IBrush? HoverBackgroundBrush
     {
         get => GetValue(HoverBackgroundBrushProperty);
         set => SetValue(HoverBackgroundBrushProperty, value);
     }
 
-    public IBrush IdleBackgroundBrush
+    public IBrush? IdleBackgroundBrush
     {
         get => GetValue(IdleBackgroundBrushProperty);
         set => SetValue(IdleBackgroundBrushProperty, value);
@@ -131,9 +149,16 @@ internal sealed partial class PclIconButton : UserControl
 
     private void RefreshVisualState()
     {
-        ShapeIcon.Fill = IconBrush;
+        var iconBrush = IconBrush
+            ?? FrontendThemeResourceResolver.GetBrush("ColorBrushGray1");
+        var hoverBackgroundBrush = HoverBackgroundBrush
+            ?? FrontendThemeResourceResolver.GetBrush("ColorBrush8");
+        var idleBackgroundBrush = IdleBackgroundBrush
+            ?? FrontendThemeResourceResolver.GetBrush("ColorBrushTransparent");
+
+        ShapeIcon.Fill = iconBrush;
         ShapeIcon.RenderTransform = new ScaleTransform(IconScale, IconScale);
-        PanBack.Background = IsEnabled && _isHovered ? HoverBackgroundBrush : IdleBackgroundBrush;
+        PanBack.Background = IsEnabled && _isHovered ? hoverBackgroundBrush : idleBackgroundBrush;
         PanBack.Opacity = IsEnabled ? 1.0 : 0.2;
         PanBack.RenderTransform = _isPressed ? new ScaleTransform(0.8, 0.8) : new ScaleTransform(1, 1);
     }
@@ -155,5 +180,37 @@ internal sealed partial class PclIconButton : UserControl
             RefreshVisualState();
         };
         _releaseBounceTimer.Start();
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
     }
 }

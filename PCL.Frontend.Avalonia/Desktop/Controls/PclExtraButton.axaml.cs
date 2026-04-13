@@ -4,6 +4,8 @@ using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -15,14 +17,26 @@ internal sealed partial class PclExtraButton : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclExtraButton, ICommand?>(nameof(Command));
 
-    private static readonly IBrush HoverBackground = Brush.Parse("#4890F5");
-    private static readonly IBrush IdleBackground = Brush.Parse("#1370F3");
     private bool _isHovered;
     private bool _isPressed;
+    private bool _isAppearanceSubscribed;
 
     public PclExtraButton()
     {
         InitializeComponent();
+
+        AttachedToVisualTree += (_, _) =>
+        {
+            SubscribeAppearance();
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
+        DataContextChanged += (_, _) =>
+        {
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
 
         ButtonHost.PointerEntered += (_, _) =>
         {
@@ -81,12 +95,46 @@ internal sealed partial class PclExtraButton : UserControl
 
     private void RefreshVisualState()
     {
-        PanColor.Background = _isHovered ? HoverBackground : IdleBackground;
+        PanColor.Background = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush4")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrush3");
         PanColor.Opacity = _isPressed ? 0.88 : 1.0;
         PanColor.RenderTransform = _isPressed
             ? new ScaleTransform(0.85, 0.85)
             : _isHovered
                 ? new ScaleTransform(1.02, 1.02)
                 : new ScaleTransform(1, 1);
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
     }
 }

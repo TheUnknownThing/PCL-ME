@@ -15,6 +15,13 @@
     SystemDecorations="None"
     TransparencyLevelHint="Transparent"
     WindowStartupLocation="CenterScreen">
+  <Window.Resources>
+    <LinearGradientBrush x:Key="ShellMainBackgroundBrush" StartPoint="90%,0%" EndPoint="10%,100%">
+      <GradientStop Color="{DynamicResource ColorObjectBg0}" Offset="-0.1" />
+      <GradientStop Color="{DynamicResource ColorObject7}" Offset="0.4" />
+      <GradientStop Color="{DynamicResource ColorObject6}" Offset="1.1" />
+    </LinearGradientBrush>
+  </Window.Resources>
   <Window.Styles>
     <Style Selector="Button.chrome">
       <Setter Property="Background" Value="Transparent" />
@@ -42,7 +49,7 @@
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0,0,0,4" />
@@ -53,7 +60,7 @@
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:pointerover">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
-      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
 
@@ -71,13 +78,13 @@
 
     <Style Selector="Border.prompt-overlay-choice-item">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:pointerover Border.prompt-overlay-choice-item">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
-      <Setter Property="BorderBrush" Value="#00000000" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
     </Style>
 
     <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected Border.prompt-overlay-choice-item">
@@ -98,85 +105,78 @@
       <Border x:Name="TopLeft" Grid.Row="0" Grid.Column="0">
         <Border.Background>
           <RadialGradientBrush Center="100%,100%" GradientOrigin="100%,100%" RadiusX="100%" RadiusY="100%">
-            <GradientStop Color="#21000000" Offset="0.43" />
-            <GradientStop Color="#11000000" Offset="0.6" />
-            <GradientStop Color="#00000000" Offset="1" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
           </RadialGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="TopRight" Grid.Row="0" Grid.Column="2">
         <Border.Background>
           <RadialGradientBrush Center="0%,100%" GradientOrigin="0%,100%" RadiusX="100%" RadiusY="100%">
-            <GradientStop Color="#21000000" Offset="0.43" />
-            <GradientStop Color="#11000000" Offset="0.6" />
-            <GradientStop Color="#00000000" Offset="1" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
           </RadialGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="BottomLeft" Grid.Row="2" Grid.Column="0">
         <Border.Background>
           <RadialGradientBrush Center="100%,0%" GradientOrigin="100%,0%" RadiusX="100%" RadiusY="100%">
-            <GradientStop Color="#21000000" Offset="0.43" />
-            <GradientStop Color="#11000000" Offset="0.6" />
-            <GradientStop Color="#00000000" Offset="1" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
           </RadialGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="BottomRight" Grid.Row="2" Grid.Column="2">
         <Border.Background>
           <RadialGradientBrush Center="0%,0%" GradientOrigin="0%,0%" RadiusX="100%" RadiusY="100%">
-            <GradientStop Color="#21000000" Offset="0.43" />
-            <GradientStop Color="#11000000" Offset="0.6" />
-            <GradientStop Color="#00000000" Offset="1" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
           </RadialGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="Top" Grid.Row="0" Grid.Column="1" Height="8" VerticalAlignment="Top">
         <Border.Background>
           <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-            <GradientStop Color="#00000000" Offset="0" />
-            <GradientStop Color="#11000000" Offset="0.7" />
-            <GradientStop Color="#21000000" Offset="1.0" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
           </LinearGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="Right" Grid.Row="1" Grid.Column="2" Width="8" HorizontalAlignment="Right">
         <Border.Background>
           <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,0%">
-            <GradientStop Color="#00000000" Offset="0" />
-            <GradientStop Color="#11000000" Offset="0.7" />
-            <GradientStop Color="#21000000" Offset="1.0" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
           </LinearGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="Bottom" Grid.Row="2" Grid.Column="1" Height="8" VerticalAlignment="Bottom">
         <Border.Background>
           <LinearGradientBrush StartPoint="0%,100%" EndPoint="0%,0%">
-            <GradientStop Color="#00000000" Offset="0" />
-            <GradientStop Color="#11000000" Offset="0.7" />
-            <GradientStop Color="#21000000" Offset="1.0" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
           </LinearGradientBrush>
         </Border.Background>
       </Border>
       <Border x:Name="Left" Grid.Row="1" Grid.Column="0" Width="8" HorizontalAlignment="Left">
         <Border.Background>
           <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-            <GradientStop Color="#00000000" Offset="0" />
-            <GradientStop Color="#11000000" Offset="0.7" />
-            <GradientStop Color="#21000000" Offset="1.0" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
           </LinearGradientBrush>
         </Border.Background>
       </Border>
     </Grid>
 
-    <Border x:Name="MainBorder" Margin="18" CornerRadius="15,15,8,8">
-      <Border.Background>
-        <LinearGradientBrush StartPoint="90%,0%" EndPoint="10%,100%">
-          <GradientStop Color="{DynamicResource ColorObjectBg0}" Offset="-0.1" />
-          <GradientStop Color="{DynamicResource ColorObject7}" Offset="0.4" />
-          <GradientStop Color="{DynamicResource ColorObject6}" Offset="1.1" />
-        </LinearGradientBrush>
-      </Border.Background>
+    <Border x:Name="MainBorder" Margin="18" CornerRadius="15,15,8,8" Background="{DynamicResource ShellMainBackgroundBrush}">
       <Border.Transitions>
         <Transitions>
           <BrushTransition Property="Background" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
@@ -199,7 +199,7 @@
                 VerticalAlignment="Center"
                 IsHitTestVisible="False"
                 Stretch="Fill"
-                Stroke="White"
+                Stroke="{DynamicResource ColorBrushTitleBarForeground}"
                 StrokeThickness="1.9"
                 UseLayoutRounding="False" />
 
@@ -207,14 +207,14 @@
                 Width="32"
                 Height="20"
                 Margin="0,0,0,0"
-                Background="White"
+                Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
                 CornerRadius="5"
                 IsHitTestVisible="False"
                 VerticalAlignment="Center">
               <TextBlock
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush2}"
+                  Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
                   Text="ME" />
             </Border>
           </StackPanel>
@@ -231,23 +231,23 @@
                 x:Name="MinimizeButton"
                 Width="28"
                 Height="28"
-                IconBrush="#F4FAFF"
-                HoverBackgroundBrush="#32FFFFFF"
+                IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
                 Click="MinimizeButton_OnClick" />
             <controls:PclIconButton
                 x:Name="MaximizeButton"
                 Width="28"
                 Height="28"
                 IsVisible="{Binding ShowMaximizeButton}"
-                IconBrush="#F4FAFF"
-                HoverBackgroundBrush="#32FFFFFF"
+                IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
                 Click="MaximizeButton_OnClick" />
             <controls:PclIconButton
                 x:Name="CloseButton"
                 Width="28"
                 Height="28"
-                IconBrush="#F4FAFF"
-                HoverBackgroundBrush="#32FFFFFF"
+                IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
                 Click="CloseButton_OnClick" />
           </StackPanel>
 
@@ -271,6 +271,7 @@
                 <ItemsControl
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    IsHitTestVisible="{Binding IsTopLevelNavigationInteractive}"
                     motion:Motion.AnimateOnVisible="True"
                     motion:Motion.OffsetY="8"
                     IsVisible="{Binding ShowTopLevelNavigation}"
@@ -307,8 +308,8 @@
                       Height="27"
                       VerticalAlignment="Center"
                       Command="{Binding BackCommand}"
-                      IconBrush="#F4FAFF"
-                      HoverBackgroundBrush="#32FFFFFF"
+                      IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                      HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
                       ToolTip.Tip="返回" />
                   <controls:PclIconButton
                       Grid.Column="1"
@@ -317,8 +318,8 @@
                       Margin="8,0,0,0"
                       VerticalAlignment="Center"
                       Command="{Binding HomeCommand}"
-                      IconBrush="#F4FAFF"
-                      HoverBackgroundBrush="#32FFFFFF"
+                      IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                      HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
                       IconData="M12 3.172 3 10v10h5v-6h8v6h5V10l-9-6.828zm0-2.5 11 8.344V22h-9v-6h-4v6H1V9.016L12 .672z"
                       IsVisible="{Binding ShowHomeNavigation}"
                       ToolTip.Tip="返回主页" />
@@ -326,7 +327,7 @@
                       Grid.Column="2"
                       Margin="12,0,0,0"
                       VerticalAlignment="Center"
-                      Foreground="White"
+                      Foreground="{DynamicResource ColorBrushTitleBarForeground}"
                       FontSize="15"
                       Text="{Binding TitleBarLabel}" />
                 </Grid>
@@ -346,7 +347,7 @@
                   Width="1"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Stretch"
-                  Background="#14FFFFFF" />
+                  Background="{DynamicResource ColorBrushShellDividerHighlight}" />
             </Border>
 
             <Grid
@@ -368,7 +369,7 @@
                 </Grid>
               </Border>
 
-              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
+              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushShellPaneOverlay}">
                 <Grid x:Name="LaunchRightContentHost">
                   <controls:PclLaunchRightPanel x:Name="LaunchRightPanel" />
                 </Grid>
@@ -398,7 +399,7 @@
                 </Grid>
               </Border>
 
-              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="#08FFFFFF">
+              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushShellPaneOverlay}">
                 <Grid x:Name="StandardRightContentHost">
                   <controls:PclAnimatedRightPaneHost PaneContent="{Binding CurrentStandardRightPane}" />
                 </Grid>
@@ -443,7 +444,7 @@
                 x:Name="PromptOverlayBackdrop"
                 IsVisible="False"
                 Classes="pcl-dialog-overlay"
-                Background="#5A000000" />
+                Background="{DynamicResource ColorBrushPromptOverlayBackdrop}" />
 
             <Border
                 x:Name="PromptOverlayHost"
@@ -454,17 +455,26 @@
                 Margin="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Background="#00000000"
-                BorderBrush="#00000000"
+                Background="{DynamicResource ColorBrushTransparent}"
+                BorderBrush="{DynamicResource ColorBrushTransparent}"
                 BorderThickness="0"
                 CornerRadius="7">
               <Border
                   x:Name="PromptOverlayPanel"
                   Classes="pcl-dialog-panel"
                   Background="{DynamicResource ColorBrushMsgBox}"
-                  BoxShadow="0 2 20 0 #CC3C3C3C"
+                  BoxShadow="{DynamicResource ColorShadowPromptPanel}"
                   CornerRadius="7">
-                <Grid Margin="22,22,22,23" RowDefinitions="Auto,2,13,Auto,Auto,*,Auto">
+                <Grid x:Name="PromptOverlayContentGrid" Margin="22,22,22,23">
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2" />
+                    <RowDefinition Height="13" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="0" />
+                    <RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
                   <TextBlock
                       Margin="7,-1,70,9"
                       Foreground="{Binding PromptOverlayTitleBrush}"
@@ -476,24 +486,26 @@
                       Height="2"
                       Fill="{Binding PromptOverlayAccentBrush}" />
 
-                  <ScrollViewer
+                  <Border
                       Grid.Row="3"
                       IsVisible="{Binding ShowPromptOverlayMessage}"
                       Margin="0,0,0,17"
-                      MaxHeight="380"
-                      Padding="7,0,15,0"
-                      HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
-                    <TextBlock
-                        Margin="1"
-                        Padding="0,1,0,2"
-                        MaxWidth="540"
-                        Foreground="{DynamicResource ColorBrushMsgBoxText}"
-                        FontSize="15"
-                        LineHeight="20"
-                        Text="{Binding PromptOverlayMessage}"
-                        TextWrapping="WrapWithOverflow" />
-                  </ScrollViewer>
+                      Padding="7,0,15,0">
+                    <ScrollViewer
+                        x:Name="PromptOverlayMessageScrollViewer"
+                        MaxHeight="380"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                      <TextBlock
+                          Padding="1,1,1,2"
+                          Width="{Binding Viewport.Width, ElementName=PromptOverlayMessageScrollViewer}"
+                          Foreground="{DynamicResource ColorBrushMsgBoxText}"
+                          FontSize="15"
+                          LineHeight="20"
+                          Text="{Binding PromptOverlayMessage}"
+                          TextWrapping="WrapWithOverflow" />
+                    </ScrollViewer>
+                  </Border>
 
                   <TextBox
                       x:Name="PromptOverlayInputTextBox"
@@ -539,7 +551,7 @@
                                   TextWrapping="WrapWithOverflow" />
                               <TextBlock
                                   MaxWidth="520"
-                                  Foreground="#697A8C"
+                                  Foreground="{DynamicResource ColorBrushPromptOverlayChoiceSummary}"
                                   FontSize="12.5"
                                   Text="{Binding Summary}"
                                   TextWrapping="WrapWithOverflow" />

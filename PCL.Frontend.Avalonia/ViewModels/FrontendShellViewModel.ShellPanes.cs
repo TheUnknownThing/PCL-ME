@@ -129,9 +129,26 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPageKey.TaskManager => CreateRightPaneDescriptor(StandardShellRightPaneKind.TaskManager, StandardShellRightPaneGroup.Generic, "task-manager-shell", usesCompatibilityView: false),
             LauncherFrontendPageKey.GameLog => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "game-log-shell", usesCompatibilityView: false),
             LauncherFrontendPageKey.CompDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "comp-detail-shell", usesCompatibilityView: false),
-            LauncherFrontendPageKey.HelpDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "help-detail-shell", usesCompatibilityView: false),
+            LauncherFrontendPageKey.HelpDetail => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, $"help-detail-shell-{GetHelpDetailTransitionKey()}", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardShellRightPaneKind.Generic, StandardShellRightPaneGroup.Generic, "generic-shell", usesCompatibilityView: false)
         };
+    }
+
+    private string GetHelpDetailTransitionKey()
+    {
+        if (_currentHelpDetailEntry is null)
+        {
+            return "empty";
+        }
+
+        var normalized = NormalizeHelpReference(_currentHelpDetailEntry.RawPath);
+        return string.IsNullOrWhiteSpace(normalized)
+            ? "empty"
+            : normalized
+                .Replace('/', '-')
+                .Replace('\\', '-')
+                .Replace(':', '-')
+                .Replace('.', '-');
     }
 
     private StandardShellRightPaneDescriptor ResolveSetupRightPaneDescriptor()

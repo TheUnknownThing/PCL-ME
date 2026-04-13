@@ -2,8 +2,71 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.InstanceScreenshotShellRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     DataContext="{Binding Shell}">
+  <UserControl.Styles>
+    <Style Selector="Button.screenshot-tile">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Border.screenshot-tile-zoomhost">
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Setter Property="RenderTransform" Value="scale(1,1)" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <TransformOperationsTransition
+              Property="RenderTransform"
+              Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Border.screenshot-tile-dim">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition
+              Property="Opacity"
+              Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Border.screenshot-tile-caption">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="RenderTransformOrigin" Value="0.5,1" />
+      <Setter Property="RenderTransform" Value="translate(0px,10px)" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition
+              Property="Opacity"
+              Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+          <TransformOperationsTransition
+              Property="RenderTransform"
+              Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.screenshot-tile:pointerover Border.screenshot-tile-zoomhost">
+      <Setter Property="RenderTransform" Value="scale(1.04,1.04)" />
+    </Style>
+
+    <Style Selector="Button.screenshot-tile:pointerover Border.screenshot-tile-dim">
+      <Setter Property="Opacity" Value="0.72" />
+    </Style>
+
+    <Style Selector="Button.screenshot-tile:pointerover Border.screenshot-tile-caption">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="RenderTransform" Value="translate(0px,0px)" />
+    </Style>
+  </UserControl.Styles>
+
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceScreenshotContent}">
       <StackPanel Margin="25,10,25,10" Spacing="15">
@@ -18,40 +81,63 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <ItemsControl ItemsSource="{Binding InstanceScreenshotEntries}">
+        <ItemsControl
+            x:Name="ScreenshotItemsControl"
+            ItemsSource="{Binding InstanceScreenshotEntries}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <WrapPanel />
+              <WrapPanel x:Name="ScreenshotWrapPanel" ItemWidth="250" ItemHeight="170" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <controls:PclCard Width="180" Height="230" Margin="0,0,15,15" ContentMargin="0,0,0,0">
-                <controls:PclCard.CardContent>
-                  <Grid RowDefinitions="160,*">
-                    <Border Grid.Row="0" Background="#EAF2FE" ClipToBounds="True">
-                      <Image Source="{Binding Image}" Stretch="UniformToFill" />
+              <Button
+                  Classes="nochrome screenshot-tile"
+                  Margin="0"
+                  FocusAdorner="{x:Null}"
+                  HorizontalContentAlignment="Stretch"
+                  VerticalContentAlignment="Stretch"
+                  Command="{Binding OpenCommand}">
+                <Border
+                    Background="{DynamicResource ColorBrush8}"
+                    BorderBrush="{DynamicResource ColorBrush6}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    ClipToBounds="True">
+                  <Grid>
+                    <Border
+                        Classes="screenshot-tile-zoomhost"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        RenderTransformOrigin="50%,50%">
+                      <Image
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Source="{Binding Image}"
+                          Stretch="UniformToFill" />
                     </Border>
-                    <StackPanel Grid.Row="1" Margin="12,10,12,12" Spacing="6">
+                    <Border Classes="screenshot-tile-dim">
+                      <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                          <GradientStop Color="#05000000" Offset="0" />
+                          <GradientStop Color="#78000000" Offset="1" />
+                        </LinearGradientBrush>
+                      </Border.Background>
+                    </Border>
+                    <Border
+                        Classes="screenshot-tile-caption"
+                        VerticalAlignment="Bottom"
+                        Padding="10,18,10,10">
                       <TextBlock
-                          Foreground="#343D4A"
+                          Foreground="White"
                           FontSize="12.5"
+                          FontWeight="SemiBold"
                           Text="{Binding Title}"
                           TextTrimming="CharacterEllipsis" />
-                      <TextBlock
-                          Foreground="#677789"
-                          FontSize="11.5"
-                          Text="{Binding Info}"
-                          TextWrapping="Wrap" />
-                      <controls:PclButton
-                          Width="72"
-                          HorizontalAlignment="Left"
-                          Command="{Binding OpenCommand}"
-                          Text="打开" />
-                    </StackPanel>
+                    </Border>
                   </Grid>
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
+                </Border>
+              </Button>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
@@ -63,12 +149,12 @@
         <StackPanel Spacing="10">
           <TextBlock
               HorizontalAlignment="Center"
-              Foreground="#4B5968"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="19"
               Text="暂时没有截图文件" />
-          <Border Height="2" Background="#D5E6FD" />
+          <Border Height="2" Background="{DynamicResource ColorBrush6}" />
           <TextBlock
-              Foreground="#677789"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12.5"
               Text="在游戏内按下截图键（默认为 F2）后，可在此处查看保存的截图"
               TextAlignment="Center"

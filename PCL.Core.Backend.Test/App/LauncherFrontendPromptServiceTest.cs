@@ -60,7 +60,7 @@ public sealed class LauncherFrontendPromptServiceTest
                 new MinecraftLaunchPromptButton(
                     "强制启动",
                     [
-                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.PersistInstanceJavaCompatibilityIgnored),
+                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.IgnoreJavaCompatibilityOnce),
                         new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)
                     ]),
                 new MinecraftLaunchPromptButton("改用兼容 Java", [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])
@@ -87,7 +87,7 @@ public sealed class LauncherFrontendPromptServiceTest
         CollectionAssert.AreEqual(
             new[]
             {
-                LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored,
+                LauncherFrontendPromptCommandKind.IgnoreJavaCompatibilityOnce,
                 LauncherFrontendPromptCommandKind.ContinueFlow
             },
             prompts[1].Options[0].Commands.Select(command => command.Kind).ToArray());

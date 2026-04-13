@@ -306,12 +306,12 @@ internal sealed partial class PclCard : UserControl
     private void RefreshState()
     {
         var isHeaderInteractive = ShowChevron || HeaderCommand is not null;
-        var idleBorderBrush = GetBrush("ColorBrushTransparent", "#00FFFFFF");
-        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver", "#78B7D3F5");
-        var idleSurfaceBrush = GetBrush("ColorBrushMyCard", "#D2FBFBFB");
-        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver", "#D2F1F4F7");
-        var idleHeaderBrush = GetBrush("ColorBrush1", "#343D4A");
-        var hoverHeaderBrush = GetBrush("ColorBrush2", "#0B5BCB");
+        var idleBorderBrush = GetBrush("ColorBrushTransparent");
+        var hoverBorderBrush = GetBrush("ColorBrushMyCardBorderMouseOver");
+        var idleSurfaceBrush = GetBrush("ColorBrushMyCard");
+        var hoverSurfaceBrush = GetBrush("ColorBrushMyCardMouseOver");
+        var idleHeaderBrush = GetBrush("ColorBrush1");
+        var hoverHeaderBrush = GetBrush("ColorBrush2");
 
         HoverOutlineBorder.BorderBrush = _isHovered
             ? hoverBorderBrush
@@ -333,33 +333,14 @@ internal sealed partial class PclCard : UserControl
         HeaderButton.IsHitTestVisible = isHeaderInteractive;
     }
 
-    private static IBrush GetBrush(string resourceKey, string fallback)
+    private static IBrush GetBrush(string resourceKey)
     {
-        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true &&
-            resource is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brush.Parse(fallback);
+        return FrontendThemeResourceResolver.GetBrush(resourceKey);
     }
 
-    private static Color GetColor(string resourceKey, string fallback)
+    private static Color GetColor(string resourceKey)
     {
-        if (Application.Current?.TryFindResource(resourceKey, out var resource) == true)
-        {
-            if (resource is Color color)
-            {
-                return color;
-            }
-
-            if (resource is ISolidColorBrush brush)
-            {
-                return brush.Color;
-            }
-        }
-
-        return Color.Parse(fallback);
+        return FrontendThemeResourceResolver.GetColor(resourceKey);
     }
 
     private static Color WithAlpha(Color color, byte alpha)
@@ -369,8 +350,8 @@ internal sealed partial class PclCard : UserControl
 
     private static BoxShadows CreateIdleBoxShadow()
     {
-        var edgeColor = WithAlpha(GetColor("ColorObject1", "#343D4A"), 0x10);
-        var shadowColor = WithAlpha(GetColor("ColorObject1", "#343D4A"), 0x14);
+        var edgeColor = WithAlpha(GetColor("ColorObject1"), 0x10);
+        var shadowColor = WithAlpha(GetColor("ColorObject1"), 0x14);
 
         return new BoxShadows(
             new BoxShadow
@@ -395,8 +376,8 @@ internal sealed partial class PclCard : UserControl
 
     private static BoxShadows CreateHoverBoxShadow()
     {
-        var edgeColor = WithAlpha(GetColor("ColorObject5", "#96C0F9"), 0x78);
-        var shadowColor = WithAlpha(GetColor("ColorObject3", "#1370F3"), 0x34);
+        var edgeColor = WithAlpha(GetColor("ColorObject5"), 0x78);
+        var shadowColor = WithAlpha(GetColor("ColorObject3"), 0x34);
 
         return new BoxShadows(
             new BoxShadow

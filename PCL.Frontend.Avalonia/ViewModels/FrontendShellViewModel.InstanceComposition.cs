@@ -53,6 +53,29 @@ internal sealed partial class FrontendShellViewModel
         "Cleanroom.png"
     ];
 
+    private static FrontendInstanceCompositionService.LoadMode ResolveInstanceCompositionLoadMode(LauncherFrontendRoute route)
+    {
+        if (route.Page != LauncherFrontendPageKey.InstanceSetup)
+        {
+            return FrontendInstanceCompositionService.LoadMode.Lightweight;
+        }
+
+        return route.Subpage switch
+        {
+            LauncherFrontendSubpageKey.VersionInstall => FrontendInstanceCompositionService.LoadMode.InstallAware,
+            LauncherFrontendSubpageKey.VersionMod
+                or LauncherFrontendSubpageKey.VersionModDisabled
+                or LauncherFrontendSubpageKey.VersionResourcePack
+                or LauncherFrontendSubpageKey.VersionShader
+                or LauncherFrontendSubpageKey.VersionSchematic
+                or LauncherFrontendSubpageKey.VersionExport => FrontendInstanceCompositionService.LoadMode.Full,
+            _ => FrontendInstanceCompositionService.LoadMode.Lightweight
+        };
+    }
+
+    private bool HasSufficientInstanceCompositionLoadMode(FrontendInstanceCompositionService.LoadMode requiredLoadMode)
+        => _instanceCompositionLoadMode >= requiredLoadMode;
+
     private void ApplyInstanceComposition(FrontendInstanceComposition composition, bool initializeAllSurfaces = true)
     {
         _instanceComposition = composition;
@@ -81,9 +104,19 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private void ReloadInstanceComposition(bool reloadDependentCompositions = true, bool initializeAllSurfaces = true)
+        => ReloadInstanceComposition(
+            FrontendInstanceCompositionService.LoadMode.Full,
+            reloadDependentCompositions,
+            initializeAllSurfaces);
+
+    private void ReloadInstanceComposition(
+        FrontendInstanceCompositionService.LoadMode loadMode,
+        bool reloadDependentCompositions = true,
+        bool initializeAllSurfaces = true)
     {
+        _instanceCompositionLoadMode = loadMode;
         ApplyInstanceComposition(
-            FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths),
+            FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, loadMode),
             initializeAllSurfaces);
 
         if (!reloadDependentCompositions)

@@ -11,7 +11,7 @@
               Grid.Row="0"
               Margin="0,0,25,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="图标" />
           <ComboBox
@@ -30,7 +30,7 @@
               Grid.Row="2"
               Margin="0,0,25,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="分类" />
           <ComboBox

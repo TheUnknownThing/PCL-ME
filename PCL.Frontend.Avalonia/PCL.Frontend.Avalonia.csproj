@@ -16,6 +16,13 @@
     <BuildInParallel>false</BuildInParallel>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <EnableThemeColorSwitch>false</EnableThemeColorSwitch>
+    <EnableThemeColorSwitch Condition="'$(RuntimeIdentifier)' != '' and !$([System.String]::Copy('$(RuntimeIdentifier)').ToLowerInvariant().StartsWith('win'))">true</EnableThemeColorSwitch>
+    <EnableThemeColorSwitch Condition="'$(RuntimeIdentifier)' == '' and !$([MSBuild]::IsOSPlatform('Windows'))">true</EnableThemeColorSwitch>
+    <DefineConstants Condition="'$(EnableThemeColorSwitch)' == 'true'">$(DefineConstants);PCL_ENABLE_THEME_COLOR_SWITCH</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <OutputType>WinExe</OutputType>
   </PropertyGroup>

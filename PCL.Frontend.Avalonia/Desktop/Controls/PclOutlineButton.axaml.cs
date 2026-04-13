@@ -18,10 +18,6 @@ internal sealed partial class PclOutlineButton : UserControl
     public static readonly StyledProperty<ICommand?> CommandProperty =
         AvaloniaProperty.Register<PclOutlineButton, ICommand?>(nameof(Command));
 
-    private static readonly IBrush HoverBorder = Brush.Parse("#1370F3");
-    private static readonly IBrush IdleBorder = Brush.Parse("#404040");
-    private static readonly IBrush HoverBackground = Brush.Parse("#E0EAFD");
-    private static readonly IBrush IdleBackground = Brush.Parse("#55FFFFFF");
     private bool _isHovered;
     private bool _isPressed;
 
@@ -88,8 +84,12 @@ internal sealed partial class PclOutlineButton : UserControl
 
     private void RefreshVisualState()
     {
-        PanFore.BorderBrush = _isHovered ? HoverBorder : IdleBorder;
-        PanFore.Background = _isHovered ? HoverBackground : IdleBackground;
+        PanFore.BorderBrush = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush3")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushGray1");
+        PanFore.Background = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush7")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
         PanFore.Opacity = _isPressed ? 0.88 : 1.0;
         PanFore.RenderTransform = _isPressed
             ? new ScaleTransform(0.955, 0.955)

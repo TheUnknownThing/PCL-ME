@@ -64,6 +64,23 @@ internal sealed class FrontendShellActionService(
         MotionDurations.ApplyRuntimePreferences(animationFpsLimit, debugAnimationSpeed);
     }
 
+    public void ApplyAppearance(
+        int darkModeIndex,
+        int lightColorIndex,
+        int darkColorIndex,
+        string? lightCustomColorHex,
+        string? darkCustomColorHex)
+    {
+        FrontendAppearanceService.ApplyAppearance(
+            Application.Current,
+            new FrontendAppearanceSelection(
+                darkModeIndex,
+                lightColorIndex,
+                darkColorIndex,
+                lightCustomColorHex,
+                darkCustomColorHex));
+    }
+
     public void AcceptLauncherEula()
     {
         PersistSharedValue("SystemEula", true);

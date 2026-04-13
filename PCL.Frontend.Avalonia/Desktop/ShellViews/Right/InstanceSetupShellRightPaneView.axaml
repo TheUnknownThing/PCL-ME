@@ -9,12 +9,12 @@
     <StackPanel Margin="25,25,25,25" Spacing="15">
       <Border
           Padding="12,10"
-          Background="#EAF2FE"
-          BorderBrush="#D5E6FD"
+          Background="{DynamicResource ColorBrush8}"
+          BorderBrush="{DynamicResource ColorBrush6}"
           BorderThickness="1"
           CornerRadius="4">
         <TextBlock
-            Foreground="#4068A8"
+            Foreground="{DynamicResource ColorBrush2}"
             FontSize="12.5"
             Text="这些设置只对该游戏实例生效，不影响其他实例。"
             TextWrapping="Wrap" />

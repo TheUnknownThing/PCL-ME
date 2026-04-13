@@ -27,13 +27,13 @@ public sealed class MinecraftLaunchAuthlibRequestWorkflowServiceTest
     {
         var result = MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
             "https://auth.example.invalid/authserver",
-            "CachedDemo",
-            "cached-id",
-            "token");
+            "token",
+            "client-token");
 
         Assert.AreEqual("https://auth.example.invalid/authserver/refresh", result.Url);
         Assert.AreEqual("application/json", result.ContentType);
-        Assert.AreEqual("CachedDemo", JsonNode.Parse(result.Body!)?["selectedProfile"]?["name"]?.ToString());
+        Assert.AreEqual("client-token", JsonNode.Parse(result.Body!)?["clientToken"]?.ToString());
+        Assert.IsNull(JsonNode.Parse(result.Body!)?["selectedProfile"]);
     }
 
     [TestMethod]

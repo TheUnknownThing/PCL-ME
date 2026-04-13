@@ -1,3 +1,6 @@
+using Avalonia.Media;
+using PCL.Frontend.Avalonia.Workflows;
+
 namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
@@ -9,14 +12,7 @@ internal sealed partial class FrontendShellViewModel
         "跟随系统"
     ];
 
-    public IReadOnlyList<string> ThemeColorOptions { get; } =
-    [
-        "龙猫蓝",
-        "甜柠青",
-        "小草绿",
-        "菠萝黄",
-        "橡木棕"
-    ];
+    public IReadOnlyList<string> ThemeColorOptions => FrontendAppearanceService.ThemeColorOptions;
 
     public IReadOnlyList<string> BlurTypeOptions { get; } =
     [
@@ -58,13 +54,133 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedLightColorIndex
     {
         get => _selectedLightColorIndex;
-        set => SetProperty(ref _selectedLightColorIndex, Math.Clamp(value, 0, ThemeColorOptions.Count - 1));
+        set
+        {
+            var normalized = FrontendAppearanceService.NormalizeThemeColorIndex(value, ThemeColorOptions.Count);
+            if (_selectedLightColorIndex == normalized)
+            {
+                return;
+            }
+
+            var previousIndex = _selectedLightColorIndex;
+            SeedCustomThemeColorIfNeeded(isDarkPalette: false, normalized, previousIndex);
+            _selectedLightColorIndex = normalized;
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(IsLightCustomThemeColorEditorVisible));
+            RaisePropertyChanged(nameof(IsAnyCustomThemeColorEditorVisible));
+            RaisePropertyChanged(nameof(IsLightCustomThemeColorInvalid));
+        }
     }
 
     public int SelectedDarkColorIndex
     {
         get => _selectedDarkColorIndex;
-        set => SetProperty(ref _selectedDarkColorIndex, Math.Clamp(value, 0, ThemeColorOptions.Count - 1));
+        set
+        {
+            var normalized = FrontendAppearanceService.NormalizeThemeColorIndex(value, ThemeColorOptions.Count);
+            if (_selectedDarkColorIndex == normalized)
+            {
+                return;
+            }
+
+            var previousIndex = _selectedDarkColorIndex;
+            SeedCustomThemeColorIfNeeded(isDarkPalette: true, normalized, previousIndex);
+            _selectedDarkColorIndex = normalized;
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(IsDarkCustomThemeColorEditorVisible));
+            RaisePropertyChanged(nameof(IsAnyCustomThemeColorEditorVisible));
+            RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
+        }
+    }
+
+    public bool IsThemeColorSwitchSupported => FrontendAppearanceService.IsThemeColorSwitchSupported;
+
+    public bool IsThemeColorSwitchUnsupportedNoticeVisible => !IsThemeColorSwitchSupported;
+
+    public bool IsLightCustomThemeColorEditorVisible =>
+        IsThemeColorSwitchSupported &&
+        FrontendAppearanceService.IsCustomThemeColorSelected(SelectedLightColorIndex);
+
+    public bool IsDarkCustomThemeColorEditorVisible =>
+        IsThemeColorSwitchSupported &&
+        FrontendAppearanceService.IsCustomThemeColorSelected(SelectedDarkColorIndex);
+
+    public bool IsAnyCustomThemeColorEditorVisible =>
+        IsLightCustomThemeColorEditorVisible || IsDarkCustomThemeColorEditorVisible;
+
+    public string CustomThemeColorInputHint => "支持 #RRGGBB，例如 #159E95";
+
+    public string CustomLightThemeColorHex
+    {
+        get => _customLightThemeColorHex;
+        set
+        {
+            if (SetProperty(ref _customLightThemeColorHex, value))
+            {
+                RaisePropertyChanged(nameof(CustomLightThemePreviewBrush));
+                RaisePropertyChanged(nameof(IsLightCustomThemeColorInvalid));
+            }
+        }
+    }
+
+    public string CustomDarkThemeColorHex
+    {
+        get => _customDarkThemeColorHex;
+        set
+        {
+            if (SetProperty(ref _customDarkThemeColorHex, value))
+            {
+                RaisePropertyChanged(nameof(CustomDarkThemePreviewBrush));
+                RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
+            }
+        }
+    }
+
+    public IBrush CustomLightThemePreviewBrush => CreateCustomThemePreviewBrush(CustomLightThemeColorHex, Colors.White);
+
+    public IBrush CustomDarkThemePreviewBrush => CreateCustomThemePreviewBrush(CustomDarkThemeColorHex, Color.Parse("#FF2B2B2B"));
+
+    public bool IsLightCustomThemeColorInvalid =>
+        IsLightCustomThemeColorEditorVisible &&
+        !FrontendAppearanceService.TryParseCustomThemeColor(CustomLightThemeColorHex, out _);
+
+    public bool IsDarkCustomThemeColorInvalid =>
+        IsDarkCustomThemeColorEditorVisible &&
+        !FrontendAppearanceService.TryParseCustomThemeColor(CustomDarkThemeColorHex, out _);
+
+    private void SeedCustomThemeColorIfNeeded(bool isDarkPalette, int newIndex, int previousIndex)
+    {
+        if (!FrontendAppearanceService.IsCustomThemeColorSelected(newIndex))
+        {
+            return;
+        }
+
+        var currentValue = isDarkPalette ? _customDarkThemeColorHex : _customLightThemeColorHex;
+        if (FrontendAppearanceService.TryParseCustomThemeColor(currentValue, out _))
+        {
+            return;
+        }
+
+        var seedIndex = FrontendAppearanceService.IsCustomThemeColorSelected(previousIndex)
+            ? 0
+            : previousIndex;
+        var seed = FrontendAppearanceService.GetBuiltInAccentHex(isDarkPalette, seedIndex);
+        if (isDarkPalette)
+        {
+            CustomDarkThemeColorHex = seed;
+        }
+        else
+        {
+            CustomLightThemeColorHex = seed;
+        }
+    }
+
+    private static IBrush CreateCustomThemePreviewBrush(string rawColor, Color fallbackColor)
+    {
+        var previewColor = FrontendAppearanceService.TryParseCustomThemeColor(rawColor, out var color)
+            ? color
+            : fallbackColor;
+        return new SolidColorBrush(previewColor);
     }
 
     public double LauncherOpacity

@@ -5,21 +5,21 @@
     DataContext="{Binding Shell}">
   <Border
       Padding="26,24"
-      Background="#F7FAFE"
-      BorderBrush="#DDE9FA"
+      Background="{DynamicResource ColorBrush8}"
+      BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="0,0,1,0">
     <Grid RowDefinitions="1*,Auto,Auto,Auto,0.7*,Auto,Auto,Auto,0.7*,Auto,Auto,Auto,1*">
-      <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="14" Foreground="#7EA7EB" Text="总进度" />
-      <Border Grid.Row="2" Height="2" Margin="8,8,8,10" Background="#3E7AE7" />
-      <TextBlock Grid.Row="3" HorizontalAlignment="Center" FontSize="20" Foreground="#4A5160" Text="{Binding TaskManagerOverallProgressText}" />
+      <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush4}" Text="总进度" />
+      <Border Grid.Row="2" Height="2" Margin="8,8,8,10" Background="{DynamicResource ColorBrush3}" />
+      <TextBlock Grid.Row="3" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush1}" Text="{Binding TaskManagerOverallProgressText}" />
 
-      <TextBlock Grid.Row="5" HorizontalAlignment="Center" FontSize="14" Foreground="#7EA7EB" Text="下载速度" />
-      <Border Grid.Row="6" Height="2" Margin="8,8,8,10" Background="#3E7AE7" />
-      <TextBlock Grid.Row="7" HorizontalAlignment="Center" FontSize="20" Foreground="#4A5160" Text="{Binding TaskManagerDownloadSpeedText}" />
+      <TextBlock Grid.Row="5" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush4}" Text="下载速度" />
+      <Border Grid.Row="6" Height="2" Margin="8,8,8,10" Background="{DynamicResource ColorBrush3}" />
+      <TextBlock Grid.Row="7" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush1}" Text="{Binding TaskManagerDownloadSpeedText}" />
 
-      <TextBlock Grid.Row="9" HorizontalAlignment="Center" FontSize="14" Foreground="#7EA7EB" Text="剩余文件" />
-      <Border Grid.Row="10" Height="2" Margin="8,8,8,10" Background="#3E7AE7" />
-      <TextBlock Grid.Row="11" HorizontalAlignment="Center" FontSize="20" Foreground="#4A5160" Text="{Binding TaskManagerRemainingFilesText}" />
+      <TextBlock Grid.Row="9" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush4}" Text="剩余文件" />
+      <Border Grid.Row="10" Height="2" Margin="8,8,8,10" Background="{DynamicResource ColorBrush3}" />
+      <TextBlock Grid.Row="11" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush1}" Text="{Binding TaskManagerRemainingFilesText}" />
     </Grid>
   </Border>
 </UserControl>

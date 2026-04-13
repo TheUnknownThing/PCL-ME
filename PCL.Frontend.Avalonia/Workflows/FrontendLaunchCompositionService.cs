@@ -15,7 +15,6 @@ using PCL.Core.Minecraft.Launch;
 using PCL.Core.Utils;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Models;
-using PCL.Frontend.Avalonia.Workflows.Inspection;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -23,24 +22,14 @@ internal static class FrontendLaunchCompositionService
 {
     private static readonly HttpClient JavaRuntimeHttpClient = new();
     private static readonly object HostJavaProbeLock = new();
-    private static readonly object NativeReplacementCatalogLock = new();
     private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedHostJavaRuntimes;
-    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>>? CachedNativeReplacementCatalog;
     private static bool IsHostJavaProbeCached;
-    private static bool IsNativeReplacementCatalogCached;
 
     public static FrontendLaunchComposition Compose(
         AvaloniaCommandOptions options,
-        FrontendRuntimePaths runtimePaths)
+        FrontendRuntimePaths runtimePaths,
+        bool ignoreJavaCompatibilityWarningOnce = false)
     {
-        var replayComposition = FrontendInspectionLaunchCompositionService.TryComposeReplay(
-            options,
-            options.SaveBatchPath);
-        if (replayComposition is not null)
-        {
-            return replayComposition;
-        }
-
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var localConfig = runtimePaths.OpenLocalConfigProvider();
 
@@ -61,7 +50,14 @@ internal static class FrontendLaunchCompositionService
         var selectedProfile = ReadSelectedProfile(runtimePaths);
         var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
         var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
-        var javaSelection = ResolveJavaRuntime(sharedConfig, localConfig, instanceConfig, launcherFolder, manifestSummary, javaWorkflow);
+        var javaSelection = ResolveJavaRuntime(
+            sharedConfig,
+            localConfig,
+            instanceConfig,
+            launcherFolder,
+            manifestSummary,
+            javaWorkflow,
+            ignoreJavaCompatibilityWarningOnce);
         var selectedJavaRuntime = javaSelection.Runtime;
         var retroWrapperOptions = ResolveRetroWrapperOptions(
             launcherFolder,
@@ -244,77 +240,6 @@ internal static class FrontendLaunchCompositionService
                 Outcome: MinecraftLaunchOutcome.Succeeded,
                 IsScriptExport: false,
                 AbortHint: null)));
-    }
-
-    public static FrontendLaunchComposition FromAvaloniaPlan(LaunchAvaloniaPlan plan)
-    {
-        var selectedProfileKind = plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft
-            ? MinecraftLaunchProfileKind.Microsoft
-            : MinecraftLaunchProfileKind.Auth;
-        var playerName = plan.ReplacementPlan.Values.TryGetValue("${auth_player_name}", out var authPlayerName)
-            ? authPlayerName
-            : "DemoPlayer";
-        var versionName = plan.ReplacementPlan.Values.TryGetValue("${version_name}", out var instanceName)
-            ? instanceName
-            : plan.Scenario;
-        var replayPrecheckRequest = new MinecraftLaunchPrecheckRequest(
-            InstanceName: versionName,
-            InstancePathIndie: plan.ReplacementPlan.Values.TryGetValue("${game_directory}", out var indiePath) ? indiePath : string.Empty,
-            InstancePath: plan.ReplacementPlan.Values.TryGetValue("${game_directory}", out var path) ? path : string.Empty,
-            IsInstanceSelected: true,
-            IsInstanceError: false,
-            InstanceErrorDescription: null,
-            IsUtf8CodePage: true,
-            IsNonAsciiPathWarningDisabled: false,
-            IsInstancePathAscii: false,
-            ProfileValidationMessage: string.Empty,
-            SelectedProfileKind: selectedProfileKind,
-            HasLabyMod: false,
-            LoginRequirement: MinecraftLaunchLoginRequirement.None,
-            RequiredAuthServer: null,
-            SelectedAuthServer: null,
-            HasMicrosoftProfile: plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft,
-            IsRestrictedFeatureAllowed: true);
-
-        return new FrontendLaunchComposition(
-            plan.Scenario,
-            versionName,
-            plan.ReplacementPlan.Values.TryGetValue("${game_directory}", out var gameDirectory)
-                ? gameDirectory
-                : string.Empty,
-            Array.Empty<FrontendLaunchArtifactRequirement>(),
-            new FrontendLaunchProfileSummary(
-                selectedProfileKind,
-                playerName,
-                plan.ReplacementPlan.Values.TryGetValue("${auth_uuid}", out var uuid) ? uuid : null,
-                plan.ReplacementPlan.Values.TryGetValue("${auth_access_token}", out var accessToken) ? accessToken : null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                plan.LoginPlan.Provider == LaunchLoginProviderKind.Microsoft),
-            null,
-            null,
-            null,
-            10,
-            replayPrecheckRequest,
-            MinecraftLaunchPrecheckService.Evaluate(replayPrecheckRequest),
-            MinecraftLaunchShellService.GetSupportPrompt(10),
-            plan.JavaWorkflow,
-            plan.JavaRuntimeManifestPlan,
-            plan.JavaRuntimeTransferPlan,
-            plan.ResolutionPlan,
-            plan.ClasspathPlan,
-            plan.NativesDirectory,
-            plan.NativePathAliasDirectory,
-            null,
-            plan.ReplacementPlan,
-            plan.PrerunPlan,
-            plan.ArgumentPlan,
-            plan.SessionStartPlan,
-            plan.PostLaunchShell,
-            plan.CompletionNotification);
     }
 
     private static MinecraftLaunchArgumentPlan BuildArgumentPlan(
@@ -804,6 +729,28 @@ internal static class FrontendLaunchCompositionService
         return $"{library.Path}:{library.IsNatives}";
     }
 
+    private static bool TryParseLibraryCoordinate(string? name, out LibraryCoordinate coordinate)
+    {
+        coordinate = new LibraryCoordinate(string.Empty, string.Empty, string.Empty, null);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        var parts = name.Split(':', StringSplitOptions.None);
+        if (parts.Length is < 3 or > 4)
+        {
+            return false;
+        }
+
+        coordinate = new LibraryCoordinate(
+            parts[0],
+            parts[1],
+            parts[2],
+            parts.Length >= 4 ? parts[3] : null);
+        return true;
+    }
+
     private static void CollectClasspathLibrariesRecursive(
         string launcherFolder,
         string versionName,
@@ -1276,10 +1223,12 @@ internal static class FrontendLaunchCompositionService
         YamlFileProvider? instanceConfig,
         string launcherFolder,
         FrontendVersionManifestSummary manifestSummary,
-        MinecraftLaunchJavaWorkflowPlan javaWorkflow)
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow,
+        bool ignoreJavaCompatibilityWarningOnce)
     {
         var selectedJavaPath = ResolveConfiguredJavaSelection(sharedConfig, instanceConfig, launcherFolder);
-        var ignoreJavaCompatibilityWarning = instanceConfig is not null &&
+        var ignoreJavaCompatibilityWarning = ignoreJavaCompatibilityWarningOnce ||
+                                            instanceConfig is not null &&
                                             ReadValue(instanceConfig, "VersionAdvanceJava", false);
         var javaEntries = FrontendJavaInventoryService.ParseAvailableRuntimes(ReadValue(localConfig, "LaunchArgumentJavaUser", "[]"));
         MinecraftLaunchPrompt? compatibilityPrompt = null;
@@ -1960,138 +1909,6 @@ internal static class FrontendLaunchCompositionService
         return true;
     }
 
-    private static bool TryResolveNativeArchiveReplacementDownload(
-        JsonElement library,
-        string? entryName,
-        string launcherFolder,
-        MachineType runtimeArchitecture,
-        out LibraryDownloadInfo download)
-    {
-        download = null!;
-        var libraryName = GetString(library, "name");
-        if (string.IsNullOrWhiteSpace(libraryName))
-        {
-            return false;
-        }
-
-        if (!string.IsNullOrWhiteSpace(entryName) &&
-            TryResolveArtifactReplacementDownload($"{libraryName}:{entryName}", launcherFolder, runtimeArchitecture, out download))
-        {
-            return true;
-        }
-
-        return TryResolveArtifactReplacementDownload(libraryName, launcherFolder, runtimeArchitecture, out download);
-    }
-
-    private static bool TryResolveLibraryDownload(
-        JsonElement library,
-        string entryName,
-        string launcherFolder,
-        out LibraryDownloadInfo download)
-    {
-        download = null!;
-        var libraryName = GetString(library, "name");
-        if (string.IsNullOrWhiteSpace(libraryName))
-        {
-            return TryResolveLegacyLibraryDownloadWithoutDownloads(library, entryName, launcherFolder, out download);
-        }
-
-        if (!library.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object)
-        {
-            if (!string.Equals(entryName, "artifact", StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            var fallbackPath = DeriveLibraryPathFromName(libraryName);
-            var fallbackTargetPath = Path.Combine(launcherFolder, "libraries", fallbackPath.Replace('/', Path.DirectorySeparatorChar));
-            download = new LibraryDownloadInfo(
-                fallbackTargetPath,
-                BuildLibraryUrl(library, fallbackPath),
-                GetString(library, "sha1"));
-            return true;
-        }
-
-        JsonElement downloadEntry;
-        if (string.Equals(entryName, "artifact", StringComparison.Ordinal))
-        {
-            if (!downloads.TryGetProperty("artifact", out downloadEntry) || downloadEntry.ValueKind != JsonValueKind.Object)
-            {
-                if (downloads.TryGetProperty("classifiers", out var classifiers) &&
-                    classifiers.ValueKind == JsonValueKind.Object)
-                {
-                    return false;
-                }
-
-                return TryResolveLegacyLibraryDownloadWithoutDownloads(library, entryName, launcherFolder, out download);
-            }
-        }
-        else
-        {
-            if (!downloads.TryGetProperty("classifiers", out var classifiers) ||
-                classifiers.ValueKind != JsonValueKind.Object ||
-                !classifiers.TryGetProperty(entryName, out downloadEntry) ||
-                downloadEntry.ValueKind != JsonValueKind.Object)
-            {
-                return false;
-            }
-        }
-
-        var path = GetString(downloadEntry, "path");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            path = DeriveLibraryPathFromName(
-                libraryName,
-                string.Equals(entryName, "artifact", StringComparison.Ordinal) ? null : entryName);
-        }
-
-        var targetPath = Path.Combine(launcherFolder, "libraries", path.Replace('/', Path.DirectorySeparatorChar));
-        var hasExplicitUrl = downloadEntry.TryGetProperty("url", out var urlElement);
-        var url = hasExplicitUrl && urlElement.ValueKind == JsonValueKind.String
-            ? urlElement.GetString()
-            : GetString(downloadEntry, "url");
-        if (!hasExplicitUrl || !string.IsNullOrWhiteSpace(url))
-        {
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                url = BuildLibraryUrl(library, path);
-            }
-        }
-
-        download = new LibraryDownloadInfo(targetPath, url, GetString(downloadEntry, "sha1"));
-        return true;
-    }
-
-    private static bool TryResolveLegacyLibraryDownloadWithoutDownloads(
-        JsonElement library,
-        string entryName,
-        string launcherFolder,
-        out LibraryDownloadInfo download)
-    {
-        download = null!;
-        if (!string.Equals(entryName, "artifact", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        var libraryName = GetString(library, "name");
-        if (string.IsNullOrWhiteSpace(libraryName))
-        {
-            return false;
-        }
-
-        var relativePath = DeriveLibraryPathFromName(libraryName);
-        if (string.IsNullOrWhiteSpace(relativePath))
-        {
-            return false;
-        }
-
-        var targetPath = Path.Combine(launcherFolder, "libraries", relativePath.Replace('/', Path.DirectorySeparatorChar));
-        var downloadUrl = BuildLibraryUrl(library, relativePath);
-        download = new LibraryDownloadInfo(targetPath, downloadUrl, Sha1: null);
-        return true;
-    }
-
     private static bool TryResolveEffectiveArtifactDownload(
         JsonElement library,
         string launcherFolder,
@@ -2110,306 +1927,6 @@ internal static class FrontendLaunchCompositionService
 
         download = new LibraryDownloadInfo(resolved.TargetPath, resolved.DownloadUrl, resolved.Sha1);
         return true;
-    }
-
-    private static bool TryResolveArtifactReplacementDownload(
-        JsonElement library,
-        string launcherFolder,
-        MachineType runtimeArchitecture,
-        out LibraryDownloadInfo download)
-    {
-        download = null!;
-        var libraryName = GetString(library, "name");
-        return !string.IsNullOrWhiteSpace(libraryName) &&
-               TryResolveArtifactReplacementDownload(libraryName, launcherFolder, runtimeArchitecture, out download);
-    }
-
-    private static bool TryResolveArtifactReplacementDownload(
-        string libraryName,
-        string launcherFolder,
-        MachineType runtimeArchitecture,
-        out LibraryDownloadInfo download)
-    {
-        download = null!;
-        var platformKey = ResolveNativeReplacementPlatformKey(runtimeArchitecture);
-        if (string.IsNullOrWhiteSpace(platformKey))
-        {
-            return false;
-        }
-
-        var catalog = GetNativeReplacementCatalog();
-        if (!catalog.TryGetValue(platformKey, out var platformCatalog) ||
-            !platformCatalog.TryGetValue(libraryName, out var replacement))
-        {
-            return false;
-        }
-
-        var replacementTargetPath = Path.Combine(
-            launcherFolder,
-            "libraries",
-            replacement.ArtifactPath.Replace('/', Path.DirectorySeparatorChar));
-        var replacementUrl = string.IsNullOrWhiteSpace(replacement.DownloadUrl)
-            ? "https://repo1.maven.org/maven2/" + replacement.ArtifactPath
-            : replacement.DownloadUrl;
-
-        download = new LibraryDownloadInfo(
-            replacementTargetPath,
-            replacementUrl,
-            replacement.Sha1);
-        return true;
-    }
-
-    private static string? ResolveNativeReplacementPlatformKey(MachineType runtimeArchitecture)
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return runtimeArchitecture switch
-            {
-                MachineType.ARM64 => "windows-arm64",
-                MachineType.I386 => "windows-x86",
-                MachineType.AMD64 => "windows-x64",
-                _ => null
-            };
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            return runtimeArchitecture switch
-            {
-                MachineType.ARM64 => "macos-arm64",
-                MachineType.AMD64 => "macos-x64",
-                _ => null
-            };
-        }
-
-        if (OperatingSystem.IsLinux())
-        {
-            return runtimeArchitecture switch
-            {
-                MachineType.ARM64 => "linux-arm64",
-                MachineType.I386 => "linux-x86",
-                MachineType.AMD64 => "linux-x64",
-                _ => null
-            };
-        }
-
-        return null;
-    }
-
-    private static bool TryParseLibraryCoordinate(string? name, out LibraryCoordinate coordinate)
-    {
-        coordinate = new LibraryCoordinate(string.Empty, string.Empty, string.Empty, null);
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return false;
-        }
-
-        var parts = name.Split(':', StringSplitOptions.None);
-        if (parts.Length is < 3 or > 4)
-        {
-            return false;
-        }
-
-        coordinate = new LibraryCoordinate(
-            parts[0],
-            parts[1],
-            parts[2],
-            parts.Length >= 4 ? parts[3] : null);
-        return true;
-    }
-
-    private static bool IsDedicatedNativeLibrary(JsonElement library)
-    {
-        return TryParseLibraryCoordinate(GetString(library, "name"), out var coordinate) &&
-               !string.IsNullOrWhiteSpace(coordinate.Classifier) &&
-               (coordinate.Classifier.StartsWith("natives-", StringComparison.OrdinalIgnoreCase) ||
-                coordinate.Classifier.StartsWith("native-", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>> GetNativeReplacementCatalog()
-    {
-        lock (NativeReplacementCatalogLock)
-        {
-            if (IsNativeReplacementCatalogCached)
-            {
-                return CachedNativeReplacementCatalog ?? EmptyNativeReplacementCatalog;
-            }
-
-            CachedNativeReplacementCatalog = LoadNativeReplacementCatalog();
-            IsNativeReplacementCatalogCached = true;
-            return CachedNativeReplacementCatalog;
-        }
-    }
-
-    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>> LoadNativeReplacementCatalog()
-    {
-        var catalogPath = FrontendLauncherAssetLocator.GetPath("NativeReplacements", "native-replacements.json");
-        if (!File.Exists(catalogPath))
-        {
-            return EmptyNativeReplacementCatalog;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(File.ReadAllText(catalogPath));
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-            {
-                return EmptyNativeReplacementCatalog;
-            }
-
-            var platforms = new Dictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var platformProperty in document.RootElement.EnumerateObject())
-            {
-                if (platformProperty.Value.ValueKind != JsonValueKind.Object)
-                {
-                    continue;
-                }
-
-                var replacements = new Dictionary<string, ReplacementArtifactInfo>(StringComparer.OrdinalIgnoreCase);
-                foreach (var replacementProperty in platformProperty.Value.EnumerateObject())
-                {
-                    if (TryParseReplacementArtifactInfo(replacementProperty.Value, out var replacement))
-                    {
-                        replacements[replacementProperty.Name] = replacement;
-                    }
-                }
-
-                if (replacements.Count > 0)
-                {
-                    platforms[platformProperty.Name] = replacements;
-                }
-            }
-
-            return platforms.Count == 0 ? EmptyNativeReplacementCatalog : platforms;
-        }
-        catch
-        {
-            return EmptyNativeReplacementCatalog;
-        }
-    }
-
-    private static bool TryParseReplacementArtifactInfo(JsonElement element, out ReplacementArtifactInfo replacement)
-    {
-        replacement = null!;
-        if (element.ValueKind != JsonValueKind.Object ||
-            !element.TryGetProperty("artifact", out var artifact) ||
-            artifact.ValueKind != JsonValueKind.Object)
-        {
-            return false;
-        }
-
-        var path = GetString(artifact, "path");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return false;
-        }
-
-        replacement = new ReplacementArtifactInfo(
-            GetString(element, "name"),
-            path,
-            GetString(artifact, "url"),
-            GetString(artifact, "sha1"));
-        return true;
-    }
-
-    private static string? ResolveNativeEntryName(JsonElement library, MachineType runtimeArchitecture)
-    {
-        var osKey = GetCurrentNativeOsKey();
-        if (library.TryGetProperty("natives", out var natives) &&
-            natives.ValueKind == JsonValueKind.Object &&
-            natives.TryGetProperty(osKey, out var classifierValue) &&
-            classifierValue.ValueKind == JsonValueKind.String)
-        {
-            return classifierValue.GetString()?.Replace(
-                "${arch}",
-                GetNativeArchitectureToken(runtimeArchitecture),
-                StringComparison.Ordinal);
-        }
-
-        if (!library.TryGetProperty("downloads", out var downloads) ||
-            downloads.ValueKind != JsonValueKind.Object ||
-            !downloads.TryGetProperty("classifiers", out var classifiers) ||
-            classifiers.ValueKind != JsonValueKind.Object)
-        {
-            return null;
-        }
-
-        foreach (var candidate in GetCurrentNativeClassifierCandidates(runtimeArchitecture))
-        {
-            if (classifiers.TryGetProperty(candidate, out _))
-            {
-                return candidate;
-            }
-        }
-
-        return null;
-    }
-
-    private static IReadOnlyList<string> GetCurrentNativeClassifierCandidates(MachineType runtimeArchitecture)
-    {
-        var candidates = new List<string>();
-        string[] osNames = OperatingSystem.IsMacOS()
-            ? ["osx", "macos", "mac-os", "mac"]
-            : OperatingSystem.IsWindows()
-                ? ["windows"]
-                : ["linux"];
-        var archNames = runtimeArchitecture switch
-        {
-            MachineType.I386 => new[] { "x86", "32" },
-            MachineType.ARM64 => new[] { "arm64", "aarch64", "64" },
-            _ => new[] { "x86_64", "amd64", "64" }
-        };
-
-        foreach (var osName in osNames)
-        {
-            candidates.Add($"natives-{osName}");
-            candidates.Add($"native-{osName}");
-            foreach (var archName in archNames)
-            {
-                candidates.Add($"natives-{osName}-{archName}");
-                candidates.Add($"native-{osName}-{archName}");
-            }
-        }
-
-        return candidates;
-    }
-
-    private static string GetCurrentNativeOsKey()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return "windows";
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            return "osx";
-        }
-
-        return "linux";
-    }
-
-    private static string GetNativeArchitectureToken(MachineType runtimeArchitecture)
-    {
-        return runtimeArchitecture == MachineType.I386 ? "32" : "64";
-    }
-
-    private static IReadOnlyList<string> GetExtractExcludes(JsonElement library)
-    {
-        if (!library.TryGetProperty("extract", out var extract) ||
-            extract.ValueKind != JsonValueKind.Object ||
-            !extract.TryGetProperty("exclude", out var exclude) ||
-            exclude.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        return exclude.EnumerateArray()
-            .Where(item => item.ValueKind == JsonValueKind.String)
-            .Select(item => item.GetString())
-            .Where(item => !string.IsNullOrWhiteSpace(item))
-            .Select(item => item!.Replace('\\', '/'))
-            .ToArray();
     }
 
     private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
@@ -2525,12 +2042,6 @@ internal static class FrontendLaunchCompositionService
         string? DownloadUrl,
         string? Sha1);
 
-    private sealed record ReplacementArtifactInfo(
-        string? ReplacementName,
-        string ArtifactPath,
-        string? DownloadUrl,
-        string? Sha1);
-
     private sealed record LibraryCoordinate(
         string GroupId,
         string ArtifactId,
@@ -2542,9 +2053,6 @@ internal static class FrontendLaunchCompositionService
         string? DownloadUrl,
         string? Sha1,
         IReadOnlyList<string> ExtractExcludes);
-
-    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>> EmptyNativeReplacementCatalog =
-        new Dictionary<string, IReadOnlyDictionary<string, ReplacementArtifactInfo>>(StringComparer.OrdinalIgnoreCase);
 
     private static string BuildLibraryUrl(JsonElement library, string relativePath)
     {
@@ -3316,7 +2824,7 @@ internal static class FrontendLaunchCompositionService
         var runtimeLabel = string.IsNullOrWhiteSpace(runtime.DisplayName)
             ? Path.GetFileName(Path.GetDirectoryName(runtime.ExecutablePath)) ?? runtime.ExecutablePath
             : runtime.DisplayName;
-        return $"已按实例设置忽略 Java 兼容性检查，当前使用 {runtimeLabel}。推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}";
+        return $"已忽略 Java 兼容性检查，当前使用 {runtimeLabel}。推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}";
     }
 
     private static MinecraftLaunchPrompt BuildJavaCompatibilityPrompt(
@@ -3330,13 +2838,13 @@ internal static class FrontendLaunchCompositionService
         return new MinecraftLaunchPrompt(
             $"你手动选择的 Java {runtimeLabel} 与当前 Minecraft 版本不兼容。{Environment.NewLine}" +
             $"推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}{Environment.NewLine}" +
-            $"你可以改用兼容 Java，或为当前实例强制忽略兼容性检查后继续启动。",
+            $"你可以改用兼容 Java，或仅在本次启动中强制忽略兼容性检查后继续启动。",
             "所选 Java 不兼容",
             [
                 new MinecraftLaunchPromptButton(
                     "强制使用当前 Java",
                     [
-                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.PersistInstanceJavaCompatibilityIgnored),
+                        new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.IgnoreJavaCompatibilityOnce),
                         new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)
                     ]),
                 new MinecraftLaunchPromptButton(
@@ -3521,11 +3029,6 @@ internal static class FrontendLaunchCompositionService
             runtime.Architecture);
     }
 
-    private static FrontendJavaRuntimeSummary? ToRuntimeSummaryOrNull(FrontendStoredJavaRuntime? runtime)
-    {
-        return runtime is null ? null : ToRuntimeSummary(runtime);
-    }
-
     private readonly record struct FrontendConfiguredJavaSelection(
         bool FollowGlobal,
         string RawSelection);
@@ -3560,11 +3063,6 @@ internal static class FrontendLaunchCompositionService
         string ExtractionDirectory,
         string SearchPath,
         string? AliasDirectory);
-
-    private static int? TryParseJavaMajorVersion(string output)
-    {
-        return GetMajorVersion(TryParseJavaVersion(output));
-    }
 
     private static int? GetMajorVersion(Version? version)
     {

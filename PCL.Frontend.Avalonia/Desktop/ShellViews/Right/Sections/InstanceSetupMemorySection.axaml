@@ -8,13 +8,13 @@
       <StackPanel Spacing="12">
         <Border
             Padding="12,10"
-            Background="#FFF8DD"
-            BorderBrush="#F2D777"
+            Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+            BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
             BorderThickness="1"
             CornerRadius="4"
             IsVisible="{Binding ShowInstance32BitJavaWarning}">
           <TextBlock
-              Foreground="#6E5800"
+              Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
               FontSize="12.5"
               Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！"
               TextWrapping="Wrap" />
@@ -22,13 +22,13 @@
 
         <Border
             Padding="12,10"
-            Background="#FFF8DD"
-            BorderBrush="#F2D777"
+            Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+            BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
             BorderThickness="1"
             CornerRadius="4"
             IsVisible="{Binding ShowRamAllocationWarning}">
           <TextBlock
-              Foreground="#6E5800"
+              Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
               FontSize="12.5"
               Text="你给游戏分配的内存过多，这可能引发游戏崩溃。建议优先考虑“自动分配”选项。"
               TextWrapping="Wrap" />
@@ -61,7 +61,7 @@
                 Grid.Column="1"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
-                Foreground="#4B5968"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="12.5"
                 Text="{Binding InstanceCustomRamAllocationLabel}" />
           </Grid>
@@ -71,7 +71,7 @@
           <TextBlock
               Margin="0,0,25,0"
               VerticalAlignment="Center"
-              Foreground="#343D4A"
+              Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
               Text="启动游戏前进行内存优化" />
           <ComboBox

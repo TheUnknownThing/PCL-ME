@@ -1334,40 +1334,6 @@ internal static class FrontendDownloadRemoteCatalogService
             : [new FrontendDownloadCatalogEntry("暂无可显示数据", emptyMessage, string.Empty, "查看详情", null)];
     }
 
-    private static string ResolvePreferredGameVersion(string preferredMinecraftVersion, JsonArray? gameArray)
-    {
-        if (!string.IsNullOrWhiteSpace(preferredMinecraftVersion))
-        {
-            return preferredMinecraftVersion;
-        }
-
-        return gameArray?
-            .Select(node => node as JsonObject)
-            .FirstOrDefault(node => node?["stable"]?.GetValue<bool>() == true)?["version"]?.GetValue<string>()
-            ?? string.Empty;
-    }
-
-    private static string ResolvePreferredForgeMinecraftVersion(string preferredMinecraftVersion, IReadOnlyList<string> versions)
-    {
-        if (!string.IsNullOrWhiteSpace(preferredMinecraftVersion))
-        {
-            var exactMatch = versions.FirstOrDefault(version => string.Equals(version, preferredMinecraftVersion, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(exactMatch))
-            {
-                return exactMatch;
-            }
-
-            var normalized = preferredMinecraftVersion.Replace("-", "_", StringComparison.Ordinal);
-            exactMatch = versions.FirstOrDefault(version => string.Equals(version, normalized, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(exactMatch))
-            {
-                return exactMatch;
-            }
-        }
-
-        return versions[0];
-    }
-
     private static IReadOnlyList<string> ParseForgeMinecraftVersionsFromHtml(string html)
     {
         var matches = Regex.Matches(html, "(?<=a href=\"index_)[0-9.]+(_pre[0-9]?)?(?=.html)");
@@ -1588,14 +1554,6 @@ internal static class FrontendDownloadRemoteCatalogService
             : [officialSource, mirrorSource];
     }
 
-    private static string BuildForgeVersionCatalogUrl(bool isOfficial, string minecraftVersion)
-    {
-        var normalizedVersion = minecraftVersion.Replace("-", "_", StringComparison.Ordinal);
-        return isOfficial
-            ? $"https://files.minecraftforge.net/maven/net/minecraftforge/forge/index_{normalizedVersion}.html"
-            : $"https://bmclapi2.bangbang93.com/forge/minecraft/{normalizedVersion}";
-    }
-
     private static string NormalizeMinecraftVersion(string? preferredMinecraftVersion)
     {
         if (string.IsNullOrWhiteSpace(preferredMinecraftVersion))
@@ -1605,19 +1563,6 @@ internal static class FrontendDownloadRemoteCatalogService
 
         var value = preferredMinecraftVersion.Trim();
         return value.Any(char.IsDigit) ? value : string.Empty;
-    }
-
-    private static string FormatClientType(string? type)
-    {
-        return type?.ToLowerInvariant() switch
-        {
-            "release" => "正式版",
-            "snapshot" => "快照版",
-            "pending" => "预览版",
-            "special" => "特别版",
-            null or "" => "未知类型",
-            _ => type
-        };
     }
 
     private static string FormatReleaseTime(string? value)
@@ -1652,16 +1597,6 @@ internal static class FrontendDownloadRemoteCatalogService
         }
 
         return DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime.ToString("yyyy/MM/dd HH:mm");
-    }
-
-    private static string FormatUnixMilliseconds(long milliseconds)
-    {
-        if (milliseconds <= 0)
-        {
-            return "未记录发布时间";
-        }
-
-        return DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).LocalDateTime.ToString("yyyy/MM/dd HH:mm");
     }
 
     private static long ReadInt64(JsonNode? node)

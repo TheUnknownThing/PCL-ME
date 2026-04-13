@@ -9,10 +9,10 @@
       <controls:PclCard Header="基础" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,28">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
                   Text="不透明度" />
@@ -26,7 +26,7 @@
                     Grid.Column="1"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    Foreground="#677789"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
                     Text="{Binding LauncherOpacityLabel}" />
               </Grid>
@@ -34,51 +34,129 @@
               <TextBlock
                   Grid.Row="2"
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
                   Text="主题" />
-              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="Auto,*,92,*,92,*">
-                <ComboBox
-                    Grid.Column="0"
-                    ItemsSource="{Binding DarkModeOptions}"
-                    SelectedIndex="{Binding SelectedDarkModeIndex}" />
+              <StackPanel Grid.Row="2" Grid.Column="1" Spacing="8">
+                <Grid ColumnDefinitions="Auto,*,92,Auto,92,Auto">
+                  <ComboBox
+                      Grid.Column="0"
+                      ItemsSource="{Binding DarkModeOptions}"
+                      SelectedIndex="{Binding SelectedDarkModeIndex}" />
+                  <TextBlock
+                      Grid.Column="2"
+                      Margin="20,0,0,0"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      IsVisible="{Binding IsThemeColorSwitchSupported}"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="12.5"
+                      Text="浅色配色" />
+                  <ComboBox
+                      Grid.Column="3"
+                      IsVisible="{Binding IsThemeColorSwitchSupported}"
+                      ItemsSource="{Binding ThemeColorOptions}"
+                      SelectedIndex="{Binding SelectedLightColorIndex}" />
+                  <TextBlock
+                      Grid.Column="4"
+                      Margin="20,0,0,0"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      IsVisible="{Binding IsThemeColorSwitchSupported}"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="12.5"
+                      Text="深色配色" />
+                  <ComboBox
+                      Grid.Column="5"
+                      IsVisible="{Binding IsThemeColorSwitchSupported}"
+                      ItemsSource="{Binding ThemeColorOptions}"
+                      SelectedIndex="{Binding SelectedDarkColorIndex}" />
+                </Grid>
+
+                <Grid
+                    IsVisible="{Binding IsLightCustomThemeColorEditorVisible}"
+                    ColumnDefinitions="92,*,28"
+                    ColumnSpacing="10">
+                  <TextBlock
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="12.5"
+                      Text="浅色自定义" />
+                  <TextBox
+                      Grid.Column="1"
+                      Watermark="{DynamicResource ThemeColorLightSampleText}"
+                      Text="{Binding CustomLightThemeColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                  <Border
+                      Grid.Column="2"
+                      Width="20"
+                      Height="20"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Background="{Binding CustomLightThemePreviewBrush}"
+                      BorderBrush="{DynamicResource ColorBrush6}"
+                      BorderThickness="1"
+                      CornerRadius="10" />
+                </Grid>
+
                 <TextBlock
-                    Grid.Column="2"
-                    Margin="20,0,0,0"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Foreground="#343D4A"
-                    FontSize="12.5"
-                    Text="浅色配色" />
-                <ComboBox
-                    Grid.Column="3"
-                    ItemsSource="{Binding ThemeColorOptions}"
-                    SelectedIndex="{Binding SelectedLightColorIndex}" />
+                    IsVisible="{Binding IsLightCustomThemeColorInvalid}"
+                    Margin="102,0,0,0"
+                    Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+                    FontSize="12"
+                    Text="{Binding CustomThemeColorInputHint}" />
+
+                <Grid
+                    IsVisible="{Binding IsDarkCustomThemeColorEditorVisible}"
+                    ColumnDefinitions="92,*,28"
+                    ColumnSpacing="10">
+                  <TextBlock
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="12.5"
+                      Text="深色自定义" />
+                  <TextBox
+                      Grid.Column="1"
+                      Watermark="{DynamicResource ThemeColorDarkSampleText}"
+                      Text="{Binding CustomDarkThemeColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                  <Border
+                      Grid.Column="2"
+                      Width="20"
+                      Height="20"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Background="{Binding CustomDarkThemePreviewBrush}"
+                      BorderBrush="{DynamicResource ColorBrush6}"
+                      BorderThickness="1"
+                      CornerRadius="10" />
+                </Grid>
+
                 <TextBlock
-                    Grid.Column="4"
-                    Margin="20,0,0,0"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Foreground="#343D4A"
-                    FontSize="12.5"
-                    Text="深色配色" />
-                <ComboBox
-                    Grid.Column="5"
-                    ItemsSource="{Binding ThemeColorOptions}"
-                    SelectedIndex="{Binding SelectedDarkColorIndex}" />
-              </Grid>
+                    IsVisible="{Binding IsDarkCustomThemeColorInvalid}"
+                    Margin="102,0,0,0"
+                    Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+                    FontSize="12"
+                    Text="{Binding CustomThemeColorInputHint}" />
+
+                <TextBlock
+                    IsVisible="{Binding IsAnyCustomThemeColorEditorVisible}"
+                    Margin="102,0,0,0"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="12"
+                    Text="自定义主题色会实时刷新当前界面配色与标题栏对比度。" />
+              </StackPanel>
             </Grid>
 
             <Border
                 Padding="18,16"
-                Background="#FFF8DD"
-                BorderBrush="#F2D777"
+                IsVisible="{Binding IsThemeColorSwitchUnsupportedNoticeVisible}"
+                Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
                 BorderThickness="1"
                 CornerRadius="5">
               <StackPanel Spacing="9">
                 <TextBlock
-                    Foreground="#6E5800"
+                    Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                     FontSize="13"
                     Text="蓝色，蓝色，还是蓝色！想要逃离蓝色困境？请使用官方快照版！"
                     TextWrapping="Wrap" />
@@ -92,28 +170,28 @@
               </StackPanel>
             </Border>
 
-            <CheckBox
-                Foreground="#343D4A"
+              <CheckBox
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="打开启动器时显示 PCL 图标"
                 IsChecked="{Binding ShowLauncherLogoSetting}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="锁定启动器大小"
                 IsChecked="{Binding LockWindowSizeSetting}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="在启动游戏时显示“你知道吗”"
                 IsChecked="{Binding ShowLaunchingHintSetting}" />
 
             <StackPanel Spacing="10">
               <CheckBox
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   Content="高级材质"
                   IsChecked="{Binding EnableAdvancedMaterial}" />
               <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowDefinitions="Auto,10,Auto">
                 <TextBlock
                     VerticalAlignment="Center"
-                    Foreground="#343D4A"
+                    Foreground="{DynamicResource ColorBrush1}"
                     FontSize="13"
                     Margin="0,0,20,0"
                     Text="模糊半径" />
@@ -127,14 +205,14 @@
                       Grid.Column="1"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
-                      Foreground="#677789"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                       FontSize="12"
                       Text="{Binding BlurRadiusLabel}" />
                 </Grid>
                 <TextBlock
                     Grid.Row="2"
                     VerticalAlignment="Center"
-                    Foreground="#343D4A"
+                    Foreground="{DynamicResource ColorBrush1}"
                     FontSize="13"
                     Margin="0,0,20,0"
                     Text="模糊方法" />
@@ -149,7 +227,7 @@
                     Grid.Column="2"
                     Margin="20,0,10,0"
                     VerticalAlignment="Center"
-                    Foreground="#343D4A"
+                    Foreground="{DynamicResource ColorBrush1}"
                     FontSize="13"
                     Text="采样率" />
                 <Grid Grid.Row="2" Grid.Column="3" ColumnDefinitions="*,52">
@@ -162,7 +240,7 @@
                       Grid.Column="1"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
-                      Foreground="#677789"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                       FontSize="12"
                       Text="{Binding BlurSamplingRateLabel}" />
                 </Grid>
@@ -177,7 +255,7 @@
           <Grid ColumnDefinitions="Auto,25,*" RowDefinitions="30,10,30">
             <TextBlock
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Text="全局" />
             <ComboBox
@@ -187,7 +265,7 @@
             <TextBlock
                 Grid.Row="2"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Text="MOTD" />
             <ComboBox
@@ -203,11 +281,11 @@
         <controls:PclCard.CardContent>
           <StackPanel Spacing="8">
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="游戏启动后暂停视频背景，游戏退出后重新播放"
                 IsChecked="{Binding AutoPauseVideo}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="叠加彩色背景"
                 IsChecked="{Binding BackgroundColorful}" />
             <Grid ColumnDefinitions="Auto,Auto,Auto">
@@ -240,7 +318,7 @@
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
                   Text="音量" />
@@ -254,29 +332,29 @@
                     Grid.Column="1"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    Foreground="#677789"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
                     Text="{Binding MusicVolumeLabel}" />
               </Grid>
             </Grid>
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="随机播放"
                 IsChecked="{Binding MusicRandomPlay}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="打开启动器自动开始播放"
                 IsChecked="{Binding MusicAutoStart}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="游戏启动后自动开始播放，游戏退出后自动暂停播放"
                 IsChecked="{Binding MusicStartOnGameLaunch}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="游戏启动后自动暂停播放，游戏退出后自动开始播放"
                 IsChecked="{Binding MusicStopOnGameLaunch}" />
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="接入系统媒体传输控制 (SMTC) 控件"
                 IsChecked="{Binding MusicEnableSmtc}" />
             <Grid ColumnDefinitions="Auto,Auto,Auto">
@@ -329,14 +407,14 @@
                   IsChecked="{Binding IsLogoTypeImageSelected}" />
             </Grid>
             <CheckBox
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 Content="标题栏居左"
                 IsChecked="{Binding LogoAlignLeft}"
                 IsVisible="{Binding IsLogoLeftVisible}" />
             <Grid IsVisible="{Binding IsLogoTextVisible}" ColumnDefinitions="Auto,*">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="标题栏文本" />
@@ -392,24 +470,24 @@
 
             <Border
                 Padding="12,10"
-                Background="#EAF2FE"
-                BorderBrush="#D5E6FD"
+                Background="{DynamicResource ColorBrush8}"
+                BorderBrush="{DynamicResource ColorBrush6}"
                 BorderThickness="1"
                 CornerRadius="4">
               <TextBlock
-                  Foreground="#4068A8"
+                  Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
                   FontSize="12.5"
                   Text="内容见 ModSetup"
                   TextWrapping="Wrap" />
             </Border>
             <Border
                 Padding="12,10"
-                Background="#FFF8DD"
-                BorderBrush="#F2D777"
+                Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
                 BorderThickness="1"
                 CornerRadius="4">
               <TextBlock
-                  Foreground="#6E5800"
+                  Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"
                   Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！"
                   TextWrapping="Wrap" />
@@ -439,7 +517,7 @@
             <Grid IsVisible="{Binding IsHomepageNetVisible}" ColumnDefinitions="Auto,*">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="下载地址" />
@@ -453,7 +531,7 @@
             <Grid IsVisible="{Binding IsHomepagePresetVisible}" ColumnDefinitions="Auto,*">
               <TextBlock
                   VerticalAlignment="Center"
-                  Foreground="#343D4A"
+                  Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
                   Text="主页预设" />
@@ -471,7 +549,7 @@
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <TextBlock
-                Foreground="#4B5968"
+                Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
                 FontSize="13"
                 Text="你可以隐藏不需要的页面或关闭特定功能。在任意界面按 F12 可以暂时显示被隐藏的功能。"
                 TextWrapping="Wrap" />
@@ -480,7 +558,7 @@
                 <DataTemplate>
                   <StackPanel Margin="0,0,0,12" Spacing="8">
                     <TextBlock
-                        Foreground="#343D4A"
+                        Foreground="{DynamicResource ColorBrush1}"
                         FontSize="13.5"
                         Text="{Binding Title}" />
                     <ItemsControl ItemsSource="{Binding Items}">
@@ -493,7 +571,7 @@
                         <DataTemplate>
                           <CheckBox
                               Margin="0,0,18,8"
-                              Foreground="#343D4A"
+                              Foreground="{DynamicResource ColorBrush1}"
                               Content="{Binding Title}"
                               IsChecked="{Binding IsChecked}" />
                         </DataTemplate>

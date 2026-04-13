@@ -16,9 +16,9 @@
       </ItemsControl>
 
       <StackPanel IsVisible="{Binding HasNoTaskManagerEntries}" Spacing="8">
-        <TextBlock Foreground="#47586D" FontSize="13.5" Text="当前没有活动任务" />
+        <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="当前没有活动任务" />
         <TextBlock
-            Foreground="#7E8FA5"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12"
             Text="下载、安装或其他后台流程开始后，这里会自动显示实时进度、速度和剩余文件数量。"
             TextWrapping="Wrap" />

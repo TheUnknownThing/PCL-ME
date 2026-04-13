@@ -11,6 +11,7 @@ namespace PCL.Frontend.Avalonia.Desktop;
 internal sealed class App : Application
 {
     private readonly AvaloniaCommandOptions _options;
+    private FrontendRuntimePaths? _runtimePaths;
 
     public App(AvaloniaCommandOptions options)
     {
@@ -20,10 +21,11 @@ internal sealed class App : Application
     public override void Initialize()
     {
         var platformAdapter = new FrontendPlatformAdapter();
-        var runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
-        FrontendLoggingBootstrap.Initialize(runtimePaths);
-        FrontendShellActionService.ApplyStoredAnimationPreferences(runtimePaths);
+        _runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
+        FrontendLoggingBootstrap.Initialize(_runtimePaths);
+        FrontendShellActionService.ApplyStoredAnimationPreferences(_runtimePaths);
         AvaloniaXamlLoader.Load(this);
+        FrontendAppearanceService.ApplyStoredAppearance(this, _runtimePaths);
         ShellPaneTemplateRegistry.Register(this);
     }
 
@@ -32,9 +34,10 @@ internal sealed class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var platformAdapter = new FrontendPlatformAdapter();
+            var runtimePaths = _runtimePaths ?? FrontendRuntimePaths.Resolve(platformAdapter);
             desktop.Exit += OnDesktopExit;
             var shellActionService = new FrontendShellActionService(
-                FrontendRuntimePaths.Resolve(platformAdapter),
+                runtimePaths,
                 platformAdapter,
                 () => desktop.Shutdown());
             desktop.MainWindow = new MainWindow
@@ -44,6 +47,8 @@ internal sealed class App : Application
 
             desktop.MainWindow.Opened += async (_, _) =>
             {
+                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths);
+
                 if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, _options.ForceCjkFontWarning))
                 {
                     await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(shellActionService);

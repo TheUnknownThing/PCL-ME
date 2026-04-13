@@ -102,7 +102,7 @@
             <Border
                 Margin="0,0,4,0"
                 Padding="3,1"
-                Background="#14000000"
+                Background="{DynamicResource ColorBrushBg1}"
                 CornerRadius="3">
               <TextBlock
                   Foreground="{DynamicResource ColorBrushGray2}"
@@ -140,55 +140,55 @@
           Width="25"
           Height="25"
           Command="{Binding InfoCommand}"
-          HoverBackgroundBrush="#184592FF"
+          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
           IconBrush="{DynamicResource ColorBrush5}"
           IconData="{Binding InfoIconData}"
           IconScale="{Binding InfoIconScale}"
-          IdleBackgroundBrush="#00FFFFFF"
+          IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasInfoAction}"
           ToolTip.Tip="详情" />
       <controls:PclIconButton
           Width="25"
           Height="25"
           Command="{Binding WebsiteCommand}"
-          HoverBackgroundBrush="#184592FF"
+          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
           IconBrush="{DynamicResource ColorBrush5}"
           IconData="{Binding WebsiteIconData}"
           IconScale="{Binding WebsiteIconScale}"
-          IdleBackgroundBrush="#00FFFFFF"
+          IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasWebsiteAction}"
           ToolTip.Tip="打开主页" />
       <controls:PclIconButton
           Width="25"
           Height="25"
           Command="{Binding OpenCommand}"
-          HoverBackgroundBrush="#184592FF"
+          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
           IconBrush="{DynamicResource ColorBrush5}"
           IconData="{Binding OpenIconData}"
           IconScale="{Binding OpenIconScale}"
-          IdleBackgroundBrush="#00FFFFFF"
+          IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasOpenAction}"
           ToolTip.Tip="打开文件位置" />
       <controls:PclIconButton
           Width="25"
           Height="25"
           Command="{Binding ToggleCommand}"
-          HoverBackgroundBrush="#184592FF"
+          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
           IconBrush="{DynamicResource ColorBrush5}"
           IconData="{Binding ToggleIconData}"
           IconScale="{Binding ToggleIconScale}"
-          IdleBackgroundBrush="#00FFFFFF"
+          IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasToggleAction}"
           ToolTip.Tip="{Binding ToggleToolTip}" />
       <controls:PclIconButton
           Width="25"
           Height="25"
           Command="{Binding DeleteCommand}"
-          HoverBackgroundBrush="#184592FF"
+          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
           IconBrush="{DynamicResource ColorBrush5}"
           IconData="{Binding DeleteIconData}"
           IconScale="{Binding DeleteIconScale}"
-          IdleBackgroundBrush="#00FFFFFF"
+          IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasDeleteAction}"
           ToolTip.Tip="删除" />
     </StackPanel>

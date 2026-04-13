@@ -9,7 +9,7 @@
       Width="28"
       Height="28"
       CornerRadius="14"
-      Background="#00FFFFFF"
+      Background="{DynamicResource ColorBrushTransparent}"
       BorderBrush="Transparent"
       BorderThickness="0"
       RenderTransformOrigin="0.5,0.5">
@@ -37,7 +37,7 @@
           Height="14"
           HorizontalAlignment="Center"
           VerticalAlignment="Center"
-          Fill="#EAF2FE"
+          Fill="{DynamicResource ColorBrush8}"
           RenderTransformOrigin="0.5,0.5"
           Stretch="Uniform" />
     </Button>

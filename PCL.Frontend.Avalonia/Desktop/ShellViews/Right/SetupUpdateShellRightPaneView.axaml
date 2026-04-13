@@ -13,7 +13,7 @@
                 Grid.Row="0"
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Text="更新通道" />
             <ComboBox
@@ -28,7 +28,7 @@
                 Grid.Row="2"
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Text="自动更新设置" />
             <ComboBox
@@ -59,14 +59,14 @@
                 Grid.Row="0"
                 Grid.Column="2"
                 VerticalAlignment="Bottom"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="20"
                 Text="{Binding AvailableUpdateName}" />
             <TextBlock
                 Grid.Row="2"
                 Grid.Column="2"
                 VerticalAlignment="Top"
-                Foreground="#677789"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="14"
                 Text="{Binding AvailableUpdatePublisher}" />
             <controls:PclButton
@@ -83,7 +83,7 @@
             <TextBlock
                 Grid.Row="4"
                 Grid.ColumnSpan="4"
-                Foreground="#4B5968"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
                 Text="{Binding AvailableUpdateSummary}"
                 TextWrapping="Wrap" />
@@ -97,7 +97,7 @@
                 BorderThickness="0"
                 Command="{Binding ShowUpdateDetailCommand}">
               <TextBlock
-                  Foreground="#1370F3"
+                  Foreground="{DynamicResource ColorBrush3}"
                   FontSize="12.5"
                   Text="有关此更新的更多信息..." />
             </Button>
@@ -121,14 +121,14 @@
                 Grid.Row="0"
                 Grid.Column="2"
                 VerticalAlignment="Bottom"
-                Foreground="#343D4A"
+                Foreground="{DynamicResource ColorBrush1}"
                 FontSize="20"
                 Text="{Binding CurrentVersionName}" />
             <TextBlock
                 Grid.Row="2"
                 Grid.Column="2"
                 VerticalAlignment="Top"
-                Foreground="#677789"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="14"
                 Text="{Binding CurrentVersionDescription}" />
             <controls:PclButton

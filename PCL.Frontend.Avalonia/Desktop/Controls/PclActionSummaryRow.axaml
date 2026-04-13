@@ -20,13 +20,13 @@
             Text="{Binding Title, ElementName=Root}"
             TextTrimming="CharacterEllipsis" />
         <TextBlock
-            Foreground="#677789"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12"
             Text="{Binding Info, ElementName=Root}"
             TextTrimming="CharacterEllipsis"
             TextWrapping="Wrap" />
         <TextBlock
-            Foreground="#8C99A6"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="11.5"
             IsVisible="{Binding ShowMeta, ElementName=Root}"
             Text="{Binding Meta, ElementName=Root}"

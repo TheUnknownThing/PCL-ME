@@ -33,5 +33,6 @@ public enum MinecraftLaunchPromptActionKind
     OpenUrl,
     AppendLaunchArgument,
     PersistNonAsciiPathWarningDisabled,
-    PersistInstanceJavaCompatibilityIgnored
+    PersistInstanceJavaCompatibilityIgnored,
+    IgnoreJavaCompatibilityOnce
 }

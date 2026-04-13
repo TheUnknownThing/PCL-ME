@@ -104,7 +104,7 @@ package_macos() {
   copy_tree "$publish_dir" "$macos_dir"
   write_text_file "${macos_dir}/${mac_launcher_name}" "#!/bin/sh
 script_dir=\"\$(cd \"\$(dirname \"\$0\")\" && pwd)\"
-exec \"\${script_dir}/${executable_name}\" app --host-env true \"\$@\"
+exec \"\${script_dir}/${executable_name}\" app \"\$@\"
 "
   create_mac_icon "${resources_dir}/AppIcon.icns" "$temp_dir"
   sed \
@@ -132,7 +132,7 @@ package_linux() {
   write_text_file "${package_dir}/${linux_launcher_script}" "#!/usr/bin/env bash
 set -euo pipefail
 script_dir=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
-exec \"\${script_dir}/${executable_name}\" app --host-env true \"\$@\"
+exec \"\${script_dir}/${executable_name}\" app \"\$@\"
 "
   sed \
     -e "s|__APP_NAME__|${app_name}|g" \
@@ -155,7 +155,7 @@ package_windows() {
   write_text_file "${package_dir}/${windows_launcher_script}" "Set shell = CreateObject(\"WScript.Shell\")
 Set fileSystem = CreateObject(\"Scripting.FileSystemObject\")
 scriptDir = fileSystem.GetParentFolderName(WScript.ScriptFullName)
-shell.Run Chr(34) & scriptDir & \"\\\\PCL.Frontend.Avalonia.exe\" & Chr(34) & \" app --host-env true\", 0
+shell.Run Chr(34) & scriptDir & \"\\\\PCL.Frontend.Avalonia.exe\" & Chr(34) & \" app\", 0
 "
   (
     cd "$rid_root"

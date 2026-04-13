@@ -13,12 +13,12 @@
               <DataTemplate>
                 <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
                   <TextBlock
-                      Foreground="#7D8897"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                       FontSize="12.5"
                       Text="{Binding Label}" />
                   <TextBlock
                       Grid.Column="2"
-                      Foreground="#343D4A"
+                      Foreground="{DynamicResource ColorBrush1}"
                       FontSize="13"
                       Text="{Binding Value}"
                       TextWrapping="Wrap" />
@@ -36,12 +36,12 @@
               <DataTemplate>
                 <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
                   <TextBlock
-                      Foreground="#7D8897"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                       FontSize="12.5"
                       Text="{Binding Label}" />
                   <TextBlock
                       Grid.Column="2"
-                      Foreground="#343D4A"
+                      Foreground="{DynamicResource ColorBrush1}"
                       FontSize="13"
                       Text="{Binding Value}"
                       TextWrapping="Wrap" />

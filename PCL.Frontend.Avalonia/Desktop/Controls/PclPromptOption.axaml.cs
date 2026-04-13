@@ -72,15 +72,23 @@ internal sealed partial class PclPromptOption : UserControl
 
     private void RefreshState()
     {
-        OptionBorder.Background = _isHovered ? Brush.Parse("#EAF3FF") : Brush.Parse("#F3F8FF");
-        OptionBorder.BorderBrush = _isHovered ? Brush.Parse("#BFD7FB") : Brush.Parse("#D5E6FD");
+        OptionBorder.Background = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush8")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiWhite");
+        OptionBorder.BorderBrush = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush6")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrush6");
         OptionBorder.Opacity = _isPressed ? 0.9 : 1.0;
         OptionBorder.RenderTransform = _isPressed
             ? new ScaleTransform(0.985, 0.985)
             : _isHovered
                 ? new ScaleTransform(1.01, 1.01)
                 : new ScaleTransform(1, 1);
-        LabelBlock.Foreground = _isHovered ? Brush.Parse("#0B5BCB") : Brush.Parse("#343D4A");
-        DetailBlock.Foreground = _isHovered ? Brush.Parse("#5D6D80") : Brush.Parse("#728091");
+        LabelBlock.Foreground = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush2")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrush1");
+        DetailBlock.Foreground = _isHovered
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySecondarySelected")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushEntrySecondaryIdle");
     }
 }

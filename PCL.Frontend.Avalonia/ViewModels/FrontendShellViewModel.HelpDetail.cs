@@ -41,8 +41,16 @@ internal sealed partial class FrontendShellViewModel
     private void ShowHelpDetail(FrontendToolsHelpEntry entry, bool addActivity)
     {
         _currentHelpDetailEntry = entry;
-        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.HelpDetail), $"Opened help detail for {entry.Title}.");
-        RefreshHelpDetailSurface();
+        var route = new LauncherFrontendRoute(LauncherFrontendPageKey.HelpDetail);
+        if (_currentRoute == route)
+        {
+            ChangeRoute(route, $"Opened help detail for {entry.Title}.", ShellNavigationTransitionDirection.Forward);
+        }
+        else
+        {
+            NavigateTo(route, $"Opened help detail for {entry.Title}.");
+        }
+
         if (addActivity)
         {
             AddActivity($"查看帮助: {entry.Title}", entry.RawPath);
@@ -91,7 +99,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            var wrapped = $"<Root>{entry.DetailContent}</Root>";
+            var wrapped = WrapHelpDetailContent(entry.DetailContent);
             var root = XDocument.Parse(wrapped, LoadOptions.PreserveWhitespace).Root;
             if (root is null)
             {
@@ -144,6 +152,15 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private static string WrapHelpDetailContent(string content)
+    {
+        return $"""
+                <Root xmlns:local="urn:pcl:help:local" xmlns:x="urn:pcl:help:x" xmlns:sys="urn:pcl:help:sys">
+                {content.TrimStart('\uFEFF')}
+                </Root>
+                """;
+    }
+
     private HelpDetailSectionViewModel ParseHelpCard(XElement card)
     {
         var title = ReadAttribute(card, "Title");
@@ -184,16 +201,9 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (IsNamed(element, "MyButton"))
+        if (IsButtonLikeElement(element))
         {
-            var title = ReadAttribute(element, "Text");
-            var eventType = ReadAttribute(element, "EventType");
-            var eventData = ReadAttribute(element, "EventData");
-            actions.Add(CreateHelpAction(
-                string.IsNullOrWhiteSpace(title) ? "执行帮助操作" : title,
-                string.IsNullOrWhiteSpace(eventData) ? eventType : eventData,
-                eventType,
-                eventData));
+            ParseHelpButtonElement(element, lines, actions);
             return;
         }
 
@@ -229,6 +239,54 @@ internal sealed partial class FrontendShellViewModel
         foreach (var child in element.Elements())
         {
             ParseHelpElement(child, lines, actions);
+        }
+    }
+
+    private void ParseHelpButtonElement(
+        XElement element,
+        List<string> lines,
+        List<SimpleListEntryViewModel> actions)
+    {
+        var title = ReadAttribute(element, "Text");
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            title = ReadAttribute(element, "Title");
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            title = ReadAttribute(element, "ToolTip");
+        }
+
+        var eventType = ReadAttribute(element, "EventType");
+        var eventData = ReadAttribute(element, "EventData");
+        if (!string.IsNullOrWhiteSpace(eventType) || !string.IsNullOrWhiteSpace(eventData))
+        {
+            var info = ReadAttribute(element, "ToolTip");
+            actions.Add(CreateHelpAction(
+                string.IsNullOrWhiteSpace(title) ? DeriveHelpActionTitle(eventType, eventData) : title,
+                string.IsNullOrWhiteSpace(info)
+                    ? string.IsNullOrWhiteSpace(eventData) ? eventType : eventData
+                    : info,
+                eventType,
+                eventData));
+            return;
+        }
+
+        var customEventSummary = DescribeCustomEvents(element);
+        if (!string.IsNullOrWhiteSpace(customEventSummary))
+        {
+            AddHelpText(
+                lines,
+                string.IsNullOrWhiteSpace(title)
+                    ? $"示例按钮：包含 {customEventSummary}。"
+                    : $"示例按钮：{title}（包含 {customEventSummary}）。");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            AddHelpText(lines, $"示例按钮：{title}");
         }
     }
 
@@ -450,9 +508,32 @@ internal sealed partial class FrontendShellViewModel
         return string.Equals(element.Name.LocalName, name, StringComparison.Ordinal);
     }
 
+    private static bool IsButtonLikeElement(XElement element)
+    {
+        return IsNamed(element, "MyButton")
+            || IsNamed(element, "MyTextButton")
+            || IsNamed(element, "MyIconTextButton")
+            || IsNamed(element, "MyIconButton");
+    }
+
     private static string ReadAttribute(XElement element, string attributeName)
     {
-        return WebUtility.HtmlDecode(element.Attribute(attributeName)?.Value ?? string.Empty).Trim();
+        var attribute = element.Attributes()
+            .FirstOrDefault(item => string.Equals(item.Name.LocalName, attributeName, StringComparison.Ordinal));
+        return WebUtility.HtmlDecode(attribute?.Value ?? string.Empty).Trim();
+    }
+
+    private static string DescribeCustomEvents(XElement element)
+    {
+        var eventTypes = element.Descendants()
+            .Where(item => IsNamed(item, "CustomEvent"))
+            .Select(item => ReadAttribute(item, "Type"))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        return eventTypes.Length == 0
+            ? string.Empty
+            : string.Join("、", eventTypes);
     }
 
     private static void AddHelpText(List<string> lines, string value)

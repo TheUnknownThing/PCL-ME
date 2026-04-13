@@ -223,8 +223,6 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("刷新测试工具页", "测试页表单与工具按钮已从当前启动器配置重新加载。");
     }
 
-    private void ManageDownloadFavoriteTargets() => _ = ManageDownloadFavoriteTargetsAsync();
-
     private async Task ManageDownloadFavoriteTargetsAsync()
     {
         var root = LoadDownloadFavoriteTargetRoot();
@@ -1422,6 +1420,7 @@ internal sealed partial class FrontendShellViewModel
         _selectedJavaRuntimeKey = key;
         _shellActionService.PersistSharedValue("LaunchArgumentJavaSelect", key == "auto" ? string.Empty : key);
         SyncJavaSelection();
+        _ = RefreshLaunchProfileCompositionAsync();
         RaisePropertyChanged(nameof(IsAutoJavaSelected));
         AddActivity("切换默认 Java", key == "auto" ? "自动选择" : key);
     }

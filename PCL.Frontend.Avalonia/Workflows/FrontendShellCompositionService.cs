@@ -2,7 +2,6 @@ using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Models;
-using PCL.Frontend.Avalonia.Workflows.Inspection;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -11,12 +10,6 @@ internal static class FrontendShellCompositionService
     public static FrontendShellComposition Compose(AvaloniaCommandOptions options)
     {
         var platformAdapter = new FrontendPlatformAdapter();
-        var replayComposition = FrontendInspectionShellCompositionService.TryComposeReplay(options);
-        if (replayComposition is not null)
-        {
-            return replayComposition;
-        }
-
         var paths = FrontendRuntimePaths.Resolve(platformAdapter);
         var sharedConfig = paths.OpenSharedConfigProvider();
         var localConfig = paths.OpenLocalConfigProvider();

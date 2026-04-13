@@ -110,11 +110,8 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<SurfaceNoticeViewModel> BuildInstanceInstallHintStrips()
     {
         var hints = GetEffectiveInstallHints(isExistingInstance: true).ToArray();
-        return hints.Select((hint, index) => CreateNoticeStrip(
+        return hints.Select((hint, index) => CreateDangerNoticeStrip(
             hint,
-            "#FFF1EA",
-            "#F1C8B6",
-            "#A94F2B",
             index < 2 ? new Thickness(0, 10, 0, 0) : new Thickness(0, 1, 0, 7))).ToArray();
     }
 

@@ -8,12 +8,12 @@
       <StackPanel Spacing="10">
         <TextBlock
             HorizontalAlignment="Center"
-            Foreground="#4B5968"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="19"
             Text="{Binding InstanceResourceEmptyTitle}" />
-        <Border Height="2" Background="#D5E6FD" />
+        <Border Height="2" Background="{DynamicResource ColorBrush6}" />
         <TextBlock
-            Foreground="#677789"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12.5"
             Text="{Binding InstanceResourceEmptyDescription}"
             TextAlignment="Center"

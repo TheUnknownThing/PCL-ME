@@ -1,0 +1,135 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections.InstanceSelectEntryCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    ClipToBounds="False">
+  <Grid x:Name="LayoutRoot" Margin="0,0,0,2" RenderTransformOrigin="0.5,0.5" RenderTransform="scale(1)">
+    <Grid.Transitions>
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+      </Transitions>
+    </Grid.Transitions>
+
+    <Border
+        x:Name="BackgroundSurface"
+        Background="Transparent"
+        CornerRadius="6"
+        Opacity="0">
+      <Border.Transitions>
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+    </Border>
+
+    <Grid Margin="6,5" ColumnDefinitions="*,Auto">
+      <Button
+          x:Name="SelectButton"
+          Classes="nochrome"
+          Background="Transparent"
+          BorderBrush="Transparent"
+          BorderThickness="0"
+          Command="{Binding SelectCommand}"
+          FocusAdorner="{x:Null}"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Stretch"
+          Padding="0">
+        <Grid ColumnDefinitions="Auto,*">
+          <Image
+              Width="24"
+              Height="24"
+              Margin="0,1,0,0"
+              VerticalAlignment="Top"
+              Source="{Binding Icon}"
+              Stretch="UniformToFill" />
+
+          <StackPanel Grid.Column="1" Margin="8,0,0,0" Spacing="1">
+            <TextBlock
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13.5"
+                Text="{Binding Title}"
+                TextTrimming="CharacterEllipsis" />
+
+            <WrapPanel IsVisible="{Binding HasMetadataContent}">
+              <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border
+                        Margin="0,0,5,1"
+                        Padding="4,1"
+                        Background="{DynamicResource ColorBrushGray7}"
+                        CornerRadius="3">
+                      <TextBlock
+                          Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                          FontSize="10.4"
+                          Text="{Binding}" />
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock
+                  Margin="0,0,0,1"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                  FontSize="11.2"
+                  IsVisible="{Binding HasSubtitle}"
+                  Text="{Binding Subtitle}"
+                  TextTrimming="CharacterEllipsis" />
+            </WrapPanel>
+          </StackPanel>
+        </Grid>
+      </Button>
+
+      <StackPanel
+          x:Name="ActionStack"
+          Grid.Column="1"
+          Margin="8,0,0,0"
+          VerticalAlignment="Center"
+          IsHitTestVisible="False"
+          Opacity="0"
+          Orientation="Horizontal"
+          Spacing="2">
+        <StackPanel.Transitions>
+          <Transitions>
+            <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+          </Transitions>
+        </StackPanel.Transitions>
+        <controls:PclIconButton
+            Command="{Binding ToggleFavoriteCommand}"
+            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+            IconBrush="{Binding FavoriteIconBrush}"
+            IconData="{Binding FavoriteIconData}"
+            IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+            ToolTip.Tip="收藏 / 取消收藏" />
+        <controls:PclIconButton
+            Command="{Binding OpenFolderCommand}"
+            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+            IconBrush="{DynamicResource ColorBrush3}"
+            IconData="{Binding OpenFolderIconData}"
+            IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+            ToolTip.Tip="打开实例文件夹" />
+        <controls:PclIconButton
+            Command="{Binding DeleteCommand}"
+            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+            IconBrush="{DynamicResource ColorBrush3}"
+            IconData="{Binding DeleteIconData}"
+            IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+            ToolTip.Tip="删除实例" />
+        <controls:PclIconButton
+            Command="{Binding OpenSettingsCommand}"
+            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+            IconBrush="{DynamicResource ColorBrush3}"
+            IconData="{Binding SettingsIconData}"
+            IconScale="{Binding SettingsIconScale}"
+            IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+            ToolTip.Tip="打开实例设置" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</UserControl>

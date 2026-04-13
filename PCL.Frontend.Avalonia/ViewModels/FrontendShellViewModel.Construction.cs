@@ -9,7 +9,6 @@ using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
-using PCL.Frontend.Avalonia.Workflows.Inspection;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -25,6 +24,7 @@ internal sealed partial class FrontendShellViewModel
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
     private FrontendInstanceComposition _instanceComposition;
+    private FrontendInstanceCompositionService.LoadMode _instanceCompositionLoadMode = FrontendInstanceCompositionService.LoadMode.Full;
     private FrontendToolsComposition _toolsComposition = new(
         new FrontendToolsHelpState([]),
         new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
@@ -53,6 +53,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _createOfflineLaunchProfileCommand;
     private readonly ActionCommand _loginMicrosoftLaunchProfileCommand;
     private readonly ActionCommand _loginAuthlibLaunchProfileCommand;
+    private readonly ActionCommand _refreshLaunchProfileCommand;
     private readonly ActionCommand _backLaunchProfileCommand;
     private readonly ActionCommand _submitOfflineLaunchProfileCommand;
     private readonly ActionCommand _submitMicrosoftLaunchProfileCommand;
@@ -140,6 +141,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _showLaunchCommunityHint = true;
     private bool _isLaunchInProgress;
     private bool _isLaunchProfileActionInProgress;
+    private bool _isLaunchProfileRefreshInProgress;
     private LaunchProfileSurfaceKind _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
     private int _launchProfileCompositionRefreshVersion;
     private bool _pendingLaunchAfterPrompt;
@@ -252,6 +254,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableHardwareAcceleration;
     private bool _enableTelemetry = true;
     private bool _isLaunchBlockedByPrompt;
+    private bool _ignoreJavaCompatibilityWarningOnce;
     private bool _enableDoH = true;
     private int _selectedHttpProxyTypeIndex;
     private string _httpProxyAddress = string.Empty;
@@ -263,7 +266,9 @@ internal sealed partial class FrontendShellViewModel
     private bool _debugDelayEnabled;
     private int _selectedDarkModeIndex = 2;
     private int _selectedLightColorIndex;
-    private int _selectedDarkColorIndex = 1;
+    private int _selectedDarkColorIndex;
+    private string _customLightThemeColorHex = string.Empty;
+    private string _customDarkThemeColorHex = string.Empty;
     private double _launcherOpacity = 360;
     private bool _showLauncherLogo = true;
     private bool _lockWindowSize;
@@ -314,7 +319,12 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.ChoicePresenter = ShowInAppChoiceAsync;
         _shellComposition = FrontendShellCompositionService.Compose(options);
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
-        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths);
+        _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
+        var initialInstanceLoadMode = _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
+            ? ResolveInstanceCompositionLoadMode(_currentRoute)
+            : FrontendInstanceCompositionService.LoadMode.Lightweight;
+        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode);
+        _instanceCompositionLoadMode = initialInstanceLoadMode;
         _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths);
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
@@ -323,9 +333,8 @@ internal sealed partial class FrontendShellViewModel
             _shellComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
-        _crashPlan = FrontendInspectionCrashCompositionService.Compose(options);
+        _crashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths);
         _activeCrashPlan = _crashPlan;
-        _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _homeCommand = new ActionCommand(NavigateHome, () => CanGoHome);
@@ -347,6 +356,7 @@ internal sealed partial class FrontendShellViewModel
         _createOfflineLaunchProfileCommand = new ActionCommand(() => _ = CreateOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _loginMicrosoftLaunchProfileCommand = new ActionCommand(() => _ = LoginMicrosoftLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _loginAuthlibLaunchProfileCommand = new ActionCommand(() => _ = LoginAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
+        _refreshLaunchProfileCommand = new ActionCommand(() => _ = RefreshSelectedLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress && !_isLaunchInProgress && CanRefreshLaunchProfile);
         _backLaunchProfileCommand = new ActionCommand(BackLaunchProfileSurface, () => !_isLaunchProfileActionInProgress);
         _submitOfflineLaunchProfileCommand = new ActionCommand(() => _ = SubmitOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _submitMicrosoftLaunchProfileCommand = new ActionCommand(() => _ = SubmitMicrosoftLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);

@@ -12,6 +12,7 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshShell(string activityMessage)
     {
         var shellPlan = BuildShellPlan();
+        var sidebarNavigation = ResolveSidebarNavigation(shellPlan.Navigation);
         var pageContent = BuildPageContent(shellPlan);
         RefreshCurrentDedicatedGenericRouteSurface();
         var surfaceFacts = pageContent.Facts;
@@ -38,8 +39,8 @@ internal sealed partial class FrontendShellViewModel
         CanGoHome = ResolveHomeRoute() is not null;
 
         ReplaceNavigationEntriesIfChanged(TopLevelEntries, shellPlan.Navigation.TopLevelEntries, NavigationVisualStyle.TopLevel);
-        ReplaceNavigationEntriesIfChanged(SidebarEntries, shellPlan.Navigation.SidebarEntries, NavigationVisualStyle.Sidebar);
-        ReplaceSidebarSectionsIfChanged(shellPlan.Navigation);
+        ReplaceNavigationEntriesIfChanged(SidebarEntries, sidebarNavigation.SidebarEntries, NavigationVisualStyle.Sidebar);
+        ReplaceSidebarSectionsIfChanged(sidebarNavigation);
         ReplaceUtilityEntriesIfChanged(shellPlan.Navigation.UtilityEntries.Where(entry => entry.IsVisible).ToArray());
         ReplaceSurfaceFactsIfChanged(surfaceFacts);
         ReplaceSurfaceSectionsIfChanged(surfaceSections);
@@ -50,6 +51,34 @@ internal sealed partial class FrontendShellViewModel
         RaiseCollectionStateProperties();
         AddActivity(activityMessage, $"{shellPlan.Navigation.CurrentPage.Title} • {shellPlan.Navigation.CurrentPage.Route.Page}/{shellPlan.Navigation.CurrentPage.Route.Subpage}");
         RaiseShellStateProperties();
+    }
+
+    private LauncherFrontendNavigationView ResolveSidebarNavigation(LauncherFrontendNavigationView navigation)
+    {
+        var route = ResolveSidebarAnchorRoute(_currentRoute);
+        if (route == _currentRoute)
+        {
+            return navigation;
+        }
+
+        var request = BuildCurrentNavigationRequest() with
+        {
+            CurrentRoute = route,
+            BackstackDepth = 0,
+            ParentRoute = ResolveDefaultParentRoute(route)
+        };
+        return LauncherFrontendNavigationService.BuildView(request);
+    }
+
+    private static LauncherFrontendRoute ResolveSidebarAnchorRoute(LauncherFrontendRoute route)
+    {
+        return route.Page switch
+        {
+            LauncherFrontendPageKey.HelpDetail => new LauncherFrontendRoute(
+                LauncherFrontendPageKey.Tools,
+                LauncherFrontendSubpageKey.ToolsLauncherHelp),
+            _ => route
+        };
     }
 
     private NavigationEntryViewModel CreateNavigationEntry(LauncherFrontendNavigationEntry entry, NavigationVisualStyle style)
@@ -68,7 +97,8 @@ internal sealed partial class FrontendShellViewModel
                 $"Navigated to {entry.Title} from the {(style == NavigationVisualStyle.Sidebar ? "sidebar" : "top bar")}.",
                 style == NavigationVisualStyle.Sidebar
                     ? RouteNavigationBehavior.Lateral
-                    : RouteNavigationBehavior.Reset))
+                    : RouteNavigationBehavior.Reset),
+                () => style != NavigationVisualStyle.TopLevel || IsTopLevelNavigationInteractive)
         );
     }
 
@@ -159,6 +189,10 @@ internal sealed partial class FrontendShellViewModel
         }
 
         ReplaceItems(collection, entries.Select(entry => CreateNavigationEntry(entry, style)));
+        if (style == NavigationVisualStyle.TopLevel)
+        {
+            NotifyTopLevelNavigationCanExecuteChanged();
+        }
     }
 
     private void ReplaceUtilityEntriesIfChanged(IReadOnlyList<LauncherFrontendUtilityEntry> entries)
@@ -613,8 +647,9 @@ internal sealed partial class FrontendShellViewModel
             ResetCommunityProjectNavigationStack();
         }
 
+        var previousRoute = _currentRoute;
         _currentRoute = route;
-        ReloadRouteCompositions(route);
+        ReloadRouteCompositions(previousRoute, route);
         RefreshShell(activityMessage);
         RequestNavigationTransition(
             direction,
@@ -627,7 +662,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void ReloadRouteCompositions(LauncherFrontendRoute route)
+    private void ReloadRouteCompositions(LauncherFrontendRoute previousRoute, LauncherFrontendRoute route)
     {
         if (route.Page == LauncherFrontendPageKey.Setup)
         {
@@ -639,7 +674,15 @@ internal sealed partial class FrontendShellViewModel
         }
         else if (route.Page == LauncherFrontendPageKey.InstanceSetup)
         {
-            ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
+            var requiredLoadMode = ResolveInstanceCompositionLoadMode(route);
+            if (previousRoute.Page != LauncherFrontendPageKey.InstanceSetup
+                || !HasSufficientInstanceCompositionLoadMode(requiredLoadMode))
+            {
+                ReloadInstanceComposition(
+                    requiredLoadMode,
+                    reloadDependentCompositions: false,
+                    initializeAllSurfaces: false);
+            }
         }
         else if (route.Page == LauncherFrontendPageKey.VersionSaves)
         {
@@ -914,5 +957,19 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(AvailableUpdateSummary));
         RaisePropertyChanged(nameof(CurrentVersionName));
         RaisePropertyChanged(nameof(CurrentVersionDescription));
+    }
+
+    private void NotifyTopLevelNavigationInteractionChanged()
+    {
+        RaisePropertyChanged(nameof(IsTopLevelNavigationInteractive));
+        NotifyTopLevelNavigationCanExecuteChanged();
+    }
+
+    private void NotifyTopLevelNavigationCanExecuteChanged()
+    {
+        foreach (var entry in TopLevelEntries)
+        {
+            entry.Command.NotifyCanExecuteChanged();
+        }
     }
 }

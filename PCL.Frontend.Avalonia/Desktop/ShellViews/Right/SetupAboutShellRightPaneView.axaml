@@ -23,11 +23,11 @@
                   </Border>
                   <StackPanel Grid.Column="1" Margin="10,0,15,0" VerticalAlignment="Center" Spacing="2">
                     <TextBlock
-                        Foreground="#343D4A"
+                        Foreground="{DynamicResource ColorBrush1}"
                         FontSize="14"
                         Text="{Binding Title}" />
                     <TextBlock
-                        Foreground="#677789"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                         FontSize="12"
                         Text="{Binding Info}"
                         TextWrapping="Wrap" />
@@ -63,11 +63,11 @@
                   </Border>
                   <StackPanel Grid.Column="1" Margin="10,0,15,0" VerticalAlignment="Center" Spacing="2">
                     <TextBlock
-                        Foreground="#343D4A"
+                        Foreground="{DynamicResource ColorBrush1}"
                         FontSize="14"
                         Text="{Binding Title}" />
                     <TextBlock
-                        Foreground="#677789"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                         FontSize="12"
                         Text="{Binding Info}"
                         TextWrapping="Wrap" />

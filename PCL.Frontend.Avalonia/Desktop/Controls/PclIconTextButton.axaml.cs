@@ -119,29 +119,29 @@ internal sealed partial class PclIconTextButton : UserControl
     {
         if (!IsEnabled)
         {
-            PanBack.Background = Brush.Parse("#01EAF2FE");
-            ShapeIcon.Fill = Brush.Parse("#CCCCCC");
-            LabText.Foreground = Brush.Parse("#CCCCCC");
+            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
+            ShapeIcon.Fill = FrontendThemeResourceResolver.GetBrush("ColorBrushGray5");
+            LabText.Foreground = FrontendThemeResourceResolver.GetBrush("ColorBrushGray5");
             PanBack.RenderTransform = new ScaleTransform(1, 1);
             return;
         }
 
         var foreground = ColorType == PclIconTextButtonColorState.Highlight
-            ? Brush.Parse("#1370F3")
-            : Brush.Parse("#343D4A");
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrush3")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrush1");
 
         if (_isPressed)
         {
-            PanBack.Background = Brush.Parse("#D5E6FD");
+            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrush6");
         }
         else if (_isHovered)
         {
-            PanBack.Background = Brush.Parse("#BEE0EAFD");
-            foreground = Brush.Parse("#1370F3");
+            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushBg1");
+            foreground = FrontendThemeResourceResolver.GetBrush("ColorBrush3");
         }
         else
         {
-            PanBack.Background = Brush.Parse("#01EAF2FE");
+            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
         }
 
         ShapeIcon.Fill = foreground;

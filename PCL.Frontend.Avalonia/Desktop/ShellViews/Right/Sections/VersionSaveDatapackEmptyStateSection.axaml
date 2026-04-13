@@ -8,12 +8,12 @@
       <StackPanel Spacing="10">
         <TextBlock
             HorizontalAlignment="Center"
-            Foreground="#4B5968"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="19"
             Text="尚未安装数据包" />
-        <Border Height="2" Background="#D5E6FD" />
+        <Border Height="2" Background="{DynamicResource ColorBrush6}" />
         <TextBlock
-            Foreground="#677789"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12.5"
             Text="你可以从已经下载好的文件安装数据包。数据包需要放置在存档的 datapacks 文件夹中才能生效。"
             TextAlignment="Center"

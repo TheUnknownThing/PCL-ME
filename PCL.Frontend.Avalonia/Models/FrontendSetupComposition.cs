@@ -99,6 +99,8 @@ internal sealed record FrontendSetupUiState(
     int DarkModeIndex,
     int LightColorIndex,
     int DarkColorIndex,
+    string LightCustomColorHex,
+    string DarkCustomColorHex,
     double LauncherOpacity,
     bool ShowLauncherLogo,
     bool LockWindowSize,

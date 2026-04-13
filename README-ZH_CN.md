@@ -44,9 +44,9 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 建议先从这些目录了解项目：
 
 - `PCL.Frontend.Avalonia/`：当前正在维护的桌面前端
-- `PCL.Core/` 与 `PCL.Core.Backend/`：共享启动器与后端逻辑
+- `PCL.Core.Backend/`：当前仍在使用的共享启动器与后端逻辑
 
 ## 许可证
 
-- `PCL 启动器逻辑` 使用与原始 PCL / PCL-CE 一致的 [自定义许可证指南](https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/LICENCE)。
+- `PCL 启动器逻辑` 使用与原始 PCL / PCL-CE 一致的 [自定义许可证指南](https://github.com/PCL-Community/PCL-CE/blob/dev/Plain%20Craft%20Launcher%202/LICENCE)。
 - `其他独立逻辑` 使用 [Apache License 2.0](LICENSE)。

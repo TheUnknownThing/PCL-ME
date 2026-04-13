@@ -10,7 +10,7 @@
             Grid.Row="0"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="版本隔离" />
         <ComboBox
@@ -23,7 +23,7 @@
             Grid.Row="2"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="游戏窗口标题" />
         <TextBox
@@ -34,7 +34,7 @@
         <CheckBox
             Grid.Row="4"
             Grid.ColumnSpan="2"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             Content="默认窗口标题"
             IsChecked="{Binding UseDefaultInstanceWindowTitle}" />
 
@@ -42,7 +42,7 @@
             Grid.Row="6"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="自定义信息" />
         <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,Auto">
@@ -55,7 +55,7 @@
             Grid.Row="8"
             Margin="0,0,25,0"
             VerticalAlignment="Center"
-            Foreground="#343D4A"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="游戏 Java" />
         <ComboBox

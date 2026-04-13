@@ -261,8 +261,6 @@ internal sealed partial class FrontendShellViewModel
         ? "当前版本依赖"
         : $"{_communityProjectDependencyReleaseTitle} 的依赖";
 
-    public bool ShowCommunityProjectDependencyEmptyState => false;
-
     public bool ShowCommunityProjectDependencyCard => _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
         && HasCommunityProjectDependencySections;
 
