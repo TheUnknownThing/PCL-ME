@@ -37,7 +37,8 @@ internal static class FrontendUiVisibilityService
 
     public static FrontendUiVisibilityPreferences BuildPreferences(
         FrontendSetupUiState uiState,
-        bool forceShowHiddenItems)
+        bool forceShowHiddenItems,
+        bool hideQuiltLoader = false)
     {
         ArgumentNullException.ThrowIfNull(uiState);
 
@@ -48,7 +49,7 @@ internal static class FrontendUiVisibilityService
             .Where(key => !string.IsNullOrWhiteSpace(key))
             .ToImmutableHashSet(StringComparer.Ordinal);
 
-        return new FrontendUiVisibilityPreferences(forceShowHiddenItems, hiddenKeys);
+        return new FrontendUiVisibilityPreferences(forceShowHiddenItems, hiddenKeys, hideQuiltLoader);
     }
 
     public static bool ShouldShowFunctionHiddenCard(FrontendUiVisibilityPreferences preferences)
@@ -78,7 +79,10 @@ internal static class FrontendUiVisibilityService
 
         if (preferences.ForceShowHiddenItems || preferences.HiddenKeys.Count == 0)
         {
-            return navigation;
+            if (!preferences.HideQuiltLoader)
+            {
+                return navigation;
+            }
         }
 
         return navigation with
@@ -105,7 +109,24 @@ internal static class FrontendUiVisibilityService
 
         return route.Page switch
         {
-            LauncherFrontendPageKey.Download => ResolveFirstVisibleTopLevelRoute(preferences),
+            LauncherFrontendPageKey.Download => ResolveFirstVisibleRouteForPage(
+                LauncherFrontendPageKey.Download,
+                preferences,
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadClient),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadForge),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadNeoForge),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadFabric),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadQuilt),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadLiteLoader),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadOptiFine),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadMod),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadPack),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadResourcePack),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadShader),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadDataPack),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadWorld),
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadCompFavorites)),
             LauncherFrontendPageKey.Setup => ResolveFirstVisibleRouteForPage(
                 LauncherFrontendPageKey.Setup,
                 preferences,
@@ -184,7 +205,8 @@ internal static class FrontendUiVisibilityService
 
         return route.Page switch
         {
-            LauncherFrontendPageKey.Download => IsTopLevelPageVisible(route.Page, preferences),
+            LauncherFrontendPageKey.Download => IsTopLevelPageVisible(route.Page, preferences)
+                                               && FrontendLoaderVisibilityService.IsDownloadSubpageVisible(route.Subpage, preferences.HideQuiltLoader),
             LauncherFrontendPageKey.Setup => IsTopLevelPageVisible(route.Page, preferences) && !preferences.IsHidden(route.Subpage switch
             {
                 LauncherFrontendSubpageKey.SetupLaunch => HideSetupLaunchKey,
@@ -258,7 +280,8 @@ internal static class FrontendUiVisibilityService
 
 internal sealed record FrontendUiVisibilityPreferences(
     bool ForceShowHiddenItems,
-    ImmutableHashSet<string> HiddenKeys)
+    ImmutableHashSet<string> HiddenKeys,
+    bool HideQuiltLoader)
 {
     private static readonly ImmutableHashSet<string> FallbackHiddenKeySet = ImmutableHashSet<string>.Empty.WithComparer(StringComparer.Ordinal);
 

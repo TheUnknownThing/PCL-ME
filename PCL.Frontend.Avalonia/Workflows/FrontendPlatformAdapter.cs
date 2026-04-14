@@ -90,6 +90,55 @@ internal sealed class FrontendPlatformAdapter
         }
     }
 
+    public bool TryStartDetachedScript(string scriptPath, out string? error)
+    {
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(scriptPath) || !File.Exists(scriptPath))
+        {
+            error = "未找到可执行的更新脚本。";
+            return false;
+        }
+
+        try
+        {
+            ProcessStartInfo startInfo;
+            if (OperatingSystem.IsWindows())
+            {
+                startInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c start \"\" \"{scriptPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+            }
+            else
+            {
+                startInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/sh",
+                    UseShellExecute = false
+                };
+                startInfo.ArgumentList.Add(scriptPath);
+            }
+
+            using var process = Process.Start(startInfo);
+            if (!IsSuccessfulStart(startInfo, process))
+            {
+                error = "系统未返回可用的更新进程。";
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+    }
+
     public FrontendShortcutMaterializationResult CreateLauncherShortcut(
         string desktopDirectory,
         string executablePath,

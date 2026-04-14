@@ -78,14 +78,7 @@ internal sealed partial class FrontendShellViewModel
         new DownloadResourceFilterOptionViewModel("1.8.9", "1.8.9"),
         new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10")
     ];
-    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions =
-    [
-        new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-        new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
-        new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
-        new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
-        new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
-    ];
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions = BuildDefaultResourceLoaderOptions();
     private IReadOnlyList<DownloadResourceEntryViewModel> _allDownloadResourceEntries = [];
 
     public ObservableCollection<DownloadResourceEntryViewModel> DownloadResourceEntries { get; } = [];
@@ -382,14 +375,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceSupportsModrinth = true;
         _downloadResourceSourceOptions = [];
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
-        _downloadResourceLoaderOptions =
-        [
-            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-            new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
-            new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
-            new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
-            new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
-        ];
+        _downloadResourceLoaderOptions = BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
         _allDownloadResourceEntries = [];
         ReplaceItems(DownloadResourceEntries, []);
         SetDownloadResourceLoading(false);
@@ -434,7 +420,7 @@ internal sealed partial class FrontendShellViewModel
                 : null);
         _downloadResourceLoaderOptions = useShaderLoaderOptions
             ? BuildDefaultShaderLoaderOptions()
-            : BuildDefaultResourceLoaderOptions();
+            : BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
         _downloadResourceRuntimeStates.Remove(_currentRoute.Subpage);
         ResetDownloadResourceFilterState();
         RaiseDownloadResourceFilterState();
@@ -478,13 +464,7 @@ internal sealed partial class FrontendShellViewModel
                 new DownloadResourceFilterOptionViewModel("Iris", "Iris"),
                 new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine")
             ]
-            : [
-                new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-                new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
-                new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
-                new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
-                new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
-            ];
+            : BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
         _allDownloadResourceEntries = entries;
         ResetDownloadResourceFilterState();
     }
@@ -1074,13 +1054,18 @@ internal sealed partial class FrontendShellViewModel
 
     private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions()
     {
+        return BuildDefaultResourceLoaderOptions(hideQuiltLoader: false);
+    }
+
+    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions(bool hideQuiltLoader)
+    {
+        var visibleLoaders = FrontendLoaderVisibilityService.FilterVisibleLoaders(
+            ["Forge", "NeoForge", "Fabric", "Quilt"],
+            hideQuiltLoader);
         return
         [
             new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-            new DownloadResourceFilterOptionViewModel("Forge", "Forge"),
-            new DownloadResourceFilterOptionViewModel("NeoForge", "NeoForge"),
-            new DownloadResourceFilterOptionViewModel("Fabric", "Fabric"),
-            new DownloadResourceFilterOptionViewModel("Quilt", "Quilt")
+            .. visibleLoaders.Select(loader => new DownloadResourceFilterOptionViewModel(loader, loader))
         ];
     }
 

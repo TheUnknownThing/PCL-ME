@@ -641,7 +641,8 @@ internal sealed partial class FrontendShellViewModel
         foreach (var release in _communityProjectState.Releases)
         {
             var gameVersions = release.GameVersions.Count == 0 ? ["其他"] : release.GameVersions;
-            var loaders = release.Loaders.Count == 0 ? [string.Empty] : release.Loaders;
+            var visibleLoaders = FrontendLoaderVisibilityService.FilterVisibleLoaders(release.Loaders, IgnoreQuiltLoader);
+            var loaders = visibleLoaders.Count == 0 ? [string.Empty] : visibleLoaders;
 
             foreach (var gameVersion in gameVersions)
             {
@@ -825,10 +826,9 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<string> BuildCommunityProjectLoaderOptions()
     {
-        return _communityProjectState.Releases
-            .SelectMany(release => release.Loaders)
-            .Where(loader => !string.IsNullOrWhiteSpace(loader))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+        return FrontendLoaderVisibilityService.FilterVisibleLoaders(
+                _communityProjectState.Releases.SelectMany(release => release.Loaders),
+                IgnoreQuiltLoader)
             .OrderBy(loader => loader, StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }

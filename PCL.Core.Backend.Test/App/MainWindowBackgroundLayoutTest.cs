@@ -68,4 +68,28 @@ public sealed class MainWindowBackgroundLayoutTest
         Assert.IsInstanceOfType<BlurEffect>(result);
         Assert.AreEqual(12d, ((BlurEffect)result).Radius);
     }
+
+    [TestMethod]
+    public void IsWindowResizeAllowed_ReturnsFalseWhenWindowSizeIsLocked()
+    {
+        Assert.IsFalse(MainWindow.IsWindowResizeAllowed(lockWindowSize: true));
+    }
+
+    [TestMethod]
+    public void ShouldShowResizeChrome_HidesResizeChromeWhenWindowSizeIsLocked()
+    {
+        Assert.IsFalse(MainWindow.ShouldShowResizeChrome(isMaximized: false, lockWindowSize: true));
+    }
+
+    [TestMethod]
+    public void ShouldShowResizeChrome_HidesResizeChromeWhenWindowIsMaximized()
+    {
+        Assert.IsFalse(MainWindow.ShouldShowResizeChrome(isMaximized: true, lockWindowSize: false));
+    }
+
+    [TestMethod]
+    public void ShouldShowResizeChrome_ShowsResizeChromeWhenWindowCanResize()
+    {
+        Assert.IsTrue(MainWindow.ShouldShowResizeChrome(isMaximized: false, lockWindowSize: false));
+    }
 }

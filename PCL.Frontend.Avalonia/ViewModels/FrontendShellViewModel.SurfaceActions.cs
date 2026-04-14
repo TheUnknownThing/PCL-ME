@@ -128,6 +128,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void DownloadAvailableUpdate()
     {
+        _ = DownloadAvailableUpdateAsync();
+    }
+
+    private async Task DownloadAvailableUpdateAsync()
+    {
         if (_updateStatus.SurfaceState != UpdateSurfaceState.Available)
         {
             AddActivity("下载并安装更新", "当前没有待下载的更新。");
@@ -141,26 +146,51 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var outputPath = Path.Combine(
-            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
-            "update-downloads",
-            $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.txt");
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        File.WriteAllText(outputPath, $"""
-            Update: {_updateStatus.AvailableUpdateName}
-            Source: {_updateStatus.AvailableUpdateSource}
-            SHA256: {_updateStatus.AvailableUpdateSha256}
-            Download: {target}
-            Release: {_updateStatus.AvailableUpdateReleaseUrl}
-            """, new UTF8Encoding(false));
+        try
+        {
+            var preparedInstall = await FrontendUpdateInstallWorkflowService.PrepareAsync(
+                new FrontendUpdateInstallRequest(
+                    DownloadUrl: target,
+                    ReleaseFileStem: SanitizeFileSegment(_updateStatus.AvailableUpdateName),
+                    ExpectedSha256: string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateSha256)
+                        ? null
+                        : _updateStatus.AvailableUpdateSha256,
+                    ArtifactDirectory: _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+                    TempDirectory: _shellActionService.RuntimePaths.FrontendTempDirectory,
+                    ExecutableDirectory: _shellActionService.RuntimePaths.ExecutableDirectory,
+                    ProcessPath: Environment.ProcessPath,
+                    ProcessId: Environment.ProcessId,
+                    PlatformAdapter: _shellActionService.PlatformAdapter));
+            var outputPath = Path.Combine(
+                _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+                "update-downloads",
+                $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, $"""
+                Update: {_updateStatus.AvailableUpdateName}
+                Source: {_updateStatus.AvailableUpdateSource}
+                SHA256: {_updateStatus.AvailableUpdateSha256}
+                Download: {target}
+                Release: {_updateStatus.AvailableUpdateReleaseUrl}
+                Archive: {preparedInstall.ArchivePath}
+                Extracted: {preparedInstall.ExtractedPackagePath}
+                Script: {preparedInstall.InstallerScriptPath}
+                """, new UTF8Encoding(false));
 
-        if (_shellActionService.TryOpenExternalTarget(target, out var error))
-        {
-            AddActivity("下载并安装更新", $"{_updateStatus.AvailableUpdateName} • 已打开下载地址，并写入下载计划：{outputPath}");
+            if (!_shellActionService.TryStartDetachedScript(preparedInstall.InstallerScriptPath, out var error))
+            {
+                AddFailureActivity("下载并安装更新失败", error ?? preparedInstall.InstallerScriptPath);
+                return;
+            }
+
+            AddActivity("下载并安装更新", $"{_updateStatus.AvailableUpdateName} • 更新包已准备完成，启动器即将退出并应用更新。");
+            AvaloniaHintBus.Show("更新包已准备完成，启动器即将关闭并自动安装。", AvaloniaHintTheme.Success);
+            await Task.Delay(400);
+            _shellActionService.ExitLauncher();
         }
-        else
+        catch (Exception ex)
         {
-            AddFailureActivity("下载并安装更新失败", error ?? outputPath);
+            AddFailureActivity("下载并安装更新失败", ex.Message);
         }
     }
 

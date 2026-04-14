@@ -193,6 +193,11 @@ internal sealed class FrontendShellActionService(
         return PlatformAdapter.TryRevealExternalTarget(target, out error);
     }
 
+    public bool TryStartDetachedScript(string scriptPath, out string? error)
+    {
+        return PlatformAdapter.TryStartDetachedScript(scriptPath, out error);
+    }
+
     public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
     {
         var storageProvider = TryGetStorageProvider(out var error)

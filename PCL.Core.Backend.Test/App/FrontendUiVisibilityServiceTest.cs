@@ -59,6 +59,53 @@ public sealed class FrontendUiVisibilityServiceTest
     }
 
     [TestMethod]
+    public void FilterNavigationViewRemovesDownloadQuiltWhenHideQuiltLoaderIsEnabled()
+    {
+        var preferences = CreatePreferences(forceShowHiddenItems: false, hideQuiltLoader: true);
+        var navigation = new LauncherFrontendNavigationView(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+            "下载",
+            new LauncherFrontendPageSurface(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
+                LauncherFrontendPageKind.TopLevel,
+                "下载",
+                string.Empty,
+                "下载分区",
+                "自动安装",
+                string.Empty,
+                true),
+            [],
+            null,
+            false,
+            [
+                new LauncherFrontendNavigationEntry("download", "下载", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Download), true)
+            ],
+            [
+                new LauncherFrontendNavigationEntry("install", "自动安装", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall), true),
+                new LauncherFrontendNavigationEntry("quilt", "Quilt", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadQuilt), false)
+            ],
+            []);
+
+        var result = FrontendUiVisibilityService.FilterNavigationView(navigation, preferences);
+
+        Assert.AreEqual(1, result.SidebarEntries.Count);
+        Assert.AreEqual(LauncherFrontendSubpageKey.DownloadInstall, result.SidebarEntries[0].Route.Subpage);
+    }
+
+    [TestMethod]
+    public void NormalizeRouteFallsBackFromDownloadQuiltWhenHideQuiltLoaderIsEnabled()
+    {
+        var preferences = CreatePreferences(forceShowHiddenItems: false, hideQuiltLoader: true);
+
+        var result = FrontendUiVisibilityService.NormalizeRoute(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadQuilt),
+            preferences);
+
+        Assert.AreEqual(LauncherFrontendPageKey.Download, result.Page);
+        Assert.AreEqual(LauncherFrontendSubpageKey.DownloadInstall, result.Subpage);
+    }
+
+    [TestMethod]
     public void ForceShowIgnoresHiddenFlags()
     {
         var preferences = CreatePreferences(forceShowHiddenItems: true, hiddenPairs: [("UiHiddenFunctionSelect", true), ("UiHiddenFunctionHidden", true)]);
@@ -73,11 +120,12 @@ public sealed class FrontendUiVisibilityServiceTest
     private static FrontendUiVisibilityPreferences CreatePreferences(
         params (string Key, bool Value)[] hiddenPairs)
     {
-        return CreatePreferences(forceShowHiddenItems: false, hiddenPairs);
+        return CreatePreferences(forceShowHiddenItems: false, hideQuiltLoader: false, hiddenPairs);
     }
 
     private static FrontendUiVisibilityPreferences CreatePreferences(
         bool forceShowHiddenItems,
+        bool hideQuiltLoader = false,
         params (string Key, bool Value)[] hiddenPairs)
     {
         var uiState = new FrontendSetupUiState(
@@ -114,6 +162,6 @@ public sealed class FrontendUiVisibilityServiceTest
                     hiddenPairs.Select(pair => new FrontendSetupUiToggleItem(pair.Key, pair.Key, pair.Value)).ToArray())
             ]);
 
-        return FrontendUiVisibilityService.BuildPreferences(uiState, forceShowHiddenItems);
+        return FrontendUiVisibilityService.BuildPreferences(uiState, forceShowHiddenItems, hideQuiltLoader);
     }
 }

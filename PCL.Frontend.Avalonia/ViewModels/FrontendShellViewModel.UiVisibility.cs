@@ -14,7 +14,7 @@ internal sealed partial class FrontendShellViewModel
 
     private FrontendUiVisibilityPreferences GetUiVisibilityPreferences()
     {
-        return FrontendUiVisibilityService.BuildPreferences(_setupComposition.Ui, _showHiddenItemsOverride);
+        return FrontendUiVisibilityService.BuildPreferences(_setupComposition.Ui, _showHiddenItemsOverride, IgnoreQuiltLoader);
     }
 
     public void ToggleHiddenItemsOverride()

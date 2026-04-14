@@ -68,10 +68,14 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasCurrentPrompt));
         RaisePromptOverlayPresentationProperties();
 
-        var selectedLane = PromptLanes.First(item => item.Kind == lane);
-        PromptInboxTitle = $"{selectedLane.Title}提示";
-       PromptInboxSummary = selectedLane.Summary;
-        PromptEmptyState = $"当前没有待处理的{selectedLane.Title}提示。";
+        var selectedLane = ResolvePromptLaneViewModel(lane);
+        var (laneTitle, laneSummary) = selectedLane is null
+            ? GetPromptLaneMetadata(lane)
+            : (selectedLane.Title, selectedLane.Summary);
+        var laneCount = selectedLane?.Count ?? _promptCatalog[lane].Count;
+        PromptInboxTitle = $"{laneTitle}提示";
+        PromptInboxSummary = laneSummary;
+        PromptEmptyState = $"当前没有待处理的{laneTitle}提示。";
         var pageContent = BuildPageContent(BuildShellPlan());
         ReplaceSurfaceFactsIfChanged(pageContent.Facts);
         ReplaceSurfaceSectionsIfChanged(pageContent.Sections);
@@ -82,8 +86,21 @@ internal sealed partial class FrontendShellViewModel
 
         if (updateActivity)
         {
-            AddActivity("Switched prompt lane.", $"{selectedLane.Title} now has {selectedLane.Count} queued prompt(s).");
+            AddActivity("Switched prompt lane.", $"{laneTitle} now has {laneCount} queued prompt(s).");
         }
+    }
+
+    private PromptLaneViewModel? ResolvePromptLaneViewModel(AvaloniaPromptLaneKind lane)
+    {
+        var selectedLane = PromptLanes.FirstOrDefault(item => item.Kind == lane);
+        if (selectedLane is not null || _promptCatalog[lane].Count == 0)
+        {
+            return selectedLane;
+        }
+
+        RebuildPromptLanes();
+        SyncPromptLaneState();
+        return PromptLanes.FirstOrDefault(item => item.Kind == lane);
     }
 
     private void SyncPromptLaneState()

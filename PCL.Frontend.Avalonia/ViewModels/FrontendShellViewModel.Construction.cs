@@ -452,6 +452,7 @@ internal sealed partial class FrontendShellViewModel
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);
+        PropertyChanged += (_, args) => HandleReactiveSettingChange(args.PropertyName);
         InitializeAboutEntries();
         InitializeFeedbackSections();
         ApplyToolsComposition(_toolsComposition);

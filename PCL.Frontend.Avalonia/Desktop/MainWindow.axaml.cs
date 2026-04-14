@@ -99,6 +99,7 @@ internal sealed partial class MainWindow : Window
         ApplyWindowOpacity();
         ApplyDynamicBackgroundState();
         UpdateWindowChromeState();
+        ApplyWindowSizingState();
     }
 
     private void ConfigureShellDividerTransitions()
@@ -164,6 +165,11 @@ internal sealed partial class MainWindow : Window
 
     private void ToggleMaximize()
     {
+        if (!IsWindowResizeAllowed(_shellViewModel?.LockWindowSizeSetting == true))
+        {
+            return;
+        }
+
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
@@ -174,7 +180,7 @@ internal sealed partial class MainWindow : Window
         control.Cursor = new Cursor(cursor);
         control.PointerPressed += (_, e) =>
         {
-            if (e.GetCurrentPoint(control).Properties.IsLeftButtonPressed)
+            if (CanResize && e.GetCurrentPoint(control).Properties.IsLeftButtonPressed)
             {
                 BeginResizeDrag(edge, e);
             }
@@ -376,6 +382,13 @@ internal sealed partial class MainWindow : Window
         if (e.PropertyName == nameof(FrontendShellViewModel.LauncherOpacity))
         {
             ApplyWindowOpacity();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.LockWindowSizeSetting)
+            || e.PropertyName == nameof(FrontendShellViewModel.ShowMaximizeButton))
+        {
+            ApplyWindowSizingState();
             return;
         }
 
@@ -741,10 +754,31 @@ internal sealed partial class MainWindow : Window
     private void UpdateWindowChromeState()
     {
         var isMaximized = WindowState == WindowState.Maximized;
-        GridResize.IsVisible = !isMaximized;
+        GridResize.IsVisible = ShouldShowResizeChrome(isMaximized, _shellViewModel?.LockWindowSizeSetting == true);
         MainBorder.Margin = isMaximized ? new Thickness(0) : new Thickness(18);
         MainBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(15, 15, 8, 8);
         MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
+    }
+
+    private void ApplyWindowSizingState()
+    {
+        var lockWindowSize = _shellViewModel?.LockWindowSizeSetting == true;
+        var canResizeWindow = IsWindowResizeAllowed(lockWindowSize);
+        CanResize = canResizeWindow;
+        GridResize.IsHitTestVisible = canResizeWindow;
+        MaximizeButton.IsEnabled = canResizeWindow;
+        MaximizeButton.Opacity = canResizeWindow ? 1d : 0.45d;
+        UpdateWindowChromeState();
+    }
+
+    internal static bool IsWindowResizeAllowed(bool lockWindowSize)
+    {
+        return !lockWindowSize;
+    }
+
+    internal static bool ShouldShowResizeChrome(bool isMaximized, bool lockWindowSize)
+    {
+        return !isMaximized && IsWindowResizeAllowed(lockWindowSize);
     }
 
     private static IBrush CreateDarkShellBackgroundBrush(Color baseColor)

@@ -678,6 +678,8 @@ internal sealed partial class FrontendShellViewModel
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
         }
+
+        QueueClipboardCommunityLinkProbe(route);
     }
 
     private void ReloadRouteCompositions(LauncherFrontendRoute previousRoute, LauncherFrontendRoute route)
