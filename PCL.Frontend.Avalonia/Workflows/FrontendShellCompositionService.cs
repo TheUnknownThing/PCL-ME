@@ -39,6 +39,8 @@ internal static class FrontendShellCompositionService
         FrontendRuntimePaths paths,
         YamlFileProvider localConfig)
     {
+        var startupVisual = FrontendStartupVisualCompositionService.Compose(localConfig);
+
         return new LauncherStartupWorkflowRequest(
             CommandLineArguments: Environment.GetCommandLineArgs()[1..],
             ExecutableDirectory: EnsureTrailingSeparator(paths.ExecutableDirectory),
@@ -47,7 +49,7 @@ internal static class FrontendShellCompositionService
             IsBetaVersion: false,
             DetectedWindowsVersion: GetHostVersionForStartupChecks(),
             Is64BitOperatingSystem: Environment.Is64BitOperatingSystem,
-            ShowStartupLogo: ReadValue(localConfig, "UiLauncherLogo", true));
+            ShowStartupLogo: startupVisual.ShouldShowSplashScreen);
     }
 
     private static LauncherMainWindowStartupWorkflowRequest BuildMainWindowRequest(

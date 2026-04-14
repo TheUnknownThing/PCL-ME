@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Desktop.ShellViews;
 using PCL.Frontend.Avalonia.ViewModels;
@@ -35,18 +36,37 @@ internal sealed class App : Application
         {
             var platformAdapter = new FrontendPlatformAdapter();
             var runtimePaths = _runtimePaths ?? FrontendRuntimePaths.Resolve(platformAdapter);
+            var startupVisual = FrontendStartupVisualCompositionService.Compose(runtimePaths);
+            var splashSession = FrontendStartupSplashPresentationService.Show(startupVisual);
             desktop.Exit += OnDesktopExit;
+            Dispatcher.UIThread.Post(
+                () => InitializeDesktop(desktop, runtimePaths, platformAdapter, splashSession),
+                DispatcherPriority.Background);
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private void InitializeDesktop(
+        IClassicDesktopStyleApplicationLifetime desktop,
+        FrontendRuntimePaths runtimePaths,
+        FrontendPlatformAdapter platformAdapter,
+        FrontendStartupSplashSession? splashSession)
+    {
+        try
+        {
             var shellActionService = new FrontendShellActionService(
                 runtimePaths,
                 platformAdapter,
                 () => desktop.Shutdown());
-            desktop.MainWindow = new MainWindow
+            var mainWindow = new MainWindow
             {
                 DataContext = FrontendShellViewModel.CreateBootstrap(_options, shellActionService)
             };
 
-            desktop.MainWindow.Opened += async (_, _) =>
+            mainWindow.Opened += async (_, _) =>
             {
+                await CloseSplashScreenAsync(splashSession);
                 await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths);
 
                 if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, _options.ForceCjkFontWarning))
@@ -54,13 +74,33 @@ internal sealed class App : Application
                     await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(shellActionService);
                 }
             };
-        }
 
-        base.OnFrameworkInitializationCompleted();
+            desktop.MainWindow = mainWindow;
+            if (!mainWindow.IsVisible)
+            {
+                mainWindow.Show();
+            }
+        }
+        catch
+        {
+            splashSession?.Dispose();
+            throw;
+        }
     }
 
     private static void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
         FrontendLoggingBootstrap.Dispose();
+    }
+
+    private static async Task CloseSplashScreenAsync(FrontendStartupSplashSession? splashSession)
+    {
+        if (splashSession is null)
+        {
+            return;
+        }
+
+        await splashSession.CloseAsync();
+        splashSession.Dispose();
     }
 }
