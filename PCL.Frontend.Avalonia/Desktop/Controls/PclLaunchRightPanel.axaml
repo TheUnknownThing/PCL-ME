@@ -28,6 +28,87 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
       </Border>
+
+      <controls:PclCard
+          Header="{Binding LaunchHomepageStatusTitle}"
+          IsVisible="{Binding ShowLaunchHomepageStatusCard}"
+          ContentMargin="20,16,20,16">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="12">
+            <TextBlock
+                FontSize="13.5"
+                Foreground="{DynamicResource ColorBrush1}"
+                Text="{Binding LaunchHomepageStatusText}"
+                TextWrapping="Wrap" />
+            <controls:PclButton
+                Width="120"
+                Height="35"
+                Command="{Binding RefreshHomepageCommand}"
+                IsVisible="{Binding ShowLaunchHomepageRefreshAction}"
+                Text="刷新主页" />
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <ItemsControl ItemsSource="{Binding LaunchHomepageSections}" IsVisible="{Binding HasLaunchHomepageSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="18,18,18,16">
+              <controls:PclCard.CardContent>
+                <StackPanel Spacing="12">
+                  <ItemsControl ItemsSource="{Binding Images}" IsVisible="{Binding HasImages}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border
+                            Height="180"
+                            Background="{DynamicResource ColorBrushSemiTransparent}"
+                            BorderBrush="{DynamicResource ColorBrush6}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            IsVisible="{Binding HasBitmap}">
+                          <Image Source="{Binding Bitmap}" Stretch="UniformToFill" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <TextBlock
+                      FontSize="12"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      IsVisible="{Binding HasSubtitle}"
+                      Text="{Binding Subtitle}"
+                      TextWrapping="Wrap" />
+
+                  <ItemsControl ItemsSource="{Binding Lines}" IsVisible="{Binding HasLines}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="13.5"
+                            Foreground="{DynamicResource ColorBrush1}"
+                            Text="{Binding}"
+                            TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <ItemsControl ItemsSource="{Binding Actions}" IsVisible="{Binding HasActions}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <controls:PclListItem
+                            Margin="0,0,0,8"
+                            Command="{Binding Command}"
+                            Info="{Binding Info}"
+                            Title="{Binding Title}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

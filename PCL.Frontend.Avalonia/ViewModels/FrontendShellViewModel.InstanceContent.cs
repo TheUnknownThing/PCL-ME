@@ -9,6 +9,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -220,7 +221,8 @@ internal sealed partial class FrontendShellViewModel
     };
 
     public bool ShowInstanceResourceCheckButton => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
-        && _instanceComposition.Selection.IsModable;
+        && _instanceComposition.Selection.IsModable
+        && FrontendUiVisibilityService.ShouldShowModUpdateAction(GetUiVisibilityPreferences());
 
     public int InstanceResourceSelectedCount => _instanceResourceSelectedPaths.Count;
 

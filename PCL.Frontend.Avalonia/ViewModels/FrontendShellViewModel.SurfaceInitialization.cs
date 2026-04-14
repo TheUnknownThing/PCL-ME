@@ -409,8 +409,10 @@ internal sealed partial class FrontendShellViewModel
         _showLaunchingHint = _setupComposition.Ui.ShowLaunchingHint;
         _selectedGlobalFontIndex = _setupComposition.Ui.GlobalFontIndex;
         _selectedMotdFontIndex = _setupComposition.Ui.MotdFontIndex;
-        _autoPauseVideo = _setupComposition.Ui.AutoPauseVideo;
         _backgroundColorful = _setupComposition.Ui.BackgroundColorful;
+        _backgroundOpacity = _setupComposition.Ui.BackgroundOpacity;
+        _backgroundBlur = _setupComposition.Ui.BackgroundBlur;
+        _selectedBackgroundSuitIndex = Math.Clamp(_setupComposition.Ui.BackgroundSuitIndex, 0, BackgroundSuitOptions.Count - 1);
         _musicVolume = _setupComposition.Ui.MusicVolume;
         _musicRandomPlay = _setupComposition.Ui.MusicRandomPlay;
         _musicAutoStart = _setupComposition.Ui.MusicAutoStart;
@@ -423,6 +425,8 @@ internal sealed partial class FrontendShellViewModel
         _selectedHomepageTypeIndex = _setupComposition.Ui.HomepageTypeIndex;
         _homepageUrl = _setupComposition.Ui.HomepageUrl;
         _selectedHomepagePresetIndex = Math.Clamp(_setupComposition.Ui.HomepagePresetIndex, 0, HomepagePresetOptions.Count - 1);
+        RefreshTitleBarLogoImage();
+        RefreshLaunchHomepage(forceRefresh: false);
 
         ReplaceItems(UiFeatureToggleGroups,
             _setupComposition.Ui.ToggleGroups.Select(group =>
@@ -433,6 +437,7 @@ internal sealed partial class FrontendShellViewModel
                             item.Title,
                             item.IsChecked,
                             isChecked => PersistUiToggle(item.ConfigKey, isChecked))).ToArray())));
+        RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
     }
 
     private void RefreshHelpTopics()

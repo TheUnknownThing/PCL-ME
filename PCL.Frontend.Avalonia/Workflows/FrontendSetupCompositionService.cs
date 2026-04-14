@@ -293,8 +293,10 @@ internal static class FrontendSetupCompositionService
             ShowLaunchingHint: ReadValue(localConfig, "UiShowLaunchingHint", true),
             GlobalFontIndex: MapFontToIndex(ReadValue(localConfig, "UiFont", string.Empty)),
             MotdFontIndex: MapFontToIndex(ReadValue(localConfig, "UiMotdFont", string.Empty)),
-            AutoPauseVideo: ReadValue(localConfig, "UiAutoPauseVideo", true),
             BackgroundColorful: ReadValue(localConfig, "UiBackgroundColorful", true),
+            BackgroundOpacity: ReadValue(localConfig, "UiBackgroundOpacity", 1000),
+            BackgroundBlur: ReadValue(localConfig, "UiBackgroundBlur", 0),
+            BackgroundSuitIndex: ReadValue(localConfig, "UiBackgroundSuit", 0),
             MusicVolume: ReadValue(localConfig, "UiMusicVolume", 500),
             MusicRandomPlay: ReadValue(localConfig, "UiMusicRandom", true),
             MusicAutoStart: ReadValue(localConfig, "UiMusicAuto", true),
@@ -306,7 +308,7 @@ internal static class FrontendSetupCompositionService
             LogoText: ReadValue(localConfig, "UiLogoText", string.Empty),
             HomepageTypeIndex: MapHomepageTypeToDisplayIndex(ReadValue(localConfig, "UiCustomType", 0)),
             HomepageUrl: ReadValue(localConfig, "UiCustomNet", string.Empty),
-            HomepagePresetIndex: ReadValue(localConfig, "UiCustomPreset", 12),
+            HomepagePresetIndex: ReadValue(localConfig, "UiCustomPreset", 11),
             ToggleGroups: BuildUiToggleGroups(localConfig));
     }
 

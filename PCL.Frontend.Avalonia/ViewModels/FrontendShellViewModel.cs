@@ -168,8 +168,6 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool IsContextModeRoute => _currentNavigation?.ShowsBackButton ?? false;
 
-    public bool ShowWindowBranding => !IsContextModeRoute;
-
     public bool ShowWindowUtilityButtons => !IsContextModeRoute;
 
     public bool HasRunningTaskManagerTasks => LauncherFrontendRuntimeStateService.HasRunningTasks();

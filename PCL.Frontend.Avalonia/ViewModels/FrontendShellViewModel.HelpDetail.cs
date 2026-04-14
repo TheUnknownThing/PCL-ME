@@ -342,6 +342,9 @@ internal sealed partial class FrontendShellViewModel
             case "清理垃圾":
                 ClearToolboxRubbish();
                 return;
+            case "刷新主页":
+                RefreshLaunchHomepage(forceRefresh: true, addActivity: true);
+                return;
             default:
                 if (!string.IsNullOrWhiteSpace(eventData))
                 {

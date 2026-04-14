@@ -830,18 +830,14 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshBackgroundAssets()
     {
-        var assets = EnumerateMediaFiles(GetBackgroundFolderPath(), BackgroundMediaExtensions).ToArray();
-        AddActivity(
-            "刷新背景内容",
-            assets.Length == 0
-                ? "未检测到可用背景内容。"
-                : $"已重新扫描背景内容目录，共找到 {assets.Length} 个文件。");
+        RefreshBackgroundContentState(selectNewAsset: true, addActivity: true);
     }
 
     private void ClearBackgroundAssets()
     {
         var folder = GetBackgroundFolderPath();
-        var removedCount = DeleteDirectoryContents(folder, BackgroundMediaExtensions);
+        var removedCount = DeleteDirectoryContents(folder, BackgroundCleanupExtensions);
+        RefreshBackgroundContentState(selectNewAsset: false, addActivity: false);
         AddActivity("清空背景内容", removedCount == 0 ? "背景目录中没有可删除的背景内容。" : $"已清空 {removedCount} 个背景内容文件。");
     }
 
@@ -911,6 +907,7 @@ internal sealed partial class FrontendShellViewModel
             SelectedLogoTypeIndex = 3;
         }
 
+        RefreshTitleBarLogoImage();
         AddActivity("更改标题栏图片", $"{sourcePath} -> {targetPath}");
     }
 
@@ -929,19 +926,13 @@ internal sealed partial class FrontendShellViewModel
             SelectedLogoTypeIndex = 1;
         }
 
+        RefreshTitleBarLogoImage();
         AddActivity("清空标题栏图片", targetPath);
     }
 
     private void RefreshHomepageContent()
     {
-        var currentTarget = SelectedHomepageTypeIndex switch
-        {
-            0 => "空白主页",
-            1 => $"预设主页: {HomepagePresetOptions[SelectedHomepagePresetIndex]}",
-            2 => GetHomepageTutorialPath(),
-            _ => string.IsNullOrWhiteSpace(HomepageUrl) ? "未填写联网主页地址" : HomepageUrl
-        };
-        AddActivity("刷新主页", $"主页配置已重新读取：{currentTarget}");
+        RefreshLaunchHomepage(forceRefresh: true, addActivity: true);
     }
 
     private void GenerateHomepageTutorialFile()
@@ -1531,7 +1522,7 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("重置界面设置", "个性化界面页已恢复到当前启动器的默认配置。");
     }
 
-    private static readonly string[] BackgroundMediaExtensions =
+    private static readonly string[] BackgroundCleanupExtensions =
     [
         ".png",
         ".jpg",
