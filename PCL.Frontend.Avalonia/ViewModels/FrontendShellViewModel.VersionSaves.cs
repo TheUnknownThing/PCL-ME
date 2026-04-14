@@ -40,7 +40,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string VersionSaveTitle => _versionSavesComposition.Selection.HasSelection
         ? _versionSavesComposition.Selection.SaveName
-        : "未选择存档";
+        : SD("save_detail.values.no_selection");
 
     public bool HasVersionSaveInfoEntries => VersionSaveInfoEntries.Count > 0;
 
@@ -58,7 +58,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowVersionSaveDatapackEmptyState => !ShowVersionSaveDatapackContent;
 
-    public string VersionSaveDatapackSortText => $"排序：{GetVersionSaveDatapackSortName(_versionSaveDatapackSortMethod)}";
+    public string VersionSaveDatapackSortText => SD("instance.content.sort.label", ("mode", GetVersionSaveDatapackSortName(_versionSaveDatapackSortMethod)));
 
     public ActionCommand OpenVersionSaveFolderCommand => new(() =>
         OpenInstanceTarget("打开存档文件夹", _versionSavesComposition.Selection.SavePath, "当前没有可打开的存档。"));
@@ -102,10 +102,14 @@ internal sealed partial class FrontendShellViewModel
     {
         ReplaceItems(
             VersionSaveInfoEntries,
-            _versionSavesComposition.InfoEntries.Select(entry => new KeyValueEntryViewModel(entry.Label, entry.Value)));
+            _versionSavesComposition.InfoEntries.Select(entry => new KeyValueEntryViewModel(
+                LocalizeVersionSaveLabel(entry.Label),
+                LocalizeVersionSaveValue(entry.Value))));
         ReplaceItems(
             VersionSaveSettingEntries,
-            _versionSavesComposition.SettingEntries.Select(entry => new KeyValueEntryViewModel(entry.Label, entry.Value)));
+            _versionSavesComposition.SettingEntries.Select(entry => new KeyValueEntryViewModel(
+                LocalizeVersionSaveLabel(entry.Label),
+                LocalizeVersionSaveValue(entry.Value))));
         ReplaceItems(
             VersionSaveBackupEntries,
             _versionSavesComposition.Backups.Select(entry => new SimpleListEntryViewModel(
@@ -137,11 +141,14 @@ internal sealed partial class FrontendShellViewModel
                 .Select(entry => new InstanceResourceEntryViewModel(
                     LoadLauncherBitmap("Images", "Blocks", entry.IconName),
                     entry.Title,
-                    entry.Summary,
-                    entry.Meta,
+                    LocalizeResourceSummary(entry.Summary),
+                    LocalizeResourceMeta(entry.Meta),
                     entry.Path,
-                    new ActionCommand(() => OpenInstanceTarget("查看数据包", entry.Path, "当前数据包不存在。")),
-                    actionToolTip: "查看数据包")));
+                    new ActionCommand(() => OpenInstanceTarget(
+                        SD("save_detail.datapack.actions.view"),
+                        entry.Path,
+                        SD("save_detail.datapack.errors.missing"))),
+                    actionToolTip: SD("save_detail.datapack.actions.view"))));
 
         RaisePropertyChanged(nameof(HasVersionSaveDatapackEntries));
         RaisePropertyChanged(nameof(HasNoVersionSaveDatapackEntries));
@@ -191,14 +198,14 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string GetVersionSaveDatapackSortName(VersionSaveDatapackSortMethod method)
+    private string GetVersionSaveDatapackSortName(VersionSaveDatapackSortMethod method)
     {
         return method switch
         {
-            VersionSaveDatapackSortMethod.FileName => "文件名",
-            VersionSaveDatapackSortMethod.CreateTime => "加入时间",
-            VersionSaveDatapackSortMethod.FileSize => "文件大小",
-            _ => "资源名称"
+            VersionSaveDatapackSortMethod.FileName => SD("instance.content.sort.file_name"),
+            VersionSaveDatapackSortMethod.CreateTime => SD("instance.content.sort.added_time"),
+            VersionSaveDatapackSortMethod.FileSize => SD("instance.content.sort.file_size"),
+            _ => SD("instance.content.sort.resource_name")
         };
     }
 

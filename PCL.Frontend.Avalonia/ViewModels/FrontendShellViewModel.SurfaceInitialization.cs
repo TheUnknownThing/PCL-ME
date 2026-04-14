@@ -21,37 +21,37 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(AboutProjectEntries,
         [
             new AboutEntryViewModel(
-                "龙腾猫跃",
-                "Plain Craft Launcher 的原作者！",
+                _i18n.T("setup.about.project.original_author.title"),
+                _i18n.T("setup.about.project.original_author.summary"),
                 LoadLauncherBitmap("Images", "Heads", "LTCat.jpg"),
-                "赞助原作者",
-                CreateLinkCommand("赞助原作者", "https://ifdian.net/a/LTCat")),
+                _i18n.T("setup.about.project.original_author.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.original_author.command"), "https://ifdian.net/a/LTCat")),
             new AboutEntryViewModel(
-                "PCL Community",
-                "PCL-ME 当前延续自社区维护分支。",
+                _i18n.T("setup.about.project.community.title"),
+                _i18n.T("setup.about.project.community.summary"),
                 LoadLauncherBitmap("Images", "Heads", "PCL-Community.png"),
-                "GitHub 主页",
-                CreateLinkCommand("打开 PCL Community GitHub", "https://github.com/PCL-Community")),
+                _i18n.T("setup.about.project.community.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.community.command"), "https://github.com/PCL-Community")),
             new AboutEntryViewModel(
-                "PCL-ME",
+                _i18n.T("setup.about.project.repo.title"),
                 _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "Heads", "Logo-CE.png"),
-                "查看源代码",
-                CreateLinkCommand("查看仓库源代码", "https://github.com/TheUnknownThing/PCL-ME"))
+                _i18n.T("setup.about.project.repo.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.repo.command"), "https://github.com/TheUnknownThing/PCL-ME"))
         ]);
 
         ReplaceItems(AboutAcknowledgementEntries,
         [
-            new AboutEntryViewModel("bangbang93", "提供 BMCLAPI 镜像源和 Forge 安装工具。", LoadLauncherBitmap("Images", "Heads", "bangbang93.png"), "赞助镜像源", CreateLinkCommand("赞助 BMCLAPI 镜像源", "https://afdian.com/a/bangbang93")),
-            new AboutEntryViewModel("MC 百科", "提供了 Mod 名称的中文翻译和更多相关信息！", LoadLauncherBitmap("Images", "Heads", "wiki.png"), "打开百科", CreateLinkCommand("打开 MC 百科", "https://www.mcmod.cn")),
-            new AboutEntryViewModel("Pysio @ Akaere Network", "提供了 PCL-CE 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), "转到博客", CreateLinkCommand("打开 Pysio 博客", "https://www.pysio.online")),
-            new AboutEntryViewModel("云默安 @ 至远光辉", "提供了 PCL-CE 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), "打开网站", CreateLinkCommand("打开至远光辉", "https://www.zyghit.cn")),
-            new AboutEntryViewModel("z0z0r4", "提供了 MCIM 中国 Mod 下载镜像源和帮助库图床！", LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
-            new AboutEntryViewModel("00ll00", "提供了 Java Launch Wrapper 和一些重要服务支持！", LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
-            new AboutEntryViewModel("Patrick", "设计并制作了 PCL 图标，让龙猫从做图标的水深火热中得到了解脱……", LoadLauncherBitmap("Images", "Heads", "Patrick.png"), null, null),
-            new AboutEntryViewModel("Hao_Tian", "在 PCL 内测中找出了一大堆没人想得到的诡异 Bug，有非同寻常的 Bug 体质", LoadLauncherBitmap("Images", "Heads", "Hao_Tian.jpg"), null, null),
-            new AboutEntryViewModel("Minecraft 中文论坛", "虽然已经关站了，但感谢此前提供了 MCBBS 镜像源……", LoadLauncherBitmap("Images", "Heads", "MCBBS.png"), null, null),
-            new AboutEntryViewModel("PCL 内群的各位", "感谢内群的沙雕网友们这么久以来对龙猫和 PCL 的支持与鼓励！", LoadLauncherBitmap("Images", "Heads", "PCL2.png"), null, null)
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.bangbang93.title"), _i18n.T("setup.about.acknowledgements.bangbang93.summary"), LoadLauncherBitmap("Images", "Heads", "bangbang93.png"), _i18n.T("setup.about.acknowledgements.bangbang93.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.bangbang93.command"), "https://afdian.com/a/bangbang93")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.mcmod.title"), _i18n.T("setup.about.acknowledgements.mcmod.summary"), LoadLauncherBitmap("Images", "Heads", "wiki.png"), _i18n.T("setup.about.acknowledgements.mcmod.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.mcmod.command"), "https://www.mcmod.cn")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.pysio.title"), _i18n.T("setup.about.acknowledgements.pysio.summary"), LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), _i18n.T("setup.about.acknowledgements.pysio.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.pysio.command"), "https://www.pysio.online")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.yunmoan.title"), _i18n.T("setup.about.acknowledgements.yunmoan.summary"), LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), _i18n.T("setup.about.acknowledgements.yunmoan.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.yunmoan.command"), "https://www.zyghit.cn")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.z0z0r4.title"), _i18n.T("setup.about.acknowledgements.z0z0r4.summary"), LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.00ll00.title"), _i18n.T("setup.about.acknowledgements.00ll00.summary"), LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.patrick.title"), _i18n.T("setup.about.acknowledgements.patrick.summary"), LoadLauncherBitmap("Images", "Heads", "Patrick.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.hao_tian.title"), _i18n.T("setup.about.acknowledgements.hao_tian.summary"), LoadLauncherBitmap("Images", "Heads", "Hao_Tian.jpg"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.mcbbs.title"), _i18n.T("setup.about.acknowledgements.mcbbs.summary"), LoadLauncherBitmap("Images", "Heads", "MCBBS.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.community.title"), _i18n.T("setup.about.acknowledgements.community.summary"), LoadLauncherBitmap("Images", "Heads", "PCL2.png"), null, null)
         ]);
     }
 
@@ -62,7 +62,15 @@ internal sealed partial class FrontendShellViewModel
                 CreateSimpleEntry(
                     entry.Title,
                     entry.Summary,
-                    CreateOpenTargetCommand($"打开日志: {entry.Title}", entry.Path, entry.Summary))));
+                    CreateOpenTargetCommand(
+                        _i18n.T(
+                            "setup.log.activities.open_log",
+                            new Dictionary<string, object?>(StringComparer.Ordinal)
+                            {
+                                ["title"] = entry.Title
+                            }),
+                        entry.Path,
+                        entry.Summary))));
     }
 
     private void InitializeUpdateSurface()
@@ -436,7 +444,7 @@ internal sealed partial class FrontendShellViewModel
                         new UiFeatureToggleItemViewModel(
                             item.Title,
                             item.IsChecked,
-                            isChecked => PersistUiToggle(item.ConfigKey, isChecked))).ToArray())));
+                            isChecked => PersistUiToggle(item.ConfigKey, item.Title, isChecked))).ToArray())));
         RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
     }
 
@@ -450,7 +458,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var results = entries
                 .Where(entry => entry.ShowInSearch && HelpEntryMatchesQuery(entry, query))
-                .Select(entry => CreateHelpTopic(entry, entry.GroupTitles.FirstOrDefault() ?? "帮助"))
+                .Select(entry => CreateHelpTopic(entry, entry.GroupTitles.FirstOrDefault() ?? LT("shell.tools.help.default_group")))
                 .OrderByDescending(topic => GetHelpSearchScore(topic, query))
                 .ThenBy(topic => topic.Title, StringComparer.Ordinal)
                 .ToArray();
@@ -493,6 +501,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsHelpSearchActive));
         RaisePropertyChanged(nameof(ShowHelpTopicLibrary));
         RaisePropertyChanged(nameof(HelpSearchResultsHeader));
+        RaisePropertyChanged(nameof(ToolsHelpSearchWatermark));
+        RaisePropertyChanged(nameof(ToolsHelpNoResultsText));
         RaiseCollectionStateProperties();
     }
 

@@ -25,10 +25,10 @@ internal sealed partial class VersionSaveDatapackEntriesSection : UserControl
             PlacementTarget = control,
             ItemsSource = new object[]
             {
-                CreateMenuItem("文件名", shell.SetVersionSaveDatapackFileNameSort),
-                CreateMenuItem("资源名称", shell.SetVersionSaveDatapackNameSort),
-                CreateMenuItem("加入时间", shell.SetVersionSaveDatapackCreateTimeSort),
-                CreateMenuItem("文件大小", shell.SetVersionSaveDatapackFileSizeSort)
+                CreateMenuItem(shell.SD("instance.content.sort.file_name"), shell.SetVersionSaveDatapackFileNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.resource_name"), shell.SetVersionSaveDatapackNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.added_time"), shell.SetVersionSaveDatapackCreateTimeSort),
+                CreateMenuItem(shell.SD("instance.content.sort.file_size"), shell.SetVersionSaveDatapackFileSizeSort)
             }
         };
 

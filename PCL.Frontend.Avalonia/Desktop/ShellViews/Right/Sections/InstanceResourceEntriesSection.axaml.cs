@@ -25,10 +25,10 @@ internal sealed partial class InstanceResourceEntriesSection : UserControl
             PlacementTarget = control,
             ItemsSource = new object[]
             {
-                CreateMenuItem("文件名", shell.SetInstanceResourceFileNameSort),
-                CreateMenuItem("资源名称", shell.SetInstanceResourceNameSort),
-                CreateMenuItem("加入时间", shell.SetInstanceResourceCreateTimeSort),
-                CreateMenuItem("文件大小", shell.SetInstanceResourceFileSizeSort)
+                CreateMenuItem(shell.SD("instance.content.sort.file_name"), shell.SetInstanceResourceFileNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.resource_name"), shell.SetInstanceResourceNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.added_time"), shell.SetInstanceResourceCreateTimeSort),
+                CreateMenuItem(shell.SD("instance.content.sort.file_size"), shell.SetInstanceResourceFileSizeSort)
             }
         };
 

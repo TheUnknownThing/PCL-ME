@@ -73,6 +73,10 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand QueryMinecraftServerCommand => _queryMinecraftServerCommand;
 
+    public string MinecraftServerQueryAddressWatermark => LT("shell.tools.test.server_query.address_watermark");
+
+    public string MinecraftServerQueryQueryButtonText => LT("shell.tools.test.server_query.query");
+
     public string MinecraftServerQueryAddress
     {
         get => _minecraftServerQueryAddress;
@@ -179,13 +183,15 @@ internal sealed partial class FrontendShellViewModel
         var resolvedAddress = (address ?? string.Empty).Trim().Replace("：", ":");
         if (string.IsNullOrWhiteSpace(resolvedAddress))
         {
-            AddActivity("查看服务器", "服务器地址为空，无法查询。");
+            AddActivity(
+                LT("shell.tools.test.server_query.open_activity"),
+                LT("shell.tools.test.server_query.empty_address"));
             return;
         }
 
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
-            $"已切换到测试页面并准备查询 {resolvedAddress}。");
+            LT("shell.tools.test.server_query.navigation", ("address", resolvedAddress)));
         Dispatcher.UIThread.Post(() =>
         {
             MinecraftServerQueryAddress = resolvedAddress;
@@ -215,7 +221,7 @@ internal sealed partial class FrontendShellViewModel
 
             if (result is null)
             {
-                throw new InvalidOperationException("未返回服务器信息");
+                throw new InvalidOperationException(LT("shell.tools.test.server_query.no_result"));
             }
 
             if (requestVersion != _minecraftServerQueryRequestVersion)
@@ -225,7 +231,7 @@ internal sealed partial class FrontendShellViewModel
 
             ApplyMinecraftServerQuerySuccessState(result);
             AddActivity(
-                "查询 Minecraft 服务器",
+                LT("shell.tools.test.server_query.query_activity"),
                 $"{address} • {result.Players.Online}/{result.Players.Max} • {result.Latency}ms");
         }
         catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested)
@@ -240,7 +246,7 @@ internal sealed partial class FrontendShellViewModel
             }
 
             ApplyMinecraftServerQueryErrorState(ex.Message);
-            AddFailureActivity("查询 Minecraft 服务器失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.server_query.query_failure"), ex.Message);
         }
         finally
         {
@@ -254,7 +260,7 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyMinecraftServerQueryLoadingState()
     {
         HasMinecraftServerQueryResult = true;
-        MinecraftServerQueryTitle = "查询中...";
+        MinecraftServerQueryTitle = LT("shell.tools.test.server_query.loading");
         MinecraftServerQueryTitleBrush = Brushes.White;
         MinecraftServerQueryPlayerCount = "-/-";
         MinecraftServerQueryLatency = string.Empty;
@@ -267,7 +273,7 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyMinecraftServerQuerySuccessState(McPingResult result)
     {
         HasMinecraftServerQueryResult = true;
-        MinecraftServerQueryTitle = "Minecraft 服务器";
+        MinecraftServerQueryTitle = LT("shell.tools.test.server_query.result_title");
         MinecraftServerQueryTitleBrush = Brushes.White;
         MinecraftServerQueryPlayerCount = $"{result.Players.Online}/{result.Players.Max}";
         MinecraftServerQueryLatency = $"{result.Latency}ms";
@@ -283,7 +289,7 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyMinecraftServerQueryErrorState(string message)
     {
         HasMinecraftServerQueryResult = true;
-        MinecraftServerQueryTitle = $"无法连接: {message}";
+        MinecraftServerQueryTitle = LT("shell.tools.test.server_query.error", ("message", message));
         MinecraftServerQueryTitleBrush = Brushes.Red;
         MinecraftServerQueryPlayerCount = "-/-";
         MinecraftServerQueryLatency = string.Empty;
@@ -528,11 +534,11 @@ internal sealed partial class FrontendShellViewModel
         return p;
     }
 
-    private static async Task<(string Ip, int Port)> ResolveMinecraftServerQueryEndpointAsync(string address, CancellationToken cancellationToken)
+    private async Task<(string Ip, int Port)> ResolveMinecraftServerQueryEndpointAsync(string address, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(address))
         {
-            throw new ArgumentException("服务器地址不能为空", nameof(address));
+            throw new ArgumentException(LT("shell.tools.test.server_query.validation.empty"), nameof(address));
         }
 
         var normalizedAddress = NormalizeMinecraftServerQueryAddress(address);
@@ -601,11 +607,11 @@ internal sealed partial class FrontendShellViewModel
         return value;
     }
 
-    private static void ValidateMinecraftServerQueryPort(int port)
+    private void ValidateMinecraftServerQueryPort(int port)
     {
         if (port is < 1 or > 65535)
         {
-            throw new FormatException($"无效的端口：{port}");
+            throw new FormatException(LT("shell.tools.test.server_query.validation.invalid_port", ("port", port)));
         }
     }
 
@@ -628,7 +634,7 @@ internal sealed partial class FrontendShellViewModel
         return host.EndsWith(".", StringComparison.Ordinal) ? host[..^1] : host;
     }
 
-    private static (string HostOrIp, int? Port) ParseMinecraftServerQueryHostAndPort(string input)
+    private (string HostOrIp, int? Port) ParseMinecraftServerQueryHostAndPort(string input)
     {
         var bracketedIpv6Match = MinecraftServerQueryBracketedIpv6.Match(input);
         if (bracketedIpv6Match.Success)
@@ -636,7 +642,7 @@ internal sealed partial class FrontendShellViewModel
             var ip = bracketedIpv6Match.Groups["ip"].Value;
             if (!IPAddress.TryParse(ip, out _))
             {
-                throw new FormatException("无效的 IPv6 地址格式");
+                throw new FormatException(LT("shell.tools.test.server_query.validation.invalid_ipv6"));
             }
 
             var portGroup = bracketedIpv6Match.Groups["port"];
@@ -666,7 +672,7 @@ internal sealed partial class FrontendShellViewModel
                 var host = input[..^trailingPortMatch.Value.Length];
                 if (string.IsNullOrWhiteSpace(host))
                 {
-                    throw new FormatException("无效的主机名");
+                    throw new FormatException(LT("shell.tools.test.server_query.validation.invalid_host"));
                 }
 
                 return (host, port);

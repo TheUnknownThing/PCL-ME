@@ -20,18 +20,7 @@ internal sealed partial class FrontendShellViewModel
     private PixelSize _currentBackgroundSourcePixelSize;
     private int _backgroundAssetCount;
 
-    public IReadOnlyList<string> BackgroundSuitOptions { get; } =
-    [
-        "智能",
-        "居中",
-        "适应",
-        "拉伸",
-        "平铺",
-        "居于左上",
-        "居于右上",
-        "居于左下",
-        "居于右下"
-    ];
+    public IReadOnlyList<string> BackgroundSuitOptions => SetupText.Ui.BackgroundSuitOptions;
 
     public int SelectedBackgroundSuitIndex
     {
@@ -67,9 +56,18 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string BackgroundBlurLabel => BackgroundBlur <= 0.5 ? "关闭" : $"{Math.Round(BackgroundBlur)}";
+    public string BackgroundBlurLabel => BackgroundBlur <= 0.5
+        ? _i18n.T("setup.ui.background.labels.blur_off")
+        : $"{Math.Round(BackgroundBlur)}";
 
-    public string BackgroundCardHeader => HasBackgroundAssets ? $"背景图片（{_backgroundAssetCount} 张）" : "背景图片";
+    public string BackgroundCardHeader => HasBackgroundAssets
+        ? _i18n.T(
+            "setup.ui.background.card_header_with_count",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["count"] = _backgroundAssetCount
+            })
+        : _i18n.T("setup.ui.background.card_header");
 
     public bool HasBackgroundAssets => _backgroundAssetCount > 0;
 
@@ -128,11 +126,20 @@ internal sealed partial class FrontendShellViewModel
 
         if (_currentBackgroundAssetPath is not null)
         {
-            AddActivity("刷新背景内容", $"已加载背景：{Path.GetFileName(_currentBackgroundAssetPath)}");
+            AddActivity(
+                _i18n.T("setup.ui.background.activities.refresh"),
+                _i18n.T(
+                    "setup.ui.background.activities.loaded",
+                    new Dictionary<string, object?>(StringComparer.Ordinal)
+                    {
+                        ["file"] = Path.GetFileName(_currentBackgroundAssetPath)
+                    }));
             return;
         }
 
-        AddActivity("刷新背景内容", "未检测到可用背景内容。");
+        AddActivity(
+            _i18n.T("setup.ui.background.activities.refresh"),
+            _i18n.T("setup.ui.background.activities.empty"));
     }
 
     private void RefreshBackgroundBitmap()

@@ -4,27 +4,11 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public IReadOnlyList<string> DownloadSourceOptions { get; } =
-    [
-        "尽量使用镜像源",
-        "优先使用官方源，在加载缓慢时换用镜像源",
-        "尽量使用官方源"
-    ];
+    public IReadOnlyList<string> DownloadSourceOptions => SetupText.GameManage.DownloadSourceOptions;
 
-    public IReadOnlyList<string> FileNameFormatOptions { get; } =
-    [
-        "【机械动力】create-1.21.1-6.0.4",
-        "[机械动力] create-1.21.1-6.0.4",
-        "机械动力-create-1.21.1-6.0.4",
-        "create-1.21.1-6.0.4-机械动力",
-        "create-1.21.1-6.0.4"
-    ];
+    public IReadOnlyList<string> FileNameFormatOptions => SetupText.GameManage.FileNameFormatOptions;
 
-    public IReadOnlyList<string> ModLocalNameStyleOptions { get; } =
-    [
-        "标题显示译名，详情显示文件名",
-        "标题显示文件名，详情显示译名"
-    ];
+    public IReadOnlyList<string> ModLocalNameStyleOptions => SetupText.GameManage.ModLocalNameStyleOptions;
 
     public int SelectedDownloadSourceIndex
     {
@@ -78,7 +62,12 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string DownloadTimeoutLabel => $"{Math.Round(DownloadTimeoutSeconds)} s";
+    public string DownloadTimeoutLabel => _i18n.T(
+        "setup.game_manage.labels.download_timeout_value",
+        new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["value"] = Math.Round(DownloadTimeoutSeconds)
+        });
 
     public bool AutoSelectNewInstance
     {
@@ -140,12 +129,7 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _detectClipboardResourceLinks, value);
     }
 
-    public IReadOnlyList<string> SystemActivityOptions { get; } =
-    [
-        "显示所有公告",
-        "仅在有重要通知时显示公告",
-        "关闭所有公告"
-    ];
+    public IReadOnlyList<string> SystemActivityOptions => SetupText.LauncherMisc.SystemActivityOptions;
 
     public int SelectedSystemActivityIndex
     {
@@ -279,7 +263,7 @@ internal sealed partial class FrontendShellViewModel
     }
 
     public string DebugAnimationSpeedLabel => Math.Round(DebugAnimationSpeed) > 29
-        ? "关闭"
+        ? _i18n.T("setup.launcher_misc.labels.debug_animation_speed_off")
         : $"{Math.Round(DebugAnimationSpeed / 10 + 0.1, 1):0.0}x";
 
     public bool SkipCopyDuringDownload

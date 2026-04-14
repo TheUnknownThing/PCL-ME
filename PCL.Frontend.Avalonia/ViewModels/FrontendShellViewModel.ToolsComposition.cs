@@ -7,10 +7,61 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private const string ToolboxUnsupportedMessage = "为便于维护，跨平台版中不包含百宝箱功能……";
     private const string LauncherShortcutDisplayName = "PCL 跨平台版";
     private const string ShortcutDesktopOptionId = "desktop";
     private const string ShortcutStartMenuOptionId = "start-menu";
+
+    public string ToolsTestToolboxCardHeader => LT("shell.tools.test.cards.toolbox");
+
+    public string ToolsTestCustomDownloadCardHeader => LT("shell.tools.test.cards.custom_download");
+
+    public string ToolsTestCustomDownloadDescription => LT("shell.tools.test.custom_download.description");
+
+    public string ToolsTestCustomDownloadAddressLabel => LT("shell.tools.test.custom_download.address");
+
+    public string ToolsTestCustomDownloadUserAgentLabel => LT("shell.tools.test.custom_download.user_agent");
+
+    public string ToolsTestCustomDownloadSaveToLabel => LT("shell.tools.test.custom_download.save_to");
+
+    public string ToolsTestCustomDownloadFileNameLabel => LT("shell.tools.test.custom_download.file_name");
+
+    public string ToolsTestCustomDownloadSelectButtonText => LT("shell.tools.test.custom_download.select");
+
+    public string ToolsTestCustomDownloadStartButtonText => LT("shell.tools.test.custom_download.start");
+
+    public string ToolsTestCustomDownloadOpenFolderButtonText => LT("shell.tools.test.custom_download.open_folder");
+
+    public string ToolsTestOfficialSkinCardHeader => LT("shell.tools.test.cards.official_skin");
+
+    public string ToolsTestOfficialSkinPlayerNameLabel => LT("shell.tools.test.official_skin.player_name");
+
+    public string ToolsTestOfficialSkinSaveButtonText => LT("shell.tools.test.official_skin.save");
+
+    public string ToolsTestServerQueryCardHeader => LT("shell.tools.test.cards.server_query");
+
+    public string ToolsTestAchievementCardHeader => LT("shell.tools.test.cards.achievement");
+
+    public string ToolsTestAchievementBlockIdLabel => LT("shell.tools.test.achievement.block_id");
+
+    public string ToolsTestAchievementTitleLabel => LT("shell.tools.test.achievement.title");
+
+    public string ToolsTestAchievementFirstLineLabel => LT("shell.tools.test.achievement.first_line");
+
+    public string ToolsTestAchievementSecondLineLabel => LT("shell.tools.test.achievement.second_line");
+
+    public string ToolsTestAchievementPreviewButtonText => LT("shell.tools.test.achievement.preview");
+
+    public string ToolsTestAchievementSaveButtonText => LT("shell.tools.test.achievement.save");
+
+    public string ToolsTestHeadCardHeader => LT("shell.tools.test.cards.head");
+
+    public string ToolsTestHeadSizeLabel => LT("shell.tools.test.head.size");
+
+    public string ToolsTestHeadPreviewLabel => LT("shell.tools.test.head.preview");
+
+    public string ToolsTestHeadSelectButtonText => LT("shell.tools.test.head.select_skin");
+
+    public string ToolsTestHeadSaveButtonText => LT("shell.tools.test.head.save");
 
     private void ApplyToolsComposition(FrontendToolsComposition composition)
     {
@@ -66,12 +117,75 @@ internal sealed partial class FrontendShellViewModel
 
     private ToolboxActionViewModel CreateToolboxAction(FrontendToolboxActionDefinition action)
     {
+        var title = ResolveToolboxActionTitle(action.ActionKey, action.Title);
+        var toolTip = ResolveToolboxActionToolTip(action.ActionKey, action.ToolTip);
         return new ToolboxActionViewModel(
-            action.Title,
-            action.ToolTip,
+            title,
+            toolTip,
             action.MinWidth,
             action.IsDanger ? PclButtonColorState.Red : PclButtonColorState.Normal,
-            ResolveToolboxActionCommand(action.ActionKey, action.Title));
+            ResolveToolboxActionCommand(action.ActionKey, title));
+    }
+
+    private string ResolveToolboxActionTitle(string actionKey, string fallback)
+    {
+        return actionKey switch
+        {
+            "memory-optimize" => LT("shell.tools.test.toolbox.actions.memory_optimize.title"),
+            "clear-rubbish" => LT("shell.tools.test.toolbox.actions.clear_rubbish.title"),
+            "daily-luck" => LT("shell.tools.test.toolbox.actions.daily_luck.title"),
+            "crash-test" => LT("shell.tools.test.toolbox.actions.crash_test.title"),
+            "create-shortcut" => LT("shell.tools.test.toolbox.actions.create_shortcut.title"),
+            "launch-count" => LT("shell.tools.test.toolbox.actions.launch_count.title"),
+            _ => fallback
+        };
+    }
+
+    private string ResolveToolboxActionToolTip(string actionKey, string fallback)
+    {
+        return actionKey switch
+        {
+            "memory-optimize" => LT("shell.tools.test.toolbox.actions.memory_optimize.tooltip"),
+            "clear-rubbish" => LT("shell.tools.test.toolbox.actions.clear_rubbish.tooltip"),
+            "daily-luck" => LT("shell.tools.test.toolbox.actions.daily_luck.tooltip"),
+            "crash-test" => LT("shell.tools.test.toolbox.actions.crash_test.tooltip"),
+            "create-shortcut" => LT("shell.tools.test.toolbox.actions.create_shortcut.tooltip"),
+            "launch-count" => LT("shell.tools.test.toolbox.actions.launch_count.tooltip"),
+            _ => fallback
+        };
+    }
+
+    private void RefreshToolsTestLocalization()
+    {
+        ReplaceItems(ToolboxActions, _toolsComposition.Test.ToolboxActions.Select(CreateToolboxAction));
+        RaisePropertyChanged(nameof(ToolsTestToolboxCardHeader));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadCardHeader));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadDescription));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadAddressLabel));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadUserAgentLabel));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadSaveToLabel));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadFileNameLabel));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadSelectButtonText));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadStartButtonText));
+        RaisePropertyChanged(nameof(ToolsTestCustomDownloadOpenFolderButtonText));
+        RaisePropertyChanged(nameof(ToolsTestOfficialSkinCardHeader));
+        RaisePropertyChanged(nameof(ToolsTestOfficialSkinPlayerNameLabel));
+        RaisePropertyChanged(nameof(ToolsTestOfficialSkinSaveButtonText));
+        RaisePropertyChanged(nameof(ToolsTestServerQueryCardHeader));
+        RaisePropertyChanged(nameof(MinecraftServerQueryAddressWatermark));
+        RaisePropertyChanged(nameof(MinecraftServerQueryQueryButtonText));
+        RaisePropertyChanged(nameof(ToolsTestAchievementCardHeader));
+        RaisePropertyChanged(nameof(ToolsTestAchievementBlockIdLabel));
+        RaisePropertyChanged(nameof(ToolsTestAchievementTitleLabel));
+        RaisePropertyChanged(nameof(ToolsTestAchievementFirstLineLabel));
+        RaisePropertyChanged(nameof(ToolsTestAchievementSecondLineLabel));
+        RaisePropertyChanged(nameof(ToolsTestAchievementPreviewButtonText));
+        RaisePropertyChanged(nameof(ToolsTestAchievementSaveButtonText));
+        RaisePropertyChanged(nameof(ToolsTestHeadCardHeader));
+        RaisePropertyChanged(nameof(ToolsTestHeadSizeLabel));
+        RaisePropertyChanged(nameof(ToolsTestHeadPreviewLabel));
+        RaisePropertyChanged(nameof(ToolsTestHeadSelectButtonText));
+        RaisePropertyChanged(nameof(ToolsTestHeadSaveButtonText));
     }
 
     private void ClearToolboxRubbish()
@@ -87,10 +201,10 @@ internal sealed partial class FrontendShellViewModel
         }
 
         AddActivity(
-            "清理游戏垃圾",
+            LT("shell.tools.test.toolbox.actions.clear_rubbish.title"),
             removedCount == 0
-                ? "没有检测到需要清理的缓存、日志或崩溃报告。"
-                : $"已清理 {removedCount} 个缓存或日志项目。");
+                ? LT("shell.tools.test.toolbox.actions.clear_rubbish.none_removed")
+                : LT("shell.tools.test.toolbox.actions.clear_rubbish.removed", ("count", removedCount)));
     }
 
     private void ShowDailyLuck() => _ = ShowDailyLuckAsync();
@@ -101,31 +215,35 @@ internal sealed partial class FrontendShellViewModel
         var random = new Random(seed);
         var luckValue = random.Next(0, 101);
         var rating = GetDailyLuckRating(luckValue);
-        var title = $"今日人品 - {DateTime.Now:yyyy/MM/dd}";
+        var title = LT("shell.tools.test.toolbox.actions.daily_luck.dialog_title", ("date", DateTime.Now.ToString("yyyy/MM/dd")));
         var message = luckValue >= 60
-            ? $"你今天的人品值是：{luckValue}！{rating}"
-            : $"你今天的人品值是：{luckValue}... {rating}";
+            ? LT("shell.tools.test.toolbox.actions.daily_luck.high_message", ("value", luckValue), ("rating", rating))
+            : LT("shell.tools.test.toolbox.actions.daily_luck.low_message", ("value", luckValue), ("rating", rating));
         var result = await ShowToolboxConfirmationAsync(title, message, isDanger: luckValue <= 30);
         if (result is null)
         {
             return;
         }
 
-        AddActivity("今日人品", $"今日人品值: {luckValue}");
+        AddActivity(
+            LT("shell.tools.test.toolbox.actions.daily_luck.title"),
+            LT("shell.tools.test.toolbox.actions.daily_luck.activity", ("value", luckValue)));
     }
 
     private void ShowLauncherLaunchCount() => _ = ShowLauncherLaunchCountAsync();
 
     private async Task ShowLauncherLaunchCountAsync()
     {
-        var message = $"PCL 已经为你启动了 {_launchComposition.LaunchCount} 次游戏了。";
-        var result = await ShowToolboxConfirmationAsync("启动次数", message);
+        var message = LT("shell.tools.test.toolbox.actions.launch_count.message", ("count", _launchComposition.LaunchCount));
+        var result = await ShowToolboxConfirmationAsync(
+            LT("shell.tools.test.toolbox.actions.launch_count.dialog_title"),
+            message);
         if (result is null)
         {
             return;
         }
 
-        AddActivity("查看启动计数", message);
+        AddActivity(LT("shell.tools.test.toolbox.actions.launch_count.title"), message);
     }
 
     private void OpenMemoryOptimizeDialog() => _ = OpenMemoryOptimizeDialogAsync();
@@ -141,7 +259,10 @@ internal sealed partial class FrontendShellViewModel
             var prompt = BuildMemoryOptimizePrompt(totalMemoryGb);
             if (!string.IsNullOrWhiteSpace(prompt))
             {
-                var confirmed = await ShowToolboxConfirmationAsync("确认内存优化？", prompt, "继续");
+                var confirmed = await ShowToolboxConfirmationAsync(
+                    LT("shell.tools.test.toolbox.actions.memory_optimize.confirm_title"),
+                    prompt,
+                    LT("shell.tools.test.toolbox.actions.memory_optimize.continue"));
                 if (confirmed is null)
                 {
                     return;
@@ -149,22 +270,24 @@ internal sealed partial class FrontendShellViewModel
 
                 if (confirmed == false)
                 {
-                    AddActivity("内存优化", "已取消内存优化。");
+                    AddActivity(
+                        LT("shell.tools.test.toolbox.actions.memory_optimize.title"),
+                        LT("shell.tools.test.toolbox.actions.memory_optimize.cancelled"));
                     return;
                 }
             }
         }
 
         var detail = OperatingSystem.IsWindows()
-            ? "Avalonia 前端尚未接入与标准实现一致的 Windows 内存优化执行器。已保留标准确认弹窗行为，不再打开文本编辑器。"
-            : "当前平台暂不支持与标准实现一致的内存优化执行器。已保留标准确认弹窗行为，不再打开文本编辑器。";
-        var result = await ShowToolboxConfirmationAsync("内存优化", detail);
+            ? LT("shell.tools.test.toolbox.actions.memory_optimize.unsupported_windows")
+            : LT("shell.tools.test.toolbox.actions.memory_optimize.unsupported_other");
+        var result = await ShowToolboxConfirmationAsync(LT("shell.tools.test.toolbox.actions.memory_optimize.title"), detail);
         if (result is null)
         {
             return;
         }
 
-        AddActivity("内存优化", detail);
+        AddActivity(LT("shell.tools.test.toolbox.actions.memory_optimize.title"), detail);
     }
 
     private void CreateLauncherShortcut() => _ = CreateLauncherShortcutAsync();
@@ -174,14 +297,17 @@ internal sealed partial class FrontendShellViewModel
         var shortcutTargets = BuildShortcutTargets(LauncherShortcutDisplayName);
         if (shortcutTargets.Count == 0)
         {
-            AddFailureActivity("创建快捷方式失败", "当前系统未提供可用的快捷方式目录。");
+            AddFailureActivity(
+                LT("shell.tools.test.toolbox.actions.create_shortcut.failure_title"),
+                LT("shell.tools.test.toolbox.actions.create_shortcut.no_targets"));
             return;
         }
 
-        var summary = "这个快捷方式不会自动移除，在删除/移动启动器前请手动移除快捷方式。"
+        var summary = LT("shell.tools.test.toolbox.actions.create_shortcut.summary_warning")
                       + Environment.NewLine
                       + Environment.NewLine
-                      + string.Join(Environment.NewLine, shortcutTargets.Select(target => $"{target.Title}位置: {target.ShortcutPath}"));
+                      + string.Join(Environment.NewLine, shortcutTargets.Select(target =>
+                          LT("shell.tools.test.toolbox.actions.create_shortcut.location", ("title", target.Title), ("path", target.ShortcutPath))));
 
         ToolboxShortcutTarget? selectedTarget;
         try
@@ -189,7 +315,10 @@ internal sealed partial class FrontendShellViewModel
             if (shortcutTargets.Count == 1)
             {
                 var onlyTarget = shortcutTargets[0];
-                var confirmed = await ShowToolboxConfirmationAsync("创建快捷方式", summary, "创建");
+                var confirmed = await ShowToolboxConfirmationAsync(
+                    LT("shell.tools.test.toolbox.actions.create_shortcut.title"),
+                    summary,
+                    LT("shell.tools.test.toolbox.actions.create_shortcut.confirm"));
                 if (confirmed is null)
                 {
                     return;
@@ -197,7 +326,9 @@ internal sealed partial class FrontendShellViewModel
 
                 if (confirmed == false)
                 {
-                    AddActivity("创建快捷方式", "已取消创建快捷方式。");
+                    AddActivity(
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.title"),
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.cancelled"));
                     return;
                 }
 
@@ -206,35 +337,41 @@ internal sealed partial class FrontendShellViewModel
             else
             {
                 var selectedId = await _shellActionService.PromptForChoiceAsync(
-                    "选择快捷方式位置",
+                    LT("shell.tools.test.toolbox.actions.create_shortcut.choose_title"),
                     summary,
                     shortcutTargets.Select(target => new PclChoiceDialogOption(
                         target.Id,
                         target.Title,
-                        $"位置: {target.ShortcutPath}")).ToArray(),
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.choice_info", ("path", target.ShortcutPath)))).ToArray(),
                     ShortcutDesktopOptionId,
-                    "创建");
+                    LT("shell.tools.test.toolbox.actions.create_shortcut.confirm"));
                 if (selectedId is null)
                 {
-                    AddActivity("创建快捷方式", "已取消创建快捷方式。");
+                    AddActivity(
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.title"),
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.cancelled"));
                     return;
                 }
 
                 selectedTarget = shortcutTargets.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.Ordinal));
                 if (selectedTarget is null)
                 {
-                    AddFailureActivity("创建快捷方式失败", $"未识别的快捷方式位置: {selectedId}");
+                    AddFailureActivity(
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.failure_title"),
+                        LT("shell.tools.test.toolbox.actions.create_shortcut.unknown_target", ("id", selectedId)));
                     return;
                 }
             }
 
             var shortcutPath = _shellActionService.CreateLauncherShortcutAt(selectedTarget.Directory, LauncherShortcutDisplayName);
-            AvaloniaHintBus.Show($"已在{selectedTarget.Title}创建快捷方式", AvaloniaHintTheme.Success);
-            AddActivity("创建快捷方式", shortcutPath);
+            AvaloniaHintBus.Show(
+                LT("shell.tools.test.toolbox.actions.create_shortcut.created_hint", ("target", selectedTarget.Title)),
+                AvaloniaHintTheme.Success);
+            AddActivity(LT("shell.tools.test.toolbox.actions.create_shortcut.title"), shortcutPath);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("创建快捷方式失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.toolbox.actions.create_shortcut.failure_title"), ex.Message);
         }
     }
 
@@ -341,30 +478,32 @@ internal sealed partial class FrontendShellViewModel
         return $"{size:0.##} {units[unitIndex]}";
     }
 
-    private static string GetDailyLuckRating(int luckValue)
+    private string ToolboxUnsupportedMessage => LT("shell.tools.test.toolbox.unsupported");
+
+    private string GetDailyLuckRating(int luckValue)
     {
         return luckValue switch
         {
-            100 => "100！100！" + Environment.NewLine + "隐藏主题 欧皇…… 不对，跨平台版应该没有这玩意……",
-            >= 95 => "差一点就到100了呢...",
-            >= 90 => "好评如潮！",
-            >= 60 => "还行啦，还行啦",
-            >= 40 => "勉强还行吧...",
-            >= 30 => "呜...",
-            >= 10 => "不会吧！",
-            _ => "（是百分制哦）"
+            100 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r100"),
+            >= 95 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r95"),
+            >= 90 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r90"),
+            >= 60 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r60"),
+            >= 40 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r40"),
+            >= 30 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r30"),
+            >= 10 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r10"),
+            _ => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r0")
         };
     }
 
-    private static string BuildMemoryOptimizePrompt(double totalMemoryGb)
+    private string BuildMemoryOptimizePrompt(double totalMemoryGb)
     {
         return totalMemoryGb switch
         {
-            >= 32 => "当前总内存充足，建议关闭不必要的程序来腾出内存而不是尝试使用内存优化。",
-            >= 16 => "当前内存比较充足，建议优先考虑让系统自动管理内存。",
-            >= 6 => "建议在使用后静置一分钟等待系统响应完毕。",
-            >= 2 => "内存资源比较紧张，建议通过加装内存以避免频繁使用内存优化功能，防止内存优化对硬盘造成过大压力。",
-            > 0 => "嗯……？",
+            >= 32 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r32"),
+            >= 16 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r16"),
+            >= 6 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r6"),
+            >= 2 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r2"),
+            > 0 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r0"),
             _ => string.Empty
         };
     }
@@ -372,16 +511,22 @@ internal sealed partial class FrontendShellViewModel
     private async Task<bool?> ShowToolboxConfirmationAsync(
         string title,
         string message,
-        string confirmText = "确定",
+        string? confirmText = null,
         bool isDanger = false)
     {
         try
         {
-            return await _shellActionService.ConfirmAsync(title, message, confirmText, isDanger);
+            return await _shellActionService.ConfirmAsync(
+                title,
+                message,
+                confirmText ?? LT("shell.tools.common.confirm"),
+                isDanger);
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"{title} 失败", ex.Message);
+            AddFailureActivity(
+                LT("shell.tools.common.failure_title", ("title", title)),
+                ex.Message);
             return null;
         }
     }
@@ -396,7 +541,7 @@ internal sealed partial class FrontendShellViewModel
         {
             targets.Add(new ToolboxShortcutTarget(
                 ShortcutDesktopOptionId,
-                "桌面",
+                LT("shell.tools.test.toolbox.actions.create_shortcut.targets.desktop"),
                 desktopDirectory,
                 Path.Combine(desktopDirectory, shortcutFileName)));
         }
@@ -409,7 +554,7 @@ internal sealed partial class FrontendShellViewModel
                 var programsDirectory = Path.Combine(startMenuDirectory, "Programs");
                 targets.Add(new ToolboxShortcutTarget(
                     ShortcutStartMenuOptionId,
-                    "开始菜单",
+                    LT("shell.tools.test.toolbox.actions.create_shortcut.targets.start_menu"),
                     programsDirectory,
                     Path.Combine(programsDirectory, shortcutFileName)));
             }

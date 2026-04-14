@@ -12,8 +12,8 @@ internal sealed partial class FrontendShellViewModel
 {
     private const string InstanceExportConfigSeparator = "==============================================================";
     private const string InstanceExportConfigCacheKey = "CacheExportConfig";
-    private string _instanceExportName = "Modern Fabric Demo";
-    private string _instanceExportVersion = "1.0.0";
+    private string _instanceExportName = string.Empty;
+    private string _instanceExportVersion = string.Empty;
     private bool _instanceExportIncludeResources;
     private bool _instanceExportModrinthMode;
 
@@ -281,19 +281,25 @@ internal sealed partial class FrontendShellViewModel
         OpenInstanceTarget("开始导出", archivePath, "导出压缩包不存在。");
     }
 
-    private static ExportOptionEntryViewModel CreateExportOption(string title, string description, bool isChecked)
+    private ExportOptionEntryViewModel CreateExportOption(string title, string description, bool isChecked)
     {
-        return new ExportOptionEntryViewModel(title, description, isChecked);
+        return new ExportOptionEntryViewModel(
+            LocalizeExportTitle(title),
+            LocalizeExportDescription(description),
+            isChecked);
     }
 
-    private static ExportOptionGroupViewModel CreateExportOptionGroup(
+    private ExportOptionGroupViewModel CreateExportOptionGroup(
         string title,
         string description,
         bool isChecked,
         IReadOnlyList<ExportOptionEntryViewModel> children)
     {
         return new ExportOptionGroupViewModel(
-            new ExportOptionEntryViewModel(title, description, isChecked),
+            new ExportOptionEntryViewModel(
+                LocalizeExportTitle(title),
+                LocalizeExportDescription(description),
+                isChecked),
             children);
     }
 
@@ -384,14 +390,14 @@ internal sealed partial class FrontendShellViewModel
         {
             switch (group.Header.Title)
             {
-                case "游戏本体":
+                case var title when string.Equals(title, LocalizeExportTitle("游戏本体"), StringComparison.Ordinal):
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
                         var fileName = child.Title switch
                         {
-                            "游戏本体设置" => "options.txt",
-                            "游戏本体个人信息" => "optionsof.txt",
-                            "OptiFine 设置" => "optionsof.txt",
+                            var item when string.Equals(item, LocalizeExportTitle("游戏本体设置"), StringComparison.Ordinal) => "options.txt",
+                            var item when string.Equals(item, LocalizeExportTitle("游戏本体个人信息"), StringComparison.Ordinal) => "optionsof.txt",
+                            var item when string.Equals(item, LocalizeExportTitle("OptiFine 设置"), StringComparison.Ordinal) => "optionsof.txt",
                             _ => null
                         };
                         if (string.IsNullOrWhiteSpace(fileName))
@@ -406,19 +412,19 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
                     break;
-                case "Mod":
+                case var title when string.Equals(title, LocalizeExportTitle("Mod"), StringComparison.Ordinal):
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
                         switch (child.Title)
                         {
-                            case "已禁用的 Mod":
+                            case var item when string.Equals(item, LocalizeExportTitle("已禁用的 Mod"), StringComparison.Ordinal):
                                 foreach (var entry in _instanceComposition.DisabledMods.Entries)
                                 {
                                     yield return (entry.Path, BuildOverrideArchivePath(indieDirectory, entry.Path));
                                 }
                                 break;
-                            case "整合包重要数据":
-                            case "Mod 设置":
+                            case var selectedItem when string.Equals(selectedItem, LocalizeExportTitle("整合包重要数据"), StringComparison.Ordinal)
+                                || string.Equals(selectedItem, LocalizeExportTitle("Mod 设置"), StringComparison.Ordinal):
                                 var configDirectory = Path.Combine(indieDirectory, "config");
                                 if (Directory.Exists(configDirectory))
                                 {
@@ -428,31 +434,31 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
                     break;
-                case "资源包":
+                case var title when string.Equals(title, LocalizeExportTitle("资源包"), StringComparison.Ordinal):
                     foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.ResourcePacks.Entries))
                     {
                         yield return source;
                     }
                     break;
-                case "光影包":
+                case var title when string.Equals(title, LocalizeExportTitle("光影包"), StringComparison.Ordinal):
                     foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.Shaders.Entries))
                     {
                         yield return source;
                     }
                     break;
-                case "截图":
+                case var title when string.Equals(title, LocalizeExportTitle("截图"), StringComparison.Ordinal):
                     foreach (var entry in _instanceComposition.Screenshot.Entries)
                     {
                         yield return (entry.Path, BuildOverrideArchivePath(indieDirectory, entry.Path));
                     }
                     break;
-                case "导出的结构":
+                case var title when string.Equals(title, LocalizeExportTitle("导出的结构"), StringComparison.Ordinal):
                     foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.Schematics.Entries))
                     {
                         yield return source;
                     }
                     break;
-                case "录像回放":
+                case var title when string.Equals(title, LocalizeExportTitle("录像回放"), StringComparison.Ordinal):
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
                         var sourcePath = Path.Combine(indieDirectory, "replay_recordings", child.Title);
@@ -462,7 +468,7 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
                     break;
-                case "单人游戏存档":
+                case var title when string.Equals(title, LocalizeExportTitle("单人游戏存档"), StringComparison.Ordinal):
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
                         var world = _instanceComposition.World.Entries.FirstOrDefault(entry => string.Equals(entry.Title, child.Title, StringComparison.OrdinalIgnoreCase));
@@ -472,14 +478,14 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
                     break;
-                case "多人游戏服务器列表":
+                case var title when string.Equals(title, LocalizeExportTitle("多人游戏服务器列表"), StringComparison.Ordinal):
                     var serversPath = Path.Combine(indieDirectory, "servers.dat");
                     if (File.Exists(serversPath))
                     {
                         yield return (serversPath, BuildOverrideArchivePath(indieDirectory, serversPath));
                     }
                     break;
-                case "PCL 启动器程序":
+                case var title when string.Equals(title, LocalizeExportTitle("PCL 启动器程序"), StringComparison.Ordinal):
                     if (group.Children.Any(child => child.IsChecked))
                     {
                         var pclDirectory = Path.Combine(instanceDirectory, "PCL");

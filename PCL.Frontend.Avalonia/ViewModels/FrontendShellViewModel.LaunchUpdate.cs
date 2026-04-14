@@ -10,75 +10,23 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public IReadOnlyList<string> LaunchIsolationOptions { get; } =
-    [
-        "关闭",
-        "隔离可安装 Mod 的实例",
-        "隔离非正式版",
-        "隔离可安装 Mod 的实例与非正式版",
-        "隔离所有实例"
-    ];
+    public IReadOnlyList<string> LaunchIsolationOptions => SetupText.Launch.IsolationOptions;
 
-    public IReadOnlyList<string> LaunchVisibilityOptions { get; } =
-    [
-        "游戏启动后立即关闭",
-        "游戏启动后隐藏，游戏退出后自动关闭",
-        "游戏启动后隐藏，游戏退出后重新打开",
-        "游戏启动后最小化",
-        "游戏启动后仍保持不变"
-    ];
+    public IReadOnlyList<string> LaunchVisibilityOptions => SetupText.Launch.VisibilityOptions;
 
-    public IReadOnlyList<string> LaunchPriorityOptions { get; } =
-    [
-        "高（优先保证游戏运行）",
-        "中（平衡）",
-        "低（优先保证其他程序运行）"
-    ];
+    public IReadOnlyList<string> LaunchPriorityOptions => SetupText.Launch.PriorityOptions;
 
-    public IReadOnlyList<string> LaunchWindowTypeOptions { get; } =
-    [
-        "全屏",
-        "默认",
-        "与启动器尺寸一致",
-        "自定义尺寸",
-        "最大化"
-    ];
+    public IReadOnlyList<string> LaunchWindowTypeOptions => SetupText.Launch.WindowTypeOptions;
 
-    public IReadOnlyList<string> LaunchMicrosoftAuthOptions { get; } =
-    [
-        "Web 账户管理器（暂时强制设备代码流）",
-        "设备代码流"
-    ];
+    public IReadOnlyList<string> LaunchMicrosoftAuthOptions => SetupText.Launch.MicrosoftAuthOptions;
 
-    public IReadOnlyList<string> LaunchPreferredIpStackOptions { get; } =
-    [
-        "IPv4 优先",
-        "Java 默认",
-        "IPv6 优先"
-    ];
+    public IReadOnlyList<string> LaunchPreferredIpStackOptions => SetupText.Launch.PreferredIpStackOptions;
 
-    public IReadOnlyList<string> LaunchRendererOptions { get; } =
-    [
-        "游戏默认",
-        "软渲染（llvmpipe）",
-        "DirectX12（d3d12）",
-        "Vulkan（zink）"
-    ];
+    public IReadOnlyList<string> LaunchRendererOptions => SetupText.Launch.RendererOptions;
 
-    public IReadOnlyList<string> UpdateChannelOptions { get; } =
-    [
-        "正式版 / Release",
-        "测试版 / Beta",
-        "开发版 / Dev"
-    ];
+    public IReadOnlyList<string> UpdateChannelOptions => SetupText.Update.ChannelOptions;
 
-    public IReadOnlyList<string> UpdateModeOptions { get; } =
-    [
-        "自动下载并安装更新",
-        "自动下载并提示更新",
-        "提示更新",
-        "不自动检查更新（不推荐）"
-    ];
+    public IReadOnlyList<string> UpdateModeOptions => SetupText.Update.ModeOptions;
 
     public int SelectedUpdateChannelIndex
     {
@@ -88,7 +36,7 @@ internal sealed partial class FrontendShellViewModel
             var clampedValue = Math.Clamp(value, 0, UpdateChannelOptions.Count - 1);
             if (SetProperty(ref _selectedUpdateChannelIndex, clampedValue))
             {
-                AddActivity("切换更新通道", UpdateChannelOptions[clampedValue]);
+                AddActivity(_i18n.T("setup.update.activities.change_channel"), UpdateChannelOptions[clampedValue]);
                 if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate))
                 {
                     _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
@@ -105,7 +53,7 @@ internal sealed partial class FrontendShellViewModel
             var clampedValue = Math.Clamp(value, 0, UpdateModeOptions.Count - 1);
             if (SetProperty(ref _selectedUpdateModeIndex, clampedValue))
             {
-                AddActivity("切换自动更新设置", UpdateModeOptions[clampedValue]);
+                AddActivity(_i18n.T("setup.update.activities.change_mode"), UpdateModeOptions[clampedValue]);
             }
         }
     }
@@ -375,33 +323,35 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowLaunchProfileSetupActions => !HasSelectedLaunchProfile;
 
     public string LaunchProfileHint => HasSelectedLaunchProfile
-        ? "已选择档案，可直接启动或切换到其他档案。"
-        : "选择一个档案以启动游戏";
+        ? T("launch.profile.hint.selected")
+        : T("launch.profile.selection.hint");
 
     public string LaunchProfileDescription => _launchComposition.SelectedProfile.Kind switch
     {
         MinecraftLaunchProfileKind.Auth when !string.IsNullOrWhiteSpace(_launchComposition.SelectedProfile.AuthServerName)
-            => $"外置验证 / {_launchComposition.SelectedProfile.AuthServerName}",
+            => T("launch.profile.kinds.authlib_with_server", ("server_name", _launchComposition.SelectedProfile.AuthServerName)),
         MinecraftLaunchProfileKind.Auth when !string.IsNullOrWhiteSpace(_launchComposition.SelectedProfile.AuthServer)
-            => $"外置验证 / {GetLaunchAuthServerDisplayName(_launchComposition.SelectedProfile.AuthServer!)}",
-        MinecraftLaunchProfileKind.Microsoft => "正版验证",
-        MinecraftLaunchProfileKind.Legacy => "离线验证",
-        _ => "新建并选择一个档案以启动游戏"
+            => T("launch.profile.kinds.authlib_with_server", ("server_name", GetLaunchAuthServerDisplayName(_launchComposition.SelectedProfile.AuthServer!))),
+        MinecraftLaunchProfileKind.Microsoft => T("launch.profile.kinds.microsoft"),
+        MinecraftLaunchProfileKind.Legacy => T("launch.profile.kinds.offline"),
+        _ => T("launch.profile.selection.hint_empty")
     };
 
-    public string LaunchButtonTitle => _isLaunchInProgress ? "启动中" : "启动游戏";
+    public string LaunchButtonTitle => _isLaunchInProgress
+        ? T("launch.actions.launching")
+        : T("launch.actions.launch");
 
     public string LaunchVersionSubtitle => GetDisplayedLaunchInstanceName();
 
-    public string LaunchWelcomeBanner => $"当前实例：{LaunchVersionSubtitle}";
+    public string LaunchWelcomeBanner => T("launch.status.current_instance", ("instance_name", LaunchVersionSubtitle));
 
-    public string LaunchMigrationHeadline => "启动状态";
+    public string LaunchMigrationHeadline => T("launch.status.title");
 
-    public string LaunchNewsTitle => $"启动概览 - {LaunchVersionSubtitle}";
+    public string LaunchNewsTitle => T("launch.status.overview_title", ("instance_name", LaunchVersionSubtitle));
 
     public string LaunchNewsBadgeText => LaunchVersionSubtitle;
 
-    public string LaunchNewsSectionTitle => "启动状态";
+    public string LaunchNewsSectionTitle => T("launch.status.title");
 
     public string LaunchAnnouncementHeader => _currentLaunchAnnouncement?.Title ?? string.Empty;
 
@@ -433,15 +383,15 @@ internal sealed partial class FrontendShellViewModel
         {
             var lines = new List<string>
             {
-                $"档案：{_launchComposition.SelectedProfile.IdentityLabel}",
-                $"Java：{GetLaunchJavaRuntimeLabel()}",
-                $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : GetLaunchPrecheckFailureMessage())}",
-                $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}",
-                $"会话状态：{(_isLaunchInProgress ? "游戏启动中" : "待命")}"
+                T("launch.status.lines.profile", ("profile_label", _launchComposition.SelectedProfile.IdentityLabel)),
+                T("launch.status.lines.java", ("java_label", GetLaunchJavaRuntimeLabel())),
+                T("launch.status.lines.precheck", ("result", _launchComposition.PrecheckResult.IsSuccess ? T("launch.status.values.passed") : GetLaunchPrecheckFailureMessage())),
+                T("launch.status.lines.prompts", ("prompt_count", _launchComposition.PrecheckResult.Prompts.Count), ("support_prompt", _launchComposition.SupportPrompt is null ? T("launch.status.values.not_matched") : T("launch.status.values.matched"))),
+                T("launch.status.lines.session", ("session_state", _isLaunchInProgress ? T("launch.status.values.launching") : T("launch.status.values.idle")))
             };
             if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
             {
-                lines.Insert(2, $"Java 警告：{_launchComposition.JavaWarningMessage}");
+                lines.Insert(2, T("launch.status.lines.java_warning", ("message", _launchComposition.JavaWarningMessage)));
             }
 
             return lines;
@@ -483,7 +433,7 @@ internal sealed partial class FrontendShellViewModel
             "SystemSystemAnnouncement",
             FrontendLaunchAnnouncementService.MarkAnnouncementAsShown(shownState, announcement.Id));
         RefreshLaunchAnnouncements();
-        AddActivity("关闭启动器公告", $"{announcement.Title} 已记录为已读。");
+        AddActivity(T("launch.status.activities.dismiss_announcement"), T("launch.status.messages.announcement_dismissed", ("title", announcement.Title)));
     }
 
     private static string GetLaunchAuthServerDisplayName(string authServer)

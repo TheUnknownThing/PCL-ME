@@ -19,6 +19,9 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
+            _updateStatus = FrontendSetupUpdateStatusService.Relocalize(_updateStatus, _i18n);
+            ReloadSetupComposition(initializeAllSurfaces: true);
+            RaiseSectionBLocalizedProperties();
             _promptCatalog[AvaloniaPromptLaneKind.Startup] = LauncherFrontendPromptService
                 .BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
                 .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
@@ -28,9 +31,29 @@ internal sealed partial class FrontendShellViewModel
             RebuildPromptLanes();
             SyncPromptLaneState();
             SelectPromptLane(_selectedPromptLane, updateActivity: false, raiseCollectionState: false);
+            ReloadDownloadComposition(includeRemoteState: _downloadCompositionHasRemoteState);
+            RefreshDownloadInstallSurfaceState();
+            RefreshDownloadResourceSurface();
+            RefreshDownloadFavoriteSurface();
+            if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail)
+            {
+                RefreshCompDetailSurface();
+            }
+
+            RefreshLaunchProfileEntries();
+            RaiseLaunchProfileSurfaceProperties();
+            RaiseSectionAI18nProperties();
+            RaisePropertyChanged(nameof(HomepagePresetOptions));
+            RaiseDownloadFavoriteSelectionProperties();
+            RaiseLaunchDialogProperties();
+            RefreshToolsTestLocalization();
+            RefreshHelpTopics();
+            RefreshCurrentDedicatedGenericRouteSurface();
+            RefreshInstanceSelectionRouteMetadata();
             RefreshShellCore(activityMessage: null, addActivity: false);
             RaiseLaunchSessionProperties();
             RaiseGameLogSurfaceProperties();
+            RefreshSectionDI18nSurfaces();
         });
     }
 
@@ -722,8 +745,8 @@ internal sealed partial class FrontendShellViewModel
             _launchSessionCancellation = launchCancellation;
             ShowLaunchDialog();
             SetLaunchDialogRunningState(
-                "正在启动游戏",
-                "初始化",
+                T("launch.dialog.state.running.title"),
+                T("launch.dialog.state.running.initializing"),
                 0d,
                 showDownload: false,
                 isError: false);
@@ -742,13 +765,13 @@ internal sealed partial class FrontendShellViewModel
 
             if (_launchComposition.SelectedJavaRuntime is null)
             {
-                throw new InvalidOperationException("当前没有可用的 Java 运行时，请先处理启动提示或在设置中选择 Java。");
+                throw new InvalidOperationException(T("launch.status.errors.java_missing"));
             }
 
             if (!string.IsNullOrWhiteSpace(_launchComposition.JavaWarningMessage))
             {
                 AppendLaunchLogLine(_launchComposition.JavaWarningMessage);
-                AddActivity("Java 兼容性检查已忽略", _launchComposition.JavaWarningMessage);
+                AddActivity(T("launch.status.activities.java_check_ignored"), _launchComposition.JavaWarningMessage);
             }
 
             foreach (var line in _launchComposition.SessionStartPlan.WatcherWorkflowPlan.StartupSummaryLogLines)
@@ -757,10 +780,10 @@ internal sealed partial class FrontendShellViewModel
             }
 
             SetLaunchDialogRunningState(
-                "正在启动游戏",
+                T("launch.dialog.state.running.title"),
                 DisableInstanceFileValidation || !_instanceComposition.Selection.HasSelection
-                    ? "准备启动参数"
-                    : "校验实例文件",
+                    ? T("launch.status.steps.prepare_arguments")
+                    : T("launch.dialog.stages.verify_instance"),
                 DisableInstanceFileValidation || !_instanceComposition.Selection.HasSelection ? 0.18d : 0.06d,
                 showDownload: false,
                 isError: false);
@@ -769,8 +792,8 @@ internal sealed partial class FrontendShellViewModel
             launchCancellation.Token.ThrowIfCancellationRequested();
 
             SetLaunchDialogRunningState(
-                "正在启动游戏",
-                "写入启动脚本",
+                T("launch.dialog.state.running.title"),
+                T("launch.status.steps.write_launch_script"),
                 0.88d,
                 showDownload: false,
                 isError: false);
@@ -780,16 +803,16 @@ internal sealed partial class FrontendShellViewModel
                 _instanceComposition.Selection.InstanceDirectory);
             _activeLaunchProcess = startResult.Process;
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
-            AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
+            AddActivity(T("launch.status.activities.game_process_started"), T("launch.status.messages.game_process_started", ("instance_name", LaunchVersionSubtitle), ("pid", startResult.Process.Id)));
             if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
             {
                 NavigateTo(
                     new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-                    "游戏启动成功后已返回主页。",
+                    T("launch.status.messages.returned_to_launch_page"),
                     RouteNavigationBehavior.Reset);
             }
 
-            AvaloniaHintBus.Show("游戏启动成功！", AvaloniaHintTheme.Success);
+            AvaloniaHintBus.Show(T("launch.status.hints.launch_succeeded"), AvaloniaHintTheme.Success);
             HideLaunchDialog();
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
@@ -800,17 +823,17 @@ internal sealed partial class FrontendShellViewModel
         {
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
-            AppendLaunchLogLine("启动已取消。");
-            AddActivity("启动已取消", "启动前文件校验或准备步骤已取消。");
-            SetLaunchDialogStoppedState("已取消启动", "启动前文件校验或准备步骤已取消。", isError: false);
+            AppendLaunchLogLine(T("launch.status.logs.canceled"));
+            AddActivity(T("launch.status.activities.canceled"), T("launch.status.messages.canceled"));
+            SetLaunchDialogStoppedState(T("launch.status.stopped.canceled_title"), T("launch.status.messages.canceled"), isError: false);
         }
         catch (Exception ex)
         {
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
-            AppendLaunchLogLine($"启动失败：{ex.Message}");
-            AddFailureActivity("启动失败", ex.Message);
-            SetLaunchDialogStoppedState("启动失败", ex.Message, isError: true);
+            AppendLaunchLogLine(T("launch.status.logs.failed", ("message", ex.Message)));
+            AddFailureActivity(T("launch.status.activities.failed"), ex.Message);
+            SetLaunchDialogStoppedState(T("launch.status.stopped.failed_title"), ex.Message, isError: true);
         }
         finally
         {
@@ -823,8 +846,8 @@ internal sealed partial class FrontendShellViewModel
     private async Task RefreshLaunchCompositionAsync(CancellationToken cancellationToken)
     {
         SetLaunchDialogRunningState(
-            "正在启动游戏",
-            "读取启动配置",
+            T("launch.dialog.state.running.title"),
+            T("launch.status.steps.read_configuration"),
             0.02d,
             showDownload: false,
             isError: false);
@@ -850,7 +873,7 @@ internal sealed partial class FrontendShellViewModel
             cancellationToken,
             forceRefresh: false,
             onStatusChanged: stage => SetLaunchDialogRunningState(
-                "正在启动游戏",
+                T("launch.dialog.state.running.title"),
                 stage,
                 0.03d,
                 showDownload: false,
@@ -868,7 +891,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         AppendLaunchLogLine(result.Message);
-        AddActivity("启动前账号检查", result.Message);
+        AddActivity(T("launch.status.activities.prelaunch_account_check"), result.Message);
     }
 
     private async Task EnsureLaunchFilesAsync(CancellationToken cancellationToken)
@@ -878,13 +901,13 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AppendLaunchLogLine("正在校验并补全实例文件...");
-        AppendLaunchLogLine("详细进度已同步到任务管理。");
+        AppendLaunchLogLine(T("launch.status.logs.verifying_instance_files"));
+        AppendLaunchLogLine(T("launch.status.logs.task_manager_progress"));
 
         try
         {
             var repairResult = await ExecuteManagedInstanceRepairAsync(
-                $"启动前校验实例文件：{_instanceComposition.Selection.InstanceName}",
+                T("launch.status.tasks.verify_instance_files", ("instance_name", _instanceComposition.Selection.InstanceName)),
                 new FrontendInstanceRepairRequest(
                     _instanceComposition.Selection.LauncherDirectory,
                     _instanceComposition.Selection.InstanceDirectory,
@@ -892,12 +915,12 @@ internal sealed partial class FrontendShellViewModel
                     ForceCoreRefresh: false),
                 ApplyLaunchRepairProgress,
                 cancellationToken);
-            var completionMessage = $"启动前文件校验完成：下载 {repairResult.DownloadedFiles.Count} 个文件，复用 {repairResult.ReusedFiles.Count} 个文件。";
+            var completionMessage = T("launch.status.messages.instance_verification_completed", ("downloaded_count", repairResult.DownloadedFiles.Count), ("reused_count", repairResult.ReusedFiles.Count));
             AppendLaunchLogLine(completionMessage);
 
             if (repairResult.DownloadedFiles.Count > 0)
             {
-                AddActivity("启动前文件校验", completionMessage);
+                AddActivity(T("launch.status.activities.instance_verification"), completionMessage);
             }
         }
         catch (OperationCanceledException)
@@ -906,7 +929,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"启动前文件校验失败：{ex.Message}", ex);
+            throw new InvalidOperationException(T("launch.status.errors.instance_verification_failed", ("message", ex.Message)), ex);
         }
     }
 

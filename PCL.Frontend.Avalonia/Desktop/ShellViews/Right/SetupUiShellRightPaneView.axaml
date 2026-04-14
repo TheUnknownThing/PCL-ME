@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
-      <controls:PclCard Header="基础" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.Ui.BasicCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto">
@@ -15,7 +15,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
-                  Text="不透明度" />
+                  Text="{Binding SetupText.Ui.LauncherOpacityLabel}" />
               <Grid Grid.Column="1" ColumnDefinitions="*,60">
                 <Slider
                     VerticalAlignment="Center"
@@ -37,7 +37,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
-                  Text="主题" />
+                  Text="{Binding SetupText.Ui.ThemeLabel}" />
               <StackPanel Grid.Row="2" Grid.Column="1" Spacing="8">
                 <Grid ColumnDefinitions="Auto,*,92,Auto,92,Auto">
                   <ComboBox
@@ -52,7 +52,7 @@
                       IsVisible="{Binding IsThemeColorSwitchSupported}"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="12.5"
-                      Text="浅色配色" />
+                      Text="{Binding SetupText.Ui.LightPaletteLabel}" />
                   <ComboBox
                       Grid.Column="3"
                       IsVisible="{Binding IsThemeColorSwitchSupported}"
@@ -66,7 +66,7 @@
                       IsVisible="{Binding IsThemeColorSwitchSupported}"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="12.5"
-                      Text="深色配色" />
+                      Text="{Binding SetupText.Ui.DarkPaletteLabel}" />
                   <ComboBox
                       Grid.Column="5"
                       IsVisible="{Binding IsThemeColorSwitchSupported}"
@@ -82,7 +82,7 @@
                       VerticalAlignment="Center"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="12.5"
-                      Text="浅色自定义" />
+                      Text="{Binding SetupText.Ui.LightCustomLabel}" />
                   <TextBox
                       Grid.Column="1"
                       Watermark="{DynamicResource ThemeColorLightSampleText}"
@@ -114,7 +114,7 @@
                       VerticalAlignment="Center"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="12.5"
-                      Text="深色自定义" />
+                      Text="{Binding SetupText.Ui.DarkCustomLabel}" />
                   <TextBox
                       Grid.Column="1"
                       Watermark="{DynamicResource ThemeColorDarkSampleText}"
@@ -143,7 +143,7 @@
                     Margin="102,0,0,0"
                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
-                    Text="自定义主题色会实时刷新当前界面配色与标题栏对比度。" />
+                    Text="{Binding SetupText.Ui.ThemeRefreshHint}" />
               </StackPanel>
             </Grid>
 
@@ -158,7 +158,7 @@
                 <TextBlock
                     Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                     FontSize="13"
-                    Text="蓝色，蓝色，还是蓝色！想要逃离蓝色困境？请使用官方快照版！"
+                    Text="{Binding SetupText.Ui.ThemeSwitchUnsupportedNotice}"
                     TextWrapping="Wrap" />
                 <controls:PclButton
                     Width="140"
@@ -166,34 +166,34 @@
                     HorizontalAlignment="Center"
                     Command="{Binding OpenSnapshotBuildCommand}"
                     ColorType="Highlight"
-                    Text="获取官方快照版" />
+                    Text="{Binding SetupText.Ui.ThemeSwitchUnsupportedAction}" />
               </StackPanel>
             </Border>
 
               <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="打开启动器时显示 PCL 图标"
+                Content="{Binding SetupText.Ui.ShowLauncherLogoLabel}"
                 IsChecked="{Binding ShowLauncherLogoSetting}" />
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="锁定启动器大小"
+                Content="{Binding SetupText.Ui.LockWindowSizeLabel}"
                 IsChecked="{Binding LockWindowSizeSetting}" />
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="在启动游戏时显示“你知道吗”"
+                Content="{Binding SetupText.Ui.ShowLaunchingHintLabel}"
                 IsChecked="{Binding ShowLaunchingHintSetting}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="字体" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.Ui.FontCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,25,*" RowDefinitions="30,10,30">
             <TextBlock
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
-                Text="全局" />
+                Text="{Binding SetupText.Ui.GlobalFontLabel}" />
             <ComboBox
                 Grid.Column="2"
                 ItemsSource="{Binding FontOptions}"
@@ -203,7 +203,7 @@
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
-                Text="MOTD" />
+                Text="{Binding SetupText.Ui.MotdFontLabel}" />
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="2"
@@ -222,7 +222,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
-                  Text="内容自适应方式" />
+                  Text="{Binding SetupText.Ui.BackgroundAdaptLabel}" />
               <ComboBox
                   Grid.Column="1"
                   ItemsSource="{Binding BackgroundSuitOptions}"
@@ -234,7 +234,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
-                  Text="不透明度" />
+                  Text="{Binding SetupText.Ui.BackgroundOpacityLabel}" />
               <Grid Grid.Column="1" ColumnDefinitions="*,56">
                 <Slider
                     VerticalAlignment="Center"
@@ -256,7 +256,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
-                  Text="背景模糊" />
+                  Text="{Binding SetupText.Ui.BackgroundBlurLabel}" />
               <Grid Grid.Column="1" ColumnDefinitions="*,56">
                 <Slider
                     VerticalAlignment="Center"
@@ -274,7 +274,7 @@
             </Grid>
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="叠加彩色背景"
+                Content="{Binding SetupText.Ui.BackgroundColorfulLabel}"
                 IsChecked="{Binding BackgroundColorful}" />
             <Grid ColumnDefinitions="Auto,Auto,Auto">
               <controls:PclButton
@@ -282,26 +282,26 @@
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding BackgroundOpenFolderCommand}"
-                  Text="打开文件夹" />
+                  Text="{Binding SetupText.Ui.BackgroundOpenFolderButton}" />
               <controls:PclButton
                   Grid.Column="1"
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding BackgroundRefreshCommand}"
-                  Text="刷新背景内容" />
+                  Text="{Binding SetupText.Ui.BackgroundRefreshButton}" />
               <controls:PclButton
                   Grid.Column="2"
                   MinWidth="140"
                   Command="{Binding BackgroundClearCommand}"
                   IsVisible="{Binding ShowBackgroundClearAction}"
                   ColorType="Red"
-                  Text="清空背景内容" />
+                  Text="{Binding SetupText.Ui.BackgroundClearButton}" />
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="背景音乐" ContentMargin="25,42,25,20">
+      <controls:PclCard Header="{Binding SetupText.Ui.MusicCardHeader}" ContentMargin="25,42,25,20">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
@@ -310,7 +310,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
-                  Text="音量" />
+                  Text="{Binding SetupText.Ui.MusicVolumeLabel}" />
               <Grid Grid.Column="1" ColumnDefinitions="*,56">
                 <Slider
                     VerticalAlignment="Center"
@@ -328,23 +328,23 @@
             </Grid>
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="随机播放"
+                Content="{Binding SetupText.Ui.MusicRandomLabel}"
                 IsChecked="{Binding MusicRandomPlay}" />
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="打开启动器自动开始播放"
+                Content="{Binding SetupText.Ui.MusicAutoStartLabel}"
                 IsChecked="{Binding MusicAutoStart}" />
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="游戏启动后自动开始播放，游戏退出后自动暂停播放"
+                Content="{Binding SetupText.Ui.MusicStartOnLaunchLabel}"
                 IsChecked="{Binding MusicStartOnGameLaunch}" />
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="游戏启动后自动暂停播放，游戏退出后自动开始播放"
+                Content="{Binding SetupText.Ui.MusicStopOnLaunchLabel}"
                 IsChecked="{Binding MusicStopOnGameLaunch}" />
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="接入系统媒体传输控制 (SMTC) 控件"
+                Content="{Binding SetupText.Ui.MusicEnableSmtcLabel}"
                 IsChecked="{Binding MusicEnableSmtc}" />
             <Grid ColumnDefinitions="Auto,Auto,Auto">
               <controls:PclButton
@@ -352,52 +352,52 @@
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding MusicOpenFolderCommand}"
-                  Text="打开文件夹" />
+                  Text="{Binding SetupText.Ui.MusicOpenFolderButton}" />
               <controls:PclButton
                   Grid.Column="1"
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding MusicRefreshCommand}"
-                  Text="刷新背景音乐" />
+                  Text="{Binding SetupText.Ui.MusicRefreshButton}" />
               <controls:PclButton
                   Grid.Column="2"
                   MinWidth="140"
                   Command="{Binding MusicClearCommand}"
                   ColorType="Red"
-                  Text="清空背景音乐" />
+                  Text="{Binding SetupText.Ui.MusicClearButton}" />
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="标题栏" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.Ui.TitleBarCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="*,*,*,*,0.2*">
               <RadioButton
                   Grid.Column="0"
                   GroupName="LogoType"
-                  Content="无"
+                  Content="{Binding SetupText.Ui.LogoTypeNoneLabel}"
                   IsChecked="{Binding IsLogoTypeNoneSelected}" />
               <RadioButton
                   Grid.Column="1"
                   GroupName="LogoType"
-                  Content="默认"
+                  Content="{Binding SetupText.Ui.LogoTypeDefaultLabel}"
                   IsChecked="{Binding IsLogoTypeDefaultSelected}" />
               <RadioButton
                   Grid.Column="2"
                   GroupName="LogoType"
-                  Content="文本"
+                  Content="{Binding SetupText.Ui.LogoTypeTextLabel}"
                   IsChecked="{Binding IsLogoTypeTextSelected}" />
               <RadioButton
                   Grid.Column="3"
                   GroupName="LogoType"
-                  Content="图片"
+                  Content="{Binding SetupText.Ui.LogoTypeImageLabel}"
                   IsChecked="{Binding IsLogoTypeImageSelected}" />
             </Grid>
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="标题栏居左"
+                Content="{Binding SetupText.Ui.LogoAlignLeftLabel}"
                 IsChecked="{Binding LogoAlignLeft}"
                 IsVisible="{Binding IsLogoLeftVisible}" />
             <Grid IsVisible="{Binding IsLogoTextVisible}" ColumnDefinitions="Auto,*">
@@ -406,7 +406,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="标题栏文本" />
+                  Text="{Binding SetupText.Ui.LogoTextLabel}" />
               <TextBox
                   Grid.Column="1"
                   Height="28"
@@ -419,41 +419,41 @@
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding ChangeLogoImageCommand}"
-                  Text="更改图片" />
+                  Text="{Binding SetupText.Ui.ChangeLogoImageButton}" />
               <controls:PclButton
                   Grid.Column="1"
                   MinWidth="140"
                   Command="{Binding DeleteLogoImageCommand}"
                   ColorType="Red"
-                  Text="清空图片" />
+                  Text="{Binding SetupText.Ui.ClearLogoImageButton}" />
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="主页" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.Ui.HomepageCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="*,*,*,*,0.2*">
               <RadioButton
                   Grid.Column="0"
                   GroupName="HomepageType"
-                  Content="空白"
+                  Content="{Binding SetupText.Ui.HomepageTypeBlankLabel}"
                   IsChecked="{Binding IsHomepageBlankSelected}" />
               <RadioButton
                   Grid.Column="1"
                   GroupName="HomepageType"
-                  Content="预设"
+                  Content="{Binding SetupText.Ui.HomepageTypePresetLabel}"
                   IsChecked="{Binding IsHomepagePresetSelected}" />
               <RadioButton
                   Grid.Column="2"
                   GroupName="HomepageType"
-                  Content="读取本地文件"
+                  Content="{Binding SetupText.Ui.HomepageTypeLocalLabel}"
                   IsChecked="{Binding IsHomepageLocalSelected}" />
               <RadioButton
                   Grid.Column="3"
                   GroupName="HomepageType"
-                  Content="联网更新"
+                  Content="{Binding SetupText.Ui.HomepageTypeRemoteLabel}"
                   IsChecked="{Binding IsHomepageNetSelected}" />
             </Grid>
 
@@ -466,7 +466,7 @@
               <TextBlock
                   Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
                   FontSize="12.5"
-                  Text="内容见 ModSetup"
+                  Text="{Binding SetupText.Ui.HomepagePresetNotice}"
                   TextWrapping="Wrap" />
             </Border>
             <Border
@@ -478,7 +478,7 @@
               <TextBlock
                   Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"
-                  Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！"
+                  Text="{Binding SetupText.Ui.HomepageSecurityWarning}"
                   TextWrapping="Wrap" />
             </Border>
 
@@ -489,18 +489,18 @@
                   MinWidth="140"
                   Command="{Binding RefreshHomepageCommand}"
                   ColorType="Highlight"
-                  Text="刷新主页" />
+                  Text="{Binding SetupText.Ui.HomepageRefreshButton}" />
               <controls:PclButton
                   Grid.Column="1"
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding GenerateHomepageTutorialFileCommand}"
-                  Text="生成教学文件" />
+                  Text="{Binding SetupText.Ui.HomepageGenerateTutorialButton}" />
               <controls:PclButton
                   Grid.Column="2"
                   MinWidth="140"
                   Command="{Binding ViewHomepageTutorialCommand}"
-                  Text="查看教程" />
+                  Text="{Binding SetupText.Ui.HomepageViewTutorialButton}" />
             </Grid>
 
             <Grid IsVisible="{Binding IsHomepageNetVisible}" ColumnDefinitions="Auto,*">
@@ -509,7 +509,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="下载地址" />
+                  Text="{Binding SetupText.Ui.HomepageUrlLabel}" />
               <TextBox
                   Grid.Column="1"
                   Height="28"
@@ -523,7 +523,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="主页预设" />
+                  Text="{Binding SetupText.Ui.HomepagePresetLabel}" />
               <ComboBox
                   Grid.Column="1"
                   ItemsSource="{Binding HomepagePresetOptions}"
@@ -540,7 +540,7 @@
             <TextBlock
                 Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
                 FontSize="13"
-                Text="你可以隐藏不需要的页面或关闭特定功能。在任意界面按 F12 可以暂时显示被隐藏的功能。"
+                Text="{Binding SetupText.Ui.HiddenFeaturesHint}"
                 TextWrapping="Wrap" />
             <ItemsControl ItemsSource="{Binding UiFeatureToggleGroups}">
               <ItemsControl.ItemTemplate>

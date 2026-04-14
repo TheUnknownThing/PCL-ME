@@ -16,12 +16,12 @@
               Margin="0,7,15,0"
               Command="{Binding OpenInstanceResourceFolderCommand}"
               ColorType="Highlight"
-              Text="打开文件夹" />
+              Text="{Binding InstanceResourceOpenFolderText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
               Command="{Binding InstallInstanceResourceFromFileCommand}"
-              Text="从文件安装" />
+              Text="{Binding InstanceResourceInstallFromFileText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
@@ -32,18 +32,18 @@
               Margin="0,7,15,0"
               Command="{Binding SelectAllInstanceResourcesCommand}"
               IsEnabled="{Binding CanSelectAllInstanceResources}"
-              Text="全选" />
+              Text="{Binding InstanceResourceSelectAllText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
               Command="{Binding ExportInstanceResourceInfoCommand}"
-              Text="导出信息" />
+              Text="{Binding InstanceResourceExportInfoText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
               Command="{Binding CheckInstanceModsCommand}"
               IsVisible="{Binding ShowInstanceResourceCheckButton}"
-              Text="检查 Mod" />
+              Text="{Binding InstanceResourceCheckModsText}" />
         </WrapPanel>
       </controls:PclCard.CardContent>
     </controls:PclCard>

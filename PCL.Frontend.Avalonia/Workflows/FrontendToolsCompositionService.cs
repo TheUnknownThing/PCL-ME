@@ -76,7 +76,7 @@ internal static class FrontendToolsCompositionService
             AchievementSecondLine: string.Empty,
             ShowAchievementPreview: false,
             SelectedHeadSizeIndex: 0,
-            SelectedHeadSkinPath: "尚未选择皮肤");
+            SelectedHeadSkinPath: string.Empty);
     }
 
     private static FrontendToolsHelpState BuildHelpState(FrontendRuntimePaths runtimePaths)

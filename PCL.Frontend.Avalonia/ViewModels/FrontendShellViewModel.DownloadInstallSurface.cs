@@ -38,7 +38,7 @@ internal sealed partial class FrontendShellViewModel
     private int _downloadInstallMinecraftCatalogVersion;
     private LauncherFrontendSubpageKey? _downloadInstallLastVisitedSubpage;
     private bool _downloadInstallIsInSelectionStage;
-    private string _downloadInstallMinecraftCatalogStatus = "正在获取版本列表";
+    private string _downloadInstallMinecraftCatalogStatus = string.Empty;
     private string _downloadInstallNameValidationMessage = string.Empty;
     private string? _downloadInstallExpandedOptionTitle;
     private bool _downloadInstallIsUpdatingGeneratedName;
@@ -182,7 +182,7 @@ internal sealed partial class FrontendShellViewModel
 
         _downloadInstallMinecraftCatalogLoaded = false;
         _isDownloadInstallMinecraftCatalogLoading = true;
-        DownloadInstallMinecraftCatalogStatus = "正在获取版本列表";
+        DownloadInstallMinecraftCatalogStatus = T("download.install.catalog.loading");
         RaiseDownloadInstallSurfaceProperties();
 
         var refreshVersion = ++_downloadInstallMinecraftCatalogVersion;
@@ -202,7 +202,7 @@ internal sealed partial class FrontendShellViewModel
                     if (task.IsFaulted)
                     {
                         _downloadInstallMinecraftCatalogChoices = [];
-                        DownloadInstallMinecraftCatalogStatus = task.Exception?.GetBaseException().Message ?? "获取版本列表失败";
+                        DownloadInstallMinecraftCatalogStatus = task.Exception?.GetBaseException().Message ?? T("download.install.catalog.load_failed");
                     }
                     else
                     {
@@ -211,7 +211,7 @@ internal sealed partial class FrontendShellViewModel
                         ApplyDownloadInstallMinecraftCatalogSections();
                         if (_downloadInstallMinecraftCatalogChoices.Count == 0)
                         {
-                            DownloadInstallMinecraftCatalogStatus = "当前没有可供安装的 Minecraft 版本。";
+                            DownloadInstallMinecraftCatalogStatus = T("download.install.catalog.empty");
                         }
                     }
 
@@ -233,14 +233,14 @@ internal sealed partial class FrontendShellViewModel
             return [];
         }
 
-        static string NormalizeGroupTitle(string group)
+        string NormalizeGroupTitle(string group)
         {
             return group switch
             {
-                "正式版" => "正式版",
-                "预览版" => "预览版",
-                "远古版" => "远古版",
-                "愚人节版" => "愚人节版",
+                "正式版" => T("download.install.catalog.groups.release"),
+                "预览版" => T("download.install.catalog.groups.preview"),
+                "远古版" => T("download.install.catalog.groups.legacy"),
+                "愚人节版" => T("download.install.catalog.groups.april_fools"),
                 _ => group
             };
         }
@@ -259,7 +259,7 @@ internal sealed partial class FrontendShellViewModel
         if (latestEntries.Count > 0)
         {
             result.Add(new DownloadInstallMinecraftSectionViewModel(
-                "最新版本",
+                T("download.install.catalog.groups.latest"),
                 latestEntries,
                 isExpanded: true,
                 canCollapse: false,
@@ -293,7 +293,7 @@ internal sealed partial class FrontendShellViewModel
         {
             latest.Add(CreateDownloadInstallMinecraftChoice(
                 releases[0],
-                summaryOverride: BuildLatestMinecraftSummary(releases[0], "最新正式版")));
+                summaryOverride: BuildLatestMinecraftSummary(releases[0], T("download.install.catalog.latest.release"))));
         }
 
         if (choicesByGroup.TryGetValue("预览版", out var previews) && previews.Length > 0)
@@ -307,19 +307,19 @@ internal sealed partial class FrontendShellViewModel
             {
                 latest.Add(CreateDownloadInstallMinecraftChoice(
                     latestPreview,
-                    summaryOverride: BuildLatestMinecraftSummary(latestPreview, "最新预览版")));
+                    summaryOverride: BuildLatestMinecraftSummary(latestPreview, T("download.install.catalog.latest.preview"))));
             }
         }
 
         return latest;
     }
 
-    private static string BuildLatestMinecraftSummary(FrontendInstallChoice choice, string label)
+    private string BuildLatestMinecraftSummary(FrontendInstallChoice choice, string label)
     {
         var releaseTime = GetDownloadInstallChoiceReleaseTime(choice);
         return releaseTime is null
             ? label
-            : $"{label}，发布于 {releaseTime.Value.LocalDateTime:yyyy/MM/dd HH:mm}";
+            : T("download.install.catalog.latest.published_at", ("label", label), ("published_at", releaseTime.Value.LocalDateTime.ToString("yyyy/MM/dd HH:mm")));
     }
 
     private static DateTimeOffset? GetDownloadInstallChoiceReleaseTime(FrontendInstallChoice choice)
@@ -385,7 +385,7 @@ internal sealed partial class FrontendShellViewModel
         foreach (var (title, _) in DownloadInstallOptionBlueprints)
         {
             _downloadInstallSelections[title] = FrontendEditableInstallSelection.Unchanged;
-            _downloadInstallBaselineSelections[title] = "可以添加";
+            _downloadInstallBaselineSelections[title] = T("download.install.options.available");
         }
 
         _downloadInstallSeedSignature = $"download-install:{minecraftChoice.Version}";
@@ -467,7 +467,7 @@ internal sealed partial class FrontendShellViewModel
                 ? GetInstallOptionUnavailableReason(isExistingInstance: false, optionTitle, minecraftVersion, cachedChoices)
                 : null);
         var selectionText = effectiveChoice?.Title
-                            ?? (unavailableReason is null ? "可以添加" : unavailableReason);
+                            ?? (unavailableReason is null ? T("download.install.options.available") : unavailableReason);
         var canExpand = unavailableReason is null;
         var isExpanded = canExpand && string.Equals(_downloadInstallExpandedOptionTitle, optionTitle, StringComparison.Ordinal);
         var choiceItems = cachedChoices.Select(choice => new DownloadInstallChoiceItemViewModel(
@@ -486,7 +486,7 @@ internal sealed partial class FrontendShellViewModel
             canExpand,
             isExpanded,
             _downloadInstallOptionLoadsInProgress.Contains(optionTitle),
-            _downloadInstallOptionLoadsInProgress.Contains(optionTitle) ? "正在获取版本列表" : string.Empty,
+            _downloadInstallOptionLoadsInProgress.Contains(optionTitle) ? T("download.install.catalog.loading") : string.Empty,
             canExpand && !_downloadInstallOptionLoadsInProgress.Contains(optionTitle) && choiceItems.Length == 0 && isExpanded,
             canExpand ? string.Empty : selectionText,
             choiceItems,
@@ -586,7 +586,7 @@ internal sealed partial class FrontendShellViewModel
 
                     if (task.IsFaulted)
                     {
-                        _downloadInstallOptionLoadErrors[optionTitle] = task.Exception?.GetBaseException().Message ?? "获取版本列表失败";
+                        _downloadInstallOptionLoadErrors[optionTitle] = task.Exception?.GetBaseException().Message ?? T("download.install.catalog.load_failed");
                     }
                     else
                     {
@@ -627,7 +627,7 @@ internal sealed partial class FrontendShellViewModel
             var shouldAutoSelect = HasInstallSelection(isExistingInstance: false, "Fabric")
                                    || (HasInstallSelection(isExistingInstance: false, "Quilt")
                                        && hasLoadedQslChoices
-                                       && GetInstallOptionUnavailableReason(false, "QFAPI / QSL", minecraftVersion, ResolveCachedDownloadInstallChoices("QFAPI / QSL")) == "无可用版本");
+                                       && GetInstallOptionUnavailableReason(false, "QFAPI / QSL", minecraftVersion, ResolveCachedDownloadInstallChoices("QFAPI / QSL")) == T("download.install.options.unavailable"));
             if (_downloadInstallAutoSelectedFabricApi || !shouldAutoSelect)
             {
                 return;
@@ -644,7 +644,7 @@ internal sealed partial class FrontendShellViewModel
             var shouldAutoSelect = HasInstallSelection(isExistingInstance: false, "Legacy Fabric")
                                    || (HasInstallSelection(isExistingInstance: false, "Quilt")
                                        && hasLoadedQslChoices
-                                       && GetInstallOptionUnavailableReason(false, "QFAPI / QSL", minecraftVersion, ResolveCachedDownloadInstallChoices("QFAPI / QSL")) == "无可用版本");
+                                       && GetInstallOptionUnavailableReason(false, "QFAPI / QSL", minecraftVersion, ResolveCachedDownloadInstallChoices("QFAPI / QSL")) == T("download.install.options.unavailable"));
             if (_downloadInstallAutoSelectedLegacyFabricApi || !shouldAutoSelect)
             {
                 return;
@@ -781,7 +781,7 @@ internal sealed partial class FrontendShellViewModel
         var minecraftVersion = _downloadInstallMinecraftChoice?.Version;
         if (string.IsNullOrWhiteSpace(minecraftVersion))
         {
-            return "新的安装方案";
+            return T("download.install.generated_name.default");
         }
 
         var name = minecraftVersion;
@@ -904,19 +904,19 @@ internal sealed partial class FrontendShellViewModel
         var trimmedName = DownloadInstallName.Trim();
         if (string.IsNullOrWhiteSpace(trimmedName))
         {
-            DownloadInstallNameValidationMessage = "请输入新的实例名称。";
+            DownloadInstallNameValidationMessage = T("download.install.validation.empty_name");
             return;
         }
 
         if (trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
         {
-            DownloadInstallNameValidationMessage = "实例名称包含文件系统不支持的字符。";
+            DownloadInstallNameValidationMessage = T("download.install.validation.invalid_characters");
             return;
         }
 
         if (trimmedName.EndsWith(".", StringComparison.Ordinal) || trimmedName.EndsWith(" ", StringComparison.Ordinal))
         {
-            DownloadInstallNameValidationMessage = "实例名称不能以空格或句点结尾。";
+            DownloadInstallNameValidationMessage = T("download.install.validation.invalid_ending");
             return;
         }
 
@@ -926,7 +926,7 @@ internal sealed partial class FrontendShellViewModel
             var targetDirectory = Path.Combine(launcherDirectory, "versions", trimmedName);
             if (Directory.Exists(targetDirectory))
             {
-                DownloadInstallNameValidationMessage = "该实例名称已存在，请更换后再安装。";
+                DownloadInstallNameValidationMessage = T("download.install.validation.already_exists");
                 return;
             }
         }

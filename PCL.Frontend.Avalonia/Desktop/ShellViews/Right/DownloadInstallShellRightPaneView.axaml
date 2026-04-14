@@ -224,7 +224,7 @@
                         HorizontalAlignment="Right"
                         IsVisible="{Binding CanClear}"
                         Command="{Binding ClearCommand}"
-                        Text="清除选择" />
+                        Text="{Binding $parent[UserControl].DataContext.DownloadInstallClearSelectionText}" />
                   </StackPanel>
                 </controls:PclCard.CardContent>
               </controls:PclCard>
@@ -239,7 +239,7 @@
               Margin="16,0,0,0"
               Command="{Binding StartDownloadInstallCommand}"
               IsEnabled="{Binding CanStartDownloadInstall}"
-              Text="开始安装" />
+              Text="{Binding DownloadInstallStartText}" />
         </Grid>
       </StackPanel>
     </StackPanel>

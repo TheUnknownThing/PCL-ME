@@ -70,14 +70,14 @@
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceScreenshotContent}">
       <StackPanel Margin="25,10,25,10" Spacing="15">
-        <controls:PclCard Header="快捷操作" ContentMargin="25,40,15,20">
+        <controls:PclCard Header="{Binding InstanceScreenshotQuickActionsHeaderText}" ContentMargin="25,40,15,20">
           <controls:PclCard.CardContent>
             <controls:PclButton
                 MinWidth="140"
                 HorizontalAlignment="Left"
                 Command="{Binding OpenInstanceScreenshotFolderCommand}"
                 ColorType="Highlight"
-                Text="打开截图文件夹" />
+                Text="{Binding InstanceScreenshotOpenFolderText}" />
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
@@ -151,12 +151,12 @@
               HorizontalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="19"
-              Text="暂时没有截图文件" />
+              Text="{Binding InstanceScreenshotEmptyTitle}" />
           <Border Height="2" Background="{DynamicResource ColorBrush6}" />
           <TextBlock
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12.5"
-              Text="在游戏内按下截图键（默认为 F2）后，可在此处查看保存的截图"
+              Text="{Binding InstanceScreenshotEmptyDescription}"
               TextAlignment="Center"
               TextWrapping="Wrap" />
           <controls:PclButton
@@ -164,7 +164,7 @@
               HorizontalAlignment="Center"
               Command="{Binding OpenInstanceScreenshotFolderCommand}"
               ColorType="Highlight"
-              Text="打开截图文件夹" />
+              Text="{Binding InstanceScreenshotOpenFolderText}" />
         </StackPanel>
       </controls:PclCard.CardContent>
     </controls:PclCard>

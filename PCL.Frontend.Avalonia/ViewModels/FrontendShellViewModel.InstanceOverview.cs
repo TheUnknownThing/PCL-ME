@@ -16,8 +16,8 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private string _instanceOverviewName = "Modern Fabric Demo";
-    private string _instanceOverviewSubtitle = "Fabric 0.16.9 / Minecraft 1.21.1 / 独立实例";
+    private string _instanceOverviewName = string.Empty;
+    private string _instanceOverviewSubtitle = string.Empty;
     private Bitmap? _instanceOverviewSelectedIcon;
     private int _selectedInstanceOverviewIconIndex;
     private int _selectedInstanceOverviewCategoryIndex;
@@ -72,9 +72,17 @@ internal sealed partial class FrontendShellViewModel
         private set => SetProperty(ref _instanceOverviewSelectedIcon, value);
     }
 
-    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewIconOptions => _instanceOverviewIconOptions;
+    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewIconOptions => _instanceOverviewIconOptions
+        .Select(option => new DownloadResourceFilterOptionViewModel(
+            LocalizeOverviewIconOption(option.Label),
+            option.FilterValue))
+        .ToArray();
 
-    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewCategoryOptions => _instanceOverviewCategoryOptions;
+    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewCategoryOptions => _instanceOverviewCategoryOptions
+        .Select(option => new DownloadResourceFilterOptionViewModel(
+            LocalizeOverviewCategoryOption(option.Label),
+            option.FilterValue))
+        .ToArray();
 
     public int SelectedInstanceOverviewIconIndex
     {
@@ -104,7 +112,9 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceOverviewCategoryLabel => InstanceOverviewCategoryOptions[SelectedInstanceOverviewCategoryIndex].Label;
 
-    public string InstanceOverviewFavoriteButtonText => _isInstanceOverviewStarred ? "移出收藏夹" : "加入收藏夹";
+    public string InstanceOverviewFavoriteButtonText => _isInstanceOverviewStarred
+        ? SD("instance.overview.actions.remove_favorite")
+        : SD("instance.overview.actions.add_favorite");
 
     public bool HasInstanceOverviewInfoEntries => InstanceOverviewInfoEntries.Count > 0;
 
@@ -145,15 +155,17 @@ internal sealed partial class FrontendShellViewModel
     {
         var overview = _instanceComposition.Overview;
         InstanceOverviewName = overview.Name;
-        InstanceOverviewSubtitle = overview.Subtitle;
+        InstanceOverviewSubtitle = LocalizeRawInstanceSubtitle(overview.Subtitle);
         _selectedInstanceOverviewIconIndex = Math.Clamp(overview.IconIndex, 0, InstanceOverviewIconOptions.Count - 1);
         _selectedInstanceOverviewCategoryIndex = Math.Clamp(overview.CategoryIndex, 0, InstanceOverviewCategoryOptions.Count - 1);
         _isInstanceOverviewStarred = overview.IsStarred;
 
-        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags);
+        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags.Select(LocalizeOverviewTag).ToArray());
         ReplaceItems(
             InstanceOverviewInfoEntries,
-            overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(entry.Label, entry.Value)));
+            overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(
+                LocalizeOverviewInfoLabel(entry.Label),
+                LocalizeOverviewInfoValue(entry.Label, entry.Value))));
 
         InstanceOverviewSelectedIcon = LoadInstanceBitmap(
             overview.IconPath,

@@ -22,6 +22,6 @@
         VerticalAlignment="Bottom"
         Command="{Binding StartInstanceExportCommand}"
         ColorType="Highlight"
-        Text="开始导出" />
+        Text="{Binding InstanceExportStartText}" />
   </Grid>
 </UserControl>

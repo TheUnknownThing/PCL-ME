@@ -6,7 +6,7 @@
   <StackPanel Spacing="15">
     <controls:PclSearchBox
         Text="{Binding VersionSaveDatapackSearchQuery, Mode=TwoWay}"
-        Watermark="搜索数据包 名称 / 描述 / 标签" />
+        Watermark="{Binding VersionSaveDatapackSearchWatermark}" />
 
     <controls:PclCard ContentMargin="15,8,0,15">
       <controls:PclCard.CardContent>
@@ -16,22 +16,22 @@
               Margin="0,7,15,0"
               Command="{Binding OpenVersionSaveDatapackFolderCommand}"
               ColorType="Highlight"
-              Text="打开文件夹" />
+              Text="{Binding VersionSaveDatapackOpenFolderText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
               Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
-              Text="从文件安装" />
+              Text="{Binding VersionSaveDatapackInstallFromFileText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
               Command="{Binding DownloadVersionSaveDatapackCommand}"
-              Text="下载新资源" />
+              Text="{Binding VersionSaveDatapackDownloadText}" />
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
               Command="{Binding ExportVersionSaveDatapackInfoCommand}"
-              Text="导出信息" />
+              Text="{Binding VersionSaveDatapackExportInfoText}" />
         </WrapPanel>
       </controls:PclCard.CardContent>
     </controls:PclCard>

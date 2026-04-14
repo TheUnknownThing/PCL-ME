@@ -44,42 +44,42 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableInstanceRetroWrapper;
     private bool _useInstanceDebugLog4jConfig;
 
-    public IReadOnlyList<string> InstanceIsolationOptions { get; } =
+    public IReadOnlyList<string> InstanceIsolationOptions =>
     [
-        "默认（跟随全局）",
-        "开启",
-        "关闭"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.options.on"),
+        SD("instance.settings.options.off")
     ];
 
-    public IReadOnlyList<string> InstanceServerLoginRequireOptions { get; } =
+    public IReadOnlyList<string> InstanceServerLoginRequireOptions =>
     [
-        "无限制",
-        "仅正版验证",
-        "仅第三方验证（Authlib-Injector）",
-        "正版验证与第三方验证（Authlib-Injector）"
+        SD("instance.settings.server.require.none"),
+        SD("instance.settings.server.require.official"),
+        SD("instance.settings.server.require.third_party"),
+        SD("instance.settings.server.require.both")
     ];
 
-    public IReadOnlyList<string> InstanceMemoryOptimizeOptions { get; } =
+    public IReadOnlyList<string> InstanceMemoryOptimizeOptions =>
     [
-        "跟随全局设置",
-        "开启",
-        "关闭"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.options.on"),
+        SD("instance.settings.options.off")
     ];
 
-    public IReadOnlyList<string> InstanceRendererOptions { get; } =
+    public IReadOnlyList<string> InstanceRendererOptions =>
     [
-        "跟随全局设置",
-        "游戏默认",
-        "软渲染（llvmpipe）",
-        "DirectX12（d3d12）",
-        "Vulkan（zink）"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.renderer.game_default"),
+        SD("instance.settings.renderer.software"),
+        SD("instance.settings.renderer.directx12"),
+        SD("instance.settings.renderer.vulkan")
     ];
 
-    public IReadOnlyList<string> InstanceForceX11OnWaylandOptions { get; } =
+    public IReadOnlyList<string> InstanceForceX11OnWaylandOptions =>
     [
-        "跟随全局设置",
-        "强制 X11",
-        "系统默认"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.linux.force_x11"),
+        SD("instance.settings.linux.system_default")
     ];
 
     public IReadOnlyList<string> InstanceJavaOptions => _instanceJavaOptionEntries

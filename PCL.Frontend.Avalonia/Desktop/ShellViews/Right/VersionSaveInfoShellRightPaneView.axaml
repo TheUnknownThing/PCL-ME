@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
-      <controls:PclCard Header="存档详细信息" ContentMargin="18,40,18,16">
+      <controls:PclCard Header="{Binding VersionSaveInfoHeaderText}" ContentMargin="18,40,18,16">
         <controls:PclCard.CardContent>
           <ItemsControl ItemsSource="{Binding VersionSaveInfoEntries}" IsVisible="{Binding HasVersionSaveInfoEntries}">
             <ItemsControl.ItemTemplate>
@@ -29,7 +29,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="存档设置" ContentMargin="18,40,18,16" IsVisible="{Binding HasVersionSaveSettingEntries}">
+      <controls:PclCard Header="{Binding VersionSaveSettingsHeaderText}" ContentMargin="18,40,18,16" IsVisible="{Binding HasVersionSaveSettingEntries}">
         <controls:PclCard.CardContent>
           <ItemsControl ItemsSource="{Binding VersionSaveSettingEntries}">
             <ItemsControl.ItemTemplate>

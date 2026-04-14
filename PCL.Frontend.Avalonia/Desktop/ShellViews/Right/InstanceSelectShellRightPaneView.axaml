@@ -15,8 +15,8 @@
         <StackPanel Margin="0,0,0,12" IsVisible="{Binding HasInstanceSelectionSearchBox}">
           <controls:PclSearchBox
               Text="{Binding InstanceSelectionSearchQuery, Mode=TwoWay}"
-              ToolTip.Tip="输入实例名称或 [游戏版本号] [Mod 加载器] 进行搜索"
-              Watermark="搜索游戏实例" />
+              ToolTip.Tip="{Binding InstanceSelectionSearchToolTip}"
+              Watermark="{Binding InstanceSelectionSearchWatermark}" />
         </StackPanel>
 
         <ItemsControl ItemsSource="{Binding InstanceSelectionGroups}" IsVisible="{Binding HasInstanceSelectionEntries}">
@@ -90,7 +90,7 @@
                   ColorType="Highlight"
                   Command="{Binding OpenInstanceSelectionDownloadCommand}"
                   IsVisible="{Binding ShowInstanceSelectionEmptyDownloadAction}"
-                  Text="下载游戏" />
+                  Text="{Binding InstanceSelectionEmptyDownloadButtonText}" />
             </StackPanel>
           </StackPanel>
         </Border>

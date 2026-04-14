@@ -94,7 +94,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool HasSelectedHeadSkin => !string.Equals(SelectedHeadSkinPath, "尚未选择皮肤", StringComparison.Ordinal);
+    public bool HasSelectedHeadSkin => !string.IsNullOrWhiteSpace(SelectedHeadSkinPath);
 
     public double HeadPreviewSize => SelectedHeadSizeIndex switch
     {

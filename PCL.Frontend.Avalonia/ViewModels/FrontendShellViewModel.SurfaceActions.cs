@@ -22,61 +22,61 @@ internal sealed partial class FrontendShellViewModel
 {
     private void ApplySidebarAccessory(string title, string actionLabel, string command)
     {
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadInstall) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
             ResetDownloadInstallSurface();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
             ResetDownloadResourceFilters();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLaunch) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLaunch) && string.Equals(command, "reset", StringComparison.Ordinal))
         {
             ResetLaunchSettingsSurface();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupFeedback) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupFeedback) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
             _ = RefreshFeedbackSectionsAsync(forceRefresh: true);
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupGameManage) && string.Equals(command, "reset", StringComparison.Ordinal))
         {
             ResetGameManageSurface();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLauncherMisc) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupLauncherMisc) && string.Equals(command, "reset", StringComparison.Ordinal))
         {
             ResetLauncherMiscSurface();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupJava) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupJava) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
             RefreshJavaSurface();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUi) && string.Equals(actionLabel, "重置", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUi) && string.Equals(command, "reset", StringComparison.Ordinal))
         {
             ResetUiSurface();
             return;
         }
 
-        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest) && string.Equals(actionLabel, "刷新", StringComparison.Ordinal))
+        if (IsCurrentStandardRightPane(StandardShellRightPaneKind.ToolsTest) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
             RefreshToolsTestSurface();
             return;
@@ -101,23 +101,23 @@ internal sealed partial class FrontendShellViewModel
         }
 
         _isCheckingUpdate = true;
-        _updateStatus = FrontendSetupUpdateStatusService.CreateChecking();
+        _updateStatus = FrontendSetupUpdateStatusService.CreateChecking(_i18n);
         RaiseUpdateSurfaceProperties();
 
         try
         {
-            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex);
+            _updateStatus = await FrontendSetupUpdateStatusService.QueryAsync(SelectedUpdateChannelIndex, _i18n);
             _lastUpdateCheckSignature = signature;
             RaiseUpdateSurfaceProperties();
 
             AddActivity(
-                "刷新更新页",
+                LT("setup.update.activities.refresh"),
                 _updateStatus.SurfaceState switch
                 {
-                    UpdateSurfaceState.Available => $"检测到可用更新：{_updateStatus.AvailableUpdateName}",
-                    UpdateSurfaceState.Latest => $"{_updateStatus.CurrentVersionName} 已是最新版本",
+                    UpdateSurfaceState.Available => LT("setup.update.activities.available", ("version", _updateStatus.AvailableUpdateName)),
+                    UpdateSurfaceState.Latest => LT("setup.update.activities.latest", ("version", _updateStatus.CurrentVersionName)),
                     UpdateSurfaceState.Error => _updateStatus.CurrentVersionDescription,
-                    _ => "正在检查更新..."
+                    _ => LT("setup.update.activities.checking")
                 });
         }
         finally
@@ -135,14 +135,18 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_updateStatus.SurfaceState != UpdateSurfaceState.Available)
         {
-            AddActivity("下载并安装更新", "当前没有待下载的更新。");
+            AddActivity(
+                LT("setup.update.activities.download_install"),
+                LT("setup.update.activities.no_pending_update"));
             return;
         }
 
         var target = _updateStatus.AvailableUpdateDownloadUrl ?? _updateStatus.AvailableUpdateReleaseUrl;
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddActivity("下载并安装更新", "当前更新源没有提供可用下载地址。");
+            AddActivity(
+                LT("setup.update.activities.download_install"),
+                LT("setup.update.activities.no_download_url"));
             return;
         }
 
@@ -179,18 +183,22 @@ internal sealed partial class FrontendShellViewModel
 
             if (!_shellActionService.TryStartDetachedScript(preparedInstall.InstallerScriptPath, out var error))
             {
-                AddFailureActivity("下载并安装更新失败", error ?? preparedInstall.InstallerScriptPath);
+                AddFailureActivity(
+                    LT("setup.update.activities.download_install_failed"),
+                    error ?? preparedInstall.InstallerScriptPath);
                 return;
             }
 
-            AddActivity("下载并安装更新", $"{_updateStatus.AvailableUpdateName} • 更新包已准备完成，启动器即将退出并应用更新。");
-            AvaloniaHintBus.Show("更新包已准备完成，启动器即将关闭并自动安装。", AvaloniaHintTheme.Success);
+            AddActivity(
+                LT("setup.update.activities.download_install"),
+                LT("setup.update.activities.package_ready", ("version", _updateStatus.AvailableUpdateName)));
+            AvaloniaHintBus.Show(LT("setup.update.activities.package_ready_hint"), AvaloniaHintTheme.Success);
             await Task.Delay(400);
             _shellActionService.ExitLauncher();
         }
         catch (Exception ex)
         {
-            AddFailureActivity("下载并安装更新失败", ex.Message);
+            AddFailureActivity(LT("setup.update.activities.download_install_failed"), ex.Message);
         }
     }
 
@@ -201,14 +209,14 @@ internal sealed partial class FrontendShellViewModel
         if (!string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateChangelog))
         {
             var result = await ShowToolboxConfirmationAsync(
-                $"更新详情: {_updateStatus.AvailableUpdateName}",
+                LT("setup.update.activities.view_detail_title", ("version", _updateStatus.AvailableUpdateName)),
                 _updateStatus.AvailableUpdateChangelog);
             if (result is null)
             {
                 return;
             }
 
-            AddActivity("查看更新详情", _updateStatus.AvailableUpdateName);
+            AddActivity(LT("setup.update.activities.view_detail"), _updateStatus.AvailableUpdateName);
 
             return;
         }
@@ -217,11 +225,13 @@ internal sealed partial class FrontendShellViewModel
         if (!string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateReleaseUrl)
             && _shellActionService.TryOpenExternalTarget(_updateStatus.AvailableUpdateReleaseUrl, out openError))
         {
-            AddActivity("查看更新详情", _updateStatus.AvailableUpdateReleaseUrl);
+            AddActivity(LT("setup.update.activities.view_detail"), _updateStatus.AvailableUpdateReleaseUrl);
             return;
         }
 
-        AddFailureActivity("查看更新详情失败", openError ?? "当前没有可用的更新详情。");
+        AddFailureActivity(
+            LT("setup.update.activities.view_detail_failed"),
+            openError ?? LT("setup.update.activities.detail_unavailable"));
     }
 
     private void ResetLaunchSettingsSurface()
@@ -229,7 +239,9 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.RemoveLocalValues(LaunchLocalResetKeys);
         _shellActionService.RemoveSharedValues(LaunchSharedResetKeys);
         ReloadSetupComposition();
-        AddActivity("重置启动设置", "启动选项、内存与高级启动参数已恢复到当前启动器的默认配置。");
+        AddActivity(
+            LT("setup.launch.activities.reset"),
+            LT("setup.launch.activities.reset_completed"));
     }
 
     private void RefreshToolsTestSurface()
@@ -250,7 +262,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasSelectedHeadSkin));
         RaisePropertyChanged(nameof(HeadPreviewSize));
         ResetMinecraftServerQuerySurface();
-        AddActivity("刷新测试工具页", "测试页表单与工具按钮已从当前启动器配置重新加载。");
+        AddActivity(
+            LT("shell.tools.test.refresh.title"),
+            LT("shell.tools.test.refresh.activity"));
     }
 
     private async Task ManageDownloadFavoriteTargetsAsync()
@@ -642,35 +656,41 @@ internal sealed partial class FrontendShellViewModel
         string? selectedFolder;
         try
         {
-            selectedFolder = await _shellActionService.PickFolderAsync("选择下载目录");
+            selectedFolder = await _shellActionService.PickFolderAsync(LT("shell.tools.test.custom_download.pick_folder_title"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择下载目录失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.custom_download.pick_folder_failure"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(selectedFolder))
         {
-            AddActivity("选择下载目录", "已取消选择下载目录。");
+            AddActivity(
+                LT("shell.tools.test.custom_download.pick_folder_activity"),
+                LT("shell.tools.test.custom_download.pick_folder_cancelled"));
             return;
         }
 
         ToolDownloadFolder = selectedFolder;
-        AddActivity("选择下载目录", ToolDownloadFolder);
+        AddActivity(LT("shell.tools.test.custom_download.pick_folder_activity"), ToolDownloadFolder);
     }
 
     private async Task StartCustomDownloadAsync()
     {
         if (!Uri.TryCreate(ToolDownloadUrl, UriKind.Absolute, out var uri))
         {
-            AddFailureActivity("开始下载自定义文件失败", "下载地址无效。");
+            AddFailureActivity(
+                LT("shell.tools.test.custom_download.start_failure"),
+                LT("shell.tools.test.custom_download.invalid_address"));
             return;
         }
 
         if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
         {
-            AddFailureActivity("开始下载自定义文件失败", "请先选择保存目录。");
+            AddFailureActivity(
+                LT("shell.tools.test.custom_download.start_failure"),
+                LT("shell.tools.test.custom_download.missing_folder"));
             return;
         }
 
@@ -694,11 +714,11 @@ internal sealed partial class FrontendShellViewModel
                 uri.ToString(),
                 targetPath,
                 speedLimiter: speedLimiter);
-            AddActivity("开始下载自定义文件", $"{uri} -> {targetPath}");
+            AddActivity(LT("shell.tools.test.custom_download.start_activity"), $"{uri} -> {targetPath}");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("开始下载自定义文件失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.custom_download.start_failure"), ex.Message);
         }
     }
 
@@ -712,7 +732,7 @@ internal sealed partial class FrontendShellViewModel
         var logDirectory = Path.Combine(_shellActionService.RuntimePaths.LauncherAppDataDirectory, "Log");
         if (!Directory.Exists(logDirectory))
         {
-            AddActivity("导出日志", "当前日志目录不存在，暂无可导出的日志。");
+            AddActivity(LT("shell.game_log.actions.export"), LT("shell.game_log.export.missing_directory"));
             return;
         }
 
@@ -721,7 +741,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (logFiles.Length == 0)
         {
-            AddActivity("导出日志", "日志目录为空，暂无可导出的日志。");
+            AddActivity(LT("shell.game_log.actions.export"), LT("shell.game_log.export.empty_directory"));
             return;
         }
 
@@ -740,7 +760,9 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        AddActivity(includeAllLogs ? "导出全部日志" : "导出日志", archivePath);
+        AddActivity(
+            includeAllLogs ? LT("shell.game_log.export.export_all_activity") : LT("shell.game_log.actions.export"),
+            archivePath);
     }
 
     private void OpenLauncherLogDirectory()
@@ -749,11 +771,11 @@ internal sealed partial class FrontendShellViewModel
         Directory.CreateDirectory(logDirectory);
         if (_shellActionService.TryOpenExternalTarget(logDirectory, out var error))
         {
-            AddActivity("打开日志目录", logDirectory);
+            AddActivity(LT("shell.game_log.actions.open_directory"), logDirectory);
         }
         else
         {
-            AddFailureActivity("打开日志目录失败", error ?? logDirectory);
+            AddFailureActivity(LT("shell.game_log.open_directory_failure"), error ?? logDirectory);
         }
     }
 
@@ -762,7 +784,9 @@ internal sealed partial class FrontendShellViewModel
         var logDirectory = Path.Combine(_shellActionService.RuntimePaths.LauncherAppDataDirectory, "Log");
         if (!Directory.Exists(logDirectory))
         {
-            AddActivity("清理历史日志", "当前日志目录不存在，无需清理。");
+            AddActivity(
+                LT("setup.log.activities.clean_history"),
+                LT("setup.log.activities.directory_missing"));
             return;
         }
 
@@ -771,7 +795,9 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (logFiles.Length <= 1)
         {
-            AddActivity("清理历史日志", "没有可清理的历史日志，已保留当前日志文件。");
+            AddActivity(
+                LT("setup.log.activities.clean_history"),
+                LT("setup.log.activities.nothing_to_clean"));
             return;
         }
 
@@ -790,7 +816,11 @@ internal sealed partial class FrontendShellViewModel
         }
 
         ReloadSetupComposition();
-        AddActivity("清理历史日志", removedCount == 0 ? "未能删除任何历史日志文件。" : $"已清理 {removedCount} 个历史日志文件。");
+        AddActivity(
+            LT("setup.log.activities.clean_history"),
+            removedCount == 0
+                ? LT("setup.log.activities.clean_failed")
+                : LT("setup.log.activities.cleaned_count", ("count", removedCount)));
     }
 
     private void ExportSettingsSnapshot()
@@ -806,7 +836,7 @@ internal sealed partial class FrontendShellViewModel
         File.Copy(_shellActionService.RuntimePaths.SharedConfigPath, sharedTarget, true);
         File.Copy(_shellActionService.RuntimePaths.LocalConfigPath, localTarget, true);
 
-        AddActivity("导出设置", exportDirectory);
+        AddActivity(LT("setup.launcher_misc.activities.export_settings"), exportDirectory);
     }
 
     private async Task ImportSettingsAsync()
@@ -815,24 +845,31 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            sourcePath = await _shellActionService.PickOpenFileAsync("选择配置文件", "PCL 配置文件", "*.json");
+            sourcePath = await _shellActionService.PickOpenFileAsync(
+                LT("setup.launcher_misc.activities.import_settings_pick_title"),
+                LT("setup.launcher_misc.activities.import_settings_pick_filter"),
+                "*.json");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("导入设置失败", ex.Message);
+            AddFailureActivity(LT("setup.launcher_misc.activities.import_settings_failed"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            AddActivity("导入设置", "已取消选择配置文件。");
+            AddActivity(
+                LT("setup.launcher_misc.activities.import_settings"),
+                LT("setup.launcher_misc.activities.import_settings_cancelled"));
             return;
         }
 
         Directory.CreateDirectory(_shellActionService.RuntimePaths.SharedConfigDirectory);
         File.Copy(sourcePath, _shellActionService.RuntimePaths.SharedConfigPath, true);
         ReloadSetupComposition();
-        AddActivity("导入设置", $"已导入共享配置：{sourcePath}。部分系统项仍建议重启后再验证。");
+        AddActivity(
+            LT("setup.launcher_misc.activities.import_settings"),
+            LT("setup.launcher_misc.activities.import_settings_completed", ("path", sourcePath)));
     }
 
     private void ApplyProxySettings()
@@ -841,7 +878,11 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.PersistSharedValue("SystemHttpProxyCustomUsername", HttpProxyUsername);
         _shellActionService.PersistSharedValue("SystemHttpProxyCustomPassword", HttpProxyPassword);
         ReloadSetupComposition();
-        AddActivity("应用代理信息", string.IsNullOrWhiteSpace(HttpProxyAddress) ? "已清空自定义 HTTP 代理。" : HttpProxyAddress);
+        AddActivity(
+            LT("setup.launcher_misc.activities.apply_proxy"),
+            string.IsNullOrWhiteSpace(HttpProxyAddress)
+                ? LT("setup.launcher_misc.activities.proxy_cleared")
+                : HttpProxyAddress);
     }
 
     private void OpenBackgroundFolder()
@@ -850,11 +891,11 @@ internal sealed partial class FrontendShellViewModel
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
-            AddActivity("打开背景文件夹", folder);
+            AddActivity(LT("setup.ui.background.activities.open_folder"), folder);
         }
         else
         {
-            AddFailureActivity("打开背景文件夹失败", error ?? folder);
+            AddFailureActivity(LT("setup.ui.background.activities.open_folder_failed"), error ?? folder);
         }
     }
 
@@ -868,7 +909,11 @@ internal sealed partial class FrontendShellViewModel
         var folder = GetBackgroundFolderPath();
         var removedCount = DeleteDirectoryContents(folder, BackgroundCleanupExtensions);
         RefreshBackgroundContentState(selectNewAsset: false, addActivity: false);
-        AddActivity("清空背景内容", removedCount == 0 ? "背景目录中没有可删除的背景内容。" : $"已清空 {removedCount} 个背景内容文件。");
+        AddActivity(
+            LT("setup.ui.background.activities.clear"),
+            removedCount == 0
+                ? LT("setup.ui.background.activities.clear_empty")
+                : LT("setup.ui.background.activities.clear_count", ("count", removedCount)));
     }
 
     private void OpenMusicFolder()
@@ -877,11 +922,11 @@ internal sealed partial class FrontendShellViewModel
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
-            AddActivity("打开音乐文件夹", folder);
+            AddActivity(LT("setup.ui.music.activities.open_folder"), folder);
         }
         else
         {
-            AddFailureActivity("打开音乐文件夹失败", error ?? folder);
+            AddFailureActivity(LT("setup.ui.music.activities.open_folder_failed"), error ?? folder);
         }
     }
 
@@ -889,17 +934,21 @@ internal sealed partial class FrontendShellViewModel
     {
         var assets = EnumerateMediaFiles(GetMusicFolderPath(), MusicMediaExtensions).ToArray();
         AddActivity(
-            "刷新背景音乐",
+            LT("setup.ui.music.activities.refresh"),
             assets.Length == 0
-                ? "未检测到可用背景音乐。"
-                : $"已重新扫描背景音乐目录，共找到 {assets.Length} 个文件。");
+                ? LT("setup.ui.music.activities.empty")
+                : LT("setup.ui.music.activities.refreshed_count", ("count", assets.Length)));
     }
 
     private void ClearMusicAssets()
     {
         var folder = GetMusicFolderPath();
         var removedCount = DeleteDirectoryContents(folder, MusicMediaExtensions);
-        AddActivity("清空背景音乐", removedCount == 0 ? "音乐目录中没有可删除的背景音乐文件。" : $"已清空 {removedCount} 个背景音乐文件。");
+        AddActivity(
+            LT("setup.ui.music.activities.clear"),
+            removedCount == 0
+                ? LT("setup.ui.music.activities.clear_empty")
+                : LT("setup.ui.music.activities.clear_count", ("count", removedCount)));
     }
 
     private async Task ChangeLogoImageAsync()
@@ -909,8 +958,8 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             sourcePath = await _shellActionService.PickOpenFileAsync(
-                "选择标题栏图片",
-                "常用图片文件",
+                LT("setup.ui.title_bar.activities.change_image_pick_title"),
+                LT("setup.ui.title_bar.activities.change_image_pick_filter"),
                 "*.png",
                 "*.jpg",
                 "*.jpeg",
@@ -919,13 +968,15 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("更改标题栏图片失败", ex.Message);
+            AddFailureActivity(LT("setup.ui.title_bar.activities.change_image_failed"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            AddActivity("更改标题栏图片", "已取消选择标题栏图片。");
+            AddActivity(
+                LT("setup.ui.title_bar.activities.change_image"),
+                LT("setup.ui.title_bar.activities.change_image_cancelled"));
             return;
         }
 
@@ -938,7 +989,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshTitleBarLogoImage();
-        AddActivity("更改标题栏图片", $"{sourcePath} -> {targetPath}");
+        AddActivity(LT("setup.ui.title_bar.activities.change_image"), $"{sourcePath} -> {targetPath}");
     }
 
     private void DeleteLogoImage()
@@ -946,7 +997,9 @@ internal sealed partial class FrontendShellViewModel
         var targetPath = GetLogoImagePath();
         if (!File.Exists(targetPath))
         {
-            AddActivity("清空标题栏图片", "当前没有自定义标题栏图片。");
+            AddActivity(
+                LT("setup.ui.title_bar.activities.clear_image"),
+                LT("setup.ui.title_bar.activities.clear_image_empty"));
             return;
         }
 
@@ -957,7 +1010,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshTitleBarLogoImage();
-        AddActivity("清空标题栏图片", targetPath);
+        AddActivity(LT("setup.ui.title_bar.activities.clear_image"), targetPath);
     }
 
     private void RefreshHomepageContent()
@@ -970,38 +1023,43 @@ internal sealed partial class FrontendShellViewModel
         var sourcePath = Path.Combine(LauncherRootDirectory, "Resources", "Custom.xml");
         if (!File.Exists(sourcePath))
         {
-            AddFailureActivity("生成教学文件失败", $"未找到主页教学模板：{sourcePath}");
+            AddFailureActivity(
+                LT("setup.ui.homepage.activities.generate_tutorial_failed"),
+                LT("setup.ui.homepage.activities.tutorial_template_missing", ("path", sourcePath)));
             return;
         }
 
         var targetPath = GetHomepageTutorialPath();
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         File.Copy(sourcePath, targetPath, true);
-        AddActivity("生成教学文件", targetPath);
+        AddActivity(LT("setup.ui.homepage.activities.generate_tutorial"), targetPath);
     }
 
     private void ViewHomepageTutorial() => _ = ViewHomepageTutorialAsync();
 
     private async Task ViewHomepageTutorialAsync()
     {
-        const string tutorialText = """
-1. 点击“生成教学文件”，会在运行目录下生成 PCL/Custom.xaml。
-2. 使用文本编辑器修改这个文件，保存后可再次点击“刷新主页”。
-3. 若使用联网主页，请确认下载地址指向可信的主页内容。
-""";
-        var result = await ShowToolboxConfirmationAsync("查看主页教程", tutorialText);
+        var result = await ShowToolboxConfirmationAsync(
+            LT("setup.ui.homepage.activities.view_tutorial"),
+            LT("setup.ui.homepage.activities.tutorial_content"));
         if (result is null)
         {
             return;
         }
 
-        AddActivity("查看主页教程", "已显示主页自定义教程。");
+        AddActivity(
+            LT("setup.ui.homepage.activities.view_tutorial"),
+            LT("setup.ui.homepage.activities.tutorial_shown"));
     }
 
     private void PreviewAchievement()
     {
         ShowAchievementPreview = !ShowAchievementPreview;
-        AddActivity("预览成就图片", ShowAchievementPreview ? AchievementTitle : "Achievement preview hidden.");
+        AddActivity(
+            LT("shell.tools.test.achievement.preview_activity"),
+            ShowAchievementPreview
+                ? AchievementTitle
+                : LT("shell.tools.test.achievement.preview_hidden"));
     }
 
     private async Task SelectHeadSkinAsync()
@@ -1010,33 +1068,37 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             sourcePath = await _shellActionService.PickOpenFileAsync(
-                "选择皮肤文件",
-                "图像文件",
+                LT("shell.tools.test.head.pick_skin_title"),
+                LT("shell.tools.test.head.pick_skin_filter"),
                 "*.png",
                 "*.jpg",
                 "*.jpeg");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择皮肤失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.head.pick_skin_failure"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            AddActivity("选择皮肤", "已取消选择皮肤文件。");
+            AddActivity(
+                LT("shell.tools.test.head.pick_skin_activity"),
+                LT("shell.tools.test.head.pick_skin_cancelled"));
             return;
         }
 
         SelectedHeadSkinPath = sourcePath;
-        AddActivity("选择皮肤", SelectedHeadSkinPath);
+        AddActivity(LT("shell.tools.test.head.pick_skin_activity"), SelectedHeadSkinPath);
     }
 
     private async Task SaveHeadAsync()
     {
         if (!HasSelectedHeadSkin || !File.Exists(SelectedHeadSkinPath))
         {
-            AddActivity("保存头像", "请先选择一个可用的皮肤文件。");
+            AddActivity(
+                LT("shell.tools.test.head.save_activity"),
+                LT("shell.tools.test.head.no_skin_selected"));
             return;
         }
 
@@ -1059,11 +1121,14 @@ internal sealed partial class FrontendShellViewModel
                 });
 
             await File.WriteAllTextAsync(outputPath, svg, new UTF8Encoding(false));
-            OpenInstanceTarget("保存头像", outputPath, "导出的头像文件不存在。");
+            OpenInstanceTarget(
+                LT("shell.tools.test.head.save_activity"),
+                outputPath,
+                LT("shell.tools.test.head.output_missing"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("保存头像失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.head.save_failure"), ex.Message);
         }
     }
 
@@ -1108,7 +1173,9 @@ internal sealed partial class FrontendShellViewModel
     {
         _shellActionService.RemoveSharedValues(GameManageResetKeys);
         ReloadSetupComposition();
-        AddActivity("重置游戏管理设置", "下载、社区资源和辅助功能设置已恢复到当前启动器的默认配置。");
+        AddActivity(
+            LT("setup.game_manage.activities.reset"),
+            LT("setup.game_manage.activities.reset_completed"));
     }
 
     private void ResetLauncherMiscSurface()
@@ -1117,7 +1184,9 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.RemoveSharedValues(LauncherMiscSharedResetKeys);
         _shellActionService.RemoveSharedValues(LauncherMiscProtectedResetKeys);
         ReloadSetupComposition();
-        AddActivity("重置启动器杂项设置", "系统、网络和调试选项已恢复到当前启动器的默认配置。");
+        AddActivity(
+            LT("setup.launcher_misc.activities.reset"),
+            LT("setup.launcher_misc.activities.reset_completed"));
     }
 
     private void RefreshJavaSurface()
@@ -1127,7 +1196,9 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task RefreshJavaSurfaceAsync()
     {
-        AddActivity("刷新 Java 列表", "正在重新扫描 Java 运行时。");
+        AddActivity(
+            LT("setup.java.activities.refresh"),
+            LT("setup.java.activities.refresh_scanning"));
 
         try
         {
@@ -1136,7 +1207,9 @@ internal sealed partial class FrontendShellViewModel
             {
                 ReloadSetupComposition(initializeAllSurfaces: false);
                 RefreshLaunchState();
-                AddActivity("刷新 Java 列表", "Java 列表已按当前扫描结果重新载入。");
+                AddActivity(
+                    LT("setup.java.activities.refresh"),
+                    LT("setup.java.activities.refresh_completed"));
             });
         }
         catch (Exception ex)
@@ -1144,7 +1217,7 @@ internal sealed partial class FrontendShellViewModel
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 ReloadSetupComposition(initializeAllSurfaces: false);
-                AddFailureActivity("刷新 Java 列表失败", ex.Message);
+                AddFailureActivity(LT("setup.java.activities.refresh_failed"), ex.Message);
             });
         }
     }
@@ -1166,12 +1239,14 @@ internal sealed partial class FrontendShellViewModel
         _isRefreshingFeedback = true;
         try
         {
-            var snapshot = await FrontendSetupFeedbackService.QueryAsync();
+            var snapshot = await FrontendSetupFeedbackService.QueryAsync(_i18n);
             _feedbackSnapshot = snapshot;
             _lastFeedbackRefreshUtc = snapshot.FetchedAtUtc;
             ApplyFeedbackSnapshot(snapshot);
             RaisePropertyChanged(nameof(HasFeedbackSections));
-            AddActivity("刷新反馈页", $"已同步 {snapshot.Sections.Sum(section => section.Entries.Count)} 条 GitHub 反馈。");
+            AddActivity(
+                LT("setup.feedback.activities.refresh"),
+                LT("setup.feedback.activities.refresh_completed", ("count", snapshot.Sections.Sum(section => section.Entries.Count))));
         }
         catch (Exception ex)
         {
@@ -1179,15 +1254,15 @@ internal sealed partial class FrontendShellViewModel
             {
                 ReplaceItems(FeedbackSections,
                 [
-                    CreateFeedbackSection("加载失败", true,
+                    CreateFeedbackSection(SetupText.Feedback.LoadFailedSectionTitle, true,
                     [
-                        CreateSimpleEntry("无法获取反馈列表", ex.Message)
+                        CreateSimpleEntry(SetupText.Feedback.LoadFailedEntryTitle, ex.Message)
                     ])
                 ]);
                 RaisePropertyChanged(nameof(HasFeedbackSections));
             }
 
-            AddFailureActivity("刷新反馈页失败", ex.Message);
+            AddFailureActivity(LT("setup.feedback.activities.refresh_failed"), ex.Message);
         }
         finally
         {
@@ -1201,28 +1276,32 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             selectedPath = await _shellActionService.PickOpenFileAsync(
-                "选择 Java 程序",
-                OperatingSystem.IsWindows() ? "Java 程序" : "Java 可执行文件",
+                LT("setup.java.activities.add_pick_title"),
+                LT(OperatingSystem.IsWindows()
+                    ? "setup.java.activities.add_pick_filter_windows"
+                    : "setup.java.activities.add_pick_filter_unix"),
                 OperatingSystem.IsWindows() ? "*.exe" : "java",
                 OperatingSystem.IsWindows() ? "java.exe" : "java.exe",
                 OperatingSystem.IsWindows() ? "javaw.exe" : "javaw");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("添加 Java 失败", ex.Message);
+            AddFailureActivity(LT("setup.java.activities.add_failed"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(selectedPath))
         {
-            AddActivity("添加 Java", "已取消选择 Java 程序。");
+            AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_cancelled"));
             return;
         }
 
         var installation = ParseJavaInstallation(selectedPath);
         if (installation is null)
         {
-            AddFailureActivity("添加 Java 失败", $"无法识别所选文件为可用的 Java：{selectedPath}");
+            AddFailureActivity(
+                LT("setup.java.activities.add_failed"),
+                LT("setup.java.activities.add_unrecognized", ("path", selectedPath)));
             return;
         }
 
@@ -1230,7 +1309,7 @@ internal sealed partial class FrontendShellViewModel
         var items = LoadStoredJavaItems();
         if (items.Any(item => string.Equals(item.Path, javaPath, StringComparison.OrdinalIgnoreCase)))
         {
-            AddActivity("添加 Java", $"Java 已存在于配置列表中：{javaPath}");
+            AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_exists", ("path", javaPath)));
             SelectJavaRuntime(javaPath);
             ReloadSetupComposition();
             return;
@@ -1245,7 +1324,7 @@ internal sealed partial class FrontendShellViewModel
         SaveStoredJavaItems(items);
         SelectJavaRuntime(javaPath);
         ReloadSetupComposition();
-        AddActivity("添加 Java", $"已添加并选中 {javaPath}");
+        AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_completed", ("path", javaPath)));
     }
 
     private JavaRuntimeEntryViewModel CreateJavaRuntimeEntry(
@@ -1264,12 +1343,17 @@ internal sealed partial class FrontendShellViewModel
             new ActionCommand(() => SelectJavaRuntime(key)),
             new ActionCommand(() => OpenJavaRuntimeFolder(title, folder)),
             new ActionCommand(() => OpenJavaRuntimeDetail(key, title, folder, tags)),
-            new ActionCommand(() => ToggleJavaEnabled(key)));
+            new ActionCommand(() => ToggleJavaEnabled(key)),
+            _i18n.T("setup.java.actions.enable"),
+            _i18n.T("setup.java.actions.disable"));
     }
 
     private void OpenJavaRuntimeFolder(string title, string folder)
     {
-        OpenInstanceTarget($"打开 Java 文件夹: {title}", folder, "当前 Java 目录不存在。");
+        OpenInstanceTarget(
+            LT("setup.java.activities.open_folder", ("title", title)),
+            folder,
+            LT("setup.java.activities.folder_missing"));
     }
 
     private void OpenJavaRuntimeDetail(string key, string title, string folder, IReadOnlyList<string> tags)
@@ -1279,7 +1363,9 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(key) || !File.Exists(key))
         {
-            AddActivity($"查看 Java 详情: {title}", "此 Java 不可用，请刷新列表。");
+            AddActivity(
+                LT("setup.java.activities.view_detail", ("title", title)),
+                LT("setup.java.activities.unavailable"));
             return;
         }
 
@@ -1288,35 +1374,37 @@ internal sealed partial class FrontendShellViewModel
         var detail = installation is null
             ? string.Join(Environment.NewLine,
             [
-                $"路径: {key}",
-                $"目录: {folder}",
-                $"来源: {sourceLabel}",
-                $"当前标签: {string.Join(" / ", tags)}",
-                $"默认 Java: {(_selectedJavaRuntimeKey == key ? "是" : "否")}",
+                LT("setup.java.details.path", ("value", key)),
+                LT("setup.java.details.folder", ("value", folder)),
+                LT("setup.java.details.source", ("value", sourceLabel)),
+                LT("setup.java.details.tags", ("value", string.Join(" / ", tags))),
+                LT("setup.java.details.default_java", ("value", _selectedJavaRuntimeKey == key ? LT("setup.java.details.yes") : LT("setup.java.details.no"))),
                 string.Empty,
-                "无法进一步解析该 Java 的详细元数据，请确认文件仍然可执行。"
+                LT("setup.java.details.metadata_unavailable")
             ])
             : string.Join(Environment.NewLine,
             [
-                $"类型: {(installation.IsJre ? "JRE" : "JDK")}",
-                $"版本: {installation.Version}",
-                $"主版本: {installation.MajorVersion}",
-                $"架构: {installation.Architecture} ({(installation.Is64Bit ? "64 Bit" : "32 Bit")})",
-                $"品牌: {installation.Brand}",
-                $"来源: {sourceLabel}",
-                $"默认 Java: {(_selectedJavaRuntimeKey == key ? "是" : "否")}",
-                $"已启用: {(JavaRuntimeEntries.FirstOrDefault(item => item.Key == key)?.IsEnabled == true ? "是" : "否")}",
-                $"可用性: {(installation.IsStillAvailable ? "可用" : "不可用")}",
-                $"可执行文件: {installation.JavaExePath}",
-                $"目录: {installation.JavaFolder}"
+                LT("setup.java.details.type", ("value", installation.IsJre ? "JRE" : "JDK")),
+                LT("setup.java.details.version", ("value", installation.Version)),
+                LT("setup.java.details.major_version", ("value", installation.MajorVersion)),
+                LT("setup.java.details.architecture", ("value", $"{installation.Architecture} ({(installation.Is64Bit ? "64 Bit" : "32 Bit")})")),
+                LT("setup.java.details.brand", ("value", installation.Brand)),
+                LT("setup.java.details.source", ("value", sourceLabel)),
+                LT("setup.java.details.default_java", ("value", _selectedJavaRuntimeKey == key ? LT("setup.java.details.yes") : LT("setup.java.details.no"))),
+                LT("setup.java.details.enabled", ("value", JavaRuntimeEntries.FirstOrDefault(item => item.Key == key)?.IsEnabled == true ? LT("setup.java.details.yes") : LT("setup.java.details.no"))),
+                LT("setup.java.details.availability", ("value", installation.IsStillAvailable ? LT("setup.java.details.available") : LT("setup.java.details.unavailable"))),
+                LT("setup.java.details.executable", ("value", installation.JavaExePath)),
+                LT("setup.java.details.folder", ("value", installation.JavaFolder))
             ]);
-        var result = await ShowToolboxConfirmationAsync($"查看 Java 详情: {title}", detail);
+        var result = await ShowToolboxConfirmationAsync(LT("setup.java.activities.view_detail", ("title", title)), detail);
         if (result is null)
         {
             return;
         }
 
-        AddActivity($"查看 Java 详情: {title}", "已显示 Java 运行时详情。");
+        AddActivity(
+            LT("setup.java.activities.view_detail", ("title", title)),
+            LT("setup.java.activities.detail_shown"));
     }
 
     private static JavaInstallation? ParseJavaInstallation(string javaExecutablePath)
@@ -1435,9 +1523,9 @@ internal sealed partial class FrontendShellViewModel
             string.Equals(candidate.Path, key, StringComparison.OrdinalIgnoreCase));
         return item?.Source switch
         {
-            JavaSource.AutoInstalled => "自动安装",
-            JavaSource.ManualAdded => "手动添加",
-            _ => "自动扫描"
+            JavaSource.AutoInstalled => LT("setup.java.tags.auto_installed"),
+            JavaSource.ManualAdded => LT("setup.java.tags.manual_added"),
+            _ => LT("setup.java.tags.auto_scanned")
         };
     }
 
@@ -1448,7 +1536,9 @@ internal sealed partial class FrontendShellViewModel
         SyncJavaSelection();
         _ = RefreshLaunchProfileCompositionAsync();
         RaisePropertyChanged(nameof(IsAutoJavaSelected));
-        AddActivity("切换默认 Java", key == "auto" ? "自动选择" : key);
+        AddActivity(
+            LT("setup.java.activities.select_default"),
+            key == "auto" ? LT("setup.java.activities.auto_select") : key);
     }
 
     private void ToggleJavaEnabled(string key)
@@ -1461,7 +1551,9 @@ internal sealed partial class FrontendShellViewModel
 
         if (_selectedJavaRuntimeKey == key && entry.IsEnabled)
         {
-            AddActivity("Java 禁用被阻止", "请先取消默认选择后再禁用当前 Java。");
+            AddActivity(
+                LT("setup.java.activities.disable_blocked"),
+                LT("setup.java.activities.disable_blocked_reason"));
             return;
         }
 
@@ -1490,8 +1582,11 @@ internal sealed partial class FrontendShellViewModel
         SaveStoredJavaItems(items);
         ReloadSetupComposition(initializeAllSurfaces: false);
         AddActivity(
-            entry.IsEnabled ? "启用 Java" : "禁用 Java",
-            $"{entry.Title} • {(entry.IsEnabled ? "已启用" : "已禁用")}");
+            entry.IsEnabled ? LT("setup.java.activities.enable") : LT("setup.java.activities.disable"),
+            LT(
+                "setup.java.activities.toggle_result",
+                ("title", entry.Title),
+                ("state", entry.IsEnabled ? LT("setup.java.activities.enabled_state") : LT("setup.java.activities.disabled_state"))));
     }
 
     private void SyncJavaSelection()
@@ -1549,7 +1644,9 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.RemoveLocalValues(UiLocalResetKeys);
         _shellActionService.RemoveSharedValues(UiSharedResetKeys);
         ReloadSetupComposition();
-        AddActivity("重置界面设置", "个性化界面页已恢复到当前启动器的默认配置。");
+        AddActivity(
+            LT("setup.ui.activities.reset"),
+            LT("setup.ui.activities.reset_completed"));
     }
 
     private static readonly string[] BackgroundCleanupExtensions =
@@ -1640,11 +1737,11 @@ internal sealed partial class FrontendShellViewModel
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
-            AddActivity("打开下载文件夹", folder);
+            AddActivity(LT("shell.tools.test.custom_download.open_folder_activity"), folder);
         }
         else
         {
-            AddFailureActivity("打开下载文件夹失败", error ?? folder);
+            AddFailureActivity(LT("shell.tools.test.custom_download.open_folder_failure"), error ?? folder);
         }
     }
 
@@ -1652,7 +1749,9 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(OfficialSkinPlayerName))
         {
-            AddFailureActivity("保存正版皮肤失败", "请先填写正版玩家名。");
+            AddFailureActivity(
+                LT("shell.tools.test.official_skin.save_failure"),
+                LT("shell.tools.test.official_skin.missing_player_name"));
             return;
         }
 
@@ -1666,7 +1765,9 @@ internal sealed partial class FrontendShellViewModel
                 : null;
             if (string.IsNullOrWhiteSpace(uuid))
             {
-                AddFailureActivity("保存正版皮肤失败", "未找到对应的正版玩家。");
+                AddFailureActivity(
+                    LT("shell.tools.test.official_skin.save_failure"),
+                    LT("shell.tools.test.official_skin.player_not_found"));
                 return;
             }
 
@@ -1679,7 +1780,9 @@ internal sealed partial class FrontendShellViewModel
                     && string.Equals(nameElement.GetString(), "textures", StringComparison.Ordinal));
             if (!texturePayload.TryGetProperty("value", out var valueElement))
             {
-                AddFailureActivity("保存正版皮肤失败", "正版档案中未包含皮肤信息。");
+                AddFailureActivity(
+                    LT("shell.tools.test.official_skin.save_failure"),
+                    LT("shell.tools.test.official_skin.missing_skin_payload"));
                 return;
             }
 
@@ -1692,7 +1795,9 @@ internal sealed partial class FrontendShellViewModel
                 .GetString();
             if (string.IsNullOrWhiteSpace(textureUrl))
             {
-                AddFailureActivity("保存正版皮肤失败", "正版档案中未包含皮肤下载地址。");
+                AddFailureActivity(
+                    LT("shell.tools.test.official_skin.save_failure"),
+                    LT("shell.tools.test.official_skin.missing_skin_url"));
                 return;
             }
 
@@ -1701,15 +1806,18 @@ internal sealed partial class FrontendShellViewModel
             var outputPath = Path.Combine(outputDirectory, $"{SanitizeFileSegment(OfficialSkinPlayerName.Trim())}.png");
             var bytes = await client.GetByteArrayAsync(textureUrl);
             await File.WriteAllBytesAsync(outputPath, bytes);
-            OpenInstanceTarget("保存正版皮肤", outputPath, "导出的皮肤文件不存在。");
+            OpenInstanceTarget(
+                LT("shell.tools.test.official_skin.save_activity"),
+                outputPath,
+                LT("shell.tools.test.official_skin.output_missing"));
         }
         catch (HttpRequestException ex)
         {
-            AddFailureActivity("保存正版皮肤失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.official_skin.save_failure"), ex.Message);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("保存正版皮肤失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.official_skin.save_failure"), ex.Message);
         }
     }
 
@@ -1718,7 +1826,9 @@ internal sealed partial class FrontendShellViewModel
         var url = GetAchievementUrl();
         if (string.IsNullOrWhiteSpace(url))
         {
-            AddFailureActivity("保存成就图片失败", "请先填写有效的成就内容。");
+            AddFailureActivity(
+                LT("shell.tools.test.achievement.save_failure"),
+                LT("shell.tools.test.achievement.invalid_content"));
             return;
         }
 
@@ -1730,11 +1840,14 @@ internal sealed partial class FrontendShellViewModel
             Directory.CreateDirectory(outputDirectory);
             var outputPath = Path.Combine(outputDirectory, $"{SanitizeFileSegment(AchievementTitle)}.png");
             await File.WriteAllBytesAsync(outputPath, bytes);
-            OpenInstanceTarget("保存成就图片", outputPath, "导出的成就图片不存在。");
+            OpenInstanceTarget(
+                LT("shell.tools.test.achievement.save_activity"),
+                outputPath,
+                LT("shell.tools.test.achievement.output_missing"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("保存成就图片失败", ex.Message);
+            AddFailureActivity(LT("shell.tools.test.achievement.save_failure"), ex.Message);
         }
     }
 

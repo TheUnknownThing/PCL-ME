@@ -1,5 +1,7 @@
 # I18N Editor Utility
 
+**Important** Under no circumstances should you edit or read locale YAML files or the schema directly. Use the CLI to perform all editing tasks, and use the validation command to check your work. There are multiple engineers working on i18n in parallel.
+
 The repo now includes a standalone developer CLI tool in `PCL.Tools.I18n`.
 
 It is intended for two use cases:

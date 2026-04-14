@@ -114,7 +114,7 @@ internal sealed partial class FrontendShellViewModel
         await _promptOverlayDialogSemaphore.WaitAsync().ConfigureAwait(false);
 
         var resultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
+        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? T("common.actions.confirm") : confirmText;
         var completionInvoked = 0;
 
         void Complete(bool result)
@@ -134,7 +134,7 @@ internal sealed partial class FrontendShellViewModel
             isDanger,
             options:
             [
-                new PromptOptionViewModel("取消", string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(false))),
+                new PromptOptionViewModel(T("common.actions.cancel"), string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(false))),
                 new PromptOptionViewModel(
                     resolvedConfirmText,
                     string.Empty,
@@ -156,7 +156,7 @@ internal sealed partial class FrontendShellViewModel
         await _promptOverlayDialogSemaphore.WaitAsync().ConfigureAwait(false);
 
         var resultSource = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
+        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? T("common.actions.confirm") : confirmText;
         var completionInvoked = 0;
 
         void Complete(string? result)
@@ -176,7 +176,7 @@ internal sealed partial class FrontendShellViewModel
             isDanger: false,
             options:
             [
-                new PromptOptionViewModel("取消", string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(null))),
+                new PromptOptionViewModel(T("common.actions.cancel"), string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(null))),
                 new PromptOptionViewModel(
                     resolvedConfirmText,
                     string.Empty,
@@ -207,7 +207,7 @@ internal sealed partial class FrontendShellViewModel
         await _promptOverlayDialogSemaphore.WaitAsync().ConfigureAwait(false);
 
         var resultSource = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? "确定" : confirmText;
+        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? T("common.actions.confirm") : confirmText;
         var completionInvoked = 0;
         PromptOverlayDialogState? dialog = null;
 
@@ -231,7 +231,7 @@ internal sealed partial class FrontendShellViewModel
             isDanger: false,
             options:
             [
-                new PromptOptionViewModel("取消", string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(null))),
+                new PromptOptionViewModel(T("common.actions.cancel"), string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(null))),
                 new PromptOptionViewModel(
                     resolvedConfirmText,
                     string.Empty,

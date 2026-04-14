@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <controls:PclCard Header="启动选项" ContentMargin="20,40,20,18">
+  <controls:PclCard Header="{Binding InstanceSetupLaunchHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
       <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,Auto,9,28,9,28">
         <TextBlock
@@ -12,7 +12,7 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
-            Text="版本隔离" />
+            Text="{Binding InstanceSetupIsolationLabelText}" />
         <ComboBox
             Grid.Row="0"
             Grid.Column="1"
@@ -25,7 +25,7 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
-            Text="游戏窗口标题" />
+            Text="{Binding InstanceSetupWindowTitleLabelText}" />
         <TextBox
             Grid.Row="2"
             Grid.Column="1"
@@ -35,7 +35,7 @@
             Grid.Row="4"
             Grid.ColumnSpan="2"
             Foreground="{DynamicResource ColorBrush1}"
-            Content="默认窗口标题"
+            Content="{Binding InstanceSetupDefaultWindowTitleText}"
             IsChecked="{Binding UseDefaultInstanceWindowTitle}" />
 
         <TextBlock
@@ -44,7 +44,7 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
-            Text="自定义信息" />
+            Text="{Binding InstanceSetupCustomInfoLabelText}" />
         <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,Auto">
           <TextBox
               Grid.Column="0"
@@ -57,7 +57,7 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
-            Text="游戏 Java" />
+            Text="{Binding InstanceSetupJavaLabelText}" />
         <ComboBox
             Grid.Row="8"
             Grid.Column="1"

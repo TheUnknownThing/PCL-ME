@@ -265,13 +265,13 @@ internal sealed partial class FrontendShellViewModel
 
         return page switch
         {
-            LauncherFrontendPageKey.Download => (refreshToolTip, FrontendIconCatalog.Refresh.Data, "刷新", $"刷新 {title} 页面"),
-            LauncherFrontendPageKey.Tools => (refreshToolTip, FrontendIconCatalog.Refresh.Data, "刷新", $"刷新 {title} 页面"),
+            LauncherFrontendPageKey.Download => (refreshToolTip, FrontendIconCatalog.Refresh.Data, refreshToolTip, "refresh"),
+            LauncherFrontendPageKey.Tools => (refreshToolTip, FrontendIconCatalog.Refresh.Data, refreshToolTip, "refresh"),
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupJava
                 or LauncherFrontendSubpageKey.SetupFeedback
-                or LauncherFrontendSubpageKey.SetupUpdate => (refreshToolTip, FrontendIconCatalog.Refresh.Data, "刷新", $"刷新 {title} 页面"),
+                or LauncherFrontendSubpageKey.SetupUpdate => (refreshToolTip, FrontendIconCatalog.Refresh.Data, refreshToolTip, "refresh"),
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupAbout or LauncherFrontendSubpageKey.SetupLog => (string.Empty, string.Empty, string.Empty, null),
-            LauncherFrontendPageKey.Setup => (resetToolTip, FrontendIconCatalog.Reset.Data, "重置", $"初始化 {title} 页面设置"),
+            LauncherFrontendPageKey.Setup => (resetToolTip, FrontendIconCatalog.Reset.Data, resetToolTip, "reset"),
             _ => (string.Empty, string.Empty, string.Empty, null)
         };
     }

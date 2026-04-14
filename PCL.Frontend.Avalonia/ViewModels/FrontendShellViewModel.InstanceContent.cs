@@ -109,7 +109,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowInstanceWorldEmptyState => !ShowInstanceWorldContent;
 
-    public string InstanceWorldSortText => $"排序：{GetInstanceWorldSortName(_instanceWorldSortMethod)}";
+    public string InstanceWorldSortText => SD("instance.content.sort.label", ("mode", GetInstanceWorldSortName(_instanceWorldSortMethod)));
 
     public bool HasInstanceScreenshotEntries => InstanceScreenshotEntries.Count > 0;
 
@@ -147,13 +147,15 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowInstanceResourceFilterBar => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
         && _instanceComposition.Selection.IsModable;
 
-    public string InstanceResourceFilterAllText => $"{(_instanceResourceIsSearching ? "搜索结果" : "全部")} ({_instanceResourceTotalCount})";
+    public string InstanceResourceFilterAllText => SD(
+        _instanceResourceIsSearching ? "instance.content.resource.filters.search_results" : "instance.content.resource.filters.all",
+        ("count", _instanceResourceTotalCount));
 
-    public string InstanceResourceSortText => $"排序：{GetInstanceResourceSortName(_instanceResourceSortMethod)}";
+    public string InstanceResourceSortText => SD("instance.content.sort.label", ("mode", GetInstanceResourceSortName(_instanceResourceSortMethod)));
 
     public bool IsInstanceResourceFilterAllSelected => _instanceResourceFilter == InstanceResourceFilter.All;
 
-    public string InstanceResourceFilterEnabledText => $"启用 ({_instanceResourceEnabledCount})";
+    public string InstanceResourceFilterEnabledText => SD("instance.content.resource.filters.enabled", ("count", _instanceResourceEnabledCount));
 
     public bool ShowInstanceResourceEnabledFilter => ShowInstanceResourceFilterBar
         && (_instanceResourceFilter == InstanceResourceFilter.Enabled
@@ -161,14 +163,14 @@ internal sealed partial class FrontendShellViewModel
 
     public bool IsInstanceResourceFilterEnabledSelected => _instanceResourceFilter == InstanceResourceFilter.Enabled;
 
-    public string InstanceResourceFilterDisabledText => $"禁用 ({_instanceResourceDisabledCount})";
+    public string InstanceResourceFilterDisabledText => SD("instance.content.resource.filters.disabled", ("count", _instanceResourceDisabledCount));
 
     public bool ShowInstanceResourceDisabledFilter => ShowInstanceResourceFilterBar
         && (_instanceResourceFilter == InstanceResourceFilter.Disabled || _instanceResourceDisabledCount > 0);
 
     public bool IsInstanceResourceFilterDisabledSelected => _instanceResourceFilter == InstanceResourceFilter.Disabled;
 
-    public string InstanceResourceFilterDuplicateText => $"重复 ({_instanceResourceDuplicateCount})";
+    public string InstanceResourceFilterDuplicateText => SD("instance.content.resource.filters.duplicate", ("count", _instanceResourceDuplicateCount));
 
     public bool ShowInstanceResourceDuplicateFilter => ShowInstanceResourceFilterBar
         && (_instanceResourceFilter == InstanceResourceFilter.Duplicate || _instanceResourceDuplicateCount > 0);
@@ -181,42 +183,42 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceResourceSearchWatermark => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionResourcePack => "搜索资源 名称 / 描述 / 标签",
-        LauncherFrontendSubpageKey.VersionShader => "搜索光影 名称 / 描述 / 标签",
-        LauncherFrontendSubpageKey.VersionSchematic => "搜索投影 名称 / 描述 / 标签",
-        _ => "搜索资源 名称 / 描述 / 标签"
+        LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.search.resource_pack"),
+        LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.search.shader"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.search.schematic"),
+        _ => SD("instance.content.resource.search.default")
     };
 
     public string InstanceResourceDownloadButtonText => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionResourcePack => "下载新资源",
-        LauncherFrontendSubpageKey.VersionShader => "下载新资源",
-        LauncherFrontendSubpageKey.VersionSchematic => "下载投影 Mod",
-        _ => "下载新资源"
+        LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.actions.download_new"),
+        LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.actions.download_new"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.actions.download_schematic_mod"),
+        _ => SD("instance.content.resource.actions.download_new")
     };
 
     public string InstanceResourceEmptyTitle => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => "该实例不可使用 Mod",
-        LauncherFrontendSubpageKey.VersionMod => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionResourcePack => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionShader => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionSchematic => "该实例不可用投影原理图",
-        _ => "尚未安装资源"
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => SD("instance.content.resource.empty.mod_unavailable_title"),
+        LauncherFrontendSubpageKey.VersionMod => SD("instance.content.resource.empty.default_title"),
+        LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.empty.default_title"),
+        LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.empty.default_title"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.empty.schematic_unavailable_title"),
+        _ => SD("instance.content.resource.empty.default_title")
     };
 
     public string InstanceResourceEmptyDescription => _currentRoute.Subpage switch
     {
         LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable =>
-            "你需要先安装 Forge、Fabric 等 Mod 加载器才能使用 Mod，请在下载页面安装这些实例。如果你已经安装过了 Mod 加载器，那么你很可能选择了错误的实例，请点击实例选择按钮切换实例。",
-        LauncherFrontendSubpageKey.VersionSchematic => "你可能需要先安装投影 Mod，如果已经安装过了投影 Mod 请先启动一次游戏。也可能是你选择错了实例，请点击实例选择按钮切换实例。",
-        _ => "你可以下载新的资源，也可以从已经下载好的文件安装资源。如果你已经安装了资源，可能是版本隔离设置有误，请在设置中调整版本隔离选项。"
+            SD("instance.content.resource.empty.mod_unavailable_description"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.empty.schematic_unavailable_description"),
+        _ => SD("instance.content.resource.empty.default_description")
     };
 
     public string InstanceResourceEmptyDownloadButtonText => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => "转到下载页面",
-        LauncherFrontendSubpageKey.VersionSchematic => "下载投影 Mod",
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => SD("instance.content.resource.actions.go_to_download"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.actions.download_schematic_mod"),
         _ => InstanceResourceDownloadButtonText
     };
 
@@ -228,7 +230,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasSelectedInstanceResources => InstanceResourceSelectedCount > 0;
 
-    public string InstanceResourceSelectionText => $"已选择 {InstanceResourceSelectedCount} 项";
+    public string InstanceResourceSelectionText => SD("instance.content.resource.selection", ("count", InstanceResourceSelectedCount));
 
     public bool ShowInstanceResourceDefaultActions => !HasSelectedInstanceResources;
 
@@ -249,24 +251,27 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand OpenInstanceWorldFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
-            "打开存档文件夹",
+            SD("instance.content.world.actions.open_folder"),
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
-            "当前实例没有存档目录。"));
+            SD("instance.content.world.errors.no_directory")));
 
     public ActionCommand PasteInstanceWorldClipboardCommand => new(() => _ = PasteInstanceWorldClipboardAsync());
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
-            "打开截图文件夹",
+            SD("instance.content.screenshot.actions.open_folder"),
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "screenshots") : string.Empty,
-            "当前实例没有截图目录。"));
+            SD("instance.content.screenshot.errors.no_directory")));
 
     public ActionCommand RefreshInstanceServerCommand => new(() => _ = RefreshAllInstanceServersAsync());
 
     public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerAsync());
 
     public ActionCommand OpenInstanceResourceFolderCommand => new(() =>
-        OpenInstanceDirectoryTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
+        OpenInstanceDirectoryTarget(
+            SD("instance.content.resource.actions.open_folder"),
+            GetCurrentInstanceResourceDirectory(),
+            SD("instance.content.resource.errors.directory_missing", ("surface", InstanceResourceSurfaceTitle))));
 
     public ActionCommand InstallInstanceResourceFromFileCommand => new(() => _ = InstallInstanceResourceFromFileAsync());
 
@@ -693,11 +698,11 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceResourceEntryViewModel(
             LoadInstanceResourceBitmap(entry),
             display.Title,
-            display.Summary,
-            entry.Meta,
+            LocalizeResourceSummary(display.Summary),
+            LocalizeResourceMeta(entry.Meta),
             entry.Path,
             openCommand,
-            actionToolTip: "打开文件位置",
+            actionToolTip: SD("instance.content.resource.tooltips.open_file_location"),
             isEnabled: entry.IsEnabled,
             description: entry.Description,
             website: entry.Website,
@@ -708,7 +713,14 @@ internal sealed partial class FrontendShellViewModel
             websiteCommand: websiteCommand,
             openCommand: openCommand,
             toggleCommand: toggleCommand,
-            deleteCommand: deleteCommand);
+            deleteCommand: deleteCommand,
+            infoToolTip: SD("instance.content.resource.tooltips.details"),
+            websiteToolTip: SD("instance.content.resource.tooltips.website"),
+            openToolTip: SD("instance.content.resource.tooltips.open_file_location"),
+            enableToolTip: SD("instance.content.resource.tooltips.enable"),
+            disableToolTip: SD("instance.content.resource.tooltips.disable"),
+            deleteToolTip: SD("instance.content.resource.tooltips.delete"),
+            disabledTagText: SD("instance.content.resource.tags.disabled"));
     }
 
     private async Task ShowInstanceResourceDetailsAsync(FrontendInstanceResourceEntry entry)
@@ -866,24 +878,24 @@ internal sealed partial class FrontendShellViewModel
 
     internal void SetInstanceWorldModifyTimeSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.ModifyTime);
 
-    private static string GetInstanceWorldSortName(InstanceWorldSortMethod method)
+    private string GetInstanceWorldSortName(InstanceWorldSortMethod method)
     {
         return method switch
         {
-            InstanceWorldSortMethod.CreateTime => "创建时间",
-            InstanceWorldSortMethod.ModifyTime => "修改时间",
-            _ => "文件名"
+            InstanceWorldSortMethod.CreateTime => SD("instance.content.sort.create_time"),
+            InstanceWorldSortMethod.ModifyTime => SD("instance.content.sort.modify_time"),
+            _ => SD("instance.content.sort.file_name")
         };
     }
 
-    private static string GetInstanceResourceSortName(InstanceResourceSortMethod method)
+    private string GetInstanceResourceSortName(InstanceResourceSortMethod method)
     {
         return method switch
         {
-            InstanceResourceSortMethod.FileName => "文件名",
-            InstanceResourceSortMethod.CreateTime => "加入时间",
-            InstanceResourceSortMethod.FileSize => "文件大小",
-            _ => "资源名称"
+            InstanceResourceSortMethod.FileName => SD("instance.content.sort.file_name"),
+            InstanceResourceSortMethod.CreateTime => SD("instance.content.sort.added_time"),
+            InstanceResourceSortMethod.FileSize => SD("instance.content.sort.file_size"),
+            _ => SD("instance.content.sort.resource_name")
         };
     }
 
@@ -953,7 +965,7 @@ internal sealed partial class FrontendShellViewModel
             InstanceScreenshotEntries,
             _instanceComposition.Screenshot.Entries.Select(entry => CreateInstanceScreenshotEntry(
                 entry.Title,
-                entry.Summary,
+                LocalizeResourceSummary(entry.Summary),
                 entry.Path,
                 LoadInstanceBitmap(entry.Path, "Images", "Backgrounds", "server_bg.png"))));
     }

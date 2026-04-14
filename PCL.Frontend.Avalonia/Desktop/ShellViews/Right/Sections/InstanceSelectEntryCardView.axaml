@@ -106,21 +106,21 @@
             IconBrush="{Binding FavoriteIconBrush}"
             IconData="{Binding FavoriteIconData}"
             IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
-            ToolTip.Tip="收藏 / 取消收藏" />
+            ToolTip.Tip="{Binding FavoriteToolTip}" />
         <controls:PclIconButton
             Command="{Binding OpenFolderCommand}"
             HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
             IconBrush="{DynamicResource ColorBrush3}"
             IconData="{Binding OpenFolderIconData}"
             IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
-            ToolTip.Tip="打开实例文件夹" />
+            ToolTip.Tip="{Binding OpenFolderToolTip}" />
         <controls:PclIconButton
             Command="{Binding DeleteCommand}"
             HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
             IconBrush="{DynamicResource ColorBrush3}"
             IconData="{Binding DeleteIconData}"
             IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
-            ToolTip.Tip="删除实例" />
+            ToolTip.Tip="{Binding DeleteToolTip}" />
         <controls:PclIconButton
             Command="{Binding OpenSettingsCommand}"
             HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
@@ -128,7 +128,7 @@
             IconData="{Binding SettingsIconData}"
             IconScale="{Binding SettingsIconScale}"
             IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
-            ToolTip.Tip="打开实例设置" />
+            ToolTip.Tip="{Binding SettingsToolTip}" />
       </StackPanel>
     </Grid>
   </Grid>

@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <controls:PclCard Header="游戏内存" ContentMargin="20,40,20,18">
+  <controls:PclCard Header="{Binding InstanceSetupMemoryHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
       <StackPanel Spacing="12">
         <Border
@@ -16,7 +16,7 @@
           <TextBlock
               Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
               FontSize="12.5"
-              Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！"
+              Text="{Binding InstanceSetupMemory32BitWarningText}"
               TextWrapping="Wrap" />
         </Border>
 
@@ -26,28 +26,28 @@
             BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
             BorderThickness="1"
             CornerRadius="4"
-            IsVisible="{Binding ShowRamAllocationWarning}">
+            IsVisible="{Binding ShowInstanceRamAllocationWarning}">
           <TextBlock
               Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
               FontSize="12.5"
-              Text="你给游戏分配的内存过多，这可能引发游戏崩溃。建议优先考虑“自动分配”选项。"
+              Text="{Binding InstanceSetupMemoryAllocationWarningText}"
               TextWrapping="Wrap" />
         </Border>
 
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
           <RadioButton
               Grid.Row="0"
-              Content="跟随全局设置"
+              Content="{Binding InstanceSetupMemoryUseGlobalText}"
               GroupName="instance-ram"
               IsChecked="{Binding UseGlobalInstanceRamAllocation}" />
           <RadioButton
               Grid.Row="1"
-              Content="自动配置"
+              Content="{Binding InstanceSetupMemoryUseAutoText}"
               GroupName="instance-ram"
               IsChecked="{Binding UseAutomaticInstanceRamAllocation}" />
           <RadioButton
               Grid.Row="2"
-              Content="自定义"
+              Content="{Binding InstanceSetupMemoryUseCustomText}"
               GroupName="instance-ram"
               IsChecked="{Binding UseCustomInstanceRamAllocation}" />
           <Grid Grid.Row="2" Grid.Column="1" Margin="18,0,0,0" ColumnDefinitions="*,72">
@@ -73,7 +73,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="启动游戏前进行内存优化" />
+              Text="{Binding InstanceSetupMemoryOptimizeLabelText}" />
           <ComboBox
               Grid.Column="1"
               ItemsSource="{Binding InstanceMemoryOptimizeOptions}"

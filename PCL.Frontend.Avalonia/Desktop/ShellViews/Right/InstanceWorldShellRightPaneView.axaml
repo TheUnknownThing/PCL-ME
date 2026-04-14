@@ -9,9 +9,9 @@
       <StackPanel Margin="25,10,25,10" Spacing="15">
         <controls:PclSearchBox
             Text="{Binding InstanceWorldSearchQuery, Mode=TwoWay}"
-            Watermark="搜索存档名称" />
+            Watermark="{Binding InstanceWorldSearchWatermark}" />
 
-        <controls:PclCard Header="快捷操作" ContentMargin="25,40,15,20">
+        <controls:PclCard Header="{Binding InstanceWorldQuickActionsHeaderText}" ContentMargin="25,40,15,20">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto">
               <controls:PclButton
@@ -20,17 +20,17 @@
                   Margin="0,0,20,0"
                   Command="{Binding OpenInstanceWorldFolderCommand}"
                   ColorType="Highlight"
-                  Text="打开存档文件夹" />
+                  Text="{Binding InstanceWorldOpenFolderText}" />
               <controls:PclButton
                   Grid.Column="1"
                   MinWidth="140"
                   Command="{Binding PasteInstanceWorldClipboardCommand}"
-                  Text="粘贴剪贴板文件" />
+                  Text="{Binding InstanceWorldPasteClipboardText}" />
             </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard Header="存档列表" ContentMargin="20,48,18,22">
+        <controls:PclCard Header="{Binding InstanceWorldListHeaderText}" ContentMargin="20,48,18,22">
           <controls:PclCard.HeaderOverlayContent>
             <controls:PclIconTextButton
                 Margin="0,13,15,0"
@@ -62,7 +62,7 @@
                         Height="35"
                         VerticalAlignment="Center"
                         Command="{Binding Command}"
-                        Text="查看" />
+                        Text="{Binding DataContext.InstanceWorldOpenEntryText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -79,12 +79,12 @@
               HorizontalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="19"
-              Text="暂时没有存档文件" />
+              Text="{Binding InstanceWorldEmptyTitle}" />
           <Border Height="2" Background="{DynamicResource ColorBrush6}" />
           <TextBlock
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12.5"
-              Text="可以在此处查看当前实例的存档"
+              Text="{Binding InstanceWorldEmptyDescription}"
               TextAlignment="Center"
               TextWrapping="Wrap" />
           <Grid ColumnDefinitions="Auto,Auto" HorizontalAlignment="Center">
@@ -94,12 +94,12 @@
                 Margin="0,0,20,0"
                 Command="{Binding OpenInstanceWorldFolderCommand}"
                 ColorType="Highlight"
-                Text="打开存档文件夹" />
+                Text="{Binding InstanceWorldOpenFolderText}" />
             <controls:PclButton
                 Grid.Column="1"
                 MinWidth="140"
                 Command="{Binding PasteInstanceWorldClipboardCommand}"
-                Text="粘贴剪贴板文件" />
+                Text="{Binding InstanceWorldPasteClipboardText}" />
           </Grid>
         </StackPanel>
       </controls:PclCard.CardContent>

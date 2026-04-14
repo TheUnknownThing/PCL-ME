@@ -16,7 +16,7 @@
         <TextBlock
             Foreground="{DynamicResource ColorBrush2}"
             FontSize="12.5"
-            Text="这些设置只对该游戏实例生效，不影响其他实例。"
+            Text="{Binding InstanceSetupIntroText}"
             TextWrapping="Wrap" />
       </Border>
 
@@ -29,7 +29,7 @@
           Width="140"
           HorizontalAlignment="Center"
           Command="{Binding OpenGlobalLaunchSettingsCommand}"
-          Text="全局设置" />
+          Text="{Binding InstanceSetupOpenGlobalSettingsText}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

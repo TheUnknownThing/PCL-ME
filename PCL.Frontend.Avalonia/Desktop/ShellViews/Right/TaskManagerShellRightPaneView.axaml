@@ -16,11 +16,11 @@
       </ItemsControl>
 
       <StackPanel IsVisible="{Binding HasNoTaskManagerEntries}" Spacing="8">
-        <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="当前没有活动任务" />
+        <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="{Binding TaskManagerEmptyTitle}" />
         <TextBlock
             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12"
-            Text="下载、安装或其他后台流程开始后，这里会自动显示实时进度、速度和剩余文件数量。"
+            Text="{Binding TaskManagerEmptyDescription}"
             TextWrapping="Wrap" />
       </StackPanel>
     </StackPanel>

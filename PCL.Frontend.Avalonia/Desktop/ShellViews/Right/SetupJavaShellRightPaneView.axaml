@@ -14,7 +14,7 @@
                 Height="35"
                 Command="{Binding AddJavaRuntimeCommand}"
                 ColorType="Highlight"
-                Text="添加" />
+                Text="{Binding SetupText.Java.AddButton}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
@@ -38,14 +38,14 @@
                     Grid.Column="1"
                     Foreground="{DynamicResource ColorBrush1}"
                     FontSize="14"
-                    Text="自动选择" />
+                    Text="{Binding SetupText.Java.AutoSelectLabel}" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="0,3,0,0"
                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
-                    Text="Java 选择自动挡，依据游戏需要自动选择合适的 Java。"
+                    Text="{Binding SetupText.Java.AutoSelectDescription}"
                     TextWrapping="Wrap" />
               </Grid>
             </Border>
@@ -82,11 +82,11 @@
                         <controls:PclOutlineButton
                             Width="72"
                             Command="{Binding OpenCommand}"
-                            Text="打开" />
+                            Text="{Binding DataContext.SetupText.Java.OpenButton, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                         <controls:PclOutlineButton
                             Width="92"
                             Command="{Binding InfoCommand}"
-                            Text="详细信息" />
+                            Text="{Binding DataContext.SetupText.Java.DetailsButton, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                         <controls:PclOutlineButton
                             Width="72"
                             Command="{Binding ToggleEnabledCommand}"

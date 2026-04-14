@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using PCL.Frontend.Avalonia.Models;
+using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -23,8 +24,12 @@ internal static class FrontendSetupFeedbackService
         new("duplicate", "重复", false, 6820804541)
     ];
 
-    public static async Task<FrontendSetupFeedbackSnapshot> QueryAsync(CancellationToken cancellationToken = default)
+    public static async Task<FrontendSetupFeedbackSnapshot> QueryAsync(
+        II18nService i18n,
+        CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(i18n);
+
         var results = new List<GitHubIssueDto>();
         for (var page = 1; page <= 2; page++)
         {
@@ -48,11 +53,13 @@ internal static class FrontendSetupFeedbackService
         }
 
         return new FrontendSetupFeedbackSnapshot(
-            BuildSections(results),
+            BuildSections(results, i18n),
             DateTimeOffset.UtcNow);
     }
 
-    private static IReadOnlyList<FrontendSetupFeedbackSectionSnapshot> BuildSections(IReadOnlyList<GitHubIssueDto> issues)
+    private static IReadOnlyList<FrontendSetupFeedbackSectionSnapshot> BuildSections(
+        IReadOnlyList<GitHubIssueDto> issues,
+        II18nService i18n)
     {
         var buckets = SectionDefinitions.ToDictionary(
             section => section.Key,
@@ -70,7 +77,7 @@ internal static class FrontendSetupFeedbackService
             var entry = new FrontendSetupFeedbackEntrySnapshot(
                 issue.Number,
                 issue.Title?.Trim() ?? $"Issue #{issue.Number}",
-                BuildSummary(issue),
+                BuildSummary(issue, i18n),
                 issue.HtmlUrl?.Trim() ?? $"{IssuesEndpoint}/{issue.Number}");
 
             var labelIds = issue.Labels?
@@ -111,7 +118,7 @@ internal static class FrontendSetupFeedbackService
         {
             sections.Add(new FrontendSetupFeedbackSectionSnapshot(
                 "other",
-                "其他",
+                i18n.T("setup.feedback.sections.other"),
                 false,
                 uncategorized));
         }
@@ -119,12 +126,24 @@ internal static class FrontendSetupFeedbackService
         return sections;
     }
 
-    private static string BuildSummary(GitHubIssueDto issue)
+    private static string BuildSummary(GitHubIssueDto issue, II18nService i18n)
     {
-        var author = string.IsNullOrWhiteSpace(issue.User?.Login) ? "unknown" : issue.User.Login.Trim();
-        var createdAt = issue.CreatedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "unknown";
-        var type = string.IsNullOrWhiteSpace(issue.Type?.Name) ? "未分类" : issue.Type!.Name!.Trim().ToLowerInvariant();
-        return $"{author} | {createdAt} | {type}";
+        var author = string.IsNullOrWhiteSpace(issue.User?.Login)
+            ? i18n.T("setup.feedback.summary.unknown_author")
+            : issue.User.Login.Trim();
+        var createdAt = issue.CreatedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                        ?? i18n.T("setup.feedback.summary.unknown_time");
+        var type = string.IsNullOrWhiteSpace(issue.Type?.Name)
+            ? i18n.T("setup.feedback.summary.uncategorized_type")
+            : issue.Type!.Name!.Trim().ToLowerInvariant();
+        return i18n.T(
+            "setup.feedback.summary.line",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["author"] = author,
+                ["created_at"] = createdAt,
+                ["type"] = type
+            });
     }
 
     private static HttpClient CreateHttpClient()

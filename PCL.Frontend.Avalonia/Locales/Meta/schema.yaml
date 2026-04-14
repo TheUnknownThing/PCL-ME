@@ -191,7 +191,7 @@ shell:
     utilities:
       back: []
       back_target:
-        - target
+      - target
       task_manager: []
       game_log: []
     accessories:
@@ -223,17 +223,17 @@ shell:
         source_file_count: []
     lines:
       active_prompt_lane:
-        - lane
+      - lane
       launch:
         runtime:
-          - java
-          - resolution
+        - java
+        - resolution
         last_completion:
-          - message
+        - message
       crash:
         export:
-          - archive_name
-          - file_count
+        - archive_name
+        - file_count
     sections:
       overview:
         eyebrow: []
@@ -250,28 +250,531 @@ shell:
         summary: []
     inbox:
       title:
-        - lane
+      - lane
       empty:
-        - lane
+      - lane
+  game_log:
+    actions:
+      clear_cache: []
+      export: []
+      open_directory: []
+      open_file:
+      - name
+      refresh: []
+    clear_cache:
+      completed: []
+    empty:
+      description: []
+      title: []
+    export:
+      empty_directory: []
+      export_all_activity: []
+      missing_directory: []
+    labels:
+      current_session_output: []
+      live_line_count: []
+      recent_files: []
+      recent_generated_files: []
+    latest_update:
+      none: []
+    live_output:
+      waiting: []
+    open_directory_failure: []
+    route:
+      description: []
+      facts:
+        latest_update: []
+        live_lines: []
+        recent_files: []
+  help_detail:
+    actions:
+      copy_text: []
+      copy_text_completed: []
+      download_file: []
+      generic: []
+      help_item: []
+      inline_default_info: []
+      open_file: []
+      open_help:
+      - name
+      open_web: []
+      view_image: []
+    activities:
+      open:
+      - title
+    empty:
+      description: []
+      title: []
+    failures:
+      action:
+      - title
+      download_target_missing: []
+      entry_not_found:
+      - reference
+      invalid_download_address: []
+      missing_action_target: []
+      missing_copy_text: []
+      missing_target: []
+    generated:
+      example_button:
+      - title
+      example_button_with_summary:
+      - summary
+      example_button_with_title_and_summary:
+      - title
+      - summary
+      hint:
+      - text
+    popup:
+      default_button: []
+      missing_content: []
+    route:
+      description: []
+      facts:
+        actions: []
+        lines: []
+        source: []
+    sections:
+      card_default_title: []
+      missing_content:
+        body: []
+        title: []
+      no_cards:
+        body: []
+      parse_failed:
+        body: []
+        title: []
+      source_line:
+      - source
+      supplement:
+        title: []
+    source_unresolved: []
+    summary_loaded: []
+    title_default: []
+  instance_select:
+    activities:
+      refresh_failure: []
+      switch_directory: []
+      switch_instance: []
+      switch_instance_detail:
+      - name
+    delete:
+      activity: []
+      cancelled: []
+      confirm_action: []
+      confirm_message:
+      - name
+      confirm_title: []
+      failure: []
+      moved_to_trash:
+      - name
+      - path
+      permanently_deleted:
+      - name
+    detail:
+      last_modified:
+      - path
+      - time
+    empty:
+      download: []
+      no_match_description:
+      - query
+      no_match_title: []
+      none_description: []
+      none_title: []
+      open_download_activity: []
+    entry:
+      current: []
+      delete_tooltip: []
+      favorite_tooltip: []
+      open_folder_tooltip: []
+      open_instance_directory: []
+      open_instance_directory_failure: []
+      open_settings_tooltip: []
+      set_as_launch: []
+    favorite:
+      added_activity: []
+      failure: []
+      removed_activity: []
+    folder:
+      current_activity: []
+      open_tooltip: []
+      remove_tooltip: []
+      switched:
+      - directory
+    folder_remove:
+      activity: []
+      cancelled: []
+      confirm_action: []
+      confirm_message:
+      - path
+      - newline
+      confirm_title: []
+      failure: []
+      not_saved: []
+      removed:
+      - path
+      removed_and_switched:
+      - removed
+      - target
+      still_active:
+      - path
+    groups:
+      api_installable: []
+      error: []
+      favorites: []
+      header:
+      - title
+      - count
+      hidden: []
+      loaders:
+        cleanroom: []
+        fabric: []
+        forge: []
+        labymod: []
+        legacy_fabric: []
+        liteloader: []
+        neoforge: []
+        quilt: []
+      rarely_used: []
+      regular: []
+    left:
+      folders: []
+      shortcuts: []
+    navigation:
+      launch:
+      - name
+      overview:
+      - name
+    open_folder:
+      activity: []
+      failure: []
+      missing_path: []
+      not_found:
+      - path
+    results:
+      count:
+      - count
+      filtered_none: []
+      none: []
+    route:
+      description: []
+      facts:
+        launch_directory: []
+        result_count: []
+        selected_instance: []
+      values:
+        none_selected: []
+        unresolved: []
+    search:
+      tooltip: []
+      watermark: []
+    shortcuts:
+      add_folder:
+        added_and_switched:
+        - path
+        cancelled: []
+        description: []
+        failure: []
+        pick_title: []
+        switched:
+        - path
+        title: []
+      import_pack:
+        cancelled: []
+        description: []
+        failure: []
+        name_failure: []
+        no_name: []
+        pick_filter: []
+        pick_title: []
+        task_queued:
+        - task
+        title: []
+      trash:
+        description: []
+        title: []
+    subtitle:
+      unknown_version: []
+    tags:
+      api: []
+      broken: []
+      favorite: []
+      hidden: []
+      rarely_used: []
+    tasks:
+      install_modpack:
+      - name
+  task_manager:
+    actions:
+      clear_finished: []
+    activity:
+      canceled:
+      - duration
+      failed:
+      - duration
+      running:
+      - duration
+      - recent
+      success:
+      - duration
+      waiting:
+      - duration
+    duration:
+      hours_minutes:
+      - hours
+      - minutes
+      minutes_seconds:
+      - minutes
+      - seconds
+      seconds:
+      - seconds
+    empty:
+      description: []
+      title: []
+    entries:
+      children:
+      - count
+    labels:
+      current_speed:
+      - speed
+      install_progress: []
+      remaining_files:
+      - count
+    left:
+      download_speed: []
+      overall_progress: []
+      remaining_files: []
+    placeholders:
+      no_progress: []
+      waiting_state_message: []
+    recent:
+      just_now: []
+      minutes_ago:
+      - minutes
+      seconds_ago:
+      - seconds
+    route:
+      description: []
+      facts:
+        failed: []
+        finished: []
+        running: []
+        waiting: []
+    stage:
+      canceled:
+      - duration
+      failed:
+      - duration
+      running:
+      - duration
+      success:
+      - duration
+      waiting: []
+    states:
+      canceled: []
+      failed: []
+      running: []
+      success: []
+      waiting: []
+    summary:
+      active:
+      - running
+      - waiting
+      none: []
+  tools:
+    common:
+      confirm: []
+      failure_title:
+      - title
+    help:
+      default_group: []
+      search:
+        empty_header: []
+        no_results: []
+        results_header: []
+        watermark: []
+    test:
+      achievement:
+        block_id: []
+        first_line: []
+        invalid_content: []
+        output_missing: []
+        preview: []
+        preview_activity: []
+        preview_hidden: []
+        save: []
+        save_activity: []
+        save_failure: []
+        second_line: []
+        title: []
+      cards:
+        achievement: []
+        custom_download: []
+        head: []
+        official_skin: []
+        server_query: []
+        toolbox: []
+      custom_download:
+        address: []
+        description: []
+        file_name: []
+        invalid_address: []
+        missing_folder: []
+        open_folder: []
+        open_folder_activity: []
+        open_folder_failure: []
+        pick_folder_activity: []
+        pick_folder_cancelled: []
+        pick_folder_failure: []
+        pick_folder_title: []
+        save_to: []
+        select: []
+        start: []
+        start_activity: []
+        start_failure: []
+        user_agent: []
+      head:
+        no_skin_selected: []
+        output_missing: []
+        pick_skin_activity: []
+        pick_skin_cancelled: []
+        pick_skin_failure: []
+        pick_skin_filter: []
+        pick_skin_title: []
+        preview: []
+        save: []
+        save_activity: []
+        save_failure: []
+        select_skin: []
+        size: []
+      official_skin:
+        missing_player_name: []
+        missing_skin_payload: []
+        missing_skin_url: []
+        output_missing: []
+        player_name: []
+        player_not_found: []
+        save: []
+        save_activity: []
+        save_failure: []
+      refresh:
+        activity: []
+        title: []
+      server_query:
+        address_watermark: []
+        empty_address: []
+        error:
+        - message
+        loading: []
+        navigation:
+        - address
+        no_result: []
+        open_activity: []
+        query: []
+        query_activity: []
+        query_failure: []
+        result_title: []
+        validation:
+          empty: []
+          invalid_host: []
+          invalid_ipv6: []
+          invalid_port:
+          - port
+      toolbox:
+        actions:
+          clear_rubbish:
+            none_removed: []
+            removed:
+            - count
+            title: []
+            tooltip: []
+          crash_test:
+            title: []
+            tooltip: []
+          create_shortcut:
+            cancelled: []
+            choice_info:
+            - path
+            choose_title: []
+            confirm: []
+            created_hint:
+            - target
+            failure_title: []
+            location:
+            - title
+            - path
+            no_targets: []
+            summary_warning: []
+            targets:
+              desktop: []
+              start_menu: []
+            title: []
+            tooltip: []
+            unknown_target:
+            - id
+          daily_luck:
+            activity:
+            - value
+            dialog_title:
+            - date
+            high_message:
+            - value
+            - rating
+            low_message:
+            - value
+            - rating
+            ratings:
+              r0: []
+              r10: []
+              r30: []
+              r40: []
+              r60: []
+              r90: []
+              r95: []
+              r100: []
+            title: []
+            tooltip: []
+          launch_count:
+            dialog_title: []
+            message:
+            - count
+            title: []
+            tooltip: []
+          memory_optimize:
+            cancelled: []
+            confirm_title: []
+            continue: []
+            prompts:
+              r0: []
+              r2: []
+              r6: []
+              r16: []
+              r32: []
+            title: []
+            tooltip: []
+            unsupported_other: []
+            unsupported_windows: []
+        unsupported: []
 startup:
   prompts:
     special_build:
       title: []
       debug:
         message:
-          - hint_env_var
-          - latest_release_url
+        - hint_env_var
+        - latest_release_url
       ci:
         message:
-          - hint_env_var
-          - latest_release_url
+        - hint_env_var
+        - latest_release_url
       actions:
         continue: []
         open_release_and_exit: []
     eula:
       title: []
       message:
-        - eula_url
+      - eula_url
       actions:
         accept: []
         reject: []
@@ -279,27 +782,27 @@ startup:
     environment_warning:
       title: []
       message:
-        - warnings
+      - warnings
       actions:
         acknowledge: []
 launch:
   notifications:
     success:
-      - instance_name
+    - instance_name
     abort_with_hint:
-      - hint
+    - hint
     script_export_canceled: []
     launch_canceled: []
     none: []
   precheck:
     failures:
       instance_path_reserved_chars:
-        - path
+      - path
       instance_indie_path_reserved_chars:
-        - path
+      - path
       instance_not_selected: []
       instance_has_error:
-        - detail
+      - detail
       no_profile_selected: []
       microsoft_profile_required: []
       auth_profile_required: []
@@ -310,7 +813,7 @@ launch:
     non_ascii_path:
       title: []
       message:
-        - instance_name
+      - instance_name
       actions:
         continue: []
         abort: []
@@ -319,7 +822,7 @@ launch:
       optional:
         title: []
         message:
-          - purchase_url
+        - purchase_url
         actions:
           buy: []
           continue: []
@@ -345,24 +848,24 @@ launch:
       auto_download:
         title: []
         message:
-          - version
+        - version
         actions:
           download: []
           cancel: []
     support:
       title:
-        - launch_count
+      - launch_count
       message:
-        - launch_count
+      - launch_count
       actions:
         sponsor: []
         continue: []
     java_compatibility:
       title: []
       message:
-        - runtime_label
-        - minimum_version
-        - maximum_version
+      - runtime_label
+      - minimum_version
+      - maximum_version
       actions:
         force_current: []
         use_compatible: []
@@ -371,7 +874,7 @@ crash:
   prompts:
     output:
       message:
-        - message
+      - message
       launch_failure:
         title: []
       manual_analysis:
@@ -384,6 +887,659 @@ crash:
   export:
     heading: []
     suggested_archive:
-      - archive_name
+    - archive_name
     source_file_count:
-      - file_count
+    - file_count
+setup:
+  launch:
+    cards:
+      options:
+        header: []
+      memory:
+        header: []
+      advanced:
+        header: []
+    fields:
+      default_isolation: []
+      game_window_title: []
+      custom_info: []
+      launcher_visibility: []
+      process_priority: []
+      window_size: []
+      microsoft_auth: []
+      preferred_ip_stack: []
+      renderer: []
+      jvm_arguments_head: []
+      game_arguments_tail: []
+      before_command: []
+      environment_variables: []
+      environment_variables_hint: []
+      wait_for_before_command: []
+      linux_display_backend: []
+      force_x11: []
+      force_x11_hint: []
+    flags:
+      disable_java_launch_wrapper: []
+      disable_retro_wrapper: []
+      require_dedicated_gpu: []
+      use_java_executable: []
+    instance_settings:
+      hint: []
+      button: []
+    memory:
+      modes:
+        automatic: []
+        automatic_description: []
+        custom: []
+      optimize_before_launch: []
+      warnings:
+        java_32_bit: []
+        overallocated: []
+    options:
+      isolation:
+        disabled: []
+        mods: []
+        non_release: []
+        mods_and_non_release: []
+        all: []
+      visibility:
+        close_after_launch: []
+        hide_then_close: []
+        hide_then_reopen: []
+        minimize: []
+        unchanged: []
+      priority:
+        high: []
+        medium: []
+        low: []
+      window:
+        fullscreen: []
+        default: []
+        match_launcher: []
+        custom: []
+        maximized: []
+      microsoft_auth:
+        web_account_manager: []
+        device_code: []
+      preferred_ip_stack:
+        ipv4_first: []
+        java_default: []
+        ipv6_first: []
+      renderer:
+        game_default: []
+        software: []
+        directx12: []
+        vulkan: []
+    activities:
+      reset: []
+      reset_completed: []
+  game_manage:
+    cards:
+      game_resources:
+        header: []
+      community_resources:
+        header: []
+      accessibility:
+        header: []
+    fields:
+      file_download_source: []
+      version_list_source: []
+      max_thread_count: []
+      speed_limit: []
+      download_timeout: []
+      target_folder: []
+      target_folder_hint: []
+      install_behavior: []
+      community_download_source: []
+      file_name_format: []
+      mod_local_name_style: []
+      game_update_notifications: []
+      game_language: []
+    flags:
+      auto_select_new_instance: []
+      upgrade_partial_authlib: []
+      hide_quilt_loader: []
+      release_update_notifications: []
+      snapshot_update_notifications: []
+      auto_switch_game_language: []
+      detect_clipboard_links: []
+    options:
+      download_source:
+        prefer_mirror: []
+        prefer_official_then_mirror: []
+        prefer_official: []
+      file_name_format:
+        display_name_brackets: []
+        display_name_square_brackets: []
+        display_name_prefix: []
+        display_name_suffix: []
+        file_name_only: []
+      mod_local_name_style:
+        title_local_detail_file: []
+        title_file_detail_local: []
+    labels:
+      download_timeout_value:
+      - value
+    activities:
+      reset: []
+      reset_completed: []
+    reactions:
+      quilt_hidden: []
+      quilt_restored: []
+  about:
+    cards:
+      about:
+        header: []
+      acknowledgements:
+        header: []
+    version_summary:
+    - version
+    project:
+      original_author:
+        title: []
+        summary: []
+        action: []
+        command: []
+      community:
+        title: []
+        summary: []
+        action: []
+        command: []
+      repo:
+        title: []
+        action: []
+        command: []
+    acknowledgements:
+      bangbang93:
+        title: []
+        summary: []
+        action: []
+        command: []
+      mcmod:
+        title: []
+        summary: []
+        action: []
+        command: []
+      pysio:
+        title: []
+        summary: []
+        action: []
+        command: []
+      yunmoan:
+        title: []
+        summary: []
+        action: []
+        command: []
+      z0z0r4:
+        title: []
+        summary: []
+      00ll00:
+        title: []
+        summary: []
+      patrick:
+        title: []
+        summary: []
+      hao_tian:
+        title: []
+        summary: []
+      mcbbs:
+        title: []
+        summary: []
+      community:
+        title: []
+        summary: []
+  log:
+    cards:
+      actions:
+        header: []
+      all_logs:
+        header: []
+    actions:
+      export_latest: []
+      export_all: []
+      open_directory: []
+      clean_history: []
+    empty:
+      title: []
+      summary: []
+    activities:
+      clean_history: []
+      directory_missing: []
+      nothing_to_clean: []
+      clean_failed: []
+      cleaned_count:
+      - count
+      open_log:
+      - title
+  feedback:
+    cards:
+      submit:
+        header: []
+    submit:
+      hint: []
+      button: []
+    loading:
+      section_title: []
+      entry_title: []
+      entry_summary: []
+    failed:
+      section_title: []
+      entry_title: []
+    sections:
+      processing: []
+      waiting_process: []
+      waiting: []
+      paused: []
+      up_next: []
+      completed: []
+      declined: []
+      ignored: []
+      duplicate: []
+      other: []
+    actions:
+      open_issue:
+      - number
+    summary:
+      unknown_author: []
+      unknown_time: []
+      uncategorized_type: []
+      line:
+      - author
+      - created_at
+      - type
+    activities:
+      refresh: []
+      refresh_completed:
+      - count
+      refresh_failed: []
+  update:
+    fields:
+      channel: []
+      mode: []
+    actions:
+      download_and_install: []
+      more_info: []
+      check_again: []
+      view_changelog: []
+    options:
+      channel:
+        release: []
+        beta: []
+        dev: []
+      mode:
+        auto_download_and_install: []
+        auto_download_and_prompt: []
+        prompt_only: []
+        disabled: []
+    version_name:
+    - version
+    states:
+      checking: []
+      available:
+      - version
+      latest: []
+      error:
+      - message
+    available:
+      publisher:
+      - source
+      summary_missing: []
+    errors:
+      github_empty_result: []
+      no_release: []
+      metadata_missing: []
+      metadata_invalid: []
+    activities:
+      change_channel: []
+      change_mode: []
+      refresh: []
+      available:
+      - version
+      latest:
+      - version
+      checking: []
+      download_install: []
+      no_pending_update: []
+      no_download_url: []
+      download_install_failed: []
+      package_ready:
+      - version
+      package_ready_hint: []
+      view_detail: []
+      view_detail_title:
+      - version
+      view_detail_failed: []
+      detail_unavailable: []
+  ui:
+    activities:
+      reset: []
+      reset_completed: []
+    background:
+      actions:
+        clear: []
+        open_folder: []
+        refresh: []
+      activities:
+        clear: []
+        clear_empty: []
+        empty: []
+        open_folder: []
+        open_folder_failed: []
+        refresh: []
+        clear_count:
+        - count
+        loaded:
+        - file
+      card_header: []
+      fields:
+        blur: []
+        opacity: []
+        suit: []
+      flags:
+        colorful: []
+      labels:
+        blur_off: []
+      card_header_with_count:
+      - count
+    cards:
+      basic:
+        header: []
+      font:
+        header: []
+      homepage:
+        header: []
+      music:
+        header: []
+      title_bar:
+        header: []
+    fields:
+      custom_theme_hint: []
+      custom_theme_refresh_hint: []
+      dark_custom: []
+      dark_palette: []
+      global_font: []
+      launcher_opacity: []
+      light_custom: []
+      light_palette: []
+      motd_font: []
+      theme: []
+    flags:
+      lock_window_size: []
+      show_launcher_logo: []
+      show_launching_hint: []
+    hidden_features:
+      groups:
+        features: []
+        instance_subpages: []
+        main_pages: []
+        setup_subpages: []
+        tools_subpages: []
+      hint: []
+      items:
+        download: []
+        feature_hidden: []
+        feature_instance_select: []
+        feature_mod_update: []
+        instance_export: []
+        instance_install: []
+        instance_mod: []
+        instance_resource_pack: []
+        instance_save: []
+        instance_schematic: []
+        instance_screenshot: []
+        instance_server: []
+        instance_shader: []
+        setup: []
+        setup_about: []
+        setup_feedback: []
+        setup_game_manage: []
+        setup_java: []
+        setup_launch: []
+        setup_launcher_misc: []
+        setup_log: []
+        setup_ui: []
+        setup_update: []
+        tools: []
+        tools_help: []
+        tools_test: []
+      reactions:
+        hidden:
+        - title
+        restored:
+        - title
+    homepage:
+      actions:
+        generate_tutorial: []
+        refresh: []
+        view_tutorial: []
+      activities:
+        generate_tutorial: []
+        generate_tutorial_failed: []
+        tutorial_shown: []
+        view_tutorial: []
+        tutorial_content: []
+        tutorial_template_missing:
+        - path
+      fields:
+        preset: []
+        url: []
+      notices:
+        preset_content: []
+        security_warning: []
+      options:
+        blank: []
+        local_file: []
+        preset: []
+        remote: []
+    music:
+      actions:
+        clear: []
+        open_folder: []
+        refresh: []
+      activities:
+        clear: []
+        clear_empty: []
+        empty: []
+        open_folder: []
+        open_folder_failed: []
+        refresh: []
+        clear_count:
+        - count
+        refreshed_count:
+        - count
+      fields:
+        volume: []
+      flags:
+        auto_start: []
+        enable_smtc: []
+        random: []
+        start_on_game_launch: []
+        stop_on_game_launch: []
+    options:
+      background_suit:
+        bottom_left: []
+        bottom_right: []
+        center: []
+        fit: []
+        smart: []
+        stretch: []
+        tile: []
+        top_left: []
+        top_right: []
+      dark_mode:
+        dark: []
+        follow_system: []
+        light: []
+      font:
+        default: []
+        jetbrains_mono: []
+        lxgw_wenkai: []
+        source_han_sans: []
+      theme_color:
+        cat_blue: []
+        custom: []
+        grass_green: []
+        lemon_cyan: []
+        oak_brown: []
+        pineapple_yellow: []
+    theme_switch:
+      unsupported_action: []
+      unsupported_notice: []
+    title_bar:
+      actions:
+        change_image: []
+        clear_image: []
+      activities:
+        change_image: []
+        change_image_cancelled: []
+        change_image_failed: []
+        change_image_pick_filter: []
+        change_image_pick_title: []
+        clear_image: []
+        clear_image_empty: []
+      fields:
+        text: []
+      flags:
+        align_left: []
+      options:
+        default: []
+        image: []
+        none: []
+        text: []
+  java:
+    actions:
+      add: []
+      details: []
+      disable: []
+      enable: []
+      open: []
+    activities:
+      add: []
+      add_cancelled: []
+      add_failed: []
+      add_pick_filter_unix: []
+      add_pick_filter_windows: []
+      add_pick_title: []
+      auto_select: []
+      detail_shown: []
+      disable: []
+      disable_blocked: []
+      disable_blocked_reason: []
+      disabled_state: []
+      enable: []
+      enabled_state: []
+      folder_missing: []
+      refresh: []
+      refresh_completed: []
+      refresh_failed: []
+      refresh_scanning: []
+      select_default: []
+      unavailable: []
+      add_completed:
+      - path
+      add_exists:
+      - path
+      add_unrecognized:
+      - path
+      open_folder:
+      - title
+      toggle_result:
+      - title
+      - state
+      view_detail:
+      - title
+    auto_select:
+      description: []
+      label: []
+    details:
+      available: []
+      metadata_unavailable: []
+      no: []
+      unavailable: []
+      yes: []
+      architecture:
+      - value
+      availability:
+      - value
+      brand:
+      - value
+      default_java:
+      - value
+      enabled:
+      - value
+      executable:
+      - value
+      folder:
+      - value
+      major_version:
+      - value
+      path:
+      - value
+      source:
+      - value
+      tags:
+      - value
+      type:
+      - value
+      version:
+      - value
+    tags:
+      auto_installed: []
+      auto_scanned: []
+      disabled: []
+      enabled: []
+      manual_added: []
+  launcher_misc:
+    actions:
+      apply_proxy: []
+      export_settings: []
+      import_settings: []
+    activities:
+      apply_proxy: []
+      export_settings: []
+      import_settings: []
+      import_settings_cancelled: []
+      import_settings_failed: []
+      import_settings_pick_filter: []
+      import_settings_pick_title: []
+      proxy_cleared: []
+      reset: []
+      reset_completed: []
+      import_settings_completed:
+      - path
+    cards:
+      debug:
+        header: []
+      network:
+        header: []
+      system:
+        header: []
+    fields:
+      announcements: []
+      debug_animation_speed: []
+      http_proxy: []
+      max_animation_fps: []
+      realtime_log_lines: []
+    flags:
+      debug_delay: []
+      debug_mode: []
+      disable_hardware_acceleration: []
+      enable_doh: []
+      skip_copy_during_download: []
+    http_proxy:
+      address_watermark: []
+      password: []
+      username: []
+      value_watermark: []
+      warning: []
+    labels:
+      debug_animation_speed_off: []
+    options:
+      http_proxy:
+        custom: []
+        none: []
+        system: []
+      system_activity:
+        all: []
+        disabled: []
+        important_only: []

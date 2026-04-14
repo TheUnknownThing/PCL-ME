@@ -25,7 +25,7 @@
               Command="{Binding InstallInstanceResourceFromFileCommand}"
               ColorType="Highlight"
               IsVisible="{Binding ShowInstanceResourceEmptyInstallActions}"
-              Text="从文件安装资源" />
+              Text="{Binding InstanceResourceInstallFromFileInEmptyStateText}" />
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"
@@ -36,13 +36,13 @@
               Margin="5,0"
               Command="{Binding OpenInstanceResourceFolderCommand}"
               IsVisible="{Binding ShowInstanceResourceEmptyInstallActions}"
-              Text="打开文件夹" />
+              Text="{Binding InstanceResourceOpenFolderText}" />
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"
               Command="{Binding VersionSelectCommand}"
               IsVisible="{Binding ShowInstanceResourceInstanceSelectAction}"
-              Text="实例选择" />
+              Text="{Binding InstanceResourceInstanceSelectText}" />
         </WrapPanel>
       </StackPanel>
     </controls:PclCard.CardContent>

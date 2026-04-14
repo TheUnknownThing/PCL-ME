@@ -31,7 +31,7 @@ internal sealed partial class FrontendShellViewModel
     private FrontendToolsComposition _toolsComposition = new(
         new FrontendToolsHelpState([]),
         new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
-    private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
+    private FrontendSetupUpdateStatus _updateStatus = null!;
     private FrontendSetupFeedbackSnapshot? _feedbackSnapshot;
     private StartupAvaloniaPlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
@@ -150,7 +150,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _pendingLaunchAfterPrompt;
     private bool _showLaunchLog;
     private readonly List<string> _launchLogLines = [];
-    private string _launchLogVisibleText = EmptyLaunchLogText;
+    private string _launchLogVisibleText = string.Empty;
     private int _launchLogVisibleStartIndex;
     private bool _isLaunchLogViewportPinned = true;
     private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
@@ -171,7 +171,7 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedLaunchOfflineUuidModeIndex;
     private string _launchOfflineCustomUuid = string.Empty;
     private string _launchOfflineStatusText = string.Empty;
-    private string _launchMicrosoftStatusText = "点击下方按钮后，启动器会打开微软登录网页。";
+    private string _launchMicrosoftStatusText = string.Empty;
     private string _launchMicrosoftDeviceCode = string.Empty;
     private string _launchMicrosoftVerificationUrl = string.Empty;
     private string _launchAuthlibServer = "https://littleskin.cn/api/yggdrasil";
@@ -185,10 +185,10 @@ internal sealed partial class FrontendShellViewModel
     private bool _showAchievementPreview;
     private int _selectedHeadSizeIndex;
     private string _selectedHeadSkinPath = "尚未选择皮肤";
-    private string _downloadInstallName = "新的安装方案";
+    private string _downloadInstallName = string.Empty;
     private string _downloadCatalogIntroTitle = string.Empty;
     private string _downloadCatalogIntroBody = string.Empty;
-    private string _downloadCatalogLoadingText = "正在获取版本列表";
+    private string _downloadCatalogLoadingText = string.Empty;
     private string _downloadFavoriteSearchQuery = string.Empty;
     private int _selectedDownloadFavoriteTargetIndex;
     private string _downloadFavoriteWarningText = string.Empty;
@@ -206,7 +206,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> _downloadResourceRuntimeStates = new();
     private int _communityProjectRefreshVersion;
     private bool _isCommunityProjectLoading;
-    private string _communityProjectLoadingText = "正在获取版本列表";
+    private string _communityProjectLoadingText = string.Empty;
     private string _selectedCommunityProjectTitleHint = string.Empty;
     private int _selectedLaunchIsolationIndex = 1;
     private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
@@ -319,11 +319,12 @@ internal sealed partial class FrontendShellViewModel
         _options = options;
         _i18n = i18nService;
         _shellActionService = shellActionService;
+        _updateStatus = FrontendSetupUpdateStatusService.CreateDefault(_i18n);
         _shellActionService.ConfirmPresenter = ShowInAppConfirmationAsync;
         _shellActionService.TextInputPresenter = ShowInAppTextInputAsync;
         _shellActionService.ChoicePresenter = ShowInAppChoiceAsync;
         _shellComposition = FrontendShellCompositionService.Compose(options);
-        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
+        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths, i18nService);
         _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         var initialInstanceLoadMode = _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
             ? ResolveInstanceCompositionLoadMode(_currentRoute)
@@ -438,13 +439,13 @@ internal sealed partial class FrontendShellViewModel
         _importInstanceSelectionPackCommand = new ActionCommand(() => _ = ImportInstanceSelectionPackAsync());
         _openInstanceSelectionDownloadCommand = new ActionCommand(() => NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-            "已从实例选择页打开下载页面。"));
+            LT("shell.instance_select.empty.open_download_activity")));
         _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
         _clearFinishedTasksCommand = new ActionCommand(() =>
         {
             TaskCenter.RemoveFinished();
             RefreshTaskManagerSurface();
-            RefreshShell("已清理所有已结束任务。");
+            RefreshShell(LT("shell.task_manager.actions.clear_finished"));
         });
         _refreshGameLogCommand = new ActionCommand(RefreshGameLogSurface);
         _clearGameLogCommand = new ActionCommand(ClearGameLogSurface);

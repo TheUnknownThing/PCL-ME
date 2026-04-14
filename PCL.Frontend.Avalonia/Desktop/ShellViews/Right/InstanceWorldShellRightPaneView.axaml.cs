@@ -25,9 +25,9 @@ internal sealed partial class InstanceWorldShellRightPaneView : UserControl
             PlacementTarget = control,
             ItemsSource = new object[]
             {
-                CreateMenuItem("文件名", shell.SetInstanceWorldFileNameSort),
-                CreateMenuItem("创建时间", shell.SetInstanceWorldCreateTimeSort),
-                CreateMenuItem("修改时间", shell.SetInstanceWorldModifyTimeSort)
+                CreateMenuItem(shell.SD("instance.content.sort.file_name"), shell.SetInstanceWorldFileNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.create_time"), shell.SetInstanceWorldCreateTimeSort),
+                CreateMenuItem(shell.SD("instance.content.sort.modify_time"), shell.SetInstanceWorldModifyTimeSort)
             }
         };
 

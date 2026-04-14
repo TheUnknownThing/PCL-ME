@@ -15,7 +15,7 @@
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
-                Text="更新通道" />
+                Text="{Binding SetupText.Update.UpdateChannelLabel}" />
             <ComboBox
                 Grid.Row="0"
                 Grid.Column="1"
@@ -30,7 +30,7 @@
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
-                Text="自动更新设置" />
+                Text="{Binding SetupText.Update.UpdateModeLabel}" />
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="1"
@@ -79,7 +79,7 @@
                 VerticalAlignment="Center"
                 Command="{Binding DownloadUpdateCommand}"
                 ColorType="Highlight"
-                Text="下载并安装" />
+                Text="{Binding SetupText.Update.DownloadAndInstallButton}" />
             <TextBlock
                 Grid.Row="4"
                 Grid.ColumnSpan="4"
@@ -99,7 +99,7 @@
               <TextBlock
                   Foreground="{DynamicResource ColorBrush3}"
                   FontSize="12.5"
-                  Text="有关此更新的更多信息..." />
+                  Text="{Binding SetupText.Update.MoreInfoButton}" />
             </Button>
           </Grid>
         </controls:PclCard.CardContent>
@@ -137,13 +137,13 @@
                 Grid.Column="3"
                 Command="{Binding CheckUpdateAgainCommand}"
                 ColorType="Highlight"
-                Text="再次检查" />
+                Text="{Binding SetupText.Update.CheckAgainButton}" />
             <controls:PclButton
                 Grid.Row="0"
                 Grid.RowSpan="2"
                 Grid.Column="5"
                 Command="{Binding OpenFullChangelogCommand}"
-                Text="查看更新日志" />
+                Text="{Binding SetupText.Update.ViewChangelogButton}" />
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>

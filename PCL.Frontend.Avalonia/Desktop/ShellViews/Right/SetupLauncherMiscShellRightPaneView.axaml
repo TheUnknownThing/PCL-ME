@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
-      <controls:PclCard Header="系统" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.LauncherMisc.SystemCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,Auto,5,Auto,5,20,8,35">
             <TextBlock
@@ -14,7 +14,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="启动器公告" />
+                Text="{Binding SetupText.LauncherMisc.LauncherAnnouncementsLabel}" />
             <ComboBox
                 Grid.Column="1"
                 Height="28"
@@ -27,7 +27,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="最高动画帧率" />
+                Text="{Binding SetupText.LauncherMisc.MaxAnimationFpsLabel}" />
             <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,58">
               <Slider
                   VerticalAlignment="Center"
@@ -49,7 +49,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="实时日志行数" />
+                Text="{Binding SetupText.LauncherMisc.RealTimeLogLinesLabel}" />
             <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,58">
               <Slider
                   VerticalAlignment="Center"
@@ -70,7 +70,7 @@
                   Grid.Column="0"
                   Margin="0,0,18,0"
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="禁用硬件加速"
+                  Content="{Binding SetupText.LauncherMisc.DisableHardwareAccelerationLabel}"
                   IsChecked="{Binding DisableHardwareAcceleration}" />
             </Grid>
 
@@ -80,24 +80,24 @@
                   Margin="0,0,20,0"
                   MinWidth="140"
                   Command="{Binding ExportSettingsCommand}"
-                  Text="导出设置" />
+                  Text="{Binding SetupText.LauncherMisc.ExportSettingsButton}" />
               <controls:PclButton
                   Grid.Column="1"
                   MinWidth="140"
                   Command="{Binding ImportSettingsCommand}"
-                  Text="导入设置" />
+                  Text="{Binding SetupText.LauncherMisc.ImportSettingsButton}" />
             </Grid>
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="网络" ContentMargin="25,38,25,15">
+      <controls:PclCard Header="{Binding SetupText.LauncherMisc.NetworkCardHeader}" ContentMargin="25,38,25,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,4,28,4,Auto">
             <CheckBox
                 Grid.ColumnSpan="2"
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="使用 DoH 解析地址"
+                Content="{Binding SetupText.LauncherMisc.EnableDoHLabel}"
                 IsChecked="{Binding EnableDoH}" />
 
             <TextBlock
@@ -106,22 +106,22 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="HTTP 代理" />
+                Text="{Binding SetupText.LauncherMisc.HttpProxyLabel}" />
             <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,*,*,0.2*">
               <RadioButton
                   Grid.Column="0"
                   GroupName="HttpProxyType"
-                  Content="不使用代理"
+                  Content="{Binding SetupText.LauncherMisc.NoProxyLabel}"
                   IsChecked="{Binding IsNoHttpProxySelected}" />
               <RadioButton
                   Grid.Column="1"
                   GroupName="HttpProxyType"
-                  Content="使用系统代理"
+                  Content="{Binding SetupText.LauncherMisc.SystemProxyLabel}"
                   IsChecked="{Binding IsSystemHttpProxySelected}" />
               <RadioButton
                   Grid.Column="2"
                   GroupName="HttpProxyType"
-                  Content="自定义代理"
+                  Content="{Binding SetupText.LauncherMisc.CustomProxyLabel}"
                   IsChecked="{Binding IsCustomHttpProxySelected}" />
             </Grid>
 
@@ -135,7 +135,7 @@
                 <TextBlock
                     Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                     FontSize="12.5"
-                    Text="请勿填写不信任的代理地址"
+                    Text="{Binding SetupText.LauncherMisc.CustomProxyWarning}"
                     TextWrapping="Wrap" />
               </Border>
 
@@ -143,7 +143,7 @@
                   Height="28"
                   Padding="8,4"
                   Text="{Binding HttpProxyAddress}"
-                  Watermark="比如 http://127.0.0.1:1080/" />
+                  Watermark="{Binding SetupText.LauncherMisc.HttpProxyAddressWatermark}" />
 
               <Grid ColumnDefinitions="Auto,*,Auto,*,Auto">
                 <TextBlock
@@ -151,33 +151,33 @@
                     Margin="0,0,8,0"
                     Foreground="{DynamicResource ColorBrush1}"
                     FontSize="13"
-                    Text="账号" />
+                    Text="{Binding SetupText.LauncherMisc.HttpProxyUsernameLabel}" />
                 <TextBox
                     Grid.Column="1"
                     Height="28"
                     Margin="0,0,8,0"
                     Padding="8,4"
                     Text="{Binding HttpProxyUsername}"
-                    Watermark="如有" />
+                    Watermark="{Binding SetupText.LauncherMisc.HttpProxyValueWatermark}" />
                 <TextBlock
                     Grid.Column="2"
                     VerticalAlignment="Center"
                     Margin="0,0,8,0"
                     Foreground="{DynamicResource ColorBrush1}"
                     FontSize="13"
-                    Text="密码" />
+                    Text="{Binding SetupText.LauncherMisc.HttpProxyPasswordLabel}" />
                 <TextBox
                     Grid.Column="3"
                     Height="28"
                     Margin="0,0,8,0"
                     Padding="8,4"
                     Text="{Binding HttpProxyPassword}"
-                    Watermark="如有" />
+                    Watermark="{Binding SetupText.LauncherMisc.HttpProxyValueWatermark}" />
                 <controls:PclButton
                     Grid.Column="4"
                     MinWidth="120"
                     Command="{Binding ApplyProxySettingsCommand}"
-                    Text="应用代理信息" />
+                    Text="{Binding SetupText.LauncherMisc.ApplyProxyButton}" />
               </Grid>
             </StackPanel>
           </Grid>
@@ -185,7 +185,7 @@
       </controls:PclCard>
 
       <controls:PclCard
-          Header="调试选项"
+          Header="{Binding SetupText.LauncherMisc.DebugCardHeader}"
           ShowChevron="True"
           IsChevronExpanded="False"
           ContentMargin="20,12,20,15">
@@ -197,7 +197,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="动画速度" />
+                  Text="{Binding SetupText.LauncherMisc.DebugAnimationSpeedLabel}" />
               <Grid Grid.Column="1" ColumnDefinitions="*,52">
                 <Slider
                     VerticalAlignment="Center"
@@ -219,18 +219,18 @@
                   Grid.Column="0"
                   Margin="0,0,14,0"
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="禁止在下载时从其他文件夹复制文件"
+                  Content="{Binding SetupText.LauncherMisc.SkipCopyDuringDownloadLabel}"
                   IsChecked="{Binding SkipCopyDuringDownload}" />
               <CheckBox
                   Grid.Column="1"
                   Margin="0,0,14,0"
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="调试模式"
+                  Content="{Binding SetupText.LauncherMisc.DebugModeLabel}"
                   IsChecked="{Binding DebugModeEnabled}" />
               <CheckBox
                   Grid.Column="2"
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="添加延迟"
+                  Content="{Binding SetupText.LauncherMisc.DebugDelayLabel}"
                   IsChecked="{Binding DebugDelayEnabled}" />
             </Grid>
           </StackPanel>

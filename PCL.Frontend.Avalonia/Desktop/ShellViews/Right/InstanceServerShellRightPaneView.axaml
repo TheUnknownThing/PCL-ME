@@ -7,7 +7,7 @@
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceServerContent}">
       <StackPanel Margin="25,10,25,10" Spacing="15">
-        <controls:PclCard Header="快捷操作" ContentMargin="25,40,23,15">
+        <controls:PclCard Header="{Binding InstanceServerQuickActionsHeaderText}" ContentMargin="25,40,23,15">
           <controls:PclCard.CardContent>
             <Grid ColumnDefinitions="Auto,Auto">
               <controls:PclButton
@@ -16,12 +16,12 @@
                   Margin="0,0,20,0"
                   Command="{Binding RefreshInstanceServerCommand}"
                   ColorType="Highlight"
-                  Text="刷新所有服务器" />
+                  Text="{Binding InstanceServerRefreshAllText}" />
               <controls:PclButton
                   Grid.Column="1"
                   MinWidth="140"
                   Command="{Binding AddInstanceServerCommand}"
-                  Text="添加新服务器" />
+                  Text="{Binding InstanceServerAddText}" />
             </Grid>
           </controls:PclCard.CardContent>
         </controls:PclCard>
@@ -122,14 +122,14 @@
                           Height="35"
                           Margin="0,0,10,0"
                           Command="{Binding RefreshCommand}"
-                          Text="刷新" />
+                          Text="{Binding DataContext.InstanceServerRefreshText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                       <controls:PclButton
                           Grid.Column="1"
                           Width="88"
                           Height="35"
                           Margin="0,0,10,0"
                           Command="{Binding CopyCommand}"
-                          Text="复制地址" />
+                          Text="{Binding DataContext.InstanceServerCopyAddressText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                       <controls:PclButton
                           Grid.Column="2"
                           Width="88"
@@ -137,7 +137,7 @@
                           Margin="0,0,10,0"
                           Command="{Binding ConnectCommand}"
                           ColorType="Highlight"
-                          Text="连接" />
+                          Text="{Binding DataContext.InstanceServerConnectText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                     </Grid>
                   </StackPanel>
                 </controls:PclCard.CardContent>
@@ -155,12 +155,12 @@
               HorizontalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="19"
-              Text="暂时没有服务器" />
+              Text="{Binding InstanceServerEmptyTitle}" />
           <Border Height="2" Background="{DynamicResource ColorBrush6}" />
           <TextBlock
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12.5"
-              Text="暂时没有找到服务器，在游戏内添加服务器或点击下方按钮添加新服务器"
+              Text="{Binding InstanceServerEmptyDescription}"
               TextAlignment="Center"
               TextWrapping="Wrap" />
           <Grid ColumnDefinitions="Auto,Auto" HorizontalAlignment="Center">
@@ -170,12 +170,12 @@
                 Margin="0,0,20,0"
                 Command="{Binding RefreshInstanceServerCommand}"
                 ColorType="Highlight"
-                Text="刷新服务器信息" />
+                Text="{Binding InstanceServerRefreshAllText}" />
             <controls:PclButton
                 Grid.Column="1"
                 MinWidth="140"
                 Command="{Binding AddInstanceServerCommand}"
-                Text="添加新服务器" />
+                Text="{Binding InstanceServerAddText}" />
           </Grid>
         </StackPanel>
       </controls:PclCard.CardContent>

@@ -61,19 +61,19 @@ internal sealed partial class FrontendShellViewModel
     private Bitmap? _communityProjectIcon;
     private FrontendCommunityProjectState _communityProjectState = new(
         string.Empty,
-        "未选择工程",
-        "先从收藏夹中选择一个工程，再查看对应详情。",
         string.Empty,
-        "未指定来源",
+        string.Empty,
+        string.Empty,
+        string.Empty,
         null,
         null,
         string.Empty,
-        "等待选择",
-        "尚未加载",
+        string.Empty,
+        string.Empty,
         0,
         0,
-        "未提供兼容信息",
-        "未提供标签信息",
+        string.Empty,
+        string.Empty,
         [],
         [],
         string.Empty,
@@ -82,12 +82,12 @@ internal sealed partial class FrontendShellViewModel
     private const string CommunityProjectInstallModeWithDependenciesValue = "with-dependencies";
     private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectModInstallModeOptions =
     [
-        new DownloadResourceFilterOptionViewModel("仅安装当前模组", CommunityProjectInstallModeCurrentOnlyValue),
-        new DownloadResourceFilterOptionViewModel("安装当前模组和缺失依赖", CommunityProjectInstallModeWithDependenciesValue)
+        new DownloadResourceFilterOptionViewModel("resource_detail.install_modes.current_only", CommunityProjectInstallModeCurrentOnlyValue),
+        new DownloadResourceFilterOptionViewModel("resource_detail.install_modes.with_dependencies", CommunityProjectInstallModeWithDependenciesValue)
     ];
     private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectSingleInstallModeOptions =
     [
-        new DownloadResourceFilterOptionViewModel("仅安装当前资源", CommunityProjectInstallModeCurrentOnlyValue)
+        new DownloadResourceFilterOptionViewModel("resource_detail.install_modes.single_resource", CommunityProjectInstallModeCurrentOnlyValue)
     ];
 
     public ObservableCollection<CommunityProjectActionButtonViewModel> CommunityProjectActionButtons { get; } = [];
@@ -127,11 +127,11 @@ internal sealed partial class FrontendShellViewModel
     public string CommunityProjectCategorySummary => _communityProjectState.CategorySummary;
 
     public string CommunityProjectDownloadCountLabel => _communityProjectState.DownloadCount <= 0
-        ? "暂无"
+        ? T("resource_detail.values.none")
         : FormatCompactCount(_communityProjectState.DownloadCount);
 
     public string CommunityProjectFollowCountLabel => _communityProjectState.FollowCount <= 0
-        ? "暂无"
+        ? T("resource_detail.values.none")
         : FormatCompactCount(_communityProjectState.FollowCount);
 
     public bool HasCommunityProjectDescription => !string.IsNullOrWhiteSpace(CommunityProjectDescription);
@@ -153,7 +153,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string CommunityProjectCurrentInstanceName => _instanceComposition.Selection.HasSelection
         ? _instanceComposition.Selection.InstanceName
-        : "未选择实例";
+        : T("resource_detail.current_instance.none_selected");
 
     public string CommunityProjectCurrentInstanceSummary
     {
@@ -161,7 +161,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (!_instanceComposition.Selection.HasSelection)
             {
-                return "下载页当前还没有选中实例，无法直接安装到实例。";
+                return T("resource_detail.current_instance.summary_none_selected");
             }
 
             var parts = new List<string> { CommunityProjectCurrentInstanceName };
@@ -182,7 +182,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowCommunityProjectInstallSuggestionCard => CanInstallCommunityProjectToCurrentInstance();
 
-    public string CommunityProjectInstallSuggestionTitle => GetSuggestedCommunityProjectInstallRelease()?.Title ?? "当前没有可安装的版本";
+    public string CommunityProjectInstallSuggestionTitle => GetSuggestedCommunityProjectInstallRelease()?.Title ?? T("resource_detail.suggested_release.none");
 
     public string CommunityProjectInstallSuggestionSummary
     {
@@ -214,9 +214,14 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand ExecuteCommunityProjectInstallSuggestionCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
 
     public IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectInstallModeOptions =>
-        _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+        (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
             ? CommunityProjectModInstallModeOptions
-            : CommunityProjectSingleInstallModeOptions;
+            : CommunityProjectSingleInstallModeOptions)
+        .Select(option => new DownloadResourceFilterOptionViewModel(
+            T(option.Label),
+            option.FilterValue,
+            option.IsHeader))
+        .ToArray();
 
     public DownloadResourceFilterOptionViewModel? SelectedCommunityProjectInstallModeOption
     {
@@ -258,8 +263,8 @@ internal sealed partial class FrontendShellViewModel
     public bool HasCommunityProjectDependencySections => CommunityProjectDependencySections.Count > 0;
 
     public string CommunityProjectDependencyCardTitle => string.IsNullOrWhiteSpace(_communityProjectDependencyReleaseTitle)
-        ? "当前版本依赖"
-        : $"{_communityProjectDependencyReleaseTitle} 的依赖";
+        ? T("resource_detail.dependencies.title")
+        : T("resource_detail.dependencies.title_for_release", ("release_title", _communityProjectDependencyReleaseTitle));
 
     public bool ShowCommunityProjectDependencyCard => _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
         && HasCommunityProjectDependencySections;
@@ -313,8 +318,8 @@ internal sealed partial class FrontendShellViewModel
                     ?? string.Empty
                 : initialLoaderFilter?.Trim() ?? string.Empty));
         var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
-            ? "已打开资源工程详情。"
-            : $"已打开 {projectTitle} 的资源详情。";
+            ? T("resource_detail.activities.open_detail")
+            : T("resource_detail.activities.open_detail_for_project", ("project_title", projectTitle));
         if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail)
         {
             RefreshShell(activityMessage);
@@ -334,7 +339,7 @@ internal sealed partial class FrontendShellViewModel
         var state = _communityProjectNavigationStack[^1];
         _communityProjectNavigationStack.RemoveAt(_communityProjectNavigationStack.Count - 1);
         ApplyCommunityProjectNavigationState(state);
-        RefreshShell($"已返回到 {state.TitleHintOrProjectId}。");
+        RefreshShell(T("resource_detail.activities.navigate_back", ("target_title", state.TitleHintOrProjectId)));
         return true;
     }
 
@@ -372,27 +377,27 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshCompDetailSurface()
     {
-        CommunityProjectLoadingText = "正在获取版本列表";
+        CommunityProjectLoadingText = T("resource_detail.loading.releases");
         if (string.IsNullOrWhiteSpace(_selectedCommunityProjectId))
         {
             _communityProjectState = new FrontendCommunityProjectState(
                 string.Empty,
-                "未选择工程",
-                "先从收藏夹或资源条目进入，才能查看对应工程详情。",
+                T("resource_detail.selection.none_selected_title"),
+                T("resource_detail.selection.none_selected_summary"),
                 string.Empty,
-                "未指定来源",
+                T("resource_detail.selection.unspecified_source"),
                 null,
                 null,
                 string.Empty,
-                "等待选择",
-                "尚未加载",
+                T("resource_detail.selection.waiting"),
+                T("resource_detail.selection.not_loaded"),
                 0,
                 0,
-                "未提供兼容信息",
-                "未提供标签信息",
+                T("resource_detail.selection.no_compatibility"),
+                T("resource_detail.selection.no_tags"),
                 [],
                 [],
-                "当前详情页没有携带工程标识。",
+                T("resource_detail.selection.missing_project_id"),
                 true);
             SetCommunityProjectLoading(false);
             ApplyCommunityProjectIcon();
@@ -403,23 +408,23 @@ internal sealed partial class FrontendShellViewModel
 
         var projectId = _selectedCommunityProjectId;
         var title = string.IsNullOrWhiteSpace(_selectedCommunityProjectTitleHint)
-            ? $"项目 {projectId}"
+            ? T("resource_detail.selection.project_fallback_title", ("project_id", projectId))
             : _selectedCommunityProjectTitleHint;
         _communityProjectState = new FrontendCommunityProjectState(
             projectId,
             title,
             title,
             string.Empty,
-            "正在加载",
+            T("resource_detail.loading.source"),
             null,
             null,
             string.Empty,
-            "正在加载",
-            "尚未加载",
+            T("resource_detail.loading.status"),
+            T("resource_detail.selection.not_loaded"),
             0,
             0,
-            "未提供兼容信息",
-            "未提供标签信息",
+            T("resource_detail.selection.no_compatibility"),
+            T("resource_detail.selection.no_tags"),
             [],
             [],
             string.Empty,
@@ -484,14 +489,14 @@ internal sealed partial class FrontendShellViewModel
             BuildCommunityProjectFilterButtons(
                 versionOptions,
                 _selectedCommunityProjectVersionFilter,
-                "全部",
+                T("common.filters.all"),
                 SelectCommunityProjectVersionFilter));
         ReplaceItems(
             CommunityProjectLoaderFilterButtons,
             BuildCommunityProjectFilterButtons(
                 loaderOptions,
                 _selectedCommunityProjectLoaderFilter,
-                "全部",
+                T("common.filters.all"),
                 SelectCommunityProjectLoaderFilter));
         ReplaceItems(CommunityProjectReleaseGroups, BuildCommunityProjectReleaseGroups(versionGrouping));
         RebuildCommunityProjectDependencySections(versionGrouping);
@@ -502,7 +507,7 @@ internal sealed partial class FrontendShellViewModel
                 :
                 [
                     new DownloadCatalogSectionViewModel(
-                        "相关链接",
+                        T("resource_detail.links.title"),
                         _communityProjectState.Links
                             .Select(entry => new DownloadCatalogEntryViewModel(
                                 entry.Title,
@@ -528,7 +533,7 @@ internal sealed partial class FrontendShellViewModel
                 CommunityProjectLinkIcon.Data,
                 CommunityProjectLinkIcon.Scale,
                 PclIconTextButtonColorState.Normal,
-                CreateOpenTargetCommand($"打开项目主页: {CommunityProjectTitle}", CommunityProjectWebsite, CommunityProjectWebsite)));
+                CreateOpenTargetCommand(T("resource_detail.activities.open_project_homepage", ("project_title", CommunityProjectTitle)), CommunityProjectWebsite, CommunityProjectWebsite)));
         }
         else
         {
@@ -537,46 +542,49 @@ internal sealed partial class FrontendShellViewModel
                 CommunityProjectLinkIcon.Data,
                 CommunityProjectLinkIcon.Scale,
                 PclIconTextButtonColorState.Normal,
-                CreateIntentCommand($"查看来源: {CommunityProjectTitle}", CommunityProjectSource)));
+                CreateIntentCommand(T("resource_detail.activities.view_source", ("project_title", CommunityProjectTitle)), CommunityProjectSource)));
         }
 
         buttons.Add(new CommunityProjectActionButtonViewModel(
-            "MC 百科",
+            T("resource_detail.actions.mc_wiki"),
             CommunityProjectLinkIcon.Data,
             CommunityProjectLinkIcon.Scale,
             PclIconTextButtonColorState.Normal,
             CreateOpenTargetCommand(
-                $"打开 MC 百科: {CommunityProjectTitle}",
+                T("resource_detail.activities.open_mc_wiki", ("project_title", CommunityProjectTitle)),
                 BuildCommunityProjectEncyclopediaUrl(CommunityProjectTitle),
                 CommunityProjectTitle)));
         buttons.Add(new CommunityProjectActionButtonViewModel(
-            "复制名称",
-            CommunityProjectCopyIcon.Data,
-            CommunityProjectCopyIcon.Scale,
-            PclIconTextButtonColorState.Normal,
-            new ActionCommand(() => _ = CopyCommunityProjectTextAsync("复制项目名称", CommunityProjectTitle, "没有可复制的项目名称。"))));
-        buttons.Add(new CommunityProjectActionButtonViewModel(
-            "复制链接",
+            T("resource_detail.actions.copy_name"),
             CommunityProjectCopyIcon.Data,
             CommunityProjectCopyIcon.Scale,
             PclIconTextButtonColorState.Normal,
             new ActionCommand(() => _ = CopyCommunityProjectTextAsync(
-                "复制项目链接",
+                T("resource_detail.actions.copy_name"),
+                CommunityProjectTitle,
+                T("resource_detail.copy_name.empty")))));
+        buttons.Add(new CommunityProjectActionButtonViewModel(
+            T("resource_detail.actions.copy_link"),
+            CommunityProjectCopyIcon.Data,
+            CommunityProjectCopyIcon.Scale,
+            PclIconTextButtonColorState.Normal,
+            new ActionCommand(() => _ = CopyCommunityProjectTextAsync(
+                T("resource_detail.actions.copy_link"),
                 string.IsNullOrWhiteSpace(CommunityProjectWebsite)
                     ? FrontendCommunityProjectService.CreateCompDetailTarget(_communityProjectState.ProjectId)
                     : CommunityProjectWebsite,
-                "当前项目没有可复制的外部链接。"))));
+                T("resource_detail.copy_link.empty")))));
         buttons.Add(new CommunityProjectActionButtonViewModel(
-            "翻译简介",
+            T("resource_detail.actions.translate_description"),
             CommunityProjectTranslateIcon.Data,
             CommunityProjectTranslateIcon.Scale,
             PclIconTextButtonColorState.Normal,
             new ActionCommand(() => _ = CopyCommunityProjectTextAsync(
-                "翻译简介",
+                T("resource_detail.actions.translate_description"),
                 BuildCommunityProjectDescriptionCopyText(),
-                "当前项目没有可供翻译的简介文本。"))));
+                T("resource_detail.translate_description.empty")))));
         buttons.Add(new CommunityProjectActionButtonViewModel(
-            "收藏到",
+            T("download.favorites.actions.favorite_to"),
             FrontendIconCatalog.FolderAdd.Data,
             FrontendIconCatalog.FolderAdd.Scale,
             PclIconTextButtonColorState.Normal,
@@ -590,7 +598,7 @@ internal sealed partial class FrontendShellViewModel
         var isFavorite = IsCommunityProjectFavorite();
         var icon = isFavorite ? CommunityProjectFavoriteFilledIcon : CommunityProjectFavoriteOutlineIcon;
         return new CommunityProjectActionButtonViewModel(
-            "收藏",
+            T("download.favorites.actions.favorite"),
             icon.Data,
             icon.Scale,
             isFavorite ? PclIconTextButtonColorState.Highlight : PclIconTextButtonColorState.Normal,
@@ -617,10 +625,10 @@ internal sealed partial class FrontendShellViewModel
         return buttons;
     }
 
-    private static IReadOnlyList<string> BuildCommunityProjectCategoryTags(string summary)
+    private IReadOnlyList<string> BuildCommunityProjectCategoryTags(string summary)
     {
         if (string.IsNullOrWhiteSpace(summary)
-            || string.Equals(summary, "未提供标签信息", StringComparison.OrdinalIgnoreCase))
+            || string.Equals(summary, T("resource_detail.selection.no_tags"), StringComparison.OrdinalIgnoreCase))
         {
             return [];
         }
@@ -640,7 +648,7 @@ internal sealed partial class FrontendShellViewModel
 
         foreach (var release in _communityProjectState.Releases)
         {
-            var gameVersions = release.GameVersions.Count == 0 ? ["其他"] : release.GameVersions;
+            var gameVersions = release.GameVersions.Count == 0 ? [T("resource_detail.values.other")] : release.GameVersions;
             var visibleLoaders = FrontendLoaderVisibilityService.FilterVisibleLoaders(release.Loaders, IgnoreQuiltLoader);
             var loaders = visibleLoaders.Count == 0 ? [string.Empty] : visibleLoaders;
 
@@ -654,7 +662,7 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 var normalizedVersion = NormalizeMinecraftVersion(gameVersion)
-                                        ?? (string.IsNullOrWhiteSpace(gameVersion) ? "其他" : gameVersion.Trim());
+                                        ?? (string.IsNullOrWhiteSpace(gameVersion) ? T("resource_detail.values.other") : gameVersion.Trim());
                 foreach (var loader in loaders)
                 {
                     if (!string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
@@ -697,7 +705,7 @@ internal sealed partial class FrontendShellViewModel
                             ? CreateCommunityProjectReleaseDownloadCommand(entry)
                             : string.IsNullOrWhiteSpace(entry.Target)
                                 ? CreateIntentCommand(entry.Title, entry.Info)
-                                : CreateOpenTargetCommand($"打开文件: {entry.Title}", entry.Target, entry.Target),
+                                : CreateOpenTargetCommand(T("resource_detail.activities.open_file", ("entry_title", entry.Title)), entry.Target, entry.Target),
                         GetCommunityProjectReleaseChannelIcon(entry.Channel)))
                     .ToArray()))
             .ToArray();
@@ -727,7 +735,7 @@ internal sealed partial class FrontendShellViewModel
                         entry.Title,
                         entry.Summary,
                         entry.Meta,
-                        "查看详情",
+                        T("resource_detail.actions.view_details"),
                         CreateCommunityProjectDependencyCommand(entry),
                         LoadCachedBitmapFromPath(entry.IconPath) ?? fallbackDependencyIcon,
                         entry.IconUrl))
@@ -747,13 +755,13 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static void AddCommunityProjectReleaseGroupEntry(
+    private void AddCommunityProjectReleaseGroupEntry(
         IDictionary<string, List<FrontendCommunityProjectReleaseEntry>> groups,
         IDictionary<string, HashSet<string>> dedupe,
         string title,
         FrontendCommunityProjectReleaseEntry release)
     {
-        var normalizedTitle = string.IsNullOrWhiteSpace(title) ? "其他" : title;
+        var normalizedTitle = string.IsNullOrWhiteSpace(title) ? T("resource_detail.values.other") : title;
         if (!groups.TryGetValue(normalizedTitle, out var entries))
         {
             entries = [];
@@ -815,7 +823,7 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<string> BuildCommunityProjectVersionOptions((bool GroupByDrop, bool FoldOld) versionGrouping)
     {
         return _communityProjectState.Releases
-            .SelectMany(release => release.GameVersions.Count == 0 ? ["其他"] : release.GameVersions)
+            .SelectMany(release => release.GameVersions.Count == 0 ? [T("resource_detail.values.other")] : release.GameVersions)
             .Select(version => GetGroupedCommunityProjectVersionName(version, versionGrouping.GroupByDrop, versionGrouping.FoldOld))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(value => GetCommunityProjectVersionSortPriority(value))
@@ -897,7 +905,7 @@ internal sealed partial class FrontendShellViewModel
 
         return string.IsNullOrWhiteSpace(entry.Target)
             ? CreateIntentCommand(entry.Title, entry.Info)
-            : CreateOpenTargetCommand($"打开项目内容: {entry.Title}", entry.Target, entry.Target);
+            : CreateOpenTargetCommand(T("resource_detail.activities.open_project_content", ("entry_title", entry.Title)), entry.Target, entry.Target);
     }
 
     private ActionCommand CreateCommunityProjectDependencyCommand(FrontendCommunityProjectDependencyEntry entry)
@@ -906,7 +914,7 @@ internal sealed partial class FrontendShellViewModel
             ? new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title))
             : string.IsNullOrWhiteSpace(entry.Target)
                 ? CreateIntentCommand(entry.Title, entry.Summary)
-                : CreateOpenTargetCommand($"打开依赖项目: {entry.Title}", entry.Target, entry.Target);
+                : CreateOpenTargetCommand(T("resource_detail.activities.open_dependency_project", ("entry_title", entry.Title)), entry.Target, entry.Target);
     }
 
     private ActionCommand CreateCommunityProjectReleaseDownloadCommand(FrontendCommunityProjectReleaseEntry entry)
@@ -920,7 +928,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (string.IsNullOrWhiteSpace(entry.Target))
             {
-                AddActivity($"下载资源文件: {entry.Title}", "当前版本没有可用的下载地址。");
+                AddActivity(T("resource_detail.activities.download_file", ("entry_title", entry.Title)), T("resource_detail.download.errors.missing_url"));
                 return;
             }
 
@@ -939,38 +947,38 @@ internal sealed partial class FrontendShellViewModel
             try
             {
                 targetPath = await _shellActionService.PickSaveFileAsync(
-                    "选择保存位置",
+                    T("resource_detail.download.dialogs.pick_save_path.title"),
                     suggestedFileName,
-                    "资源文件",
+                    T("resource_detail.download.dialogs.pick_save_path.file_type"),
                     suggestedStartFolder,
                     patterns);
             }
             catch (Exception ex)
             {
-                AddFailureActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+                AddFailureActivity(T("resource_detail.activities.pick_save_path_failed", ("entry_title", entry.Title)), ex.Message);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(targetPath))
             {
-                AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
+                AddActivity(T("resource_detail.activities.download_canceled", ("entry_title", entry.Title)), T("resource_detail.download.messages.no_save_path"));
                 return;
             }
 
             TaskCenter.Register(new FrontendManagedFileDownloadTask(
-                $"下载资源文件：{Path.GetFileNameWithoutExtension(targetPath)}",
+                T("resource_detail.download.task_title", ("file_name", Path.GetFileNameWithoutExtension(targetPath))),
                 entry.Target,
                 targetPath,
                 ResolveDownloadRequestTimeout(),
                 _shellActionService.GetDownloadTransferOptions(),
-                onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
-                onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+                onStarted: filePath => AvaloniaHintBus.Show(T("resource_detail.download.hints.started", ("file_name", Path.GetFileName(filePath))), AvaloniaHintTheme.Info),
+                onCompleted: filePath => AvaloniaHintBus.Show(T("resource_detail.download.hints.completed", ("file_name", Path.GetFileName(filePath))), AvaloniaHintTheme.Success),
                 onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
-            AddActivity($"开始下载资源文件: {entry.Title}", targetPath);
+            AddActivity(T("resource_detail.activities.download_started", ("entry_title", entry.Title)), targetPath);
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"下载资源文件失败: {entry.Title}", ex.Message);
+            AddFailureActivity(T("resource_detail.activities.download_failed", ("entry_title", entry.Title)), ex.Message);
         }
     }
 
@@ -991,19 +999,19 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("安装到当前实例", "当前未选择实例。");
+            AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.current_instance.none_selected"));
             return;
         }
 
         if (!TryGetCommunityProjectInstallRelease(out var entry))
         {
-            AddActivity("安装到当前实例", "当前筛选条件下没有可直接安装的版本文件。");
+            AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.errors.no_filtered_release"));
             return;
         }
 
         if (string.IsNullOrWhiteSpace(entry.Target))
         {
-            AddActivity("安装到当前实例", "当前版本没有可用的下载地址。");
+            AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.download.errors.missing_url"));
             return;
         }
 
@@ -1013,12 +1021,12 @@ internal sealed partial class FrontendShellViewModel
             var route = _selectedCommunityProjectOriginSubpage;
             if (route is null)
             {
-                AddActivity("安装到当前实例", "当前页面没有可识别的资源类型。");
+                AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.errors.unknown_resource_type"));
                 return;
             }
 
-            AvaloniaHintBus.Show("正在分析建议安装版本…", AvaloniaHintTheme.Info);
-            AddActivity("安装到当前实例", $"{CommunityProjectCurrentInstanceName} • 正在分析 {CommunityProjectTitle} 的安装计划。");
+            AvaloniaHintBus.Show(T("resource_detail.install.hints.analyzing"), AvaloniaHintTheme.Info);
+            AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.messages.analyzing", ("instance_name", CommunityProjectCurrentInstanceName), ("project_title", CommunityProjectTitle)));
             var result = await Task.Run(() => BuildCommunityProjectInstallBuildResult(
                 [
                     new CommunityProjectInstallRootRequest(
@@ -1037,49 +1045,49 @@ internal sealed partial class FrontendShellViewModel
                 var confirmed = await ConfirmCommunityProjectInstallWithDependenciesAsync(result);
                 if (!confirmed)
                 {
-                    AddActivity("安装到当前实例", "已取消安装当前模组和缺失依赖。");
+                    AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.messages.canceled_with_dependencies"));
                     return;
                 }
             }
 
             if (result.Plans.Count == 0)
             {
-                AddActivity("安装到当前实例", result.Skipped.Count == 0
-                    ? "没有需要加入任务中心的安装项。"
+                AddActivity(T("resource_detail.activities.install_current_instance"), result.Skipped.Count == 0
+                    ? T("resource_detail.install.messages.no_tasks")
                     : string.Join("；", result.Skipped.Take(3)));
                 return;
             }
 
-            AvaloniaHintBus.Show("安装任务已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
+            AvaloniaHintBus.Show(T("resource_detail.install.hints.started"), AvaloniaHintTheme.Info);
             foreach (var plan in result.Plans)
             {
-                RegisterCommunityProjectInstallTask(plan, "安装到当前实例");
+                RegisterCommunityProjectInstallTask(plan, T("resource_detail.activities.install_current_instance"));
             }
 
-            var summaryParts = new List<string> { $"已加入 {result.Plans.Count} 个安装任务" };
+            var summaryParts = new List<string> { T("resource_detail.install.summary.tasks", ("count", result.Plans.Count)) };
             if (includeDependencies)
             {
                 var dependencyCount = result.Plans.Count(plan => plan.IsDependency);
                 if (dependencyCount > 0)
                 {
-                    summaryParts.Add($"包含 {dependencyCount} 个缺失依赖");
+                    summaryParts.Add(T("resource_detail.install.summary.dependencies", ("count", dependencyCount)));
                 }
             }
 
             if (result.Skipped.Count > 0)
             {
-                summaryParts.Add($"跳过 {result.Skipped.Count} 项");
+                summaryParts.Add(T("resource_detail.install.summary.skipped", ("count", result.Skipped.Count)));
             }
 
-            AddActivity("安装到当前实例", $"{CommunityProjectCurrentInstanceName} • {string.Join("，", summaryParts)}。");
+            AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.summary.completed", ("instance_name", CommunityProjectCurrentInstanceName), ("summary", string.Join(T("common.punctuation.comma"), summaryParts))));
             foreach (var skipped in result.Skipped.Take(5))
             {
-                AddActivity("安装到当前实例", skipped);
+                AddActivity(T("resource_detail.activities.install_current_instance"), skipped);
             }
         }
         catch (Exception ex)
         {
-            AddFailureActivity("安装到当前实例失败", ex.Message);
+            AddFailureActivity(T("resource_detail.activities.install_current_instance_failed"), ex.Message);
         }
     }
 
@@ -1088,13 +1096,13 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             return await _shellActionService.ConfirmAsync(
-                "确认安装依赖",
+                T("resource_detail.install.dialogs.confirm_dependencies.title"),
                 BuildCommunityProjectInstallConfirmationMessage(CommunityProjectCurrentInstanceName, result),
-                "开始安装");
+                T("resource_detail.install.dialogs.confirm_dependencies.confirm"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("安装确认失败", ex.Message);
+            AddFailureActivity(T("resource_detail.install.dialogs.confirm_dependencies.failed"), ex.Message);
             return false;
         }
     }
@@ -1130,13 +1138,13 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("输入实例名称失败", ex.Message);
+            AddFailureActivity(T("resource_detail.modpack.activities.prompt_instance_name_failed"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(instanceName))
         {
-            AddActivity($"已取消安装整合包: {entry.Title}", "没有输入实例名称。");
+            AddActivity(T("resource_detail.modpack.activities.install_canceled", ("entry_title", entry.Title)), T("resource_detail.modpack.messages.missing_instance_name"));
             return;
         }
 
@@ -1147,11 +1155,11 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var targetDirectory = Path.Combine(versionsDirectory, instanceName);
-        var archivePath = Path.Combine(targetDirectory, $"原始整合包{extension}");
+        var archivePath = Path.Combine(targetDirectory, T("resource_detail.modpack.archive_name", ("extension", extension)));
         var description = string.IsNullOrWhiteSpace(_communityProjectState.Summary)
             ? _communityProjectState.Description
             : _communityProjectState.Summary;
-        var taskTitle = $"{_communityProjectState.Source} 整合包安装：{instanceName}";
+        var taskTitle = T("resource_detail.modpack.task_title", ("source_name", _communityProjectState.Source), ("instance_name", instanceName));
 
         TaskCenter.Register(new FrontendManagedModpackInstallTask(
             taskTitle,
@@ -1173,7 +1181,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AvaloniaHintBus.Show($"开始下载并安装 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info);
+                    AvaloniaHintBus.Show(T("resource_detail.modpack.hints.download_and_install_started", ("file_name", Path.GetFileName(filePath))), AvaloniaHintTheme.Info);
                 });
             },
             onCompleted: result =>
@@ -1187,12 +1195,12 @@ internal sealed partial class FrontendShellViewModel
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AddFailureActivity($"整合包安装失败: {entry.Title}", message);
+                    AddFailureActivity(T("resource_detail.modpack.activities.install_failed", ("entry_title", entry.Title)), message);
                 });
             }));
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-            $"{taskTitle} 已加入任务中心。");
+            T("resource_detail.install.messages.queued_in_task_center", ("task_title", taskTitle)));
     }
 
     private async Task SelectCommunityProjectInstanceAsync()
@@ -1202,7 +1210,7 @@ internal sealed partial class FrontendShellViewModel
         {
             NavigateTo(
                 new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect),
-                "下载页未发现可用实例，已转到实例选择页。");
+                T("resource_detail.instance_selection.messages.no_instances"));
             return;
         }
 
@@ -1210,18 +1218,18 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             selectedId = await _shellActionService.PromptForChoiceAsync(
-                "选择实例",
-                "根据选择实例筛选推荐模组版本，支持直接安装到该实例。",
+                T("resource_detail.instance_selection.dialog.title"),
+                T("resource_detail.instance_selection.dialog.message"),
                 instances.Select(entry => new PclChoiceDialogOption(
                     entry.Name,
                     entry.Name,
                     entry.Subtitle)).ToArray(),
                 _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : null,
-                "切换实例");
+                T("download.resource.current_instance.actions.switch"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择实例失败", ex.Message);
+            AddFailureActivity(T("resource_detail.instance_selection.activities.select_failed"), ex.Message);
             return;
         }
 
@@ -1233,7 +1241,7 @@ internal sealed partial class FrontendShellViewModel
         if (_instanceComposition.Selection.HasSelection
             && string.Equals(_instanceComposition.Selection.InstanceName, selectedId, StringComparison.OrdinalIgnoreCase))
         {
-            AddActivity("选择实例", $"{selectedId} 已经是当前实例。");
+            AddActivity(T("resource_detail.instance_selection.activities.select"), T("resource_detail.instance_selection.messages.already_selected", ("instance_name", selectedId)));
             return;
         }
 
@@ -1246,10 +1254,10 @@ internal sealed partial class FrontendShellViewModel
         while (true)
         {
             var input = await _shellActionService.PromptForTextAsync(
-                "输入实例名称",
-                "整合包会安装到当前启动目录的 versions 文件夹中。",
+                T("resource_detail.modpack.dialogs.instance_name.title"),
+                T("resource_detail.modpack.dialogs.instance_name.message"),
                 suggestion,
-                "开始安装");
+                T("download.install.actions.start"));
             if (input is null)
             {
                 return null;
@@ -1263,9 +1271,9 @@ internal sealed partial class FrontendShellViewModel
             }
 
             var retry = await _shellActionService.ConfirmAsync(
-                "实例名称不可用",
+                T("resource_detail.modpack.dialogs.invalid_name.title"),
                 validationError,
-                "重新输入");
+                T("resource_detail.modpack.dialogs.invalid_name.confirm"));
             if (!retry)
             {
                 return null;
@@ -1284,48 +1292,48 @@ internal sealed partial class FrontendShellViewModel
         return SanitizeInstallDirectoryName(title);
     }
 
-    private static string? ValidateCommunityProjectInstanceName(string value, string versionsDirectory)
+    private string? ValidateCommunityProjectInstanceName(string value, string versionsDirectory)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return "实例名称不能为空。";
+            return T("resource_detail.modpack.validation.empty");
         }
 
         if (value.StartsWith(' ') || value.EndsWith(' '))
         {
-            return "实例名称不能以空格开头或结尾。";
+            return T("resource_detail.modpack.validation.trim_spaces");
         }
 
         if (value.Length > 100)
         {
-            return "实例名称不能超过 100 个字符。";
+            return T("resource_detail.modpack.validation.too_long");
         }
 
         if (value.EndsWith(".", StringComparison.Ordinal))
         {
-            return "实例名称不能以小数点结尾。";
+            return T("resource_detail.modpack.validation.trailing_dot");
         }
 
         if (value.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || value.Contains('!') || value.Contains(';'))
         {
-            return "实例名称包含不受支持的字符。";
+            return T("resource_detail.modpack.validation.invalid_characters");
         }
 
         if (CommunityProjectReservedInstanceNames.Contains(value, StringComparer.OrdinalIgnoreCase))
         {
-            return "实例名称不能使用系统保留名称。";
+            return T("resource_detail.modpack.validation.reserved_name");
         }
 
         if (Regex.IsMatch(value, ".{2,}~\\d", RegexOptions.CultureInvariant))
         {
-            return "实例名称不能包含这一特殊格式。";
+            return T("resource_detail.modpack.validation.short_name_pattern");
         }
 
         if (Directory.Exists(versionsDirectory) && Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly)
                 .Select(Path.GetFileName)
                 .Any(name => string.Equals(name, value, StringComparison.OrdinalIgnoreCase)))
         {
-            return "不可与现有实例重名。";
+            return T("resource_detail.modpack.validation.duplicate");
         }
 
         return null;
@@ -1340,8 +1348,8 @@ internal sealed partial class FrontendShellViewModel
 
         RefreshLaunchState();
         ReloadDownloadComposition();
-        AddActivity("整合包安装完成", $"{result.InstanceName} • {result.TargetDirectory}");
-        AvaloniaHintBus.Show($"{result.InstanceName} 安装完成", AvaloniaHintTheme.Success);
+        AddActivity(T("resource_detail.modpack.activities.install_completed"), T("resource_detail.modpack.messages.install_completed", ("instance_name", result.InstanceName), ("target_directory", result.TargetDirectory)));
+        AvaloniaHintBus.Show(T("resource_detail.modpack.hints.install_completed", ("instance_name", result.InstanceName)), AvaloniaHintTheme.Success);
     }
 
     private string ResolveCommunityProjectReleaseExtension(FrontendCommunityProjectReleaseEntry entry)
@@ -1499,7 +1507,7 @@ internal sealed partial class FrontendShellViewModel
         FrontendCommunityProjectReleaseEntry release,
         (bool GroupByDrop, bool FoldOld) versionGrouping)
     {
-        var versions = release.GameVersions.Count == 0 ? ["其他"] : release.GameVersions;
+        var versions = release.GameVersions.Count == 0 ? [T("resource_detail.values.other")] : release.GameVersions;
         var loaders = release.Loaders.Count == 0 ? [string.Empty] : release.Loaders;
 
         var matchesVersion = string.IsNullOrWhiteSpace(_selectedCommunityProjectVersionFilter)
@@ -1526,17 +1534,17 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string GetCommunityProjectDependencyGroupTitle(FrontendCommunityProjectDependencyKind kind)
+    private string GetCommunityProjectDependencyGroupTitle(FrontendCommunityProjectDependencyKind kind)
     {
         return kind switch
         {
-            FrontendCommunityProjectDependencyKind.Required => "必需依赖",
-            FrontendCommunityProjectDependencyKind.Tool => "工具依赖",
-            FrontendCommunityProjectDependencyKind.Include => "内含依赖",
-            FrontendCommunityProjectDependencyKind.Optional => "可选依赖",
-            FrontendCommunityProjectDependencyKind.Embedded => "已嵌入依赖",
-            FrontendCommunityProjectDependencyKind.Incompatible => "不兼容项目",
-            _ => "其他依赖"
+            FrontendCommunityProjectDependencyKind.Required => T("resource_detail.dependencies.groups.required"),
+            FrontendCommunityProjectDependencyKind.Tool => T("resource_detail.dependencies.groups.tool"),
+            FrontendCommunityProjectDependencyKind.Include => T("resource_detail.dependencies.groups.included"),
+            FrontendCommunityProjectDependencyKind.Optional => T("resource_detail.dependencies.groups.optional"),
+            FrontendCommunityProjectDependencyKind.Embedded => T("resource_detail.dependencies.groups.embedded"),
+            FrontendCommunityProjectDependencyKind.Incompatible => T("resource_detail.dependencies.groups.incompatible"),
+            _ => T("resource_detail.dependencies.groups.other")
         };
     }
 
@@ -1834,11 +1842,11 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             await _shellActionService.SetClipboardTextAsync(text);
-            AddActivity(title, "已复制到剪贴板。");
+            AddActivity(title, T("resource_detail.copy.messages.completed"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"{title} 失败", ex.Message);
+            AddFailureActivity(T("resource_detail.copy.messages.failed", ("title", title)), ex.Message);
         }
     }
 
@@ -1875,7 +1883,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private static JsonArray ParseCommunityProjectFavoriteTargets(string raw)
+    private JsonArray ParseCommunityProjectFavoriteTargets(string raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
         {
@@ -1897,7 +1905,7 @@ internal sealed partial class FrontendShellViewModel
                 [
                     new JsonObject
                     {
-                        ["Name"] = "默认收藏夹",
+                        ["Name"] = T("download.favorites.targets.default_name"),
                         ["Id"] = "default",
                         ["Favs"] = new JsonArray(rootArray.Select(node => node?.DeepClone()).ToArray()),
                         ["Notes"] = new JsonObject()
@@ -1913,7 +1921,7 @@ internal sealed partial class FrontendShellViewModel
         return [];
     }
 
-    private static JsonObject EnsureCommunityProjectFavoriteTarget(JsonArray root)
+    private JsonObject EnsureCommunityProjectFavoriteTarget(JsonArray root)
     {
         var existing = root.OfType<JsonObject>().FirstOrDefault();
         if (existing is not null)
@@ -1923,7 +1931,7 @@ internal sealed partial class FrontendShellViewModel
 
         var created = new JsonObject
         {
-            ["Name"] = "默认收藏夹",
+            ["Name"] = T("download.favorites.targets.default_name"),
             ["Id"] = "default",
             ["Favs"] = new JsonArray(),
             ["Notes"] = new JsonObject()
@@ -1980,13 +1988,13 @@ internal sealed partial class FrontendShellViewModel
         return $"https://www.mcmod.cn/s?key={Uri.EscapeDataString(title)}";
     }
 
-    private static int GetCommunityProjectVersionSortPriority(string value)
+    private int GetCommunityProjectVersionSortPriority(string value)
     {
         return value switch
         {
-            "其他" => 0,
-            "远古版" => 1,
-            "快照版" => 2,
+            var other when string.Equals(other, T("resource_detail.values.other"), StringComparison.Ordinal) => 0,
+            var legacy when string.Equals(legacy, T("resource_detail.versions.legacy"), StringComparison.Ordinal) => 1,
+            var snapshot when string.Equals(snapshot, T("resource_detail.versions.snapshot"), StringComparison.Ordinal) => 2,
             _ => 3
         };
     }
@@ -2023,33 +2031,33 @@ internal sealed partial class FrontendShellViewModel
             : string.Empty;
     }
 
-    private static string GetGroupedCommunityProjectVersionName(string? version, bool groupByDrop, bool foldOld)
+    private string GetGroupedCommunityProjectVersionName(string? version, bool groupByDrop, bool foldOld)
     {
         if (string.IsNullOrWhiteSpace(version))
         {
-            return "其他";
+            return T("resource_detail.values.other");
         }
 
         var trimmed = version.Trim();
         if (trimmed.Contains('w', StringComparison.OrdinalIgnoreCase))
         {
-            return "快照版";
+            return T("resource_detail.versions.snapshot");
         }
 
         if (!IsCommunityProjectVersionFormat(trimmed))
         {
-            return "其他";
+            return T("resource_detail.values.other");
         }
 
         var drop = GetCommunityProjectVersionDrop(trimmed);
         if (drop <= 0)
         {
-            return "其他";
+            return T("resource_detail.values.other");
         }
 
         if (foldOld && drop < 120)
         {
-            return "远古版";
+            return T("resource_detail.versions.legacy");
         }
 
         if (groupByDrop)
@@ -2254,12 +2262,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowCommunityProjectContent));
     }
 
-    private static string FormatCompactCount(int value)
+    private string FormatCompactCount(int value)
     {
         return value switch
         {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
-            >= 10_000 => $"{value / 10_000d:0.#}万",
+            >= 100_000_000 => T("resource_detail.counts.hundred_million", ("value", $"{value / 100_000_000d:0.#}")),
+            >= 10_000 => T("resource_detail.counts.ten_thousand", ("value", $"{value / 10_000d:0.#}")),
             _ => value.ToString()
         };
     }

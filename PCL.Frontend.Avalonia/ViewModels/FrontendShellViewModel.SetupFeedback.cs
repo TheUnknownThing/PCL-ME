@@ -14,9 +14,9 @@ internal sealed partial class FrontendShellViewModel
         {
             ReplaceItems(FeedbackSections,
             [
-                CreateFeedbackSection("正在获取", true,
+                CreateFeedbackSection(SetupText.Feedback.LoadingSectionTitle, true,
                 [
-                    CreateSimpleEntry("正在同步 GitHub 反馈列表", "首次打开反馈页时会从仓库 Issue 列表加载真实反馈状态。")
+                    CreateSimpleEntry(SetupText.Feedback.LoadingEntryTitle, SetupText.Feedback.LoadingEntrySummary)
                 ])
             ]);
         }
@@ -30,13 +30,39 @@ internal sealed partial class FrontendShellViewModel
             FeedbackSections,
             snapshot.Sections.Select(section =>
                 CreateFeedbackSection(
-                    section.Title,
+                    LocalizeFeedbackSectionTitle(section.Key),
                     section.DefaultExpanded,
                     section.Entries.Select(entry =>
                         CreateSimpleEntry(
                             entry.Title,
                             entry.Summary,
-                            CreateOpenTargetCommand($"查看反馈: #{entry.Number}", entry.Url, entry.Url)))
+                            CreateOpenTargetCommand(
+                                _i18n.T(
+                                    "setup.feedback.actions.open_issue",
+                                    new Dictionary<string, object?>(StringComparer.Ordinal)
+                                    {
+                                        ["number"] = entry.Number
+                                    }),
+                                entry.Url,
+                                entry.Url)))
                         .ToArray())));
+    }
+
+    private string LocalizeFeedbackSectionTitle(string key)
+    {
+        return key switch
+        {
+            "processing" => _i18n.T("setup.feedback.sections.processing"),
+            "waiting-process" => _i18n.T("setup.feedback.sections.waiting_process"),
+            "wait" => _i18n.T("setup.feedback.sections.waiting"),
+            "pause" => _i18n.T("setup.feedback.sections.paused"),
+            "upnext" => _i18n.T("setup.feedback.sections.up_next"),
+            "completed" => _i18n.T("setup.feedback.sections.completed"),
+            "decline" => _i18n.T("setup.feedback.sections.declined"),
+            "ignored" => _i18n.T("setup.feedback.sections.ignored"),
+            "duplicate" => _i18n.T("setup.feedback.sections.duplicate"),
+            "other" => _i18n.T("setup.feedback.sections.other"),
+            _ => key
+        };
     }
 }

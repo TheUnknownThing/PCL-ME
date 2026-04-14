@@ -1157,6 +1157,13 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     private Bitmap? _icon;
     private bool _isSelected;
     private bool _isEnabled;
+    private readonly string _infoToolTip;
+    private readonly string _websiteToolTip;
+    private readonly string _openToolTip;
+    private readonly string _enableToolTip;
+    private readonly string _disableToolTip;
+    private readonly string _deleteToolTip;
+    private readonly string _disabledTagText;
 
     public InstanceResourceEntryViewModel(
         Bitmap? icon,
@@ -1176,7 +1183,14 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ActionCommand? websiteCommand = null,
         ActionCommand? openCommand = null,
         ActionCommand? toggleCommand = null,
-        ActionCommand? deleteCommand = null)
+        ActionCommand? deleteCommand = null,
+        string infoToolTip = "详情",
+        string websiteToolTip = "打开主页",
+        string openToolTip = "打开文件位置",
+        string enableToolTip = "启用",
+        string disableToolTip = "禁用",
+        string deleteToolTip = "删除",
+        string disabledTagText = "已禁用")
     {
         _icon = icon;
         Title = title;
@@ -1197,6 +1211,13 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         OpenCommand = openCommand ?? actionCommand;
         ToggleCommand = toggleCommand;
         DeleteCommand = deleteCommand;
+        _infoToolTip = infoToolTip;
+        _websiteToolTip = websiteToolTip;
+        _openToolTip = openToolTip;
+        _enableToolTip = enableToolTip;
+        _disableToolTip = disableToolTip;
+        _deleteToolTip = deleteToolTip;
+        _disabledTagText = disabledTagText;
     }
 
     public Bitmap? Icon
@@ -1273,11 +1294,19 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ? FrontendIconCatalog.DisableCircle.Scale
         : FrontendIconCatalog.EnableCircle.Scale;
 
-    public string ToggleToolTip => IsEnabledState ? "禁用" : "启用";
+    public string ToggleToolTip => IsEnabledState ? _disableToolTip : _enableToolTip;
 
     public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
 
     public double DeleteIconScale => FrontendIconCatalog.DeleteOutline.Scale;
+
+    public string InfoToolTip => _infoToolTip;
+
+    public string WebsiteToolTip => _websiteToolTip;
+
+    public string OpenToolTip => _openToolTip;
+
+    public string DeleteToolTip => _deleteToolTip;
 
     public IReadOnlyList<string> Tags
     {
@@ -1294,7 +1323,7 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 
             if (HasToggleAction && !IsEnabledState)
             {
-                tags.Add("已禁用");
+                tags.Add(_disabledTagText);
             }
 
             return tags;
@@ -1397,7 +1426,9 @@ internal sealed class JavaRuntimeEntryViewModel(
     ActionCommand selectCommand,
     ActionCommand openCommand,
     ActionCommand infoCommand,
-    ActionCommand toggleEnabledCommand) : ViewModelBase
+    ActionCommand toggleEnabledCommand,
+    string enableText = "Enable",
+    string disableText = "Disable") : ViewModelBase
 {
     private bool _isSelected;
     private bool _isEnabled = isEnabled;
@@ -1417,6 +1448,10 @@ internal sealed class JavaRuntimeEntryViewModel(
     public ActionCommand InfoCommand { get; } = infoCommand;
 
     public ActionCommand ToggleEnabledCommand { get; } = toggleEnabledCommand;
+
+    public string EnableText { get; } = enableText;
+
+    public string DisableText { get; } = disableText;
 
     public bool IsSelected
     {
@@ -1438,7 +1473,7 @@ internal sealed class JavaRuntimeEntryViewModel(
         }
     }
 
-    public string ToggleButtonText => IsEnabled ? "禁用" : "启用";
+    public string ToggleButtonText => IsEnabled ? DisableText : EnableText;
 
     public double TitleOpacity => IsEnabled ? 1.0 : 0.48;
 

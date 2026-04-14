@@ -109,25 +109,25 @@
                 Margin="0,0,10,0"
                 ColorType="Highlight"
                 Command="{Binding RefreshGameLogCommand}"
-                Text="刷新" />
+                Text="{Binding GameLogRefreshButtonText}" />
             <controls:PclButton
                 Width="92"
                 Height="35"
                 Margin="0,0,10,0"
                 Command="{Binding ExportLogCommand}"
-                Text="导出日志" />
+                Text="{Binding GameLogExportButtonText}" />
             <controls:PclButton
                 Width="120"
                 Height="35"
                 Margin="0,0,10,0"
                 Command="{Binding OpenLogDirectoryCommand}"
-                Text="打开日志目录" />
+                Text="{Binding GameLogOpenDirectoryButtonText}" />
             <controls:PclButton
                 Width="108"
                 Height="35"
                 Command="{Binding ClearGameLogCommand}"
                 ColorType="Red"
-                Text="清空缓存" />
+                Text="{Binding GameLogClearCacheButtonText}" />
           </WrapPanel>
 
           <Grid ColumnDefinitions="*,*">
@@ -138,7 +138,7 @@
                 BorderThickness="1"
                 CornerRadius="4">
               <StackPanel Spacing="4">
-                <TextBlock Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" FontSize="11.5" Text="实时输出行数" />
+                <TextBlock Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" FontSize="11.5" Text="{Binding GameLogLiveLineCountLabel}" />
                 <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="18" Text="{Binding GameLogLiveLineCount}" />
               </StackPanel>
             </Border>
@@ -151,7 +151,7 @@
                 BorderThickness="1"
                 CornerRadius="4">
               <StackPanel Spacing="4">
-                <TextBlock Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" FontSize="11.5" Text="最近日志文件" />
+                <TextBlock Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" FontSize="11.5" Text="{Binding GameLogRecentFilesLabel}" />
                 <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="18" Text="{Binding GameLogRecentFileCount}" />
                 <TextBlock Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" FontSize="11" Text="{Binding GameLogLatestUpdateLabel}" />
               </StackPanel>
@@ -159,7 +159,7 @@
           </Grid>
 
           <StackPanel IsVisible="{Binding ShowGameLogLiveOutput}" Spacing="8">
-            <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="当前会话输出" />
+            <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="{Binding GameLogCurrentSessionOutputTitle}" />
             <Border
                 x:Name="LiveLogSurface"
                 Classes="live-log-surface">
@@ -183,7 +183,7 @@
           </StackPanel>
 
           <StackPanel IsVisible="{Binding HasGameLogFiles}" Spacing="8">
-            <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="最近生成的日志文件" />
+            <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="{Binding GameLogRecentGeneratedFilesTitle}" />
             <ItemsControl ItemsSource="{Binding GameLogFileEntries}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -198,11 +198,11 @@
           </StackPanel>
 
           <StackPanel IsVisible="{Binding ShowGameLogEmptyState}" Spacing="8">
-            <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="还没有可展示的日志" />
+            <TextBlock Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Text="{Binding GameLogEmptyTitle}" />
             <TextBlock
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
-                Text="启动一次游戏、触发崩溃恢复，或者刷新日志目录后，这里就会出现实时输出和最近的日志文件。"
+                Text="{Binding GameLogEmptyDescription}"
                 TextWrapping="Wrap" />
           </StackPanel>
         </StackPanel>
@@ -433,7 +433,7 @@
                         VerticalAlignment="Top"
                         Foreground="{DynamicResource ColorBrush1}"
                         FontSize="13"
-                        Text="实例筛选：" />
+                        Text="{Binding CommunityProjectVersionFilterLabel}" />
                     <ItemsControl
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
@@ -462,7 +462,7 @@
                         VerticalAlignment="Top"
                         Foreground="{DynamicResource ColorBrush1}"
                         FontSize="13"
-                        Text="模组加载器筛选：" />
+                        Text="{Binding CommunityProjectLoaderFilterLabel}" />
                     <ItemsControl
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
@@ -489,7 +489,7 @@
 
             <controls:PclCard
                 Margin="0,0,0,15"
-                Header="推荐版本"
+                Header="{Binding CommunityProjectSuggestedReleaseTitle}"
                 IsVisible="{Binding ShowCommunityProjectInstallSuggestionCard}"
                 ContentMargin="20,18,20,18">
               <controls:PclCard.CardContent>
@@ -592,12 +592,12 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <controls:PclCard Margin="0,0,0,15" Header="还没有可展示的版本" IsVisible="{Binding HasNoCommunityProjectReleaseGroups}" ContentMargin="20,18,20,18">
+            <controls:PclCard Margin="0,0,0,15" Header="{Binding CommunityProjectNoReleasesTitle}" IsVisible="{Binding HasNoCommunityProjectReleaseGroups}" ContentMargin="20,18,20,18">
               <controls:PclCard.CardContent>
               <TextBlock
                     Foreground="{DynamicResource ColorBrush1}"
                     FontSize="13"
-                    Text="该工程暂时没有返回可展示的版本文件信息。"
+                    Text="{Binding CommunityProjectNoReleasesBody}"
                     TextWrapping="Wrap" />
               </controls:PclCard.CardContent>
             </controls:PclCard>
@@ -673,12 +673,12 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
-          <controls:PclCard Margin="0,0,0,15" Header="暂无详情内容" IsVisible="{Binding HasNoHelpDetailSections}" ContentMargin="20,18,20,18">
+          <controls:PclCard Margin="0,0,0,15" Header="{Binding HelpDetailEmptyTitle}" IsVisible="{Binding HasNoHelpDetailSections}" ContentMargin="20,18,20,18">
             <controls:PclCard.CardContent>
               <TextBlock
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13"
-                  Text="当前帮助条目没有可显示的详情内容。"
+                  Text="{Binding HelpDetailEmptyDescription}"
                   TextWrapping="Wrap" />
             </controls:PclCard.CardContent>
           </controls:PclCard>

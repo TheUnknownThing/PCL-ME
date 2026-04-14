@@ -190,7 +190,7 @@ internal sealed partial class FrontendShellViewModel
     private void ReloadSetupComposition(bool initializeAllSurfaces = true)
     {
         ApplySetupComposition(
-            FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths),
+            FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n),
             initializeAllSurfaces);
     }
 
@@ -656,7 +656,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void PersistUiToggle(string key, bool value)
+    private void PersistUiToggle(string key, string title, bool value)
     {
         if (_suppressSetupPersistence)
         {
@@ -665,7 +665,14 @@ internal sealed partial class FrontendShellViewModel
 
         _shellActionService.PersistLocalValue(key, value);
         ReloadSetupComposition(initializeAllSurfaces: false);
-        RefreshShell(value ? $"已隐藏 {key}。" : $"已恢复 {key}。");
+        RefreshShell(_i18n.T(
+            value
+                ? "setup.ui.hidden_features.reactions.hidden"
+                : "setup.ui.hidden_features.reactions.restored",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["title"] = title
+            }));
         RaiseUiVisibilityProperties();
     }
 

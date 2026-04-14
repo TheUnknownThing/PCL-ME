@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <controls:PclCard Header="实例信息" ContentMargin="18,40,18,16">
+  <controls:PclCard Header="{Binding InstanceOverviewInfoHeaderText}" ContentMargin="18,40,18,16">
     <controls:PclCard.CardContent>
       <ItemsControl ItemsSource="{Binding InstanceOverviewInfoEntries}" IsVisible="{Binding HasInstanceOverviewInfoEntries}">
         <ItemsControl.ItemTemplate>

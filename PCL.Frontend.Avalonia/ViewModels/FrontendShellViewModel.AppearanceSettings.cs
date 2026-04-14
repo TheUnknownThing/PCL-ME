@@ -5,24 +5,13 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public IReadOnlyList<string> DarkModeOptions { get; } =
-    [
-        "浅色",
-        "深色",
-        "跟随系统"
-    ];
+    public IReadOnlyList<string> DarkModeOptions => SetupText.Ui.DarkModeOptions;
 
-    public IReadOnlyList<string> ThemeColorOptions => FrontendAppearanceService.ThemeColorOptions;
+    public IReadOnlyList<string> ThemeColorOptions => SetupText.Ui.ThemeColorOptions;
 
-    public IReadOnlyList<string> FontOptions { get; } =
-    [
-        "默认字体",
-        "思源黑体",
-        "霞鹜文楷",
-        "JetBrains Mono"
-    ];
+    public IReadOnlyList<string> FontOptions => SetupText.Ui.FontOptions;
 
-    public IReadOnlyList<string> HomepagePresetOptions { get; } = HomepagePresetCatalog.Select(item => item.Title).ToArray();
+    public IReadOnlyList<string> HomepagePresetOptions => HomepagePresetCatalog.Select(item => item.Title).ToArray();
 
     public int SelectedDarkModeIndex
     {
@@ -87,7 +76,7 @@ internal sealed partial class FrontendShellViewModel
     public bool IsAnyCustomThemeColorEditorVisible =>
         IsLightCustomThemeColorEditorVisible || IsDarkCustomThemeColorEditorVisible;
 
-    public string CustomThemeColorInputHint => "支持 #RRGGBB，例如 #159E95";
+    public string CustomThemeColorInputHint => SetupText.Ui.CustomThemeHint;
 
     public string CustomLightThemeColorHex
     {

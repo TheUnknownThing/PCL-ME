@@ -2,357 +2,1400 @@ shell:
   navigation:
     pages:
       launch:
-        title: "啟動"
-        summary: "實例選擇、帳號準備與啟動狀態。"
+        title: 啟動
+        summary: 實例選擇、帳號準備與啟動狀態。
       download:
-        title: "下載"
-        summary: "安裝 Minecraft、載入器與社群資源。"
+        title: 下載
+        summary: 安裝 Minecraft、載入器與社群資源。
       setup:
-        title: "設定"
-        summary: "啟動器、Java 與遊戲相關設定。"
+        title: 設定
+        summary: 啟動器、Java 與遊戲相關設定。
       tools:
-        title: "工具"
-        summary: "說明內容與實驗功能。"
+        title: 工具
+        summary: 說明內容與實驗功能。
       instance_select:
-        title: "實例選擇"
-        summary: "選擇要啟動的實例。"
+        title: 實例選擇
+        summary: 選擇要啟動的實例。
       task_manager:
-        title: "任務管理"
-        summary: "查看下載與背景任務。"
+        title: 任務管理
+        summary: 查看下載與背景任務。
       instance_setup:
-        title: "實例設定"
-        summary: "查看實例詳情並管理資源。"
+        title: 實例設定
+        summary: 查看實例詳情並管理資源。
       comp_detail:
-        title: "資源詳情"
-        summary: "查看選中的社群資源詳情。"
+        title: 資源詳情
+        summary: 查看選中的社群資源詳情。
       help_detail:
-        title: "說明詳情"
-        summary: "閱讀目前的說明條目。"
+        title: 說明詳情
+        summary: 閱讀目前的說明條目。
       game_log:
-        title: "即時日誌"
-        summary: "查看啟動輸出與日誌。"
+        title: 即時日誌
+        summary: 查看啟動輸出與日誌。
       version_saves:
-        title: "存檔管理"
-        summary: "管理選中存檔及其備份。"
+        title: 存檔管理
+        summary: 管理選中存檔及其備份。
     subpages:
       download_install:
-        title: "自動安裝"
-        summary: "建立新實例並選擇安裝元件。"
+        title: 自動安裝
+        summary: 建立新實例並選擇安裝元件。
       download_mod:
-        title: "Mod"
-        summary: "瀏覽並安裝 Mod。"
+        title: Mod
+        summary: 瀏覽並安裝 Mod。
       download_pack:
-        title: "整合包"
-        summary: "瀏覽整合包資源。"
+        title: 整合包
+        summary: 瀏覽整合包資源。
       download_data_pack:
-        title: "資料包"
-        summary: "搜尋並安裝資料包。"
+        title: 資料包
+        summary: 搜尋並安裝資料包。
       download_resource_pack:
-        title: "資源包"
-        summary: "搜尋並安裝資源包。"
+        title: 資源包
+        summary: 搜尋並安裝資源包。
       download_shader:
-        title: "光影包"
-        summary: "搜尋並安裝光影包。"
+        title: 光影包
+        summary: 搜尋並安裝光影包。
       download_world:
-        title: "存檔"
-        summary: "匯入地圖與存檔壓縮包。"
+        title: 存檔
+        summary: 匯入地圖與存檔壓縮包。
       download_comp_favorites:
-        title: "收藏夾"
-        summary: "查看收藏的社群資源。"
+        title: 收藏夾
+        summary: 查看收藏的社群資源。
       download_client:
-        title: "Minecraft"
-        summary: "選擇要安裝的 Minecraft 版本。"
+        title: Minecraft
+        summary: 選擇要安裝的 Minecraft 版本。
       download_opti_fine:
-        title: "OptiFine"
-        summary: "為目前版本安裝 OptiFine。"
+        title: OptiFine
+        summary: 為目前版本安裝 OptiFine。
       download_forge:
-        title: "Forge"
-        summary: "為目前版本安裝 Forge。"
+        title: Forge
+        summary: 為目前版本安裝 Forge。
       download_neo_forge:
-        title: "NeoForge"
-        summary: "為目前版本安裝 NeoForge。"
+        title: NeoForge
+        summary: 為目前版本安裝 NeoForge。
       download_cleanroom:
-        title: "Cleanroom"
-        summary: "為目前版本安裝 Cleanroom。"
+        title: Cleanroom
+        summary: 為目前版本安裝 Cleanroom。
       download_fabric:
-        title: "Fabric"
-        summary: "為目前版本安裝 Fabric。"
+        title: Fabric
+        summary: 為目前版本安裝 Fabric。
       download_quilt:
-        title: "Quilt"
-        summary: "為目前版本安裝 Quilt。"
+        title: Quilt
+        summary: 為目前版本安裝 Quilt。
       download_lite_loader:
-        title: "LiteLoader"
-        summary: "為目前版本安裝 LiteLoader。"
+        title: LiteLoader
+        summary: 為目前版本安裝 LiteLoader。
       download_laby_mod:
-        title: "LabyMod"
-        summary: "為目前版本安裝 LabyMod。"
+        title: LabyMod
+        summary: 為目前版本安裝 LabyMod。
       download_legacy_fabric:
-        title: "Legacy Fabric"
-        summary: "為舊版本安裝 Legacy Fabric。"
+        title: Legacy Fabric
+        summary: 為舊版本安裝 Legacy Fabric。
       setup_launch:
-        title: "啟動"
-        summary: "調整啟動參數、視窗與執行行為。"
+        title: 啟動
+        summary: 調整啟動參數、視窗與執行行為。
       setup_u_i:
-        title: "介面"
-        summary: "調整主題、動畫與外觀。"
+        title: 介面
+        summary: 調整主題、動畫與外觀。
       setup_game_manage:
-        title: "遊戲管理"
-        summary: "控制實例目錄與檔案行為。"
+        title: 遊戲管理
+        summary: 控制實例目錄與檔案行為。
       setup_link:
-        title: "連結"
-        summary: "管理啟動器相關外部連結。"
+        title: 連結
+        summary: 管理啟動器相關外部連結。
       setup_about:
-        title: "關於"
-        summary: "查看版本與專案資訊。"
+        title: 關於
+        summary: 查看版本與專案資訊。
       setup_log:
-        title: "日誌"
-        summary: "設定日誌與診斷輸出。"
+        title: 日誌
+        summary: 設定日誌與診斷輸出。
       setup_feedback:
-        title: "回饋"
-        summary: "查看關聯的回饋與問題入口。"
+        title: 回饋
+        summary: 查看關聯的回饋與問題入口。
       setup_update:
-        title: "更新"
-        summary: "設定更新通道與檢查策略。"
+        title: 更新
+        summary: 設定更新通道與檢查策略。
       setup_java:
-        title: "Java"
-        summary: "管理 Java 執行環境與選擇規則。"
+        title: Java
+        summary: 管理 Java 執行環境與選擇規則。
       setup_launcher_misc:
-        title: "啟動器雜項"
-        summary: "調整零散的啟動器行為。"
+        title: 啟動器雜項
+        summary: 調整零散的啟動器行為。
       tools_launcher_help:
-        title: "說明"
-        summary: "瀏覽啟動器說明主題。"
+        title: 說明
+        summary: 瀏覽啟動器說明主題。
       tools_test:
-        title: "測試"
-        summary: "開啟實驗或診斷工具。"
+        title: 測試
+        summary: 開啟實驗或診斷工具。
       version_overall:
-        title: "概覽"
-        summary: "查看實例標識與基礎資訊。"
+        title: 概覽
+        summary: 查看實例標識與基礎資訊。
       version_setup:
-        title: "設定"
-        summary: "設定此實例的專屬配置。"
+        title: 設定
+        summary: 設定此實例的專屬配置。
       version_export:
-        title: "匯出"
-        summary: "匯出實例或製作可分發整合包。"
+        title: 匯出
+        summary: 匯出實例或製作可分發整合包。
       version_world:
-        title: "世界"
-        summary: "瀏覽此實例關聯的世界。"
+        title: 世界
+        summary: 瀏覽此實例關聯的世界。
       version_screenshot:
-        title: "截圖"
-        summary: "瀏覽截圖內容。"
+        title: 截圖
+        summary: 瀏覽截圖內容。
       version_mod:
-        title: "Mod"
-        summary: "管理已啟用的 Mod。"
+        title: Mod
+        summary: 管理已啟用的 Mod。
       version_mod_disabled:
-        title: "已停用 Mod"
-        summary: "查看目前已停用的 Mod。"
+        title: 已停用 Mod
+        summary: 查看目前已停用的 Mod。
       version_resource_pack:
-        title: "資源包"
-        summary: "管理已安裝的資源包。"
+        title: 資源包
+        summary: 管理已安裝的資源包。
       version_shader:
-        title: "光影包"
-        summary: "管理已安裝的光影包。"
+        title: 光影包
+        summary: 管理已安裝的光影包。
       version_schematic:
-        title: "投影"
-        summary: "管理投影與建築檔案。"
+        title: 投影
+        summary: 管理投影與建築檔案。
       version_install:
-        title: "修改"
-        summary: "調整實例版本與載入器元件。"
+        title: 修改
+        summary: 調整實例版本與載入器元件。
       version_server:
-        title: "伺服器"
-        summary: "管理已保存的伺服器入口。"
+        title: 伺服器
+        summary: 管理已保存的伺服器入口。
       version_saves_info:
-        title: "概覽"
-        summary: "查看選中存檔的中繼資料。"
+        title: 概覽
+        summary: 查看選中存檔的中繼資料。
       version_saves_backup:
-        title: "備份"
-        summary: "建立、匯入與還原存檔備份。"
+        title: 備份
+        summary: 建立、匯入與還原存檔備份。
       version_saves_datapack:
-        title: "資料包"
-        summary: "管理選中存檔中的資料包。"
+        title: 資料包
+        summary: 管理選中存檔中的資料包。
     sidebar_groups:
-      download: "下載工作區"
-      setup: "設定工作區"
-      tools: "工具工作區"
-      instance_setup: "實例工作區"
-      version_saves: "存檔工作區"
+      download: 下載工作區
+      setup: 設定工作區
+      tools: 工具工作區
+      instance_setup: 實例工作區
+      version_saves: 存檔工作區
     sidebar_section_groups:
-      community_resources: "社群資源"
-      installers: "安裝器"
-      game: "遊戲"
-      launcher: "啟動器"
-      about: "關於"
-      tools: "工具"
-      instance: "實例"
-      content: "內容"
-      resources: "資源"
-      other: "其他"
-      saves: "存檔"
+      community_resources: 社群資源
+      installers: 安裝器
+      game: 遊戲
+      launcher: 啟動器
+      about: 關於
+      tools: 工具
+      instance: 實例
+      content: 內容
+      resources: 資源
+      other: 其他
+      saves: 存檔
     utilities:
-      back: "返回"
-      back_target: "返回到 {target}"
-      task_manager: "任務管理"
-      game_log: "即時日誌"
+      back: 返回
+      back_target: 返回到 {target}
+      task_manager: 任務管理
+      game_log: 即時日誌
     accessories:
-      refresh: "重新整理"
-      reset: "初始化設定"
+      refresh: 重新整理
+      reset: 初始化設定
   page_content:
     eyebrows:
-      top_level: "頂層路由"
-      secondary: "次級路由"
-      detail: "詳情路由"
-      utility: "工具路由"
+      top_level: 頂層路由
+      secondary: 次級路由
+      detail: 詳情路由
+      utility: 工具路由
     values:
-      none: "無"
+      none: 無
     facts:
-      current_page: "目前頁面"
-      current_section: "目前分區"
-      prompt_count: "提示數量"
-      active_prompt_lane: "目前提示分組"
-      page_kind: "頁面類型"
-      back_target: "返回目標"
+      current_page: 目前頁面
+      current_section: 目前分區
+      prompt_count: 提示數量
+      active_prompt_lane: 目前提示分組
+      page_kind: 頁面類型
+      back_target: 返回目標
       launch:
-        identity: "身份"
-        java: "Java"
-        resolution: "解析度"
-        classpath_count: "Classpath 項目"
-        java_warning: "Java 警告"
+        identity: 身份
+        java: Java
+        resolution: 解析度
+        classpath_count: Classpath 項目
+        java_warning: Java 警告
       crash:
-        archive_name: "建議壓縮包"
-        source_file_count: "來源檔案數量"
+        archive_name: 建議壓縮包
+        source_file_count: 來源檔案數量
     lines:
-      active_prompt_lane: "目前提示面板聚焦在 {lane} 分組。"
+      active_prompt_lane: 目前提示面板聚焦在 {lane} 分組。
       launch:
-        runtime: "目前執行環境使用 {java}，解析度為 {resolution}。"
-        last_completion: "最近一次啟動通知：{message}"
+        runtime: 目前執行環境使用 {java}，解析度為 {resolution}。
+        last_completion: 最近一次啟動通知：{message}
       crash:
-        export: "目前崩潰匯出計畫會生成 {archive_name}，共收集 {file_count} 個檔案。"
+        export: 目前崩潰匯出計畫會生成 {archive_name}，共收集 {file_count} 個檔案。
     sections:
       overview:
-        eyebrow: "概覽"
+        eyebrow: 概覽
   prompts:
     lanes:
       startup:
-        title: "啟動"
-        summary: "啟動器引導提示與授權提醒。"
+        title: 啟動
+        summary: 啟動器引導提示與授權提醒。
       launch:
-        title: "啟動前"
-        summary: "啟動前檢查與執行期提示。"
+        title: 啟動前
+        summary: 啟動前檢查與執行期提示。
       crash:
-        title: "崩潰"
-        summary: "崩潰恢復操作與診斷資訊。"
+        title: 崩潰
+        summary: 崩潰恢復操作與診斷資訊。
     inbox:
-      title: "{lane} 提示"
-      empty: "{lane} 分組目前沒有待處理提示。"
+      title: '{lane} 提示'
+      empty: '{lane} 分組目前沒有待處理提示。'
+  game_log:
+    actions:
+      clear_cache: 清空快取
+      export: 匯出日誌
+      open_directory: 打開日誌資料夾
+      open_file: 打開日誌檔案：{name}
+      refresh: 重新整理日誌
+    clear_cache:
+      completed: 已清空目前工作階段日誌快取。
+    empty:
+      description: 啟動遊戲後，這裡會顯示啟動器日誌、產生的啟動腳本以及原始啟動輸出。
+      title: 還沒有日誌
+    export:
+      empty_directory: 目前日誌目錄中沒有可匯出的日誌檔案。
+      export_all_activity: 匯出全部日誌
+      missing_directory: 日誌目錄不可用。
+    labels:
+      current_session_output: 目前工作階段輸出
+      live_line_count: 即時行數
+      recent_files: 最近檔案
+      recent_generated_files: 最近產生的檔案
+    latest_update:
+      none: 尚未發現日誌檔案
+    live_output:
+      waiting: 正在等待目前工作階段輸出...
+    open_directory_failure: 打開日誌資料夾失敗
+    route:
+      description: 查看目前工作階段即時輸出，以及最近產生的啟動器日誌檔案。
+      facts:
+        latest_update: 最新更新
+        live_lines: 即時行數
+        recent_files: 最近檔案
+  help_detail:
+    actions:
+      copy_text: 複製文字
+      copy_text_completed: 已複製文字到剪貼簿。
+      download_file: 下載檔案
+      generic: 說明操作
+      help_item: 說明條目
+      inline_default_info: 操作資訊
+      open_file: 打開檔案
+      open_help: 打開說明：{name}
+      open_web: 打開網頁
+      view_image: 查看圖片
+    activities:
+      open: 打開說明：{title}
+    empty:
+      description: 選擇一個說明條目以查看內容、來源和可用操作。
+      title: 未選擇說明條目
+    failures:
+      action: '{title} 失敗'
+      download_target_missing: 下載後的目標檔案不存在。
+      entry_not_found: 未找到說明條目：{reference}
+      invalid_download_address: 下載位址無效。
+      missing_action_target: 該操作缺少目標。
+      missing_copy_text: 沒有可複製的文字。
+      missing_target: 目標不可用。
+    generated:
+      example_button: 示例按鈕：{title}
+      example_button_with_summary: 示例按鈕：{summary}
+      example_button_with_title_and_summary: 示例按鈕：{title}（{summary}）
+      hint: 提示：{text}
+    popup:
+      default_button: 確定
+      missing_content: 該彈窗沒有可顯示的內容。
+    route:
+      description: 說明詳情會展示解析後的內容、內嵌操作以及可追溯的來源資訊。
+      facts:
+        actions: 操作數
+        lines: 段落數
+        source: 來源
+    sections:
+      card_default_title: 說明內容
+      missing_content:
+        body: 該說明條目不包含可讀取的內容。
+        title: 無法載入內容
+      no_cards:
+        body: 未找到結構化的說明卡片。
+      parse_failed:
+        body: 無法正確解析說明文件。
+        title: 解析失敗
+      source_line: 來源：{source}
+      supplement:
+        title: 補充說明
+    source_unresolved: 來源未解析
+    summary_loaded: 下方顯示了解析後的說明內容與操作。
+    title_default: 說明詳情
+  instance_select:
+    activities:
+      refresh_failure: 重新整理實例失敗
+      switch_directory: 切換實例目錄
+      switch_instance: 切換啟動實例
+      switch_instance_detail: 目前啟動實例已切換為 {name}。
+    delete:
+      activity: 刪除實例
+      cancelled: 已取消刪除實例。
+      confirm_action: 刪除
+      confirm_message: 確定要刪除實例 {name} 嗎？啟動器會優先嘗試將其移入回收站。
+      confirm_title: 刪除這個實例？
+      failure: 刪除實例失敗
+      moved_to_trash: 已將實例 {name} 移入回收站：{path}
+      permanently_deleted: 已永久刪除實例 {name}。
+    detail:
+      last_modified: '{path} • 最後修改於 {time}'
+    empty:
+      download: 下載實例
+      no_match_description: 沒有找到與「{query}」相符的實例，請嘗試更換關鍵字或清空搜尋。
+      no_match_title: 無相符實例
+      none_description: 未找到任何遊戲實例，請先下載一個實例，或透過左側列表新增既有資料夾。
+      none_title: 無可用實例
+      open_download_activity: 打開下載頁
+    entry:
+      current: 目前
+      delete_tooltip: 刪除實例
+      favorite_tooltip: 切換收藏狀態
+      open_folder_tooltip: 打開實例資料夾
+      open_instance_directory: 打開實例資料夾
+      open_instance_directory_failure: 打開實例資料夾失敗
+      open_settings_tooltip: 打開設定
+      set_as_launch: 設為啟動目標
+    favorite:
+      added_activity: 已加入收藏
+      failure: 更新收藏失敗
+      removed_activity: 已取消收藏
+    folder:
+      current_activity: 目前實例目錄
+      open_tooltip: 打開資料夾
+      remove_tooltip: 移除資料夾
+      switched: 已切換實例目錄到 {directory}。
+    folder_remove:
+      activity: 移除實例目錄
+      cancelled: 已取消移除實例目錄。
+      confirm_action: 移除
+      confirm_message: 要從列表中移除此資料夾嗎？{newline}{newline}{path}
+      confirm_title: 移除此資料夾？
+      failure: 移除實例目錄失敗
+      not_saved: 該資料夾未被儲存，無法從列表中移除。
+      removed: 已從資料夾列表中移除 {path}。
+      removed_and_switched: 已移除 {removed}，並切換到 {target}。
+      still_active: '{path} 仍是目前正在使用的實例目錄。'
+    groups:
+      api_installable: API 可安裝
+      error: 異常實例
+      favorites: 收藏
+      header: '{title}（{count}）'
+      hidden: 隱藏
+      loaders:
+        cleanroom: Cleanroom
+        fabric: Fabric
+        forge: Forge
+        labymod: LabyMod
+        legacy_fabric: Legacy Fabric
+        liteloader: LiteLoader
+        neoforge: NeoForge
+        quilt: Quilt
+      rarely_used: 較少使用
+      regular: 常規
+    left:
+      folders: 資料夾
+      shortcuts: 快捷操作
+    navigation:
+      launch: 已切換啟動實例到 {name} 並返回啟動頁。
+      overview: 已打開實例 {name} 的概覽頁面。
+    open_folder:
+      activity: 打開資料夾
+      failure: 打開資料夾失敗
+      missing_path: 資料夾路徑不可用。
+      not_found: 未找到資料夾：{path}
+    results:
+      count: 已顯示 {count} 個實例
+      filtered_none: 目前篩選條件沒有匹配到任何實例。
+      none: 目前啟動目錄下還沒有可用實例。
+    route:
+      description: 查看目前啟動目錄中的實例列表，並切換啟動目標。
+      facts:
+        launch_directory: 啟動目錄
+        result_count: 結果數量
+        selected_instance: 已選實例
+      values:
+        none_selected: 未選擇
+        unresolved: 未解析
+    search:
+      tooltip: 依名稱、版本或標籤搜尋實例
+      watermark: 搜尋實例
+    shortcuts:
+      add_folder:
+        added_and_switched: 已新增資料夾並切換到 {path}。
+        cancelled: 已取消新增資料夾。
+        description: 將既有實例資料夾加入啟動器列表中。
+        failure: 新增資料夾失敗
+        pick_title: 選擇實例資料夾
+        switched: 已切換到 {path}。
+        title: 新增既有資料夾
+      import_pack:
+        cancelled: 已取消匯入整合包。
+        description: 將整合包壓縮檔匯入到目前啟動器目錄。
+        failure: 匯入整合包失敗
+        name_failure: 解析實例名稱失敗
+        no_name: 無法從所選壓縮檔中判定實例名稱。
+        pick_filter: 整合包壓縮檔
+        pick_title: 選擇整合包壓縮檔
+        task_queued: 已加入任務佇列：{task}
+        title: 匯入整合包
+      trash:
+        description: 打開系統回收站或垃圾桶。
+        title: 回收站 / 垃圾桶
+    subtitle:
+      unknown_version: 未知版本
+    tags:
+      api: API
+      broken: 異常
+      favorite: 收藏
+      hidden: 隱藏
+      rarely_used: 較少使用
+    tasks:
+      install_modpack: 整合包安裝：{name}
+  task_manager:
+    actions:
+      clear_finished: 清除已完成任務
+    activity:
+      canceled: 已取消，持續 {duration}
+      failed: 已失敗，持續 {duration}
+      running: 已執行 {duration} • 最近更新於 {recent}
+      success: 已完成，用時 {duration}
+      waiting: 已等待 {duration}
+    duration:
+      hours_minutes: '{hours} 小時 {minutes} 分鐘'
+      minutes_seconds: '{minutes} 分 {seconds} 秒'
+      seconds: '{seconds} 秒'
+    empty:
+      description: 目前沒有正在進行的背景任務。
+      title: 目前沒有背景任務
+    entries:
+      children: 子任務 {count} 項
+    labels:
+      current_speed: 目前速度：{speed}
+      install_progress: 安裝進度
+      remaining_files: 剩餘檔案：{count}
+    left:
+      download_speed: 下載速度
+      overall_progress: 整體進度
+      remaining_files: 剩餘檔案
+    placeholders:
+      no_progress: 無進度
+      waiting_state_message: 正在等待執行
+    recent:
+      just_now: 剛剛
+      minutes_ago: '{minutes} 分鐘前'
+      seconds_ago: '{seconds} 秒前'
+    route:
+      description: 查看背景任務的等待、執行、完成和失敗狀態。
+      facts:
+        failed: 失敗
+        finished: 已結束
+        running: 執行中
+        waiting: 等待中
+    stage:
+      canceled: 已取消 • {duration}
+      failed: 已失敗 • {duration}
+      running: 執行中 • {duration}
+      success: 已完成 • {duration}
+      waiting: 等待中
+    states:
+      canceled: 已取消
+      failed: 已失敗
+      running: 執行中
+      success: 已完成
+      waiting: 等待中
+    summary:
+      active: 執行中 {running} 項，等待中 {waiting} 項
+      none: 目前沒有背景任務
+  tools:
+    common:
+      confirm: 確定
+      failure_title: '{title} 失敗'
+    help:
+      default_group: 常規
+      search:
+        empty_header: 無搜尋結果
+        no_results: 目前關鍵字沒有匹配到任何說明條目。
+        results_header: 搜尋結果
+        watermark: 搜尋說明條目
+    test:
+      achievement:
+        block_id: 物品名稱（ID）
+        first_line: 第一行
+        invalid_content: 成就圖像內容不完整。
+        output_missing: 未產生成就圖像。
+        preview: 預覽成就圖像
+        preview_activity: 預覽成就圖像
+        preview_hidden: 預覽已隱藏。
+        save: 儲存圖片
+        save_activity: 儲存成就圖像
+        save_failure: 儲存成就圖像失敗
+        second_line: 第二行
+        title: 成就名稱
+      cards:
+        achievement: 自訂成就圖片產生器（僅支援英文）
+        custom_download: 下載自訂檔案
+        head: 皮膚頭像產生器
+        official_skin: 下載正版玩家皮膚
+        server_query: 伺服器查詢
+        toolbox: 百寶箱
+      custom_download:
+        address: 下載位址
+        description: 使用 PCL 的高速多執行緒下載引擎下載任意檔案。部分網站可能返回 403，無法正常下載。
+        file_name: 檔名
+        invalid_address: 下載位址無效。
+        missing_folder: 請先選擇儲存資料夾。
+        open_folder: 打開資料夾
+        open_folder_activity: 打開下載資料夾
+        open_folder_failure: 打開下載資料夾失敗
+        pick_folder_activity: 選擇下載資料夾
+        pick_folder_cancelled: 已取消選擇下載資料夾。
+        pick_folder_failure: 選擇下載資料夾失敗
+        pick_folder_title: 選擇下載資料夾
+        save_to: 儲存到
+        select: 選擇
+        start: 開始下載
+        start_activity: 開始下載自訂檔案
+        start_failure: 開始下載自訂檔案失敗
+        user_agent: User-Agent
+      head:
+        no_skin_selected: 尚未選擇皮膚。
+        output_missing: 未產生頭像圖像。
+        pick_skin_activity: 選擇皮膚
+        pick_skin_cancelled: 已取消選擇皮膚。
+        pick_skin_failure: 選擇皮膚失敗
+        pick_skin_filter: 常用圖片檔案
+        pick_skin_title: 選擇皮膚圖片
+        preview: 頭像預覽
+        save: 儲存頭像
+        save_activity: 儲存頭像圖像
+        save_failure: 儲存頭像圖像失敗
+        select_skin: 選擇皮膚
+        size: 頭像大小
+      official_skin:
+        missing_player_name: 玩家名稱不能為空。
+        missing_skin_payload: 該玩家沒有可下載的皮膚資訊。
+        missing_skin_url: 該玩家沒有皮膚下載位址。
+        output_missing: 未下載到皮膚檔案。
+        player_name: 正版玩家名稱
+        player_not_found: 未找到該玩家。
+        save: 儲存皮膚
+        save_activity: 儲存正版皮膚
+        save_failure: 儲存正版皮膚失敗
+      refresh:
+        activity: 測試頁表單與工具按鈕已從目前啟動器設定重新載入。
+        title: 重新整理測試工具頁
+      server_query:
+        address_watermark: 伺服器位址或 host:port
+        empty_address: 伺服器位址為空，無法查詢。
+        error: 無法連線：{message}
+        loading: 查詢中...
+        navigation: 已切換到測試頁面並準備查詢 {address}。
+        no_result: 未回傳伺服器資訊。
+        open_activity: 打開伺服器查詢
+        query: 查詢
+        query_activity: 查詢 Minecraft 伺服器
+        query_failure: 查詢 Minecraft 伺服器失敗
+        result_title: Minecraft 伺服器
+        validation:
+          empty: 伺服器位址不能為空。
+          invalid_host: 無效的主機名稱。
+          invalid_ipv6: 無效的 IPv6 位址格式。
+          invalid_port: 無效的連接埠：{port}
+      toolbox:
+        actions:
+          clear_rubbish:
+            none_removed: 沒有偵測到需要清理的快取、日誌或崩潰報告。
+            removed: 已清理 {count} 個快取或日誌項目。
+            title: 清理遊戲垃圾
+            tooltip: 清理快取、日誌和崩潰報告。
+          crash_test:
+            title: 崩潰提示測試
+            tooltip: 觸發崩潰提示測試。
+          create_shortcut:
+            cancelled: 已取消建立快捷方式。
+            choice_info: 位置：{path}
+            choose_title: 選擇快捷方式位置
+            confirm: 建立
+            created_hint: 已在 {target} 建立快捷方式。
+            failure_title: 建立快捷方式失敗
+            location: '{title} 位置：{path}'
+            no_targets: 目前系統未提供可用的快捷方式目錄。
+            summary_warning: 該快捷方式不會自動移除，請在刪除或移動啟動器前手動移除。
+            targets:
+              desktop: 桌面
+              start_menu: 開始功能表
+            title: 建立快捷方式
+            tooltip: 建立啟動器快捷方式。
+            unknown_target: 未識別的快捷方式位置：{id}
+          daily_luck:
+            activity: 今日人品值：{value}
+            dialog_title: 今日人品 - {date}
+            high_message: 你今天的人品值是：{value}！{rating}
+            low_message: 你今天的人品值是：{value}... {rating}
+            ratings:
+              r0: （是百分制喔）
+              r10: 不會吧！
+              r30: 嗚...
+              r40: 勉強還行吧...
+              r60: 還行啦，還行啦
+              r90: 好評如潮！
+              r95: 差一點就到 100 了呢...
+              r100: 100！100！隱藏主題？等等，跨平台版大概沒有這個……
+            title: 今日人品
+            tooltip: 看看今天的人品。
+          launch_count:
+            dialog_title: 啟動次數
+            message: PCL 已經為你啟動了 {count} 次遊戲了。
+            title: 查看啟動計數
+            tooltip: 查看啟動器已啟動遊戲的次數。
+          memory_optimize:
+            cancelled: 已取消記憶體最佳化。
+            confirm_title: 確認記憶體最佳化？
+            continue: 繼續
+            prompts:
+              r0: 嗯……？
+              r2: 記憶體資源比較緊張，建議加裝記憶體，避免頻繁使用記憶體最佳化並對硬碟造成過大壓力。
+              r6: 建議在使用後靜置一分鐘，等待系統回應完畢。
+              r16: 目前記憶體比較充足，建議優先讓系統自動管理記憶體。
+              r32: 目前總記憶體充足，建議關閉不必要的程式，而不是嘗試使用記憶體最佳化。
+            title: 記憶體最佳化
+            tooltip: 嘗試釋放一部分系統記憶體。
+            unsupported_other: 目前平台暫不支援與標準實作一致的記憶體最佳化執行器。已保留標準確認彈窗行為，不再打開文字編輯器。
+            unsupported_windows: Avalonia 前端尚未接入與標準實作一致的 Windows 記憶體最佳化執行器。已保留標準確認彈窗行為，不再打開文字編輯器。
+        unsupported: 該百寶箱操作在 Avalonia 前端中暫未支援。
 startup:
   prompts:
     special_build:
-      title: "特殊構建"
+      title: 特殊構建
       debug:
-        message: "目前啟動器為偵錯構建，可能不穩定。可設定環境變數 {hint_env_var} 關閉此提醒，或開啟最新穩定版：{latest_release_url}"
+        message: 目前啟動器為偵錯構建，可能不穩定。可設定環境變數 {hint_env_var} 關閉此提醒，或開啟最新穩定版：{latest_release_url}
       ci:
-        message: "目前啟動器來自 CI 構建，可能並不完整。可設定環境變數 {hint_env_var} 關閉此提醒，或開啟最新穩定版：{latest_release_url}"
+        message: 目前啟動器來自 CI 構建，可能並不完整。可設定環境變數 {hint_env_var} 關閉此提醒，或開啟最新穩定版：{latest_release_url}
       actions:
-        continue: "繼續"
-        open_release_and_exit: "開啟發佈頁並退出"
+        continue: 繼續
+        open_release_and_exit: 開啟發佈頁並退出
     eula:
-      title: "授權協議"
-      message: "繼續之前需要閱讀並接受啟動器協議。參考位址：{eula_url}"
+      title: 授權協議
+      message: 繼續之前需要閱讀並接受啟動器協議。參考位址：{eula_url}
       actions:
-        accept: "接受"
-        reject: "拒絕並退出"
-        open: "開啟協議"
+        accept: 接受
+        reject: 拒絕並退出
+        open: 開啟協議
     environment_warning:
-      title: "環境警告"
-      message: "目前執行環境需要注意：\n{warnings}"
+      title: 環境警告
+      message: >-
+        目前執行環境需要注意：
+
+        {warnings}
       actions:
-        acknowledge: "我知道了"
+        acknowledge: 我知道了
 launch:
   notifications:
-    success: "{instance_name} 已成功啟動。"
-    abort_with_hint: "啟動已取消：{hint}"
-    script_export_canceled: "匯出啟動腳本已完成，啟動流程已中止。"
-    launch_canceled: "啟動已取消。"
-    none: ""
+    success: '{instance_name} 已成功啟動。'
+    abort_with_hint: 啟動已取消：{hint}
+    script_export_canceled: 匯出啟動腳本已完成，啟動流程已中止。
+    launch_canceled: 啟動已取消。
+    none: ''
   precheck:
     failures:
-      instance_path_reserved_chars: "實例路徑中不可包含 ! 或 ;（{path}）。"
-      instance_indie_path_reserved_chars: "獨立遊戲路徑中不可包含 ! 或 ;（{path}）。"
-      instance_not_selected: "目前未選擇實例。"
-      instance_has_error: "目前實例狀態異常：{detail}"
-      no_profile_selected: "請先選擇登入檔案後再啟動。"
-      microsoft_profile_required: "目前實例要求使用微軟檔案啟動。"
-      auth_profile_required: "目前實例要求使用外置登入檔案啟動。"
-      auth_server_mismatch: "目前外置登入檔案與實例要求的認證伺服器不一致。"
-      microsoft_or_auth_profile_required: "目前實例要求使用微軟檔案或符合認證伺服器的外置登入檔案啟動。"
-      unknown: "目前實例尚未滿足啟動條件。"
+      instance_path_reserved_chars: 實例路徑中不可包含 ! 或 ;（{path}）。
+      instance_indie_path_reserved_chars: 獨立遊戲路徑中不可包含 ! 或 ;（{path}）。
+      instance_not_selected: 目前未選擇實例。
+      instance_has_error: 目前實例狀態異常：{detail}
+      no_profile_selected: 請先選擇登入檔案後再啟動。
+      microsoft_profile_required: 目前實例要求使用微軟檔案啟動。
+      auth_profile_required: 目前實例要求使用外置登入檔案啟動。
+      auth_server_mismatch: 目前外置登入檔案與實例要求的認證伺服器不一致。
+      microsoft_or_auth_profile_required: 目前實例要求使用微軟檔案或符合認證伺服器的外置登入檔案啟動。
+      unknown: 目前實例尚未滿足啟動條件。
   prompts:
     non_ascii_path:
-      title: "非 ASCII 路徑警告"
-      message: "{instance_name} 目前使用包含非 ASCII 字元的路徑，部分 Java 執行環境或模組可能因此啟動失敗。"
+      title: 非 ASCII 路徑警告
+      message: '{instance_name} 目前使用包含非 ASCII 字元的路徑，部分 Java 執行環境或模組可能因此啟動失敗。'
       actions:
-        continue: "仍然繼續"
-        abort: "取消啟動"
-        disable: "不再提醒"
+        continue: 仍然繼續
+        abort: 取消啟動
+        disable: 不再提醒
     purchase:
       optional:
-        title: "建議綁定正版帳號"
-        message: "目前未選擇擁有 Minecraft 正版資格的微軟檔案。如果你已擁有正版，可以重新登入或前往購買：{purchase_url}"
+        title: 建議綁定正版帳號
+        message: 目前未選擇擁有 Minecraft 正版資格的微軟檔案。如果你已擁有正版，可以重新登入或前往購買：{purchase_url}
         actions:
-          buy: "開啟購買頁"
-          continue: "繼續"
+          buy: 開啟購買頁
+          continue: 繼續
       required:
-        title: "需要正版資格"
-        message: "目前功能要求使用擁有 Minecraft 正版資格的微軟檔案。"
+        title: 需要正版資格
+        message: 目前功能要求使用擁有 Minecraft 正版資格的微軟檔案。
         actions:
-          buy: "開啟購買頁"
-          demo: "以試玩模式啟動"
-          abort: "取消啟動"
+          buy: 開啟購買頁
+          demo: 以試玩模式啟動
+          abort: 取消啟動
     java_missing:
-      title: "缺少 Java 執行環境"
+      title: 缺少 Java 執行環境
       manual_java7_with_legacy_fixer:
-        message: "目前實例需要 Java 7，且還涉及舊版 Forge 相容處理。請先手動安裝對應的 Java 7 再啟動。"
+        message: 目前實例需要 Java 7，且還涉及舊版 Forge 相容處理。請先手動安裝對應的 Java 7 再啟動。
       manual_java7:
-        message: "目前實例需要 Java 7。請先手動安裝對應的 Java 7 再啟動。"
+        message: 目前實例需要 Java 7。請先手動安裝對應的 Java 7 再啟動。
       manual_java8u141_to_320:
-        message: "目前實例需要 Java 8 Update 141 到 320 之間的版本。請先手動安裝相容的 Java 8 再啟動。"
+        message: 目前實例需要 Java 8 Update 141 到 320 之間的版本。請先手動安裝相容的 Java 8 再啟動。
       manual_java8u141_plus:
-        message: "目前實例需要 Java 8 Update 141 或更新版本。請先手動安裝相容的 Java 8 再啟動。"
+        message: 目前實例需要 Java 8 Update 141 或更新版本。請先手動安裝相容的 Java 8 再啟動。
       actions:
-        confirm: "關閉"
+        confirm: 關閉
       auto_download:
-        title: "下載 Java 執行環境"
-        message: "目前沒有可用的相容執行環境。是否自動下載並註冊 {version}？"
+        title: 下載 Java 執行環境
+        message: 目前沒有可用的相容執行環境。是否自動下載並註冊 {version}？
         actions:
-          download: "下載"
-          cancel: "取消"
+          download: 下載
+          cancel: 取消
     support:
-      title: "第 {launch_count} 次啟動"
-      message: "你已累計啟動遊戲 {launch_count} 次。如果 PCL-ME 對你有幫助，可以考慮贊助專案。"
+      title: 第 {launch_count} 次啟動
+      message: 你已累計啟動遊戲 {launch_count} 次。如果 PCL-ME 對你有幫助，可以考慮贊助專案。
       actions:
-        sponsor: "贊助"
-        continue: "繼續"
+        sponsor: 贊助
+        continue: 繼續
     java_compatibility:
-      title: "Java 相容性警告"
-      message: "{runtime_label} 可能不符合目前實例要求的 Java 範圍（{minimum_version} - {maximum_version}）。"
+      title: Java 相容性警告
+      message: '{runtime_label} 可能不符合目前實例要求的 Java 範圍（{minimum_version} - {maximum_version}）。'
       actions:
-        force_current: "繼續使用目前 Java"
-        use_compatible: "改用相容 Java"
-        abort: "取消啟動"
+        force_current: 繼續使用目前 Java
+        use_compatible: 改用相容 Java
+        abort: 取消啟動
 crash:
   prompts:
     output:
-      message: "{message}"
+      message: '{message}'
       launch_failure:
-        title: "啟動失敗"
+        title: 啟動失敗
       manual_analysis:
-        title: "崩潰分析"
+        title: 崩潰分析
       actions:
-        close: "關閉"
-        open_instance_settings: "開啟實例設定"
-        view_log: "查看日誌"
-        export_report: "匯出報告"
+        close: 關閉
+        open_instance_settings: 開啟實例設定
+        view_log: 查看日誌
+        export_report: 匯出報告
   export:
-    heading: "匯出計畫"
-    suggested_archive: "- 建議壓縮包：{archive_name}"
-    source_file_count: "- 來源檔案數量：{file_count}"
+    heading: 匯出計畫
+    suggested_archive: '- 建議壓縮包：{archive_name}'
+    source_file_count: '- 來源檔案數量：{file_count}'
+setup:
+  launch:
+    cards:
+      options:
+        header: 启动选项
+      memory:
+        header: 内存
+      advanced:
+        header: 高级启动选项
+    fields:
+      default_isolation: 默认隔离模式
+      game_window_title: 游戏窗口标题
+      custom_info: 版本自定义信息
+      launcher_visibility: 启动后启动器可见性
+      process_priority: 游戏进程优先级
+      window_size: 游戏窗口大小
+      microsoft_auth: 微软登录方式
+      preferred_ip_stack: 首选 IP 协议栈
+      renderer: 渲染器
+      jvm_arguments_head: JVM 参数
+      game_arguments_tail: 游戏参数
+      before_command: 启动前执行命令
+      environment_variables: 环境变量
+      environment_variables_hint: 每行填写一条 KEY=VALUE。
+      wait_for_before_command: 等待命令执行完毕后再启动
+      linux_display_backend: Linux 显示后端
+      force_x11: 强制使用 X11 模式
+      force_x11_hint: 当 Wayland 存在兼容性问题时可启用。
+    flags:
+      disable_java_launch_wrapper: 禁用 Java 启动包装器
+      disable_retro_wrapper: 禁用 RetroWrapper
+      require_dedicated_gpu: 优先使用独立显卡
+      use_java_executable: 使用 java 而非 javaw
+    instance_settings:
+      hint: 这些设置可以在实例设置中单独覆盖。
+      button: 打开实例设置
+    memory:
+      modes:
+        automatic: 自动分配
+        automatic_description: 根据设备和实例状态自动分配内存。
+        custom: 自定义分配
+      optimize_before_launch: 启动前优化内存
+      warnings:
+        java_32_bit: 当前 Java 为 32 位，大内存分配可能无法生效。
+        overallocated: 当前分配的内存已接近或超过可用物理内存。
+    options:
+      isolation:
+        disabled: 不隔离
+        mods: 仅隔离 Mod
+        non_release: 仅隔离非正式版
+        mods_and_non_release: 隔离 Mod 与非正式版
+        all: 完整隔离全部版本文件
+      visibility:
+        close_after_launch: 启动后关闭启动器
+        hide_then_close: 先隐藏，游戏启动后关闭
+        hide_then_reopen: 先隐藏，游戏结束后重新打开
+        minimize: 最小化启动器
+        unchanged: 保持当前窗口状态
+      priority:
+        high: 高
+        medium: 中
+        low: 低
+      window:
+        fullscreen: 全屏
+        default: 启动器默认
+        match_launcher: 与启动器大小一致
+        custom: 自定义大小
+        maximized: 最大化
+      microsoft_auth:
+        web_account_manager: Web Account Manager
+        device_code: 设备代码登录
+      preferred_ip_stack:
+        ipv4_first: 优先 IPv4
+        java_default: 使用 Java 默认
+        ipv6_first: 优先 IPv6
+      renderer:
+        game_default: 游戏默认
+        software: 软件渲染
+        directx12: DirectX 12
+        vulkan: Vulkan
+    activities:
+      reset: 重置启动设置
+      reset_completed: 启动选项、内存与高级启动参数已恢复到当前启动器的默认配置。
+  game_manage:
+    cards:
+      game_resources:
+        header: 游戏资源
+      community_resources:
+        header: 社区资源
+      accessibility:
+        header: 辅助功能
+    fields:
+      file_download_source: 游戏下载源
+      version_list_source: 版本列表源
+      max_thread_count: 最大下载线程数
+      speed_limit: 下载速度限制
+      download_timeout: 下载超时
+      target_folder: 目标文件夹
+      target_folder_hint: 应用于新安装的实例。
+      install_behavior: 安装行为
+      community_download_source: 社区资源下载源
+      file_name_format: 资源文件名格式
+      mod_local_name_style: Mod 本地名显示样式
+      game_update_notifications: 游戏更新提醒
+      game_language: 游戏语言
+    flags:
+      auto_select_new_instance: 安装后自动选中新实例
+      upgrade_partial_authlib: 自动升级部分 authlib 支持
+      hide_quilt_loader: 在版本列表中隐藏 Quilt
+      release_update_notifications: 提醒正式版更新
+      snapshot_update_notifications: 提醒快照更新
+      auto_switch_game_language: 自动切换游戏语言
+      detect_clipboard_links: 检测剪贴板中的资源链接
+    options:
+      download_source:
+        prefer_mirror: 优先镜像源
+        prefer_official_then_mirror: 优先官方，失败时使用镜像
+        prefer_official: 优先官方源
+      file_name_format:
+        display_name_brackets: 显示名（文件名）
+        display_name_square_brackets: 显示名 [文件名]
+        display_name_prefix: 显示名 - 文件名
+        display_name_suffix: 文件名 - 显示名
+        file_name_only: 仅文件名
+      mod_local_name_style:
+        title_local_detail_file: 优先本地名，其次描述，最后文件名
+        title_file_detail_local: 优先文件名，其次描述，最后本地名
+    labels:
+      download_timeout_value: '{value} 秒'
+    activities:
+      reset: 重置游戏管理设置
+      reset_completed: 下载、社区资源和辅助功能设置已恢复到当前启动器的默认配置。
+    reactions:
+      quilt_hidden: 已隱藏 Quilt 相關入口。
+      quilt_restored: 已恢復 Quilt 相關入口。
+  about:
+    cards:
+      about:
+        header: 关于
+      acknowledgements:
+        header: 致谢
+    version_summary: 当前版本：{version}
+    project:
+      original_author:
+        title: 龙腾猫跃
+        summary: Plain Craft Launcher 的原作者。
+        action: 支持作者
+        command: 打开原作者页面
+      community:
+        title: PCL Community
+        summary: 由社区协作维护的 PCL 相关项目团队。
+        action: 打开社区页面
+        command: 打开社区仓库
+      repo:
+        title: PCL-ME
+        action: 打开仓库
+        command: 打开项目仓库
+    acknowledgements:
+      bangbang93:
+        title: bangbang93
+        summary: PCL 2 的作者，也是这一生态许多核心思路的提出者。
+        action: 打开支持页面
+        command: 打开 bangbang93 支持页面
+      mcmod:
+        title: MC 百科
+        summary: 重要的 Minecraft 中文资料站与 Mod 查询站。
+        action: 打开网站
+        command: 打开 MC 百科
+      pysio:
+        title: Pysio @ Akaere Network
+        summary: 贡献者与社区支持者。
+        action: 打开网站
+        command: 打开 Pysio 网站
+      yunmoan:
+        title: 云默安 @ 至远光辉
+        summary: 贡献者与项目支持者。
+        action: 打开网站
+        command: 打开云默安的网站
+      z0z0r4:
+        title: z0z0r4
+        summary: 启动器生态贡献者。
+      00ll00:
+        title: 00ll00
+        summary: 启动器生态贡献者。
+      patrick:
+        title: Patrick
+        summary: 启动器生态贡献者。
+      hao_tian:
+        title: Hao_Tian
+        summary: 启动器生态贡献者。
+      mcbbs:
+        title: Minecraft 中文论坛
+        summary: 历史悠久的中文 Minecraft 社区论坛。
+      community:
+        title: PCL 内群的各位
+        summary: 所有提供反馈、测试与想法的社区成员。
+  log:
+    cards:
+      actions:
+        header: 操作
+      all_logs:
+        header: 全部日志
+    actions:
+      export_latest: 导出最新日志
+      export_all: 导出全部日志
+      open_directory: 打开日志目录
+      clean_history: 清理历史日志
+    empty:
+      title: 暂无日志
+      summary: 启动器生成的日志会显示在这里。
+    activities:
+      clean_history: 清理历史日志
+      directory_missing: 当前日志目录不存在，无需清理。
+      nothing_to_clean: 没有可清理的历史日志，已保留当前日志文件。
+      clean_failed: 未能删除任何历史日志文件。
+      cleaned_count: 已清理 {count} 个历史日志文件。
+      open_log: 打开日志：{title}
+  feedback:
+    cards:
+      submit:
+        header: 提交反馈
+    submit:
+      hint: 打开 GitHub Issue 页面来提交反馈或建议。
+      button: 打开反馈页面
+    loading:
+      section_title: 加载中
+      entry_title: 正在获取反馈列表
+      entry_summary: 请稍候。
+    failed:
+      section_title: 加载失败
+      entry_title: 无法获取反馈列表
+    sections:
+      processing: 正在处理
+      waiting_process: 等待处理
+      waiting: 等待
+      paused: 暂停
+      up_next: 在即
+      completed: 已完成
+      declined: 已拒绝
+      ignored: 已忽略
+      duplicate: 重复
+      other: 其他
+    actions:
+      open_issue: '打开 Issue #{number}'
+    summary:
+      unknown_author: 未知作者
+      unknown_time: 未知时间
+      uncategorized_type: 未分类
+      line: '{author} | {created_at} | {type}'
+    activities:
+      refresh: 刷新反馈页
+      refresh_completed: 已同步 {count} 条 GitHub 反馈。
+      refresh_failed: 刷新反馈页失败
+  update:
+    fields:
+      channel: 更新通道
+      mode: 更新方式
+    actions:
+      download_and_install: 下载并安装
+      more_info: 更多信息
+      check_again: 重新检查
+      view_changelog: 查看更新日志
+    options:
+      channel:
+        release: 正式版
+        beta: 测试版
+        dev: 开发版
+      mode:
+        auto_download_and_install: 自动下载并安装
+        auto_download_and_prompt: 自动下载，下载后提示安装
+        prompt_only: 仅提示
+        disabled: 禁用
+    version_name: 版本 {version}
+    states:
+      checking: 正在检查更新...
+      available: 检测到可用更新：{version}
+      latest: 当前已是最新版本。
+      error: 检查更新失败：{message}
+    available:
+      publisher: 来源：{source}
+      summary_missing: 该版本暂无可显示的摘要。
+    errors:
+      github_empty_result: GitHub 返回了空结果。
+      no_release: GitHub 没有可用的更新版本。
+      metadata_missing: 未找到启动器版本元数据。
+      metadata_invalid: 无法读取启动器版本元数据。
+    activities:
+      change_channel: 切换更新通道
+      change_mode: 切换自动更新设置
+      refresh: 刷新更新页
+      available: 检测到可用更新：{version}
+      latest: '{version} 已是最新版本'
+      checking: 正在检查更新...
+      download_install: 下载并安装更新
+      no_pending_update: 当前没有待下载的更新。
+      no_download_url: 当前更新源没有提供可用下载地址。
+      download_install_failed: 下载并安装更新失败
+      package_ready: '{version} 的更新包已准备完成，启动器即将退出并应用更新。'
+      package_ready_hint: 更新包已准备完成，启动器即将关闭并自动安装。
+      view_detail: 查看更新详情
+      view_detail_title: 更新详情：{version}
+      view_detail_failed: 查看更新详情失败
+      detail_unavailable: 当前没有可用的更新详情。
+  ui:
+    activities:
+      reset: 重置界面設置
+      reset_completed: 個性化界面頁已恢復到當前啓動器的默認配置。
+    background:
+      actions:
+        clear: 清空背景內容
+        open_folder: 打開文件夾
+        refresh: 刷新背景內容
+      activities:
+        clear: 清空背景內容
+        clear_empty: 背景目錄中沒有可刪除的背景內容。
+        empty: 未檢測到可用背景內容。
+        open_folder: 打開背景文件夾
+        open_folder_failed: 打開背景文件夾失敗
+        refresh: 刷新背景內容
+        clear_count: 已清空 {count} 個背景內容文件。
+        loaded: 已加載背景：{file}
+      card_header: 背景圖片
+      fields:
+        blur: 背景模糊
+        opacity: 不透明度
+        suit: 內容自適應方式
+      flags:
+        colorful: 疊加彩色背景
+      labels:
+        blur_off: 關閉
+      card_header_with_count: 背景圖片（{count} 張）
+    cards:
+      basic:
+        header: 基礎
+      font:
+        header: 字體
+      homepage:
+        header: 主頁
+      music:
+        header: 背景音樂
+      title_bar:
+        header: 標題欄
+    fields:
+      custom_theme_hint: '支持 #RRGGBB，例如 #159E95'
+      custom_theme_refresh_hint: 自定義主題色會實時刷新當前界面配色與標題欄對比度。
+      dark_custom: 深色自定義
+      dark_palette: 深色配色
+      global_font: 全局
+      launcher_opacity: 不透明度
+      light_custom: 淺色自定義
+      light_palette: 淺色配色
+      motd_font: MOTD
+      theme: 主題
+    flags:
+      lock_window_size: 鎖定啓動器大小
+      show_launcher_logo: 打開啓動器時顯示 PCL 圖標
+      show_launching_hint: 在啓動遊戲時顯示“你知道嗎”
+    hidden_features:
+      groups:
+        features: 特定功能
+        instance_subpages: 子頁面 實例設置
+        main_pages: 主頁面
+        setup_subpages: 子頁面 設置
+        tools_subpages: 子頁面 工具
+      hint: 你可以隱藏不需要的頁面或關閉特定功能。在任意界面按 F12 可以暫時顯示被隱藏的功能。
+      items:
+        download: 下載
+        feature_hidden: 功能隱藏
+        feature_instance_select: 實例管理
+        feature_mod_update: Mod 更新
+        instance_export: 導出
+        instance_install: 修改
+        instance_mod: Mod
+        instance_resource_pack: 資源包
+        instance_save: 存檔
+        instance_schematic: 投影原理圖
+        instance_screenshot: 截圖
+        instance_server: 服務器
+        instance_shader: 光影包
+        setup: 設置
+        setup_about: 關於
+        setup_feedback: 反饋
+        setup_game_manage: 管理
+        setup_java: Java
+        setup_launch: 啓動
+        setup_launcher_misc: 雜項
+        setup_log: 查看日誌
+        setup_ui: 個性化
+        setup_update: 軟件更新
+        tools: 工具
+        tools_help: 幫助
+        tools_test: 百寶箱
+      reactions:
+        hidden: 已隱藏 {title}。
+        restored: 已恢復 {title}。
+    homepage:
+      actions:
+        generate_tutorial: 生成教學文件
+        refresh: 刷新主頁
+        view_tutorial: 查看教程
+      activities:
+        generate_tutorial: 生成教學文件
+        generate_tutorial_failed: 生成教學文件失敗
+        tutorial_shown: 已顯示主頁自定義教程。
+        view_tutorial: 查看主頁教程
+        tutorial_content: >-
+          1. 點擊“生成教學文件”，會在運行目錄下生成 PCL/Custom.xaml。
+
+          2. 使用文本編輯器修改這個文件，保存後可再次點擊“刷新主頁”。
+
+          3. 若使用聯網主頁，請確認下載地址指向可信的主頁內容。
+        tutorial_template_missing: 未找到主頁教學模板：{path}
+      fields:
+        preset: 主頁預設
+        url: 下載地址
+      notices:
+        preset_content: 內容見 ModSetup
+        security_warning: 請謹慎使用陌生人提供的主頁，惡意代碼可能會造成損害！
+      options:
+        blank: 空白
+        local_file: 讀取本地文件
+        preset: 預設
+        remote: 聯網更新
+    music:
+      actions:
+        clear: 清空背景音樂
+        open_folder: 打開文件夾
+        refresh: 刷新背景音樂
+      activities:
+        clear: 清空背景音樂
+        clear_empty: 音樂目錄中沒有可刪除的背景音樂文件。
+        empty: 未檢測到可用背景音樂。
+        open_folder: 打開音樂文件夾
+        open_folder_failed: 打開音樂文件夾失敗
+        refresh: 刷新背景音樂
+        clear_count: 已清空 {count} 個背景音樂文件。
+        refreshed_count: 已重新掃描背景音樂目錄，共找到 {count} 個文件。
+      fields:
+        volume: 音量
+      flags:
+        auto_start: 打開啓動器自動開始播放
+        enable_smtc: 接入系統媒體傳輸控制 (SMTC) 控件
+        random: 隨機播放
+        start_on_game_launch: 遊戲啓動後自動開始播放，遊戲退出後自動暫停播放
+        stop_on_game_launch: 遊戲啓動後自動暫停播放，遊戲退出後自動開始播放
+    options:
+      background_suit:
+        bottom_left: 居於左下
+        bottom_right: 居於右下
+        center: 居中
+        fit: 適應
+        smart: 智能
+        stretch: 拉伸
+        tile: 平鋪
+        top_left: 居於左上
+        top_right: 居於右上
+      dark_mode:
+        dark: 深色
+        follow_system: 跟隨系統
+        light: 淺色
+      font:
+        default: 默認字體
+        jetbrains_mono: JetBrains Mono
+        lxgw_wenkai: 霞鶩文楷
+        source_han_sans: 思源黑體
+      theme_color:
+        cat_blue: 龍貓藍
+        custom: 自定義
+        grass_green: 小草綠
+        lemon_cyan: 甜檸青
+        oak_brown: 橡木棕
+        pineapple_yellow: 菠蘿黃
+    theme_switch:
+      unsupported_action: 獲取官方快照版
+      unsupported_notice: 藍色，藍色，還是藍色！想要逃離藍色困境？請使用官方快照版！
+    title_bar:
+      actions:
+        change_image: 更改圖片
+        clear_image: 清空圖片
+      activities:
+        change_image: 更改標題欄圖片
+        change_image_cancelled: 已取消選擇標題欄圖片。
+        change_image_failed: 更改標題欄圖片失敗
+        change_image_pick_filter: 常用圖片文件
+        change_image_pick_title: 選擇標題欄圖片
+        clear_image: 清空標題欄圖片
+        clear_image_empty: 當前沒有自定義標題欄圖片。
+      fields:
+        text: 標題欄文本
+      flags:
+        align_left: 標題欄居左
+      options:
+        default: 默認
+        image: 圖片
+        none: 無
+        text: 文本
+  java:
+    actions:
+      add: 添加
+      details: 詳細信息
+      disable: 禁用
+      enable: 啓用
+      open: 打開
+    activities:
+      add: 添加 Java
+      add_cancelled: 已取消選擇 Java 程序。
+      add_failed: 添加 Java 失敗
+      add_pick_filter_unix: Java 可執行文件
+      add_pick_filter_windows: Java 程序
+      add_pick_title: 選擇 Java 程序
+      auto_select: 自動選擇
+      detail_shown: 已顯示 Java 運行時詳情。
+      disable: 禁用 Java
+      disable_blocked: Java 禁用被阻止
+      disable_blocked_reason: 請先取消默認選擇後再禁用當前 Java。
+      disabled_state: 已禁用
+      enable: 啓用 Java
+      enabled_state: 已啓用
+      folder_missing: 當前 Java 目錄不存在。
+      refresh: 刷新 Java 列表
+      refresh_completed: Java 列表已按當前掃描結果重新載入。
+      refresh_failed: 刷新 Java 列表失敗
+      refresh_scanning: 正在重新掃描 Java 運行時。
+      select_default: 切換默認 Java
+      unavailable: 此 Java 不可用，請刷新列表。
+      add_completed: 已添加並選中 {path}
+      add_exists: Java 已存在於配置列表中：{path}
+      add_unrecognized: 無法識別所選文件爲可用的 Java：{path}
+      open_folder: '打開 Java 文件夾: {title}'
+      toggle_result: '{title} • {state}'
+      view_detail: '查看 Java 詳情: {title}'
+    auto_select:
+      description: Java 選擇自動擋，依據遊戲需要自動選擇合適的 Java。
+      label: 自動選擇
+    details:
+      available: 可用
+      metadata_unavailable: 無法進一步解析該 Java 的詳細元數據，請確認文件仍然可執行。
+      no: 否
+      unavailable: 不可用
+      yes: 是
+      architecture: '架構: {value}'
+      availability: '可用性: {value}'
+      brand: '品牌: {value}'
+      default_java: '默認 Java: {value}'
+      enabled: '已啓用: {value}'
+      executable: '可執行文件: {value}'
+      folder: '目錄: {value}'
+      major_version: '主版本: {value}'
+      path: '路徑: {value}'
+      source: '來源: {value}'
+      tags: '當前標籤: {value}'
+      type: '類型: {value}'
+      version: '版本: {value}'
+    tags:
+      auto_installed: 自動安裝
+      auto_scanned: 自動掃描
+      disabled: 已禁用
+      enabled: 已啓用
+      manual_added: 手動添加
+  launcher_misc:
+    actions:
+      apply_proxy: 應用代理信息
+      export_settings: 導出設置
+      import_settings: 導入設置
+    activities:
+      apply_proxy: 應用代理信息
+      export_settings: 導出設置
+      import_settings: 導入設置
+      import_settings_cancelled: 已取消選擇配置文件。
+      import_settings_failed: 導入設置失敗
+      import_settings_pick_filter: PCL 配置文件
+      import_settings_pick_title: 選擇配置文件
+      proxy_cleared: 已清空自定義 HTTP 代理。
+      reset: 重置啓動器雜項設置
+      reset_completed: 系統、網絡和調試選項已恢復到當前啓動器的默認配置。
+      import_settings_completed: 已導入共享配置：{path}。部分系統項仍建議重啓後再驗證。
+    cards:
+      debug:
+        header: 調試選項
+      network:
+        header: 網絡
+      system:
+        header: 系統
+    fields:
+      announcements: 啓動器公告
+      debug_animation_speed: 動畫速度
+      http_proxy: HTTP 代理
+      max_animation_fps: 最高動畫幀率
+      realtime_log_lines: 實時日誌行數
+    flags:
+      debug_delay: 添加延遲
+      debug_mode: 調試模式
+      disable_hardware_acceleration: 禁用硬件加速
+      enable_doh: 使用 DoH 解析地址
+      skip_copy_during_download: 禁止在下載時從其他文件夾複製文件
+    http_proxy:
+      address_watermark: 比如 http://127.0.0.1:1080/
+      password: 密碼
+      username: 賬號
+      value_watermark: 如有
+      warning: 請勿填寫不信任的代理地址
+    labels:
+      debug_animation_speed_off: 關閉
+    options:
+      http_proxy:
+        custom: 自定義代理
+        none: 不使用代理
+        system: 使用系統代理
+      system_activity:
+        all: 顯示所有公告
+        disabled: 關閉所有公告
+        important_only: 僅在有重要通知時顯示公告

@@ -14,19 +14,27 @@ internal sealed partial class FrontendShellViewModel
 
     public ObservableCollection<HelpDetailSectionViewModel> HelpDetailSections { get; } = [];
 
+    public string ToolsHelpSearchWatermark => LT("shell.tools.help.search.watermark");
+
+    public string ToolsHelpNoResultsText => LT("shell.tools.help.search.no_results");
+
     public bool ShowHelpDetailSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.HelpDetail;
 
     public bool HasHelpDetailSections => HelpDetailSections.Count > 0;
 
     public bool HasNoHelpDetailSections => !HasHelpDetailSections;
 
-    public string HelpDetailTitle => _currentHelpDetailEntry?.Title ?? "帮助详情";
+    public string HelpDetailEmptyTitle => LT("shell.help_detail.empty.title");
+
+    public string HelpDetailEmptyDescription => LT("shell.help_detail.empty.description");
+
+    public string HelpDetailTitle => _currentHelpDetailEntry?.Title ?? LT("shell.help_detail.title_default");
 
     public string HelpDetailSummary => string.IsNullOrWhiteSpace(_currentHelpDetailEntry?.Summary)
-        ? "已加载帮助条目详情。"
+        ? LT("shell.help_detail.summary_loaded")
         : _currentHelpDetailEntry!.Summary;
 
-    public string HelpDetailSource => _currentHelpDetailEntry?.RawPath ?? "未解析帮助来源";
+    public string HelpDetailSource => _currentHelpDetailEntry?.RawPath ?? LT("shell.help_detail.source_unresolved");
 
     private void OpenHelpTopic(FrontendToolsHelpEntry entry)
     {
@@ -54,7 +62,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (addActivity)
         {
-            AddActivity($"查看帮助: {entry.Title}", entry.RawPath);
+            AddActivity(LT("shell.help_detail.activities.open", ("title", entry.Title)), entry.RawPath);
         }
     }
 
@@ -77,6 +85,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowHelpDetailSurface));
         RaisePropertyChanged(nameof(HasHelpDetailSections));
         RaisePropertyChanged(nameof(HasNoHelpDetailSections));
+        RaisePropertyChanged(nameof(HelpDetailEmptyTitle));
+        RaisePropertyChanged(nameof(HelpDetailEmptyDescription));
         RaisePropertyChanged(nameof(HelpDetailTitle));
         RaisePropertyChanged(nameof(HelpDetailSummary));
         RaisePropertyChanged(nameof(HelpDetailSource));
@@ -89,10 +99,10 @@ internal sealed partial class FrontendShellViewModel
             return
             [
                 new HelpDetailSectionViewModel(
-                    "条目内容缺失",
+                    LT("shell.help_detail.sections.missing_content.title"),
                     [
-                        "当前帮助条目只有索引元数据，没有可渲染的详情内容。",
-                        $"源路径：{entry.RawPath}"
+                        LT("shell.help_detail.sections.missing_content.body"),
+                        LT("shell.help_detail.sections.source_line", ("source", entry.RawPath))
                     ],
                     [])
             ];
@@ -115,7 +125,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 if (IsNamed(child, "MyCard"))
                 {
-                    FlushPendingSection(sections, pendingLines, pendingActions, "补充说明");
+                    FlushPendingSection(sections, pendingLines, pendingActions, LT("shell.help_detail.sections.supplement.title"));
                     sections.Add(ParseHelpCard(child));
                     continue;
                 }
@@ -123,14 +133,14 @@ internal sealed partial class FrontendShellViewModel
                 ParseHelpElement(child, pendingLines, pendingActions);
             }
 
-            FlushPendingSection(sections, pendingLines, pendingActions, "补充说明");
+            FlushPendingSection(sections, pendingLines, pendingActions, LT("shell.help_detail.sections.supplement.title"));
             if (sections.Count == 0)
             {
                 sections.Add(new HelpDetailSectionViewModel(
                     entry.Title,
                     [
-                        "当前帮助条目没有可识别的卡片内容。",
-                        $"源路径：{entry.RawPath}"
+                        LT("shell.help_detail.sections.no_cards.body"),
+                        LT("shell.help_detail.sections.source_line", ("source", entry.RawPath))
                     ],
                     []));
             }
@@ -142,11 +152,11 @@ internal sealed partial class FrontendShellViewModel
             return
             [
                 new HelpDetailSectionViewModel(
-                    "加载失败",
+                    LT("shell.help_detail.sections.parse_failed.title"),
                     [
-                        "帮助详情内容解析失败，已保留原始来源以便继续排查。",
+                        LT("shell.help_detail.sections.parse_failed.body"),
                         ex.Message,
-                        $"源路径：{entry.RawPath}"
+                        LT("shell.help_detail.sections.source_line", ("source", entry.RawPath))
                     ],
                     [])
             ];
@@ -174,7 +184,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return new HelpDetailSectionViewModel(
-            string.IsNullOrWhiteSpace(title) ? "帮助内容" : title,
+            string.IsNullOrWhiteSpace(title) ? LT("shell.help_detail.sections.card_default_title") : title,
             lines,
             actions);
     }
@@ -198,7 +208,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (IsNamed(element, "MyHint"))
         {
-            AddHelpText(lines, $"提示：{ReadAttribute(element, "Text")}");
+            AddHelpText(lines, LT("shell.help_detail.generated.hint", ("text", ReadAttribute(element, "Text"))));
             return;
         }
 
@@ -219,7 +229,7 @@ internal sealed partial class FrontendShellViewModel
                     ? DeriveHelpActionTitle(eventType, eventData)
                     : title,
                 string.IsNullOrWhiteSpace(info)
-                    ? string.IsNullOrWhiteSpace(eventData) ? "打开帮助内动作。" : eventData
+                    ? string.IsNullOrWhiteSpace(eventData) ? LT("shell.help_detail.actions.inline_default_info") : eventData
                     : info,
                 eventType,
                 eventData));
@@ -231,7 +241,7 @@ internal sealed partial class FrontendShellViewModel
             var source = ReadAttribute(element, "Source");
             if (!string.IsNullOrWhiteSpace(source))
             {
-                actions.Add(CreateHelpAction("查看配图", source, "打开网页", source));
+                actions.Add(CreateHelpAction(LT("shell.help_detail.actions.view_image"), source, "打开网页", source));
             }
 
             return;
@@ -280,14 +290,14 @@ internal sealed partial class FrontendShellViewModel
             AddHelpText(
                 lines,
                 string.IsNullOrWhiteSpace(title)
-                    ? $"示例按钮：包含 {customEventSummary}。"
-                    : $"示例按钮：{title}（包含 {customEventSummary}）。");
+                    ? LT("shell.help_detail.generated.example_button_with_summary", ("summary", customEventSummary))
+                    : LT("shell.help_detail.generated.example_button_with_title_and_summary", ("title", title), ("summary", customEventSummary)));
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(title))
         {
-            AddHelpText(lines, $"示例按钮：{title}");
+            AddHelpText(lines, LT("shell.help_detail.generated.example_button", ("title", title)));
         }
     }
 
@@ -320,7 +330,9 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddFailureActivity($"{title} 失败", $"未找到帮助条目：{eventData}");
+                    AddFailureActivity(
+                        LT("shell.help_detail.failures.action", ("title", title)),
+                        LT("shell.help_detail.failures.entry_not_found", ("reference", eventData ?? string.Empty)));
                 }
 
                 return;
@@ -352,7 +364,9 @@ internal sealed partial class FrontendShellViewModel
                 }
                 else
                 {
-                    AddFailureActivity($"{title} 失败", "帮助动作缺少可执行的目标。");
+                    AddFailureActivity(
+                        LT("shell.help_detail.failures.action", ("title", title)),
+                        LT("shell.help_detail.failures.missing_action_target"));
                 }
 
                 return;
@@ -363,18 +377,20 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(eventData))
         {
-            AddFailureActivity($"{title} 失败", "没有可复制的文本。");
+            AddFailureActivity(
+                LT("shell.help_detail.failures.action", ("title", title)),
+                LT("shell.help_detail.failures.missing_copy_text"));
             return;
         }
 
         try
         {
             await _shellActionService.SetClipboardTextAsync(eventData);
-            AddActivity(title, "已复制帮助中的文本内容。");
+            AddActivity(title, LT("shell.help_detail.actions.copy_text_completed"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"{title} 失败", ex.Message);
+            AddFailureActivity(LT("shell.help_detail.failures.action", ("title", title)), ex.Message);
         }
     }
 
@@ -382,7 +398,9 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!Uri.TryCreate(eventData, UriKind.Absolute, out var uri))
         {
-            AddFailureActivity($"{title} 失败", "下载地址无效。");
+            AddFailureActivity(
+                LT("shell.help_detail.failures.action", ("title", title)),
+                LT("shell.help_detail.failures.invalid_download_address"));
             return;
         }
 
@@ -401,11 +419,11 @@ internal sealed partial class FrontendShellViewModel
                 uri.ToString(),
                 targetPath,
                 speedLimiter: speedLimiter);
-            OpenInstanceTarget(title, targetPath, "帮助文件下载完成但目标文件不存在。");
+            OpenInstanceTarget(title, targetPath, LT("shell.help_detail.failures.download_target_missing"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"{title} 失败", ex.Message);
+            AddFailureActivity(LT("shell.help_detail.failures.action", ("title", title)), ex.Message);
         }
     }
 
@@ -427,7 +445,9 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddFailureActivity($"{title} 失败", "帮助动作缺少目标地址。");
+            AddFailureActivity(
+                LT("shell.help_detail.failures.action", ("title", title)),
+                LT("shell.help_detail.failures.missing_target"));
             return;
         }
 
@@ -437,15 +457,18 @@ internal sealed partial class FrontendShellViewModel
         }
         else
         {
-            AddFailureActivity($"{title} 失败", error ?? target);
+            AddFailureActivity(LT("shell.help_detail.failures.action", ("title", title)), error ?? target);
         }
     }
 
-    private static HelpPopupSpec ParseHelpPopupSpec(string fallbackTitle, string? eventData)
+    private HelpPopupSpec ParseHelpPopupSpec(string fallbackTitle, string? eventData)
     {
         if (string.IsNullOrWhiteSpace(eventData))
         {
-            return new HelpPopupSpec(fallbackTitle, "帮助弹窗缺少内容。", "确定");
+            return new HelpPopupSpec(
+                fallbackTitle,
+                LT("shell.help_detail.popup.missing_content"),
+                LT("shell.help_detail.popup.default_button"));
         }
 
         var segments = eventData.Split('|', 3);
@@ -454,7 +477,7 @@ internal sealed partial class FrontendShellViewModel
             return new HelpPopupSpec(
                 fallbackTitle,
                 NormalizeHelpPopupText(eventData),
-                "确定");
+                LT("shell.help_detail.popup.default_button"));
         }
 
         var popupTitle = string.IsNullOrWhiteSpace(segments[0])
@@ -463,7 +486,7 @@ internal sealed partial class FrontendShellViewModel
         var popupMessage = NormalizeHelpPopupText(segments[1]);
         var buttonText = segments.Length >= 3 && !string.IsNullOrWhiteSpace(segments[2])
             ? NormalizeHelpPopupText(segments[2])
-            : "确定";
+            : LT("shell.help_detail.popup.default_button");
         return new HelpPopupSpec(popupTitle, popupMessage, buttonText);
     }
 
@@ -560,16 +583,17 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private static string DeriveHelpActionTitle(string? eventType, string? eventData)
+    private string DeriveHelpActionTitle(string? eventType, string? eventData)
     {
+        var helpName = Path.GetFileNameWithoutExtension(eventData) ?? LT("shell.help_detail.actions.help_item");
         return eventType switch
         {
-            "打开帮助" => $"打开帮助：{Path.GetFileNameWithoutExtension(eventData) ?? "帮助条目"}",
-            "打开网页" => "打开网页",
-            "复制文本" => "复制文本",
-            "下载文件" => "下载文件",
-            "打开文件" => "打开文件",
-            _ => string.IsNullOrWhiteSpace(eventData) ? "帮助操作" : eventData
+            "打开帮助" => LT("shell.help_detail.actions.open_help", ("name", helpName)),
+            "打开网页" => LT("shell.help_detail.actions.open_web"),
+            "复制文本" => LT("shell.help_detail.actions.copy_text"),
+            "下载文件" => LT("shell.help_detail.actions.download_file"),
+            "打开文件" => LT("shell.help_detail.actions.open_file"),
+            _ => string.IsNullOrWhiteSpace(eventData) ? LT("shell.help_detail.actions.generic") : eventData
         };
     }
 
