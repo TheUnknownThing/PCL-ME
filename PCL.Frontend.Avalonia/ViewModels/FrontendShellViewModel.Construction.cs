@@ -272,10 +272,6 @@ internal sealed partial class FrontendShellViewModel
     private bool _showLauncherLogo = true;
     private bool _lockWindowSize;
     private bool _showLaunchingHint = true;
-    private bool _enableAdvancedMaterial;
-    private double _blurRadius = 14;
-    private double _blurSamplingRate = 65;
-    private int _selectedBlurTypeIndex;
     private int _selectedGlobalFontIndex;
     private int _selectedMotdFontIndex = 1;
     private bool _autoPauseVideo = true;

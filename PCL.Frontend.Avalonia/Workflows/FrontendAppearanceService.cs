@@ -9,6 +9,10 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendAppearanceService
 {
     private const string CustomThemeColorName = "自定义";
+    private const double LauncherOpacitySliderMinimum = 0d;
+    private const double LauncherOpacitySliderMaximum = 600d;
+    private const double LauncherWindowOpacityMinimum = 0.4d;
+    private const double LauncherWindowOpacityRange = 0.6d;
     private static Application? _subscribedApplication;
     private static FrontendAppearanceSelection _currentSelection = new(2, 0, 0, null, null);
     private static bool _isReapplyingForThemeVariantChange;
@@ -105,6 +109,26 @@ internal static class FrontendAppearanceService
     public static string FormatCustomThemeColor(Color color)
     {
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    public static double NormalizeLauncherOpacity(double value)
+    {
+        return Math.Clamp(value, LauncherOpacitySliderMinimum, LauncherOpacitySliderMaximum);
+    }
+
+    public static string FormatLauncherOpacityLabel(double value)
+    {
+        var normalized = NormalizeLauncherOpacity(value);
+        var percentage = normalized <= LauncherOpacitySliderMinimum
+            ? 0d
+            : (normalized / LauncherOpacitySliderMaximum) * 100d;
+        return $"{Math.Round(percentage)}%";
+    }
+
+    public static double MapLauncherOpacityToWindowOpacity(double value)
+    {
+        var normalized = NormalizeLauncherOpacity(value);
+        return LauncherWindowOpacityMinimum + ((normalized / LauncherOpacitySliderMaximum) * LauncherWindowOpacityRange);
     }
 
     public static void ApplyStoredAppearance(Application application, FrontendRuntimePaths runtimePaths)

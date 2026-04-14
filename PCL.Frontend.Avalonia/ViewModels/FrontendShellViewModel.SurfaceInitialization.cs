@@ -405,10 +405,6 @@ internal sealed partial class FrontendShellViewModel
         _showLauncherLogo = _setupComposition.Ui.ShowLauncherLogo;
         _lockWindowSize = _setupComposition.Ui.LockWindowSize;
         _showLaunchingHint = _setupComposition.Ui.ShowLaunchingHint;
-        _enableAdvancedMaterial = _setupComposition.Ui.EnableAdvancedMaterial;
-        _blurRadius = _setupComposition.Ui.BlurRadius;
-        _blurSamplingRate = _setupComposition.Ui.BlurSamplingRate;
-        _selectedBlurTypeIndex = _setupComposition.Ui.BlurTypeIndex;
         _selectedGlobalFontIndex = _setupComposition.Ui.GlobalFontIndex;
         _selectedMotdFontIndex = _setupComposition.Ui.MotdFontIndex;
         _autoPauseVideo = _setupComposition.Ui.AutoPauseVideo;

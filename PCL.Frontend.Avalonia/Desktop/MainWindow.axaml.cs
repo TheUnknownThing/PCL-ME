@@ -20,6 +20,7 @@ using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.ViewModels;
+using PCL.Frontend.Avalonia.Workflows;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -94,6 +95,7 @@ internal sealed partial class MainWindow : Window
         DataContextChanged += OnDataContextChanged;
         ApplyMainBackgroundBrush();
         ApplyTitleBarBackgroundBrush();
+        ApplyWindowOpacity();
         UpdateWindowChromeState();
     }
 
@@ -332,6 +334,7 @@ internal sealed partial class MainWindow : Window
             _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
         }
 
+        ApplyWindowOpacity();
         UpdatePromptOverlayRowHeights();
         QueuePromptOverlaySync();
     }
@@ -358,6 +361,12 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
+        if (e.PropertyName == nameof(FrontendShellViewModel.LauncherOpacity))
+        {
+            ApplyWindowOpacity();
+            return;
+        }
+
         if (e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayTextInput)
             || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList)
             || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayMessage))
@@ -365,6 +374,12 @@ internal sealed partial class MainWindow : Window
             UpdatePromptOverlayRowHeights();
             QueuePromptOverlayFocus();
         }
+    }
+
+    private void ApplyWindowOpacity()
+    {
+        var configuredOpacity = _shellViewModel?.LauncherOpacity ?? 600d;
+        Opacity = FrontendAppearanceService.MapLauncherOpacityToWindowOpacity(configuredOpacity);
     }
 
     private void QueuePromptOverlaySync()

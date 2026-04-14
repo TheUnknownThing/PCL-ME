@@ -14,12 +14,6 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> ThemeColorOptions => FrontendAppearanceService.ThemeColorOptions;
 
-    public IReadOnlyList<string> BlurTypeOptions { get; } =
-    [
-        "高斯模糊",
-        "方框模糊"
-    ];
-
     public IReadOnlyList<string> FontOptions { get; } =
     [
         "默认字体",
@@ -188,14 +182,15 @@ internal sealed partial class FrontendShellViewModel
         get => _launcherOpacity;
         set
         {
-            if (SetProperty(ref _launcherOpacity, value))
+            var normalized = FrontendAppearanceService.NormalizeLauncherOpacity(value);
+            if (SetProperty(ref _launcherOpacity, normalized))
             {
                 RaisePropertyChanged(nameof(LauncherOpacityLabel));
             }
         }
     }
 
-    public string LauncherOpacityLabel => $"{Math.Round(LauncherOpacity / 10)}%";
+    public string LauncherOpacityLabel => FrontendAppearanceService.FormatLauncherOpacityLabel(LauncherOpacity);
 
     public bool ShowLauncherLogoSetting
     {
@@ -213,46 +208,6 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _showLaunchingHint;
         set => SetProperty(ref _showLaunchingHint, value);
-    }
-
-    public bool EnableAdvancedMaterial
-    {
-        get => _enableAdvancedMaterial;
-        set => SetProperty(ref _enableAdvancedMaterial, value);
-    }
-
-    public double BlurRadius
-    {
-        get => _blurRadius;
-        set
-        {
-            if (SetProperty(ref _blurRadius, value))
-            {
-                RaisePropertyChanged(nameof(BlurRadiusLabel));
-            }
-        }
-    }
-
-    public string BlurRadiusLabel => $"{Math.Round(BlurRadius)}";
-
-    public double BlurSamplingRate
-    {
-        get => _blurSamplingRate;
-        set
-        {
-            if (SetProperty(ref _blurSamplingRate, value))
-            {
-                RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-            }
-        }
-    }
-
-    public string BlurSamplingRateLabel => $"{Math.Round(BlurSamplingRate)}%";
-
-    public int SelectedBlurTypeIndex
-    {
-        get => _selectedBlurTypeIndex;
-        set => SetProperty(ref _selectedBlurTypeIndex, Math.Clamp(value, 0, BlurTypeOptions.Count - 1));
     }
 
     public int SelectedGlobalFontIndex

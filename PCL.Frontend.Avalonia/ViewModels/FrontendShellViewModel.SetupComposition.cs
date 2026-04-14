@@ -315,12 +315,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
                 RaisePropertyChanged(nameof(LockWindowSizeSetting));
                 RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
-                RaisePropertyChanged(nameof(EnableAdvancedMaterial));
-                RaisePropertyChanged(nameof(BlurRadius));
-                RaisePropertyChanged(nameof(BlurRadiusLabel));
-                RaisePropertyChanged(nameof(BlurSamplingRate));
-                RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-                RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
                 RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
                 RaisePropertyChanged(nameof(SelectedMotdFontIndex));
                 RaisePropertyChanged(nameof(AutoPauseVideo));
@@ -595,18 +589,6 @@ internal sealed partial class FrontendShellViewModel
             case nameof(ShowLaunchingHintSetting):
                 _shellActionService.PersistLocalValue("UiShowLaunchingHint", ShowLaunchingHintSetting);
                 break;
-            case nameof(EnableAdvancedMaterial):
-                _shellActionService.PersistLocalValue("UiBlur", EnableAdvancedMaterial);
-                break;
-            case nameof(BlurRadius):
-                _shellActionService.PersistLocalValue("UiBlurValue", (int)Math.Round(BlurRadius));
-                break;
-            case nameof(BlurSamplingRate):
-                _shellActionService.PersistLocalValue("UiBlurSamplingRate", (int)Math.Round(BlurSamplingRate));
-                break;
-            case nameof(SelectedBlurTypeIndex):
-                _shellActionService.PersistLocalValue("UiBlurType", SelectedBlurTypeIndex);
-                break;
             case nameof(SelectedGlobalFontIndex):
                 _shellActionService.PersistLocalValue("UiFont", MapFontIndexToConfigValue(SelectedGlobalFontIndex));
                 break;
@@ -814,12 +796,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
         RaisePropertyChanged(nameof(LockWindowSizeSetting));
         RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
-        RaisePropertyChanged(nameof(EnableAdvancedMaterial));
-        RaisePropertyChanged(nameof(BlurRadius));
-        RaisePropertyChanged(nameof(BlurRadiusLabel));
-        RaisePropertyChanged(nameof(BlurSamplingRate));
-        RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-        RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
         RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
         RaisePropertyChanged(nameof(SelectedMotdFontIndex));
         RaisePropertyChanged(nameof(AutoPauseVideo));
