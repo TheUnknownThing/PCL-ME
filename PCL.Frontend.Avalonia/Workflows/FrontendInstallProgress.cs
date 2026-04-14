@@ -23,7 +23,7 @@ internal sealed record FrontendInstanceRepairGroupSnapshot(
             : 1d;
 }
 
-internal sealed record FrontendInstanceRepairTelemetrySnapshot(
+internal sealed record FrontendInstanceRepairProgressSnapshot(
     IReadOnlyDictionary<FrontendInstanceRepairFileGroup, FrontendInstanceRepairGroupSnapshot> Groups,
     string CurrentFileName,
     int DownloadedFileCount,

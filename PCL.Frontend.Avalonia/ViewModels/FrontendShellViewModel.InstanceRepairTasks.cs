@@ -8,20 +8,20 @@ internal sealed partial class FrontendShellViewModel
     private async Task<FrontendInstanceRepairResult> ExecuteManagedInstanceRepairAsync(
         string taskTitle,
         FrontendInstanceRepairRequest request,
-        Action<FrontendInstanceRepairTelemetrySnapshot>? onTelemetry = null,
+        Action<FrontendInstanceRepairProgressSnapshot>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
         var repairTask = new FrontendManagedInstanceRepairTask(
             taskTitle,
-            (taskTelemetry, taskCancellationToken) =>
+            (taskProgress, taskCancellationToken) =>
             {
-                void PublishTelemetry(FrontendInstanceRepairTelemetrySnapshot snapshot)
+                void PublishProgress(FrontendInstanceRepairProgressSnapshot snapshot)
                 {
-                    taskTelemetry(snapshot);
-                    onTelemetry?.Invoke(snapshot);
+                    taskProgress(snapshot);
+                    onProgress?.Invoke(snapshot);
                 }
 
-                return _shellActionService.RepairInstance(request, PublishTelemetry, taskCancellationToken);
+                return _shellActionService.RepairInstance(request, PublishProgress, taskCancellationToken);
             });
 
         TaskCenter.Register(repairTask, start: false);
@@ -32,22 +32,22 @@ internal sealed partial class FrontendShellViewModel
 
 internal sealed class FrontendManagedInstanceRepairTask(
     string title,
-    Func<Action<FrontendInstanceRepairTelemetrySnapshot>, CancellationToken, FrontendInstanceRepairResult> executeRepair)
-    : ITask, ITaskProgressive, ITaskGroup, ITaskTelemetry, ITaskCancelable
+    Func<Action<FrontendInstanceRepairProgressSnapshot>, CancellationToken, FrontendInstanceRepairResult> executeRepair)
+    : ITask, ITaskProgressive, ITaskGroup, ITaskProgressStatus, ITaskCancelable
 {
     private readonly FrontendInstallStageTask _supportStage = new("补全游戏主文件与支持库");
     private readonly FrontendInstallStageTask _assetStage = new("补全游戏资源文件");
     private readonly CancellationTokenSource _cancellation = new();
     private bool _stagesAdded;
     private double _progress;
-    private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", null, null);
-    private FrontendInstanceRepairTelemetrySnapshot? _lastSnapshot;
+    private FrontendInstanceRepairProgressSnapshot? _lastSnapshot;
+    private TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", null, null);
 
     public string Title { get; } = title;
 
     public FrontendInstanceRepairResult? Result { get; private set; }
 
-    public TaskTelemetrySnapshot Telemetry => _telemetry;
+    public TaskProgressStatusSnapshot ProgressStatus => _progressStatus;
 
     public event TaskStateEvent StateChanged = delegate { };
 
@@ -57,7 +57,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
 
     public event TaskGroupEvent RemoveTask = delegate { };
 
-    public event TaskTelemetryEvent TelemetryChanged = delegate { };
+    public event TaskProgressStatusEvent ProgressStatusChanged = delegate { };
 
     public void Cancel()
     {
@@ -83,22 +83,29 @@ internal sealed class FrontendManagedInstanceRepairTask(
         try
         {
             StateChanged(TaskState.Running, "正在校验并补全实例文件…");
-            Result = await Task.Run(() => executeRepair(ApplyTelemetrySnapshot, executionToken), executionToken);
+            Result = await Task.Run(() => executeRepair(ApplyProgressSnapshot, executionToken), executionToken);
             CompleteSuccessfully(Result);
         }
         catch (OperationCanceledException)
         {
-            PublishTelemetry(new TaskTelemetrySnapshot(
-                $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
-                "0 B/s",
-                _telemetry.RemainingFileCount,
-                null));
+            PublishProgressStatus(
+                new TaskProgressStatusSnapshot(
+                    $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
+                    "0 B/s",
+                    _progressStatus.RemainingFileCount,
+                    null));
             MarkCancellation();
             StateChanged(TaskState.Canceled, "实例文件校验已取消");
             throw;
         }
         catch (Exception ex)
         {
+            PublishProgressStatus(
+                new TaskProgressStatusSnapshot(
+                    $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
+                    "0 B/s",
+                    _progressStatus.RemainingFileCount,
+                    null));
             MarkFailure(ex.Message);
             StateChanged(TaskState.Failed, ex.Message);
             throw;
@@ -117,7 +124,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
         _stagesAdded = true;
     }
 
-    private void ApplyTelemetrySnapshot(FrontendInstanceRepairTelemetrySnapshot snapshot)
+    private void ApplyProgressSnapshot(FrontendInstanceRepairProgressSnapshot snapshot)
     {
         _lastSnapshot = snapshot;
 
@@ -141,11 +148,12 @@ internal sealed class FrontendManagedInstanceRepairTask(
 
         _progress = snapshot.Progress;
         ProgressChanged(_progress);
-        PublishTelemetry(new TaskTelemetrySnapshot(
-            $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
-            snapshot.SpeedBytesPerSecond > 0d ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s" : "0 B/s",
-            snapshot.RemainingFileCount,
-            null));
+        PublishProgressStatus(
+            new TaskProgressStatusSnapshot(
+                $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
+                snapshot.SpeedBytesPerSecond > 0d ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s" : "0 B/s",
+                snapshot.RemainingFileCount,
+                null));
 
         StateChanged(
             TaskState.Running,
@@ -182,7 +190,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
 
         _progress = 1d;
         ProgressChanged(_progress);
-        PublishTelemetry(new TaskTelemetrySnapshot("100%", "0 B/s", 0, null));
+        PublishProgressStatus(new TaskProgressStatusSnapshot("100%", "0 B/s", 0, null));
         StateChanged(
             TaskState.Success,
             $"已下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
@@ -245,14 +253,14 @@ internal sealed class FrontendManagedInstanceRepairTask(
         stage.Report(snapshot.Progress >= 0.999 ? TaskState.Success : TaskState.Running, message, snapshot.Progress);
     }
 
-    private void PublishTelemetry(TaskTelemetrySnapshot snapshot)
+    private void PublishProgressStatus(TaskProgressStatusSnapshot snapshot)
     {
-        _telemetry = snapshot;
-        TelemetryChanged(snapshot);
+        _progressStatus = snapshot;
+        ProgressStatusChanged(snapshot);
     }
 
     private static FrontendInstanceRepairGroupSnapshot BuildMergedGroupSnapshot(
-        FrontendInstanceRepairTelemetrySnapshot snapshot,
+        FrontendInstanceRepairProgressSnapshot snapshot,
         params FrontendInstanceRepairFileGroup[] groups)
     {
         var available = groups
@@ -281,7 +289,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
     }
 
     private static FrontendInstanceRepairGroupSnapshot GetGroupSnapshot(
-        FrontendInstanceRepairTelemetrySnapshot snapshot,
+        FrontendInstanceRepairProgressSnapshot snapshot,
         FrontendInstanceRepairFileGroup group)
     {
         return snapshot.Groups.TryGetValue(group, out var value)
@@ -307,4 +315,5 @@ internal sealed class FrontendManagedInstanceRepairTask(
 
         return $"{size:0.##} {units[unitIndex]}";
     }
+
 }

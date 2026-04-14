@@ -2287,20 +2287,20 @@ internal sealed class FrontendManagedFileDownloadTask(
     TimeSpan requestTimeout,
     Action<string>? onStarted = null,
     Action<string>? onCompleted = null,
-    Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskTelemetry, ITaskCancelable
+    Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
 {
     private readonly CancellationTokenSource _cancellation = new();
-    private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", 1, null);
+    private TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", 1, null);
 
     public string Title { get; } = title;
 
-    public TaskTelemetrySnapshot Telemetry => _telemetry;
+    public TaskProgressStatusSnapshot ProgressStatus => _progressStatus;
 
     public event TaskStateEvent StateChanged = delegate { };
 
     public event TaskProgressEvent ProgressChanged = delegate { };
 
-    public event TaskTelemetryEvent TelemetryChanged = delegate { };
+    public event TaskProgressStatusEvent ProgressStatusChanged = delegate { };
 
     public void Cancel()
     {
@@ -2359,7 +2359,7 @@ internal sealed class FrontendManagedFileDownloadTask(
                     {
                         var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
                         var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
-                        PublishTelemetry(progress, speed);
+                        PublishProgressStatus(progress, speed);
                         lastReportedAt = now;
                         lastReportedBytes = totalRead;
                         StateChanged(TaskState.Running, $"正在下载 {Path.GetFileName(targetPath)}…");
@@ -2370,14 +2370,14 @@ internal sealed class FrontendManagedFileDownloadTask(
             }
 
             ProgressChanged(1d);
-            PublishTelemetry(1d, 0d, 0);
+            PublishProgressStatus(1d, 0d, 0);
             StateChanged(TaskState.Success, $"已保存到 {targetPath}");
             onCompleted?.Invoke(targetPath);
         }
         catch (OperationCanceledException)
         {
             CleanupPartialDownload();
-            PublishTelemetry(0d, 0d);
+            PublishProgressStatus(0d, 0d);
             StateChanged(TaskState.Canceled, "下载已取消");
             onFailed?.Invoke($"{Path.GetFileName(targetPath)} 下载已取消");
             throw;
@@ -2385,7 +2385,7 @@ internal sealed class FrontendManagedFileDownloadTask(
         catch (Exception ex)
         {
             CleanupPartialDownload();
-            PublishTelemetry(0d, 0d);
+            PublishProgressStatus(0d, 0d);
             StateChanged(TaskState.Failed, ex.Message);
             onFailed?.Invoke($"{Path.GetFileName(targetPath)} 下载失败");
             throw;
@@ -2419,14 +2419,14 @@ internal sealed class FrontendManagedFileDownloadTask(
         }
     }
 
-    private void PublishTelemetry(double progress, double speedBytesPerSecond, int? remainingFileCount = 1)
+    private void PublishProgressStatus(double progress, double speedBytesPerSecond, int? remainingFileCount = 1)
     {
-        _telemetry = new TaskTelemetrySnapshot(
+        _progressStatus = new TaskProgressStatusSnapshot(
             $"{Math.Round(progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
             $"{FormatBytes(speedBytesPerSecond)}/s",
             remainingFileCount,
             null);
-        TelemetryChanged(_telemetry);
+        ProgressStatusChanged(_progressStatus);
     }
 
     private static string FormatBytes(double value)
@@ -2440,4 +2440,5 @@ internal sealed class FrontendManagedFileDownloadTask(
             _ => $"{absolute:0} B"
         };
     }
+
 }

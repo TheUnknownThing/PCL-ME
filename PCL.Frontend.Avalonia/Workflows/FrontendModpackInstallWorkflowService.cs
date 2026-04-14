@@ -1124,21 +1124,21 @@ internal sealed class FrontendManagedModpackInstallTask(
     TimeSpan requestTimeout,
     Action<string>? onStarted = null,
     Action<FrontendModpackInstallResult>? onCompleted = null,
-    Action<string>? onFailed = null) : PCL.Core.App.Tasks.ITask, PCL.Core.App.Tasks.ITaskProgressive, PCL.Core.App.Tasks.ITaskTelemetry, PCL.Core.App.Tasks.ITaskCancelable
+    Action<string>? onFailed = null) : PCL.Core.App.Tasks.ITask, PCL.Core.App.Tasks.ITaskProgressive, PCL.Core.App.Tasks.ITaskProgressStatus, PCL.Core.App.Tasks.ITaskCancelable
 {
     private readonly CancellationTokenSource _cancellation = new();
-    private PCL.Core.App.Tasks.TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", 1, null);
     private double _progress;
+    private PCL.Core.App.Tasks.TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", 1, null);
 
     public string Title { get; } = title;
 
-    public PCL.Core.App.Tasks.TaskTelemetrySnapshot Telemetry => _telemetry;
+    public PCL.Core.App.Tasks.TaskProgressStatusSnapshot ProgressStatus => _progressStatus;
 
     public event PCL.Core.App.Tasks.TaskStateEvent StateChanged = delegate { };
 
     public event PCL.Core.App.Tasks.TaskProgressEvent ProgressChanged = delegate { };
 
-    public event PCL.Core.App.Tasks.TaskTelemetryEvent TelemetryChanged = delegate { };
+    public event PCL.Core.App.Tasks.TaskProgressStatusEvent ProgressStatusChanged = delegate { };
 
     public void Cancel()
     {
@@ -1170,18 +1170,30 @@ internal sealed class FrontendManagedModpackInstallTask(
                 token).ConfigureAwait(false);
 
             PublishProgress(1d);
-            PublishTelemetry(new PCL.Core.App.Tasks.TaskTelemetrySnapshot("100%", "0 B/s", 0, null));
+            PublishProgressStatus(new PCL.Core.App.Tasks.TaskProgressStatusSnapshot("100%", "0 B/s", 0, null));
             PublishState(PCL.Core.App.Tasks.TaskState.Success, "整合包安装完成");
             onCompleted?.Invoke(result);
         }
         catch (OperationCanceledException)
         {
             CleanupFailedInstall();
+            PublishProgressStatus(
+                new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
+                    $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
+                    "0 B/s",
+                    _progressStatus.RemainingFileCount,
+                    null));
             PublishState(PCL.Core.App.Tasks.TaskState.Canceled, "整合包安装已取消");
         }
         catch (Exception ex)
         {
             CleanupFailedInstall();
+            PublishProgressStatus(
+                new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
+                    $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
+                    "0 B/s",
+                    _progressStatus.RemainingFileCount,
+                    null));
             PublishState(PCL.Core.App.Tasks.TaskState.Failed, ex.Message);
             onFailed?.Invoke(ex.Message);
         }
@@ -1220,7 +1232,6 @@ internal sealed class FrontendManagedModpackInstallTask(
         var totalRead = 0L;
         var lastReportedBytes = 0L;
         var lastReportedAt = Environment.TickCount64;
-
         while (true)
         {
             var read = await sourceStream.ReadAsync(buffer, token).ConfigureAwait(false);
@@ -1237,14 +1248,13 @@ internal sealed class FrontendManagedModpackInstallTask(
                 ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
                 : 0d;
             PublishProgress(progress * 0.35);
-
             var now = Environment.TickCount64;
             if (now - lastReportedAt >= 250)
             {
                 var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
                 var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
-                PublishTelemetry(
-                    new PCL.Core.App.Tasks.TaskTelemetrySnapshot(
+                PublishProgressStatus(
+                    new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
                         $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
                         speed > 0d ? $"{FormatBytes(speed)}/s" : "0 B/s",
                         1,
@@ -1254,8 +1264,8 @@ internal sealed class FrontendManagedModpackInstallTask(
             }
         }
 
-        PublishTelemetry(
-            new PCL.Core.App.Tasks.TaskTelemetrySnapshot(
+        PublishProgressStatus(
+            new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
                 $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
                 "0 B/s",
                 1,
@@ -1286,8 +1296,8 @@ internal sealed class FrontendManagedModpackInstallTask(
                 ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
                 : 1d;
             PublishProgress(progress * 0.35);
-            PublishTelemetry(
-                new PCL.Core.App.Tasks.TaskTelemetrySnapshot(
+            PublishProgressStatus(
+                new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
                     $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
                     "0 B/s",
                     1,
@@ -1310,8 +1320,8 @@ internal sealed class FrontendManagedModpackInstallTask(
     private void UpdateFromInstallStatus(FrontendModpackInstallStatus status)
     {
         PublishProgress(0.35 + status.Progress * 0.65);
-        PublishTelemetry(
-            new PCL.Core.App.Tasks.TaskTelemetrySnapshot(
+        PublishProgressStatus(
+            new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
                 $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
                 status.SpeedBytesPerSecond is > 0d
                     ? $"{FormatBytes(status.SpeedBytesPerSecond.Value)}/s"
@@ -1338,10 +1348,10 @@ internal sealed class FrontendManagedModpackInstallTask(
         ProgressChanged(_progress);
     }
 
-    private void PublishTelemetry(PCL.Core.App.Tasks.TaskTelemetrySnapshot snapshot)
+    private void PublishProgressStatus(PCL.Core.App.Tasks.TaskProgressStatusSnapshot snapshot)
     {
-        _telemetry = snapshot;
-        TelemetryChanged(snapshot);
+        _progressStatus = snapshot;
+        ProgressStatusChanged(snapshot);
     }
 
     private static string FormatBytes(double bytes)
@@ -1357,6 +1367,7 @@ internal sealed class FrontendManagedModpackInstallTask(
 
         return unitIndex == 0 ? $"{Math.Round(value):0} {units[unitIndex]}" : $"{value:0.##} {units[unitIndex]}";
     }
+
 }
 
 internal sealed record FrontendModpackInstallRequest(

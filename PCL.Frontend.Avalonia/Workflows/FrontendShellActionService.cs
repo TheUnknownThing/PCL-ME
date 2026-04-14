@@ -168,10 +168,10 @@ internal sealed class FrontendShellActionService(
 
     public FrontendInstanceRepairResult RepairInstance(
         FrontendInstanceRepairRequest request,
-        Action<FrontendInstanceRepairTelemetrySnapshot>? onTelemetry = null,
+        Action<FrontendInstanceRepairProgressSnapshot>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
-        return FrontendInstanceRepairService.Repair(request, onTelemetry, cancellationToken);
+        return FrontendInstanceRepairService.Repair(request, onProgress, cancellationToken);
     }
 
     public bool TryOpenExternalTarget(string target, out string? error)

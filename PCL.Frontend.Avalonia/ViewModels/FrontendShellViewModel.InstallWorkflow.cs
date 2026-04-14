@@ -420,7 +420,7 @@ internal sealed partial class FrontendShellViewModel
                                 (phase, message) => installTask.AdvancePhase(phase, message),
                                 snapshot =>
                                 {
-                                    installTask.ApplyRepairTelemetry(snapshot);
+                                    installTask.ApplyRepairProgress(snapshot);
                                 },
                                 cancelToken),
                             cancelToken);
@@ -727,7 +727,7 @@ internal sealed class FrontendInstallTask(
     string title,
     Func<FrontendInstallTask, CancellationToken, Task> executeAsync,
     Func<Exception, Task>? onErrorAsync = null)
-    : ITask, ITaskProgressive, ITaskGroup, ITaskTelemetry, ITaskCancelable
+    : ITask, ITaskProgressive, ITaskGroup, ITaskProgressStatus, ITaskCancelable
 {
     private readonly Dictionary<FrontendInstallTaskStage, FrontendInstallStageTask> _stages = new()
     {
@@ -746,12 +746,12 @@ internal sealed class FrontendInstallTask(
     };
 
     private double _progress;
-    private TaskTelemetrySnapshot _telemetry = new("0%", "0 B/s", null, null);
+    private TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", null, null);
     private readonly CancellationTokenSource _cancellation = new();
 
     public string Title { get; } = title;
 
-    public TaskTelemetrySnapshot Telemetry => _telemetry;
+    public TaskProgressStatusSnapshot ProgressStatus => _progressStatus;
 
     public event TaskStateEvent StateChanged = delegate { };
 
@@ -761,7 +761,7 @@ internal sealed class FrontendInstallTask(
 
     public event TaskGroupEvent RemoveTask = delegate { };
 
-    public event TaskTelemetryEvent TelemetryChanged = delegate { };
+    public event TaskProgressStatusEvent ProgressStatusChanged = delegate { };
 
     public void Cancel()
     {
@@ -811,7 +811,7 @@ internal sealed class FrontendInstallTask(
         }
     }
 
-    public void ApplyRepairTelemetry(FrontendInstanceRepairTelemetrySnapshot snapshot)
+    public void ApplyRepairProgress(FrontendInstanceRepairProgressSnapshot snapshot)
     {
         var supportSnapshot = BuildMergedGroupSnapshot(
             snapshot,
@@ -837,14 +837,12 @@ internal sealed class FrontendInstallTask(
             UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "无需下载游戏资源文件", 1d);
         }
 
-        var progressText = $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%";
-        var speedText = snapshot.SpeedBytesPerSecond > 0d
-            ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s"
-            : "0 B/s";
-        PublishTelemetry(
-            new TaskTelemetrySnapshot(
-                progressText,
-                speedText,
+        PublishProgressStatus(
+            new TaskProgressStatusSnapshot(
+                $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
+                snapshot.SpeedBytesPerSecond > 0d
+                    ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s"
+                    : "0 B/s",
                 snapshot.RemainingFileCount,
                 null));
 
@@ -861,8 +859,8 @@ internal sealed class FrontendInstallTask(
         UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "游戏支持文件已准备完成", 1d);
         UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "资源文件已准备完成", 1d);
         UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Success, "安装完成", 1d);
-        PublishTelemetry(
-            new TaskTelemetrySnapshot(
+        PublishProgressStatus(
+            new TaskProgressStatusSnapshot(
                 "100%",
                 "0 B/s",
                 0,
@@ -894,7 +892,12 @@ internal sealed class FrontendInstallTask(
         catch (OperationCanceledException)
         {
             UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Canceled, "任务已取消", _progress);
-            PublishTelemetry(new TaskTelemetrySnapshot($"{Math.Round(_progress * 100, 1):0.#}%", "0 B/s", null, null));
+            PublishProgressStatus(
+                new TaskProgressStatusSnapshot(
+                    $"{Math.Round(_progress * 100, 1):0.#}%",
+                    "0 B/s",
+                    null,
+                    null));
             ReportState(TaskState.Canceled, "任务已取消");
             throw;
         }
@@ -916,11 +919,11 @@ internal sealed class FrontendInstallTask(
         var stage = _stages.Values.FirstOrDefault(candidate => candidate.State == TaskState.Running)
                     ?? _stages[FrontendInstallTaskStage.Finalize];
         stage.Report(TaskState.Failed, message, stage.Progress);
-        PublishTelemetry(
-            new TaskTelemetrySnapshot(
+        PublishProgressStatus(
+            new TaskProgressStatusSnapshot(
                 $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
-                _telemetry.SpeedText,
-                _telemetry.RemainingFileCount,
+                _progressStatus.SpeedText,
+                _progressStatus.RemainingFileCount,
                 null));
     }
 
@@ -955,15 +958,15 @@ internal sealed class FrontendInstallTask(
         UpdateStage(stage, state, message, snapshot.Progress);
     }
 
-    private void PublishTelemetry(TaskTelemetrySnapshot snapshot)
-    {
-        _telemetry = snapshot;
-        TelemetryChanged(snapshot);
-    }
-
     private void ReportState(TaskState state, string message)
     {
         StateChanged(state, message);
+    }
+
+    private void PublishProgressStatus(TaskProgressStatusSnapshot snapshot)
+    {
+        _progressStatus = snapshot;
+        ProgressStatusChanged(snapshot);
     }
 
     private void RecalculateProgress()
@@ -973,15 +976,15 @@ internal sealed class FrontendInstallTask(
             ? 0d
             : _stages.Sum(pair => pair.Value.Progress * _stageWeights[pair.Key]) / totalWeight;
         ProgressChanged(_progress);
-        PublishTelemetry(
-            _telemetry with
+        PublishProgressStatus(
+            _progressStatus with
             {
                 ProgressText = $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%"
             });
     }
 
     private static FrontendInstanceRepairGroupSnapshot BuildMergedGroupSnapshot(
-        FrontendInstanceRepairTelemetrySnapshot snapshot,
+        FrontendInstanceRepairProgressSnapshot snapshot,
         params FrontendInstanceRepairFileGroup[] groups)
     {
         var available = groups
@@ -1010,7 +1013,7 @@ internal sealed class FrontendInstallTask(
     }
 
     private static FrontendInstanceRepairGroupSnapshot GetGroupSnapshot(
-        FrontendInstanceRepairTelemetrySnapshot snapshot,
+        FrontendInstanceRepairProgressSnapshot snapshot,
         FrontendInstanceRepairFileGroup group)
     {
         return snapshot.Groups.TryGetValue(group, out var value)
@@ -1036,6 +1039,7 @@ internal sealed class FrontendInstallTask(
 
         return $"{size:0.##} {units[unitIndex]}";
     }
+
 }
 
 internal enum FrontendInstallTaskStage

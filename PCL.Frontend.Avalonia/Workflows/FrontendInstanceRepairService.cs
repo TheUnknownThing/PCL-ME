@@ -12,7 +12,7 @@ internal static class FrontendInstanceRepairService
 
     public static FrontendInstanceRepairResult Repair(
         FrontendInstanceRepairRequest request,
-        Action<FrontendInstanceRepairTelemetrySnapshot>? onTelemetry = null,
+        Action<FrontendInstanceRepairProgressSnapshot>? onProgress = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -22,7 +22,7 @@ internal static class FrontendInstanceRepairService
         var downloadedFiles = new List<string>();
         var reusedFiles = new List<string>();
         var manifestDocuments = LoadManifestDocuments(request.LauncherDirectory, request.InstanceName);
-        var progressTracker = onTelemetry is null ? null : new FrontendInstanceRepairProgressTracker(onTelemetry);
+        var progressTracker = onProgress is null ? null : new FrontendInstanceRepairProgressTracker(onProgress);
 
         if (manifestDocuments.Count == 0)
         {
@@ -701,14 +701,14 @@ internal sealed record FrontendInstanceRepairFilePlan(
     bool ForceDownload,
     FrontendInstanceRepairFileGroup Group);
 
-internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInstanceRepairTelemetrySnapshot> onTelemetry)
+internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInstanceRepairProgressSnapshot> onProgress)
 {
-    private const int TelemetryIntervalMs = 120;
+    private const int ProgressIntervalMs = 120;
     private readonly Dictionary<string, ProgressEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
     private long _lastSampleBytes;
     private long _lastSampleTimestampMs;
-    private long _lastTelemetryTimestampMs;
+    private long _lastProgressTimestampMs;
     private double _speedBytesPerSecond;
     private string _currentFileName = string.Empty;
 
@@ -807,7 +807,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
             }
         }
 
-        if (!forceEmit && nowMs - _lastTelemetryTimestampMs < TelemetryIntervalMs)
+        if (!forceEmit && nowMs - _lastProgressTimestampMs < ProgressIntervalMs)
         {
             return;
         }
@@ -832,9 +832,9 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
 
         var totalFiles = _entries.Count;
         var completedFiles = _entries.Values.Count(entry => entry.IsCompleted);
-        _lastTelemetryTimestampMs = nowMs;
-        onTelemetry(
-            new FrontendInstanceRepairTelemetrySnapshot(
+        _lastProgressTimestampMs = nowMs;
+        onProgress(
+            new FrontendInstanceRepairProgressSnapshot(
                 groups,
                 _currentFileName,
                 _entries.Values.Count(entry => entry.IsCompleted && entry.WasDownloaded),

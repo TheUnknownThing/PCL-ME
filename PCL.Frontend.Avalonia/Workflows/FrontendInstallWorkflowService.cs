@@ -210,7 +210,7 @@ internal static class FrontendInstallWorkflowService
     public static FrontendInstallApplyResult Apply(
         FrontendInstallApplyRequest request,
         Action<FrontendInstallApplyPhase, string>? onPhaseChanged = null,
-        Action<FrontendInstanceRepairTelemetrySnapshot>? onRepairTelemetry = null,
+        Action<FrontendInstanceRepairProgressSnapshot>? onRepairProgress = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -277,7 +277,7 @@ internal static class FrontendInstallWorkflowService
                 targetDirectory,
                 request.TargetInstanceName,
                 request.ForceCoreRefresh),
-                onRepairTelemetry,
+                onRepairProgress,
                 cancelToken)
             : new FrontendInstanceRepairResult([], []);
 

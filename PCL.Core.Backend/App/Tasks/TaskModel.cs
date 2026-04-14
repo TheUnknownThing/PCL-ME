@@ -68,7 +68,7 @@ public partial class TaskModel : ObservableObject
     [ObservableProperty] private string _progressText = string.Empty;
 
     /// <summary>
-    /// 任务当前下载速度文本
+    /// 任务当前速度文本
     /// </summary>
     [ObservableProperty] private string _speedText = string.Empty;
 

@@ -38,7 +38,7 @@ public static class TaskCenter
         var cancelable = instance as ITaskCancelable;
         var pausable = instance as ITaskPausable;
         var progressive = instance as ITaskProgressive;
-        var telemetry = instance as ITaskTelemetry;
+        var progressStatus = instance as ITaskProgressStatus;
         // ReSharper restore SuspiciousTypeConversion.Global
 
         TaskModel? model = null;
@@ -82,9 +82,9 @@ public static class TaskCenter
         };
         TouchModel(model, updateStateSince: false);
 
-        if (telemetry != null)
+        if (progressStatus != null)
         {
-            ApplyTelemetry(model, telemetry.Telemetry);
+            ApplyProgressStatus(model, progressStatus.ProgressStatus);
         }
 
         // state event
@@ -117,13 +117,13 @@ public static class TaskCenter
             };
         }
 
-        if (telemetry != null)
+        if (progressStatus != null)
         {
-            telemetry.TelemetryChanged += snapshot =>
+            progressStatus.ProgressStatusChanged += snapshot =>
             {
                 RunOnContext(context, () =>
                 {
-                    ApplyTelemetry(model, snapshot);
+                    ApplyProgressStatus(model, snapshot);
                     TouchModel(model, updateStateSince: false);
                 });
             };
@@ -158,7 +158,7 @@ public static class TaskCenter
         return model;
     }
 
-    private static void ApplyTelemetry(TaskModel model, TaskTelemetrySnapshot snapshot)
+    private static void ApplyProgressStatus(TaskModel model, TaskProgressStatusSnapshot snapshot)
     {
         model.ProgressText = snapshot.ProgressText;
         model.SpeedText = snapshot.SpeedText;

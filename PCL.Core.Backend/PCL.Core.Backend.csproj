@@ -77,7 +77,7 @@
     <Compile Include="App/Tasks/ITaskGroup.cs" />
     <Compile Include="App/Tasks/ITaskPausable.cs" />
     <Compile Include="App/Tasks/ITaskProgressive.cs" />
-    <Compile Include="App/Tasks/ITaskTelemetry.cs" />
+    <Compile Include="App/Tasks/ITaskProgressStatus.cs" />
     <Compile Include="App/Tasks/TaskCenter.cs" />
     <Compile Include="App/Tasks/TaskModel.cs" />
     <Compile Include="App/Tasks/TaskState.cs" />

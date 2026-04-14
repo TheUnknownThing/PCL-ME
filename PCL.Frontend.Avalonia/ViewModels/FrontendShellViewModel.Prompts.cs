@@ -838,7 +838,7 @@ internal sealed partial class FrontendShellViewModel
                     _instanceComposition.Selection.InstanceDirectory,
                     _instanceComposition.Selection.InstanceName,
                     ForceCoreRefresh: false),
-                ApplyLaunchRepairTelemetry,
+                ApplyLaunchRepairProgress,
                 cancellationToken);
             var completionMessage = $"启动前文件校验完成：下载 {repairResult.DownloadedFiles.Count} 个文件，复用 {repairResult.ReusedFiles.Count} 个文件。";
             AppendLaunchLogLine(completionMessage);

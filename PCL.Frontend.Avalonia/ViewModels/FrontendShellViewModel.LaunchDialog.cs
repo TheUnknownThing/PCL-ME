@@ -142,7 +142,7 @@ internal sealed partial class FrontendShellViewModel
         RaiseLaunchDialogProperties();
     }
 
-    private void ApplyLaunchRepairTelemetry(FrontendInstanceRepairTelemetrySnapshot snapshot)
+    private void ApplyLaunchRepairProgress(FrontendInstanceRepairProgressSnapshot snapshot)
     {
         Dispatcher.UIThread.Post(() =>
         {
@@ -160,7 +160,7 @@ internal sealed partial class FrontendShellViewModel
         });
     }
 
-    private string ResolveLaunchRepairStage(FrontendInstanceRepairTelemetrySnapshot snapshot)
+    private string ResolveLaunchRepairStage(FrontendInstanceRepairProgressSnapshot snapshot)
     {
         var assets = snapshot.Groups.TryGetValue(FrontendInstanceRepairFileGroup.Assets, out var assetGroup)
             ? assetGroup
