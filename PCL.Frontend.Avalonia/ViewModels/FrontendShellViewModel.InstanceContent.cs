@@ -668,6 +668,9 @@ internal sealed partial class FrontendShellViewModel
 
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(FrontendInstanceResourceEntry entry)
     {
+        var display = IsInstanceResourceToggleSupported()
+            ? FrontendGameManagementService.ResolveLocalModDisplay(entry, SelectedModLocalNameStyleIndex)
+            : new FrontendLocalModDisplay(entry.Title, entry.Summary);
         var detailCommand = new ActionCommand(() => _ = ShowInstanceResourceDetailsAsync(entry));
         var websiteCommand = string.IsNullOrWhiteSpace(entry.Website)
             ? null
@@ -689,8 +692,8 @@ internal sealed partial class FrontendShellViewModel
 
         return new InstanceResourceEntryViewModel(
             LoadInstanceResourceBitmap(entry),
-            entry.Title,
-            entry.Summary,
+            display.Title,
+            display.Summary,
             entry.Meta,
             entry.Path,
             openCommand,

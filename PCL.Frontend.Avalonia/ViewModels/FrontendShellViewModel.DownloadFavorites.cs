@@ -817,7 +817,11 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 Directory.CreateDirectory(targetDirectory);
-                var targetFileName = SanitizeCommunityProjectReleaseFileName(release.SuggestedFileName, release.Title);
+                var targetFileName = FrontendGameManagementService.ResolveCommunityResourceFileName(
+                    projectTitle,
+                    release.SuggestedFileName,
+                    release.Title,
+                    SelectedFileNameFormatIndex);
                 var installed = FindInstalledCommunityProjectResource(targetComposition, request.Route, projectTitle, projectState);
                 if (request.Route != LauncherFrontendSubpageKey.DownloadWorld
                     && installed is not null

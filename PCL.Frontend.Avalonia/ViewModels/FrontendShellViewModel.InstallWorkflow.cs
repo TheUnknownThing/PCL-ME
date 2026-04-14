@@ -428,7 +428,11 @@ internal sealed partial class FrontendShellViewModel
 
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
+                            if (isExistingInstance || AutoSelectNewInstance)
+                            {
+                                _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
+                            }
+
                             ReloadInstanceComposition();
                             ReloadDownloadComposition();
                             if (!isExistingInstance)

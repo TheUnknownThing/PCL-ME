@@ -137,7 +137,7 @@ internal static class FrontendLaunchCompositionService
                               Directory.EnumerateFileSystemEntries(Path.Combine(indieDirectory, "saves")).Any(),
             ReleaseTime: manifestSummary.ReleaseTime ?? javaWorkflowRequest.ReleaseTime,
             LaunchWindowType: ReadValue(localConfig, "LaunchArgumentWindowType", (int)GameWindowSizeMode.Default),
-            AutoChangeLanguage: false));
+            AutoChangeLanguage: ReadValue(sharedConfig, "ToolHelpChinese", true)));
         var argumentPlan = BuildArgumentPlan(
             runtimePaths,
             launcherFolder,

@@ -930,7 +930,7 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+            var suggestedFileName = ResolveCommunityProjectReleaseFileName(entry, CommunityProjectTitle);
             var extension = Path.GetExtension(suggestedFileName);
             var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
             var suggestedStartFolder = ResolveCommunityProjectDownloadStartDirectory();
@@ -1344,9 +1344,9 @@ internal sealed partial class FrontendShellViewModel
         AvaloniaHintBus.Show($"{result.InstanceName} 安装完成", AvaloniaHintTheme.Success);
     }
 
-    private static string ResolveCommunityProjectReleaseExtension(FrontendCommunityProjectReleaseEntry entry)
+    private string ResolveCommunityProjectReleaseExtension(FrontendCommunityProjectReleaseEntry entry)
     {
-        var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+        var suggestedFileName = ResolveCommunityProjectReleaseFileName(entry, _communityProjectState.Title);
         var extension = Path.GetExtension(suggestedFileName);
         if (!string.IsNullOrWhiteSpace(extension))
         {
@@ -1636,12 +1636,13 @@ internal sealed partial class FrontendShellViewModel
                    StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string SanitizeCommunityProjectReleaseFileName(string? suggestedFileName, string fallbackTitle)
+    private string ResolveCommunityProjectReleaseFileName(FrontendCommunityProjectReleaseEntry entry, string? projectTitle = null)
     {
-        var candidate = string.IsNullOrWhiteSpace(suggestedFileName) ? fallbackTitle : suggestedFileName.Trim();
-        var invalidCharacters = Path.GetInvalidFileNameChars();
-        var cleaned = new string(candidate.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
-        return string.IsNullOrWhiteSpace(cleaned) ? "community-resource-download" : cleaned;
+        return FrontendGameManagementService.ResolveCommunityResourceFileName(
+            projectTitle,
+            entry.SuggestedFileName,
+            entry.Title,
+            SelectedFileNameFormatIndex);
     }
 
     private static string FinalizeCommunityProjectInstalledArtifact(
