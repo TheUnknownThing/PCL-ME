@@ -24,16 +24,15 @@ public sealed class LauncherFrontendShellServiceTest
             new LauncherStartupConsentRequest(
                 LauncherStartupSpecialBuildKind.Ci,
                 IsSpecialBuildHintDisabled: false,
-                HasAcceptedEula: false,
-                IsTelemetryDefault: true),
+                HasAcceptedEula: false),
             new LauncherFrontendNavigationViewRequest(
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
                 HasRunningTasks: true,
                 HasGameLogs: true)));
 
         Assert.AreEqual(4, plan.Catalog.TopLevelPages.Count);
-        Assert.AreEqual(3, plan.Consent.Prompts.Count);
-        Assert.AreEqual(3, plan.Prompts.Count);
+        Assert.AreEqual(2, plan.Consent.Prompts.Count);
+        Assert.AreEqual(2, plan.Prompts.Count);
         Assert.AreEqual(LauncherFrontendPageKey.Launch, plan.Navigation.CurrentRoute.Page);
         Assert.AreEqual(LauncherFrontendPageKind.TopLevel, plan.Navigation.CurrentPage.Kind);
         Assert.AreEqual(2, plan.Navigation.UtilityEntries.Count(entry => entry.IsVisible));

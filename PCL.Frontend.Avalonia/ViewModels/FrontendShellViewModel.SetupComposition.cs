@@ -69,7 +69,6 @@ internal sealed partial class FrontendShellViewModel
         "UiAniFPS",
         "SystemMaxLog",
         "SystemDisableHardwareAcceleration",
-        "SystemTelemetry",
         "SystemNetEnableDoH",
         "SystemHttpProxyType",
         "SystemHttpProxyCustomUsername",
@@ -276,7 +275,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(MaxRealTimeLogValue));
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
                 RaisePropertyChanged(nameof(DisableHardwareAcceleration));
-                RaisePropertyChanged(nameof(EnableTelemetry));
                 RaisePropertyChanged(nameof(EnableDoH));
                 RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
                 RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
@@ -548,9 +546,6 @@ internal sealed partial class FrontendShellViewModel
             case nameof(DisableHardwareAcceleration):
                 _shellActionService.PersistSharedValue("SystemDisableHardwareAcceleration", DisableHardwareAcceleration);
                 break;
-            case nameof(EnableTelemetry):
-                _shellActionService.PersistSharedValue("SystemTelemetry", EnableTelemetry);
-                break;
             case nameof(EnableDoH):
                 _shellActionService.PersistSharedValue("SystemNetEnableDoH", EnableDoH);
                 break;
@@ -783,7 +778,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(MaxRealTimeLogValue));
         RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
         RaisePropertyChanged(nameof(DisableHardwareAcceleration));
-        RaisePropertyChanged(nameof(EnableTelemetry));
         RaisePropertyChanged(nameof(EnableDoH));
         RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
         RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));

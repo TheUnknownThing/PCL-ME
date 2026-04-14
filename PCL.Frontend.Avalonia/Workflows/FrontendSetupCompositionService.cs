@@ -215,7 +215,6 @@ internal static class FrontendSetupCompositionService
             AnimationFpsLimit: ReadValue(sharedConfig, "UiAniFPS", 59),
             MaxRealTimeLogValue: ReadValue(sharedConfig, "SystemMaxLog", 13),
             DisableHardwareAcceleration: ReadValue(sharedConfig, "SystemDisableHardwareAcceleration", false),
-            EnableTelemetry: ReadValue(sharedConfig, "SystemTelemetry", false),
             EnableDoH: ReadValue(sharedConfig, "SystemNetEnableDoH", true),
             HttpProxyTypeIndex: ReadValue(sharedConfig, "SystemHttpProxyType", 1),
             HttpProxyAddress: ReadProtectedValue(paths, "SystemHttpProxy"),

@@ -23,8 +23,7 @@ public enum LauncherStartupPromptActionKind
     Accept,
     Reject,
     OpenUrl,
-    ExitLauncher,
-    SetTelemetryEnabled
+    ExitLauncher
 }
 
 public enum LauncherStartupSpecialBuildKind

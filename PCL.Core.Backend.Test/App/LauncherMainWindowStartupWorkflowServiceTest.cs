@@ -20,12 +20,11 @@ public sealed class LauncherMainWindowStartupWorkflowServiceTest
                 SpecialBuildKind: LauncherStartupSpecialBuildKind.Ci,
                 IsSpecialBuildHintDisabled: false,
                 HasAcceptedEula: false,
-                IsTelemetryDefault: true,
                 CurrentStartupCount: 98));
 
         Assert.IsTrue(result.VersionIsolationMigration.ShouldStoreVersionIsolationV2);
         Assert.AreEqual(2, result.VersionIsolationMigration.VersionIsolationV2Value);
-        Assert.AreEqual(3, result.Consent.Prompts.Count);
+        Assert.AreEqual(2, result.Consent.Prompts.Count);
         Assert.AreEqual(99, result.Milestone.UpdatedCount);
         Assert.IsTrue(result.Milestone.ShouldAttemptUnlockHiddenTheme);
     }

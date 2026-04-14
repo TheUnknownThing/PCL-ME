@@ -72,11 +72,6 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   Content="禁用硬件加速"
                   IsChecked="{Binding DisableHardwareAcceleration}" />
-              <CheckBox
-                  Grid.Column="1"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="启用遥测数据收集"
-                  IsChecked="{Binding EnableTelemetry}" />
             </Grid>
 
             <Grid Grid.Row="8" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto">

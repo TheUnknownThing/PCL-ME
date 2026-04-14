@@ -252,7 +252,6 @@ internal sealed partial class FrontendShellViewModel
     private double _animationFpsLimit = 59;
     private double _maxRealTimeLogValue = 13;
     private bool _disableHardwareAcceleration;
-    private bool _enableTelemetry = true;
     private bool _isLaunchBlockedByPrompt;
     private bool _ignoreJavaCompatibilityWarningOnce;
     private bool _enableDoH = true;

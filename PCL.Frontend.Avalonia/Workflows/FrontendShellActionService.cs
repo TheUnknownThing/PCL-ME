@@ -86,11 +86,6 @@ internal sealed class FrontendShellActionService(
         PersistSharedValue("SystemEula", true);
     }
 
-    public void SetTelemetryEnabled(bool enabled)
-    {
-        PersistSharedValue("SystemTelemetry", enabled);
-    }
-
     public void PersistLocalValue<T>(string key, T value)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(RuntimePaths.LocalConfigPath)!);

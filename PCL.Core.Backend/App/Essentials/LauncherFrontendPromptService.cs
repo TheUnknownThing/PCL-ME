@@ -156,9 +156,6 @@ public static class LauncherFrontendPromptService
                     action.Value),
                 LauncherStartupPromptActionKind.ExitLauncher => new LauncherFrontendPromptCommand(
                     LauncherFrontendPromptCommandKind.ExitLauncher),
-                LauncherStartupPromptActionKind.SetTelemetryEnabled => new LauncherFrontendPromptCommand(
-                    LauncherFrontendPromptCommandKind.SetTelemetryEnabled,
-                    action.Value),
                 _ => throw new ArgumentOutOfRangeException(nameof(action), action.Kind, "Unknown startup prompt action.")
             }).ToArray());
     }
@@ -276,7 +273,6 @@ public enum LauncherFrontendPromptCommandKind
     RejectConsent = 2,
     OpenUrl = 3,
     ExitLauncher = 4,
-    SetTelemetryEnabled = 5,
     AbortLaunch = 6,
     AppendLaunchArgument = 7,
     PersistSetting = 8,

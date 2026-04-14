@@ -28,18 +28,16 @@ public sealed class LauncherFrontendPromptServiceTest
         var consent = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.Debug,
             IsSpecialBuildHintDisabled: false,
-            HasAcceptedEula: false,
-            IsTelemetryDefault: true));
+            HasAcceptedEula: false));
 
         var prompts = LauncherFrontendPromptService.BuildStartupPromptQueue(startupPlan, consent);
 
-        Assert.AreEqual(4, prompts.Count);
+        Assert.AreEqual(3, prompts.Count);
         Assert.AreEqual(LauncherFrontendPromptSource.StartupEnvironmentWarning, prompts[0].Source);
         Assert.AreEqual(LauncherFrontendPromptSeverity.Warning, prompts[0].Severity);
         Assert.AreEqual(LauncherFrontendPromptCommandKind.ContinueFlow, prompts[0].Options[0].Commands[0].Kind);
         Assert.AreEqual(LauncherFrontendPromptSource.StartupConsent, prompts[1].Source);
         Assert.AreEqual(LauncherFrontendPromptCommandKind.AcceptConsent, prompts[2].Options[0].Commands[0].Kind);
-        Assert.AreEqual(LauncherFrontendPromptCommandKind.SetTelemetryEnabled, prompts[3].Options[0].Commands[0].Kind);
     }
 
     [TestMethod]

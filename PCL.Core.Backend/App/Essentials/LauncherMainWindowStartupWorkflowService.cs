@@ -21,8 +21,7 @@ public static class LauncherMainWindowStartupWorkflowService
             new LauncherStartupConsentRequest(
                 request.SpecialBuildKind,
                 request.IsSpecialBuildHintDisabled,
-                request.HasAcceptedEula,
-                request.IsTelemetryDefault));
+                request.HasAcceptedEula));
 
         var milestone = LauncherStartupMilestoneService.AdvanceStartupCount(request.CurrentStartupCount);
 
@@ -43,7 +42,6 @@ public sealed record LauncherMainWindowStartupWorkflowRequest(
     LauncherStartupSpecialBuildKind SpecialBuildKind,
     bool IsSpecialBuildHintDisabled,
     bool HasAcceptedEula,
-    bool IsTelemetryDefault,
     int CurrentStartupCount);
 
 public sealed record LauncherMainWindowStartupWorkflowPlan(

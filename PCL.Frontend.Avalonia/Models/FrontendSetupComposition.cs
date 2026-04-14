@@ -73,7 +73,6 @@ internal sealed record FrontendSetupLauncherMiscState(
     double AnimationFpsLimit,
     double MaxRealTimeLogValue,
     bool DisableHardwareAcceleration,
-    bool EnableTelemetry,
     bool EnableDoH,
     int HttpProxyTypeIndex,
     string HttpProxyAddress,

@@ -28,11 +28,6 @@ public static class LauncherStartupConsentService
             prompts.Add(CreateEulaPrompt());
         }
 
-        if (request.IsTelemetryDefault)
-        {
-            prompts.Add(CreateTelemetryPrompt());
-        }
-
         return new LauncherStartupConsentResult(prompts);
     }
 
@@ -85,27 +80,6 @@ public static class LauncherStartupConsentService
                     "查看用户协议与免责声明",
                     [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.OpenUrl, EulaUrl)],
                     ClosesPrompt: false)
-            ]);
-    }
-
-    private static LauncherStartupPrompt CreateTelemetryPrompt()
-    {
-        return new LauncherStartupPrompt(
-            "启用遥测数据收集后，启动器将会收集并上报错误与设备环境信息，这可以帮助开发者修复潜在的问题、更好的进行规划和开发。" + Environment.NewLine +
-            "若启用此功能，我们将会收集以下信息：" + Environment.NewLine + Environment.NewLine +
-            "- 启动器内出现的错误" + Environment.NewLine +
-            "- 启动器版本信息与识别码" + Environment.NewLine +
-            "- Windows 系统版本与架构" + Environment.NewLine +
-            "- 已安装的物理内存大小" + Environment.NewLine +
-            "- NAT 与 IPv6 支持情况" + Environment.NewLine +
-            "- 是否使用过官方版 PCL、HMCL 或 BakaXL" + Environment.NewLine + Environment.NewLine +
-            "这些数据均不与你关联，我们也绝不会向第三方出售数据。" + Environment.NewLine +
-            "如果不希望启用遥测，可以选择拒绝。这不会影响其他功能的正常使用，但可能会影响开发者修复潜在 Bug。" + Environment.NewLine +
-            "你可以随时在启动器设置中调整这项设置。",
-            "启用遥测数据收集",
-            [
-                new LauncherStartupPromptButton("同意", [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.SetTelemetryEnabled, bool.TrueString)]),
-                new LauncherStartupPromptButton("拒绝", [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.SetTelemetryEnabled, bool.FalseString)])
             ]);
     }
 }

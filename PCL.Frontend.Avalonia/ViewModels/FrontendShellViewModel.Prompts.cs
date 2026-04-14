@@ -262,9 +262,6 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPromptCommandKind.AppendLaunchArgument:
                 AppendPromptLaunchArgument(command.Value);
                 break;
-            case LauncherFrontendPromptCommandKind.SetTelemetryEnabled:
-                SetTelemetryPreference(command.Value);
-                break;
             case LauncherFrontendPromptCommandKind.AcceptConsent:
                 AcceptPromptConsent();
                 break;
@@ -384,7 +381,6 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendPromptCommandKind.RejectConsent => "Reject consent",
             LauncherFrontendPromptCommandKind.OpenUrl => $"Open URL ({command.Value ?? "n/a"})",
             LauncherFrontendPromptCommandKind.ExitLauncher => "Exit launcher",
-            LauncherFrontendPromptCommandKind.SetTelemetryEnabled => $"Set telemetry = {command.Value ?? "n/a"}",
             LauncherFrontendPromptCommandKind.AbortLaunch => "Abort launch",
             LauncherFrontendPromptCommandKind.AppendLaunchArgument => $"Append launch arg ({command.Value ?? "n/a"})",
             LauncherFrontendPromptCommandKind.PersistSetting => $"Persist setting ({command.Value ?? "n/a"})",
@@ -442,21 +438,6 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.AcceptLauncherEula();
         UpdateStartupConsentRequest(request => request with { HasAcceptedEula = true });
         AddActivity("已同意协议授权", "协议授权状态已写入共享配置。");
-    }
-
-    private void SetTelemetryPreference(string? rawValue)
-    {
-        if (!bool.TryParse(rawValue, out var enabled))
-        {
-            AddFailureActivity("遥测设置失败", rawValue ?? "缺少遥测布尔值。");
-            return;
-        }
-
-        _shellActionService.SetTelemetryEnabled(enabled);
-        EnableTelemetry = enabled;
-        UpdateStartupConsentRequest(request => request with { IsTelemetryDefault = false });
-        RaisePropertyChanged(nameof(EnableTelemetry));
-        AddActivity("已更新遥测设置", enabled ? "已启用遥测数据收集。" : "已禁用遥测数据收集。");
     }
 
     private void ContinuePromptFlow(AvaloniaPromptLaneKind lane)

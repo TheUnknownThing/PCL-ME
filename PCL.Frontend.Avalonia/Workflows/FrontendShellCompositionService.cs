@@ -28,8 +28,7 @@ internal static class FrontendShellCompositionService
             new LauncherStartupConsentRequest(
                 mainWindowRequest.SpecialBuildKind,
                 mainWindowRequest.IsSpecialBuildHintDisabled,
-                mainWindowRequest.HasAcceptedEula,
-                mainWindowRequest.IsTelemetryDefault),
+                mainWindowRequest.HasAcceptedEula),
             mainWindowPlan.Consent,
             BuildNavigationRequest(paths, platformAdapter),
             "Runtime-composed shell inputs",
@@ -66,7 +65,6 @@ internal static class FrontendShellCompositionService
             SpecialBuildKind: GetStartupSpecialBuildKind(),
             IsSpecialBuildHintDisabled: !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PCL_DISABLE_DEBUG_HINT")),
             HasAcceptedEula: ReadValue(sharedConfig, "SystemEula", false),
-            IsTelemetryDefault: !sharedConfig.Exists("SystemTelemetry"),
             CurrentStartupCount: LauncherFrontendRuntimeStateService.ReadStartupCount(
                 paths.SharedConfigDirectory,
                 paths.SharedConfigPath));

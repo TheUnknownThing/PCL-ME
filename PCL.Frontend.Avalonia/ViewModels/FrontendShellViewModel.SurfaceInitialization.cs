@@ -367,7 +367,6 @@ internal sealed partial class FrontendShellViewModel
         _animationFpsLimit = _setupComposition.LauncherMisc.AnimationFpsLimit;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;
         _disableHardwareAcceleration = _setupComposition.LauncherMisc.DisableHardwareAcceleration;
-        _enableTelemetry = _setupComposition.LauncherMisc.EnableTelemetry;
         _enableDoH = _setupComposition.LauncherMisc.EnableDoH;
         _selectedHttpProxyTypeIndex = _setupComposition.LauncherMisc.HttpProxyTypeIndex;
         _httpProxyAddress = _setupComposition.LauncherMisc.HttpProxyAddress;

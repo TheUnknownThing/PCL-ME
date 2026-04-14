@@ -195,8 +195,7 @@ public sealed class LauncherFrontendPageContentServiceTest
         return LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.Ci,
             IsSpecialBuildHintDisabled: false,
-            HasAcceptedEula: false,
-            IsTelemetryDefault: true));
+            HasAcceptedEula: false));
     }
 
     private static LauncherFrontendPromptLaneSummary[] BuildPromptLanes()

@@ -185,12 +185,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _disableHardwareAcceleration, value);
     }
 
-    public bool EnableTelemetry
-    {
-        get => _enableTelemetry;
-        set => SetProperty(ref _enableTelemetry, value);
-    }
-
     public bool EnableDoH
     {
         get => _enableDoH;

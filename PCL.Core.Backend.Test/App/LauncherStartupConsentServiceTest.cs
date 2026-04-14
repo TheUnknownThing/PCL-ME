@@ -13,11 +13,10 @@ public sealed class LauncherStartupConsentServiceTest
         var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.Debug,
             IsSpecialBuildHintDisabled: false,
-            HasAcceptedEula: false,
-            IsTelemetryDefault: true));
+            HasAcceptedEula: false));
 
         CollectionAssert.AreEqual(
-            new[] { "特殊版本提示", "协议授权", "启用遥测数据收集" },
+            new[] { "特殊版本提示", "协议授权" },
             result.Prompts.Select(prompt => prompt.Title).ToArray());
     }
 
@@ -27,8 +26,7 @@ public sealed class LauncherStartupConsentServiceTest
         var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.Ci,
             IsSpecialBuildHintDisabled: true,
-            HasAcceptedEula: true,
-            IsTelemetryDefault: false));
+            HasAcceptedEula: true));
 
         Assert.AreEqual(0, result.Prompts.Count);
     }
@@ -39,8 +37,7 @@ public sealed class LauncherStartupConsentServiceTest
         var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.None,
             IsSpecialBuildHintDisabled: false,
-            HasAcceptedEula: false,
-            IsTelemetryDefault: false));
+            HasAcceptedEula: false));
 
         var eulaPrompt = result.Prompts.Single();
         Assert.AreEqual("协议授权", eulaPrompt.Title);
@@ -54,8 +51,7 @@ public sealed class LauncherStartupConsentServiceTest
         var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.Ci,
             IsSpecialBuildHintDisabled: false,
-            HasAcceptedEula: true,
-            IsTelemetryDefault: false));
+            HasAcceptedEula: true));
 
         var prompt = result.Prompts.Single();
         CollectionAssert.AreEqual(
@@ -67,22 +63,4 @@ public sealed class LauncherStartupConsentServiceTest
             prompt.Buttons[1].Actions.Select(action => action.Kind).ToArray());
     }
 
-    [TestMethod]
-    public void EvaluateReturnsTelemetryPromptWithExplicitDecisionActions()
-    {
-        var result = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
-            LauncherStartupSpecialBuildKind.None,
-            IsSpecialBuildHintDisabled: false,
-            HasAcceptedEula: true,
-            IsTelemetryDefault: true));
-
-        var telemetryPrompt = result.Prompts.Single();
-        CollectionAssert.AreEqual(
-            new[]
-            {
-                bool.TrueString,
-                bool.FalseString
-            },
-            telemetryPrompt.Buttons.Select(button => button.Actions.Single().Value).ToArray());
-    }
 }
