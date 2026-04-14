@@ -219,9 +219,7 @@ internal static class FrontendSetupCompositionService
             HttpProxyUsername: FrontendHttpProxyService.ReadConfiguredProxyUsername(paths),
             HttpProxyPassword: FrontendHttpProxyService.ReadConfiguredProxyPassword(paths),
             DebugAnimationSpeed: ReadValue(sharedConfig, "SystemDebugAnim", 9),
-            SkipCopyDuringDownload: ReadValue(sharedConfig, "SystemDebugSkipCopy", false),
-            DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false),
-            DebugDelayEnabled: ReadValue(sharedConfig, "SystemDebugDelay", false));
+            DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false));
     }
 
     private static FrontendSetupJavaState BuildJavaState(

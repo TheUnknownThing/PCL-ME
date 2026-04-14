@@ -381,10 +381,9 @@ internal sealed partial class FrontendShellViewModel
         _proxyTestFeedbackText = string.Empty;
         _isProxyTestFeedbackSuccess = false;
         _debugAnimationSpeed = _setupComposition.LauncherMisc.DebugAnimationSpeed;
-        _skipCopyDuringDownload = _setupComposition.LauncherMisc.SkipCopyDuringDownload;
         _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;
-        _debugDelayEnabled = _setupComposition.LauncherMisc.DebugDelayEnabled;
         ApplyLaunchLogRetentionPreference();
+        RefreshDebugModeSurface();
         RefreshLaunchAnnouncements();
     }
 

@@ -256,24 +256,12 @@
               </Grid>
             </Grid>
 
-            <Grid ColumnDefinitions="1.5*,*,*">
+            <Grid ColumnDefinitions="*">
               <CheckBox
                   Grid.Column="0"
-                  Margin="0,0,14,0"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="禁止在下载时从其他文件夹复制文件"
-                  IsChecked="{Binding SkipCopyDuringDownload}" />
-              <CheckBox
-                  Grid.Column="1"
-                  Margin="0,0,14,0"
                   Foreground="{DynamicResource ColorBrush1}"
                   Content="调试模式"
                   IsChecked="{Binding DebugModeEnabled}" />
-              <CheckBox
-                  Grid.Column="2"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="添加延迟"
-                  IsChecked="{Binding DebugDelayEnabled}" />
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>

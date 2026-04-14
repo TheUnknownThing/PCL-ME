@@ -6,6 +6,42 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,25" Spacing="10">
+      <controls:PclCard Header="调试诊断" IsVisible="{Binding ShowDebugModeSummaryCard}" ContentMargin="20,18,20,16">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="10">
+            <TextBlock
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13.5"
+                Text="{Binding DebugModeSummaryTitle}" />
+            <TextBlock
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="12"
+                Text="{Binding DebugModeSummaryDescription}"
+                TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding DebugInfoEntries}" IsVisible="{Binding HasDebugInfoEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,6" ColumnDefinitions="110,*">
+                    <TextBlock
+                        VerticalAlignment="Top"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="11.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontFamily="{DynamicResource LaunchFontFamily}"
+                        FontSize="11.5"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
       <controls:PclCard Header="日志操作" ContentMargin="25,40,20,20">
         <controls:PclCard.CardContent>
           <WrapPanel>

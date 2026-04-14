@@ -77,9 +77,7 @@ internal sealed record FrontendSetupLauncherMiscState(
     string HttpProxyUsername,
     string HttpProxyPassword,
     double DebugAnimationSpeed,
-    bool SkipCopyDuringDownload,
-    bool DebugModeEnabled,
-    bool DebugDelayEnabled);
+    bool DebugModeEnabled);
 
 internal sealed record FrontendSetupJavaState(
     string SelectedRuntimeKey,

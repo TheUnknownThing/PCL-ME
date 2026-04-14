@@ -70,9 +70,7 @@ internal sealed partial class FrontendShellViewModel
         "SystemNetEnableDoH",
         "SystemHttpProxyType",
         "SystemDebugAnim",
-        "SystemDebugSkipCopy",
-        "SystemDebugMode",
-        "SystemDebugDelay"
+        "SystemDebugMode"
     ];
 
     private static readonly string[] LauncherMiscProtectedResetKeys =
@@ -288,9 +286,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
                 RaisePropertyChanged(nameof(DebugAnimationSpeed));
                 RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
-                RaisePropertyChanged(nameof(SkipCopyDuringDownload));
                 RaisePropertyChanged(nameof(DebugModeEnabled));
-                RaisePropertyChanged(nameof(DebugDelayEnabled));
                 break;
             case LauncherFrontendSubpageKey.SetupJava:
                 RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
@@ -555,14 +551,10 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.PersistSharedValue("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
                 FrontendShellActionService.ApplyAnimationPreferences((int)Math.Round(AnimationFpsLimit), DebugAnimationSpeed);
                 break;
-            case nameof(SkipCopyDuringDownload):
-                _shellActionService.PersistSharedValue("SystemDebugSkipCopy", SkipCopyDuringDownload);
-                break;
             case nameof(DebugModeEnabled):
                 _shellActionService.PersistSharedValue("SystemDebugMode", DebugModeEnabled);
-                break;
-            case nameof(DebugDelayEnabled):
-                _shellActionService.PersistSharedValue("SystemDebugDelay", DebugDelayEnabled);
+                RefreshDebugModeSurface();
+                AddActivity("调试模式", DebugModeEnabled ? "已启用更详细的日志与诊断信息。" : "已关闭额外的诊断输出。");
                 break;
             case nameof(SelectedDarkModeIndex):
                 _shellActionService.PersistSharedValue("UiDarkMode", SelectedDarkModeIndex);
@@ -788,9 +780,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
         RaisePropertyChanged(nameof(DebugAnimationSpeed));
         RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
-        RaisePropertyChanged(nameof(SkipCopyDuringDownload));
         RaisePropertyChanged(nameof(DebugModeEnabled));
-        RaisePropertyChanged(nameof(DebugDelayEnabled));
         RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
         RaisePropertyChanged(nameof(IsAutoJavaSelected));
         RaisePropertyChanged(nameof(SelectedDarkModeIndex));

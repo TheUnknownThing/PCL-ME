@@ -152,6 +152,9 @@ internal sealed partial class FrontendShellViewModel
     private string _launchLogVisibleText = EmptyLaunchLogText;
     private int _launchLogVisibleStartIndex;
     private bool _isLaunchLogViewportPinned = true;
+    private string? _latestLaunchScriptPath;
+    private string? _latestLaunchSessionSummaryPath;
+    private string? _latestLaunchRawOutputLogPath;
     private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
     private string _launchPromptContextKey = string.Empty;
     private string _helpSearchQuery = string.Empty;
@@ -260,9 +263,7 @@ internal sealed partial class FrontendShellViewModel
     private string _httpProxyUsername = string.Empty;
     private string _httpProxyPassword = string.Empty;
     private double _debugAnimationSpeed = 30;
-    private bool _skipCopyDuringDownload;
     private bool _debugModeEnabled;
-    private bool _debugDelayEnabled;
     private int _selectedDarkModeIndex = 2;
     private int _selectedLightColorIndex;
     private int _selectedDarkColorIndex;

@@ -704,6 +704,7 @@ internal sealed partial class FrontendShellViewModel
 
             await RefreshLaunchCompositionAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
+            AppendLaunchDebugCompositionSnapshot();
 
             if (_launchComposition.SelectedJavaRuntime is null)
             {
@@ -744,7 +745,14 @@ internal sealed partial class FrontendShellViewModel
                 _launchComposition,
                 _instanceComposition.Selection.InstanceDirectory);
             _activeLaunchProcess = startResult.Process;
+            _latestLaunchScriptPath = startResult.LaunchScriptPath;
+            _latestLaunchSessionSummaryPath = startResult.SessionSummaryPath;
+            _latestLaunchRawOutputLogPath = startResult.RawOutputLogPath;
+            RefreshDebugModeSurface();
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
+            AppendLaunchDebugLine("启动脚本", startResult.LaunchScriptPath);
+            AppendLaunchDebugLine("会话摘要", startResult.SessionSummaryPath);
+            AppendLaunchDebugLine("原始输出", startResult.RawOutputLogPath);
             AddActivity("游戏进程已启动", $"{LaunchVersionSubtitle} • PID {startResult.Process.Id}");
             if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
             {
@@ -774,6 +782,7 @@ internal sealed partial class FrontendShellViewModel
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine($"启动失败：{ex.Message}");
+            AppendLaunchDebugException("启动失败明细", ex);
             AddFailureActivity("启动失败", ex.Message);
             SetLaunchDialogStoppedState("启动失败", ex.Message, isError: true);
         }
@@ -859,6 +868,7 @@ internal sealed partial class FrontendShellViewModel
                 cancellationToken);
             var completionMessage = $"启动前文件校验完成：下载 {repairResult.DownloadedFiles.Count} 个文件，复用 {repairResult.ReusedFiles.Count} 个文件。";
             AppendLaunchLogLine(completionMessage);
+            AppendRepairDebugSummary(repairResult);
 
             if (repairResult.DownloadedFiles.Count > 0)
             {
@@ -926,6 +936,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             AppendLaunchLogLine($"会话监控异常：{ex.Message}");
+            AppendLaunchDebugException("会话监控异常明细", ex);
             AddActivity("会话监控异常", ex.Message);
         }
         finally
@@ -989,6 +1000,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RaiseLaunchCompositionProperties();
+        RefreshDebugModeSurface();
         ScheduleLaunchAvatarRefresh();
     }
 

@@ -315,21 +315,9 @@ internal sealed partial class FrontendShellViewModel
         ? "关闭"
         : $"{Math.Round(DebugAnimationSpeed / 10 + 0.1, 1):0.0}x";
 
-    public bool SkipCopyDuringDownload
-    {
-        get => _skipCopyDuringDownload;
-        set => SetProperty(ref _skipCopyDuringDownload, value);
-    }
-
     public bool DebugModeEnabled
     {
         get => _debugModeEnabled;
         set => SetProperty(ref _debugModeEnabled, value);
-    }
-
-    public bool DebugDelayEnabled
-    {
-        get => _debugDelayEnabled;
-        set => SetProperty(ref _debugDelayEnabled, value);
     }
 }
