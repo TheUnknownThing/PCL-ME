@@ -36,6 +36,60 @@ internal static class FrontendCommunityProjectService
         return false;
     }
 
+    public static bool TryParseClipboardProjectLink(string? text, out FrontendClipboardCommunityProjectLink link)
+    {
+        if (string.IsNullOrWhiteSpace(text)
+            || !Uri.TryCreate(text.Trim(), UriKind.Absolute, out var uri))
+        {
+            link = default!;
+            return false;
+        }
+
+        var segments = uri.AbsolutePath
+            .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (segments.Length >= 2
+            && IsModrinthHost(uri.Host)
+            && TryMapModrinthProjectTypeToRoute(segments[0], out var modrinthRoute))
+        {
+            link = new FrontendClipboardCommunityProjectLink(
+                "Modrinth",
+                segments[1],
+                modrinthRoute,
+                uri.ToString());
+            return true;
+        }
+
+        if (segments.Length >= 3
+            && IsCurseForgeHost(uri.Host)
+            && string.Equals(segments[0], "minecraft", StringComparison.OrdinalIgnoreCase)
+            && TryMapCurseForgeSectionToRoute(segments[1], out var curseForgeRoute))
+        {
+            link = new FrontendClipboardCommunityProjectLink(
+                "CurseForge",
+                segments[2],
+                curseForgeRoute,
+                uri.ToString());
+            return true;
+        }
+
+        link = default!;
+        return false;
+    }
+
+    public static FrontendClipboardCommunityProjectResolution ResolveClipboardProjectLink(
+        FrontendClipboardCommunityProjectLink link,
+        int communitySourcePreference)
+    {
+        ArgumentNullException.ThrowIfNull(link);
+
+        return link.Source switch
+        {
+            "Modrinth" => ResolveModrinthClipboardProjectLink(link, communitySourcePreference),
+            "CurseForge" => ResolveCurseForgeClipboardProjectLink(link, communitySourcePreference),
+            _ => throw new InvalidOperationException($"不支持的社区来源：{link.Source}")
+        };
+    }
+
     public static FrontendCommunityProjectLookupResult LookupProjects(
         IEnumerable<string> projectIds,
         int communitySourcePreference)
@@ -385,6 +439,57 @@ internal static class FrontendCommunityProjectService
             links,
             string.Empty,
             false);
+    }
+
+    private static FrontendClipboardCommunityProjectResolution ResolveModrinthClipboardProjectLink(
+        FrontendClipboardCommunityProjectLink link,
+        int communitySourcePreference)
+    {
+        var encodedIdentifier = Uri.EscapeDataString(link.Identifier);
+        var project = ReadJsonObject(
+            "Modrinth",
+            $"https://api.modrinth.com/v2/project/{encodedIdentifier}",
+            $"https://mod.mcimirror.top/modrinth/v2/project/{encodedIdentifier}",
+            communitySourcePreference,
+            officialRequiresApiKey: false,
+            postBody: null);
+        var projectId = GetString(project, "id") ?? throw new InvalidOperationException("Modrinth 工程缺少项目 ID。");
+        var title = GetString(project, "title") ?? projectId;
+        var route = TryMapModrinthProjectTypeToRoute(GetString(project, "project_type"), out var resolvedRoute)
+            ? resolvedRoute
+            : link.Route;
+        return new FrontendClipboardCommunityProjectResolution(projectId, title, route, link.Source, link.Url);
+    }
+
+    private static FrontendClipboardCommunityProjectResolution ResolveCurseForgeClipboardProjectLink(
+        FrontendClipboardCommunityProjectLink link,
+        int communitySourcePreference)
+    {
+        var encodedSlug = Uri.EscapeDataString(link.Identifier);
+        var response = ReadJsonObject(
+            "CurseForge",
+            $"https://api.curseforge.com/v1/mods/search?gameId=432&slug={encodedSlug}&pageSize=10",
+            $"https://mod.mcimirror.top/curseforge/v1/mods/search?gameId=432&slug={encodedSlug}&pageSize=10",
+            communitySourcePreference,
+            officialRequiresApiKey: true,
+            postBody: null);
+        var project = (response["data"] as JsonArray ?? [])
+            .Select(node => node as JsonObject)
+            .Where(node => node is not null)
+            .Cast<JsonObject>()
+            .OrderByDescending(candidate => MapCurseForgeClassToRoute(GetInt(candidate, "classId")) == link.Route)
+            .ThenByDescending(candidate => GetInt(candidate, "downloadCount"))
+            .FirstOrDefault()
+            ?? throw new InvalidOperationException("CurseForge 没有返回匹配的工程。");
+        var projectId = GetInt(project, "id");
+        if (projectId <= 0)
+        {
+            throw new InvalidOperationException("CurseForge 工程缺少项目 ID。");
+        }
+
+        var title = GetString(project, "name") ?? projectId.ToString();
+        var route = MapCurseForgeClassToRoute(GetInt(project, "classId")) ?? link.Route;
+        return new FrontendClipboardCommunityProjectResolution(projectId.ToString(), title, route, link.Source, link.Url);
     }
 
     private static FrontendCommunityProjectSummary? BuildModrinthSummary(JsonObject project)
@@ -1190,6 +1295,71 @@ internal static class FrontendCommunityProjectService
         };
     }
 
+    private static bool IsModrinthHost(string host)
+    {
+        return string.Equals(host, "modrinth.com", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(host, "www.modrinth.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsCurseForgeHost(string host)
+    {
+        return string.Equals(host, "curseforge.com", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(host, "www.curseforge.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryMapModrinthProjectTypeToRoute(string? projectType, out LauncherFrontendSubpageKey route)
+    {
+        switch (projectType?.Trim().ToLowerInvariant())
+        {
+            case "mod":
+                route = LauncherFrontendSubpageKey.DownloadMod;
+                return true;
+            case "modpack":
+                route = LauncherFrontendSubpageKey.DownloadPack;
+                return true;
+            case "resourcepack":
+                route = LauncherFrontendSubpageKey.DownloadResourcePack;
+                return true;
+            case "shader":
+                route = LauncherFrontendSubpageKey.DownloadShader;
+                return true;
+            case "datapack":
+                route = LauncherFrontendSubpageKey.DownloadDataPack;
+                return true;
+            default:
+                route = default;
+                return false;
+        }
+    }
+
+    private static bool TryMapCurseForgeSectionToRoute(string? section, out LauncherFrontendSubpageKey route)
+    {
+        return (route = section?.Trim().ToLowerInvariant() switch
+        {
+            "mc-mods" => LauncherFrontendSubpageKey.DownloadMod,
+            "modpacks" => LauncherFrontendSubpageKey.DownloadPack,
+            "texture-packs" => LauncherFrontendSubpageKey.DownloadResourcePack,
+            "shaders" => LauncherFrontendSubpageKey.DownloadShader,
+            "data-packs" => LauncherFrontendSubpageKey.DownloadDataPack,
+            "worlds" => LauncherFrontendSubpageKey.DownloadWorld,
+            _ => default
+        }) != default;
+    }
+
+    private static LauncherFrontendSubpageKey? MapCurseForgeClassToRoute(int classId)
+    {
+        return classId switch
+        {
+            6 => LauncherFrontendSubpageKey.DownloadMod,
+            4471 => LauncherFrontendSubpageKey.DownloadPack,
+            12 => LauncherFrontendSubpageKey.DownloadResourcePack,
+            6552 => LauncherFrontendSubpageKey.DownloadShader,
+            6945 => LauncherFrontendSubpageKey.DownloadDataPack,
+            17 => LauncherFrontendSubpageKey.DownloadWorld,
+            _ => null
+        };
+    }
+
     private static string TranslateProjectStatus(string? status)
     {
         return status switch
@@ -1344,6 +1514,19 @@ internal static class FrontendCommunityProjectService
             ? parsed
             : null;
     }
+
+    internal sealed record FrontendClipboardCommunityProjectLink(
+        string Source,
+        string Identifier,
+        LauncherFrontendSubpageKey Route,
+        string Url);
+
+    internal sealed record FrontendClipboardCommunityProjectResolution(
+        string ProjectId,
+        string ProjectTitle,
+        LauncherFrontendSubpageKey Route,
+        string Source,
+        string Url);
 
     private sealed record CacheEntry<T>(T Value, DateTimeOffset CreatedAt);
 

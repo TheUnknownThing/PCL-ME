@@ -291,14 +291,12 @@ internal static class FrontendSetupCompositionService
             ShowLauncherLogo: ReadValue(localConfig, "UiLauncherLogo", true),
             LockWindowSize: ReadValue(sharedConfig, "UiLockWindowSize", false),
             ShowLaunchingHint: ReadValue(localConfig, "UiShowLaunchingHint", true),
-            EnableAdvancedMaterial: ReadValue(localConfig, "UiBlur", false),
-            BlurRadius: ReadValue(localConfig, "UiBlurValue", 16),
-            BlurSamplingRate: ReadValue(localConfig, "UiBlurSamplingRate", 70),
-            BlurTypeIndex: ReadValue(localConfig, "UiBlurType", 0),
             GlobalFontIndex: MapFontToIndex(ReadValue(localConfig, "UiFont", string.Empty)),
             MotdFontIndex: MapFontToIndex(ReadValue(localConfig, "UiMotdFont", string.Empty)),
-            AutoPauseVideo: ReadValue(localConfig, "UiAutoPauseVideo", true),
             BackgroundColorful: ReadValue(localConfig, "UiBackgroundColorful", true),
+            BackgroundOpacity: ReadValue(localConfig, "UiBackgroundOpacity", 1000),
+            BackgroundBlur: ReadValue(localConfig, "UiBackgroundBlur", 0),
+            BackgroundSuitIndex: ReadValue(localConfig, "UiBackgroundSuit", 0),
             MusicVolume: ReadValue(localConfig, "UiMusicVolume", 500),
             MusicRandomPlay: ReadValue(localConfig, "UiMusicRandom", true),
             MusicAutoStart: ReadValue(localConfig, "UiMusicAuto", true),
@@ -310,7 +308,7 @@ internal static class FrontendSetupCompositionService
             LogoText: ReadValue(localConfig, "UiLogoText", string.Empty),
             HomepageTypeIndex: MapHomepageTypeToDisplayIndex(ReadValue(localConfig, "UiCustomType", 0)),
             HomepageUrl: ReadValue(localConfig, "UiCustomNet", string.Empty),
-            HomepagePresetIndex: ReadValue(localConfig, "UiCustomPreset", 12),
+            HomepagePresetIndex: ReadValue(localConfig, "UiCustomPreset", 11),
             ToggleGroups: BuildUiToggleGroups(localConfig));
     }
 

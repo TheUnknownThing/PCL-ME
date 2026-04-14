@@ -67,7 +67,9 @@ internal sealed partial class FrontendShellViewModel
             BackstackDepth = 0,
             ParentRoute = ResolveDefaultParentRoute(route)
         };
-        return LauncherFrontendNavigationService.BuildView(request);
+        return FrontendUiVisibilityService.FilterNavigationView(
+            LauncherFrontendNavigationService.BuildView(request),
+            GetUiVisibilityPreferences());
     }
 
     private static LauncherFrontendRoute ResolveSidebarAnchorRoute(LauncherFrontendRoute route)
@@ -479,10 +481,23 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendShellPlan BuildShellPlan()
     {
-        return LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
+        var normalizedCurrentRoute = NormalizeRoute(_currentRoute);
+        if (normalizedCurrentRoute != _currentRoute)
+        {
+            _currentRoute = normalizedCurrentRoute;
+        }
+
+        var plan = LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
             _shellComposition.StartupWorkflowRequest,
             _shellComposition.StartupConsentRequest,
             BuildCurrentNavigationRequest()));
+
+        return plan with
+        {
+            Navigation = FrontendUiVisibilityService.FilterNavigationView(
+                plan.Navigation,
+                GetUiVisibilityPreferences())
+        };
     }
 
     private LauncherFrontendNavigationViewRequest BuildCurrentNavigationRequest()
@@ -538,9 +553,9 @@ internal sealed partial class FrontendShellViewModel
         ChangeRoute(route, activityMessage, ShellNavigationTransitionDirection.Forward);
     }
 
-    private static LauncherFrontendRoute NormalizeRoute(LauncherFrontendRoute route)
+    private LauncherFrontendRoute NormalizeRoute(LauncherFrontendRoute route)
     {
-        return route switch
+        var normalized = route switch
         {
             { Page: LauncherFrontendPageKey.Download, Subpage: LauncherFrontendSubpageKey.Default } =>
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
@@ -552,6 +567,8 @@ internal sealed partial class FrontendShellViewModel
                 new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod),
             _ => route
         };
+
+        return FrontendUiVisibilityService.NormalizeRoute(normalized, GetUiVisibilityPreferences());
     }
 
     private void ApplyRouteNavigation(LauncherFrontendRoute route, RouteNavigationBehavior behavior)
@@ -637,6 +654,7 @@ internal sealed partial class FrontendShellViewModel
         string activityMessage,
         ShellNavigationTransitionDirection direction)
     {
+        route = NormalizeRoute(route);
         var previousIsLaunchRoute = IsLaunchRoute;
         var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
         var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
@@ -660,6 +678,8 @@ internal sealed partial class FrontendShellViewModel
         {
             _ = CheckForLauncherUpdatesAsync(forceRefresh: false);
         }
+
+        QueueClipboardCommunityLinkProbe(route);
     }
 
     private void ReloadRouteCompositions(LauncherFrontendRoute previousRoute, LauncherFrontendRoute route)
@@ -837,6 +857,13 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowTopLevelNavigation));
         RaisePropertyChanged(nameof(ShowInnerNavigation));
         RaisePropertyChanged(nameof(ShowWindowBranding));
+        RaisePropertyChanged(nameof(ShowCenteredTopLevelNavigation));
+        RaisePropertyChanged(nameof(ShowLeftAlignedTopLevelNavigation));
+        RaisePropertyChanged(nameof(ShowDefaultTitleBarBranding));
+        RaisePropertyChanged(nameof(ShowTextTitleBarBranding));
+        RaisePropertyChanged(nameof(ShowImageTitleBarBranding));
+        RaisePropertyChanged(nameof(TitleBarCustomText));
+        RaisePropertyChanged(nameof(TitleBarCustomLogoImage));
         RaisePropertyChanged(nameof(ShowWindowUtilityButtons));
         RaisePropertyChanged(nameof(HasRunningTaskManagerTasks));
         RaisePropertyChanged(nameof(ShowTaskManagerShortcutButton));
@@ -848,6 +875,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(StandardShellLeftPaneWidth));
         RaisePropertyChanged(nameof(CurrentShellLeftPaneWidth));
         RaisePropertyChanged(nameof(TitleBarLabel));
+        RaisePropertyChanged(nameof(ShowUiFeatureHiddenCard));
+        RaisePropertyChanged(nameof(UiFeatureHiddenCardHeader));
+        RaisePropertyChanged(nameof(ShowLaunchInstanceManagementButtons));
+        RaisePropertyChanged(nameof(ShowInstanceResourceCheckButton));
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));

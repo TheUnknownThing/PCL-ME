@@ -641,7 +641,8 @@ internal sealed partial class FrontendShellViewModel
         foreach (var release in _communityProjectState.Releases)
         {
             var gameVersions = release.GameVersions.Count == 0 ? ["其他"] : release.GameVersions;
-            var loaders = release.Loaders.Count == 0 ? [string.Empty] : release.Loaders;
+            var visibleLoaders = FrontendLoaderVisibilityService.FilterVisibleLoaders(release.Loaders, IgnoreQuiltLoader);
+            var loaders = visibleLoaders.Count == 0 ? [string.Empty] : visibleLoaders;
 
             foreach (var gameVersion in gameVersions)
             {
@@ -825,10 +826,9 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<string> BuildCommunityProjectLoaderOptions()
     {
-        return _communityProjectState.Releases
-            .SelectMany(release => release.Loaders)
-            .Where(loader => !string.IsNullOrWhiteSpace(loader))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+        return FrontendLoaderVisibilityService.FilterVisibleLoaders(
+                _communityProjectState.Releases.SelectMany(release => release.Loaders),
+                IgnoreQuiltLoader)
             .OrderBy(loader => loader, StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
@@ -930,7 +930,7 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+            var suggestedFileName = ResolveCommunityProjectReleaseFileName(entry, CommunityProjectTitle);
             var extension = Path.GetExtension(suggestedFileName);
             var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
             var suggestedStartFolder = ResolveCommunityProjectDownloadStartDirectory();
@@ -962,6 +962,7 @@ internal sealed partial class FrontendShellViewModel
                 entry.Target,
                 targetPath,
                 ResolveDownloadRequestTimeout(),
+                _shellActionService.GetDownloadTransferOptions(),
                 onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
                 onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
                 onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
@@ -1167,6 +1168,7 @@ internal sealed partial class FrontendShellViewModel
                 description,
                 _selectedCommunityDownloadSourceIndex),
             ResolveDownloadRequestTimeout(),
+            _shellActionService.GetDownloadTransferOptions(),
             onStarted: filePath =>
             {
                 Dispatcher.UIThread.Post(() =>
@@ -1342,9 +1344,9 @@ internal sealed partial class FrontendShellViewModel
         AvaloniaHintBus.Show($"{result.InstanceName} 安装完成", AvaloniaHintTheme.Success);
     }
 
-    private static string ResolveCommunityProjectReleaseExtension(FrontendCommunityProjectReleaseEntry entry)
+    private string ResolveCommunityProjectReleaseExtension(FrontendCommunityProjectReleaseEntry entry)
     {
-        var suggestedFileName = SanitizeCommunityProjectReleaseFileName(entry.SuggestedFileName, entry.Title);
+        var suggestedFileName = ResolveCommunityProjectReleaseFileName(entry, _communityProjectState.Title);
         var extension = Path.GetExtension(suggestedFileName);
         if (!string.IsNullOrWhiteSpace(extension))
         {
@@ -1634,12 +1636,13 @@ internal sealed partial class FrontendShellViewModel
                    StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string SanitizeCommunityProjectReleaseFileName(string? suggestedFileName, string fallbackTitle)
+    private string ResolveCommunityProjectReleaseFileName(FrontendCommunityProjectReleaseEntry entry, string? projectTitle = null)
     {
-        var candidate = string.IsNullOrWhiteSpace(suggestedFileName) ? fallbackTitle : suggestedFileName.Trim();
-        var invalidCharacters = Path.GetInvalidFileNameChars();
-        var cleaned = new string(candidate.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
-        return string.IsNullOrWhiteSpace(cleaned) ? "community-resource-download" : cleaned;
+        return FrontendGameManagementService.ResolveCommunityResourceFileName(
+            projectTitle,
+            entry.SuggestedFileName,
+            entry.Title,
+            SelectedFileNameFormatIndex);
     }
 
     private static string FinalizeCommunityProjectInstalledArtifact(
@@ -2285,6 +2288,7 @@ internal sealed class FrontendManagedFileDownloadTask(
     string sourceUrl,
     string targetPath,
     TimeSpan requestTimeout,
+    FrontendDownloadTransferOptions? downloadOptions = null,
     Action<string>? onStarted = null,
     Action<string>? onCompleted = null,
     Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
@@ -2325,48 +2329,43 @@ internal sealed class FrontendManagedFileDownloadTask(
             using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
             response.EnsureSuccessStatusCode();
 
+            var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
+                ? new FrontendDownloadSpeedLimiter(speedLimit)
+                : null;
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
             await using (var sourceStream = await response.Content.ReadAsStreamAsync(token))
-            await using (var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
             {
-                var contentLength = response.Content.Headers.ContentLength;
-                var buffer = new byte[81920];
-                var totalRead = 0L;
+                var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
                 var lastReportedBytes = 0L;
                 var lastReportedAt = Environment.TickCount64;
                 StateChanged(TaskState.Running, "正在下载文件…");
                 onStarted?.Invoke(targetPath);
 
-                while (true)
-                {
-                    var read = await sourceStream.ReadAsync(buffer, token);
-                    if (read <= 0)
+                await FrontendDownloadTransferService.CopyToPathAsync(
+                    sourceStream,
+                    targetPath,
+                    totalRead =>
                     {
-                        break;
-                    }
+                        var progress = contentLength > 0
+                            ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
+                            : 0d;
+                        ProgressChanged(progress);
 
-                    await targetStream.WriteAsync(buffer.AsMemory(0, read), token);
-                    totalRead += read;
+                        var now = Environment.TickCount64;
+                        if (now - lastReportedAt < 250)
+                        {
+                            return;
+                        }
 
-                    var totalLength = contentLength.GetValueOrDefault();
-                    var progress = totalLength > 0
-                        ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
-                        : 0d;
-                    ProgressChanged(progress);
-
-                    var now = Environment.TickCount64;
-                    if (now - lastReportedAt >= 250)
-                    {
                         var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
                         var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
                         PublishProgressStatus(progress, speed);
                         lastReportedAt = now;
                         lastReportedBytes = totalRead;
                         StateChanged(TaskState.Running, $"正在下载 {Path.GetFileName(targetPath)}…");
-                    }
-                }
-
-                await targetStream.FlushAsync(token);
+                    },
+                    speedLimiter,
+                    token);
             }
 
             ProgressChanged(1d);

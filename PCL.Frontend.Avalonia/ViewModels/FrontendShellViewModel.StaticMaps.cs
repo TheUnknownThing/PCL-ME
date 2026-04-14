@@ -259,18 +259,6 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string FormatMaxRealTimeLog(double value)
-    {
-        var rounded = Math.Round(value);
-        return rounded switch
-        {
-            <= 5 => $"{rounded * 10 + 50}",
-            <= 13 => $"{rounded * 50 - 150}",
-            <= 28 => $"{rounded * 100 - 800}",
-            _ => "无限制"
-        };
-    }
-
     private static void ReplaceItems<T>(ObservableCollection<T> collection, IEnumerable<T> items)
     {
         collection.Clear();

@@ -9,6 +9,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -220,7 +221,8 @@ internal sealed partial class FrontendShellViewModel
     };
 
     public bool ShowInstanceResourceCheckButton => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
-        && _instanceComposition.Selection.IsModable;
+        && _instanceComposition.Selection.IsModable
+        && FrontendUiVisibilityService.ShouldShowModUpdateAction(GetUiVisibilityPreferences());
 
     public int InstanceResourceSelectedCount => _instanceResourceSelectedPaths.Count;
 
@@ -666,6 +668,9 @@ internal sealed partial class FrontendShellViewModel
 
     private InstanceResourceEntryViewModel CreateInstanceResourceEntry(FrontendInstanceResourceEntry entry)
     {
+        var display = IsInstanceResourceToggleSupported()
+            ? FrontendGameManagementService.ResolveLocalModDisplay(entry, SelectedModLocalNameStyleIndex)
+            : new FrontendLocalModDisplay(entry.Title, entry.Summary);
         var detailCommand = new ActionCommand(() => _ = ShowInstanceResourceDetailsAsync(entry));
         var websiteCommand = string.IsNullOrWhiteSpace(entry.Website)
             ? null
@@ -687,8 +692,8 @@ internal sealed partial class FrontendShellViewModel
 
         return new InstanceResourceEntryViewModel(
             LoadInstanceResourceBitmap(entry),
-            entry.Title,
-            entry.Summary,
+            display.Title,
+            display.Summary,
             entry.Meta,
             entry.Path,
             openCommand,

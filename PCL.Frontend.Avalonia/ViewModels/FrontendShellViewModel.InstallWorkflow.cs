@@ -422,12 +422,17 @@ internal sealed partial class FrontendShellViewModel
                                 {
                                     installTask.ApplyRepairProgress(snapshot);
                                 },
+                                _shellActionService.GetDownloadTransferOptions(),
                                 cancelToken),
                             cancelToken);
 
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
+                            if (isExistingInstance || AutoSelectNewInstance)
+                            {
+                                _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
+                            }
+
                             ReloadInstanceComposition();
                             ReloadDownloadComposition();
                             if (!isExistingInstance)

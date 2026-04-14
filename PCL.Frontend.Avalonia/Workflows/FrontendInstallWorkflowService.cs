@@ -211,10 +211,14 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         Action<FrontendInstallApplyPhase, string>? onPhaseChanged = null,
         Action<FrontendInstanceRepairProgressSnapshot>? onRepairProgress = null,
+        FrontendDownloadTransferOptions? downloadOptions = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         cancelToken.ThrowIfCancellationRequested();
+        var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
 
         var launcherDirectory = request.LauncherDirectory;
         var targetDirectory = Path.Combine(launcherDirectory, "versions", request.TargetInstanceName);
@@ -222,7 +226,7 @@ internal static class FrontendInstallWorkflowService
         void ReportPrepare(string message) => onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, message);
 
         onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, "正在写入安装清单并准备安装环境…");
-        var manifestNode = BuildTargetManifest(request, ReportPrepare, cancelToken);
+        var manifestNode = BuildTargetManifest(request, ReportPrepare, speedLimiter, cancelToken);
         cancelToken.ThrowIfCancellationRequested();
         ReportPrepare("正在清理本地缺失依赖引用…");
         RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
@@ -278,6 +282,7 @@ internal static class FrontendInstallWorkflowService
                 request.TargetInstanceName,
                 request.ForceCoreRefresh),
                 onRepairProgress,
+                downloadOptions,
                 cancelToken)
             : new FrontendInstanceRepairResult([], []);
 
@@ -294,6 +299,7 @@ internal static class FrontendInstallWorkflowService
     private static JsonObject BuildTargetManifest(
         FrontendInstallApplyRequest request,
         Action<string>? onStatusChanged = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         cancelToken.ThrowIfCancellationRequested();
@@ -325,7 +331,7 @@ internal static class FrontendInstallWorkflowService
                 ReportPrepareStatus(onStatusChanged, $"正在准备 {request.PrimaryLoaderChoice.Title} 安装器…");
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
-                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged, cancelToken),
+                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged, speedLimiter, cancelToken),
                     request.TargetInstanceName);
                 break;
             default:
@@ -349,7 +355,7 @@ internal static class FrontendInstallWorkflowService
             ReportPrepareStatus(onStatusChanged, "正在处理 OptiFine 安装信息…");
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
-                BuildStandaloneOptiFineManifest(request, onStatusChanged, cancelToken),
+                BuildStandaloneOptiFineManifest(request, onStatusChanged, speedLimiter, cancelToken),
                 request.TargetInstanceName);
         }
 
@@ -374,6 +380,7 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         FrontendInstallChoice loaderChoice,
         Action<string>? onStatusChanged = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(loaderChoice);
@@ -385,7 +392,7 @@ internal static class FrontendInstallWorkflowService
         try
         {
             ReportPrepareStatus(onStatusChanged, $"正在下载 {loaderChoice.Title} 安装器…");
-            File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl, cancelToken).GetAwaiter().GetResult());
+            FrontendDownloadTransferService.DownloadToPath(HttpClient, installerUrl, installerPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
             using var archive = ZipFile.OpenRead(installerPath);
             var installProfile = ReadJsonObjectFromEntry(archive, "install_profile.json");
 
@@ -403,6 +410,7 @@ internal static class FrontendInstallWorkflowService
                 request,
                 loaderChoice,
                 onStatusChanged,
+                speedLimiter,
                 cancelToken);
         }
         finally
@@ -471,6 +479,7 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         FrontendInstallChoice loaderChoice,
         Action<string>? onStatusChanged = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         var minecraftVersion = GetRequiredString(
@@ -492,13 +501,13 @@ internal static class FrontendInstallWorkflowService
         try
         {
             ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, cancelToken);
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, speedLimiter, cancelToken);
 
             ReportPrepareStatus(onStatusChanged, $"正在解包 {loaderChoice.Title} 安装器中的支持库…");
             CopyEmbeddedForgelikeLibraries(archive, installProfile, tempRoot);
 
             ReportPrepareStatus(onStatusChanged, $"正在补全 {loaderChoice.Title} 安装依赖…");
-            EnsureForgelikeLibrariesAvailable(installProfile, tempRoot, cancelToken);
+            EnsureForgelikeLibrariesAvailable(installProfile, tempRoot, speedLimiter, cancelToken);
 
             ReportPrepareStatus(onStatusChanged, $"正在执行 {loaderChoice.Title} 安装步骤…");
             ExecuteForgelikeProcessors(
@@ -507,6 +516,7 @@ internal static class FrontendInstallWorkflowService
                 tempRoot,
                 installerPath,
                 request.MinecraftChoice,
+                speedLimiter,
                 cancelToken);
 
             ReportPrepareStatus(onStatusChanged, "正在复制安装器生成的支持库…");
@@ -579,6 +589,7 @@ internal static class FrontendInstallWorkflowService
     private static void EnsureForgelikeLibrariesAvailable(
         JsonObject installProfile,
         string launcherDirectory,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         if (installProfile["libraries"] is not JsonArray libraries)
@@ -594,13 +605,14 @@ internal static class FrontendInstallWorkflowService
                 continue;
             }
 
-            EnsureForgelikeLibraryAvailable(library, launcherDirectory, cancelToken);
+            EnsureForgelikeLibraryAvailable(library, launcherDirectory, speedLimiter, cancelToken);
         }
     }
 
     private static void EnsureForgelikeLibraryAvailable(
         JsonObject library,
         string launcherDirectory,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         var relativePath = ResolveLibraryRelativePath(library);
@@ -628,7 +640,7 @@ internal static class FrontendInstallWorkflowService
             return;
         }
 
-        DownloadFileToPath(downloadUrl, localPath, GetLibraryArtifactSha1(library), cancelToken);
+        DownloadFileToPath(downloadUrl, localPath, GetLibraryArtifactSha1(library), speedLimiter, cancelToken);
     }
 
     private static void ExecuteForgelikeProcessors(
@@ -637,6 +649,7 @@ internal static class FrontendInstallWorkflowService
         string launcherDirectory,
         string installerPath,
         FrontendInstallChoice minecraftChoice,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         if (installProfile["processors"] is not JsonArray processors)
@@ -671,6 +684,7 @@ internal static class FrontendInstallWorkflowService
                 librariesDirectory,
                 launcherDirectory,
                 minecraftChoice,
+                speedLimiter,
                 cancelToken);
         }
     }
@@ -737,6 +751,7 @@ internal static class FrontendInstallWorkflowService
         string librariesDirectory,
         string launcherDirectory,
         FrontendInstallChoice minecraftChoice,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         var outputs = ResolveProcessorOutputs(processor, variables, librariesDirectory);
@@ -745,7 +760,7 @@ internal static class FrontendInstallWorkflowService
             return;
         }
 
-        if (TryHandleDownloadMojmapsProcessor(processor, variables, librariesDirectory, minecraftChoice, cancelToken))
+        if (TryHandleDownloadMojmapsProcessor(processor, variables, librariesDirectory, minecraftChoice, speedLimiter, cancelToken))
         {
             EnsureProcessorOutputs(outputs);
             return;
@@ -885,6 +900,7 @@ internal static class FrontendInstallWorkflowService
         IReadOnlyDictionary<string, string> variables,
         string librariesDirectory,
         FrontendInstallChoice minecraftChoice,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         if (processor["args"] is not JsonArray argNodes)
@@ -910,9 +926,7 @@ internal static class FrontendInstallWorkflowService
         }
 
         var mappings = ResolveClientMappingsDownload(version, minecraftChoice);
-        Directory.CreateDirectory(Path.GetDirectoryName(output)!);
-        var payload = HttpClient.GetByteArrayAsync(mappings.Url, cancelToken).GetAwaiter().GetResult();
-        File.WriteAllBytes(output, payload);
+        DownloadFileToPath(mappings.Url, output, mappings.Sha1, speedLimiter, cancelToken);
 
         if (!string.IsNullOrWhiteSpace(mappings.Sha1))
         {
@@ -1280,14 +1294,14 @@ internal static class FrontendInstallWorkflowService
         string url,
         string targetPath,
         string? expectedSha1 = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         var tempPath = targetPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            var bytes = HttpClient.GetByteArrayAsync(url, cancelToken).GetAwaiter().GetResult();
-            File.WriteAllBytes(tempPath, bytes);
+            FrontendDownloadTransferService.DownloadToPath(HttpClient, url, tempPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
 
             if (!string.IsNullOrWhiteSpace(expectedSha1))
             {
@@ -1345,13 +1359,14 @@ internal static class FrontendInstallWorkflowService
     private static JsonObject BuildStandaloneOptiFineManifest(
         FrontendInstallApplyRequest request,
         Action<string>? onStatusChanged = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         var choice = request.OptiFineChoice
                      ?? throw new InvalidOperationException("缺少 OptiFine 选择项。");
         if (IsModernOptiFineVersion(choice))
         {
-            return BuildModernOptiFineManifest(request, choice, onStatusChanged, cancelToken);
+            return BuildModernOptiFineManifest(request, choice, onStatusChanged, speedLimiter, cancelToken);
         }
 
         return BuildLegacyOptiFineManifest(choice);
@@ -1361,6 +1376,7 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         FrontendInstallChoice choice,
         Action<string>? onStatusChanged = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         cancelToken.ThrowIfCancellationRequested();
@@ -1372,9 +1388,9 @@ internal static class FrontendInstallWorkflowService
         try
         {
             ReportPrepareStatus(onStatusChanged, "正在下载 OptiFine 安装器…");
-            File.WriteAllBytes(installerPath, HttpClient.GetByteArrayAsync(installerUrl, cancelToken).GetAwaiter().GetResult());
+            FrontendDownloadTransferService.DownloadToPath(HttpClient, installerUrl, installerPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
             ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, cancelToken);
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, speedLimiter, cancelToken);
             ReportPrepareStatus(onStatusChanged, "正在执行 OptiFine 安装器…");
             RunOptiFineInstaller(installerPath, tempRoot, cancelToken);
             ReportPrepareStatus(onStatusChanged, "正在复制 OptiFine 生成的支持库…");
@@ -1446,6 +1462,7 @@ internal static class FrontendInstallWorkflowService
         string launcherDirectory,
         FrontendInstallChoice minecraftChoice,
         Action<string>? onStatusChanged = null,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancelToken = default)
     {
         cancelToken.ThrowIfCancellationRequested();
@@ -1473,7 +1490,7 @@ internal static class FrontendInstallWorkflowService
         }
 
         ReportPrepareStatus(onStatusChanged, $"正在下载 Minecraft {minecraftChoice.Version} 原版客户端…");
-        File.WriteAllBytes(jarPath, HttpClient.GetByteArrayAsync(clientUrl, cancelToken).GetAwaiter().GetResult());
+        FrontendDownloadTransferService.DownloadToPath(HttpClient, clientUrl, jarPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
         var launcherProfilesPath = Path.Combine(launcherDirectory, "launcher_profiles.json");
         if (!File.Exists(launcherProfilesPath))
         {
@@ -2339,7 +2356,7 @@ internal static class FrontendInstallWorkflowService
         }
 
         Directory.CreateDirectory(modsDirectory);
-        File.WriteAllBytes(outputPath, HttpClient.GetByteArrayAsync(selectedChoice.DownloadUrl).GetAwaiter().GetResult());
+        DownloadFileToPath(selectedChoice.DownloadUrl, outputPath);
     }
 
     private static void RemoveMissingLocalOnlyLibraries(JsonObject manifest, string launcherDirectory)

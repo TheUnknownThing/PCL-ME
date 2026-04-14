@@ -182,70 +182,6 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 Content="在启动游戏时显示“你知道吗”"
                 IsChecked="{Binding ShowLaunchingHintSetting}" />
-
-            <StackPanel Spacing="10">
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="高级材质"
-                  IsChecked="{Binding EnableAdvancedMaterial}" />
-              <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" RowDefinitions="Auto,10,Auto">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Margin="0,0,20,0"
-                    Text="模糊半径" />
-                <Grid Grid.Column="1" ColumnDefinitions="*,42">
-                  <Slider
-                      VerticalAlignment="Center"
-                      Minimum="0"
-                      Maximum="40"
-                      Value="{Binding BlurRadius}" />
-                  <TextBlock
-                      Grid.Column="1"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Center"
-                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                      FontSize="12"
-                      Text="{Binding BlurRadiusLabel}" />
-                </Grid>
-                <TextBlock
-                    Grid.Row="2"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Margin="0,0,20,0"
-                    Text="模糊方法" />
-                <ComboBox
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    Width="120"
-                    ItemsSource="{Binding BlurTypeOptions}"
-                    SelectedIndex="{Binding SelectedBlurTypeIndex}" />
-                <TextBlock
-                    Grid.Row="2"
-                    Grid.Column="2"
-                    Margin="20,0,10,0"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Text="采样率" />
-                <Grid Grid.Row="2" Grid.Column="3" ColumnDefinitions="*,52">
-                  <Slider
-                      VerticalAlignment="Center"
-                      Minimum="0"
-                      Maximum="100"
-                      Value="{Binding BlurSamplingRate}" />
-                  <TextBlock
-                      Grid.Column="1"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Center"
-                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                      FontSize="12"
-                      Text="{Binding BlurSamplingRateLabel}" />
-                </Grid>
-              </Grid>
-            </StackPanel>
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
@@ -277,13 +213,65 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="背景内容" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding BackgroundCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="8">
-            <CheckBox
-                Foreground="{DynamicResource ColorBrush1}"
-                Content="游戏启动后暂停视频背景，游戏退出后重新播放"
-                IsChecked="{Binding AutoPauseVideo}" />
+            <Grid IsVisible="{Binding ShowBackgroundAdvancedSettings}" ColumnDefinitions="Auto,*">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,20,0"
+                  Text="内容自适应方式" />
+              <ComboBox
+                  Grid.Column="1"
+                  ItemsSource="{Binding BackgroundSuitOptions}"
+                  SelectedIndex="{Binding SelectedBackgroundSuitIndex}" />
+            </Grid>
+            <Grid IsVisible="{Binding ShowBackgroundAdvancedSettings}" ColumnDefinitions="Auto,*">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,20,0"
+                  Text="不透明度" />
+              <Grid Grid.Column="1" ColumnDefinitions="*,56">
+                <Slider
+                    VerticalAlignment="Center"
+                    Minimum="0"
+                    Maximum="1000"
+                    Value="{Binding BackgroundOpacity}" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="12"
+                    Text="{Binding BackgroundOpacityLabel}" />
+              </Grid>
+            </Grid>
+            <Grid IsVisible="{Binding ShowBackgroundAdvancedSettings}" ColumnDefinitions="Auto,*">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,20,0"
+                  Text="背景模糊" />
+              <Grid Grid.Column="1" ColumnDefinitions="*,56">
+                <Slider
+                    VerticalAlignment="Center"
+                    Minimum="0"
+                    Maximum="40"
+                    Value="{Binding BackgroundBlur}" />
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="12"
+                    Text="{Binding BackgroundBlurLabel}" />
+              </Grid>
+            </Grid>
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
                 Content="叠加彩色背景"
@@ -305,6 +293,7 @@
                   Grid.Column="2"
                   MinWidth="140"
                   Command="{Binding BackgroundClearCommand}"
+                  IsVisible="{Binding ShowBackgroundClearAction}"
                   ColorType="Red"
                   Text="清空背景内容" />
             </Grid>
@@ -545,7 +534,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="功能隐藏" ContentMargin="25,38,20,15">
+      <controls:PclCard Header="{Binding UiFeatureHiddenCardHeader}" ContentMargin="25,38,20,15" IsVisible="{Binding ShowUiFeatureHiddenCard}">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <TextBlock

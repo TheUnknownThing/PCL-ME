@@ -1,3 +1,5 @@
+using PCL.Frontend.Avalonia.Workflows;
+
 namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
@@ -48,7 +50,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string DownloadThreadLimitLabel => $"{Math.Round(DownloadThreadLimit)}";
+    public string DownloadThreadLimitLabel => FrontendDownloadSettingsService.FormatThreadLimitLabel(DownloadThreadLimit);
 
     public double DownloadSpeedLimit
     {
@@ -62,7 +64,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string DownloadSpeedLimitLabel => $"{Math.Round(DownloadSpeedLimit)}";
+    public string DownloadSpeedLimitLabel => FrontendDownloadSettingsService.FormatSpeedLimitLabel(DownloadSpeedLimit);
 
     public double DownloadTimeoutSeconds
     {
@@ -172,12 +174,13 @@ internal sealed partial class FrontendShellViewModel
         {
             if (SetProperty(ref _maxRealTimeLogValue, value))
             {
+                ApplyLaunchLogRetentionPreference();
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
             }
         }
     }
 
-    public string MaxRealTimeLogLabel => FormatMaxRealTimeLog(MaxRealTimeLogValue);
+    public string MaxRealTimeLogLabel => FrontendRealTimeLogSettingsService.FormatLineLimitLabel(MaxRealTimeLogValue);
 
     public bool DisableHardwareAcceleration
     {

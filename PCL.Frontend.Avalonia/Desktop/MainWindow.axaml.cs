@@ -20,6 +20,7 @@ using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.ViewModels;
+using PCL.Frontend.Avalonia.Workflows;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -92,9 +93,13 @@ internal sealed partial class MainWindow : Window
         KeyUp += OnWindowKeyUp;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
+        SizeChanged += (_, _) => ApplyDynamicBackgroundState();
         ApplyMainBackgroundBrush();
         ApplyTitleBarBackgroundBrush();
+        ApplyWindowOpacity();
+        ApplyDynamicBackgroundState();
         UpdateWindowChromeState();
+        ApplyWindowSizingState();
     }
 
     private void ConfigureShellDividerTransitions()
@@ -160,6 +165,11 @@ internal sealed partial class MainWindow : Window
 
     private void ToggleMaximize()
     {
+        if (!IsWindowResizeAllowed(_shellViewModel?.LockWindowSizeSetting == true))
+        {
+            return;
+        }
+
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
@@ -170,7 +180,7 @@ internal sealed partial class MainWindow : Window
         control.Cursor = new Cursor(cursor);
         control.PointerPressed += (_, e) =>
         {
-            if (e.GetCurrentPoint(control).Properties.IsLeftButtonPressed)
+            if (CanResize && e.GetCurrentPoint(control).Properties.IsLeftButtonPressed)
             {
                 BeginResizeDrag(edge, e);
             }
@@ -281,6 +291,13 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
+        if (_shellViewModel is not null && e.Key == Key.F12)
+        {
+            _shellViewModel.ToggleHiddenItemsOverride();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Handled || e.Key != Key.Escape || _shellViewModel is null)
         {
             return;
@@ -307,12 +324,14 @@ internal sealed partial class MainWindow : Window
     {
         ApplyMainBackgroundBrush();
         ApplyTitleBarBackgroundBrush();
+        ApplyDynamicBackgroundState();
     }
 
     private void OnWindowResourcesChanged(object? sender, ResourcesChangedEventArgs e)
     {
         ApplyMainBackgroundBrush();
         ApplyTitleBarBackgroundBrush();
+        ApplyDynamicBackgroundState();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -332,6 +351,8 @@ internal sealed partial class MainWindow : Window
             _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
         }
 
+        ApplyWindowOpacity();
+        ApplyDynamicBackgroundState();
         UpdatePromptOverlayRowHeights();
         QueuePromptOverlaySync();
     }
@@ -358,6 +379,31 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
+        if (e.PropertyName == nameof(FrontendShellViewModel.LauncherOpacity))
+        {
+            ApplyWindowOpacity();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.LockWindowSizeSetting)
+            || e.PropertyName == nameof(FrontendShellViewModel.ShowMaximizeButton))
+        {
+            ApplyWindowSizingState();
+            return;
+        }
+
+        if (e.PropertyName is nameof(FrontendShellViewModel.CurrentBackgroundBitmap)
+            or nameof(FrontendShellViewModel.BackgroundOpacity)
+            or nameof(FrontendShellViewModel.BackgroundBlur)
+            or nameof(FrontendShellViewModel.BackgroundColorful)
+            or nameof(FrontendShellViewModel.SelectedBackgroundSuitIndex)
+            or nameof(FrontendShellViewModel.CurrentBackgroundSourcePixelWidth)
+            or nameof(FrontendShellViewModel.CurrentBackgroundSourcePixelHeight))
+        {
+            ApplyDynamicBackgroundState();
+            return;
+        }
+
         if (e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayTextInput)
             || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList)
             || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayMessage))
@@ -365,6 +411,12 @@ internal sealed partial class MainWindow : Window
             UpdatePromptOverlayRowHeights();
             QueuePromptOverlayFocus();
         }
+    }
+
+    private void ApplyWindowOpacity()
+    {
+        var configuredOpacity = _shellViewModel?.LauncherOpacity ?? 600d;
+        Opacity = FrontendAppearanceService.MapLauncherOpacityToWindowOpacity(configuredOpacity);
     }
 
     private void QueuePromptOverlaySync()
@@ -480,6 +532,201 @@ internal sealed partial class MainWindow : Window
         NavBackgroundBorder.Background = _defaultTitleBarBackgroundBrush;
     }
 
+    private void ApplyDynamicBackgroundState()
+    {
+        var bitmap = _shellViewModel?.CurrentBackgroundBitmap;
+        if (bitmap is null)
+        {
+            DynamicBackgroundHost.IsVisible = false;
+            DynamicBackgroundHost.Background = Brushes.Transparent;
+            DynamicBackgroundHost.Effect = null;
+            DynamicBackgroundHost.Margin = default;
+            DynamicBackgroundHost.Width = double.NaN;
+            DynamicBackgroundHost.Height = double.NaN;
+            DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Stretch;
+            DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Stretch;
+            DynamicBackgroundOverlay.IsVisible = false;
+            DynamicBackgroundOverlay.Background = Brushes.Transparent;
+            return;
+        }
+
+        ConfigureBackgroundHostLayout(bitmap);
+        DynamicBackgroundHost.Background = CreateDynamicBackgroundBrush(bitmap);
+        DynamicBackgroundHost.Opacity = Math.Clamp((_shellViewModel?.BackgroundOpacity ?? 1000d) / 1000d, 0d, 1d);
+        var blur = Math.Clamp(_shellViewModel?.BackgroundBlur ?? 0d, 0d, 40d);
+        DynamicBackgroundHost.Effect = CreateDynamicBackgroundEffect(blur);
+        DynamicBackgroundHost.Margin = blur <= 0.5d
+            ? default
+            : new Thickness(-((blur + 1d) / 1.8d));
+        DynamicBackgroundHost.IsVisible = true;
+
+        var showColorfulOverlay = _shellViewModel?.BackgroundColorful == true;
+        DynamicBackgroundOverlay.IsVisible = showColorfulOverlay;
+        DynamicBackgroundOverlay.Background = showColorfulOverlay
+            ? CreateDynamicBackgroundOverlayBrush()
+            : Brushes.Transparent;
+    }
+
+    private IBrush CreateDynamicBackgroundBrush(Bitmap bitmap)
+    {
+        var brush = new ImageBrush(bitmap);
+        ApplyBackgroundSuit(brush, bitmap);
+        return brush;
+    }
+
+    internal static IEffect? CreateDynamicBackgroundEffect(double blur)
+    {
+        var normalized = Math.Clamp(blur, 0d, 40d);
+        return normalized <= 0.5d
+            ? null
+            : new BlurEffect
+            {
+                Radius = normalized
+            };
+    }
+
+    private void ConfigureBackgroundHostLayout(Bitmap bitmap)
+    {
+        var suit = ResolveBackgroundSuitMode(bitmap);
+        var assetPixelSize = ResolveBackgroundAssetPixelSize(bitmap.PixelSize);
+        DynamicBackgroundHost.Width = double.NaN;
+        DynamicBackgroundHost.Height = double.NaN;
+
+        switch (suit)
+        {
+            case 1:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Center;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Center;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 5:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Left;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Top;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 6:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Right;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Top;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 7:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Left;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Bottom;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 8:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Right;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Bottom;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            default:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Stretch;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Stretch;
+                break;
+        }
+    }
+
+    private void ApplyBackgroundSuit(ImageBrush brush, Bitmap bitmap)
+    {
+        var suit = ResolveBackgroundSuitMode(bitmap);
+        var assetPixelSize = ResolveBackgroundAssetPixelSize(bitmap.PixelSize);
+        brush.TileMode = TileMode.None;
+        brush.SourceRect = new RelativeRect(0, 0, 1, 1, RelativeUnit.Relative);
+        brush.DestinationRect = new RelativeRect(0, 0, 1, 1, RelativeUnit.Relative);
+
+        switch (suit)
+        {
+            case 1:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                brush.Stretch = Stretch.Fill;
+                break;
+            case 3:
+                brush.Stretch = Stretch.Fill;
+                break;
+            case 4:
+                brush.Stretch = Stretch.Fill;
+                brush.TileMode = TileMode.Tile;
+                brush.DestinationRect = new RelativeRect(0, 0, assetPixelSize.Width, assetPixelSize.Height, RelativeUnit.Absolute);
+                break;
+            default:
+                brush.Stretch = Stretch.UniformToFill;
+                break;
+        }
+    }
+
+    private int ResolveBackgroundSuitMode(Bitmap bitmap)
+    {
+        var configuredSuit = _shellViewModel?.SelectedBackgroundSuitIndex ?? 0;
+        if (configuredSuit != 0)
+        {
+            return configuredSuit;
+        }
+
+        var assetPixelSize = ResolveBackgroundAssetPixelSize(bitmap.PixelSize);
+        var availableWidth = MainClipBorder.Bounds.Width > 0 ? MainClipBorder.Bounds.Width : Bounds.Width;
+        var availableHeight = MainClipBorder.Bounds.Height > 0 ? MainClipBorder.Bounds.Height : Bounds.Height;
+        return ResolveAutomaticBackgroundSuitMode(assetPixelSize, availableWidth, availableHeight);
+    }
+
+    internal static PixelSize ResolveBackgroundAssetPixelSize(PixelSize renderedPixelSize, int sourcePixelWidth, int sourcePixelHeight)
+    {
+        if (sourcePixelWidth > 0 && sourcePixelHeight > 0)
+        {
+            return new PixelSize(sourcePixelWidth, sourcePixelHeight);
+        }
+
+        return renderedPixelSize;
+    }
+
+    internal static int ResolveAutomaticBackgroundSuitMode(PixelSize assetPixelSize, double availableWidth, double availableHeight)
+    {
+        if (assetPixelSize.Width < availableWidth / 2d && assetPixelSize.Height < availableHeight / 2d)
+        {
+            return 4;
+        }
+
+        return 2;
+    }
+
+    private PixelSize ResolveBackgroundAssetPixelSize(PixelSize renderedPixelSize)
+    {
+        return ResolveBackgroundAssetPixelSize(
+            renderedPixelSize,
+            _shellViewModel?.CurrentBackgroundSourcePixelWidth ?? 0,
+            _shellViewModel?.CurrentBackgroundSourcePixelHeight ?? 0);
+    }
+
+    private IBrush CreateDynamicBackgroundOverlayBrush()
+    {
+        var start = FrontendThemeResourceResolver.GetColor("ColorObject7");
+        var mid = FrontendThemeResourceResolver.GetColor("ColorObjectBg0");
+        var end = FrontendThemeResourceResolver.GetColor("ColorObject6");
+        return new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0.1, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(0.9, 1, RelativeUnit.Relative),
+            GradientStops =
+            [
+                new GradientStop(WithAlpha(start, ActualThemeVariant == ThemeVariant.Dark ? (byte)84 : (byte)64), 0),
+                new GradientStop(WithAlpha(mid, ActualThemeVariant == ThemeVariant.Dark ? (byte)52 : (byte)28), 0.45),
+                new GradientStop(WithAlpha(end, ActualThemeVariant == ThemeVariant.Dark ? (byte)70 : (byte)48), 1)
+            ]
+        };
+    }
+
+    private static Color WithAlpha(Color color, byte alpha)
+    {
+        return new Color(alpha, color.R, color.G, color.B);
+    }
+
     private void UpdatePromptOverlayRowHeights()
     {
         if (PromptOverlayContentGrid.RowDefinitions.Count <= PromptOverlayChoiceRowIndex)
@@ -507,10 +754,31 @@ internal sealed partial class MainWindow : Window
     private void UpdateWindowChromeState()
     {
         var isMaximized = WindowState == WindowState.Maximized;
-        GridResize.IsVisible = !isMaximized;
+        GridResize.IsVisible = ShouldShowResizeChrome(isMaximized, _shellViewModel?.LockWindowSizeSetting == true);
         MainBorder.Margin = isMaximized ? new Thickness(0) : new Thickness(18);
         MainBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(15, 15, 8, 8);
         MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
+    }
+
+    private void ApplyWindowSizingState()
+    {
+        var lockWindowSize = _shellViewModel?.LockWindowSizeSetting == true;
+        var canResizeWindow = IsWindowResizeAllowed(lockWindowSize);
+        CanResize = canResizeWindow;
+        GridResize.IsHitTestVisible = canResizeWindow;
+        MaximizeButton.IsEnabled = canResizeWindow;
+        MaximizeButton.Opacity = canResizeWindow ? 1d : 0.45d;
+        UpdateWindowChromeState();
+    }
+
+    internal static bool IsWindowResizeAllowed(bool lockWindowSize)
+    {
+        return !lockWindowSize;
+    }
+
+    internal static bool ShouldShowResizeChrome(bool isMaximized, bool lockWindowSize)
+    {
+        return !isMaximized && IsWindowResizeAllowed(lockWindowSize);
     }
 
     private static IBrush CreateDarkShellBackgroundBrush(Color baseColor)

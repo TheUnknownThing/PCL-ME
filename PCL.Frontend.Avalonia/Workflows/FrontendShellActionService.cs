@@ -171,7 +171,16 @@ internal sealed class FrontendShellActionService(
         Action<FrontendInstanceRepairProgressSnapshot>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
-        return FrontendInstanceRepairService.Repair(request, onProgress, cancellationToken);
+        return FrontendInstanceRepairService.Repair(
+            request,
+            onProgress,
+            GetDownloadTransferOptions(),
+            cancellationToken);
+    }
+
+    public FrontendDownloadTransferOptions GetDownloadTransferOptions()
+    {
+        return FrontendDownloadSettingsService.ResolveTransferOptions(RuntimePaths);
     }
 
     public bool TryOpenExternalTarget(string target, out string? error)
@@ -182,6 +191,11 @@ internal sealed class FrontendShellActionService(
     public bool TryRevealExternalTarget(string target, out string? error)
     {
         return PlatformAdapter.TryRevealExternalTarget(target, out error);
+    }
+
+    public bool TryStartDetachedScript(string scriptPath, out string? error)
+    {
+        return PlatformAdapter.TryStartDetachedScript(scriptPath, out error);
     }
 
     public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
@@ -393,12 +407,15 @@ internal sealed class FrontendShellActionService(
         var effectiveTransferPlan = ResolveEffectiveJavaTransferPlan(manifestPlan, transferPlan);
         var runtimeDirectory = effectiveTransferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory;
         var summaryPath = Path.Combine(runtimeDirectory, "download-summary.txt");
+        var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
 
         Directory.CreateDirectory(runtimeDirectory);
 
         foreach (var file in effectiveTransferPlan.FilesToDownload)
         {
-            DownloadJavaRuntimeFile(file);
+            DownloadJavaRuntimeFile(file, speedLimiter);
         }
         EnsureUnixExecutableBits(runtimeDirectory, effectiveTransferPlan);
 
@@ -426,7 +443,10 @@ internal sealed class FrontendShellActionService(
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
 
-        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts);
+        var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
+        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, speedLimiter);
         var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
         EnsureNativePathAlias(launchComposition.NativePathAliasDirectory, launchComposition.NativesDirectory);
 
@@ -554,7 +574,9 @@ internal sealed class FrontendShellActionService(
         }
     }
 
-    private static void EnsureRequiredArtifacts(IReadOnlyList<FrontendLaunchArtifactRequirement> requirements)
+    private static void EnsureRequiredArtifacts(
+        IReadOnlyList<FrontendLaunchArtifactRequirement> requirements,
+        FrontendDownloadSpeedLimiter? speedLimiter = null)
     {
         ArgumentNullException.ThrowIfNull(requirements);
 
@@ -568,8 +590,11 @@ internal sealed class FrontendShellActionService(
             Directory.CreateDirectory(Path.GetDirectoryName(requirement.TargetPath)!);
             try
             {
-                var payload = JavaRuntimeHttpClient.GetByteArrayAsync(requirement.DownloadUrl).GetAwaiter().GetResult();
-                File.WriteAllBytes(requirement.TargetPath, payload);
+                FrontendDownloadTransferService.DownloadToPath(
+                    JavaRuntimeHttpClient,
+                    requirement.DownloadUrl,
+                    requirement.TargetPath,
+                    speedLimiter: speedLimiter);
             }
             catch (Exception ex)
             {
@@ -955,7 +980,9 @@ internal sealed class FrontendShellActionService(
         throw new InvalidOperationException("无法下载 Java 运行时元数据。", lastError);
     }
 
-    private static void DownloadJavaRuntimeFile(MinecraftJavaRuntimeDownloadRequestFilePlan file)
+    private static void DownloadJavaRuntimeFile(
+        MinecraftJavaRuntimeDownloadRequestFilePlan file,
+        FrontendDownloadSpeedLimiter? speedLimiter = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(file.TargetPath)!);
 
@@ -964,14 +991,20 @@ internal sealed class FrontendShellActionService(
         {
             try
             {
-                var bytes = JavaRuntimeHttpClient.GetByteArrayAsync(url).GetAwaiter().GetResult();
-                var sha1 = Convert.ToHexString(SHA1.HashData(bytes)).ToLowerInvariant();
+                var tempPath = file.TargetPath + ".download";
+                FrontendDownloadTransferService.DownloadToPath(
+                    JavaRuntimeHttpClient,
+                    url,
+                    tempPath,
+                    speedLimiter: speedLimiter);
+                var sha1 = ComputeSha1FromFile(tempPath);
                 if (!string.Equals(sha1, file.Sha1, StringComparison.OrdinalIgnoreCase))
                 {
+                    TryDeleteFile(tempPath);
                     throw new InvalidOperationException($"Java 文件校验失败：{file.RelativePath}");
                 }
 
-                File.WriteAllBytes(file.TargetPath, bytes);
+                File.Move(tempPath, file.TargetPath, overwrite: true);
                 return;
             }
             catch (Exception ex)
@@ -981,6 +1014,12 @@ internal sealed class FrontendShellActionService(
         }
 
         throw new InvalidOperationException($"无法下载 Java 文件：{file.RelativePath}", lastError);
+    }
+
+    private static string ComputeSha1FromFile(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(SHA1.HashData(stream)).ToLowerInvariant();
     }
 
     private static void EnsureUnixExecutableBits(

@@ -185,39 +185,112 @@
 
       <Border x:Name="MainClipBorder" ClipToBounds="True" CornerRadius="6">
         <Grid RowDefinitions="Auto,*">
-          <StackPanel
+          <Border
+              x:Name="DynamicBackgroundHost"
+              Grid.RowSpan="2"
+              Background="{DynamicResource ColorBrushTransparent}"
+              IsHitTestVisible="False"
+              IsVisible="False" />
+
+          <Border
+              x:Name="DynamicBackgroundOverlay"
+              Grid.RowSpan="2"
+              Background="{DynamicResource ColorBrushTransparent}"
+              IsHitTestVisible="False"
+              IsVisible="False" />
+
+          <Grid
               Margin="19,0,0,0"
-              IsVisible="{Binding ShowWindowBranding}"
-              Orientation="Horizontal"
+              HorizontalAlignment="Left"
               VerticalAlignment="Center"
               ZIndex="3">
-            <Path
-                Width="48"
-                Height="16"
-                Data="M26,29 v-25 h5 a7,7 180 0 1 0,14 h-5 M61,6.5 a10,11.5 180 1 0 0,18 M68,2.5 v24.5 h12 M98,2"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                IsHitTestVisible="False"
-                Stretch="Fill"
-                Stroke="{DynamicResource ColorBrushTitleBarForeground}"
-                StrokeThickness="1.9"
-                UseLayoutRounding="False" />
-
-            <Border
-                Width="32"
-                Height="20"
-                Margin="0,0,0,0"
-                Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
-                CornerRadius="5"
-                IsHitTestVisible="False"
-                VerticalAlignment="Center">
-              <TextBlock
-                  HorizontalAlignment="Center"
+            <StackPanel
+                IsVisible="{Binding ShowDefaultTitleBarBranding}"
+                Orientation="Horizontal"
+                Spacing="0">
+              <Path
+                  Width="48"
+                  Height="16"
+                  Data="M26,29 v-25 h5 a7,7 180 0 1 0,14 h-5 M61,6.5 a10,11.5 180 1 0 0,18 M68,2.5 v24.5 h12 M98,2"
+                  HorizontalAlignment="Left"
                   VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
-                  Text="ME" />
-            </Border>
-          </StackPanel>
+                  IsHitTestVisible="False"
+                  Stretch="Fill"
+                  Stroke="{DynamicResource ColorBrushTitleBarForeground}"
+                  StrokeThickness="1.9"
+                  UseLayoutRounding="False" />
+
+              <Border
+                  Width="32"
+                  Height="20"
+                  Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
+                  CornerRadius="5"
+                  IsHitTestVisible="False"
+                  VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
+                    Text="ME" />
+              </Border>
+            </StackPanel>
+
+            <StackPanel
+                IsVisible="{Binding ShowTextTitleBarBranding}"
+                Orientation="Horizontal"
+                Spacing="10">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrushTitleBarForeground}"
+                  FontSize="16"
+                  FontWeight="SemiBold"
+                  Text="{Binding TitleBarCustomText}" />
+              <Border
+                  MinWidth="32"
+                  Height="20"
+                  Padding="8,0"
+                  Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
+                  CornerRadius="5"
+                  IsHitTestVisible="False"
+                  VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
+                    Text="ME" />
+              </Border>
+            </StackPanel>
+
+            <StackPanel
+                IsVisible="{Binding ShowImageTitleBarBranding}"
+                Orientation="Horizontal"
+                Spacing="10">
+              <Border
+                  Height="24"
+                  Padding="0"
+                  Background="{DynamicResource ColorBrushTransparent}"
+                  VerticalAlignment="Center">
+                <Image
+                    Height="24"
+                    Source="{Binding TitleBarCustomLogoImage}"
+                    Stretch="Uniform" />
+              </Border>
+              <Border
+                  MinWidth="32"
+                  Height="20"
+                  Padding="8,0"
+                  Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
+                  CornerRadius="5"
+                  IsHitTestVisible="False"
+                  VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
+                    Text="ME" />
+              </Border>
+            </StackPanel>
+          </Grid>
 
           <StackPanel
               Grid.Row="0"
@@ -269,12 +342,39 @@
             <Grid ColumnDefinitions="Auto,*,Auto">
               <Grid Grid.Column="1">
                 <ItemsControl
+                    Margin="15,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="{Binding IsTopLevelNavigationInteractive}"
+                    motion:Motion.AnimateOnVisible="True"
+                    motion:Motion.OffsetY="8"
+                    IsVisible="{Binding ShowLeftAlignedTopLevelNavigation}"
+                    ItemsSource="{Binding TopLevelEntries}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclTabButton
+                          Margin="5,0"
+                          Command="{Binding Command}"
+                          IconData="{Binding IconPath}"
+                          IconScale="{Binding IconScale}"
+                          IsSelected="{Binding IsSelected}"
+                          Text="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     IsHitTestVisible="{Binding IsTopLevelNavigationInteractive}"
                     motion:Motion.AnimateOnVisible="True"
                     motion:Motion.OffsetY="8"
-                    IsVisible="{Binding ShowTopLevelNavigation}"
+                    IsVisible="{Binding ShowCenteredTopLevelNavigation}"
                     ItemsSource="{Binding TopLevelEntries}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

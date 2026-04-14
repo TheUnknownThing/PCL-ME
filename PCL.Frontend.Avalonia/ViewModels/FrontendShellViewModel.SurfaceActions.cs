@@ -128,6 +128,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void DownloadAvailableUpdate()
     {
+        _ = DownloadAvailableUpdateAsync();
+    }
+
+    private async Task DownloadAvailableUpdateAsync()
+    {
         if (_updateStatus.SurfaceState != UpdateSurfaceState.Available)
         {
             AddActivity("下载并安装更新", "当前没有待下载的更新。");
@@ -141,26 +146,51 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var outputPath = Path.Combine(
-            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
-            "update-downloads",
-            $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.txt");
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        File.WriteAllText(outputPath, $"""
-            Update: {_updateStatus.AvailableUpdateName}
-            Source: {_updateStatus.AvailableUpdateSource}
-            SHA256: {_updateStatus.AvailableUpdateSha256}
-            Download: {target}
-            Release: {_updateStatus.AvailableUpdateReleaseUrl}
-            """, new UTF8Encoding(false));
+        try
+        {
+            var preparedInstall = await FrontendUpdateInstallWorkflowService.PrepareAsync(
+                new FrontendUpdateInstallRequest(
+                    DownloadUrl: target,
+                    ReleaseFileStem: SanitizeFileSegment(_updateStatus.AvailableUpdateName),
+                    ExpectedSha256: string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateSha256)
+                        ? null
+                        : _updateStatus.AvailableUpdateSha256,
+                    ArtifactDirectory: _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+                    TempDirectory: _shellActionService.RuntimePaths.FrontendTempDirectory,
+                    ExecutableDirectory: _shellActionService.RuntimePaths.ExecutableDirectory,
+                    ProcessPath: Environment.ProcessPath,
+                    ProcessId: Environment.ProcessId,
+                    PlatformAdapter: _shellActionService.PlatformAdapter));
+            var outputPath = Path.Combine(
+                _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+                "update-downloads",
+                $"{SanitizeFileSegment(_updateStatus.AvailableUpdateName)}.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, $"""
+                Update: {_updateStatus.AvailableUpdateName}
+                Source: {_updateStatus.AvailableUpdateSource}
+                SHA256: {_updateStatus.AvailableUpdateSha256}
+                Download: {target}
+                Release: {_updateStatus.AvailableUpdateReleaseUrl}
+                Archive: {preparedInstall.ArchivePath}
+                Extracted: {preparedInstall.ExtractedPackagePath}
+                Script: {preparedInstall.InstallerScriptPath}
+                """, new UTF8Encoding(false));
 
-        if (_shellActionService.TryOpenExternalTarget(target, out var error))
-        {
-            AddActivity("下载并安装更新", $"{_updateStatus.AvailableUpdateName} • 已打开下载地址，并写入下载计划：{outputPath}");
+            if (!_shellActionService.TryStartDetachedScript(preparedInstall.InstallerScriptPath, out var error))
+            {
+                AddFailureActivity("下载并安装更新失败", error ?? preparedInstall.InstallerScriptPath);
+                return;
+            }
+
+            AddActivity("下载并安装更新", $"{_updateStatus.AvailableUpdateName} • 更新包已准备完成，启动器即将退出并应用更新。");
+            AvaloniaHintBus.Show("更新包已准备完成，启动器即将关闭并自动安装。", AvaloniaHintTheme.Success);
+            await Task.Delay(400);
+            _shellActionService.ExitLauncher();
         }
-        else
+        catch (Exception ex)
         {
-            AddFailureActivity("下载并安装更新失败", error ?? outputPath);
+            AddFailureActivity("下载并安装更新失败", ex.Message);
         }
     }
 
@@ -656,9 +686,14 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             using var client = CreateToolHttpClient();
-            await using var source = await client.GetStreamAsync(uri);
-            await using var output = File.Create(targetPath);
-            await source.CopyToAsync(output);
+            var speedLimiter = _shellActionService.GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+                ? new FrontendDownloadSpeedLimiter(speedLimit)
+                : null;
+            await FrontendDownloadTransferService.DownloadToPathAsync(
+                client,
+                uri.ToString(),
+                targetPath,
+                speedLimiter: speedLimiter);
             AddActivity("开始下载自定义文件", $"{uri} -> {targetPath}");
         }
         catch (Exception ex)
@@ -825,18 +860,14 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshBackgroundAssets()
     {
-        var assets = EnumerateMediaFiles(GetBackgroundFolderPath(), BackgroundMediaExtensions).ToArray();
-        AddActivity(
-            "刷新背景内容",
-            assets.Length == 0
-                ? "未检测到可用背景内容。"
-                : $"已重新扫描背景内容目录，共找到 {assets.Length} 个文件。");
+        RefreshBackgroundContentState(selectNewAsset: true, addActivity: true);
     }
 
     private void ClearBackgroundAssets()
     {
         var folder = GetBackgroundFolderPath();
-        var removedCount = DeleteDirectoryContents(folder, BackgroundMediaExtensions);
+        var removedCount = DeleteDirectoryContents(folder, BackgroundCleanupExtensions);
+        RefreshBackgroundContentState(selectNewAsset: false, addActivity: false);
         AddActivity("清空背景内容", removedCount == 0 ? "背景目录中没有可删除的背景内容。" : $"已清空 {removedCount} 个背景内容文件。");
     }
 
@@ -906,6 +937,7 @@ internal sealed partial class FrontendShellViewModel
             SelectedLogoTypeIndex = 3;
         }
 
+        RefreshTitleBarLogoImage();
         AddActivity("更改标题栏图片", $"{sourcePath} -> {targetPath}");
     }
 
@@ -924,19 +956,13 @@ internal sealed partial class FrontendShellViewModel
             SelectedLogoTypeIndex = 1;
         }
 
+        RefreshTitleBarLogoImage();
         AddActivity("清空标题栏图片", targetPath);
     }
 
     private void RefreshHomepageContent()
     {
-        var currentTarget = SelectedHomepageTypeIndex switch
-        {
-            0 => "空白主页",
-            1 => $"预设主页: {HomepagePresetOptions[SelectedHomepagePresetIndex]}",
-            2 => GetHomepageTutorialPath(),
-            _ => string.IsNullOrWhiteSpace(HomepageUrl) ? "未填写联网主页地址" : HomepageUrl
-        };
-        AddActivity("刷新主页", $"主页配置已重新读取：{currentTarget}");
+        RefreshLaunchHomepage(forceRefresh: true, addActivity: true);
     }
 
     private void GenerateHomepageTutorialFile()
@@ -1526,7 +1552,7 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("重置界面设置", "个性化界面页已恢复到当前启动器的默认配置。");
     }
 
-    private static readonly string[] BackgroundMediaExtensions =
+    private static readonly string[] BackgroundCleanupExtensions =
     [
         ".png",
         ".jpg",

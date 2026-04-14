@@ -104,7 +104,6 @@ internal sealed partial class FrontendShellViewModel
         "UiBackgroundOpacity",
         "UiBackgroundBlur",
         "UiBackgroundSuit",
-        "UiAutoPauseVideo",
         "UiBlur",
         "UiBlurValue",
         "UiBlurSamplingRate",
@@ -315,16 +314,17 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
                 RaisePropertyChanged(nameof(LockWindowSizeSetting));
                 RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
-                RaisePropertyChanged(nameof(EnableAdvancedMaterial));
-                RaisePropertyChanged(nameof(BlurRadius));
-                RaisePropertyChanged(nameof(BlurRadiusLabel));
-                RaisePropertyChanged(nameof(BlurSamplingRate));
-                RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-                RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
                 RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
                 RaisePropertyChanged(nameof(SelectedMotdFontIndex));
-                RaisePropertyChanged(nameof(AutoPauseVideo));
                 RaisePropertyChanged(nameof(BackgroundColorful));
+                RaisePropertyChanged(nameof(SelectedBackgroundSuitIndex));
+                RaisePropertyChanged(nameof(ShowBackgroundAdvancedSettings));
+                RaisePropertyChanged(nameof(BackgroundOpacity));
+                RaisePropertyChanged(nameof(BackgroundOpacityLabel));
+                RaisePropertyChanged(nameof(BackgroundBlur));
+                RaisePropertyChanged(nameof(BackgroundBlurLabel));
+                RaisePropertyChanged(nameof(BackgroundCardHeader));
+                RaisePropertyChanged(nameof(ShowBackgroundClearAction));
                 RaisePropertyChanged(nameof(MusicVolume));
                 RaisePropertyChanged(nameof(MusicVolumeLabel));
                 RaisePropertyChanged(nameof(MusicRandomPlay));
@@ -535,6 +535,7 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedSystemActivityIndex):
                 _shellActionService.PersistLocalValue("SystemSystemActivity", SelectedSystemActivityIndex);
+                RefreshLaunchAnnouncements();
                 break;
             case nameof(AnimationFpsLimit):
                 _shellActionService.PersistSharedValue("UiAniFPS", (int)Math.Round(AnimationFpsLimit));
@@ -595,29 +596,23 @@ internal sealed partial class FrontendShellViewModel
             case nameof(ShowLaunchingHintSetting):
                 _shellActionService.PersistLocalValue("UiShowLaunchingHint", ShowLaunchingHintSetting);
                 break;
-            case nameof(EnableAdvancedMaterial):
-                _shellActionService.PersistLocalValue("UiBlur", EnableAdvancedMaterial);
-                break;
-            case nameof(BlurRadius):
-                _shellActionService.PersistLocalValue("UiBlurValue", (int)Math.Round(BlurRadius));
-                break;
-            case nameof(BlurSamplingRate):
-                _shellActionService.PersistLocalValue("UiBlurSamplingRate", (int)Math.Round(BlurSamplingRate));
-                break;
-            case nameof(SelectedBlurTypeIndex):
-                _shellActionService.PersistLocalValue("UiBlurType", SelectedBlurTypeIndex);
-                break;
             case nameof(SelectedGlobalFontIndex):
                 _shellActionService.PersistLocalValue("UiFont", MapFontIndexToConfigValue(SelectedGlobalFontIndex));
                 break;
             case nameof(SelectedMotdFontIndex):
                 _shellActionService.PersistLocalValue("UiMotdFont", MapFontIndexToConfigValue(SelectedMotdFontIndex));
                 break;
-            case nameof(AutoPauseVideo):
-                _shellActionService.PersistLocalValue("UiAutoPauseVideo", AutoPauseVideo);
-                break;
             case nameof(BackgroundColorful):
                 _shellActionService.PersistLocalValue("UiBackgroundColorful", BackgroundColorful);
+                break;
+            case nameof(SelectedBackgroundSuitIndex):
+                _shellActionService.PersistLocalValue("UiBackgroundSuit", SelectedBackgroundSuitIndex);
+                break;
+            case nameof(BackgroundOpacity):
+                _shellActionService.PersistLocalValue("UiBackgroundOpacity", (int)Math.Round(BackgroundOpacity));
+                break;
+            case nameof(BackgroundBlur):
+                _shellActionService.PersistLocalValue("UiBackgroundBlur", (int)Math.Round(BackgroundBlur));
                 break;
             case nameof(MusicVolume):
                 _shellActionService.PersistLocalValue("UiMusicVolume", (int)Math.Round(MusicVolume));
@@ -648,12 +643,15 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedHomepageTypeIndex):
                 _shellActionService.PersistLocalValue("UiCustomType", MapHomepageDisplayIndexToStoredValue(SelectedHomepageTypeIndex));
+                RefreshLaunchHomepage(forceRefresh: false);
                 break;
             case nameof(HomepageUrl):
                 _shellActionService.PersistLocalValue("UiCustomNet", HomepageUrl);
+                RefreshLaunchHomepage(forceRefresh: false);
                 break;
             case nameof(SelectedHomepagePresetIndex):
                 _shellActionService.PersistLocalValue("UiCustomPreset", SelectedHomepagePresetIndex);
+                RefreshLaunchHomepage(forceRefresh: false);
                 break;
         }
     }
@@ -666,6 +664,9 @@ internal sealed partial class FrontendShellViewModel
         }
 
         _shellActionService.PersistLocalValue(key, value);
+        ReloadSetupComposition(initializeAllSurfaces: false);
+        RefreshShell(value ? $"已隐藏 {key}。" : $"已恢复 {key}。");
+        RaiseUiVisibilityProperties();
     }
 
     private static string MapFontIndexToConfigValue(int index)
@@ -814,16 +815,17 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
         RaisePropertyChanged(nameof(LockWindowSizeSetting));
         RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
-        RaisePropertyChanged(nameof(EnableAdvancedMaterial));
-        RaisePropertyChanged(nameof(BlurRadius));
-        RaisePropertyChanged(nameof(BlurRadiusLabel));
-        RaisePropertyChanged(nameof(BlurSamplingRate));
-        RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-        RaisePropertyChanged(nameof(SelectedBlurTypeIndex));
         RaisePropertyChanged(nameof(SelectedGlobalFontIndex));
         RaisePropertyChanged(nameof(SelectedMotdFontIndex));
-        RaisePropertyChanged(nameof(AutoPauseVideo));
         RaisePropertyChanged(nameof(BackgroundColorful));
+        RaisePropertyChanged(nameof(SelectedBackgroundSuitIndex));
+        RaisePropertyChanged(nameof(ShowBackgroundAdvancedSettings));
+        RaisePropertyChanged(nameof(BackgroundOpacity));
+        RaisePropertyChanged(nameof(BackgroundOpacityLabel));
+        RaisePropertyChanged(nameof(BackgroundBlur));
+        RaisePropertyChanged(nameof(BackgroundBlurLabel));
+        RaisePropertyChanged(nameof(BackgroundCardHeader));
+        RaisePropertyChanged(nameof(ShowBackgroundClearAction));
         RaisePropertyChanged(nameof(MusicVolume));
         RaisePropertyChanged(nameof(MusicVolumeLabel));
         RaisePropertyChanged(nameof(MusicRandomPlay));

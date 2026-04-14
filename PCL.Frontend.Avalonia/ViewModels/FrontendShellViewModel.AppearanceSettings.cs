@@ -14,12 +14,6 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> ThemeColorOptions => FrontendAppearanceService.ThemeColorOptions;
 
-    public IReadOnlyList<string> BlurTypeOptions { get; } =
-    [
-        "高斯模糊",
-        "方框模糊"
-    ];
-
     public IReadOnlyList<string> FontOptions { get; } =
     [
         "默认字体",
@@ -28,22 +22,7 @@ internal sealed partial class FrontendShellViewModel
         "JetBrains Mono"
     ];
 
-    public IReadOnlyList<string> HomepagePresetOptions { get; } =
-    [
-        "你知道吗？",
-        "Minecraft 新闻（作者：最亮的信标）",
-        "简单主页（作者：MFn233）",
-        "每日整合包推荐（作者：wkea）",
-        "Minecraft 皮肤推荐（作者：wkea）",
-        "OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）",
-        "PCL 新闻速报（作者：Joker2184）",
-        "PCL 新功能说明书（作者：WForst-Breeze）",
-        "杂志主页（作者：CreeperIsASpy）",
-        "PCL GitHub 仪表盘（作者：Deep-Dark-Forest）",
-        "Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）",
-        "PCL-ME 公告栏",
-        "Minecraft 官方信息流"
-    ];
+    public IReadOnlyList<string> HomepagePresetOptions { get; } = HomepagePresetCatalog.Select(item => item.Title).ToArray();
 
     public int SelectedDarkModeIndex
     {
@@ -188,14 +167,15 @@ internal sealed partial class FrontendShellViewModel
         get => _launcherOpacity;
         set
         {
-            if (SetProperty(ref _launcherOpacity, value))
+            var normalized = FrontendAppearanceService.NormalizeLauncherOpacity(value);
+            if (SetProperty(ref _launcherOpacity, normalized))
             {
                 RaisePropertyChanged(nameof(LauncherOpacityLabel));
             }
         }
     }
 
-    public string LauncherOpacityLabel => $"{Math.Round(LauncherOpacity / 10)}%";
+    public string LauncherOpacityLabel => FrontendAppearanceService.FormatLauncherOpacityLabel(LauncherOpacity);
 
     public bool ShowLauncherLogoSetting
     {
@@ -215,46 +195,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _showLaunchingHint, value);
     }
 
-    public bool EnableAdvancedMaterial
-    {
-        get => _enableAdvancedMaterial;
-        set => SetProperty(ref _enableAdvancedMaterial, value);
-    }
-
-    public double BlurRadius
-    {
-        get => _blurRadius;
-        set
-        {
-            if (SetProperty(ref _blurRadius, value))
-            {
-                RaisePropertyChanged(nameof(BlurRadiusLabel));
-            }
-        }
-    }
-
-    public string BlurRadiusLabel => $"{Math.Round(BlurRadius)}";
-
-    public double BlurSamplingRate
-    {
-        get => _blurSamplingRate;
-        set
-        {
-            if (SetProperty(ref _blurSamplingRate, value))
-            {
-                RaisePropertyChanged(nameof(BlurSamplingRateLabel));
-            }
-        }
-    }
-
-    public string BlurSamplingRateLabel => $"{Math.Round(BlurSamplingRate)}%";
-
-    public int SelectedBlurTypeIndex
-    {
-        get => _selectedBlurTypeIndex;
-        set => SetProperty(ref _selectedBlurTypeIndex, Math.Clamp(value, 0, BlurTypeOptions.Count - 1));
-    }
-
     public int SelectedGlobalFontIndex
     {
         get => _selectedGlobalFontIndex;
@@ -265,12 +205,6 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _selectedMotdFontIndex;
         set => SetProperty(ref _selectedMotdFontIndex, Math.Clamp(value, 0, FontOptions.Count - 1));
-    }
-
-    public bool AutoPauseVideo
-    {
-        get => _autoPauseVideo;
-        set => SetProperty(ref _autoPauseVideo, value);
     }
 
     public bool BackgroundColorful
@@ -338,6 +272,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsLogoLeftVisible));
                 RaisePropertyChanged(nameof(IsLogoTextVisible));
                 RaisePropertyChanged(nameof(IsLogoImageActionsVisible));
+                RaiseTitleBarAppearanceProperties();
             }
         }
     }
@@ -366,12 +301,18 @@ internal sealed partial class FrontendShellViewModel
         set { if (value) SelectedLogoTypeIndex = 3; }
     }
 
-    public bool IsLogoLeftVisible => SelectedLogoTypeIndex != 0;
+    public bool IsLogoLeftVisible => SelectedLogoTypeIndex == 0;
 
     public bool LogoAlignLeft
     {
         get => _logoAlignLeft;
-        set => SetProperty(ref _logoAlignLeft, value);
+        set
+        {
+            if (SetProperty(ref _logoAlignLeft, value))
+            {
+                RaiseTitleBarAppearanceProperties();
+            }
+        }
     }
 
     public bool IsLogoTextVisible => SelectedLogoTypeIndex == 2;
@@ -379,7 +320,13 @@ internal sealed partial class FrontendShellViewModel
     public string LogoTextValue
     {
         get => _logoText;
-        set => SetProperty(ref _logoText, value);
+        set
+        {
+            if (SetProperty(ref _logoText, value))
+            {
+                RaiseTitleBarAppearanceProperties();
+            }
+        }
     }
 
     public bool IsLogoImageActionsVisible => SelectedLogoTypeIndex == 3;
@@ -399,6 +346,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsHomepageLocalActionsVisible));
                 RaisePropertyChanged(nameof(IsHomepageNetVisible));
                 RaisePropertyChanged(nameof(IsHomepagePresetVisible));
+                RaisePropertyChanged(nameof(ShowLaunchHomepageRefreshAction));
             }
         }
     }

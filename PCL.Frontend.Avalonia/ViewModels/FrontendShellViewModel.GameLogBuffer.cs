@@ -1,4 +1,5 @@
 using System.Text;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -48,9 +49,14 @@ internal sealed partial class FrontendShellViewModel
     private void AppendLaunchLogEntry(string line)
     {
         _launchLogLines.Add(line);
+        var removedCount = TrimLaunchLogBufferToRetentionLimit();
         if (_isLaunchLogViewportPinned)
         {
             _launchLogVisibleStartIndex = Math.Max(0, _launchLogLines.Count - LaunchLogVisibleTailLineCount);
+        }
+        else if (removedCount > 0)
+        {
+            _launchLogVisibleStartIndex = Math.Max(0, _launchLogVisibleStartIndex - removedCount);
         }
 
         UpdateLaunchLogVisibleText();
@@ -100,5 +106,39 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return builder.ToString();
+    }
+
+    private void ApplyLaunchLogRetentionPreference()
+    {
+        var removedCount = TrimLaunchLogBufferToRetentionLimit();
+        if (removedCount <= 0)
+        {
+            return;
+        }
+
+        if (_isLaunchLogViewportPinned)
+        {
+            _launchLogVisibleStartIndex = Math.Max(0, _launchLogLines.Count - LaunchLogVisibleTailLineCount);
+        }
+        else
+        {
+            _launchLogVisibleStartIndex = Math.Max(0, _launchLogVisibleStartIndex - removedCount);
+        }
+
+        UpdateLaunchLogVisibleText();
+        RaiseGameLogSurfaceProperties();
+    }
+
+    private int TrimLaunchLogBufferToRetentionLimit()
+    {
+        var maxLineCount = FrontendRealTimeLogSettingsService.ResolveLineLimit(_maxRealTimeLogValue);
+        if (!maxLineCount.HasValue || _launchLogLines.Count <= maxLineCount.Value)
+        {
+            return 0;
+        }
+
+        var removedCount = _launchLogLines.Count - maxLineCount.Value;
+        _launchLogLines.RemoveRange(0, removedCount);
+        return removedCount;
     }
 }

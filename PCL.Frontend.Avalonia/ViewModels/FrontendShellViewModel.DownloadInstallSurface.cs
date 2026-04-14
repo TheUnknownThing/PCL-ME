@@ -443,6 +443,7 @@ internal sealed partial class FrontendShellViewModel
         {
             "Cleanroom" => string.Equals(minecraftVersion, "1.12.2", StringComparison.OrdinalIgnoreCase),
             "NeoForge" => IsVersionAtLeast(minecraftVersion, "1.20.1"),
+            "Quilt" or "QFAPI / QSL" => !IgnoreQuiltLoader,
             "LiteLoader" => !IsVersionAtLeast(minecraftVersion, "1.13"),
             _ => true
         };

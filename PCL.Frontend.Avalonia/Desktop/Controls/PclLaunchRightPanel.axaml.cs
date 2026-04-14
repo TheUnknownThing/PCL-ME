@@ -17,7 +17,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
     private const double ExitOffsetY = -10d;
 
     private FrontendShellViewModel? _shell;
-    private int _launchHintAnimationVersion;
+    private int _launchAnnouncementAnimationVersion;
     private int _routeEnterAnimationVersion;
     private bool _isLaunchHintRendered;
 
@@ -31,7 +31,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
-        QueueLaunchHintSync();
+        QueueLaunchAnnouncementSync();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -47,36 +47,36 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             _shell.PropertyChanged += OnShellPropertyChanged;
         }
 
-        QueueLaunchHintSync();
+        QueueLaunchAnnouncementSync();
     }
 
     private void OnShellPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FrontendShellViewModel.ShowLaunchCommunityHint))
+        if (e.PropertyName == nameof(FrontendShellViewModel.ShowLaunchAnnouncement))
         {
-            QueueLaunchHintSync();
+            QueueLaunchAnnouncementSync();
         }
     }
 
-    private void QueueLaunchHintSync()
+    private void QueueLaunchAnnouncementSync()
     {
-        var version = ++_launchHintAnimationVersion;
+        var version = ++_launchAnnouncementAnimationVersion;
         Dispatcher.UIThread.Post(
             () =>
             {
-                if (version != _launchHintAnimationVersion || VisualRoot is null)
+                if (version != _launchAnnouncementAnimationVersion || VisualRoot is null)
                 {
                     return;
                 }
 
-                SyncLaunchHint();
+                SyncLaunchAnnouncement();
             },
             DispatcherPriority.Render);
     }
 
-    private void SyncLaunchHint()
+    private void SyncLaunchAnnouncement()
     {
-        var shouldShow = _shell?.ShowLaunchCommunityHint == true;
+        var shouldShow = _shell?.ShowLaunchAnnouncement == true;
         if (shouldShow == _isLaunchHintRendered)
         {
             return;
@@ -85,29 +85,29 @@ internal sealed partial class PclLaunchRightPanel : UserControl
         if (shouldShow)
         {
             _isLaunchHintRendered = true;
-            LaunchCommunityHintHost.IsVisible = true;
+            LaunchAnnouncementHost.IsVisible = true;
             return;
         }
 
         if (!_isLaunchHintRendered)
         {
-            LaunchCommunityHintHost.IsVisible = false;
+            LaunchAnnouncementHost.IsVisible = false;
             return;
         }
 
         _isLaunchHintRendered = false;
-        LaunchCommunityHintHost.IsVisible = false;
+        LaunchAnnouncementHost.IsVisible = false;
     }
 
     private void ConfigureLaunchHintMotion()
     {
-        Motion.SetAnimateOnVisible(LaunchCommunityHintHost, true);
-        Motion.SetInitialOpacity(LaunchCommunityHintHost, 0);
-        Motion.SetOffsetX(LaunchCommunityHintHost, 0);
-        Motion.SetOffsetY(LaunchCommunityHintHost, EnterOffsetY);
-        Motion.SetOvershootTranslation(LaunchCommunityHintHost, true);
-        Motion.SetExitOffsetX(LaunchCommunityHintHost, 0);
-        Motion.SetExitOffsetY(LaunchCommunityHintHost, ExitOffsetY);
+        Motion.SetAnimateOnVisible(LaunchAnnouncementHost, true);
+        Motion.SetInitialOpacity(LaunchAnnouncementHost, 0);
+        Motion.SetOffsetX(LaunchAnnouncementHost, 0);
+        Motion.SetOffsetY(LaunchAnnouncementHost, EnterOffsetY);
+        Motion.SetOvershootTranslation(LaunchAnnouncementHost, true);
+        Motion.SetExitOffsetX(LaunchAnnouncementHost, 0);
+        Motion.SetExitOffsetY(LaunchAnnouncementHost, ExitOffsetY);
     }
 
     internal void QueueRouteEnterAnimation()
@@ -133,23 +133,23 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
     private async Task PlayRouteEnterAnimationAsync(int version)
     {
-        LaunchCommunityHintHost.Transitions = null;
-        LaunchCommunityHintHost.Opacity = 0;
-        LaunchCommunityHintHost.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+        LaunchAnnouncementHost.Transitions = null;
+        LaunchAnnouncementHost.Opacity = 0;
+        LaunchAnnouncementHost.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
 
-        var transform = LaunchCommunityHintHost.RenderTransform as TranslateTransform ?? new TranslateTransform();
+        var transform = LaunchAnnouncementHost.RenderTransform as TranslateTransform ?? new TranslateTransform();
         transform.Transitions = null;
         transform.X = 0;
         transform.Y = EnterOffsetY;
-        LaunchCommunityHintHost.RenderTransform = transform;
+        LaunchAnnouncementHost.RenderTransform = transform;
 
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (version != _routeEnterAnimationVersion || !_isLaunchHintRendered || !LaunchCommunityHintHost.IsVisible)
+        if (version != _routeEnterAnimationVersion || !_isLaunchHintRendered || !LaunchAnnouncementHost.IsVisible)
         {
             return;
         }
 
-        LaunchCommunityHintHost.Transitions =
+        LaunchAnnouncementHost.Transitions =
         [
             new DoubleTransition
             {
@@ -169,7 +169,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
             }
         ];
 
-        LaunchCommunityHintHost.Opacity = 1;
+        LaunchAnnouncementHost.Opacity = 1;
         transform.Y = 0;
     }
 }
