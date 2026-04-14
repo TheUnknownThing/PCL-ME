@@ -200,6 +200,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsNoHttpProxySelected));
                 RaisePropertyChanged(nameof(IsSystemHttpProxySelected));
                 RaisePropertyChanged(nameof(IsCustomHttpProxySelected));
+                ClearProxyTestFeedback();
             }
         }
     }
@@ -245,20 +246,58 @@ internal sealed partial class FrontendShellViewModel
     public string HttpProxyAddress
     {
         get => _httpProxyAddress;
-        set => SetProperty(ref _httpProxyAddress, value);
+        set
+        {
+            if (SetProperty(ref _httpProxyAddress, value))
+            {
+                ClearProxyTestFeedback();
+            }
+        }
     }
 
     public string HttpProxyUsername
     {
         get => _httpProxyUsername;
-        set => SetProperty(ref _httpProxyUsername, value);
+        set
+        {
+            if (SetProperty(ref _httpProxyUsername, value))
+            {
+                ClearProxyTestFeedback();
+            }
+        }
     }
 
     public string HttpProxyPassword
     {
         get => _httpProxyPassword;
-        set => SetProperty(ref _httpProxyPassword, value);
+        set
+        {
+            if (SetProperty(ref _httpProxyPassword, value))
+            {
+                ClearProxyTestFeedback();
+            }
+        }
     }
+
+    public string ProxyTestFeedbackText
+    {
+        get => _proxyTestFeedbackText;
+        private set
+        {
+            if (SetProperty(ref _proxyTestFeedbackText, value))
+            {
+                RaisePropertyChanged(nameof(IsProxyTestFeedbackVisible));
+                RaisePropertyChanged(nameof(IsProxyTestSuccessVisible));
+                RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
+            }
+        }
+    }
+
+    public bool IsProxyTestFeedbackVisible => !string.IsNullOrWhiteSpace(ProxyTestFeedbackText);
+
+    public bool IsProxyTestSuccessVisible => IsProxyTestFeedbackVisible && _isProxyTestFeedbackSuccess;
+
+    public bool IsProxyTestFailureVisible => IsProxyTestFeedbackVisible && !_isProxyTestFeedbackSuccess;
 
     public double DebugAnimationSpeed
     {

@@ -10,7 +10,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendInstanceRepairService
 {
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
 
     public static FrontendInstanceRepairResult Repair(
         FrontendInstanceRepairRequest request,

@@ -69,8 +69,6 @@ internal sealed partial class FrontendShellViewModel
         "SystemDisableHardwareAcceleration",
         "SystemNetEnableDoH",
         "SystemHttpProxyType",
-        "SystemHttpProxyCustomUsername",
-        "SystemHttpProxyCustomPassword",
         "SystemDebugAnim",
         "SystemDebugSkipCopy",
         "SystemDebugMode",
@@ -79,7 +77,9 @@ internal sealed partial class FrontendShellViewModel
 
     private static readonly string[] LauncherMiscProtectedResetKeys =
     [
-        "SystemHttpProxy"
+        "SystemHttpProxy",
+        "SystemHttpProxyCustomUsername",
+        "SystemHttpProxyCustomPassword"
     ];
 
     private static readonly string[] UpdateLocalResetKeys =
@@ -187,6 +187,8 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadSetupComposition(bool initializeAllSurfaces = true)
     {
+        FrontendHttpProxyService.ApplyStoredProxySettings(_shellActionService.RuntimePaths);
+        FrontendHttpProxyService.ApplyStoredDnsSettings(_shellActionService.RuntimePaths);
         ApplySetupComposition(
             FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths),
             initializeAllSurfaces);
@@ -280,6 +282,10 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HttpProxyAddress));
                 RaisePropertyChanged(nameof(HttpProxyUsername));
                 RaisePropertyChanged(nameof(HttpProxyPassword));
+                RaisePropertyChanged(nameof(ProxyTestFeedbackText));
+                RaisePropertyChanged(nameof(IsProxyTestFeedbackVisible));
+                RaisePropertyChanged(nameof(IsProxyTestSuccessVisible));
+                RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
                 RaisePropertyChanged(nameof(DebugAnimationSpeed));
                 RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
                 RaisePropertyChanged(nameof(SkipCopyDuringDownload));
@@ -539,9 +545,11 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(EnableDoH):
                 _shellActionService.PersistSharedValue("SystemNetEnableDoH", EnableDoH);
+                FrontendHttpProxyService.ApplyDnsOverHttpsSetting(EnableDoH);
                 break;
             case nameof(SelectedHttpProxyTypeIndex):
                 _shellActionService.PersistSharedValue("SystemHttpProxyType", SelectedHttpProxyTypeIndex);
+                FrontendHttpProxyService.ApplyStoredProxySettings(_shellActionService.RuntimePaths);
                 break;
             case nameof(DebugAnimationSpeed):
                 _shellActionService.PersistSharedValue("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
@@ -774,6 +782,10 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HttpProxyAddress));
         RaisePropertyChanged(nameof(HttpProxyUsername));
         RaisePropertyChanged(nameof(HttpProxyPassword));
+        RaisePropertyChanged(nameof(ProxyTestFeedbackText));
+        RaisePropertyChanged(nameof(IsProxyTestFeedbackVisible));
+        RaisePropertyChanged(nameof(IsProxyTestSuccessVisible));
+        RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
         RaisePropertyChanged(nameof(DebugAnimationSpeed));
         RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
         RaisePropertyChanged(nameof(SkipCopyDuringDownload));

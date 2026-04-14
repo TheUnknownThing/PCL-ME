@@ -22,8 +22,10 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
                 DebugLog4jConfigurationFilePath: @"C:\Temp\log4j2.xml",
                 RendererAgentArgument: "-javaagent:\"renderer.jar\"=llvmpipe",
                 ProxyScheme: "http",
-                ProxyHost: "http://proxy.example",
+                ProxyHost: "proxy.example",
                 ProxyPort: 8080,
+                ProxyUsername: null,
+                ProxyPassword: null,
                 UseJavaWrapper: false,
                 JavaWrapperTempDirectory: null,
                 JavaWrapperPath: null,
@@ -34,7 +36,10 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
         StringAssert.Contains(result, "\"-Djava.library.path=C:\\Minecraft\\natives\"");
         StringAssert.Contains(result, "-cp ${classpath}");
         StringAssert.Contains(result, "-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT");
+        StringAssert.Contains(result, "-Dhttp.proxyHost=proxy.example");
         StringAssert.Contains(result, "-Dhttp.proxyPort=8080");
+        StringAssert.Contains(result, "-Dhttps.proxyHost=proxy.example");
+        StringAssert.Contains(result, "-Dhttps.proxyPort=8080");
         StringAssert.Contains(result, "net.minecraft.client.main.Main");
     }
 
@@ -54,6 +59,8 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
                 ProxyScheme: null,
                 ProxyHost: null,
                 ProxyPort: null,
+                ProxyUsername: null,
+                ProxyPassword: null,
                 UseJavaWrapper: true,
                 JavaWrapperTempDirectory: @"C:\Temp",
                 JavaWrapperPath: @"C:\Temp\JavaWrapper.jar",
@@ -81,6 +88,8 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
                 ProxyScheme: null,
                 ProxyHost: null,
                 ProxyPort: null,
+                ProxyUsername: null,
+                ProxyPassword: null,
                 UseJavaWrapper: false,
                 JavaWrapperTempDirectory: null,
                 JavaWrapperPath: null,
@@ -91,6 +100,36 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
         StringAssert.Contains(result, "-Djava.net.preferIPv4Stack=true");
         StringAssert.Contains(result, "-Dretrowrapper.doUpdateCheck=false");
         StringAssert.EndsWith(result, "Main");
+    }
+
+    [TestMethod]
+    public void BuildLegacyArguments_UsesSocksProxyKeysAndCredentials()
+    {
+        var result = MinecraftLaunchJvmArgumentService.BuildLegacyArguments(
+            new MinecraftLaunchLegacyJvmArgumentRequest(
+                VariableJvmArguments: "-XX:+UseG1GC",
+                YoungGenerationMegabytes: 512,
+                TotalMemoryMegabytes: 4096,
+                NativesDirectory: @"C:\Minecraft\natives",
+                JavaMajorVersion: 21,
+                AuthlibInjectorArgument: null,
+                DebugLog4jConfigurationFilePath: null,
+                RendererAgentArgument: null,
+                ProxyScheme: "socks",
+                ProxyHost: "proxy.example",
+                ProxyPort: 1080,
+                ProxyUsername: "user",
+                ProxyPassword: "pass",
+                UseJavaWrapper: false,
+                JavaWrapperTempDirectory: null,
+                JavaWrapperPath: null,
+                MainClass: "net.minecraft.client.main.Main"));
+
+        StringAssert.Contains(result, "-DsocksProxyHost=proxy.example");
+        StringAssert.Contains(result, "-DsocksProxyPort=1080");
+        StringAssert.Contains(result, "-Djava.net.socks.username=user");
+        StringAssert.Contains(result, "-Djava.net.socks.password=pass");
+        Assert.IsFalse(result.Contains("-Dhttp.proxyHost=", System.StringComparison.Ordinal));
     }
 
     private static int CountOccurrences(string text, string value)

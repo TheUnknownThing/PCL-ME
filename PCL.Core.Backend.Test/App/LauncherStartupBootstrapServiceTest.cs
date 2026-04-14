@@ -35,9 +35,11 @@ public sealed class LauncherStartupBootstrapServiceTest
                 "SystemDebugAnim",
                 "SystemHttpProxy",
                 "SystemHttpProxyCustomUsername",
+                "SystemHttpProxyCustomPassword",
                 "SystemHttpProxyType",
                 "ToolDownloadThread",
                 "ToolDownloadSpeed",
+                "ToolDownloadTimeout",
                 "UiFont"
             },
             result.ConfigKeysToLoad.ToArray());

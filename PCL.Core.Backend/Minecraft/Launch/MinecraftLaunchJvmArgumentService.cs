@@ -78,8 +78,38 @@ public static class MinecraftLaunchJvmArgumentService
             !string.IsNullOrWhiteSpace(request.ProxyHost) &&
             request.ProxyPort.HasValue)
         {
-            data.Add($"-D{request.ProxyScheme}.proxyHost={request.ProxyHost}");
-            data.Add($"-D{request.ProxyScheme}.proxyPort={request.ProxyPort.Value}");
+            if (request.ProxyScheme.StartsWith("socks", StringComparison.OrdinalIgnoreCase))
+            {
+                data.Add($"-DsocksProxyHost={request.ProxyHost}");
+                data.Add($"-DsocksProxyPort={request.ProxyPort.Value}");
+                if (!string.IsNullOrWhiteSpace(request.ProxyUsername))
+                {
+                    data.Add($"-Djava.net.socks.username={request.ProxyUsername}");
+                }
+
+                if (!string.IsNullOrEmpty(request.ProxyPassword))
+                {
+                    data.Add($"-Djava.net.socks.password={request.ProxyPassword}");
+                }
+            }
+            else
+            {
+                data.Add($"-Dhttp.proxyHost={request.ProxyHost}");
+                data.Add($"-Dhttp.proxyPort={request.ProxyPort.Value}");
+                data.Add($"-Dhttps.proxyHost={request.ProxyHost}");
+                data.Add($"-Dhttps.proxyPort={request.ProxyPort.Value}");
+                if (!string.IsNullOrWhiteSpace(request.ProxyUsername))
+                {
+                    data.Add($"-Dhttp.proxyUser={request.ProxyUsername}");
+                    data.Add($"-Dhttps.proxyUser={request.ProxyUsername}");
+                }
+
+                if (!string.IsNullOrEmpty(request.ProxyPassword))
+                {
+                    data.Add($"-Dhttp.proxyPassword={request.ProxyPassword}");
+                    data.Add($"-Dhttps.proxyPassword={request.ProxyPassword}");
+                }
+            }
         }
 
         if (MinecraftLaunchJavaWrapperService.ShouldUse(
@@ -164,6 +194,8 @@ public abstract record MinecraftLaunchJvmArgumentRequestBase(
     string? ProxyScheme,
     string? ProxyHost,
     int? ProxyPort,
+    string? ProxyUsername,
+    string? ProxyPassword,
     bool UseJavaWrapper,
     string? JavaWrapperTempDirectory,
     string? JavaWrapperPath,
@@ -181,6 +213,8 @@ public sealed record MinecraftLaunchLegacyJvmArgumentRequest(
     string? ProxyScheme,
     string? ProxyHost,
     int? ProxyPort,
+    string? ProxyUsername,
+    string? ProxyPassword,
     bool UseJavaWrapper,
     string? JavaWrapperTempDirectory,
     string? JavaWrapperPath,
@@ -193,6 +227,8 @@ public sealed record MinecraftLaunchLegacyJvmArgumentRequest(
         ProxyScheme,
         ProxyHost,
         ProxyPort,
+        ProxyUsername,
+        ProxyPassword,
         UseJavaWrapper,
         JavaWrapperTempDirectory,
         JavaWrapperPath,
@@ -212,6 +248,8 @@ public sealed record MinecraftLaunchModernJvmArgumentRequest(
     string? ProxyScheme,
     string? ProxyHost,
     int? ProxyPort,
+    string? ProxyUsername,
+    string? ProxyPassword,
     bool UseJavaWrapper,
     string? JavaWrapperTempDirectory,
     string? JavaWrapperPath,
@@ -224,6 +262,8 @@ public sealed record MinecraftLaunchModernJvmArgumentRequest(
         ProxyScheme,
         ProxyHost,
         ProxyPort,
+        ProxyUsername,
+        ProxyPassword,
         UseJavaWrapper,
         JavaWrapperTempDirectory,
         JavaWrapperPath,

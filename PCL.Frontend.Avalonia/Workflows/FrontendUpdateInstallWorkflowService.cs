@@ -7,10 +7,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendUpdateInstallWorkflowService
 {
-    private static readonly HttpClient HttpClient = new()
-    {
-        Timeout = TimeSpan.FromMinutes(5)
-    };
+    private static readonly HttpClient HttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromMinutes(5));
 
     public static async Task<FrontendPreparedUpdateInstall> PrepareAsync(
         FrontendUpdateInstallRequest request,

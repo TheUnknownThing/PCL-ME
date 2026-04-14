@@ -24,6 +24,8 @@ internal sealed class App : Application
         var platformAdapter = new FrontendPlatformAdapter();
         _runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
         FrontendLoggingBootstrap.Initialize(_runtimePaths);
+        FrontendHttpProxyService.ApplyStoredProxySettings(_runtimePaths);
+        FrontendHttpProxyService.ApplyStoredDnsSettings(_runtimePaths);
         FrontendShellActionService.ApplyStoredAnimationPreferences(_runtimePaths);
         AvaloniaXamlLoader.Load(this);
         FrontendAppearanceService.ApplyStoredAppearance(this, _runtimePaths);

@@ -75,6 +75,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _exportSettingsCommand;
     private readonly ActionCommand _importSettingsCommand;
     private readonly ActionCommand _applyProxySettingsCommand;
+    private readonly ActionCommand _testProxyConnectionCommand;
     private readonly ActionCommand _addJavaRuntimeCommand;
     private readonly ActionCommand _selectAutoJavaCommand;
     private readonly ActionCommand _resetUiSettingsCommand;
@@ -295,6 +296,9 @@ internal sealed partial class FrontendShellViewModel
     private bool _suppressSetupPersistence;
     private bool _suppressInstancePersistence;
     private bool _suppressToolsPersistence;
+    private bool _isTestingProxyConnection;
+    private string _proxyTestFeedbackText = string.Empty;
+    private bool _isProxyTestFeedbackSuccess;
     private Task _selectedInstanceRefreshTask = Task.CompletedTask;
     private bool _hasOptimisticLaunchInstanceName;
     private string _optimisticLaunchInstanceName = string.Empty;
@@ -375,6 +379,7 @@ internal sealed partial class FrontendShellViewModel
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
         _importSettingsCommand = new ActionCommand(() => _ = ImportSettingsAsync());
         _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
+        _testProxyConnectionCommand = new ActionCommand(() => _ = TestProxyConnectionAsync(), () => !_isTestingProxyConnection);
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);

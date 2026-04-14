@@ -838,10 +838,87 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyProxySettings()
     {
         _shellActionService.PersistProtectedSharedValue("SystemHttpProxy", HttpProxyAddress);
-        _shellActionService.PersistSharedValue("SystemHttpProxyCustomUsername", HttpProxyUsername);
-        _shellActionService.PersistSharedValue("SystemHttpProxyCustomPassword", HttpProxyPassword);
+        _shellActionService.PersistProtectedSharedValue("SystemHttpProxyCustomUsername", HttpProxyUsername);
+        _shellActionService.PersistProtectedSharedValue("SystemHttpProxyCustomPassword", HttpProxyPassword);
         ReloadSetupComposition();
         AddActivity("应用代理信息", string.IsNullOrWhiteSpace(HttpProxyAddress) ? "已清空自定义 HTTP 代理。" : HttpProxyAddress);
+    }
+
+    private async Task TestProxyConnectionAsync()
+    {
+        if (_isTestingProxyConnection)
+        {
+            return;
+        }
+
+        var configuration = FrontendHttpProxyService.BuildConfiguration(
+            SelectedHttpProxyTypeIndex,
+            HttpProxyAddress,
+            HttpProxyUsername,
+            HttpProxyPassword);
+        if (SelectedHttpProxyTypeIndex == 2 && configuration.CustomProxyAddress is null)
+        {
+            SetProxyTestFeedback("自定义代理地址无效。", isSuccess: false);
+            AddFailureActivity("测试代理连接失败", "自定义代理地址无效。");
+            return;
+        }
+
+        _isTestingProxyConnection = true;
+        _testProxyConnectionCommand.NotifyCanExecuteChanged();
+        AddActivity("测试代理连接", $"正在通过{DescribeProxyMode(configuration)}访问 {FrontendHttpProxyService.ProxyConnectivityProbeUri.Host}。");
+
+        try
+        {
+            using var client = FrontendHttpProxyService.CreateHttpClient(
+                configuration,
+                TimeSpan.FromSeconds(12),
+                "PCL-ME-Avalonia/1.0");
+            using var request = new HttpRequestMessage(HttpMethod.Get, FrontendHttpProxyService.ProxyConnectivityProbeUri);
+            using var response = await client.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            AddActivity(
+                "测试代理连接",
+                $"{DescribeProxyMode(configuration)}连接成功，HTTP {(int)response.StatusCode} {response.ReasonPhrase}。");
+            SetProxyTestFeedback(
+                $"{DescribeProxyMode(configuration)}连接成功，HTTP {(int)response.StatusCode} {response.ReasonPhrase}。",
+                isSuccess: true);
+            AvaloniaHintBus.Show("代理连接测试成功。", AvaloniaHintTheme.Success);
+        }
+        catch (Exception ex)
+        {
+            SetProxyTestFeedback(ex.Message, isSuccess: false);
+            AddFailureActivity("测试代理连接失败", ex.Message);
+        }
+        finally
+        {
+            _isTestingProxyConnection = false;
+            _testProxyConnectionCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private void ClearProxyTestFeedback()
+    {
+        _isProxyTestFeedbackSuccess = false;
+        ProxyTestFeedbackText = string.Empty;
+    }
+
+    private void SetProxyTestFeedback(string text, bool isSuccess)
+    {
+        _isProxyTestFeedbackSuccess = isSuccess;
+        ProxyTestFeedbackText = text;
+    }
+
+    private static string DescribeProxyMode(FrontendResolvedProxyConfiguration configuration)
+    {
+        return configuration.Mode switch
+        {
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => configuration.CustomProxyAddress?.ToString() ?? "自定义代理",
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.SystemProxy => "系统代理",
+            _ => "直连"
+        };
     }
 
     private void OpenBackgroundFolder()
@@ -1760,11 +1837,11 @@ internal sealed partial class FrontendShellViewModel
 
     private HttpClient CreateToolHttpClient()
     {
-        var client = new HttpClient();
         var userAgent = string.IsNullOrWhiteSpace(ToolDownloadUserAgent)
             ? "PCL-ME-Avalonia/1.0"
             : ToolDownloadUserAgent.Trim();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
-        return client;
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            TimeSpan.FromSeconds(100),
+            userAgent);
     }
 }

@@ -13,10 +13,7 @@ internal static class FrontendSetupUpdateStatusService
     private const string GithubApiVersion = "2022-11-28";
     private const string GithubApiUserAgent = "PCL-ME-Frontend-Avalonia";
     private const string GithubReleaseBaseUrl = "https://github.com/TheUnknownThing/PCL-ME/releases";
-    private static readonly HttpClient HttpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
+    private static readonly HttpClient HttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(10));
 
     public static FrontendSetupUpdateStatus CreateDefault()
     {

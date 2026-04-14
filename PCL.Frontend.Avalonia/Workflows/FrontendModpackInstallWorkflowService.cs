@@ -1071,13 +1071,9 @@ internal static class FrontendModpackInstallWorkflowService
 
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = timeout
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            timeout,
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private static TimeSpan NormalizeDownloadTimeout(TimeSpan? requestTimeout)
@@ -1315,13 +1311,9 @@ internal sealed class FrontendManagedModpackInstallTask(
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
         var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = safeTimeout
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            safeTimeout,
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private void UpdateFromInstallStatus(FrontendModpackInstallStatus status)

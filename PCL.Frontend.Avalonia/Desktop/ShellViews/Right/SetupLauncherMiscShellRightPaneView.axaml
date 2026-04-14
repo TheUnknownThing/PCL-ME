@@ -125,60 +125,102 @@
                   IsChecked="{Binding IsCustomHttpProxySelected}" />
             </Grid>
 
-            <StackPanel Grid.Row="4" Grid.Column="1" IsVisible="{Binding IsCustomHttpProxyEnabled}" Spacing="9">
+            <StackPanel Grid.Row="4" Grid.Column="1" Spacing="9">
+              <StackPanel IsVisible="{Binding IsCustomHttpProxyEnabled}" Spacing="9">
+                <Border
+                    Padding="12,10"
+                    Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                    BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
+                      FontSize="12.5"
+                      Text="请勿填写不信任的代理地址"
+                      TextWrapping="Wrap" />
+                </Border>
+
+                <TextBox
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding HttpProxyAddress}"
+                    Watermark="比如 http://127.0.0.1:1080/" />
+
+                <Grid ColumnDefinitions="Auto,*,Auto,*">
+                  <TextBlock
+                      VerticalAlignment="Center"
+                      Margin="0,0,8,0"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="13"
+                      Text="账号" />
+                  <TextBox
+                      Grid.Column="1"
+                      Height="28"
+                      Margin="0,0,8,0"
+                      Padding="8,4"
+                      Text="{Binding HttpProxyUsername}"
+                      Watermark="如有" />
+                  <TextBlock
+                      Grid.Column="2"
+                      VerticalAlignment="Center"
+                      Margin="0,0,8,0"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="13"
+                      Text="密码" />
+                  <TextBox
+                      Grid.Column="3"
+                      Height="28"
+                      Padding="8,4"
+                      Text="{Binding HttpProxyPassword}"
+                      Watermark="如有" />
+                </Grid>
+              </StackPanel>
+
+              <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="8">
+                <controls:PclButton
+                    MinWidth="120"
+                    Command="{Binding TestProxyConnectionCommand}"
+                    Text="测试连接" />
+                <controls:PclButton
+                    MinWidth="120"
+                    IsVisible="{Binding IsCustomHttpProxyEnabled}"
+                    Command="{Binding ApplyProxySettingsCommand}"
+                    Text="应用代理信息" />
+              </StackPanel>
+
               <Border
+                  IsVisible="{Binding IsProxyTestSuccessVisible}"
                   Padding="12,10"
-                  Background="{DynamicResource ColorBrushSemanticWarningBackground}"
-                  BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
+                  HorizontalAlignment="Center"
+                  MaxWidth="520"
+                  Background="{DynamicResource ColorBrushSemanticSuccessBackground}"
+                  BorderBrush="{DynamicResource ColorBrushSemanticSuccessBorder}"
                   BorderThickness="1"
                   CornerRadius="4">
                 <TextBlock
-                    Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
+                    Foreground="{DynamicResource ColorBrushSemanticSuccessForeground}"
                     FontSize="12.5"
-                    Text="请勿填写不信任的代理地址"
+                    Text="{Binding ProxyTestFeedbackText}"
+                    TextAlignment="Center"
                     TextWrapping="Wrap" />
               </Border>
 
-              <TextBox
-                  Height="28"
-                  Padding="8,4"
-                  Text="{Binding HttpProxyAddress}"
-                  Watermark="比如 http://127.0.0.1:1080/" />
-
-              <Grid ColumnDefinitions="Auto,*,Auto,*,Auto">
+              <Border
+                  IsVisible="{Binding IsProxyTestFailureVisible}"
+                  Padding="12,10"
+                  HorizontalAlignment="Center"
+                  MaxWidth="520"
+                  Background="{DynamicResource ColorBrushSemanticErrorBackground}"
+                  BorderBrush="{DynamicResource ColorBrushSemanticErrorBorder}"
+                  BorderThickness="1"
+                  CornerRadius="4">
                 <TextBlock
-                    VerticalAlignment="Center"
-                    Margin="0,0,8,0"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Text="账号" />
-                <TextBox
-                    Grid.Column="1"
-                    Height="28"
-                    Margin="0,0,8,0"
-                    Padding="8,4"
-                    Text="{Binding HttpProxyUsername}"
-                    Watermark="如有" />
-                <TextBlock
-                    Grid.Column="2"
-                    VerticalAlignment="Center"
-                    Margin="0,0,8,0"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Text="密码" />
-                <TextBox
-                    Grid.Column="3"
-                    Height="28"
-                    Margin="0,0,8,0"
-                    Padding="8,4"
-                    Text="{Binding HttpProxyPassword}"
-                    Watermark="如有" />
-                <controls:PclButton
-                    Grid.Column="4"
-                    MinWidth="120"
-                    Command="{Binding ApplyProxySettingsCommand}"
-                    Text="应用代理信息" />
-              </Grid>
+                    Foreground="{DynamicResource ColorBrushSemanticErrorForeground}"
+                    FontSize="12.5"
+                    Text="{Binding ProxyTestFeedbackText}"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+              </Border>
             </StackPanel>
           </Grid>
         </controls:PclCard.CardContent>

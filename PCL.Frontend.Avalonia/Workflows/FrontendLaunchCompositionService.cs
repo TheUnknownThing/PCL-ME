@@ -20,7 +20,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendLaunchCompositionService
 {
-    private static readonly HttpClient JavaRuntimeHttpClient = new();
+    private static readonly HttpClient JavaRuntimeHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
     private static readonly object HostJavaProbeLock = new();
     private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedHostJavaRuntimes;
     private static bool IsHostJavaProbeCached;
@@ -1458,15 +1458,11 @@ internal static class FrontendLaunchCompositionService
             return FrontendProxyOptions.None;
         }
 
-        var proxyType = ReadValue(sharedConfig, "SystemHttpProxyType", 1);
-        return proxyType switch
+        var configuration = FrontendHttpProxyService.ResolveConfiguration(runtimePaths, sharedConfig);
+        return configuration.Mode switch
         {
-            2 => TryParseProxyUri(LauncherFrontendRuntimeStateService.TryReadProtectedString(
-                    runtimePaths.SharedConfigDirectory,
-                    runtimePaths.SharedConfigPath,
-                    "SystemHttpProxy"))
-                ?? FrontendProxyOptions.None,
-            1 => ResolveSystemProxyOptions(),
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => CreateProxyOptions(configuration.CustomProxyAddress),
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.SystemProxy => ResolveSystemProxyOptions(),
             _ => FrontendProxyOptions.None
         };
     }
@@ -1484,7 +1480,7 @@ internal static class FrontendLaunchCompositionService
                 return FrontendProxyOptions.None;
             }
 
-            return TryParseProxyUri(proxyUri.ToString()) ?? FrontendProxyOptions.None;
+            return CreateProxyOptions(proxyUri);
         }
         catch
         {
@@ -1492,23 +1488,11 @@ internal static class FrontendLaunchCompositionService
         }
     }
 
-    private static FrontendProxyOptions? TryParseProxyUri(string? rawValue)
+    private static FrontendProxyOptions CreateProxyOptions(Uri? uri)
     {
-        if (string.IsNullOrWhiteSpace(rawValue))
+        if (uri is null || !uri.IsAbsoluteUri || string.IsNullOrWhiteSpace(uri.Host))
         {
-            return null;
-        }
-
-        var candidate = rawValue.Trim();
-        if (!candidate.Contains("://", StringComparison.Ordinal))
-        {
-            candidate = "http://" + candidate;
-        }
-
-        if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri) ||
-            string.IsNullOrWhiteSpace(uri.Host))
-        {
-            return null;
+            return FrontendProxyOptions.None;
         }
 
         var scheme = uri.Scheme.StartsWith("socks", StringComparison.OrdinalIgnoreCase)
@@ -1526,7 +1510,7 @@ internal static class FrontendLaunchCompositionService
             : uri.Port;
         if (port <= 0)
         {
-            return null;
+            return FrontendProxyOptions.None;
         }
 
         return new FrontendProxyOptions(scheme, uri.Host, port);
@@ -2492,6 +2476,8 @@ internal static class FrontendLaunchCompositionService
                     ProxyScheme: proxyOptions.Scheme,
                     ProxyHost: proxyOptions.Host,
                     ProxyPort: proxyOptions.Port,
+                    ProxyUsername: null,
+                    ProxyPassword: null,
                     UseJavaWrapper: javaWrapperOptions.IsRequested,
                     JavaWrapperTempDirectory: javaWrapperOptions.TempDirectory,
                     JavaWrapperPath: javaWrapperOptions.WrapperPath,
@@ -2509,6 +2495,8 @@ internal static class FrontendLaunchCompositionService
                     ProxyScheme: proxyOptions.Scheme,
                     ProxyHost: proxyOptions.Host,
                     ProxyPort: proxyOptions.Port,
+                    ProxyUsername: null,
+                    ProxyPassword: null,
                     UseJavaWrapper: javaWrapperOptions.IsRequested,
                     JavaWrapperTempDirectory: javaWrapperOptions.TempDirectory,
                     JavaWrapperPath: javaWrapperOptions.WrapperPath,

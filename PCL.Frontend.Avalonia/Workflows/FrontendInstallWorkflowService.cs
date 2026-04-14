@@ -16,7 +16,7 @@ internal static class FrontendInstallWorkflowService
 {
     private const string MojangVersionManifestUrl = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
 
     private static readonly JsonSerializerOptions JsonNodeOptions = new()
     {

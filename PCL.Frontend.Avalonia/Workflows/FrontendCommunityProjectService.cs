@@ -986,13 +986,9 @@ internal static class FrontendCommunityProjectService
 
     private static HttpClient CreateHttpClient()
     {
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = TimeSpan.FromSeconds(20)
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            TimeSpan.FromSeconds(20),
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private static bool MatchesPreferredVersion(JsonObject version, string? preferredVersion)

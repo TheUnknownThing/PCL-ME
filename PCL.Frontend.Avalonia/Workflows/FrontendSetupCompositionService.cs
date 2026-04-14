@@ -215,9 +215,9 @@ internal static class FrontendSetupCompositionService
             DisableHardwareAcceleration: ReadValue(sharedConfig, "SystemDisableHardwareAcceleration", false),
             EnableDoH: ReadValue(sharedConfig, "SystemNetEnableDoH", true),
             HttpProxyTypeIndex: ReadValue(sharedConfig, "SystemHttpProxyType", 1),
-            HttpProxyAddress: ReadProtectedValue(paths, "SystemHttpProxy"),
-            HttpProxyUsername: ReadValue(sharedConfig, "SystemHttpProxyCustomUsername", string.Empty),
-            HttpProxyPassword: ReadValue(sharedConfig, "SystemHttpProxyCustomPassword", string.Empty),
+            HttpProxyAddress: FrontendHttpProxyService.ReadConfiguredProxyAddress(paths),
+            HttpProxyUsername: FrontendHttpProxyService.ReadConfiguredProxyUsername(paths),
+            HttpProxyPassword: FrontendHttpProxyService.ReadConfiguredProxyPassword(paths),
             DebugAnimationSpeed: ReadValue(sharedConfig, "SystemDebugAnim", 9),
             SkipCopyDuringDownload: ReadValue(sharedConfig, "SystemDebugSkipCopy", false),
             DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false),
@@ -378,11 +378,6 @@ internal static class FrontendSetupCompositionService
             2 => 3,
             _ => 0
         };
-    }
-
-    private static string ReadProtectedValue(FrontendRuntimePaths paths, string key)
-    {
-        return LauncherFrontendRuntimeStateService.TryReadProtectedString(paths.SharedConfigDirectory, paths.SharedConfigPath, key) ?? string.Empty;
     }
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)

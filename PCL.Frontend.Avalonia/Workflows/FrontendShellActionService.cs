@@ -24,7 +24,7 @@ internal sealed class FrontendShellActionService(
     FrontendPlatformAdapter platformAdapter,
     Action exitLauncher)
 {
-    private static readonly HttpClient JavaRuntimeHttpClient = new();
+    private static readonly HttpClient JavaRuntimeHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
 
     public FrontendRuntimePaths RuntimePaths { get; } = runtimePaths;
 

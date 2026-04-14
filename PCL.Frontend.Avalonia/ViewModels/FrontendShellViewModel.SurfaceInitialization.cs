@@ -370,6 +370,8 @@ internal sealed partial class FrontendShellViewModel
         _httpProxyAddress = _setupComposition.LauncherMisc.HttpProxyAddress;
         _httpProxyUsername = _setupComposition.LauncherMisc.HttpProxyUsername;
         _httpProxyPassword = _setupComposition.LauncherMisc.HttpProxyPassword;
+        _proxyTestFeedbackText = string.Empty;
+        _isProxyTestFeedbackSuccess = false;
         _debugAnimationSpeed = _setupComposition.LauncherMisc.DebugAnimationSpeed;
         _skipCopyDuringDownload = _setupComposition.LauncherMisc.SkipCopyDuringDownload;
         _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;

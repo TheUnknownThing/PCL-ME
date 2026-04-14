@@ -2395,13 +2395,9 @@ internal sealed class FrontendManagedFileDownloadTask(
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
         var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = safeTimeout
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            safeTimeout,
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private void CleanupPartialDownload()
