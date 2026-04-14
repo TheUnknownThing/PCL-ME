@@ -31,6 +31,13 @@
     <OutputType>WinExe</OutputType>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <EmbeddedMicrosoftClientId>$([System.Environment]::GetEnvironmentVariable('PCL_MS_CLIENT_ID'))</EmbeddedMicrosoftClientId>
+    <EmbeddedMicrosoftClientId Condition="'$(EmbeddedMicrosoftClientId)' == ''">$([System.Environment]::GetEnvironmentVariable('MS_CLIENT_ID'))</EmbeddedMicrosoftClientId>
+    <EmbeddedCurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('PCL_CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
+    <EmbeddedCurseForgeApiKey Condition="'$(EmbeddedCurseForgeApiKey)' == ''">$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Ae.Dns.Client" Version="3.1.0" />
     <PackageReference Include="Avalonia" Version="11.3.13" />
@@ -50,11 +57,11 @@
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>PCL_SECRET_MS_CLIENT_ID</_Parameter1>
-      <_Parameter2>$([System.Environment]::GetEnvironmentVariable('PCL_MS_CLIENT_ID'))</_Parameter2>
+      <_Parameter2>$(EmbeddedMicrosoftClientId)</_Parameter2>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>PCL_SECRET_CURSEFORGE_API_KEY</_Parameter1>
-      <_Parameter2>$([System.Environment]::GetEnvironmentVariable('PCL_CURSEFORGE_API_KEY'))</_Parameter2>
+      <_Parameter2>$(EmbeddedCurseForgeApiKey)</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 

@@ -13,6 +13,10 @@ internal static class FrontendShellCompositionService
         var paths = FrontendRuntimePaths.Resolve(platformAdapter);
         var sharedConfig = paths.OpenSharedConfigProvider();
         var localConfig = paths.OpenLocalConfigProvider();
+        var launcherDirectory = FrontendLauncherPathService.ResolveLauncherFolder(
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+            paths);
+        FrontendLauncherPathService.EnsureLauncherFolderLayout(launcherDirectory);
 
         var startupWorkflowRequest = BuildStartupWorkflowRequest(paths, localConfig);
         var mainWindowRequest = BuildMainWindowRequest(paths, sharedConfig, localConfig);

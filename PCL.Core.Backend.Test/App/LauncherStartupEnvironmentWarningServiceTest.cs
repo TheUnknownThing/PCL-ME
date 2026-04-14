@@ -41,4 +41,22 @@ public sealed class LauncherStartupEnvironmentWarningServiceTest
 
         Assert.AreEqual(0, warnings.Count);
     }
+
+    [TestMethod]
+    public void GetWarningsUsesDedicatedMessageForMacAppTranslocation()
+    {
+        var request = new LauncherStartupEnvironmentWarningRequest(
+            "/private/var/folders/xx/yy/AppTranslocation/12345678-90AB-CDEF-1234-567890ABCDEF/d/PCL-ME.app/Contents/MacOS/",
+            new Version(10, 0, 19045, 0),
+            true);
+
+        var warnings = LauncherStartupEnvironmentWarningService.GetWarnings(request);
+
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                "- PCL 当前被 macOS 放在临时隔离路径中运行，请将 PCL 移到应用程序或其他常规目录后再打开，以避免路径识别异常"
+            },
+            warnings.ToArray());
+    }
 }

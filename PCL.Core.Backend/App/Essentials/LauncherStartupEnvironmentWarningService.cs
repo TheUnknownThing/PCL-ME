@@ -12,6 +12,7 @@ public static class LauncherStartupEnvironmentWarningService
 
         var warnings = new List<string>();
         var executableDirectory = request.ExecutableDirectory ?? string.Empty;
+        var isLikelyMacAppTranslocation = IsLikelyMacAppTranslocationPath(executableDirectory);
 
         if (request.DetectedWindowsVersion.Build < 17763)
         {
@@ -23,8 +24,12 @@ public static class LauncherStartupEnvironmentWarningService
             warnings.Add("- 当前系统为 32 位，不受 PCL 和新版 Minecraft 支持，非常建议重装为 64 位系统后再进行游戏");
         }
 
-        if (executableDirectory.Contains(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase) ||
-            executableDirectory.Contains(@"AppData\Local\Temp\", StringComparison.OrdinalIgnoreCase))
+        if (isLikelyMacAppTranslocation)
+        {
+            warnings.Add("- PCL 当前被 macOS 放在临时隔离路径中运行，请将 PCL 移到应用程序或其他常规目录后再打开，以避免路径识别异常");
+        }
+        else if (executableDirectory.Contains(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase) ||
+                 executableDirectory.Contains(@"AppData\Local\Temp\", StringComparison.OrdinalIgnoreCase))
         {
             warnings.Add("- PCL 正在临时目录运行，请将 PCL 从压缩包中解压之后再使用，否则可能导致游戏存档或设置丢失");
         }
@@ -37,5 +42,16 @@ public static class LauncherStartupEnvironmentWarningService
         }
 
         return warnings;
+    }
+
+    private static bool IsLikelyMacAppTranslocationPath(string executableDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(executableDirectory))
+        {
+            return false;
+        }
+
+        return executableDirectory.Contains("/AppTranslocation/", StringComparison.OrdinalIgnoreCase)
+               && executableDirectory.Contains(".app/Contents/MacOS", StringComparison.OrdinalIgnoreCase);
     }
 }
