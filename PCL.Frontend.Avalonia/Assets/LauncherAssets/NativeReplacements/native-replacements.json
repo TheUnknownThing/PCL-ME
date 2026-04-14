@@ -29,7 +29,7 @@
       "artifact": {
         "path": "org/lwjgl/lwjgl/3.3.2/lwjgl-3.3.2.jar",
         "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl/3.3.2/lwjgl-3.3.2.jar",
-        "sha1": "38f2ee9f76a524d3a9cbf940ffad6f2c4a76f7fd"
+        "sha1": "4421d94af68e35dcaa31737a6fc59136a1e61b94"
       }
     },
     "org.lwjgl:lwjgl-jemalloc:3.3.1": {
