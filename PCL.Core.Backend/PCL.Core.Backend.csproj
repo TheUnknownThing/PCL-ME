@@ -36,6 +36,7 @@
              Exclude="Foundation/bin/**;Foundation/obj/**;Foundation/publish/**;Foundation/**/*.g.cs"
              Link="Foundation/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="App/ConfigEnums.cs" />
+    <Compile Include="App/Essentials/LauncherAnnouncementService.cs" />
     <Compile Include="App/Essentials/LauncherDataProtectionService.cs" />
     <Compile Include="App/Essentials/LauncherFrontendNavigationService.cs" />
     <Compile Include="App/Essentials/LauncherFrontendPageContentService.cs" />

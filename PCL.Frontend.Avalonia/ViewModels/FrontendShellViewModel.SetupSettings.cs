@@ -174,12 +174,13 @@ internal sealed partial class FrontendShellViewModel
         {
             if (SetProperty(ref _maxRealTimeLogValue, value))
             {
+                ApplyLaunchLogRetentionPreference();
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
             }
         }
     }
 
-    public string MaxRealTimeLogLabel => FormatMaxRealTimeLog(MaxRealTimeLogValue);
+    public string MaxRealTimeLogLabel => FrontendRealTimeLogSettingsService.FormatLineLimitLabel(MaxRealTimeLogValue);
 
     public bool DisableHardwareAcceleration
     {

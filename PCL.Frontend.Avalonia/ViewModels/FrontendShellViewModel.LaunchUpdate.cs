@@ -403,15 +403,13 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchNewsSectionTitle => "启动状态";
 
-    public string LaunchCommunityHintPrimaryText => "你正在使用 PCL 跨平台版！此版本为独立开发和维护，与官方版本维护路线不同，体验有所出入。";
+    public string LaunchAnnouncementHeader => _currentLaunchAnnouncement?.Title ?? string.Empty;
 
-    public string LaunchCommunityHintSecondaryText => "现在软件仍未经过充分测试，欢迎参与测试并提出反馈！";
+    public string LaunchAnnouncementPrimaryText => _currentLaunchAnnouncement?.Message ?? string.Empty;
 
-    public bool ShowLaunchCommunityHint
-    {
-        get => _showLaunchCommunityHint;
-        private set => SetProperty(ref _showLaunchCommunityHint, value);
-    }
+    public string LaunchAnnouncementSecondaryText => _currentLaunchAnnouncement?.Detail ?? string.Empty;
+
+    public bool ShowLaunchAnnouncement => _currentLaunchAnnouncement is not null;
 
     public bool ShowLaunchLog => _showLaunchLog;
 
@@ -457,6 +455,36 @@ internal sealed partial class FrontendShellViewModel
     public Bitmap? LaunchNewsImage => File.Exists(LaunchNewsImageFilePath)
         ? new Bitmap(LaunchNewsImageFilePath)
         : null;
+
+    private void RefreshLaunchAnnouncements()
+    {
+        var sharedConfig = _shellActionService.RuntimePaths.OpenSharedConfigProvider();
+        var localConfig = _shellActionService.RuntimePaths.OpenLocalConfigProvider();
+        _currentLaunchAnnouncement = FrontendLaunchAnnouncementService.Compose(sharedConfig, localConfig).FirstOrDefault();
+        RaisePropertyChanged(nameof(LaunchAnnouncementHeader));
+        RaisePropertyChanged(nameof(LaunchAnnouncementPrimaryText));
+        RaisePropertyChanged(nameof(LaunchAnnouncementSecondaryText));
+        RaisePropertyChanged(nameof(ShowLaunchAnnouncement));
+    }
+
+    private void DismissCurrentLaunchAnnouncement()
+    {
+        if (_currentLaunchAnnouncement is null)
+        {
+            return;
+        }
+
+        var announcement = _currentLaunchAnnouncement;
+        var sharedConfig = _shellActionService.RuntimePaths.OpenSharedConfigProvider();
+        var shownState = sharedConfig.Exists("SystemSystemAnnouncement")
+            ? sharedConfig.Get<string>("SystemSystemAnnouncement")
+            : string.Empty;
+        _shellActionService.PersistSharedValue(
+            "SystemSystemAnnouncement",
+            FrontendLaunchAnnouncementService.MarkAnnouncementAsShown(shownState, announcement.Id));
+        RefreshLaunchAnnouncements();
+        AddActivity("关闭启动器公告", $"{announcement.Title} 已记录为已读。");
+    }
 
     private static string GetLaunchAuthServerDisplayName(string authServer)
     {

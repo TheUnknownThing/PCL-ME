@@ -7,10 +7,10 @@
     <StackPanel
         Margin="25,25,25,10"
         Spacing="15">
-      <Border x:Name="LaunchCommunityHintHost" IsVisible="False" Background="Transparent">
+      <Border x:Name="LaunchAnnouncementHost" IsVisible="False" Background="Transparent">
         <controls:PclCard
-            x:Name="LaunchCommunityHintCard"
-            Header="跨平台版提示"
+            x:Name="LaunchAnnouncementCard"
+            Header="{Binding LaunchAnnouncementHeader}"
             IsClosable="True"
             CloseCommand="{Binding DismissLaunchCommunityHintCommand}"
             ContentMargin="20,12,20,15">
@@ -19,11 +19,11 @@
               <TextBlock
                   FontSize="13.5"
                   TextWrapping="Wrap"
-                  Text="{Binding LaunchCommunityHintPrimaryText}" />
+                  Text="{Binding LaunchAnnouncementPrimaryText}" />
               <TextBlock
                   FontSize="13.5"
                   TextWrapping="Wrap"
-                  Text="{Binding LaunchCommunityHintSecondaryText}" />
+                  Text="{Binding LaunchAnnouncementSecondaryText}" />
             </StackPanel>
           </controls:PclCard.CardContent>
         </controls:PclCard>

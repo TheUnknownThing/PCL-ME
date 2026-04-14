@@ -138,7 +138,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _isPromptOverlayOpen;
     private bool _isLaunchMigrationExpanded = true;
     private bool _isLaunchNewsExpanded = true;
-    private bool _showLaunchCommunityHint = true;
+    private LauncherAnnouncement? _currentLaunchAnnouncement;
     private bool _isLaunchInProgress;
     private bool _isLaunchProfileActionInProgress;
     private bool _isLaunchProfileRefreshInProgress;
@@ -345,7 +345,7 @@ internal sealed partial class FrontendShellViewModel
         _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
         _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
-        _dismissLaunchCommunityHintCommand = new ActionCommand(() => ShowLaunchCommunityHint = false);
+        _dismissLaunchCommunityHintCommand = new ActionCommand(DismissCurrentLaunchAnnouncement);
         _selectLaunchProfileCommand = new ActionCommand(() => _ = SelectLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _addLaunchProfileCommand = new ActionCommand(() => _ = AddLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _createOfflineLaunchProfileCommand = new ActionCommand(() => _ = CreateOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);

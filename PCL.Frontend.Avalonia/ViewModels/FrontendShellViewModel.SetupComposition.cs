@@ -529,6 +529,7 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedSystemActivityIndex):
                 _shellActionService.PersistLocalValue("SystemSystemActivity", SelectedSystemActivityIndex);
+                RefreshLaunchAnnouncements();
                 break;
             case nameof(AnimationFpsLimit):
                 _shellActionService.PersistSharedValue("UiAniFPS", (int)Math.Round(AnimationFpsLimit));
