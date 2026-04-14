@@ -9,27 +9,31 @@ public sealed class FrontendUpdateInstallWorkflowServiceTest
     [TestMethod]
     public void ResolveInstallLayout_UsesExecutableDirectoryForPortableInstall()
     {
+        var executableDirectory = "/Applications/PCL-ME";
+        var processPath = "/Applications/PCL-ME/PCL.Frontend.Avalonia.exe";
         var layout = FrontendUpdateInstallWorkflowService.ResolveInstallLayout(
             FrontendUpdateInstallPlatform.Windows,
-            "/Applications/PCL-ME",
-            "/Applications/PCL-ME/PCL.Frontend.Avalonia.exe");
+            executableDirectory,
+            processPath);
 
         Assert.AreEqual(FrontendUpdateInstallTargetKind.Directory, layout.TargetKind);
-        Assert.AreEqual("/Applications/PCL-ME", layout.TargetPath);
-        Assert.AreEqual("/Applications/PCL-ME/PCL.Frontend.Avalonia.exe", layout.RestartTargetPath);
+        Assert.AreEqual(NormalizeForCurrentPlatform(executableDirectory), layout.TargetPath);
+        Assert.AreEqual(NormalizeForCurrentPlatform(processPath), layout.RestartTargetPath);
     }
 
     [TestMethod]
     public void ResolveInstallLayout_RecognizesMacAppBundle()
     {
+        var executableDirectory = "/Applications/PCL-ME.app/Contents/MacOS";
+        var processPath = "/Applications/PCL-ME.app/Contents/MacOS/PCL.Frontend.Avalonia";
         var layout = FrontendUpdateInstallWorkflowService.ResolveInstallLayout(
             FrontendUpdateInstallPlatform.MacOS,
-            "/Applications/PCL-ME.app/Contents/MacOS",
-            "/Applications/PCL-ME.app/Contents/MacOS/PCL.Frontend.Avalonia");
+            executableDirectory,
+            processPath);
 
         Assert.AreEqual(FrontendUpdateInstallTargetKind.MacAppBundle, layout.TargetKind);
-        Assert.AreEqual("/Applications/PCL-ME.app", layout.TargetPath);
-        Assert.AreEqual("/Applications/PCL-ME.app", layout.RestartTargetPath);
+        Assert.AreEqual(NormalizeForCurrentPlatform("/Applications/PCL-ME.app"), layout.TargetPath);
+        Assert.AreEqual(NormalizeForCurrentPlatform("/Applications/PCL-ME.app"), layout.RestartTargetPath);
     }
 
     [TestMethod]
@@ -113,5 +117,11 @@ public sealed class FrontendUpdateInstallWorkflowServiceTest
         StringAssert.Contains(script, "rm -rf \"$TARGET\"");
         StringAssert.Contains(script, "mkdir -p \"$TARGET\"");
         StringAssert.Contains(script, "cp -R \"$SOURCE\"/. \"$TARGET\"/");
+    }
+
+    private static string NormalizeForCurrentPlatform(string path)
+    {
+        return Path.GetFullPath(path)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 }
