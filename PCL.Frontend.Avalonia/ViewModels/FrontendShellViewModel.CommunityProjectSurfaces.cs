@@ -2292,7 +2292,8 @@ internal sealed class FrontendManagedFileDownloadTask(
     FrontendDownloadTransferOptions? downloadOptions = null,
     Action<string>? onStarted = null,
     Action<string>? onCompleted = null,
-    Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
+    Action<string>? onFailed = null,
+    string? userAgent = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
 {
     private readonly CancellationTokenSource _cancellation = new();
     private TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", 1, null);
@@ -2326,7 +2327,7 @@ internal sealed class FrontendManagedFileDownloadTask(
 
         try
         {
-            using var client = CreateDownloadHttpClient(requestTimeout);
+            using var client = CreateDownloadHttpClient(requestTimeout, userAgent);
             using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
             response.EnsureSuccessStatusCode();
 
@@ -2392,11 +2393,12 @@ internal sealed class FrontendManagedFileDownloadTask(
         }
     }
 
-    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
+    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout, string? userAgent)
     {
         var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
         return FrontendHttpProxyService.CreateLauncherHttpClient(
             safeTimeout,
+            userAgent,
             automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 

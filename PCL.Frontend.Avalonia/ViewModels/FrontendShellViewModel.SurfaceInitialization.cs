@@ -114,6 +114,8 @@ internal sealed partial class FrontendShellViewModel
     private void InitializeToolsTestSurface()
     {
         var testState = _toolsComposition.Test;
+        AchievementPreviewImage = null;
+        HeadPreviewImage = null;
         _toolDownloadUrl = testState.DownloadUrl;
         _toolDownloadUserAgent = testState.DownloadUserAgent;
         _toolDownloadFolder = testState.DownloadFolder;
@@ -126,6 +128,12 @@ internal sealed partial class FrontendShellViewModel
         _showAchievementPreview = testState.ShowAchievementPreview;
         _selectedHeadSizeIndex = testState.SelectedHeadSizeIndex;
         _selectedHeadSkinPath = testState.SelectedHeadSkinPath;
+        if (_showAchievementPreview)
+        {
+            _showAchievementPreview = false;
+        }
+
+        RefreshHeadPreviewFromSelection(addActivity: false);
 
         ReplaceItems(ToolboxActions, testState.ToolboxActions.Select(CreateToolboxAction));
         InitializeMinecraftServerQuerySurface();

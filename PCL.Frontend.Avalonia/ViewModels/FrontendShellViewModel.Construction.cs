@@ -401,7 +401,7 @@ internal sealed partial class FrontendShellViewModel
         _startCustomDownloadCommand = new ActionCommand(() => _ = StartCustomDownloadAsync());
         _openCustomDownloadFolderCommand = new ActionCommand(OpenCustomDownloadFolder);
         _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
-        _previewAchievementCommand = new ActionCommand(PreviewAchievement);
+        _previewAchievementCommand = new ActionCommand(() => _ = PreviewAchievementAsync());
         _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
         _queryMinecraftServerCommand = new ActionCommand(() => _ = QueryMinecraftServerAsync());
         _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());

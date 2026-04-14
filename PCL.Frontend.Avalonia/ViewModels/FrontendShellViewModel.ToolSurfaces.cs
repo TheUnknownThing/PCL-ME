@@ -1,7 +1,12 @@
+using Avalonia.Media.Imaging;
+
 namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private Bitmap? _achievementPreviewImage;
+    private RenderTargetBitmap? _headPreviewImage;
+
     public string ToolDownloadUrl
     {
         get => _toolDownloadUrl;
@@ -62,6 +67,23 @@ internal sealed partial class FrontendShellViewModel
         private set => SetProperty(ref _showAchievementPreview, value);
     }
 
+    public Bitmap? AchievementPreviewImage
+    {
+        get => _achievementPreviewImage;
+        private set
+        {
+            if (ReferenceEquals(_achievementPreviewImage, value))
+            {
+                return;
+            }
+
+            var previous = _achievementPreviewImage;
+            _achievementPreviewImage = value;
+            RaisePropertyChanged(nameof(AchievementPreviewImage));
+            previous?.Dispose();
+        }
+    }
+
     public IReadOnlyList<string> HeadSizeOptions { get; } =
     [
         "64x64",
@@ -78,6 +100,7 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedHeadSizeIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(HeadPreviewSize));
+                RefreshHeadPreviewFromSelection(addActivity: false);
             }
         }
     }
@@ -90,11 +113,32 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedHeadSkinPath, value))
             {
                 RaisePropertyChanged(nameof(HasSelectedHeadSkin));
+                RefreshHeadPreviewFromSelection(addActivity: false);
             }
         }
     }
 
+    public RenderTargetBitmap? HeadPreviewImage
+    {
+        get => _headPreviewImage;
+        private set
+        {
+            if (ReferenceEquals(_headPreviewImage, value))
+            {
+                return;
+            }
+
+            var previous = _headPreviewImage;
+            _headPreviewImage = value;
+            RaisePropertyChanged(nameof(HeadPreviewImage));
+            RaisePropertyChanged(nameof(HasHeadPreviewImage));
+            previous?.Dispose();
+        }
+    }
+
     public bool HasSelectedHeadSkin => !string.Equals(SelectedHeadSkinPath, "尚未选择皮肤", StringComparison.Ordinal);
+
+    public bool HasHeadPreviewImage => HeadPreviewImage is not null;
 
     public double HeadPreviewSize => SelectedHeadSizeIndex switch
     {

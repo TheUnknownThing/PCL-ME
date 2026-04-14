@@ -5,10 +5,14 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using System.Text.Json.Nodes;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
@@ -245,10 +249,13 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(AchievementFirstLine));
         RaisePropertyChanged(nameof(AchievementSecondLine));
         RaisePropertyChanged(nameof(ShowAchievementPreview));
+        RaisePropertyChanged(nameof(AchievementPreviewImage));
         RaisePropertyChanged(nameof(SelectedHeadSizeIndex));
         RaisePropertyChanged(nameof(SelectedHeadSkinPath));
         RaisePropertyChanged(nameof(HasSelectedHeadSkin));
         RaisePropertyChanged(nameof(HeadPreviewSize));
+        RaisePropertyChanged(nameof(HeadPreviewImage));
+        RaisePropertyChanged(nameof(HasHeadPreviewImage));
         ResetMinecraftServerQuerySurface();
         AddActivity("刷新测试工具页", "测试页表单与工具按钮已从当前启动器配置重新加载。");
     }
@@ -660,18 +667,18 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("选择下载目录", ToolDownloadFolder);
     }
 
-    private async Task StartCustomDownloadAsync()
+    private Task StartCustomDownloadAsync()
     {
         if (!Uri.TryCreate(ToolDownloadUrl, UriKind.Absolute, out var uri))
         {
             AddFailureActivity("开始下载自定义文件失败", "下载地址无效。");
-            return;
+            return Task.CompletedTask;
         }
 
         if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
         {
             AddFailureActivity("开始下载自定义文件失败", "请先选择保存目录。");
-            return;
+            return Task.CompletedTask;
         }
 
         var fileName = string.IsNullOrWhiteSpace(ToolDownloadName)
@@ -685,21 +692,28 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            using var client = CreateToolHttpClient();
-            var speedLimiter = _shellActionService.GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
-                ? new FrontendDownloadSpeedLimiter(speedLimit)
-                : null;
-            await FrontendDownloadTransferService.DownloadToPathAsync(
-                client,
+            var userAgent = string.IsNullOrWhiteSpace(ToolDownloadUserAgent)
+                ? null
+                : ToolDownloadUserAgent.Trim();
+            TaskCenter.Register(new FrontendManagedFileDownloadTask(
+                $"自定义下载：{fileName}",
                 uri.ToString(),
                 targetPath,
-                speedLimiter: speedLimiter);
-            AddActivity("开始下载自定义文件", $"{uri} -> {targetPath}");
+                ResolveDownloadRequestTimeout(),
+                _shellActionService.GetDownloadTransferOptions(),
+                onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
+                onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+                onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error),
+                userAgent: userAgent));
+
+            AddActivity("开始下载自定义文件", $"{uri} -> {targetPath}（可在任务中心查看进度）");
         }
         catch (Exception ex)
         {
             AddFailureActivity("开始下载自定义文件失败", ex.Message);
         }
+
+        return Task.CompletedTask;
     }
 
     private void SaveOfficialSkin()
@@ -1075,10 +1089,30 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("查看主页教程", "已显示主页自定义教程。");
     }
 
-    private void PreviewAchievement()
+    private async Task PreviewAchievementAsync()
     {
-        ShowAchievementPreview = !ShowAchievementPreview;
-        AddActivity("预览成就图片", ShowAchievementPreview ? AchievementTitle : "Achievement preview hidden.");
+        var url = GetAchievementUrl();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            AddFailureActivity("预览成就图片失败", "请先填写有效的成就内容。");
+            return;
+        }
+
+        try
+        {
+            using var client = CreateToolHttpClient();
+            var bytes = await client.GetByteArrayAsync(url);
+            using var stream = new MemoryStream(bytes);
+            AchievementPreviewImage = new Bitmap(stream);
+            ShowAchievementPreview = true;
+            AddActivity("预览成就图片", $"已加载 {AchievementTitle.Trim()} 的成就图像。\n{url}");
+        }
+        catch (Exception ex)
+        {
+            ShowAchievementPreview = false;
+            AchievementPreviewImage = null;
+            AddFailureActivity("预览成就图片失败", ex.Message);
+        }
     }
 
     private async Task SelectHeadSkinAsync()
@@ -1109,12 +1143,49 @@ internal sealed partial class FrontendShellViewModel
         AddActivity("选择皮肤", SelectedHeadSkinPath);
     }
 
-    private async Task SaveHeadAsync()
+    private void RefreshHeadPreviewFromSelection(bool addActivity)
+    {
+        if (!HasSelectedHeadSkin || !File.Exists(SelectedHeadSkinPath))
+        {
+            HeadPreviewImage = null;
+            return;
+        }
+
+        try
+        {
+            HeadPreviewImage = GenerateHeadPreviewBitmap(SelectedHeadSkinPath, SelectedHeadSizeIndex);
+            if (addActivity)
+            {
+                AddActivity("头像预览", $"已生成 {HeadSizeOptions[SelectedHeadSizeIndex]} 头像预览。");
+            }
+        }
+        catch (Exception ex)
+        {
+            HeadPreviewImage = null;
+            if (addActivity)
+            {
+                AddFailureActivity("头像预览失败", ex.Message);
+            }
+        }
+    }
+
+    private Task SaveHeadAsync()
     {
         if (!HasSelectedHeadSkin || !File.Exists(SelectedHeadSkinPath))
         {
             AddActivity("保存头像", "请先选择一个可用的皮肤文件。");
-            return;
+            return Task.CompletedTask;
+        }
+
+        if (HeadPreviewImage is null)
+        {
+            RefreshHeadPreviewFromSelection(addActivity: false);
+        }
+
+        if (HeadPreviewImage is null)
+        {
+            AddFailureActivity("保存头像失败", "无法从当前皮肤生成头像预览，请尝试选择标准皮肤文件。");
+            return Task.CompletedTask;
         }
 
         try
@@ -1123,46 +1194,56 @@ internal sealed partial class FrontendShellViewModel
             Directory.CreateDirectory(outputDirectory);
             var outputPath = Path.Combine(
                 outputDirectory,
-                $"{SanitizeFileSegment(Path.GetFileNameWithoutExtension(SelectedHeadSkinPath))}-{HeadSizeOptions[SelectedHeadSizeIndex]}.svg");
-            var bytes = await File.ReadAllBytesAsync(SelectedHeadSkinPath);
-            var svg = BuildHeadSvg(
-                Convert.ToBase64String(bytes),
-                GetImageMimeType(SelectedHeadSkinPath),
-                SelectedHeadSizeIndex switch
-                {
-                    0 => 64,
-                    1 => 96,
-                    _ => 128
-                });
-
-            await File.WriteAllTextAsync(outputPath, svg, new UTF8Encoding(false));
+                $"{SanitizeFileSegment(Path.GetFileNameWithoutExtension(SelectedHeadSkinPath))}-{HeadSizeOptions[SelectedHeadSizeIndex]}.png");
+            HeadPreviewImage.Save(outputPath);
             OpenInstanceTarget("保存头像", outputPath, "导出的头像文件不存在。");
         }
         catch (Exception ex)
         {
             AddFailureActivity("保存头像失败", ex.Message);
         }
+
+        return Task.CompletedTask;
     }
 
-    private static string BuildHeadSvg(string base64Image, string mimeType, int size)
+    private static RenderTargetBitmap GenerateHeadPreviewBitmap(string skinPath, int selectedHeadSizeIndex)
     {
-        return $$"""
-            <svg xmlns="http://www.w3.org/2000/svg" width="{{size}}" height="{{size}}" viewBox="0 0 8 8" shape-rendering="crispEdges">
-              <image href="data:{{mimeType}};base64,{{base64Image}}" x="-8" y="-8" width="64" height="64" image-rendering="pixelated" />
-              <image href="data:{{mimeType}};base64,{{base64Image}}" x="-40" y="-8" width="64" height="64" image-rendering="pixelated" />
-            </svg>
-            """;
-    }
-
-    private static string GetImageMimeType(string path)
-    {
-        return Path.GetExtension(path).ToLowerInvariant() switch
+        using var skinBitmap = new Bitmap(skinPath);
+        var width = skinBitmap.PixelSize.Width;
+        var height = skinBitmap.PixelSize.Height;
+        if (width < 64 || height < 32 || width % 64 != 0)
         {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".webp" => "image/webp",
-            ".gif" => "image/gif",
-            _ => "image/png"
+            throw new InvalidOperationException("皮肤尺寸无效，需满足宽度为 64 的整数倍且高度至少为 32 像素。");
+        }
+
+        var scale = Math.Max(1, width / 64);
+        var headSize = selectedHeadSizeIndex switch
+        {
+            0 => 64,
+            1 => 96,
+            _ => 128
         };
+        var headBitmap = new RenderTargetBitmap(new PixelSize(headSize, headSize));
+        using var context = headBitmap.CreateDrawingContext();
+        using (context.PushRenderOptions(new RenderOptions
+               {
+                   BitmapInterpolationMode = BitmapInterpolationMode.None
+               }))
+        {
+            context.DrawImage(
+                skinBitmap,
+                new Rect(scale * 8, scale * 8, scale * 8, scale * 8),
+                new Rect(0, 0, headSize, headSize));
+            if (width >= 64 && height >= 32)
+            {
+                context.DrawImage(
+                    skinBitmap,
+                    new Rect(scale * 40, scale * 8, scale * 8, scale * 8),
+                    new Rect(0, 0, headSize, headSize));
+            }
+        }
+
+        return headBitmap;
     }
 
     private void ResetDownloadInstallSurface()
