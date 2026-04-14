@@ -44,12 +44,6 @@ internal sealed partial class FrontendShellViewModel
         "最大化"
     ];
 
-    public IReadOnlyList<string> LaunchMicrosoftAuthOptions { get; } =
-    [
-        "Web 账户管理器（暂时强制设备代码流）",
-        "设备代码流"
-    ];
-
     public IReadOnlyList<string> LaunchPreferredIpStackOptions { get; } =
     [
         "IPv4 优先",
@@ -186,12 +180,6 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _launchWindowHeight;
         set => SetProperty(ref _launchWindowHeight, value);
-    }
-
-    public int SelectedLaunchMicrosoftAuthIndex
-    {
-        get => _selectedLaunchMicrosoftAuthIndex;
-        set => SetProperty(ref _selectedLaunchMicrosoftAuthIndex, Math.Clamp(value, 0, LaunchMicrosoftAuthOptions.Count - 1));
     }
 
     public int SelectedLaunchPreferredIpStackIndex

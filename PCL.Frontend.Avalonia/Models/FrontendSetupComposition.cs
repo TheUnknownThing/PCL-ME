@@ -48,7 +48,6 @@ internal sealed record FrontendSetupLaunchState(
     bool DisableRetroWrapper,
     bool RequireDedicatedGpu,
     bool UseJavaExecutable,
-    int MicrosoftAuthIndex,
     int PreferredIpStackIndex);
 
 internal sealed record FrontendSetupGameManageState(

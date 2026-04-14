@@ -35,7 +35,6 @@ internal sealed partial class FrontendShellViewModel
         "LaunchAdvanceDisableRW",
         "LaunchAdvanceGraphicCard",
         "LaunchAdvanceNoJavaw",
-        "LoginMsAuthType",
         "LaunchPreferredIpStack",
         "LaunchArgumentJavaSelect"
     ];
@@ -388,7 +387,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DisableRetroWrapper));
                 RaisePropertyChanged(nameof(RequireDedicatedGpu));
                 RaisePropertyChanged(nameof(UseJavaExecutable));
-                RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
                 RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
                 break;
         }
@@ -481,9 +479,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(UseJavaExecutable):
                 _shellActionService.PersistSharedValue("LaunchAdvanceNoJavaw", UseJavaExecutable);
-                break;
-            case nameof(SelectedLaunchMicrosoftAuthIndex):
-                _shellActionService.PersistSharedValue("LoginMsAuthType", SelectedLaunchMicrosoftAuthIndex);
                 break;
             case nameof(SelectedLaunchPreferredIpStackIndex):
                 _shellActionService.PersistSharedValue("LaunchPreferredIpStack", SelectedLaunchPreferredIpStackIndex);
@@ -751,7 +746,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DisableRetroWrapper));
         RaisePropertyChanged(nameof(RequireDedicatedGpu));
         RaisePropertyChanged(nameof(UseJavaExecutable));
-        RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
         RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
         RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
         RaisePropertyChanged(nameof(SelectedVersionSourceIndex));

@@ -181,7 +181,6 @@ internal static class FrontendSetupCompositionService
             DisableRetroWrapper: ReadValue(sharedConfig, "LaunchAdvanceDisableRW", false),
             RequireDedicatedGpu: ReadValue(sharedConfig, "LaunchAdvanceGraphicCard", true),
             UseJavaExecutable: ReadValue(sharedConfig, "LaunchAdvanceNoJavaw", false),
-            MicrosoftAuthIndex: ReadValue(sharedConfig, "LoginMsAuthType", 1),
             PreferredIpStackIndex: ReadValue(sharedConfig, "LaunchPreferredIpStack", 1));
     }
 

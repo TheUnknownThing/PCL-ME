@@ -232,7 +232,6 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableRetroWrapper;
     private bool _requireDedicatedGpu = true;
     private bool _useJavaExecutable;
-    private int _selectedLaunchMicrosoftAuthIndex;
     private int _selectedLaunchPreferredIpStackIndex;
     private int _selectedDownloadSourceIndex;
     private int _selectedVersionSourceIndex;

@@ -108,7 +108,6 @@ internal sealed partial class FrontendShellViewModel
         _disableRetroWrapper = _setupComposition.Launch.DisableRetroWrapper;
         _requireDedicatedGpu = _setupComposition.Launch.RequireDedicatedGpu;
         _useJavaExecutable = _setupComposition.Launch.UseJavaExecutable;
-        _selectedLaunchMicrosoftAuthIndex = _setupComposition.Launch.MicrosoftAuthIndex;
         _selectedLaunchPreferredIpStackIndex = _setupComposition.Launch.PreferredIpStackIndex;
     }
 
