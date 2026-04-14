@@ -193,7 +193,6 @@ internal static class FrontendSetupCompositionService
             DownloadSpeedLimit: ReadValue(sharedConfig, "ToolDownloadSpeed", 42),
             DownloadTimeoutSeconds: ReadValue(sharedConfig, "ToolDownloadTimeout", 8),
             AutoSelectNewInstance: ReadValue(sharedConfig, "ToolDownloadAutoSelectVersion", true),
-            UpgradePartialAuthlib: ReadValue(sharedConfig, "ToolFixAuthlib", true),
             CommunityDownloadSourceIndex: ReadValue(sharedConfig, "ToolDownloadMod", 1),
             FileNameFormatIndex: ReadValue(sharedConfig, "ToolDownloadTranslateV2", 1),
             ModLocalNameStyleIndex: ReadValue(sharedConfig, "ToolModLocalNameStyle", 0),

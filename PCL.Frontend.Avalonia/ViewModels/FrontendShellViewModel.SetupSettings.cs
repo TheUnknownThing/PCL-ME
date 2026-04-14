@@ -86,12 +86,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _autoSelectNewInstance, value);
     }
 
-    public bool UpgradePartialAuthlib
-    {
-        get => _upgradePartialAuthlib;
-        set => SetProperty(ref _upgradePartialAuthlib, value);
-    }
-
     public int SelectedCommunityDownloadSourceIndex
     {
         get => _selectedCommunityDownloadSourceIndex;

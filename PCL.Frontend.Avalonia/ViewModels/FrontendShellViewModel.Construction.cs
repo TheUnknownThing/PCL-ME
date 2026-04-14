@@ -239,7 +239,6 @@ internal sealed partial class FrontendShellViewModel
     private double _downloadSpeedLimit = 42;
     private double _downloadTimeoutSeconds = 8;
     private bool _autoSelectNewInstance = true;
-    private bool _upgradePartialAuthlib = true;
     private int _selectedCommunityDownloadSourceIndex = 1;
     private int _selectedFileNameFormatIndex = 1;
     private int _selectedModLocalNameStyleIndex;

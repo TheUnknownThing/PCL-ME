@@ -47,7 +47,6 @@ internal sealed partial class FrontendShellViewModel
         "ToolDownloadSource",
         "ToolDownloadVersion",
         "ToolDownloadAutoSelectVersion",
-        "ToolFixAuthlib",
         "ToolDownloadTranslateV2",
         "ToolDownloadMod",
         "ToolModLocalNameStyle",
@@ -256,7 +255,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DownloadTimeoutSeconds));
                 RaisePropertyChanged(nameof(DownloadTimeoutLabel));
                 RaisePropertyChanged(nameof(AutoSelectNewInstance));
-                RaisePropertyChanged(nameof(UpgradePartialAuthlib));
                 RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
                 RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
                 RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
@@ -500,9 +498,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(AutoSelectNewInstance):
                 _shellActionService.PersistSharedValue("ToolDownloadAutoSelectVersion", AutoSelectNewInstance);
-                break;
-            case nameof(UpgradePartialAuthlib):
-                _shellActionService.PersistSharedValue("ToolFixAuthlib", UpgradePartialAuthlib);
                 break;
             case nameof(SelectedCommunityDownloadSourceIndex):
                 _shellActionService.PersistSharedValue("ToolDownloadMod", SelectedCommunityDownloadSourceIndex);
@@ -756,7 +751,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DownloadTimeoutSeconds));
         RaisePropertyChanged(nameof(DownloadTimeoutLabel));
         RaisePropertyChanged(nameof(AutoSelectNewInstance));
-        RaisePropertyChanged(nameof(UpgradePartialAuthlib));
         RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
         RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
         RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));

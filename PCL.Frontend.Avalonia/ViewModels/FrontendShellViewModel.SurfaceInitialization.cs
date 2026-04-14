@@ -349,7 +349,6 @@ internal sealed partial class FrontendShellViewModel
         _downloadSpeedLimit = _setupComposition.GameManage.DownloadSpeedLimit;
         _downloadTimeoutSeconds = _setupComposition.GameManage.DownloadTimeoutSeconds;
         _autoSelectNewInstance = _setupComposition.GameManage.AutoSelectNewInstance;
-        _upgradePartialAuthlib = _setupComposition.GameManage.UpgradePartialAuthlib;
         _selectedCommunityDownloadSourceIndex = _setupComposition.GameManage.CommunityDownloadSourceIndex;
         _selectedFileNameFormatIndex = _setupComposition.GameManage.FileNameFormatIndex;
         _selectedModLocalNameStyleIndex = _setupComposition.GameManage.ModLocalNameStyleIndex;

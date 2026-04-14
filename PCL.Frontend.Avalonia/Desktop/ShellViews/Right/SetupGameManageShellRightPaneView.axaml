@@ -124,17 +124,11 @@
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="安装行为" />
-            <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,*">
+                        <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*">
               <CheckBox
-                  Grid.Column="0"
                   Foreground="{DynamicResource ColorBrush1}"
                   Content="安装新实例后自动选定该实例"
                   IsChecked="{Binding AutoSelectNewInstance}" />
-              <CheckBox
-                  Grid.Column="1"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="升级部分版本的 Authlib"
-                  IsChecked="{Binding UpgradePartialAuthlib}" />
             </Grid>
           </Grid>
         </controls:PclCard.CardContent>
