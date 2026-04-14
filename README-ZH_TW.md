@@ -46,4 +46,9 @@ PCL-ME 採用分層授權模型：
 - `PCL.Frontend.Avalonia/` 下的 UI 內容遵循 [PCL.Frontend.Avalonia/LICENSE](PCL.Frontend.Avalonia/LICENSE) 自訂授權。
 - 本倉庫中其餘啟動器相關邏輯遵循 [Apache License 2.0](LICENSE)，除非某個檔案或子目錄另有說明。
 
+資源致謝：
+
+- 目前應用程式 Logo 基於 [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo) 倉庫中的素材；該來源倉庫採用 Apache License 2.0。
+- 為了維持多平台環境下的介面字體一致性，`PCL.Frontend.Avalonia/Assets/Fonts/` 中隨附並使用了 [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/) 字體檔。HarmonyOS Sans 的著作權歸 Huawei Device Co., Ltd. 所有，並依 HarmonyOS Sans Fonts License Agreement 提供，特此致謝。
+
 如果你不確定某個檔案適用哪套條款，請先看它所在目錄，再檢查該目錄附近的授權說明。

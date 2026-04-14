@@ -64,3 +64,8 @@ AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project PCL.
 本目录下的 UI 内容遵循本目录中的 [LICENSE](LICENSE) 自定义许可证。
 
 仓库中位于此前端 UI 层之外的启动器相关逻辑遵循 [../LICENSE](../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
+
+资源致谢：
+
+- 当前应用 Logo 基于 [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo) 仓库中的素材；该源仓库使用 Apache License 2.0。
+- 为了保持多平台环境下的界面字体一致性，本目录在 `Assets/Fonts/` 中随附并使用了 [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/) 字体文件。HarmonyOS Sans 版权归 Huawei Device Co., Ltd. 所有，按 HarmonyOS Sans Fonts License Agreement 提供，特此致谢。

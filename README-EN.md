@@ -46,4 +46,9 @@ PCL-ME uses a split license model:
 - UI contents under `PCL.Frontend.Avalonia/` follow the custom license in [PCL.Frontend.Avalonia/LICENSE](PCL.Frontend.Avalonia/LICENSE).
 - All other launcher-related logic in this repository follows [Apache License 2.0](LICENSE), unless a file states otherwise.
 
+Asset credits:
+
+- The current application logo is based on assets from [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo); that source repository is licensed under Apache License 2.0.
+- To keep UI typography consistent across platforms, the project bundles and uses [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/) font files in `PCL.Frontend.Avalonia/Assets/Fonts/`. HarmonyOS Sans is copyrighted by Huawei Device Co., Ltd. and provided under the HarmonyOS Sans Fonts License Agreement.
+
 If you are unsure which terms apply to a file, start with the folder it lives in and then check the nearest license notice in that subtree.
