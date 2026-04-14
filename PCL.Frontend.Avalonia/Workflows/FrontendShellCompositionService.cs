@@ -77,7 +77,7 @@ internal static class FrontendShellCompositionService
         FrontendPlatformAdapter platformAdapter)
     {
         var hasGameLogs = HasLatestLaunchScript(paths.LauncherAppDataDirectory, platformAdapter) ||
-                          HasLatestLaunchScript(Path.Combine(paths.ExecutableDirectory, "PCL"), platformAdapter) ||
+                          HasLatestLaunchScript(paths.DataDirectory, platformAdapter) ||
                           Directory.Exists(Path.Combine(paths.LauncherAppDataDirectory, "Log"));
 
         return new LauncherFrontendNavigationViewRequest(

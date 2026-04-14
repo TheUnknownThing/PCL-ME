@@ -4,7 +4,7 @@ internal static class FrontendLaunchHintService
 {
     private static readonly string[] FallbackHints =
     [
-        "在 PCL 文件夹下创建 hints.txt，可以自定义启动时显示的“你知道吗”内容。",
+        "在数据目录下创建 hints.txt，可以自定义启动时显示的“你知道吗”内容。",
         "游戏的基本时间单位是刻，1 刻等于 0.05 秒。",
         "给一只绵羊命名为 \"jeb_\"，它的羊毛会持续变色。",
         "没有绑定磁石的指南针会始终指向世界出生点。",
@@ -22,7 +22,7 @@ internal static class FrontendLaunchHintService
 
         var candidates = new[]
             {
-                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "hints.txt"),
+                Path.Combine(runtimePaths.DataDirectory, "hints.txt"),
                 FrontendLauncherAssetLocator.GetPath("Resources", "hints.txt")
             }
             .Where(File.Exists)

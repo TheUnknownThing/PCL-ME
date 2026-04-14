@@ -109,7 +109,7 @@ internal static class FrontendSetupCompositionService
         var logDirectories = new[]
         {
             Path.Combine(paths.LauncherAppDataDirectory, "Log"),
-            Path.Combine(paths.ExecutableDirectory, "PCL", "Log"),
+            Path.Combine(paths.DataDirectory, "Log"),
             paths.FrontendArtifactDirectory
         };
 
@@ -134,7 +134,7 @@ internal static class FrontendSetupCompositionService
             [
                 new FrontendSetupLogEntry(
                     "暂无日志文件",
-                    "当前运行目录下还没有可供设置页展示的日志文件。",
+                    "当前数据目录下还没有可供设置页展示的日志文件。",
                     paths.LauncherAppDataDirectory)
             ];
         }

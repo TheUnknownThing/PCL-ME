@@ -937,7 +937,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenBackgroundFolder()
     {
-        var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Pictures");
+        var folder = GetBackgroundFolderPath();
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
@@ -964,7 +964,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenMusicFolder()
     {
-        var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
+        var folder = GetMusicFolderPath();
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
@@ -1076,7 +1076,7 @@ internal sealed partial class FrontendShellViewModel
     private async Task ViewHomepageTutorialAsync()
     {
         const string tutorialText = """
-1. 点击“生成教学文件”，会在运行目录下生成 PCL/Custom.xaml。
+    1. 点击“生成教学文件”，会在数据目录下生成 Custom.xaml。
 2. 使用文本编辑器修改这个文件，保存后可再次点击“刷新主页”。
 3. 若使用联网主页，请确认下载地址指向可信的主页内容。
 """;
@@ -1737,22 +1737,22 @@ internal sealed partial class FrontendShellViewModel
 
     private string GetBackgroundFolderPath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Pictures");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Pictures");
     }
 
     private string GetMusicFolderPath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Musics");
     }
 
     private string GetLogoImagePath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Logo.png");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Logo.png");
     }
 
     private string GetHomepageTutorialPath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Custom.xaml");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Custom.xaml");
     }
 
     private static IEnumerable<string> EnumerateMediaFiles(string folder, IEnumerable<string> allowedExtensions)

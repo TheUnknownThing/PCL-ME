@@ -22,7 +22,7 @@ internal static class FrontendToolsCompositionService
     {
         var configuredFolder = ReadValue(sharedConfig, "CacheDownloadFolder", string.Empty).Trim();
         var downloadFolder = string.IsNullOrWhiteSpace(configuredFolder)
-            ? Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "MyDownload")
+            ? Path.Combine(runtimePaths.DataDirectory, "MyDownload")
             : configuredFolder;
 
         return new FrontendToolsTestState(
@@ -83,7 +83,7 @@ internal static class FrontendToolsCompositionService
     {
         var entries = new List<FrontendToolsHelpEntry>();
         var ignorePatterns = ReadHelpIgnorePatterns(runtimePaths);
-        var overrideRoot = Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Help");
+        var overrideRoot = Path.Combine(runtimePaths.DataDirectory, "Help");
 
         if (Directory.Exists(overrideRoot))
         {
@@ -142,7 +142,7 @@ internal static class FrontendToolsCompositionService
 
     private static IReadOnlyList<string> ReadHelpIgnorePatterns(FrontendRuntimePaths runtimePaths)
     {
-        var overrideRoot = Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Help");
+        var overrideRoot = Path.Combine(runtimePaths.DataDirectory, "Help");
         if (!Directory.Exists(overrideRoot))
         {
             return [];
