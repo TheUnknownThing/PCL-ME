@@ -188,7 +188,7 @@ internal sealed partial class FrontendShellViewModel
         var refreshVersion = ++_downloadInstallMinecraftCatalogVersion;
         var preferredVersion = _instanceComposition.Install.MinecraftVersion.Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
 
-        _ = Task.Run(() => FrontendInstallWorkflowService.GetMinecraftCatalogChoices(preferredVersion))
+        _ = Task.Run(() => FrontendInstallWorkflowService.GetMinecraftCatalogChoices(preferredVersion, SelectedDownloadSourceIndex))
             .ContinueWith(async task =>
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>

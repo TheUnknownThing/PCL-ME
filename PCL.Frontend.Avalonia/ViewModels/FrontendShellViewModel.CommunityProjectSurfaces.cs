@@ -1160,6 +1160,7 @@ internal sealed partial class FrontendShellViewModel
                 null,
                 archivePath,
                 launcherDirectory,
+                _selectedDownloadSourceIndex,
                 instanceName,
                 targetDirectory,
                 _selectedCommunityProjectId,

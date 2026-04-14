@@ -178,6 +178,7 @@ internal sealed class FrontendShellActionService(
         return FrontendInstanceRepairService.Repair(
             request,
             onProgress,
+            GetDownloadProvider(),
             GetDownloadTransferOptions(),
             cancellationToken);
     }
@@ -411,6 +412,7 @@ internal sealed class FrontendShellActionService(
         var effectiveTransferPlan = ResolveEffectiveJavaTransferPlan(manifestPlan, transferPlan);
         var runtimeDirectory = effectiveTransferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory;
         var summaryPath = Path.Combine(runtimeDirectory, "download-summary.txt");
+        var downloadProvider = GetDownloadProvider();
         var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
@@ -419,7 +421,7 @@ internal sealed class FrontendShellActionService(
 
         foreach (var file in effectiveTransferPlan.FilesToDownload)
         {
-            DownloadJavaRuntimeFile(file, speedLimiter);
+            DownloadJavaRuntimeFile(file, downloadProvider, speedLimiter);
         }
         EnsureUnixExecutableBits(runtimeDirectory, effectiveTransferPlan);
 
@@ -450,7 +452,7 @@ internal sealed class FrontendShellActionService(
         var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
-        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, speedLimiter);
+        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), speedLimiter);
         var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
         EnsureNativePathAlias(launchComposition.NativePathAliasDirectory, launchComposition.NativesDirectory);
 
@@ -580,6 +582,7 @@ internal sealed class FrontendShellActionService(
 
     private static void EnsureRequiredArtifacts(
         IReadOnlyList<FrontendLaunchArtifactRequirement> requirements,
+        FrontendDownloadProvider downloadProvider,
         FrontendDownloadSpeedLimiter? speedLimiter = null)
     {
         ArgumentNullException.ThrowIfNull(requirements);
@@ -592,19 +595,30 @@ internal sealed class FrontendShellActionService(
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(requirement.TargetPath)!);
-            try
+            Exception? lastError = null;
+            foreach (var url in downloadProvider.GetPreferredUrls(requirement.DownloadUrl))
             {
-                FrontendDownloadTransferService.DownloadToPath(
-                    JavaRuntimeHttpClient,
-                    requirement.DownloadUrl,
-                    requirement.TargetPath,
-                    speedLimiter: speedLimiter);
+                try
+                {
+                    FrontendDownloadTransferService.DownloadToPath(
+                        JavaRuntimeHttpClient,
+                        url,
+                        requirement.TargetPath,
+                        speedLimiter: speedLimiter);
+                    lastError = null;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    lastError = ex;
+                }
             }
-            catch (Exception ex)
+
+            if (lastError is not null)
             {
                 throw new InvalidOperationException(
                     $"缺少启动所需文件且自动下载失败：{requirement.TargetPath}",
-                    ex);
+                    lastError);
             }
         }
     }
@@ -698,7 +712,7 @@ internal sealed class FrontendShellActionService(
         return string.Equals(left, right, comparison);
     }
 
-    private static MinecraftJavaRuntimeDownloadTransferPlan ResolveEffectiveJavaTransferPlan(
+    private MinecraftJavaRuntimeDownloadTransferPlan ResolveEffectiveJavaTransferPlan(
         MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
         MinecraftJavaRuntimeDownloadTransferPlan transferPlan)
     {
@@ -710,14 +724,19 @@ internal sealed class FrontendShellActionService(
             return transferPlan;
         }
 
-        var indexJson = DownloadUtf8String(MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().AllUrls);
+        var downloadProvider = GetDownloadProvider();
+        var indexJson = DownloadUtf8String(downloadProvider.GetPreferredUrls(
+            MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().OfficialUrls,
+            MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().MirrorUrls));
         var liveManifestPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
             new MinecraftJavaRuntimeManifestRequestPlanRequest(
                 indexJson,
                 manifestPlan.Selection.PlatformKey,
                 manifestPlan.Selection.RequestedComponent,
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
-        var manifestJson = DownloadUtf8String(liveManifestPlan.RequestUrls.AllUrls);
+        var manifestJson = DownloadUtf8String(downloadProvider.GetPreferredUrls(
+            liveManifestPlan.RequestUrls.OfficialUrls,
+            liveManifestPlan.RequestUrls.MirrorUrls));
         var workflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
             new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                 manifestJson,
@@ -986,12 +1005,13 @@ internal sealed class FrontendShellActionService(
 
     private static void DownloadJavaRuntimeFile(
         MinecraftJavaRuntimeDownloadRequestFilePlan file,
+        FrontendDownloadProvider downloadProvider,
         FrontendDownloadSpeedLimiter? speedLimiter = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(file.TargetPath)!);
 
         Exception? lastError = null;
-        foreach (var url in file.RequestUrls.AllUrls)
+        foreach (var url in downloadProvider.GetPreferredUrls(file.RequestUrls.OfficialUrls, file.RequestUrls.MirrorUrls))
         {
             try
             {
@@ -1080,6 +1100,11 @@ internal sealed class FrontendShellActionService(
     {
         var encryptionKey = ResolveSharedEncryptionKey();
         return LauncherDataProtectionService.Protect(plainText, encryptionKey);
+    }
+
+    private FrontendDownloadProvider GetDownloadProvider()
+    {
+        return FrontendDownloadProvider.FromPreference(ReadSharedValue("ToolDownloadSource", 1));
     }
 
     private byte[] ResolveSharedEncryptionKey()

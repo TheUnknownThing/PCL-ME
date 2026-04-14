@@ -15,19 +15,22 @@ internal static class FrontendInstanceRepairService
     public static FrontendInstanceRepairResult Repair(
         FrontendInstanceRepairRequest request,
         Action<FrontendInstanceRepairProgressSnapshot>? onProgress = null,
+        FrontendDownloadProvider? downloadProvider = null,
         FrontendDownloadTransferOptions? downloadOptions = null,
         CancellationToken cancelToken = default)
     {
-        return RepairAsync(request, onProgress, downloadOptions, cancelToken).GetAwaiter().GetResult();
+        return RepairAsync(request, onProgress, downloadProvider, downloadOptions, cancelToken).GetAwaiter().GetResult();
     }
 
     private static async Task<FrontendInstanceRepairResult> RepairAsync(
         FrontendInstanceRepairRequest request,
         Action<FrontendInstanceRepairProgressSnapshot>? onProgress,
+        FrontendDownloadProvider? downloadProvider,
         FrontendDownloadTransferOptions? downloadOptions,
         CancellationToken cancelToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        downloadProvider ??= FrontendDownloadProvider.FromPreference((int)FrontendDownloadSourcePreference.OfficialPreferred);
 
         var runtimeArchitecture = FrontendLibraryArtifactResolver.GetCurrentRuntimeArchitecture();
         var filePlans = new Dictionary<string, FrontendInstanceRepairFilePlan>(StringComparer.OrdinalIgnoreCase);
@@ -48,8 +51,8 @@ internal static class FrontendInstanceRepairService
         JsonElement? effectiveAssetIndex = null;
         foreach (var (versionName, root) in manifestDocuments)
         {
-            AddClientDownload(filePlans, root, request.LauncherDirectory, versionName, request.ForceCoreRefresh);
-            AddLibraryDownloads(filePlans, root, request.LauncherDirectory, runtimeArchitecture, request.ForceCoreRefresh);
+            AddClientDownload(filePlans, root, request.LauncherDirectory, versionName, request.ForceCoreRefresh, downloadProvider);
+            AddLibraryDownloads(filePlans, root, request.LauncherDirectory, runtimeArchitecture, request.ForceCoreRefresh, downloadProvider);
 
             if (effectiveAssetIndex is null &&
                 root.TryGetProperty("assetIndex", out var assetIndex) &&
@@ -68,7 +71,7 @@ internal static class FrontendInstanceRepairService
                 await MaterializeFileAsync(assetIndexPlan, downloadedFiles, reusedFiles, progressTracker, speedLimiter, cancelToken).ConfigureAwait(false);
             }
 
-            AddAssetObjectDownloads(filePlans, request.LauncherDirectory, request.InstanceDirectory, resolvedAssetIndex);
+            AddAssetObjectDownloads(filePlans, request.LauncherDirectory, request.InstanceDirectory, resolvedAssetIndex, downloadProvider);
         }
 
         progressTracker?.UpsertPlans(filePlans.Values);
@@ -113,7 +116,8 @@ internal static class FrontendInstanceRepairService
         JsonElement root,
         string launcherDirectory,
         string versionName,
-        bool forceDownload)
+        bool forceDownload,
+        FrontendDownloadProvider downloadProvider)
     {
         if (!root.TryGetProperty("downloads", out var downloads) ||
             downloads.ValueKind != JsonValueKind.Object ||
@@ -134,7 +138,7 @@ internal static class FrontendInstanceRepairService
             filePlans,
             new FrontendInstanceRepairFilePlan(
                 localPath,
-                [url],
+                downloadProvider.GetPreferredUrls(url),
                 GetString(client, "sha1"),
                 GetLong(client, "size"),
                 forceDownload,
@@ -146,7 +150,8 @@ internal static class FrontendInstanceRepairService
         JsonElement root,
         string launcherDirectory,
         MachineType runtimeArchitecture,
-        bool forceDownload)
+        bool forceDownload,
+        FrontendDownloadProvider downloadProvider)
     {
         if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
         {
@@ -160,8 +165,8 @@ internal static class FrontendInstanceRepairService
                 continue;
             }
 
-            AddArtifactDownload(filePlans, library, launcherDirectory, runtimeArchitecture, forceDownload);
-            AddNativeDownload(filePlans, library, launcherDirectory, runtimeArchitecture, forceDownload);
+            AddArtifactDownload(filePlans, library, launcherDirectory, runtimeArchitecture, forceDownload, downloadProvider);
+            AddNativeDownload(filePlans, library, launcherDirectory, runtimeArchitecture, forceDownload, downloadProvider);
         }
     }
 
@@ -170,7 +175,8 @@ internal static class FrontendInstanceRepairService
         JsonElement library,
         string launcherDirectory,
         MachineType runtimeArchitecture,
-        bool forceDownload)
+        bool forceDownload,
+        FrontendDownloadProvider downloadProvider)
     {
         if (!FrontendLibraryArtifactResolver.TryResolveArtifactDownload(
                 library,
@@ -183,7 +189,7 @@ internal static class FrontendInstanceRepairService
 
         var filePlan = new FrontendInstanceRepairFilePlan(
             resolved.TargetPath,
-            string.IsNullOrWhiteSpace(resolved.DownloadUrl) ? [] : [resolved.DownloadUrl],
+            string.IsNullOrWhiteSpace(resolved.DownloadUrl) ? [] : downloadProvider.GetPreferredUrls(resolved.DownloadUrl),
             resolved.Sha1,
             resolved.Size,
             false,
@@ -197,7 +203,8 @@ internal static class FrontendInstanceRepairService
         JsonElement library,
         string launcherDirectory,
         MachineType runtimeArchitecture,
-        bool forceDownload)
+        bool forceDownload,
+        FrontendDownloadProvider downloadProvider)
     {
         if (!FrontendLibraryArtifactResolver.TryResolveNativeArchiveDownload(
                 library,
@@ -210,7 +217,7 @@ internal static class FrontendInstanceRepairService
 
         var filePlan = new FrontendInstanceRepairFilePlan(
             resolved.TargetPath,
-            string.IsNullOrWhiteSpace(resolved.DownloadUrl) ? [] : [resolved.DownloadUrl],
+            string.IsNullOrWhiteSpace(resolved.DownloadUrl) ? [] : downloadProvider.GetPreferredUrls(resolved.DownloadUrl),
             resolved.Sha1,
             resolved.Size,
             false,
@@ -324,7 +331,8 @@ internal static class FrontendInstanceRepairService
         IDictionary<string, FrontendInstanceRepairFilePlan> filePlans,
         string launcherDirectory,
         string instanceDirectory,
-        JsonElement assetIndex)
+        JsonElement assetIndex,
+        FrontendDownloadProvider downloadProvider)
     {
         var indexName = GetString(assetIndex, "id");
         if (string.IsNullOrWhiteSpace(indexName))
@@ -366,7 +374,7 @@ internal static class FrontendInstanceRepairService
                 filePlans,
                 new FrontendInstanceRepairFilePlan(
                     localPath,
-                    [$"https://resources.download.minecraft.net/{hash[..2]}/{hash}"],
+                    downloadProvider.GetAssetObjectUrls($"{hash[..2]}/{hash}"),
                     hash,
                     GetLong(asset.Value, "size"),
                     false,

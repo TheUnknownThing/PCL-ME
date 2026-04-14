@@ -507,17 +507,18 @@ internal static class FrontendModpackInstallWorkflowService
         FrontendModpackPackage package,
         FrontendModpackInstallRequest request)
     {
-        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion);
+        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion, request.DownloadSourceIndex);
         var primaryChoice =
-            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion) ??
-            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion) ??
-            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion) ??
-            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion);
-        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion);
+            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion, request.DownloadSourceIndex) ??
+            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion, request.DownloadSourceIndex) ??
+            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion, request.DownloadSourceIndex) ??
+            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, request.DownloadSourceIndex);
+        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion, request.DownloadSourceIndex);
 
         return new FrontendInstallApplyRequest(
             request.LauncherDirectory,
             request.InstanceName,
+            request.DownloadSourceIndex,
             minecraftChoice,
             primaryChoice,
             LiteLoaderChoice: null,
@@ -532,23 +533,27 @@ internal static class FrontendModpackInstallWorkflowService
             PreserveExistingManagedModFiles: true);
     }
 
-    private static FrontendInstallChoice ResolveMinecraftChoice(string version)
+    private static FrontendInstallChoice ResolveMinecraftChoice(string version, int downloadSourceIndex)
     {
-        var choices = FrontendInstallWorkflowService.GetMinecraftCatalogChoices(version);
+        var choices = FrontendInstallWorkflowService.GetMinecraftCatalogChoices(version, downloadSourceIndex);
         var choice = choices.FirstOrDefault(candidate =>
             string.Equals(candidate.Version, version, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Metadata?["rawVersion"]?.GetValue<string>(), version, StringComparison.OrdinalIgnoreCase));
         return choice ?? throw new InvalidOperationException($"未找到可用的 Minecraft {version} 安装方案。");
     }
 
-    private static FrontendInstallChoice? ResolveLoaderChoice(string optionTitle, string minecraftVersion, string? requestedVersion)
+    private static FrontendInstallChoice? ResolveLoaderChoice(
+        string optionTitle,
+        string minecraftVersion,
+        string? requestedVersion,
+        int downloadSourceIndex)
     {
         if (string.IsNullOrWhiteSpace(requestedVersion))
         {
             return null;
         }
 
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, downloadSourceIndex);
         var choice = choices.FirstOrDefault(candidate =>
             string.Equals(candidate.Version, requestedVersion, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Title, requestedVersion, StringComparison.OrdinalIgnoreCase));
@@ -1377,6 +1382,7 @@ internal sealed record FrontendModpackInstallRequest(
     string? SourceArchivePath,
     string ArchivePath,
     string LauncherDirectory,
+    int DownloadSourceIndex,
     string InstanceName,
     string TargetDirectory,
     string? ProjectId,

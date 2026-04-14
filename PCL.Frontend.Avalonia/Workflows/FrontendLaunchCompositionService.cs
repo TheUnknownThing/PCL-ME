@@ -36,6 +36,7 @@ internal static class FrontendLaunchCompositionService
         var launcherFolder = FrontendLauncherPathService.ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
+        var downloadProvider = FrontendDownloadProvider.FromPreference(ReadValue(sharedConfig, "ToolDownloadSource", 1));
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
         var instancePath = string.IsNullOrWhiteSpace(selectedInstanceName)
             ? Path.Combine(launcherFolder, "versions")
@@ -206,8 +207,9 @@ internal static class FrontendLaunchCompositionService
         var manifestPlan = BuildJavaRuntimeManifestPlan(
             javaWorkflow,
             manifestSummary,
-            selectedJavaRuntime);
-        var transferPlan = BuildJavaRuntimeTransferPlan(launcherFolder, manifestPlan);
+            selectedJavaRuntime,
+            downloadProvider);
+        var transferPlan = BuildJavaRuntimeTransferPlan(launcherFolder, manifestPlan, downloadProvider);
 
         return new FrontendLaunchComposition(
             options.Scenario,
@@ -1932,7 +1934,8 @@ internal static class FrontendLaunchCompositionService
     private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
         MinecraftLaunchJavaWorkflowPlan javaWorkflow,
         FrontendVersionManifestSummary manifestSummary,
-        FrontendJavaRuntimeSummary? selectedJavaRuntime)
+        FrontendJavaRuntimeSummary? selectedJavaRuntime,
+        FrontendDownloadProvider downloadProvider)
     {
         if (string.IsNullOrWhiteSpace(javaWorkflow.MissingJavaPrompt.DownloadTarget))
         {
@@ -1942,7 +1945,10 @@ internal static class FrontendLaunchCompositionService
         try
         {
             var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
-            var liveIndexJson = TryDownloadUtf8String(MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan().AllUrls);
+            var indexRequestUrls = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan();
+            var liveIndexJson = TryDownloadUtf8String(downloadProvider.GetPreferredUrls(
+                indexRequestUrls.OfficialUrls,
+                indexRequestUrls.MirrorUrls));
             if (string.IsNullOrWhiteSpace(liveIndexJson))
             {
                 return null;
@@ -1963,7 +1969,8 @@ internal static class FrontendLaunchCompositionService
 
     private static MinecraftJavaRuntimeDownloadTransferPlan? BuildJavaRuntimeTransferPlan(
         string launcherFolder,
-        MinecraftJavaRuntimeManifestRequestPlan? manifestPlan)
+        MinecraftJavaRuntimeManifestRequestPlan? manifestPlan,
+        FrontendDownloadProvider downloadProvider)
     {
         if (manifestPlan is null)
         {
@@ -1973,7 +1980,9 @@ internal static class FrontendLaunchCompositionService
         var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
             launcherFolder,
             manifestPlan.Selection.ComponentKey);
-        var manifestJson = TryDownloadUtf8String(manifestPlan.RequestUrls.AllUrls);
+        var manifestJson = TryDownloadUtf8String(downloadProvider.GetPreferredUrls(
+            manifestPlan.RequestUrls.OfficialUrls,
+            manifestPlan.RequestUrls.MirrorUrls));
         if (string.IsNullOrWhiteSpace(manifestJson))
         {
             return null;

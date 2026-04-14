@@ -569,6 +569,7 @@ internal sealed partial class FrontendShellViewModel
                 SourceArchivePath: sourcePath,
                 ArchivePath: archivePath,
                 LauncherDirectory: launcherDirectory,
+                DownloadSourceIndex: SelectedDownloadSourceIndex,
                 InstanceName: instanceName,
                 TargetDirectory: targetDirectory,
                 ProjectId: null,

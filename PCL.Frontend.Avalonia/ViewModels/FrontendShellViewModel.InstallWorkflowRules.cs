@@ -256,7 +256,7 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<FrontendInstallChoice> GetSelectableInstallChoices(bool isExistingInstance, string optionTitle, string minecraftVersion)
     {
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex);
         return optionTitle switch
         {
             "Forge" => FilterForgeChoicesForCurrentState(isExistingInstance, choices),
