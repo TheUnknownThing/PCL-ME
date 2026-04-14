@@ -422,6 +422,7 @@ internal sealed partial class FrontendShellViewModel
                                 {
                                     installTask.ApplyRepairProgress(snapshot);
                                 },
+                                _shellActionService.GetDownloadTransferOptions(),
                                 cancelToken),
                             cancelToken);
 

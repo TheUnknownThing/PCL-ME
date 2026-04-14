@@ -2,7 +2,9 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Collections.Concurrent;
 using PCL.Core.Utils;
+using PCL.Core.Utils.Exts;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -13,16 +15,30 @@ internal static class FrontendInstanceRepairService
     public static FrontendInstanceRepairResult Repair(
         FrontendInstanceRepairRequest request,
         Action<FrontendInstanceRepairProgressSnapshot>? onProgress = null,
+        FrontendDownloadTransferOptions? downloadOptions = null,
         CancellationToken cancelToken = default)
+    {
+        return RepairAsync(request, onProgress, downloadOptions, cancelToken).GetAwaiter().GetResult();
+    }
+
+    private static async Task<FrontendInstanceRepairResult> RepairAsync(
+        FrontendInstanceRepairRequest request,
+        Action<FrontendInstanceRepairProgressSnapshot>? onProgress,
+        FrontendDownloadTransferOptions? downloadOptions,
+        CancellationToken cancelToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var runtimeArchitecture = FrontendLibraryArtifactResolver.GetCurrentRuntimeArchitecture();
         var filePlans = new Dictionary<string, FrontendInstanceRepairFilePlan>(StringComparer.OrdinalIgnoreCase);
-        var downloadedFiles = new List<string>();
-        var reusedFiles = new List<string>();
+        var downloadedFiles = new ConcurrentBag<string>();
+        var reusedFiles = new ConcurrentBag<string>();
         var manifestDocuments = LoadManifestDocuments(request.LauncherDirectory, request.InstanceName);
         var progressTracker = onProgress is null ? null : new FrontendInstanceRepairProgressTracker(onProgress);
+        var maxConcurrency = downloadOptions?.MaxConcurrentFileTransfers ?? 1;
+        var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
 
         if (manifestDocuments.Count == 0)
         {
@@ -49,19 +65,22 @@ internal static class FrontendInstanceRepairService
             if (assetIndexPlan is not null)
             {
                 progressTracker?.UpsertPlan(assetIndexPlan);
-                MaterializeFile(assetIndexPlan, downloadedFiles, reusedFiles, progressTracker, cancelToken);
+                await MaterializeFileAsync(assetIndexPlan, downloadedFiles, reusedFiles, progressTracker, speedLimiter, cancelToken).ConfigureAwait(false);
             }
 
             AddAssetObjectDownloads(filePlans, request.LauncherDirectory, request.InstanceDirectory, resolvedAssetIndex);
         }
 
         progressTracker?.UpsertPlans(filePlans.Values);
-        foreach (var plan in filePlans.Values)
-        {
-            MaterializeFile(plan, downloadedFiles, reusedFiles, progressTracker, cancelToken);
-        }
+        await filePlans.Values
+            .ToArray()
+            .ForEachAsync(
+                (plan, token) => MaterializeFileAsync(plan, downloadedFiles, reusedFiles, progressTracker, speedLimiter, token),
+                maxConcurrency,
+                cancelToken)
+            .ConfigureAwait(false);
 
-        return new FrontendInstanceRepairResult(downloadedFiles, reusedFiles);
+        return new FrontendInstanceRepairResult(downloadedFiles.ToArray(), reusedFiles.ToArray());
     }
 
     private static List<(string VersionName, JsonElement Root)> LoadManifestDocuments(string launcherDirectory, string instanceName)
@@ -440,11 +459,12 @@ internal static class FrontendInstanceRepairService
         return string.Equals(hash, filePlan.Sha1, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void MaterializeFile(
+    private static async Task MaterializeFileAsync(
         FrontendInstanceRepairFilePlan filePlan,
-        ICollection<string> downloadedFiles,
-        ICollection<string> reusedFiles,
+        ConcurrentBag<string> downloadedFiles,
+        ConcurrentBag<string> reusedFiles,
         FrontendInstanceRepairProgressTracker? progressTracker,
+        FrontendDownloadSpeedLimiter? speedLimiter,
         CancellationToken cancelToken)
     {
         var isFileValid = IsFileValid(filePlan);
@@ -467,14 +487,15 @@ internal static class FrontendInstanceRepairService
             throw new InvalidOperationException($"实例修复文件缺少可用下载源：{filePlan.LocalPath}");
         }
 
-        DownloadFile(filePlan, progressTracker, cancelToken);
+        await DownloadFileAsync(filePlan, progressTracker, speedLimiter, cancelToken).ConfigureAwait(false);
         downloadedFiles.Add(filePlan.LocalPath);
         progressTracker?.MarkDownloaded(filePlan);
     }
 
-    private static void DownloadFile(
+    private static async Task DownloadFileAsync(
         FrontendInstanceRepairFilePlan filePlan,
         FrontendInstanceRepairProgressTracker? progressTracker,
+        FrontendDownloadSpeedLimiter? speedLimiter,
         CancellationToken cancelToken)
     {
         Exception? lastError = null;
@@ -487,9 +508,9 @@ internal static class FrontendInstanceRepairService
                 cancelToken.ThrowIfCancellationRequested();
                 progressTracker?.StartDownload(filePlan);
 
-                using var response = HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancelToken).GetAwaiter().GetResult();
+                using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                using var stream = response.Content.ReadAsStreamAsync(cancelToken).GetAwaiter().GetResult();
+                await using var stream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
 
                 Directory.CreateDirectory(Path.GetDirectoryName(filePlan.LocalPath)!);
                 if (File.Exists(tempPath))
@@ -497,23 +518,12 @@ internal static class FrontendInstanceRepairService
                     File.Delete(tempPath);
                 }
 
-                using (var output = File.Create(tempPath))
-                {
-                    var buffer = new byte[81920];
-                    long transferredBytes = 0;
-                    while (true)
-                    {
-                        var read = stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancelToken).GetAwaiter().GetResult();
-                        if (read <= 0)
-                        {
-                            break;
-                        }
-
-                        output.Write(buffer, 0, read);
-                        transferredBytes += read;
-                        progressTracker?.ReportDownloadProgress(filePlan, transferredBytes);
-                    }
-                }
+                await FrontendDownloadTransferService.CopyToPathAsync(
+                    stream,
+                    tempPath,
+                    transferredBytes => progressTracker?.ReportDownloadProgress(filePlan, transferredBytes),
+                    speedLimiter,
+                    cancelToken).ConfigureAwait(false);
 
                 if (File.Exists(filePlan.LocalPath))
                 {
@@ -704,6 +714,7 @@ internal sealed record FrontendInstanceRepairFilePlan(
 internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInstanceRepairProgressSnapshot> onProgress)
 {
     private const int ProgressIntervalMs = 120;
+    private readonly object _syncRoot = new();
     private readonly Dictionary<string, ProgressEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
     private long _lastSampleBytes;
@@ -714,22 +725,28 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
 
     public void UpsertPlans(IEnumerable<FrontendInstanceRepairFilePlan> plans)
     {
+        FrontendInstanceRepairProgressSnapshot? snapshot = null;
         var changed = false;
-        foreach (var plan in plans)
+        lock (_syncRoot)
         {
-            if (_entries.ContainsKey(plan.LocalPath))
+            foreach (var plan in plans)
             {
-                continue;
+                if (_entries.ContainsKey(plan.LocalPath))
+                {
+                    continue;
+                }
+
+                _entries.Add(plan.LocalPath, new ProgressEntry(plan));
+                changed = true;
             }
 
-            _entries.Add(plan.LocalPath, new ProgressEntry(plan));
-            changed = true;
+            if (changed)
+            {
+                snapshot = BuildSnapshot(forceEmit: true);
+            }
         }
 
-        if (changed)
-        {
-            Publish(forceEmit: true);
-        }
+        Emit(snapshot);
     }
 
     public void UpsertPlan(FrontendInstanceRepairFilePlan plan)
@@ -739,44 +756,68 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
 
     public void MarkReused(FrontendInstanceRepairFilePlan plan)
     {
-        var entry = GetEntry(plan);
-        entry.CurrentBytes = entry.TotalBytes;
-        entry.IsCompleted = true;
-        entry.WasDownloaded = false;
-        entry.TransferBytes = 0;
-        _currentFileName = Path.GetFileName(plan.LocalPath);
-        Publish(forceEmit: true);
+        FrontendInstanceRepairProgressSnapshot? snapshot;
+        lock (_syncRoot)
+        {
+            var entry = GetEntry(plan);
+            entry.CurrentBytes = entry.TotalBytes;
+            entry.IsCompleted = true;
+            entry.WasDownloaded = false;
+            entry.TransferBytes = 0;
+            _currentFileName = Path.GetFileName(plan.LocalPath);
+            snapshot = BuildSnapshot(forceEmit: true);
+        }
+
+        Emit(snapshot);
     }
 
     public void StartDownload(FrontendInstanceRepairFilePlan plan)
     {
-        var entry = GetEntry(plan);
-        entry.CurrentBytes = 0;
-        entry.IsCompleted = false;
-        entry.WasDownloaded = false;
-        entry.TransferBytes = 0;
-        _currentFileName = Path.GetFileName(plan.LocalPath);
-        Publish(forceSpeedRefresh: true);
+        FrontendInstanceRepairProgressSnapshot? snapshot;
+        lock (_syncRoot)
+        {
+            var entry = GetEntry(plan);
+            entry.CurrentBytes = 0;
+            entry.IsCompleted = false;
+            entry.WasDownloaded = false;
+            entry.TransferBytes = 0;
+            _currentFileName = Path.GetFileName(plan.LocalPath);
+            snapshot = BuildSnapshot(forceSpeedRefresh: true);
+        }
+
+        Emit(snapshot);
     }
 
     public void ReportDownloadProgress(FrontendInstanceRepairFilePlan plan, long transferredBytes)
     {
-        var entry = GetEntry(plan);
-        entry.CurrentBytes = Math.Clamp(transferredBytes, 0, entry.TotalBytes > 0 ? entry.TotalBytes : transferredBytes);
-        entry.TransferBytes = transferredBytes;
-        _currentFileName = Path.GetFileName(plan.LocalPath);
-        Publish(forceSpeedRefresh: true);
+        FrontendInstanceRepairProgressSnapshot? snapshot;
+        lock (_syncRoot)
+        {
+            var entry = GetEntry(plan);
+            entry.CurrentBytes = Math.Clamp(transferredBytes, 0, entry.TotalBytes > 0 ? entry.TotalBytes : transferredBytes);
+            entry.TransferBytes = transferredBytes;
+            _currentFileName = Path.GetFileName(plan.LocalPath);
+            snapshot = BuildSnapshot(forceSpeedRefresh: true);
+        }
+
+        Emit(snapshot);
     }
 
     public void MarkDownloaded(FrontendInstanceRepairFilePlan plan)
     {
-        var entry = GetEntry(plan);
-        entry.CurrentBytes = entry.TotalBytes > 0 ? entry.TotalBytes : Math.Max(entry.CurrentBytes, 1);
-        entry.IsCompleted = true;
-        entry.WasDownloaded = true;
-        entry.TransferBytes = entry.CurrentBytes;
-        _currentFileName = Path.GetFileName(plan.LocalPath);
-        Publish(forceSpeedRefresh: true, forceEmit: true);
+        FrontendInstanceRepairProgressSnapshot? snapshot;
+        lock (_syncRoot)
+        {
+            var entry = GetEntry(plan);
+            entry.CurrentBytes = entry.TotalBytes > 0 ? entry.TotalBytes : Math.Max(entry.CurrentBytes, 1);
+            entry.IsCompleted = true;
+            entry.WasDownloaded = true;
+            entry.TransferBytes = entry.CurrentBytes;
+            _currentFileName = Path.GetFileName(plan.LocalPath);
+            snapshot = BuildSnapshot(forceSpeedRefresh: true, forceEmit: true);
+        }
+
+        Emit(snapshot);
     }
 
     private ProgressEntry GetEntry(FrontendInstanceRepairFilePlan plan)
@@ -791,7 +832,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
         return entry;
     }
 
-    private void Publish(bool forceSpeedRefresh = false, bool forceEmit = false)
+    private FrontendInstanceRepairProgressSnapshot? BuildSnapshot(bool forceSpeedRefresh = false, bool forceEmit = false)
     {
         var nowMs = _stopwatch.ElapsedMilliseconds;
         var completedBytes = _entries.Values.Sum(entry => entry.CompletedBytes);
@@ -809,7 +850,7 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
 
         if (!forceEmit && nowMs - _lastProgressTimestampMs < ProgressIntervalMs)
         {
-            return;
+            return null;
         }
 
         var groups = _entries.Values
@@ -833,17 +874,24 @@ internal sealed class FrontendInstanceRepairProgressTracker(Action<FrontendInsta
         var totalFiles = _entries.Count;
         var completedFiles = _entries.Values.Count(entry => entry.IsCompleted);
         _lastProgressTimestampMs = nowMs;
-        onProgress(
-            new FrontendInstanceRepairProgressSnapshot(
-                groups,
-                _currentFileName,
-                _entries.Values.Count(entry => entry.IsCompleted && entry.WasDownloaded),
-                _entries.Values.Count(entry => entry.IsCompleted && !entry.WasDownloaded),
-                totalFiles,
-                Math.Max(0, totalFiles - completedFiles),
-                completedBytes,
-                _entries.Values.Sum(entry => entry.TotalBytes),
-                _speedBytesPerSecond));
+        return new FrontendInstanceRepairProgressSnapshot(
+            groups,
+            _currentFileName,
+            _entries.Values.Count(entry => entry.IsCompleted && entry.WasDownloaded),
+            _entries.Values.Count(entry => entry.IsCompleted && !entry.WasDownloaded),
+            totalFiles,
+            Math.Max(0, totalFiles - completedFiles),
+            completedBytes,
+            _entries.Values.Sum(entry => entry.TotalBytes),
+            _speedBytesPerSecond);
+    }
+
+    private void Emit(FrontendInstanceRepairProgressSnapshot? snapshot)
+    {
+        if (snapshot is not null)
+        {
+            onProgress(snapshot);
+        }
     }
 
     private sealed class ProgressEntry(FrontendInstanceRepairFilePlan plan)

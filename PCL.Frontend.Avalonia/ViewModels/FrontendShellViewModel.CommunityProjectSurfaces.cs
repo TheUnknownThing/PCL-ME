@@ -962,6 +962,7 @@ internal sealed partial class FrontendShellViewModel
                 entry.Target,
                 targetPath,
                 ResolveDownloadRequestTimeout(),
+                _shellActionService.GetDownloadTransferOptions(),
                 onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
                 onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
                 onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
@@ -1167,6 +1168,7 @@ internal sealed partial class FrontendShellViewModel
                 description,
                 _selectedCommunityDownloadSourceIndex),
             ResolveDownloadRequestTimeout(),
+            _shellActionService.GetDownloadTransferOptions(),
             onStarted: filePath =>
             {
                 Dispatcher.UIThread.Post(() =>
@@ -2285,6 +2287,7 @@ internal sealed class FrontendManagedFileDownloadTask(
     string sourceUrl,
     string targetPath,
     TimeSpan requestTimeout,
+    FrontendDownloadTransferOptions? downloadOptions = null,
     Action<string>? onStarted = null,
     Action<string>? onCompleted = null,
     Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
@@ -2325,48 +2328,43 @@ internal sealed class FrontendManagedFileDownloadTask(
             using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
             response.EnsureSuccessStatusCode();
 
+            var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
+                ? new FrontendDownloadSpeedLimiter(speedLimit)
+                : null;
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
             await using (var sourceStream = await response.Content.ReadAsStreamAsync(token))
-            await using (var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
             {
-                var contentLength = response.Content.Headers.ContentLength;
-                var buffer = new byte[81920];
-                var totalRead = 0L;
+                var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
                 var lastReportedBytes = 0L;
                 var lastReportedAt = Environment.TickCount64;
                 StateChanged(TaskState.Running, "正在下载文件…");
                 onStarted?.Invoke(targetPath);
 
-                while (true)
-                {
-                    var read = await sourceStream.ReadAsync(buffer, token);
-                    if (read <= 0)
+                await FrontendDownloadTransferService.CopyToPathAsync(
+                    sourceStream,
+                    targetPath,
+                    totalRead =>
                     {
-                        break;
-                    }
+                        var progress = contentLength > 0
+                            ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
+                            : 0d;
+                        ProgressChanged(progress);
 
-                    await targetStream.WriteAsync(buffer.AsMemory(0, read), token);
-                    totalRead += read;
+                        var now = Environment.TickCount64;
+                        if (now - lastReportedAt < 250)
+                        {
+                            return;
+                        }
 
-                    var totalLength = contentLength.GetValueOrDefault();
-                    var progress = totalLength > 0
-                        ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
-                        : 0d;
-                    ProgressChanged(progress);
-
-                    var now = Environment.TickCount64;
-                    if (now - lastReportedAt >= 250)
-                    {
                         var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
                         var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
                         PublishProgressStatus(progress, speed);
                         lastReportedAt = now;
                         lastReportedBytes = totalRead;
                         StateChanged(TaskState.Running, $"正在下载 {Path.GetFileName(targetPath)}…");
-                    }
-                }
-
-                await targetStream.FlushAsync(token);
+                    },
+                    speedLimiter,
+                    token);
             }
 
             ProgressChanged(1d);

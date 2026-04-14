@@ -656,9 +656,14 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             using var client = CreateToolHttpClient();
-            await using var source = await client.GetStreamAsync(uri);
-            await using var output = File.Create(targetPath);
-            await source.CopyToAsync(output);
+            var speedLimiter = _shellActionService.GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+                ? new FrontendDownloadSpeedLimiter(speedLimit)
+                : null;
+            await FrontendDownloadTransferService.DownloadToPathAsync(
+                client,
+                uri.ToString(),
+                targetPath,
+                speedLimiter: speedLimiter);
             AddActivity("开始下载自定义文件", $"{uri} -> {targetPath}");
         }
         catch (Exception ex)

@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml.Linq;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Models;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -385,13 +386,18 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             using var client = CreateToolHttpClient();
-            await using var source = await client.GetStreamAsync(uri);
             Directory.CreateDirectory(ToolDownloadFolder);
             var fileName = Path.GetFileName(uri.LocalPath);
             fileName = string.IsNullOrWhiteSpace(fileName) ? "help-download.bin" : SanitizeFileSegment(fileName);
             var targetPath = Path.Combine(ToolDownloadFolder, fileName);
-            await using var output = File.Create(targetPath);
-            await source.CopyToAsync(output);
+            var speedLimiter = _shellActionService.GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+                ? new FrontendDownloadSpeedLimiter(speedLimit)
+                : null;
+            await FrontendDownloadTransferService.DownloadToPathAsync(
+                client,
+                uri.ToString(),
+                targetPath,
+                speedLimiter: speedLimiter);
             OpenInstanceTarget(title, targetPath, "帮助文件下载完成但目标文件不存在。");
         }
         catch (Exception ex)

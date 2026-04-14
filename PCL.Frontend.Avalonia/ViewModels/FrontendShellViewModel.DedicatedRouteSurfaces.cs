@@ -577,6 +577,7 @@ internal sealed partial class FrontendShellViewModel
                 ProjectDescription: null,
                 CommunitySourcePreference: SelectedCommunityDownloadSourceIndex),
             ResolveDownloadRequestTimeout(),
+            _shellActionService.GetDownloadTransferOptions(),
             onCompleted: result =>
             {
                 Dispatcher.UIThread.Post(() =>

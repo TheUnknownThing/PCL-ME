@@ -17,12 +17,16 @@ internal static class FrontendModpackInstallWorkflowService
         FrontendModpackInstallRequest request,
         Action<FrontendModpackInstallStatus>? onStatusChanged = null,
         TimeSpan? requestTimeout = null,
+        FrontendDownloadTransferOptions? downloadOptions = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         cancelToken.ThrowIfCancellationRequested();
         var effectiveTimeout = NormalizeDownloadTimeout(requestTimeout);
         using var httpClient = CreateDownloadHttpClient(effectiveTimeout);
+        var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
 
         Directory.CreateDirectory(request.TargetDirectory);
         ReportStatus(onStatusChanged, 0.02, "正在解析整合包清单…");
@@ -66,7 +70,7 @@ internal static class FrontendModpackInstallWorkflowService
                         string.IsNullOrWhiteSpace(fileName) ? "正在下载整合包附带文件…" : $"正在处理 {fileName}…",
                         RemainingFileCount: resolvedFiles.Length - completedCount);
 
-                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, cancelToken).ConfigureAwait(false))
+                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, speedLimiter, cancelToken).ConfigureAwait(false))
                     {
                         downloadedFiles.Add(file.TargetPath);
                     }
@@ -113,6 +117,7 @@ internal static class FrontendModpackInstallWorkflowService
                             snapshot.RemainingFileCount,
                             snapshot.CurrentFileName);
                     },
+                    downloadOptions,
                     cancelToken),
                 cancelToken).ConfigureAwait(false);
 
@@ -587,6 +592,7 @@ internal static class FrontendModpackInstallWorkflowService
         FrontendModpackFileDownloadPlan file,
         int communitySourcePreference,
         HttpClient httpClient,
+        FrontendDownloadSpeedLimiter? speedLimiter,
         CancellationToken cancelToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(file.TargetPath)!);
@@ -606,11 +612,8 @@ internal static class FrontendModpackInstallWorkflowService
                 response.EnsureSuccessStatusCode();
 
                 TryDeleteFile(tempFile);
-                await using (var sourceStream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false))
-                await using (var targetStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
-                {
-                    await sourceStream.CopyToAsync(targetStream, cancelToken).ConfigureAwait(false);
-                }
+                await using var sourceStream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
+                await FrontendDownloadTransferService.CopyToPathAsync(sourceStream, tempFile, speedLimiter: speedLimiter, cancelToken: cancelToken).ConfigureAwait(false);
 
                 if (!ValidateDownloadedFile(tempFile, file))
                 {
@@ -1122,6 +1125,7 @@ internal sealed class FrontendManagedModpackInstallTask(
     string title,
     FrontendModpackInstallRequest request,
     TimeSpan requestTimeout,
+    FrontendDownloadTransferOptions? downloadOptions = null,
     Action<string>? onStarted = null,
     Action<FrontendModpackInstallResult>? onCompleted = null,
     Action<string>? onFailed = null) : PCL.Core.App.Tasks.ITask, PCL.Core.App.Tasks.ITaskProgressive, PCL.Core.App.Tasks.ITaskProgressStatus, PCL.Core.App.Tasks.ITaskCancelable
@@ -1167,6 +1171,7 @@ internal sealed class FrontendManagedModpackInstallTask(
                 request,
                 status => UpdateFromInstallStatus(status),
                 requestTimeout,
+                downloadOptions,
                 token).ConfigureAwait(false);
 
             PublishProgress(1d);
@@ -1221,36 +1226,32 @@ internal sealed class FrontendManagedModpackInstallTask(
     private async Task DownloadArchiveAsync(string sourceUrl, CancellationToken token, TimeSpan timeout)
     {
         using var client = CreateDownloadHttpClient(timeout);
+        var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
         using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         await using var sourceStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
-        await using var targetStream = new FileStream(request.ArchivePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
-
-        var contentLength = response.Content.Headers.ContentLength;
-        var buffer = new byte[81920];
-        var totalRead = 0L;
+        var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
         var lastReportedBytes = 0L;
         var lastReportedAt = Environment.TickCount64;
-        while (true)
-        {
-            var read = await sourceStream.ReadAsync(buffer, token).ConfigureAwait(false);
-            if (read <= 0)
+        await FrontendDownloadTransferService.CopyToPathAsync(
+            sourceStream,
+            request.ArchivePath,
+            totalRead =>
             {
-                break;
-            }
+                var progress = contentLength > 0
+                    ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
+                    : 0d;
+                PublishProgress(progress * 0.35);
 
-            await targetStream.WriteAsync(buffer.AsMemory(0, read), token).ConfigureAwait(false);
-            totalRead += read;
+                var now = Environment.TickCount64;
+                if (now - lastReportedAt < 250)
+                {
+                    return;
+                }
 
-            var totalLength = contentLength.GetValueOrDefault();
-            var progress = totalLength > 0
-                ? Math.Clamp(totalRead / (double)totalLength, 0d, 1d)
-                : 0d;
-            PublishProgress(progress * 0.35);
-            var now = Environment.TickCount64;
-            if (now - lastReportedAt >= 250)
-            {
                 var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
                 var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
                 PublishProgressStatus(
@@ -1261,8 +1262,9 @@ internal sealed class FrontendManagedModpackInstallTask(
                         null));
                 lastReportedBytes = totalRead;
                 lastReportedAt = now;
-            }
-        }
+            },
+            speedLimiter,
+            token).ConfigureAwait(false);
 
         PublishProgressStatus(
             new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
