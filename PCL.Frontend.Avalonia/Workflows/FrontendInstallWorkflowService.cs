@@ -55,7 +55,6 @@ internal static class FrontendInstallWorkflowService
                     ManifestUrl: node["url"]?.GetValue<string>());
             })
             .Where(choice => !string.IsNullOrWhiteSpace(choice.Version) && !string.IsNullOrWhiteSpace(choice.ManifestUrl))
-            .Take(36)
             .ToList();
 
         if (!string.IsNullOrWhiteSpace(preferredVersion)
@@ -1910,8 +1909,7 @@ internal static class FrontendInstallWorkflowService
                     });
             })
             .Where(choice => choice is not null)
-            .Cast<FrontendInstallChoice>(),
-            36);
+            .Cast<FrontendInstallChoice>());
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetNeoForgeChoices(
@@ -1928,8 +1926,7 @@ internal static class FrontendInstallWorkflowService
         return SortInstallChoicesByVersionDescending(
             choices
             .GroupBy(choice => choice.Id, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First()),
-            36);
+            .Select(group => group.First()));
     }
 
     private static void AddNeoForgeChoices(
@@ -2037,8 +2034,7 @@ internal static class FrontendInstallWorkflowService
                         ["releaseTime"] = ParseCatalogReleaseTime(node["published_at"]?.GetValue<string>())?.ToString("O")
                     });
             })
-            .Cast<FrontendInstallChoice>(),
-            18);
+            .Cast<FrontendInstallChoice>());
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetFabricLoaderChoices(
@@ -2085,8 +2081,7 @@ internal static class FrontendInstallWorkflowService
                     Kind: FrontendInstallChoiceKind.QuiltLoader,
                     ManifestUrl: profileUrl);
             })
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)),
-            18);
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)));
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetLabyModChoices(
@@ -2185,8 +2180,7 @@ internal static class FrontendInstallWorkflowService
                         ["isPreview"] = patch.Contains("pre", StringComparison.OrdinalIgnoreCase)
                     });
             })
-            .Cast<FrontendInstallChoice>(),
-            24);
+            .Cast<FrontendInstallChoice>());
     }
 
     private static IReadOnlyList<FrontendInstallChoice> GetLiteLoaderChoices(
@@ -2251,7 +2245,6 @@ internal static class FrontendInstallWorkflowService
             .Where(node => node is not null)
             .Where(node => CfWidgetFileMatchesVersion(node!, minecraftVersion))
             .OrderByDescending(node => node!["uploaded_at"]?.GetValue<string>() ?? string.Empty)
-            .Take(18)
             .Select(node =>
             {
                 var fileId = node!["id"]?.GetValue<int>() ?? 0;
@@ -2303,7 +2296,7 @@ internal static class FrontendInstallWorkflowService
                 .Select(ToModrinthChoice)
                 .Where(choice => choice is not null)
                 .Cast<FrontendInstallChoice>();
-            var orderedChoices = SortInstallChoicesDescending(choices, 18);
+            var orderedChoices = SortInstallChoicesDescending(choices);
             if (orderedChoices.Count > 0)
             {
                 return orderedChoices;
@@ -2373,8 +2366,7 @@ internal static class FrontendInstallWorkflowService
                     Kind: kind,
                     ManifestUrl: $"{url.TrimEnd('/')}/{version}/profile/json");
             })
-            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)),
-            18);
+            .Where(choice => !string.IsNullOrWhiteSpace(choice.Version)));
     }
 
     private static IEnumerable<string> GetVersionCandidates(string minecraftVersion, bool allowFallback)
@@ -2750,22 +2742,15 @@ internal static class FrontendInstallWorkflowService
     }
 
     private static IReadOnlyList<FrontendInstallChoice> SortInstallChoicesDescending(
-        IEnumerable<FrontendInstallChoice> choices,
-        int? maxCount = null)
+        IEnumerable<FrontendInstallChoice> choices)
     {
         var ordered = choices.ToList();
         ordered.Sort(CompareInstallChoicesDescending);
-        if (maxCount is int limit && ordered.Count > limit)
-        {
-            ordered.RemoveRange(limit, ordered.Count - limit);
-        }
-
         return ordered;
     }
 
     private static IReadOnlyList<FrontendInstallChoice> SortInstallChoicesByVersionDescending(
-        IEnumerable<FrontendInstallChoice> choices,
-        int? maxCount = null)
+        IEnumerable<FrontendInstallChoice> choices)
     {
         var ordered = choices.ToList();
         ordered.Sort((left, right) =>
@@ -2778,11 +2763,6 @@ internal static class FrontendInstallWorkflowService
 
             return CompareInstallChoicesDescending(left, right);
         });
-
-        if (maxCount is int limit && ordered.Count > limit)
-        {
-            ordered.RemoveRange(limit, ordered.Count - limit);
-        }
 
         return ordered;
     }
