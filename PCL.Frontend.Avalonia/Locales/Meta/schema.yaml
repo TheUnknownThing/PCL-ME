@@ -1,1 +1,389 @@
-{}
+shell:
+  navigation:
+    pages:
+      launch:
+        title: []
+        summary: []
+      download:
+        title: []
+        summary: []
+      setup:
+        title: []
+        summary: []
+      tools:
+        title: []
+        summary: []
+      instance_select:
+        title: []
+        summary: []
+      task_manager:
+        title: []
+        summary: []
+      instance_setup:
+        title: []
+        summary: []
+      comp_detail:
+        title: []
+        summary: []
+      help_detail:
+        title: []
+        summary: []
+      game_log:
+        title: []
+        summary: []
+      version_saves:
+        title: []
+        summary: []
+    subpages:
+      download_install:
+        title: []
+        summary: []
+      download_mod:
+        title: []
+        summary: []
+      download_pack:
+        title: []
+        summary: []
+      download_data_pack:
+        title: []
+        summary: []
+      download_resource_pack:
+        title: []
+        summary: []
+      download_shader:
+        title: []
+        summary: []
+      download_world:
+        title: []
+        summary: []
+      download_comp_favorites:
+        title: []
+        summary: []
+      download_client:
+        title: []
+        summary: []
+      download_opti_fine:
+        title: []
+        summary: []
+      download_forge:
+        title: []
+        summary: []
+      download_neo_forge:
+        title: []
+        summary: []
+      download_cleanroom:
+        title: []
+        summary: []
+      download_fabric:
+        title: []
+        summary: []
+      download_quilt:
+        title: []
+        summary: []
+      download_lite_loader:
+        title: []
+        summary: []
+      download_laby_mod:
+        title: []
+        summary: []
+      download_legacy_fabric:
+        title: []
+        summary: []
+      setup_launch:
+        title: []
+        summary: []
+      setup_u_i:
+        title: []
+        summary: []
+      setup_game_manage:
+        title: []
+        summary: []
+      setup_link:
+        title: []
+        summary: []
+      setup_about:
+        title: []
+        summary: []
+      setup_log:
+        title: []
+        summary: []
+      setup_feedback:
+        title: []
+        summary: []
+      setup_update:
+        title: []
+        summary: []
+      setup_java:
+        title: []
+        summary: []
+      setup_launcher_misc:
+        title: []
+        summary: []
+      tools_launcher_help:
+        title: []
+        summary: []
+      tools_test:
+        title: []
+        summary: []
+      version_overall:
+        title: []
+        summary: []
+      version_setup:
+        title: []
+        summary: []
+      version_export:
+        title: []
+        summary: []
+      version_world:
+        title: []
+        summary: []
+      version_screenshot:
+        title: []
+        summary: []
+      version_mod:
+        title: []
+        summary: []
+      version_mod_disabled:
+        title: []
+        summary: []
+      version_resource_pack:
+        title: []
+        summary: []
+      version_shader:
+        title: []
+        summary: []
+      version_schematic:
+        title: []
+        summary: []
+      version_install:
+        title: []
+        summary: []
+      version_server:
+        title: []
+        summary: []
+      version_saves_info:
+        title: []
+        summary: []
+      version_saves_backup:
+        title: []
+        summary: []
+      version_saves_datapack:
+        title: []
+        summary: []
+    sidebar_groups:
+      download: []
+      setup: []
+      tools: []
+      instance_setup: []
+      version_saves: []
+    sidebar_section_groups:
+      community_resources: []
+      installers: []
+      game: []
+      launcher: []
+      about: []
+      tools: []
+      instance: []
+      content: []
+      resources: []
+      other: []
+      saves: []
+    utilities:
+      back: []
+      back_target:
+        - target
+      task_manager: []
+      game_log: []
+    accessories:
+      refresh: []
+      reset: []
+  page_content:
+    eyebrows:
+      top_level: []
+      secondary: []
+      detail: []
+      utility: []
+    values:
+      none: []
+    facts:
+      current_page: []
+      current_section: []
+      prompt_count: []
+      active_prompt_lane: []
+      page_kind: []
+      back_target: []
+      launch:
+        identity: []
+        java: []
+        resolution: []
+        classpath_count: []
+        java_warning: []
+      crash:
+        archive_name: []
+        source_file_count: []
+    lines:
+      active_prompt_lane:
+        - lane
+      launch:
+        runtime:
+          - java
+          - resolution
+        last_completion:
+          - message
+      crash:
+        export:
+          - archive_name
+          - file_count
+    sections:
+      overview:
+        eyebrow: []
+  prompts:
+    lanes:
+      startup:
+        title: []
+        summary: []
+      launch:
+        title: []
+        summary: []
+      crash:
+        title: []
+        summary: []
+    inbox:
+      title:
+        - lane
+      empty:
+        - lane
+startup:
+  prompts:
+    special_build:
+      title: []
+      debug:
+        message:
+          - hint_env_var
+          - latest_release_url
+      ci:
+        message:
+          - hint_env_var
+          - latest_release_url
+      actions:
+        continue: []
+        open_release_and_exit: []
+    eula:
+      title: []
+      message:
+        - eula_url
+      actions:
+        accept: []
+        reject: []
+        open: []
+    environment_warning:
+      title: []
+      message:
+        - warnings
+      actions:
+        acknowledge: []
+launch:
+  notifications:
+    success:
+      - instance_name
+    abort_with_hint:
+      - hint
+    script_export_canceled: []
+    launch_canceled: []
+    none: []
+  precheck:
+    failures:
+      instance_path_reserved_chars:
+        - path
+      instance_indie_path_reserved_chars:
+        - path
+      instance_not_selected: []
+      instance_has_error:
+        - detail
+      no_profile_selected: []
+      microsoft_profile_required: []
+      auth_profile_required: []
+      auth_server_mismatch: []
+      microsoft_or_auth_profile_required: []
+      unknown: []
+  prompts:
+    non_ascii_path:
+      title: []
+      message:
+        - instance_name
+      actions:
+        continue: []
+        abort: []
+        disable: []
+    purchase:
+      optional:
+        title: []
+        message:
+          - purchase_url
+        actions:
+          buy: []
+          continue: []
+      required:
+        title: []
+        message: []
+        actions:
+          buy: []
+          demo: []
+          abort: []
+    java_missing:
+      title: []
+      manual_java7_with_legacy_fixer:
+        message: []
+      manual_java7:
+        message: []
+      manual_java8u141_to_320:
+        message: []
+      manual_java8u141_plus:
+        message: []
+      actions:
+        confirm: []
+      auto_download:
+        title: []
+        message:
+          - version
+        actions:
+          download: []
+          cancel: []
+    support:
+      title:
+        - launch_count
+      message:
+        - launch_count
+      actions:
+        sponsor: []
+        continue: []
+    java_compatibility:
+      title: []
+      message:
+        - runtime_label
+        - minimum_version
+        - maximum_version
+      actions:
+        force_current: []
+        use_compatible: []
+        abort: []
+crash:
+  prompts:
+    output:
+      message:
+        - message
+      launch_failure:
+        title: []
+      manual_analysis:
+        title: []
+      actions:
+        close: []
+        open_instance_settings: []
+        view_log: []
+        export_report: []
+  export:
+    heading: []
+    suggested_archive:
+      - archive_name
+    source_file_count:
+      - file_count

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PCL.Core.App.I18n;
 
 namespace PCL.Core.Minecraft.Launch;
 
@@ -20,12 +21,15 @@ public static class MinecraftLaunchJavaPromptService
         if (request.MaximumVersion < new Version(1, 8))
         {
             return new MinecraftLaunchJavaPrompt(
-                request.HasForge
-                    ? $"你需要先安装 LegacyJavaFixer Mod，或安装 Java 7 才能启动该版本。{Environment.NewLine}请自行搜索并安装 Java 7，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。"
-                    : $"你需要安装 Java 7 才能启动该版本。{Environment.NewLine}请自行搜索并安装 Java 7，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。",
-                "未找到 Java",
+                I18nText.Plain(
+                    request.HasForge
+                        ? "launch.prompts.java_missing.manual_java7_with_legacy_fixer.message"
+                        : "launch.prompts.java_missing.manual_java7.message"),
+                I18nText.Plain("launch.prompts.java_missing.title"),
                 [
-                    new MinecraftLaunchJavaPromptOption("确定", MinecraftLaunchJavaPromptDecision.Abort)
+                    new MinecraftLaunchJavaPromptOption(
+                        I18nText.Plain("launch.prompts.java_missing.actions.confirm"),
+                        MinecraftLaunchJavaPromptDecision.Abort)
                 ]);
         }
 
@@ -33,20 +37,24 @@ public static class MinecraftLaunchJavaPromptService
             request.MaximumVersion < new Version(1, 8, 0, 321))
         {
             return new MinecraftLaunchJavaPrompt(
-                $"你需要安装 Java 8u141 ~ 8u320 才能启动该版本。{Environment.NewLine}请自行搜索并安装，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。",
-                "未找到 Java",
+                I18nText.Plain("launch.prompts.java_missing.manual_java8u141_to_320.message"),
+                I18nText.Plain("launch.prompts.java_missing.title"),
                 [
-                    new MinecraftLaunchJavaPromptOption("确定", MinecraftLaunchJavaPromptDecision.Abort)
+                    new MinecraftLaunchJavaPromptOption(
+                        I18nText.Plain("launch.prompts.java_missing.actions.confirm"),
+                        MinecraftLaunchJavaPromptDecision.Abort)
                 ]);
         }
 
         if (request.MinimumVersion > new Version(1, 8, 0, 140))
         {
             return new MinecraftLaunchJavaPrompt(
-                $"你需要安装 Java 8u141 或更高版本的 Java 8 才能启动该版本。{Environment.NewLine}请自行搜索并安装，安装后在 设置 → 启动选项 → 游戏 Java 中重新搜索或导入。",
-                "未找到 Java",
+                I18nText.Plain("launch.prompts.java_missing.manual_java8u141_plus.message"),
+                I18nText.Plain("launch.prompts.java_missing.title"),
                 [
-                    new MinecraftLaunchJavaPromptOption("确定", MinecraftLaunchJavaPromptDecision.Abort)
+                    new MinecraftLaunchJavaPromptOption(
+                        I18nText.Plain("launch.prompts.java_missing.actions.confirm"),
+                        MinecraftLaunchJavaPromptDecision.Abort)
                 ]);
         }
 
@@ -56,11 +64,17 @@ public static class MinecraftLaunchJavaPromptService
     private static MinecraftLaunchJavaPrompt CreateAutomaticDownloadPrompt(string versionDescription, string downloadTarget)
     {
         return new MinecraftLaunchJavaPrompt(
-            $"PCL 未找到 {versionDescription}，是否需要 PCL 自动下载？{Environment.NewLine}如果你已经安装了 {versionDescription}，可以在 设置 → 启动选项 → 游戏 Java 中手动导入。",
-            "自动下载 Java？",
+            I18nText.WithArgs(
+                "launch.prompts.java_missing.auto_download.message",
+                I18nTextArgument.String("version", versionDescription)),
+            I18nText.Plain("launch.prompts.java_missing.auto_download.title"),
             [
-                new MinecraftLaunchJavaPromptOption("自动下载", MinecraftLaunchJavaPromptDecision.Download),
-                new MinecraftLaunchJavaPromptOption("取消", MinecraftLaunchJavaPromptDecision.Abort)
+                new MinecraftLaunchJavaPromptOption(
+                    I18nText.Plain("launch.prompts.java_missing.auto_download.actions.download"),
+                    MinecraftLaunchJavaPromptDecision.Download),
+                new MinecraftLaunchJavaPromptOption(
+                    I18nText.Plain("launch.prompts.java_missing.auto_download.actions.cancel"),
+                    MinecraftLaunchJavaPromptDecision.Abort)
             ],
             downloadTarget);
     }
@@ -78,13 +92,13 @@ public sealed record MinecraftLaunchJavaPromptRequest(
     string? RecommendedComponent);
 
 public sealed record MinecraftLaunchJavaPrompt(
-    string Message,
-    string Title,
+    I18nText Message,
+    I18nText Title,
     IReadOnlyList<MinecraftLaunchJavaPromptOption> Options,
     string? DownloadTarget = null);
 
 public sealed record MinecraftLaunchJavaPromptOption(
-    string Label,
+    I18nText Label,
     MinecraftLaunchJavaPromptDecision Decision);
 
 public enum MinecraftLaunchJavaPromptDecision

@@ -12,6 +12,8 @@ internal interface II18nService
 
     string T(string key, IReadOnlyDictionary<string, object?> args);
 
+    string T(I18nText text);
+
     bool ReloadCurrentLocale();
 
     event Action? Changed;
@@ -57,6 +59,18 @@ internal sealed class I18nService : II18nService, IDisposable
     public string T(string key)
     {
         return T(key, EmptyArgs);
+    }
+
+    public string T(I18nText text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        return T(
+            text.Key,
+            text.Arguments?.ToDictionary(
+                argument => argument.Name,
+                argument => argument.GetValue(),
+                StringComparer.Ordinal) ?? EmptyArgs);
     }
 
     public string T(string key, IReadOnlyDictionary<string, object?> args)

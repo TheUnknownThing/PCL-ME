@@ -1,4 +1,5 @@
 using PCL.Core.App;
+using PCL.Core.App.I18n;
 using System.Collections.Generic;
 
 namespace PCL.Core.Minecraft.Launch;
@@ -15,15 +16,22 @@ public static class MinecraftLaunchShellService
         return request.Outcome switch
         {
             MinecraftLaunchOutcome.Succeeded => new MinecraftLaunchNotification(
-                $"{request.InstanceName} 启动成功！",
+                I18nText.WithArgs(
+                    "launch.notifications.success",
+                    I18nTextArgument.String("instance_name", request.InstanceName)),
                 MinecraftLaunchNotificationKind.Finish),
             MinecraftLaunchOutcome.Aborted when !string.IsNullOrEmpty(request.AbortHint) => new MinecraftLaunchNotification(
-                request.AbortHint,
+                I18nText.WithArgs(
+                    "launch.notifications.abort_with_hint",
+                    I18nTextArgument.String("hint", request.AbortHint)),
                 MinecraftLaunchNotificationKind.Finish),
             MinecraftLaunchOutcome.Aborted => new MinecraftLaunchNotification(
-                request.IsScriptExport ? "已取消导出启动脚本！" : "已取消启动！",
+                I18nText.Plain(
+                    request.IsScriptExport
+                        ? "launch.notifications.script_export_canceled"
+                        : "launch.notifications.launch_canceled"),
                 MinecraftLaunchNotificationKind.Info),
-            _ => new MinecraftLaunchNotification(string.Empty, MinecraftLaunchNotificationKind.None)
+            _ => new MinecraftLaunchNotification(I18nText.Plain("launch.notifications.none"), MinecraftLaunchNotificationKind.None)
         };
     }
 
@@ -53,16 +61,18 @@ public static class MinecraftLaunchShellService
         }
 
         return new MinecraftLaunchPrompt(
-            "PCL 已经为你启动了 " + launchCount + " 次游戏啦！" + System.Environment.NewLine +
-            "如果 PCL 还算好用的话，也许可以考虑赞助一下 PCL 原作者……" + System.Environment.NewLine +
-            "如果没有大家的支持，PCL 很难在免费、无任何广告的情况下维持数年的更新（磕头）……！",
-            launchCount + " 次启动！",
+            I18nText.WithArgs(
+                "launch.prompts.support.message",
+                I18nTextArgument.Int("launch_count", launchCount)),
+            I18nText.WithArgs(
+                "launch.prompts.support.title",
+                I18nTextArgument.Int("launch_count", launchCount)),
             [
                 new MinecraftLaunchPromptButton(
-                    "支持一下！",
+                    I18nText.Plain("launch.prompts.support.actions.sponsor"),
                     [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.OpenUrl, "https://afdian.com/a/LTCat")]),
                 new MinecraftLaunchPromptButton(
-                    "但是我拒绝",
+                    I18nText.Plain("launch.prompts.support.actions.continue"),
                     [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])
             ],
             IsWarning: false);
@@ -180,7 +190,7 @@ public sealed record MinecraftLaunchWatcherStopShellRequest(
     bool TriggerLauncherShutdown);
 
 public sealed record MinecraftLaunchNotification(
-    string Message,
+    I18nText Message,
     MinecraftLaunchNotificationKind Kind);
 
 public sealed record MinecraftLaunchFailureDisplay(

@@ -1,1 +1,358 @@
-
+shell:
+  navigation:
+    pages:
+      launch:
+        title: "Launch"
+        summary: "Instance selection, account setup, and launch readiness."
+      download:
+        title: "Download"
+        summary: "Install Minecraft, mod loaders, and community resources."
+      setup:
+        title: "Settings"
+        summary: "Launcher, Java, and gameplay preferences."
+      tools:
+        title: "Tools"
+        summary: "Help content and experimental utilities."
+      instance_select:
+        title: "Instance Select"
+        summary: "Choose which instance to launch."
+      task_manager:
+        title: "Task Manager"
+        summary: "Monitor downloads and background tasks."
+      instance_setup:
+        title: "Instance Settings"
+        summary: "Inspect instance details and manage its resources."
+      comp_detail:
+        title: "Resource Detail"
+        summary: "Inspect a selected community resource."
+      help_detail:
+        title: "Help Detail"
+        summary: "Read the currently selected help topic."
+      game_log:
+        title: "Game Log"
+        summary: "Review launch output and live logs."
+      version_saves:
+        title: "Save Manager"
+        summary: "Manage a selected world save and its backups."
+    subpages:
+      download_install:
+        title: "Auto Install"
+        summary: "Create a new instance and pick its installation components."
+      download_mod:
+        title: "Mods"
+        summary: "Browse and install mods."
+      download_pack:
+        title: "Modpacks"
+        summary: "Browse curated modpacks."
+      download_data_pack:
+        title: "Data Packs"
+        summary: "Search and install data packs."
+      download_resource_pack:
+        title: "Resource Packs"
+        summary: "Search and install resource packs."
+      download_shader:
+        title: "Shaders"
+        summary: "Search and install shader packs."
+      download_world:
+        title: "Worlds"
+        summary: "Import maps and save archives."
+      download_comp_favorites:
+        title: "Favorites"
+        summary: "Review favorited community resources."
+      download_client:
+        title: "Minecraft"
+        summary: "Choose a Minecraft version to install."
+      download_opti_fine:
+        title: "OptiFine"
+        summary: "Install OptiFine for the selected game version."
+      download_forge:
+        title: "Forge"
+        summary: "Install Forge for the selected game version."
+      download_neo_forge:
+        title: "NeoForge"
+        summary: "Install NeoForge for the selected game version."
+      download_cleanroom:
+        title: "Cleanroom"
+        summary: "Install Cleanroom for the selected game version."
+      download_fabric:
+        title: "Fabric"
+        summary: "Install Fabric for the selected game version."
+      download_quilt:
+        title: "Quilt"
+        summary: "Install Quilt for the selected game version."
+      download_lite_loader:
+        title: "LiteLoader"
+        summary: "Install LiteLoader for the selected game version."
+      download_laby_mod:
+        title: "LabyMod"
+        summary: "Install LabyMod for the selected game version."
+      download_legacy_fabric:
+        title: "Legacy Fabric"
+        summary: "Install Legacy Fabric for older versions."
+      setup_launch:
+        title: "Launch"
+        summary: "Tune launch arguments, visibility, and runtime behavior."
+      setup_u_i:
+        title: "Interface"
+        summary: "Adjust themes, animation, and shell presentation."
+      setup_game_manage:
+        title: "Game Management"
+        summary: "Control instance storage and game file behavior."
+      setup_link:
+        title: "Links"
+        summary: "Manage launcher-related external links."
+      setup_about:
+        title: "About"
+        summary: "Read version details and project information."
+      setup_log:
+        title: "Logs"
+        summary: "Configure logging and diagnostics output."
+      setup_feedback:
+        title: "Feedback"
+        summary: "Review linked issue and feedback channels."
+      setup_update:
+        title: "Updates"
+        summary: "Configure update channels and check strategy."
+      setup_java:
+        title: "Java"
+        summary: "Manage Java runtimes and selection rules."
+      setup_launcher_misc:
+        title: "Launcher Misc"
+        summary: "Adjust miscellaneous launcher behaviors."
+      tools_launcher_help:
+        title: "Help"
+        summary: "Browse launcher help topics."
+      tools_test:
+        title: "Tests"
+        summary: "Open experimental and diagnostic utilities."
+      version_overall:
+        title: "Overview"
+        summary: "Review instance identity and high-level metadata."
+      version_setup:
+        title: "Settings"
+        summary: "Configure this instance's dedicated settings."
+      version_export:
+        title: "Export"
+        summary: "Export the instance or assemble a distributable pack."
+      version_world:
+        title: "Worlds"
+        summary: "Browse worlds associated with the instance."
+      version_screenshot:
+        title: "Screenshots"
+        summary: "Browse captured screenshots."
+      version_mod:
+        title: "Mods"
+        summary: "Manage enabled mods."
+      version_mod_disabled:
+        title: "Disabled Mods"
+        summary: "Review mods that are currently disabled."
+      version_resource_pack:
+        title: "Resource Packs"
+        summary: "Manage installed resource packs."
+      version_shader:
+        title: "Shaders"
+        summary: "Manage installed shader packs."
+      version_schematic:
+        title: "Schematics"
+        summary: "Manage schematics and building files."
+      version_install:
+        title: "Modify"
+        summary: "Adjust the instance version and loader components."
+      version_server:
+        title: "Servers"
+        summary: "Manage saved server entries."
+      version_saves_info:
+        title: "Overview"
+        summary: "Review metadata for the selected save."
+      version_saves_backup:
+        title: "Backups"
+        summary: "Create, import, and restore save backups."
+      version_saves_datapack:
+        title: "Data Packs"
+        summary: "Manage data packs inside the selected save."
+    sidebar_groups:
+      download: "Download workspace"
+      setup: "Settings workspace"
+      tools: "Tools workspace"
+      instance_setup: "Instance workspace"
+      version_saves: "Save workspace"
+    sidebar_section_groups:
+      community_resources: "Community resources"
+      installers: "Installers"
+      game: "Game"
+      launcher: "Launcher"
+      about: "About"
+      tools: "Tools"
+      instance: "Instance"
+      content: "Content"
+      resources: "Resources"
+      other: "Other"
+      saves: "Saves"
+    utilities:
+      back: "Back"
+      back_target: "Back to {target}"
+      task_manager: "Task Manager"
+      game_log: "Game Log"
+    accessories:
+      refresh: "Refresh"
+      reset: "Reset"
+  page_content:
+    eyebrows:
+      top_level: "Top-level route"
+      secondary: "Secondary route"
+      detail: "Detail route"
+      utility: "Utility route"
+    values:
+      none: "None"
+    facts:
+      current_page: "Current page"
+      current_section: "Current section"
+      prompt_count: "Queued prompts"
+      active_prompt_lane: "Active prompt lane"
+      page_kind: "Page kind"
+      back_target: "Back target"
+      launch:
+        identity: "Identity"
+        java: "Java"
+        resolution: "Resolution"
+        classpath_count: "Classpath entries"
+        java_warning: "Java warning"
+      crash:
+        archive_name: "Suggested archive"
+        source_file_count: "Source files"
+    lines:
+      active_prompt_lane: "The prompt overlay is currently focused on the {lane} lane."
+      launch:
+        runtime: "Current runtime uses {java} at {resolution}."
+        last_completion: "Latest launch notification: {message}"
+      crash:
+        export: "Crash export currently targets {archive_name} with {file_count} collected files."
+    sections:
+      overview:
+        eyebrow: "Overview"
+  prompts:
+    lanes:
+      startup:
+        title: "Startup"
+        summary: "Launcher bootstrap notices and consent prompts."
+      launch:
+        title: "Launch"
+        summary: "Pre-launch checks and runtime prompts."
+      crash:
+        title: "Crash"
+        summary: "Crash recovery actions and diagnostics."
+    inbox:
+      title: "{lane} prompts"
+      empty: "No prompts are waiting in the {lane} lane."
+startup:
+  prompts:
+    special_build:
+      title: "Special build"
+      debug:
+        message: "This launcher build was produced for debugging and may be unstable. Set {hint_env_var} to disable this reminder, or open the latest stable release: {latest_release_url}"
+      ci:
+        message: "This launcher build came from CI and may be incomplete. Set {hint_env_var} to disable this reminder, or open the latest stable release: {latest_release_url}"
+      actions:
+        continue: "Continue"
+        open_release_and_exit: "Open release page and exit"
+    eula:
+      title: "License agreement"
+      message: "You need to review and accept the launcher agreement before continuing. Reference: {eula_url}"
+      actions:
+        accept: "Accept"
+        reject: "Reject and exit"
+        open: "Open agreement"
+    environment_warning:
+      title: "Environment warning"
+      message: "The current environment needs attention:\n{warnings}"
+      actions:
+        acknowledge: "I understand"
+launch:
+  notifications:
+    success: "{instance_name} launched successfully."
+    abort_with_hint: "Launch was canceled: {hint}"
+    script_export_canceled: "Launch script export finished and the launch was stopped."
+    launch_canceled: "Launch was canceled."
+    none: ""
+  precheck:
+    failures:
+      instance_path_reserved_chars: "The instance path cannot contain ! or ; ({path})."
+      instance_indie_path_reserved_chars: "The independent game path cannot contain ! or ; ({path})."
+      instance_not_selected: "No instance is currently selected."
+      instance_has_error: "The selected instance is in an invalid state: {detail}"
+      no_profile_selected: "Select a login profile before launching."
+      microsoft_profile_required: "This instance requires a Microsoft profile."
+      auth_profile_required: "This instance requires an Authlib profile."
+      auth_server_mismatch: "The selected Authlib account does not match the required auth server."
+      microsoft_or_auth_profile_required: "This instance requires either a Microsoft or matching Authlib profile."
+      unknown: "The current instance is not ready to launch yet."
+  prompts:
+    non_ascii_path:
+      title: "Non-ASCII path warning"
+      message: "{instance_name} is using a path with non-ASCII characters. Some Java runtimes or mods may fail in this environment."
+      actions:
+        continue: "Continue anyway"
+        abort: "Cancel launch"
+        disable: "Don't warn again"
+    purchase:
+      optional:
+        title: "Minecraft ownership recommended"
+        message: "No Microsoft ownership profile is selected. If you own Minecraft, consider signing in or purchasing it here: {purchase_url}"
+        actions:
+          buy: "Open purchase page"
+          continue: "Continue"
+      required:
+        title: "Minecraft ownership required"
+        message: "This feature requires a Microsoft-owned Minecraft profile."
+        actions:
+          buy: "Open purchase page"
+          demo: "Launch demo mode"
+          abort: "Cancel launch"
+    java_missing:
+      title: "Java runtime missing"
+      manual_java7_with_legacy_fixer:
+        message: "This instance needs Java 7 and legacy Forge compatibility handling. Install a matching Java 7 runtime manually before launching."
+      manual_java7:
+        message: "This instance needs Java 7. Install a matching Java 7 runtime manually before launching."
+      manual_java8u141_to_320:
+        message: "This instance needs Java 8 update 141 through 320. Install a compatible Java 8 runtime manually before launching."
+      manual_java8u141_plus:
+        message: "This instance needs Java 8 update 141 or newer. Install a compatible Java 8 runtime manually before launching."
+      actions:
+        confirm: "Close"
+      auto_download:
+        title: "Download Java runtime"
+        message: "No compatible runtime is available. Download and register {version} automatically?"
+        actions:
+          download: "Download"
+          cancel: "Cancel"
+    support:
+      title: "Launch milestone {launch_count}"
+      message: "You have launched the game {launch_count} times. If PCL-ME has been useful, consider sponsoring the project."
+      actions:
+        sponsor: "Sponsor"
+        continue: "Continue"
+    java_compatibility:
+      title: "Java compatibility warning"
+      message: "{runtime_label} may not satisfy the required Java range ({minimum_version} - {maximum_version})."
+      actions:
+        force_current: "Use current Java"
+        use_compatible: "Use compatible Java"
+        abort: "Cancel launch"
+crash:
+  prompts:
+    output:
+      message: "{message}"
+      launch_failure:
+        title: "Launch failed"
+      manual_analysis:
+        title: "Crash analysis"
+      actions:
+        close: "Close"
+        open_instance_settings: "Open instance settings"
+        view_log: "View log"
+        export_report: "Export report"
+  export:
+    heading: "Export plan"
+    suggested_archive: "- Suggested archive: {archive_name}"
+    source_file_count: "- Source file count: {file_count}"

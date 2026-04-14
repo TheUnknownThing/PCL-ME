@@ -15,6 +15,25 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private void HandleI18nChanged()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            _promptCatalog[AvaloniaPromptLaneKind.Startup] = LauncherFrontendPromptService
+                .BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
+                .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
+                .ToList();
+            EnsureLaunchPromptLane();
+            EnsureCrashPromptLane();
+            RebuildPromptLanes();
+            SyncPromptLaneState();
+            SelectPromptLane(_selectedPromptLane, updateActivity: false, raiseCollectionState: false);
+            RefreshShellCore(activityMessage: null, addActivity: false);
+            RaiseLaunchSessionProperties();
+            RaiseGameLogSurfaceProperties();
+        });
+    }
+
     private Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>> BuildPromptCatalog(string scenario)
     {
         var startupPrompts = LauncherFrontendPromptService.BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent);
@@ -73,9 +92,19 @@ internal sealed partial class FrontendShellViewModel
             ? GetPromptLaneMetadata(lane)
             : (selectedLane.Title, selectedLane.Summary);
         var laneCount = selectedLane?.Count ?? _promptCatalog[lane].Count;
-        PromptInboxTitle = $"{laneTitle}提示";
+        PromptInboxTitle = _i18n.T(
+            "shell.prompts.inbox.title",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["lane"] = laneTitle
+            });
         PromptInboxSummary = laneSummary;
-        PromptEmptyState = $"当前没有待处理的{laneTitle}提示。";
+        PromptEmptyState = _i18n.T(
+            "shell.prompts.inbox.empty",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["lane"] = laneTitle
+            });
         var pageContent = BuildPageContent(BuildShellPlan());
         ReplaceSurfaceFactsIfChanged(pageContent.Facts);
         ReplaceSurfaceSectionsIfChanged(pageContent.Sections);
@@ -137,13 +166,19 @@ internal sealed partial class FrontendShellViewModel
             new ActionCommand(() => SelectPromptLane(lane)));
     }
 
-    private static (string Title, string Summary) GetPromptLaneMetadata(AvaloniaPromptLaneKind lane)
+    private (string Title, string Summary) GetPromptLaneMetadata(AvaloniaPromptLaneKind lane)
     {
         return lane switch
         {
-            AvaloniaPromptLaneKind.Startup => ("启动前", "许可、环境与首次启动提示。"),
-            AvaloniaPromptLaneKind.Launch => ("启动中", "启动前检查、赞助与 Java 下载提示。"),
-            AvaloniaPromptLaneKind.Crash => ("崩溃恢复", "崩溃输出与导出恢复提示。"),
+            AvaloniaPromptLaneKind.Startup => (
+                _i18n.T("shell.prompts.lanes.startup.title"),
+                _i18n.T("shell.prompts.lanes.startup.summary")),
+            AvaloniaPromptLaneKind.Launch => (
+                _i18n.T("shell.prompts.lanes.launch.title"),
+                _i18n.T("shell.prompts.lanes.launch.summary")),
+            AvaloniaPromptLaneKind.Crash => (
+                _i18n.T("shell.prompts.lanes.crash.title"),
+                _i18n.T("shell.prompts.lanes.crash.summary")),
             _ => throw new ArgumentOutOfRangeException(nameof(lane), lane, "Unknown prompt lane.")
         };
     }
@@ -166,8 +201,8 @@ internal sealed partial class FrontendShellViewModel
         return new PromptCardViewModel(
             lane,
             prompt.Id,
-            prompt.Title,
-            prompt.Message,
+            _i18n.T(prompt.Title),
+            _i18n.T(prompt.Message),
             prompt.Source.ToString(),
             prompt.Severity.ToString(),
             prompt.Severity == LauncherFrontendPromptSeverity.Warning
@@ -180,7 +215,7 @@ internal sealed partial class FrontendShellViewModel
                 ? FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticDangerBackground", "#FFF1EA")
                 : FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticInfoBackground", "#EDF5FF"),
             prompt.Options.Select((option, index) => new PromptOptionViewModel(
-                option.Label,
+                _i18n.T(option.Label),
                 string.Empty,
                 ResolvePromptOptionColorType(prompt.Severity, index, prompt.Options.Count),
                 new ActionCommand(() => _ = ApplyPromptOptionAsync(lane, prompt.Id, option)))).ToList());
@@ -209,7 +244,7 @@ internal sealed partial class FrontendShellViewModel
         var commandSummary = option.Commands.Count == 0
             ? "No commands attached."
             : string.Join(" • ", option.Commands.Select(DescribePromptCommand));
-        AddActivity($"Prompt action: {option.Label}", commandSummary);
+        AddActivity($"Prompt action: {_i18n.T(option.Label)}", commandSummary);
 
         if (option.ClosesPrompt && IsPromptOverlayVisible)
         {
@@ -431,7 +466,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (!_launchComposition.PrecheckResult.IsSuccess)
         {
-            AddFailureActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
+            AddFailureActivity("启动前检查未通过", GetLaunchPrecheckFailureMessage());
             return;
         }
 
@@ -1008,7 +1043,8 @@ internal sealed partial class FrontendShellViewModel
 
     private void ShowLaunchCompletionNotification()
     {
-        if (string.IsNullOrWhiteSpace(_launchComposition.CompletionNotification.Message))
+        var message = _i18n.T(_launchComposition.CompletionNotification.Message);
+        if (string.IsNullOrWhiteSpace(message))
         {
             return;
         }
@@ -1016,10 +1052,10 @@ internal sealed partial class FrontendShellViewModel
         switch (_launchComposition.CompletionNotification.Kind)
         {
             case MinecraftLaunchNotificationKind.Info:
-                AvaloniaHintBus.Show(_launchComposition.CompletionNotification.Message, AvaloniaHintTheme.Info);
+                AvaloniaHintBus.Show(message, AvaloniaHintTheme.Info);
                 break;
             case MinecraftLaunchNotificationKind.Finish:
-                AvaloniaHintBus.Show(_launchComposition.CompletionNotification.Message, AvaloniaHintTheme.Success);
+                AvaloniaHintBus.Show(message, AvaloniaHintTheme.Success);
                 break;
         }
     }
@@ -1033,6 +1069,13 @@ internal sealed partial class FrontendShellViewModel
         _launchCommand.NotifyCanExecuteChanged();
         _cancelLaunchCommand.NotifyCanExecuteChanged();
         RaiseLaunchDialogProperties();
+    }
+
+    private string GetLaunchPrecheckFailureMessage()
+    {
+        return _launchComposition.PrecheckResult.Failure is { } failure
+            ? _i18n.T(failure.ToLocalizedText())
+            : _i18n.T("launch.precheck.failures.unknown");
     }
 
     private void EnsureLaunchPromptLane()
@@ -1200,13 +1243,13 @@ internal sealed partial class FrontendShellViewModel
 
     private LauncherFrontendPageContent BuildPageContent(LauncherFrontendShellPlan shellPlan)
     {
-        return LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
-            shellPlan.Navigation,
-            shellPlan.StartupPlan,
-            shellPlan.Consent,
+        return FrontendShellLocalizationService.BuildPageContent(
+            shellPlan,
+            _currentNavigation ?? FrontendShellLocalizationService.LocalizeNavigationView(shellPlan.Navigation, _i18n),
             BuildPromptLaneSummaries(),
             BuildLaunchSurfaceData(),
-            BuildCrashSurfaceData()));
+            BuildCrashSurfaceData(),
+            _i18n);
     }
 
     private LauncherFrontendPromptLaneSummary[] BuildPromptLaneSummaries()
@@ -1239,7 +1282,7 @@ internal sealed partial class FrontendShellViewModel
             _launchComposition.PrerunPlan.LauncherProfiles.Workflow.ShouldWrite,
             false,
             null,
-            _launchComposition.CompletionNotification.Message);
+            _i18n.T(_launchComposition.CompletionNotification.Message));
     }
 
     private string GetLaunchJavaRuntimeLabel()

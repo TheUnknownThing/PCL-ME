@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Cli;
@@ -21,6 +22,7 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private readonly AvaloniaCommandOptions _options;
+    private readonly II18nService _i18n;
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
@@ -303,16 +305,19 @@ internal sealed partial class FrontendShellViewModel
 
     public static FrontendShellViewModel CreateBootstrap(
         AvaloniaCommandOptions options,
-        FrontendShellActionService shellActionService)
+        FrontendShellActionService shellActionService,
+        II18nService i18nService)
     {
-        return new FrontendShellViewModel(options, shellActionService);
+        return new FrontendShellViewModel(options, shellActionService, i18nService);
     }
 
     private FrontendShellViewModel(
         AvaloniaCommandOptions options,
-        FrontendShellActionService shellActionService)
+        FrontendShellActionService shellActionService,
+        II18nService i18nService)
     {
         _options = options;
+        _i18n = i18nService;
         _shellActionService = shellActionService;
         _shellActionService.ConfirmPresenter = ShowInAppConfirmationAsync;
         _shellActionService.TextInputPresenter = ShowInAppTextInputAsync;
@@ -449,6 +454,7 @@ internal sealed partial class FrontendShellViewModel
         InputLabel = _shellComposition.InputLabel;
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
+        _i18n.Changed += HandleI18nChanged;
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);

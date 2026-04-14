@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft.Launch;
 
 namespace PCL.Core.Test.Minecraft;
@@ -181,9 +182,9 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
                 HasForge: true,
                 RecommendedComponent: null));
 
-        Assert.AreEqual("未找到 Java", result.Title);
+        Assert.AreEqual("launch.prompts.java_missing.title", result.Title.Key);
         Assert.AreEqual(MinecraftLaunchJavaPromptDecision.Abort, result.Options.Single().Decision);
-        StringAssert.Contains(result.Message, "LegacyJavaFixer");
+        Assert.AreEqual("launch.prompts.java_missing.manual_java7_with_legacy_fixer.message", result.Message.Key);
     }
 
     [TestMethod]
@@ -196,8 +197,8 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
                 HasForge: false,
                 RecommendedComponent: null));
 
-        Assert.AreEqual("未找到 Java", result.Title);
-        StringAssert.Contains(result.Message, "Java 8u141 ~ 8u320");
+        Assert.AreEqual("launch.prompts.java_missing.title", result.Title.Key);
+        Assert.AreEqual("launch.prompts.java_missing.manual_java8u141_to_320.message", result.Message.Key);
         Assert.AreEqual(MinecraftLaunchJavaPromptDecision.Abort, result.Options.Single().Decision);
     }
 
@@ -246,7 +247,8 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
                 HasForge: false,
                 RecommendedComponent: null));
 
-        StringAssert.Contains(result.Message, "Java 22");
+        Assert.AreEqual("launch.prompts.java_missing.auto_download.message", result.Message.Key);
+        Assert.AreEqual("Java 22", result.Message.Arguments?.Single().StringValue);
         CollectionAssert.AreEqual(
             new[]
             {

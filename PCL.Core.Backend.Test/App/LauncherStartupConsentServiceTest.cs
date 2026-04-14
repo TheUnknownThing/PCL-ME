@@ -16,8 +16,8 @@ public sealed class LauncherStartupConsentServiceTest
             HasAcceptedEula: false));
 
         CollectionAssert.AreEqual(
-            new[] { "特殊版本提示", "协议授权" },
-            result.Prompts.Select(prompt => prompt.Title).ToArray());
+            new[] { "startup.prompts.special_build.title", "startup.prompts.eula.title" },
+            result.Prompts.Select(prompt => prompt.Title.Key).ToArray());
     }
 
     [TestMethod]
@@ -40,7 +40,7 @@ public sealed class LauncherStartupConsentServiceTest
             HasAcceptedEula: false));
 
         var eulaPrompt = result.Prompts.Single();
-        Assert.AreEqual("协议授权", eulaPrompt.Title);
+        Assert.AreEqual("startup.prompts.eula.title", eulaPrompt.Title.Key);
         Assert.IsFalse(eulaPrompt.Buttons[2].ClosesPrompt);
         Assert.AreEqual(LauncherStartupPromptActionKind.OpenUrl, eulaPrompt.Buttons[2].Actions.Single().Kind);
     }

@@ -435,7 +435,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 $"档案：{_launchComposition.SelectedProfile.IdentityLabel}",
                 $"Java：{GetLaunchJavaRuntimeLabel()}",
-                $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : _launchComposition.PrecheckResult.FailureMessage ?? "未通过")}",
+                $"预检查：{(_launchComposition.PrecheckResult.IsSuccess ? "已通过" : GetLaunchPrecheckFailureMessage())}",
                 $"启动提示：{_launchComposition.PrecheckResult.Prompts.Count} 项预检，支持提示 {(_launchComposition.SupportPrompt is null ? "未命中" : "已命中")}",
                 $"会话状态：{(_isLaunchInProgress ? "游戏启动中" : "待命")}"
             };

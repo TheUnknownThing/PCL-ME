@@ -52,10 +52,10 @@ public sealed class LauncherStartupShellServiceTest
         var result = LauncherStartupShellService.GetEnvironmentWarningPrompt("warning");
 
         Assert.IsNotNull(result);
-        Assert.AreEqual("环境警告", result.Title);
+        Assert.AreEqual("startup.prompts.environment_warning.title", result.Title.Key);
         Assert.IsTrue(result.IsWarning);
         Assert.AreEqual(1, result.Buttons.Count);
-        Assert.AreEqual("我知道了", result.Buttons[0].Label);
+        Assert.AreEqual("startup.prompts.environment_warning.actions.acknowledge", result.Buttons[0].Label.Key);
         Assert.AreEqual(LauncherStartupPromptActionKind.Continue, result.Buttons[0].Actions[0].Kind);
     }
 

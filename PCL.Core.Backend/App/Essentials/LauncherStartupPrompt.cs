@@ -1,15 +1,16 @@
+using PCL.Core.App.I18n;
 using System.Collections.Generic;
 
 namespace PCL.Core.App.Essentials;
 
 public sealed record LauncherStartupPrompt(
-    string Message,
-    string Title,
+    I18nText Message,
+    I18nText Title,
     IReadOnlyList<LauncherStartupPromptButton> Buttons,
     bool IsWarning = false);
 
 public sealed record LauncherStartupPromptButton(
-    string Label,
+    I18nText Label,
     IReadOnlyList<LauncherStartupPromptAction> Actions,
     bool ClosesPrompt = true);
 

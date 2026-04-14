@@ -1,1 +1,358 @@
-
+shell:
+  navigation:
+    pages:
+      launch:
+        title: "启动"
+        summary: "实例选择、账号准备与启动状态。"
+      download:
+        title: "下载"
+        summary: "安装 Minecraft、加载器与社区资源。"
+      setup:
+        title: "设置"
+        summary: "启动器、Java 与游戏相关设置。"
+      tools:
+        title: "工具"
+        summary: "帮助内容与实验功能。"
+      instance_select:
+        title: "实例选择"
+        summary: "选择要启动的实例。"
+      task_manager:
+        title: "任务管理"
+        summary: "查看下载与后台任务。"
+      instance_setup:
+        title: "实例设置"
+        summary: "查看实例详情并管理资源。"
+      comp_detail:
+        title: "资源详情"
+        summary: "查看选中的社区资源详情。"
+      help_detail:
+        title: "帮助详情"
+        summary: "阅读当前帮助条目。"
+      game_log:
+        title: "实时日志"
+        summary: "查看启动输出与日志。"
+      version_saves:
+        title: "存档管理"
+        summary: "管理选中存档及其备份。"
+    subpages:
+      download_install:
+        title: "自动安装"
+        summary: "创建新实例并选择安装组件。"
+      download_mod:
+        title: "Mod"
+        summary: "浏览并安装 Mod。"
+      download_pack:
+        title: "整合包"
+        summary: "浏览整合包资源。"
+      download_data_pack:
+        title: "数据包"
+        summary: "搜索并安装数据包。"
+      download_resource_pack:
+        title: "资源包"
+        summary: "搜索并安装资源包。"
+      download_shader:
+        title: "光影包"
+        summary: "搜索并安装光影包。"
+      download_world:
+        title: "存档"
+        summary: "导入地图与存档压缩包。"
+      download_comp_favorites:
+        title: "收藏夹"
+        summary: "查看收藏的社区资源。"
+      download_client:
+        title: "Minecraft"
+        summary: "选择要安装的 Minecraft 版本。"
+      download_opti_fine:
+        title: "OptiFine"
+        summary: "为当前版本安装 OptiFine。"
+      download_forge:
+        title: "Forge"
+        summary: "为当前版本安装 Forge。"
+      download_neo_forge:
+        title: "NeoForge"
+        summary: "为当前版本安装 NeoForge。"
+      download_cleanroom:
+        title: "Cleanroom"
+        summary: "为当前版本安装 Cleanroom。"
+      download_fabric:
+        title: "Fabric"
+        summary: "为当前版本安装 Fabric。"
+      download_quilt:
+        title: "Quilt"
+        summary: "为当前版本安装 Quilt。"
+      download_lite_loader:
+        title: "LiteLoader"
+        summary: "为当前版本安装 LiteLoader。"
+      download_laby_mod:
+        title: "LabyMod"
+        summary: "为当前版本安装 LabyMod。"
+      download_legacy_fabric:
+        title: "Legacy Fabric"
+        summary: "为旧版本安装 Legacy Fabric。"
+      setup_launch:
+        title: "启动"
+        summary: "调整启动参数、窗口与运行行为。"
+      setup_u_i:
+        title: "界面"
+        summary: "调整主题、动画与外观。"
+      setup_game_manage:
+        title: "游戏管理"
+        summary: "控制实例目录与文件行为。"
+      setup_link:
+        title: "链接"
+        summary: "管理启动器相关外部链接。"
+      setup_about:
+        title: "关于"
+        summary: "查看版本与项目信息。"
+      setup_log:
+        title: "日志"
+        summary: "配置日志与诊断输出。"
+      setup_feedback:
+        title: "反馈"
+        summary: "查看关联的反馈与问题入口。"
+      setup_update:
+        title: "更新"
+        summary: "配置更新通道与检查策略。"
+      setup_java:
+        title: "Java"
+        summary: "管理 Java 运行时与选择规则。"
+      setup_launcher_misc:
+        title: "启动器杂项"
+        summary: "调整零散的启动器行为。"
+      tools_launcher_help:
+        title: "帮助"
+        summary: "浏览启动器帮助主题。"
+      tools_test:
+        title: "测试"
+        summary: "打开实验或诊断工具。"
+      version_overall:
+        title: "概览"
+        summary: "查看实例标识与基础信息。"
+      version_setup:
+        title: "设置"
+        summary: "配置该实例的专属设置。"
+      version_export:
+        title: "导出"
+        summary: "导出实例或制作可分发整合包。"
+      version_world:
+        title: "世界"
+        summary: "浏览该实例关联的世界。"
+      version_screenshot:
+        title: "截图"
+        summary: "浏览截图内容。"
+      version_mod:
+        title: "Mod"
+        summary: "管理已启用的 Mod。"
+      version_mod_disabled:
+        title: "已禁用 Mod"
+        summary: "查看当前已禁用的 Mod。"
+      version_resource_pack:
+        title: "资源包"
+        summary: "管理已安装的资源包。"
+      version_shader:
+        title: "光影包"
+        summary: "管理已安装的光影包。"
+      version_schematic:
+        title: "投影"
+        summary: "管理投影与建筑文件。"
+      version_install:
+        title: "修改"
+        summary: "调整实例版本与加载器组件。"
+      version_server:
+        title: "服务器"
+        summary: "管理保存的服务器入口。"
+      version_saves_info:
+        title: "概览"
+        summary: "查看选中存档的元数据。"
+      version_saves_backup:
+        title: "备份"
+        summary: "创建、导入与恢复存档备份。"
+      version_saves_datapack:
+        title: "数据包"
+        summary: "管理选中存档中的数据包。"
+    sidebar_groups:
+      download: "下载工作区"
+      setup: "设置工作区"
+      tools: "工具工作区"
+      instance_setup: "实例工作区"
+      version_saves: "存档工作区"
+    sidebar_section_groups:
+      community_resources: "社区资源"
+      installers: "安装器"
+      game: "游戏"
+      launcher: "启动器"
+      about: "关于"
+      tools: "工具"
+      instance: "实例"
+      content: "内容"
+      resources: "资源"
+      other: "其他"
+      saves: "存档"
+    utilities:
+      back: "返回"
+      back_target: "返回到 {target}"
+      task_manager: "任务管理"
+      game_log: "实时日志"
+    accessories:
+      refresh: "刷新"
+      reset: "初始化设置"
+  page_content:
+    eyebrows:
+      top_level: "顶级路由"
+      secondary: "二级路由"
+      detail: "详情路由"
+      utility: "工具路由"
+    values:
+      none: "无"
+    facts:
+      current_page: "当前页面"
+      current_section: "当前分区"
+      prompt_count: "提示数量"
+      active_prompt_lane: "当前提示分组"
+      page_kind: "页面类型"
+      back_target: "返回目标"
+      launch:
+        identity: "身份"
+        java: "Java"
+        resolution: "分辨率"
+        classpath_count: "Classpath 条目"
+        java_warning: "Java 警告"
+      crash:
+        archive_name: "建议压缩包"
+        source_file_count: "源文件数量"
+    lines:
+      active_prompt_lane: "当前提示面板聚焦在 {lane} 分组。"
+      launch:
+        runtime: "当前运行时使用 {java}，分辨率为 {resolution}。"
+        last_completion: "最近一次启动通知：{message}"
+      crash:
+        export: "当前崩溃导出计划会生成 {archive_name}，共收集 {file_count} 个文件。"
+    sections:
+      overview:
+        eyebrow: "概览"
+  prompts:
+    lanes:
+      startup:
+        title: "启动"
+        summary: "启动器引导提示与授权提醒。"
+      launch:
+        title: "启动前"
+        summary: "启动前检查与运行时提示。"
+      crash:
+        title: "崩溃"
+        summary: "崩溃恢复操作与诊断信息。"
+    inbox:
+      title: "{lane} 提示"
+      empty: "{lane} 分组当前没有待处理提示。"
+startup:
+  prompts:
+    special_build:
+      title: "特殊构建"
+      debug:
+        message: "当前启动器为调试构建，可能不稳定。可设置环境变量 {hint_env_var} 关闭此提醒，或打开最新稳定版：{latest_release_url}"
+      ci:
+        message: "当前启动器来自 CI 构建，可能并不完整。可设置环境变量 {hint_env_var} 关闭此提醒，或打开最新稳定版：{latest_release_url}"
+      actions:
+        continue: "继续"
+        open_release_and_exit: "打开发布页并退出"
+    eula:
+      title: "许可协议"
+      message: "继续之前需要阅读并接受启动器协议。参考地址：{eula_url}"
+      actions:
+        accept: "接受"
+        reject: "拒绝并退出"
+        open: "打开协议"
+    environment_warning:
+      title: "环境警告"
+      message: "当前运行环境需要注意：\n{warnings}"
+      actions:
+        acknowledge: "我知道了"
+launch:
+  notifications:
+    success: "{instance_name} 已成功启动。"
+    abort_with_hint: "启动已取消：{hint}"
+    script_export_canceled: "导出启动脚本已完成，启动流程已中止。"
+    launch_canceled: "启动已取消。"
+    none: ""
+  precheck:
+    failures:
+      instance_path_reserved_chars: "实例路径中不可包含 ! 或 ;（{path}）。"
+      instance_indie_path_reserved_chars: "独立游戏路径中不可包含 ! 或 ;（{path}）。"
+      instance_not_selected: "当前未选择实例。"
+      instance_has_error: "当前实例状态异常：{detail}"
+      no_profile_selected: "请先选择登录档案后再启动。"
+      microsoft_profile_required: "当前实例要求使用微软档案启动。"
+      auth_profile_required: "当前实例要求使用外置登录档案启动。"
+      auth_server_mismatch: "当前外置登录档案与实例要求的认证服务器不一致。"
+      microsoft_or_auth_profile_required: "当前实例要求使用微软档案或匹配认证服务器的外置登录档案启动。"
+      unknown: "当前实例尚未满足启动条件。"
+  prompts:
+    non_ascii_path:
+      title: "非 ASCII 路径警告"
+      message: "{instance_name} 当前使用包含非 ASCII 字符的路径，部分 Java 运行时或模组可能因此启动失败。"
+      actions:
+        continue: "仍然继续"
+        abort: "取消启动"
+        disable: "不再提醒"
+    purchase:
+      optional:
+        title: "建议绑定正版账号"
+        message: "当前未选择拥有 Minecraft 正版资格的微软档案。如果你已拥有正版，可以重新登录或前往购买：{purchase_url}"
+        actions:
+          buy: "打开购买页"
+          continue: "继续"
+      required:
+        title: "需要正版资格"
+        message: "当前功能要求使用拥有 Minecraft 正版资格的微软档案。"
+        actions:
+          buy: "打开购买页"
+          demo: "以演示模式启动"
+          abort: "取消启动"
+    java_missing:
+      title: "缺少 Java 运行时"
+      manual_java7_with_legacy_fixer:
+        message: "当前实例需要 Java 7，并且还涉及旧版 Forge 兼容处理。请先手动安装匹配的 Java 7 再启动。"
+      manual_java7:
+        message: "当前实例需要 Java 7。请先手动安装匹配的 Java 7 再启动。"
+      manual_java8u141_to_320:
+        message: "当前实例需要 Java 8 Update 141 到 320 之间的版本。请先手动安装兼容的 Java 8 再启动。"
+      manual_java8u141_plus:
+        message: "当前实例需要 Java 8 Update 141 或更新版本。请先手动安装兼容的 Java 8 再启动。"
+      actions:
+        confirm: "关闭"
+      auto_download:
+        title: "下载 Java 运行时"
+        message: "当前没有可用的兼容运行时。是否自动下载并注册 {version}？"
+        actions:
+          download: "下载"
+          cancel: "取消"
+    support:
+      title: "第 {launch_count} 次启动"
+      message: "你已经累计启动游戏 {launch_count} 次。如果 PCL-ME 对你有帮助，可以考虑赞助项目。"
+      actions:
+        sponsor: "赞助"
+        continue: "继续"
+    java_compatibility:
+      title: "Java 兼容性警告"
+      message: "{runtime_label} 可能不满足当前实例要求的 Java 范围（{minimum_version} - {maximum_version}）。"
+      actions:
+        force_current: "继续使用当前 Java"
+        use_compatible: "改用兼容 Java"
+        abort: "取消启动"
+crash:
+  prompts:
+    output:
+      message: "{message}"
+      launch_failure:
+        title: "启动失败"
+      manual_analysis:
+        title: "崩溃分析"
+      actions:
+        close: "关闭"
+        open_instance_settings: "打开实例设置"
+        view_log: "查看日志"
+        export_report: "导出报告"
+  export:
+    heading: "导出计划"
+    suggested_archive: "- 建议压缩包：{archive_name}"
+    source_file_count: "- 源文件数量：{file_count}"

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft;
 
 namespace PCL.Core.Test.Minecraft;
@@ -17,9 +18,9 @@ public sealed class MinecraftCrashWorkflowServiceTest
             HasDirectFile: true,
             CanOpenModLoaderSettings: true));
 
-        Assert.AreEqual("错误报告分析结果", result.Title);
+        Assert.AreEqual("crash.prompts.output.manual_analysis.title", result.Title.Key);
         Assert.AreEqual(1, result.Buttons.Count);
-        Assert.AreEqual("确定", result.Buttons[0].Label);
+        Assert.AreEqual("crash.prompts.output.actions.close", result.Buttons[0].Label.Key);
         Assert.AreEqual(MinecraftCrashOutputPromptActionKind.Close, result.Buttons[0].Action);
     }
 
@@ -32,12 +33,12 @@ public sealed class MinecraftCrashWorkflowServiceTest
             HasDirectFile: true,
             CanOpenModLoaderSettings: false));
 
-        Assert.AreEqual("Minecraft 出现错误", result.Title);
+        Assert.AreEqual("crash.prompts.output.launch_failure.title", result.Title.Key);
         Assert.AreEqual(3, result.Buttons.Count);
-        Assert.AreEqual("查看日志", result.Buttons[1].Label);
+        Assert.AreEqual("crash.prompts.output.actions.view_log", result.Buttons[1].Label.Key);
         Assert.AreEqual(MinecraftCrashOutputPromptActionKind.ViewLog, result.Buttons[1].Action);
         Assert.IsFalse(result.Buttons[1].ClosesPrompt);
-        Assert.AreEqual("导出错误报告", result.Buttons[2].Label);
+        Assert.AreEqual("crash.prompts.output.actions.export_report", result.Buttons[2].Label.Key);
         Assert.AreEqual(MinecraftCrashOutputPromptActionKind.ExportReport, result.Buttons[2].Action);
     }
 
@@ -51,7 +52,7 @@ public sealed class MinecraftCrashWorkflowServiceTest
             CanOpenModLoaderSettings: true));
 
         Assert.AreEqual(3, result.Buttons.Count);
-        Assert.AreEqual("前往修改", result.Buttons[1].Label);
+        Assert.AreEqual("crash.prompts.output.actions.open_instance_settings", result.Buttons[1].Label.Key);
         Assert.AreEqual(MinecraftCrashOutputPromptActionKind.OpenInstanceSettings, result.Buttons[1].Action);
         Assert.IsTrue(result.Buttons[1].ClosesPrompt);
     }

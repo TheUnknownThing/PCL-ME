@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using PCL.Core.App;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
@@ -22,13 +23,16 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal sealed class FrontendShellActionService(
     FrontendRuntimePaths runtimePaths,
     FrontendPlatformAdapter platformAdapter,
-    Action exitLauncher)
+    Action exitLauncher,
+    II18nService i18nService)
 {
     private static readonly HttpClient JavaRuntimeHttpClient = new();
 
     public FrontendRuntimePaths RuntimePaths { get; } = runtimePaths;
 
     public FrontendPlatformAdapter PlatformAdapter { get; } = platformAdapter;
+
+    private II18nService I18n { get; } = i18nService;
 
     public Func<string, string, string, bool, Task<bool>>? ConfirmPresenter { get; set; }
 
@@ -380,13 +384,23 @@ internal sealed class FrontendShellActionService(
 
         var exportRequest = crashPlan.ExportPlan.ExportRequest;
         var builder = new StringBuilder()
-            .AppendLine(crashPlan.OutputPrompt.Title)
+            .AppendLine(I18n.T(crashPlan.OutputPrompt.Title))
             .AppendLine()
             .AppendLine(crashPlan.OutputPrompt.Message)
             .AppendLine()
-            .AppendLine("导出计划")
-            .AppendLine($"- 建议压缩包: {crashPlan.ExportPlan.SuggestedArchiveName}")
-            .AppendLine($"- 源文件数量: {exportRequest.SourceFiles.Count}");
+            .AppendLine(I18n.T("crash.export.heading"))
+            .AppendLine(I18n.T(
+                "crash.export.suggested_archive",
+                new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["archive_name"] = crashPlan.ExportPlan.SuggestedArchiveName
+                }))
+            .AppendLine(I18n.T(
+                "crash.export.source_file_count",
+                new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["file_count"] = exportRequest.SourceFiles.Count
+                }));
 
         foreach (var sourceFile in exportRequest.SourceFiles)
         {
