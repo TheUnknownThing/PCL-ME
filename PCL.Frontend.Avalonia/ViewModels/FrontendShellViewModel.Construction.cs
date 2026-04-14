@@ -274,7 +274,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _lockWindowSize;
     private bool _showLaunchingHint = true;
     private int _selectedGlobalFontIndex;
-    private int _selectedMotdFontIndex = 1;
+    private int _selectedMotdFontIndex;
     private bool _backgroundColorful = true;
     private double _backgroundOpacity = 1000;
     private double _backgroundBlur;

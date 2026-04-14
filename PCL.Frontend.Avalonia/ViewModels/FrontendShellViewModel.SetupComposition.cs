@@ -598,9 +598,11 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedGlobalFontIndex):
                 _shellActionService.PersistLocalValue("UiFont", MapFontIndexToConfigValue(SelectedGlobalFontIndex));
+                ApplyCurrentAppearanceSettings();
                 break;
             case nameof(SelectedMotdFontIndex):
                 _shellActionService.PersistLocalValue("UiMotdFont", MapFontIndexToConfigValue(SelectedMotdFontIndex));
+                ApplyCurrentAppearanceSettings();
                 break;
             case nameof(BackgroundColorful):
                 _shellActionService.PersistLocalValue("UiBackgroundColorful", BackgroundColorful);
@@ -671,13 +673,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static string MapFontIndexToConfigValue(int index)
     {
-        return index switch
-        {
-            1 => "SourceHanSansCN-Regular",
-            2 => "LXGW WenKai",
-            3 => "JetBrains Mono",
-            _ => string.Empty
-        };
+        return FrontendAppearanceService.MapFontIndexToConfigValue(index, FrontendAppearanceService.GetFontOptions());
     }
 
     private static int MapHomepageDisplayIndexToStoredValue(int displayIndex)
@@ -698,7 +694,9 @@ internal sealed partial class FrontendShellViewModel
             SelectedLightColorIndex,
             SelectedDarkColorIndex,
             CustomLightThemeColorHex,
-            CustomDarkThemeColorHex);
+            CustomDarkThemeColorHex,
+            MapFontIndexToConfigValue(SelectedGlobalFontIndex),
+            MapFontIndexToConfigValue(SelectedMotdFontIndex));
     }
 
     private void PersistCustomThemeColor(string key, string rawValue)

@@ -406,15 +406,7 @@ internal static class FrontendSetupCompositionService
 
     private static int MapFontToIndex(string value)
     {
-        return value.Trim() switch
-        {
-            "" => 0,
-            "MiSans" => 0,
-            "SourceHanSansCN-Regular" => 1,
-            "LXGW WenKai" => 2,
-            "JetBrains Mono" => 3,
-            _ => 0
-        };
+        return FrontendAppearanceService.MapFontConfigValueToIndex(value);
     }
 
     private static string ResolveJavaFolder(string javaPath)

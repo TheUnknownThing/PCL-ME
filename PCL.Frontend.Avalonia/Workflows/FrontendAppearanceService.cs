@@ -9,12 +9,20 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendAppearanceService
 {
     private const string CustomThemeColorName = "自定义";
+    private const string DefaultFontOptionName = "默认字体";
+    private const string LaunchFontFamilyResourceKey = "LaunchFontFamily";
+    private const string LaunchMotdFontFamilyResourceKey = "LaunchMotdFontFamily";
+    private const string BundledHarmonyOsSansFontFamily = "avares://PCL.Frontend.Avalonia/Assets/Fonts#HarmonyOS Sans";
+    private const string DefaultUiFontFamily =
+        $"{BundledHarmonyOsSansFontFamily}, Microsoft YaHei UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Source Han Sans CN, WenQuanYi Micro Hei, sans-serif";
     private const double LauncherOpacitySliderMinimum = 0d;
     private const double LauncherOpacitySliderMaximum = 600d;
     private const double LauncherWindowOpacityMinimum = 0.4d;
     private const double LauncherWindowOpacityRange = 0.6d;
+    private static readonly Lock FontOptionSync = new();
     private static Application? _subscribedApplication;
-    private static FrontendAppearanceSelection _currentSelection = new(2, 0, 0, null, null);
+    private static FrontendAppearanceSelection _currentSelection = new(2, 0, 0, null, null, null, null);
+    private static IReadOnlyList<string>? _fontOptions;
     private static bool _isReapplyingForThemeVariantChange;
 
     public static event Action? AppearanceChanged;
@@ -42,6 +50,39 @@ internal static class FrontendAppearanceService
         .. LightPalettes.Select(palette => palette.Name),
         CustomThemeColorName
     ];
+
+    public static IReadOnlyList<string> GetFontOptions()
+    {
+        lock (FontOptionSync)
+        {
+            if (_fontOptions is not null)
+            {
+                return _fontOptions;
+            }
+
+            IReadOnlyList<string> systemFonts;
+            try
+            {
+                systemFonts = FontManager.Current.SystemFonts
+                    .Select(font => font.Name)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
+                    .ToArray();
+            }
+            catch
+            {
+                systemFonts = [];
+            }
+
+            _fontOptions =
+            [
+                DefaultFontOptionName,
+                .. systemFonts
+            ];
+            return _fontOptions;
+        }
+    }
 
     public static int CustomThemeColorIndex => ThemeColorOptions.Count - 1;
 
@@ -111,6 +152,37 @@ internal static class FrontendAppearanceService
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
     }
 
+    public static int MapFontConfigValueToIndex(string? value)
+    {
+        var normalizedValue = NormalizeStoredFontValue(value);
+        if (string.IsNullOrWhiteSpace(normalizedValue))
+        {
+            return 0;
+        }
+
+        var options = GetFontOptions();
+        for (var index = 1; index < options.Count; index++)
+        {
+            if (string.Equals(options[index], normalizedValue, StringComparison.OrdinalIgnoreCase))
+            {
+                return index;
+            }
+        }
+
+        return 0;
+    }
+
+    public static string MapFontIndexToConfigValue(int index, IReadOnlyList<string> fontOptions)
+    {
+        if (fontOptions.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var normalizedIndex = Math.Clamp(index, 0, fontOptions.Count - 1);
+        return normalizedIndex == 0 ? string.Empty : fontOptions[normalizedIndex];
+    }
+
     public static double NormalizeLauncherOpacity(double value)
     {
         return Math.Clamp(value, LauncherOpacitySliderMinimum, LauncherOpacitySliderMaximum);
@@ -141,6 +213,8 @@ internal static class FrontendAppearanceService
         var darkColorIndex = 0;
         string? lightCustomColor = null;
         string? darkCustomColor = null;
+        string? globalFontConfigValue = null;
+        string? motdFontConfigValue = null;
 
         if (File.Exists(runtimePaths.SharedConfigPath))
         {
@@ -171,12 +245,28 @@ internal static class FrontendAppearanceService
             }
         }
 
+        if (File.Exists(runtimePaths.LocalConfigPath))
+        {
+            var provider = runtimePaths.OpenLocalConfigProvider();
+            if (provider.Exists("UiFont"))
+            {
+                globalFontConfigValue = provider.Get<string>("UiFont");
+            }
+
+            if (provider.Exists("UiMotdFont"))
+            {
+                motdFontConfigValue = provider.Get<string>("UiMotdFont");
+            }
+        }
+
         ApplyAppearance(application, new FrontendAppearanceSelection(
             darkModeIndex,
             lightColorIndex,
             darkColorIndex,
             lightCustomColor,
-            darkCustomColor));
+            darkCustomColor,
+            globalFontConfigValue,
+            motdFontConfigValue));
     }
 
     public static void ApplyAppearance(Application? application, FrontendAppearanceSelection selection)
@@ -207,6 +297,7 @@ internal static class FrontendAppearanceService
             ? CreateDarkPalette(accent)
             : CreateLightPalette(accent);
 
+        ApplyFontResources(application, selection);
         ApplyPaletteResources(application, palette, useDarkPalette);
         ApplyInputResources(application, palette, useDarkPalette);
         ApplyFluentAccentResources(application, palette, useDarkPalette);
@@ -536,6 +627,11 @@ internal static class FrontendAppearanceService
         application.Resources[key] = new SolidColorBrush(color);
     }
 
+    private static void SetFontFamilyResource(Application application, string key, string fontFamily)
+    {
+        application.Resources[key] = new FontFamily(fontFamily);
+    }
+
     private static void SetColorResource(Application application, string key, Color color)
     {
         application.Resources[key] = color;
@@ -558,6 +654,60 @@ internal static class FrontendAppearanceService
 
         var builtInIndex = Math.Clamp(optionIndex, 0, palettes.Length - 1);
         return palettes[builtInIndex].Accent;
+    }
+
+    private static void ApplyFontResources(Application application, FrontendAppearanceSelection selection)
+    {
+        SetFontFamilyResource(
+            application,
+            LaunchFontFamilyResourceKey,
+            ResolveFontFamily(selection.GlobalFontConfigValue));
+        SetFontFamilyResource(
+            application,
+            LaunchMotdFontFamilyResourceKey,
+            ResolveFontFamily(selection.MotdFontConfigValue));
+    }
+
+    private static string ResolveFontFamily(string? configValue)
+    {
+        var normalizedValue = NormalizeStoredFontValue(configValue);
+        return string.IsNullOrWhiteSpace(normalizedValue)
+            ? DefaultUiFontFamily
+            : $"{normalizedValue}, {DefaultUiFontFamily}";
+    }
+
+    private static string NormalizeStoredFontValue(string? configValue)
+    {
+        var trimmed = configValue?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed) || string.Equals(trimmed, "MiSans", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        return trimmed switch
+        {
+            "SourceHanSansCN-Regular" => FindInstalledFontName("Source Han Sans CN", "Source Han Sans SC", "Noto Sans CJK SC"),
+            "LXGW WenKai" => FindInstalledFontName("LXGW WenKai", "LXGW WenKai GB"),
+            "JetBrains Mono" => FindInstalledFontName("JetBrains Mono", "JetBrainsMono Nerd Font", "JetBrains Mono NL"),
+            _ => FindInstalledFontName(trimmed)
+        } ?? string.Empty;
+    }
+
+    private static string? FindInstalledFontName(params string[] candidateNames)
+    {
+        var options = GetFontOptions();
+        foreach (var candidateName in candidateNames)
+        {
+            for (var index = 1; index < options.Count; index++)
+            {
+                if (string.Equals(options[index], candidateName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return options[index];
+                }
+            }
+        }
+
+        return null;
     }
 
     private static void EnsureThemeVariantTracking(Application application)
@@ -669,4 +819,6 @@ internal readonly record struct FrontendAppearanceSelection(
     int LightColorIndex,
     int DarkColorIndex,
     string? LightCustomColorHex,
-    string? DarkCustomColorHex);
+    string? DarkCustomColorHex,
+    string? GlobalFontConfigValue,
+    string? MotdFontConfigValue);

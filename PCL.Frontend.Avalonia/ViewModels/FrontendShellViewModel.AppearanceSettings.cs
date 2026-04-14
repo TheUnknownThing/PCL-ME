@@ -14,13 +14,7 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> ThemeColorOptions => FrontendAppearanceService.ThemeColorOptions;
 
-    public IReadOnlyList<string> FontOptions { get; } =
-    [
-        "默认字体",
-        "思源黑体",
-        "霞鹜文楷",
-        "JetBrains Mono"
-    ];
+    public IReadOnlyList<string> FontOptions { get; } = FrontendAppearanceService.GetFontOptions();
 
     public IReadOnlyList<string> HomepagePresetOptions { get; } = HomepagePresetCatalog.Select(item => item.Title).ToArray();
 

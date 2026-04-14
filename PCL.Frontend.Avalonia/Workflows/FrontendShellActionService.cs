@@ -69,7 +69,9 @@ internal sealed class FrontendShellActionService(
         int lightColorIndex,
         int darkColorIndex,
         string? lightCustomColorHex,
-        string? darkCustomColorHex)
+        string? darkCustomColorHex,
+        string? globalFontConfigValue,
+        string? motdFontConfigValue)
     {
         FrontendAppearanceService.ApplyAppearance(
             Application.Current,
@@ -78,7 +80,9 @@ internal sealed class FrontendShellActionService(
                 lightColorIndex,
                 darkColorIndex,
                 lightCustomColorHex,
-                darkCustomColorHex));
+                darkCustomColorHex,
+                globalFontConfigValue,
+                motdFontConfigValue));
     }
 
     public void AcceptLauncherEula()
