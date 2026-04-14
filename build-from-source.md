@@ -3,40 +3,44 @@ layout: default
 title: 从源码构建
 lang: zh-CN
 permalink: /build-from-source/
-description: 了解如何使用 .NET 10 从源码构建和运行 PCL-ME。
+description: 了解如何使用 .NET 10 从源码构建、运行并测试 PCL-ME。
 ---
 
 [首页]({{ "/" | relative_url }}) · [下载]({{ "/downloads/" | relative_url }}) · [从源码构建]({{ "/build-from-source/" | relative_url }}) · [社区]({{ "/community/" | relative_url }}) · [English]({{ "/en/build-from-source/" | relative_url }}) · [繁體中文]({{ "/zh-tw/build-from-source/" | relative_url }})
 
 ## 环境要求
 
+- Git
 - `.NET 10 SDK`
 - 可运行 Avalonia 的桌面环境
-- Git
 
 ## 快速开始
 
 ```bash
-git clone https://github.com/TheUnknownThing/PCL-CE.git
-cd PCL-CE
+git clone https://github.com/TheUnknownThing/PCL-ME.git
+cd PCL-ME
 dotnet restore
 dotnet build
 dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-## 说明
+## 测试
 
-- 当前正在维护的前端目录为 `PCL.Frontend.Avalonia/`。
-- 旧版 WPF 前端不再是本仓库的开发目标。
-- 当前主线代码以 C# 和 `.NET 10` 为基础。
-- 测试可通过 `dotnet test` 运行。
+```bash
+dotnet test
+```
 
-## 常用路径
+仓库当前包含后端回归测试与基础层测试；提交变更前，建议至少先跑完整测试集确认没有回归。
 
-- `PCL.Frontend.Avalonia/`
-- `PCL.Core.Backend/`
+## 重点目录
 
-## 更多文档
+- `PCL.Frontend.Avalonia/`：当前维护中的桌面前端与 UI 资源
+- `PCL.Core.Backend/`：共享启动器逻辑、后端工作流与基础服务
+- `PCL.Core.Backend.Test/`：后端回归测试
+- `PCL.Core.Backend.Foundation.Test/`：可移植性与基础层测试
 
-- [Avalonia 前端 README](https://github.com/TheUnknownThing/PCL-CE/blob/dev/PCL.Frontend.Avalonia/README.md)
-- [仓库 README](https://github.com/TheUnknownThing/PCL-CE/blob/dev/README.md)
+## 相关文档
+
+- [简体中文 README](https://github.com/TheUnknownThing/PCL-ME/blob/main/README-ZH_CN.md)
+- [Avalonia 前端 README](https://github.com/TheUnknownThing/PCL-ME/blob/main/PCL.Frontend.Avalonia/README.md)
+- [后端 README](https://github.com/TheUnknownThing/PCL-ME/blob/main/PCL.Core.Backend/README.md)

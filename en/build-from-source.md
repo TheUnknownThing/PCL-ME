@@ -3,40 +3,44 @@ layout: default
 title: Build From Source
 lang: en
 permalink: /en/build-from-source/
-description: Learn how to build and run PCL-ME from source with .NET 10.
+description: Learn how to build, run, and test PCL-ME from source with .NET 10.
 ---
 
 [Home]({{ "/en/" | relative_url }}) · [Downloads]({{ "/en/downloads/" | relative_url }}) · [Build From Source]({{ "/en/build-from-source/" | relative_url }}) · [Community]({{ "/en/community/" | relative_url }}) · [简体中文]({{ "/build-from-source/" | relative_url }}) · [繁體中文]({{ "/zh-tw/build-from-source/" | relative_url }})
 
 ## Requirements
 
+- Git
 - `.NET 10 SDK`
 - A desktop environment supported by Avalonia
-- Git
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/TheUnknownThing/PCL-CE.git
-cd PCL-CE
+git clone https://github.com/TheUnknownThing/PCL-ME.git
+cd PCL-ME
 dotnet restore
 dotnet build
 dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-## Notes
+## Tests
 
-- The active frontend lives in `PCL.Frontend.Avalonia/`.
-- The old WPF frontend is no longer the maintained target in this repository.
-- The current mainline stack is based on C# and `.NET 10`.
-- You can run tests with `dotnet test`.
+```bash
+dotnet test
+```
 
-## Useful Paths
+The repository includes backend regression tests and foundation-level tests. Running the full test suite before you push changes is the safest baseline.
 
-- `PCL.Frontend.Avalonia/`
-- `PCL.Core.Backend/`
+## Important Directories
 
-## More Documentation
+- `PCL.Frontend.Avalonia/`: maintained desktop frontend and UI assets
+- `PCL.Core.Backend/`: shared launcher logic, backend workflows, and foundation services
+- `PCL.Core.Backend.Test/`: backend regression tests
+- `PCL.Core.Backend.Foundation.Test/`: portability and foundation tests
 
-- [Avalonia frontend README](https://github.com/TheUnknownThing/PCL-CE/blob/dev/PCL.Frontend.Avalonia/README.md)
-- [Repository README](https://github.com/TheUnknownThing/PCL-CE/blob/dev/README-EN.md)
+## Documentation
+
+- [English README](https://github.com/TheUnknownThing/PCL-ME/blob/main/README-EN.md)
+- [Avalonia frontend README](https://github.com/TheUnknownThing/PCL-ME/blob/main/PCL.Frontend.Avalonia/README.md)
+- [Backend README](https://github.com/TheUnknownThing/PCL-ME/blob/main/PCL.Core.Backend/README.md)

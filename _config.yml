@@ -1,9 +1,9 @@
 title: PCL-ME
-description: PCL-ME 是从 PCL-CE 衍生出来的多平台版本，当前以 C#、.NET 10 与 Avalonia 为主线。
+description: PCL-ME 是面向 Windows、macOS 和 Linux 的跨平台启动器，当前主线基于 C#、.NET 10 与 Avalonia。
 lang: zh-CN
 theme: jekyll-theme-cayman
 url: "https://theunknownthing.github.io"
-baseurl: "/PCL-CE"
+baseurl: "/PCL-ME"
 show_downloads: false
 exclude:
   - .codex
