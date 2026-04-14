@@ -102,6 +102,15 @@ internal static class FrontendUiVisibilityService
     {
         ArgumentNullException.ThrowIfNull(preferences);
 
+        route = route switch
+        {
+            { Page: LauncherFrontendPageKey.Setup, Subpage: LauncherFrontendSubpageKey.Default } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
+            { Page: LauncherFrontendPageKey.Tools, Subpage: LauncherFrontendSubpageKey.Default } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
+            _ => route
+        };
+
         if (IsRouteVisible(route, preferences))
         {
             return route;
