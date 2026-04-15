@@ -348,13 +348,13 @@ internal static class FrontendInstallWorkflowService
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
                     ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
-                                   ?? throw new InvalidOperationException("缺少安装器清单地址。")),
+                                   ?? throw new InvalidOperationException("Missing installer manifest URL.")),
                     request.TargetInstanceName);
                 break;
             case FrontendInstallChoiceKind.LabyMod:
                 ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.fetch_labymod_manifest", "Fetching the LabyMod manifest..."));
                 targetManifest = ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
-                                               ?? throw new InvalidOperationException("缺少 LabyMod 清单地址。"));
+                                               ?? throw new InvalidOperationException("Missing LabyMod manifest URL."));
                 targetManifest["id"] = request.TargetInstanceName;
                 break;
             case FrontendInstallChoiceKind.Forge:
@@ -426,7 +426,7 @@ internal static class FrontendInstallWorkflowService
         cancelToken.ThrowIfCancellationRequested();
 
         var installerUrl = loaderChoice.DownloadUrl
-                           ?? throw new InvalidOperationException("缺少安装器下载地址。");
+                           ?? throw new InvalidOperationException("Missing installer download URL.");
         var installerPath = CreateTempFile("pcl-forgelike-installer-", ".jar");
         try
         {
@@ -485,7 +485,7 @@ internal static class FrontendInstallWorkflowService
             var jsonPath = installProfile["json"]?.GetValue<string>()?.TrimStart('/');
             if (string.IsNullOrWhiteSpace(jsonPath))
             {
-                throw new InvalidOperationException("旧版 Forge 安装器缺少版本清单路径。");
+                throw new InvalidOperationException("Legacy Forge installer is missing the version manifest path.");
             }
 
             return ReadJsonObjectFromEntry(archive, jsonPath);
@@ -495,7 +495,7 @@ internal static class FrontendInstallWorkflowService
         var entryPath = installProfile["install"]?["filePath"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(installPath) || string.IsNullOrWhiteSpace(entryPath))
         {
-            throw new InvalidOperationException("旧版 Forge 安装器缺少支持库写入信息。");
+            throw new InvalidOperationException("Legacy Forge installer is missing support library write information.");
         }
 
         var libraryOutputPath = Path.Combine(
@@ -511,7 +511,7 @@ internal static class FrontendInstallWorkflowService
                 "Writing support libraries for {loader_title}...",
                 ("loader_title", loaderChoice.Title)));
         using (var source = archive.GetEntry(entryPath)?.Open()
-                             ?? throw new InvalidOperationException($"旧版 Forge 安装器缺少条目：{entryPath}"))
+                             ?? throw new InvalidOperationException($"Legacy Forge installer is missing entry: {entryPath}"))
         using (var output = File.Create(libraryOutputPath))
         {
             source.CopyTo(output);
@@ -519,7 +519,7 @@ internal static class FrontendInstallWorkflowService
 
         if (installProfile["versionInfo"] is not JsonObject versionInfo)
         {
-            throw new InvalidOperationException("旧版 Forge 安装器缺少 versionInfo。");
+            throw new InvalidOperationException("Legacy Forge installer is missing versionInfo.");
         }
 
         var manifest = CloneObject(versionInfo);
@@ -545,17 +545,17 @@ internal static class FrontendInstallWorkflowService
         var minecraftVersion = GetRequiredString(
             installProfile,
             "minecraft",
-            $"{loaderChoice.Title} 安装器缺少 Minecraft 版本信息。");
+            $"{loaderChoice.Title} installer is missing Minecraft version information.");
         if (!string.Equals(minecraftVersion, request.MinecraftChoice.Version, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"{loaderChoice.Title} 安装器目标版本为 {minecraftVersion}，与当前选择的 {request.MinecraftChoice.Version} 不一致。");
+                $"{loaderChoice.Title} installer targets Minecraft {minecraftVersion}, which does not match the selected version {request.MinecraftChoice.Version}.");
         }
 
         var versionJsonPath = GetRequiredString(
             installProfile,
             "json",
-            $"{loaderChoice.Title} 安装器缺少版本清单路径。").TrimStart('/');
+            $"{loaderChoice.Title} installer is missing the version manifest path.").TrimStart('/');
 
         var tempRoot = CreateTempDirectory("pcl-forgelike-");
         try
@@ -628,7 +628,7 @@ internal static class FrontendInstallWorkflowService
             && !string.Equals(profileMinecraftVersion, expectedMinecraftVersion, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"Forge 安装器目标版本为 {profileMinecraftVersion}，与当前选择的 {expectedMinecraftVersion} 不一致。");
+                $"Forge installer targets Minecraft {profileMinecraftVersion}, which does not match the selected version {expectedMinecraftVersion}.");
         }
     }
 
@@ -853,16 +853,16 @@ internal static class FrontendInstallWorkflowService
         var processorJar = GetRequiredArtifactPath(
             processor["jar"],
             librariesDirectory,
-            "安装器处理器缺少可执行 JAR。");
+            "Installer processor is missing an executable JAR.");
         if (!File.Exists(processorJar))
         {
-            throw new InvalidOperationException($"安装器处理器缺少依赖文件：{processorJar}");
+            throw new InvalidOperationException($"Installer processor dependency file is missing: {processorJar}");
         }
 
         var mainClass = ReadJarMainClass(processorJar);
         if (string.IsNullOrWhiteSpace(mainClass))
         {
-            throw new InvalidOperationException($"处理器 JAR 缺少 Main-Class：{processorJar}");
+            throw new InvalidOperationException($"Processor JAR is missing Main-Class: {processorJar}");
         }
 
         var classpath = new List<string>();
@@ -873,10 +873,10 @@ internal static class FrontendInstallWorkflowService
                 var entryPath = GetRequiredArtifactPath(
                     node,
                     librariesDirectory,
-                    "安装器处理器缺少类路径依赖。");
+                    "Installer processor is missing a classpath dependency.");
                 if (!File.Exists(entryPath))
                 {
-                    throw new InvalidOperationException($"安装器处理器缺少类路径依赖：{entryPath}");
+                    throw new InvalidOperationException($"Installer processor classpath dependency is missing: {entryPath}");
                 }
 
                 classpath.Add(entryPath);
@@ -897,7 +897,7 @@ internal static class FrontendInstallWorkflowService
             foreach (var node in argNodes)
             {
                 var rawArgument = node?.GetValue<string>()
-                                  ?? throw new InvalidOperationException("安装器处理器参数缺少文本值。");
+                                  ?? throw new InvalidOperationException("Installer processor argument is missing a text value.");
                 arguments.Add(ParseForgelikeLiteral(rawArgument, variables, librariesDirectory));
             }
         }
@@ -906,7 +906,7 @@ internal static class FrontendInstallWorkflowService
             ResolveJavaExecutable(),
             arguments,
             launcherDirectory,
-            "Forge-like 安装器处理器执行失败。",
+            "Forge-like installer processor execution failed.",
             cancelToken);
 
         EnsureProcessorOutputs(outputs);
@@ -927,7 +927,7 @@ internal static class FrontendInstallWorkflowService
         {
             var rawPath = pair.Key;
             var rawHash = pair.Value?.GetValue<string>()
-                          ?? throw new InvalidOperationException("安装器处理器输出缺少校验值。");
+                          ?? throw new InvalidOperationException("Installer processor output is missing a checksum.");
             var resolvedPath = ParseForgelikeLiteral(rawPath, variables, librariesDirectory);
             var resolvedHash = ParseForgelikeLiteral(rawHash, variables, librariesDirectory);
             outputs[resolvedPath] = resolvedHash;
@@ -966,7 +966,7 @@ internal static class FrontendInstallWorkflowService
         {
             if (!File.Exists(pair.Key))
             {
-                throw new InvalidOperationException($"安装器处理器没有生成预期文件：{pair.Key}");
+                throw new InvalidOperationException($"Installer processor did not generate the expected file: {pair.Key}");
             }
 
             var actualHash = ComputeFileSha1(pair.Key);
@@ -974,7 +974,7 @@ internal static class FrontendInstallWorkflowService
             {
                 TryDeleteFile(pair.Key);
                 throw new InvalidOperationException(
-                    $"安装器处理器输出校验失败：{pair.Key}，期望 {pair.Value}，实际 {actualHash}。");
+                    $"Installer processor output checksum mismatch for {pair.Key}: expected {pair.Value}, actual {actualHash}.");
             }
         }
     }
@@ -1019,7 +1019,7 @@ internal static class FrontendInstallWorkflowService
             {
                 TryDeleteFile(output);
                 throw new InvalidOperationException(
-                    $"Mojang mappings 下载校验失败：期望 {mappings.Sha1}，实际 {actualHash}。");
+                    $"Mojang mappings download checksum mismatch: expected {mappings.Sha1}, actual {actualHash}.");
             }
         }
 
@@ -1084,7 +1084,7 @@ internal static class FrontendInstallWorkflowService
                 : null;
             if (string.IsNullOrWhiteSpace(versionUrl))
             {
-                throw new InvalidOperationException($"无法找到 Minecraft {version} 的 Mojang 版本清单。");
+                throw new InvalidOperationException($"Unable to find the Mojang version manifest for Minecraft {version}.");
             }
 
             versionManifest = ReadJsonObject(versionUrl);
@@ -1094,7 +1094,7 @@ internal static class FrontendInstallWorkflowService
         var url = clientMappings?["url"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(url))
         {
-            throw new InvalidOperationException($"Minecraft {version} 缺少 client_mappings 下载地址。");
+            throw new InvalidOperationException($"Minecraft {version} is missing the client_mappings download URL.");
         }
 
         return (url, clientMappings?["sha1"]?.GetValue<string>());
@@ -1111,7 +1111,7 @@ internal static class FrontendInstallWorkflowService
             var key = literal[1..^1];
             return variables.TryGetValue(key, out var value)
                 ? value
-                : throw new InvalidOperationException($"安装器变量缺失：{key}");
+                : throw new InvalidOperationException($"Missing installer variable: {key}");
         }
 
         if (literal.Length >= 2 && literal[0] == '\'' && literal[^1] == '\'')
@@ -1138,7 +1138,7 @@ internal static class FrontendInstallWorkflowService
             {
                 if (index == value.Length - 1)
                 {
-                    throw new InvalidOperationException($"非法安装器参数：{value}");
+                    throw new InvalidOperationException($"Invalid installer argument: {value}");
                 }
 
                 builder.Append(value[++index]);
@@ -1156,7 +1156,7 @@ internal static class FrontendInstallWorkflowService
                     {
                         if (index == value.Length - 1)
                         {
-                            throw new InvalidOperationException($"非法安装器参数：{value}");
+                            throw new InvalidOperationException($"Invalid installer argument: {value}");
                         }
 
                         key.Append(value[++index]);
@@ -1173,7 +1173,7 @@ internal static class FrontendInstallWorkflowService
 
                 if (index >= value.Length)
                 {
-                    throw new InvalidOperationException($"非法安装器参数：{value}");
+                    throw new InvalidOperationException($"Invalid installer argument: {value}");
                 }
 
                 if (current == '\'')
@@ -1184,7 +1184,7 @@ internal static class FrontendInstallWorkflowService
 
                 if (!variables.TryGetValue(key.ToString(), out var replacement))
                 {
-                    throw new InvalidOperationException($"安装器变量缺失：{key}");
+                    throw new InvalidOperationException($"Missing installer variable: {key}");
                 }
 
                 builder.Append(replacement);
@@ -1309,7 +1309,7 @@ internal static class FrontendInstallWorkflowService
     private static Stream OpenInstallerEntry(ZipArchive archive, string entryPath)
     {
         return archive.GetEntry(entryPath.TrimStart('/').Replace('\\', '/'))?.Open()
-               ?? throw new InvalidOperationException($"安装器中缺少条目：{entryPath}");
+               ?? throw new InvalidOperationException($"Installer is missing entry: {entryPath}");
     }
 
     private static string ReadJarMainClass(string jarPath)
@@ -1393,7 +1393,7 @@ internal static class FrontendInstallWorkflowService
                 if (!string.Equals(actualSha1, expectedSha1, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException(
-                        $"下载的安装器依赖校验失败：{targetPath}，期望 {expectedSha1}，实际 {actualSha1}。");
+                        $"Downloaded installer dependency checksum mismatch for {targetPath}: expected {expectedSha1}, actual {actualSha1}.");
                 }
             }
 
@@ -1410,7 +1410,7 @@ internal static class FrontendInstallWorkflowService
     {
         if (choice.Metadata?["token"] is not JsonObject token)
         {
-            throw new InvalidOperationException("LiteLoader 安装项缺少版本元数据。");
+            throw new InvalidOperationException("LiteLoader install entry is missing version metadata.");
         }
 
         var releaseTime = choice.Metadata["releaseTime"]?.GetValue<string>() ?? string.Empty;
@@ -1448,7 +1448,7 @@ internal static class FrontendInstallWorkflowService
         CancellationToken cancelToken = default)
     {
         var choice = request.OptiFineChoice
-                     ?? throw new InvalidOperationException("缺少 OptiFine 选择项。");
+                     ?? throw new InvalidOperationException("Missing OptiFine selection.");
         if (IsModernOptiFineVersion(choice))
         {
             return BuildModernOptiFineManifest(request, choice, onStatusChanged, speedLimiter, i18n, cancelToken);
@@ -1467,7 +1467,7 @@ internal static class FrontendInstallWorkflowService
     {
         cancelToken.ThrowIfCancellationRequested();
         var installerUrl = choice.DownloadUrl
-                           ?? throw new InvalidOperationException("缺少 OptiFine 下载地址。");
+                           ?? throw new InvalidOperationException("Missing OptiFine download URL.");
         var installerPath = CreateTempFile("pcl-optifine-", ".jar");
         var tempRoot = CreateTempDirectory("pcl-optifine-home-");
 
@@ -1491,13 +1491,13 @@ internal static class FrontendInstallWorkflowService
             var generatedVersion = choice.Metadata?["nameVersion"]?.GetValue<string>();
             if (string.IsNullOrWhiteSpace(generatedVersion))
             {
-                throw new InvalidOperationException("OptiFine 安装项缺少版本目录信息。");
+                throw new InvalidOperationException("OptiFine install entry is missing version directory information.");
             }
 
             var manifestPath = Path.Combine(tempRoot, "versions", generatedVersion, $"{generatedVersion}.json");
             if (!File.Exists(manifestPath))
             {
-                throw new InvalidOperationException("OptiFine 安装器没有产出可读取的版本清单。");
+                throw new InvalidOperationException("OptiFine installer did not produce a readable version manifest.");
             }
 
             ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.read_optifine_manifest", "Reading the manifest generated by OptiFine..."));
@@ -1516,7 +1516,7 @@ internal static class FrontendInstallWorkflowService
         var downloadUrl = choice.DownloadUrl;
         if (string.IsNullOrWhiteSpace(libraryVersion) || string.IsNullOrWhiteSpace(downloadUrl))
         {
-            throw new InvalidOperationException("旧版 OptiFine 安装项缺少库信息。");
+            throw new InvalidOperationException("Legacy OptiFine install entry is missing library information.");
         }
 
         return new JsonObject
@@ -1560,7 +1560,7 @@ internal static class FrontendInstallWorkflowService
     {
         cancelToken.ThrowIfCancellationRequested();
         var manifestUrl = minecraftChoice.ManifestUrl
-                          ?? throw new InvalidOperationException("缺少 Minecraft 版本清单地址。");
+                          ?? throw new InvalidOperationException("Missing Minecraft version manifest URL.");
         ReportPrepareStatus(
             onStatusChanged,
             Text(
@@ -1591,7 +1591,7 @@ internal static class FrontendInstallWorkflowService
         var clientUrl = baseManifest["downloads"]?["client"]?["url"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(clientUrl))
         {
-            throw new InvalidOperationException("缺少原版客户端下载地址。");
+            throw new InvalidOperationException("Missing vanilla client download URL.");
         }
 
         ReportPrepareStatus(
@@ -1619,7 +1619,7 @@ internal static class FrontendInstallWorkflowService
             arguments = "--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED " + arguments;
         }
 
-        RunProcess(javaPath, arguments, launcherDirectory, "OptiFine 安装器执行失败。", cancelToken);
+        RunProcess(javaPath, arguments, launcherDirectory, "OptiFine installer execution failed.", cancelToken);
     }
 
     private static void RunProcess(string fileName, string arguments, string workingDirectory, string failureMessage, CancellationToken cancelToken = default)
@@ -2578,7 +2578,7 @@ internal static class FrontendInstallWorkflowService
         response.EnsureSuccessStatusCode();
         var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return JsonNode.Parse(content)?.AsObject()
-               ?? throw new InvalidOperationException($"无法读取 JSON 对象：{url}");
+               ?? throw new InvalidOperationException($"Unable to read JSON object: {url}");
     }
 
     private static JsonArray ReadJsonArray(string url)
@@ -2593,28 +2593,28 @@ internal static class FrontendInstallWorkflowService
         response.EnsureSuccessStatusCode();
         var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return JsonNode.Parse(content)?.AsArray()
-               ?? throw new InvalidOperationException($"无法读取 JSON 数组：{url}");
+               ?? throw new InvalidOperationException($"Unable to read JSON array: {url}");
     }
 
     private static JsonObject ReadJsonObjectFromEntry(ZipArchive archive, string entryPath)
     {
         using var stream = archive.GetEntry(entryPath)?.Open()
-                           ?? throw new InvalidOperationException($"安装器中缺少条目：{entryPath}");
+                           ?? throw new InvalidOperationException($"Installer is missing entry: {entryPath}");
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return JsonNode.Parse(reader.ReadToEnd())?.AsObject()
-               ?? throw new InvalidOperationException($"无法读取安装器 JSON：{entryPath}");
+               ?? throw new InvalidOperationException($"Unable to read installer JSON: {entryPath}");
     }
 
     private static JsonObject ReadJsonObjectFromFile(string filePath)
     {
         return JsonNode.Parse(File.ReadAllText(filePath))?.AsObject()
-               ?? throw new InvalidOperationException($"无法读取 JSON 文件：{filePath}");
+               ?? throw new InvalidOperationException($"Unable to read JSON file: {filePath}");
     }
 
     private static JsonObject CloneObject(JsonObject source)
     {
         return JsonNode.Parse(source.ToJsonString())?.AsObject()
-               ?? throw new InvalidOperationException("复制安装清单失败。");
+               ?? throw new InvalidOperationException("Failed to copy the install manifest.");
     }
 
     private static void ReportPrepareStatus(Action<string>? onStatusChanged, string message)

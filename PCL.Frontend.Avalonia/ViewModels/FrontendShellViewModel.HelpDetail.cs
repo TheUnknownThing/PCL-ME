@@ -242,7 +242,7 @@ internal sealed partial class FrontendShellViewModel
             var source = ReadAttribute(element, "Source");
             if (!string.IsNullOrWhiteSpace(source))
             {
-                actions.Add(CreateHelpAction(LT("shell.help_detail.actions.view_image"), source, "打开网页", source));
+                actions.Add(CreateHelpAction(LT("shell.help_detail.actions.view_image"), source, "open_web", source));
             }
 
             return;
@@ -316,15 +316,15 @@ internal sealed partial class FrontendShellViewModel
 
     private void ExecuteHelpEvent(string title, string? eventType, string? eventData)
     {
-        switch (eventType?.Trim())
+        switch (FrontendHelpEventTypeResolver.Resolve(eventType))
         {
-            case "打开网页":
+            case FrontendHelpEventType.OpenWeb:
                 OpenHelpTarget(title, eventData, infoFallback: eventData);
                 return;
-            case "打开文件":
+            case FrontendHelpEventType.OpenFile:
                 OpenHelpTarget(title, eventData, infoFallback: eventData);
                 return;
-            case "打开帮助":
+            case FrontendHelpEventType.OpenHelp:
                 if (TryResolveHelpEntry(eventData, out var helpEntry))
                 {
                     ShowHelpDetail(helpEntry, addActivity: true);
@@ -337,27 +337,27 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 return;
-            case "复制文本":
+            case FrontendHelpEventType.CopyText:
                 _ = CopyHelpTextAsync(title, eventData);
                 return;
-            case "下载文件":
+            case FrontendHelpEventType.DownloadFile:
                 _ = DownloadHelpFileAsync(title, eventData);
                 return;
-            case "弹出窗口":
+            case FrontendHelpEventType.Popup:
                 OpenHelpPopup(title, eventData);
                 return;
-            case "启动游戏":
+            case FrontendHelpEventType.LaunchGame:
                 NavigateTo(
                     new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
                     LT("resource_detail.activities.view_details", ("surface_title", title)));
                 return;
-            case "内存优化":
+            case FrontendHelpEventType.MemoryOptimize:
                 OpenMemoryOptimizeDialog();
                 return;
-            case "清理垃圾":
+            case FrontendHelpEventType.ClearRubbish:
                 ClearToolboxRubbish();
                 return;
-            case "刷新主页":
+            case FrontendHelpEventType.RefreshHomepage:
                 RefreshLaunchHomepage(forceRefresh: true, addActivity: true);
                 return;
             default:
@@ -568,7 +568,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         return eventTypes.Length == 0
             ? string.Empty
-            : string.Join("、", eventTypes);
+            : string.Join(", ", eventTypes);
     }
 
     private static void AddHelpText(List<string> lines, string value)
@@ -589,13 +589,13 @@ internal sealed partial class FrontendShellViewModel
     private string DeriveHelpActionTitle(string? eventType, string? eventData)
     {
         var helpName = Path.GetFileNameWithoutExtension(eventData) ?? LT("shell.help_detail.actions.help_item");
-        return eventType switch
+        return FrontendHelpEventTypeResolver.Resolve(eventType) switch
         {
-            "打开帮助" => LT("shell.help_detail.actions.open_help", ("name", helpName)),
-            "打开网页" => LT("shell.help_detail.actions.open_web"),
-            "复制文本" => LT("shell.help_detail.actions.copy_text"),
-            "下载文件" => LT("shell.help_detail.actions.download_file"),
-            "打开文件" => LT("shell.help_detail.actions.open_file"),
+            FrontendHelpEventType.OpenHelp => LT("shell.help_detail.actions.open_help", ("name", helpName)),
+            FrontendHelpEventType.OpenWeb => LT("shell.help_detail.actions.open_web"),
+            FrontendHelpEventType.CopyText => LT("shell.help_detail.actions.copy_text"),
+            FrontendHelpEventType.DownloadFile => LT("shell.help_detail.actions.download_file"),
+            FrontendHelpEventType.OpenFile => LT("shell.help_detail.actions.open_file"),
             _ => string.IsNullOrWhiteSpace(eventData) ? LT("shell.help_detail.actions.generic") : eventData
         };
     }

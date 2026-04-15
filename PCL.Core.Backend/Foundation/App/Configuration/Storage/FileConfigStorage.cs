@@ -10,12 +10,12 @@ using PCL.Core.Logging;
 namespace PCL.Core.App.Configuration.Storage;
 
 /// <summary>
-/// 文件存取仓库。
+/// File-backed storage repository.
 /// </summary>
 public class FileConfigStorage : ConfigStorage
 {
     /// <summary>
-    /// 键值文件实例。
+    /// Key-value file instance.
     /// </summary>
     public IKeyValueFileProvider File { get; }
 
@@ -40,11 +40,11 @@ public class FileConfigStorage : ConfigStorage
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
-                    // 读入并合并暂存操作
+                    // Read and merge buffered operations.
                     var (key, action) = await reader.ReadAsync(cancelToken);
                     writeActionMap[key] = action;
                     if (Environment.TickCount64 - lastSyncTick < syncInterval || cancelToken.IsCancellationRequested) continue;
-                    // 同步文件
+                    // Sync the file.
                     Sync();
                     lastSyncTick = Environment.TickCount64;
                     writeActionMap.Clear();
@@ -53,7 +53,7 @@ public class FileConfigStorage : ConfigStorage
             catch (OperationCanceledException) { /* ignoring*/ }
             finally
             {
-                // 结束时执行一次同步
+                // Perform one final sync at shutdown.
                 Sync();
             }
             _writeStopEvent.Set();
@@ -62,13 +62,13 @@ public class FileConfigStorage : ConfigStorage
             {
                 try
                 {
-                    LogWrapper.Trace("Config", $"正在保存 {File.FilePath}");
+                    LogWrapper.Trace("Config", $"Saving {File.FilePath}");
                     foreach (var action in writeActionMap.Values) action();
                     File.Sync();
                 }
                 catch (Exception ex)
                 {
-                    const string message = "配置文件保存失败";
+                    const string message = "Failed to save configuration file.";
                     LogWrapper.Error(ex, "Config", message);
                     ConfigStorageHooks.SaveFailureHandler?.Invoke(new ConfigStorageSaveFailureContext(
                         this,
@@ -102,9 +102,9 @@ public class FileConfigStorage : ConfigStorage
                 value = File.Get<TValue>(strKey);
                 return true;
             case StorageAction.Exists:
-                // 由于 Exists 的 value 类型一定是 bool，此处可 unsafe 直接赋值
+                // Exists always uses a bool value, so unsafe assignment is valid here.
                 if (typeof(TValue) == typeof(bool)) Unsafe.As<TValue, bool>(ref value) = File.Exists(strKey);
-                else throw new InvalidOperationException($"Storage action '{StorageAction.Exists}' must have a boolean value");
+                else throw new InvalidOperationException($"Storage action '{StorageAction.Exists}' must have a boolean value.");
                 return true;
             case StorageAction.Set:
                 var localValue = value;

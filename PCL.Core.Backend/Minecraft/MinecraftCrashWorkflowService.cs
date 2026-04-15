@@ -7,8 +7,6 @@ namespace PCL.Core.Minecraft;
 
 public static class MinecraftCrashWorkflowService
 {
-    private const string ModLoaderIncompatiblePrefix = "Mod 加载器版本与 Mod 不兼容";
-
     public static MinecraftCrashOutputPrompt BuildOutputPrompt(MinecraftCrashOutputPromptRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -21,8 +19,7 @@ public static class MinecraftCrashWorkflowService
 
         if (!request.IsManualAnalysis)
         {
-            if (request.CanOpenModLoaderSettings &&
-                request.ResultText.StartsWith(ModLoaderIncompatiblePrefix, StringComparison.Ordinal))
+            if (request.CanOpenModLoaderSettings && request.HasModLoaderVersionMismatch)
             {
                 buttons.Add(new MinecraftCrashOutputPromptButton(
                     I18nText.Plain("crash.prompts.output.actions.open_instance_settings"),
@@ -57,7 +54,7 @@ public static class MinecraftCrashWorkflowService
             .Replace(":", ".", StringComparison.Ordinal)
             .Replace(" ", "_", StringComparison.Ordinal);
 
-        return $"错误报告-{formattedTimestamp}.zip";
+        return $"crash-report-{formattedTimestamp}.zip";
     }
 }
 
@@ -65,7 +62,8 @@ public sealed record MinecraftCrashOutputPromptRequest(
     string ResultText,
     bool IsManualAnalysis,
     bool HasDirectFile,
-    bool CanOpenModLoaderSettings);
+    bool CanOpenModLoaderSettings,
+    bool HasModLoaderVersionMismatch = false);
 
 public sealed record MinecraftCrashOutputPrompt(
     string Message,

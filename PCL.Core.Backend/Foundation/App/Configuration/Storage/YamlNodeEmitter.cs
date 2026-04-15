@@ -18,9 +18,9 @@ public sealed class YamlNodeEmitter : IEmitter
 
     public YamlNode SingleRootNode => _documents.Count switch
     {
-        0 => throw new InvalidOperationException("尚未产生任何文档。"),
+        0 => throw new InvalidOperationException("No YAML documents have been produced."),
         1 => _documents[0].RootNode,
-        _ => throw new InvalidOperationException("存在多个文档，请使用 Documents 访问。")
+        _ => throw new InvalidOperationException("Multiple YAML documents exist. Use Documents instead.")
     };
 
     public void Reset()
@@ -43,7 +43,7 @@ public sealed class YamlNodeEmitter : IEmitter
             case StreamEnd:
                 _inStream = false;
                 if (_stack.Count != 0)
-                    throw new InvalidOperationException("事件结束时堆栈未清空，事件序列不平衡。");
+                    throw new InvalidOperationException("The container stack was not empty at StreamEnd. The event sequence is unbalanced.");
                 break;
 
             case DocumentStart:
@@ -55,11 +55,11 @@ public sealed class YamlNodeEmitter : IEmitter
                 {
                     _RequireStream();
                     if (_stack.Count == 0 || _stack.Peek().Kind != ContainerKind.Document)
-                        throw new InvalidOperationException("DocumentEnd 前缺少对应的 DocumentStart。");
+                        throw new InvalidOperationException("DocumentEnd is missing a matching DocumentStart.");
 
                     var doc = _stack.Pop();
                     if (doc.Node is null)
-                        throw new InvalidOperationException("空文档：未设置根节点。");
+                        throw new InvalidOperationException("The YAML document is empty because no root node was assigned.");
 
                     _documents.Add(new YamlDocument(doc.Node));
                 }
@@ -77,12 +77,12 @@ public sealed class YamlNodeEmitter : IEmitter
             case MappingEnd:
                 {
                     if (_stack.Count == 0 || _stack.Peek().Kind != ContainerKind.Mapping)
-                        throw new InvalidOperationException("MappingEnd 前缺少对应的 MappingStart。");
+                        throw new InvalidOperationException("MappingEnd is missing a matching MappingStart.");
 
                     var finished = _stack.Pop();
-                    // no-op: 已在 Start 时挂接到父级
+                    // no-op: already attached to the parent in Start.
                     if (finished.PendingKey is not null)
-                        throw new InvalidOperationException("映射以键结尾，缺少对应的值。");
+                        throw new InvalidOperationException("The YAML mapping ended with a key that has no corresponding value.");
                 }
                 break;
 
@@ -98,9 +98,9 @@ public sealed class YamlNodeEmitter : IEmitter
             case SequenceEnd:
                 {
                     if (_stack.Count == 0 || _stack.Peek().Kind != ContainerKind.Sequence)
-                        throw new InvalidOperationException("SequenceEnd 前缺少对应的 SequenceStart。");
+                        throw new InvalidOperationException("SequenceEnd is missing a matching SequenceStart.");
 
-                    _stack.Pop(); // 已在 Start 时挂接到父级
+                    _stack.Pop(); // already attached to the parent in Start.
                 }
                 break;
 
@@ -116,7 +116,7 @@ public sealed class YamlNodeEmitter : IEmitter
                 {
                     var anchorName = alias.Value.Value; // AnchorName.Value -> string
                     if (!_anchors.TryGetValue(anchorName, out var target))
-                        throw new InvalidOperationException($"未找到锚点 '{anchorName}' 的定义。");
+                        throw new InvalidOperationException($"No definition was found for anchor '{anchorName}'.");
                     _AttachToParent(target);
                 }
                 break;
@@ -126,26 +126,26 @@ public sealed class YamlNodeEmitter : IEmitter
     private void _RequireStream()
     {
         if (!_inStream)
-            throw new InvalidOperationException("必须在 StreamStart 与 StreamEnd 之间接收事件。");
+            throw new InvalidOperationException("Events must be received between StreamStart and StreamEnd.");
     }
 
     private void _ApplyAnchor(NodeEvent nodeEvent, YamlNode node)
     {
-        // 仅在存在锚点时登记；Tag/Style 等可按需扩展
+        // Register only when an anchor is present; Tag/Style can be extended later if needed.
         if (nodeEvent.Anchor.IsEmpty) return;
         var name = nodeEvent.Anchor.Value;
         node.Anchor = name;
-        // 最新 YamlDotNet 表示模型允许同名锚点复用同一节点引用；
-        // 若重复定义同名锚点，认为是非法
+        // The current YamlDotNet representation model allows the same node reference to be reused.
+        // Treat duplicate anchor definitions as invalid.
         if (!_anchors.TryAdd(name, node))
-            throw new InvalidOperationException($"锚点 '{name}' 被重复定义。");
+            throw new InvalidOperationException($"Anchor '{name}' was defined more than once.");
     }
 
     private void _AttachToParent(YamlNode node)
     {
         if (_stack.Count == 0)
         {
-            throw new InvalidOperationException("缺少 DocumentStart：无法确定根节点所属文档。");
+            throw new InvalidOperationException("DocumentStart is missing, so the root node cannot be assigned to a document.");
         }
 
         var parent = _stack.Peek();
@@ -153,10 +153,10 @@ public sealed class YamlNodeEmitter : IEmitter
         {
             case ContainerKind.Document:
                 if (parent.Node is not null)
-                    throw new InvalidOperationException("一个文档只能包含一个根节点。");
+                    throw new InvalidOperationException("A YAML document can contain only one root node.");
                 parent.Node = node;
                 _stack.Pop();
-                _stack.Push(parent); // 写回修改
+                _stack.Push(parent); // write the updated value back
                 break;
 
             case ContainerKind.Sequence:
@@ -166,7 +166,7 @@ public sealed class YamlNodeEmitter : IEmitter
             case ContainerKind.Mapping:
                 if (parent.PendingKey is null)
                 {
-                    parent.PendingKey = node; // 作为键
+                    parent.PendingKey = node; // as key
                 }
                 else
                 {
@@ -174,7 +174,7 @@ public sealed class YamlNodeEmitter : IEmitter
                     parent.PendingKey = null;
                 }
                 _stack.Pop();
-                _stack.Push(parent); // 写回修改
+                _stack.Push(parent); // write the updated value back
                 break;
 
             default:

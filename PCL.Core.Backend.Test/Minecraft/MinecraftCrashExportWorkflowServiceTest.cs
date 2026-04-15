@@ -46,7 +46,7 @@ public sealed class MinecraftCrashExportWorkflowServiceTest
             UserProfilePath: @"C:\Users\Alice",
             Culture: new CultureInfo("zh-CN")));
 
-        Assert.AreEqual("错误报告-2026-4-2_13.05.06.zip", result.SuggestedArchiveName);
+        Assert.AreEqual("crash-report-2026-4-2_13.05.06.zip", result.SuggestedArchiveName);
         Assert.AreEqual("/tmp/report", result.ExportRequest.ReportDirectory);
         Assert.AreEqual("/tmp/a.log", result.ExportRequest.CurrentLauncherLogFilePath);
         CollectionAssert.AreEqual(

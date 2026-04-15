@@ -141,11 +141,19 @@ public static class MinecraftCrashAnalysisService
         {
             var resultText = GetAnalyzeResult();
             var hasKnownReason = _reasons.Keys.Any(reason => reason != CrashReason.NoAnalysisFiles);
+            var hasModLoaderVersionMismatch = HasModLoaderVersionMismatch();
             return new MinecraftCrashAnalysisResult(
                 resultText,
                 hasKnownReason,
                 _directFilePath is not null,
-                _directFilePath);
+                _directFilePath,
+                hasModLoaderVersionMismatch);
+        }
+
+        private bool HasModLoaderVersionMismatch()
+        {
+            return _reasons.TryGetValue(CrashReason.IncompatibleMods, out var details)
+                   && details.Any(RegexPatterns.IncompatibleModLoaderErrorHint.IsMatch);
         }
 
         private IEnumerable<string> EnumerateCandidatePaths()
@@ -185,14 +193,27 @@ public static class MinecraftCrashAnalysisService
                 return AnalyzeFileType.CrashReport;
             }
 
-            if (matchName is "latest.log" or "latest log.txt" or "debug.log" or "debug log.txt" or "游戏崩溃前的输出.txt" or "rawoutput.log")
+            if (matchName is "latest.log"
+                or "latest log.txt"
+                or "debug.log"
+                or "debug log.txt"
+                or "pre-crash output.txt"
+                or "游戏崩溃前的输出.txt"
+                or "rawoutput.log")
             {
                 _directFilePath ??= file.Path;
                 return AnalyzeFileType.MinecraftLog;
             }
 
             if (PathsEqual(file.Path, _request.CurrentLauncherLogFilePath) ||
-                matchName is "启动器日志.txt" or "pcl2 启动器日志.txt" or "pcl 启动器日志.txt" or "log1.txt" or "log-ce1.log" or "pcl.log")
+                matchName is "pcl launcher log.txt"
+                    or "launcher log.txt"
+                    or "启动器日志.txt"
+                    or "pcl2 启动器日志.txt"
+                    or "pcl 启动器日志.txt"
+                    or "log1.txt"
+                    or "log-ce1.log"
+                    or "pcl.log")
             {
                 if (file.Lines.Any(line => line.Contains("以下为游戏输出的最后一段内容", StringComparison.Ordinal)))
                 {
@@ -244,6 +265,8 @@ public static class MinecraftCrashAnalysisService
             foreach (var fileName in new[]
                      {
                          "rawoutput.log",
+                         "Pre-Crash Output.txt",
+                         "PCL Launcher Log.txt",
                          "启动器日志.txt",
                          "log1.txt",
                          "log-ce1.log",
@@ -1439,4 +1462,5 @@ public sealed record MinecraftCrashAnalysisResult(
     string ResultText,
     bool HasKnownReason,
     bool HasDirectFile,
-    string? DirectFilePath);
+    string? DirectFilePath,
+    bool HasModLoaderVersionMismatch = false);

@@ -16,7 +16,7 @@ public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJav
         try
         {
             var searchRoots = _GetSearchRoots();
-            LogWrapper.Info($"[Java] 对下列目录进行广度关键词搜索:{Environment.NewLine}{string.Join(Environment.NewLine, searchRoots)}");
+            LogWrapper.Info($"[Java] Running breadth-first keyword scan across:{Environment.NewLine}{string.Join(Environment.NewLine, searchRoots)}");
 
             foreach (var root in searchRoots)
             {
@@ -25,7 +25,7 @@ public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJav
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, "Java", "默认路径扫描失败");
+            LogWrapper.Error(ex, "Java", "Default path scan failed.");
         }
     }
 
@@ -49,7 +49,7 @@ public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJav
                     roots.Add(Path.Combine(drive, folder));
                 }
 
-                // 根目录关键词搜索
+                // Search the root directories for keyword matches.
                 try
                 {
                     var rootDirs = Directory.EnumerateDirectories(drive)
@@ -59,8 +59,8 @@ public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJav
                     foreach (var dir in rootDirs)
                         roots.Add(dir);
                 }
-                catch (UnauthorizedAccessException) { /* 忽略无权限目录 */ }
-                catch (IOException) { /* 忽略IO错误 */ }
+                catch (UnauthorizedAccessException) { /* ignore protected directories */ }
+                catch (IOException) { /* ignore I/O errors */ }
             }
         }
         else if (_runtime.IsMacOS)
@@ -93,7 +93,7 @@ public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJav
 
             try
             {
-                // 深度0时只遍历含关键词的目录
+                // At depth 0, only traverse directories that contain a keyword.
                 var dirsToScan = depth == 0
                     ? Directory.EnumerateDirectories(current)
                         .Where(dir => _ShouldScanDirectory(dir))
@@ -116,11 +116,11 @@ public class DefaultPathsScanner(IJavaRuntimeEnvironment? runtime = null) : IJav
             }
             catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or DirectoryNotFoundException)
             {
-                LogWrapper.Debug($"跳过目录 {current}: {ex.Message}");
+                LogWrapper.Debug($"Skipping directory {current}: {ex.Message}");
             }
             catch (Exception ex)
             {
-                LogWrapper.Error(ex, "Java", $"搜索目录 {current} 时出错");
+                LogWrapper.Error(ex, "Java", $"Failed while scanning directory {current}.");
             }
         }
     }

@@ -18,7 +18,7 @@ public sealed class MinecraftCrashExportArchiveServiceTest
     {
         var root = Path.Combine(Path.GetTempPath(), "pcl-crash-archive-" + Guid.NewGuid().ToString("N"));
         var reportDirectory = Path.Combine(root, "Report");
-        var archivePath = Path.Combine(root, "Export", "错误报告.zip");
+        var archivePath = Path.Combine(root, "Export", "crash-report.zip");
         Directory.CreateDirectory(root);
 
         try
@@ -49,12 +49,12 @@ public sealed class MinecraftCrashExportArchiveServiceTest
 
             Assert.AreEqual(archivePath, result.ArchiveFilePath);
             Assert.IsFalse(Directory.Exists(reportDirectory));
-            CollectionAssert.Contains(result.ArchivedFileNames.ToArray(), "PCL 启动器日志.txt");
-            CollectionAssert.Contains(result.ArchivedFileNames.ToArray(), "环境与启动信息.txt");
+            CollectionAssert.Contains(result.ArchivedFileNames.ToArray(), "PCL Launcher Log.txt");
+            CollectionAssert.Contains(result.ArchivedFileNames.ToArray(), "Environment and Launch Info.txt");
 
             using var archive = ZipFile.OpenRead(archivePath);
-            CollectionAssert.Contains(archive.Entries.Select(entry => entry.FullName).ToArray(), "PCL 启动器日志.txt");
-            CollectionAssert.Contains(archive.Entries.Select(entry => entry.FullName).ToArray(), "环境与启动信息.txt");
+            CollectionAssert.Contains(archive.Entries.Select(entry => entry.FullName).ToArray(), "PCL Launcher Log.txt");
+            CollectionAssert.Contains(archive.Entries.Select(entry => entry.FullName).ToArray(), "Environment and Launch Info.txt");
         }
         finally
         {

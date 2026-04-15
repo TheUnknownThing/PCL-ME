@@ -355,7 +355,9 @@ internal sealed partial class FrontendShellViewModel
     {
         var projectId = entry.Identity ?? string.Empty;
         var actionCommand = string.IsNullOrWhiteSpace(entry.Target)
-            ? CreateIntentCommand($"收藏夹条目: {entry.Title}", entry.Info)
+            ? CreateIntentCommand(
+                T("download.catalog.activities.open_favorite_entry", ("entry_title", entry.Title)),
+                entry.Info)
             : CreateDownloadFavoriteCommand(entry);
         var icon = LoadCachedBitmapFromPath(entry.IconPath);
         if (icon is null && !string.IsNullOrWhiteSpace(entry.IconName))
@@ -636,7 +638,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (entry.IsEvent)
         {
-            return string.Equals(entry.EventType, "弹出窗口", StringComparison.OrdinalIgnoreCase)
+            return FrontendHelpEventTypeResolver.Resolve(entry.EventType) == FrontendHelpEventType.Popup
                 ? LoadLauncherBitmap("Images", "Blocks", "GrassPath.png")
                 : LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png");
         }
@@ -892,14 +894,11 @@ internal sealed partial class FrontendShellViewModel
 
     private string LocalizeDownloadCatalogActionText(string actionText)
     {
-        return actionText switch
+        return NormalizeDownloadCatalogActionToken(actionText) switch
         {
             "save_installer" => T("download.catalog.actions.save_installer"),
             "open_website" => T("common.actions.open_website"),
             "view_details" => T("resource_detail.actions.view_details"),
-            "保存安装器" => T("download.catalog.actions.save_installer"),
-            "打开官网" => T("common.actions.open_website"),
-            "查看详情" => T("resource_detail.actions.view_details"),
             _ => actionText
         };
     }
@@ -926,16 +925,16 @@ internal sealed partial class FrontendShellViewModel
             return title;
         }
 
-        var localizedGroup = match.Groups["group"].Value.Trim() switch
+        var localizedGroup = NormalizeDownloadCatalogSectionGroupToken(match.Groups["group"].Value.Trim()) switch
         {
             "latest_versions" => T("download.catalog.sections.latest_versions"),
             "remote_catalog" => T("download.catalog.sections.remote_catalog"),
             "version_list" => T("download.catalog.sections.version_list"),
-            "latest" or "最新版本" => T("download.install.catalog.groups.latest"),
-            "release" or "正式版" => T("download.install.catalog.groups.release"),
-            "preview" or "预览版" => T("download.install.catalog.groups.preview"),
-            "legacy" or "远古版" => T("download.install.catalog.groups.legacy"),
-            "april_fools" or "愚人节版" => T("download.install.catalog.groups.april_fools"),
+            "latest" => T("download.install.catalog.groups.latest"),
+            "release" => T("download.install.catalog.groups.release"),
+            "preview" => T("download.install.catalog.groups.preview"),
+            "legacy" => T("download.install.catalog.groups.legacy"),
+            "april_fools" => T("download.install.catalog.groups.april_fools"),
             _ => title
         };
 
@@ -997,12 +996,8 @@ internal sealed partial class FrontendShellViewModel
             return T("download.catalog.loading.fetch_list", ("surface_name", ResolveDownloadCatalogRouteTitle(route)));
         }
 
-        var listMatch = Regex.Match(loadingText, @"^正在获取 (?<surface>.+) 列表$|^正在获取(?<surface2>.+)列表$");
-        if (listMatch.Success)
+        if (TryParseLegacyDownloadCatalogSurfaceName(loadingText, out var surfaceName))
         {
-            var surfaceName = listMatch.Groups["surface"].Success
-                ? listMatch.Groups["surface"].Value
-                : listMatch.Groups["surface2"].Value;
             return T("download.catalog.loading.fetch_list", ("surface_name", surfaceName));
         }
 
@@ -1021,19 +1016,58 @@ internal sealed partial class FrontendShellViewModel
         [
             CreateDownloadCatalogSection("Mod",
             [
-                CreateDownloadCatalogEntry("Sodium", "现代性能优化模组。", "Fabric • 已收藏", "查看详情"),
-                CreateDownloadCatalogEntry("Mod Menu", "管理 Fabric 模组菜单。", "Fabric • 已收藏", "查看详情")
+                CreateDownloadCatalogEntry("Sodium", T("download.favorites.demo.entries.sodium.info"), BuildActivityDetail("Fabric", T("instance.overview.tags.favorited")), "view_details"),
+                CreateDownloadCatalogEntry("Mod Menu", T("download.favorites.demo.entries.mod_menu.info"), BuildActivityDetail("Fabric", T("instance.overview.tags.favorited")), "view_details")
             ]),
-            CreateDownloadCatalogSection("整合包",
+            CreateDownloadCatalogSection(T("shell.navigation.subpages.download_pack.title"),
             [
-                CreateDownloadCatalogEntry("All The Mods 9", "大型整合包演示条目。", "整合包 • 已收藏", "查看详情")
+                CreateDownloadCatalogEntry("All The Mods 9", T("download.favorites.demo.entries.atm9.info"), BuildActivityDetail(T("shell.navigation.subpages.download_pack.title"), T("instance.overview.tags.favorited")), "view_details")
             ]),
-            CreateDownloadCatalogSection("资源包",
+            CreateDownloadCatalogSection(T("shell.navigation.subpages.download_resource_pack.title"),
             [
-                CreateDownloadCatalogEntry("Faithful 32x", "经典风格资源包。", "资源包 • 已收藏", "查看详情"),
-                CreateDownloadCatalogEntry("Complementary Shaders", "常用光影收藏条目。", "光影包 • 已收藏", "查看详情")
+                CreateDownloadCatalogEntry("Faithful 32x", T("download.favorites.demo.entries.faithful.info"), BuildActivityDetail(T("shell.navigation.subpages.download_resource_pack.title"), T("instance.overview.tags.favorited")), "view_details"),
+                CreateDownloadCatalogEntry("Complementary Shaders", T("download.favorites.demo.entries.complementary.info"), BuildActivityDetail(T("shell.navigation.subpages.download_shader.title"), T("instance.overview.tags.favorited")), "view_details")
             ])
         ];
+    }
+
+    private static string NormalizeDownloadCatalogActionToken(string actionText)
+    {
+        return actionText switch
+        {
+            "保存安装器" => "save_installer",
+            "打开官网" => "open_website",
+            "查看详情" => "view_details",
+            _ => actionText
+        };
+    }
+
+    private static string NormalizeDownloadCatalogSectionGroupToken(string group)
+    {
+        return group switch
+        {
+            "最新版本" => "latest",
+            "正式版" => "release",
+            "预览版" => "preview",
+            "远古版" => "legacy",
+            "愚人节版" => "april_fools",
+            _ => group
+        };
+    }
+
+    private static bool TryParseLegacyDownloadCatalogSurfaceName(string loadingText, out string surfaceName)
+    {
+        var listMatch = Regex.Match(loadingText, @"^正在获取 (?<surface>.+) 列表$|^正在获取(?<surface2>.+)列表$");
+        if (listMatch.Success)
+        {
+            surfaceName = listMatch.Groups["surface"].Success
+                ? listMatch.Groups["surface"].Value
+                : listMatch.Groups["surface2"].Value;
+            return true;
+        }
+
+        surfaceName = string.Empty;
+        return false;
     }
 
     private ActionCommand CreateLinkCommand(string title, string url)

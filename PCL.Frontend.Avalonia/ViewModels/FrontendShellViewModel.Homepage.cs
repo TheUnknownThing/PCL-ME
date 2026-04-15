@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -619,14 +620,10 @@ internal sealed partial class FrontendShellViewModel
 
     private string ResolveHomepageEventData(string? eventType, string rawValue, HomepageContentOrigin origin)
     {
-        return eventType switch
-        {
-            "open_web" or "\u6253\u5F00\u7F51\u9875" => ResolveHomepageAssetTarget(rawValue, origin),
-            "open_file" or "\u6253\u5F00\u6587\u4EF6" => ResolveHomepageAssetTarget(rawValue, origin),
-            "download_file" or "\u4E0B\u8F7D\u6587\u4EF6" => ResolveHomepageAssetTarget(rawValue, origin),
-            _ when string.IsNullOrWhiteSpace(eventType) => ResolveHomepageAssetTarget(rawValue, origin),
-            _ => rawValue
-        };
+        return FrontendHelpEventTypeResolver.UsesResolvedTarget(eventType)
+            || string.IsNullOrWhiteSpace(eventType)
+            ? ResolveHomepageAssetTarget(rawValue, origin)
+            : rawValue;
     }
 
     private static string ResolveHomepageAssetTarget(string rawValue, HomepageContentOrigin origin)

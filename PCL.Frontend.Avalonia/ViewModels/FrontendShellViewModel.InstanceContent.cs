@@ -385,7 +385,10 @@ internal sealed partial class FrontendShellViewModel
             image,
             title,
             info,
-            new ActionCommand(() => OpenInstanceTarget("打开截图", path, "当前截图文件不存在。")));
+            new ActionCommand(() => OpenInstanceTarget(
+                SD("instance.content.screenshot.actions.open_file"),
+                path,
+                SD("instance.content.screenshot.messages.missing_file"))));
     }
 
     private void RefreshInstanceResourceEntries()
@@ -1182,7 +1185,7 @@ internal sealed partial class FrontendShellViewModel
             RefreshLaunchState();
             NavigateTo(
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-                $"已切换到启动页并准备连接服务器 {entry.Title}。");
+                SD("instance.content.server.messages.launch_route_prepared", ("entry_title", entry.Title)));
             await HandleLaunchRequestedAsync();
             AddActivity(activityTitle, BuildActivityDetail(entry.Title, address));
         }
@@ -1434,7 +1437,7 @@ internal sealed partial class FrontendShellViewModel
     {
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, ResolveInstanceDownloadSubpage()),
-            $"{InstanceResourceSurfaceTitle} 页面已跳转到下载页。");
+            SD("instance.content.resource.messages.open_download_route", ("surface_title", InstanceResourceSurfaceTitle)));
     }
 
     private async Task SetSelectedInstanceResourcesEnabledAsync(bool isEnabled)
@@ -1634,12 +1637,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            throw new InvalidOperationException("资源路径为空。");
+            throw new InvalidOperationException("The resource path is empty.");
         }
 
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException("资源文件不存在。", path);
+            throw new FileNotFoundException("The resource file does not exist.", path);
         }
 
         if (isEnabled)
@@ -1766,10 +1769,10 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.VersionResourcePack => ("资源包文件", ["*.zip", "*.rar"]),
-            LauncherFrontendSubpageKey.VersionShader => ("光影文件", ["*.zip", "*.rar"]),
-            LauncherFrontendSubpageKey.VersionSchematic => ("投影原理图文件", ["*.litematic", "*.schem", "*.schematic", "*.nbt"]),
-            _ => ("Mod 文件", ["*.jar", "*.disabled", "*.old"])
+            LauncherFrontendSubpageKey.VersionResourcePack => (SD("instance.content.resource.dialogs.install_from_file.file_types.resource_pack"), ["*.zip", "*.rar"]),
+            LauncherFrontendSubpageKey.VersionShader => (SD("instance.content.resource.dialogs.install_from_file.file_types.shader"), ["*.zip", "*.rar"]),
+            LauncherFrontendSubpageKey.VersionSchematic => (SD("instance.content.resource.dialogs.install_from_file.file_types.schematic"), ["*.litematic", "*.schem", "*.schematic", "*.nbt"]),
+            _ => (SD("instance.content.resource.dialogs.install_from_file.file_types.mod"), ["*.jar", "*.disabled", "*.old"])
         };
     }
 
@@ -1810,12 +1813,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            throw new InvalidOperationException("资源路径为空。");
+            throw new InvalidOperationException("The resource path is empty.");
         }
 
         if (!File.Exists(sourcePath) && !Directory.Exists(sourcePath))
         {
-            throw new FileNotFoundException("资源项目不存在。", sourcePath);
+            throw new FileNotFoundException("The resource entry does not exist.", sourcePath);
         }
 
         Directory.CreateDirectory(trashDirectory);

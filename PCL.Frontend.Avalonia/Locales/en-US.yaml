@@ -2078,6 +2078,18 @@ download:
     meta:
       downloads: '{value} downloads'
       updated: 'Updated {value}'
+    demo:
+      entries:
+        sodium:
+          info: Modern performance optimization mod.
+        mod_menu:
+          info: Manage the Fabric mod menu.
+        atm9:
+          info: Large modpack demo entry.
+        faithful:
+          info: Classic-style resource pack.
+        complementary:
+          info: Common shader favorite entry.
     targets:
       default_name: Default Favorites
       empty_share_code: Nothing to share.
@@ -2915,6 +2927,9 @@ instance:
       summary: '{created_at} • {file_size}'
       actions:
         open_folder: Open Folder
+        open_file: Open Screenshot
+      messages:
+        missing_file: The selected screenshot file does not exist.
     server:
       quick_actions: Quick Actions
       actions:
@@ -2949,6 +2964,7 @@ instance:
         read_list_failed: |-
           Unable to read the current instance server list.
           {error}
+        launch_route_prepared: 'Switched to the launch page and prepared to connect to {entry_title}.'
         update_list_failed: |-
           Unable to update the current instance server list.
           {error}
@@ -3034,9 +3050,15 @@ instance:
         entry_missing: '{surface_title} item does not exist.'
         details_read_failed: 'Failed to read additional info: {error}'
         checked_mods_summary: 'Checked {instance_name}: {enabled_count} enabled, {disabled_count} disabled, {duplicate_count} duplicate groups.'
+        open_download_route: '{surface_title} page has been opened in Download.'
       dialogs:
         install_from_file:
           title: 'Select {surface_title} file'
+          file_types:
+            mod: Mod File
+            resource_pack: Resource Pack File
+            shader: Shader Pack File
+            schematic: Schematic File
         delete:
           title: Confirm Resource Deletion
           message: 'Move these {count} {surface_title} items to the recycle area?'

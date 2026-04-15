@@ -49,7 +49,8 @@ public sealed class MinecraftCrashWorkflowServiceTest
             "Mod 加载器版本与 Mod 不兼容，请前往修改",
             IsManualAnalysis: false,
             HasDirectFile: true,
-            CanOpenModLoaderSettings: true));
+            CanOpenModLoaderSettings: true,
+            HasModLoaderVersionMismatch: true));
 
         Assert.AreEqual(3, result.Buttons.Count);
         Assert.AreEqual("crash.prompts.output.actions.open_instance_settings", result.Buttons[1].Label.Key);
@@ -64,6 +65,6 @@ public sealed class MinecraftCrashWorkflowServiceTest
             new DateTime(2026, 4, 2, 13, 5, 6),
             new CultureInfo("zh-CN"));
 
-        Assert.AreEqual("错误报告-2026-4-2_13.05.06.zip", result);
+        Assert.AreEqual("crash-report-2026-4-2_13.05.06.zip", result);
     }
 }

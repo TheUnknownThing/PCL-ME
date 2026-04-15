@@ -2330,6 +2330,18 @@ download:
       - value
       updated:
       - value
+    demo:
+      entries:
+        sodium:
+          info: []
+        mod_menu:
+          info: []
+        atm9:
+          info: []
+        faithful:
+          info: []
+        complementary:
+          info: []
     targets:
       default_name: []
       empty_share_code: []
@@ -3322,6 +3334,9 @@ instance:
       - file_size
       actions:
         open_folder: []
+        open_file: []
+      messages:
+        missing_file: []
     server:
       quick_actions: []
       actions:
@@ -3363,6 +3378,8 @@ instance:
         address_required: []
         read_list_failed:
         - error
+        launch_route_prepared:
+        - entry_title
         update_list_failed:
         - error
         write_list_failed: []
@@ -3482,10 +3499,17 @@ instance:
         - enabled_count
         - disabled_count
         - duplicate_count
+        open_download_route:
+        - surface_title
       dialogs:
         install_from_file:
           title:
           - surface_title
+          file_types:
+            mod: []
+            resource_pack: []
+            shader: []
+            schematic: []
         delete:
           title: []
           message:

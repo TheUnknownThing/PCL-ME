@@ -2078,6 +2078,18 @@ download:
     meta:
       downloads: '{value} 下载'
       updated: '更新 {value}'
+    demo:
+      entries:
+        sodium:
+          info: 现代性能优化模组。
+        mod_menu:
+          info: 管理 Fabric 模组菜单。
+        atm9:
+          info: 大型整合包演示条目。
+        faithful:
+          info: 经典风格资源包。
+        complementary:
+          info: 常用光影收藏条目。
     targets:
       default_name: 默认收藏夹
       empty_share_code: 分享了个寂寞啊！
@@ -2915,6 +2927,9 @@ instance:
       summary: '{created_at} • {file_size}'
       actions:
         open_folder: 打开截图文件夹
+        open_file: 打开截图
+      messages:
+        missing_file: 当前截图文件不存在。
     server:
       quick_actions: 快捷操作
       actions:
@@ -2949,6 +2964,7 @@ instance:
         read_list_failed: |-
           无法读取当前实例的服务器列表。
           {error}
+        launch_route_prepared: '已切换到启动页并准备连接服务器 {entry_title}。'
         update_list_failed: |-
           无法更新当前实例的服务器列表。
           {error}
@@ -3034,9 +3050,15 @@ instance:
         entry_missing: '{surface_title} 项目不存在。'
         details_read_failed: '附加信息读取失败：{error}'
         checked_mods_summary: '已检查 {instance_name}：启用 {enabled_count} 个，禁用 {disabled_count} 个，重复 {duplicate_count} 组。'
+        open_download_route: '{surface_title} 页面已跳转到下载页。'
       dialogs:
         install_from_file:
           title: '选择{surface_title}文件'
+          file_types:
+            mod: Mod 文件
+            resource_pack: 资源包文件
+            shader: 光影文件
+            schematic: 投影原理图文件
         delete:
           title: 资源删除确认
           message: '确定要将这 {count} 个{surface_title}项目移入回收区吗？'

@@ -25,7 +25,7 @@ internal static class WindowsLegacyCpuIdProvider
                 }
                 catch (ManagementException ex)
                 {
-                    LogWrapper.Warn(LogModule, $"WMI属性读取失败: {ex.Message}");
+                    LogWrapper.Warn(LogModule, $"Failed to read WMI property: {ex.Message}");
                 }
                 finally
                 {
@@ -33,24 +33,24 @@ internal static class WindowsLegacyCpuIdProvider
                 }
             }
 
-            LogWrapper.Warn(LogModule, "未找到有效的CPU ID");
+            LogWrapper.Warn(LogModule, "No valid CPU ID was found.");
             return null;
         }
         catch (ManagementException ex)
         {
-            LogWrapper.Error(ex, LogModule, "WMI查询失败");
+            LogWrapper.Error(ex, LogModule, "WMI query failed.");
         }
         catch (System.Runtime.InteropServices.COMException ex)
         {
-            LogWrapper.Error(ex, LogModule, "COM异常，请确保WMI服务正在运行");
+            LogWrapper.Error(ex, LogModule, "A COM exception occurred. Make sure the WMI service is running.");
         }
         catch (UnauthorizedAccessException ex)
         {
-            LogWrapper.Error(ex, LogModule, "访问被拒绝，请以管理员权限运行");
+            LogWrapper.Error(ex, LogModule, "Access denied. Try running with administrator privileges.");
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, LogModule, "意外的系统异常");
+            LogWrapper.Error(ex, LogModule, "Unexpected system exception.");
         }
 
         return null;

@@ -38,7 +38,7 @@ public class RegistryJavaScanner : IJavaScanner
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, "Java", "注册表扫描失败");
+            LogWrapper.Error(ex, "Java", "Registry scan failed.");
         }
     }
 

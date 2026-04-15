@@ -2078,6 +2078,18 @@ download:
     meta:
       downloads: '{value} 下載'
       updated: '更新 {value}'
+    demo:
+      entries:
+        sodium:
+          info: 現代效能優化模組。
+        mod_menu:
+          info: 管理 Fabric 模組選單。
+        atm9:
+          info: 大型整合包展示項目。
+        faithful:
+          info: 經典風格資源包。
+        complementary:
+          info: 常用光影收藏條目。
     targets:
       default_name: 預設收藏夾
       empty_share_code: 分享了個寂寞啊！
@@ -2915,6 +2927,9 @@ instance:
       summary: '{created_at} • {file_size}'
       actions:
         open_folder: 開啟截圖資料夾
+        open_file: 開啟截圖
+      messages:
+        missing_file: 目前截圖檔案不存在。
     server:
       quick_actions: 快捷操作
       actions:
@@ -2949,6 +2964,7 @@ instance:
         read_list_failed: |-
           無法讀取目前實例的伺服器列表。
           {error}
+        launch_route_prepared: '已切換到啟動頁並準備連線到伺服器 {entry_title}。'
         update_list_failed: |-
           無法更新目前實例的伺服器列表。
           {error}
@@ -3034,9 +3050,15 @@ instance:
         entry_missing: '{surface_title} 項目不存在。'
         details_read_failed: '讀取附加資訊失敗：{error}'
         checked_mods_summary: '已檢查 {instance_name}：啟用 {enabled_count} 個，停用 {disabled_count} 個，重複 {duplicate_count} 組。'
+        open_download_route: '{surface_title} 頁面已切換到下載頁。'
       dialogs:
         install_from_file:
           title: '選擇{surface_title}檔案'
+          file_types:
+            mod: Mod 檔案
+            resource_pack: 資源包檔案
+            shader: 光影檔案
+            schematic: 投影原理圖檔案
         delete:
           title: 資源刪除確認
           message: '確定要將這 {count} 個{surface_title}項目移入回收區嗎？'

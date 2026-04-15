@@ -26,7 +26,8 @@ internal static class FrontendCrashCompositionService
         var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(inputs.OutputPromptRequest with
         {
             ResultText = analysisResult.ResultText,
-            HasDirectFile = analysisResult.HasDirectFile
+            HasDirectFile = analysisResult.HasDirectFile,
+            HasModLoaderVersionMismatch = analysisResult.HasModLoaderVersionMismatch
         });
 
         return new CrashAvaloniaPlan(

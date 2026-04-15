@@ -1204,7 +1204,8 @@ internal sealed partial class FrontendShellViewModel
             resultText,
             IsManualAnalysis: false,
             HasDirectFile: analysisResult.HasDirectFile,
-            CanOpenModLoaderSettings: true));
+            CanOpenModLoaderSettings: true,
+            HasModLoaderVersionMismatch: analysisResult.HasModLoaderVersionMismatch));
         var exportPlan = MinecraftCrashExportWorkflowService.CreatePlan(exportRequest);
 
         return new CrashAvaloniaPlan(outputPrompt, exportPlan);
