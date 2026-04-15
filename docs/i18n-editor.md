@@ -2,6 +2,8 @@
 
 **Important** Under no circumstances should you edit or read locale YAML files or the schema directly. Use the CLI to perform all editing tasks, and use the validation command to check your work. There are multiple engineers working on i18n in parallel.
 
+**Note** You should ensure that zh-Hans remains consistent with commits before i18n is introduced. You can reference files from previous commits for the correct content (source of truth: b0f8ebb61ee80157b0743ef949c59b784453f8a9). You would need to manually translate to English and zh-Hant.
+
 The repo now includes a standalone developer CLI tool in `PCL.Tools.I18n`.
 
 It is intended for two use cases:

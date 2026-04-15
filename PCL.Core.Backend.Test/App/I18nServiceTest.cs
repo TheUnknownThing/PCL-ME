@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
 using PCL.Core.App.Configuration;
 using PCL.Core.App.I18n;
+using PCL.Core.Logging;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Test.App;
@@ -74,6 +75,59 @@ public sealed class I18nServiceTest
         Assert.AreEqual(1, changeCount);
     }
 
+    [TestMethod]
+    public void T_MissingKeyLogsWarningWithSchemaPreviewOnce()
+    {
+        using var fixture = new LocaleFixture();
+        fixture.WriteSchema(
+            """
+            launch:
+              profile:
+                kinds:
+                  authlib: []
+                  offline: []
+            """);
+        fixture.WriteLocale(
+            "en-US",
+            """
+            launch:
+              profile:
+                kinds:
+                  authlib: "Authlib-Injector"
+                  offline: "Offline"
+            """);
+
+        var settingsManager = new I18nSettingsManager(new InMemoryConfigProvider());
+        using var service = new I18nService(fixture.LocaleDirectory, settingsManager);
+        var warnings = new List<string>();
+
+        void HandleLog(LogLevel level, string message, string? module, Exception? exception)
+        {
+            if (level == LogLevel.Warning && string.Equals(module, "I18n", StringComparison.Ordinal))
+            {
+                warnings.Add(message);
+            }
+        }
+
+        LogWrapper.OnLog += HandleLog;
+        try
+        {
+            Assert.AreEqual("launch.profile.kinds.microsoft", service.T("launch.profile.kinds.microsoft"));
+            Assert.AreEqual("launch.profile.kinds.microsoft", service.T("launch.profile.kinds.microsoft"));
+        }
+        finally
+        {
+            LogWrapper.OnLog -= HandleLog;
+        }
+
+        Assert.AreEqual(1, warnings.Count);
+        StringAssert.Contains(warnings[0], "Missing translation key 'launch.profile.kinds.microsoft'");
+        StringAssert.Contains(warnings[0], "Expected schema:");
+        StringAssert.Contains(warnings[0], "launch");
+        StringAssert.Contains(warnings[0], "microsoft");
+        StringAssert.Contains(warnings[0], "authlib []");
+    }
+
     private sealed class LocaleFixture : IDisposable
     {
         public LocaleFixture()
@@ -81,11 +135,15 @@ public sealed class I18nServiceTest
             RootDirectory = Path.Combine(Path.GetTempPath(), "pcl-i18n-test-" + Guid.NewGuid().ToString("N"));
             LocaleDirectory = Path.Combine(RootDirectory, "Locales");
             Directory.CreateDirectory(LocaleDirectory);
+            MetaDirectory = Path.Combine(LocaleDirectory, "Meta");
+            Directory.CreateDirectory(MetaDirectory);
         }
 
         public string RootDirectory { get; }
 
         public string LocaleDirectory { get; }
+
+        public string MetaDirectory { get; }
 
         public void Dispose()
         {
@@ -96,6 +154,13 @@ public sealed class I18nServiceTest
         {
             File.WriteAllText(
                 Path.Combine(LocaleDirectory, locale + ".yaml"),
+                content + Environment.NewLine);
+        }
+
+        public void WriteSchema(string content)
+        {
+            File.WriteAllText(
+                Path.Combine(MetaDirectory, "schema.yaml"),
                 content + Environment.NewLine);
         }
     }

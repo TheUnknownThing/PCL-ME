@@ -240,6 +240,177 @@ public sealed class I18nYamlEditorTest
         Assert.AreEqual("locale.placeholder_value", report.Warnings.Single().Code);
     }
 
+    [TestMethod]
+    public void MergeLocaleFilesAddsSchemaAndSkipsExistingValuesWithoutForce()
+    {
+        using var fixture = new I18nYamlEditorFixture();
+        fixture.WriteManifest(
+            """
+            locales:
+              en-US: "English"
+              zh-Hans: "简体中文"
+            """);
+        fixture.WriteSchema(
+            """
+            common:
+              actions:
+                exit: []
+            """);
+        fixture.WriteLocale(
+            "en-US",
+            """
+            common:
+              actions:
+                exit: "Exit"
+            """);
+        fixture.WriteLocale(
+            "zh-Hans",
+            """
+            common:
+              actions:
+                exit: "退出"
+            """);
+        fixture.WriteMergeLocale(
+            "en-US",
+            """
+            common:
+              actions:
+                exit: "Close"
+              greeting:
+                message: "Hello, {name}!"
+            """);
+        fixture.WriteMergeLocale(
+            "zh-Hans",
+            """
+            common:
+              actions:
+                exit: "关闭"
+              greeting:
+                message: "你好，{name}！"
+            """);
+
+        var editor = new I18nYamlEditor(fixture.LocaleDirectory);
+        var report = editor.MergeLocaleFiles(fixture.MergeSourceDirectory);
+
+        Assert.AreEqual("zh-Hans", report.SchemaSourceLocale);
+        Assert.AreEqual(1, report.SchemaAddedCount);
+        Assert.AreEqual(0, report.SchemaUpdatedCount);
+        CollectionAssert.AreEqual(new[] { "name" }, editor.ReadSchema()["common.greeting.message"].ToArray());
+        Assert.AreEqual("Exit", editor.ReadLocaleValues("en-US")["common.actions.exit"]);
+        Assert.AreEqual("Hello, {name}!", editor.ReadLocaleValues("en-US")["common.greeting.message"]);
+        Assert.AreEqual(1, report.LocaleResults.Single(result => result.Locale == "en-US").SkippedCount);
+        Assert.AreEqual(1, report.LocaleResults.Single(result => result.Locale == "zh-Hans").SkippedCount);
+    }
+
+    [TestMethod]
+    public void MergeLocaleFilesRejectsSourceSchemaMismatch()
+    {
+        using var fixture = new I18nYamlEditorFixture();
+        fixture.WriteManifest(
+            """
+            locales:
+              en-US: "English"
+              zh-Hans: "简体中文"
+            """);
+        fixture.WriteSchema(
+            """
+            common:
+              actions:
+                exit: []
+            """);
+        fixture.WriteLocale(
+            "en-US",
+            """
+            common:
+              actions:
+                exit: "Exit"
+            """);
+        fixture.WriteLocale(
+            "zh-Hans",
+            """
+            common:
+              actions:
+                exit: "退出"
+            """);
+        fixture.WriteMergeLocale(
+            "en-US",
+            """
+            common:
+              greeting:
+                message: "Hello, {name}!"
+            """);
+        fixture.WriteMergeLocale(
+            "zh-Hans",
+            """
+            common:
+              greeting:
+                message: "你好！"
+            """);
+
+        var editor = new I18nYamlEditor(fixture.LocaleDirectory);
+
+        var exception = Assert.ThrowsExactly<InvalidDataException>(
+            () => editor.MergeLocaleFiles(fixture.MergeSourceDirectory));
+        StringAssert.Contains(exception.Message, "does not match the schema derived from locale");
+    }
+
+    [TestMethod]
+    public void MergeLocaleFilesOverwritesExistingValuesAndSchemaWithForce()
+    {
+        using var fixture = new I18nYamlEditorFixture();
+        fixture.WriteManifest(
+            """
+            locales:
+              en-US: "English"
+              zh-Hans: "简体中文"
+            """);
+        fixture.WriteSchema(
+            """
+            common:
+              greeting:
+                message: []
+            """);
+        fixture.WriteLocale(
+            "en-US",
+            """
+            common:
+              greeting:
+                message: "Hello"
+            """);
+        fixture.WriteLocale(
+            "zh-Hans",
+            """
+            common:
+              greeting:
+                message: "你好"
+            """);
+        fixture.WriteMergeLocale(
+            "en-US",
+            """
+            common:
+              greeting:
+                message: "Hello, {name}!"
+            """);
+        fixture.WriteMergeLocale(
+            "zh-Hans",
+            """
+            common:
+              greeting:
+                message: "你好，{name}！"
+            """);
+
+        var editor = new I18nYamlEditor(fixture.LocaleDirectory);
+        var report = editor.MergeLocaleFiles(fixture.MergeSourceDirectory, force: true);
+
+        Assert.AreEqual(0, report.SchemaAddedCount);
+        Assert.AreEqual(1, report.SchemaUpdatedCount);
+        CollectionAssert.AreEqual(new[] { "name" }, editor.ReadSchema()["common.greeting.message"].ToArray());
+        Assert.AreEqual("Hello, {name}!", editor.ReadLocaleValues("en-US")["common.greeting.message"]);
+        Assert.AreEqual("你好，{name}！", editor.ReadLocaleValues("zh-Hans")["common.greeting.message"]);
+        Assert.AreEqual(1, report.LocaleResults.Single(result => result.Locale == "en-US").UpdatedCount);
+        Assert.AreEqual(1, report.LocaleResults.Single(result => result.Locale == "zh-Hans").UpdatedCount);
+    }
+
     private sealed class I18nYamlEditorFixture : IDisposable
     {
         public I18nYamlEditorFixture()
@@ -247,7 +418,9 @@ public sealed class I18nYamlEditorTest
             RootDirectory = Path.Combine(Path.GetTempPath(), "pcl-i18n-editor-test-" + Guid.NewGuid().ToString("N"));
             LocaleDirectory = Path.Combine(RootDirectory, "Locales");
             MetaDirectory = Path.Combine(LocaleDirectory, "Meta");
+            MergeSourceDirectory = Path.Combine(RootDirectory, "MergeSource");
             Directory.CreateDirectory(MetaDirectory);
+            Directory.CreateDirectory(MergeSourceDirectory);
         }
 
         public string RootDirectory { get; }
@@ -255,6 +428,8 @@ public sealed class I18nYamlEditorTest
         public string LocaleDirectory { get; }
 
         public string MetaDirectory { get; }
+
+        public string MergeSourceDirectory { get; }
 
         public void Dispose()
         {
@@ -274,6 +449,11 @@ public sealed class I18nYamlEditorTest
         public void WriteLocale(string locale, string content)
         {
             File.WriteAllText(Path.Combine(LocaleDirectory, locale + ".yaml"), content + Environment.NewLine);
+        }
+
+        public void WriteMergeLocale(string locale, string content)
+        {
+            File.WriteAllText(Path.Combine(MergeSourceDirectory, locale + ".yaml"), content + Environment.NewLine);
         }
     }
 }

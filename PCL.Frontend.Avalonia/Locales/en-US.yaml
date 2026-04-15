@@ -618,8 +618,8 @@ shell:
             title: Clear Game Junk
             tooltip: Clean cached logs and crash reports.
           crash_test:
-            title: Crash Prompt Test
-            tooltip: Trigger the crash prompt test.
+            title: Crash Test
+            tooltip: Trigger the crash prompt.
           create_shortcut:
             cancelled: Shortcut creation canceled.
             choice_info: 'Location: {path}'
@@ -655,20 +655,20 @@ shell:
           launch_count:
             dialog_title: Launch Count
             message: PCL has already started the game {count} time(s) for you.
-            title: View Launch Count
+            title: Launch Count
             tooltip: Show how many times the launcher has started the game.
           memory_optimize:
             cancelled: Memory optimization canceled.
             confirm_title: Confirm Memory Optimization?
             continue: Continue
             prompts:
-              r0: Hm...?
+              r0: Huh...?
               r2: Memory is tight. Adding more RAM is recommended to avoid repeated optimization and heavy disk pressure.
               r6: Let the system settle for about a minute after using this feature.
               r16: You have a fair amount of memory. Let the system manage memory first.
               r32: Total memory is abundant. Close unnecessary programs instead of trying memory optimization.
-            title: Memory Optimization
-            tooltip: Try to free some system memory.
+            title: Mem Opt
+            tooltip: Automatically free some memory.
             unsupported_other: This platform does not provide a memory optimizer compatible with the standard implementation. The confirmation flow is kept, but no external editor will be opened.
             unsupported_windows: The Avalonia frontend has not yet integrated the Windows memory optimizer used by the standard implementation. The confirmation flow is kept, but no external editor will be opened.
         unsupported: This toolbox action is not yet supported in the Avalonia frontend.
@@ -770,6 +770,268 @@ launch:
         force_current: Use current Java
         use_compatible: Use compatible Java
         abort: Cancel launch
+  actions:
+    launch: Launch
+    launching: Launching...
+    version_select: Select Version
+    version_setup: Version Settings
+  dialog:
+    download_speed:
+      zero: 0 B/s
+    labels:
+      did_you_know: Did you know
+      download_speed: Download speed
+      method: Method
+      progress: Progress
+      step: Step
+    stages:
+      assets: Downloading assets
+      assets_file: 'Downloading asset: {file_name}'
+      support: Repairing support files
+      support_file: 'Repairing file: {file_name}'
+      verify_instance: Verifying instance files
+    state:
+      canceling:
+        game_process: Stopping game process
+        prelaunch_tasks: Stopping pre-launch tasks
+        title: Canceling
+      running:
+        initializing: Initializing
+        title: Launching
+  profile:
+    actions:
+      add_or_login: Add or Sign In
+      select: Select
+    activities:
+      authlib_login: Authlib sign-in
+      authlib_login_failed: Authlib sign-in failed
+      busy: Another profile action is already running
+      create_offline: Create offline profile
+      create_offline_failed: Failed to create offline profile
+      delete: Delete profile
+      delete_failed: Failed to delete profile
+      microsoft_login: Microsoft sign-in
+      microsoft_login_failed: Microsoft sign-in failed
+      refresh: Refresh profile
+      refresh_failed: Failed to refresh profile
+      switch: Switch profile
+      switch_failed: Failed to switch profile
+    authlib:
+      actions:
+        login: Sign In
+        use_littleskin: Use LittleSkin
+      activities:
+        use_littleskin: Switch auth server
+      completed: Signed in as {profile_name}
+      errors:
+        invalid_server: Invalid auth server address
+        login_failed: Authlib sign-in failed
+        no_roles: The auth server returned no available roles
+        required_fields: Enter the server address, username, and password
+      password_watermark: Password
+      server_watermark: Auth server URL
+      title: Authlib-Injector
+      user_name_watermark: Username
+    chooser:
+      authlib: Authlib-Injector
+      microsoft: Microsoft account
+      offline: Offline profile
+    delete:
+      canceled: Deletion canceled
+      completed: Deleted profile {profile_name}
+      confirmation:
+        confirm: Delete
+        message: Delete the selected profile? This cannot be undone.
+        title: Delete Profile
+      list_changed: The profile list changed. Please try again.
+    entry:
+      unnamed: Unnamed profile
+    hint:
+      selected: Profile ready
+    kinds:
+      authlib: Authlib-Injector
+      authlib_with_server: Authlib-Injector ({server_name})
+      microsoft: Microsoft account
+      offline: Offline profile
+    microsoft:
+      actions:
+        continue_after_auth: Continue
+        reopen_browser: Open browser again
+        start: Start sign-in
+      completed: Signed in as {user_name}
+      device_code: Device code
+      errors:
+        authorization_declined: Authorization was declined.
+        authorization_timeout: Timed out waiting for Microsoft authorization.
+        device_code_expired: The device code expired. Start again.
+        missing_client_id: Missing embedded Microsoft client ID.
+      messages:
+        opened_profile_create_page: Opened the Microsoft account creation page
+        opened_related_web: Opened the related web page
+        opened_sign_in_page: Opened the Microsoft sign-in page
+      status:
+        browser_opened: Browser opened. Finish authorization and return here.
+        initial: Ready to sign in with Microsoft
+        requesting_device_code: Requesting device code...
+        waiting_for_auth: Waiting for Microsoft authorization...
+      title: Microsoft Account
+    none_selected: No profile selected
+    offline:
+      actions:
+        create: Create
+      completed: Created offline profile {user_name}
+      custom_uuid_watermark: Custom UUID (optional)
+      errors:
+        empty_user_name: Enter a username
+        invalid_uuid: The custom UUID format is invalid
+      title: Offline Profile
+      user_name_watermark: Username
+      uuid_modes:
+        custom: Custom UUID
+        legacy: Legacy UUID
+        standard: Standard UUID
+    refresh:
+      authlib:
+        completed: Refreshed Authlib profile {profile_name}
+        errors:
+          failed: 'Authlib refresh failed: {message}'
+          incomplete_session: The current Authlib session is incomplete
+          invalid_server: The saved auth server address is invalid
+          multiple_roles: Multiple roles were returned. Please sign in again.
+          profile_changed: The returned profile does not match the current account
+          relogin_required: Session expired. Sign in again.
+        reauthenticate: Reauthenticating...
+        reauthenticated: Reauthenticated as {profile_name}
+        refresh_session: Refreshing session...
+        valid: Authlib session is valid for {profile_name}
+        validate_session: Validating session...
+      canceled: Refresh canceled
+      errors:
+        expired_keyword: expired
+        request_failed_status: Request failed with status code {status_code}
+      microsoft:
+        check_ownership: Checking game ownership...
+        completed: Refreshed Microsoft profile {profile_name}
+        errors:
+          failed: 'Microsoft refresh failed: {message}'
+          missing_refresh_token: Missing refresh token. Sign in again.
+          relogin_required: Session expired. Sign in again.
+        get_minecraft_access_token: Getting Minecraft access token...
+        get_xbox_live_token: Getting Xbox Live token...
+        get_xsts_token: Getting XSTS token...
+        refresh_account: Refreshing Microsoft account...
+        sync_profile: Syncing profile information...
+        valid: Microsoft session is valid for {profile_name}
+        validate_session: Validating session...
+      not_required: This profile does not need refresh
+    selection:
+      empty: No available profile
+      hint: Choose a launch profile
+      hint_empty: No launch profile selected
+  status:
+    activities:
+      canceled: Launch canceled
+      dismiss_announcement: Dismiss announcement
+      failed: Launch failed
+      game_process_started: Game started
+      instance_verification: Instance verification
+      java_check_ignored: Java warning ignored
+      prelaunch_account_check: Pre-launch account check
+    current_instance: 'Current instance: {instance_name}'
+    errors:
+      instance_verification_failed: 'Instance verification failed: {message}'
+      java_missing: No Java runtime is selected
+    hints:
+      launch_succeeded: Launch started successfully
+    lines:
+      java: 'Java: {java_label}'
+      java_warning: 'Java warning: {message}'
+      precheck: 'Precheck: {result}'
+      profile: 'Profile: {profile_label}'
+      prompts: 'Prompts: {prompt_count}, support prompt: {support_prompt}'
+      session: 'Session: {session_state}'
+    logs:
+      canceled: Launch canceled
+      failed: 'Launch failed: {message}'
+      task_manager_progress: Task manager progress is being tracked
+      verifying_instance_files: Verifying instance files...
+    messages:
+      announcement_dismissed: 'Dismissed announcement: {title}'
+      canceled: Launch canceled
+      game_process_started: Started {instance_name} (PID {pid})
+      instance_verification_completed: Instance verification completed. Downloaded {downloaded_count} files and reused {reused_count} files.
+      returned_to_launch_page: Returned to the Launch page
+    overview_title: '{instance_name} Overview'
+    steps:
+      prepare_arguments: Preparing launch arguments
+      read_configuration: Reading launch configuration
+      write_launch_script: Writing launch script
+    stopped:
+      canceled_title: Launch canceled
+      failed_title: Launch failed
+    tasks:
+      verify_instance_files: Verify instance files for {instance_name}
+    title: Launch Status
+    values:
+      idle: Idle
+      launching: Launching
+      matched: Matched
+      not_matched: Not matched
+      passed: Passed
+  homepage:
+    actions:
+      inline_default_info: View Info
+      open_web: Open on Web
+      refresh: Refresh
+      view_details: View Details
+    activities:
+      loaded_content: Loaded homepage content from {source_name}
+      loaded_preset: 'Loaded preset: {preset_title}'
+      refresh_failed: Homepage refresh failed
+      switched_to_blank: Switched to a blank homepage
+    errors:
+      missing_root: Homepage markup is missing a root element
+    examples:
+      button: 'Button: {title}'
+      button_with_events: 'Button: {title} ({summary})'
+      button_with_events_untitled: Button with events ({summary})
+    hints:
+      prefix: 'Text: {text}'
+    official_news:
+      author: Official News
+    presets:
+      announcement_board: Announcement Board
+      daily_modpacks: Daily Modpacks
+      github_dashboard: GitHub Dashboard
+      magazine: Magazine
+      minecraft_news: Minecraft News
+      news_flash: News Flash
+      official_news: Official News
+      openbmclapi_dashboard: OpenBMCLAPI Dashboard
+      random_hint: Random Hint
+      simple_homepage: Simple Homepage
+      skin_recommendations: Skin Recommendations
+      update_summary: Update Summary
+      whats_new: What's New
+    random_hint:
+      actions:
+        next: Next
+        next_info: Next Hint
+      fallback: No hints are available
+      title: Random Hint
+    sections:
+      content_title: Content
+      default_title: Homepage
+    sources:
+      local: Local file
+      remote: Remote homepage
+    status:
+      invalid_remote_url: The remote homepage URL is invalid
+      loading_official_news: Loading official news...
+      loading_remote: Loading remote homepage...
+      loading_title: Loading homepage
+      local_file_missing: 'Local file not found: {path}'
+      unavailable_title: Homepage Unavailable
 crash:
   prompts:
     output:
@@ -1098,7 +1360,7 @@ setup:
       actions:
         clear: Clear background content
         open_folder: Open folder
-        refresh: Refresh background content
+        refresh: Refresh
       activities:
         clear: Clear background content
         clear_empty: There are no background files to remove.
@@ -1212,9 +1474,9 @@ setup:
         remote: Remote update
     music:
       actions:
-        clear: Clear background music
+        clear: Clear
         open_folder: Open folder
-        refresh: Refresh background music
+        refresh: Refresh
       activities:
         clear: Clear background music
         clear_empty: There are no background music files to remove.
@@ -1253,7 +1515,7 @@ setup:
         lxgw_wenkai: LXGW WenKai
         source_han_sans: Source Han Sans
       theme_color:
-        cat_blue: Cat Blue
+        cat_blue: LTCat Blue
         custom: Custom
         grass_green: Grass Green
         lemon_cyan: Lemon Cyan
@@ -1399,3 +1661,372 @@ setup:
         all: Show all announcements
         disabled: Hide all announcements
         important_only: Show announcements only when important notices are available
+common:
+  actions:
+    back: Back
+    cancel: Cancel
+    close: Close
+    confirm: Confirm
+    select_all: Select all
+  filters:
+    all: All
+    any: Any
+  punctuation:
+    comma: ', '
+download:
+  favorites:
+    actions:
+      batch_install: Batch Install
+      clear_selection: Clear Selection
+      favorite: Favorite
+      favorite_to: Favorite To...
+      manage_targets: Manage Targets
+      remove: Remove
+      share_selected: Share Selected
+    activities:
+      batch_install: Batch install favorites
+      batch_install_failed: Batch install failed
+      favorite_to: Favorite to target
+      remove: Remove favorites
+      remove_failed: Failed to remove favorites
+      select_all: Select all favorites
+      share_selected: Share selected favorites
+      share_selected_failed: Failed to share selected favorites
+    batch_install:
+      analyzing_activity: Analyzing {count} favorites for {target_name}
+      analyzing_hint: Analyzing {count} selected items...
+      canceled: Batch install canceled
+      confirmation:
+        confirm: Start Install
+        failed: Failed to confirm batch install
+        title: Batch Install Favorites
+      empty_selection: No favorites are selected
+      started_activity: Started batch install for {target_name}
+      started_hint: Batch install started
+      summary:
+        dependencies: '{count} dependencies'
+        none: No tasks
+        skipped: '{count} skipped'
+        tasks: '{count} tasks'
+    empty:
+      body: Add projects to favorites so you can install or share them later.
+      title: No Favorites Yet
+    favorite_to:
+      already_contains_selected: '{target_name} already contains all selected favorites'
+      completed: Added {count} favorites to {target_name}
+      selection_prompt: Choose a target for {count} selected favorites
+    remove:
+      completed: Removed {count} favorites from {target_name}
+      confirmation:
+        message: Remove {count} selected favorites from {target_name}?
+        title: Remove Favorites
+      no_matches: No matching favorites were found in {target_name}
+    search:
+      watermark: Search favorites
+    select_all:
+      completed: Selected {count} visible favorites in {target_name}
+      empty: No visible favorites in {target_name}
+    selection:
+      summary: '{count} selected'
+    share_selected:
+      completed: Copied {count} selected favorite IDs
+      empty: No selected favorites to share
+    targets:
+      default_name: Default Favorites
+  install:
+    actions:
+      clear_selection: Clear Selection
+      start: Start Install
+    catalog:
+      empty: No versions are available
+      groups:
+        april_fools: April Fools
+        latest: Latest
+        legacy: Legacy
+        preview: Preview
+        release: Release
+      latest:
+        preview: Latest preview
+        published_at: '{label}: {published_at}'
+        release: Latest release
+      load_failed: Failed to load versions
+      loading: Loading versions...
+    generated_name:
+      default: New Version
+    options:
+      available: Available
+      unavailable: Unavailable
+    validation:
+      already_exists: This name already exists
+      empty_name: Enter a name
+      invalid_characters: The name contains invalid characters
+      invalid_ending: The name cannot end with a space or period
+    workflow:
+      activities:
+        apply_changes: Apply Changes
+        apply_changes_failed: Failed to apply changes
+        load_minecraft_failed: Failed to load Minecraft versions
+        reset_instance: Reset Instance
+        select_option: Select {option_title}
+        select_option_failed: Failed to select {option_title}
+        start_failed: Failed to start installation
+      dialogs:
+        reset_instance:
+          confirm: Reset
+          message: No changes are selected. Reset this instance to its base state?
+          title: Reset Instance
+        select_minecraft:
+          confirm: Select
+          message: Choose a Minecraft version
+          title: Select Minecraft Version
+        select_option:
+          confirm: Select
+          message: Choose an available option
+          title: Select {option_title}
+      messages:
+        instance_missing: No target instance is selected
+        option_not_supported: This option is not supported by the frontend installer
+        queued_in_task_center: 'Queued in Task Center: {task_title}'
+        select_minecraft_first: Select a Minecraft version first
+        unresolved_selections: 'Resolve these selections first: {options}'
+      selection:
+        none: None
+      stages:
+        asset_files: Asset Files
+        finalize: Finalize
+        prepare: Prepare
+        support_files: Support Files
+      tasks:
+        asset_files_completed: Asset files completed
+        asset_files_ready: Asset files ready
+        canceled: Canceled
+        canceling: Canceling...
+        completed: Completed
+        downloading_asset_files: Downloading asset files
+        downloading_dependencies: Downloading dependencies
+        files_ready: '{completed_count}/{total_count} files ready'
+        manifest_written: Manifest written
+        no_asset_files_needed: No asset files needed
+        no_asset_files_to_download: No asset files to download
+        no_support_files_needed: No support files needed
+        no_support_files_to_repair: No support files to repair
+        prepare_environment: Preparing environment
+        processing_file: Processing {file_name}
+        progress_with_file: '{prefix}: {completed_count}/{total_count} ({file_name})'
+        progress_without_file: '{prefix}: {completed_count}/{total_count}'
+        queued: Queued
+        repairing_support_files: Repairing support files
+        support_files_completed: Support files completed
+        support_files_ready: Support files ready
+        waiting_asset_files: Waiting for asset files
+        waiting_execution: Waiting to execute
+        waiting_finalize: Waiting to finalize
+        waiting_support_files: Waiting for support files
+  resource:
+    activities:
+      install_pack: Install Pack
+      install_pack_failed: Failed to install pack
+      reset_filters: Reset Filters
+      reset_filters_message: Filters reset for {surface_title}
+    current_instance:
+      actions:
+        switch: Switch Instance
+      none_selected: No instance selected
+      summary_none_selected: Select an instance to improve compatibility filtering
+      summary_suffix: Used for compatibility filtering
+      title: Current Instance
+    empty:
+      default: No results
+    filters:
+      loader: Loader
+      sort: Sort
+      source: Source
+      tag: Tag
+      version: Version
+    hints:
+      modrinth_unavailable: Modrinth is unavailable for the current source
+    install_pack:
+      no_filtered_result: No installable pack in the current results
+      no_surface: No download surface is active
+      open_target_missing: Unable to open the target folder
+      runtime_state_missing: Download state is unavailable
+      target_missing: Install target is missing
+    results:
+      summary: Showing {shown_count} of {total_count}
+    search:
+      data_pack: Data packs
+      default: Search projects
+      mod: Mods
+      pack: Modpacks
+      resource_pack: Resource packs
+      shader: Shaders
+      world: Worlds
+    sort:
+      default: Default
+      downloads: Downloads
+      follows: Follows
+      release: Release Date
+      relevance: Relevance
+      update: Updated
+    surface:
+      empty: No {surface_name} found
+      loading: Loading {surface_name}...
+      title: '{surface_name}'
+resource_detail:
+  actions:
+    copy_link: Copy Link
+    copy_name: Copy Name
+    mc_wiki: MC Wiki
+    translate_description: Translate Description
+    view_details: View Details
+  activities:
+    download_canceled: 'Canceled download: {entry_title}'
+    download_failed: 'Download failed: {entry_title}'
+    download_file: 'Download file: {entry_title}'
+    download_started: 'Download started: {entry_title}'
+    install_current_instance: Install to current instance
+    install_current_instance_failed: Failed to install to current instance
+    navigate_back: Back to {target_title}
+    open_dependency_project: 'Open dependency project: {entry_title}'
+    open_detail: Open Details
+    open_detail_for_project: Open details for {project_title}
+    open_file: 'Open file: {entry_title}'
+    open_mc_wiki: Open MC Wiki for {project_title}
+    open_project_content: 'Open content: {entry_title}'
+    open_project_homepage: Open homepage for {project_title}
+    pick_save_path_failed: Failed to choose save path for {entry_title}
+    view_source: View source for {project_title}
+  copy:
+    messages:
+      completed: Copied successfully
+      failed: '{title} failed'
+  copy_link:
+    empty: There is no link to copy
+  copy_name:
+    empty: There is no name to copy
+  counts:
+    hundred_million: '{value} hundred million'
+    ten_thousand: '{value} ten thousand'
+  current_instance:
+    none_selected: No current instance selected
+    summary_none_selected: Select an instance to install this project directly
+  dependencies:
+    groups:
+      embedded: Embedded
+      included: Included
+      incompatible: Incompatible
+      optional: Optional
+      other: Other
+      required: Required
+      tool: Tool
+    title: Dependencies
+    title_for_release: '{release_title} Dependencies'
+  download:
+    dialogs:
+      pick_save_path:
+        file_type: Download file
+        title: Choose Save Path
+    errors:
+      missing_url: Missing download URL
+    hints:
+      completed: Downloaded {file_name}
+      started: Started downloading {file_name}
+    messages:
+      no_save_path: No save path was chosen
+    task_title: Download {file_name}
+  filters:
+    loader: Loader
+    version: Version
+  install:
+    dialogs:
+      confirm_dependencies:
+        confirm: Continue
+        failed: Failed to confirm dependency install
+        title: Install Dependencies Too?
+    errors:
+      no_filtered_release: No matching release is available
+      unknown_resource_type: Unknown resource type
+    hints:
+      analyzing: Analyzing installation plan...
+      started: Installation tasks started
+    messages:
+      analyzing: Analyzing how to install {project_title} into {instance_name}
+      canceled_with_dependencies: Canceled installation with dependencies
+      no_tasks: No installation tasks are needed
+      queued_in_task_center: 'Queued in Task Center: {task_title}'
+    summary:
+      completed: 'Installation queued for {instance_name}: {summary}'
+      dependencies: '{count} dependencies'
+      skipped: '{count} skipped'
+      tasks: '{count} tasks'
+  instance_selection:
+    activities:
+      select: Select instance
+      select_failed: Failed to select instance
+    dialog:
+      message: Choose an instance to install this project into
+      title: Choose Instance
+    messages:
+      already_selected: '{instance_name} is already selected'
+      no_instances: There are no available instances
+  links:
+    title: Links
+  loading:
+    releases: Loading releases...
+    source: Source
+    status: Status
+  modpack:
+    activities:
+      install_canceled: 'Canceled modpack install: {entry_title}'
+      install_completed: Modpack installed
+      install_failed: 'Modpack install failed: {entry_title}'
+      prompt_instance_name_failed: Failed to ask for an instance name
+    archive_name: modpack{extension}
+    dialogs:
+      instance_name:
+        message: Enter a name for the new instance
+        title: New Instance Name
+      invalid_name:
+        confirm: OK
+        title: Invalid Instance Name
+    hints:
+      download_and_install_started: Started downloading and installing {file_name}
+      install_completed: '{instance_name} was installed successfully'
+    messages:
+      install_completed: Installed {instance_name} to {target_directory}
+      missing_instance_name: No instance name was provided
+    task_title: Install {source_name} as {instance_name}
+    validation:
+      duplicate: An instance with this name already exists
+      empty: Enter an instance name
+      invalid_characters: The name contains invalid characters
+      reserved_name: This name is reserved by the system
+      short_name_pattern: This short name is reserved on Windows
+      too_long: The name is too long
+      trailing_dot: The name cannot end with a space or period
+      trim_spaces: Remove leading or trailing spaces
+  releases:
+    empty:
+      body: No releases match the current filters
+      title: No Releases
+  selection:
+    missing_project_id: Missing project ID
+    no_compatibility: No compatible release
+    no_tags: No tags
+    none_selected_summary: Choose a project to see its details
+    none_selected_title: Nothing Selected
+    not_loaded: Not loaded yet
+    project_fallback_title: Project {project_id}
+    unspecified_source: Unspecified source
+    waiting: Waiting for selection
+  suggested_release:
+    none: No suggested release
+    title: Suggested Release
+  translate_description:
+    empty: There is no description to translate
+  values:
+    none: None
+    other: Other
+  versions:
+    legacy: Legacy
+    snapshot: Snapshot

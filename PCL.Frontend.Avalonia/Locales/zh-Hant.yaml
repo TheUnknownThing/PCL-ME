@@ -770,6 +770,268 @@ launch:
         force_current: 繼續使用目前 Java
         use_compatible: 改用相容 Java
         abort: 取消啟動
+  actions:
+    launch: 啟動
+    launching: 正在啟動...
+    version_select: 選擇版本
+    version_setup: 版本設定
+  dialog:
+    download_speed:
+      zero: 0 B/s
+    labels:
+      did_you_know: 你知道嗎
+      download_speed: 下載速度
+      method: 方式
+      progress: 進度
+      step: 步驟
+    stages:
+      assets: 正在下載資源檔案
+      assets_file: 正在下載資源檔案：{file_name}
+      support: 正在修復支援檔案
+      support_file: 正在修復檔案：{file_name}
+      verify_instance: 正在校驗實例檔案
+    state:
+      canceling:
+        game_process: 正在停止遊戲程序
+        prelaunch_tasks: 正在停止啟動前任務
+        title: 正在取消
+      running:
+        initializing: 正在初始化
+        title: 正在啟動
+  profile:
+    actions:
+      add_or_login: 新增或登入
+      select: 選擇
+    activities:
+      authlib_login: Authlib 登入
+      authlib_login_failed: Authlib 登入失敗
+      busy: 已有其他檔案操作正在進行
+      create_offline: 建立離線檔案
+      create_offline_failed: 建立離線檔案失敗
+      delete: 刪除檔案
+      delete_failed: 刪除檔案失敗
+      microsoft_login: 微軟登入
+      microsoft_login_failed: 微軟登入失敗
+      refresh: 重新整理檔案
+      refresh_failed: 重新整理檔案失敗
+      switch: 切換檔案
+      switch_failed: 切換檔案失敗
+    authlib:
+      actions:
+        login: 登入
+        use_littleskin: 使用 LittleSkin
+      activities:
+        use_littleskin: 切換驗證伺服器
+      completed: 已登入為 {profile_name}
+      errors:
+        invalid_server: 驗證伺服器地址無效
+        login_failed: Authlib 登入失敗
+        no_roles: 驗證伺服器未回傳可用角色
+        required_fields: 請輸入伺服器位址、使用者名稱和密碼
+      password_watermark: 密碼
+      server_watermark: 驗證伺服器位址
+      title: Authlib-Injector
+      user_name_watermark: 使用者名稱
+    chooser:
+      authlib: Authlib-Injector
+      microsoft: 微軟帳號
+      offline: 離線檔案
+    delete:
+      canceled: 已取消刪除
+      completed: 已刪除檔案 {profile_name}
+      confirmation:
+        confirm: 刪除
+        message: 要刪除所選檔案嗎？此操作無法復原。
+        title: 刪除檔案
+      list_changed: 檔案清單已變更，請重試。
+    entry:
+      unnamed: 未命名檔案
+    hint:
+      selected: 已選擇檔案
+    kinds:
+      authlib: Authlib-Injector
+      authlib_with_server: Authlib-Injector（{server_name}）
+      microsoft: 微軟帳號
+      offline: 離線檔案
+    microsoft:
+      actions:
+        continue_after_auth: 繼續
+        reopen_browser: 重新開啟瀏覽器
+        start: 開始登入
+      completed: 已登入為 {user_name}
+      device_code: 裝置代碼
+      errors:
+        authorization_declined: 授權已被拒絕。
+        authorization_timeout: 等待微軟授權逾時。
+        device_code_expired: 裝置代碼已過期，請重新開始。
+        missing_client_id: 缺少內建微軟用戶端 ID。
+      messages:
+        opened_profile_create_page: 已開啟微軟帳號建立頁面
+        opened_related_web: 已開啟相關網頁
+        opened_sign_in_page: 已開啟微軟登入頁面
+      status:
+        browser_opened: 瀏覽器已開啟，請完成授權後回到這裡。
+        initial: 準備使用微軟帳號登入
+        requesting_device_code: 正在要求裝置代碼...
+        waiting_for_auth: 正在等待微軟授權...
+      title: 微軟帳號
+    none_selected: 未選擇檔案
+    offline:
+      actions:
+        create: 建立
+      completed: 已建立離線檔案 {user_name}
+      custom_uuid_watermark: 自訂 UUID（選填）
+      errors:
+        empty_user_name: 請輸入使用者名稱
+        invalid_uuid: 自訂 UUID 格式無效
+      title: 離線檔案
+      user_name_watermark: 使用者名稱
+      uuid_modes:
+        custom: 自訂 UUID
+        legacy: 舊版 UUID
+        standard: 標準 UUID
+    refresh:
+      authlib:
+        completed: 已重新整理 Authlib 檔案 {profile_name}
+        errors:
+          failed: Authlib 重新整理失敗：{message}
+          incomplete_session: 目前的 Authlib 工作階段不完整
+          invalid_server: 儲存的驗證伺服器位址無效
+          multiple_roles: 回傳了多個角色，請重新登入。
+          profile_changed: 回傳的檔案與目前帳號不符
+          relogin_required: 工作階段已過期，請重新登入。
+        reauthenticate: 正在重新驗證...
+        reauthenticated: 已重新驗證為 {profile_name}
+        refresh_session: 正在重新整理工作階段...
+        valid: Authlib 工作階段對 {profile_name} 仍然有效
+        validate_session: 正在驗證工作階段...
+      canceled: 已取消重新整理
+      errors:
+        expired_keyword: expired
+        request_failed_status: 要求失敗，狀態碼為 {status_code}
+      microsoft:
+        check_ownership: 正在檢查遊戲擁有權...
+        completed: 已重新整理微軟檔案 {profile_name}
+        errors:
+          failed: 微軟重新整理失敗：{message}
+          missing_refresh_token: 缺少重新整理權杖，請重新登入。
+          relogin_required: 工作階段已過期，請重新登入。
+        get_minecraft_access_token: 正在取得 Minecraft 存取權杖...
+        get_xbox_live_token: 正在取得 Xbox Live 權杖...
+        get_xsts_token: 正在取得 XSTS 權杖...
+        refresh_account: 正在重新整理微軟帳號...
+        sync_profile: 正在同步檔案資訊...
+        valid: 微軟工作階段對 {profile_name} 仍然有效
+        validate_session: 正在驗證工作階段...
+      not_required: 此檔案不需要重新整理
+    selection:
+      empty: 沒有可用檔案
+      hint: 選擇一個啟動檔案
+      hint_empty: 未選擇啟動檔案
+  status:
+    activities:
+      canceled: 啟動已取消
+      dismiss_announcement: 關閉公告
+      failed: 啟動失敗
+      game_process_started: 遊戲已啟動
+      instance_verification: 實例校驗
+      java_check_ignored: 已忽略 Java 警告
+      prelaunch_account_check: 啟動前帳號檢查
+    current_instance: 目前實例：{instance_name}
+    errors:
+      instance_verification_failed: 實例校驗失敗：{message}
+      java_missing: 未選擇 Java 執行階段
+    hints:
+      launch_succeeded: 已成功開始啟動
+    lines:
+      java: Java：{java_label}
+      java_warning: Java 警告：{message}
+      precheck: 預先檢查：{result}
+      profile: 檔案：{profile_label}
+      prompts: 提示：{prompt_count}，輔助提示：{support_prompt}
+      session: 工作階段：{session_state}
+    logs:
+      canceled: 啟動已取消
+      failed: 啟動失敗：{message}
+      task_manager_progress: 正在追蹤工作管理員進度
+      verifying_instance_files: 正在校驗實例檔案...
+    messages:
+      announcement_dismissed: 已關閉公告：{title}
+      canceled: 啟動已取消
+      game_process_started: 已啟動 {instance_name}（PID {pid}）
+      instance_verification_completed: 實例校驗完成，下載了 {downloaded_count} 個檔案，重用了 {reused_count} 個檔案。
+      returned_to_launch_page: 已返回啟動頁
+    overview_title: '{instance_name} 概覽'
+    steps:
+      prepare_arguments: 正在準備啟動參數
+      read_configuration: 正在讀取啟動設定
+      write_launch_script: 正在寫入啟動腳本
+    stopped:
+      canceled_title: 啟動已取消
+      failed_title: 啟動失敗
+    tasks:
+      verify_instance_files: 校驗 {instance_name} 的實例檔案
+    title: 啟動狀態
+    values:
+      idle: 閒置
+      launching: 啟動中
+      matched: 已匹配
+      not_matched: 未匹配
+      passed: 通過
+  homepage:
+    actions:
+      inline_default_info: 查看資訊
+      open_web: 開啟網頁
+      refresh: 重新整理
+      view_details: 查看詳細資訊
+    activities:
+      loaded_content: 已從 {source_name} 載入首頁內容
+      loaded_preset: 已載入預設：{preset_title}
+      refresh_failed: 首頁重新整理失敗
+      switched_to_blank: 已切換為空白首頁
+    errors:
+      missing_root: 首頁標記缺少根元素
+    examples:
+      button: 按鈕：{title}
+      button_with_events: 按鈕：{title}（{summary}）
+      button_with_events_untitled: 帶事件的按鈕（{summary}）
+    hints:
+      prefix: 文字：{text}
+    official_news:
+      author: 官方資訊
+    presets:
+      announcement_board: 公告欄
+      daily_modpacks: 每日整合包
+      github_dashboard: GitHub 儀表板
+      magazine: 雜誌
+      minecraft_news: Minecraft 資訊
+      news_flash: 快訊
+      official_news: 官方資訊
+      openbmclapi_dashboard: OpenBMCLAPI 儀表板
+      random_hint: 隨機提示
+      simple_homepage: 簡潔首頁
+      skin_recommendations: 皮膚推薦
+      update_summary: 更新摘要
+      whats_new: 新內容
+    random_hint:
+      actions:
+        next: 下一則
+        next_info: 下一則提示
+      fallback: 暫無提示
+      title: 隨機提示
+    sections:
+      content_title: 內容
+      default_title: 首頁
+    sources:
+      local: 本機檔案
+      remote: 遠端首頁
+    status:
+      invalid_remote_url: 遠端首頁網址無效
+      loading_official_news: 正在載入官方資訊...
+      loading_remote: 正在載入遠端首頁...
+      loading_title: 正在載入首頁
+      local_file_missing: 找不到本機檔案：{path}
+      unavailable_title: 首頁不可用
 crash:
   prompts:
     output:
@@ -1399,3 +1661,372 @@ setup:
         all: 顯示所有公告
         disabled: 關閉所有公告
         important_only: 僅在有重要通知時顯示公告
+common:
+  actions:
+    back: 返回
+    cancel: 取消
+    close: 關閉
+    confirm: 確認
+    select_all: 全選
+  filters:
+    all: 全部
+    any: 任意
+  punctuation:
+    comma: 、
+download:
+  favorites:
+    actions:
+      batch_install: 批量安裝
+      clear_selection: 取消選取
+      favorite: 收藏
+      favorite_to: 收藏到...
+      manage_targets: 管理收藏夾
+      remove: 移除
+      share_selected: 分享所選
+    activities:
+      batch_install: 批量安裝收藏項
+      batch_install_failed: 批量安裝失敗
+      favorite_to: 收藏到目標
+      remove: 移除收藏項
+      remove_failed: 移除收藏項失敗
+      select_all: 全選收藏項
+      share_selected: 分享所選收藏項
+      share_selected_failed: 分享所選收藏項失敗
+    batch_install:
+      analyzing_activity: 正在為 {target_name} 分析 {count} 個收藏項
+      analyzing_hint: 正在分析 {count} 個已選項目...
+      canceled: 已取消批量安裝
+      confirmation:
+        confirm: 開始安裝
+        failed: 確認批量安裝失敗
+        title: 批量安裝收藏項
+      empty_selection: 未選擇任何收藏項
+      started_activity: 已開始為 {target_name} 批量安裝
+      started_hint: 已開始批量安裝
+      summary:
+        dependencies: '{count} 個依賴項'
+        none: 無任務
+        skipped: 跳過了 {count} 項
+        tasks: '{count} 個任務'
+    empty:
+      body: 把項目加入收藏夾，之後即可安裝或分享。
+      title: 還沒有收藏項
+    favorite_to:
+      already_contains_selected: '{target_name} 已經包含所有選中的收藏項'
+      completed: 已將 {count} 個收藏項加入 {target_name}
+      selection_prompt: 為 {count} 個已選收藏項選擇目標
+    remove:
+      completed: 已從 {target_name} 移除 {count} 個收藏項
+      confirmation:
+        message: 要從 {target_name} 移除 {count} 個已選收藏項嗎？
+        title: 移除收藏項
+      no_matches: 在 {target_name} 中未找到相符的收藏項
+    search:
+      watermark: 搜尋收藏項
+    select_all:
+      completed: 已在 {target_name} 中選取 {count} 個可見收藏項
+      empty: '{target_name} 中沒有可見收藏項'
+    selection:
+      summary: 已選擇 {count} 項
+    share_selected:
+      completed: 已複製 {count} 個選中收藏項的 ID
+      empty: 沒有可分享的已選收藏項
+    targets:
+      default_name: 預設收藏夾
+  install:
+    actions:
+      clear_selection: 清除選取
+      start: 開始安裝
+    catalog:
+      empty: 暫無可用版本
+      groups:
+        april_fools: 愚人節版
+        latest: 最新
+        legacy: 遠古版
+        preview: 預覽版
+        release: 正式版
+      latest:
+        preview: 最新預覽版
+        published_at: '{label}：{published_at}'
+        release: 最新正式版
+      load_failed: 載入版本失敗
+      loading: 正在載入版本...
+    generated_name:
+      default: 新版本
+    options:
+      available: 可用
+      unavailable: 不可用
+    validation:
+      already_exists: 此名稱已存在
+      empty_name: 請輸入名稱
+      invalid_characters: 名稱包含無效字元
+      invalid_ending: 名稱不能以空格或句點結尾
+    workflow:
+      activities:
+        apply_changes: 套用變更
+        apply_changes_failed: 套用變更失敗
+        load_minecraft_failed: 載入 Minecraft 版本失敗
+        reset_instance: 重設實例
+        select_option: 選擇 {option_title}
+        select_option_failed: 選擇 {option_title} 失敗
+        start_failed: 開始安裝失敗
+      dialogs:
+        reset_instance:
+          confirm: 重設
+          message: 目前沒有選取任何變更。要將此實例重設為基礎狀態嗎？
+          title: 重設實例
+        select_minecraft:
+          confirm: 選擇
+          message: 選擇一個 Minecraft 版本
+          title: 選擇 Minecraft 版本
+        select_option:
+          confirm: 選擇
+          message: 選擇一個可用選項
+          title: 選擇 {option_title}
+      messages:
+        instance_missing: 未選擇目標實例
+        option_not_supported: 此前端安裝器不支援此選項
+        queued_in_task_center: 已加入工作中心：{task_title}
+        select_minecraft_first: 請先選擇 Minecraft 版本
+        unresolved_selections: 請先處理這些選擇項：{options}
+      selection:
+        none: 無
+      stages:
+        asset_files: 資源檔案
+        finalize: 完成收尾
+        prepare: 準備
+        support_files: 支援檔案
+      tasks:
+        asset_files_completed: 資源檔案已完成
+        asset_files_ready: 資源檔案已就緒
+        canceled: 已取消
+        canceling: 正在取消...
+        completed: 已完成
+        downloading_asset_files: 正在下載資源檔案
+        downloading_dependencies: 正在下載依賴
+        files_ready: '{completed_count}/{total_count} 個檔案已就緒'
+        manifest_written: 資訊清單已寫入
+        no_asset_files_needed: 無需資源檔案
+        no_asset_files_to_download: 沒有需要下載的資源檔案
+        no_support_files_needed: 無需支援檔案
+        no_support_files_to_repair: 沒有需要修復的支援檔案
+        prepare_environment: 正在準備環境
+        processing_file: 正在處理 {file_name}
+        progress_with_file: '{prefix}：{completed_count}/{total_count}（{file_name}）'
+        progress_without_file: '{prefix}：{completed_count}/{total_count}'
+        queued: 已排隊
+        repairing_support_files: 正在修復支援檔案
+        support_files_completed: 支援檔案已完成
+        support_files_ready: 支援檔案已就緒
+        waiting_asset_files: 等待資源檔案
+        waiting_execution: 等待執行
+        waiting_finalize: 等待完成收尾
+        waiting_support_files: 等待支援檔案
+  resource:
+    activities:
+      install_pack: 安裝整合包
+      install_pack_failed: 安裝整合包失敗
+      reset_filters: 重設篩選條件
+      reset_filters_message: 已重設 {surface_title} 的篩選條件
+    current_instance:
+      actions:
+        switch: 切換實例
+      none_selected: 未選擇實例
+      summary_none_selected: 選擇一個實例以提升相容性篩選效果
+      summary_suffix: 用於相容性篩選
+      title: 目前實例
+    empty:
+      default: 沒有結果
+    filters:
+      loader: 載入器
+      sort: 排序
+      source: 來源
+      tag: 標籤
+      version: 版本
+    hints:
+      modrinth_unavailable: 目前來源暫不支援 Modrinth
+    install_pack:
+      no_filtered_result: 目前結果中沒有可安裝的整合包
+      no_surface: 目前沒有可用的下載頁面
+      open_target_missing: 無法開啟目標資料夾
+      runtime_state_missing: 下載狀態不可用
+      target_missing: 缺少安裝目標
+    results:
+      summary: 顯示 {total_count} 項中的 {shown_count} 項
+    search:
+      data_pack: 資料包
+      default: 搜尋項目
+      mod: Mod
+      pack: 整合包
+      resource_pack: 資源包
+      shader: 光影
+      world: 地圖
+    sort:
+      default: 預設
+      downloads: 下載量
+      follows: 關注數
+      release: 發佈時間
+      relevance: 相關性
+      update: 更新時間
+    surface:
+      empty: 沒有找到 {surface_name}
+      loading: 正在載入 {surface_name}...
+      title: '{surface_name}'
+resource_detail:
+  actions:
+    copy_link: 複製連結
+    copy_name: 複製名稱
+    mc_wiki: MC 百科
+    translate_description: 翻譯簡介
+    view_details: 查看詳細資訊
+  activities:
+    download_canceled: 已取消下載：{entry_title}
+    download_failed: 下載失敗：{entry_title}
+    download_file: 下載檔案：{entry_title}
+    download_started: 已開始下載：{entry_title}
+    install_current_instance: 安裝到目前實例
+    install_current_instance_failed: 安裝到目前實例失敗
+    navigate_back: 返回 {target_title}
+    open_dependency_project: 開啟依賴專案：{entry_title}
+    open_detail: 開啟詳細資訊
+    open_detail_for_project: 開啟 {project_title} 的詳細資訊
+    open_file: 開啟檔案：{entry_title}
+    open_mc_wiki: 開啟 {project_title} 的 MC 百科頁面
+    open_project_content: 開啟內容：{entry_title}
+    open_project_homepage: 開啟 {project_title} 的首頁
+    pick_save_path_failed: 為 {entry_title} 選擇儲存路徑失敗
+    view_source: 查看 {project_title} 的原始碼
+  copy:
+    messages:
+      completed: 複製成功
+      failed: '{title} 失敗'
+  copy_link:
+    empty: 沒有可複製的連結
+  copy_name:
+    empty: 沒有可複製的名稱
+  counts:
+    hundred_million: '{value} 億'
+    ten_thousand: '{value} 萬'
+  current_instance:
+    none_selected: 未選擇目前實例
+    summary_none_selected: 選擇一個實例即可直接安裝此專案
+  dependencies:
+    groups:
+      embedded: 內嵌
+      included: 包含
+      incompatible: 不相容
+      optional: 可選
+      other: 其他
+      required: 必需
+      tool: 工具
+    title: 依賴項
+    title_for_release: '{release_title} 的依賴項'
+  download:
+    dialogs:
+      pick_save_path:
+        file_type: 下載檔案
+        title: 選擇儲存路徑
+    errors:
+      missing_url: 缺少下載網址
+    hints:
+      completed: 已下載 {file_name}
+      started: 已開始下載 {file_name}
+    messages:
+      no_save_path: 未選擇儲存路徑
+    task_title: 下載 {file_name}
+  filters:
+    loader: 載入器
+    version: 版本
+  install:
+    dialogs:
+      confirm_dependencies:
+        confirm: 繼續
+        failed: 確認依賴安裝失敗
+        title: 是否同時安裝依賴項？
+    errors:
+      no_filtered_release: 沒有相符的版本
+      unknown_resource_type: 未知的資源類型
+    hints:
+      analyzing: 正在分析安裝方案...
+      started: 已開始安裝任務
+    messages:
+      analyzing: 正在分析如何將 {project_title} 安裝到 {instance_name}
+      canceled_with_dependencies: 已取消包含依賴項的安裝
+      no_tasks: 無需執行安裝任務
+      queued_in_task_center: 已加入工作中心：{task_title}
+    summary:
+      completed: 已為 {instance_name} 加入安裝佇列：{summary}
+      dependencies: '{count} 個依賴項'
+      skipped: 跳過了 {count} 項
+      tasks: '{count} 個任務'
+  instance_selection:
+    activities:
+      select: 選擇實例
+      select_failed: 選擇實例失敗
+    dialog:
+      message: 選擇一個實例來安裝此專案
+      title: 選擇實例
+    messages:
+      already_selected: '{instance_name} 已經被選取'
+      no_instances: 沒有可用實例
+  links:
+    title: 連結
+  loading:
+    releases: 正在載入版本...
+    source: 來源
+    status: 狀態
+  modpack:
+    activities:
+      install_canceled: 已取消整合包安裝：{entry_title}
+      install_completed: 整合包安裝完成
+      install_failed: 整合包安裝失敗：{entry_title}
+      prompt_instance_name_failed: 詢問實例名稱失敗
+    archive_name: 整合包{extension}
+    dialogs:
+      instance_name:
+        message: 請輸入新實例的名稱
+        title: 新實例名稱
+      invalid_name:
+        confirm: 確定
+        title: 實例名稱無效
+    hints:
+      download_and_install_started: 已開始下載並安裝 {file_name}
+      install_completed: '{instance_name} 已安裝完成'
+    messages:
+      install_completed: 已將 {instance_name} 安裝到 {target_directory}
+      missing_instance_name: 未提供實例名稱
+    task_title: 將 {source_name} 安裝為 {instance_name}
+    validation:
+      duplicate: 已存在同名實例
+      empty: 請輸入實例名稱
+      invalid_characters: 名稱包含無效字元
+      reserved_name: 此名稱為系統保留名稱
+      short_name_pattern: 此短名稱在 Windows 上不可用
+      too_long: 名稱過長
+      trailing_dot: 名稱不能以空格或句點結尾
+      trim_spaces: 請移除前後空格
+  releases:
+    empty:
+      body: 目前篩選條件下沒有可用版本
+      title: 沒有可用版本
+  selection:
+    missing_project_id: 缺少專案 ID
+    no_compatibility: 沒有相容版本
+    no_tags: 沒有標籤
+    none_selected_summary: 選擇一個專案以查看詳細資訊
+    none_selected_title: 未選擇專案
+    not_loaded: 尚未載入
+    project_fallback_title: 專案 {project_id}
+    unspecified_source: 未指定來源
+    waiting: 等待選擇
+  suggested_release:
+    none: 沒有建議版本
+    title: 建議版本
+  translate_description:
+    empty: 沒有可翻譯的簡介
+  values:
+    none: 無
+    other: 其他
+  versions:
+    legacy: 舊版
+    snapshot: 快照
