@@ -146,7 +146,7 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
-            var stage = ResolveLaunchRepairStage(snapshot);
+            var stage = FrontendLaunchRepairStageService.ResolveStage(snapshot);
             _launchDialogStage = stage;
             _launchDialogProgress = Math.Clamp(0.08d + snapshot.Progress * 0.72d, 0d, 0.82d);
             _launchDialogProgressText = $"{_launchDialogProgress * 100:0.00} %";
@@ -158,39 +158,6 @@ internal sealed partial class FrontendShellViewModel
             _showLaunchDialogHint = _showLaunchingHint && !string.IsNullOrWhiteSpace(_launchDialogHint);
             RaiseLaunchDialogProperties();
         });
-    }
-
-    private string ResolveLaunchRepairStage(FrontendInstanceRepairProgressSnapshot snapshot)
-    {
-        var assets = snapshot.Groups.TryGetValue(FrontendInstanceRepairFileGroup.Assets, out var assetGroup)
-            ? assetGroup
-            : null;
-        if (assets is not null && assets.TotalFiles > 0 && assets.Progress < 0.999d)
-        {
-            return string.IsNullOrWhiteSpace(assets.CurrentFileName)
-                ? "下载游戏资源文件"
-                : $"下载资源文件 • {assets.CurrentFileName}";
-        }
-
-        var supportGroups = new[]
-        {
-            FrontendInstanceRepairFileGroup.Client,
-            FrontendInstanceRepairFileGroup.Libraries,
-            FrontendInstanceRepairFileGroup.AssetIndex
-        };
-        foreach (var group in supportGroups)
-        {
-            if (!snapshot.Groups.TryGetValue(group, out var snapshotGroup) || snapshotGroup.TotalFiles == 0 || snapshotGroup.Progress >= 0.999d)
-            {
-                continue;
-            }
-
-            return string.IsNullOrWhiteSpace(snapshotGroup.CurrentFileName)
-                ? "补全游戏主文件与支持库"
-                : $"补全支持文件 • {snapshotGroup.CurrentFileName}";
-        }
-
-        return "校验实例文件";
     }
 
     private void HandleCancelLaunchRequested()

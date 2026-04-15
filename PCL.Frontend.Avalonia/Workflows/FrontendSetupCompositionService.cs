@@ -208,11 +208,16 @@ internal static class FrontendSetupCompositionService
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
+        var renderingConfiguration = FrontendStartupRenderingService.Resolve(
+            paths,
+            new FrontendPlatformAdapter().GetDesktopPlatformKind());
+
         return new FrontendSetupLauncherMiscState(
             SystemActivityIndex: ReadValue(localConfig, "SystemSystemActivity", 0),
             AnimationFpsLimit: ReadValue(sharedConfig, "UiAniFPS", 59),
             MaxRealTimeLogValue: ReadValue(sharedConfig, "SystemMaxLog", 13),
-            DisableHardwareAcceleration: ReadValue(sharedConfig, "SystemDisableHardwareAcceleration", false),
+            IsHardwareAccelerationToggleAvailable: renderingConfiguration.IsHardwareAccelerationToggleAvailable,
+            DisableHardwareAcceleration: renderingConfiguration.DisableHardwareAcceleration,
             EnableDoH: ReadValue(sharedConfig, "SystemNetEnableDoH", true),
             HttpProxyTypeIndex: ReadValue(sharedConfig, "SystemHttpProxyType", 1),
             HttpProxyAddress: FrontendHttpProxyService.ReadConfiguredProxyAddress(paths),

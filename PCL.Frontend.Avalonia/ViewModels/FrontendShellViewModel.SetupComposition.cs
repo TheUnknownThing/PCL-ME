@@ -66,7 +66,7 @@ internal sealed partial class FrontendShellViewModel
     [
         "UiAniFPS",
         "SystemMaxLog",
-        "SystemDisableHardwareAcceleration",
+        FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
         "SystemNetEnableDoH",
         "SystemHttpProxyType",
         "SystemDebugAnim",
@@ -270,6 +270,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(AnimationFpsLabel));
                 RaisePropertyChanged(nameof(MaxRealTimeLogValue));
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
+                RaisePropertyChanged(nameof(IsHardwareAccelerationToggleVisible));
                 RaisePropertyChanged(nameof(DisableHardwareAcceleration));
                 RaisePropertyChanged(nameof(EnableDoH));
                 RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
@@ -537,7 +538,12 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.PersistSharedValue("SystemMaxLog", (int)Math.Round(MaxRealTimeLogValue));
                 break;
             case nameof(DisableHardwareAcceleration):
-                _shellActionService.PersistSharedValue("SystemDisableHardwareAcceleration", DisableHardwareAcceleration);
+                _shellActionService.PersistSharedValue(
+                    FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
+                    DisableHardwareAcceleration);
+                AddActivity(
+                    DisableHardwareAcceleration ? "禁用硬件加速" : "启用硬件加速",
+                    "这个设置会在下次启动启动器时生效。");
                 break;
             case nameof(EnableDoH):
                 _shellActionService.PersistSharedValue("SystemNetEnableDoH", EnableDoH);

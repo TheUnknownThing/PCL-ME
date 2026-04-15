@@ -176,6 +176,8 @@ internal sealed partial class FrontendShellViewModel
 
     public string MaxRealTimeLogLabel => FrontendRealTimeLogSettingsService.FormatLineLimitLabel(MaxRealTimeLogValue);
 
+    public bool IsHardwareAccelerationToggleVisible => _setupComposition.LauncherMisc.IsHardwareAccelerationToggleAvailable;
+
     public bool DisableHardwareAcceleration
     {
         get => _disableHardwareAcceleration;
