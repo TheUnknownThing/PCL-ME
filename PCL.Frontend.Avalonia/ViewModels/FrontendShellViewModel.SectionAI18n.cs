@@ -82,6 +82,8 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchDialogHintTitle => T("launch.dialog.labels.did_you_know");
 
+    public string CommonSearchButtonText => T("common.actions.search");
+
     public string DownloadInstallClearSelectionText => T("download.install.actions.clear_selection");
 
     public string DownloadInstallStartText => T("download.install.actions.start");
@@ -161,6 +163,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchDialogProgressLabel));
         RaisePropertyChanged(nameof(LaunchDialogDownloadSpeedLabel));
         RaisePropertyChanged(nameof(LaunchDialogHintTitle));
+        RaisePropertyChanged(nameof(CommonSearchButtonText));
         RaisePropertyChanged(nameof(DownloadInstallClearSelectionText));
         RaisePropertyChanged(nameof(DownloadInstallStartText));
         RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceTitleText));

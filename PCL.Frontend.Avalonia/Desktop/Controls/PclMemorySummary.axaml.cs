@@ -17,11 +17,17 @@ internal sealed partial class PclMemorySummary : UserControl
     public static readonly StyledProperty<string> UsedRamLabelProperty =
         AvaloniaProperty.Register<PclMemorySummary, string>(nameof(UsedRamLabel), "0.0 GB");
 
+    public static readonly StyledProperty<string> UsageHeaderTextProperty =
+        AvaloniaProperty.Register<PclMemorySummary, string>(nameof(UsageHeaderText), string.Empty);
+
     public static readonly StyledProperty<string> TotalRamLabelProperty =
-        AvaloniaProperty.Register<PclMemorySummary, string>(nameof(TotalRamLabel), " / 0.0 GB");
+        AvaloniaProperty.Register<PclMemorySummary, string>(nameof(TotalRamLabel), "0.0 GB");
 
     public static readonly StyledProperty<string> AllocatedRamLabelProperty =
         AvaloniaProperty.Register<PclMemorySummary, string>(nameof(AllocatedRamLabel), "0.0 GB");
+
+    public static readonly StyledProperty<string> AllocationPrefixTextProperty =
+        AvaloniaProperty.Register<PclMemorySummary, string>(nameof(AllocationPrefixText), string.Empty);
 
     public PclMemorySummary()
     {
@@ -52,6 +58,12 @@ internal sealed partial class PclMemorySummary : UserControl
         set => SetValue(UsedRamLabelProperty, value);
     }
 
+    public string UsageHeaderText
+    {
+        get => GetValue(UsageHeaderTextProperty);
+        set => SetValue(UsageHeaderTextProperty, value);
+    }
+
     public string TotalRamLabel
     {
         get => GetValue(TotalRamLabelProperty);
@@ -62,5 +74,11 @@ internal sealed partial class PclMemorySummary : UserControl
     {
         get => GetValue(AllocatedRamLabelProperty);
         set => SetValue(AllocatedRamLabelProperty, value);
+    }
+
+    public string AllocationPrefixText
+    {
+        get => GetValue(AllocationPrefixTextProperty);
+        set => SetValue(AllocationPrefixTextProperty, value);
     }
 }

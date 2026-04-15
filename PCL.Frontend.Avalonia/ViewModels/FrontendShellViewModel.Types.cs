@@ -866,12 +866,16 @@ internal sealed class DownloadResourceEntryViewModel(
     string version,
     string loader,
     IReadOnlyList<string> tags,
+    IReadOnlyList<string> displayTags,
     IReadOnlyList<string> supportedVersions,
     IReadOnlyList<string> supportedLoaders,
     int downloadCount,
     int followCount,
     int releaseRank,
     int updateRank,
+    string versionLabel,
+    string downloadCountLabel,
+    string updatedLabel,
     string actionText,
     ActionCommand command,
     string? iconUrl)
@@ -910,6 +914,8 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public IReadOnlyList<string> Tags { get; } = tags;
 
+    public IReadOnlyList<string> DisplayTags { get; } = displayTags;
+
     public IReadOnlyList<string> SupportedVersions { get; } = supportedVersions;
 
     public IReadOnlyList<string> SupportedLoaders { get; } = supportedLoaders;
@@ -932,7 +938,7 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public bool HasInfo => !string.IsNullOrWhiteSpace(Info);
 
-    public IReadOnlyList<string> VisibleTags => Tags
+    public IReadOnlyList<string> VisibleTags => DisplayTags
         .Where(tag => !string.IsNullOrWhiteSpace(tag))
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .Take(4)
@@ -940,30 +946,11 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public bool HasVisibleTags => VisibleTags.Count > 0;
 
-    public string VersionLabel => string.IsNullOrWhiteSpace(Version) ? "未标注版本" : Version;
+    public string VersionLabel { get; } = versionLabel;
 
-    public string DownloadCountLabel => DownloadCount <= 0 ? "暂无下载" : $"{FormatCompactCount(DownloadCount)} 下载";
+    public string DownloadCountLabel { get; } = downloadCountLabel;
 
-    public string UpdatedLabel
-    {
-        get
-        {
-            var rank = UpdateRank > 0 ? UpdateRank : ReleaseRank;
-            if (rank <= 0)
-            {
-                return "时间未知";
-            }
-
-            try
-            {
-                return DateTimeOffset.FromUnixTimeSeconds(rank).LocalDateTime.ToString("yyyy/MM/dd");
-            }
-            catch
-            {
-                return "时间未知";
-            }
-        }
-    }
+    public string UpdatedLabel { get; } = updatedLabel;
 
     public string Meta
     {
@@ -994,7 +981,7 @@ internal sealed class DownloadResourceEntryViewModel(
         Loader,
         string.Join(" ", SupportedVersions),
         string.Join(" ", SupportedLoaders),
-        string.Join(" ", Tags)
+        string.Join(" ", DisplayTags)
     });
 
     public bool TryBeginIconLoad()
@@ -1010,17 +997,6 @@ internal sealed class DownloadResourceEntryViewModel(
             Icon = icon;
         }
     }
-
-    private static string FormatCompactCount(int value)
-    {
-        return value switch
-        {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
-            >= 10_000 => $"{value / 10_000d:0.#}万",
-            _ => value.ToString()
-        };
-    }
-
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

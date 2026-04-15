@@ -221,9 +221,11 @@
                 UsedBarWidth="{Binding UsedRamBarWidth}"
                 AllocatedBarWidth="{Binding AllocatedRamBarWidth}"
                 FreeBarWidth="{Binding FreeRamBarWidth}"
+                UsageHeaderText="{Binding MemorySummaryUsageHeaderText}"
                 UsedRamLabel="{Binding UsedRamLabel}"
-                TotalRamLabel="{Binding TotalRamLabel, StringFormat=' / {0}'}"
-                AllocatedRamLabel="{Binding AllocatedRamLabel}" />
+                TotalRamLabel="{Binding TotalRamLabel}"
+                AllocatedRamLabel="{Binding AllocatedRamLabel}"
+                AllocationPrefixText="{Binding MemorySummaryAllocationPrefixText}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>

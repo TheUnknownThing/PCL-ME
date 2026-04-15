@@ -786,6 +786,11 @@ startup:
       actions:
         acknowledge: []
 launch:
+  announcements:
+    community_edition_intro:
+      title: []
+      message: []
+      detail: []
   notifications:
     success:
     - instance_name
@@ -1851,13 +1856,64 @@ common:
     cancel: []
     close: []
     confirm: []
+    open: []
+    open_website: []
+    search: []
     select_all: []
   filters:
     all: []
     any: []
+  memory:
+    summary:
+      allocation_prefix: []
+      size_gb:
+      - value
+      usage_header: []
   punctuation:
     comma: []
 download:
+  catalog:
+    errors:
+      empty_description: []
+      empty_title: []
+      load_failed_title: []
+      retry_later: []
+      section_title: []
+    intro:
+      cleanroom:
+        body: []
+        title: []
+      fabric:
+        body: []
+        title: []
+      forge:
+        body: []
+        title: []
+      labymod:
+        body: []
+        title: []
+      legacy_fabric:
+        body: []
+        title: []
+      liteloader:
+        body: []
+        title: []
+      neoforge:
+        body: []
+        title: []
+      optifine:
+        body: []
+        title: []
+      quilt:
+        body: []
+        title: []
+      stale_cache:
+      - body
+      - error
+    loading:
+      fetch_list:
+      - surface_name
+      fetch_versions: []
   favorites:
     actions:
       batch_install: []
@@ -2068,6 +2124,23 @@ download:
       version: []
     hints:
       modrinth_unavailable: []
+      partial_results:
+      - message
+      retry_later: []
+      search_failed:
+      - message
+      unavailable:
+      - message
+      version_fallback:
+      - version
+      - surface_name
+    entry:
+      count_style: []
+      downloads_none: []
+      downloads_with_count:
+      - count
+      updated_unknown: []
+      version_unknown: []
     install_pack:
       no_filtered_result: []
       no_surface: []
@@ -2100,6 +2173,95 @@ download:
       - surface_name
       title:
       - surface_name
+    tag_groups:
+      features: []
+      performance: []
+      resolution: []
+      style: []
+    tags:
+      adventure: []
+      audio: []
+      automation: []
+      biomes: []
+      cartoon: []
+      chaotic: []
+      colored_lighting: []
+      combat: []
+      core_shaders: []
+      creative: []
+      creative_mode: []
+      data_pack: []
+      decoration: []
+      dimensions: []
+      dynamic_effects: []
+      energy: []
+      entities: []
+      equipment_tools: []
+      exploration: []
+      fantasy: []
+      fantasy_style: []
+      farming: []
+      food_cooking: []
+      fonts: []
+      game_mechanics: []
+      gui: []
+      hardcore: []
+      information: []
+      kitchen_sink: []
+      large: []
+      library: []
+      lightweight: []
+      locale: []
+      logistics: []
+      magic: []
+      map_based: []
+      medieval: []
+      minigames: []
+      mobs: []
+      mod_compatible: []
+      mod_world: []
+      modded: []
+      modern: []
+      models: []
+      multiplayer: []
+      ores_resources: []
+      parkour: []
+      path_tracing: []
+      performance: []
+      performance_high: []
+      performance_low: []
+      performance_medium: []
+      performance_very_low: []
+      puzzle: []
+      quests: []
+      realistic: []
+      reflections: []
+      redstone: []
+      resolution_128x: []
+      resolution_16x: []
+      resolution_256x: []
+      resolution_32x: []
+      resolution_48x: []
+      resolution_512x: []
+      resolution_64x: []
+      resolution_8x: []
+      scifi: []
+      semi_realistic: []
+      simple: []
+      skyblock: []
+      steampunk: []
+      storage: []
+      structures: []
+      survival: []
+      technology: []
+      themed: []
+      transportation: []
+      tweaks: []
+      utility: []
+      vanilla_compatible: []
+      vanilla_plus: []
+      vanilla_style: []
+      worldgen: []
 resource_detail:
   actions:
     copy_link: []
@@ -2305,9 +2467,35 @@ instance:
     installed: []
     not_installed: []
   overview:
+    sections:
+      info: []
+      personalization: []
+      shortcuts: []
+      advanced: []
     info:
       launch_count: []
+      launch_count_never: []
       modpack_version: []
+      description: []
+    personalization:
+      icon: []
+      category: []
+    actions:
+      rename: []
+      edit_description: []
+      add_favorite: []
+      remove_favorite: []
+    shortcuts:
+      instance_folder: []
+      saves_folder: []
+      mods_folder: []
+    advanced:
+      export_script: []
+      test_game: []
+      repair_files: []
+      reset: []
+      delete: []
+      patch_core: []
     categories:
       auto: []
       hidden: []
@@ -2336,6 +2524,12 @@ instance:
       quilt: []
       neoforge: []
   install:
+    minecraft:
+      header: []
+    actions:
+      apply_changes: []
+      reset_to_scanned: []
+      modify: []
     option:
       can_add: []
     hints:
@@ -2344,7 +2538,68 @@ instance:
       incompatible_with:
       - target
   content:
+    world:
+      search: []
+      quick_actions: []
+      list: []
+      actions:
+        open_folder: []
+        paste_clipboard: []
+    screenshot:
+      quick_actions: []
+      actions:
+        open_folder: []
+    server:
+      quick_actions: []
+      actions:
+        refresh_all: []
+        add: []
+        refresh: []
+        copy_address: []
+        connect: []
+    sort:
+      label:
+      - mode
+      file_name: []
+      create_time: []
+      modify_time: []
+      resource_name: []
+      added_time: []
+      file_size: []
     resource:
+      search:
+        default: []
+        resource_pack: []
+        shader: []
+        schematic: []
+      actions:
+        open_folder: []
+        install_from_file: []
+        install_from_file_empty: []
+        download_new: []
+        download_schematic_mod: []
+        select_all: []
+        export_info: []
+        check_mods: []
+        enable: []
+        disable: []
+        delete: []
+        clear_selection: []
+        instance_select: []
+        go_to_download: []
+      filters:
+        all:
+        - count
+        enabled:
+        - count
+        disabled:
+        - count
+        duplicate:
+        - count
+        search_results:
+        - count
+      selection:
+      - count
       kind:
         resource_pack: []
         shader: []
@@ -2362,16 +2617,63 @@ instance:
       tags:
         disabled: []
   settings:
+    intro: []
+    sections:
+      launch: []
+      memory: []
+      server: []
+      advanced: []
+    actions:
+      global_settings: []
     options:
       follow_global: []
       on: []
       off: []
+    launch:
+      isolation: []
+      window_title: []
+      default_window_title: []
+      custom_info: []
+      java: []
+    memory:
+      warning_32bit: []
+      warning_allocation: []
+      use_global: []
+      use_auto: []
+      use_custom: []
+      optimize_before_launch: []
     server:
+      locked_warning: []
+      login_requirement: []
+      auth_server: []
+      auth_register: []
+      auth_name: []
+      auto_join: []
+      set_littleskin: []
+      lock_login: []
+      create_profile: []
       require:
         none: []
         official: []
         third_party: []
         both: []
+    advanced:
+      renderer: []
+      jvm_head: []
+      game_tail: []
+      classpath_head: []
+      prelaunch_command: []
+      environment_variables: []
+      environment_variables_hint: []
+      linux_backend: []
+      linux_backend_hint: []
+      wait_for_prelaunch: []
+      ignore_java_compatibility: []
+      disable_file_validation: []
+      follow_launcher_proxy: []
+      disable_java_launch_wrapper: []
+      disable_retro_wrapper: []
+      use_debug_log4j: []
     renderer:
       game_default: []
       software: []
@@ -2381,6 +2683,25 @@ instance:
       force_x11: []
       system_default: []
   export:
+    warnings:
+      modrinth: []
+      include_resources: []
+    sections:
+      content: []
+      advanced: []
+    actions:
+      start: []
+      reset: []
+      import_config: []
+      save_config: []
+      guide: []
+    name: []
+    version: []
+    options:
+      include_resources: []
+      modrinth_mode: []
+    config:
+      hint: []
     groups:
       game: []
       mods: []

@@ -34,7 +34,7 @@ internal sealed partial class FrontendShellViewModel
         ? LT("shell.help_detail.summary_loaded")
         : _currentHelpDetailEntry!.Summary;
 
-    public string HelpDetailSource => _currentHelpDetailEntry?.RawPath ?? LT("shell.help_detail.source_unresolved");
+    public string HelpDetailSource => _currentHelpDetailEntry?.SourcePath ?? LT("shell.help_detail.source_unresolved");
 
     private void OpenHelpTopic(FrontendToolsHelpEntry entry)
     {
@@ -62,7 +62,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (addActivity)
         {
-            AddActivity(LT("shell.help_detail.activities.open", ("title", entry.Title)), entry.RawPath);
+            AddActivity(LT("shell.help_detail.activities.open", ("title", entry.Title)), entry.SourcePath);
         }
     }
 
@@ -102,7 +102,7 @@ internal sealed partial class FrontendShellViewModel
                     LT("shell.help_detail.sections.missing_content.title"),
                     [
                         LT("shell.help_detail.sections.missing_content.body"),
-                        LT("shell.help_detail.sections.source_line", ("source", entry.RawPath))
+                        LT("shell.help_detail.sections.source_line", ("source", entry.SourcePath))
                     ],
                     [])
             ];
@@ -140,7 +140,7 @@ internal sealed partial class FrontendShellViewModel
                     entry.Title,
                     [
                         LT("shell.help_detail.sections.no_cards.body"),
-                        LT("shell.help_detail.sections.source_line", ("source", entry.RawPath))
+                        LT("shell.help_detail.sections.source_line", ("source", entry.SourcePath))
                     ],
                     []));
             }
@@ -156,7 +156,7 @@ internal sealed partial class FrontendShellViewModel
                     [
                         LT("shell.help_detail.sections.parse_failed.body"),
                         ex.Message,
-                        LT("shell.help_detail.sections.source_line", ("source", entry.RawPath))
+                        LT("shell.help_detail.sections.source_line", ("source", entry.SourcePath))
                     ],
                     [])
             ];

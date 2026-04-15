@@ -78,9 +78,27 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    private void ApplyHelpState(FrontendToolsHelpState helpState)
+    {
+        var currentReference = _currentHelpDetailEntry?.RawPath;
+        _toolsComposition = _toolsComposition with { Help = helpState };
+        if (!string.IsNullOrWhiteSpace(currentReference) && TryResolveHelpEntry(currentReference, out var refreshedEntry))
+        {
+            _currentHelpDetailEntry = refreshedEntry;
+        }
+
+        RefreshHelpTopics();
+        RefreshHelpDetailSurface();
+    }
+
     private void ReloadToolsComposition()
     {
-        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths));
+        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _i18n.Locale));
+    }
+
+    private void ReloadHelpState()
+    {
+        ApplyHelpState(FrontendToolsCompositionService.LoadHelpState(_shellActionService.RuntimePaths, _i18n.Locale));
     }
 
     private void PersistToolsSetting(string? propertyName)

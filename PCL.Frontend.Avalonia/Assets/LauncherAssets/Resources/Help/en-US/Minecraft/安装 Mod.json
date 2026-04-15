@@ -1,0 +1,7 @@
+{
+  "__author__": "OpenAI Codex",
+  "Title": "Install Mods",
+  "Description": "Download and import Minecraft mods",
+  "Keywords": "forge neoforge fabric quilt mod loader",
+  "Types": ["Minecraft"]
+}

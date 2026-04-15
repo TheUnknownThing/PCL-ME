@@ -18,8 +18,6 @@ internal sealed partial class FrontendShellViewModel
     private double _instanceTotalRamGb;
     private double _instanceAutomaticAllocatedRamGb;
     private double _instanceGlobalAllocatedRamGb;
-    private string _instanceUsedRamLabel = "0.0 GB";
-    private string _instanceTotalRamLabel = " / 0.0 GB";
     private bool _showInstanceRamAllocationWarning;
     private bool _showInstance32BitJavaWarning;
     private int _selectedInstanceServerLoginRequireIndex;
@@ -152,7 +150,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string InstanceCustomRamAllocationLabel => $"{Math.Round(InstanceCustomRamAllocation):0} GB";
+    public string InstanceCustomRamAllocationLabel => FormatMemorySummarySize(Math.Round(InstanceCustomRamAllocation));
 
     public int SelectedInstanceMemoryOptimizeIndex
     {
@@ -160,11 +158,11 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _selectedInstanceMemoryOptimizeIndex, Math.Clamp(value, 0, InstanceMemoryOptimizeOptions.Count - 1));
     }
 
-    public string InstanceUsedRamLabel => _instanceUsedRamLabel;
+    public string InstanceUsedRamLabel => FormatMemorySummarySize(_instanceUsedRamGb);
 
-    public string InstanceTotalRamLabel => _instanceTotalRamLabel;
+    public string InstanceTotalRamLabel => FormatMemorySummarySize(_instanceTotalRamGb);
 
-    public string InstanceAllocatedRamLabel => $"{ResolveInstanceAllocatedRamGb():0.0} GB";
+    public string InstanceAllocatedRamLabel => FormatMemorySummarySize(ResolveInstanceAllocatedRamGb());
 
     public GridLength InstanceUsedRamBarWidth => CreateMemoryBarWidth(_instanceUsedRamGb);
 
@@ -354,8 +352,6 @@ internal sealed partial class FrontendShellViewModel
         _instanceTotalRamGb = setup.TotalMemoryGb;
         _instanceAutomaticAllocatedRamGb = setup.AutomaticAllocatedMemoryGb;
         _instanceGlobalAllocatedRamGb = setup.GlobalAllocatedMemoryGb;
-        _instanceUsedRamLabel = setup.UsedMemoryLabel;
-        _instanceTotalRamLabel = setup.TotalMemoryLabel;
         _showInstanceRamAllocationWarning = setup.ShowMemoryWarning;
         _showInstance32BitJavaWarning = setup.Show32BitJavaWarning;
         _selectedInstanceServerLoginRequireIndex = Math.Clamp(setup.ServerLoginRequirementIndex, 0, InstanceServerLoginRequireOptions.Count - 1);

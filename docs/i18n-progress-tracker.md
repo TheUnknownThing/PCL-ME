@@ -40,9 +40,16 @@
 
 These still require localization work.
 
-[ ] 跨平台版提示 and the content below
-[ ] 搜索 (Search) buttons should be localized, sharing one common key
-[ ] Various loading screens, like 正在获取xxx
-[ ] Tags should be localized (or query for tags respect localization)
-[ ] Number of downloads should be localized, with the number respecting locale standards (EN: K/M/B, CN: 万/亿, etc.)
-[ ] Content in Tools > Help. These help articles should have a localized version (fallback to English) and should not be handled by classic i18n keys.
+- [x] 跨平台版提示 and the content below
+- [x] 搜索 (Search) buttons should be localized, sharing one common key
+- [x] Various loading screens, like 正在获取xxx
+- [x] Tags should be localized (or query for tags respect localization)
+- [x] Number of downloads should be localized, with the number respecting locale standards (EN: K/M/B, CN: 万/亿, etc.)
+- [x] In mod installation screen, the mod description should be localized.
+- [x] Memory layout display should be localized.
+- [x] Tools > Help article loading should resolve locale-specific assets with English fallback instead of classic i18n keys.
+- [ ] 已启动 xx 次 in Overview tab
+- [ ] Mod list 已安装 未安装 安装器, along with missing translation key for instance.install.option.loading_versions
+- [ ] Instance Settings > Worlds: 创建时间 最后修改时间
+- [ ] Instance Settings > Servers: Missing text in all buttons
+- [ ] Content in Tools > Help. Initial English article seeds are in place, but broader localized coverage is still needed for the remaining help topics.

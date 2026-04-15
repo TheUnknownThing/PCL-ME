@@ -8,7 +8,7 @@
         Margin="2,0,0,4"
         Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
         FontSize="11"
-        Text="已使用内存 / 已安装内存" />
+        Text="{Binding UsageHeaderText, ElementName=Root}" />
     <Grid Height="6">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="{Binding UsedBarWidth, ElementName=Root}" />
@@ -24,6 +24,7 @@
           VerticalAlignment="Center"
           FontSize="16">
         <Run Foreground="{DynamicResource ColorBrushSemanticSuccessForeground}" Text="{Binding UsedRamLabel, ElementName=Root}" />
+        <Run Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" Text=" / " />
         <Run Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" Text="{Binding TotalRamLabel, ElementName=Root}" />
       </TextBlock>
       <TextBlock
@@ -31,7 +32,8 @@
           Margin="18,0,0,0"
           VerticalAlignment="Center"
           FontSize="16">
-        <Run Foreground="{DynamicResource ColorBrushSemanticInfoForeground}" Text="游戏分配 " />
+        <Run Foreground="{DynamicResource ColorBrushSemanticInfoForeground}" Text="{Binding AllocationPrefixText, ElementName=Root}" />
+        <Run Foreground="{DynamicResource ColorBrushSemanticInfoForeground}" Text=" " />
         <Run Foreground="{DynamicResource ColorBrushSemanticInfoForeground}" Text="{Binding AllocatedRamLabel, ElementName=Root}" />
       </TextBlock>
     </Grid>

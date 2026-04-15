@@ -699,6 +699,11 @@ startup:
       actions:
         acknowledge: 我知道了
 launch:
+  announcements:
+    community_edition_intro:
+      title: 跨平台版提示
+      message: 你正在使用 PCL 跨平台版！此版本由社群獨立開發與維護，與官方版本的維護路線不同，體驗可能有所差異。
+      detail: 目前軟體仍未經過充分測試，歡迎參與測試並提出回饋！
   notifications:
     success: '{instance_name} 已成功啟動。'
     abort_with_hint: 啟動已取消：{hint}
@@ -1667,13 +1672,60 @@ common:
     cancel: 取消
     close: 關閉
     confirm: 確認
+    open: 開啟
+    open_website: 打開官網
+    search: 搜尋
     select_all: 全選
   filters:
     all: 全部
     any: 任意
+  memory:
+    summary:
+      allocation_prefix: 遊戲分配
+      size_gb: '{value} GB'
+      usage_header: 已使用記憶體 / 已安裝記憶體
   punctuation:
     comma: 、
 download:
+  catalog:
+    errors:
+      empty_description: 目前無法讀取遠端目錄，請稍後重試。
+      empty_title: 暫無可顯示資料
+      load_failed_title: 遠端目錄載入失敗
+      retry_later: 請稍後重試。
+      section_title: 遠端目錄
+    intro:
+      cleanroom:
+        body: Cleanroom 是針對 1.12.2 基於 Forge 二次開發的 Mod 載入器，理論上與 99% 的 Forge Mod 相容。
+        title: Cleanroom 簡介
+      fabric:
+        body: "Fabric Loader 是新版 Minecraft 下的輕量化 Mod 載入器，你需要先安裝它才能安裝各種 Fabric 模組。\n本頁面提供 Fabric 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        title: Fabric 簡介
+      forge:
+        body: Forge 是一個 Mod 載入器，你需要先安裝 Forge 才能安裝各種 Forge 模組。
+        title: Forge 簡介
+      labymod:
+        body: "LabyMod 是 Minecraft 下的優化客戶端。\n本頁面提供 LabyMod 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        title: LabyMod 簡介
+      legacy_fabric:
+        body: "Legacy Fabric 是 Fabric 的舊版本移植，你需要先安裝它才能安裝各種 Legacy Fabric 模組。\n本頁面提供 Legacy Fabric 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        title: Legacy Fabric 簡介
+      liteloader:
+        body: 與 Forge 類似，LiteLoader 可以用於載入舊版本 Minecraft 中的 LiteLoader 模組。
+        title: LiteLoader 簡介
+      neoforge:
+        body: "NeoForge 是 Minecraft 1.20.1+ 的 Mod 載入器，你需要先安裝它才能安裝各種 NeoForge 模組，它也相容一些 Forge 模組。\n本頁面提供 NeoForge 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        title: NeoForge 簡介
+      optifine:
+        body: OptiFine 又稱為高清修復，可用於安裝光影、使用高清材質與提升遊戲效能，但與 Mod 的相容性較差。
+        title: OptiFine 簡介
+      quilt:
+        body: "Quilt Loader 是新版 Minecraft 下的輕量模組化 Mod 載入器，你需要先安裝它才能安裝各種 Quilt 模組。\n本頁面提供 Quilt 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        title: Quilt 簡介
+      stale_cache: "{body}\n\n重新整理遠端目錄失敗，因此暫時保留上次成功同步的結果。錯誤：{error}"
+    loading:
+      fetch_list: 正在取得 {surface_name} 列表
+      fetch_versions: 正在取得版本列表
   favorites:
     actions:
       batch_install: 批量安裝
@@ -1845,6 +1897,17 @@ download:
       version: 版本
     hints:
       modrinth_unavailable: 目前來源暫不支援 Modrinth
+      partial_results: 已顯示可存取來源的即時結果，另有部分來源失敗：{message}
+      retry_later: 請稍後重試，或調整來源篩選。
+      search_failed: 即時社群搜尋失敗：{message}
+      unavailable: 目前無法取得即時社群結果：{message}
+      version_fallback: 沒有找到適配 Minecraft {version} 的 {surface_name} 熱門結果，已回退到社群通用榜單。
+    entry:
+      count_style: east_asian
+      downloads_none: 暫無下載
+      downloads_with_count: '{count} 下載'
+      updated_unknown: 時間未知
+      version_unknown: 未標註版本
     install_pack:
       no_filtered_result: 目前結果中沒有可安裝的整合包
       no_surface: 目前沒有可用的下載頁面
@@ -1872,6 +1935,95 @@ download:
       empty: 沒有找到 {surface_name}
       loading: 正在載入 {surface_name}...
       title: '{surface_name}'
+    tag_groups:
+      features: 特性
+      performance: 效能負荷
+      resolution: 解析度
+      style: 風格
+    tags:
+      adventure: 冒險
+      audio: 含聲音
+      automation: 自動化
+      biomes: 生物群系
+      cartoon: 卡通風
+      chaotic: 鬼畜
+      colored_lighting: 彩色光照
+      combat: 戰鬥
+      core_shaders: 核心著色器
+      creative: 創造
+      creative_mode: 創造模式
+      data_pack: 資料包
+      decoration: 裝飾
+      dimensions: 維度
+      dynamic_effects: 動態效果
+      energy: 能源
+      entities: 含實體
+      equipment_tools: 裝備與工具
+      exploration: 探索
+      fantasy: 幻想
+      fantasy_style: 幻想風
+      farming: 農業
+      food_cooking: 食物與烹飪
+      fonts: 含字體
+      game_mechanics: 遊戲機制
+      gui: 含 UI
+      hardcore: 硬核
+      information: 資訊顯示
+      kitchen_sink: 水槽包
+      large: 大型整合
+      library: 支援庫
+      lightweight: 輕量整合
+      locale: 含語言
+      logistics: 管道與物流
+      magic: 魔法
+      map_based: 基於地圖
+      medieval: 中世紀
+      minigames: 小遊戲
+      mobs: 生物
+      mod_compatible: 相容 Mod
+      mod_world: Mod 世界
+      modded: Mod 相關
+      modern: 現代風
+      models: 含模型
+      multiplayer: 多人
+      ores_resources: 礦物與資源
+      parkour: 跑酷
+      path_tracing: 路徑追蹤
+      performance: 效能優化
+      performance_high: 高
+      performance_low: 低
+      performance_medium: 中
+      performance_very_low: 極低
+      puzzle: 解謎
+      quests: 任務
+      realistic: 寫實風
+      reflections: 反射
+      redstone: 紅石
+      resolution_128x: 128x
+      resolution_16x: 16x
+      resolution_256x: 256x
+      resolution_32x: 32x
+      resolution_48x: 48x
+      resolution_512x: 512x 或更高
+      resolution_64x: 64x
+      resolution_8x: 8x 或更低
+      scifi: 科幻
+      semi_realistic: 半寫實風
+      simple: 簡潔
+      skyblock: 空島
+      steampunk: 蒸汽龐克
+      storage: 倉儲
+      structures: 天然結構
+      survival: 生存
+      technology: 科技
+      themed: 主題化
+      transportation: 運輸
+      tweaks: 改良
+      utility: 實用
+      vanilla_compatible: 原版可用
+      vanilla_plus: 原版改良
+      vanilla_style: 原版風
+      worldgen: 世界元素
 resource_detail:
   actions:
     copy_link: 複製連結
@@ -2038,9 +2190,35 @@ instance:
     installed: 已安裝
     not_installed: 未安裝
   overview:
+    sections:
+      info: 資訊
+      personalization: 個人化
+      shortcuts: 快捷操作
+      advanced: 進階操作
     info:
       launch_count: 啟動次數
+      launch_count_never: 從未啟動
       modpack_version: 整合包版本
+      description: 實例描述
+    personalization:
+      icon: 圖示
+      category: 分類
+    actions:
+      rename: 重新命名
+      edit_description: 修改描述
+      add_favorite: 加入收藏
+      remove_favorite: 取消收藏
+    shortcuts:
+      instance_folder: 實例資料夾
+      saves_folder: 存檔資料夾
+      mods_folder: Mod 資料夾
+    advanced:
+      export_script: 匯出啟動腳本
+      test_game: 測試啟動
+      repair_files: 修復檔案
+      reset: 重設實例
+      delete: 刪除實例
+      patch_core: 修補核心
     categories:
       auto: 自動
       hidden: 隱藏實例
@@ -2069,6 +2247,12 @@ instance:
       quilt: 方格（Quilt）
       neoforge: 狐狸（NeoForge）
   install:
+    minecraft:
+      header: Minecraft
+    actions:
+      apply_changes: 套用變更
+      reset_to_scanned: 重設為掃描結果
+      modify: 修改
     option:
       can_add: 可新增
     hints:
@@ -2076,7 +2260,61 @@ instance:
     unavailable:
       incompatible_with: 與 {target} 不相容
   content:
+    world:
+      search: 搜尋存檔
+      quick_actions: 快捷操作
+      list: 存檔列表
+      actions:
+        open_folder: 開啟存檔資料夾
+        paste_clipboard: 貼上剪貼簿內容
+    screenshot:
+      quick_actions: 快捷操作
+      actions:
+        open_folder: 開啟截圖資料夾
+    server:
+      quick_actions: 快捷操作
+      actions:
+        refresh_all: 全部重新整理
+        add: 新增伺服器
+        refresh: 重新整理
+        copy_address: 複製地址
+        connect: 連線
+    sort:
+      label: '排序：{mode}'
+      file_name: 檔案名稱
+      create_time: 建立時間
+      modify_time: 修改時間
+      resource_name: 資源名稱
+      added_time: 新增時間
+      file_size: 檔案大小
     resource:
+      search:
+        default: 搜尋資源
+        resource_pack: 搜尋資源包
+        shader: 搜尋光影包
+        schematic: 搜尋投影
+      actions:
+        open_folder: 開啟資料夾
+        install_from_file: 從檔案安裝
+        install_from_file_empty: 先安裝檔案
+        download_new: 下載新資源
+        download_schematic_mod: 下載投影 Mod
+        select_all: 全選
+        export_info: 匯出資訊
+        check_mods: 檢查 Mod
+        enable: 啟用
+        disable: 停用
+        delete: 刪除
+        clear_selection: 清除選取
+        instance_select: 選擇相容實例
+        go_to_download: 前往下載
+      filters:
+        all: 全部（{count}）
+        enabled: 已啟用（{count}）
+        disabled: 已停用（{count}）
+        duplicate: 重複項（{count}）
+        search_results: 搜尋結果（{count}）
+      selection: 已選擇 {count} 項
       kind:
         resource_pack: 資源包
         shader: 光影包
@@ -2094,16 +2332,63 @@ instance:
       tags:
         disabled: 已停用
   settings:
+    intro: 為這個實例設定專屬的啟動行為、記憶體分配、伺服器設定與進階覆寫項。
+    sections:
+      launch: 啟動
+      memory: 記憶體
+      server: 伺服器
+      advanced: 進階
+    actions:
+      global_settings: 開啟全域設定
     options:
       follow_global: 跟隨全域設定
       on: 開啟
       off: 關閉
+    launch:
+      isolation: 隔離設定
+      window_title: 視窗標題
+      default_window_title: 使用預設視窗標題
+      custom_info: 自訂資訊
+      java: Java
+    memory:
+      warning_32bit: 目前所選 Java 為 32 位元，會大幅限制可用記憶體。
+      warning_allocation: 目前的記憶體分配可能會讓系統剩餘可用記憶體不足。
+      use_global: 使用全域設定
+      use_auto: 自動分配
+      use_custom: 自訂分配
+      optimize_before_launch: 啟動前最佳化記憶體
     server:
+      locked_warning: 這個實例的伺服器登入設定已鎖定。
+      login_requirement: 登入要求
+      auth_server: 驗證伺服器
+      auth_register: 註冊頁面
+      auth_name: 驗證名稱
+      auto_join: 自動加入伺服器
+      set_littleskin: 設為 LittleSkin 預設值
+      lock_login: 鎖定登入設定
+      create_profile: 建立登入設定檔
       require:
         none: 無
         official: 僅正版
         third_party: 僅第三方登入
         both: 兩者皆可
+    advanced:
+      renderer: 渲染器
+      jvm_head: JVM 參數前置
+      game_tail: 遊戲參數後置
+      classpath_head: Classpath 前置
+      prelaunch_command: 啟動前命令
+      environment_variables: 環境變數
+      environment_variables_hint: 每行一個變數，格式為 KEY=VALUE。
+      linux_backend: Linux 顯示後端
+      linux_backend_hint: 選擇遊戲視窗在 Wayland 與 X11 下的整合方式。
+      wait_for_prelaunch: 等待啟動前命令完成
+      ignore_java_compatibility: 忽略 Java 相容性檢查
+      disable_file_validation: 停用檔案驗證
+      follow_launcher_proxy: 跟隨啟動器代理設定
+      disable_java_launch_wrapper: 停用 Java 啟動包裝器
+      disable_retro_wrapper: 停用 RetroWrapper
+      use_debug_log4j: 使用除錯版 Log4j 設定
     renderer:
       game_default: 遊戲預設
       software: 軟體渲染
@@ -2113,6 +2398,25 @@ instance:
       force_x11: 強制使用 X11
       system_default: 系統預設
   export:
+    warnings:
+      modrinth: Modrinth 匯出模式會產出 `.mrpack` 工作流程，且可能省略啟動器專屬內容。
+      include_resources: 打包資源檔會顯著增加匯出檔案體積。
+    sections:
+      content: 內容
+      advanced: 進階
+    actions:
+      start: 開始匯出
+      reset: 重設
+      import_config: 讀取設定
+      save_config: 儲存設定
+      guide: 指南
+    name: 整合包名稱
+    version: 整合包版本
+    options:
+      include_resources: 直接打包資源檔
+      modrinth_mode: Modrinth 上傳模式
+    config:
+      hint: 如果你想重複使用同一組匯出選項，可以讀取或儲存匯出設定。
     groups:
       game: 遊戲本體
       mods: Mod

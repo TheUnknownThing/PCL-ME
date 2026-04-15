@@ -10,6 +10,8 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal interface II18nService
 {
+    string Locale { get; }
+
     string T(string key);
 
     string T(string key, IReadOnlyDictionary<string, object?> args);
@@ -63,6 +65,8 @@ internal sealed class I18nService : II18nService, IDisposable
     }
 
     public event Action? Changed;
+
+    public string Locale => Volatile.Read(ref _currentSnapshot).Locale;
 
     public string T(string key)
     {

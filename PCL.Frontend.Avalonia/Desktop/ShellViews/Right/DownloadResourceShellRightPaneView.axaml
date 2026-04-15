@@ -122,6 +122,7 @@
       <controls:PclSearchBox
           x:Name="SearchRow"
           SearchCommand="{Binding SearchDownloadResourceCommand}"
+          SearchButtonText="{Binding CommonSearchButtonText}"
           ShowSearchButton="True"
           Text="{Binding DownloadResourceSearchQuery, Mode=TwoWay}"
           Watermark="{Binding DownloadResourceSearchWatermark}" />

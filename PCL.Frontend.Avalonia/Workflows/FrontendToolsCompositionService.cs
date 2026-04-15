@@ -9,13 +9,19 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendToolsCompositionService
 {
     private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
+    private const string EnglishFallbackLocale = "en-US";
 
-    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths)
+    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths, string locale)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         return new FrontendToolsComposition(
-            BuildHelpState(runtimePaths),
+            LoadHelpState(runtimePaths, locale),
             BuildTestState(sharedConfig, runtimePaths));
+    }
+
+    public static FrontendToolsHelpState LoadHelpState(FrontendRuntimePaths runtimePaths, string locale)
+    {
+        return BuildHelpState(runtimePaths, locale);
     }
 
     private static FrontendToolsTestState BuildTestState(JsonFileProvider sharedConfig, FrontendRuntimePaths runtimePaths)
@@ -79,25 +85,32 @@ internal static class FrontendToolsCompositionService
             SelectedHeadSkinPath: string.Empty);
     }
 
-    private static FrontendToolsHelpState BuildHelpState(FrontendRuntimePaths runtimePaths)
+    private static FrontendToolsHelpState BuildHelpState(FrontendRuntimePaths runtimePaths, string locale)
     {
-        var entries = new List<FrontendToolsHelpEntry>();
+        var entryCandidates = new List<HelpEntryCandidate>();
+        var detailCandidates = new List<HelpDetailCandidate>();
         var ignorePatterns = ReadHelpIgnorePatterns(runtimePaths);
         var overrideRoot = Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Help");
+        var bundledHelpRoot = Path.Combine(LauncherRootDirectory, "Resources", "Help");
 
         if (Directory.Exists(overrideRoot))
         {
-            foreach (var filePath in Directory.EnumerateFiles(overrideRoot, "*.json", SearchOption.AllDirectories))
-            {
-                try
-                {
-                    entries.Add(ReadHelpEntry(File.ReadAllText(filePath), filePath));
-                }
-                catch
-                {
-                    // Ignore malformed override entries and keep loading the rest.
-                }
-            }
+            CollectHelpDirectoryCandidates(
+                overrideRoot,
+                ignorePatterns,
+                priority: 0,
+                entryCandidates,
+                detailCandidates);
+        }
+
+        if (Directory.Exists(bundledHelpRoot))
+        {
+            CollectHelpDirectoryCandidates(
+                bundledHelpRoot,
+                ignorePatterns,
+                priority: 1,
+                entryCandidates,
+                detailCandidates);
         }
 
         var bundledZipPath = Path.Combine(LauncherRootDirectory, "Resources", "Help.zip");
@@ -108,14 +121,14 @@ internal static class FrontendToolsCompositionService
                 using var archive = ZipFile.OpenRead(bundledZipPath);
                 foreach (var entry in archive.Entries.Where(item => item.FullName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (MatchesIgnorePattern(entry.FullName, ignorePatterns))
-                    {
-                        continue;
-                    }
-
-                    using var stream = entry.Open();
-                    using var reader = new StreamReader(stream);
-                    entries.Add(ReadHelpEntry(reader.ReadToEnd(), $"{bundledZipPath}::{entry.FullName}"));
+                    CollectZipHelpEntryCandidate(
+                        archive,
+                        entry,
+                        bundledZipPath,
+                        ignorePatterns,
+                        priority: 2,
+                        entryCandidates,
+                        detailCandidates);
                 }
             }
             catch
@@ -124,20 +137,153 @@ internal static class FrontendToolsCompositionService
             }
         }
 
+        var entries = BuildResolvedHelpEntries(entryCandidates, detailCandidates, locale);
         if (entries.Count == 0)
         {
             entries.AddRange(
             [
-                new FrontendToolsHelpEntry(["指南"], "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "实例, 启动, 版本", null, "fallback://launch/select-instance", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["指南"], "Java 下载提示", "Java 缺失时，可以按提示下载并选择可用运行时。", "Java, 运行时, 下载", null, "fallback://launch/java-runtime", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["启动器"], "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "日志, 导出, 诊断", null, "fallback://diagnostics/log-export", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["启动器"], "崩溃恢复提示", "发生崩溃后，可以查看日志、导出报告并按提示恢复。", "崩溃, 恢复, 日志", null, "fallback://diagnostics/crash-recovery", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["帮助"], "页面布局说明", "新版页面会尽量保持常用操作的顺序与分组，方便继续使用。", "页面, 布局, 操作", null, "fallback://help/page-layout", true, true, true, false, null, null, null),
-                new FrontendToolsHelpEntry(["帮助"], "启动前检查什么", "启动前建议确认实例、账号、Java 和提示信息是否正确。", "启动, 检查, Java", null, "fallback://help/launch-checklist", true, true, true, false, null, null, null)
+                new FrontendToolsHelpEntry(["指南"], "如何选择实例", "从启动页进入实例选择，然后再返回主启动面板继续启动。", "实例, 启动, 版本", null, "fallback://launch/select-instance", "fallback://launch/select-instance", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["指南"], "Java 下载提示", "Java 缺失时，可以按提示下载并选择可用运行时。", "Java, 运行时, 下载", null, "fallback://launch/java-runtime", "fallback://launch/java-runtime", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["启动器"], "导出日志", "可以在设置的日志页导出当前日志或全部历史日志压缩包。", "日志, 导出, 诊断", null, "fallback://diagnostics/log-export", "fallback://diagnostics/log-export", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["启动器"], "崩溃恢复提示", "发生崩溃后，可以查看日志、导出报告并按提示恢复。", "崩溃, 恢复, 日志", null, "fallback://diagnostics/crash-recovery", "fallback://diagnostics/crash-recovery", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["帮助"], "页面布局说明", "新版页面会尽量保持常用操作的顺序与分组，方便继续使用。", "页面, 布局, 操作", null, "fallback://help/page-layout", "fallback://help/page-layout", true, true, true, false, null, null, null),
+                new FrontendToolsHelpEntry(["帮助"], "启动前检查什么", "启动前建议确认实例、账号、Java 和提示信息是否正确。", "启动, 检查, Java", null, "fallback://help/launch-checklist", "fallback://help/launch-checklist", true, true, true, false, null, null, null)
             ]);
         }
 
         return new FrontendToolsHelpState(entries);
+    }
+
+    private static List<FrontendToolsHelpEntry> BuildResolvedHelpEntries(
+        IReadOnlyList<HelpEntryCandidate> entryCandidates,
+        IReadOnlyList<HelpDetailCandidate> detailCandidates,
+        string locale)
+    {
+        var resolvedEntries = new List<FrontendToolsHelpEntry>();
+        var groupedEntries = entryCandidates
+            .GroupBy(candidate => candidate.ReferencePath, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in groupedEntries)
+        {
+            var selectedEntry = SelectBestLocalizedCandidate(group, locale);
+            if (selectedEntry is null)
+            {
+                continue;
+            }
+
+            var selectedDetail = SelectBestLocalizedCandidate(
+                detailCandidates.Where(candidate =>
+                    string.Equals(candidate.ReferencePath, group.Key, StringComparison.OrdinalIgnoreCase)),
+                locale);
+
+            try
+            {
+                resolvedEntries.Add(ReadHelpEntry(
+                    selectedEntry.JsonContent,
+                    selectedEntry.ReferencePath,
+                    selectedEntry.SourcePath,
+                    selectedDetail?.Content));
+            }
+            catch
+            {
+                // Ignore malformed entries and keep loading the rest.
+            }
+        }
+
+        return resolvedEntries;
+    }
+
+    private static void CollectHelpDirectoryCandidates(
+        string rootDirectory,
+        IReadOnlyList<string> ignorePatterns,
+        int priority,
+        ICollection<HelpEntryCandidate> entryCandidates,
+        ICollection<HelpDetailCandidate> detailCandidates)
+    {
+        foreach (var filePath in Directory.EnumerateFiles(rootDirectory, "*.json", SearchOption.AllDirectories))
+        {
+            try
+            {
+                var relativePath = Path.GetRelativePath(rootDirectory, filePath).Replace('\\', '/');
+                var assetPath = ParseHelpAssetPath(relativePath);
+                if (MatchesIgnorePattern(relativePath, ignorePatterns, assetPath.ReferencePath))
+                {
+                    continue;
+                }
+
+                entryCandidates.Add(new HelpEntryCandidate(
+                    assetPath.ReferencePath,
+                    filePath,
+                    assetPath.Locale,
+                    priority,
+                    File.ReadAllText(filePath)));
+
+                var xamlPath = Path.ChangeExtension(filePath, ".xaml");
+                if (!string.IsNullOrWhiteSpace(xamlPath) && File.Exists(xamlPath))
+                {
+                    detailCandidates.Add(new HelpDetailCandidate(
+                        assetPath.ReferencePath,
+                        xamlPath,
+                        assetPath.Locale,
+                        priority,
+                        File.ReadAllText(xamlPath)));
+                }
+            }
+            catch
+            {
+                // Ignore malformed override entries and keep loading the rest.
+            }
+        }
+    }
+
+    private static void CollectZipHelpEntryCandidate(
+        ZipArchive archive,
+        ZipArchiveEntry entry,
+        string zipPath,
+        IReadOnlyList<string> ignorePatterns,
+        int priority,
+        ICollection<HelpEntryCandidate> entryCandidates,
+        ICollection<HelpDetailCandidate> detailCandidates)
+    {
+        var assetPath = ParseHelpAssetPath(entry.FullName);
+        if (MatchesIgnorePattern(entry.FullName, ignorePatterns, assetPath.ReferencePath))
+        {
+            return;
+        }
+
+        using (var stream = entry.Open())
+        using (var reader = new StreamReader(stream))
+        {
+            entryCandidates.Add(new HelpEntryCandidate(
+                assetPath.ReferencePath,
+                $"{zipPath}::{entry.FullName}",
+                assetPath.Locale,
+                priority,
+                reader.ReadToEnd()));
+        }
+
+        var xamlEntryPath = Path.ChangeExtension(entry.FullName, ".xaml")?.Replace('\\', '/');
+        if (string.IsNullOrWhiteSpace(xamlEntryPath))
+        {
+            return;
+        }
+
+        var xamlEntry = archive.Entries.FirstOrDefault(item =>
+            string.Equals(item.FullName, xamlEntryPath, StringComparison.OrdinalIgnoreCase));
+        if (xamlEntry is null)
+        {
+            return;
+        }
+
+        using var xamlStream = xamlEntry.Open();
+        using var xamlReader = new StreamReader(xamlStream);
+        detailCandidates.Add(new HelpDetailCandidate(
+            assetPath.ReferencePath,
+            $"{zipPath}::{xamlEntry.FullName}",
+            assetPath.Locale,
+            priority,
+            xamlReader.ReadToEnd()));
     }
 
     private static IReadOnlyList<string> ReadHelpIgnorePatterns(FrontendRuntimePaths runtimePaths)
@@ -164,13 +310,14 @@ internal static class FrontendToolsCompositionService
         return patterns;
     }
 
-    private static bool MatchesIgnorePattern(string relativePath, IReadOnlyList<string> ignorePatterns)
+    private static bool MatchesIgnorePattern(string relativePath, IReadOnlyList<string> ignorePatterns, string? referencePath = null)
     {
         foreach (var pattern in ignorePatterns)
         {
             try
             {
-                if (Regex.IsMatch(relativePath, pattern, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(relativePath, pattern, RegexOptions.IgnoreCase)
+                    || (!string.IsNullOrWhiteSpace(referencePath) && Regex.IsMatch(referencePath, pattern, RegexOptions.IgnoreCase)))
                 {
                     return true;
                 }
@@ -184,7 +331,11 @@ internal static class FrontendToolsCompositionService
         return false;
     }
 
-    private static FrontendToolsHelpEntry ReadHelpEntry(string json, string rawPath)
+    private static FrontendToolsHelpEntry ReadHelpEntry(
+        string json,
+        string rawPath,
+        string sourcePath,
+        string? detailContent)
     {
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
@@ -210,52 +361,131 @@ internal static class FrontendToolsCompositionService
             Keywords: ReadString(root, "Keywords"),
             Logo: ReadString(root, "Logo"),
             RawPath: rawPath,
+            SourcePath: sourcePath,
             ShowInSearch: ReadBool(root, "ShowInSearch", defaultValue: true),
             ShowInPublic: ReadBool(root, "ShowInPublic", defaultValue: true),
             ShowInSnapshot: ReadBool(root, "ShowInSnapshot", defaultValue: true),
             IsEvent: ReadBool(root, "IsEvent"),
             EventType: ReadString(root, "EventType"),
             EventData: ReadString(root, "EventData"),
-            DetailContent: ReadDetailContent(rawPath));
+            DetailContent: detailContent);
     }
 
-    private static string? ReadDetailContent(string rawPath)
+    private static TCandidate? SelectBestLocalizedCandidate<TCandidate>(
+        IEnumerable<TCandidate> candidates,
+        string locale)
+        where TCandidate : IHelpAssetCandidate
     {
-        try
+        var candidateList = candidates.ToArray();
+        if (candidateList.Length == 0)
         {
-            var zipMarkerIndex = rawPath.IndexOf("::", StringComparison.Ordinal);
-            if (zipMarkerIndex >= 0)
-            {
-                var zipPath = rawPath[..zipMarkerIndex];
-                var entryPath = rawPath[(zipMarkerIndex + 2)..];
-                var xamlEntryPath = Path.ChangeExtension(entryPath, ".xaml")?.Replace('\\', '/');
-                if (string.IsNullOrWhiteSpace(xamlEntryPath) || !File.Exists(zipPath))
-                {
-                    return null;
-                }
-
-                using var archive = ZipFile.OpenRead(zipPath);
-                var xamlEntry = archive.Entries.FirstOrDefault(item =>
-                    string.Equals(item.FullName, xamlEntryPath, StringComparison.OrdinalIgnoreCase));
-                if (xamlEntry is null)
-                {
-                    return null;
-                }
-
-                using var stream = xamlEntry.Open();
-                using var reader = new StreamReader(stream);
-                return reader.ReadToEnd();
-            }
-
-            var xamlPath = Path.ChangeExtension(rawPath, ".xaml");
-            return !string.IsNullOrWhiteSpace(xamlPath) && File.Exists(xamlPath)
-                ? File.ReadAllText(xamlPath)
-                : null;
+            return default;
         }
-        catch
+
+        foreach (var preferredLocale in EnumerateHelpLocalePreferences(locale))
+        {
+            var match = candidateList
+                .Where(candidate => string.Equals(candidate.Locale, preferredLocale, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(candidate => candidate.Priority)
+                .FirstOrDefault();
+            if (match is not null)
+            {
+                return match;
+            }
+        }
+
+        return candidateList
+            .OrderBy(candidate => candidate.Priority)
+            .First();
+    }
+
+    private static IReadOnlyList<string?> EnumerateHelpLocalePreferences(string locale)
+    {
+        var normalizedLocale = NormalizeHelpLocale(locale);
+        var locales = new List<string?>();
+        if (!string.IsNullOrWhiteSpace(normalizedLocale))
+        {
+            locales.Add(normalizedLocale);
+            var languageOnly = normalizedLocale.Split('-', 2)[0];
+            if (!string.Equals(languageOnly, normalizedLocale, StringComparison.OrdinalIgnoreCase))
+            {
+                locales.Add(languageOnly);
+            }
+        }
+
+        if (!string.Equals(normalizedLocale, EnglishFallbackLocale, StringComparison.OrdinalIgnoreCase))
+        {
+            locales.Add(EnglishFallbackLocale);
+            locales.Add("en");
+        }
+
+        locales.Add(null);
+        return locales
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static HelpAssetPath ParseHelpAssetPath(string relativePath)
+    {
+        var normalized = NormalizeHelpReference(relativePath);
+        var slashIndex = normalized.IndexOf('/');
+        if (slashIndex > 0)
+        {
+            var leadingSegment = normalized[..slashIndex];
+            var normalizedLocale = NormalizeHelpLocale(leadingSegment);
+            if (!string.IsNullOrWhiteSpace(normalizedLocale))
+            {
+                return new HelpAssetPath(normalized[(slashIndex + 1)..], normalizedLocale);
+            }
+        }
+
+        return new HelpAssetPath(normalized, null);
+    }
+
+    private static string NormalizeHelpReference(string reference)
+    {
+        return reference.Replace('\\', '/').Trim().TrimStart('/');
+    }
+
+    private static string? NormalizeHelpLocale(string? locale)
+    {
+        if (string.IsNullOrWhiteSpace(locale))
         {
             return null;
         }
+
+        var rawSegments = locale
+            .Trim()
+            .Replace('_', '-')
+            .Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (rawSegments.Length == 0 || rawSegments.Any(segment => !segment.All(char.IsLetterOrDigit)))
+        {
+            return null;
+        }
+
+        var normalizedSegments = new List<string>(rawSegments.Length);
+        for (var i = 0; i < rawSegments.Length; i++)
+        {
+            var segment = rawSegments[i];
+            if (i == 0)
+            {
+                normalizedSegments.Add(segment.ToLowerInvariant());
+            }
+            else if (segment.Length == 4 && segment.All(char.IsLetter))
+            {
+                normalizedSegments.Add(char.ToUpperInvariant(segment[0]) + segment[1..].ToLowerInvariant());
+            }
+            else if ((segment.Length == 2 || segment.Length == 3) && segment.All(char.IsLetter))
+            {
+                normalizedSegments.Add(segment.ToUpperInvariant());
+            }
+            else
+            {
+                normalizedSegments.Add(segment);
+            }
+        }
+
+        return string.Join('-', normalizedSegments);
     }
 
     private static string ReadString(JsonElement element, string propertyName)
@@ -292,4 +522,27 @@ internal static class FrontendToolsCompositionService
             return fallback;
         }
     }
+
+    private interface IHelpAssetCandidate
+    {
+        string? Locale { get; }
+
+        int Priority { get; }
+    }
+
+    private sealed record HelpAssetPath(string ReferencePath, string? Locale);
+
+    private sealed record HelpEntryCandidate(
+        string ReferencePath,
+        string SourcePath,
+        string? Locale,
+        int Priority,
+        string JsonContent) : IHelpAssetCandidate;
+
+    private sealed record HelpDetailCandidate(
+        string ReferencePath,
+        string SourcePath,
+        string? Locale,
+        int Priority,
+        string Content) : IHelpAssetCandidate;
 }

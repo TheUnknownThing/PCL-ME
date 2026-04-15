@@ -117,7 +117,7 @@ shell:
         title: Java
         summary: Manage Java runtimes and selection rules.
       setup_launcher_misc:
-        title: Launcher Misc
+        title: Misc
         summary: Adjust miscellaneous launcher behaviors.
       tools_launcher_help:
         title: Help
@@ -699,6 +699,11 @@ startup:
       actions:
         acknowledge: I understand
 launch:
+  announcements:
+    community_edition_intro:
+      title: Cross-Platform Edition Notice
+      message: You are using the cross-platform edition of PCL. This edition is independently developed and maintained, and its roadmap differs from the official release.
+      detail: This build is still being actively tested. Feedback and bug reports are welcome.
   notifications:
     success: '{instance_name} launched successfully.'
     abort_with_hint: 'Launch was canceled: {hint}'
@@ -1667,13 +1672,60 @@ common:
     cancel: Cancel
     close: Close
     confirm: Confirm
+    open: Open
+    open_website: Open Website
+    search: Search
     select_all: Select all
   filters:
     all: All
     any: Any
+  memory:
+    summary:
+      allocation_prefix: Game allocation
+      size_gb: '{value} GB'
+      usage_header: Used memory / Installed memory
   punctuation:
     comma: ', '
 download:
+  catalog:
+    errors:
+      empty_description: The remote catalog is temporarily unavailable. Try again later.
+      empty_title: Nothing to show
+      load_failed_title: Failed to load remote catalog
+      retry_later: Please try again later.
+      section_title: Remote Catalog
+    intro:
+      cleanroom:
+        body: Cleanroom is a Forge-derived mod loader for Minecraft 1.12.2 and is theoretically compatible with 99% of Forge mods.
+        title: Cleanroom Overview
+      fabric:
+        body: "Fabric Loader is a lightweight mod loader for modern Minecraft. You need to install it before using Fabric mods.\nThis page provides the Fabric installer download. After downloading it, you still need to open the installer manually to complete setup."
+        title: Fabric Overview
+      forge:
+        body: Forge is a mod loader. You need to install Forge before you can use Forge mods.
+        title: Forge Overview
+      labymod:
+        body: "LabyMod is an optimized Minecraft client.\nThis page provides the LabyMod installer download. After downloading it, you still need to open the installer manually to complete setup."
+        title: LabyMod Overview
+      legacy_fabric:
+        body: "Legacy Fabric is a backport of Fabric for older Minecraft versions. You need to install it before using Legacy Fabric mods.\nThis page provides the Legacy Fabric installer download. After downloading it, you still need to open the installer manually to complete setup."
+        title: Legacy Fabric Overview
+      liteloader:
+        body: Similar to Forge, LiteLoader can be used to load LiteLoader mods for older Minecraft versions.
+        title: LiteLoader Overview
+      neoforge:
+        body: "NeoForge is a mod loader for Minecraft 1.20.1 and newer. You need it before installing NeoForge mods, and it is also compatible with some Forge mods.\nThis page provides the NeoForge installer download. After downloading it, you still need to open the installer manually to complete setup."
+        title: NeoForge Overview
+      optifine:
+        body: OptiFine, also known as HD fix, enables shader installation, high-resolution resource packs, and performance improvements, but it has weaker compatibility with mods.
+        title: OptiFine Overview
+      quilt:
+        body: "Quilt Loader is a lightweight, modular mod loader for modern Minecraft. You need to install it before using Quilt mods.\nThis page provides the Quilt installer download. After downloading it, you still need to open the installer manually to complete setup."
+        title: Quilt Overview
+      stale_cache: "{body}\n\nRefreshing the remote catalog failed, so the most recently synchronized results are being kept for now. Error: {error}"
+    loading:
+      fetch_list: Fetching {surface_name} list
+      fetch_versions: Fetching version list
   favorites:
     actions:
       batch_install: Batch Install
@@ -1845,6 +1897,17 @@ download:
       version: Version
     hints:
       modrinth_unavailable: Modrinth is unavailable for the current source
+      partial_results: 'Showing live results from available sources. Some sources failed: {message}'
+      retry_later: Try again later, or adjust the source filter.
+      search_failed: 'Live community search failed: {message}'
+      unavailable: 'Unable to fetch live community results: {message}'
+      version_fallback: No popular {surface_name} results matched Minecraft {version}. Falling back to the general community list.
+    entry:
+      count_style: western
+      downloads_none: No downloads
+      downloads_with_count: '{count} downloads'
+      updated_unknown: Unknown date
+      version_unknown: Unspecified version
     install_pack:
       no_filtered_result: No installable pack in the current results
       no_surface: No download surface is active
@@ -1872,6 +1935,95 @@ download:
       empty: No {surface_name} found
       loading: Loading {surface_name}...
       title: '{surface_name}'
+    tag_groups:
+      features: Features
+      performance: Performance
+      resolution: Resolution
+      style: Style
+    tags:
+      adventure: Adventure
+      audio: Includes Audio
+      automation: Automation
+      biomes: Biomes
+      cartoon: Cartoon
+      chaotic: Chaotic
+      colored_lighting: Colored Lighting
+      combat: Combat
+      core_shaders: Core Shaders
+      creative: Creative
+      creative_mode: Creative Mode
+      data_pack: Data Pack
+      decoration: Decoration
+      dimensions: Dimensions
+      dynamic_effects: Dynamic Effects
+      energy: Energy
+      entities: Includes Entities
+      equipment_tools: Equipment and Tools
+      exploration: Exploration
+      fantasy: Fantasy
+      fantasy_style: Fantasy
+      farming: Farming
+      food_cooking: Food and Cooking
+      fonts: Includes Fonts
+      game_mechanics: Game Mechanics
+      gui: Includes UI
+      hardcore: Hardcore
+      information: Information Display
+      kitchen_sink: Kitchen Sink
+      large: Large
+      library: Library
+      lightweight: Lightweight
+      locale: Includes Locales
+      logistics: Logistics
+      magic: Magic
+      map_based: Map-Based
+      medieval: Medieval
+      minigames: Minigames
+      mobs: Mobs
+      mod_compatible: Mod Compatible
+      mod_world: Mod World
+      modded: Modded
+      modern: Modern
+      models: Includes Models
+      multiplayer: Multiplayer
+      ores_resources: Ores and Resources
+      parkour: Parkour
+      path_tracing: Path Tracing
+      performance: Performance
+      performance_high: High
+      performance_low: Low
+      performance_medium: Medium
+      performance_very_low: Very Low
+      puzzle: Puzzle
+      quests: Quests
+      realistic: Realistic
+      reflections: Reflections
+      redstone: Redstone
+      resolution_128x: 128x
+      resolution_16x: 16x
+      resolution_256x: 256x
+      resolution_32x: 32x
+      resolution_48x: 48x
+      resolution_512x: 512x or higher
+      resolution_64x: 64x
+      resolution_8x: 8x or lower
+      scifi: Sci-Fi
+      semi_realistic: Semi-Realistic
+      simple: Simple
+      skyblock: Skyblock
+      steampunk: Steampunk
+      storage: Storage
+      structures: Structures
+      survival: Survival
+      technology: Technology
+      themed: Themed
+      transportation: Transportation
+      tweaks: Tweaks
+      utility: Utility
+      vanilla_compatible: Vanilla Compatible
+      vanilla_plus: Vanilla+
+      vanilla_style: Vanilla Style
+      worldgen: World Generation
 resource_detail:
   actions:
     copy_link: Copy Link
@@ -2038,9 +2190,35 @@ instance:
     installed: Installed
     not_installed: Not installed
   overview:
+    sections:
+      info: Info
+      personalization: Personalization
+      shortcuts: Shortcuts
+      advanced: Advanced
     info:
       launch_count: Launch count
+      launch_count_never: Never launched
       modpack_version: Modpack version
+      description: Description
+    personalization:
+      icon: Icon
+      category: Category
+    actions:
+      rename: Rename
+      edit_description: Edit Description
+      add_favorite: Add to Favorites
+      remove_favorite: Unfavorite
+    shortcuts:
+      instance_folder: Instance Folder
+      saves_folder: Saves Folder
+      mods_folder: Mods Folder
+    advanced:
+      export_script: Export Launch Script
+      test_game: Test Game
+      repair_files: Repair Files
+      reset: Reset Instance
+      delete: Delete Instance
+      patch_core: Patch Core
     categories:
       auto: Auto
       hidden: Hidden instance
@@ -2069,6 +2247,12 @@ instance:
       quilt: Quilt
       neoforge: NeoForge
   install:
+    minecraft:
+      header: Minecraft
+    actions:
+      apply_changes: Apply Changes
+      reset_to_scanned: Reset to Scanned State
+      modify: Modify
     option:
       can_add: Can add
     hints:
@@ -2076,7 +2260,61 @@ instance:
     unavailable:
       incompatible_with: Incompatible with {target}
   content:
+    world:
+      search: Search worlds
+      quick_actions: Quick Actions
+      list: World List
+      actions:
+        open_folder: Open Saves Folder
+        paste_clipboard: Paste from Clipboard
+    screenshot:
+      quick_actions: Quick Actions
+      actions:
+        open_folder: Open Folder
+    server:
+      quick_actions: Quick Actions
+      actions:
+        refresh_all: Refresh All
+        add: Add Server
+        refresh: Refresh
+        copy_address: Copy Address
+        connect: Connect
+    sort:
+      label: 'Sort: {mode}'
+      file_name: File Name
+      create_time: Created Time
+      modify_time: Modified Time
+      resource_name: Resource Name
+      added_time: Added Time
+      file_size: File Size
     resource:
+      search:
+        default: Search resources
+        resource_pack: Search resource packs
+        shader: Search shaders
+        schematic: Search schematics
+      actions:
+        open_folder: Open Folder
+        install_from_file: Install from File
+        install_from_file_empty: Install First File
+        download_new: Download New
+        download_schematic_mod: Download Schematic Mod
+        select_all: Select All
+        export_info: Export Info
+        check_mods: Check Mods
+        enable: Enable
+        disable: Disable
+        delete: Delete
+        clear_selection: Clear Selection
+        instance_select: Select Compatible Instance
+        go_to_download: Go to Download
+      filters:
+        all: All ({count})
+        enabled: Enabled ({count})
+        disabled: Disabled ({count})
+        duplicate: Duplicates ({count})
+        search_results: Search Results ({count})
+      selection: '{count} selected'
       kind:
         resource_pack: Resource pack
         shader: Shader pack
@@ -2094,16 +2332,63 @@ instance:
       tags:
         disabled: Disabled
   settings:
+    intro: Configure dedicated launch behavior, memory allocation, server settings, and advanced overrides for this instance.
+    sections:
+      launch: Launch
+      memory: Memory
+      server: Server
+      advanced: Advanced
+    actions:
+      global_settings: Open Global Settings
     options:
       follow_global: Follow global setting
       on: On
       off: Off
+    launch:
+      isolation: Isolation
+      window_title: Window Title
+      default_window_title: Use default window title
+      custom_info: Custom Info
+      java: Java
+    memory:
+      warning_32bit: The selected Java runtime is 32-bit, which can severely limit usable memory.
+      warning_allocation: The current memory allocation may leave too little free system memory.
+      use_global: Use global setting
+      use_auto: Allocate automatically
+      use_custom: Set custom allocation
+      optimize_before_launch: Optimize memory before launch
     server:
+      locked_warning: Server login settings are locked for this instance.
+      login_requirement: Login Requirement
+      auth_server: Authentication Server
+      auth_register: Registration Page
+      auth_name: Authentication Label
+      auto_join: Auto-Join Server
+      set_littleskin: Set to LittleSkin Defaults
+      lock_login: Lock Login Settings
+      create_profile: Create Login Profile
       require:
         none: None
         official: Official only
         third_party: Third-party only
         both: Both
+    advanced:
+      renderer: Renderer
+      jvm_head: JVM Arguments (Head)
+      game_tail: Game Arguments (Tail)
+      classpath_head: Classpath Head
+      prelaunch_command: Pre-Launch Command
+      environment_variables: Environment Variables
+      environment_variables_hint: One variable per line, in KEY=VALUE format.
+      linux_backend: Linux Display Backend
+      linux_backend_hint: Choose how the game window integrates with Wayland and X11.
+      wait_for_prelaunch: Wait for pre-launch command to finish
+      ignore_java_compatibility: Ignore Java compatibility checks
+      disable_file_validation: Disable file validation
+      follow_launcher_proxy: Follow launcher proxy settings
+      disable_java_launch_wrapper: Disable Java launch wrapper
+      disable_retro_wrapper: Disable RetroWrapper
+      use_debug_log4j: Use debug Log4j configuration
     renderer:
       game_default: Game default
       software: Software
@@ -2113,6 +2398,25 @@ instance:
       force_x11: Force X11
       system_default: System default
   export:
+    warnings:
+      modrinth: Modrinth export mode produces a `.mrpack` workflow and may omit launcher-specific extras.
+      include_resources: Including resource files can significantly increase the size of the export package.
+    sections:
+      content: Content
+      advanced: Advanced
+    actions:
+      start: Start Export
+      reset: Reset
+      import_config: Import Config
+      save_config: Save Config
+      guide: Guide
+    name: Pack Name
+    version: Pack Version
+    options:
+      include_resources: Include resource files directly
+      modrinth_mode: Modrinth upload mode
+    config:
+      hint: Import or save an export config if you want to reuse the same selection later.
     groups:
       game: Game
       mods: Mods

@@ -1077,7 +1077,7 @@ internal static class FrontendCommunityResourceCatalogService
         };
     }
 
-    private static string BuildEntryInfo(string? description, string? author, DateTimeOffset? updatedAt, int downloads)
+    private static string BuildEntryInfo(string? description, string? author, DateTimeOffset? _, int __)
     {
         var parts = new List<string>();
         if (!string.IsNullOrWhiteSpace(description))
@@ -1085,25 +1085,9 @@ internal static class FrontendCommunityResourceCatalogService
             parts.Add(description.Trim());
         }
 
-        var metaParts = new List<string>();
         if (!string.IsNullOrWhiteSpace(author))
         {
-            metaParts.Add(author.Trim());
-        }
-
-        if (updatedAt is not null)
-        {
-            metaParts.Add($"更新于 {updatedAt.Value.LocalDateTime:yyyy/MM/dd}");
-        }
-
-        if (downloads > 0)
-        {
-            metaParts.Add($"{downloads:N0} 次下载");
-        }
-
-        if (metaParts.Count > 0)
-        {
-            parts.Add(string.Join(" • ", metaParts));
+            parts.Add(author.Trim());
         }
 
         return string.Join(" | ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));

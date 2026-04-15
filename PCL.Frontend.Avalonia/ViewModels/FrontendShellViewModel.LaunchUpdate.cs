@@ -1,6 +1,8 @@
 using System.IO;
+using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
@@ -10,6 +12,10 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    public string MemorySummaryUsageHeaderText => T("common.memory.summary.usage_header");
+
+    public string MemorySummaryAllocationPrefixText => T("common.memory.summary.allocation_prefix");
+
     public IReadOnlyList<string> LaunchIsolationOptions => SetupText.Launch.IsolationOptions;
 
     public IReadOnlyList<string> LaunchVisibilityOptions => SetupText.Launch.VisibilityOptions;
@@ -211,15 +217,15 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string CustomRamAllocationLabel => $"{Math.Round(CustomRamAllocation):0} GB";
+    public string CustomRamAllocationLabel => FormatMemorySummarySize(Math.Round(CustomRamAllocation));
 
-    public string UsedRamLabel => $"{_launchUsedRamGb:0.0} GB";
+    public string UsedRamLabel => FormatMemorySummarySize(_launchUsedRamGb);
 
-    public string TotalRamLabel => $"{_launchTotalRamGb:0.0} GB";
+    public string TotalRamLabel => FormatMemorySummarySize(_launchTotalRamGb);
 
     public string AllocatedRamLabel => UseAutomaticRamAllocation
-        ? $"{_launchAutomaticAllocatedRamGb:0.0} GB"
-        : $"{Math.Round(CustomRamAllocation, 1):0.0} GB";
+        ? FormatMemorySummarySize(_launchAutomaticAllocatedRamGb)
+        : FormatMemorySummarySize(Math.Round(CustomRamAllocation, 1));
 
     public GridLength UsedRamBarWidth => CreateMemoryBarWidth(_launchUsedRamGb);
 
@@ -246,6 +252,23 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _isLaunchAdvancedOptionsExpanded;
         private set => SetProperty(ref _isLaunchAdvancedOptionsExpanded, value);
+    }
+
+    private string FormatMemorySummarySize(double sizeGb)
+    {
+        return T("common.memory.summary.size_gb", ("value", sizeGb.ToString("0.0", ResolveCurrentLocaleCulture())));
+    }
+
+    private CultureInfo ResolveCurrentLocaleCulture()
+    {
+        try
+        {
+            return CultureInfo.GetCultureInfo(_i18n.Locale);
+        }
+        catch (CultureNotFoundException)
+        {
+            return CultureInfo.InvariantCulture;
+        }
     }
 
     public int SelectedLaunchRendererIndex
@@ -353,11 +376,11 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchNewsSectionTitle => T("launch.status.title");
 
-    public string LaunchAnnouncementHeader => _currentLaunchAnnouncement?.Title ?? string.Empty;
+    public string LaunchAnnouncementHeader => ResolveLaunchAnnouncementTitle(_currentLaunchAnnouncement);
 
-    public string LaunchAnnouncementPrimaryText => _currentLaunchAnnouncement?.Message ?? string.Empty;
+    public string LaunchAnnouncementPrimaryText => ResolveLaunchAnnouncementMessage(_currentLaunchAnnouncement);
 
-    public string LaunchAnnouncementSecondaryText => _currentLaunchAnnouncement?.Detail ?? string.Empty;
+    public string LaunchAnnouncementSecondaryText => ResolveLaunchAnnouncementDetail(_currentLaunchAnnouncement);
 
     public bool ShowLaunchAnnouncement => _currentLaunchAnnouncement is not null;
 
@@ -433,7 +456,51 @@ internal sealed partial class FrontendShellViewModel
             "SystemSystemAnnouncement",
             FrontendLaunchAnnouncementService.MarkAnnouncementAsShown(shownState, announcement.Id));
         RefreshLaunchAnnouncements();
-        AddActivity(T("launch.status.activities.dismiss_announcement"), T("launch.status.messages.announcement_dismissed", ("title", announcement.Title)));
+        AddActivity(
+            T("launch.status.activities.dismiss_announcement"),
+            T("launch.status.messages.announcement_dismissed", ("title", ResolveLaunchAnnouncementTitle(announcement))));
+    }
+
+    private string ResolveLaunchAnnouncementTitle(LauncherAnnouncement? announcement)
+    {
+        if (announcement is null)
+        {
+            return string.Empty;
+        }
+
+        return announcement.Id switch
+        {
+            "launch-community-edition-intro" => T("launch.announcements.community_edition_intro.title"),
+            _ => announcement.Title
+        };
+    }
+
+    private string ResolveLaunchAnnouncementMessage(LauncherAnnouncement? announcement)
+    {
+        if (announcement is null)
+        {
+            return string.Empty;
+        }
+
+        return announcement.Id switch
+        {
+            "launch-community-edition-intro" => T("launch.announcements.community_edition_intro.message"),
+            _ => announcement.Message
+        };
+    }
+
+    private string ResolveLaunchAnnouncementDetail(LauncherAnnouncement? announcement)
+    {
+        if (announcement is null)
+        {
+            return string.Empty;
+        }
+
+        return announcement.Id switch
+        {
+            "launch-community-edition-intro" => T("launch.announcements.community_edition_intro.detail"),
+            _ => announcement.Detail ?? string.Empty
+        };
     }
 
     private static string GetLaunchAuthServerDisplayName(string authServer)

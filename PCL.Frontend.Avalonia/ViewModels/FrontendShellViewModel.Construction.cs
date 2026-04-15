@@ -331,7 +331,7 @@ internal sealed partial class FrontendShellViewModel
             : FrontendInstanceCompositionService.LoadMode.Lightweight;
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode);
         _instanceCompositionLoadMode = initialInstanceLoadMode;
-        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _i18n.Locale);
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         _startupPlan = new StartupAvaloniaPlan(

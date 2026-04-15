@@ -1,0 +1,34 @@
+<local:MyCard Title="Can I use PCL to create a modpack?" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="You can package and share modpacks with the community edition of PCL. The launcher-side features used for exporting instances and distributing packs do not require a separate authorization flow." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Export a modpack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <TextBlock Margin="0,0,0,8" LineHeight="17" TextWrapping="Wrap"
+               Text="Use the instance export page to choose the files that belong in the pack and produce the archive you want to distribute." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/导出整合包.json" Title="Open the pack export article" />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Auto-install a distributed pack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the distributed archive is named modpack.zip or modpack.mrpack and is placed next to the launcher executable, PCL can detect it on startup and begin the install flow automatically." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="That makes it easier to hand players a ready-to-run package without asking them to import the pack manually." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Sensitive data and launcher branding" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Account credentials are not exported together with a modpack, so you do not need to strip player login data by hand before sharing the package." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="You can also hide unused launcher features and adjust homepage content so the distributed pack presents only the pages your players actually need." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyHint Margin="0,0,0,15" IsWarn="False" Text="English article seed: Modpack Creation Guide" />
