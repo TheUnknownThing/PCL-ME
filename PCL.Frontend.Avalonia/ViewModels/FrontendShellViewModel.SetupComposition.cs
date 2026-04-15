@@ -66,6 +66,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static readonly string[] LauncherMiscSharedResetKeys =
     [
+        "SystemLocale",
         "UiAniFPS",
         "SystemMaxLog",
         "SystemDisableHardwareAcceleration",
@@ -268,6 +269,8 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
                 break;
             case LauncherFrontendSubpageKey.SetupLauncherMisc:
+                RaisePropertyChanged(nameof(LauncherLocaleOptions));
+                RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
                 RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
                 RaisePropertyChanged(nameof(AnimationFpsLimit));
                 RaisePropertyChanged(nameof(AnimationFpsLabel));
@@ -780,6 +783,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(NotifySnapshotUpdates));
         RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
         RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
+        RaisePropertyChanged(nameof(LauncherLocaleOptions));
+        RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
         RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
         RaisePropertyChanged(nameof(AnimationFpsLimit));
         RaisePropertyChanged(nameof(AnimationFpsLabel));

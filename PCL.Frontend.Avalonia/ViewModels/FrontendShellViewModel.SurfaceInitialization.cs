@@ -476,6 +476,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeLauncherMiscSurface()
     {
+        _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
         _selectedSystemActivityIndex = _setupComposition.LauncherMisc.SystemActivityIndex;
         _animationFpsLimit = _setupComposition.LauncherMisc.AnimationFpsLimit;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;

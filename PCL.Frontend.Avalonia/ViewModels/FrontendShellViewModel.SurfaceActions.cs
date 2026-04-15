@@ -867,7 +867,11 @@ internal sealed partial class FrontendShellViewModel
 
         Directory.CreateDirectory(_shellActionService.RuntimePaths.SharedConfigDirectory);
         File.Copy(sourcePath, _shellActionService.RuntimePaths.SharedConfigPath, true);
-        ReloadSetupComposition();
+        if (!_i18n.ReloadLocaleFromSettings())
+        {
+            ReloadSetupComposition();
+        }
+
         AddActivity(
             LT("setup.launcher_misc.activities.import_settings"),
             LT("setup.launcher_misc.activities.import_settings_completed", ("path", sourcePath)));
@@ -1186,7 +1190,11 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.RemoveLocalValues(LauncherMiscLocalResetKeys);
         _shellActionService.RemoveSharedValues(LauncherMiscSharedResetKeys);
         _shellActionService.RemoveSharedValues(LauncherMiscProtectedResetKeys);
-        ReloadSetupComposition();
+        if (!_i18n.ReloadLocaleFromSettings())
+        {
+            ReloadSetupComposition();
+        }
+
         AddActivity(
             LT("setup.launcher_misc.activities.reset"),
             LT("setup.launcher_misc.activities.reset_completed"));

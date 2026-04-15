@@ -1849,6 +1849,7 @@ setup:
       system:
         header: System
     fields:
+      locale: Interface language
       announcements: Launcher announcements
       debug_animation_speed: Animation speed
       http_proxy: HTTP proxy

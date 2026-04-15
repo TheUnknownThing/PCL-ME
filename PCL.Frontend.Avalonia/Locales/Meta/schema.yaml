@@ -2078,6 +2078,7 @@ setup:
       system:
         header: []
     fields:
+      locale: []
       announcements: []
       debug_animation_speed: []
       http_proxy: []

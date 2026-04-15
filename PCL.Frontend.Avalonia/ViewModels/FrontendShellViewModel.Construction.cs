@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +24,8 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private readonly AvaloniaCommandOptions _options;
     private readonly II18nService _i18n;
+    private readonly IReadOnlyList<string> _launcherLocaleKeys;
+    private readonly IReadOnlyList<string> _launcherLocaleOptions;
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
@@ -251,6 +254,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _notifySnapshotUpdates;
     private bool _autoSwitchGameLanguageToChinese = true;
     private bool _detectClipboardResourceLinks = true;
+    private int _selectedLauncherLocaleIndex;
     private int _selectedSystemActivityIndex;
     private double _animationFpsLimit = 59;
     private double _maxRealTimeLogValue = 13;
@@ -318,6 +322,8 @@ internal sealed partial class FrontendShellViewModel
     {
         _options = options;
         _i18n = i18nService;
+        _launcherLocaleKeys = _i18n.AvailableLocales;
+        _launcherLocaleOptions = _launcherLocaleKeys.Select(FormatLauncherLocaleOption).ToArray();
         _shellActionService = shellActionService;
         _updateStatus = FrontendSetupUpdateStatusService.CreateDefault(_i18n);
         _selectedHeadSkinPath = _i18n.T("shell.tools.test.head.no_skin_selected");

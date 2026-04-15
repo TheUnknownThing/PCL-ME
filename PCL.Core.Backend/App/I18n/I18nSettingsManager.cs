@@ -9,6 +9,8 @@ public interface II18nSettingsManager
 
     bool SetLocale(string locale);
 
+    bool ReloadLocale();
+
     event Action<string>? LocaleChanged;
 }
 
@@ -19,6 +21,7 @@ public sealed class I18nSettingsManager : II18nSettingsManager
 
     private readonly IConfigProvider _configProvider;
     private readonly string _configKey;
+    private readonly string _fallbackLocale;
     private string _locale;
 
     public I18nSettingsManager(
@@ -31,7 +34,9 @@ public sealed class I18nSettingsManager : II18nSettingsManager
 
         _configProvider = configProvider;
         _configKey = configKey;
-        _locale = ReadInitialLocale(configProvider, configKey, fallbackLocale);
+        _fallbackLocale = NormalizeLocale(fallbackLocale)
+                          ?? throw new ArgumentException("Fallback locale is invalid.", nameof(fallbackLocale));
+        _locale = ReadInitialLocale(configProvider, configKey, _fallbackLocale);
     }
 
     public string Locale => Volatile.Read(ref _locale);
@@ -55,6 +60,20 @@ public sealed class I18nSettingsManager : II18nSettingsManager
         _configProvider.SetValue(_configKey, normalizedLocale);
         Volatile.Write(ref _locale, normalizedLocale);
         LocaleChanged?.Invoke(normalizedLocale);
+        return true;
+    }
+
+    public bool ReloadLocale()
+    {
+        var reloadedLocale = ReadInitialLocale(_configProvider, _configKey, _fallbackLocale);
+        var currentLocale = Volatile.Read(ref _locale);
+        if (string.Equals(currentLocale, reloadedLocale, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        Volatile.Write(ref _locale, reloadedLocale);
+        LocaleChanged?.Invoke(reloadedLocale);
         return true;
     }
 

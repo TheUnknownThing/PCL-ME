@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Linq;
 using System.Text;
 using PCL.Core.App.I18n;
 using PCL.Core.Logging;
@@ -12,11 +13,17 @@ internal interface II18nService
 {
     string Locale { get; }
 
+    IReadOnlyList<string> AvailableLocales { get; }
+
     string T(string key);
 
     string T(string key, IReadOnlyDictionary<string, object?> args);
 
     string T(I18nText text);
+
+    bool SetLocale(string locale);
+
+    bool ReloadLocaleFromSettings();
 
     bool ReloadCurrentLocale();
 
@@ -35,6 +42,7 @@ internal sealed class I18nService : II18nService, IDisposable
     private readonly string _schemaPath;
     private readonly II18nSettingsManager _settingsManager;
     private readonly string _fallbackLocale;
+    private readonly IReadOnlyList<string> _availableLocales;
     private readonly ConcurrentDictionary<string, I18nLocaleSnapshot> _snapshotCache = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> _missingKeyWarnings = new(StringComparer.Ordinal);
     private readonly I18nSchemaSnapshot _schemaSnapshot;
@@ -59,6 +67,7 @@ internal sealed class I18nService : II18nService, IDisposable
         _settingsManager = settingsManager;
         _fallbackLocale = NormalizeLocale(fallbackLocale)
                           ?? throw new ArgumentException("Fallback locale is invalid.", nameof(fallbackLocale));
+        _availableLocales = DiscoverAvailableLocales(_localeDirectory, _fallbackLocale);
         _schemaSnapshot = LoadSchemaSnapshot(_schemaPath);
         _currentSnapshot = LoadInitialSnapshot(settingsManager.Locale);
         _settingsManager.LocaleChanged += OnLocaleChanged;
@@ -67,6 +76,8 @@ internal sealed class I18nService : II18nService, IDisposable
     public event Action? Changed;
 
     public string Locale => Volatile.Read(ref _currentSnapshot).Locale;
+
+    public IReadOnlyList<string> AvailableLocales => _availableLocales;
 
     public string T(string key)
     {
@@ -98,6 +109,23 @@ internal sealed class I18nService : II18nService, IDisposable
 
         WarnMissingKey(snapshot.Locale, key);
         return key;
+    }
+
+    public bool SetLocale(string locale)
+    {
+        ThrowIfDisposed();
+
+        var normalizedLocale = NormalizeLocale(locale);
+        return normalizedLocale is not null &&
+               TryGetOrLoadSnapshot(normalizedLocale, useCache: true, out _) &&
+               _settingsManager.SetLocale(normalizedLocale);
+    }
+
+    public bool ReloadLocaleFromSettings()
+    {
+        ThrowIfDisposed();
+
+        return _settingsManager.ReloadLocale();
     }
 
     public bool ReloadCurrentLocale()
@@ -137,7 +165,37 @@ internal sealed class I18nService : II18nService, IDisposable
         if (TryApplyLocale(locale, useCache: true))
         {
             Changed?.Invoke();
+            return;
         }
+
+        if (!string.Equals(locale, _fallbackLocale, StringComparison.Ordinal))
+        {
+            _settingsManager.SetLocale(_fallbackLocale);
+        }
+    }
+
+    private static IReadOnlyList<string> DiscoverAvailableLocales(string localeDirectory, string fallbackLocale)
+    {
+        var discoveredLocales = Directory.EnumerateFiles(localeDirectory, "*.yaml", SearchOption.TopDirectoryOnly)
+            .Select(path => NormalizeLocale(Path.GetFileNameWithoutExtension(path)))
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(locale => locale, StringComparer.Ordinal)
+            .ToList();
+
+        if (!discoveredLocales.Contains(fallbackLocale, StringComparer.Ordinal))
+        {
+            discoveredLocales.Insert(0, fallbackLocale);
+        }
+        else
+        {
+            discoveredLocales.Sort((left, right) =>
+                left == fallbackLocale ? -1 :
+                right == fallbackLocale ? 1 :
+                StringComparer.Ordinal.Compare(left, right));
+        }
+
+        return discoveredLocales;
     }
 
     private I18nLocaleSnapshot LoadInitialSnapshot(string requestedLocale)

@@ -290,6 +290,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherMisc = new SetupLauncherMiscLocalization
             {
                 SystemCardHeader = _i18n.T("setup.launcher_misc.cards.system.header"),
+                LocaleLabel = _i18n.T("setup.launcher_misc.fields.locale"),
                 LauncherAnnouncementsLabel = _i18n.T("setup.launcher_misc.fields.announcements"),
                 MaxAnimationFpsLabel = _i18n.T("setup.launcher_misc.fields.max_animation_fps"),
                 RealTimeLogLinesLabel = _i18n.T("setup.launcher_misc.fields.realtime_log_lines"),
@@ -561,6 +562,7 @@ internal sealed class SetupJavaLocalization
 internal sealed class SetupLauncherMiscLocalization
 {
     public required string SystemCardHeader { get; init; }
+    public required string LocaleLabel { get; init; }
     public required string LauncherAnnouncementsLabel { get; init; }
     public required string MaxAnimationFpsLabel { get; init; }
     public required string RealTimeLogLinesLabel { get; init; }

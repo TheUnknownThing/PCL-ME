@@ -1,3 +1,4 @@
+using System.Globalization;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -127,6 +128,28 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _detectClipboardResourceLinks;
         set => SetProperty(ref _detectClipboardResourceLinks, value);
+    }
+
+    public IReadOnlyList<string> LauncherLocaleOptions => _launcherLocaleOptions;
+
+    public int SelectedLauncherLocaleIndex
+    {
+        get => _selectedLauncherLocaleIndex;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, LauncherLocaleOptions.Count - 1);
+            if (!SetProperty(ref _selectedLauncherLocaleIndex, clamped))
+            {
+                return;
+            }
+
+            if (clamped >= 0 &&
+                clamped < _launcherLocaleKeys.Count &&
+                !string.Equals(_i18n.Locale, _launcherLocaleKeys[clamped], StringComparison.Ordinal))
+            {
+                _i18n.SetLocale(_launcherLocaleKeys[clamped]);
+            }
+        }
     }
 
     public IReadOnlyList<string> SystemActivityOptions => SetupText.LauncherMisc.SystemActivityOptions;
@@ -282,5 +305,34 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _debugDelayEnabled;
         set => SetProperty(ref _debugDelayEnabled, value);
+    }
+
+    private int ResolveLauncherLocaleIndex(string locale)
+    {
+        for (var i = 0; i < _launcherLocaleKeys.Count; i++)
+        {
+            if (string.Equals(_launcherLocaleKeys[i], locale, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    private static string FormatLauncherLocaleOption(string locale)
+    {
+        try
+        {
+            var culture = CultureInfo.GetCultureInfo(locale);
+            var nativeName = culture.NativeName;
+            return string.IsNullOrWhiteSpace(nativeName)
+                ? locale
+                : $"{nativeName} ({locale})";
+        }
+        catch (CultureNotFoundException)
+        {
+            return locale;
+        }
     }
 }

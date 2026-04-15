@@ -1849,6 +1849,7 @@ setup:
       system:
         header: 系統
     fields:
+      locale: 介面語言
       announcements: 啓動器公告
       debug_animation_speed: 動畫速度
       http_proxy: HTTP 代理
