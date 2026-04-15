@@ -1,0 +1,20 @@
+<local:MyCard Title="Download and configure IntelliJ IDEA" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Install IntelliJ IDEA if you prefer a full IDE for repository editing. Any edition that gives you normal file editing and Git integration is sufficient for help-library work." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Set up Git support" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Sign in to GitHub if desired, make sure Git is available on the system, and confirm the repository opens with version control enabled so branch and commit operations work normally." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Clone the repository" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Clone the help repository to a writable local folder, create a new branch for your edits, and then update the relevant help JSON or XAML files before committing." />
+  </StackPanel>
+</local:MyCard>

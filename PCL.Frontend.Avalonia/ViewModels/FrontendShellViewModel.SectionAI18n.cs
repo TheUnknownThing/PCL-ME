@@ -132,6 +132,12 @@ internal sealed partial class FrontendShellViewModel
 
     public string CommunityProjectNoReleasesBody => T("resource_detail.releases.empty.body");
 
+    public string ShellBackTooltip => T("shell.navigation.utilities.back");
+
+    public string ShellHomeTooltip => T("shell.navigation.utilities.home");
+
+    public string ShellTaskManagerTooltip => T("shell.navigation.utilities.task_manager");
+
     private void RaiseSectionAI18nProperties()
     {
         RaisePropertyChanged(nameof(LaunchHomepageRefreshButtonText));
@@ -189,5 +195,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CommunityProjectInstallModeOptions));
         RaisePropertyChanged(nameof(CommunityProjectNoReleasesTitle));
         RaisePropertyChanged(nameof(CommunityProjectNoReleasesBody));
+        RaisePropertyChanged(nameof(ShellBackTooltip));
+        RaisePropertyChanged(nameof(ShellHomeTooltip));
+        RaisePropertyChanged(nameof(ShellTaskManagerTooltip));
     }
 }

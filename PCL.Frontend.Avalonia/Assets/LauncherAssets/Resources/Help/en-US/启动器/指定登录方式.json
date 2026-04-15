@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Set Third-Party Login or Restrict Login Methods",
+  "Description": "Configure which login methods are allowed for a pack or launcher setup",
+  "Keywords": "login auth third-party restriction",
+  "Types": ["Launcher"]
+}

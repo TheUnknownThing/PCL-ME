@@ -48,18 +48,13 @@ internal sealed record FrontendLaunchProfileSummary(
     string? RawJson,
     bool HasMicrosoftProfile)
 {
-    public string AuthLabel => Kind switch
+    public string AuthLabelKey => Kind switch
     {
-        MinecraftLaunchProfileKind.Microsoft => "正版验证",
-        MinecraftLaunchProfileKind.Auth => "外置验证",
-        MinecraftLaunchProfileKind.Legacy => "离线验证",
-        _ => "未选择档案"
+        MinecraftLaunchProfileKind.Microsoft => "launch.profile.kinds.microsoft",
+        MinecraftLaunchProfileKind.Auth => "launch.profile.kinds.authlib",
+        MinecraftLaunchProfileKind.Legacy => "launch.profile.kinds.offline",
+        _ => "launch.profile.none_selected"
     };
-
-    public string IdentityLabel => Kind == MinecraftLaunchProfileKind.Auth &&
-                                   !string.IsNullOrWhiteSpace(AuthServer)
-        ? $"{UserName} / {AuthLabel}"
-        : UserName;
 }
 
 internal sealed record FrontendJavaRuntimeSummary(

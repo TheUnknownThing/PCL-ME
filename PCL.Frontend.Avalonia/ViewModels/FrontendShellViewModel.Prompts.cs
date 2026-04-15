@@ -333,7 +333,9 @@ internal sealed partial class FrontendShellViewModel
                 OpenCrashLogFromPrompt();
                 break;
             case LauncherFrontendPromptCommandKind.OpenInstanceSettings:
-                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Prompt routed the shell to instance settings.");
+                NavigateTo(
+                    new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup),
+                    "Prompt routed the shell to instance settings.");
                 break;
             case LauncherFrontendPromptCommandKind.ExportCrashReport:
                 ExportCrashReportFromPrompt();
@@ -1302,7 +1304,7 @@ internal sealed partial class FrontendShellViewModel
         return new LauncherFrontendLaunchSurfaceData(
             _launchComposition.Scenario,
             LaunchAuthLabel,
-            _launchComposition.SelectedProfile.IdentityLabel,
+            GetLaunchProfileIdentityLabel(),
             _launchComposition.SelectedProfile.Kind == MinecraftLaunchProfileKind.None ? 0 : 1,
             GetLaunchJavaRuntimeLabel(),
             _launchComposition.JavaWarningMessage,

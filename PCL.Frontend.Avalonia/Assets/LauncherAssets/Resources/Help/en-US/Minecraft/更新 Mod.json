@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Update Mods",
+  "Description": "Safely update installed mods in an existing instance",
+  "Keywords": "mod update dependency compatibility",
+  "Types": ["Minecraft"]
+}

@@ -1,0 +1,10 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Custom Event List",
+  "Description": "Actions available to custom homepage and help documents",
+  "Keywords": "xaml custom event actions",
+  "Types": ["Personalization"],
+  "IsEvent": true,
+  "EventType": "打开网页",
+  "EventData": "https://github.com/Meloong-Git/PCL/wiki/%E8%87%AA%E5%AE%9A%E4%B9%89%E4%BA%8B%E4%BB%B6"
+}

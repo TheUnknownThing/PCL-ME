@@ -194,6 +194,7 @@ shell:
       - target
       task_manager: []
       game_log: []
+      home: []
     accessories:
       refresh: []
       reset: []
@@ -756,6 +757,11 @@ shell:
             unsupported_other: []
             unsupported_windows: []
         unsupported: []
+  startup:
+    migration_warnings:
+      title: []
+      message:
+      - warnings
 startup:
   prompts:
     special_build:
@@ -905,6 +911,17 @@ launch:
       running:
         initializing: []
         title: []
+    hints:
+      create_hints_file: []
+      time_tick: []
+      jeb_sheep: []
+      lodestone_compass: []
+      parrots_dance: []
+      map_lock: []
+      baby_turtle_scute: []
+      potion_damage: []
+      dinnerbone: []
+      best_selling: []
   profile:
     actions:
       add_or_login: []
@@ -1184,6 +1201,7 @@ crash:
       - message
       launch_failure:
         title: []
+        result_text: []
       manual_analysis:
         title: []
       actions:
@@ -1860,6 +1878,7 @@ common:
     open_website: []
     search: []
     select_all: []
+    continue: []
   filters:
     all: []
     any: []

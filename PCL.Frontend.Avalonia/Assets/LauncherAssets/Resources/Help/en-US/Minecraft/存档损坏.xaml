@@ -1,0 +1,22 @@
+<local:MyCard Title="Before you start" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Create a full backup of the affected save folder before changing anything. Recovery attempts can make the world harder to repair if you overwrite the only remaining copy." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Show file extensions" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Enable visible file extensions in your file manager first. That makes it easier to identify region files, level data, and any backup copies you may need during repair." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Typical recovery steps" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Try the newest backup first. If no backup exists, compare the damaged world folder with another healthy save and check whether only one region file, the player data, or level.dat appears to be broken." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the corruption started after adding mods, remove the newly added mods or restore the exact mod set the world was created with, then open a backup copy instead of the original save." />
+  </StackPanel>
+</local:MyCard>

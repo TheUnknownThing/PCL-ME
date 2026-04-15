@@ -339,7 +339,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string LaunchUserName => _launchComposition.SelectedProfile.UserName;
 
-    public string LaunchAuthLabel => _launchComposition.SelectedProfile.AuthLabel;
+    public string LaunchAuthLabel => T(_launchComposition.SelectedProfile.AuthLabelKey);
 
     public bool HasSelectedLaunchProfile => _launchComposition.SelectedProfile.Kind != MinecraftLaunchProfileKind.None;
 
@@ -406,7 +406,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var lines = new List<string>
             {
-                T("launch.status.lines.profile", ("profile_label", _launchComposition.SelectedProfile.IdentityLabel)),
+                T("launch.status.lines.profile", ("profile_label", GetLaunchProfileIdentityLabel())),
                 T("launch.status.lines.java", ("java_label", GetLaunchJavaRuntimeLabel())),
                 T("launch.status.lines.precheck", ("result", _launchComposition.PrecheckResult.IsSuccess ? T("launch.status.values.passed") : GetLaunchPrecheckFailureMessage())),
                 T("launch.status.lines.prompts", ("prompt_count", _launchComposition.PrecheckResult.Prompts.Count), ("support_prompt", _launchComposition.SupportPrompt is null ? T("launch.status.values.not_matched") : T("launch.status.values.matched"))),
@@ -419,6 +419,15 @@ internal sealed partial class FrontendShellViewModel
 
             return lines;
         }
+    }
+
+    private string GetLaunchProfileIdentityLabel()
+    {
+        var profile = _launchComposition.SelectedProfile;
+        return profile.Kind == MinecraftLaunchProfileKind.Auth &&
+               !string.IsNullOrWhiteSpace(profile.AuthServer)
+            ? $"{profile.UserName} / {LaunchAuthLabel}"
+            : profile.UserName;
     }
 
     public Bitmap? LaunchAvatarImage => File.Exists(_launchAvatarImagePath)

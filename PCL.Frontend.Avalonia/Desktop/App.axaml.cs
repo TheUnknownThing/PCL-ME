@@ -73,7 +73,7 @@ internal sealed class App : Application
             mainWindow.Opened += async (_, _) =>
             {
                 await CloseSplashScreenAsync(splashSession);
-                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths);
+                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths, _i18nService!);
 
                 if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, _options.ForceCjkFontWarning))
                 {

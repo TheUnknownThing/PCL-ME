@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Use PCL for Multiplayer",
+  "Description": "Basic host and join flow for multiplayer features exposed by the launcher",
+  "Keywords": "multiplayer p2p host join",
+  "Types": ["Minecraft"]
+}

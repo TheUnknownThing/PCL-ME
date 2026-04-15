@@ -1,0 +1,15 @@
+<local:MyCard Title="Get the world files" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Download the world from a trusted source. Some worlds arrive as a zip archive, while others already contain the save folder with files such as level.dat and region subfolders." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Import the world" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the instance world page or the saves folder for the target instance, then copy the extracted world folder into that saves directory. The final structure should keep the world files inside one folder, not scattered directly into saves." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the download is still zipped, extract it first. Minecraft cannot load a compressed archive directly as a playable world." />
+  </StackPanel>
+</local:MyCard>

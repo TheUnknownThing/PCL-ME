@@ -44,7 +44,7 @@ internal sealed record FrontendDownloadCatalogSection(
     bool IsCollapsible = false,
     bool IsInitiallyExpanded = true,
     string? LazyLoadToken = null,
-    string LoadingText = "正在获取版本列表");
+    string LoadingText = "");
 
 internal sealed record FrontendDownloadCatalogEntry(
     string Title,

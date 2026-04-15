@@ -1,0 +1,15 @@
+<local:MyCard Title="Before updating" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Create a backup or export of the instance first. A mod update can break compatibility with the current game version, loader version, save format, or other mods in the pack." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Choose the mod and update carefully" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Review the release notes and supported versions before replacing the existing file. Pay close attention to required dependencies, API changes, and loader-specific variants of the mod." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the instance is part of a modpack, prefer updating one mod at a time so it is easier to identify the cause if the game stops launching afterward." />
+  </StackPanel>
+</local:MyCard>

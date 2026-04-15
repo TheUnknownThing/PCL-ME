@@ -1,0 +1,19 @@
+<local:MyCard Title="Overview" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Some packs or servers need a fixed login route, such as Microsoft only, a specific third-party auth service, or both. The launcher can be configured so players only see the methods that are valid for that environment." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Restrict login methods" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the relevant settings page and choose whether the environment should accept no login, only official accounts, only third-party accounts, or both. If you lock the profile afterward, users cannot accidentally edit those fields." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Further reading" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="启动器/LittleSkin 外置登录使用教程.json" Title="LittleSkin login setup" Info="Open the related third-party login article." />
+  </StackPanel>
+</local:MyCard>

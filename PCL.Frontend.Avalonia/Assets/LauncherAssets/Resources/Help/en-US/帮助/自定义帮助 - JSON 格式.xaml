@@ -1,0 +1,20 @@
+<local:MyCard Title="Overview" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Each help entry uses a JSON file for metadata such as title, description, grouping, keywords, and whether the entry opens a page, a popup, or another action." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Important JSON fields" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Common fields include Title, Description, Types, Keywords, IsEvent, EventType, and EventData. Keep the metadata consistent with the actual behavior of the help entry so search results and quick actions stay trustworthy." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Examples" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="One kind of JSON points to a normal article with an accompanying XAML body. Another kind describes an event entry that opens a web page or shows a popup directly without a separate XAML file." />
+  </StackPanel>
+</local:MyCard>

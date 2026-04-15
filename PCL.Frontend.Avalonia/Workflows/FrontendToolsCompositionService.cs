@@ -458,7 +458,10 @@ internal static class FrontendToolsCompositionService
             .Trim()
             .Replace('_', '-')
             .Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (rawSegments.Length == 0 || rawSegments.Any(segment => !segment.All(char.IsLetterOrDigit)))
+        if (rawSegments.Length == 0
+            || rawSegments.Any(segment => !segment.All(char.IsLetterOrDigit))
+            || rawSegments[0].Length is < 2 or > 3
+            || !rawSegments[0].All(static character => character is >= 'A' and <= 'Z' or >= 'a' and <= 'z'))
         {
             return null;
         }

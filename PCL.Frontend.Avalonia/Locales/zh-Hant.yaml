@@ -193,6 +193,7 @@ shell:
       back_target: 返回到 {target}
       task_manager: 任務管理
       game_log: 即時日誌
+      home: 返回主頁
     accessories:
       refresh: 重新整理
       reset: 初始化設定
@@ -672,6 +673,14 @@ shell:
             unsupported_other: 目前平台暫不支援與標準實作一致的記憶體最佳化執行器。已保留標準確認彈窗行為，不再打開文字編輯器。
             unsupported_windows: Avalonia 前端尚未接入與標準實作一致的 Windows 記憶體最佳化執行器。已保留標準確認彈窗行為，不再打開文字編輯器。
         unsupported: 該百寶箱操作在 Avalonia 前端中暫未支援。
+  startup:
+    migration_warnings:
+      title: 設定檔遷移失敗
+      message: >-
+        啟動器無法遷移設定檔，將繼續執行，但某些設定可能會回退到預設值。
+
+
+        {warnings}
 startup:
   prompts:
     special_build:
@@ -803,6 +812,17 @@ launch:
       running:
         initializing: 正在初始化
         title: 正在啟動
+    hints:
+      create_hints_file: 在 PCL 資料夾下建立 hints.txt，可以自訂啟動時顯示的「你知道嗎」內容。
+      time_tick: 遊戲的基本時間單位是刻，1 刻等於 0.05 秒。
+      jeb_sheep: 給一隻綿羊命名為 "jeb_"，它的羊毛會持續變色。
+      lodestone_compass: 沒有綁定磁石的指南針會始終指向世界出生點。
+      parrots_dance: 鸚鵡會在正在播放唱片的唱片機周圍跳舞。
+      map_lock: 把地圖和玻璃片一起放進製圖台，地圖內容會被鎖定。
+      baby_turtle_scute: 小海龜長大的一瞬間會掉落鱗甲。
+      potion_damage: 藥水傷害無視護甲，別指望獄髓裝甲能硬扛傷害藥水。
+      dinnerbone: 在 Java 版中，把生物命名為 Dinnerbone 或 Grumm，它會倒過來。
+      best_selling: Minecraft 是全球累計銷量最高的電子遊戲之一。
   profile:
     actions:
       add_or_login: 新增或登入
@@ -1043,6 +1063,7 @@ crash:
       message: '{message}'
       launch_failure:
         title: 啟動失敗
+        result_text: Minecraft 啟動或執行過程中發生錯誤。
       manual_analysis:
         title: 崩潰分析
       actions:
@@ -1676,6 +1697,7 @@ common:
     open_website: 打開官網
     search: 搜尋
     select_all: 全選
+    continue: 繼續
   filters:
     all: 全部
     any: 任意
@@ -1699,30 +1721,49 @@ download:
         body: Cleanroom 是針對 1.12.2 基於 Forge 二次開發的 Mod 載入器，理論上與 99% 的 Forge Mod 相容。
         title: Cleanroom 簡介
       fabric:
-        body: "Fabric Loader 是新版 Minecraft 下的輕量化 Mod 載入器，你需要先安裝它才能安裝各種 Fabric 模組。\n本頁面提供 Fabric 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        body: >-
+          Fabric Loader 是新版 Minecraft 下的輕量化 Mod 載入器，你需要先安裝它才能安裝各種 Fabric 模組。
+
+          本頁面提供 Fabric 安裝器下載，在下載後你需要手動打開安裝器進行安裝。
         title: Fabric 簡介
       forge:
         body: Forge 是一個 Mod 載入器，你需要先安裝 Forge 才能安裝各種 Forge 模組。
         title: Forge 簡介
       labymod:
-        body: "LabyMod 是 Minecraft 下的優化客戶端。\n本頁面提供 LabyMod 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        body: >-
+          LabyMod 是 Minecraft 下的優化客戶端。
+
+          本頁面提供 LabyMod 安裝器下載，在下載後你需要手動打開安裝器進行安裝。
         title: LabyMod 簡介
       legacy_fabric:
-        body: "Legacy Fabric 是 Fabric 的舊版本移植，你需要先安裝它才能安裝各種 Legacy Fabric 模組。\n本頁面提供 Legacy Fabric 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        body: >-
+          Legacy Fabric 是 Fabric 的舊版本移植，你需要先安裝它才能安裝各種 Legacy Fabric 模組。
+
+          本頁面提供 Legacy Fabric 安裝器下載，在下載後你需要手動打開安裝器進行安裝。
         title: Legacy Fabric 簡介
       liteloader:
         body: 與 Forge 類似，LiteLoader 可以用於載入舊版本 Minecraft 中的 LiteLoader 模組。
         title: LiteLoader 簡介
       neoforge:
-        body: "NeoForge 是 Minecraft 1.20.1+ 的 Mod 載入器，你需要先安裝它才能安裝各種 NeoForge 模組，它也相容一些 Forge 模組。\n本頁面提供 NeoForge 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        body: >-
+          NeoForge 是 Minecraft 1.20.1+ 的 Mod 載入器，你需要先安裝它才能安裝各種 NeoForge 模組，它也相容一些 Forge 模組。
+
+          本頁面提供 NeoForge 安裝器下載，在下載後你需要手動打開安裝器進行安裝。
         title: NeoForge 簡介
       optifine:
         body: OptiFine 又稱為高清修復，可用於安裝光影、使用高清材質與提升遊戲效能，但與 Mod 的相容性較差。
         title: OptiFine 簡介
       quilt:
-        body: "Quilt Loader 是新版 Minecraft 下的輕量模組化 Mod 載入器，你需要先安裝它才能安裝各種 Quilt 模組。\n本頁面提供 Quilt 安裝器下載，在下載後你需要手動打開安裝器進行安裝。"
+        body: >-
+          Quilt Loader 是新版 Minecraft 下的輕量模組化 Mod 載入器，你需要先安裝它才能安裝各種 Quilt 模組。
+
+          本頁面提供 Quilt 安裝器下載，在下載後你需要手動打開安裝器進行安裝。
         title: Quilt 簡介
-      stale_cache: "{body}\n\n重新整理遠端目錄失敗，因此暫時保留上次成功同步的結果。錯誤：{error}"
+      stale_cache: >-
+        {body}
+
+
+        重新整理遠端目錄失敗，因此暫時保留上次成功同步的結果。錯誤：{error}
     loading:
       fetch_list: 正在取得 {surface_name} 列表
       fetch_versions: 正在取得版本列表
@@ -2280,7 +2321,7 @@ instance:
         copy_address: 複製地址
         connect: 連線
     sort:
-      label: '排序：{mode}'
+      label: 排序：{mode}
       file_name: 檔案名稱
       create_time: 建立時間
       modify_time: 修改時間

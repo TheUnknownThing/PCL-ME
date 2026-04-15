@@ -1,0 +1,22 @@
+<local:MyCard Title="Choose a shader loader" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Shader packs require a compatible loader. OptiFine works for many older setups, while Iris Shaders or Oculus are common choices for modern Fabric and Forge based instances." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Get a shader pack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Download the shader pack as a zip file from a trusted source. Do not extract it unless the author specifically says the pack must be unpacked." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install the loader and enable the pack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Install OptiFine, Iris Shaders, or Oculus for the same Minecraft version as the target instance. Then place the shader zip into the instance shaderpacks folder and enable it from the video or shader settings inside the game." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the pack does not appear, confirm that the loader is present and that the shader zip was copied into shaderpacks instead of mods or resourcepacks." />
+  </StackPanel>
+</local:MyCard>

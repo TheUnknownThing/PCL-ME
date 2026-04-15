@@ -72,6 +72,19 @@ public sealed class FrontendUiVisibilityServiceTest
     }
 
     [TestMethod]
+    public void NormalizeRouteMapsDefaultInstanceSetupRouteToSettingsSubpage()
+    {
+        var preferences = CreatePreferences();
+
+        var result = FrontendUiVisibilityService.NormalizeRoute(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup),
+            preferences);
+
+        Assert.AreEqual(LauncherFrontendPageKey.InstanceSetup, result.Page);
+        Assert.AreEqual(LauncherFrontendSubpageKey.VersionOverall, result.Subpage);
+    }
+
+    [TestMethod]
     public void FilterNavigationViewRemovesDownloadQuiltWhenHideQuiltLoaderIsEnabled()
     {
         var preferences = CreatePreferences(forceShowHiddenItems: false, hideQuiltLoader: true);

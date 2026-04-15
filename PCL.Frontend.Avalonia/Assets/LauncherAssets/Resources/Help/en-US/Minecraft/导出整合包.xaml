@@ -1,0 +1,20 @@
+<local:MyCard Title="Export a modpack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Use the instance export page when you want to share a playable pack with other people. The export flow helps you choose which files should be packaged and which local-only files should stay out of the archive." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Choose the instance and export target" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Select the correct instance first, then confirm the archive name and export location. Double-check that the instance starts correctly before exporting, otherwise you may distribute a broken pack." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Advanced packaging options" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Review optional content such as logs, screenshots, caches, local accounts, and launcher files. In most cases you should export only the files required to reproduce the intended game experience." />
+  </StackPanel>
+</local:MyCard>

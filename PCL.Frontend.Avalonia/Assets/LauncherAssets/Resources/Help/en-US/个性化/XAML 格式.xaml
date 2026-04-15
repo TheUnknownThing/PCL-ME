@@ -1,0 +1,22 @@
+<local:MyCard Title="Overview" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Custom homepage and help content uses a small XAML subset. In practice you write cards, text blocks, images, buttons, and a few launcher-specific helper controls instead of a full general-purpose Avalonia view." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Plain text and basic cards" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="TextBlock is the main element for readable text. Wrap related text inside MyCard blocks so the launcher can show each topic as a separated section with a title." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Images, buttons, and helper controls" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Use MyImage for screenshots or reference graphics, MyHint for compact notices, and button-like controls or list items when the article should open another help entry, show a popup, or open a web page." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="个性化/替换标记.json" Title="Replacement Tokens" Info="Open the related article about supported replacement markers." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="个性化/自定义事件.json" Title="Custom Events" Info="Open the related article about actions that XAML content can trigger." />
+  </StackPanel>
+</local:MyCard>

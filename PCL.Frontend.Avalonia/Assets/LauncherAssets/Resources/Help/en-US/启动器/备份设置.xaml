@@ -1,0 +1,13 @@
+<local:MyCard Title="Back up configuration files" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Back up the launcher configuration directory regularly if you care about preserved settings, custom themes, account presets, or other local preferences. A plain folder copy is often enough for a personal backup." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="AppData and migration notes" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If settings have moved into AppData or another platform-specific location, back up that current storage path instead of relying on older registry-based assumptions. Restore only into a matching launcher version when possible." />
+  </StackPanel>
+</local:MyCard>

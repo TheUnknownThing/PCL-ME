@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Back Up Launcher Settings",
+  "Description": "Preserve your launcher configuration and related data",
+  "Keywords": "backup settings configuration appdata",
+  "Types": ["Launcher"]
+}

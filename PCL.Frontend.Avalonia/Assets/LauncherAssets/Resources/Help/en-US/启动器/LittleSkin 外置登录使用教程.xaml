@@ -1,0 +1,13 @@
+<local:MyCard Title="Overview and notes" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="LittleSkin is a common third-party authentication service for Minecraft launchers. Before configuring it, confirm that the server or community you are joining really uses a LittleSkin compatible auth service." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Configuration steps" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the login or account settings, add a third-party or authlib profile, then fill in the authentication server, registration page, and label shown to the user. Use the exact endpoints provided by the service instead of guessing them." />
+  </StackPanel>
+</local:MyCard>

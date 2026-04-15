@@ -193,6 +193,7 @@ shell:
       back_target: Back to {target}
       task_manager: Task Manager
       game_log: Game Log
+      home: Back to Home
     accessories:
       refresh: Refresh
       reset: Reset
@@ -672,6 +673,14 @@ shell:
             unsupported_other: This platform does not provide a memory optimizer compatible with the standard implementation. The confirmation flow is kept, but no external editor will be opened.
             unsupported_windows: The Avalonia frontend has not yet integrated the Windows memory optimizer used by the standard implementation. The confirmation flow is kept, but no external editor will be opened.
         unsupported: This toolbox action is not yet supported in the Avalonia frontend.
+  startup:
+    migration_warnings:
+      title: Configuration Migration Failed
+      message: >-
+        The launcher could not migrate the configuration files. It will continue running, but some settings may fall back to defaults.
+
+
+        {warnings}
 startup:
   prompts:
     special_build:
@@ -803,6 +812,17 @@ launch:
       running:
         initializing: Initializing
         title: Launching
+    hints:
+      create_hints_file: Create a hints.txt file in the PCL folder to customize the Did You Know messages shown at startup.
+      time_tick: The basic unit of time in the game is the tick. One tick equals 0.05 seconds.
+      jeb_sheep: If you name a sheep "jeb_", its wool will keep changing colors.
+      lodestone_compass: A compass that is not linked to a lodestone always points to the world spawn.
+      parrots_dance: Parrots dance near a jukebox that is currently playing a music disc.
+      map_lock: Put a map and a glass pane into a cartography table to lock the map contents.
+      baby_turtle_scute: A baby turtle drops a scute the moment it grows up.
+      potion_damage: Potion damage ignores armor, so Netherite armor will not save you from harming potions.
+      dinnerbone: In Java Edition, naming a mob Dinnerbone or Grumm turns it upside down.
+      best_selling: Minecraft is one of the best-selling video games of all time.
   profile:
     actions:
       add_or_login: Add or Sign In
@@ -1043,6 +1063,7 @@ crash:
       message: '{message}'
       launch_failure:
         title: Launch failed
+        result_text: Minecraft encountered an error while starting or running.
       manual_analysis:
         title: Crash analysis
       actions:
@@ -1676,6 +1697,7 @@ common:
     open_website: Open Website
     search: Search
     select_all: Select all
+    continue: Continue
   filters:
     all: All
     any: Any
@@ -1699,30 +1721,49 @@ download:
         body: Cleanroom is a Forge-derived mod loader for Minecraft 1.12.2 and is theoretically compatible with 99% of Forge mods.
         title: Cleanroom Overview
       fabric:
-        body: "Fabric Loader is a lightweight mod loader for modern Minecraft. You need to install it before using Fabric mods.\nThis page provides the Fabric installer download. After downloading it, you still need to open the installer manually to complete setup."
+        body: >-
+          Fabric Loader is a lightweight mod loader for modern Minecraft. You need to install it before using Fabric mods.
+
+          This page provides the Fabric installer download. After downloading it, you still need to open the installer manually to complete setup.
         title: Fabric Overview
       forge:
         body: Forge is a mod loader. You need to install Forge before you can use Forge mods.
         title: Forge Overview
       labymod:
-        body: "LabyMod is an optimized Minecraft client.\nThis page provides the LabyMod installer download. After downloading it, you still need to open the installer manually to complete setup."
+        body: >-
+          LabyMod is an optimized Minecraft client.
+
+          This page provides the LabyMod installer download. After downloading it, you still need to open the installer manually to complete setup.
         title: LabyMod Overview
       legacy_fabric:
-        body: "Legacy Fabric is a backport of Fabric for older Minecraft versions. You need to install it before using Legacy Fabric mods.\nThis page provides the Legacy Fabric installer download. After downloading it, you still need to open the installer manually to complete setup."
+        body: >-
+          Legacy Fabric is a backport of Fabric for older Minecraft versions. You need to install it before using Legacy Fabric mods.
+
+          This page provides the Legacy Fabric installer download. After downloading it, you still need to open the installer manually to complete setup.
         title: Legacy Fabric Overview
       liteloader:
         body: Similar to Forge, LiteLoader can be used to load LiteLoader mods for older Minecraft versions.
         title: LiteLoader Overview
       neoforge:
-        body: "NeoForge is a mod loader for Minecraft 1.20.1 and newer. You need it before installing NeoForge mods, and it is also compatible with some Forge mods.\nThis page provides the NeoForge installer download. After downloading it, you still need to open the installer manually to complete setup."
+        body: >-
+          NeoForge is a mod loader for Minecraft 1.20.1 and newer. You need it before installing NeoForge mods, and it is also compatible with some Forge mods.
+
+          This page provides the NeoForge installer download. After downloading it, you still need to open the installer manually to complete setup.
         title: NeoForge Overview
       optifine:
         body: OptiFine, also known as HD fix, enables shader installation, high-resolution resource packs, and performance improvements, but it has weaker compatibility with mods.
         title: OptiFine Overview
       quilt:
-        body: "Quilt Loader is a lightweight, modular mod loader for modern Minecraft. You need to install it before using Quilt mods.\nThis page provides the Quilt installer download. After downloading it, you still need to open the installer manually to complete setup."
+        body: >-
+          Quilt Loader is a lightweight, modular mod loader for modern Minecraft. You need to install it before using Quilt mods.
+
+          This page provides the Quilt installer download. After downloading it, you still need to open the installer manually to complete setup.
         title: Quilt Overview
-      stale_cache: "{body}\n\nRefreshing the remote catalog failed, so the most recently synchronized results are being kept for now. Error: {error}"
+      stale_cache: >-
+        {body}
+
+
+        Refreshing the remote catalog failed, so the most recently synchronized results are being kept for now. Error: {error}
     loading:
       fetch_list: Fetching {surface_name} list
       fetch_versions: Fetching version list

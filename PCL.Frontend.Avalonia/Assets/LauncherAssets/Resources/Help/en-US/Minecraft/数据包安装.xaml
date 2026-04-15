@@ -1,0 +1,20 @@
+<local:MyCard Title="Get the datapack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Download the datapack from a trusted source. Most datapacks are distributed as zip archives and should stay zipped when copied into the world datapacks folder." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="General installation method" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the target world's save folder, then copy the datapack zip or extracted datapack directory into the datapacks subfolder for that world. Each world has its own datapacks folder." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Load or reload the datapack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="After copying the files, open the world and reload datapacks if necessary. Newer Java Edition versions can usually pick up the pack automatically or after using a reload command." />
+  </StackPanel>
+</local:MyCard>

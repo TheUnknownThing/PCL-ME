@@ -30,7 +30,7 @@ internal sealed partial class FrontendShellViewModel
     private FrontendInstanceCompositionService.LoadMode _instanceCompositionLoadMode = FrontendInstanceCompositionService.LoadMode.Full;
     private FrontendToolsComposition _toolsComposition = new(
         new FrontendToolsHelpState([]),
-        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
+        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, string.Empty));
     private FrontendSetupUpdateStatus _updateStatus = null!;
     private FrontendSetupFeedbackSnapshot? _feedbackSnapshot;
     private StartupAvaloniaPlan _startupPlan;
@@ -184,7 +184,7 @@ internal sealed partial class FrontendShellViewModel
     private string _achievementSecondLine = "PCL Frontend Avalonia";
     private bool _showAchievementPreview;
     private int _selectedHeadSizeIndex;
-    private string _selectedHeadSkinPath = "尚未选择皮肤";
+    private string _selectedHeadSkinPath = string.Empty;
     private string _downloadInstallName = string.Empty;
     private string _downloadCatalogIntroTitle = string.Empty;
     private string _downloadCatalogIntroBody = string.Empty;
@@ -320,6 +320,7 @@ internal sealed partial class FrontendShellViewModel
         _i18n = i18nService;
         _shellActionService = shellActionService;
         _updateStatus = FrontendSetupUpdateStatusService.CreateDefault(_i18n);
+        _selectedHeadSkinPath = _i18n.T("shell.tools.test.head.no_skin_selected");
         _shellActionService.ConfirmPresenter = ShowInAppConfirmationAsync;
         _shellActionService.TextInputPresenter = ShowInAppTextInputAsync;
         _shellActionService.ChoicePresenter = ShowInAppChoiceAsync;
@@ -339,7 +340,7 @@ internal sealed partial class FrontendShellViewModel
             _shellComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
-        _crashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths);
+        _crashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths, _i18n);
         _activeCrashPlan = _crashPlan;
         _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
@@ -353,7 +354,9 @@ internal sealed partial class FrontendShellViewModel
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
-        _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
+        _versionSetupCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup),
+            "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
         _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
         _dismissLaunchCommunityHintCommand = new ActionCommand(DismissCurrentLaunchAnnouncement);
@@ -428,7 +431,7 @@ internal sealed partial class FrontendShellViewModel
             InstanceServerAuthServer = "https://littleskin.cn/api/yggdrasil";
             InstanceServerAuthRegister = "https://littleskin.cn/auth/register";
             InstanceServerAuthName = "LittleSkin";
-            AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
+            AddActivity(T("launch.profile.authlib.activities.use_littleskin"), InstanceServerAuthServer);
         });
         _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());

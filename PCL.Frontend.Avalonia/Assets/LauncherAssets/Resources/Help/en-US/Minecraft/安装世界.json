@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Install a World Save",
+  "Description": "Import a Minecraft world, map, or save into an instance",
+  "Keywords": "world save map import",
+  "Types": ["Minecraft"]
+}

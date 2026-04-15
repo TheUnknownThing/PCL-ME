@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Add PCL to Microsoft Defender Exclusions",
+  "Description": "Prevent Windows Security from quarantining launcher files unexpectedly",
+  "Keywords": "defender windows security exclusion antivirus",
+  "Types": ["Launcher"]
+}

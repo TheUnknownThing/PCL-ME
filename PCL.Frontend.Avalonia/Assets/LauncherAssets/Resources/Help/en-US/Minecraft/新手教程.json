@@ -1,0 +1,10 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Minecraft Beginner Guide",
+  "Description": "An introductory tutorial for new Minecraft players",
+  "Types": ["Minecraft", "Reference", "Guides"],
+  "IsEvent": true,
+  "Keywords": "minecraft beginner tutorial",
+  "EventType": "打开网页",
+  "EventData": "https://minecraft.wiki/w/Tutorials"
+}

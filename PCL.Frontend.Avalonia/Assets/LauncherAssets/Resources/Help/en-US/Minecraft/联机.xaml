@@ -1,0 +1,20 @@
+<local:MyCard Title="Use PCL for multiplayer" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Launcher-assisted multiplayer helps one player host a room and lets other players join with the same version and content set. All participants still need matching game versions and compatible mods." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Create a room as the host" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Start the target instance, create or open the world you want to share, and then start the room or relay flow from the launcher. Share the generated join information with the other players." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Join a room as a player" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Use the room information from the host, then launch the same game version and connect. If the join fails, verify firewalls, NAT behavior, and whether the host is still online." />
+  </StackPanel>
+</local:MyCard>

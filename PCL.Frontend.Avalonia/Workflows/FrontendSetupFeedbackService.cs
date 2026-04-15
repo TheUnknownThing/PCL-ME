@@ -13,15 +13,15 @@ internal static class FrontendSetupFeedbackService
 
     private static readonly FeedbackSectionDefinition[] SectionDefinitions =
     [
-        new("processing", "正在处理", true, 6820804544),
-        new("waiting-process", "等待处理", true, 6820804546),
-        new("wait", "等待", true, 8743070786),
-        new("pause", "暂停", true, 8558220235),
-        new("upnext", "在即", true, 8550609020),
-        new("completed", "已完成", false, 6820804547),
-        new("decline", "已拒绝", false, 6820804539),
-        new("ignored", "已忽略", false, 8064650117),
-        new("duplicate", "重复", false, 6820804541)
+        new("processing", "setup.feedback.sections.processing", true, 6820804544),
+        new("waiting-process", "setup.feedback.sections.waiting_process", true, 6820804546),
+        new("wait", "setup.feedback.sections.waiting", true, 8743070786),
+        new("pause", "setup.feedback.sections.paused", true, 8558220235),
+        new("upnext", "setup.feedback.sections.up_next", true, 8550609020),
+        new("completed", "setup.feedback.sections.completed", false, 6820804547),
+        new("decline", "setup.feedback.sections.declined", false, 6820804539),
+        new("ignored", "setup.feedback.sections.ignored", false, 8064650117),
+        new("duplicate", "setup.feedback.sections.duplicate", false, 6820804541)
     ];
 
     public static async Task<FrontendSetupFeedbackSnapshot> QueryAsync(
@@ -109,7 +109,7 @@ internal static class FrontendSetupFeedbackService
 
             sections.Add(new FrontendSetupFeedbackSectionSnapshot(
                 section.Key,
-                section.Title,
+                i18n.T(section.TitleKey),
                 section.DefaultExpanded,
                 buckets[section.Key]));
         }
@@ -160,7 +160,7 @@ internal static class FrontendSetupFeedbackService
 
     private sealed record FeedbackSectionDefinition(
         string Key,
-        string Title,
+        string TitleKey,
         bool DefaultExpanded,
         long LabelId);
 

@@ -1,0 +1,13 @@
+<local:MyCard Title="Get VSCode and choose a language" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Install Visual Studio Code if you want a lightweight editor with strong Git support. Add any language packs you need before editing the repository." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Clone the help library and submit changes" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Clone the repository from the source control view or the integrated terminal, make your edits, review the diff, then commit and push the branch so you can open a pull request." />
+  </StackPanel>
+</local:MyCard>

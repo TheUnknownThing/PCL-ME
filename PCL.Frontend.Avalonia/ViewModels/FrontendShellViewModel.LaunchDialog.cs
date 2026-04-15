@@ -65,7 +65,7 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogMethod = LaunchProfileDescription;
         _launchDialogInstanceName = LaunchVersionSubtitle;
         _launchDialogHint = _showLaunchingHint
-            ? FrontendLaunchHintService.GetRandomHint(_shellActionService.RuntimePaths)
+            ? FrontendLaunchHintService.GetRandomHint(_shellActionService.RuntimePaths, _i18n)
             : string.Empty;
         _launchDialogHasSuccessfulSession = false;
         _launchProcessTerminationRequested = false;
