@@ -2030,3 +2030,165 @@ resource_detail:
   versions:
     legacy: Legacy
     snapshot: Snapshot
+instance:
+  common:
+    independent: Independent instance
+    shared: Shared instance
+    no_selection: No instance selected
+    installed: Installed
+    not_installed: Not installed
+  overview:
+    info:
+      launch_count: Launch count
+      modpack_version: Modpack version
+    categories:
+      auto: Auto
+      hidden: Hidden instance
+      modable: Mod-capable
+      hide_from_list: Hide from instance list
+      modable_long: Instance that supports mod installation
+      regular: Regular instance
+      rare: Rarely used instance
+      april_fools: April Fools version
+    tags:
+      mod_supported: Supports Mods
+      favorited: Favorited
+    icons:
+      auto: Auto
+      cobblestone: Cobblestone
+      command_block: Command Block
+      gold_block: Gold Block
+      grass_block: Grass Block
+      grass_path: Grass Path
+      anvil: Anvil
+      redstone_block: Redstone Block
+      redstone_lamp_on: Redstone Lamp (On)
+      redstone_lamp_off: Redstone Lamp (Off)
+      egg: Egg
+      fabric: Fabric
+      quilt: Quilt
+      neoforge: NeoForge
+  install:
+    option:
+      can_add: Can add
+    hints:
+      optifine_mod_compatibility: OptiFine may be incompatible with some mods.
+    unavailable:
+      incompatible_with: Incompatible with {target}
+  content:
+    resource:
+      kind:
+        resource_pack: Resource pack
+        shader: Shader pack
+        schematic_file: Schematic file
+      meta:
+        archive: Archive
+        folder: Folder
+      tooltips:
+        open_file_location: Open file location
+        details: Details
+        website: Website
+        enable: Enable
+        disable: Disable
+        delete: Delete
+      tags:
+        disabled: Disabled
+  settings:
+    options:
+      follow_global: Follow global setting
+      on: On
+      off: Off
+    server:
+      require:
+        none: None
+        official: Official only
+        third_party: Third-party only
+        both: Both
+    renderer:
+      game_default: Game default
+      software: Software
+      directx12: DirectX 12
+      vulkan: Vulkan
+    linux:
+      force_x11: Force X11
+      system_default: System default
+  export:
+    groups:
+      game: Game
+      mods: Mods
+      resource_packs: Resource packs
+      shaders: Shader packs
+      screenshots: Screenshots
+      schematics: Schematics
+      replays: Replays
+      worlds: World saves
+      servers: Server list
+      launcher: PCL launcher
+    items:
+      game_settings: Game settings
+      game_personal: Personal game data
+      optifine_settings: OptiFine settings
+      disabled_mods: Disabled mods
+      important_data: Important modpack data
+      mod_settings: Mod settings
+      launcher_personalization: PCL personalization content
+    descriptions:
+      mods: Mods
+      resource_packs: Texture packs / resource packs
+      schematics: schematics folder
+      replays: Replay Mod recordings
+      worlds: Worlds / maps
+      launcher: Bundle the cross-platform PCL launcher so players without it can install the modpack.
+    detected:
+      options: Detected options.txt
+      config_missing: Configuration file not found
+      optifine_settings: Detected OptiFine settings
+      personal_missing: Personal settings not found
+      optifine_present: This instance includes OptiFine
+      optifine_missing: This instance does not have OptiFine installed
+      config_folder: Detected config folder
+      config_folder_missing: Config folder not found
+      config_directory: Detected configuration directory
+      config_directory_missing: Configuration directory not found
+      pcl_directory: Detected instance PCL configuration directory
+      pcl_directory_missing: Instance PCL configuration directory not found
+save_detail:
+  datapack:
+    name: Data pack
+  labels:
+    instance: Instance
+    save_name: Save name
+    save_path: Save path
+    last_modified: Last modified
+    file_size: File size
+    file_count: File count
+    datapack_count: Data pack count
+    backup_count: Backup count
+    icon: Icon
+    level_name: Level name
+    game_mode: Game mode
+    difficulty: Difficulty
+    allow_commands: Allow commands
+    hardcore: Hardcore
+    raining: Raining
+    thundering: Thundering
+    day_count: Day count
+    save_version: Save version
+    save_format: Save format
+    player_dimension: Player dimension
+  values:
+    no_selection: No save selected
+    not_found: Not found
+    provided: Provided
+    not_provided: Not provided
+    survival: Survival
+    creative: Creative
+    adventure: Adventure
+    spectator: Spectator
+    peaceful: Peaceful
+    easy: Easy
+    normal: Normal
+    hard: Hard
+    no: No
+    yes: Yes
+    unknown: Unknown

@@ -112,7 +112,7 @@ internal static class FrontendShellLocalizationService
 
         var routeLabel = ResolveRouteLabel(navigation.CurrentRoute, i18n);
         return new LauncherFrontendPageContent(
-            i18n.T("shell.page_content.eyebrows." + navigation.CurrentPage.Kind.ToString().ToLowerInvariant()),
+            i18n.T("shell.page_content.eyebrows." + ResolvePageKindEyebrowKey(navigation.CurrentPage.Kind)),
             ResolveRouteSummary(navigation.CurrentRoute, i18n),
             facts,
             [
@@ -128,6 +128,18 @@ internal static class FrontendShellLocalizationService
         return route.Subpage != LauncherFrontendSubpageKey.Default
             ? ResolveSubpageTitle(route.Subpage, i18n)
             : ResolvePageTitle(route.Page, i18n);
+    }
+
+    private static string ResolvePageKindEyebrowKey(LauncherFrontendPageKind kind)
+    {
+        return kind switch
+        {
+            LauncherFrontendPageKind.TopLevel => "top_level",
+            LauncherFrontendPageKind.Secondary => "secondary",
+            LauncherFrontendPageKind.Detail => "detail",
+            LauncherFrontendPageKind.Utility => "utility",
+            _ => "top_level"
+        };
     }
 
     public static string ResolveRouteSummary(LauncherFrontendRoute route, II18nService i18n)

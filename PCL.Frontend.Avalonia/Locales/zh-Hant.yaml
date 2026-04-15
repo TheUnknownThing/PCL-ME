@@ -2030,3 +2030,165 @@ resource_detail:
   versions:
     legacy: 舊版
     snapshot: 快照
+instance:
+  common:
+    independent: 獨立實例
+    shared: 共用實例
+    no_selection: 未選擇實例
+    installed: 已安裝
+    not_installed: 未安裝
+  overview:
+    info:
+      launch_count: 啟動次數
+      modpack_version: 整合包版本
+    categories:
+      auto: 自動
+      hidden: 隱藏實例
+      modable: 可安裝 Mod
+      hide_from_list: 從實例列表中隱藏
+      modable_long: 可安裝 Mod 的實例
+      regular: 常規實例
+      rare: 不常用實例
+      april_fools: 愚人節版本
+    tags:
+      mod_supported: 支援 Mod
+      favorited: 已收藏
+    icons:
+      auto: 自動
+      cobblestone: 圓石
+      command_block: 命令方塊
+      gold_block: 金塊
+      grass_block: 草方塊
+      grass_path: 小徑
+      anvil: 鐵砧
+      redstone_block: 紅石塊
+      redstone_lamp_on: 紅石燈（開）
+      redstone_lamp_off: 紅石燈（關）
+      egg: 雞蛋
+      fabric: 布料（Fabric）
+      quilt: 方格（Quilt）
+      neoforge: 狐狸（NeoForge）
+  install:
+    option:
+      can_add: 可新增
+    hints:
+      optifine_mod_compatibility: OptiFine 可能與部分 Mod 不相容。
+    unavailable:
+      incompatible_with: 與 {target} 不相容
+  content:
+    resource:
+      kind:
+        resource_pack: 資源包
+        shader: 光影包
+        schematic_file: 投影檔案
+      meta:
+        archive: 壓縮檔
+        folder: 資料夾
+      tooltips:
+        open_file_location: 開啟檔案位置
+        details: 詳細資訊
+        website: 網站
+        enable: 啟用
+        disable: 停用
+        delete: 刪除
+      tags:
+        disabled: 已停用
+  settings:
+    options:
+      follow_global: 跟隨全域設定
+      on: 開啟
+      off: 關閉
+    server:
+      require:
+        none: 無
+        official: 僅正版
+        third_party: 僅第三方登入
+        both: 兩者皆可
+    renderer:
+      game_default: 遊戲預設
+      software: 軟體渲染
+      directx12: DirectX 12
+      vulkan: Vulkan
+    linux:
+      force_x11: 強制使用 X11
+      system_default: 系統預設
+  export:
+    groups:
+      game: 遊戲本體
+      mods: Mod
+      resource_packs: 資源包
+      shaders: 光影包
+      screenshots: 截圖
+      schematics: 匯出的結構
+      replays: 錄影回放
+      worlds: 單人遊戲存檔
+      servers: 多人遊戲伺服器列表
+      launcher: PCL 啟動器程式
+    items:
+      game_settings: 遊戲本體設定
+      game_personal: 遊戲本體個人資訊
+      optifine_settings: OptiFine 設定
+      disabled_mods: 已停用的 Mod
+      important_data: 整合包重要資料
+      mod_settings: Mod 設定
+      launcher_personalization: PCL 個人化內容
+    descriptions:
+      mods: 模組
+      resource_packs: 紋理包 / 材質包
+      schematics: schematics 資料夾
+      replays: Replay Mod 的錄影檔案
+      worlds: 世界 / 地圖
+      launcher: 打包跨平台版 PCL，讓沒有啟動器的玩家也能安裝整合包
+    detected:
+      options: 偵測到 options.txt
+      config_missing: 未偵測到設定檔
+      optifine_settings: 偵測到 OptiFine 設定
+      personal_missing: 未偵測到個人設定
+      optifine_present: 目前實例包含 OptiFine
+      optifine_missing: 目前實例未安裝 OptiFine
+      config_folder: 偵測到 config 資料夾
+      config_folder_missing: 未偵測到 config 資料夾
+      config_directory: 偵測到設定目錄
+      config_directory_missing: 未偵測到設定目錄
+      pcl_directory: 偵測到實例 PCL 設定目錄
+      pcl_directory_missing: 未偵測到實例 PCL 設定目錄
+save_detail:
+  datapack:
+    name: 資料包
+  labels:
+    instance: 實例
+    save_name: 存檔名稱
+    save_path: 存檔路徑
+    last_modified: 最後修改
+    file_size: 檔案大小
+    file_count: 檔案總數
+    datapack_count: 資料包數量
+    backup_count: 備份數量
+    icon: 圖示
+    level_name: 關卡名稱
+    game_mode: 遊戲模式
+    difficulty: 難度
+    allow_commands: 允許作弊
+    hardcore: 極限模式
+    raining: 下雨中
+    thundering: 雷暴中
+    day_count: 遊戲天數
+    save_version: 存檔版本
+    save_format: 存檔格式
+    player_dimension: 玩家維度
+  values:
+    no_selection: 未選擇存檔
+    not_found: 未找到
+    provided: 已提供
+    not_provided: 未提供
+    survival: 生存
+    creative: 創造
+    adventure: 冒險
+    spectator: 旁觀
+    peaceful: 和平
+    easy: 簡單
+    normal: 普通
+    hard: 困難
+    no: 否
+    yes: 是
+    unknown: 未知

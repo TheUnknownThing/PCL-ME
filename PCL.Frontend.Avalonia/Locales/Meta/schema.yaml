@@ -2297,3 +2297,166 @@ resource_detail:
   versions:
     legacy: []
     snapshot: []
+instance:
+  common:
+    independent: []
+    shared: []
+    no_selection: []
+    installed: []
+    not_installed: []
+  overview:
+    info:
+      launch_count: []
+      modpack_version: []
+    categories:
+      auto: []
+      hidden: []
+      modable: []
+      hide_from_list: []
+      modable_long: []
+      regular: []
+      rare: []
+      april_fools: []
+    tags:
+      mod_supported: []
+      favorited: []
+    icons:
+      auto: []
+      cobblestone: []
+      command_block: []
+      gold_block: []
+      grass_block: []
+      grass_path: []
+      anvil: []
+      redstone_block: []
+      redstone_lamp_on: []
+      redstone_lamp_off: []
+      egg: []
+      fabric: []
+      quilt: []
+      neoforge: []
+  install:
+    option:
+      can_add: []
+    hints:
+      optifine_mod_compatibility: []
+    unavailable:
+      incompatible_with:
+      - target
+  content:
+    resource:
+      kind:
+        resource_pack: []
+        shader: []
+        schematic_file: []
+      meta:
+        archive: []
+        folder: []
+      tooltips:
+        open_file_location: []
+        details: []
+        website: []
+        enable: []
+        disable: []
+        delete: []
+      tags:
+        disabled: []
+  settings:
+    options:
+      follow_global: []
+      on: []
+      off: []
+    server:
+      require:
+        none: []
+        official: []
+        third_party: []
+        both: []
+    renderer:
+      game_default: []
+      software: []
+      directx12: []
+      vulkan: []
+    linux:
+      force_x11: []
+      system_default: []
+  export:
+    groups:
+      game: []
+      mods: []
+      resource_packs: []
+      shaders: []
+      screenshots: []
+      schematics: []
+      replays: []
+      worlds: []
+      servers: []
+      launcher: []
+    items:
+      game_settings: []
+      game_personal: []
+      optifine_settings: []
+      disabled_mods: []
+      important_data: []
+      mod_settings: []
+      launcher_personalization: []
+    descriptions:
+      mods: []
+      resource_packs: []
+      schematics: []
+      replays: []
+      worlds: []
+      launcher: []
+    detected:
+      options: []
+      config_missing: []
+      optifine_settings: []
+      personal_missing: []
+      optifine_present: []
+      optifine_missing: []
+      config_folder: []
+      config_folder_missing: []
+      config_directory: []
+      config_directory_missing: []
+      pcl_directory: []
+      pcl_directory_missing: []
+save_detail:
+  datapack:
+    name: []
+  labels:
+    instance: []
+    save_name: []
+    save_path: []
+    last_modified: []
+    file_size: []
+    file_count: []
+    datapack_count: []
+    backup_count: []
+    icon: []
+    level_name: []
+    game_mode: []
+    difficulty: []
+    allow_commands: []
+    hardcore: []
+    raining: []
+    thundering: []
+    day_count: []
+    save_version: []
+    save_format: []
+    player_dimension: []
+  values:
+    no_selection: []
+    not_found: []
+    provided: []
+    not_provided: []
+    survival: []
+    creative: []
+    adventure: []
+    spectator: []
+    peaceful: []
+    easy: []
+    normal: []
+    hard: []
+    no: []
+    yes: []
+    unknown: []
