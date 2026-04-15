@@ -1632,7 +1632,8 @@ internal sealed partial class FrontendShellViewModel
             {
                 Path = items[updated].Path,
                 IsEnable = entry.IsEnabled,
-                Source = items[updated].Source
+                Source = items[updated].Source,
+                Installation = items[updated].Installation
             };
         }
         else

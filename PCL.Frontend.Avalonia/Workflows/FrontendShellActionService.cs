@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Formats.Tar;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -404,15 +406,37 @@ internal sealed class FrontendShellActionService(
     }
 
     public FrontendJavaRuntimeInstallResult MaterializeJavaRuntime(
-        MinecraftJavaRuntimeManifestRequestPlan manifestPlan,
-        MinecraftJavaRuntimeDownloadTransferPlan transferPlan)
+        FrontendJavaRuntimeInstallPlan installPlan,
+        Action<FrontendJavaRuntimeInstallProgressSnapshot>? onProgress = null,
+        CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(manifestPlan);
-        ArgumentNullException.ThrowIfNull(transferPlan);
+        ArgumentNullException.ThrowIfNull(installPlan);
 
+        return installPlan.Kind switch
+        {
+            FrontendJavaRuntimeInstallPlanKind.MojangManifest => MaterializeMojangJavaRuntime(
+                installPlan,
+                onProgress,
+                cancellationToken),
+            FrontendJavaRuntimeInstallPlanKind.ArchivePackage => MaterializeArchiveJavaRuntime(
+                installPlan,
+                onProgress,
+                cancellationToken),
+            _ => throw new InvalidOperationException($"不支持的 Java 下载方案：{installPlan.Kind}")
+        };
+    }
+
+    private FrontendJavaRuntimeInstallResult MaterializeMojangJavaRuntime(
+        FrontendJavaRuntimeInstallPlan installPlan,
+        Action<FrontendJavaRuntimeInstallProgressSnapshot>? onProgress,
+        CancellationToken cancellationToken)
+    {
+        var manifestPlan = installPlan.MojangManifestPlan
+                           ?? throw new InvalidOperationException("Mojang Java 下载计划缺少 manifest。");
+        var transferPlan = installPlan.MojangTransferPlan
+                           ?? throw new InvalidOperationException("Mojang Java 下载计划缺少传输计划。");
         var effectiveTransferPlan = ResolveEffectiveJavaTransferPlan(manifestPlan, transferPlan);
         var runtimeDirectory = effectiveTransferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory;
-        var summaryPath = Path.Combine(runtimeDirectory, "download-summary.txt");
         var downloadProvider = GetDownloadProvider();
         var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
@@ -420,28 +444,174 @@ internal sealed class FrontendShellActionService(
 
         Directory.CreateDirectory(runtimeDirectory);
 
+        var totalFileCount = effectiveTransferPlan.FilesToDownload.Count;
+        var completedFileCount = 0;
+        var downloadedBytes = 0L;
+        onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+            string.Empty,
+            completedFileCount,
+            totalFileCount,
+            downloadedBytes,
+            effectiveTransferPlan.DownloadBytes,
+            0d));
         foreach (var file in effectiveTransferPlan.FilesToDownload)
         {
-            DownloadJavaRuntimeFile(file, downloadProvider, speedLimiter);
+            cancellationToken.ThrowIfCancellationRequested();
+            var lastReportedBytes = 0L;
+            var lastReportedAt = Environment.TickCount64;
+            DownloadJavaRuntimeFile(
+                file,
+                downloadProvider,
+                speedLimiter,
+                transferredBytes =>
+                {
+                    var now = Environment.TickCount64;
+                    if (now - lastReportedAt < 250)
+                    {
+                        return;
+                    }
+
+                    var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                    var speed = (transferredBytes - lastReportedBytes) / elapsedSeconds;
+                    lastReportedBytes = transferredBytes;
+                    lastReportedAt = now;
+                    onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+                        file.RelativePath,
+                        completedFileCount,
+                        totalFileCount,
+                        downloadedBytes + transferredBytes,
+                        effectiveTransferPlan.DownloadBytes,
+                        speed));
+                },
+                cancellationToken);
+            downloadedBytes += file.Size;
+            completedFileCount++;
+            onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+                file.RelativePath,
+                completedFileCount,
+                totalFileCount,
+                downloadedBytes,
+                effectiveTransferPlan.DownloadBytes,
+                0d));
         }
+
         EnsureUnixExecutableBits(runtimeDirectory, effectiveTransferPlan);
-
-        var summary = $"""
-            Java runtime: {manifestPlan.Selection.VersionName}
-            Component: {manifestPlan.Selection.ComponentKey}
-            Runtime directory: {runtimeDirectory}
-            Download files: {effectiveTransferPlan.FilesToDownload.Count}
-            Reused files: {effectiveTransferPlan.ReusedFiles.Count}
-            Total bytes planned: {effectiveTransferPlan.DownloadBytes}
-            """;
-        File.WriteAllText(summaryPath, summary, new UTF8Encoding(false));
-
+        var summaryPath = WriteJavaRuntimeSummary(
+            installPlan,
+            runtimeDirectory,
+            effectiveTransferPlan.FilesToDownload.Count,
+            effectiveTransferPlan.ReusedFiles.Count,
+            effectiveTransferPlan.DownloadBytes);
         return new FrontendJavaRuntimeInstallResult(
-            manifestPlan.Selection.VersionName,
+            installPlan.VersionName,
             runtimeDirectory,
             effectiveTransferPlan.FilesToDownload.Count,
             effectiveTransferPlan.ReusedFiles.Count,
             summaryPath);
+    }
+
+    private FrontendJavaRuntimeInstallResult MaterializeArchiveJavaRuntime(
+        FrontendJavaRuntimeInstallPlan installPlan,
+        Action<FrontendJavaRuntimeInstallProgressSnapshot>? onProgress,
+        CancellationToken cancellationToken)
+    {
+        var archivePlan = installPlan.ArchivePlan
+                          ?? throw new InvalidOperationException("归档 Java 下载计划缺少归档信息。");
+        var runtimeDirectory = installPlan.RuntimeDirectory;
+        var downloadProvider = GetDownloadProvider();
+        var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
+        var stagingDirectory = runtimeDirectory + ".staging";
+        var extractDirectory = Path.Combine(stagingDirectory, "extract");
+        var archivePath = Path.Combine(stagingDirectory, archivePlan.PackageName);
+
+        try
+        {
+            TryDeleteDirectory(stagingDirectory);
+            Directory.CreateDirectory(stagingDirectory);
+            onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+                archivePlan.PackageName,
+                0,
+                1,
+                0L,
+                archivePlan.Size,
+                0d));
+
+            var lastReportedBytes = 0L;
+            var lastReportedAt = Environment.TickCount64;
+            DownloadJavaRuntimeArchivePackage(
+                archivePlan,
+                archivePath,
+                downloadProvider,
+                speedLimiter,
+                transferredBytes =>
+                {
+                    var now = Environment.TickCount64;
+                    if (now - lastReportedAt < 250)
+                    {
+                        return;
+                    }
+
+                    var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                    var speed = (transferredBytes - lastReportedBytes) / elapsedSeconds;
+                    lastReportedBytes = transferredBytes;
+                    lastReportedAt = now;
+                    onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+                        archivePlan.PackageName,
+                        0,
+                        1,
+                        transferredBytes,
+                        archivePlan.Size,
+                        speed));
+                },
+                cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+                "解压 Java 运行时",
+                0,
+                1,
+                archivePlan.Size,
+                archivePlan.Size,
+                0d));
+
+            ExtractJavaRuntimeArchive(archivePath, extractDirectory);
+            cancellationToken.ThrowIfCancellationRequested();
+            var extractedRoot = ResolveExtractedJavaRuntimeRoot(extractDirectory)
+                                ?? throw new InvalidOperationException("归档中未找到可用的 Java 运行时目录。");
+
+            TryDeleteDirectory(runtimeDirectory);
+            Directory.CreateDirectory(runtimeDirectory);
+            MoveDirectoryContents(extractedRoot, runtimeDirectory);
+            TryDeleteDirectory(stagingDirectory);
+            EnsureUnixExecutableBits(runtimeDirectory);
+
+            onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
+                archivePlan.PackageName,
+                1,
+                1,
+                archivePlan.Size,
+                archivePlan.Size,
+                0d));
+
+            var summaryPath = WriteJavaRuntimeSummary(
+                installPlan,
+                runtimeDirectory,
+                downloadedFileCount: 1,
+                reusedFileCount: 0,
+                totalBytes: archivePlan.Size);
+            return new FrontendJavaRuntimeInstallResult(
+                installPlan.VersionName,
+                runtimeDirectory,
+                1,
+                0,
+                summaryPath);
+        }
+        finally
+        {
+            TryDeleteDirectory(stagingDirectory);
+        }
     }
 
     public FrontendLaunchStartResult StartLaunchSession(
@@ -758,7 +928,7 @@ internal sealed class FrontendShellActionService(
             new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
                 manifestJson,
                 transferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory,
-                null,
+                MinecraftJavaRuntimeDownloadSessionService.GetDefaultIgnoredSha1Hashes(),
                 MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
         var existingRelativePaths = workflowPlan.Files
             .Where(file => File.Exists(file.TargetPath))
@@ -1034,7 +1204,9 @@ internal sealed class FrontendShellActionService(
     private static void DownloadJavaRuntimeFile(
         MinecraftJavaRuntimeDownloadRequestFilePlan file,
         FrontendDownloadProvider downloadProvider,
-        FrontendDownloadSpeedLimiter? speedLimiter = null)
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
+        Action<long>? onProgress = null,
+        CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(file.TargetPath)!);
 
@@ -1048,7 +1220,9 @@ internal sealed class FrontendShellActionService(
                     JavaRuntimeHttpClient,
                     url,
                     tempPath,
-                    speedLimiter: speedLimiter);
+                    onProgress,
+                    speedLimiter: speedLimiter,
+                    cancelToken: cancellationToken);
                 var sha1 = ComputeSha1FromFile(tempPath);
                 if (!string.Equals(sha1, file.Sha1, StringComparison.OrdinalIgnoreCase))
                 {
@@ -1059,8 +1233,14 @@ internal sealed class FrontendShellActionService(
                 File.Move(tempPath, file.TargetPath, overwrite: true);
                 return;
             }
+            catch (OperationCanceledException)
+            {
+                TryDeleteFile(file.TargetPath + ".download");
+                throw;
+            }
             catch (Exception ex)
             {
+                TryDeleteFile(file.TargetPath + ".download");
                 lastError = ex;
             }
         }
@@ -1068,10 +1248,128 @@ internal sealed class FrontendShellActionService(
         throw new InvalidOperationException($"无法下载 Java 文件：{file.RelativePath}", lastError);
     }
 
+    private static void DownloadJavaRuntimeArchivePackage(
+        FrontendJavaRuntimeArchiveDownloadPlan archivePlan,
+        string targetPath,
+        FrontendDownloadProvider downloadProvider,
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
+        Action<long>? onProgress = null,
+        CancellationToken cancellationToken = default)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+
+        Exception? lastError = null;
+        foreach (var url in downloadProvider.GetPreferredUrls(archivePlan.RequestUrls.OfficialUrls, archivePlan.RequestUrls.MirrorUrls))
+        {
+            try
+            {
+                var tempPath = targetPath + ".download";
+                FrontendDownloadTransferService.DownloadToPath(
+                    JavaRuntimeHttpClient,
+                    url,
+                    tempPath,
+                    onProgress,
+                    speedLimiter: speedLimiter,
+                    cancelToken: cancellationToken);
+                if (!string.IsNullOrWhiteSpace(archivePlan.Sha256))
+                {
+                    var sha256 = ComputeSha256FromFile(tempPath);
+                    if (!string.Equals(sha256, archivePlan.Sha256, StringComparison.OrdinalIgnoreCase))
+                    {
+                        TryDeleteFile(tempPath);
+                        throw new InvalidOperationException($"Java 归档校验失败：{archivePlan.PackageName}");
+                    }
+                }
+
+                File.Move(tempPath, targetPath, overwrite: true);
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                TryDeleteFile(targetPath + ".download");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                TryDeleteFile(targetPath + ".download");
+                lastError = ex;
+            }
+        }
+
+        throw new InvalidOperationException($"无法下载 Java 归档：{archivePlan.PackageName}", lastError);
+    }
+
     private static string ComputeSha1FromFile(string path)
     {
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(SHA1.HashData(stream)).ToLowerInvariant();
+    }
+
+    private static string ComputeSha256FromFile(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+    }
+
+    private static void ExtractJavaRuntimeArchive(string archivePath, string extractDirectory)
+    {
+        TryDeleteDirectory(extractDirectory);
+        Directory.CreateDirectory(extractDirectory);
+
+        if (archivePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            ZipFile.ExtractToDirectory(archivePath, extractDirectory, overwriteFiles: true);
+            return;
+        }
+
+        if (archivePath.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase) ||
+            archivePath.EndsWith(".tgz", StringComparison.OrdinalIgnoreCase))
+        {
+            using var archiveStream = File.OpenRead(archivePath);
+            using var gzipStream = new GZipStream(archiveStream, CompressionMode.Decompress);
+            TarFile.ExtractToDirectory(gzipStream, extractDirectory, overwriteFiles: true);
+            return;
+        }
+
+        throw new InvalidOperationException($"不支持的 Java 归档格式：{Path.GetFileName(archivePath)}");
+    }
+
+    private string? ResolveExtractedJavaRuntimeRoot(string extractDirectory)
+    {
+        if (HasJavaExecutable(extractDirectory))
+        {
+            return extractDirectory;
+        }
+
+        var childDirectories = Directory.Exists(extractDirectory)
+            ? Directory.EnumerateDirectories(extractDirectory).ToArray()
+            : [];
+        if (childDirectories.Length == 1 && HasJavaExecutable(childDirectories[0]))
+        {
+            return childDirectories[0];
+        }
+
+        return childDirectories.FirstOrDefault(HasJavaExecutable);
+    }
+
+    private bool HasJavaExecutable(string runtimeDirectory)
+    {
+        return File.Exists(GetJavaExecutablePath(runtimeDirectory));
+    }
+
+    private static void MoveDirectoryContents(string sourceDirectory, string targetDirectory)
+    {
+        foreach (var directory in Directory.EnumerateDirectories(sourceDirectory))
+        {
+            var targetPath = Path.Combine(targetDirectory, Path.GetFileName(directory));
+            Directory.Move(directory, targetPath);
+        }
+
+        foreach (var file in Directory.EnumerateFiles(sourceDirectory))
+        {
+            var targetPath = Path.Combine(targetDirectory, Path.GetFileName(file));
+            File.Move(file, targetPath, overwrite: true);
+        }
     }
 
     private static void EnsureUnixExecutableBits(
@@ -1106,6 +1404,52 @@ internal sealed class FrontendShellActionService(
                 UnixFileMode.OtherRead |
                 UnixFileMode.OtherExecute);
         }
+    }
+
+    private void EnsureUnixExecutableBits(string runtimeDirectory)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var executablePath = GetJavaExecutablePath(runtimeDirectory);
+        if (!File.Exists(executablePath))
+        {
+            return;
+        }
+
+        File.SetUnixFileMode(
+            executablePath,
+            UnixFileMode.UserRead |
+            UnixFileMode.UserWrite |
+            UnixFileMode.UserExecute |
+            UnixFileMode.GroupRead |
+            UnixFileMode.GroupExecute |
+            UnixFileMode.OtherRead |
+            UnixFileMode.OtherExecute);
+    }
+
+    private static string WriteJavaRuntimeSummary(
+        FrontendJavaRuntimeInstallPlan installPlan,
+        string runtimeDirectory,
+        int downloadedFileCount,
+        int reusedFileCount,
+        long totalBytes)
+    {
+        var summaryPath = Path.Combine(runtimeDirectory, "download-summary.txt");
+        var summary = $"""
+            Java runtime: {installPlan.VersionName}
+            Source: {installPlan.SourceName}
+            Requested component: {installPlan.RequestedComponent}
+            Platform: {installPlan.PlatformKey}
+            Runtime directory: {runtimeDirectory}
+            Download files: {downloadedFileCount}
+            Reused files: {reusedFileCount}
+            Total bytes planned: {totalBytes}
+            """;
+        File.WriteAllText(summaryPath, summary, new UTF8Encoding(false));
+        return summaryPath;
     }
 
     private static void WriteJavaRuntimeFile(string runtimeDirectory, string relativePath, string content)
@@ -1153,6 +1497,14 @@ internal sealed record FrontendJavaRuntimeInstallResult(
     int DownloadedFileCount,
     int ReusedFileCount,
     string SummaryPath);
+
+internal sealed record FrontendJavaRuntimeInstallProgressSnapshot(
+    string CurrentFileRelativePath,
+    int CompletedFileCount,
+    int TotalFileCount,
+    long DownloadedBytes,
+    long TotalDownloadBytes,
+    double SpeedBytesPerSecond);
 
 internal sealed record FrontendLaunchStartResult(
     Process Process,

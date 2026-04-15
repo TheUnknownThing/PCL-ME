@@ -9,8 +9,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendJavaInventoryService
 {
-    private static readonly IJavaParser JavaParser = new CompositeJavaParser(
-        new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner()));
+    private static readonly IJavaParser JavaParser = BuildJavaParser();
     private static readonly object PortableJavaScanLock = new();
     private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedPortableJavaRuntimes;
     private static bool IsPortableJavaScanCached;
@@ -55,7 +54,20 @@ internal static class FrontendJavaInventoryService
                     IsEnable = GetBoolean(item, "IsEnable")
                                ?? GetBoolean(item, "IsEnabled")
                                ?? true,
-                    Source = GetEnum<JavaSource>(item, "Source")
+                    Source = GetEnum<JavaSource>(item, "Source"),
+                    Installation = GetNestedString(item, "Installation", "JavaExePath") is { } installationPath
+                        ? new JavaStorageInstallationInfo
+                        {
+                            JavaExePath = NormalizeExecutablePath(installationPath),
+                            DisplayName = GetNestedString(item, "Installation", "DisplayName"),
+                            Version = GetNestedString(item, "Installation", "Version"),
+                            MajorVersion = GetNestedInt(item, "Installation", "MajorVersion"),
+                            Is64Bit = GetNestedBoolean(item, "Installation", "Is64Bit"),
+                            IsJre = GetNestedBoolean(item, "Installation", "IsJre"),
+                            Brand = GetNestedEnum<JavaBrandType>(item, "Installation", "Brand"),
+                            Architecture = GetNestedEnum<MachineType>(item, "Installation", "Architecture")
+                        }
+                        : null
                 });
             }
 
@@ -108,10 +120,13 @@ internal static class FrontendJavaInventoryService
                                    ?? GetNestedInt(item, "Installation", "MajorVersion")
                                    ?? GetMajorVersion(parsedVersion);
                 var is64Bit = installation?.Is64Bit ?? GetNestedBoolean(item, "Installation", "Is64Bit");
-                var isJre = installation?.IsJre;
-                var brand = installation?.Brand;
-                var architecture = installation?.Architecture;
-                var displayName = !string.IsNullOrWhiteSpace(storedVersionText)
+                var isJre = installation?.IsJre ?? GetNestedBoolean(item, "Installation", "IsJre");
+                var brand = installation?.Brand ?? GetNestedEnum<JavaBrandType>(item, "Installation", "Brand");
+                var architecture = installation?.Architecture ?? GetNestedEnum<MachineType>(item, "Installation", "Architecture");
+                var displayName = GetNestedString(item, "Installation", "DisplayName");
+                displayName = !string.IsNullOrWhiteSpace(displayName)
+                    ? displayName
+                    : !string.IsNullOrWhiteSpace(storedVersionText)
                     ? storedVersionText
                     : installation?.Version.ToString()
                       ?? Path.GetFileName(Path.GetDirectoryName(normalizedPath))
@@ -211,6 +226,36 @@ internal static class FrontendJavaInventoryService
             installation?.Architecture);
     }
 
+    public static FrontendStoredJavaRuntime CreateStoredRuntime(
+        string executablePath,
+        string? displayName,
+        string? rawVersion,
+        bool isEnabled = true,
+        bool? is64Bit = null,
+        bool? isJre = null,
+        JavaBrandType? brand = null,
+        MachineType? architecture = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
+
+        var normalizedPath = NormalizeExecutablePath(executablePath);
+        var parsedVersion = TryParseVersion(rawVersion);
+        return new FrontendStoredJavaRuntime(
+            normalizedPath,
+            !string.IsNullOrWhiteSpace(displayName)
+                ? displayName
+                : rawVersion
+                  ?? Path.GetFileName(Path.GetDirectoryName(normalizedPath))
+                  ?? "Java",
+            parsedVersion,
+            GetMajorVersion(parsedVersion),
+            isEnabled,
+            is64Bit,
+            isJre,
+            brand,
+            architecture);
+    }
+
     public static Task WarmPortableJavaScanCacheAsync()
     {
         lock (PortableJavaScanLock)
@@ -276,6 +321,20 @@ internal static class FrontendJavaInventoryService
             PortableJavaScanTask = null;
             return CachedPortableJavaRuntimes;
         }
+    }
+
+    private static IJavaParser BuildJavaParser()
+    {
+        var parsers = new List<IJavaParser>
+        {
+            new CommandJavaParser(SystemJavaRuntimeEnvironment.Current, new ProcessCommandRunner())
+        };
+        if (OperatingSystem.IsWindows())
+        {
+            parsers.Add(new PeHeaderParser());
+        }
+
+        return new CompositeJavaParser([.. parsers]);
     }
 
     private static JavaInstallation? TryParseInstallation(string executablePath)
@@ -417,6 +476,27 @@ internal static class FrontendJavaInventoryService
             JsonValueKind.Number when property.TryGetInt32(out var number) &&
                                       Enum.IsDefined(typeof(TEnum), number) => (TEnum)Enum.ToObject(typeof(TEnum), number),
             JsonValueKind.String when Enum.TryParse<TEnum>(property.GetString(), ignoreCase: true, out var parsed) => parsed,
+            _ => null
+        };
+    }
+
+    private static TEnum? GetNestedEnum<TEnum>(JsonElement element, params string[] path)
+        where TEnum : struct, Enum
+    {
+        var current = element;
+        foreach (var segment in path)
+        {
+            if (!current.TryGetProperty(segment, out current))
+            {
+                return null;
+            }
+        }
+
+        return current.ValueKind switch
+        {
+            JsonValueKind.Number when current.TryGetInt32(out var number) &&
+                                      Enum.IsDefined(typeof(TEnum), number) => (TEnum)Enum.ToObject(typeof(TEnum), number),
+            JsonValueKind.String when Enum.TryParse<TEnum>(current.GetString(), ignoreCase: true, out var parsed) => parsed,
             _ => null
         };
     }

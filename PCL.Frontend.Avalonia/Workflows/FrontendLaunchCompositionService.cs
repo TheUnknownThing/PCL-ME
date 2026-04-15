@@ -204,12 +204,12 @@ internal static class FrontendLaunchCompositionService
             HasMicrosoftProfile: selectedProfile.HasMicrosoftProfile,
             IsRestrictedFeatureAllowed: true);
         var precheckResult = MinecraftLaunchPrecheckService.Evaluate(precheckRequest);
-        var manifestPlan = BuildJavaRuntimeManifestPlan(
+        var javaRuntimeInstallPlan = BuildJavaRuntimeInstallPlan(
             javaWorkflow,
             manifestSummary,
             selectedJavaRuntime,
+            launcherFolder,
             downloadProvider);
-        var transferPlan = BuildJavaRuntimeTransferPlan(launcherFolder, manifestPlan, downloadProvider);
 
         return new FrontendLaunchComposition(
             options.Scenario,
@@ -225,8 +225,7 @@ internal static class FrontendLaunchCompositionService
             precheckResult,
             supportPrompt,
             javaWorkflow,
-            manifestPlan,
-            transferPlan,
+            javaRuntimeInstallPlan,
             resolutionPlan,
             classpathPlan,
             nativesDirectory,
@@ -1915,10 +1914,11 @@ internal static class FrontendLaunchCompositionService
         return true;
     }
 
-    private static MinecraftJavaRuntimeManifestRequestPlan? BuildJavaRuntimeManifestPlan(
+    private static FrontendJavaRuntimeInstallPlan? BuildJavaRuntimeInstallPlan(
         MinecraftLaunchJavaWorkflowPlan javaWorkflow,
         FrontendVersionManifestSummary manifestSummary,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
+        string launcherFolder,
         FrontendDownloadProvider downloadProvider)
     {
         if (string.IsNullOrWhiteSpace(javaWorkflow.MissingJavaPrompt.DownloadTarget))
@@ -1926,9 +1926,50 @@ internal static class FrontendLaunchCompositionService
             return null;
         }
 
+        var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
+        var platformKind = GetCurrentDesktopPlatformKind();
+        if (ShouldPreferAdoptiumForJavaRuntime(platformKind, runtimeArchitecture))
+        {
+            return TryBuildAdoptiumJavaRuntimeInstallPlan(
+                       javaWorkflow,
+                       launcherFolder,
+                       platformKind,
+                       runtimeArchitecture,
+                       downloadProvider)
+                   ?? TryBuildMojangJavaRuntimeInstallPlan(
+                       javaWorkflow,
+                       launcherFolder,
+                       runtimeArchitecture,
+                       downloadProvider);
+        }
+
+        return TryBuildMojangJavaRuntimeInstallPlan(
+                   javaWorkflow,
+                   launcherFolder,
+                   runtimeArchitecture,
+                   downloadProvider)
+               ?? TryBuildAdoptiumJavaRuntimeInstallPlan(
+                   javaWorkflow,
+                   launcherFolder,
+                   platformKind,
+                   runtimeArchitecture,
+                   downloadProvider);
+    }
+
+    private static FrontendJavaRuntimeInstallPlan? TryBuildMojangJavaRuntimeInstallPlan(
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow,
+        string launcherFolder,
+        MachineType runtimeArchitecture,
+        FrontendDownloadProvider downloadProvider)
+    {
+        var downloadTarget = javaWorkflow.MissingJavaPrompt.DownloadTarget;
+        if (string.IsNullOrWhiteSpace(downloadTarget))
+        {
+            return null;
+        }
+
         try
         {
-            var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
             var indexRequestUrls = MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultIndexRequestUrlPlan();
             var liveIndexJson = TryDownloadUtf8String(downloadProvider.GetPreferredUrls(
                 indexRequestUrls.OfficialUrls,
@@ -1938,12 +1979,51 @@ internal static class FrontendLaunchCompositionService
                 return null;
             }
 
-            return MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
+            var manifestPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildManifestRequestPlan(
                 new MinecraftJavaRuntimeManifestRequestPlanRequest(
                     liveIndexJson,
                     ResolveJavaRuntimePlatformKey(runtimeArchitecture),
-                    javaWorkflow.MissingJavaPrompt.DownloadTarget,
+                    downloadTarget,
                     MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultManifestUrlRewrites()));
+            var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
+                launcherFolder,
+                manifestPlan.Selection.ComponentKey);
+            var manifestJson = TryDownloadUtf8String(downloadProvider.GetPreferredUrls(
+                manifestPlan.RequestUrls.OfficialUrls,
+                manifestPlan.RequestUrls.MirrorUrls));
+            if (string.IsNullOrWhiteSpace(manifestJson))
+            {
+                return null;
+            }
+
+            var workflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+                new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
+                    manifestJson,
+                    runtimeBaseDirectory,
+                    MinecraftJavaRuntimeDownloadSessionService.GetDefaultIgnoredSha1Hashes(),
+                    MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
+            var existingRelativePaths = workflowPlan.Files
+                .Where(file => File.Exists(file.TargetPath))
+                .Select(file => file.RelativePath)
+                .ToArray();
+            var transferPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
+                new MinecraftJavaRuntimeDownloadTransferPlanRequest(
+                    workflowPlan,
+                    existingRelativePaths));
+
+            return new FrontendJavaRuntimeInstallPlan(
+                FrontendJavaRuntimeInstallPlanKind.MojangManifest,
+                SourceName: "Mojang",
+                DisplayName: $"Java {manifestPlan.Selection.VersionName}",
+                VersionName: manifestPlan.Selection.VersionName,
+                RequestedComponent: manifestPlan.Selection.RequestedComponent,
+                PlatformKey: manifestPlan.Selection.PlatformKey,
+                RuntimeDirectory: runtimeBaseDirectory,
+                RuntimeArchitecture: runtimeArchitecture,
+                IsJre: true,
+                Brand: JavaBrandType.OpenJDK,
+                MojangManifestPlan: manifestPlan,
+                MojangTransferPlan: transferPlan);
         }
         catch
         {
@@ -1951,42 +2031,57 @@ internal static class FrontendLaunchCompositionService
         }
     }
 
-    private static MinecraftJavaRuntimeDownloadTransferPlan? BuildJavaRuntimeTransferPlan(
+    private static FrontendJavaRuntimeInstallPlan? TryBuildAdoptiumJavaRuntimeInstallPlan(
+        MinecraftLaunchJavaWorkflowPlan javaWorkflow,
         string launcherFolder,
-        MinecraftJavaRuntimeManifestRequestPlan? manifestPlan,
+        FrontendDesktopPlatformKind platformKind,
+        MachineType runtimeArchitecture,
         FrontendDownloadProvider downloadProvider)
     {
-        if (manifestPlan is null)
+        var osToken = ResolveAdoptiumOperatingSystemToken(platformKind);
+        var architectureToken = ResolveAdoptiumArchitectureToken(runtimeArchitecture);
+        if (string.IsNullOrWhiteSpace(osToken) || string.IsNullOrWhiteSpace(architectureToken))
         {
             return null;
         }
 
-        var runtimeBaseDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
-            launcherFolder,
-            manifestPlan.Selection.ComponentKey);
-        var manifestJson = TryDownloadUtf8String(downloadProvider.GetPreferredUrls(
-            manifestPlan.RequestUrls.OfficialUrls,
-            manifestPlan.RequestUrls.MirrorUrls));
-        if (string.IsNullOrWhiteSpace(manifestJson))
+        foreach (var imageType in new[] { "jre", "jdk" })
         {
-            return null;
+            try
+            {
+                var metadataJson = TryDownloadUtf8String(
+                    [
+                        BuildAdoptiumMetadataUrl(
+                            javaWorkflow.RecommendedMajorVersion,
+                            osToken,
+                            architectureToken,
+                            imageType)
+                    ]);
+                if (string.IsNullOrWhiteSpace(metadataJson))
+                {
+                    continue;
+                }
+
+                var plan = BuildAdoptiumJavaRuntimeInstallPlanFromMetadata(
+                    metadataJson,
+                    launcherFolder,
+                    javaWorkflow.MissingJavaPrompt.DownloadTarget!,
+                    javaWorkflow.RecommendedMajorVersion,
+                    platformKind,
+                    runtimeArchitecture,
+                    imageType);
+                if (plan is not null)
+                {
+                    return plan;
+                }
+            }
+            catch
+            {
+                // Try the next image type.
+            }
         }
 
-        var workflowPlan = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
-            new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
-                manifestJson,
-                runtimeBaseDirectory,
-                Array.Empty<string>(),
-                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
-        var existingRelativePaths = workflowPlan.Files
-            .Where(file => File.Exists(file.TargetPath))
-            .Select(file => file.RelativePath)
-            .ToArray();
-
-        return MinecraftJavaRuntimeDownloadWorkflowService.BuildTransferPlan(
-            new MinecraftJavaRuntimeDownloadTransferPlanRequest(
-                workflowPlan,
-                existingRelativePaths));
+        return null;
     }
 
     private static string? TryDownloadUtf8String(IReadOnlyList<string> urls)
@@ -2006,9 +2101,11 @@ internal static class FrontendLaunchCompositionService
         return null;
     }
 
-    private static string ResolveJavaRuntimePlatformKey(MachineType runtimeArchitecture)
+    internal static string ResolveJavaRuntimePlatformKeyForPlatform(
+        FrontendDesktopPlatformKind platformKind,
+        MachineType runtimeArchitecture)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (platformKind == FrontendDesktopPlatformKind.Windows)
         {
             return runtimeArchitecture switch
             {
@@ -2018,16 +2115,35 @@ internal static class FrontendLaunchCompositionService
             };
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        if (platformKind == FrontendDesktopPlatformKind.MacOS)
         {
             return runtimeArchitecture == MachineType.ARM64
                 ? "mac-os-arm64"
                 : "mac-os";
         }
 
-        return runtimeArchitecture == MachineType.I386
-            ? "linux-i386"
-            : "linux";
+        return runtimeArchitecture switch
+        {
+            // Mojang's Java runtime index currently exposes "linux" and "linux-i386",
+            // but not a dedicated "linux-arm64" key.
+            MachineType.ARM64 => "linux",
+            MachineType.I386 => "linux-i386",
+            _ => "linux"
+        };
+    }
+
+    private static string ResolveJavaRuntimePlatformKey(MachineType runtimeArchitecture)
+    {
+        return ResolveJavaRuntimePlatformKeyForPlatform(GetCurrentDesktopPlatformKind(), runtimeArchitecture);
+    }
+
+    private static FrontendDesktopPlatformKind GetCurrentDesktopPlatformKind()
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? FrontendDesktopPlatformKind.Windows
+            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? FrontendDesktopPlatformKind.MacOS
+                : FrontendDesktopPlatformKind.Linux;
     }
 
     private sealed record LibraryDownloadInfo(
@@ -2077,6 +2193,105 @@ internal static class FrontendLaunchCompositionService
         {
             return trimmed;
         }
+    }
+
+    internal static FrontendJavaRuntimeInstallPlan? BuildAdoptiumJavaRuntimeInstallPlanFromMetadata(
+        string metadataJson,
+        string launcherFolder,
+        string requestedComponent,
+        int majorVersion,
+        FrontendDesktopPlatformKind platformKind,
+        MachineType runtimeArchitecture,
+        string imageType)
+    {
+        using var document = JsonDocument.Parse(metadataJson);
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var release = document.RootElement.EnumerateArray().FirstOrDefault();
+        if (release.ValueKind != JsonValueKind.Object ||
+            !release.TryGetProperty("binary", out var binary) ||
+            binary.ValueKind != JsonValueKind.Object ||
+            !binary.TryGetProperty("package", out var package) ||
+            package.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var packageName = GetString(package, "name");
+        var downloadLink = GetString(package, "link");
+        if (string.IsNullOrWhiteSpace(packageName) || string.IsNullOrWhiteSpace(downloadLink))
+        {
+            return null;
+        }
+
+        var versionName = GetNestedString(release, "version", "semver")
+                          ?? GetNestedString(release, "version", "openjdk_version")
+                          ?? GetString(release, "release_name")
+                          ?? $"Java {majorVersion}";
+        var osToken = ResolveAdoptiumOperatingSystemToken(platformKind);
+        var architectureToken = ResolveAdoptiumArchitectureToken(runtimeArchitecture) ?? runtimeArchitecture.ToString().ToLowerInvariant();
+        var componentKey = $"adoptium-{imageType}-{majorVersion}-{osToken}-{architectureToken}";
+        var runtimeDirectory = MinecraftJavaRuntimeDownloadSessionService.GetRuntimeBaseDirectory(
+            launcherFolder,
+            componentKey);
+        return new FrontendJavaRuntimeInstallPlan(
+            FrontendJavaRuntimeInstallPlanKind.ArchivePackage,
+            SourceName: "Adoptium",
+            DisplayName: $"Java {versionName}",
+            VersionName: versionName,
+            RequestedComponent: requestedComponent,
+            PlatformKey: $"{osToken}-{architectureToken}",
+            RuntimeDirectory: runtimeDirectory,
+            RuntimeArchitecture: runtimeArchitecture,
+            IsJre: string.Equals(imageType, "jre", StringComparison.OrdinalIgnoreCase),
+            Brand: JavaBrandType.EclipseTemurin,
+            ArchivePlan: new FrontendJavaRuntimeArchiveDownloadPlan(
+                packageName,
+                new MinecraftJavaRuntimeRequestUrlPlan([downloadLink], []),
+                GetLong(package, "size") ?? 0L,
+                GetString(package, "checksum"),
+                imageType));
+    }
+
+    internal static string BuildAdoptiumMetadataUrl(
+        int majorVersion,
+        string osToken,
+        string architectureToken,
+        string imageType)
+    {
+        return $"https://api.adoptium.net/v3/assets/latest/{majorVersion}/hotspot?architecture={Uri.EscapeDataString(architectureToken)}&heap_size=normal&image_type={Uri.EscapeDataString(imageType)}&jvm_impl=hotspot&os={Uri.EscapeDataString(osToken)}&page_size=1&project=jdk&vendor=eclipse";
+    }
+
+    internal static string ResolveAdoptiumOperatingSystemToken(FrontendDesktopPlatformKind platformKind)
+    {
+        return platformKind switch
+        {
+            FrontendDesktopPlatformKind.Windows => "windows",
+            FrontendDesktopPlatformKind.MacOS => "mac",
+            _ => "linux"
+        };
+    }
+
+    internal static string? ResolveAdoptiumArchitectureToken(MachineType runtimeArchitecture)
+    {
+        return runtimeArchitecture switch
+        {
+            MachineType.AMD64 => "x64",
+            MachineType.I386 => "x32",
+            MachineType.ARM64 => "aarch64",
+            _ => null
+        };
+    }
+
+    internal static bool ShouldPreferAdoptiumForJavaRuntime(
+        FrontendDesktopPlatformKind platformKind,
+        MachineType runtimeArchitecture)
+    {
+        return platformKind == FrontendDesktopPlatformKind.Linux &&
+               runtimeArchitecture == MachineType.ARM64;
     }
 
     private static string ResolveConfiguredJavaSelection(
@@ -3247,6 +3462,25 @@ internal static class FrontendLaunchCompositionService
         return element.TryGetProperty(propertyName, out var value) && value.ValueKind is JsonValueKind.True or JsonValueKind.False
             ? value.GetBoolean()
             : null;
+    }
+
+    private static long? GetLong(JsonElement element, string propertyName)
+    {
+        if (element.TryGetProperty(propertyName, out var value))
+        {
+            if (value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out var longValue))
+            {
+                return longValue;
+            }
+
+            if (value.ValueKind == JsonValueKind.String &&
+                long.TryParse(value.GetString(), out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return null;
     }
 
     private static bool? GetNestedBoolean(JsonElement element, params string[] path)

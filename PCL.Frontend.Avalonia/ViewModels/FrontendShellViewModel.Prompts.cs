@@ -3,7 +3,9 @@ using Avalonia.Threading;
 using PCL.Core.App.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
+using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils;
 using PCL.Core.Utils.OS;
 using System.Runtime.InteropServices;
 using PCL.Frontend.Avalonia.Desktop.Animation;
@@ -532,93 +534,180 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DownloadJavaRuntimeFromPromptAsync()
     {
-        if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
+        if (_launchComposition.JavaRuntimeInstallPlan is null)
         {
             AddFailureActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
             return;
         }
 
-        AddActivity("Java 运行时准备中", "正在后台下载并注册 Java 运行时。");
+        var installPlan = _launchComposition.JavaRuntimeInstallPlan;
+        var trackedRuntimeDirectory = installPlan.RuntimeDirectory;
+        var shouldResumePendingLaunch = _pendingLaunchAfterPrompt;
+        var downloadState = MinecraftJavaRuntimeDownloadSessionState.Loading;
+
+        _isLaunchBlockedByPrompt = true;
+        AddActivity("Java 运行时准备中", "正在后台下载并注册 Java 运行时，详细进度已同步到任务管理。");
 
         try
         {
-            var installResult = await Task.Run(() => _shellActionService.MaterializeJavaRuntime(
-                _launchComposition.JavaRuntimeManifestPlan,
-                _launchComposition.JavaRuntimeTransferPlan));
+            var installResult = await ExecuteManagedJavaRuntimeDownloadAsync(
+                $"自动下载 {installPlan.DisplayName} ({installPlan.SourceName})",
+                installPlan);
+            downloadState = MinecraftJavaRuntimeDownloadSessionState.Finished;
+
+            try
+            {
+                await FrontendJavaInventoryService.RefreshPortableJavaScanCacheAsync();
+            }
+            catch
+            {
+                // Persisted Java storage keeps the downloaded runtime selectable even if a background scan fails.
+            }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                var executablePath = _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory);
                 var installedRuntime = FrontendJavaInventoryService.TryResolveRuntime(
-                    _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
-                    isEnabled: true,
-                    fallbackDisplayName: $"Java {installResult.VersionName}");
+                                         executablePath,
+                                         isEnabled: true,
+                                         fallbackDisplayName: installPlan.DisplayName)
+                                     ?? FrontendJavaInventoryService.CreateStoredRuntime(
+                                         executablePath,
+                                         installPlan.DisplayName,
+                                         installPlan.VersionName,
+                                         isEnabled: true,
+                                         is64Bit: Is64BitMachineType(installPlan.RuntimeArchitecture),
+                                         isJre: installPlan.IsJre,
+                                         brand: installPlan.Brand,
+                                         architecture: installPlan.RuntimeArchitecture);
+
+                RegisterMaterializedJavaRuntime(installedRuntime);
                 _launchComposition = _launchComposition with
                 {
                     SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
-                        installedRuntime?.ExecutablePath ?? _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
-                        installedRuntime?.DisplayName ?? $"Java {installResult.VersionName}",
-                        installedRuntime?.MajorVersion ?? _launchComposition.JavaWorkflow.RecommendedMajorVersion,
-                        IsEnabled: installedRuntime?.IsEnabled ?? true,
-                        Is64Bit: installedRuntime?.Is64Bit ?? Environment.Is64BitOperatingSystem,
-                        Architecture: installedRuntime?.Architecture),
+                        installedRuntime.ExecutablePath,
+                        installedRuntime.DisplayName,
+                        installedRuntime.MajorVersion ?? _launchComposition.JavaWorkflow.RecommendedMajorVersion,
+                        IsEnabled: installedRuntime.IsEnabled,
+                        Is64Bit: installedRuntime.Is64Bit ?? Environment.Is64BitOperatingSystem,
+                        Architecture: installedRuntime.Architecture),
                     JavaWarningMessage = null
                 };
                 RaiseLaunchCompositionProperties();
-                RegisterMaterializedJavaRuntime(installResult);
                 _isLaunchBlockedByPrompt = false;
-                _pendingLaunchAfterPrompt = false;
-                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
                 AddActivity(
                     "Java 运行时已准备",
                     $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+
+                if (shouldResumePendingLaunch)
+                {
+                    _pendingLaunchAfterPrompt = false;
+                    AddActivity("继续启动流程", "Java 自动下载完成，正在继续当前启动。");
+                    _ = StartLaunchAsync();
+                    return;
+                }
+
+                _pendingLaunchAfterPrompt = false;
+                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            downloadState = MinecraftJavaRuntimeDownloadSessionState.Aborted;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _isLaunchBlockedByPrompt = false;
+                _pendingLaunchAfterPrompt = false;
+                AddActivity("Java 下载已取消", "自动下载已取消，未注册新的 Java 运行时。");
             });
         }
         catch (Exception ex)
         {
+            downloadState = MinecraftJavaRuntimeDownloadSessionState.Failed;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                _isLaunchBlockedByPrompt = false;
+                _pendingLaunchAfterPrompt = false;
                 AddFailureActivity("Java 运行时准备失败", ex.Message);
             });
         }
-    }
-
-    private void RegisterMaterializedJavaRuntime(FrontendJavaRuntimeInstallResult installResult)
-    {
-        var key = $"downloaded-{Path.GetFileName(installResult.RuntimeDirectory)}";
-        var tags = new List<string> { "64 Bit", "Prompt Download" };
-        if (installResult.ReusedFileCount > 0)
+        finally
         {
-            tags.Add($"复用 {installResult.ReusedFileCount}");
-        }
+            var transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(
+                downloadState,
+                trackedRuntimeDirectory);
 
-        var newEntry = CreateJavaRuntimeEntry(
-            key,
-            $"Java {installResult.VersionName}",
-            installResult.RuntimeDirectory,
-            tags,
-            isEnabled: true);
-
-        var existingIndex = -1;
-        for (var index = 0; index < JavaRuntimeEntries.Count; index++)
-        {
-            if (JavaRuntimeEntries[index].Key == key)
+            if (!string.IsNullOrWhiteSpace(transitionPlan.CleanupLogMessage))
             {
-                existingIndex = index;
-                break;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    AddActivity("Java 下载清理", transitionPlan.CleanupLogMessage);
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(transitionPlan.CleanupDirectoryPath) &&
+                Directory.Exists(transitionPlan.CleanupDirectoryPath))
+            {
+                try
+                {
+                    Directory.Delete(transitionPlan.CleanupDirectoryPath, recursive: true);
+                }
+                catch
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        AddActivity("Java 下载清理", $"未能自动清理目录：{transitionPlan.CleanupDirectoryPath}");
+                    });
+                }
             }
         }
+    }
+
+    private void RegisterMaterializedJavaRuntime(FrontendStoredJavaRuntime installedRuntime)
+    {
+        var items = LoadStoredJavaItems();
+        var existingIndex = items.FindIndex(item =>
+            string.Equals(item.Path, installedRuntime.ExecutablePath, StringComparison.OrdinalIgnoreCase));
+        var updatedItem = new JavaStorageItem
+        {
+            Path = installedRuntime.ExecutablePath,
+            IsEnable = true,
+            Source = JavaSource.AutoInstalled,
+            Installation = new JavaStorageInstallationInfo
+            {
+                JavaExePath = installedRuntime.ExecutablePath,
+                DisplayName = installedRuntime.DisplayName,
+                Version = installedRuntime.ParsedVersion?.ToString() ?? installedRuntime.DisplayName,
+                MajorVersion = installedRuntime.MajorVersion,
+                Is64Bit = installedRuntime.Is64Bit,
+                IsJre = installedRuntime.IsJre,
+                Brand = installedRuntime.Brand,
+                Architecture = installedRuntime.Architecture
+            }
+        };
 
         if (existingIndex >= 0)
         {
-            JavaRuntimeEntries[existingIndex] = newEntry;
+            items[existingIndex] = updatedItem;
         }
         else
         {
-            JavaRuntimeEntries.Add(newEntry);
+            items.Add(updatedItem);
         }
 
-        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
-        SelectJavaRuntime(key);
+        SaveStoredJavaItems(items);
+        SelectJavaRuntime(installedRuntime.ExecutablePath);
+        ReloadSetupComposition(initializeAllSurfaces: false);
+    }
+
+    private static bool? Is64BitMachineType(MachineType? machineType)
+    {
+        return machineType switch
+        {
+            MachineType.AMD64 or MachineType.ARM64 or MachineType.IA64 => true,
+            MachineType.I386 or MachineType.ARM or MachineType.ARMNT => false,
+            _ => null
+        };
     }
 
     private void OpenExternalTarget(string? target, string successMessage)
