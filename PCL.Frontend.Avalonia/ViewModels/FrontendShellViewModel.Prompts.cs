@@ -250,7 +250,7 @@ internal sealed partial class FrontendShellViewModel
                 _promptCatalog[AvaloniaPromptLaneKind.Launch].Count == 0)
             {
                 _pendingLaunchAfterPrompt = false;
-                _ = StartLaunchAsync();
+                _ = StartLaunchAsync(resumeAfterPrompt: true);
             }
         }
     }
@@ -420,34 +420,9 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        await AwaitLatestSelectedInstanceRefreshAsync();
-        RefreshLaunchState();
-
-        if (_isLaunchBlockedByPrompt)
-        {
-            AddActivity("启动已被提示中止", "请先重新确认启动前提示或调整当前实例设置。");
-            return;
-        }
-
-        if (!_launchComposition.PrecheckResult.IsSuccess)
-        {
-            AddFailureActivity("启动前检查未通过", _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。");
-            return;
-        }
-
         _dismissedLaunchPromptIds.Clear();
-        EnsureLaunchPromptLane();
-        if (_promptCatalog[AvaloniaPromptLaneKind.Launch].Count > 0)
-        {
-            _pendingLaunchAfterPrompt = true;
-            RebuildPromptLanes();
-            SetPromptOverlayOpen(true);
-            SelectPromptLane(AvaloniaPromptLaneKind.Launch, updateActivity: false);
-            AddActivity("启动前提示待处理", $"{LaunchVersionSubtitle} 还有 {_promptCatalog[AvaloniaPromptLaneKind.Launch].Count} 个提示需要确认。");
-            return;
-        }
-
-        await StartLaunchAsync();
+        _pendingLaunchAfterPrompt = false;
+        await StartLaunchAsync(resumeAfterPrompt: false);
     }
 
     private void AcceptPromptConsent()
@@ -679,7 +654,7 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private async Task StartLaunchAsync()
+    private async Task StartLaunchAsync(bool resumeAfterPrompt = false)
     {
         try
         {
@@ -688,7 +663,7 @@ internal sealed partial class FrontendShellViewModel
             ShowLaunchDialog();
             SetLaunchDialogRunningState(
                 "正在启动游戏",
-                "初始化",
+                resumeAfterPrompt ? "继续启动流程" : "初始化启动流程",
                 0d,
                 showDownload: false,
                 isError: false);
@@ -699,12 +674,44 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             RefreshGameLogSurface();
 
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                "同步实例状态",
+                0.01d,
+                showDownload: false,
+                isError: false);
+
+            await AwaitLatestSelectedInstanceRefreshAsync();
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
             await EnsureSelectedLaunchProfileReadyForLaunchAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
 
             await RefreshLaunchCompositionAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
             AppendLaunchDebugCompositionSnapshot();
+
+            if (!_launchComposition.PrecheckResult.IsSuccess)
+            {
+                var failureMessage = _launchComposition.PrecheckResult.FailureMessage ?? "当前实例尚未满足启动条件。";
+                AddFailureActivity("启动前检查未通过", failureMessage);
+                SetLaunchDialogStoppedState("启动前检查未通过", failureMessage, isError: true);
+                return;
+            }
+
+            EnsureLaunchPromptLane();
+            if (_promptCatalog[AvaloniaPromptLaneKind.Launch].Count > 0)
+            {
+                _pendingLaunchAfterPrompt = true;
+                RebuildPromptLanes();
+                HideLaunchDialog();
+                SetPromptOverlayOpen(true);
+                SelectPromptLane(AvaloniaPromptLaneKind.Launch, updateActivity: false);
+                AddActivity("启动前提示待处理", $"{LaunchVersionSubtitle} 还有 {_promptCatalog[AvaloniaPromptLaneKind.Launch].Count} 个提示需要确认。");
+                _isLaunchInProgress = false;
+                RaiseLaunchSessionProperties();
+                return;
+            }
 
             if (_launchComposition.SelectedJavaRuntime is null)
             {
@@ -741,9 +748,16 @@ internal sealed partial class FrontendShellViewModel
                 showDownload: false,
                 isError: false);
 
-            var startResult = _shellActionService.StartLaunchSession(
+            var startResult = await Task.Run(() => _shellActionService.StartLaunchSession(
                 _launchComposition,
-                _instanceComposition.Selection.InstanceDirectory);
+                _instanceComposition.Selection.InstanceDirectory,
+                stage => Dispatcher.UIThread.Post(() => SetLaunchDialogRunningState(
+                    "正在启动游戏",
+                    stage,
+                    ResolveLaunchDialogStartupProgress(stage),
+                    showDownload: false,
+                    isError: false)),
+                launchCancellation.Token));
             _activeLaunchProcess = startResult.Process;
             _latestLaunchScriptPath = startResult.LaunchScriptPath;
             _latestLaunchSessionSummaryPath = startResult.SessionSummaryPath;
@@ -792,6 +806,19 @@ internal sealed partial class FrontendShellViewModel
             _launchSessionCancellation = null;
             RaiseLaunchSessionProperties();
         }
+    }
+
+    private static double ResolveLaunchDialogStartupProgress(string stage)
+    {
+        return stage switch
+        {
+            "检查运行依赖" => 0.9d,
+            "同步游戏本地库" => 0.93d,
+            "写入启动前配置" => 0.95d,
+            "执行启动前命令" => 0.97d,
+            "启动游戏进程" => 0.99d,
+            _ => 0.9d
+        };
     }
 
     private async Task RefreshLaunchCompositionAsync(CancellationToken cancellationToken)

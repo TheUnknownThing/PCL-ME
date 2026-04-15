@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
@@ -445,14 +446,20 @@ internal sealed class FrontendShellActionService(
 
     public FrontendLaunchStartResult StartLaunchSession(
         FrontendLaunchComposition launchComposition,
-        string? instanceDirectory)
+        string? instanceDirectory,
+        Action<string>? onStageChanged = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
 
         var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
-        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), speedLimiter);
+        cancellationToken.ThrowIfCancellationRequested();
+        onStageChanged?.Invoke("检查运行依赖");
+        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), speedLimiter, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        onStageChanged?.Invoke("同步游戏本地库");
         var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
         EnsureNativePathAlias(launchComposition.NativePathAliasDirectory, launchComposition.NativesDirectory);
 
@@ -461,6 +468,8 @@ internal sealed class FrontendShellActionService(
         Directory.CreateDirectory(launcherDataDirectory);
         Directory.CreateDirectory(logDirectory);
 
+        cancellationToken.ThrowIfCancellationRequested();
+        onStageChanged?.Invoke("写入启动前配置");
         ApplyPrerunPlan(launchComposition.PrerunPlan);
 
         var launchScriptPath = FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
@@ -486,8 +495,11 @@ internal sealed class FrontendShellActionService(
             File.Delete(rawOutputLogPath);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+        onStageChanged?.Invoke("执行启动前命令");
         foreach (var shellPlan in launchComposition.SessionStartPlan.CustomCommandShellPlans)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var customProcess = SystemProcessManager.Current.Start(
                 MinecraftLaunchProcessExecutionService.BuildCustomCommandStartRequest(shellPlan))
                 ?? throw new InvalidOperationException(shellPlan.FailureLogMessage);
@@ -501,6 +513,8 @@ internal sealed class FrontendShellActionService(
             }
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+        onStageChanged?.Invoke("启动游戏进程");
         var process = SystemProcessManager.Current.Start(
             MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(
                 launchComposition.SessionStartPlan.ProcessShellPlan))
@@ -509,7 +523,7 @@ internal sealed class FrontendShellActionService(
             process,
             launchComposition.SessionStartPlan.ProcessShellPlan.PriorityKind);
 
-        ApplyPostLaunchShellPlan(launchComposition.PostLaunchShell);
+        ApplyPostLaunchShellPlanOnUiThread(launchComposition.PostLaunchShell);
         IncrementLaunchCounts(instanceDirectory, launchComposition.PostLaunchShell);
 
         return new FrontendLaunchStartResult(
@@ -583,12 +597,14 @@ internal sealed class FrontendShellActionService(
     private static void EnsureRequiredArtifacts(
         IReadOnlyList<FrontendLaunchArtifactRequirement> requirements,
         FrontendDownloadProvider downloadProvider,
-        FrontendDownloadSpeedLimiter? speedLimiter = null)
+        FrontendDownloadSpeedLimiter? speedLimiter = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(requirements);
 
         foreach (var requirement in requirements)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (File.Exists(requirement.TargetPath))
             {
                 continue;
@@ -598,6 +614,7 @@ internal sealed class FrontendShellActionService(
             Exception? lastError = null;
             foreach (var url in downloadProvider.GetPreferredUrls(requirement.DownloadUrl))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     FrontendDownloadTransferService.DownloadToPath(
@@ -785,6 +802,17 @@ internal sealed class FrontendShellActionService(
     private void ApplyPostLaunchShellPlan(MinecraftGameShellPlan shellPlan)
     {
         ApplyLauncherShellAction(shellPlan.LauncherAction);
+    }
+
+    private void ApplyPostLaunchShellPlanOnUiThread(MinecraftGameShellPlan shellPlan)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            ApplyPostLaunchShellPlan(shellPlan);
+            return;
+        }
+
+        Dispatcher.UIThread.InvokeAsync(() => ApplyPostLaunchShellPlan(shellPlan)).GetAwaiter().GetResult();
     }
 
     private void ApplyLauncherShellAction(MinecraftLaunchShellAction action)
