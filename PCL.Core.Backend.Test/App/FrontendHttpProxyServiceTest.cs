@@ -158,6 +158,7 @@ public sealed class FrontendHttpProxyServiceTest
             SetEnvironmentVariable("PCL_PATH_LOCAL", SharedLocalDataDirectory);
             SetEnvironmentVariable("PCL_PATH_TEMP", TempDirectory);
             SetEnvironmentVariable("PCL_PORTABLE", "0");
+            SetEnvironmentVariable("PCL_ENCRYPTION_KEY", "frontend-http-proxy-test-key");
             SetEnvironmentVariable("HOME", RootDirectory);
             SetEnvironmentVariable("USERPROFILE", RootDirectory);
         }
