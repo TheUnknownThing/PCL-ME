@@ -151,14 +151,44 @@ internal sealed partial class FrontendShellViewModel
         _ => "?"
     };
 
-    public string CommunityProjectCurrentInstanceName => _instanceComposition.Selection.HasSelection
-        ? _instanceComposition.Selection.InstanceName
-        : "未选择实例";
+    public string CommunityProjectCurrentInstanceName
+    {
+        get
+        {
+            if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
+            {
+                return _versionSavesComposition.Selection.HasSelection
+                    ? _versionSavesComposition.Selection.SaveName
+                    : "未选择存档";
+            }
+
+            return _instanceComposition.Selection.HasSelection
+                ? _instanceComposition.Selection.InstanceName
+                : "未选择实例";
+        }
+    }
 
     public string CommunityProjectCurrentInstanceSummary
     {
         get
         {
+            if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
+            {
+                if (!_versionSavesComposition.Selection.HasSelection)
+                {
+                    return "下载页当前还没有选中存档，无法直接安装数据包。请先在存档页打开目标存档详情。";
+                }
+
+                var datapackParts = new List<string> { _versionSavesComposition.Selection.InstanceName };
+                if (!string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion))
+                {
+                    datapackParts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
+                }
+
+                datapackParts.Add(_versionSavesComposition.Selection.SavePath);
+                return string.Join(" • ", datapackParts);
+            }
+
             if (!_instanceComposition.Selection.HasSelection)
             {
                 return "下载页当前还没有选中实例，无法直接安装到实例。";
@@ -195,6 +225,12 @@ internal sealed partial class FrontendShellViewModel
             }
 
             var parts = new List<string>();
+            if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
+                && _versionSavesComposition.Selection.HasSelection)
+            {
+                parts.Add($"目标存档：{_versionSavesComposition.Selection.SaveName}");
+            }
+
             if (!string.IsNullOrWhiteSpace(release.Info))
             {
                 parts.Add(release.Info);
@@ -976,10 +1012,30 @@ internal sealed partial class FrontendShellViewModel
 
     private bool CanInstallCommunityProjectToCurrentInstance()
     {
+        if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
+            && ResolveCurrentDatapackInstallSelection() is null)
+        {
+            return false;
+        }
+
         return _instanceComposition.Selection.HasSelection
                && _selectedCommunityProjectOriginSubpage != LauncherFrontendSubpageKey.DownloadPack
                && _selectedCommunityProjectOriginSubpage is not null
                && TryGetCommunityProjectInstallRelease(out _);
+    }
+
+    private FrontendVersionSaveSelectionState? ResolveCurrentDatapackInstallSelection()
+    {
+        return _versionSavesComposition.Selection.HasSelection
+            ? _versionSavesComposition.Selection
+            : null;
+    }
+
+    private string GetCommunityProjectInstallActivityTitle()
+    {
+        return _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
+            ? "安装到当前存档"
+            : "安装到当前实例";
     }
 
     private FrontendCommunityProjectReleaseEntry? GetSuggestedCommunityProjectInstallRelease()
@@ -989,21 +1045,22 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task InstallCommunityProjectToCurrentInstanceAsync()
     {
+        var activityTitle = GetCommunityProjectInstallActivityTitle();
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("安装到当前实例", "当前未选择实例。");
+            AddActivity(activityTitle, "当前未选择实例。");
             return;
         }
 
         if (!TryGetCommunityProjectInstallRelease(out var entry))
         {
-            AddActivity("安装到当前实例", "当前筛选条件下没有可直接安装的版本文件。");
+            AddActivity(activityTitle, "当前筛选条件下没有可直接安装的版本文件。");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(entry.Target))
         {
-            AddActivity("安装到当前实例", "当前版本没有可用的下载地址。");
+            AddActivity(activityTitle, "当前版本没有可用的下载地址。");
             return;
         }
 
@@ -1013,12 +1070,21 @@ internal sealed partial class FrontendShellViewModel
             var route = _selectedCommunityProjectOriginSubpage;
             if (route is null)
             {
-                AddActivity("安装到当前实例", "当前页面没有可识别的资源类型。");
+                AddActivity(activityTitle, "当前页面没有可识别的资源类型。");
+                return;
+            }
+
+            var datapackSaveSelection = route == LauncherFrontendSubpageKey.DownloadDataPack
+                ? ResolveCurrentDatapackInstallSelection()
+                : null;
+            if (route == LauncherFrontendSubpageKey.DownloadDataPack && datapackSaveSelection is null)
+            {
+                AddActivity(activityTitle, "当前未选择存档，无法直接安装数据包。");
                 return;
             }
 
             AvaloniaHintBus.Show("正在分析建议安装版本…", AvaloniaHintTheme.Info);
-            AddActivity("安装到当前实例", $"{CommunityProjectCurrentInstanceName} • 正在分析 {CommunityProjectTitle} 的安装计划。");
+            AddActivity(activityTitle, $"{CommunityProjectCurrentInstanceName} • 正在分析 {CommunityProjectTitle} 的安装计划。");
             var result = await Task.Run(() => BuildCommunityProjectInstallBuildResult(
                 [
                     new CommunityProjectInstallRootRequest(
@@ -1030,21 +1096,22 @@ internal sealed partial class FrontendShellViewModel
                 ],
                 _instanceComposition,
                 ResolveSelectedInstanceLoaderLabel(),
-                includeDependencies));
+                includeDependencies,
+                datapackSaveSelection));
 
             if (includeDependencies)
             {
                 var confirmed = await ConfirmCommunityProjectInstallWithDependenciesAsync(result);
                 if (!confirmed)
                 {
-                    AddActivity("安装到当前实例", "已取消安装当前模组和缺失依赖。");
+                    AddActivity(activityTitle, "已取消安装当前模组和缺失依赖。");
                     return;
                 }
             }
 
             if (result.Plans.Count == 0)
             {
-                AddActivity("安装到当前实例", result.Skipped.Count == 0
+                AddActivity(activityTitle, result.Skipped.Count == 0
                     ? "没有需要加入任务中心的安装项。"
                     : string.Join("；", result.Skipped.Take(3)));
                 return;
@@ -1053,7 +1120,7 @@ internal sealed partial class FrontendShellViewModel
             AvaloniaHintBus.Show("安装任务已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
             foreach (var plan in result.Plans)
             {
-                RegisterCommunityProjectInstallTask(plan, "安装到当前实例");
+                RegisterCommunityProjectInstallTask(plan, activityTitle);
             }
 
             var summaryParts = new List<string> { $"已加入 {result.Plans.Count} 个安装任务" };
@@ -1071,15 +1138,15 @@ internal sealed partial class FrontendShellViewModel
                 summaryParts.Add($"跳过 {result.Skipped.Count} 项");
             }
 
-            AddActivity("安装到当前实例", $"{CommunityProjectCurrentInstanceName} • {string.Join("，", summaryParts)}。");
+            AddActivity(activityTitle, $"{CommunityProjectCurrentInstanceName} • {string.Join("，", summaryParts)}。");
             foreach (var skipped in result.Skipped.Take(5))
             {
-                AddActivity("安装到当前实例", skipped);
+                AddActivity(activityTitle, skipped);
             }
         }
         catch (Exception ex)
         {
-            AddFailureActivity("安装到当前实例失败", ex.Message);
+            AddFailureActivity($"{activityTitle}失败", ex.Message);
         }
     }
 
@@ -1639,23 +1706,58 @@ internal sealed partial class FrontendShellViewModel
 
     private string ResolveCommunityProjectReleaseFileName(FrontendCommunityProjectReleaseEntry entry, string? projectTitle = null)
     {
-        return FrontendGameManagementService.ResolveCommunityResourceFileName(
+        var fileName = FrontendGameManagementService.ResolveCommunityResourceFileName(
             projectTitle,
             entry.SuggestedFileName,
             entry.Title,
             SelectedFileNameFormatIndex);
+        return NormalizeCommunityProjectInstallArtifactFileName(_selectedCommunityProjectOriginSubpage, fileName);
+    }
+
+    private static string NormalizeCommunityProjectInstallArtifactFileName(
+        LauncherFrontendSubpageKey? route,
+        string fileName)
+    {
+        if (route != LauncherFrontendSubpageKey.DownloadDataPack)
+        {
+            return fileName;
+        }
+
+        var extension = Path.GetExtension(fileName);
+        if (string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            return fileName;
+        }
+
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return $"{fileName}.zip";
+        }
+
+        if (string.Equals(extension, ".jar", StringComparison.OrdinalIgnoreCase))
+        {
+            return Path.ChangeExtension(fileName, ".zip");
+        }
+
+        return fileName;
     }
 
     private static string FinalizeCommunityProjectInstalledArtifact(
         LauncherFrontendSubpageKey? originSubpage,
-        string downloadedPath)
+        string downloadedPath,
+        string? replacedPath = null)
     {
-        if (originSubpage != LauncherFrontendSubpageKey.DownloadWorld)
+        if (originSubpage == LauncherFrontendSubpageKey.DownloadWorld)
         {
-            return downloadedPath;
+            return FrontendWorldArchiveInstallService.ExtractInstalledWorldArchive(downloadedPath);
         }
 
-        return FrontendWorldArchiveInstallService.ExtractInstalledWorldArchive(downloadedPath);
+        if (originSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
+        {
+            return FrontendDatapackArchiveInstallService.ExtractInstalledDatapackArchive(downloadedPath, replacedPath);
+        }
+
+        return downloadedPath;
     }
 
     private async Task CopyCommunityProjectTextAsync(string title, string text, string emptyMessage)
@@ -2063,7 +2165,9 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.DownloadResourcePack => ResolveCurrentInstanceResourceDirectory("resourcepacks"),
             LauncherFrontendSubpageKey.DownloadShader => ResolveCurrentInstanceResourceDirectory("shaderpacks"),
             LauncherFrontendSubpageKey.DownloadWorld => Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves"),
-            LauncherFrontendSubpageKey.DownloadDataPack => _instanceComposition.Selection.IndieDirectory,
+            LauncherFrontendSubpageKey.DownloadDataPack => _versionSavesComposition.Selection.HasSelection
+                ? _versionSavesComposition.Selection.DatapackDirectory
+                : Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves"),
             LauncherFrontendSubpageKey.DownloadPack => _instanceComposition.Selection.InstanceDirectory,
             _ => ResolveCurrentInstanceResourceDirectory("mods")
         };

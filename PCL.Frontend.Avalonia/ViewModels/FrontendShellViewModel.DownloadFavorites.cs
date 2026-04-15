@@ -301,14 +301,14 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var targetSnapshot = await PromptForDownloadFavoriteInstallTargetAsync(selectedEntries.Count);
+        var targetSnapshot = await PromptForDownloadFavoriteInstallTargetAsync(selectedEntries);
         if (targetSnapshot is null)
         {
             return;
         }
 
         AvaloniaHintBus.Show($"正在分析 {selectedEntries.Count} 个收藏项目…", AvaloniaHintTheme.Info);
-        AddActivity("批量安装收藏", $"正在为 {targetSnapshot.Name} 分析 {selectedEntries.Count} 个收藏项目。");
+        AddActivity("批量安装收藏", $"正在为 {targetSnapshot.DisplayName} 分析 {selectedEntries.Count} 个收藏项目。");
         CommunityProjectInstallBuildResult result;
         try
         {
@@ -328,7 +328,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         AvaloniaHintBus.Show("批量安装已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
-        AddActivity("批量安装收藏", $"{targetSnapshot.Name} • 正在把分析完成的资源加入任务中心。");
+        AddActivity("批量安装收藏", $"{targetSnapshot.DisplayName} • 正在把分析完成的资源加入任务中心。");
         foreach (var plan in result.Plans)
         {
             RegisterDownloadFavoriteBatchInstallTask(plan);
@@ -352,7 +352,7 @@ internal sealed partial class FrontendShellViewModel
 
         AddActivity(
             "批量安装收藏",
-            $"{targetSnapshot.Name} • {(summaryParts.Count == 0 ? "没有可执行的安装任务。" : string.Join("，", summaryParts))}");
+            $"{targetSnapshot.DisplayName} • {(summaryParts.Count == 0 ? "没有可执行的安装任务。" : string.Join("，", summaryParts))}");
 
         foreach (var skipped in result.Skipped.Take(5))
         {
@@ -361,7 +361,7 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private async Task<bool> ConfirmDownloadFavoriteBatchInstallAsync(
-        InstanceSelectionSnapshot targetSnapshot,
+        DownloadFavoriteInstallTargetSnapshot targetSnapshot,
         CommunityProjectInstallBuildResult result)
     {
         try
@@ -498,8 +498,11 @@ internal sealed partial class FrontendShellViewModel
         return GetSelectedDownloadFavoriteTargetState().Name;
     }
 
-    private async Task<InstanceSelectionSnapshot?> PromptForDownloadFavoriteInstallTargetAsync(int selectedCount)
+    private async Task<DownloadFavoriteInstallTargetSnapshot?> PromptForDownloadFavoriteInstallTargetAsync(
+        IReadOnlyList<FrontendDownloadCatalogEntry> selectedEntries)
     {
+        var selectedCount = selectedEntries.Count;
+        var includesDatapacks = selectedEntries.Any(entry => entry.OriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack);
         var instances = LoadAvailableDownloadTargetInstances();
         if (instances.Count == 0)
         {
@@ -512,7 +515,9 @@ internal sealed partial class FrontendShellViewModel
         {
             selectedId = await _shellActionService.PromptForChoiceAsync(
                 "选择安装目标版本",
-                $"批量安装会根据目标实例的 Minecraft 版本与加载器，为这 {selectedCount} 个收藏选择推荐版本。",
+                includesDatapacks
+                    ? $"批量安装会根据目标实例的 Minecraft 版本与加载器，为这 {selectedCount} 个收藏选择推荐版本。数据包会在下一步继续选择目标存档。"
+                    : $"批量安装会根据目标实例的 Minecraft 版本与加载器，为这 {selectedCount} 个收藏选择推荐版本。",
                 instances.Select(entry => new PclChoiceDialogOption(
                     entry.Name,
                     entry.Name,
@@ -527,9 +532,84 @@ internal sealed partial class FrontendShellViewModel
             return null;
         }
 
-        return string.IsNullOrWhiteSpace(selectedId)
+        var instanceSnapshot = string.IsNullOrWhiteSpace(selectedId)
             ? null
             : instances.FirstOrDefault(entry => string.Equals(entry.Name, selectedId, StringComparison.OrdinalIgnoreCase));
+        if (instanceSnapshot is null)
+        {
+            return null;
+        }
+
+        if (!includesDatapacks)
+        {
+            return new DownloadFavoriteInstallTargetSnapshot(instanceSnapshot, null);
+        }
+
+        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, instanceSnapshot.Name);
+        if (!targetComposition.Selection.HasSelection)
+        {
+            AddActivity("批量安装收藏", $"{instanceSnapshot.Name} 当前不可用，无法选择数据包存档。");
+            return null;
+        }
+
+        var datapackSaveSelection = await PromptForDownloadFavoriteDatapackSaveTargetAsync(targetComposition, instanceSnapshot);
+        if (datapackSaveSelection is null)
+        {
+            return null;
+        }
+
+        return new DownloadFavoriteInstallTargetSnapshot(instanceSnapshot, datapackSaveSelection);
+    }
+
+    private async Task<FrontendVersionSaveSelectionState?> PromptForDownloadFavoriteDatapackSaveTargetAsync(
+        FrontendInstanceComposition targetComposition,
+        InstanceSelectionSnapshot instanceSnapshot)
+    {
+        var saves = targetComposition.World.Entries;
+        if (saves.Count == 0)
+        {
+            AddActivity("批量安装收藏", $"{instanceSnapshot.Name} 当前没有可用的存档，无法安装数据包。");
+            return null;
+        }
+
+        var defaultSavePath = string.Equals(instanceSnapshot.Name, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase)
+                              && _versionSavesComposition.Selection.HasSelection
+            ? _versionSavesComposition.Selection.SavePath
+            : saves[0].Path;
+
+        string? selectedSavePath;
+        try
+        {
+            selectedSavePath = await _shellActionService.PromptForChoiceAsync(
+                "选择数据包安装存档",
+                $"数据包需要安装到具体存档的 datapacks 文件夹中。请选择 {instanceSnapshot.Name} 中的目标存档。",
+                saves.Select(entry => new PclChoiceDialogOption(
+                    entry.Path,
+                    entry.Title,
+                    entry.Summary))
+                    .ToArray(),
+                defaultSavePath,
+                "开始安装");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("选择数据包存档失败", ex.Message);
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedSavePath))
+        {
+            return null;
+        }
+
+        var selection = FrontendVersionSavesCompositionService.Compose(targetComposition, selectedSavePath).Selection;
+        if (!selection.HasSelection)
+        {
+            AddActivity("批量安装收藏", "未能解析所选存档的数据包目录。");
+            return null;
+        }
+
+        return selection;
     }
 
     private JsonObject GetSelectedDownloadFavoriteTarget(JsonArray root)
@@ -635,12 +715,12 @@ internal sealed partial class FrontendShellViewModel
 
     private CommunityProjectInstallBuildResult BuildDownloadFavoriteBatchInstallResult(
         IReadOnlyList<FrontendDownloadCatalogEntry> selectedEntries,
-        InstanceSelectionSnapshot targetSnapshot)
+        DownloadFavoriteInstallTargetSnapshot targetSnapshot)
     {
-        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, targetSnapshot.Name);
+        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, targetSnapshot.Instance.Name);
         if (!targetComposition.Selection.HasSelection)
         {
-            return new CommunityProjectInstallBuildResult([], [$"{targetSnapshot.Name} 当前不可用，无法执行批量安装。"]);
+            return new CommunityProjectInstallBuildResult([], [$"{targetSnapshot.Instance.Name} 当前不可用，无法执行批量安装。"]);
         }
 
         var roots = new List<CommunityProjectInstallRootRequest>();
@@ -674,8 +754,9 @@ internal sealed partial class FrontendShellViewModel
         var buildResult = BuildCommunityProjectInstallBuildResult(
             roots,
             targetComposition,
-            targetSnapshot.LoaderLabel,
-            includeDependencies: true);
+            targetSnapshot.Instance.LoaderLabel,
+            includeDependencies: true,
+            datapackSaveSelection: targetSnapshot.DatapackSaveSelection);
         return new CommunityProjectInstallBuildResult(
             buildResult.Plans,
             skipped.Concat(buildResult.Skipped).ToArray());
@@ -693,20 +774,24 @@ internal sealed partial class FrontendShellViewModel
             plan.SourceUrl,
             plan.TargetPath,
             ResolveDownloadRequestTimeout(),
-            onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {plan.InstanceName}", AvaloniaHintTheme.Info),
+            onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {plan.TargetName}", AvaloniaHintTheme.Info),
             onCompleted: downloadedPath =>
             {
-                var installedPath = FinalizeCommunityProjectInstalledArtifact(plan.Route, downloadedPath);
+                var installedPath = FinalizeCommunityProjectInstalledArtifact(plan.Route, downloadedPath, plan.ReplacedPath);
                 Dispatcher.UIThread.Post(() =>
                 {
                     CleanupReplacedDownloadFavoriteResource(plan.ReplacedPath);
                     if (plan.IsCurrentInstanceTarget)
                     {
                         ReloadInstanceComposition(reloadDependentCompositions: false, initializeAllSurfaces: false);
+                        if (plan.Route == LauncherFrontendSubpageKey.DownloadDataPack)
+                        {
+                            ReloadVersionSavesComposition();
+                        }
                     }
 
                     AddActivity(activityTitle, $"{plan.Title} -> {installedPath}");
-                    AvaloniaHintBus.Show($"{plan.Title} 已安装到 {plan.InstanceName}", AvaloniaHintTheme.Success);
+                    AvaloniaHintBus.Show($"{plan.Title} 已安装到 {plan.TargetName}", AvaloniaHintTheme.Success);
                 });
             },
             onFailed: message =>
@@ -719,7 +804,8 @@ internal sealed partial class FrontendShellViewModel
         IReadOnlyList<CommunityProjectInstallRootRequest> roots,
         FrontendInstanceComposition targetComposition,
         string? preferredLoader,
-        bool includeDependencies)
+        bool includeDependencies,
+        FrontendVersionSaveSelectionState? datapackSaveSelection = null)
     {
         if (!targetComposition.Selection.HasSelection)
         {
@@ -782,9 +868,13 @@ internal sealed partial class FrontendShellViewModel
                     preferredVersion,
                     preferredLoader,
                     request.Route);
+                var installTargetName = ResolveCommunityProjectInstallTargetName(
+                    targetComposition.Selection.InstanceName,
+                    request.Route,
+                    datapackSaveSelection);
                 if (release is null || string.IsNullOrWhiteSpace(release.Target))
                 {
-                    skipped.Add($"已跳过 {projectTitle}：没有找到适合 {targetComposition.Selection.InstanceName} 的可安装版本。");
+                    skipped.Add($"已跳过 {projectTitle}：没有找到适合 {installTargetName} 的可安装版本。");
                     resolvedResults[requestKey] = false;
                     return false;
                 }
@@ -808,10 +898,10 @@ internal sealed partial class FrontendShellViewModel
                     }
                 }
 
-                var targetDirectory = ResolveCommunityProjectInstallDirectory(targetComposition.Selection, request.Route);
+                var targetDirectory = ResolveCommunityProjectInstallDirectory(targetComposition.Selection, request.Route, datapackSaveSelection);
                 if (string.IsNullOrWhiteSpace(targetDirectory))
                 {
-                    skipped.Add($"已跳过 {projectTitle}：{targetComposition.Selection.InstanceName} 没有可用的安装目录。");
+                    skipped.Add($"已跳过 {projectTitle}：{installTargetName} 没有可用的安装目录。");
                     resolvedResults[requestKey] = false;
                     return false;
                 }
@@ -822,12 +912,13 @@ internal sealed partial class FrontendShellViewModel
                     release.SuggestedFileName,
                     release.Title,
                     SelectedFileNameFormatIndex);
-                var installed = FindInstalledCommunityProjectResource(targetComposition, request.Route, projectTitle, projectState);
+                targetFileName = NormalizeCommunityProjectInstallArtifactFileName(request.Route, targetFileName);
+                var installed = FindInstalledCommunityProjectResource(targetComposition, request.Route, projectTitle, projectState, datapackSaveSelection);
                 if (request.Route != LauncherFrontendSubpageKey.DownloadWorld
                     && installed is not null
                     && !ShouldInstallFavoriteResourceUpdate(installed, targetFileName, release))
                 {
-                    skipped.Add($"已跳过 {projectTitle}：{targetComposition.Selection.InstanceName} 中已安装相同或更新的版本。");
+                    skipped.Add($"已跳过 {projectTitle}：{installTargetName} 中已安装相同或更新的版本。");
                     resolvedAliases.UnionWith(projectAliases);
 
                     resolvedResults[requestKey] = true;
@@ -849,6 +940,7 @@ internal sealed partial class FrontendShellViewModel
                     release.Target!,
                     targetPath,
                     targetComposition.Selection.InstanceName,
+                    installTargetName,
                     request.Route,
                     installed is not null && !string.Equals(installed.Path, targetPath, StringComparison.OrdinalIgnoreCase)
                         ? installed.Path
@@ -917,7 +1009,8 @@ internal sealed partial class FrontendShellViewModel
 
     private static string? ResolveCommunityProjectInstallDirectory(
         FrontendInstanceSelectionState selection,
-        LauncherFrontendSubpageKey route)
+        LauncherFrontendSubpageKey route,
+        FrontendVersionSaveSelectionState? datapackSaveSelection = null)
     {
         if (!selection.HasSelection)
         {
@@ -929,7 +1022,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.DownloadResourcePack => Path.Combine(selection.IndieDirectory, "resourcepacks"),
             LauncherFrontendSubpageKey.DownloadShader => Path.Combine(selection.IndieDirectory, "shaderpacks"),
             LauncherFrontendSubpageKey.DownloadWorld => Path.Combine(selection.IndieDirectory, "saves"),
-            LauncherFrontendSubpageKey.DownloadDataPack => selection.IndieDirectory,
+            LauncherFrontendSubpageKey.DownloadDataPack => datapackSaveSelection?.HasSelection == true ? datapackSaveSelection.DatapackDirectory : null,
             _ => Path.Combine(selection.IndieDirectory, "mods")
         };
     }
@@ -938,23 +1031,25 @@ internal sealed partial class FrontendShellViewModel
         FrontendInstanceComposition composition,
         LauncherFrontendSubpageKey route,
         FrontendDownloadCatalogEntry favorite,
-        FrontendCommunityProjectState projectState)
+        FrontendCommunityProjectState projectState,
+        FrontendVersionSaveSelectionState? datapackSaveSelection = null)
     {
-        return FindInstalledCommunityProjectResource(composition, route, favorite.Title, projectState);
+        return FindInstalledCommunityProjectResource(composition, route, favorite.Title, projectState, datapackSaveSelection);
     }
 
     private static InstalledFavoriteResource? FindInstalledCommunityProjectResource(
         FrontendInstanceComposition composition,
         LauncherFrontendSubpageKey route,
         string title,
-        FrontendCommunityProjectState projectState)
+        FrontendCommunityProjectState projectState,
+        FrontendVersionSaveSelectionState? datapackSaveSelection = null)
     {
         if (route == LauncherFrontendSubpageKey.DownloadWorld)
         {
             return null;
         }
 
-        var installedResources = GetInstalledFavoriteResources(composition, route);
+        var installedResources = GetInstalledFavoriteResources(composition, route, datapackSaveSelection);
         var projectAliases = BuildCommunityProjectInstallAliases(route, title, projectState.Website);
         if (!string.IsNullOrWhiteSpace(projectState.Website))
         {
@@ -973,7 +1068,8 @@ internal sealed partial class FrontendShellViewModel
 
     private static IReadOnlyList<InstalledFavoriteResource> GetInstalledFavoriteResources(
         FrontendInstanceComposition composition,
-        LauncherFrontendSubpageKey route)
+        LauncherFrontendSubpageKey route,
+        FrontendVersionSaveSelectionState? datapackSaveSelection = null)
     {
         return route switch
         {
@@ -1002,9 +1098,24 @@ internal sealed partial class FrontendShellViewModel
                     entry.Website,
                     BuildCommunityProjectInstallAliases(route, entry.Title, entry.Website, entry.Identity, entry.Path)))
                 .ToArray(),
-            LauncherFrontendSubpageKey.DownloadDataPack => EnumerateDirectoryInstallArtifacts(composition.Selection.IndieDirectory),
+            LauncherFrontendSubpageKey.DownloadDataPack => datapackSaveSelection?.HasSelection == true
+                ? EnumerateDirectoryInstallArtifacts(datapackSaveSelection.DatapackDirectory)
+                : [],
             _ => []
         };
+    }
+
+    private static string ResolveCommunityProjectInstallTargetName(
+        string instanceName,
+        LauncherFrontendSubpageKey route,
+        FrontendVersionSaveSelectionState? datapackSaveSelection)
+    {
+        if (route == LauncherFrontendSubpageKey.DownloadDataPack && datapackSaveSelection?.HasSelection == true)
+        {
+            return $"{instanceName} • {datapackSaveSelection.SaveName}";
+        }
+
+        return instanceName;
     }
 
     private static InstalledFavoriteResource[] EnumerateDirectoryInstallArtifacts(string directory)
@@ -1076,19 +1187,19 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private static string BuildDownloadFavoriteBatchInstallConfirmationMessage(
-        InstanceSelectionSnapshot targetSnapshot,
+        DownloadFavoriteInstallTargetSnapshot targetSnapshot,
         CommunityProjectInstallBuildResult result)
     {
-        return BuildCommunityProjectInstallConfirmationMessage(targetSnapshot.Name, result);
+        return BuildCommunityProjectInstallConfirmationMessage(targetSnapshot.DisplayName, result);
     }
 
     private static string BuildCommunityProjectInstallConfirmationMessage(
-        string instanceName,
+        string targetName,
         CommunityProjectInstallBuildResult result)
     {
         var lines = new List<string>
         {
-            $"目标实例：{instanceName}",
+            $"安装目标：{targetName}",
             $"准备安装：{result.Plans.Count} 项"
         };
 
@@ -1311,6 +1422,7 @@ internal sealed partial class FrontendShellViewModel
         string SourceUrl,
         string TargetPath,
         string InstanceName,
+        string TargetName,
         LauncherFrontendSubpageKey Route,
         string? ReplacedPath,
         bool IsCurrentInstanceTarget,
@@ -1326,6 +1438,15 @@ internal sealed partial class FrontendShellViewModel
         LauncherFrontendSubpageKey Route,
         FrontendCommunityProjectState? ProjectState = null,
         FrontendCommunityProjectReleaseEntry? Release = null);
+
+    private sealed record DownloadFavoriteInstallTargetSnapshot(
+        InstanceSelectionSnapshot Instance,
+        FrontendVersionSaveSelectionState? DatapackSaveSelection)
+    {
+        public string DisplayName => DatapackSaveSelection?.HasSelection == true
+            ? $"{Instance.Name} • {DatapackSaveSelection.SaveName}"
+            : Instance.Name;
+    }
 
     private sealed record InstalledFavoriteResource(
         string Title,

@@ -96,6 +96,8 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshVersionSaveSurfaces();
+        RaiseDownloadResourceFilterState();
+        RaiseCommunityProjectProperties();
     }
 
     private void RefreshVersionSaveSurfaces()
@@ -269,7 +271,7 @@ internal sealed partial class FrontendShellViewModel
         string? sourcePath;
         try
         {
-            sourcePath = await _shellActionService.PickOpenFileAsync("选择数据包文件", "压缩包或数据包文件", "*.zip");
+            sourcePath = await _shellActionService.PickOpenFileAsync("选择数据包文件", "压缩包或数据包文件", "*.zip", "*.jar");
         }
         catch (Exception ex)
         {
@@ -284,10 +286,14 @@ internal sealed partial class FrontendShellViewModel
         }
 
         Directory.CreateDirectory(_versionSavesComposition.Selection.DatapackDirectory);
-        var targetPath = Path.Combine(_versionSavesComposition.Selection.DatapackDirectory, Path.GetFileName(sourcePath));
+        var targetFileName = NormalizeCommunityProjectInstallArtifactFileName(
+            LauncherFrontendSubpageKey.DownloadDataPack,
+            Path.GetFileName(sourcePath));
+        var targetPath = Path.Combine(_versionSavesComposition.Selection.DatapackDirectory, targetFileName);
         File.Copy(sourcePath, targetPath, true);
+        var installedPath = FrontendDatapackArchiveInstallService.ExtractInstalledDatapackArchive(targetPath);
         ReloadVersionSavesComposition();
-        AddActivity("安装数据包", $"{sourcePath} -> {targetPath}");
+        AddActivity("安装数据包", $"{sourcePath} -> {installedPath}");
     }
 
     private void ExportVersionSaveDatapackInfo()
