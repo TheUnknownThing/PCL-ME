@@ -7,9 +7,21 @@
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.ShellViews.Right.Sections"
     DataContext="{Binding Shell}">
   <UserControl.Resources>
-    <DataTemplate x:Key="CommunityProjectInstallModeOptionTemplate">
-      <TextBlock Text="{Binding Label}" />
-    </DataTemplate>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+          <StaticResource x:Key="LiveLogConsoleBackgroundBrush" ResourceKey="ColorBrushWhite" />
+          <StaticResource x:Key="LiveLogConsoleForegroundBrush" ResourceKey="ColorBrush1" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="LiveLogConsoleBackgroundBrush" Color="{DynamicResource BaseColor_Neutral910}" />
+          <SolidColorBrush x:Key="LiveLogConsoleForegroundBrush" Color="{DynamicResource BaseColor_Neutral570}" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+      <DataTemplate x:Key="CommunityProjectInstallModeOptionTemplate">
+        <TextBlock Text="{Binding Label}" />
+      </DataTemplate>
+    </ResourceDictionary>
   </UserControl.Resources>
   <UserControl.Styles>
     <Style Selector="Button.install-suggestion-button">
@@ -36,7 +48,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
     </Style>
     <Style Selector="Border.live-log-surface">
-      <Setter Property="Background" Value="{DynamicResource ColorBrushWhite}" />
+      <Setter Property="Background" Value="{DynamicResource LiveLogConsoleBackgroundBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush6}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="4" />
@@ -57,33 +69,33 @@
       <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush5}" />
     </Style>
     <Style Selector="TextBox.live-log-console">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
-      <Setter Property="Background" Value="{DynamicResource ColorBrushWhite}" />
+      <Setter Property="Foreground" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
+      <Setter Property="Background" Value="{DynamicResource LiveLogConsoleBackgroundBrush}" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="Padding" Value="10,8" />
       <Setter Property="FocusAdorner" Value="{x:Null}" />
       <Setter Property="SelectionBrush" Value="{DynamicResource ColorBrush8}" />
-      <Setter Property="CaretBrush" Value="{DynamicResource ColorBrush1}" />
+      <Setter Property="CaretBrush" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
     </Style>
     <Style Selector="TextBox.live-log-console:pointerover">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
-      <Setter Property="Background" Value="{DynamicResource ColorBrushWhite}" />
+      <Setter Property="Foreground" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
+      <Setter Property="Background" Value="{DynamicResource LiveLogConsoleBackgroundBrush}" />
       <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="CaretBrush" Value="{DynamicResource ColorBrush1}" />
+      <Setter Property="CaretBrush" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
     </Style>
     <Style Selector="TextBox.live-log-console:focus">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
-      <Setter Property="Background" Value="{DynamicResource ColorBrushWhite}" />
+      <Setter Property="Foreground" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
+      <Setter Property="Background" Value="{DynamicResource LiveLogConsoleBackgroundBrush}" />
       <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="CaretBrush" Value="{DynamicResource ColorBrush1}" />
+      <Setter Property="CaretBrush" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
     </Style>
     <Style Selector="TextBox.live-log-console:focus:pointerover">
-      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
-      <Setter Property="Background" Value="{DynamicResource ColorBrushWhite}" />
+      <Setter Property="Foreground" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
+      <Setter Property="Background" Value="{DynamicResource LiveLogConsoleBackgroundBrush}" />
       <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="CaretBrush" Value="{DynamicResource ColorBrush1}" />
+      <Setter Property="CaretBrush" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
     </Style>
     <Style Selector="TextBox.live-log-console /template/ Border">
       <Setter Property="Background" Value="Transparent" />
@@ -95,7 +107,7 @@
       <Setter Property="Background" Value="Transparent" />
     </Style>
     <Style Selector="TextBox.live-log-console /template/ TextPresenter">
-      <Setter Property="TextElement.Foreground" Value="{DynamicResource ColorBrush1}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource LiveLogConsoleForegroundBrush}" />
     </Style>
   </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
