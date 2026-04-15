@@ -19,11 +19,11 @@ internal static class FrontendCommunityResourceCatalogService
     private static readonly IReadOnlyList<RouteConfig> RouteConfigs =
     [
         new RouteConfig(LauncherFrontendSubpageKey.DownloadMod, "Mod", "CommandBlock.png", false, "mod", null, 6, "mc-mods"),
-        new RouteConfig(LauncherFrontendSubpageKey.DownloadPack, "整合包", "CommandBlock.png", false, "modpack", null, 4471, "modpacks"),
-        new RouteConfig(LauncherFrontendSubpageKey.DownloadDataPack, "数据包", "RedstoneLampOn.png", false, "mod", "datapack", 6945, "data-packs"),
-        new RouteConfig(LauncherFrontendSubpageKey.DownloadResourcePack, "资源包", "Grass.png", false, "resourcepack", null, 12, "texture-packs"),
-        new RouteConfig(LauncherFrontendSubpageKey.DownloadShader, "光影包", "GoldBlock.png", true, "shader", null, 6552, "shaders"),
-        new RouteConfig(LauncherFrontendSubpageKey.DownloadWorld, "世界", "GrassPath.png", false, null, null, 17, "worlds")
+        new RouteConfig(LauncherFrontendSubpageKey.DownloadPack, "pack", "CommandBlock.png", false, "modpack", null, 4471, "modpacks"),
+        new RouteConfig(LauncherFrontendSubpageKey.DownloadDataPack, "data_pack", "RedstoneLampOn.png", false, "mod", "datapack", 6945, "data-packs"),
+        new RouteConfig(LauncherFrontendSubpageKey.DownloadResourcePack, "resource_pack", "Grass.png", false, "resourcepack", null, 12, "texture-packs"),
+        new RouteConfig(LauncherFrontendSubpageKey.DownloadShader, "shader", "GoldBlock.png", true, "shader", null, 6552, "shaders"),
+        new RouteConfig(LauncherFrontendSubpageKey.DownloadWorld, "world", "GrassPath.png", false, null, null, 17, "worlds")
     ];
 
     public static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> BuildResourceStates(
@@ -116,7 +116,7 @@ internal static class FrontendCommunityResourceCatalogService
             .ToArray();
 
         return new FrontendDownloadResourceState(
-            $"{config.Title} 列表",
+            config.Title,
             config.ModrinthProjectType is not null && config.CurseForgeClassId is not null,
             false,
             config.UseShaderLoaderOptions,
@@ -168,7 +168,7 @@ internal static class FrontendCommunityResourceCatalogService
                 {
                     "Modrinth" => FetchModrinthEntries(config, preferredVersion, communitySourcePreference, query, state.Offset),
                     "CurseForge" => FetchCurseForgeEntries(config, preferredVersion, communitySourcePreference, query, state.Offset),
-                    _ => new SourceFetchResult([], "未知社区来源。", 0, null, false)
+                    _ => new SourceFetchResult([], "Unknown community source.", 0, null, false)
                 }))
                 .ToArray();
 
@@ -251,7 +251,7 @@ internal static class FrontendCommunityResourceCatalogService
         }
         catch (Exception ex)
         {
-            return new SourceFetchResult([], $"Modrinth 暂时不可用：{ex.Message}", 0, null, false);
+            return new SourceFetchResult([], $"Modrinth is temporarily unavailable: {ex.Message}", 0, null, false);
         }
     }
 
@@ -288,7 +288,7 @@ internal static class FrontendCommunityResourceCatalogService
         }
         catch (Exception ex)
         {
-            return new SourceFetchResult([], $"CurseForge 暂时不可用：{ex.Message}", 0, null, false);
+            return new SourceFetchResult([], $"CurseForge is temporarily unavailable: {ex.Message}", 0, null, false);
         }
     }
 
@@ -349,7 +349,7 @@ internal static class FrontendCommunityResourceCatalogService
             translatedTags.Length == 0 ? [config.Title] : translatedTags,
             normalizedVersions,
             loaders,
-            "查看详情",
+            "view_details",
             iconUrl,
             iconPath,
             config.IconName,
@@ -432,7 +432,7 @@ internal static class FrontendCommunityResourceCatalogService
             translatedTags.Length == 0 ? [config.Title] : translatedTags,
             normalizedVersions,
             loaders,
-            "查看详情",
+            "view_details",
             iconUrl,
             iconPath,
             config.IconName,
@@ -468,7 +468,7 @@ internal static class FrontendCommunityResourceCatalogService
                 response.EnsureSuccessStatusCode();
                 var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 return JsonNode.Parse(content)?.AsObject()
-                       ?? throw new InvalidOperationException($"{sourceName} 返回了无效的 JSON 对象。");
+                       ?? throw new InvalidOperationException($"{sourceName} returned an invalid JSON object.");
             }
             catch (Exception ex)
             {
@@ -669,17 +669,17 @@ internal static class FrontendCommunityResourceCatalogService
         var parts = new List<string>();
         if (usedVersionFallback && !string.IsNullOrWhiteSpace(preferredVersion))
         {
-            parts.Add($"没有找到适配 Minecraft {preferredVersion} 的 {config.Title} 热门结果，已回退到社区通用榜单。");
+            parts.Add($"version_fallback|{preferredVersion}|{config.Title}");
         }
 
         if (sourceErrors.Count > 0)
         {
             parts.Add(hasEntries
-                ? $"已显示可访问来源的实时结果，另有部分来源失败：{string.Join("；", sourceErrors)}"
-                : $"当前无法获取实时社区结果：{string.Join("；", sourceErrors)}");
+                ? $"partial_results|{string.Join(" ; ", sourceErrors)}"
+                : $"unavailable|{string.Join(" ; ", sourceErrors)}");
         }
 
-        return string.Join(" ", parts);
+        return string.Join(Environment.NewLine, parts);
     }
 
     private static IReadOnlyList<FrontendDownloadResourceFilterOption> BuildTagOptions(
@@ -687,7 +687,7 @@ internal static class FrontendCommunityResourceCatalogService
     {
         return
         [
-            new FrontendDownloadResourceFilterOption("全部", string.Empty),
+            new FrontendDownloadResourceFilterOption("all", string.Empty),
             .. entries
                 .SelectMany(entry => entry.Tags)
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -835,7 +835,7 @@ internal static class FrontendCommunityResourceCatalogService
 
             if (categorySet.Contains("vanilla"))
             {
-                return "原版可用";
+                return "vanilla_compatible";
             }
 
             return string.Empty;
@@ -878,9 +878,9 @@ internal static class FrontendCommunityResourceCatalogService
             return "OptiFine";
         }
 
-        if (tagSet.Contains("原版可用"))
+        if (tagSet.Contains("vanilla_compatible"))
         {
-            return "原版可用";
+            return "vanilla_compatible";
         }
 
         return string.Empty;
@@ -893,9 +893,9 @@ internal static class FrontendCommunityResourceCatalogService
 
         if (useShaderLoaderOptions)
         {
-            if (values.Contains("vanilla") || values.Contains("原版可用"))
+            if (values.Contains("vanilla") || values.Contains("vanilla_compatible"))
             {
-                loaders.Add("原版可用");
+                loaders.Add("vanilla_compatible");
             }
 
             if (values.Contains("optifine") || values.Contains("OptiFine"))
@@ -939,57 +939,57 @@ internal static class FrontendCommunityResourceCatalogService
         return categories
             .Select(category => category switch
             {
-                "technology" => "科技",
-                "magic" => "魔法",
-                "adventure" => "冒险",
-                "utility" => "实用",
-                "optimization" => "性能优化",
-                "vanilla-like" => "原版风",
-                "realistic" => "写实风",
-                "worldgen" => "世界元素",
-                "food" => "食物/烹饪",
-                "game-mechanics" => "游戏机制",
-                "transportation" => "运输",
-                "storage" => "仓储",
-                "decoration" => "装饰",
-                "mobs" => "生物",
-                "equipment" => "装备",
-                "social" => "服务器",
-                "library" => "支持库",
-                "multiplayer" => "多人",
-                "challenging" => "硬核",
-                "combat" => "战斗",
-                "quests" => "任务",
-                "kitchen-sink" => "水槽包",
-                "lightweight" => "轻量",
-                "simplistic" => "简洁",
-                "tweaks" => "改良",
-                "8x-" => "极简",
+                "technology" => "technology",
+                "magic" => "magic",
+                "adventure" => "adventure",
+                "utility" => "utility",
+                "optimization" => "performance",
+                "vanilla-like" => "vanilla_style",
+                "realistic" => "realistic",
+                "worldgen" => "worldgen",
+                "food" => "food_cooking",
+                "game-mechanics" => "game_mechanics",
+                "transportation" => "transportation",
+                "storage" => "storage",
+                "decoration" => "decoration",
+                "mobs" => "mobs",
+                "equipment" => "equipment_tools",
+                "social" => "multiplayer",
+                "library" => "library",
+                "multiplayer" => "multiplayer",
+                "challenging" => "hardcore",
+                "combat" => "combat",
+                "quests" => "quests",
+                "kitchen-sink" => "kitchen_sink",
+                "lightweight" => "lightweight",
+                "simplistic" => "simple",
+                "tweaks" => "tweaks",
+                "8x-" => "resolution_8x",
                 "16x" => "16x",
                 "32x" => "32x",
                 "48x" => "48x",
                 "64x" => "64x",
                 "128x" => "128x",
                 "256x" => "256x",
-                "512x+" => "超高清",
-                "audio" => "含声音",
-                "fonts" => "含字体",
-                "models" => "含模型",
-                "gui" => "含 UI",
-                "locale" => "含语言",
-                "core-shaders" => "核心着色器",
-                "modded" => "兼容 Mod",
-                "fantasy" => "幻想风",
-                "semi-realistic" => "半写实风",
-                "cartoon" => "卡通风",
-                "colored-lighting" => "彩色光照",
-                "path-tracing" => "路径追踪",
+                "512x+" => "resolution_512x",
+                "audio" => "audio",
+                "fonts" => "fonts",
+                "models" => "models",
+                "gui" => "gui",
+                "locale" => "locale",
+                "core-shaders" => "core_shaders",
+                "modded" => "mod_compatible",
+                "fantasy" => "fantasy_style",
+                "semi-realistic" => "semi_realistic",
+                "cartoon" => "cartoon",
+                "colored-lighting" => "colored_lighting",
+                "path-tracing" => "path_tracing",
                 "pbr" => "PBR",
-                "reflections" => "反射",
+                "reflections" => "reflections",
                 "iris" => "Iris",
                 "optifine" => "OptiFine",
-                "vanilla" => "原版可用",
-                "datapack" => "数据包",
+                "vanilla" => "vanilla_compatible",
+                "datapack" => "data_pack",
                 _ => string.Empty
             })
             .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -1000,79 +1000,79 @@ internal static class FrontendCommunityResourceCatalogService
     {
         return categoryId switch
         {
-            406 => "世界元素",
-            407 => "生物群系",
-            410 => "维度",
-            408 => "矿物/资源",
-            409 => "天然结构",
-            412 => "科技",
-            415 => "管道/物流",
-            4843 => "自动化",
-            417 => "能源",
-            4558 => "红石",
-            436 => "食物/烹饪",
-            416 => "农业",
-            414 => "运输",
-            420 => "仓储",
-            419 => "魔法",
-            422 => "冒险",
-            424 => "装饰",
-            411 => "生物",
-            434 => "装备",
-            6814 => "性能优化",
-            9026 => "创造模式",
-            423 => "信息显示",
-            435 => "服务器",
-            5191 => "改良",
-            421 => "支持库",
-            4484 => "多人",
-            4479 => "硬核",
-            4483 => "战斗",
-            4478 => "任务",
-            4472 => "科技",
-            4473 => "魔法",
-            4475 => "冒险",
-            4476 => "探索",
-            4477 => "小游戏",
-            4471 => "科幻",
-            4736 => "空岛",
-            5128 => "原版改良",
+            406 => "worldgen",
+            407 => "biomes",
+            410 => "dimensions",
+            408 => "ores_resources",
+            409 => "structures",
+            412 => "technology",
+            415 => "logistics",
+            4843 => "automation",
+            417 => "energy",
+            4558 => "redstone",
+            436 => "food_cooking",
+            416 => "farming",
+            414 => "transportation",
+            420 => "storage",
+            419 => "magic",
+            422 => "adventure",
+            424 => "decoration",
+            411 => "mobs",
+            434 => "equipment_tools",
+            6814 => "performance",
+            9026 => "creative_mode",
+            423 => "information",
+            435 => "multiplayer",
+            5191 => "tweaks",
+            421 => "library",
+            4484 => "multiplayer",
+            4479 => "hardcore",
+            4483 => "combat",
+            4478 => "quests",
+            4472 => "technology",
+            4473 => "magic",
+            4475 => "adventure",
+            4476 => "exploration",
+            4477 => "minigames",
+            4471 => "scifi",
+            4736 => "skyblock",
+            5128 => "vanilla_plus",
             4487 => "FTB",
-            4480 => "基于地图",
-            4481 => "轻量",
-            4482 => "大型",
-            403 => "原版风",
-            400 => "写实风",
-            401 => "现代风",
-            402 => "中世纪",
-            399 => "蒸汽朋克",
-            5244 => "含字体",
-            404 => "动态效果",
-            4465 => "兼容 Mod",
+            4480 => "map_based",
+            4481 => "lightweight",
+            4482 => "large",
+            403 => "vanilla_style",
+            400 => "realistic",
+            401 => "modern",
+            402 => "medieval",
+            399 => "steampunk",
+            5244 => "fonts",
+            404 => "dynamic_effects",
+            4465 => "mod_compatible",
             393 => "16x",
             394 => "32x",
             395 => "64x",
             396 => "128x",
             397 => "256x",
-            398 => "超高清",
-            5193 => "数据包",
-            6553 => "写实风",
-            6554 => "幻想风",
-            6555 => "原版风",
-            6948 => "冒险",
-            6949 => "幻想",
-            6950 => "支持库",
-            6952 => "魔法",
-            6946 => "Mod 相关",
-            6951 => "科技",
-            6953 => "实用",
-            248 => "冒险",
-            249 => "创造",
-            250 => "小游戏",
-            251 => "跑酷",
-            252 => "解谜",
-            253 => "生存",
-            4464 => "Mod 世界",
+            398 => "resolution_512x",
+            5193 => "data_pack",
+            6553 => "realistic",
+            6554 => "fantasy_style",
+            6555 => "vanilla_style",
+            6948 => "adventure",
+            6949 => "fantasy",
+            6950 => "library",
+            6952 => "magic",
+            6946 => "modded",
+            6951 => "technology",
+            6953 => "utility",
+            248 => "adventure",
+            249 => "creative",
+            250 => "minigames",
+            251 => "parkour",
+            252 => "puzzle",
+            253 => "survival",
+            4464 => "mod_world",
             _ => string.Empty
         };
     }
@@ -1253,68 +1253,68 @@ internal static class FrontendCommunityResourceCatalogService
         {
             LauncherFrontendSubpageKey.DownloadMod => tag switch
             {
-                "世界元素" => "worldgen",
-                "科技" => "technology",
-                "游戏机制" => "game-mechanics",
-                "运输" => "transportation",
-                "仓储" => "storage",
-                "魔法" => "magic",
-                "冒险" => "adventure",
-                "装饰" => "decoration",
-                "生物" => "mobs",
-                "实用" => "utility",
-                "装备与工具" => "equipment",
-                "性能优化" => "optimization",
-                "服务器" => "social",
-                "支持库" => "library",
+                "worldgen" => "worldgen",
+                "technology" => "technology",
+                "game_mechanics" => "game-mechanics",
+                "transportation" => "transportation",
+                "storage" => "storage",
+                "magic" => "magic",
+                "adventure" => "adventure",
+                "decoration" => "decoration",
+                "mobs" => "mobs",
+                "utility" => "utility",
+                "equipment_tools" => "equipment",
+                "performance" => "optimization",
+                "multiplayer" => "social",
+                "library" => "library",
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadPack => tag switch
             {
-                "多人" => "multiplayer",
-                "性能优化" => "optimization",
-                "硬核" => "challenging",
-                "战斗" => "combat",
-                "任务" => "quests",
-                "科技" => "technology",
-                "魔法" => "magic",
-                "冒险" => "adventure",
-                "水槽包" => "kitchen-sink",
-                "轻量整合" => "lightweight",
+                "multiplayer" => "multiplayer",
+                "performance" => "optimization",
+                "hardcore" => "challenging",
+                "combat" => "combat",
+                "quests" => "quests",
+                "technology" => "technology",
+                "magic" => "magic",
+                "adventure" => "adventure",
+                "kitchen_sink" => "kitchen-sink",
+                "lightweight" => "lightweight",
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadDataPack => tag switch
             {
-                "世界元素" => "worldgen",
-                "科技" => "technology",
-                "游戏机制" => "game-mechanics",
-                "运输" => "transportation",
-                "仓储" => "storage",
-                "魔法" => "magic",
-                "冒险" => "adventure",
-                "装饰" => "decoration",
-                "生物" => "mobs",
-                "实用" => "utility",
-                "性能优化" => "optimization",
-                "服务器" => "social",
-                "支持库" => "library",
-                "Mod 相关" => "modded",
+                "worldgen" => "worldgen",
+                "technology" => "technology",
+                "game_mechanics" => "game-mechanics",
+                "transportation" => "transportation",
+                "storage" => "storage",
+                "magic" => "magic",
+                "adventure" => "adventure",
+                "decoration" => "decoration",
+                "mobs" => "mobs",
+                "utility" => "utility",
+                "performance" => "optimization",
+                "multiplayer" => "social",
+                "library" => "library",
+                "modded" => "modded",
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadResourcePack => tag switch
             {
-                "原版风" => "vanilla-like",
-                "写实风" => "realistic",
-                "简洁" => "simplistic",
-                "战斗" => "combat",
-                "改良" => "tweaks",
-                "含声音" => "audio",
-                "含字体" => "fonts",
-                "含模型" => "models",
-                "含语言" => "locale",
-                "含 UI" => "gui",
-                "核心着色器" => "core-shaders",
-                "兼容 Mod" => "modded",
+                "vanilla_style" => "vanilla-like",
+                "realistic" => "realistic",
+                "simple" => "simplistic",
+                "combat" => "combat",
+                "tweaks" => "tweaks",
+                "audio" => "audio",
+                "fonts" => "fonts",
+                "models" => "models",
+                "locale" => "locale",
+                "gui" => "gui",
+                "core_shaders" => "core-shaders",
+                "mod_compatible" => "modded",
                 "16x" => "16x",
                 "32x" => "32x",
                 "48x" => "48x",
@@ -1325,15 +1325,15 @@ internal static class FrontendCommunityResourceCatalogService
             },
             LauncherFrontendSubpageKey.DownloadShader => tag switch
             {
-                "原版风" => "vanilla-like",
-                "幻想风" => "fantasy",
-                "写实风" => "realistic",
-                "半写实风" => "semi-realistic",
-                "卡通风" => "cartoon",
-                "彩色光照" => "colored-lighting",
-                "路径追踪" => "path-tracing",
+                "vanilla_style" => "vanilla-like",
+                "fantasy_style" => "fantasy",
+                "realistic" => "realistic",
+                "semi_realistic" => "semi-realistic",
+                "cartoon" => "cartoon",
+                "colored_lighting" => "colored-lighting",
+                "path_tracing" => "path-tracing",
                 "PBR" => "pbr",
-                "反射" => "reflections",
+                "reflections" => "reflections",
                 _ => null
             },
             _ => null
@@ -1346,84 +1346,84 @@ internal static class FrontendCommunityResourceCatalogService
         {
             LauncherFrontendSubpageKey.DownloadMod => tag switch
             {
-                "世界元素" => 406,
-                "科技" => 412,
-                "游戏机制" => 423,
-                "运输" => 414,
-                "仓储" => 420,
-                "魔法" => 419,
-                "冒险" => 422,
-                "装饰" => 424,
-                "生物" => 411,
-                "性能优化" => 6814,
-                "服务器" => 435,
-                "支持库" => 421,
+                "worldgen" => 406,
+                "technology" => 412,
+                "game_mechanics" => 423,
+                "transportation" => 414,
+                "storage" => 420,
+                "magic" => 419,
+                "adventure" => 422,
+                "decoration" => 424,
+                "mobs" => 411,
+                "performance" => 6814,
+                "multiplayer" => 435,
+                "library" => 421,
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadPack => tag switch
             {
-                "多人" => 4484,
-                "硬核" => 4479,
-                "战斗" => 4483,
-                "任务" => 4478,
-                "科技" => 4472,
-                "魔法" => 4473,
-                "冒险" => 4475,
-                "探索" => 4476,
-                "小游戏" => 4477,
-                "空岛" => 4736,
-                "原版改良" => 5128,
+                "multiplayer" => 4484,
+                "hardcore" => 4479,
+                "combat" => 4483,
+                "quests" => 4478,
+                "technology" => 4472,
+                "magic" => 4473,
+                "adventure" => 4475,
+                "exploration" => 4476,
+                "minigames" => 4477,
+                "skyblock" => 4736,
+                "vanilla_plus" => 5128,
                 "FTB" => 4487,
-                "基于地图" => 4480,
-                "轻量整合" => 4481,
-                "大型整合" => 4482,
+                "map_based" => 4480,
+                "lightweight" => 4481,
+                "large" => 4482,
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadDataPack => tag switch
             {
-                "冒险" => 6948,
-                "幻想" => 6949,
-                "支持库" => 6950,
-                "魔法" => 6952,
-                "Mod 相关" => 6946,
-                "科技" => 6951,
-                "实用" => 6953,
+                "adventure" => 6948,
+                "fantasy" => 6949,
+                "library" => 6950,
+                "magic" => 6952,
+                "modded" => 6946,
+                "technology" => 6951,
+                "utility" => 6953,
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadResourcePack => tag switch
             {
-                "原版风" => 403,
-                "写实风" => 400,
-                "现代风" => 401,
-                "中世纪" => 402,
-                "蒸汽朋克" => 399,
-                "含字体" => 5244,
-                "动态效果" => 404,
-                "兼容 Mod" => 4465,
+                "vanilla_style" => 403,
+                "realistic" => 400,
+                "modern" => 401,
+                "medieval" => 402,
+                "steampunk" => 399,
+                "fonts" => 5244,
+                "dynamic_effects" => 404,
+                "mod_compatible" => 4465,
                 "16x" => 393,
                 "32x" => 394,
                 "64x" => 395,
                 "128x" => 396,
                 "256x" => 397,
-                "512x 或更高" => 398,
+                "resolution_512x" => 398,
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadShader => tag switch
             {
-                "写实风" => 6553,
-                "幻想风" => 6554,
-                "原版风" => 6555,
+                "realistic" => 6553,
+                "fantasy_style" => 6554,
+                "vanilla_style" => 6555,
                 _ => null
             },
             LauncherFrontendSubpageKey.DownloadWorld => tag switch
             {
-                "冒险" => 248,
-                "创造" => 249,
-                "小游戏" => 250,
-                "跑酷" => 251,
-                "解谜" => 252,
-                "生存" => 253,
-                "Mod 世界" => 4464,
+                "adventure" => 248,
+                "creative" => 249,
+                "minigames" => 250,
+                "parkour" => 251,
+                "puzzle" => 252,
+                "survival" => 253,
+                "mod_world" => 4464,
                 _ => null
             },
             _ => null
@@ -1442,7 +1442,7 @@ internal static class FrontendCommunityResourceCatalogService
             {
                 "Iris" => "iris",
                 "OptiFine" => "optifine",
-                "原版可用" => "vanilla",
+                "vanilla_compatible" => "vanilla",
                 _ => null
             }
             : loader switch

@@ -30,14 +30,14 @@ internal sealed partial class InstanceResourceShellRightPaneView : UserControl
 
     private void ConfigureSelectionActionButtons()
     {
-        var selectAllIcon = FrontendIconCatalog.GetSidebarIcon("游戏管理");
+        var selectAllIcon = FrontendIconCatalog.GetSidebarIcon("game_manage");
         SelectionSelectAllButton.IconData = selectAllIcon.Data;
         SelectionSelectAllButton.IconScale = selectAllIcon.Scale;
         SelectionEnableButton.IconData = FrontendIconCatalog.EnableCircle.Data;
         SelectionEnableButton.IconScale = FrontendIconCatalog.EnableCircle.Scale;
         SelectionDisableButton.IconData = FrontendIconCatalog.DisableCircle.Data;
         SelectionDisableButton.IconScale = FrontendIconCatalog.DisableCircle.Scale;
-        var exportIcon = FrontendIconCatalog.GetSidebarIcon("日志");
+        var exportIcon = FrontendIconCatalog.GetSidebarIcon("log");
         SelectionExportButton.IconData = exportIcon.Data;
         SelectionExportButton.IconScale = exportIcon.Scale;
         SelectionCheckButton.IconData = FrontendIconCatalog.InfoCircle.Data;

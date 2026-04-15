@@ -391,7 +391,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var (_, showInstallModPackAction, useShaderLoaderOptions) = GetDownloadResourceSurfaceDescriptor(_currentRoute.Subpage);
+        var (showInstallModPackAction, useShaderLoaderOptions) = GetDownloadResourceSurfaceDescriptor(_currentRoute.Subpage);
         var surfaceTitle = GetLocalizedDownloadResourceSurfaceName(_currentRoute.Subpage);
         DownloadResourceSurfaceTitle = T("download.resource.surface.title", ("surface_name", surfaceTitle));
         DownloadResourceLoadingText = T("download.resource.surface.loading", ("surface_name", surfaceTitle));
@@ -456,7 +456,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceLoaderOptions = useShaderLoader
             ? [
                 CreateDownloadResourceFilterOption(T("common.filters.any"), string.Empty),
-                CreateDownloadResourceFilterOption("原版可用", "原版可用"),
+                CreateDownloadResourceFilterOption("vanilla_compatible", "vanilla_compatible"),
                 CreateDownloadResourceFilterOption("Iris", "Iris"),
                 CreateDownloadResourceFilterOption("OptiFine", "OptiFine")
             ]
@@ -561,11 +561,11 @@ internal sealed partial class FrontendShellViewModel
                 summaryPath,
                 string.Join(Environment.NewLine,
                 [
-                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                    $"来源整合包: {visibleEntry.Title}",
-                    $"源目录: {sourceEntry.TargetPath}",
-                    $"目标目录: {targetDirectory}",
-                    $"当前下载安装名: {DownloadInstallName}"
+                    $"Time: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                    $"Source modpack: {visibleEntry.Title}",
+                    $"Source directory: {sourceEntry.TargetPath}",
+                    $"Target directory: {targetDirectory}",
+                    $"Current install name: {DownloadInstallName}"
                 ]),
                 new UTF8Encoding(false));
 
@@ -1013,18 +1013,18 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowDownloadResourceContent));
     }
 
-    private static (string SurfaceTitle, bool ShowInstallModPackAction, bool UseShaderLoaderOptions) GetDownloadResourceSurfaceDescriptor(
+    private static (bool ShowInstallModPackAction, bool UseShaderLoaderOptions) GetDownloadResourceSurfaceDescriptor(
         LauncherFrontendSubpageKey route)
     {
         return route switch
         {
-            LauncherFrontendSubpageKey.DownloadMod => ("Mod", false, false),
-            LauncherFrontendSubpageKey.DownloadPack => ("整合包", true, false),
-            LauncherFrontendSubpageKey.DownloadDataPack => ("数据包", false, false),
-            LauncherFrontendSubpageKey.DownloadResourcePack => ("资源包", false, false),
-            LauncherFrontendSubpageKey.DownloadShader => ("光影包", false, true),
-            LauncherFrontendSubpageKey.DownloadWorld => ("世界", false, false),
-            _ => ("资源", false, false)
+            LauncherFrontendSubpageKey.DownloadMod => (false, false),
+            LauncherFrontendSubpageKey.DownloadPack => (true, false),
+            LauncherFrontendSubpageKey.DownloadDataPack => (false, false),
+            LauncherFrontendSubpageKey.DownloadResourcePack => (false, false),
+            LauncherFrontendSubpageKey.DownloadShader => (false, true),
+            LauncherFrontendSubpageKey.DownloadWorld => (false, false),
+            _ => (false, false)
         };
     }
 
@@ -1294,10 +1294,15 @@ internal sealed partial class FrontendShellViewModel
                     FormatDownloadResourceUpdatedLabel(entry.UpdateRank, entry.ReleaseRank),
                     LocalizeDownloadResourceActionText(entry.ActionText),
                     string.IsNullOrWhiteSpace(entry.TargetPath)
-                        ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
+                        ? new ActionCommand(() => AddActivity(
+                            T("download.resource.activities.entry_action", ("entry_title", entry.Title)),
+                            BuildActivityDetail(entry.Info, entry.Source)))
                         : FrontendCommunityProjectService.TryParseCompDetailTarget(entry.TargetPath, out var projectId)
                             ? new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title, entry.Version, entry.Loader, _currentRoute.Subpage))
-                            : CreateOpenTargetCommand($"打开资源页面: {entry.Title}", entry.TargetPath, entry.TargetPath),
+                            : CreateOpenTargetCommand(
+                                T("download.resource.activities.open_page", ("entry_title", entry.Title)),
+                                entry.TargetPath,
+                                entry.TargetPath),
                     entry.IconUrl);
             })
             .ToArray();
@@ -1355,7 +1360,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return actionText switch
         {
-            "查看详情" => T("resource_detail.actions.view_details"),
+            "view_details" => T("resource_detail.actions.view_details"),
             _ => actionText
         };
     }
@@ -1367,34 +1372,55 @@ internal sealed partial class FrontendShellViewModel
             return string.Empty;
         }
 
-        var versionFallbackMatch = Regex.Match(
-            hintText,
-            @"^没有找到适配 Minecraft (?<version>.+?) 的 (?<surface>.+?) 热门结果，已回退到社区通用榜单。$");
-        if (versionFallbackMatch.Success)
-        {
-            return T(
-                "download.resource.hints.version_fallback",
-                ("version", versionFallbackMatch.Groups["version"].Value),
-                ("surface_name", versionFallbackMatch.Groups["surface"].Value));
-        }
+        var lines = hintText
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(line =>
+            {
+                if (line.StartsWith("version_fallback|", StringComparison.Ordinal))
+                {
+                    var parts = line.Split('|', 3);
+                    if (parts.Length == 3)
+                    {
+                        return T(
+                            "download.resource.hints.version_fallback",
+                            ("version", parts[1]),
+                            ("surface_name", LocalizeDownloadResourceSurfaceName(parts[2])));
+                    }
+                }
 
-        const string partialResultsPrefix = "已显示可访问来源的实时结果，另有部分来源失败：";
-        if (hintText.StartsWith(partialResultsPrefix, StringComparison.Ordinal))
-        {
-            return T(
-                "download.resource.hints.partial_results",
-                ("message", hintText[partialResultsPrefix.Length..].Trim()));
-        }
+                if (line.StartsWith("partial_results|", StringComparison.Ordinal))
+                {
+                    return T(
+                        "download.resource.hints.partial_results",
+                        ("message", line["partial_results|".Length..].Trim()));
+                }
 
-        const string unavailablePrefix = "当前无法获取实时社区结果：";
-        if (hintText.StartsWith(unavailablePrefix, StringComparison.Ordinal))
-        {
-            return T(
-                "download.resource.hints.unavailable",
-                ("message", hintText[unavailablePrefix.Length..].Trim()));
-        }
+                if (line.StartsWith("unavailable|", StringComparison.Ordinal))
+                {
+                    return T(
+                        "download.resource.hints.unavailable",
+                        ("message", line["unavailable|".Length..].Trim()));
+                }
 
-        return hintText;
+                return line;
+            })
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToArray();
+
+        return string.Join(" ", lines);
+    }
+
+    private string LocalizeDownloadResourceSurfaceName(string surfaceId)
+    {
+        return surfaceId switch
+        {
+            "mod" => T("download.resource.search.mod"),
+            "pack" => T("download.resource.search.pack"),
+            "resource_pack" => T("download.resource.search.resource_pack"),
+            "shader" => T("download.resource.search.shader"),
+            "world" => T("download.resource.search.world"),
+            _ => surfaceId
+        };
     }
 
     private string FormatDownloadResourceVersionLabel(string version)
@@ -1438,12 +1464,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.Equals(T("download.resource.entry.count_style"), "east_asian", StringComparison.OrdinalIgnoreCase))
         {
-            return value switch
-            {
-                >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
-                >= 10_000 => $"{value / 10_000d:0.#}万",
-                _ => value.ToString("N0", CultureInfo.InvariantCulture)
-            };
+        return value switch
+        {
+            >= 100_000_000 => $"{value / 100_000_000d:0.#}\u4EBF",
+            >= 10_000 => $"{value / 10_000d:0.#}\u4E07",
+            _ => value.ToString("N0", CultureInfo.InvariantCulture)
+        };
         }
 
         return value switch
@@ -1459,10 +1485,10 @@ internal sealed partial class FrontendShellViewModel
     {
         return label switch
         {
-            "风格" => T("download.resource.tag_groups.style"),
-            "特性" => T("download.resource.tag_groups.features"),
-            "分辨率" => T("download.resource.tag_groups.resolution"),
-            "性能负荷" => T("download.resource.tag_groups.performance"),
+            "style" => T("download.resource.tag_groups.style"),
+            "features" => T("download.resource.tag_groups.features"),
+            "resolution" => T("download.resource.tag_groups.resolution"),
+            "performance" => T("download.resource.tag_groups.performance"),
             _ => label
         };
     }
@@ -1471,95 +1497,101 @@ internal sealed partial class FrontendShellViewModel
     {
         return tag switch
         {
+            "all" => T("common.filters.all"),
             "CurseForge" => "CurseForge",
             "Modrinth" => "Modrinth",
             "Iris" => "Iris",
             "OptiFine" => "OptiFine",
             "FTB" => "FTB",
             "PBR" => "PBR",
-            "世界元素" => T("download.resource.tags.worldgen"),
-            "生物群系" => T("download.resource.tags.biomes"),
-            "维度" => T("download.resource.tags.dimensions"),
-            "矿物与资源" or "矿物/资源" => T("download.resource.tags.ores_resources"),
-            "天然结构" => T("download.resource.tags.structures"),
-            "科技" => T("download.resource.tags.technology"),
-            "管道与物流" => T("download.resource.tags.logistics"),
-            "自动化" => T("download.resource.tags.automation"),
-            "能源" => T("download.resource.tags.energy"),
-            "红石" => T("download.resource.tags.redstone"),
-            "食物与烹饪" or "食物/烹饪" => T("download.resource.tags.food_cooking"),
-            "农业" => T("download.resource.tags.farming"),
-            "游戏机制" => T("download.resource.tags.game_mechanics"),
-            "运输" => T("download.resource.tags.transportation"),
-            "仓储" => T("download.resource.tags.storage"),
-            "魔法" => T("download.resource.tags.magic"),
-            "冒险" => T("download.resource.tags.adventure"),
-            "装饰" => T("download.resource.tags.decoration"),
-            "生物" => T("download.resource.tags.mobs"),
-            "实用" => T("download.resource.tags.utility"),
-            "装备" or "装备与工具" => T("download.resource.tags.equipment_tools"),
-            "创造模式" => T("download.resource.tags.creative_mode"),
-            "性能优化" => T("download.resource.tags.performance"),
-            "信息显示" => T("download.resource.tags.information"),
-            "服务器" or "多人" => T("download.resource.tags.multiplayer"),
-            "支持库" => T("download.resource.tags.library"),
-            "硬核" => T("download.resource.tags.hardcore"),
-            "战斗" => T("download.resource.tags.combat"),
-            "任务" => T("download.resource.tags.quests"),
-            "水槽包" => T("download.resource.tags.kitchen_sink"),
-            "探索" => T("download.resource.tags.exploration"),
-            "小游戏" => T("download.resource.tags.minigames"),
-            "科幻" => T("download.resource.tags.scifi"),
-            "空岛" => T("download.resource.tags.skyblock"),
-            "原版改良" => T("download.resource.tags.vanilla_plus"),
-            "基于地图" => T("download.resource.tags.map_based"),
-            "轻量整合" or "轻量" => T("download.resource.tags.lightweight"),
-            "大型整合" or "大型" => T("download.resource.tags.large"),
-            "幻想" => T("download.resource.tags.fantasy"),
-            "Mod 相关" or "modded" => T("download.resource.tags.modded"),
-            "原版风" or "vanilla-like" => T("download.resource.tags.vanilla_style"),
-            "写实风" or "realistic" => T("download.resource.tags.realistic"),
-            "现代风" => T("download.resource.tags.modern"),
-            "中世纪" => T("download.resource.tags.medieval"),
-            "蒸汽朋克" => T("download.resource.tags.steampunk"),
-            "主题化" => T("download.resource.tags.themed"),
-            "简洁" or "simplistic" => T("download.resource.tags.simple"),
-            "改良" or "tweaks" => T("download.resource.tags.tweaks"),
-            "鬼畜" => T("download.resource.tags.chaotic"),
-            "含实体" => T("download.resource.tags.entities"),
-            "含声音" or "audio" => T("download.resource.tags.audio"),
-            "含字体" or "fonts" => T("download.resource.tags.fonts"),
-            "含模型" or "models" => T("download.resource.tags.models"),
-            "含语言" or "locale" => T("download.resource.tags.locale"),
-            "含 UI" or "gui" => T("download.resource.tags.gui"),
-            "核心着色器" or "core-shaders" => T("download.resource.tags.core_shaders"),
-            "动态效果" => T("download.resource.tags.dynamic_effects"),
-            "兼容 Mod" => T("download.resource.tags.mod_compatible"),
-            "8x 或更低" or "极简" => T("download.resource.tags.resolution_8x"),
+            "mod" => T("download.resource.search.mod"),
+            "pack" => T("download.resource.search.pack"),
+            "resource_pack" => T("download.resource.search.resource_pack"),
+            "shader" => T("download.resource.search.shader"),
+            "world" => T("download.resource.search.world"),
+            "worldgen" => T("download.resource.tags.worldgen"),
+            "biomes" => T("download.resource.tags.biomes"),
+            "dimensions" => T("download.resource.tags.dimensions"),
+            "ores_resources" => T("download.resource.tags.ores_resources"),
+            "structures" => T("download.resource.tags.structures"),
+            "technology" => T("download.resource.tags.technology"),
+            "logistics" => T("download.resource.tags.logistics"),
+            "automation" => T("download.resource.tags.automation"),
+            "energy" => T("download.resource.tags.energy"),
+            "redstone" => T("download.resource.tags.redstone"),
+            "food_cooking" => T("download.resource.tags.food_cooking"),
+            "farming" => T("download.resource.tags.farming"),
+            "game_mechanics" => T("download.resource.tags.game_mechanics"),
+            "transportation" => T("download.resource.tags.transportation"),
+            "storage" => T("download.resource.tags.storage"),
+            "magic" => T("download.resource.tags.magic"),
+            "adventure" => T("download.resource.tags.adventure"),
+            "decoration" => T("download.resource.tags.decoration"),
+            "mobs" => T("download.resource.tags.mobs"),
+            "utility" => T("download.resource.tags.utility"),
+            "equipment_tools" => T("download.resource.tags.equipment_tools"),
+            "creative_mode" => T("download.resource.tags.creative_mode"),
+            "performance" => T("download.resource.tags.performance"),
+            "information" => T("download.resource.tags.information"),
+            "multiplayer" => T("download.resource.tags.multiplayer"),
+            "library" => T("download.resource.tags.library"),
+            "hardcore" => T("download.resource.tags.hardcore"),
+            "combat" => T("download.resource.tags.combat"),
+            "quests" => T("download.resource.tags.quests"),
+            "kitchen_sink" => T("download.resource.tags.kitchen_sink"),
+            "exploration" => T("download.resource.tags.exploration"),
+            "minigames" => T("download.resource.tags.minigames"),
+            "scifi" => T("download.resource.tags.scifi"),
+            "skyblock" => T("download.resource.tags.skyblock"),
+            "vanilla_plus" => T("download.resource.tags.vanilla_plus"),
+            "map_based" => T("download.resource.tags.map_based"),
+            "lightweight" => T("download.resource.tags.lightweight"),
+            "large" => T("download.resource.tags.large"),
+            "fantasy" => T("download.resource.tags.fantasy"),
+            "modded" => T("download.resource.tags.modded"),
+            "vanilla_style" => T("download.resource.tags.vanilla_style"),
+            "realistic" => T("download.resource.tags.realistic"),
+            "modern" => T("download.resource.tags.modern"),
+            "medieval" => T("download.resource.tags.medieval"),
+            "steampunk" => T("download.resource.tags.steampunk"),
+            "themed" => T("download.resource.tags.themed"),
+            "simple" => T("download.resource.tags.simple"),
+            "tweaks" => T("download.resource.tags.tweaks"),
+            "chaotic" => T("download.resource.tags.chaotic"),
+            "entities" => T("download.resource.tags.entities"),
+            "audio" => T("download.resource.tags.audio"),
+            "fonts" => T("download.resource.tags.fonts"),
+            "models" => T("download.resource.tags.models"),
+            "locale" => T("download.resource.tags.locale"),
+            "gui" => T("download.resource.tags.gui"),
+            "core_shaders" => T("download.resource.tags.core_shaders"),
+            "dynamic_effects" => T("download.resource.tags.dynamic_effects"),
+            "mod_compatible" => T("download.resource.tags.mod_compatible"),
+            "resolution_8x" => T("download.resource.tags.resolution_8x"),
             "16x" => T("download.resource.tags.resolution_16x"),
             "32x" => T("download.resource.tags.resolution_32x"),
             "48x" => T("download.resource.tags.resolution_48x"),
             "64x" => T("download.resource.tags.resolution_64x"),
             "128x" => T("download.resource.tags.resolution_128x"),
             "256x" => T("download.resource.tags.resolution_256x"),
-            "512x 或更高" or "超高清" => T("download.resource.tags.resolution_512x"),
-            "幻想风" => T("download.resource.tags.fantasy_style"),
-            "半写实风" => T("download.resource.tags.semi_realistic"),
-            "卡通风" => T("download.resource.tags.cartoon"),
-            "彩色光照" => T("download.resource.tags.colored_lighting"),
-            "路径追踪" => T("download.resource.tags.path_tracing"),
-            "反射" => T("download.resource.tags.reflections"),
-            "极低" => T("download.resource.tags.performance_very_low"),
-            "低" => T("download.resource.tags.performance_low"),
-            "中" => T("download.resource.tags.performance_medium"),
-            "高" => T("download.resource.tags.performance_high"),
-            "创造" => T("download.resource.tags.creative"),
-            "跑酷" => T("download.resource.tags.parkour"),
-            "解谜" => T("download.resource.tags.puzzle"),
-            "生存" => T("download.resource.tags.survival"),
-            "Mod 世界" => T("download.resource.tags.mod_world"),
-            "原版可用" or "vanilla" => T("download.resource.tags.vanilla_compatible"),
-            "数据包" or "datapack" => T("download.resource.tags.data_pack"),
+            "resolution_512x" => T("download.resource.tags.resolution_512x"),
+            "fantasy_style" => T("download.resource.tags.fantasy_style"),
+            "semi_realistic" => T("download.resource.tags.semi_realistic"),
+            "cartoon" => T("download.resource.tags.cartoon"),
+            "colored_lighting" => T("download.resource.tags.colored_lighting"),
+            "path_tracing" => T("download.resource.tags.path_tracing"),
+            "reflections" => T("download.resource.tags.reflections"),
+            "performance_very_low" => T("download.resource.tags.performance_very_low"),
+            "performance_low" => T("download.resource.tags.performance_low"),
+            "performance_medium" => T("download.resource.tags.performance_medium"),
+            "performance_high" => T("download.resource.tags.performance_high"),
+            "creative" => T("download.resource.tags.creative"),
+            "parkour" => T("download.resource.tags.parkour"),
+            "puzzle" => T("download.resource.tags.puzzle"),
+            "survival" => T("download.resource.tags.survival"),
+            "mod_world" => T("download.resource.tags.mod_world"),
+            "vanilla_compatible" => T("download.resource.tags.vanilla_compatible"),
+            "data_pack" => T("download.resource.tags.data_pack"),
             _ => tag
         };
     }
@@ -1583,32 +1615,32 @@ internal sealed partial class FrontendShellViewModel
         return
         [
             CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
-            CreateDownloadResourceFilterOption("世界元素", "世界元素"),
-            CreateDownloadResourceFilterOption("生物群系", "生物群系"),
-            CreateDownloadResourceFilterOption("维度", "维度"),
-            CreateDownloadResourceFilterOption("矿物与资源", "矿物与资源"),
-            CreateDownloadResourceFilterOption("天然结构", "天然结构"),
-            CreateDownloadResourceFilterOption("科技", "科技"),
-            CreateDownloadResourceFilterOption("管道与物流", "管道与物流"),
-            CreateDownloadResourceFilterOption("自动化", "自动化"),
-            CreateDownloadResourceFilterOption("能源", "能源"),
-            CreateDownloadResourceFilterOption("红石", "红石"),
-            CreateDownloadResourceFilterOption("食物与烹饪", "食物与烹饪"),
-            CreateDownloadResourceFilterOption("农业", "农业"),
-            CreateDownloadResourceFilterOption("游戏机制", "游戏机制"),
-            CreateDownloadResourceFilterOption("运输", "运输"),
-            CreateDownloadResourceFilterOption("仓储", "仓储"),
-            CreateDownloadResourceFilterOption("魔法", "魔法"),
-            CreateDownloadResourceFilterOption("冒险", "冒险"),
-            CreateDownloadResourceFilterOption("装饰", "装饰"),
-            CreateDownloadResourceFilterOption("生物", "生物"),
-            CreateDownloadResourceFilterOption("实用", "实用"),
-            CreateDownloadResourceFilterOption("装备与工具", "装备与工具"),
-            CreateDownloadResourceFilterOption("创造模式", "创造模式"),
-            CreateDownloadResourceFilterOption("性能优化", "性能优化"),
-            CreateDownloadResourceFilterOption("信息显示", "信息显示"),
-            CreateDownloadResourceFilterOption("服务器", "服务器"),
-            CreateDownloadResourceFilterOption("支持库", "支持库")
+            CreateDownloadResourceFilterOption("worldgen", "worldgen"),
+            CreateDownloadResourceFilterOption("biomes", "biomes"),
+            CreateDownloadResourceFilterOption("dimensions", "dimensions"),
+            CreateDownloadResourceFilterOption("ores_resources", "ores_resources"),
+            CreateDownloadResourceFilterOption("structures", "structures"),
+            CreateDownloadResourceFilterOption("technology", "technology"),
+            CreateDownloadResourceFilterOption("logistics", "logistics"),
+            CreateDownloadResourceFilterOption("automation", "automation"),
+            CreateDownloadResourceFilterOption("energy", "energy"),
+            CreateDownloadResourceFilterOption("redstone", "redstone"),
+            CreateDownloadResourceFilterOption("food_cooking", "food_cooking"),
+            CreateDownloadResourceFilterOption("farming", "farming"),
+            CreateDownloadResourceFilterOption("game_mechanics", "game_mechanics"),
+            CreateDownloadResourceFilterOption("transportation", "transportation"),
+            CreateDownloadResourceFilterOption("storage", "storage"),
+            CreateDownloadResourceFilterOption("magic", "magic"),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("decoration", "decoration"),
+            CreateDownloadResourceFilterOption("mobs", "mobs"),
+            CreateDownloadResourceFilterOption("utility", "utility"),
+            CreateDownloadResourceFilterOption("equipment_tools", "equipment_tools"),
+            CreateDownloadResourceFilterOption("creative_mode", "creative_mode"),
+            CreateDownloadResourceFilterOption("performance", "performance"),
+            CreateDownloadResourceFilterOption("information", "information"),
+            CreateDownloadResourceFilterOption("multiplayer", "multiplayer"),
+            CreateDownloadResourceFilterOption("library", "library")
         ];
     }
 
@@ -1617,24 +1649,24 @@ internal sealed partial class FrontendShellViewModel
         return
         [
             CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
-            CreateDownloadResourceFilterOption("多人", "多人"),
-            CreateDownloadResourceFilterOption("性能优化", "性能优化"),
-            CreateDownloadResourceFilterOption("硬核", "硬核"),
-            CreateDownloadResourceFilterOption("战斗", "战斗"),
-            CreateDownloadResourceFilterOption("任务", "任务"),
-            CreateDownloadResourceFilterOption("科技", "科技"),
-            CreateDownloadResourceFilterOption("魔法", "魔法"),
-            CreateDownloadResourceFilterOption("冒险", "冒险"),
-            CreateDownloadResourceFilterOption("水槽包", "水槽包"),
-            CreateDownloadResourceFilterOption("探索", "探索"),
-            CreateDownloadResourceFilterOption("小游戏", "小游戏"),
-            CreateDownloadResourceFilterOption("科幻", "科幻"),
-            CreateDownloadResourceFilterOption("空岛", "空岛"),
-            CreateDownloadResourceFilterOption("原版改良", "原版改良"),
+            CreateDownloadResourceFilterOption("multiplayer", "multiplayer"),
+            CreateDownloadResourceFilterOption("performance", "performance"),
+            CreateDownloadResourceFilterOption("hardcore", "hardcore"),
+            CreateDownloadResourceFilterOption("combat", "combat"),
+            CreateDownloadResourceFilterOption("quests", "quests"),
+            CreateDownloadResourceFilterOption("technology", "technology"),
+            CreateDownloadResourceFilterOption("magic", "magic"),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("kitchen_sink", "kitchen_sink"),
+            CreateDownloadResourceFilterOption("exploration", "exploration"),
+            CreateDownloadResourceFilterOption("minigames", "minigames"),
+            CreateDownloadResourceFilterOption("scifi", "scifi"),
+            CreateDownloadResourceFilterOption("skyblock", "skyblock"),
+            CreateDownloadResourceFilterOption("vanilla_plus", "vanilla_plus"),
             CreateDownloadResourceFilterOption("FTB", "FTB"),
-            CreateDownloadResourceFilterOption("基于地图", "基于地图"),
-            CreateDownloadResourceFilterOption("轻量整合", "轻量整合"),
-            CreateDownloadResourceFilterOption("大型整合", "大型整合")
+            CreateDownloadResourceFilterOption("map_based", "map_based"),
+            CreateDownloadResourceFilterOption("lightweight", "lightweight"),
+            CreateDownloadResourceFilterOption("large", "large")
         ];
     }
 
@@ -1643,22 +1675,22 @@ internal sealed partial class FrontendShellViewModel
         return
         [
             CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
-            CreateDownloadResourceFilterOption("世界元素", "世界元素"),
-            CreateDownloadResourceFilterOption("科技", "科技"),
-            CreateDownloadResourceFilterOption("游戏机制", "游戏机制"),
-            CreateDownloadResourceFilterOption("运输", "运输"),
-            CreateDownloadResourceFilterOption("仓储", "仓储"),
-            CreateDownloadResourceFilterOption("魔法", "魔法"),
-            CreateDownloadResourceFilterOption("冒险", "冒险"),
-            CreateDownloadResourceFilterOption("幻想", "幻想"),
-            CreateDownloadResourceFilterOption("装饰", "装饰"),
-            CreateDownloadResourceFilterOption("生物", "生物"),
-            CreateDownloadResourceFilterOption("实用", "实用"),
-            CreateDownloadResourceFilterOption("装备与工具", "装备与工具"),
-            CreateDownloadResourceFilterOption("性能优化", "性能优化"),
-            CreateDownloadResourceFilterOption("服务器", "服务器"),
-            CreateDownloadResourceFilterOption("支持库", "支持库"),
-            CreateDownloadResourceFilterOption("Mod 相关", "Mod 相关")
+            CreateDownloadResourceFilterOption("worldgen", "worldgen"),
+            CreateDownloadResourceFilterOption("technology", "technology"),
+            CreateDownloadResourceFilterOption("game_mechanics", "game_mechanics"),
+            CreateDownloadResourceFilterOption("transportation", "transportation"),
+            CreateDownloadResourceFilterOption("storage", "storage"),
+            CreateDownloadResourceFilterOption("magic", "magic"),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("fantasy", "fantasy"),
+            CreateDownloadResourceFilterOption("decoration", "decoration"),
+            CreateDownloadResourceFilterOption("mobs", "mobs"),
+            CreateDownloadResourceFilterOption("utility", "utility"),
+            CreateDownloadResourceFilterOption("equipment_tools", "equipment_tools"),
+            CreateDownloadResourceFilterOption("performance", "performance"),
+            CreateDownloadResourceFilterOption("multiplayer", "multiplayer"),
+            CreateDownloadResourceFilterOption("library", "library"),
+            CreateDownloadResourceFilterOption("modded", "modded")
         ];
     }
 
@@ -1667,38 +1699,38 @@ internal sealed partial class FrontendShellViewModel
         return
         [
             CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
-            CreateDownloadResourceFilterOption("风格", string.Empty, isHeader: true),
-            CreateDownloadResourceFilterOption("原版风", "原版风"),
-            CreateDownloadResourceFilterOption("写实风", "写实风"),
-            CreateDownloadResourceFilterOption("现代风", "现代风"),
-            CreateDownloadResourceFilterOption("中世纪", "中世纪"),
-            CreateDownloadResourceFilterOption("蒸汽朋克", "蒸汽朋克"),
-            CreateDownloadResourceFilterOption("主题化", "主题化"),
-            CreateDownloadResourceFilterOption("简洁", "简洁"),
-            CreateDownloadResourceFilterOption("装饰", "装饰"),
-            CreateDownloadResourceFilterOption("战斗", "战斗"),
-            CreateDownloadResourceFilterOption("实用", "实用"),
-            CreateDownloadResourceFilterOption("改良", "改良"),
-            CreateDownloadResourceFilterOption("鬼畜", "鬼畜"),
-            CreateDownloadResourceFilterOption("特性", string.Empty, isHeader: true),
-            CreateDownloadResourceFilterOption("含实体", "含实体"),
-            CreateDownloadResourceFilterOption("含声音", "含声音"),
-            CreateDownloadResourceFilterOption("含字体", "含字体"),
-            CreateDownloadResourceFilterOption("含模型", "含模型"),
-            CreateDownloadResourceFilterOption("含语言", "含语言"),
-            CreateDownloadResourceFilterOption("含 UI", "含 UI"),
-            CreateDownloadResourceFilterOption("核心着色器", "核心着色器"),
-            CreateDownloadResourceFilterOption("动态效果", "动态效果"),
-            CreateDownloadResourceFilterOption("兼容 Mod", "兼容 Mod"),
-            CreateDownloadResourceFilterOption("分辨率", string.Empty, isHeader: true),
-            CreateDownloadResourceFilterOption("8x 或更低", "8x 或更低"),
+            CreateDownloadResourceFilterOption("style", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("vanilla_style", "vanilla_style"),
+            CreateDownloadResourceFilterOption("realistic", "realistic"),
+            CreateDownloadResourceFilterOption("modern", "modern"),
+            CreateDownloadResourceFilterOption("medieval", "medieval"),
+            CreateDownloadResourceFilterOption("steampunk", "steampunk"),
+            CreateDownloadResourceFilterOption("themed", "themed"),
+            CreateDownloadResourceFilterOption("simple", "simple"),
+            CreateDownloadResourceFilterOption("decoration", "decoration"),
+            CreateDownloadResourceFilterOption("combat", "combat"),
+            CreateDownloadResourceFilterOption("utility", "utility"),
+            CreateDownloadResourceFilterOption("tweaks", "tweaks"),
+            CreateDownloadResourceFilterOption("chaotic", "chaotic"),
+            CreateDownloadResourceFilterOption("features", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("entities", "entities"),
+            CreateDownloadResourceFilterOption("audio", "audio"),
+            CreateDownloadResourceFilterOption("fonts", "fonts"),
+            CreateDownloadResourceFilterOption("models", "models"),
+            CreateDownloadResourceFilterOption("locale", "locale"),
+            CreateDownloadResourceFilterOption("gui", "gui"),
+            CreateDownloadResourceFilterOption("core_shaders", "core_shaders"),
+            CreateDownloadResourceFilterOption("dynamic_effects", "dynamic_effects"),
+            CreateDownloadResourceFilterOption("mod_compatible", "mod_compatible"),
+            CreateDownloadResourceFilterOption("resolution", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("resolution_8x", "resolution_8x"),
             CreateDownloadResourceFilterOption("16x", "16x"),
             CreateDownloadResourceFilterOption("32x", "32x"),
             CreateDownloadResourceFilterOption("48x", "48x"),
             CreateDownloadResourceFilterOption("64x", "64x"),
             CreateDownloadResourceFilterOption("128x", "128x"),
             CreateDownloadResourceFilterOption("256x", "256x"),
-            CreateDownloadResourceFilterOption("512x 或更高", "512x 或更高")
+            CreateDownloadResourceFilterOption("resolution_512x", "resolution_512x")
         ];
     }
 
@@ -1707,22 +1739,22 @@ internal sealed partial class FrontendShellViewModel
         return
         [
             CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
-            CreateDownloadResourceFilterOption("风格", string.Empty, isHeader: true),
-            CreateDownloadResourceFilterOption("原版风", "原版风"),
-            CreateDownloadResourceFilterOption("幻想风", "幻想风"),
-            CreateDownloadResourceFilterOption("写实风", "写实风"),
-            CreateDownloadResourceFilterOption("半写实风", "半写实风"),
-            CreateDownloadResourceFilterOption("卡通风", "卡通风"),
-            CreateDownloadResourceFilterOption("特性", string.Empty, isHeader: true),
-            CreateDownloadResourceFilterOption("彩色光照", "彩色光照"),
-            CreateDownloadResourceFilterOption("路径追踪", "路径追踪"),
+            CreateDownloadResourceFilterOption("style", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("vanilla_style", "vanilla_style"),
+            CreateDownloadResourceFilterOption("fantasy_style", "fantasy_style"),
+            CreateDownloadResourceFilterOption("realistic", "realistic"),
+            CreateDownloadResourceFilterOption("semi_realistic", "semi_realistic"),
+            CreateDownloadResourceFilterOption("cartoon", "cartoon"),
+            CreateDownloadResourceFilterOption("features", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("colored_lighting", "colored_lighting"),
+            CreateDownloadResourceFilterOption("path_tracing", "path_tracing"),
             CreateDownloadResourceFilterOption("PBR", "PBR"),
-            CreateDownloadResourceFilterOption("反射", "反射"),
-            CreateDownloadResourceFilterOption("性能负荷", string.Empty, isHeader: true),
-            CreateDownloadResourceFilterOption("极低", "极低"),
-            CreateDownloadResourceFilterOption("低", "低"),
-            CreateDownloadResourceFilterOption("中", "中"),
-            CreateDownloadResourceFilterOption("高", "高")
+            CreateDownloadResourceFilterOption("reflections", "reflections"),
+            CreateDownloadResourceFilterOption("performance", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("performance_very_low", "performance_very_low"),
+            CreateDownloadResourceFilterOption("performance_low", "performance_low"),
+            CreateDownloadResourceFilterOption("performance_medium", "performance_medium"),
+            CreateDownloadResourceFilterOption("performance_high", "performance_high")
         ];
     }
 
@@ -1731,13 +1763,13 @@ internal sealed partial class FrontendShellViewModel
         return
         [
             CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
-            CreateDownloadResourceFilterOption("冒险", "冒险"),
-            CreateDownloadResourceFilterOption("创造", "创造"),
-            CreateDownloadResourceFilterOption("小游戏", "小游戏"),
-            CreateDownloadResourceFilterOption("跑酷", "跑酷"),
-            CreateDownloadResourceFilterOption("解谜", "解谜"),
-            CreateDownloadResourceFilterOption("生存", "生存"),
-            CreateDownloadResourceFilterOption("Mod 世界", "Mod 世界")
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("creative", "creative"),
+            CreateDownloadResourceFilterOption("minigames", "minigames"),
+            CreateDownloadResourceFilterOption("parkour", "parkour"),
+            CreateDownloadResourceFilterOption("puzzle", "puzzle"),
+            CreateDownloadResourceFilterOption("survival", "survival"),
+            CreateDownloadResourceFilterOption("mod_world", "mod_world")
         ];
     }
 
@@ -1780,7 +1812,9 @@ internal sealed partial class FrontendShellViewModel
             FormatDownloadResourceDownloadCountLabel(downloadCount),
             FormatDownloadResourceUpdatedLabel(updateRank, releaseRank),
             LocalizeDownloadResourceActionText(actionText),
-            new ActionCommand(() => AddActivity($"下载资源操作: {title}", $"{source} • {version} • {string.Join(" / ", tags)}")),
+            new ActionCommand(() => AddActivity(
+                T("download.resource.activities.entry_action", ("entry_title", title)),
+                BuildActivityDetail(source, version, string.Join(" / ", tags)))),
             null);
     }
 

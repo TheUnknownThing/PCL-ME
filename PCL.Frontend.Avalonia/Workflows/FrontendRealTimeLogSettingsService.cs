@@ -4,7 +4,7 @@ internal static class FrontendRealTimeLogSettingsService
 {
     public static string FormatLineLimitLabel(double value)
     {
-        return ResolveLineLimit(value)?.ToString() ?? "无限制";
+        return ResolveLineLimit(value)?.ToString() ?? "Unlimited";
     }
 
     public static int? ResolveLineLimit(double value)

@@ -36,11 +36,11 @@ internal sealed partial class FrontendShellViewModel
         }
 
         Eyebrow = eyebrow;
-        Title = localizedNavigation.CurrentPage.Title;
+        Title = FrontendShellLocalizationService.ResolvePageTitle(localizedNavigation.CurrentRoute.Page, _i18n);
         Description = description;
-        Status = $"Immediate command: {shellPlan.StartupPlan.ImmediateCommand.Kind} | Splash: {(shellPlan.StartupPlan.Visual.ShouldShowSplashScreen ? "on" : "off")} | Navigation depth: {_routeAncestors.Count}";
+        Status = FrontendShellLocalizationService.DescribeShellStatus(shellPlan, _routeAncestors.Count, _i18n);
         BreadcrumbTrail = string.Join(" / ", localizedNavigation.Breadcrumbs.Select(crumb => crumb.Title));
-        SurfaceMeta = $"{localizedNavigation.CurrentPage.Kind} surface • {(localizedNavigation.CurrentPage.SidebarGroupTitle ?? "No sidebar group")} • {(localizedNavigation.ShowsBackButton ? localizedNavigation.BackTarget?.Label ?? "Back available" : "Top-level route")}";
+        SurfaceMeta = FrontendShellLocalizationService.DescribeSurfaceMeta(localizedNavigation, _i18n);
         CanGoBack = localizedNavigation.ShowsBackButton && localizedNavigation.BackTarget is not null;
         CanGoHome = ResolveHomeRoute() is not null;
 
@@ -57,10 +57,27 @@ internal sealed partial class FrontendShellViewModel
         RaiseCollectionStateProperties();
         if (addActivity && !string.IsNullOrWhiteSpace(activityMessage))
         {
-            AddActivity(activityMessage, $"{localizedNavigation.CurrentPage.Title} • {localizedNavigation.CurrentPage.Route.Page}/{localizedNavigation.CurrentPage.Route.Subpage}");
+            AddActivity(
+                activityMessage,
+                $"{FrontendShellLocalizationService.ResolvePageTitle(localizedNavigation.CurrentPage.Route.Page, _i18n)} • {localizedNavigation.CurrentPage.Route.Page}/{localizedNavigation.CurrentPage.Route.Subpage}");
         }
 
         RaiseShellStateProperties();
+    }
+
+    private string ResolveNavigationEntryTitle(LauncherFrontendNavigationEntry entry)
+    {
+        return FrontendShellLocalizationService.ResolveRouteLabel(entry.Route, _i18n);
+    }
+
+    private string ResolveNavigationEntrySummary(LauncherFrontendNavigationEntry entry)
+    {
+        return FrontendShellLocalizationService.ResolveRouteSummary(entry.Route, _i18n);
+    }
+
+    private string ResolveUtilityEntryTitle(LauncherFrontendUtilityEntry entry)
+    {
+        return FrontendShellLocalizationService.ResolveUtilityTitle(entry.Id, _i18n);
     }
 
     private LauncherFrontendNavigationView ResolveSidebarNavigation(LauncherFrontendNavigationView navigation)
@@ -97,10 +114,12 @@ internal sealed partial class FrontendShellViewModel
 
     private NavigationEntryViewModel CreateNavigationEntry(LauncherFrontendNavigationEntry entry, NavigationVisualStyle style)
     {
-        var (iconPath, iconScale) = GetNavigationIcon(entry.Route, entry.Title);
+        var title = ResolveNavigationEntryTitle(entry);
+        var summary = ResolveNavigationEntrySummary(entry);
+        var (iconPath, iconScale) = GetNavigationIcon(entry.Route, title);
         return new NavigationEntryViewModel(
-            entry.Title,
-            entry.Summary,
+            title,
+            summary,
             style == NavigationVisualStyle.Sidebar ? entry.Route.Subpage.ToString() : entry.Route.Page.ToString(),
             entry.IsSelected,
             iconPath,
@@ -108,7 +127,10 @@ internal sealed partial class FrontendShellViewModel
             GetNavigationPalette(entry.IsSelected, style),
             new ActionCommand(() => NavigateTo(
                 entry.Route,
-                $"Navigated to {entry.Title} from the {(style == NavigationVisualStyle.Sidebar ? "sidebar" : "top bar")}.",
+                FrontendShellLocalizationService.DescribeNavigationActivity(
+                    title,
+                    style == NavigationVisualStyle.Sidebar ? "sidebar" : "top_bar",
+                    _i18n),
                 style == NavigationVisualStyle.Sidebar
                     ? RouteNavigationBehavior.Lateral
                     : RouteNavigationBehavior.Reset),
@@ -118,17 +140,18 @@ internal sealed partial class FrontendShellViewModel
 
     private NavigationEntryViewModel CreateUtilityEntry(LauncherFrontendUtilityEntry entry)
     {
+        var title = ResolveUtilityEntryTitle(entry);
         var meta = entry.Id switch
         {
-            "back" => "返",
-            "task-manager" => "任",
-            "game-log" => "志",
+            "back" => "B",
+            "task-manager" => "T",
+            "game-log" => "L",
             _ => entry.Route.Page.ToString()
         };
 
         return new NavigationEntryViewModel(
-            entry.Title,
-            entry.IsSelected ? "Utility surface is active in the shell." : "Pinned shell utility surface.",
+            title,
+            FrontendShellLocalizationService.DescribeUtilitySummary(entry.IsSelected, _i18n),
             meta,
             entry.IsSelected,
             GetUtilityIcon(entry.Id),
@@ -136,7 +159,10 @@ internal sealed partial class FrontendShellViewModel
             GetNavigationPalette(entry.IsSelected, NavigationVisualStyle.Utility),
             entry.Id == "back"
                 ? new ActionCommand(NavigateBack, () => CanGoBack)
-                : new ActionCommand(() => NavigateTo(entry.Route, $"Opened utility surface {entry.Title}.", RouteNavigationBehavior.Child)));
+                : new ActionCommand(() => NavigateTo(
+                    entry.Route,
+                    FrontendShellLocalizationService.DescribeOpenedUtilitySurface(title, _i18n),
+                    RouteNavigationBehavior.Child)));
     }
 
     private IEnumerable<SidebarSectionViewModel> BuildSidebarSections(LauncherFrontendNavigationView navigation)
@@ -159,21 +185,26 @@ internal sealed partial class FrontendShellViewModel
                     enterDelay,
                     group.Select(entry =>
                     {
-                        var (iconPath, iconScale) = GetSidebarIcon(entry.Route.Page, entry.Route.Subpage, entry.Title);
-                        var accessory = GetSidebarAccessory(entry.Route.Page, entry.Route.Subpage, entry.Title, _i18n);
+                        var title = ResolveNavigationEntryTitle(entry);
+                        var summary = ResolveNavigationEntrySummary(entry);
+                        var (iconPath, iconScale) = GetSidebarIcon(entry.Route.Page, entry.Route.Subpage, title);
+                        var accessory = GetSidebarAccessory(entry.Route.Page, entry.Route.Subpage, title, _i18n);
                         return new SidebarListItemViewModel(
-                            entry.Title,
-                            entry.Summary,
+                            title,
+                            summary,
                             entry.IsSelected,
                             iconPath,
                             iconScale,
                             itemIndex++ * 28,
-                            new ActionCommand(() => NavigateTo(entry.Route, $"Navigated to {entry.Title} from the launcher-style left pane.", RouteNavigationBehavior.Lateral)),
+                            new ActionCommand(() => NavigateTo(
+                                entry.Route,
+                                FrontendShellLocalizationService.DescribeNavigationActivity(title, "left_pane", _i18n),
+                                RouteNavigationBehavior.Lateral)),
                             accessory.ToolTip,
                             accessory.IconPath,
                             accessory.Command is null
                                 ? null
-                                : new ActionCommand(() => ApplySidebarAccessory(entry.Title, accessory.ActionLabel, accessory.Command)));
+                                : new ActionCommand(() => ApplySidebarAccessory(title, accessory.ActionLabel, accessory.Command)));
                     }).ToArray());
             })
             .ToArray();
@@ -378,11 +409,13 @@ internal sealed partial class FrontendShellViewModel
                 !string.IsNullOrWhiteSpace(group.Key),
                 group.Select(entry =>
                 {
-                    var (iconPath, iconScale) = GetSidebarIcon(entry.Route.Page, entry.Route.Subpage, entry.Title);
-                    var accessory = GetSidebarAccessory(entry.Route.Page, entry.Route.Subpage, entry.Title, _i18n);
+                    var title = ResolveNavigationEntryTitle(entry);
+                    var summary = ResolveNavigationEntrySummary(entry);
+                    var (iconPath, iconScale) = GetSidebarIcon(entry.Route.Page, entry.Route.Subpage, title);
+                    var accessory = GetSidebarAccessory(entry.Route.Page, entry.Route.Subpage, title, _i18n);
                     return new SidebarItemSnapshot(
-                        entry.Title,
-                        entry.Summary,
+                        title,
+                        summary,
                         entry.IsSelected,
                         iconPath,
                         iconScale,
@@ -398,13 +431,15 @@ internal sealed partial class FrontendShellViewModel
         LauncherFrontendNavigationEntry entry,
         NavigationVisualStyle style)
     {
-        var (iconPath, iconScale) = GetNavigationIcon(entry.Route, entry.Title);
+        var title = ResolveNavigationEntryTitle(entry);
+        var summary = ResolveNavigationEntrySummary(entry);
+        var (iconPath, iconScale) = GetNavigationIcon(entry.Route, title);
         var meta = style == NavigationVisualStyle.Sidebar
             ? entry.Route.Subpage.ToString()
             : entry.Route.Page.ToString();
 
-        return current.Title == entry.Title
-            && current.Summary == entry.Summary
+        return current.Title == title
+            && current.Summary == summary
             && current.Meta == meta
             && current.IsSelected == entry.IsSelected
             && current.IconPath == iconPath
@@ -413,15 +448,16 @@ internal sealed partial class FrontendShellViewModel
 
     private bool MatchesUtilityEntry(NavigationEntryViewModel current, LauncherFrontendUtilityEntry entry)
     {
+        var title = ResolveUtilityEntryTitle(entry);
         var meta = entry.Id switch
         {
-            "back" => "返",
-            "task-manager" => "任",
-            "game-log" => "志",
+            "back" => "B",
+            "task-manager" => "T",
+            "game-log" => "L",
             _ => entry.Route.Page.ToString()
         };
 
-        return current.Title == entry.Title
+        return current.Title == title
             && current.Meta == meta
             && current.IsSelected == entry.IsSelected
             && current.IconPath == GetUtilityIcon(entry.Id);
@@ -559,7 +595,7 @@ internal sealed partial class FrontendShellViewModel
         route = NormalizeRoute(route);
         if (route == _currentRoute)
         {
-            AddActivity("Stayed on the current route.", $"{route.Page}/{route.Subpage}");
+            AddActivity(FrontendShellLocalizationService.DescribeStayedOnCurrentRoute(_i18n), $"{route.Page}/{route.Subpage}");
             return;
         }
 
@@ -640,7 +676,10 @@ internal sealed partial class FrontendShellViewModel
                 _routeAncestors.RemoveAt(_routeAncestors.Count - 1);
             }
 
-            ChangeRoute(backRoute, $"Followed shell back target to {backRoute.Page}.", ShellNavigationTransitionDirection.Backward);
+            ChangeRoute(
+                backRoute,
+                FrontendShellLocalizationService.DescribeFollowedBackTarget(backRoute, _i18n),
+                ShellNavigationTransitionDirection.Backward);
         }
     }
 
@@ -660,7 +699,10 @@ internal sealed partial class FrontendShellViewModel
 
         _routeAncestors.Clear();
         ResetCommunityProjectNavigationStack();
-        ChangeRoute(homeRoute, $"已返回到 {homeRoute.Page}。", ShellNavigationTransitionDirection.Backward);
+        ChangeRoute(
+            homeRoute,
+            FrontendShellLocalizationService.DescribeReturnedHome(homeRoute, _i18n),
+            ShellNavigationTransitionDirection.Backward);
     }
 
     private void ChangeRoute(

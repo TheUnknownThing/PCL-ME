@@ -62,12 +62,12 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanApplyInstanceInstall => _instanceComposition.Selection.HasSelection;
 
-    public string InstanceInstallApplyButtonIconData => FrontendIconCatalog.GetNavigationIcon("下载").Data;
+    public string InstanceInstallApplyButtonIconData => FrontendIconCatalog.GetNavigationIcon("download").Data;
 
     public double InstanceInstallApplyButtonIconScale => 0.95;
 
     public ActionCommand EditInstanceInstallSelectionCommand => new(() =>
-        AddActivity("修改实例安装目标", $"{InstanceInstallSelectionTitle} • {InstanceInstallSelectionSummary}"));
+        AddActivity("Change instance install target", $"{InstanceInstallSelectionTitle} • {InstanceInstallSelectionSummary}"));
 
     public ActionCommand EditInstanceInstallMinecraftCommand => new(() =>
         _ = EditInstallMinecraftAsync(isExistingInstance: true));
@@ -430,7 +430,7 @@ internal sealed partial class FrontendShellViewModel
             var shouldAutoSelect = HasInstallSelection(isExistingInstance: true, "Fabric")
                                    || (HasInstallSelection(isExistingInstance: true, "Quilt")
                                        && hasLoadedQslChoices
-                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == "无可用版本");
+                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == SD("instance.install.unavailable.no_versions"));
             if (_instanceInstallAutoSelectedFabricApi || !shouldAutoSelect)
             {
                 return;
@@ -447,7 +447,7 @@ internal sealed partial class FrontendShellViewModel
             var shouldAutoSelect = HasInstallSelection(isExistingInstance: true, "Legacy Fabric")
                                    || (HasInstallSelection(isExistingInstance: true, "Quilt")
                                        && hasLoadedQslChoices
-                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == "无可用版本");
+                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == SD("instance.install.unavailable.no_versions"));
             if (_instanceInstallAutoSelectedLegacyFabricApi || !shouldAutoSelect)
             {
                 return;

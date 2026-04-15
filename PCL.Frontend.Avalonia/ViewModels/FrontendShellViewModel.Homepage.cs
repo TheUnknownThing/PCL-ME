@@ -621,9 +621,9 @@ internal sealed partial class FrontendShellViewModel
     {
         return eventType switch
         {
-            "打开网页" or "open_web" => ResolveHomepageAssetTarget(rawValue, origin),
-            "打开文件" or "open_file" => ResolveHomepageAssetTarget(rawValue, origin),
-            "下载文件" or "download_file" => ResolveHomepageAssetTarget(rawValue, origin),
+            "open_web" or "\u6253\u5F00\u7F51\u9875" => ResolveHomepageAssetTarget(rawValue, origin),
+            "open_file" or "\u6253\u5F00\u6587\u4EF6" => ResolveHomepageAssetTarget(rawValue, origin),
+            "download_file" or "\u4E0B\u8F7D\u6587\u4EF6" => ResolveHomepageAssetTarget(rawValue, origin),
             _ when string.IsNullOrWhiteSpace(eventType) => ResolveHomepageAssetTarget(rawValue, origin),
             _ => rawValue
         };

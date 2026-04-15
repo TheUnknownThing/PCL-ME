@@ -20,11 +20,11 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
     {
         InitializeComponent();
         _installScrollViewer = this.FindControl<ScrollViewer>("InstallScrollViewer")
-            ?? throw new InvalidOperationException("安装页面未找到滚动容器。");
+            ?? throw new InvalidOperationException("The install page did not contain the scroll viewer.");
         _minecraftCatalogStage = this.FindControl<StackPanel>("MinecraftCatalogStage")
-            ?? throw new InvalidOperationException("安装页面未找到 Minecraft 版本选择阶段。");
+            ?? throw new InvalidOperationException("The install page did not contain the Minecraft version selection stage.");
         _selectionStage = this.FindControl<StackPanel>("SelectionStage")
-            ?? throw new InvalidOperationException("安装页面未找到加载器选择阶段。");
+            ?? throw new InvalidOperationException("The install page did not contain the loader selection stage.");
         DataContextChanged += OnDataContextChanged;
         DetachedFromVisualTree += (_, _) =>
         {

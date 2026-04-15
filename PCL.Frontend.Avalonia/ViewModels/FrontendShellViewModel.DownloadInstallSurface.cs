@@ -188,7 +188,7 @@ internal sealed partial class FrontendShellViewModel
         var refreshVersion = ++_downloadInstallMinecraftCatalogVersion;
         var preferredVersion = _instanceComposition.Install.MinecraftVersion.Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
 
-        _ = Task.Run(() => FrontendInstallWorkflowService.GetMinecraftCatalogChoices(preferredVersion))
+        _ = Task.Run(() => FrontendInstallWorkflowService.GetMinecraftCatalogChoices(preferredVersion, _i18n))
             .ContinueWith(async task =>
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
@@ -237,16 +237,16 @@ internal sealed partial class FrontendShellViewModel
         {
             return group switch
             {
-                "正式版" => T("download.install.catalog.groups.release"),
-                "预览版" => T("download.install.catalog.groups.preview"),
-                "远古版" => T("download.install.catalog.groups.legacy"),
-                "愚人节版" => T("download.install.catalog.groups.april_fools"),
+                "release" => T("download.install.catalog.groups.release"),
+                "preview" => T("download.install.catalog.groups.preview"),
+                "legacy" => T("download.install.catalog.groups.legacy"),
+                "april_fools" => T("download.install.catalog.groups.april_fools"),
                 _ => group
             };
         }
 
         var choicesByGroup = _downloadInstallMinecraftCatalogChoices
-            .GroupBy(choice => choice.Metadata?["catalogGroup"]?.GetValue<string>() ?? "正式版")
+            .GroupBy(choice => choice.Metadata?["catalogGroup"]?.GetValue<string>() ?? "release")
             .ToDictionary(
                 group => group.Key,
                 group => group
@@ -266,7 +266,7 @@ internal sealed partial class FrontendShellViewModel
                 toggleCommand: new ActionCommand(() => { })));
         }
 
-        foreach (var groupTitle in new[] { "正式版", "预览版", "远古版", "愚人节版" })
+        foreach (var groupTitle in new[] { "release", "preview", "legacy", "april_fools" })
         {
             if (!choicesByGroup.TryGetValue(groupTitle, out var choices) || choices.Length == 0)
             {
@@ -289,14 +289,14 @@ internal sealed partial class FrontendShellViewModel
         IReadOnlyDictionary<string, FrontendInstallChoice[]> choicesByGroup)
     {
         var latest = new List<DownloadInstallMinecraftChoiceViewModel>();
-        if (choicesByGroup.TryGetValue("正式版", out var releases) && releases.Length > 0)
+        if (choicesByGroup.TryGetValue("release", out var releases) && releases.Length > 0)
         {
             latest.Add(CreateDownloadInstallMinecraftChoice(
                 releases[0],
                 summaryOverride: BuildLatestMinecraftSummary(releases[0], T("download.install.catalog.latest.release"))));
         }
 
-        if (choicesByGroup.TryGetValue("预览版", out var previews) && previews.Length > 0)
+        if (choicesByGroup.TryGetValue("preview", out var previews) && previews.Length > 0)
         {
             var latestPreview = previews[0];
             var latestReleaseTime = releases is null || releases.Length == 0
@@ -788,7 +788,7 @@ internal sealed partial class FrontendShellViewModel
         AppendGeneratedSuffix(ref name, "Fabric", "-Fabric_", removePrefix: false, normalize: static text => text.Replace("+build", string.Empty, StringComparison.Ordinal));
         AppendGeneratedSuffix(ref name, "Legacy Fabric", "-LegacyFabric_");
         AppendGeneratedSuffix(ref name, "Quilt", "-Quilt_");
-        AppendGeneratedSuffix(ref name, "LabyMod", "-LabyMod_", normalize: static text => text.Replace(" 稳定版", "_Production", StringComparison.Ordinal).Replace(" 快照版", "_Snapshot", StringComparison.Ordinal));
+        AppendGeneratedSuffix(ref name, "LabyMod", "-LabyMod_", normalize: static text => text.Replace(" \u7A33\u5B9A\u7248", "_Production", StringComparison.Ordinal).Replace(" \u5FEB\u7167\u7248", "_Snapshot", StringComparison.Ordinal));
         AppendGeneratedSuffix(ref name, "Forge", "-Forge_");
         AppendGeneratedSuffix(ref name, "NeoForge", "-NeoForge_");
         AppendGeneratedSuffix(ref name, "Cleanroom", "-Cleanroom_");

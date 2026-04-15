@@ -148,7 +148,9 @@ internal sealed partial class FrontendShellViewModel
 
         if (updateActivity)
         {
-            AddActivity("Switched prompt lane.", $"{laneTitle} now has {laneCount} queued prompt(s).");
+            AddActivity(
+                T("shell.prompts.activities.switch_lane.title"),
+                T("shell.prompts.activities.switch_lane.body", ("lane", laneTitle), ("count", laneCount)));
         }
     }
 
@@ -275,9 +277,9 @@ internal sealed partial class FrontendShellViewModel
     private async Task ApplyPromptOptionAsync(AvaloniaPromptLaneKind lane, string promptId, LauncherFrontendPromptOption option)
     {
         var commandSummary = option.Commands.Count == 0
-            ? "No commands attached."
+            ? T("shell.prompts.commands.none_attached")
             : string.Join(" • ", option.Commands.Select(DescribePromptCommand));
-        AddActivity($"Prompt action: {_i18n.T(option.Label)}", commandSummary);
+        AddActivity(T("shell.prompts.activities.action.title", ("label", _i18n.T(option.Label))), commandSummary);
 
         if (option.ClosesPrompt && IsPromptOverlayVisible)
         {
@@ -310,7 +312,9 @@ internal sealed partial class FrontendShellViewModel
                 SetPromptOverlayOpen(false);
             }
 
-            AddActivity("Prompt closed.", $"{promptId} was dismissed from the {lane} lane.");
+            AddActivity(
+                T("shell.prompts.activities.closed.title"),
+                T("shell.prompts.activities.closed.body", ("prompt_id", promptId), ("lane", lane.ToString())));
 
             if (lane == AvaloniaPromptLaneKind.Launch &&
                 _pendingLaunchAfterPrompt &&
@@ -335,7 +339,7 @@ internal sealed partial class FrontendShellViewModel
             case LauncherFrontendPromptCommandKind.OpenInstanceSettings:
                 NavigateTo(
                     new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup),
-                    "Prompt routed the shell to instance settings.");
+                    T("shell.prompts.activities.navigate.instance_settings"));
                 break;
             case LauncherFrontendPromptCommandKind.ExportCrashReport:
                 ExportCrashReportFromPrompt();
@@ -344,7 +348,7 @@ internal sealed partial class FrontendShellViewModel
                 _ = DownloadJavaRuntimeFromPromptAsync();
                 break;
             case LauncherFrontendPromptCommandKind.OpenUrl:
-                OpenExternalTarget(command.Value, "已根据提示打开外部链接。");
+                OpenExternalTarget(command.Value, T("shell.prompts.external_open.success.url"));
                 break;
             case LauncherFrontendPromptCommandKind.AppendLaunchArgument:
                 AppendPromptLaunchArgument(command.Value);
@@ -353,7 +357,7 @@ internal sealed partial class FrontendShellViewModel
                 AcceptPromptConsent();
                 break;
             case LauncherFrontendPromptCommandKind.RejectConsent:
-                AddActivity("已拒绝协议授权", "当前提示未写入同意状态。");
+                AddActivity(T("shell.prompts.activities.reject_consent.title"), T("shell.prompts.activities.reject_consent.body"));
                 break;
             case LauncherFrontendPromptCommandKind.ContinueFlow:
                 ContinuePromptFlow(lane);
@@ -371,14 +375,14 @@ internal sealed partial class FrontendShellViewModel
                 IgnoreJavaCompatibilityWarningOnce();
                 break;
             case LauncherFrontendPromptCommandKind.ClosePrompt:
-                AddActivity("关闭提示", "当前提示已标记为完成。");
+                AddActivity(T("shell.prompts.activities.close_prompt.title"), T("shell.prompts.activities.close_prompt.body"));
                 break;
             case LauncherFrontendPromptCommandKind.ExitLauncher:
-                AddActivity("退出启动器", "已根据提示请求关闭启动器。");
+                AddActivity(T("shell.prompts.activities.exit_launcher.title"), T("shell.prompts.activities.exit_launcher.body"));
                 _shellActionService.ExitLauncher();
                 break;
             default:
-                AddActivity("Unhandled prompt command encountered.", command.Kind.ToString());
+                AddActivity(T("shell.prompts.activities.unhandled_command.title"), command.Kind.ToString());
                 break;
         }
     }
@@ -400,13 +404,13 @@ internal sealed partial class FrontendShellViewModel
         AvaloniaHintBus.Show(ComposeFailureHintMessage(title, body), AvaloniaHintTheme.Error);
     }
 
-    private static string ComposeFailureHintMessage(string title, string body)
+    private string ComposeFailureHintMessage(string title, string body)
     {
         var normalizedTitle = (title ?? string.Empty).Trim();
         var normalizedBody = (body ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(normalizedBody))
         {
-            return string.IsNullOrWhiteSpace(normalizedTitle) ? "操作失败。" : normalizedTitle;
+            return string.IsNullOrWhiteSpace(normalizedTitle) ? T("shell.prompts.activities.failure_default") : normalizedTitle;
         }
 
         if (string.IsNullOrWhiteSpace(normalizedTitle) ||
@@ -452,32 +456,32 @@ internal sealed partial class FrontendShellViewModel
         NotifyTopLevelNavigationInteractionChanged();
     }
 
-    private static string DescribePromptOption(LauncherFrontendPromptOption option)
+    private string DescribePromptOption(LauncherFrontendPromptOption option)
     {
         return option.Commands.Count == 0
-            ? "No shell commands."
+            ? T("shell.prompts.commands.none")
             : string.Join(", ", option.Commands.Select(DescribePromptCommand));
     }
 
-    private static string DescribePromptCommand(LauncherFrontendPromptCommand command)
+    private string DescribePromptCommand(LauncherFrontendPromptCommand command)
     {
         return command.Kind switch
         {
-            LauncherFrontendPromptCommandKind.ContinueFlow => "Continue flow",
-            LauncherFrontendPromptCommandKind.AcceptConsent => "Accept consent",
-            LauncherFrontendPromptCommandKind.RejectConsent => "Reject consent",
-            LauncherFrontendPromptCommandKind.OpenUrl => $"Open URL ({command.Value ?? "n/a"})",
-            LauncherFrontendPromptCommandKind.ExitLauncher => "Exit launcher",
-            LauncherFrontendPromptCommandKind.AbortLaunch => "Abort launch",
-            LauncherFrontendPromptCommandKind.AppendLaunchArgument => $"Append launch arg ({command.Value ?? "n/a"})",
-            LauncherFrontendPromptCommandKind.PersistSetting => $"Persist setting ({command.Value ?? "n/a"})",
-            LauncherFrontendPromptCommandKind.DownloadJavaRuntime => $"Download Java ({command.Value ?? "n/a"})",
-            LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored => "Persist Java compatibility override",
-            LauncherFrontendPromptCommandKind.IgnoreJavaCompatibilityOnce => "Ignore Java compatibility once",
-            LauncherFrontendPromptCommandKind.ClosePrompt => "Close prompt",
-            LauncherFrontendPromptCommandKind.ViewGameLog => "Open game log",
-            LauncherFrontendPromptCommandKind.OpenInstanceSettings => "Open instance settings",
-            LauncherFrontendPromptCommandKind.ExportCrashReport => "Export crash report",
+            LauncherFrontendPromptCommandKind.ContinueFlow => T("shell.prompts.commands.continue_flow"),
+            LauncherFrontendPromptCommandKind.AcceptConsent => T("shell.prompts.commands.accept_consent"),
+            LauncherFrontendPromptCommandKind.RejectConsent => T("shell.prompts.commands.reject_consent"),
+            LauncherFrontendPromptCommandKind.OpenUrl => T("shell.prompts.commands.open_url", ("value", command.Value ?? T("shell.prompts.commands.not_available"))),
+            LauncherFrontendPromptCommandKind.ExitLauncher => T("shell.prompts.commands.exit_launcher"),
+            LauncherFrontendPromptCommandKind.AbortLaunch => T("shell.prompts.commands.abort_launch"),
+            LauncherFrontendPromptCommandKind.AppendLaunchArgument => T("shell.prompts.commands.append_launch_argument", ("value", command.Value ?? T("shell.prompts.commands.not_available"))),
+            LauncherFrontendPromptCommandKind.PersistSetting => T("shell.prompts.commands.persist_setting", ("value", command.Value ?? T("shell.prompts.commands.not_available"))),
+            LauncherFrontendPromptCommandKind.DownloadJavaRuntime => T("shell.prompts.commands.download_java_runtime", ("value", command.Value ?? T("shell.prompts.commands.not_available"))),
+            LauncherFrontendPromptCommandKind.PersistInstanceJavaCompatibilityIgnored => T("shell.prompts.commands.persist_java_override"),
+            LauncherFrontendPromptCommandKind.IgnoreJavaCompatibilityOnce => T("shell.prompts.commands.ignore_java_once"),
+            LauncherFrontendPromptCommandKind.ClosePrompt => T("shell.prompts.commands.close_prompt"),
+            LauncherFrontendPromptCommandKind.ViewGameLog => T("shell.prompts.commands.view_game_log"),
+            LauncherFrontendPromptCommandKind.OpenInstanceSettings => T("shell.prompts.commands.open_instance_settings"),
+            LauncherFrontendPromptCommandKind.ExportCrashReport => T("shell.prompts.commands.export_crash_report"),
             _ => command.Kind.ToString()
         };
     }
@@ -486,7 +490,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_isLaunchInProgress)
         {
-            AddActivity("启动进行中", "当前已经有一个启动会话正在运行。");
+            AddActivity(T("shell.prompts.activities.launch_in_progress.title"), T("shell.prompts.activities.launch_in_progress.body"));
             return;
         }
 
@@ -495,13 +499,13 @@ internal sealed partial class FrontendShellViewModel
 
         if (_isLaunchBlockedByPrompt)
         {
-            AddActivity("启动已被提示中止", "请先重新确认启动前提示或调整当前实例设置。");
+            AddActivity(T("shell.prompts.activities.launch_blocked.title"), T("shell.prompts.activities.launch_blocked.body"));
             return;
         }
 
         if (!_launchComposition.PrecheckResult.IsSuccess)
         {
-            AddFailureActivity("启动前检查未通过", GetLaunchPrecheckFailureMessage());
+            AddFailureActivity(T("shell.prompts.activities.precheck_failed.title"), GetLaunchPrecheckFailureMessage());
             return;
         }
 
@@ -513,7 +517,9 @@ internal sealed partial class FrontendShellViewModel
             RebuildPromptLanes();
             SetPromptOverlayOpen(true);
             SelectPromptLane(AvaloniaPromptLaneKind.Launch, updateActivity: false);
-            AddActivity("启动前提示待处理", $"{LaunchVersionSubtitle} 还有 {_promptCatalog[AvaloniaPromptLaneKind.Launch].Count} 个提示需要确认。");
+            AddActivity(
+                T("shell.prompts.activities.pending_launch_prompts.title"),
+                T("shell.prompts.activities.pending_launch_prompts.body", ("instance", LaunchVersionSubtitle), ("count", _promptCatalog[AvaloniaPromptLaneKind.Launch].Count)));
             return;
         }
 
@@ -524,7 +530,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _shellActionService.AcceptLauncherEula();
         UpdateStartupConsentRequest(request => request with { HasAcceptedEula = true });
-        AddActivity("已同意协议授权", "协议授权状态已写入共享配置。");
+        AddActivity(T("shell.prompts.activities.accept_consent.title"), T("shell.prompts.activities.accept_consent.body"));
     }
 
     private void ContinuePromptFlow(AvaloniaPromptLaneKind lane)
@@ -532,11 +538,15 @@ internal sealed partial class FrontendShellViewModel
         if (lane == AvaloniaPromptLaneKind.Launch)
         {
             _isLaunchBlockedByPrompt = false;
-            AddActivity("继续启动流程", _pendingLaunchAfterPrompt ? "启动前提示已放行，将继续当前启动。" : "启动前提示已放行，启动按钮恢复可用。");
+            AddActivity(
+                T("shell.prompts.activities.continue_launch.title"),
+                _pendingLaunchAfterPrompt
+                    ? T("shell.prompts.activities.continue_launch.body_pending")
+                    : T("shell.prompts.activities.continue_launch.body_ready"));
             return;
         }
 
-        AddActivity("继续当前流程", "提示要求的继续操作已完成。");
+        AddActivity(T("shell.prompts.activities.continue_flow.title"), T("shell.prompts.activities.continue_flow.body"));
     }
 
     private void AbortLaunchFromPrompt()
@@ -544,7 +554,7 @@ internal sealed partial class FrontendShellViewModel
         _isLaunchBlockedByPrompt = false;
         _ignoreJavaCompatibilityWarningOnce = false;
         _pendingLaunchAfterPrompt = false;
-        AddActivity("已中止启动流程", "启动提示要求返回处理，当前启动动作已被阻止。");
+        AddActivity(T("shell.prompts.activities.abort_launch.title"), T("shell.prompts.activities.abort_launch.body"));
     }
 
     private void PersistPromptSetting(string? rawValue)
@@ -561,10 +571,10 @@ internal sealed partial class FrontendShellViewModel
         };
         RaiseLaunchCompositionProperties();
         AddActivity(
-            "已保存提示设置",
+            T("shell.prompts.activities.persist_setting.title"),
             string.IsNullOrWhiteSpace(rawValue)
-                ? "已关闭非 ASCII 游戏路径提示。"
-                : $"已保存设置: {rawValue}");
+                ? T("shell.prompts.activities.persist_setting.body_non_ascii_disabled")
+                : T("shell.prompts.activities.persist_setting.body_value", ("value", rawValue)));
     }
 
     private void PersistJavaCompatibilityOverride()
@@ -572,27 +582,27 @@ internal sealed partial class FrontendShellViewModel
         var instanceDirectory = _instanceComposition.Selection.InstanceDirectory;
         if (string.IsNullOrWhiteSpace(instanceDirectory))
         {
-            AddFailureActivity("无法强制启动", "当前没有可写入设置的实例。");
+            AddFailureActivity(T("shell.prompts.activities.persist_java_override_failed.title"), T("shell.prompts.activities.persist_java_override_failed.body"));
             return;
         }
 
         _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceJava", true);
         IgnoreInstanceJavaCompatibilityWarning = true;
         RefreshLaunchState();
-        AddActivity("已启用 Java 强制启动", "当前实例后续将忽略 Java 兼容性检查，继续使用你手动选择的 Java。");
+        AddActivity(T("shell.prompts.activities.persist_java_override.title"), T("shell.prompts.activities.persist_java_override.body"));
     }
 
     private void IgnoreJavaCompatibilityWarningOnce()
     {
         _ignoreJavaCompatibilityWarningOnce = true;
-        AddActivity("已为本次启动忽略 Java 检查", "当前启动将继续使用你手动选择的 Java，不会修改实例设置。");
+        AddActivity(T("shell.prompts.activities.ignore_java_once.title"), T("shell.prompts.activities.ignore_java_once.body"));
     }
 
     private void AppendPromptLaunchArgument(string? argument)
     {
         if (string.IsNullOrWhiteSpace(argument))
         {
-            AddFailureActivity("追加启动参数失败", "提示中未提供可写入的参数。");
+            AddFailureActivity(T("shell.prompts.activities.append_argument_failed.title"), T("shell.prompts.activities.append_argument_failed.body"));
             return;
         }
 
@@ -600,40 +610,42 @@ internal sealed partial class FrontendShellViewModel
         var argumentTokens = currentArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (argumentTokens.Contains(argument, StringComparer.Ordinal))
         {
-            AddActivity("启动参数已存在", argument);
+            AddActivity(T("shell.prompts.activities.argument_exists.title"), argument);
             return;
         }
 
         LaunchGameArguments = string.IsNullOrWhiteSpace(currentArguments)
             ? argument
             : $"{currentArguments} {argument}";
-        AddActivity("已追加启动参数", LaunchGameArguments);
+        AddActivity(T("shell.prompts.activities.argument_appended.title"), LaunchGameArguments);
     }
 
     private void OpenCrashLogFromPrompt()
     {
         var logPath = _shellActionService.MaterializeCrashLog(_activeCrashPlan);
-        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), "Prompt routed the shell to the live game log surface.");
+        NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog), T("shell.prompts.activities.navigate.game_log"));
         RefreshGameLogSurface();
-        AddActivity("查看日志", $"已生成崩溃日志，可在实时日志页点击打开：{logPath}");
+        AddActivity(T("shell.prompts.activities.open_log.title"), T("shell.prompts.activities.open_log.body", ("path", logPath)));
     }
 
     private void ExportCrashReportFromPrompt()
     {
         var exportResult = _shellActionService.ExportCrashReport(_activeCrashPlan);
-        OpenExternalTarget(exportResult.ArchivePath, "已导出并打开崩溃报告压缩包。");
-        AddActivity("崩溃报告已导出", $"{exportResult.ArchivePath} • {exportResult.ArchivedFileCount} 个文件已归档。");
+        OpenExternalTarget(exportResult.ArchivePath, T("shell.prompts.external_open.success.crash_report_exported"));
+        AddActivity(
+            T("shell.prompts.activities.crash_report_exported.title"),
+            T("shell.prompts.activities.crash_report_exported.body", ("path", exportResult.ArchivePath), ("count", exportResult.ArchivedFileCount)));
     }
 
     private async Task DownloadJavaRuntimeFromPromptAsync()
     {
         if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
         {
-            AddFailureActivity("Java 运行时准备失败", "当前启动状态没有可执行的 Java 下载计划。");
+            AddFailureActivity(T("shell.prompts.activities.java_runtime_prepare_failed.title"), T("shell.prompts.activities.java_runtime_prepare_failed.body_missing_plan"));
             return;
         }
 
-        AddActivity("Java 运行时准备中", "正在后台下载并注册 Java 运行时。");
+        AddActivity(T("shell.prompts.activities.java_runtime_preparing.title"), T("shell.prompts.activities.java_runtime_preparing.body"));
 
         try
         {
@@ -646,12 +658,12 @@ internal sealed partial class FrontendShellViewModel
                 var installedRuntime = FrontendJavaInventoryService.TryResolveRuntime(
                     _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
                     isEnabled: true,
-                    fallbackDisplayName: $"Java {installResult.VersionName}");
+                    fallbackDisplayName: T("shell.prompts.java.runtime_name", ("version", installResult.VersionName)));
                 _launchComposition = _launchComposition with
                 {
                     SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
                         installedRuntime?.ExecutablePath ?? _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
-                        installedRuntime?.DisplayName ?? $"Java {installResult.VersionName}",
+                        installedRuntime?.DisplayName ?? T("shell.prompts.java.runtime_name", ("version", installResult.VersionName)),
                         installedRuntime?.MajorVersion ?? _launchComposition.JavaWorkflow.RecommendedMajorVersion,
                         IsEnabled: installedRuntime?.IsEnabled ?? true,
                         Is64Bit: installedRuntime?.Is64Bit ?? Environment.Is64BitOperatingSystem,
@@ -662,17 +674,17 @@ internal sealed partial class FrontendShellViewModel
                 RegisterMaterializedJavaRuntime(installResult);
                 _isLaunchBlockedByPrompt = false;
                 _pendingLaunchAfterPrompt = false;
-                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), "Prompt routed the shell to Java settings after preparing the runtime.");
+                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), T("shell.prompts.activities.navigate.java_settings"));
                 AddActivity(
-                    "Java 运行时已准备",
-                    $"{installResult.RuntimeDirectory} • 下载 {installResult.DownloadedFileCount} 个文件，复用 {installResult.ReusedFileCount} 个文件。");
+                    T("shell.prompts.activities.java_runtime_ready.title"),
+                    T("shell.prompts.activities.java_runtime_ready.body", ("path", installResult.RuntimeDirectory), ("downloaded_count", installResult.DownloadedFileCount), ("reused_count", installResult.ReusedFileCount)));
             });
         }
         catch (Exception ex)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                AddFailureActivity("Java 运行时准备失败", ex.Message);
+                AddFailureActivity(T("shell.prompts.activities.java_runtime_prepare_failed.title"), ex.Message);
             });
         }
     }
@@ -680,15 +692,15 @@ internal sealed partial class FrontendShellViewModel
     private void RegisterMaterializedJavaRuntime(FrontendJavaRuntimeInstallResult installResult)
     {
         var key = $"downloaded-{Path.GetFileName(installResult.RuntimeDirectory)}";
-        var tags = new List<string> { "64 Bit", "Prompt Download" };
+        var tags = new List<string> { T("shell.prompts.java.tags.bit64"), T("shell.prompts.java.tags.prompt_download") };
         if (installResult.ReusedFileCount > 0)
         {
-            tags.Add($"复用 {installResult.ReusedFileCount}");
+            tags.Add(T("shell.prompts.java.tags.reused_count", ("count", installResult.ReusedFileCount)));
         }
 
         var newEntry = CreateJavaRuntimeEntry(
             key,
-            $"Java {installResult.VersionName}",
+            T("shell.prompts.java.runtime_name", ("version", installResult.VersionName)),
             installResult.RuntimeDirectory,
             tags,
             isEnabled: true);
@@ -720,17 +732,17 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(target))
         {
-            AddFailureActivity("外部打开失败", "缺少可打开的目标。");
+            AddFailureActivity(T("shell.prompts.external_open.failure.title"), T("shell.prompts.external_open.failure.missing_target"));
             return;
         }
 
         if (_shellActionService.TryOpenExternalTarget(target, out var error))
         {
-            AddActivity("已打开外部目标", $"{successMessage} {target}");
+            AddActivity(T("shell.prompts.external_open.success.title"), T("shell.prompts.external_open.success.body", ("message", successMessage), ("target", target)));
             return;
         }
 
-        AddFailureActivity("外部打开失败", $"{target} • {error ?? "未知错误"}");
+        AddFailureActivity(T("shell.prompts.external_open.failure.title"), T("shell.prompts.external_open.failure.body", ("target", target), ("error", error ?? T("shell.prompts.external_open.failure.unknown_error"))));
     }
 
     private void UpdateStartupConsentRequest(Func<LauncherStartupConsentRequest, LauncherStartupConsentRequest> updater)
@@ -986,8 +998,8 @@ internal sealed partial class FrontendShellViewModel
 
             await startResult.Process.WaitForExitAsync();
             _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
-            AppendLaunchLogLine($"游戏进程已退出，退出码 {startResult.Process.ExitCode}。");
-            AddActivity("游戏进程已结束", $"{LaunchVersionSubtitle} • ExitCode {startResult.Process.ExitCode}");
+            AppendLaunchLogLine(T("shell.prompts.launch_logs.process_exited", ("exit_code", startResult.Process.ExitCode)));
+            AddActivity(T("shell.prompts.activities.game_process_ended.title"), T("shell.prompts.activities.game_process_ended.body", ("instance", LaunchVersionSubtitle), ("exit_code", startResult.Process.ExitCode)));
             if (startResult.Process.ExitCode != 0 && !_launchProcessTerminationRequested)
             {
                 await Dispatcher.UIThread.InvokeAsync(() => ShowCrashPromptForLaunchFailure(startResult));
@@ -995,8 +1007,8 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AppendLaunchLogLine($"会话监控异常：{ex.Message}");
-            AddActivity("会话监控异常", ex.Message);
+            AppendLaunchLogLine(T("shell.prompts.launch_logs.monitor_exception", ("message", ex.Message)));
+            AddActivity(T("shell.prompts.activities.monitor_exception.title"), ex.Message);
         }
         finally
         {
@@ -1153,7 +1165,7 @@ internal sealed partial class FrontendShellViewModel
         RebuildPromptLanes();
         SetPromptOverlayOpen(true);
         SelectPromptLane(AvaloniaPromptLaneKind.Crash, updateActivity: false);
-        AddActivity("Minecraft 出现错误", "已弹出崩溃恢复提示，可直接查看日志或导出错误报告。");
+        AddActivity(T("shell.prompts.activities.crash_prompt_shown.title"), T("shell.prompts.activities.crash_prompt_shown.body"));
     }
 
     private CrashAvaloniaPlan BuildCrashPlanForLaunchFailure(FrontendLaunchStartResult startResult)
@@ -1187,7 +1199,7 @@ internal sealed partial class FrontendShellViewModel
             exportRequest.CurrentLauncherLogFilePath));
         var resultText = analysisResult.HasKnownReason
             ? analysisResult.ResultText
-            : $"{analysisResult.ResultText}{Environment.NewLine}{Environment.NewLine}详细信息：{Environment.NewLine}{BuildLaunchFailureMessage(startResult)}";
+            : $"{analysisResult.ResultText}{Environment.NewLine}{Environment.NewLine}{T("shell.prompts.crash.details_header")}{Environment.NewLine}{BuildLaunchFailureMessage(startResult)}";
         var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
             resultText,
             IsManualAnalysis: false,
@@ -1207,11 +1219,11 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
     }
 
-    private static string BuildLaunchFailureMessage(FrontendLaunchStartResult startResult)
+    private string BuildLaunchFailureMessage(FrontendLaunchStartResult startResult)
     {
         var details = new List<string>
         {
-            $"游戏进程异常退出，退出码 {startResult.Process.ExitCode}。"
+            T("shell.prompts.crash.launch_failure.exit_code", ("exit_code", startResult.Process.ExitCode))
         };
 
         var lastOutputLine = TryReadLastMeaningfulLine(startResult.RawOutputLogPath);
@@ -1220,7 +1232,7 @@ internal sealed partial class FrontendShellViewModel
             details.Add(lastOutputLine);
         }
 
-        details.Add($"原始输出日志：{startResult.RawOutputLogPath}");
+        details.Add(T("shell.prompts.crash.launch_failure.raw_output_log", ("path", startResult.RawOutputLogPath)));
         return string.Join(Environment.NewLine, details);
     }
 
@@ -1273,7 +1285,7 @@ internal sealed partial class FrontendShellViewModel
         RebuildPromptLanes();
         SetPromptOverlayOpen(true);
         SelectPromptLane(AvaloniaPromptLaneKind.Crash, updateActivity: false);
-        AddActivity("崩溃测试已触发", "崩溃恢复提示现已加入提示队列。");
+        AddActivity(T("shell.prompts.activities.crash_test_triggered.title"), T("shell.prompts.activities.crash_test_triggered.body"));
     }
 
     private LauncherFrontendPageContent BuildPageContent(LauncherFrontendShellPlan shellPlan)
@@ -1328,8 +1340,8 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return _launchComposition.JavaWorkflow.RecommendedComponent is null
-            ? $"Java {_launchComposition.JavaWorkflow.RecommendedMajorVersion}"
-            : $"{_launchComposition.JavaWorkflow.RecommendedComponent} (Java {_launchComposition.JavaWorkflow.RecommendedMajorVersion})";
+            ? T("shell.prompts.java.runtime_name", ("version", _launchComposition.JavaWorkflow.RecommendedMajorVersion))
+            : T("shell.prompts.java.component_runtime_name", ("component", _launchComposition.JavaWorkflow.RecommendedComponent), ("version", _launchComposition.JavaWorkflow.RecommendedMajorVersion));
     }
 
     private MinecraftLaunchJavaPrompt? GetPendingJavaPrompt()

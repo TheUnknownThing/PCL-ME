@@ -73,7 +73,7 @@ internal static class FrontendDownloadSettingsService
             <= 14 => $"{(roundedValue + 1) * 0.1d:F1} M/s",
             <= 31 => $"{(roundedValue - 11) * 0.5d:F1} M/s",
             <= 41 => $"{roundedValue - 21} M/s",
-            _ => "无限制"
+            _ => "Unlimited"
         };
     }
 

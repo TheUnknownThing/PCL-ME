@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -227,9 +228,9 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         ? LT("shell.tools.help.search.results_header")
         : LT("shell.tools.help.search.empty_header");
 
-    public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
-        ?? _currentNavigation?.CurrentPage.Title
-        ?? Title;
+    public string TitleBarLabel => _currentNavigation is null
+        ? Title
+        : FrontendShellLocalizationService.ResolveTitleBarLabel(_currentNavigation, _i18n);
 
     public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind switch
     {

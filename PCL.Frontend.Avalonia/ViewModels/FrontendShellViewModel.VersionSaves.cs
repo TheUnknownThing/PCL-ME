@@ -61,14 +61,20 @@ internal sealed partial class FrontendShellViewModel
     public string VersionSaveDatapackSortText => SD("instance.content.sort.label", ("mode", GetVersionSaveDatapackSortName(_versionSaveDatapackSortMethod)));
 
     public ActionCommand OpenVersionSaveFolderCommand => new(() =>
-        OpenInstanceTarget("打开存档文件夹", _versionSavesComposition.Selection.SavePath, "当前没有可打开的存档。"));
+        OpenInstanceTarget(
+            SD("save_detail.actions.open_save_folder"),
+            _versionSavesComposition.Selection.SavePath,
+            SD("save_detail.messages.no_openable_save")));
 
     public ActionCommand CreateVersionSaveBackupCommand => new(CreateVersionSaveBackup);
 
     public ActionCommand CleanVersionSaveBackupCommand => new(CleanVersionSaveBackups);
 
     public ActionCommand OpenVersionSaveDatapackFolderCommand => new(() =>
-        OpenInstanceTarget("打开数据包文件夹", _versionSavesComposition.Selection.DatapackDirectory, "当前存档没有数据包目录。"));
+        OpenInstanceTarget(
+            SD("save_detail.actions.open_datapack_folder"),
+            _versionSavesComposition.Selection.DatapackDirectory,
+            SD("save_detail.messages.no_datapack_directory")));
 
     public ActionCommand InstallVersionSaveDatapackFromFileCommand => new(() => _ = InstallVersionSaveDatapackFromFileAsync());
 
@@ -115,7 +121,10 @@ internal sealed partial class FrontendShellViewModel
             _versionSavesComposition.Backups.Select(entry => new SimpleListEntryViewModel(
                 entry.Title,
                 entry.Summary,
-                new ActionCommand(() => OpenInstanceTarget("查看备份", entry.Path, "备份文件不存在。")))));
+                new ActionCommand(() => OpenInstanceTarget(
+                    SD("save_detail.actions.view_backup"),
+                    entry.Path,
+                    SD("save_detail.messages.backup_missing"))))));
         RefreshVersionSaveDatapackEntries();
 
         RaisePropertyChanged(nameof(VersionSaveTitle));
@@ -213,7 +222,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_versionSavesComposition.Selection.HasSelection)
         {
-            AddActivity("创建存档备份", "当前没有可备份的存档。");
+            AddActivity(SD("save_detail.activities.create_backup"), SD("save_detail.messages.no_backup_target"));
             return;
         }
 
@@ -232,14 +241,14 @@ internal sealed partial class FrontendShellViewModel
         }
 
         ReloadVersionSavesComposition();
-        AddActivity("创建存档备份", archivePath);
+        AddActivity(SD("save_detail.activities.create_backup"), archivePath);
     }
 
     private void CleanVersionSaveBackups()
     {
         if (!_versionSavesComposition.Selection.HasSelection)
         {
-            AddActivity("清理备份记录", "当前没有可清理的存档。");
+            AddActivity(SD("save_detail.activities.clean_backups"), SD("save_detail.messages.no_backup_target"));
             return;
         }
 
@@ -262,31 +271,38 @@ internal sealed partial class FrontendShellViewModel
         }
 
         ReloadVersionSavesComposition();
-        AddActivity("清理备份记录", removed == 0 ? "没有检测到需要清理的空备份文件。" : $"已清理 {removed} 个空备份文件。");
+        AddActivity(
+            SD("save_detail.activities.clean_backups"),
+            removed == 0
+                ? SD("save_detail.messages.no_empty_backups")
+                : SD("save_detail.messages.cleaned_empty_backups", ("count", removed)));
     }
 
     private async Task InstallVersionSaveDatapackFromFileAsync()
     {
         if (!_versionSavesComposition.Selection.HasSelection)
         {
-            AddActivity("安装数据包", "当前没有选中的存档。");
+            AddActivity(SD("save_detail.activities.install_datapack"), SD("save_detail.messages.no_selected_save"));
             return;
         }
 
         string? sourcePath;
         try
         {
-            sourcePath = await _shellActionService.PickOpenFileAsync("选择数据包文件", "压缩包或数据包文件", "*.zip");
+            sourcePath = await _shellActionService.PickOpenFileAsync(
+                SD("save_detail.dialogs.datapack_file.title"),
+                SD("save_detail.dialogs.datapack_file.filter_name"),
+                "*.zip");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("安装数据包失败", ex.Message);
+            AddFailureActivity(SD("save_detail.activities.install_datapack_failed"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            AddActivity("安装数据包", "已取消选择数据包文件。");
+            AddActivity(SD("save_detail.activities.install_datapack"), SD("save_detail.messages.install_datapack_canceled"));
             return;
         }
 
@@ -294,14 +310,14 @@ internal sealed partial class FrontendShellViewModel
         var targetPath = Path.Combine(_versionSavesComposition.Selection.DatapackDirectory, Path.GetFileName(sourcePath));
         File.Copy(sourcePath, targetPath, true);
         ReloadVersionSavesComposition();
-        AddActivity("安装数据包", $"{sourcePath} -> {targetPath}");
+        AddActivity(SD("save_detail.activities.install_datapack"), $"{sourcePath} -> {targetPath}");
     }
 
     private void ExportVersionSaveDatapackInfo()
     {
         if (!_versionSavesComposition.Selection.HasSelection)
         {
-            AddActivity("导出数据包信息", "当前没有选中的存档。");
+            AddActivity(SD("save_detail.activities.export_datapack_info"), SD("save_detail.messages.no_selected_save"));
             return;
         }
 
@@ -310,6 +326,9 @@ internal sealed partial class FrontendShellViewModel
         var outputPath = Path.Combine(exportDirectory, $"{_versionSavesComposition.Selection.SaveName}-datapacks.txt");
         var lines = _versionSavesComposition.Datapacks.Select(entry => $"{entry.Title} | {entry.Meta} | {entry.Summary}").ToArray();
         File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        OpenInstanceTarget("导出数据包信息", outputPath, "导出文件不存在。");
+        OpenInstanceTarget(
+            SD("save_detail.activities.export_datapack_info"),
+            outputPath,
+            SD("save_detail.messages.export_missing"));
     }
 }

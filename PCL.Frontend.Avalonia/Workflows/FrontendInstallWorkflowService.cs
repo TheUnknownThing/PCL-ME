@@ -25,7 +25,7 @@ internal static class FrontendInstallWorkflowService
 
     private static readonly UTF8Encoding Utf8NoBom = new(false);
 
-    public static IReadOnlyList<FrontendInstallChoice> GetMinecraftChoices(string? preferredVersion)
+    public static IReadOnlyList<FrontendInstallChoice> GetMinecraftChoices(string? preferredVersion, II18nService? i18n = null)
     {
         var root = ReadJsonObject(MojangVersionManifestUrl);
         if (root["versions"] is not JsonArray versions)
@@ -45,8 +45,12 @@ internal static class FrontendInstallWorkflowService
                     Id: $"minecraft:{version}",
                     Title: version,
                     Summary: string.IsNullOrWhiteSpace(releaseTime)
-                        ? "正式版"
-                        : $"正式版 • {FormatReleaseTime(releaseTime)}",
+                        ? Text(i18n, "download.install.choices.summaries.release", "Release")
+                        : Text(
+                            i18n,
+                            "download.install.choices.summaries.release_with_time",
+                            "Release • {published_at}",
+                            ("published_at", FormatReleaseTime(i18n, releaseTime))),
                     Version: version,
                     Kind: FrontendInstallChoiceKind.Minecraft,
                     ManifestUrl: node["url"]?.GetValue<string>());
@@ -68,7 +72,11 @@ internal static class FrontendInstallWorkflowService
                     new FrontendInstallChoice(
                         Id: $"minecraft:{preferredVersion}",
                         Title: preferredVersion,
-                        Summary: $"当前实例 • {FormatReleaseTime(extra["releaseTime"]?.GetValue<string>())}",
+                        Summary: Text(
+                            i18n,
+                            "download.install.choices.summaries.current_instance_with_time",
+                            "Current instance • {published_at}",
+                            ("published_at", FormatReleaseTime(i18n, extra["releaseTime"]?.GetValue<string>()))),
                         Version: preferredVersion,
                         Kind: FrontendInstallChoiceKind.Minecraft,
                         ManifestUrl: extra["url"]?.GetValue<string>()));
@@ -78,7 +86,7 @@ internal static class FrontendInstallWorkflowService
         return choices;
     }
 
-    public static IReadOnlyList<FrontendInstallChoice> GetMinecraftCatalogChoices(string? preferredVersion)
+    public static IReadOnlyList<FrontendInstallChoice> GetMinecraftCatalogChoices(string? preferredVersion, II18nService? i18n = null)
     {
         var root = ReadJsonObject(MojangVersionManifestUrl);
         if (root["versions"] is not JsonArray versions)
@@ -102,10 +110,10 @@ internal static class FrontendInstallWorkflowService
                 var normalizedId = NormalizeMinecraftCatalogVersionId(rawId);
                 var group = ResolveMinecraftCatalogGroup(rawId, node["type"]?.GetValue<string>(), releaseTime);
                 var iconName = ResolveMinecraftCatalogIconName(group);
-                var lore = ResolveMinecraftCatalogLore(rawId, group, releaseTime);
+                var lore = ResolveMinecraftCatalogLore(i18n, rawId, group, releaseTime);
                 var formattedTitle = FormatMinecraftCatalogVersion(normalizedId);
                 var summary = string.IsNullOrWhiteSpace(lore)
-                    ? BuildMinecraftCatalogTimestampSummary(releaseTime, normalizedId, formattedTitle)
+                    ? BuildMinecraftCatalogTimestampSummary(i18n, releaseTime, normalizedId, formattedTitle)
                     : BuildMinecraftCatalogLoreSummary(lore, normalizedId, formattedTitle);
 
                 return new FrontendInstallChoice(
@@ -143,7 +151,11 @@ internal static class FrontendInstallWorkflowService
                     new FrontendInstallChoice(
                         Id: $"minecraft:{preferredVersion}",
                         Title: FormatMinecraftCatalogVersion(preferredVersion),
-                        Summary: $"当前实例 • {FormatReleaseTime(releaseTime)}",
+                        Summary: Text(
+                            i18n,
+                            "download.install.choices.summaries.current_instance_with_time",
+                            "Current instance • {published_at}",
+                            ("published_at", FormatReleaseTime(i18n, releaseTime))),
                         Version: preferredVersion,
                         Kind: FrontendInstallChoiceKind.Minecraft,
                         ManifestUrl: extra["url"]?.GetValue<string>(),
@@ -162,25 +174,26 @@ internal static class FrontendInstallWorkflowService
 
     public static IReadOnlyList<FrontendInstallChoice> GetSupportedChoices(
         string optionTitle,
-        string minecraftVersion)
+        string minecraftVersion,
+        II18nService? i18n = null)
     {
         try
         {
             return optionTitle switch
             {
-                "Forge" => GetForgeChoices(minecraftVersion),
-                "NeoForge" => GetNeoForgeChoices(minecraftVersion),
-                "Cleanroom" => GetCleanroomChoices(minecraftVersion),
-                "Fabric" => GetFabricLoaderChoices(minecraftVersion),
-                "Legacy Fabric" => GetLegacyFabricLoaderChoices(minecraftVersion),
-                "Quilt" => GetQuiltLoaderChoices(minecraftVersion),
-                "LabyMod" => GetLabyModChoices(minecraftVersion),
-                "OptiFine" => GetOptiFineChoices(minecraftVersion),
-                "LiteLoader" => GetLiteLoaderChoices(minecraftVersion),
-                "Fabric API" => GetModrinthFileChoices("fabric-api", minecraftVersion, ["fabric"]),
-                "Legacy Fabric API" => GetModrinthFileChoices("9CJED7xi", minecraftVersion, null),
-                "QFAPI / QSL" => GetModrinthFileChoices("qvIfYCYJ", minecraftVersion, ["quilt"], allowVersionFallback: true),
-                "OptiFabric" => GetOptiFabricChoices(minecraftVersion),
+                "Forge" => GetForgeChoices(minecraftVersion, i18n),
+                "NeoForge" => GetNeoForgeChoices(minecraftVersion, i18n),
+                "Cleanroom" => GetCleanroomChoices(minecraftVersion, i18n),
+                "Fabric" => GetFabricLoaderChoices(minecraftVersion, i18n),
+                "Legacy Fabric" => GetLegacyFabricLoaderChoices(minecraftVersion, i18n),
+                "Quilt" => GetQuiltLoaderChoices(minecraftVersion, i18n),
+                "LabyMod" => GetLabyModChoices(minecraftVersion, i18n),
+                "OptiFine" => GetOptiFineChoices(minecraftVersion, i18n),
+                "LiteLoader" => GetLiteLoaderChoices(minecraftVersion, i18n),
+                "Fabric API" => GetModrinthFileChoices("fabric-api", minecraftVersion, ["fabric"], i18n: i18n),
+                "Legacy Fabric API" => GetModrinthFileChoices("9CJED7xi", minecraftVersion, null, i18n: i18n),
+                "QFAPI / QSL" => GetModrinthFileChoices("qvIfYCYJ", minecraftVersion, ["quilt"], allowVersionFallback: true, i18n: i18n),
+                "OptiFabric" => GetOptiFabricChoices(minecraftVersion, i18n),
                 _ => []
             };
         }
@@ -212,6 +225,7 @@ internal static class FrontendInstallWorkflowService
         Action<FrontendInstallApplyPhase, string>? onPhaseChanged = null,
         Action<FrontendInstanceRepairProgressSnapshot>? onRepairProgress = null,
         FrontendDownloadTransferOptions? downloadOptions = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -225,16 +239,21 @@ internal static class FrontendInstallWorkflowService
         Directory.CreateDirectory(targetDirectory);
         void ReportPrepare(string message) => onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, message);
 
-        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, "正在写入安装清单并准备安装环境…");
-        var manifestNode = BuildTargetManifest(request, ReportPrepare, speedLimiter, cancelToken);
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.PrepareManifest, Text(i18n, "download.install.workflow.tasks.preparing_manifest", "Writing the install manifest and preparing the environment..."));
+        var manifestNode = BuildTargetManifest(request, ReportPrepare, speedLimiter, i18n, cancelToken);
         cancelToken.ThrowIfCancellationRequested();
-        ReportPrepare("正在清理本地缺失依赖引用…");
+        ReportPrepare(Text(i18n, "download.install.workflow.tasks.cleaning_missing_local_libraries", "Cleaning missing local dependency references..."));
         RemoveMissingLocalOnlyLibraries(manifestNode, launcherDirectory);
         var manifestPath = Path.Combine(targetDirectory, $"{request.TargetInstanceName}.json");
-        ReportPrepare($"正在写入安装清单文件 {Path.GetFileName(manifestPath)}…");
+        ReportPrepare(
+            Text(
+                i18n,
+                "download.install.workflow.tasks.writing_manifest_file",
+                "Writing install manifest file {file_name}...",
+                ("file_name", Path.GetFileName(manifestPath))));
         File.WriteAllText(manifestPath, manifestNode.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
-        ReportPrepare("正在写入实例配置…");
+        ReportPrepare(Text(i18n, "download.install.workflow.tasks.writing_instance_config", "Writing instance configuration..."));
         var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(targetDirectory);
         instanceConfig.Set("VersionVanillaName", request.MinecraftChoice.Version);
         instanceConfig.Set("VersionArgumentIndieV2", request.UseInstanceIsolation);
@@ -243,10 +262,10 @@ internal static class FrontendInstallWorkflowService
         var modsDirectory = request.UseInstanceIsolation
             ? Path.Combine(targetDirectory, "mods")
             : Path.Combine(launcherDirectory, "mods");
-        ReportPrepare("正在创建实例目录结构…");
+        ReportPrepare(Text(i18n, "download.install.workflow.tasks.creating_instance_directories", "Creating instance directory structure..."));
         Directory.CreateDirectory(modsDirectory);
 
-        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在准备受管依赖文件…");
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, Text(i18n, "download.install.workflow.tasks.preparing_managed_dependencies", "Preparing managed dependency files..."));
         ApplyManagedModSelection(
             modsDirectory,
             request.FabricApiChoice,
@@ -274,7 +293,7 @@ internal static class FrontendInstallWorkflowService
             request.PreserveExistingManagedModFiles,
             "OptiFine_");
 
-        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, "正在补全游戏主文件与支持库…");
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.DownloadSupportFiles, Text(i18n, "download.install.workflow.tasks.repairing_game_files", "Completing game core files and support libraries..."));
         var repairResult = request.RunRepair
             ? FrontendInstanceRepairService.Repair(new FrontendInstanceRepairRequest(
                 launcherDirectory,
@@ -286,7 +305,7 @@ internal static class FrontendInstallWorkflowService
                 cancelToken)
             : new FrontendInstanceRepairResult([], []);
 
-        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.Finalize, "正在整理实例目录并完成安装…");
+        onPhaseChanged?.Invoke(FrontendInstallApplyPhase.Finalize, Text(i18n, "download.install.workflow.tasks.finalizing_installation", "Organizing the instance directory and finishing installation..."));
         EnsureResourceFolders(targetDirectory, request.UseInstanceIsolation ? targetDirectory : launcherDirectory);
 
         return new FrontendInstallApplyResult(
@@ -300,10 +319,17 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         Action<string>? onStatusChanged = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         cancelToken.ThrowIfCancellationRequested();
-        ReportPrepareStatus(onStatusChanged, $"正在获取 Minecraft {request.MinecraftChoice.Version} 原版清单…");
+        ReportPrepareStatus(
+            onStatusChanged,
+            Text(
+                i18n,
+                "download.install.workflow.tasks.fetch_vanilla_manifest",
+                "Fetching the vanilla manifest for Minecraft {version}...",
+                ("version", request.MinecraftChoice.Version)));
         var baseManifest = ReadJsonObject(request.MinecraftChoice.ManifestUrl ?? MojangVersionManifestUrl);
         JsonObject targetManifest;
 
@@ -312,7 +338,13 @@ internal static class FrontendInstallWorkflowService
             case FrontendInstallChoiceKind.FabricLoader:
             case FrontendInstallChoiceKind.LegacyFabricLoader:
             case FrontendInstallChoiceKind.QuiltLoader:
-                ReportPrepareStatus(onStatusChanged, $"正在获取 {request.PrimaryLoaderChoice.Title} 安装清单…");
+                ReportPrepareStatus(
+                    onStatusChanged,
+                    Text(
+                        i18n,
+                        "download.install.workflow.tasks.fetch_loader_manifest",
+                        "Fetching the manifest for {loader_title}...",
+                        ("loader_title", request.PrimaryLoaderChoice.Title)));
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
                     ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
@@ -320,7 +352,7 @@ internal static class FrontendInstallWorkflowService
                     request.TargetInstanceName);
                 break;
             case FrontendInstallChoiceKind.LabyMod:
-                ReportPrepareStatus(onStatusChanged, "正在获取 LabyMod 安装清单…");
+                ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.fetch_labymod_manifest", "Fetching the LabyMod manifest..."));
                 targetManifest = ReadJsonObject(request.PrimaryLoaderChoice.ManifestUrl
                                                ?? throw new InvalidOperationException("缺少 LabyMod 清单地址。"));
                 targetManifest["id"] = request.TargetInstanceName;
@@ -328,14 +360,20 @@ internal static class FrontendInstallWorkflowService
             case FrontendInstallChoiceKind.Forge:
             case FrontendInstallChoiceKind.NeoForge:
             case FrontendInstallChoiceKind.Cleanroom:
-                ReportPrepareStatus(onStatusChanged, $"正在准备 {request.PrimaryLoaderChoice.Title} 安装器…");
+                ReportPrepareStatus(
+                    onStatusChanged,
+                    Text(
+                        i18n,
+                        "download.install.workflow.tasks.prepare_loader_installer",
+                        "Preparing the installer for {loader_title}...",
+                        ("loader_title", request.PrimaryLoaderChoice.Title)));
                 targetManifest = MergeBaseAndLoaderManifest(
                     baseManifest,
-                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged, speedLimiter, cancelToken),
+                    BuildForgelikeManifest(request, request.PrimaryLoaderChoice, onStatusChanged, speedLimiter, i18n, cancelToken),
                     request.TargetInstanceName);
                 break;
             default:
-                ReportPrepareStatus(onStatusChanged, "正在整理原版安装清单…");
+                ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.organizing_vanilla_manifest", "Organizing the vanilla install manifest..."));
                 targetManifest = CloneObject(baseManifest);
                 targetManifest["id"] = request.TargetInstanceName;
                 break;
@@ -343,7 +381,7 @@ internal static class FrontendInstallWorkflowService
 
         if (request.LiteLoaderChoice is not null)
         {
-            ReportPrepareStatus(onStatusChanged, "正在合并 LiteLoader 安装信息…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.merging_liteloader_manifest", "Merging LiteLoader install information..."));
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
                 BuildLiteLoaderManifest(request.LiteLoaderChoice),
@@ -352,14 +390,14 @@ internal static class FrontendInstallWorkflowService
 
         if (ShouldInstallOptiFineStandalone(request))
         {
-            ReportPrepareStatus(onStatusChanged, "正在处理 OptiFine 安装信息…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.processing_optifine_manifest", "Processing OptiFine install information..."));
             targetManifest = MergeBaseAndLoaderManifest(
                 targetManifest,
-                BuildStandaloneOptiFineManifest(request, onStatusChanged, speedLimiter, cancelToken),
+                BuildStandaloneOptiFineManifest(request, onStatusChanged, speedLimiter, i18n, cancelToken),
                 request.TargetInstanceName);
         }
 
-        ReportPrepareStatus(onStatusChanged, "正在生成目标安装清单…");
+        ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.generating_target_manifest", "Generating the target install manifest..."));
         targetManifest["id"] = request.TargetInstanceName;
         return targetManifest;
     }
@@ -381,6 +419,7 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallChoice loaderChoice,
         Action<string>? onStatusChanged = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(loaderChoice);
@@ -391,7 +430,13 @@ internal static class FrontendInstallWorkflowService
         var installerPath = CreateTempFile("pcl-forgelike-installer-", ".jar");
         try
         {
-            ReportPrepareStatus(onStatusChanged, $"正在下载 {loaderChoice.Title} 安装器…");
+            ReportPrepareStatus(
+                onStatusChanged,
+                Text(
+                    i18n,
+                    "download.install.workflow.tasks.download_loader_installer",
+                    "Downloading the installer for {loader_title}...",
+                    ("loader_title", loaderChoice.Title)));
             FrontendDownloadTransferService.DownloadToPath(HttpClient, installerUrl, installerPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
             using var archive = ZipFile.OpenRead(installerPath);
             var installProfile = ReadJsonObjectFromEntry(archive, "install_profile.json");
@@ -399,8 +444,14 @@ internal static class FrontendInstallWorkflowService
             if (loaderChoice.Kind == FrontendInstallChoiceKind.Forge
                 && IsLegacyForgeInstallProfile(installProfile))
             {
-                ReportPrepareStatus(onStatusChanged, $"正在解析 {loaderChoice.Title} 安装器内容…");
-                return BuildLegacyForgeManifest(archive, request, loaderChoice, installProfile, onStatusChanged);
+                ReportPrepareStatus(
+                    onStatusChanged,
+                    Text(
+                        i18n,
+                        "download.install.workflow.tasks.inspect_loader_installer",
+                        "Inspecting the installer contents for {loader_title}...",
+                        ("loader_title", loaderChoice.Title)));
+                return BuildLegacyForgeManifest(archive, request, loaderChoice, installProfile, onStatusChanged, i18n);
             }
 
             return BuildModernForgelikeManifest(
@@ -411,6 +462,7 @@ internal static class FrontendInstallWorkflowService
                 loaderChoice,
                 onStatusChanged,
                 speedLimiter,
+                i18n,
                 cancelToken);
         }
         finally
@@ -424,7 +476,8 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         FrontendInstallChoice loaderChoice,
         JsonObject installProfile,
-        Action<string>? onStatusChanged = null)
+        Action<string>? onStatusChanged = null,
+        II18nService? i18n = null)
     {
         ValidateLegacyForgeInstallProfile(installProfile, request.MinecraftChoice.Version);
         if (installProfile["install"] is null)
@@ -450,7 +503,13 @@ internal static class FrontendInstallWorkflowService
             "libraries",
             FrontendLibraryArtifactResolver.DeriveLibraryPathFromName(installPath).Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(libraryOutputPath)!);
-        ReportPrepareStatus(onStatusChanged, $"正在写入 {loaderChoice.Title} 支持库…");
+        ReportPrepareStatus(
+            onStatusChanged,
+            Text(
+                i18n,
+                "download.install.workflow.tasks.write_loader_libraries",
+                "Writing support libraries for {loader_title}...",
+                ("loader_title", loaderChoice.Title)));
         using (var source = archive.GetEntry(entryPath)?.Open()
                              ?? throw new InvalidOperationException($"旧版 Forge 安装器缺少条目：{entryPath}"))
         using (var output = File.Create(libraryOutputPath))
@@ -480,6 +539,7 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallChoice loaderChoice,
         Action<string>? onStatusChanged = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         var minecraftVersion = GetRequiredString(
@@ -500,16 +560,40 @@ internal static class FrontendInstallWorkflowService
         var tempRoot = CreateTempDirectory("pcl-forgelike-");
         try
         {
-            ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, speedLimiter, cancelToken);
+            ReportPrepareStatus(
+                onStatusChanged,
+                Text(
+                    i18n,
+                    "download.install.workflow.tasks.prepare_vanilla_files",
+                    "Preparing vanilla files for Minecraft {version}...",
+                    ("version", request.MinecraftChoice.Version)));
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, speedLimiter, i18n, cancelToken);
 
-            ReportPrepareStatus(onStatusChanged, $"正在解包 {loaderChoice.Title} 安装器中的支持库…");
+            ReportPrepareStatus(
+                onStatusChanged,
+                Text(
+                    i18n,
+                    "download.install.workflow.tasks.extract_loader_libraries",
+                    "Extracting bundled libraries from the {loader_title} installer...",
+                    ("loader_title", loaderChoice.Title)));
             CopyEmbeddedForgelikeLibraries(archive, installProfile, tempRoot);
 
-            ReportPrepareStatus(onStatusChanged, $"正在补全 {loaderChoice.Title} 安装依赖…");
+            ReportPrepareStatus(
+                onStatusChanged,
+                Text(
+                    i18n,
+                    "download.install.workflow.tasks.repair_loader_dependencies",
+                    "Repairing install dependencies for {loader_title}...",
+                    ("loader_title", loaderChoice.Title)));
             EnsureForgelikeLibrariesAvailable(installProfile, tempRoot, speedLimiter, cancelToken);
 
-            ReportPrepareStatus(onStatusChanged, $"正在执行 {loaderChoice.Title} 安装步骤…");
+            ReportPrepareStatus(
+                onStatusChanged,
+                Text(
+                    i18n,
+                    "download.install.workflow.tasks.run_loader_installer",
+                    "Running the installation steps for {loader_title}...",
+                    ("loader_title", loaderChoice.Title)));
             ExecuteForgelikeProcessors(
                 archive,
                 installProfile,
@@ -519,10 +603,10 @@ internal static class FrontendInstallWorkflowService
                 speedLimiter,
                 cancelToken);
 
-            ReportPrepareStatus(onStatusChanged, "正在复制安装器生成的支持库…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.copy_generated_libraries", "Copying generated support libraries..."));
             CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
-            ReportPrepareStatus(onStatusChanged, "正在读取安装器版本清单…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.read_generated_manifest", "Reading the generated installer manifest..."));
             return ReadJsonObjectFromEntry(archive, versionJsonPath);
         }
         finally
@@ -1360,13 +1444,14 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallApplyRequest request,
         Action<string>? onStatusChanged = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         var choice = request.OptiFineChoice
                      ?? throw new InvalidOperationException("缺少 OptiFine 选择项。");
         if (IsModernOptiFineVersion(choice))
         {
-            return BuildModernOptiFineManifest(request, choice, onStatusChanged, speedLimiter, cancelToken);
+            return BuildModernOptiFineManifest(request, choice, onStatusChanged, speedLimiter, i18n, cancelToken);
         }
 
         return BuildLegacyOptiFineManifest(choice);
@@ -1377,6 +1462,7 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallChoice choice,
         Action<string>? onStatusChanged = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         cancelToken.ThrowIfCancellationRequested();
@@ -1387,13 +1473,19 @@ internal static class FrontendInstallWorkflowService
 
         try
         {
-            ReportPrepareStatus(onStatusChanged, "正在下载 OptiFine 安装器…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.download_optifine_installer", "Downloading the OptiFine installer..."));
             FrontendDownloadTransferService.DownloadToPath(HttpClient, installerUrl, installerPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
-            ReportPrepareStatus(onStatusChanged, $"正在准备 Minecraft {request.MinecraftChoice.Version} 原版文件…");
-            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, speedLimiter, cancelToken);
-            ReportPrepareStatus(onStatusChanged, "正在执行 OptiFine 安装器…");
+            ReportPrepareStatus(
+                onStatusChanged,
+                Text(
+                    i18n,
+                    "download.install.workflow.tasks.prepare_vanilla_files",
+                    "Preparing vanilla files for Minecraft {version}...",
+                    ("version", request.MinecraftChoice.Version)));
+            EnsureVanillaVersionFiles(tempRoot, request.MinecraftChoice, onStatusChanged, speedLimiter, i18n, cancelToken);
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.run_optifine_installer", "Running the OptiFine installer..."));
             RunOptiFineInstaller(installerPath, tempRoot, cancelToken);
-            ReportPrepareStatus(onStatusChanged, "正在复制 OptiFine 生成的支持库…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.copy_optifine_libraries", "Copying libraries generated by OptiFine..."));
             CopyDirectoryContents(Path.Combine(tempRoot, "libraries"), Path.Combine(request.LauncherDirectory, "libraries"));
 
             var generatedVersion = choice.Metadata?["nameVersion"]?.GetValue<string>();
@@ -1408,7 +1500,7 @@ internal static class FrontendInstallWorkflowService
                 throw new InvalidOperationException("OptiFine 安装器没有产出可读取的版本清单。");
             }
 
-            ReportPrepareStatus(onStatusChanged, "正在读取 OptiFine 生成的版本清单…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.read_optifine_manifest", "Reading the manifest generated by OptiFine..."));
             return ReadJsonObjectFromFile(manifestPath);
         }
         finally
@@ -1463,18 +1555,31 @@ internal static class FrontendInstallWorkflowService
         FrontendInstallChoice minecraftChoice,
         Action<string>? onStatusChanged = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        II18nService? i18n = null,
         CancellationToken cancelToken = default)
     {
         cancelToken.ThrowIfCancellationRequested();
         var manifestUrl = minecraftChoice.ManifestUrl
                           ?? throw new InvalidOperationException("缺少 Minecraft 版本清单地址。");
-        ReportPrepareStatus(onStatusChanged, $"正在读取 Minecraft {minecraftChoice.Version} 版本详情…");
+        ReportPrepareStatus(
+            onStatusChanged,
+            Text(
+                i18n,
+                "download.install.workflow.tasks.read_vanilla_version_details",
+                "Reading version details for Minecraft {version}...",
+                ("version", minecraftChoice.Version)));
         var baseManifest = ReadJsonObject(manifestUrl);
         var versionDirectory = Path.Combine(launcherDirectory, "versions", minecraftChoice.Version);
         Directory.CreateDirectory(versionDirectory);
 
         var manifestPath = Path.Combine(versionDirectory, $"{minecraftChoice.Version}.json");
-        ReportPrepareStatus(onStatusChanged, $"正在写入 Minecraft {minecraftChoice.Version} 原版清单…");
+        ReportPrepareStatus(
+            onStatusChanged,
+            Text(
+                i18n,
+                "download.install.workflow.tasks.write_vanilla_manifest",
+                "Writing the vanilla manifest for Minecraft {version}...",
+                ("version", minecraftChoice.Version)));
         File.WriteAllText(manifestPath, baseManifest.ToJsonString(JsonNodeOptions), Utf8NoBom);
 
         var jarPath = Path.Combine(versionDirectory, $"{minecraftChoice.Version}.jar");
@@ -1489,12 +1594,18 @@ internal static class FrontendInstallWorkflowService
             throw new InvalidOperationException("缺少原版客户端下载地址。");
         }
 
-        ReportPrepareStatus(onStatusChanged, $"正在下载 Minecraft {minecraftChoice.Version} 原版客户端…");
+        ReportPrepareStatus(
+            onStatusChanged,
+            Text(
+                i18n,
+                "download.install.workflow.tasks.download_vanilla_client",
+                "Downloading the vanilla client for Minecraft {version}...",
+                ("version", minecraftChoice.Version)));
         FrontendDownloadTransferService.DownloadToPath(HttpClient, clientUrl, jarPath, speedLimiter: speedLimiter, cancelToken: cancelToken);
         var launcherProfilesPath = Path.Combine(launcherDirectory, "launcher_profiles.json");
         if (!File.Exists(launcherProfilesPath))
         {
-            ReportPrepareStatus(onStatusChanged, "正在初始化 launcher_profiles.json…");
+            ReportPrepareStatus(onStatusChanged, Text(i18n, "download.install.workflow.tasks.initialize_launcher_profiles", "Initializing launcher_profiles.json..."));
             File.WriteAllText(launcherProfilesPath, "{}", Utf8NoBom);
         }
     }
@@ -1807,7 +1918,7 @@ internal static class FrontendInstallWorkflowService
         return merged;
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetForgeChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetForgeChoices(string minecraftVersion, II18nService? i18n = null)
     {
         var root = ReadJsonArray($"https://bmclapi2.bangbang93.com/forge/minecraft/{minecraftVersion.Replace("-", "_", StringComparison.Ordinal)}");
         return SortInstallChoicesByVersionDescending(
@@ -1834,7 +1945,11 @@ internal static class FrontendInstallWorkflowService
                 return new FrontendInstallChoice(
                     Id: $"forge:{minecraftVersion}:{version}",
                     Title: version,
-                    Summary: $"安装器 • {FormatReleaseTime(node["modified"]?.GetValue<string>())}",
+                    Summary: Text(
+                        i18n,
+                        "download.install.choices.summaries.installer_with_time",
+                        "Installer • {published_at}",
+                        ("published_at", FormatReleaseTime(i18n, node["modified"]?.GetValue<string>()))),
                     Version: version,
                     Kind: FrontendInstallChoiceKind.Forge,
                     DownloadUrl: $"https://bmclapi2.bangbang93.com/maven/net/minecraftforge/forge/{fileName}",
@@ -1852,14 +1967,14 @@ internal static class FrontendInstallWorkflowService
             36);
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetNeoForgeChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetNeoForgeChoices(string minecraftVersion, II18nService? i18n = null)
     {
         var main = ReadJsonObject("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/neoforge");
         var legacy = ReadJsonObject("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/forge");
         var choices = new List<FrontendInstallChoice>();
 
-        AddNeoForgeChoices(choices, main, FrontendInstallChoiceKind.NeoForge, minecraftVersion);
-        AddNeoForgeChoices(choices, legacy, FrontendInstallChoiceKind.NeoForge, minecraftVersion);
+        AddNeoForgeChoices(choices, main, FrontendInstallChoiceKind.NeoForge, minecraftVersion, i18n);
+        AddNeoForgeChoices(choices, legacy, FrontendInstallChoiceKind.NeoForge, minecraftVersion, i18n);
 
         return SortInstallChoicesByVersionDescending(
             choices
@@ -1872,7 +1987,8 @@ internal static class FrontendInstallWorkflowService
         ICollection<FrontendInstallChoice> choices,
         JsonObject root,
         FrontendInstallChoiceKind kind,
-        string minecraftVersion)
+        string minecraftVersion,
+        II18nService? i18n = null)
     {
         if (root["files"] is not JsonArray files)
         {
@@ -1897,8 +2013,8 @@ internal static class FrontendInstallWorkflowService
                 Id: $"neoforge:{apiName}",
                 Title: versionName,
                 Summary: apiName.Contains("beta", StringComparison.OrdinalIgnoreCase) || apiName.Contains("alpha", StringComparison.OrdinalIgnoreCase)
-                    ? "测试版"
-                    : "稳定版",
+                    ? Text(i18n, "download.install.choices.summaries.testing", "Testing")
+                    : Text(i18n, "download.install.choices.summaries.stable", "Stable"),
                 Version: versionName,
                 Kind: kind,
                 DownloadUrl: $"https://bmclapi2.bangbang93.com/maven/net/neoforged/{packageName}/{apiName}/{packageName}-{apiName}-installer.jar",
@@ -1944,7 +2060,7 @@ internal static class FrontendInstallWorkflowService
         return (inherit, apiName, "neoforge");
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetCleanroomChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetCleanroomChoices(string minecraftVersion, II18nService? i18n = null)
     {
         if (!string.Equals(minecraftVersion, "1.12.2", StringComparison.OrdinalIgnoreCase))
         {
@@ -1962,7 +2078,9 @@ internal static class FrontendInstallWorkflowService
                 return new FrontendInstallChoice(
                     Id: $"cleanroom:{tag}",
                     Title: tag,
-                    Summary: tag.Contains("alpha", StringComparison.OrdinalIgnoreCase) ? "测试版" : "稳定版",
+                    Summary: tag.Contains("alpha", StringComparison.OrdinalIgnoreCase)
+                        ? Text(i18n, "download.install.choices.summaries.testing", "Testing")
+                        : Text(i18n, "download.install.choices.summaries.stable", "Stable"),
                     Version: tag,
                     Kind: FrontendInstallChoiceKind.Cleanroom,
                     DownloadUrl: $"https://github.com/CleanroomMC/Cleanroom/releases/download/{tag}/cleanroom-{tag}-installer.jar",
@@ -1977,23 +2095,25 @@ internal static class FrontendInstallWorkflowService
             18);
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetFabricLoaderChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetFabricLoaderChoices(string minecraftVersion, II18nService? i18n = null)
     {
         return ReadLoaderChoices(
             $"https://meta.fabricmc.net/v2/versions/loader/{minecraftVersion}",
             FrontendInstallChoiceKind.FabricLoader,
-            "Fabric");
+            "Fabric",
+            i18n);
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetLegacyFabricLoaderChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetLegacyFabricLoaderChoices(string minecraftVersion, II18nService? i18n = null)
     {
         return ReadLoaderChoices(
             $"https://meta.legacyfabric.net/v2/versions/loader/{minecraftVersion}",
             FrontendInstallChoiceKind.LegacyFabricLoader,
-            "Legacy Fabric");
+            "Legacy Fabric",
+            i18n);
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetQuiltLoaderChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetQuiltLoaderChoices(string minecraftVersion, II18nService? i18n = null)
     {
         var root = ReadJsonArray($"https://meta.quiltmc.org/v3/versions/loader/{minecraftVersion}");
         return SortInstallChoicesByVersionDescending(
@@ -2008,7 +2128,7 @@ internal static class FrontendInstallWorkflowService
                 return new FrontendInstallChoice(
                     Id: $"quilt:{version}",
                     Title: version,
-                    Summary: loader["maven"]?.GetValue<string>() ?? "Quilt 安装器",
+                    Summary: loader["maven"]?.GetValue<string>() ?? Text(i18n, "download.install.choices.summaries.quilt_installer", "Quilt Installer"),
                     Version: version,
                     Kind: FrontendInstallChoiceKind.QuiltLoader,
                     ManifestUrl: profileUrl);
@@ -2017,14 +2137,14 @@ internal static class FrontendInstallWorkflowService
             18);
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetLabyModChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetLabyModChoices(string minecraftVersion, II18nService? i18n = null)
     {
         var production = ReadJsonObject("https://releases.r2.labymod.net/api/v1/manifest/production/latest.json");
         var snapshot = ReadJsonObject("https://releases.r2.labymod.net/api/v1/manifest/snapshot/latest.json");
         var choices = new List<FrontendInstallChoice>();
 
-        AddLabyChoice(choices, production, minecraftVersion, "production", "稳定版");
-        AddLabyChoice(choices, snapshot, minecraftVersion, "snapshot", "快照版");
+        AddLabyChoice(choices, production, minecraftVersion, "production", Text(i18n, "download.install.choices.channels.stable", "Stable"), i18n);
+        AddLabyChoice(choices, snapshot, minecraftVersion, "snapshot", Text(i18n, "download.install.choices.channels.snapshot", "Snapshot"), i18n);
         return choices;
     }
 
@@ -2033,7 +2153,8 @@ internal static class FrontendInstallWorkflowService
         JsonObject manifest,
         string minecraftVersion,
         string channel,
-        string channelLabel)
+        string channelLabel,
+        II18nService? i18n = null)
     {
         if (manifest["minecraftVersions"] is not JsonArray versions)
         {
@@ -2053,13 +2174,17 @@ internal static class FrontendInstallWorkflowService
         choices.Add(new FrontendInstallChoice(
             Id: $"labymod:{channel}:{commitReference}",
             Title: $"{versionLabel} {channelLabel}",
-            Summary: $"LabyMod 4 • {minecraftVersion}",
+            Summary: Text(
+                i18n,
+                "download.install.choices.summaries.labymod_for_minecraft",
+                "LabyMod 4 • {minecraft_version}",
+                ("minecraft_version", minecraftVersion)),
             Version: versionLabel,
             Kind: FrontendInstallChoiceKind.LabyMod,
             ManifestUrl: versionEntry["customManifestUrl"]?.GetValue<string>()));
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetOptiFineChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetOptiFineChoices(string minecraftVersion, II18nService? i18n = null)
     {
         var root = ReadJsonArray("https://bmclapi2.bangbang93.com/optifine/versionList");
         return SortInstallChoicesByVersionDescending(
@@ -2097,7 +2222,9 @@ internal static class FrontendInstallWorkflowService
                 return new FrontendInstallChoice(
                     Id: $"optifine:{nameVersion}",
                     Title: shortName,
-                    Summary: patch.Contains("pre", StringComparison.OrdinalIgnoreCase) ? "预览版" : "正式版",
+                    Summary: patch.Contains("pre", StringComparison.OrdinalIgnoreCase)
+                        ? Text(i18n, "download.install.choices.summaries.preview", "Preview")
+                        : Text(i18n, "download.install.choices.summaries.release", "Release"),
                     Version: shortName,
                     Kind: FrontendInstallChoiceKind.OptiFine,
                     DownloadUrl: downloadUrl,
@@ -2115,7 +2242,7 @@ internal static class FrontendInstallWorkflowService
             24);
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetLiteLoaderChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetLiteLoaderChoices(string minecraftVersion, II18nService? i18n = null)
     {
         var root = ReadJsonObject("https://dl.liteloader.com/versions/versions.json");
         if (root["versions"] is not JsonObject versions
@@ -2135,14 +2262,23 @@ internal static class FrontendInstallWorkflowService
         var releaseTime = token["timestamp"]?.GetValue<string>() ?? string.Empty;
         var formattedReleaseTime = long.TryParse(releaseTime, out var rawTimestamp)
             ? DateTimeOffset.FromUnixTimeSeconds(rawTimestamp).LocalDateTime.ToString("yyyy/MM/dd HH:mm")
-            : "未记录发布时间";
+            : Text(i18n, "download.install.choices.summaries.release_time_unavailable", "Release time unavailable");
 
         return
         [
             new FrontendInstallChoice(
                 Id: $"liteloader:{minecraftVersion}:{token["version"]?.GetValue<string>()}",
                 Title: token["version"]?.GetValue<string>() ?? minecraftVersion,
-                Summary: $"{(string.Equals(token["stream"]?.GetValue<string>(), "SNAPSHOT", StringComparison.OrdinalIgnoreCase) ? "测试版" : "稳定版")} • {formattedReleaseTime}",
+                Summary: Text(
+                    i18n,
+                    "download.install.choices.summaries.status_with_time",
+                    "{status} • {published_at}",
+                    (
+                        "status",
+                        string.Equals(token["stream"]?.GetValue<string>(), "SNAPSHOT", StringComparison.OrdinalIgnoreCase)
+                            ? Text(i18n, "download.install.choices.summaries.testing", "Testing")
+                            : Text(i18n, "download.install.choices.summaries.stable", "Stable")),
+                    ("published_at", formattedReleaseTime)),
                 Version: token["version"]?.GetValue<string>() ?? minecraftVersion,
                 Kind: FrontendInstallChoiceKind.LiteLoader,
                 Metadata: new JsonObject
@@ -2154,7 +2290,7 @@ internal static class FrontendInstallWorkflowService
         ];
     }
 
-    private static IReadOnlyList<FrontendInstallChoice> GetOptiFabricChoices(string minecraftVersion)
+    private static IReadOnlyList<FrontendInstallChoice> GetOptiFabricChoices(string minecraftVersion, II18nService? i18n = null)
     {
         if (minecraftVersion.StartsWith("1.14", StringComparison.OrdinalIgnoreCase)
             || minecraftVersion.StartsWith("1.15", StringComparison.OrdinalIgnoreCase))
@@ -2185,7 +2321,12 @@ internal static class FrontendInstallWorkflowService
                 return new FrontendInstallChoice(
                     Id: $"optifabric:{fileId}",
                     Title: displayName.Replace("OptiFabric-v", string.Empty, StringComparison.OrdinalIgnoreCase).Trim(),
-                    Summary: $"{NormalizeVersionType(type)} • {FormatReleaseTime(uploadedAt)}",
+                    Summary: Text(
+                        i18n,
+                        "download.install.choices.summaries.status_with_time",
+                        "{status} • {published_at}",
+                        ("status", NormalizeVersionType(i18n, type)),
+                        ("published_at", FormatReleaseTime(i18n, uploadedAt))),
                     Version: displayName,
                     Kind: FrontendInstallChoiceKind.ModFile,
                     DownloadUrl: BuildCurseForgeMediaUrl(fileId, fileName),
@@ -2203,7 +2344,8 @@ internal static class FrontendInstallWorkflowService
         string projectId,
         string minecraftVersion,
         IReadOnlyList<string>? loaders,
-        bool allowVersionFallback = false)
+        bool allowVersionFallback = false,
+        II18nService? i18n = null)
     {
         foreach (var candidateVersion in GetVersionCandidates(minecraftVersion, allowVersionFallback))
         {
@@ -2221,7 +2363,7 @@ internal static class FrontendInstallWorkflowService
             var choices = root
                 .Select(node => node as JsonObject)
                 .Where(node => node is not null)
-                .Select(ToModrinthChoice)
+                .Select(node => ToModrinthChoice(node, i18n))
                 .Where(choice => choice is not null)
                 .Cast<FrontendInstallChoice>();
             var orderedChoices = SortInstallChoicesDescending(choices, 18);
@@ -2234,7 +2376,7 @@ internal static class FrontendInstallWorkflowService
         return [];
     }
 
-    private static FrontendInstallChoice? ToModrinthChoice(JsonObject? version)
+    private static FrontendInstallChoice? ToModrinthChoice(JsonObject? version, II18nService? i18n = null)
     {
         if (version?["files"] is not JsonArray files)
         {
@@ -2260,7 +2402,12 @@ internal static class FrontendInstallWorkflowService
         return new FrontendInstallChoice(
             Id: $"mod:{version["id"]?.GetValue<string>()}",
             Title: title,
-            Summary: $"{NormalizeVersionType(versionType)} • {FormatReleaseTime(published)}",
+            Summary: Text(
+                i18n,
+                "download.install.choices.summaries.status_with_time",
+                "{status} • {published_at}",
+                ("status", NormalizeVersionType(i18n, versionType)),
+                ("published_at", FormatReleaseTime(i18n, published))),
             Version: title,
             Kind: FrontendInstallChoiceKind.ModFile,
             DownloadUrl: primaryFile["url"]?.GetValue<string>(),
@@ -2274,7 +2421,8 @@ internal static class FrontendInstallWorkflowService
     private static IReadOnlyList<FrontendInstallChoice> ReadLoaderChoices(
         string url,
         FrontendInstallChoiceKind kind,
-        string prefix)
+        string prefix,
+        II18nService? i18n = null)
     {
         var root = ReadJsonArray(url);
         return SortInstallChoicesByVersionDescending(
@@ -2288,7 +2436,13 @@ internal static class FrontendInstallWorkflowService
                 return new FrontendInstallChoice(
                     Id: $"{kind}:{version}",
                     Title: version,
-                    Summary: loader["stable"]?.GetValue<bool>() == true ? "稳定版" : $"{prefix} 测试版",
+                    Summary: loader["stable"]?.GetValue<bool>() == true
+                        ? Text(i18n, "download.install.choices.summaries.stable", "Stable")
+                        : Text(
+                            i18n,
+                            "download.install.choices.summaries.loader_testing",
+                            "{loader_name} testing build",
+                            ("loader_name", prefix)),
                     Version: version,
                     Kind: kind,
                     ManifestUrl: $"{url.TrimEnd('/')}/{version}/profile/json");
@@ -2471,6 +2625,41 @@ internal static class FrontendInstallWorkflowService
         }
     }
 
+    private static string Text(
+        II18nService? i18n,
+        string key,
+        string fallback,
+        params (string Key, object? Value)[] args)
+    {
+        if (i18n is null)
+        {
+            return ApplyFallbackArgs(fallback, args);
+        }
+
+        if (args.Length == 0)
+        {
+            return i18n.T(key);
+        }
+
+        return i18n.T(
+            key,
+            args.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value,
+                StringComparer.Ordinal));
+    }
+
+    private static string ApplyFallbackArgs(string fallback, IReadOnlyList<(string Key, object? Value)> args)
+    {
+        var result = fallback;
+        foreach (var (key, value) in args)
+        {
+            result = result.Replace("{" + key + "}", value?.ToString() ?? string.Empty, StringComparison.Ordinal);
+        }
+
+        return result;
+    }
+
     private static string BuildModrinthVersionUrl(string projectId, string minecraftVersion, IReadOnlyList<string>? loaders)
     {
         var builder = new UriBuilder($"https://api.modrinth.com/v2/project/{projectId}/version");
@@ -2527,19 +2716,19 @@ internal static class FrontendInstallWorkflowService
         switch (type?.ToLowerInvariant())
         {
             case "release":
-                return "正式版";
+                return "release";
             case "snapshot":
             case "pending":
                 if (IsAprilFoolsVersion(normalizedId, releaseTime))
                 {
-                    return "愚人节版";
+                    return "april_fools";
                 }
 
-                return LooksLikeMisclassifiedRelease(normalizedId) ? "正式版" : "预览版";
+                return LooksLikeMisclassifiedRelease(normalizedId) ? "release" : "preview";
             case "special":
-                return "愚人节版";
+                return "april_fools";
             default:
-                return IsAprilFoolsVersion(normalizedId, releaseTime) ? "愚人节版" : "远古版";
+                return IsAprilFoolsVersion(normalizedId, releaseTime) ? "april_fools" : "legacy";
         }
     }
 
@@ -2555,7 +2744,7 @@ internal static class FrontendInstallWorkflowService
 
     private static bool IsAprilFoolsVersion(string normalizedId, string? releaseTime)
     {
-        if (ResolveMinecraftCatalogAprilFoolsLore(normalizedId).Length > 0)
+        if (ResolveMinecraftCatalogAprilFoolsLore(null, normalizedId).Length > 0)
         {
             return true;
         }
@@ -2571,51 +2760,57 @@ internal static class FrontendInstallWorkflowService
     {
         return group switch
         {
-            "预览版" => "CommandBlock.png",
-            "愚人节版" => "GoldBlock.png",
-            "远古版" => "CobbleStone.png",
+            "preview" => "CommandBlock.png",
+            "april_fools" => "GoldBlock.png",
+            "legacy" => "CobbleStone.png",
             _ => "Grass.png"
         };
     }
 
-    private static string ResolveMinecraftCatalogLore(string versionId, string group, string? releaseTime)
+    private static string ResolveMinecraftCatalogLore(II18nService? i18n, string versionId, string group, string? releaseTime)
     {
-        var lore = ResolveMinecraftCatalogAprilFoolsLore(versionId.ToLowerInvariant());
+        var lore = ResolveMinecraftCatalogAprilFoolsLore(i18n, versionId.ToLowerInvariant());
         if (lore.Length > 0)
         {
             return lore;
         }
 
-        if (!string.Equals(group, "愚人节版", StringComparison.Ordinal))
+        if (!string.Equals(group, "april_fools", StringComparison.Ordinal))
         {
             return string.Empty;
         }
 
         var parsed = ParseCatalogReleaseTime(releaseTime);
-        return parsed is null ? string.Empty : $"发布于 {parsed.Value.LocalDateTime:yyyy/MM/dd HH:mm} 的愚人节特辑";
+        return parsed is null
+            ? string.Empty
+            : Text(
+                i18n,
+                "download.install.choices.summaries.april_fools_special",
+                "April Fools special released on {published_at}",
+                ("published_at", parsed.Value.LocalDateTime.ToString("yyyy/MM/dd HH:mm")));
     }
 
-    private static string ResolveMinecraftCatalogAprilFoolsLore(string normalizedId)
+    private static string ResolveMinecraftCatalogAprilFoolsLore(II18nService? i18n, string normalizedId)
     {
         return normalizedId switch
         {
             var value when value.StartsWith("2.0", StringComparison.Ordinal) || value.StartsWith("2point0", StringComparison.Ordinal) =>
                 value.EndsWith("red", StringComparison.Ordinal)
-                    ? "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（红色版本）"
+                    ? Text(i18n, "download.install.choices.summaries.april_fools.2013_red", "2013 | This secret update, planned for two years, took the game to a new level! (Red version)")
                     : value.EndsWith("blue", StringComparison.Ordinal)
-                        ? "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（蓝色版本）"
+                        ? Text(i18n, "download.install.choices.summaries.april_fools.2013_blue", "2013 | This secret update, planned for two years, took the game to a new level! (Blue version)")
                         : value.EndsWith("purple", StringComparison.Ordinal)
-                            ? "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（紫色版本）"
-                            : "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！",
-            "15w14a" => "2015 | 作为一款全年龄向的游戏，我们需要和平，需要爱与拥抱。",
-            "1.rv-pre1" => "2016 | 是时候将现代科技带入 Minecraft 了！",
-            "3d shareware v1.34" => "2019 | 我们从地下室的废墟里找到了这个开发于 1994 年的杰作！",
-            var value when value.StartsWith("20w14inf", StringComparison.Ordinal) || value == "20w14∞" => "2020 | 我们加入了 20 亿个新的维度，让无限的想象变成了现实！",
-            "22w13oneblockatatime" => "2022 | 一次一个方块更新！迎接全新的挖掘、合成与骑乘玩法吧！",
-            "23w13a_or_b" => "2023 | 研究表明：玩家喜欢作出选择——越多越好！",
-            "24w14potato" => "2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！",
-            "25w14craftmine" => "2025 | 你可以合成任何东西——包括合成你的世界！",
-            "26w14a" => "2026 | 为什么需要物品栏？让方块们跟着你走吧！",
+                            ? Text(i18n, "download.install.choices.summaries.april_fools.2013_purple", "2013 | This secret update, planned for two years, took the game to a new level! (Purple version)")
+                            : Text(i18n, "download.install.choices.summaries.april_fools.2013", "2013 | This secret update, planned for two years, took the game to a new level!"),
+            "15w14a" => Text(i18n, "download.install.choices.summaries.april_fools.2015", "2015 | As a game for all ages, we need peace, love, and hugs."),
+            "1.rv-pre1" => Text(i18n, "download.install.choices.summaries.april_fools.2016", "2016 | It's time to bring modern technology into Minecraft!"),
+            "3d shareware v1.34" => Text(i18n, "download.install.choices.summaries.april_fools.2019", "2019 | We found this masterpiece from 1994 in the ruins of a basement!"),
+            var value when value.StartsWith("20w14inf", StringComparison.Ordinal) || value == "20w14∞" => Text(i18n, "download.install.choices.summaries.april_fools.2020", "2020 | We added 2 billion new dimensions and turned infinite imagination into reality!"),
+            "22w13oneblockatatime" => Text(i18n, "download.install.choices.summaries.april_fools.2022", "2022 | One block at a time! Meet new digging, crafting, and riding gameplay."),
+            "23w13a_or_b" => Text(i18n, "download.install.choices.summaries.april_fools.2023", "2023 | Research shows players like making choices, and the more the better!"),
+            "24w14potato" => Text(i18n, "download.install.choices.summaries.april_fools.2024", "2024 | Poisonous potatoes have always been ignored and underestimated, so we supercharged them!"),
+            "25w14craftmine" => Text(i18n, "download.install.choices.summaries.april_fools.2025", "2025 | You can craft anything, including your world itself!"),
+            "26w14a" => Text(i18n, "download.install.choices.summaries.april_fools.2026", "2026 | Why do you need an inventory? Let the blocks follow you instead!"),
             _ => string.Empty
         };
     }
@@ -2625,9 +2820,9 @@ internal static class FrontendInstallWorkflowService
         return versionId.Replace('_', ' ');
     }
 
-    private static string BuildMinecraftCatalogTimestampSummary(string? releaseTime, string normalizedId, string formattedTitle)
+    private static string BuildMinecraftCatalogTimestampSummary(II18nService? i18n, string? releaseTime, string normalizedId, string formattedTitle)
     {
-        var published = FormatReleaseTime(releaseTime);
+        var published = FormatReleaseTime(i18n, releaseTime);
         return formattedTitle == normalizedId
             ? published
             : $"{published} | {normalizedId}";
@@ -2640,20 +2835,20 @@ internal static class FrontendInstallWorkflowService
             : $"{lore} | {normalizedId}";
     }
 
-    private static string FormatReleaseTime(string? rawValue)
+    private static string FormatReleaseTime(II18nService? i18n, string? rawValue)
     {
         return DateTimeOffset.TryParse(rawValue, out var value)
             ? value.LocalDateTime.ToString("yyyy/MM/dd HH:mm")
-            : "未记录发布时间";
+            : Text(i18n, "download.install.choices.summaries.release_time_unavailable", "Release time unavailable");
     }
 
-    private static string NormalizeVersionType(string rawValue)
+    private static string NormalizeVersionType(II18nService? i18n, string rawValue)
     {
         return rawValue switch
         {
-            "release" => "正式版",
-            "beta" => "测试版",
-            "alpha" => "预览版",
+            "release" => Text(i18n, "download.install.choices.summaries.release", "Release"),
+            "beta" => Text(i18n, "download.install.choices.summaries.testing", "Testing"),
+            "alpha" => Text(i18n, "download.install.choices.summaries.preview", "Preview"),
             _ => rawValue
         };
     }

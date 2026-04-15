@@ -72,10 +72,11 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(
             InstanceExportOptionGroups,
             exportState.OptionGroups.Select(group => CreateExportOptionGroup(
+                group.Key,
                 group.Title,
                 group.Description,
                 group.IsChecked,
-                group.Children.Select(child => CreateExportOption(child.Title, child.Description, child.IsChecked)).ToArray())));
+                group.Children.Select(child => CreateExportOption(child.Key, child.Title, child.Description, child.IsChecked)).ToArray())));
     }
 
     private void RefreshInstanceExportSurface()
@@ -98,7 +99,9 @@ internal sealed partial class FrontendShellViewModel
     {
         ReloadInstanceComposition();
         RefreshInstanceExportSurface();
-        AddActivity("重置导出选项", "实例导出页已恢复到当前实例扫描结果。");
+        AddActivity(
+            T("instance.export.activities.reset"),
+            T("instance.export.messages.reset_completed"));
     }
 
     private async Task ImportInstanceExportConfigAsync()
@@ -106,17 +109,20 @@ internal sealed partial class FrontendShellViewModel
         string? sourcePath;
         try
         {
-            sourcePath = await _shellActionService.PickOpenFileAsync("选择整合包导出配置", "整合包导出配置", "*.txt");
+            sourcePath = await _shellActionService.PickOpenFileAsync(
+                T("instance.export.dialogs.import_config.title"),
+                T("instance.export.dialogs.import_config.filter_name"),
+                "*.txt");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("读取配置失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", T("instance.export.activities.import_config"))), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            AddActivity("读取配置", "已取消选择配置文件。");
+            AddActivity(T("instance.export.activities.import_config"), T("instance.export.messages.import_config_canceled"));
             return;
         }
 
@@ -127,12 +133,12 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("读取配置失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", T("instance.export.activities.import_config"))), ex.Message);
             return;
         }
 
         ApplyInstanceExportConfig(content);
-        AddActivity("读取配置", sourcePath);
+        AddActivity(T("instance.export.activities.import_config"), sourcePath);
     }
 
     private void SaveInstanceExportConfig() => _ = SaveInstanceExportConfigAsync();
@@ -141,7 +147,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("保存配置", "当前未选择实例。");
+            AddActivity(T("instance.export.activities.save_config"), T("instance.export.messages.no_instance_selected"));
             return;
         }
 
@@ -156,10 +162,10 @@ internal sealed partial class FrontendShellViewModel
 
         foreach (var group in InstanceExportOptionGroups)
         {
-            lines.Add($"Group:{group.Header.Title}|{group.Header.IsChecked}");
+            lines.Add($"Group:{group.Header.Key}|{group.Header.IsChecked}");
             foreach (var child in group.Children)
             {
-                lines.Add($"Item:{group.Header.Title}|{child.Title}|{child.IsChecked}");
+                lines.Add($"Item:{group.Header.Key}|{child.Key}|{child.IsChecked}");
             }
         }
 
@@ -182,15 +188,15 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             outputPath = await _shellActionService.PickSaveFileAsync(
-                "选择文件位置",
-                "export_config.txt",
-                "整合包导出配置",
+                T("instance.export.dialogs.save_config.title"),
+                T("instance.export.dialogs.save_config.default_name"),
+                T("instance.export.dialogs.save_config.filter_name"),
                 suggestedStartFolder,
                 "*.txt");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("保存配置失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", T("instance.export.activities.save_config"))), ex.Message);
             return;
         }
 
@@ -206,15 +212,15 @@ internal sealed partial class FrontendShellViewModel
             _shellActionService.PersistSharedValue(InstanceExportConfigCacheKey, outputPath);
             if (_shellActionService.TryRevealExternalTarget(outputPath, out var error))
             {
-                AddActivity("保存配置", outputPath);
+                AddActivity(T("instance.export.activities.save_config"), outputPath);
                 return;
             }
 
-            AddFailureActivity("保存配置失败", error ?? outputPath);
+            AddFailureActivity(T("common.activities.failed", ("title", T("instance.export.activities.save_config"))), error ?? outputPath);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("保存配置失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", T("instance.export.activities.save_config"))), ex.Message);
         }
     }
 
@@ -230,30 +236,30 @@ internal sealed partial class FrontendShellViewModel
 
         var lines = new[]
         {
-            "整合包制作指南",
+            T("instance.export.guide.title"),
             string.Empty,
-            "1. 先在实例导出页确认名称、版本号和勾选内容。",
-            "2. 如果需要复用同一套导出规则，先点击“保存配置”，后续可直接“读取配置”。",
-            "3. “打包资源文件”会直接把 Mod、资源包或光影包放进导出包，适合离线分发。",
-            "4. “Modrinth 上传模式”会输出 .mrpack 文件，便于继续整理发布。",
-            "5. 导出完成后，请检查生成的压缩包结构和内容是否符合当前实例需求。"
+            T("instance.export.guide.step_1"),
+            T("instance.export.guide.step_2"),
+            T("instance.export.guide.step_3"),
+            T("instance.export.guide.step_4"),
+            T("instance.export.guide.step_5")
         };
         var result = await ShowToolboxConfirmationAsync(
-            "整合包制作指南",
+            T("instance.export.guide.title"),
             string.Join(Environment.NewLine, lines.Skip(2)));
         if (result is null)
         {
             return;
         }
 
-        AddActivity("整合包制作指南", "已显示制作指南。");
+        AddActivity(T("instance.export.activities.guide"), T("instance.export.messages.guide_shown"));
     }
 
     private void StartInstanceExport()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("开始导出", "当前未选择实例。");
+            AddActivity(T("instance.export.activities.start"), T("instance.export.messages.no_instance_selected"));
             return;
         }
 
@@ -278,18 +284,20 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        OpenInstanceTarget("开始导出", archivePath, "导出压缩包不存在。");
+        OpenInstanceTarget(T("instance.export.activities.start"), archivePath, T("instance.export.messages.archive_missing"));
     }
 
-    private ExportOptionEntryViewModel CreateExportOption(string title, string description, bool isChecked)
+    private ExportOptionEntryViewModel CreateExportOption(string key, string title, string description, bool isChecked)
     {
         return new ExportOptionEntryViewModel(
+            key,
             LocalizeExportTitle(title),
             LocalizeExportDescription(description),
             isChecked);
     }
 
     private ExportOptionGroupViewModel CreateExportOptionGroup(
+        string key,
         string title,
         string description,
         bool isChecked,
@@ -297,6 +305,7 @@ internal sealed partial class FrontendShellViewModel
     {
         return new ExportOptionGroupViewModel(
             new ExportOptionEntryViewModel(
+                key,
                 LocalizeExportTitle(title),
                 LocalizeExportDescription(description),
                 isChecked),
@@ -367,7 +376,9 @@ internal sealed partial class FrontendShellViewModel
                 && bool.TryParse(itemParts[2], out var isCheckedValue)
                 && TryFindInstanceExportGroup(itemParts[0], out var selectedGroup))
             {
-                var child = selectedGroup.Children.FirstOrDefault(entry => string.Equals(entry.Title, itemParts[1], StringComparison.OrdinalIgnoreCase));
+                var child = selectedGroup.Children.FirstOrDefault(entry =>
+                    string.Equals(entry.Key, itemParts[1], StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(entry.Title, itemParts[1], StringComparison.OrdinalIgnoreCase));
                 if (child is not null)
                 {
                     child.IsChecked = isCheckedValue;
@@ -388,16 +399,16 @@ internal sealed partial class FrontendShellViewModel
 
         foreach (var group in InstanceExportOptionGroups.Where(entry => entry.Header.IsChecked))
         {
-            switch (group.Header.Title)
+            switch (group.Header.Key)
             {
-                case var title when string.Equals(title, LocalizeExportTitle("游戏本体"), StringComparison.Ordinal):
+                case "game":
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
-                        var fileName = child.Title switch
+                        var fileName = child.Key switch
                         {
-                            var item when string.Equals(item, LocalizeExportTitle("游戏本体设置"), StringComparison.Ordinal) => "options.txt",
-                            var item when string.Equals(item, LocalizeExportTitle("游戏本体个人信息"), StringComparison.Ordinal) => "optionsof.txt",
-                            var item when string.Equals(item, LocalizeExportTitle("OptiFine 设置"), StringComparison.Ordinal) => "optionsof.txt",
+                            "game_settings" => "options.txt",
+                            "game_personal" => "optionsof.txt",
+                            "optifine_settings" => "optionsof.txt",
                             _ => null
                         };
                         if (string.IsNullOrWhiteSpace(fileName))
@@ -412,19 +423,19 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("Mod"), StringComparison.Ordinal):
+                case "mods":
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
-                        switch (child.Title)
+                        switch (child.Key)
                         {
-                            case var item when string.Equals(item, LocalizeExportTitle("已禁用的 Mod"), StringComparison.Ordinal):
+                            case "disabled_mods":
                                 foreach (var entry in _instanceComposition.DisabledMods.Entries)
                                 {
                                     yield return (entry.Path, BuildOverrideArchivePath(indieDirectory, entry.Path));
                                 }
                                 break;
-                            case var selectedItem when string.Equals(selectedItem, LocalizeExportTitle("整合包重要数据"), StringComparison.Ordinal)
-                                || string.Equals(selectedItem, LocalizeExportTitle("Mod 设置"), StringComparison.Ordinal):
+                            case "important_data":
+                            case "mod_settings":
                                 var configDirectory = Path.Combine(indieDirectory, "config");
                                 if (Directory.Exists(configDirectory))
                                 {
@@ -434,58 +445,53 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("资源包"), StringComparison.Ordinal):
+                case "resource_packs":
                     foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.ResourcePacks.Entries))
                     {
                         yield return source;
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("光影包"), StringComparison.Ordinal):
+                case "shaders":
                     foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.Shaders.Entries))
                     {
                         yield return source;
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("截图"), StringComparison.Ordinal):
+                case "screenshots":
                     foreach (var entry in _instanceComposition.Screenshot.Entries)
                     {
                         yield return (entry.Path, BuildOverrideArchivePath(indieDirectory, entry.Path));
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("导出的结构"), StringComparison.Ordinal):
+                case "schematics":
                     foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.Schematics.Entries))
                     {
                         yield return source;
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("录像回放"), StringComparison.Ordinal):
+                case "replays":
                     foreach (var child in group.Children.Where(entry => entry.IsChecked))
                     {
-                        var sourcePath = Path.Combine(indieDirectory, "replay_recordings", child.Title);
-                        if (File.Exists(sourcePath))
+                        if (File.Exists(child.Key))
                         {
-                            yield return (sourcePath, BuildOverrideArchivePath(indieDirectory, sourcePath));
+                            yield return (child.Key, BuildOverrideArchivePath(indieDirectory, child.Key));
                         }
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("单人游戏存档"), StringComparison.Ordinal):
-                    foreach (var child in group.Children.Where(entry => entry.IsChecked))
+                case "worlds":
+                    foreach (var source in ResolveCheckedExportEntries(group, _instanceComposition.World.Entries))
                     {
-                        var world = _instanceComposition.World.Entries.FirstOrDefault(entry => string.Equals(entry.Title, child.Title, StringComparison.OrdinalIgnoreCase));
-                        if (world is not null)
-                        {
-                            yield return (world.Path, BuildOverrideArchivePath(indieDirectory, world.Path));
-                        }
+                        yield return source;
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("多人游戏服务器列表"), StringComparison.Ordinal):
+                case "servers":
                     var serversPath = Path.Combine(indieDirectory, "servers.dat");
                     if (File.Exists(serversPath))
                     {
                         yield return (serversPath, BuildOverrideArchivePath(indieDirectory, serversPath));
                     }
                     break;
-                case var title when string.Equals(title, LocalizeExportTitle("PCL 启动器程序"), StringComparison.Ordinal):
+                case "launcher":
                     if (group.Children.Any(child => child.IsChecked))
                     {
                         var pclDirectory = Path.Combine(instanceDirectory, "PCL");
@@ -513,7 +519,25 @@ internal sealed partial class FrontendShellViewModel
     {
         foreach (var child in group.Children.Where(entry => entry.IsChecked))
         {
-            var source = entries.FirstOrDefault(entry => string.Equals(entry.Title, child.Title, StringComparison.OrdinalIgnoreCase));
+            var source = entries.FirstOrDefault(entry =>
+                string.Equals(entry.Path, child.Key, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(entry.Title, child.Title, StringComparison.OrdinalIgnoreCase));
+            if (source is not null)
+            {
+                yield return (source.Path, BuildOverrideArchivePath(_instanceComposition.Selection.IndieDirectory, source.Path));
+            }
+        }
+    }
+
+    private IEnumerable<(string SourcePath, string ArchivePath)> ResolveCheckedExportEntries(
+        ExportOptionGroupViewModel group,
+        IEnumerable<FrontendInstanceDirectoryEntry> entries)
+    {
+        foreach (var child in group.Children.Where(entry => entry.IsChecked))
+        {
+            var source = entries.FirstOrDefault(entry =>
+                string.Equals(entry.Path, child.Key, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(entry.Title, child.Title, StringComparison.OrdinalIgnoreCase));
             if (source is not null)
             {
                 yield return (source.Path, BuildOverrideArchivePath(_instanceComposition.Selection.IndieDirectory, source.Path));
@@ -551,9 +575,11 @@ internal sealed partial class FrontendShellViewModel
         return path.Replace('\\', '/');
     }
 
-    private bool TryFindInstanceExportGroup(string title, out ExportOptionGroupViewModel group)
+    private bool TryFindInstanceExportGroup(string keyOrTitle, out ExportOptionGroupViewModel group)
     {
-        group = InstanceExportOptionGroups.FirstOrDefault(entry => string.Equals(entry.Header.Title, title, StringComparison.OrdinalIgnoreCase))!;
+        group = InstanceExportOptionGroups.FirstOrDefault(entry =>
+            string.Equals(entry.Header.Key, keyOrTitle, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entry.Header.Title, keyOrTitle, StringComparison.OrdinalIgnoreCase))!;
         return group is not null;
     }
 

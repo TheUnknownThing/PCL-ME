@@ -29,10 +29,12 @@ internal sealed partial class FrontendShellViewModel
             ? FrontendDownloadCompositionService.Compose(
                 _shellActionService.RuntimePaths,
                 _instanceComposition,
-                _versionSavesComposition)
+                _versionSavesComposition,
+                _i18n)
             : FrontendDownloadCompositionService.ComposeBootstrap(
                 _shellActionService.RuntimePaths,
-                _instanceComposition);
+                _instanceComposition,
+                _i18n);
         _downloadCompositionHasRemoteState = includeRemoteState;
         SyncDownloadFavoriteTargets();
     }
@@ -97,7 +99,7 @@ internal sealed partial class FrontendShellViewModel
                 {
                     Favorites = _downloadComposition.Favorites with
                     {
-                        WarningText = $"收藏夹在线元数据加载失败：{ex.Message}",
+                        WarningText = $"Failed to load online metadata for favorites: {ex.Message}",
                         ShowWarning = _downloadComposition.Favorites.Targets.Any(target => target.Sections.Any(section => section.Entries.Count > 0))
                     }
                 };

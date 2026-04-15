@@ -204,11 +204,14 @@ internal sealed class KeyValueEntryViewModel(string label, string value)
 }
 
 internal sealed class ExportOptionEntryViewModel(
+    string key,
     string title,
     string description,
     bool isChecked) : ViewModelBase
 {
     private bool _isChecked = isChecked;
+
+    public string Key { get; } = key;
 
     public string Title { get; } = title;
 
@@ -595,7 +598,7 @@ internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
         bool isCollapsible = false,
         bool isExpanded = true,
         Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
-        string loadingText = "正在获取版本列表")
+        string loadingText = "Loading versions")
     {
         Title = title;
         LoadingText = loadingText;
@@ -712,10 +715,10 @@ internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
             ReplaceVisibleItems(
             [
                 new DownloadCatalogEntryViewModel(
-                    "加载失败",
+                    "Load failed",
                     ex.Message,
                     string.Empty,
-                    "重试",
+                    "Retry",
                     new ActionCommand(ReloadEntries))
             ]);
         }
@@ -1029,7 +1032,7 @@ internal sealed class InstanceServerEntryViewModel(
     ActionCommand inspectCommand) : ViewModelBase
 {
     private Bitmap? _logo = logo;
-    private string _statusText = "已保存服务器";
+    private string _statusText = "Saved server";
     private IBrush _statusBrush = Brushes.White;
     private string _playerCount = "-/-";
     private string _latency = string.Empty;
@@ -1148,7 +1151,7 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         string meta,
         string path,
         ActionCommand actionCommand,
-        string actionToolTip = "查看",
+        string actionToolTip = "View",
         bool isEnabled = true,
         string description = "",
         string website = "",
@@ -1160,13 +1163,13 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ActionCommand? openCommand = null,
         ActionCommand? toggleCommand = null,
         ActionCommand? deleteCommand = null,
-        string infoToolTip = "详情",
-        string websiteToolTip = "打开主页",
-        string openToolTip = "打开文件位置",
-        string enableToolTip = "启用",
-        string disableToolTip = "禁用",
-        string deleteToolTip = "删除",
-        string disabledTagText = "已禁用")
+        string infoToolTip = "Details",
+        string websiteToolTip = "Open website",
+        string openToolTip = "Open file location",
+        string enableToolTip = "Enable",
+        string disableToolTip = "Disable",
+        string deleteToolTip = "Delete",
+        string disabledTagText = "Disabled")
     {
         _icon = icon;
         Title = title;

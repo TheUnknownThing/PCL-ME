@@ -8,7 +8,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendAppearanceService
 {
-    private const string CustomThemeColorName = "自定义";
+    private const string CustomThemeColorName = "custom";
     private const double LauncherOpacitySliderMinimum = 0d;
     private const double LauncherOpacitySliderMaximum = 600d;
     private const double LauncherWindowOpacityMinimum = 0.4d;
@@ -21,20 +21,20 @@ internal static class FrontendAppearanceService
 
     private static readonly FrontendPaletteDefinition[] LightPalettes =
     [
-        new("龙猫蓝", Color.Parse("#1370F3")),
-        new("甜柠青", Color.Parse("#159E95")),
-        new("小草绿", Color.Parse("#459A44")),
-        new("菠萝黄", Color.Parse("#C48910")),
-        new("橡木棕", Color.Parse("#9A6B42"))
+        new("cat_blue", Color.Parse("#1370F3")),
+        new("lemon_cyan", Color.Parse("#159E95")),
+        new("grass_green", Color.Parse("#459A44")),
+        new("pineapple_yellow", Color.Parse("#C48910")),
+        new("oak_brown", Color.Parse("#9A6B42"))
     ];
 
     private static readonly FrontendPaletteDefinition[] DarkPalettes =
     [
-        new("龙猫蓝", Color.Parse("#33BBFF")),
-        new("甜柠青", Color.Parse("#50DED4")),
-        new("小草绿", Color.Parse("#C4F1C4")),
-        new("菠萝黄", Color.Parse("#F0C44A")),
-        new("橡木棕", Color.Parse("#D8A06C"))
+        new("cat_blue", Color.Parse("#33BBFF")),
+        new("lemon_cyan", Color.Parse("#50DED4")),
+        new("grass_green", Color.Parse("#C4F1C4")),
+        new("pineapple_yellow", Color.Parse("#F0C44A")),
+        new("oak_brown", Color.Parse("#D8A06C"))
     ];
 
     public static IReadOnlyList<string> ThemeColorOptions { get; } =

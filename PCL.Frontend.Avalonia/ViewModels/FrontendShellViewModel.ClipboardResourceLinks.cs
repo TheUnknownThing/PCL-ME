@@ -88,9 +88,9 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var confirmed = await _shellActionService.ConfirmAsync(
-            "检测到社区资源链接",
-            $"剪贴板中包含 {resolution.Source} 项目“{resolution.ProjectTitle}”的链接，是否打开详情页？",
-            "打开详情");
+            "Community resource link detected",
+            $"The clipboard contains a link to {resolution.Source} project \"{resolution.ProjectTitle}\". Open the detail page?",
+            "Open details");
         if (!confirmed || version != _clipboardCommunityLinkCheckVersion)
         {
             return;

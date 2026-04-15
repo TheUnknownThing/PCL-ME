@@ -209,7 +209,7 @@ internal sealed partial class FrontendShellViewModel
     private string _communityProjectLoadingText = string.Empty;
     private string _selectedCommunityProjectTitleHint = string.Empty;
     private int _selectedLaunchIsolationIndex = 1;
-    private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
+    private string _launchWindowTitle = "{}{name} | Player: {user} | Signed in via {login}";
     private string _launchCustomInfo = "PCL";
     private int _selectedLaunchVisibilityIndex = 4;
     private int _selectedLaunchPriorityIndex = 1;
@@ -330,7 +330,7 @@ internal sealed partial class FrontendShellViewModel
         var initialInstanceLoadMode = _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
             ? ResolveInstanceCompositionLoadMode(_currentRoute)
             : FrontendInstanceCompositionService.LoadMode.Lightweight;
-        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode);
+        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode, _i18n);
         _instanceCompositionLoadMode = initialInstanceLoadMode;
         _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _i18n.Locale);
         ReloadVersionSavesComposition();
@@ -349,7 +349,7 @@ internal sealed partial class FrontendShellViewModel
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
         _openTaskManagerShortcutCommand = new ActionCommand(() => NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-            "已从右下角快捷入口打开任务中心。",
+            "Opened Task Manager from the bottom-right shortcut.",
             RouteNavigationBehavior.Child));
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
@@ -372,7 +372,7 @@ internal sealed partial class FrontendShellViewModel
         _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => !_isLaunchProfileActionInProgress);
         _submitAuthlibLaunchProfileCommand = new ActionCommand(() => _ = SubmitAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _useLittleSkinLaunchProfileCommand = new ActionCommand(ApplyLittleSkinLaunchProfilePreset, () => !_isLaunchProfileActionInProgress);
-        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/TheUnknownThing/PCL-ME/issues");
+        _openFeedbackCommand = CreateLinkCommand("Open feedback", "https://github.com/TheUnknownThing/PCL-ME/issues");
         _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
         _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
         _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
@@ -380,7 +380,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
-        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/TheUnknownThing/PCL-ME/releases");
+        _openFullChangelogCommand = CreateLinkCommand("View changelog", "https://github.com/TheUnknownThing/PCL-ME/releases");
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
@@ -389,7 +389,7 @@ internal sealed partial class FrontendShellViewModel
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
-        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/TheUnknownThing/PCL-ME");
+        _openSnapshotBuildCommand = CreateLinkCommand("Get official snapshot build", "https://github.com/TheUnknownThing/PCL-ME");
         _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
         _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
         _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);

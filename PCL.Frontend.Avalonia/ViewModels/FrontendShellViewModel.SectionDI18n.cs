@@ -312,11 +312,17 @@ internal sealed partial class FrontendShellViewModel
 
         return meta
             .Replace("数据包", SD("save_detail.datapack.name"), StringComparison.Ordinal)
+            .Replace("datapack", SD("save_detail.datapack.name"), StringComparison.OrdinalIgnoreCase)
             .Replace("资源包", SD("instance.content.resource.kind.resource_pack"), StringComparison.Ordinal)
+            .Replace("resource pack", SD("instance.content.resource.kind.resource_pack"), StringComparison.OrdinalIgnoreCase)
             .Replace("光影包", SD("instance.content.resource.kind.shader"), StringComparison.Ordinal)
+            .Replace("shader", SD("instance.content.resource.kind.shader"), StringComparison.OrdinalIgnoreCase)
             .Replace("投影文件", SD("instance.content.resource.kind.schematic_file"), StringComparison.Ordinal)
+            .Replace("schematic file", SD("instance.content.resource.kind.schematic_file"), StringComparison.OrdinalIgnoreCase)
             .Replace("压缩包", SD("instance.content.resource.meta.archive"), StringComparison.Ordinal)
-            .Replace("文件夹", SD("instance.content.resource.meta.folder"), StringComparison.Ordinal);
+            .Replace("archive", SD("instance.content.resource.meta.archive"), StringComparison.OrdinalIgnoreCase)
+            .Replace("文件夹", SD("instance.content.resource.meta.folder"), StringComparison.Ordinal)
+            .Replace("folder", SD("instance.content.resource.meta.folder"), StringComparison.OrdinalIgnoreCase);
     }
 
     private string LocalizeResourceSummary(string summary)
@@ -326,33 +332,35 @@ internal sealed partial class FrontendShellViewModel
             return summary;
         }
 
-        return summary.Replace("文件夹", SD("instance.content.resource.meta.folder"), StringComparison.Ordinal);
+        return summary
+            .Replace("文件夹", SD("instance.content.resource.meta.folder"), StringComparison.Ordinal)
+            .Replace("Folder", SD("instance.content.resource.meta.folder"), StringComparison.OrdinalIgnoreCase);
     }
 
     private string LocalizeVersionSaveLabel(string label)
     {
         return label switch
         {
-            "实例" => SD("save_detail.labels.instance"),
-            "存档名称" => SD("save_detail.labels.save_name"),
-            "存档路径" => SD("save_detail.labels.save_path"),
-            "最后修改" => SD("save_detail.labels.last_modified"),
-            "文件大小" => SD("save_detail.labels.file_size"),
-            "文件总数" => SD("save_detail.labels.file_count"),
-            "数据包数量" => SD("save_detail.labels.datapack_count"),
-            "备份数量" => SD("save_detail.labels.backup_count"),
-            "图标" => SD("save_detail.labels.icon"),
-            "关卡名称" => SD("save_detail.labels.level_name"),
-            "游戏模式" => SD("save_detail.labels.game_mode"),
-            "难度" => SD("save_detail.labels.difficulty"),
-            "允许作弊" => SD("save_detail.labels.allow_commands"),
-            "极限模式" => SD("save_detail.labels.hardcore"),
-            "下雨中" => SD("save_detail.labels.raining"),
-            "雷暴中" => SD("save_detail.labels.thundering"),
-            "游戏天数" => SD("save_detail.labels.day_count"),
-            "存档版本" => SD("save_detail.labels.save_version"),
-            "存档格式" => SD("save_detail.labels.save_format"),
-            "玩家维度" => SD("save_detail.labels.player_dimension"),
+            "实例" or "instance" => SD("save_detail.labels.instance"),
+            "存档名称" or "save_name" => SD("save_detail.labels.save_name"),
+            "存档路径" or "save_path" => SD("save_detail.labels.save_path"),
+            "最后修改" or "last_modified" => SD("save_detail.labels.last_modified"),
+            "文件大小" or "file_size" => SD("save_detail.labels.file_size"),
+            "文件总数" or "file_count" => SD("save_detail.labels.file_count"),
+            "数据包数量" or "datapack_count" => SD("save_detail.labels.datapack_count"),
+            "备份数量" or "backup_count" => SD("save_detail.labels.backup_count"),
+            "图标" or "icon" => SD("save_detail.labels.icon"),
+            "关卡名称" or "level_name" => SD("save_detail.labels.level_name"),
+            "游戏模式" or "game_mode" => SD("save_detail.labels.game_mode"),
+            "难度" or "difficulty" => SD("save_detail.labels.difficulty"),
+            "允许作弊" or "allow_commands" => SD("save_detail.labels.allow_commands"),
+            "极限模式" or "hardcore" => SD("save_detail.labels.hardcore"),
+            "下雨中" or "raining" => SD("save_detail.labels.raining"),
+            "雷暴中" or "thundering" => SD("save_detail.labels.thundering"),
+            "游戏天数" or "day_count" => SD("save_detail.labels.day_count"),
+            "存档版本" or "save_version" => SD("save_detail.labels.save_version"),
+            "存档格式" or "save_format" => SD("save_detail.labels.save_format"),
+            "玩家维度" or "player_dimension" => SD("save_detail.labels.player_dimension"),
             _ => label
         };
     }
@@ -361,20 +369,20 @@ internal sealed partial class FrontendShellViewModel
     {
         return value switch
         {
-            "未找到" => SD("save_detail.values.not_found"),
-            "已提供" => SD("save_detail.values.provided"),
-            "未提供" => SD("save_detail.values.not_provided"),
-            "生存" => SD("save_detail.values.survival"),
-            "创造" => SD("save_detail.values.creative"),
-            "冒险" => SD("save_detail.values.adventure"),
-            "旁观" => SD("save_detail.values.spectator"),
-            "和平" => SD("save_detail.values.peaceful"),
-            "简单" => SD("save_detail.values.easy"),
-            "普通" => SD("save_detail.values.normal"),
-            "困难" => SD("save_detail.values.hard"),
-            "否" => SD("save_detail.values.no"),
-            "是" => SD("save_detail.values.yes"),
-            "未知" => SD("save_detail.values.unknown"),
+            "未找到" or "not_found" => SD("save_detail.values.not_found"),
+            "已提供" or "provided" => SD("save_detail.values.provided"),
+            "未提供" or "not_provided" => SD("save_detail.values.not_provided"),
+            "生存" or "survival" => SD("save_detail.values.survival"),
+            "创造" or "creative" => SD("save_detail.values.creative"),
+            "冒险" or "adventure" => SD("save_detail.values.adventure"),
+            "旁观" or "spectator" => SD("save_detail.values.spectator"),
+            "和平" or "peaceful" => SD("save_detail.values.peaceful"),
+            "简单" or "easy" => SD("save_detail.values.easy"),
+            "普通" or "normal" => SD("save_detail.values.normal"),
+            "困难" or "hard" => SD("save_detail.values.hard"),
+            "否" or "no" => SD("save_detail.values.no"),
+            "是" or "yes" => SD("save_detail.values.yes"),
+            "未知" or "unknown" => SD("save_detail.values.unknown"),
             _ => value
         };
     }

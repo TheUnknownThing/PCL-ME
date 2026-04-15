@@ -42,7 +42,7 @@ internal static class FrontendInstanceRepairService
 
         if (manifestDocuments.Count == 0)
         {
-            throw new InvalidOperationException("当前实例缺少可读取的版本清单。");
+            throw new InvalidOperationException("The current instance does not contain a readable version manifest.");
         }
 
         JsonElement? effectiveAssetIndex = null;
@@ -484,7 +484,7 @@ internal static class FrontendInstanceRepairService
                 return;
             }
 
-            throw new InvalidOperationException($"实例修复文件缺少可用下载源：{filePlan.LocalPath}");
+            throw new InvalidOperationException($"The instance repair file does not have any available download sources: {filePlan.LocalPath}");
         }
 
         await DownloadFileAsync(filePlan, progressTracker, speedLimiter, cancelToken).ConfigureAwait(false);
@@ -534,7 +534,7 @@ internal static class FrontendInstanceRepairService
 
                 if (!IsFileValid(filePlan))
                 {
-                    throw new InvalidOperationException($"下载后的文件校验失败：{filePlan.LocalPath}");
+                    throw new InvalidOperationException($"Downloaded file verification failed: {filePlan.LocalPath}");
                 }
 
                 return;
@@ -560,7 +560,7 @@ internal static class FrontendInstanceRepairService
         }
 
         throw new InvalidOperationException(
-            $"无法下载实例修复文件：{filePlan.LocalPath}",
+            $"Unable to download instance repair file: {filePlan.LocalPath}",
             lastError);
     }
 

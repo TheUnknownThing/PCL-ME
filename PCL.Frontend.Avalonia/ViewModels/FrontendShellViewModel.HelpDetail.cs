@@ -51,13 +51,14 @@ internal sealed partial class FrontendShellViewModel
     {
         _currentHelpDetailEntry = entry;
         var route = new LauncherFrontendRoute(LauncherFrontendPageKey.HelpDetail);
+        var navigationReason = LT("resource_detail.activities.view_details", ("surface_title", entry.Title));
         if (_currentRoute == route)
         {
-            ChangeRoute(route, $"Opened help detail for {entry.Title}.", ShellNavigationTransitionDirection.Forward);
+            ChangeRoute(route, navigationReason, ShellNavigationTransitionDirection.Forward);
         }
         else
         {
-            NavigateTo(route, $"Opened help detail for {entry.Title}.");
+            NavigateTo(route, navigationReason);
         }
 
         if (addActivity)
@@ -346,7 +347,9 @@ internal sealed partial class FrontendShellViewModel
                 OpenHelpPopup(title, eventData);
                 return;
             case "启动游戏":
-                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Launch), $"Opened the launch route from help detail: {title}.");
+                NavigateTo(
+                    new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                    LT("resource_detail.activities.view_details", ("surface_title", title)));
                 return;
             case "内存优化":
                 OpenMemoryOptimizeDialog();

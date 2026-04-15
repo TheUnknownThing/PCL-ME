@@ -28,25 +28,25 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     {
         InitializeComponent();
         _searchRow = this.FindControl<PclSearchBox>("SearchRow")
-            ?? throw new InvalidOperationException("下载资源页面未找到搜索框容器。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the search box host.");
         _filterCard = this.FindControl<PclCard>("FilterCard")
-            ?? throw new InvalidOperationException("下载资源页面未找到筛选卡片。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the filter card.");
         _hintBanner = this.FindControl<Border>("HintBanner")
-            ?? throw new InvalidOperationException("下载资源页面未找到提示横幅。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the hint banner.");
         _contentHost = this.FindControl<StackPanel>("ContentHost")
-            ?? throw new InvalidOperationException("下载资源页面未找到内容容器。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the content host.");
         _loadingCard = this.FindControl<PclCard>("LoadingCard")
-            ?? throw new InvalidOperationException("下载资源页面未找到加载卡片。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the loading card.");
         _sourceComboBox = this.FindControl<ComboBox>("DownloadResourceSourceComboBox")
-            ?? throw new InvalidOperationException("下载资源页面未找到来源筛选框。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the source filter.");
         _tagComboBox = this.FindControl<ComboBox>("DownloadResourceTagComboBox")
-            ?? throw new InvalidOperationException("下载资源页面未找到标签筛选框。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the tag filter.");
         _sortComboBox = this.FindControl<ComboBox>("DownloadResourceSortComboBox")
-            ?? throw new InvalidOperationException("下载资源页面未找到排序筛选框。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the sort filter.");
         _versionComboBox = this.FindControl<ComboBox>("DownloadResourceVersionComboBox")
-            ?? throw new InvalidOperationException("下载资源页面未找到版本筛选框。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the version filter.");
         _loaderComboBox = this.FindControl<ComboBox>("DownloadResourceLoaderComboBox")
-            ?? throw new InvalidOperationException("下载资源页面未找到加载器筛选框。");
+            ?? throw new InvalidOperationException("The resource download page did not contain the loader filter.");
         DataContextChanged += OnDataContextChanged;
         DetachedFromVisualTree += (_, _) =>
         {

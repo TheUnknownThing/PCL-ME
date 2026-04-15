@@ -25,7 +25,9 @@ internal sealed record FrontendDownloadCatalogState(
     string IntroBody,
     string LoadingText,
     IReadOnlyList<FrontendDownloadCatalogAction> Actions,
-    IReadOnlyList<FrontendDownloadCatalogSection> Sections);
+    IReadOnlyList<FrontendDownloadCatalogSection> Sections,
+    string? StaleError = null,
+    string? LoadError = null);
 
 internal sealed record FrontendDownloadCatalogAction(
     string Text,

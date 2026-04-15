@@ -4,6 +4,101 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendShellLocalizationService
 {
+    public static string DescribeShellStatus(
+        LauncherFrontendShellPlan shellPlan,
+        int navigationDepth,
+        II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(shellPlan);
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T(
+            "shell.navigation.status.line",
+            CreateArgs(
+                ("command", ResolveImmediateCommandLabel(shellPlan.StartupPlan.ImmediateCommand.Kind, i18n)),
+                ("splash", ResolveSplashStateLabel(shellPlan.StartupPlan.Visual.ShouldShowSplashScreen, i18n)),
+                ("depth", navigationDepth)));
+    }
+
+    public static string DescribeSurfaceMeta(
+        LauncherFrontendNavigationView navigation,
+        II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(navigation);
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        var sidebarGroup = ResolveSidebarGroupTitle(navigation.CurrentPage.Route.Page, i18n)
+            ?? i18n.T("shell.navigation.surface_meta.no_sidebar_group");
+        var navigationState = navigation.ShowsBackButton
+            ? navigation.BackTarget is { Route: { } route }
+                ? ResolveBackTargetLabel(route, i18n)
+                : i18n.T("shell.navigation.surface_meta.back_available")
+            : i18n.T("shell.navigation.surface_meta.top_level_route");
+
+        return i18n.T(
+            "shell.navigation.surface_meta.line",
+            CreateArgs(
+                ("kind", ResolveSurfaceKindLabel(navigation.CurrentPage.Kind, i18n)),
+                ("sidebar_group", sidebarGroup),
+                ("navigation_state", navigationState)));
+    }
+
+    public static string DescribeNavigationActivity(
+        string target,
+        string source,
+        II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T(
+            "shell.navigation.activities.navigated",
+            CreateArgs(
+                ("target", target),
+                ("source", i18n.T("shell.navigation.activities.sources." + source))));
+    }
+
+    public static string DescribeUtilitySummary(bool isSelected, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T(
+            isSelected
+                ? "shell.navigation.utilities.active_summary"
+                : "shell.navigation.utilities.pinned_summary");
+    }
+
+    public static string DescribeOpenedUtilitySurface(string target, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T("shell.navigation.activities.opened_utility", CreateArgs(("target", target)));
+    }
+
+    public static string DescribeStayedOnCurrentRoute(II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T("shell.navigation.activities.stayed_current");
+    }
+
+    public static string DescribeFollowedBackTarget(LauncherFrontendRoute route, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T(
+            "shell.navigation.activities.followed_back_target",
+            CreateArgs(("target", ResolveRouteLabel(route, i18n))));
+    }
+
+    public static string DescribeReturnedHome(LauncherFrontendRoute route, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return i18n.T(
+            "shell.navigation.activities.returned_home",
+            CreateArgs(("target", ResolveRouteLabel(route, i18n))));
+    }
+
     public static LauncherFrontendNavigationView LocalizeNavigationView(
         LauncherFrontendNavigationView navigation,
         II18nService i18n)
@@ -11,58 +106,9 @@ internal static class FrontendShellLocalizationService
         ArgumentNullException.ThrowIfNull(navigation);
         ArgumentNullException.ThrowIfNull(i18n);
 
-        var topLevelEntries = navigation.TopLevelEntries
-            .Select(entry => entry with
-            {
-                Title = ResolveRouteLabel(entry.Route, i18n),
-                Summary = ResolveRouteSummary(entry.Route, i18n)
-            })
-            .ToArray();
+        var breadcrumbs = BuildBreadcrumbs(navigation, i18n);
 
-        var sidebarEntries = navigation.SidebarEntries
-            .Select(entry => entry with
-            {
-                Title = ResolveRouteLabel(entry.Route, i18n),
-                Summary = ResolveRouteSummary(entry.Route, i18n)
-            })
-            .ToArray();
-
-        var currentPage = navigation.CurrentPage with
-        {
-            Title = ResolvePageTitle(navigation.CurrentPage.Route.Page, i18n),
-            Summary = ResolvePageSummary(navigation.CurrentPage.Route.Page, i18n),
-            SidebarGroupTitle = ResolveSidebarGroupTitle(navigation.CurrentPage.Route.Page, i18n),
-            SidebarItemTitle = ResolveSubpageTitle(navigation.CurrentRoute.Subpage, i18n),
-            SidebarItemSummary = ResolveSubpageSummary(navigation.CurrentRoute.Subpage, i18n)
-        };
-
-        var breadcrumbs = BuildBreadcrumbs(navigation, currentPage, sidebarEntries, i18n);
-        var backTarget = navigation.BackTarget is { Route: { } route }
-            ? navigation.BackTarget with
-            {
-                Label = i18n.T(
-                    "shell.navigation.utilities.back_target",
-                    CreateArgs(("target", ResolveRouteLabel(route, i18n))))
-            }
-            : navigation.BackTarget;
-
-        var utilityEntries = navigation.UtilityEntries
-            .Select(entry => entry with
-            {
-                Title = ResolveUtilityTitle(entry.Id, i18n)
-            })
-            .ToArray();
-
-        return navigation with
-        {
-            CurrentPageTitle = currentPage.Title,
-            CurrentPage = currentPage,
-            Breadcrumbs = breadcrumbs,
-            BackTarget = backTarget,
-            TopLevelEntries = topLevelEntries,
-            SidebarEntries = sidebarEntries,
-            UtilityEntries = utilityEntries
-        };
+        return navigation with { Breadcrumbs = breadcrumbs };
     }
 
     public static LauncherFrontendPageContent BuildPageContent(
@@ -91,7 +137,8 @@ internal static class FrontendShellLocalizationService
 
         if (navigation.BackTarget is not null)
         {
-            facts.Add(CreateFact(i18n, "shell.page_content.facts.back_target", navigation.BackTarget.Label));
+            var backTargetLabel = ResolveBackTargetLabel(navigation.BackTarget.Route, i18n);
+            facts.Add(CreateFact(i18n, "shell.page_content.facts.back_target", backTargetLabel));
         }
 
         AddRouteSpecificFacts(facts, launch, crash, navigation.CurrentRoute.Page, i18n);
@@ -149,31 +196,92 @@ internal static class FrontendShellLocalizationService
             : ResolvePageSummary(route.Page, i18n);
     }
 
+    public static string ResolveTitleBarLabel(LauncherFrontendNavigationView navigation, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(navigation);
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return navigation.CurrentRoute.Subpage != LauncherFrontendSubpageKey.Default
+            ? ResolveSubpageTitle(navigation.CurrentRoute.Subpage, i18n)
+            : ResolvePageTitle(navigation.CurrentRoute.Page, i18n);
+    }
+
+    public static string ResolvePageTitle(LauncherFrontendPageKey page, II18nService i18n)
+    {
+        return i18n.T("shell.navigation.pages." + page.ToString().ToSnakeCase() + ".title");
+    }
+
+    public static string ResolvePageSummary(LauncherFrontendPageKey page, II18nService i18n)
+    {
+        return i18n.T("shell.navigation.pages." + page.ToString().ToSnakeCase() + ".summary");
+    }
+
+    public static string ResolveSubpageTitle(LauncherFrontendSubpageKey subpage, II18nService i18n)
+    {
+        return subpage == LauncherFrontendSubpageKey.Default
+            ? string.Empty
+            : i18n.T("shell.navigation.subpages." + subpage.ToString().ToSnakeCase() + ".title");
+    }
+
+    public static string ResolveSubpageSummary(LauncherFrontendSubpageKey subpage, II18nService i18n)
+    {
+        return subpage == LauncherFrontendSubpageKey.Default
+            ? string.Empty
+            : i18n.T("shell.navigation.subpages." + subpage.ToString().ToSnakeCase() + ".summary");
+    }
+
+    public static string? ResolveSidebarGroupTitle(LauncherFrontendPageKey page, II18nService i18n)
+    {
+        var key = page switch
+        {
+            LauncherFrontendPageKey.Download or LauncherFrontendPageKey.CompDetail => "download",
+            LauncherFrontendPageKey.Setup => "setup",
+            LauncherFrontendPageKey.Tools or LauncherFrontendPageKey.HelpDetail => "tools",
+            LauncherFrontendPageKey.InstanceSetup => "instance_setup",
+            LauncherFrontendPageKey.VersionSaves => "version_saves",
+            _ => null
+        };
+
+        return key is null ? null : i18n.T("shell.navigation.sidebar_groups." + key);
+    }
+
+    public static string ResolveUtilityTitle(string id, II18nService i18n)
+    {
+        return i18n.T("shell.navigation.utilities." + id.Replace('-', '_'));
+    }
+
+    public static string ResolveBackTargetLabel(LauncherFrontendRoute? route, II18nService i18n)
+    {
+        return route is null
+            ? string.Empty
+            : i18n.T(
+                "shell.navigation.utilities.back_target",
+                CreateArgs(("target", ResolveRouteLabel(route, i18n))));
+    }
+
     private static IReadOnlyList<LauncherFrontendBreadcrumb> BuildBreadcrumbs(
         LauncherFrontendNavigationView navigation,
-        LauncherFrontendPageSurface currentPage,
-        IReadOnlyList<LauncherFrontendNavigationEntry> sidebarEntries,
         II18nService i18n)
     {
         var breadcrumbs = new List<LauncherFrontendBreadcrumb>();
-        if (currentPage.Kind == LauncherFrontendPageKind.TopLevel)
+        if (navigation.CurrentPage.Kind == LauncherFrontendPageKind.TopLevel)
         {
             breadcrumbs.Add(new LauncherFrontendBreadcrumb(
-                currentPage.Title,
-                new LauncherFrontendRoute(currentPage.Route.Page)));
+                ResolvePageTitle(navigation.CurrentPage.Route.Page, i18n),
+                new LauncherFrontendRoute(navigation.CurrentPage.Route.Page)));
         }
         else
         {
             breadcrumbs.Add(new LauncherFrontendBreadcrumb(
-                currentPage.Title,
+                ResolvePageTitle(navigation.CurrentPage.Route.Page, i18n),
                 navigation.Breadcrumbs.FirstOrDefault()?.Route));
         }
 
-        var selectedSidebarEntry = sidebarEntries.FirstOrDefault(entry => entry.IsSelected);
+        var selectedSidebarEntry = navigation.SidebarEntries.FirstOrDefault(entry => entry.IsSelected);
         if (selectedSidebarEntry is not null)
         {
             breadcrumbs.Add(new LauncherFrontendBreadcrumb(
-                selectedSidebarEntry.Title,
+                ResolveRouteLabel(selectedSidebarEntry.Route, i18n),
                 selectedSidebarEntry.Route));
         }
 
@@ -244,48 +352,22 @@ internal static class FrontendShellLocalizationService
         }
     }
 
-    private static string ResolvePageTitle(LauncherFrontendPageKey page, II18nService i18n)
+    private static string ResolveImmediateCommandLabel(LauncherStartupImmediateCommandKind kind, II18nService i18n)
     {
-        return i18n.T("shell.navigation.pages." + page.ToString().ToSnakeCase() + ".title");
+        return i18n.T("shell.navigation.status.commands." + kind.ToString().ToSnakeCase());
     }
 
-    private static string ResolvePageSummary(LauncherFrontendPageKey page, II18nService i18n)
+    private static string ResolveSplashStateLabel(bool showsSplashScreen, II18nService i18n)
     {
-        return i18n.T("shell.navigation.pages." + page.ToString().ToSnakeCase() + ".summary");
+        return i18n.T(
+            showsSplashScreen
+                ? "shell.navigation.status.splash_on"
+                : "shell.navigation.status.splash_off");
     }
 
-    private static string ResolveSubpageTitle(LauncherFrontendSubpageKey subpage, II18nService i18n)
+    private static string ResolveSurfaceKindLabel(LauncherFrontendPageKind kind, II18nService i18n)
     {
-        return subpage == LauncherFrontendSubpageKey.Default
-            ? string.Empty
-            : i18n.T("shell.navigation.subpages." + subpage.ToString().ToSnakeCase() + ".title");
-    }
-
-    private static string ResolveSubpageSummary(LauncherFrontendSubpageKey subpage, II18nService i18n)
-    {
-        return subpage == LauncherFrontendSubpageKey.Default
-            ? string.Empty
-            : i18n.T("shell.navigation.subpages." + subpage.ToString().ToSnakeCase() + ".summary");
-    }
-
-    private static string? ResolveSidebarGroupTitle(LauncherFrontendPageKey page, II18nService i18n)
-    {
-        var key = page switch
-        {
-            LauncherFrontendPageKey.Download or LauncherFrontendPageKey.CompDetail => "download",
-            LauncherFrontendPageKey.Setup => "setup",
-            LauncherFrontendPageKey.Tools or LauncherFrontendPageKey.HelpDetail => "tools",
-            LauncherFrontendPageKey.InstanceSetup => "instance_setup",
-            LauncherFrontendPageKey.VersionSaves => "version_saves",
-            _ => null
-        };
-
-        return key is null ? null : i18n.T("shell.navigation.sidebar_groups." + key);
-    }
-
-    private static string ResolveUtilityTitle(string id, II18nService i18n)
-    {
-        return i18n.T("shell.navigation.utilities." + id.Replace('-', '_'));
+        return i18n.T("shell.navigation.surface_meta.kinds." + kind.ToString().ToSnakeCase());
     }
 
     private static IReadOnlyDictionary<string, object?> CreateArgs(params (string Name, object? Value)[] values)

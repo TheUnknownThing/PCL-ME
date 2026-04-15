@@ -145,7 +145,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_downloadInstallIsInSelectionStage && !_downloadInstallIsNameEditedByUser)
         {
-            _downloadInstallName = "新的安装方案";
+            _downloadInstallName = T("download.install.generated_name.default");
         }
 
         RefreshDownloadInstallSurfaceState();
@@ -168,7 +168,8 @@ internal sealed partial class FrontendShellViewModel
         DownloadCatalogIntroTitle = string.Empty;
         DownloadCatalogIntroBody = string.Empty;
         DownloadCatalogLoadingText = LocalizeDownloadCatalogLoadingText(
-            FrontendDownloadRemoteCatalogService.GetLoadingText(_currentRoute.Subpage));
+            _currentRoute.Subpage,
+            FrontendDownloadRemoteCatalogService.GetLoadingText(_currentRoute.Subpage, _i18n));
         ReplaceItems(DownloadCatalogIntroActions, []);
         ReplaceItems(DownloadCatalogSections, []);
         SetDownloadCatalogLoading(false);
@@ -197,6 +198,7 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.RuntimePaths,
                 _instanceComposition,
                 route,
+                _i18n,
                 cancellationToken);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -227,23 +229,10 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 DownloadCatalogIntroTitle = T("download.catalog.errors.load_failed_title");
-                DownloadCatalogIntroBody = ex.Message;
+                DownloadCatalogIntroBody = T("download.catalog.errors.load_failed_body", ("error", ex.Message));
                 DownloadCatalogLoadingText = T("download.catalog.errors.retry_later");
                 ReplaceItems(DownloadCatalogIntroActions, []);
-                ReplaceItems(
-                    DownloadCatalogSections,
-                    [
-                        CreateDownloadCatalogSection(
-                            T("download.catalog.errors.section_title"),
-                            [
-                                new DownloadCatalogEntryViewModel(
-                                    T("download.catalog.errors.empty_title"),
-                                    T("download.catalog.errors.empty_description"),
-                                    string.Empty,
-                                    T("resource_detail.actions.view_details"),
-                                    CreateIntentCommand(T("download.catalog.errors.load_failed_title"), ex.Message))
-                            ])
-                    ]);
+                ReplaceItems(DownloadCatalogSections, BuildDownloadCatalogErrorSections(ex.Message));
                 SetDownloadCatalogLoading(false);
             });
         }
@@ -251,9 +240,26 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyDownloadCatalogState(FrontendDownloadCatalogState state)
     {
+        if (!string.IsNullOrWhiteSpace(state.LoadError))
+        {
+            DownloadCatalogLoadingText = T("download.catalog.errors.retry_later");
+            SetDownloadCatalogIntro(
+                T("download.catalog.errors.load_failed_title"),
+                T("download.catalog.errors.load_failed_body", ("error", state.LoadError)),
+                state.Actions.Select(action =>
+                    new DownloadCatalogActionViewModel(
+                        LocalizeDownloadCatalogActionText(action.Text),
+                        action.IsHighlight ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
+                        string.IsNullOrWhiteSpace(action.Target)
+                            ? CreateIntentCommand(LocalizeDownloadCatalogActionText(action.Text), state.LoadError)
+                            : CreateOpenTargetCommand(LocalizeDownloadCatalogActionText(action.Text), action.Target, action.Target))).ToArray());
+            ReplaceItems(DownloadCatalogSections, BuildDownloadCatalogErrorSections(state.LoadError));
+            return;
+        }
+
         var localizedIntroTitle = LocalizeDownloadCatalogIntroTitle(_currentRoute.Subpage, state.IntroTitle);
-        var localizedIntroBody = LocalizeDownloadCatalogIntroBody(_currentRoute.Subpage, state.IntroBody);
-        DownloadCatalogLoadingText = LocalizeDownloadCatalogLoadingText(state.LoadingText);
+        var localizedIntroBody = LocalizeDownloadCatalogIntroBody(_currentRoute.Subpage, state.IntroBody, state.StaleError);
+        DownloadCatalogLoadingText = LocalizeDownloadCatalogLoadingText(_currentRoute.Subpage, state.LoadingText);
         SetDownloadCatalogIntro(
             localizedIntroTitle,
             localizedIntroBody,
@@ -281,6 +287,23 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowDownloadCatalogContent));
     }
 
+    private IReadOnlyList<DownloadCatalogSectionViewModel> BuildDownloadCatalogErrorSections(string error)
+    {
+        return
+        [
+            CreateDownloadCatalogSection(
+                T("download.catalog.errors.section_title"),
+                [
+                    new DownloadCatalogEntryViewModel(
+                        T("download.catalog.errors.empty_title"),
+                        T("download.catalog.errors.empty_description"),
+                        string.Empty,
+                        T("resource_detail.actions.view_details"),
+                        CreateIntentCommand(T("download.catalog.errors.load_failed_title"), error))
+                ])
+        ];
+    }
+
     private void RefreshDownloadFavoriteSurface()
     {
         ReplaceItems(DownloadFavoriteSections, []);
@@ -296,6 +319,13 @@ internal sealed partial class FrontendShellViewModel
         var selectedTarget = GetSelectedDownloadFavoriteTargetState();
         SyncDownloadFavoriteSelectionTarget(selectedTarget.Id);
         var visibleEntries = selectedTarget.Sections
+            .Select(section => new
+            {
+                Title = LocalizeDownloadFavoriteSectionTitle(section.Title),
+                Entries = section.Entries
+                    .Select(LocalizeDownloadFavoriteEntry)
+                    .ToArray()
+            })
             .Select(section => new DownloadFavoriteSectionViewModel(
                 section.Title,
                 section.Entries
@@ -340,7 +370,7 @@ internal sealed partial class FrontendShellViewModel
             meta: entry.Meta,
             path: projectId,
             actionCommand: actionCommand,
-            actionToolTip: "查看详情",
+            actionToolTip: T("resource_detail.actions.view_details"),
             isEnabled: true,
             description: entry.Info,
             showSelection: true,
@@ -352,6 +382,75 @@ internal sealed partial class FrontendShellViewModel
                 : new ActionCommand(() => _ = RemoveDownloadFavoriteAsync(projectId, entry.Title)));
         QueueDownloadFavoriteIconLoad(viewModel, entry.IconUrl);
         return viewModel;
+    }
+
+    private FrontendDownloadCatalogEntry LocalizeDownloadFavoriteEntry(FrontendDownloadCatalogEntry entry)
+    {
+        return entry with
+        {
+            Meta = LocalizeDownloadFavoriteMeta(entry.Meta)
+        };
+    }
+
+    private string LocalizeDownloadFavoriteSectionTitle(string value)
+    {
+        return value switch
+        {
+            "other" => T("resource_detail.values.other"),
+            _ => LocalizeCommunityProjectProjectType(value)
+        };
+    }
+
+    private string LocalizeDownloadFavoriteMeta(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || !value.StartsWith("favorite_meta|", StringComparison.Ordinal))
+        {
+            return value;
+        }
+
+        var segments = value
+            .Split('|')
+            .Skip(1)
+            .Select(Uri.UnescapeDataString)
+            .ToArray();
+        var parts = new List<string>();
+        var targetName = segments.ElementAtOrDefault(0);
+        if (!string.IsNullOrWhiteSpace(targetName))
+        {
+            parts.Add(targetName);
+        }
+
+        var source = segments.ElementAtOrDefault(1);
+        if (!string.IsNullOrWhiteSpace(source))
+        {
+            parts.Add(source);
+        }
+
+        var projectType = LocalizeCommunityProjectProjectType(segments.ElementAtOrDefault(2) ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(projectType))
+        {
+            parts.Add(projectType);
+        }
+
+        var author = segments.ElementAtOrDefault(3);
+        if (!string.IsNullOrWhiteSpace(author))
+        {
+            parts.Add(author);
+        }
+
+        var updatedLabel = segments.ElementAtOrDefault(4);
+        if (!string.IsNullOrWhiteSpace(updatedLabel) && !string.Equals(updatedLabel, "unknown", StringComparison.OrdinalIgnoreCase))
+        {
+            parts.Add(T("download.favorites.meta.updated", ("value", LocalizeCommunityProjectUpdatedLabel(updatedLabel))));
+        }
+
+        if (int.TryParse(segments.ElementAtOrDefault(5), out var downloadCount) && downloadCount > 0)
+        {
+            parts.Add(T("download.favorites.meta.downloads", ("value", FormatCompactCount(downloadCount))));
+        }
+
+        return string.Join(" • ", parts);
     }
 
     private void InitializeGameManageSurface()
@@ -623,7 +722,12 @@ internal sealed partial class FrontendShellViewModel
 
     private SimpleListEntryViewModel CreateSimpleEntry(string title, string info)
     {
-        return new SimpleListEntryViewModel(title, info, new ActionCommand(() => AddActivity($"查看条目: {title}", info)));
+        return new SimpleListEntryViewModel(
+            title,
+            info,
+            new ActionCommand(() => AddActivity(
+                T("resource_detail.activities.view_details", ("surface_title", title)),
+                info)));
     }
 
     private SimpleListEntryViewModel CreateSimpleEntry(string title, string info, ActionCommand command)
@@ -729,7 +833,7 @@ internal sealed partial class FrontendShellViewModel
         bool isCollapsible = false,
         bool isExpanded = true,
         Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
-        string loadingText = "正在获取版本列表")
+        string loadingText = "fetch_versions")
     {
         return new DownloadCatalogSectionViewModel(title, items, isCollapsible, isExpanded, loadEntriesAsync, loadingText);
     }
@@ -749,18 +853,19 @@ internal sealed partial class FrontendShellViewModel
                     _instanceComposition,
                     route,
                     lazyLoadToken,
+                    _i18n,
                     cancellationToken);
                 return entries.Select(CreateDownloadCatalogEntryViewModel).ToArray();
             };
         }
 
         return CreateDownloadCatalogSection(
-            section.Title,
+            LocalizeDownloadCatalogSectionTitle(route, section.Title),
             section.Entries.Select(CreateDownloadCatalogEntryViewModel).ToArray(),
             section.IsCollapsible,
             section.IsInitiallyExpanded,
             loadEntriesAsync,
-            LocalizeDownloadCatalogLoadingText(section.LoadingText));
+            LocalizeDownloadCatalogLoadingText(route, section.LoadingText));
     }
 
     private DownloadCatalogEntryViewModel CreateDownloadCatalogEntry(string title, string info, string meta, string actionText)
@@ -770,7 +875,9 @@ internal sealed partial class FrontendShellViewModel
             info,
             meta,
             LocalizeDownloadCatalogActionText(actionText),
-            new ActionCommand(() => AddActivity($"下载页操作: {title}", $"{meta} • {info}")));
+            new ActionCommand(() => AddActivity(
+                T("download.catalog.activities.entry_action", ("entry_title", title)),
+                BuildActivityDetail(meta, info))));
     }
 
     private DownloadCatalogEntryViewModel CreateDownloadCatalogEntryViewModel(FrontendDownloadCatalogEntry entry)
@@ -787,10 +894,54 @@ internal sealed partial class FrontendShellViewModel
     {
         return actionText switch
         {
+            "save_installer" => T("download.catalog.actions.save_installer"),
+            "open_website" => T("common.actions.open_website"),
+            "view_details" => T("resource_detail.actions.view_details"),
+            "保存安装器" => T("download.catalog.actions.save_installer"),
             "打开官网" => T("common.actions.open_website"),
             "查看详情" => T("resource_detail.actions.view_details"),
             _ => actionText
         };
+    }
+
+    private string LocalizeDownloadCatalogSectionTitle(LauncherFrontendSubpageKey route, string title)
+    {
+        if (string.IsNullOrWhiteSpace(title) || route != LauncherFrontendSubpageKey.DownloadClient)
+        {
+            return title switch
+            {
+                "latest_versions" => T("download.catalog.sections.latest_versions"),
+                "remote_catalog" => T("download.catalog.sections.remote_catalog"),
+                _ when title.StartsWith("version_list ", StringComparison.Ordinal) => title.Replace(
+                    "version_list",
+                    T("download.catalog.sections.version_list"),
+                    StringComparison.Ordinal),
+                _ => title
+            };
+        }
+
+        var match = Regex.Match(title, @"^(?<group>[^()]+?)(?: \((?<count>\d+)\))?$");
+        if (!match.Success)
+        {
+            return title;
+        }
+
+        var localizedGroup = match.Groups["group"].Value.Trim() switch
+        {
+            "latest_versions" => T("download.catalog.sections.latest_versions"),
+            "remote_catalog" => T("download.catalog.sections.remote_catalog"),
+            "version_list" => T("download.catalog.sections.version_list"),
+            "latest" or "最新版本" => T("download.install.catalog.groups.latest"),
+            "release" or "正式版" => T("download.install.catalog.groups.release"),
+            "preview" or "预览版" => T("download.install.catalog.groups.preview"),
+            "legacy" or "远古版" => T("download.install.catalog.groups.legacy"),
+            "april_fools" or "愚人节版" => T("download.install.catalog.groups.april_fools"),
+            _ => title
+        };
+
+        return match.Groups["count"].Success
+            ? $"{localizedGroup} ({match.Groups["count"].Value})"
+            : localizedGroup;
     }
 
     private string LocalizeDownloadCatalogIntroTitle(LauncherFrontendSubpageKey route, string title)
@@ -810,7 +961,7 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private string LocalizeDownloadCatalogIntroBody(LauncherFrontendSubpageKey route, string body)
+    private string LocalizeDownloadCatalogIntroBody(LauncherFrontendSubpageKey route, string body, string? staleError)
     {
         var localizedBody = route switch
         {
@@ -826,39 +977,24 @@ internal sealed partial class FrontendShellViewModel
             _ => body
         };
 
-        if (TryExtractDownloadCatalogStaleError(body, out var errorMessage))
+        if (!string.IsNullOrWhiteSpace(staleError))
         {
-            return T("download.catalog.intro.stale_cache", ("body", localizedBody), ("error", errorMessage));
+            return T("download.catalog.intro.stale_cache", ("body", localizedBody), ("error", staleError));
         }
 
         return localizedBody;
     }
 
-    private static bool TryExtractDownloadCatalogStaleError(string body, out string errorMessage)
-    {
-        const string staleErrorMarker = " 刷新远程目录失败，因此暂时保留上次成功同步的结果。错误：";
-
-        errorMessage = string.Empty;
-        if (string.IsNullOrWhiteSpace(body))
-        {
-            return false;
-        }
-
-        var markerIndex = body.IndexOf(staleErrorMarker, StringComparison.Ordinal);
-        if (markerIndex < 0)
-        {
-            return false;
-        }
-
-        errorMessage = body[(markerIndex + staleErrorMarker.Length)..].Trim();
-        return !string.IsNullOrWhiteSpace(errorMessage);
-    }
-
-    private string LocalizeDownloadCatalogLoadingText(string loadingText)
+    private string LocalizeDownloadCatalogLoadingText(LauncherFrontendSubpageKey route, string loadingText)
     {
         if (string.IsNullOrWhiteSpace(loadingText))
         {
             return string.Empty;
+        }
+
+        if (string.Equals(loadingText, "fetch_list", StringComparison.Ordinal))
+        {
+            return T("download.catalog.loading.fetch_list", ("surface_name", ResolveDownloadCatalogRouteTitle(route)));
         }
 
         var listMatch = Regex.Match(loadingText, @"^正在获取 (?<surface>.+) 列表$|^正在获取(?<surface2>.+)列表$");
@@ -870,7 +1006,8 @@ internal sealed partial class FrontendShellViewModel
             return T("download.catalog.loading.fetch_list", ("surface_name", surfaceName));
         }
 
-        if (string.Equals(loadingText, "正在获取版本列表", StringComparison.Ordinal))
+        if (string.Equals(loadingText, "fetch_versions", StringComparison.Ordinal)
+            || string.Equals(loadingText, "正在获取版本列表", StringComparison.Ordinal))
         {
             return T("download.catalog.loading.fetch_versions");
         }
@@ -909,6 +1046,15 @@ internal sealed partial class FrontendShellViewModel
         return new ActionCommand(() => AddActivity(title, detail));
     }
 
+    private static string BuildActivityDetail(params string?[] parts)
+    {
+        return string.Join(
+            " • ",
+            parts
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select(part => part!.Trim()));
+    }
+
     private ActionCommand CreateDownloadCatalogCommand(FrontendDownloadCatalogEntry entry)
     {
         if (entry.ActionKind == FrontendDownloadCatalogEntryActionKind.DownloadFile
@@ -918,28 +1064,37 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return string.IsNullOrWhiteSpace(entry.Target)
-            ? CreateIntentCommand($"下载页操作: {entry.Title}", $"{entry.Info} • {entry.Meta}".Trim(' ', '•'))
-            : CreateOpenTargetCommand($"打开条目: {entry.Title}", entry.Target, entry.Target);
+            ? CreateIntentCommand(
+                T("download.catalog.activities.entry_action", ("entry_title", entry.Title)),
+                BuildActivityDetail(entry.Info, entry.Meta))
+            : CreateOpenTargetCommand(
+                T("download.catalog.activities.open_entry", ("entry_title", entry.Title)),
+                entry.Target,
+                entry.Target);
     }
 
     private async Task DownloadCatalogFileAsync(FrontendDownloadCatalogEntry entry)
     {
         if (string.IsNullOrWhiteSpace(entry.Target))
         {
-            AddFailureActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
+            AddFailureActivity(
+                T("resource_detail.activities.download_failed", ("entry_title", entry.Title)),
+                T("download.catalog.download.missing_url"));
             return;
         }
 
         var suggestedFileName = ResolveDownloadCatalogSuggestedFileName(entry);
         var extension = Path.GetExtension(suggestedFileName);
         var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
-        var typeName = $"{GetDownloadCatalogRouteTitle(_currentRoute.Subpage)} 安装器";
+        var typeName = T(
+            "download.catalog.download.installer_type",
+            ("surface_name", ResolveDownloadCatalogRouteTitle(_currentRoute.Subpage)));
 
         string? targetPath;
         try
         {
             targetPath = await _shellActionService.PickSaveFileAsync(
-                "选择保存位置",
+                T("download.catalog.download.pick_save_path_title"),
                 suggestedFileName,
                 typeName,
                 ResolveDownloadCatalogStartDirectory(),
@@ -947,25 +1102,35 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+            AddFailureActivity(
+                T("resource_detail.activities.pick_save_path_failed", ("entry_title", entry.Title)),
+                ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(targetPath))
         {
-            AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
+            AddActivity(
+                T("resource_detail.activities.download_canceled", ("entry_title", entry.Title)),
+                T("download.catalog.download.no_save_path"));
             return;
         }
 
         TaskCenter.Register(new FrontendManagedFileDownloadTask(
-            $"下载 {Path.GetFileNameWithoutExtension(targetPath)}",
+            T("download.catalog.download.task_title", ("file_name", Path.GetFileNameWithoutExtension(targetPath))),
             entry.Target,
             targetPath,
             ResolveDownloadRequestTimeout(),
-            onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
-            onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+            onStarted: filePath => AvaloniaHintBus.Show(
+                T("download.catalog.download.hints.started", ("file_name", Path.GetFileName(filePath))),
+                AvaloniaHintTheme.Info),
+            onCompleted: filePath => AvaloniaHintBus.Show(
+                T("download.catalog.download.hints.completed", ("file_name", Path.GetFileName(filePath))),
+                AvaloniaHintTheme.Success),
             onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
-        AddActivity($"开始下载: {entry.Title}", $"{entry.Target} -> {targetPath}");
+        AddActivity(
+            T("resource_detail.activities.download_started", ("entry_title", entry.Title)),
+            targetPath);
     }
 
     private string ResolveDownloadCatalogSuggestedFileName(FrontendDownloadCatalogEntry entry)
@@ -999,21 +1164,12 @@ internal sealed partial class FrontendShellViewModel
         return directory;
     }
 
-    private static string GetDownloadCatalogRouteTitle(LauncherFrontendSubpageKey route)
+    private string ResolveDownloadCatalogRouteTitle(LauncherFrontendSubpageKey route)
     {
-        return route switch
-        {
-            LauncherFrontendSubpageKey.DownloadOptiFine => "OptiFine",
-            LauncherFrontendSubpageKey.DownloadForge => "Forge",
-            LauncherFrontendSubpageKey.DownloadNeoForge => "NeoForge",
-            LauncherFrontendSubpageKey.DownloadCleanroom => "Cleanroom",
-            LauncherFrontendSubpageKey.DownloadFabric => "Fabric",
-            LauncherFrontendSubpageKey.DownloadQuilt => "Quilt",
-            LauncherFrontendSubpageKey.DownloadLiteLoader => "LiteLoader",
-            LauncherFrontendSubpageKey.DownloadLabyMod => "LabyMod",
-            LauncherFrontendSubpageKey.DownloadLegacyFabric => "Legacy Fabric",
-            _ => "文件"
-        };
+        var title = FrontendShellLocalizationService.ResolveSubpageTitle(route, _i18n);
+        return string.IsNullOrWhiteSpace(title)
+            ? T("download.catalog.download.file_type_default")
+            : title;
     }
 
     private ActionCommand CreateDownloadFavoriteCommand(FrontendDownloadCatalogEntry entry)
@@ -1023,7 +1179,10 @@ internal sealed partial class FrontendShellViewModel
             return new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title));
         }
 
-        return CreateOpenTargetCommand($"打开收藏夹条目: {entry.Title}", entry.Target!, entry.Target!);
+        return CreateOpenTargetCommand(
+            T("download.catalog.activities.open_favorite_entry", ("entry_title", entry.Title)),
+            entry.Target!,
+            entry.Target!);
     }
 
     private ActionCommand CreateOpenTargetCommand(string title, string target, string detail)
@@ -1036,7 +1195,7 @@ internal sealed partial class FrontendShellViewModel
             }
             else
             {
-                AddFailureActivity($"{title} 失败", error ?? detail);
+                AddFailureActivity(T("common.activities.failed", ("title", title)), error ?? detail);
             }
         });
     }

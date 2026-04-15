@@ -172,7 +172,7 @@ internal sealed partial class FrontendShellViewModel
             return selectableChoices.Count > 0 ? SD("instance.install.option.install_recommended") : SD("instance.install.option.unavailable");
         }
 
-        return "更换版本";
+        return "Change version";
     }
 
     private string BuildInstallOptionUnresolvedDetail(
@@ -240,7 +240,7 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<FrontendInstallChoice> GetSelectableInstallChoices(bool isExistingInstance, string optionTitle, string minecraftVersion)
     {
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, _i18n);
         return optionTitle switch
         {
             "Forge" => FilterForgeChoicesForCurrentState(isExistingInstance, choices),

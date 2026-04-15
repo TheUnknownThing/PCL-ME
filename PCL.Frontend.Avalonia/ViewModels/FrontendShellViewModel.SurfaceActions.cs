@@ -82,7 +82,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AddActivity($"左侧操作: {actionLabel}", $"{title} • {command}");
+        AddActivity(T("shell.surface_actions.sidebar.title", ("action", actionLabel)), T("shell.surface_actions.sidebar.body", ("title", title), ("command", command)));
     }
 
     private async Task CheckForLauncherUpdatesAsync(bool forceRefresh)
@@ -281,21 +281,21 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             actionId = await _shellActionService.PromptForChoiceAsync(
-                "管理收藏夹",
-                $"当前收藏夹：{currentTargetName}",
+                T("download.favorites.targets.manage.title"),
+                T("download.favorites.targets.manage.current_target", ("target_name", currentTargetName)),
                 [
-                    new PclChoiceDialogOption("share", "分享当前收藏夹", "复制当前收藏夹的分享代码。"),
-                    new PclChoiceDialogOption("import", "导入收藏", "把分享代码导入到当前或新的收藏夹。"),
-                    new PclChoiceDialogOption("create", "新建收藏夹", "创建一个新的收藏夹目标。"),
-                    new PclChoiceDialogOption("rename", "重命名收藏夹名称", "修改当前收藏夹的名称。"),
-                    new PclChoiceDialogOption("delete", "删除当前收藏夹", "删除当前收藏夹。")
+                    new PclChoiceDialogOption("share", T("download.favorites.targets.manage.options.share.label"), T("download.favorites.targets.manage.options.share.description")),
+                    new PclChoiceDialogOption("import", T("download.favorites.targets.manage.options.import.label"), T("download.favorites.targets.manage.options.import.description")),
+                    new PclChoiceDialogOption("create", T("download.favorites.targets.manage.options.create.label"), T("download.favorites.targets.manage.options.create.description")),
+                    new PclChoiceDialogOption("rename", T("download.favorites.targets.manage.options.rename.label"), T("download.favorites.targets.manage.options.rename.description")),
+                    new PclChoiceDialogOption("delete", T("download.favorites.targets.manage.options.delete.label"), T("download.favorites.targets.manage.options.delete.description"))
                 ],
                 "share",
-                "继续");
+                T("common.actions.continue"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("管理收藏夹失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.manage.failed"), ex.Message);
             return;
         }
 
@@ -322,7 +322,7 @@ internal sealed partial class FrontendShellViewModel
                 await DeleteDownloadFavoriteTargetAsync(root, currentTarget);
                 return;
             default:
-                AddFailureActivity("管理收藏夹失败", $"未识别的收藏夹操作：{actionId}");
+                AddFailureActivity(T("download.favorites.targets.manage.failed"), T("download.favorites.targets.manage.unknown_action", ("action_id", actionId)));
                 return;
         }
     }
@@ -331,7 +331,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("新建档案", "当前未选择实例。");
+            AddActivity(T("launch.profile.instance_create.title"), T("instance.overview.messages.no_instance_selected"));
             return Task.CompletedTask;
         }
 
@@ -342,13 +342,13 @@ internal sealed partial class FrontendShellViewModel
         LaunchAuthlibLoginName = string.Empty;
         LaunchAuthlibPassword = string.Empty;
         LaunchAuthlibStatusText = string.IsNullOrWhiteSpace(InstanceServerAuthName)
-            ? "已从实例设置带入第三方验证服务器。"
-            : $"已从实例设置带入 {InstanceServerAuthName}。";
+            ? T("launch.profile.instance_create.status_default")
+            : T("launch.profile.instance_create.status_named", ("auth_name", InstanceServerAuthName));
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-            "Opened the launch route from instance settings for auth profile creation.");
+            T("launch.profile.instance_create.navigation"));
         SetLaunchProfileSurface(LaunchProfileSurfaceKind.AuthlibEditor);
-        AddActivity("新建档案", $"已跳转到启动页，为 {_instanceComposition.Selection.InstanceName} 创建第三方验证档案。");
+        AddActivity(T("launch.profile.instance_create.title"), T("launch.profile.instance_create.completed", ("instance_name", _instanceComposition.Selection.InstanceName)));
         return Task.CompletedTask;
     }
 
@@ -396,18 +396,18 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (favoriteIds.Length == 0)
         {
-            AddActivity("分享当前收藏夹", "分享了个寂寞啊！");
+            AddActivity(T("download.favorites.targets.share.activity"), T("download.favorites.targets.empty_share_code"));
             return;
         }
 
         try
         {
             await _shellActionService.SetClipboardTextAsync(JsonSerializer.Serialize(favoriteIds));
-            AddActivity("分享当前收藏夹", $"已复制 {GetDownloadFavoriteTargetName(target)} 的分享代码。");
+            AddActivity(T("download.favorites.targets.share.activity"), T("download.favorites.targets.share.completed", ("target_name", GetDownloadFavoriteTargetName(target))));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("分享当前收藏夹失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.share.failed"), ex.Message);
         }
     }
 
@@ -417,15 +417,15 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             shareCode = await _shellActionService.PromptForTextAsync(
-                "导入收藏",
-                "输入分享的收藏。",
+                T("download.favorites.targets.import.title"),
+                T("download.favorites.targets.import.prompt"),
                 string.Empty,
-                "继续",
-                "例如：[\"23333\"]");
+                T("common.actions.continue"),
+                T("download.favorites.targets.import.watermark"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("导入收藏失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.import.failed"), ex.Message);
             return;
         }
 
@@ -437,7 +437,7 @@ internal sealed partial class FrontendShellViewModel
         var importedIds = ParseDownloadFavoriteShareCode(shareCode);
         if (importedIds.Count == 0)
         {
-            AddActivity("导入收藏", "分享了个寂寞啊！");
+            AddActivity(T("download.favorites.targets.import.activity"), T("download.favorites.targets.empty_share_code"));
             return;
         }
 
@@ -445,18 +445,18 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             destinationId = await _shellActionService.PromptForChoiceAsync(
-                "导入收藏",
-                $"识别到 {importedIds.Count} 个收藏项目，要加入到哪里？",
+                T("download.favorites.targets.import.title"),
+                T("download.favorites.targets.import.destination_prompt", ("count", importedIds.Count)),
                 [
-                    new PclChoiceDialogOption("new", "新的收藏夹", "新建一个收藏夹并导入这些收藏。"),
-                    new PclChoiceDialogOption("current", "当前收藏夹", "把这些收藏加入当前收藏夹。")
+                    new PclChoiceDialogOption("new", T("download.favorites.targets.import.options.new_target.label"), T("download.favorites.targets.import.options.new_target.description")),
+                    new PclChoiceDialogOption("current", T("download.favorites.targets.import.options.current_target.label"), T("download.favorites.targets.import.options.current_target.description"))
                 ],
                 "current",
-                "继续");
+                T("common.actions.continue"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("导入收藏失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.import.failed"), ex.Message);
             return;
         }
 
@@ -471,12 +471,12 @@ internal sealed partial class FrontendShellViewModel
             try
             {
                 newTargetName = await _shellActionService.PromptForTextAsync(
-                    "新收藏夹名称",
-                    "请输入新收藏夹名称");
+                    T("download.favorites.targets.create.title"),
+                    T("download.favorites.targets.create.prompt"));
             }
             catch (Exception ex)
             {
-                AddFailureActivity("导入收藏失败", ex.Message);
+                AddFailureActivity(T("download.favorites.targets.import.failed"), ex.Message);
                 return;
             }
 
@@ -488,7 +488,7 @@ internal sealed partial class FrontendShellViewModel
 
             root.Add(CreateDownloadFavoriteTargetNode(newTargetName, importedIds));
             PersistDownloadFavoriteTargetRoot(root, root.OfType<JsonObject>().Count() - 1);
-            AddActivity("导入收藏", $"已导入到新收藏夹：{newTargetName}");
+            AddActivity(T("download.favorites.targets.import.activity"), T("download.favorites.targets.import.completed_new", ("target_name", newTargetName)));
             return;
         }
 
@@ -505,7 +505,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
-        AddActivity("导入收藏", $"已导入到当前收藏夹：{GetDownloadFavoriteTargetName(currentTarget)}");
+        AddActivity(T("download.favorites.targets.import.activity"), T("download.favorites.targets.import.completed_current", ("target_name", GetDownloadFavoriteTargetName(currentTarget))));
     }
 
     private async Task CreateDownloadFavoriteTargetAsync(JsonArray root)
@@ -514,12 +514,12 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             newTargetName = await _shellActionService.PromptForTextAsync(
-                "新建收藏夹",
-                "请输入新收藏夹名称");
+                T("download.favorites.targets.create.title"),
+                T("download.favorites.targets.create.prompt"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("新建收藏夹失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.create.failed"), ex.Message);
             return;
         }
 
@@ -531,7 +531,7 @@ internal sealed partial class FrontendShellViewModel
 
         root.Add(CreateDownloadFavoriteTargetNode(newTargetName));
         PersistDownloadFavoriteTargetRoot(root, root.OfType<JsonObject>().Count() - 1);
-        AddActivity("新建收藏夹", newTargetName);
+        AddActivity(T("download.favorites.targets.create.activity"), newTargetName);
     }
 
     private async Task RenameDownloadFavoriteTargetAsync(JsonArray root, JsonObject target, int selectedIndex)
@@ -540,13 +540,13 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             nextName = await _shellActionService.PromptForTextAsync(
-                "输入新名称",
-                "请输入收藏夹名称。",
+                T("download.favorites.targets.rename.title"),
+                T("download.favorites.targets.rename.prompt"),
                 GetDownloadFavoriteTargetName(target));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("重命名收藏夹失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.rename.failed"), ex.Message);
             return;
         }
 
@@ -558,7 +558,7 @@ internal sealed partial class FrontendShellViewModel
 
         target["Name"] = nextName;
         PersistDownloadFavoriteTargetRoot(root, selectedIndex);
-        AddActivity("重命名收藏夹名称", nextName);
+        AddActivity(T("download.favorites.targets.rename.activity"), nextName);
     }
 
     private async Task DeleteDownloadFavoriteTargetAsync(JsonArray root, JsonObject target)
@@ -566,7 +566,7 @@ internal sealed partial class FrontendShellViewModel
         var targets = root.OfType<JsonObject>().ToArray();
         if (targets.Length <= 1)
         {
-            AddActivity("删除当前收藏夹", "您不能删除最后一个收藏夹。");
+            AddActivity(T("download.favorites.targets.delete.activity"), T("download.favorites.targets.delete.blocked_last"));
             return;
         }
 
@@ -574,18 +574,19 @@ internal sealed partial class FrontendShellViewModel
             .Select(GetCommunityProjectFavoriteId)
             .OfType<string>()
             .Count();
-        var content = $"确认删除 {GetDownloadFavoriteTargetName(target)} 收藏夹？{Environment.NewLine}{Environment.NewLine}" +
-                      $"此收藏夹有 {favoriteCount} 个收藏项目{Environment.NewLine}" +
-                      $"收藏夹 ID 为 {GetDownloadFavoriteTargetId(target)}{Environment.NewLine}" +
-                      "此操作不可逆！";
+        var content = T(
+            "download.favorites.targets.delete.confirmation_message",
+            ("target_name", GetDownloadFavoriteTargetName(target)),
+            ("count", favoriteCount),
+            ("target_id", GetDownloadFavoriteTargetId(target)));
         bool confirmed;
         try
         {
-            confirmed = await _shellActionService.ConfirmAsync("删除确认", content, "删除", isDanger: true);
+            confirmed = await _shellActionService.ConfirmAsync(T("download.favorites.targets.delete.confirmation_title"), content, T("download.favorites.targets.delete.confirm"), isDanger: true);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("删除当前收藏夹失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.delete.failed"), ex.Message);
             return;
         }
 
@@ -596,7 +597,7 @@ internal sealed partial class FrontendShellViewModel
 
         root.Remove(target);
         PersistDownloadFavoriteTargetRoot(root, 0);
-        AddActivity("删除当前收藏夹", $"已删除 {GetDownloadFavoriteTargetName(target)}。");
+        AddActivity(T("download.favorites.targets.delete.activity"), T("download.favorites.targets.delete.completed", ("target_name", GetDownloadFavoriteTargetName(target))));
     }
 
     private static HashSet<string> ParseDownloadFavoriteShareCode(string code)
@@ -633,12 +634,12 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string GetDownloadFavoriteTargetName(JsonObject target)
+    private string GetDownloadFavoriteTargetName(JsonObject target)
     {
         return target["Name"]?.GetValue<string>()?.Trim() switch
         {
             { Length: > 0 } value => value,
-            _ => "默认收藏夹"
+            _ => T("download.favorites.targets.default_name")
         };
     }
 
@@ -1166,7 +1167,9 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(DownloadInstallMinecraftSections, []);
         InitializeDownloadInstallSurface();
         RaisePropertyChanged(nameof(DownloadInstallName));
-        AddActivity("刷新自动安装页", "自动安装选项已重新载入。");
+        AddActivity(
+            LT("download.install.refresh.title"),
+            LT("download.install.refresh.activity"));
     }
 
     private void ResetGameManageSurface()

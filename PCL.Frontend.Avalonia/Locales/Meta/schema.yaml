@@ -195,9 +195,60 @@ shell:
       task_manager: []
       game_log: []
       home: []
+      active_summary: []
+      pinned_summary: []
+    status:
+      line:
+      - command
+      - splash
+      - depth
+      splash_on: []
+      splash_off: []
+      commands:
+        none: []
+        set_gpu_preference: []
+        optimize_memory: []
+        invalid: []
+    surface_meta:
+      line:
+      - kind
+      - sidebar_group
+      - navigation_state
+      no_sidebar_group: []
+      back_available: []
+      top_level_route: []
+      kinds:
+        top_level: []
+        secondary: []
+        detail: []
+        utility: []
+    activities:
+      navigated:
+      - target
+      - source
+      opened_utility:
+      - target
+      stayed_current: []
+      followed_back_target:
+      - target
+      returned_home:
+      - target
+      sources:
+        sidebar: []
+        top_bar: []
+        left_pane: []
     accessories:
       refresh: []
       reset: []
+  comp_detail:
+    route:
+      eyebrow: []
+      description: []
+      facts:
+        source: []
+        status: []
+        updated: []
+        downloads: []
   page_content:
     eyebrows:
       top_level: []
@@ -254,6 +305,185 @@ shell:
       - lane
       empty:
       - lane
+    activities:
+      failure_default: []
+      switch_lane:
+        title: []
+        body:
+        - lane
+        - count
+      action:
+        title:
+        - label
+      closed:
+        title: []
+        body:
+        - prompt_id
+        - lane
+      reject_consent:
+        title: []
+        body: []
+      close_prompt:
+        title: []
+        body: []
+      exit_launcher:
+        title: []
+        body: []
+      unhandled_command:
+        title: []
+      launch_in_progress:
+        title: []
+        body: []
+      launch_blocked:
+        title: []
+        body: []
+      precheck_failed:
+        title: []
+      pending_launch_prompts:
+        title: []
+        body:
+        - instance
+        - count
+      accept_consent:
+        title: []
+        body: []
+      continue_launch:
+        title: []
+        body_pending: []
+        body_ready: []
+      continue_flow:
+        title: []
+        body: []
+      abort_launch:
+        title: []
+        body: []
+      persist_setting:
+        title: []
+        body_non_ascii_disabled: []
+        body_value:
+        - value
+      persist_java_override_failed:
+        title: []
+        body: []
+      persist_java_override:
+        title: []
+        body: []
+      ignore_java_once:
+        title: []
+        body: []
+      append_argument_failed:
+        title: []
+        body: []
+      argument_exists:
+        title: []
+      argument_appended:
+        title: []
+      navigate:
+        instance_settings: []
+        game_log: []
+        java_settings: []
+      open_log:
+        title: []
+        body:
+        - path
+      crash_report_exported:
+        title: []
+        body:
+        - path
+        - count
+      java_runtime_prepare_failed:
+        title: []
+        body_missing_plan: []
+      java_runtime_preparing:
+        title: []
+        body: []
+      java_runtime_ready:
+        title: []
+        body:
+        - path
+        - downloaded_count
+        - reused_count
+      game_process_ended:
+        title: []
+        body:
+        - instance
+        - exit_code
+      monitor_exception:
+        title: []
+      crash_prompt_shown:
+        title: []
+        body: []
+      crash_test_triggered:
+        title: []
+        body: []
+    commands:
+      none_attached: []
+      none: []
+      not_available: []
+      continue_flow: []
+      accept_consent: []
+      reject_consent: []
+      open_url:
+      - value
+      exit_launcher: []
+      abort_launch: []
+      append_launch_argument:
+      - value
+      persist_setting:
+      - value
+      download_java_runtime:
+      - value
+      persist_java_override: []
+      ignore_java_once: []
+      close_prompt: []
+      view_game_log: []
+      open_instance_settings: []
+      export_crash_report: []
+    external_open:
+      success:
+        title: []
+        body:
+        - message
+        - target
+        url: []
+        crash_report_exported: []
+      failure:
+        title: []
+        missing_target: []
+        body:
+        - target
+        - error
+        unknown_error: []
+    launch_logs:
+      process_exited:
+      - exit_code
+      monitor_exception:
+      - message
+    crash:
+      details_header: []
+      launch_failure:
+        exit_code:
+        - exit_code
+        raw_output_log:
+        - path
+    java:
+      runtime_name:
+      - version
+      component_runtime_name:
+      - component
+      - version
+      tags:
+        bit64: []
+        prompt_download: []
+        reused_count:
+        - count
+  surface_actions:
+    sidebar:
+      title:
+      - action
+      body:
+      - title
+      - command
   game_log:
     actions:
       clear_cache: []
@@ -940,6 +1170,14 @@ launch:
       refresh_failed: []
       switch: []
       switch_failed: []
+    instance_create:
+      title: []
+      status_default: []
+      status_named:
+      - auth_name
+      navigation: []
+      completed:
+      - instance_name
     authlib:
       actions:
         login: []
@@ -1879,6 +2117,9 @@ common:
     search: []
     select_all: []
     continue: []
+  activities:
+    failed:
+    - title
   filters:
     all: []
     any: []
@@ -1892,12 +2133,81 @@ common:
     comma: []
 download:
   catalog:
+    actions:
+      save_installer: []
+    activities:
+      entry_action:
+      - entry_title
+      open_entry:
+      - entry_title
+      open_favorite_entry:
+      - entry_title
+    download:
+      file_type_default: []
+      hints:
+        completed:
+        - file_name
+        started:
+        - file_name
+      installer_type:
+      - surface_name
+      missing_url: []
+      no_save_path: []
+      pick_save_path_title: []
+      task_title:
+      - file_name
     errors:
       empty_description: []
       empty_title: []
+      load_failed_body:
+      - error
       load_failed_title: []
       retry_later: []
       section_title: []
+    remote:
+      latest:
+        preview_published:
+        - published_at
+        release_published:
+        - published_at
+      groups:
+        snapshot: []
+      labels:
+        forge_compatible:
+        - forge_version
+        forge_incompatible: []
+        installer: []
+        latest: []
+        no_display_data: []
+        published_at:
+        - published_at
+        recommended: []
+        separator: []
+        unknown_version: []
+        variant_blue: []
+        variant_purple: []
+        variant_red: []
+      empty:
+        cleanroom: []
+        forge_version_entries:
+        - minecraft_version
+        forge_versions: []
+        group_entries:
+        - group_name
+        installer_versions: []
+        labymod_channels: []
+        latest_versions: []
+        liteloader: []
+        neoforge: []
+        optifine: []
+      errors:
+        client_versions_missing: []
+        forge_mirror_parse_failed: []
+        forge_versions_missing: []
+        lazy_route_unsupported: []
+        liteloader_versions_missing: []
+        optifine_format_invalid: []
+        optifine_mirror_parse_failed: []
     intro:
       cleanroom:
         body: []
@@ -1933,6 +2243,10 @@ download:
       fetch_list:
       - surface_name
       fetch_versions: []
+    sections:
+      latest_versions: []
+      remote_catalog: []
+      version_list: []
   favorites:
     actions:
       batch_install: []
@@ -2011,9 +2325,87 @@ download:
       completed:
       - count
       empty: []
+    meta:
+      downloads:
+      - value
+      updated:
+      - value
     targets:
       default_name: []
+      empty_share_code: []
+      manage:
+        title: []
+        current_target:
+        - target_name
+        failed: []
+        unknown_action:
+        - action_id
+        options:
+          share:
+            label: []
+            description: []
+          import:
+            label: []
+            description: []
+          create:
+            label: []
+            description: []
+          rename:
+            label: []
+            description: []
+          delete:
+            label: []
+            description: []
+      share:
+        activity: []
+        completed:
+        - target_name
+        failed: []
+      import:
+        title: []
+        activity: []
+        prompt: []
+        watermark: []
+        failed: []
+        destination_prompt:
+        - count
+        completed_new:
+        - target_name
+        completed_current:
+        - target_name
+        options:
+          new_target:
+            label: []
+            description: []
+          current_target:
+            label: []
+            description: []
+      create:
+        title: []
+        prompt: []
+        activity: []
+        failed: []
+      rename:
+        title: []
+        prompt: []
+        activity: []
+        failed: []
+      delete:
+        activity: []
+        blocked_last: []
+        confirmation_title: []
+        confirmation_message:
+        - target_name
+        - count
+        - target_id
+        confirm: []
+        completed:
+        - target_name
+        failed: []
   install:
+    refresh:
+      title: []
+      activity: []
     actions:
       clear_selection: []
       start: []
@@ -2033,6 +2425,46 @@ download:
         release: []
       load_failed: []
       loading: []
+    choices:
+      channels:
+        snapshot: []
+        stable: []
+      summaries:
+        current_instance_with_time:
+        - published_at
+        installer_with_time:
+        - published_at
+        labymod_for_minecraft:
+        - minecraft_version
+        loader_testing:
+        - loader_name
+        preview: []
+        quilt_installer: []
+        release: []
+        release_time_unavailable: []
+        release_with_time:
+        - published_at
+        stable: []
+        status_with_time:
+        - status
+        - published_at
+        testing: []
+        april_fools_special:
+        - published_at
+        april_fools:
+          2013: []
+          2013_blue: []
+          2013_purple: []
+          2013_red: []
+          2015: []
+          2016: []
+          2019: []
+          2020: []
+          2022: []
+          2023: []
+          2024: []
+          2025: []
+          2026: []
     generated_name:
       default: []
     options:
@@ -2088,18 +2520,48 @@ download:
         asset_files_ready: []
         canceled: []
         canceling: []
+        cleaning_missing_local_libraries: []
         completed: []
+        copy_generated_libraries: []
+        copy_optifine_libraries: []
+        creating_instance_directories: []
+        download_loader_installer:
+        - loader_title
+        download_optifine_installer: []
         downloading_asset_files: []
         downloading_dependencies: []
+        download_vanilla_client:
+        - version
+        extract_loader_libraries:
+        - loader_title
+        fetch_labymod_manifest: []
+        fetch_loader_manifest:
+        - loader_title
+        fetch_vanilla_manifest:
+        - version
+        finalizing_installation: []
         files_ready:
         - completed_count
         - total_count
+        generating_target_manifest: []
+        initialize_launcher_profiles: []
+        inspect_loader_installer:
+        - loader_title
         manifest_written: []
+        merging_liteloader_manifest: []
         no_asset_files_needed: []
         no_asset_files_to_download: []
         no_support_files_needed: []
         no_support_files_to_repair: []
+        organizing_vanilla_manifest: []
         prepare_environment: []
+        preparing_managed_dependencies: []
+        preparing_manifest: []
+        prepare_loader_installer:
+        - loader_title
+        prepare_vanilla_files:
+        - version
+        processing_optifine_manifest: []
         processing_file:
         - file_name
         progress_with_file:
@@ -2112,17 +2574,38 @@ download:
         - completed_count
         - total_count
         queued: []
+        read_generated_manifest: []
+        read_optifine_manifest: []
+        read_vanilla_version_details:
+        - version
+        repairing_game_files: []
+        repair_loader_dependencies:
+        - loader_title
         repairing_support_files: []
+        run_loader_installer:
+        - loader_title
+        run_optifine_installer: []
         support_files_completed: []
         support_files_ready: []
         waiting_asset_files: []
         waiting_execution: []
         waiting_finalize: []
         waiting_support_files: []
+        write_loader_libraries:
+        - loader_title
+        writing_manifest_file:
+        - file_name
+        writing_instance_config: []
+        write_vanilla_manifest:
+        - version
   resource:
     activities:
+      entry_action:
+      - entry_title
       install_pack: []
       install_pack_failed: []
+      open_page:
+      - entry_title
       reset_filters: []
       reset_filters_message:
       - surface_title
@@ -2332,9 +2815,63 @@ resource_detail:
     - value
     ten_thousand:
     - value
+  compatibility:
+    no_loaders: []
+    no_versions: []
+    loaders:
+    - loaders
+    summary:
+    - version_summary
+    - loader_summary
+    versions:
+    - versions
   current_instance:
     none_selected: []
     summary_none_selected: []
+  categories:
+    adventure: []
+    automation: []
+    biomes: []
+    cartoon: []
+    combat: []
+    data_pack: []
+    decoration: []
+    dimensions: []
+    energy: []
+    equipment_tools: []
+    exploration: []
+    fantasy: []
+    farming: []
+    food_cooking: []
+    game_mechanics: []
+    hardcore: []
+    information: []
+    kitchen_sink: []
+    library: []
+    lightweight: []
+    magic: []
+    mobs: []
+    multiplayer: []
+    ores_resources: []
+    performance: []
+    pipes_logistics: []
+    quests: []
+    realistic: []
+    redstone: []
+    resolution_16x: []
+    resolution_32x: []
+    resolution_64x_plus: []
+    server: []
+    simple: []
+    small_modpack: []
+    storage: []
+    structures: []
+    technology: []
+    transportation: []
+    tweaks: []
+    utility: []
+    vanilla_style: []
+    worldgen: []
   dependencies:
     groups:
       embedded: []
@@ -2409,10 +2946,47 @@ resource_detail:
       no_instances: []
   links:
     title: []
+  link_actions:
+    open_community: []
+    open_download: []
+    open_homepage: []
+    open_issues: []
+    open_link: []
+    open_project_page: []
+    open_source: []
+    open_wiki: []
+  link_titles:
+    community: []
+    default_support_platform: []
+    homepage: []
+    issues: []
+    source: []
+    support_author:
+    - platform
+    wiki: []
   loading:
     releases: []
     source: []
     status: []
+  project_types:
+    data_pack: []
+    mod: []
+    modpack: []
+    resource_pack: []
+    shader: []
+    world: []
+  release_info:
+    unavailable: []
+    versions:
+    - versions
+  release_meta:
+    downloads:
+    - count
+    published:
+    - date
+    published_with_downloads:
+    - date
+    - downloads
   modpack:
     activities:
       install_canceled:
@@ -2443,6 +3017,14 @@ resource_detail:
     task_title:
     - source_name
     - instance_name
+    task:
+      canceling: []
+      queued: []
+      completed: []
+      canceled: []
+      copying_archive: []
+      downloading_archive: []
+      source_missing: []
     validation:
       duplicate: []
       empty: []
@@ -2452,6 +3034,48 @@ resource_detail:
       too_long: []
       trailing_dot: []
       trim_spaces: []
+    workflow:
+      status:
+        inspecting_manifest: []
+        preparing_install_plan: []
+        extracting_overrides: []
+        downloading_bundled_files: []
+        processing_file:
+        - file_name
+        bundled_files_ready: []
+        file_ready:
+        - file_name
+        installing_game: []
+        repairing_game_files: []
+        finalizing_instance: []
+        completed: []
+      errors:
+        unsupported_package_kind: []
+        modrinth_missing_minecraft_version: []
+        curseforge_missing_minecraft_version: []
+        curseforge_recommended_forge_unsupported: []
+        curseforge_missing_files: []
+        pcl_missing_addons: []
+        pcl_missing_game_version: []
+        missing_critical_file:
+        - path
+        minecraft_choice_missing:
+        - version
+        loader_choice_missing:
+        - option_title
+        - requested_version
+        file_download_failed:
+        - file_name
+        curseforge_metadata_empty: []
+        curseforge_metadata_missing_data: []
+        file_path_outside_instance:
+        - relative_path
+        archive_illegal_path:
+        - entry_path
+        rar_unsupported: []
+        archive_open_failed: []
+        json_parse_failed:
+        - entry_path
   releases:
     empty:
       body: []
@@ -2467,17 +3091,38 @@ resource_detail:
     - project_id
     unspecified_source: []
     waiting: []
+  statuses:
+    archived: []
+    draft: []
+    fallback:
+    - status
+    load_failed: []
+    published: []
+    removed: []
+    unlisted: []
   suggested_release:
     none: []
     title: []
   translate_description:
     empty: []
   values:
+    and_more: []
     none: []
     other: []
+    unknown: []
   versions:
     legacy: []
     snapshot: []
+  warnings:
+    load_failed:
+    - message
+  world_archive:
+    extract_failed:
+    - message
+    install_directory_unavailable: []
+    no_importable_content: []
+    unsafe_path:
+    - path
 instance:
   common:
     independent: []
@@ -2485,15 +3130,41 @@ instance:
     no_selection: []
     installed: []
     not_installed: []
+    unknown_version: []
   overview:
     sections:
       info: []
       personalization: []
       shortcuts: []
       advanced: []
+    dialogs:
+      rename:
+        title: []
+        message: []
+        confirm: []
+        input_label: []
+      edit_description:
+        title: []
+        message: []
+        confirm: []
+        input_label: []
+      reset:
+        title: []
+        message:
+        - instance_name
+        confirm: []
+      patch_core:
+        title: []
+        message:
+        - instance_name
+        confirm: []
+        file_title: []
+        file_filter: []
     info:
       launch_count: []
       launch_count_never: []
+      launch_count_value:
+      - count
       modpack_version: []
       description: []
     personalization:
@@ -2515,6 +3186,74 @@ instance:
       reset: []
       delete: []
       patch_core: []
+    artifacts:
+      launch_script_name:
+      - instance_name
+    messages:
+      select_to_view_details: []
+      no_instance_selected: []
+      no_saves_directory: []
+      no_mods_directory: []
+      rename_canceled: []
+      rename_empty: []
+      rename_unchanged: []
+      rename_invalid: []
+      rename_exists:
+      - name
+      description_canceled: []
+      description_restored: []
+      launch_script_missing: []
+      repair_disable_validation_hint: []
+      repair_completed:
+      - downloaded_count
+      - reused_count
+      repair_canceled_title: []
+      repair_canceled: []
+      reset_canceled_title: []
+      reset_canceled: []
+      reset_completed:
+      - downloaded_count
+      - reused_count
+      delete_permanent:
+      - instance_name
+      delete_recycled:
+      - instance_name
+      - trash_directory
+      patch_canceled: []
+      patch_file_canceled: []
+      patched_core_missing: []
+      rename_completed:
+      - old_name
+      - new_name
+      test_instance_navigated:
+      - instance_name
+      repair_task_title:
+      - action_title
+      - instance_name
+      repair_summary:
+        instance:
+        - instance_name
+        instance_directory:
+        - path
+        core_json:
+        - status
+        - path
+        core_jar:
+        - status
+        - path
+        backup_directory:
+        - path
+        downloaded_count:
+        - count
+        reused_count:
+        - count
+        downloaded_item:
+        - path
+        reused_item:
+        - path
+        intro: []
+        present: []
+        missing: []
     categories:
       auto: []
       hidden: []
@@ -2542,9 +3281,12 @@ instance:
       fabric: []
       quilt: []
       neoforge: []
+      cleanroom: []
   install:
     minecraft:
       header: []
+      version:
+      - version
     actions:
       apply_changes: []
       reset_to_scanned: []
@@ -2553,6 +3295,9 @@ instance:
       can_add: []
     hints:
       optifine_mod_compatibility: []
+      fabric_api_required: []
+      qsl_required: []
+      optifabric_required: []
     unavailable:
       incompatible_with:
       - target
@@ -2561,11 +3306,20 @@ instance:
       search: []
       quick_actions: []
       list: []
+      summary:
+      - created_at
+      - modified_at
       actions:
         open_folder: []
         paste_clipboard: []
+      messages:
+        no_instance_selected: []
+        no_importable_paths: []
     screenshot:
       quick_actions: []
+      summary:
+      - created_at
+      - file_size
       actions:
         open_folder: []
     server:
@@ -2576,6 +3330,48 @@ instance:
         refresh: []
         copy_address: []
         connect: []
+      status:
+        saved: []
+        connecting: []
+        online: []
+        offline: []
+        offline_short: []
+        connecting_short: []
+        connection_failed:
+        - message
+      motd:
+        click_to_refresh: []
+        connecting: []
+        offline: []
+      messages:
+        no_instance_selected: []
+        no_saved_servers: []
+        refreshed_count:
+        - count
+        address_empty: []
+        no_server_info: []
+        no_copyable_address:
+        - entry_title
+        copied_address:
+        - entry_title
+        - address
+        no_connectable_address:
+        - entry_title
+        added:
+        - name
+        - address
+        address_required: []
+        read_list_failed:
+        - error
+        update_list_failed:
+        - error
+        write_list_failed: []
+      dialogs:
+        edit:
+          title: []
+          name_prompt: []
+          name_default: []
+          address_prompt: []
     sort:
       label:
       - mode
@@ -2593,6 +3389,7 @@ instance:
         schematic: []
       actions:
         open_folder: []
+        open_homepage: []
         install_from_file: []
         install_from_file_empty: []
         download_new: []
@@ -2606,6 +3403,12 @@ instance:
         clear_selection: []
         instance_select: []
         go_to_download: []
+      activities:
+        open_homepage:
+        - surface_title
+        - entry_title
+        view_details:
+        - surface_title
       filters:
         all:
         - count
@@ -2620,12 +3423,100 @@ instance:
       selection:
       - count
       kind:
+        mod: []
+        resource: []
         resource_pack: []
         shader: []
         schematic_file: []
       meta:
         archive: []
         folder: []
+        root_directory: []
+      summary:
+        file:
+        - parent_directory
+        - modified_at
+        archive:
+        - modified_at
+        - file_size
+        folder:
+        - modified_at
+        - folder_kind
+      messages:
+        no_instance_selected: []
+        list_empty:
+        - surface_title
+        selected_all:
+        - surface_title
+        - count
+        no_toggleable_entries: []
+        no_deletable_entries: []
+        install_from_file_canceled: []
+        toggle_not_supported:
+        - surface_title
+        no_selected: []
+        already_enabled: []
+        already_disabled: []
+        enabled_completed:
+        - count
+        - titles
+        disabled_completed:
+        - count
+        - titles
+        enabled_partial:
+        - count
+        - failed_count
+        disabled_partial:
+        - count
+        - failed_count
+        delete_canceled: []
+        deleted_completed:
+        - count
+        export_missing: []
+        entry_missing:
+        - surface_title
+        details_read_failed:
+        - error
+        checked_mods_summary:
+        - instance_name
+        - enabled_count
+        - disabled_count
+        - duplicate_count
+      dialogs:
+        install_from_file:
+          title:
+          - surface_title
+        delete:
+          title: []
+          message:
+          - count
+          - surface_title
+          confirm: []
+          extra_items:
+          - count
+      details:
+        fields:
+          name: []
+          status: []
+          type: []
+          loader: []
+          version: []
+          authors: []
+          description: []
+          website: []
+          summary: []
+          path: []
+          item_kind: []
+          file_size: []
+          create_time: []
+          modify_time: []
+      check_mods:
+        instance: []
+        enabled_mods: []
+        disabled_mods: []
+        duplicate_names: []
+        no_duplicates: []
+        duplicate_group_title: []
       tooltips:
         open_file_location: []
         details: []
@@ -2648,6 +3539,11 @@ instance:
       follow_global: []
       on: []
       off: []
+    java_options:
+      auto_select: []
+      launcher_relative: []
+      launcher_relative_selected:
+      - relative_path
     launch:
       isolation: []
       window_title: []
@@ -2702,6 +3598,15 @@ instance:
       force_x11: []
       system_default: []
   export:
+    count:
+      items:
+      - count
+    activities:
+      reset: []
+      import_config: []
+      save_config: []
+      guide: []
+      start: []
     warnings:
       modrinth: []
       include_resources: []
@@ -2721,6 +3626,27 @@ instance:
       modrinth_mode: []
     config:
       hint: []
+    dialogs:
+      import_config:
+        title: []
+        filter_name: []
+      save_config:
+        title: []
+        default_name: []
+        filter_name: []
+    messages:
+      reset_completed: []
+      import_config_canceled: []
+      no_instance_selected: []
+      guide_shown: []
+      archive_missing: []
+    guide:
+      title: []
+      step_1: []
+      step_2: []
+      step_3: []
+      step_4: []
+      step_5: []
     groups:
       game: []
       mods: []
@@ -2760,9 +3686,40 @@ instance:
       config_directory_missing: []
       pcl_directory: []
       pcl_directory_missing: []
+  trash:
+    activities:
+      open_directory: []
+    dialogs:
+      delete:
+        title: []
+        confirm_permanent: []
+        confirm_recycle: []
+    messages:
+      launcher_missing: []
+      delete_canceled: []
+      confirm_permanent:
+      - instance_name
+      confirm_recycle:
+      - instance_name
+      confirm_indie_warning: []
+      confirm_recycle_note: []
 save_detail:
+  actions:
+    open_save_folder: []
+    open_datapack_folder: []
+    view_backup: []
+  activities:
+    create_backup: []
+    clean_backups: []
+    install_datapack: []
+    install_datapack_failed: []
+    export_datapack_info: []
   datapack:
     name: []
+  dialogs:
+    datapack_file:
+      title: []
+      filter_name: []
   labels:
     instance: []
     save_name: []
@@ -2800,3 +3757,14 @@ save_detail:
     no: []
     yes: []
     unknown: []
+  messages:
+    no_openable_save: []
+    no_datapack_directory: []
+    backup_missing: []
+    no_backup_target: []
+    no_selected_save: []
+    no_empty_backups: []
+    cleaned_empty_backups:
+    - count
+    install_datapack_canceled: []
+    export_missing: []

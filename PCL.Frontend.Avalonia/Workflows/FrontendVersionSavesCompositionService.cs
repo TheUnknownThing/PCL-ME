@@ -5,6 +5,51 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendVersionSavesCompositionService
 {
+    private static class SaveDetailLabelIds
+    {
+        public const string Instance = "instance";
+        public const string SaveName = "save_name";
+        public const string SavePath = "save_path";
+        public const string LastModified = "last_modified";
+        public const string FileSize = "file_size";
+        public const string FileCount = "file_count";
+        public const string DatapackCount = "datapack_count";
+        public const string BackupCount = "backup_count";
+        public const string Icon = "icon";
+        public const string LevelName = "level_name";
+        public const string GameMode = "game_mode";
+        public const string Difficulty = "difficulty";
+        public const string AllowCommands = "allow_commands";
+        public const string Hardcore = "hardcore";
+        public const string Raining = "raining";
+        public const string Thundering = "thundering";
+        public const string DayCount = "day_count";
+        public const string SaveVersion = "save_version";
+        public const string SaveFormat = "save_format";
+        public const string PlayerDimension = "player_dimension";
+    }
+
+    private static class SaveDetailValueIds
+    {
+        public const string NotFound = "not_found";
+        public const string Provided = "provided";
+        public const string NotProvided = "not_provided";
+        public const string Survival = "survival";
+        public const string Creative = "creative";
+        public const string Adventure = "adventure";
+        public const string Spectator = "spectator";
+        public const string Peaceful = "peaceful";
+        public const string Easy = "easy";
+        public const string Normal = "normal";
+        public const string Hard = "hard";
+        public const string No = "no";
+        public const string Yes = "yes";
+        public const string Unknown = "unknown";
+        public const string Folder = "folder";
+        public const string Archive = "archive";
+        public const string Datapack = "datapack";
+    }
+
     public static FrontendVersionSavesComposition Compose(
         FrontendInstanceComposition instanceComposition,
         string? selectedSavePath)
@@ -73,19 +118,21 @@ internal static class FrontendVersionSavesCompositionService
     {
         var info = new List<FrontendVersionSaveInfoEntry>
         {
-            new("实例", selection.InstanceName),
-            new("存档名称", selection.SaveName),
-            new("存档路径", selection.SavePath),
-            new("最后修改", Directory.GetLastWriteTime(selection.SavePath).ToString("yyyy/MM/dd HH:mm")),
-            new("文件大小", FormatDirectorySize(selection.SavePath)),
-            new("文件总数", CountFiles(selection.SavePath).ToString()),
-            new("数据包数量", BuildDatapacks(selection).Count.ToString()),
-            new("备份数量", BuildBackups(selection).Count.ToString())
+            new(SaveDetailLabelIds.Instance, selection.InstanceName),
+            new(SaveDetailLabelIds.SaveName, selection.SaveName),
+            new(SaveDetailLabelIds.SavePath, selection.SavePath),
+            new(SaveDetailLabelIds.LastModified, Directory.GetLastWriteTime(selection.SavePath).ToString("yyyy/MM/dd HH:mm")),
+            new(SaveDetailLabelIds.FileSize, FormatDirectorySize(selection.SavePath)),
+            new(SaveDetailLabelIds.FileCount, CountFiles(selection.SavePath).ToString()),
+            new(SaveDetailLabelIds.DatapackCount, BuildDatapacks(selection).Count.ToString()),
+            new(SaveDetailLabelIds.BackupCount, BuildBackups(selection).Count.ToString())
         };
 
         var levelDatPath = Path.Combine(selection.SavePath, "level.dat");
-        info.Add(new FrontendVersionSaveInfoEntry("level.dat", File.Exists(levelDatPath) ? levelDatPath : "未找到"));
-        info.Add(new FrontendVersionSaveInfoEntry("图标", File.Exists(Path.Combine(selection.SavePath, "icon.png")) ? "已提供" : "未提供"));
+        info.Add(new FrontendVersionSaveInfoEntry("level.dat", File.Exists(levelDatPath) ? levelDatPath : SaveDetailValueIds.NotFound));
+        info.Add(new FrontendVersionSaveInfoEntry(
+            SaveDetailLabelIds.Icon,
+            File.Exists(Path.Combine(selection.SavePath, "icon.png")) ? SaveDetailValueIds.Provided : SaveDetailValueIds.NotProvided));
         return info;
     }
 
@@ -107,26 +154,26 @@ internal static class FrontendVersionSavesCompositionService
             }
 
             var settings = new List<FrontendVersionSaveInfoEntry>();
-            AddIfNotEmpty(settings, "关卡名称", data.Get<NbtString>("LevelName")?.Value);
-            AddIfNotEmpty(settings, "游戏模式", MapGameType(data.Get<NbtInt>("GameType")?.Value));
-            AddIfNotEmpty(settings, "难度", MapDifficulty(data.Get<NbtByte>("Difficulty")?.Value));
-            AddIfNotEmpty(settings, "允许作弊", MapBool(data.Get<NbtByte>("allowCommands")?.Value));
-            AddIfNotEmpty(settings, "极限模式", MapBool(data.Get<NbtByte>("hardcore")?.Value));
-            AddIfNotEmpty(settings, "下雨中", MapBool(data.Get<NbtByte>("raining")?.Value));
-            AddIfNotEmpty(settings, "雷暴中", MapBool(data.Get<NbtByte>("thundering")?.Value));
-            AddIfNotEmpty(settings, "游戏天数", data.Get<NbtLong>("DayTime")?.Value is { } dayTime ? (dayTime / 24000L).ToString() : null);
+            AddIfNotEmpty(settings, SaveDetailLabelIds.LevelName, data.Get<NbtString>("LevelName")?.Value);
+            AddIfNotEmpty(settings, SaveDetailLabelIds.GameMode, MapGameType(data.Get<NbtInt>("GameType")?.Value));
+            AddIfNotEmpty(settings, SaveDetailLabelIds.Difficulty, MapDifficulty(data.Get<NbtByte>("Difficulty")?.Value));
+            AddIfNotEmpty(settings, SaveDetailLabelIds.AllowCommands, MapBool(data.Get<NbtByte>("allowCommands")?.Value));
+            AddIfNotEmpty(settings, SaveDetailLabelIds.Hardcore, MapBool(data.Get<NbtByte>("hardcore")?.Value));
+            AddIfNotEmpty(settings, SaveDetailLabelIds.Raining, MapBool(data.Get<NbtByte>("raining")?.Value));
+            AddIfNotEmpty(settings, SaveDetailLabelIds.Thundering, MapBool(data.Get<NbtByte>("thundering")?.Value));
+            AddIfNotEmpty(settings, SaveDetailLabelIds.DayCount, data.Get<NbtLong>("DayTime")?.Value is { } dayTime ? (dayTime / 24000L).ToString() : null);
 
             var version = data.Get<NbtCompound>("Version");
             if (version is not null)
             {
-                AddIfNotEmpty(settings, "存档版本", version.Get<NbtString>("Name")?.Value);
-                AddIfNotEmpty(settings, "存档格式", version.Get<NbtInt>("Id")?.Value.ToString());
+                AddIfNotEmpty(settings, SaveDetailLabelIds.SaveVersion, version.Get<NbtString>("Name")?.Value);
+                AddIfNotEmpty(settings, SaveDetailLabelIds.SaveFormat, version.Get<NbtInt>("Id")?.Value.ToString());
             }
 
             var player = data.Get<NbtCompound>("Player");
             if (player is not null)
             {
-                AddIfNotEmpty(settings, "玩家维度", player.Get<NbtString>("Dimension")?.Value);
+                AddIfNotEmpty(settings, SaveDetailLabelIds.PlayerDimension, player.Get<NbtString>("Dimension")?.Value);
             }
 
             return settings;
@@ -165,7 +212,7 @@ internal static class FrontendVersionSavesCompositionService
             .Select(file => new FrontendVersionSaveDatapackEntry(
                 Path.GetFileNameWithoutExtension(file.Name),
                 $"{file.LastWriteTime:yyyy/MM/dd HH:mm} • {FormatFileSize(file.Length)}",
-                "数据包 • 压缩包",
+                $"{SaveDetailValueIds.Datapack} • {SaveDetailValueIds.Archive}",
                 file.FullName,
                 "CommandBlock.png"));
         var folders = Directory.EnumerateDirectories(selection.DatapackDirectory, "*", SearchOption.TopDirectoryOnly)
@@ -173,8 +220,8 @@ internal static class FrontendVersionSavesCompositionService
             .Where(folder => folder.EnumerateFileSystemInfos().Any())
             .Select(folder => new FrontendVersionSaveDatapackEntry(
                 folder.Name,
-                $"{folder.LastWriteTime:yyyy/MM/dd HH:mm} • 文件夹",
-                "数据包 • 文件夹",
+                $"{folder.LastWriteTime:yyyy/MM/dd HH:mm} • {SaveDetailValueIds.Folder}",
+                $"{SaveDetailValueIds.Datapack} • {SaveDetailValueIds.Folder}",
                 folder.FullName,
                 "Grass.png"));
         return archives.Concat(folders)
@@ -210,11 +257,11 @@ internal static class FrontendVersionSavesCompositionService
     {
         return value switch
         {
-            0 => "生存",
-            1 => "创造",
-            2 => "冒险",
-            3 => "旁观",
-            _ => "未知"
+            0 => SaveDetailValueIds.Survival,
+            1 => SaveDetailValueIds.Creative,
+            2 => SaveDetailValueIds.Adventure,
+            3 => SaveDetailValueIds.Spectator,
+            _ => SaveDetailValueIds.Unknown
         };
     }
 
@@ -222,11 +269,11 @@ internal static class FrontendVersionSavesCompositionService
     {
         return value switch
         {
-            0 => "和平",
-            1 => "简单",
-            2 => "普通",
-            3 => "困难",
-            _ => "未知"
+            0 => SaveDetailValueIds.Peaceful,
+            1 => SaveDetailValueIds.Easy,
+            2 => SaveDetailValueIds.Normal,
+            3 => SaveDetailValueIds.Hard,
+            _ => SaveDetailValueIds.Unknown
         };
     }
 
@@ -234,9 +281,9 @@ internal static class FrontendVersionSavesCompositionService
     {
         return value switch
         {
-            0 => "否",
-            1 => "是",
-            _ => "未知"
+            0 => SaveDetailValueIds.No,
+            1 => SaveDetailValueIds.Yes,
+            _ => SaveDetailValueIds.Unknown
         };
     }
 
@@ -263,7 +310,7 @@ internal static class FrontendVersionSavesCompositionService
         }
         catch
         {
-            return "未知";
+            return SaveDetailValueIds.Unknown;
         }
     }
 

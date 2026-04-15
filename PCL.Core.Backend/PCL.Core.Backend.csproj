@@ -41,7 +41,7 @@
     <Compile Include="App/Essentials/LauncherAnnouncementService.cs" />
     <Compile Include="App/Essentials/LauncherDataProtectionService.cs" />
     <Compile Include="App/Essentials/LauncherFrontendNavigationService.cs" />
-    <Compile Include="App/Essentials/LauncherFrontendPageContentService.cs" />
+    <Compile Include="App/Essentials/LauncherFrontendPageContentContracts.cs" />
     <Compile Include="App/Essentials/LauncherFrontendPromptService.cs" />
     <Compile Include="App/Essentials/LauncherFrontendRuntimeStateService.cs" />
     <Compile Include="App/Essentials/LauncherIdentityResolutionService.cs" />

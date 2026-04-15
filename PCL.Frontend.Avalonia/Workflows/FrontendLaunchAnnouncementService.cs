@@ -12,9 +12,9 @@ internal static class FrontendLaunchAnnouncementService
     [
         new(
             "launch-community-edition-intro",
-            "跨平台版提示",
-            "你正在使用 PCL 跨平台版！此版本为独立开发和维护，与官方版本维护路线不同，体验有所出入。",
-            "现在软件仍未经过充分测试，欢迎参与测试并提出反馈！",
+            "Community Edition notice",
+            "You are using the PCL Community Edition. This build is maintained independently and may differ from the original release line.",
+            "The app is still under active testing. Feedback and bug reports are welcome.",
             LauncherAnnouncementSeverity.Important)
     ];
 

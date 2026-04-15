@@ -194,9 +194,49 @@ shell:
       task_manager: 任务管理
       game_log: 实时日志
       home: 返回主页
+      active_summary: 当前已显示该工具页面。
+      pinned_summary: 固定显示的工具页面入口。
+    status:
+      line: '即时命令：{command} | 启动画面：{splash} | 导航深度：{depth}'
+      splash_on: 开启
+      splash_off: 关闭
+      commands:
+        none: 无
+        set_gpu_preference: 设置显卡偏好
+        optimize_memory: 优化内存
+        invalid: 无效
+    surface_meta:
+      line: '{kind} 页面 • {sidebar_group} • {navigation_state}'
+      no_sidebar_group: 无侧边栏分组
+      back_available: 可返回
+      top_level_route: 顶级路由
+      kinds:
+        top_level: 顶级
+        secondary: 次级
+        detail: 详情
+        utility: 工具
+    activities:
+      navigated: 已从{source}切换到 {target}。
+      opened_utility: 已打开工具页面 {target}。
+      stayed_current: 保持在当前路由。
+      followed_back_target: 已返回到 {target}。
+      returned_home: 已返回到 {target}。
+      sources:
+        sidebar: 侧边栏
+        top_bar: 顶部导航
+        left_pane: 左侧面板
     accessories:
       refresh: 刷新
       reset: 初始化设置
+  comp_detail:
+    route:
+      eyebrow: 项目详情
+      description: 查看该项目的实时社区信息与最新发布内容。
+      facts:
+        source: 来源
+        status: 状态
+        updated: 更新时间
+        downloads: 下载量
   page_content:
     eyebrows:
       top_level: 顶级路由
@@ -245,6 +285,150 @@ shell:
     inbox:
       title: '{lane} 提示'
       empty: '{lane} 分组当前没有待处理提示。'
+    activities:
+      failure_default: 操作失败。
+      switch_lane:
+        title: 已切换提示分组
+        body: '{lane} 当前有 {count} 条待处理提示。'
+      action:
+        title: '提示操作：{label}'
+      closed:
+        title: 提示已关闭
+        body: '{prompt_id} 已从 {lane} 分组移除。'
+      reject_consent:
+        title: 已拒绝协议授权
+        body: 当前提示未写入同意状态。
+      close_prompt:
+        title: 关闭提示
+        body: 当前提示已标记为完成。
+      exit_launcher:
+        title: 退出启动器
+        body: 已根据提示请求关闭启动器。
+      unhandled_command:
+        title: 遇到未处理的提示命令
+      launch_in_progress:
+        title: 启动进行中
+        body: 当前已经有一个启动会话正在运行。
+      launch_blocked:
+        title: 启动已被提示中止
+        body: 请先重新确认启动前提示或调整当前实例设置。
+      precheck_failed:
+        title: 启动前检查未通过
+      pending_launch_prompts:
+        title: 启动前提示待处理
+        body: '{instance} 还有 {count} 个提示需要确认。'
+      accept_consent:
+        title: 已同意协议授权
+        body: 协议授权状态已写入共享配置。
+      continue_launch:
+        title: 继续启动流程
+        body_pending: 启动前提示已放行，将继续当前启动。
+        body_ready: 启动前提示已放行，启动按钮恢复可用。
+      continue_flow:
+        title: 继续当前流程
+        body: 提示要求的继续操作已完成。
+      abort_launch:
+        title: 已中止启动流程
+        body: 启动提示要求返回处理，当前启动动作已被阻止。
+      persist_setting:
+        title: 已保存提示设置
+        body_non_ascii_disabled: 已关闭非 ASCII 游戏路径提示。
+        body_value: '已保存设置：{value}'
+      persist_java_override_failed:
+        title: 无法强制启动
+        body: 当前没有可写入设置的实例。
+      persist_java_override:
+        title: 已启用 Java 强制启动
+        body: 当前实例后续将忽略 Java 兼容性检查，继续使用你手动选择的 Java。
+      ignore_java_once:
+        title: 已为本次启动忽略 Java 检查
+        body: 当前启动将继续使用你手动选择的 Java，不会修改实例设置。
+      append_argument_failed:
+        title: 追加启动参数失败
+        body: 提示中未提供可写入的参数。
+      argument_exists:
+        title: 启动参数已存在
+      argument_appended:
+        title: 已追加启动参数
+      navigate:
+        instance_settings: 提示已将界面跳转到实例设置页。
+        game_log: 提示已将界面跳转到实时日志页。
+        java_settings: 提示已在准备运行时后跳转到 Java 设置页。
+      open_log:
+        title: 查看日志
+        body: '已生成崩溃日志，可在实时日志页点击打开：{path}'
+      crash_report_exported:
+        title: 崩溃报告已导出
+        body: '{path} • 已归档 {count} 个文件。'
+      java_runtime_prepare_failed:
+        title: Java 运行时准备失败
+        body_missing_plan: 当前启动状态没有可执行的 Java 下载计划。
+      java_runtime_preparing:
+        title: Java 运行时准备中
+        body: 正在后台下载并注册 Java 运行时。
+      java_runtime_ready:
+        title: Java 运行时已准备
+        body: '{path} • 下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。'
+      game_process_ended:
+        title: 游戏进程已结束
+        body: '{instance} • ExitCode {exit_code}'
+      monitor_exception:
+        title: 会话监控异常
+      crash_prompt_shown:
+        title: Minecraft 出现错误
+        body: 已弹出崩溃恢复提示，可直接查看日志或导出错误报告。
+      crash_test_triggered:
+        title: 崩溃测试已触发
+        body: 崩溃恢复提示现已加入提示队列。
+    commands:
+      none_attached: 未附带任何命令。
+      none: 没有可执行的提示命令。
+      not_available: 无
+      continue_flow: 继续流程
+      accept_consent: 同意协议授权
+      reject_consent: 拒绝协议授权
+      open_url: '打开链接（{value}）'
+      exit_launcher: 退出启动器
+      abort_launch: 中止启动
+      append_launch_argument: '追加启动参数（{value}）'
+      persist_setting: '保存设置（{value}）'
+      download_java_runtime: '下载 Java（{value}）'
+      persist_java_override: 保存 Java 兼容性忽略设置
+      ignore_java_once: 仅本次忽略 Java 兼容性检查
+      close_prompt: 关闭提示
+      view_game_log: 打开游戏日志
+      open_instance_settings: 打开实例设置
+      export_crash_report: 导出崩溃报告
+    external_open:
+      success:
+        title: 已打开外部目标
+        body: '{message} {target}'
+        url: 已根据提示打开外部链接。
+        crash_report_exported: 已导出并打开崩溃报告压缩包。
+      failure:
+        title: 外部打开失败
+        missing_target: 缺少可打开的目标。
+        body: '{target} • {error}'
+        unknown_error: 未知错误
+    launch_logs:
+      process_exited: '游戏进程已退出，退出码 {exit_code}。'
+      monitor_exception: '会话监控异常：{message}'
+    crash:
+      details_header: 详细信息：
+      launch_failure:
+        exit_code: '游戏进程异常退出，退出码 {exit_code}。'
+        raw_output_log: '原始输出日志：{path}'
+    java:
+      runtime_name: 'Java {version}'
+      component_runtime_name: '{component}（Java {version}）'
+      tags:
+        bit64: 64 位
+        prompt_download: 提示下载
+        reused_count: '复用 {count}'
+  surface_actions:
+    sidebar:
+      title: '左侧操作：{action}'
+      body: '{title} • {command}'
   game_log:
     actions:
       clear_cache: 清空缓存
@@ -841,6 +1025,12 @@ launch:
       refresh_failed: 刷新档案失败
       switch: 切换档案
       switch_failed: 切换档案失败
+    instance_create:
+      title: 新建档案
+      status_default: 已从实例设置带入第三方验证服务器。
+      status_named: '已从实例设置带入 {auth_name}。'
+      navigation: 已从实例设置跳转到启动页，准备创建第三方验证档案。
+      completed: '已跳转到启动页，为 {instance_name} 创建第三方验证档案。'
     authlib:
       actions:
         login: 登录
@@ -1698,6 +1888,8 @@ common:
     search: 搜索
     select_all: 全选
     continue: 继续
+  activities:
+    failed: '{title} 失败'
   filters:
     all: 全部
     any: 任意
@@ -1710,12 +1902,67 @@ common:
     comma: 、
 download:
   catalog:
+    actions:
+      save_installer: 保存安装器
+    activities:
+      entry_action: '下载页操作：{entry_title}'
+      open_entry: '打开条目：{entry_title}'
+      open_favorite_entry: '打开收藏夹条目：{entry_title}'
+    download:
+      file_type_default: 文件
+      hints:
+        completed: '{file_name} 下载完成'
+        started: 开始下载 {file_name}
+      installer_type: '{surface_name} 安装器'
+      missing_url: 当前没有可用的下载地址。
+      no_save_path: 没有选择保存位置。
+      pick_save_path_title: 选择保存位置
+      task_title: '下载 {file_name}'
     errors:
       empty_description: 当前无法读取远程目录，请稍后重试。
       empty_title: 暂无可显示数据
+      load_failed_body: '读取远程目录失败。错误：{error}'
       load_failed_title: 远程目录加载失败
       retry_later: 请稍后重试。
       section_title: 远程目录
+    remote:
+      latest:
+        preview_published: '最新快照，发布时间 {published_at}'
+        release_published: '最新正式版，发布时间 {published_at}'
+      groups:
+        snapshot: 快照版本
+      labels:
+        forge_compatible: '兼容 Forge {forge_version}'
+        forge_incompatible: 不兼容 Forge
+        installer: 安装器
+        latest: 最新
+        no_display_data: 暂无可显示数据
+        published_at: '发布时间 {published_at}'
+        recommended: 推荐
+        separator: ，
+        unknown_version: 未知版本
+        variant_blue: （蓝色变种）
+        variant_purple: （紫色变种）
+        variant_red: （红色变种）
+      empty:
+        cleanroom: 当前没有可用的 Cleanroom 远程条目。
+        forge_version_entries: '当前没有适用于 {minecraft_version} 的 Forge 条目。'
+        forge_versions: Forge 远程目录没有返回任何 Minecraft 版本。
+        group_entries: '{group_name} 当前没有可用条目。'
+        installer_versions: 当前没有可用的安装器版本。
+        labymod_channels: 当前没有可用的 LabyMod 渠道。
+        latest_versions: 远程版本清单没有返回任何最新版本。
+        liteloader: 当前没有可用的 LiteLoader 远程条目。
+        neoforge: 当前没有可用的 NeoForge 远程条目。
+        optifine: 当前没有可用的 OptiFine 远程条目。
+      errors:
+        client_versions_missing: Minecraft 版本清单缺少 versions 字段。
+        forge_mirror_parse_failed: 无法解析 Forge 镜像构建目录。
+        forge_versions_missing: Forge 远程目录没有返回任何 Minecraft 版本。
+        lazy_route_unsupported: 当前页面不支持延迟加载远程目录。
+        liteloader_versions_missing: LiteLoader 目录缺少 versions 字段。
+        optifine_format_invalid: OptiFine 官方目录格式无效。
+        optifine_mirror_parse_failed: 无法解析 OptiFine 镜像目录。
     intro:
       cleanroom:
         body: Cleanroom 是针对 1.12.2 基于 Forge 二次开发的 Mod 加载器，理论上与 99% 的 Forge Mod 兼容。
@@ -1767,6 +2014,10 @@ download:
     loading:
       fetch_list: 正在获取 {surface_name} 列表
       fetch_versions: 正在获取版本列表
+    sections:
+      latest_versions: 最新版本
+      remote_catalog: 远程目录
+      version_list: 版本列表
   favorites:
     actions:
       batch_install: 批量安装
@@ -1824,9 +2075,80 @@ download:
     share_selected:
       completed: 已复制 {count} 个选中收藏项的 ID
       empty: 没有可分享的已选收藏项
+    meta:
+      downloads: '{value} 下载'
+      updated: '更新 {value}'
     targets:
       default_name: 默认收藏夹
+      empty_share_code: 分享了个寂寞啊！
+      manage:
+        title: 管理收藏夹
+        current_target: '当前收藏夹：{target_name}'
+        failed: 管理收藏夹失败
+        unknown_action: '未识别的收藏夹操作：{action_id}'
+        options:
+          share:
+            label: 分享当前收藏夹
+            description: 复制当前收藏夹的分享代码。
+          import:
+            label: 导入收藏
+            description: 把分享代码导入到当前或新的收藏夹。
+          create:
+            label: 新建收藏夹
+            description: 创建一个新的收藏夹目标。
+          rename:
+            label: 重命名收藏夹名称
+            description: 修改当前收藏夹的名称。
+          delete:
+            label: 删除当前收藏夹
+            description: 删除当前收藏夹。
+      share:
+        activity: 分享当前收藏夹
+        completed: '已复制 {target_name} 的分享代码。'
+        failed: 分享当前收藏夹失败
+      import:
+        title: 导入收藏
+        activity: 导入收藏
+        prompt: 输入分享的收藏。
+        watermark: '例如：["23333"]'
+        failed: 导入收藏失败
+        destination_prompt: '识别到 {count} 个收藏项目，要加入到哪里？'
+        completed_new: '已导入到新收藏夹：{target_name}'
+        completed_current: '已导入到当前收藏夹：{target_name}'
+        options:
+          new_target:
+            label: 新的收藏夹
+            description: 新建一个收藏夹并导入这些收藏。
+          current_target:
+            label: 当前收藏夹
+            description: 把这些收藏加入当前收藏夹。
+      create:
+        title: 新建收藏夹
+        prompt: 请输入新收藏夹名称
+        activity: 新建收藏夹
+        failed: 新建收藏夹失败
+      rename:
+        title: 输入新名称
+        prompt: 请输入收藏夹名称。
+        activity: 重命名收藏夹名称
+        failed: 重命名收藏夹失败
+      delete:
+        activity: 删除当前收藏夹
+        blocked_last: 您不能删除最后一个收藏夹。
+        confirmation_title: 删除确认
+        confirmation_message: |-
+          确认删除 {target_name} 收藏夹？
+
+          此收藏夹有 {count} 个收藏项目
+          收藏夹 ID 为 {target_id}
+          此操作不可逆！
+        confirm: 删除
+        completed: '已删除 {target_name}。'
+        failed: 删除当前收藏夹失败
   install:
+    refresh:
+      title: 刷新自动安装页
+      activity: 自动安装选项已重新载入。
     actions:
       clear_selection: 清除选择
       start: 开始安装
@@ -1844,6 +2166,38 @@ download:
         release: 最新正式版
       load_failed: 加载版本失败
       loading: 正在加载版本...
+    choices:
+      channels:
+        snapshot: 快照版
+        stable: 稳定版
+      summaries:
+        current_instance_with_time: '当前实例 • {published_at}'
+        installer_with_time: '安装器 • {published_at}'
+        labymod_for_minecraft: 'LabyMod 4 • {minecraft_version}'
+        loader_testing: '{loader_name} 测试版'
+        preview: 预览版
+        quilt_installer: Quilt 安装器
+        release: 正式版
+        release_time_unavailable: 未记录发布时间
+        release_with_time: '正式版 • {published_at}'
+        stable: 稳定版
+        status_with_time: '{status} • {published_at}'
+        testing: 测试版
+        april_fools_special: '发布于 {published_at} 的愚人节特辑'
+        april_fools:
+          2013: 2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！
+          2013_blue: 2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（蓝色版本）
+          2013_purple: 2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（紫色版本）
+          2013_red: 2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（红色版本）
+          2015: 2015 | 作为一款全年龄向的游戏，我们需要和平，需要爱与拥抱。
+          2016: 2016 | 是时候将现代科技带入 Minecraft 了！
+          2019: 2019 | 我们从地下室的废墟里找到了这个开发于 1994 年的杰作！
+          2020: 2020 | 我们加入了 20 亿个新的维度，让无限的想象变成了现实！
+          2022: 2022 | 一次一个方块更新！迎接全新的挖掘、合成与骑乘玩法吧！
+          2023: 2023 | 研究表明：玩家喜欢作出选择，越多越好！
+          2024: 2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！
+          2025: 2025 | 你可以合成任何东西，包括合成你的世界！
+          2026: 2026 | 为什么需要物品栏？让方块们跟着你走吧！
     generated_name:
       default: 新版本
     options:
@@ -1894,31 +2248,66 @@ download:
         asset_files_ready: 资源文件已就绪
         canceled: 已取消
         canceling: 正在取消...
+        cleaning_missing_local_libraries: 正在清理本地缺失依赖引用…
         completed: 已完成
+        copy_generated_libraries: 正在复制安装器生成的支持库…
+        copy_optifine_libraries: 正在复制 OptiFine 生成的支持库…
+        creating_instance_directories: 正在创建实例目录结构…
+        download_loader_installer: '正在下载 {loader_title} 安装器…'
+        download_optifine_installer: 正在下载 OptiFine 安装器…
         downloading_asset_files: 正在下载资源文件
         downloading_dependencies: 正在下载依赖
+        download_vanilla_client: '正在下载 Minecraft {version} 原版客户端…'
+        extract_loader_libraries: '正在解包 {loader_title} 安装器中的支持库…'
+        fetch_labymod_manifest: 正在获取 LabyMod 安装清单…
+        fetch_loader_manifest: '正在获取 {loader_title} 安装清单…'
+        fetch_vanilla_manifest: '正在获取 Minecraft {version} 原版清单…'
+        finalizing_installation: 正在整理实例目录并完成安装…
         files_ready: '{completed_count}/{total_count} 个文件已就绪'
+        generating_target_manifest: 正在生成目标安装清单…
+        initialize_launcher_profiles: 正在初始化 launcher_profiles.json…
+        inspect_loader_installer: '正在解析 {loader_title} 安装器内容…'
         manifest_written: 清单已写入
+        merging_liteloader_manifest: 正在合并 LiteLoader 安装信息…
         no_asset_files_needed: 无需资源文件
         no_asset_files_to_download: 没有需要下载的资源文件
         no_support_files_needed: 无需支持文件
         no_support_files_to_repair: 没有需要修复的支持文件
+        organizing_vanilla_manifest: 正在整理原版安装清单…
         prepare_environment: 正在准备环境
+        preparing_managed_dependencies: 正在准备受管依赖文件…
+        preparing_manifest: 正在写入安装清单并准备安装环境…
+        prepare_loader_installer: '正在准备 {loader_title} 安装器…'
+        prepare_vanilla_files: '正在准备 Minecraft {version} 原版文件…'
+        processing_optifine_manifest: 正在处理 OptiFine 安装信息…
         processing_file: 正在处理 {file_name}
         progress_with_file: '{prefix}：{completed_count}/{total_count}（{file_name}）'
         progress_without_file: '{prefix}：{completed_count}/{total_count}'
         queued: 已排队
+        read_generated_manifest: 正在读取安装器版本清单…
+        read_optifine_manifest: 正在读取 OptiFine 生成的版本清单…
+        read_vanilla_version_details: '正在读取 Minecraft {version} 版本详情…'
+        repairing_game_files: 正在补全游戏主文件与支持库…
+        repair_loader_dependencies: '正在补全 {loader_title} 安装依赖…'
         repairing_support_files: 正在修复支持文件
+        run_loader_installer: '正在执行 {loader_title} 安装步骤…'
+        run_optifine_installer: 正在执行 OptiFine 安装器…
         support_files_completed: 支持文件已完成
         support_files_ready: 支持文件已就绪
         waiting_asset_files: 等待资源文件
         waiting_execution: 等待执行
         waiting_finalize: 等待完成收尾
         waiting_support_files: 等待支持文件
+        write_loader_libraries: '正在写入 {loader_title} 支持库…'
+        writing_manifest_file: '正在写入安装清单文件 {file_name}…'
+        writing_instance_config: 正在写入实例配置…
+        write_vanilla_manifest: '正在写入 Minecraft {version} 原版清单…'
   resource:
     activities:
+      entry_action: '资源操作：{entry_title}'
       install_pack: 安装整合包
       install_pack_failed: 安装整合包失败
+      open_page: '打开资源页面：{entry_title}'
       reset_filters: 重置筛选条件
       reset_filters_message: 已重置 {surface_title} 的筛选条件
     current_instance:
@@ -2100,9 +2489,59 @@ resource_detail:
   counts:
     hundred_million: '{value} 亿'
     ten_thousand: '{value} 万'
+  compatibility:
+    no_loaders: 未提供加载器信息
+    no_versions: 未提供 Minecraft 版本列表
+    loaders: '加载器：{loaders}'
+    summary: '{version_summary} • {loader_summary}'
+    versions: 'Minecraft {versions}'
   current_instance:
     none_selected: 未选择当前实例
     summary_none_selected: 选择一个实例即可直接安装此项目
+  categories:
+    adventure: 冒险
+    automation: 自动化
+    biomes: 生物群系
+    cartoon: 卡通风
+    combat: 战斗
+    data_pack: 数据包
+    decoration: 装饰
+    dimensions: 维度
+    energy: 能源
+    equipment_tools: 装备
+    exploration: 探索
+    fantasy: 幻想风
+    farming: 农业
+    food_cooking: 食物/烹饪
+    game_mechanics: 游戏机制
+    hardcore: 硬核
+    information: 信息显示
+    kitchen_sink: 水槽包
+    library: 支持库
+    lightweight: 轻量
+    magic: 魔法
+    mobs: 生物
+    multiplayer: 多人
+    ores_resources: 矿物/资源
+    performance: 性能优化
+    pipes_logistics: 管道/物流
+    quests: 任务
+    realistic: 写实风
+    redstone: 红石
+    resolution_16x: 16x
+    resolution_32x: 32x
+    resolution_64x_plus: 64x+
+    server: 服务器
+    simple: 简洁
+    small_modpack: 小型整合包
+    storage: 仓储
+    structures: 天然结构
+    technology: 科技
+    transportation: 运输
+    tweaks: 改良
+    utility: 实用
+    vanilla_style: 原版风
+    worldgen: 世界元素
   dependencies:
     groups:
       embedded: 内嵌
@@ -2164,10 +2603,41 @@ resource_detail:
       no_instances: 没有可用实例
   links:
     title: 链接
+  link_actions:
+    open_community: 打开社区
+    open_download: 打开下载
+    open_homepage: 打开项目主页
+    open_issues: 打开 Issues
+    open_link: 打开链接
+    open_project_page: 打开项目页
+    open_source: 打开源码
+    open_wiki: 打开 Wiki
+  link_titles:
+    community: Discord
+    default_support_platform: 赞助
+    homepage: 项目主页
+    issues: 问题反馈
+    source: 源码仓库
+    support_author: '支持作者 · {platform}'
+    wiki: Wiki
   loading:
     releases: 正在加载版本...
     source: 来源
     status: 状态
+  project_types:
+    data_pack: 数据包
+    mod: Mod
+    modpack: 整合包
+    resource_pack: 资源包
+    shader: 光影包
+    world: 世界
+  release_info:
+    unavailable: 未提供版本信息
+    versions: 'Minecraft {versions}'
+  release_meta:
+    downloads: '{count} 下载'
+    published: '发布 {date}'
+    published_with_downloads: '发布 {date} • {downloads}'
   modpack:
     activities:
       install_canceled: 已取消整合包安装：{entry_title}
@@ -2189,6 +2659,14 @@ resource_detail:
       install_completed: 已将 {instance_name} 安装到 {target_directory}
       missing_instance_name: 未提供实例名称
     task_title: 将 {source_name} 安装为 {instance_name}
+    task:
+      canceling: 正在取消整合包安装…
+      queued: 已加入任务中心
+      completed: 整合包安装完成
+      canceled: 整合包安装已取消
+      copying_archive: 正在复制整合包文件…
+      downloading_archive: 正在下载整合包文件…
+      source_missing: 缺少整合包来源
     validation:
       duplicate: 已存在同名实例
       empty: 请输入实例名称
@@ -2198,6 +2676,38 @@ resource_detail:
       too_long: 名称过长
       trailing_dot: 名称不能以空格或句点结尾
       trim_spaces: 请移除首尾空格
+    workflow:
+      status:
+        inspecting_manifest: 正在解析整合包清单…
+        preparing_install_plan: 正在准备实例安装方案…
+        extracting_overrides: 正在解压整合包覆写文件…
+        downloading_bundled_files: 正在下载整合包附带文件…
+        processing_file: 正在处理 {file_name}…
+        bundled_files_ready: 整合包附带文件已处理。
+        file_ready: '{file_name} 已就绪'
+        installing_game: 正在安装游戏与加载器…
+        repairing_game_files: 正在补全游戏文件…
+        finalizing_instance: 正在整理实例目录…
+        completed: 整合包安装完成。
+      errors:
+        unsupported_package_kind: 仅支持自动安装 PCL 标准、Modrinth 和 CurseForge 整合包。
+        modrinth_missing_minecraft_version: Modrinth 整合包缺少 Minecraft 版本信息。
+        curseforge_missing_minecraft_version: CurseForge 整合包缺少 Minecraft 版本信息。
+        curseforge_recommended_forge_unsupported: 该 CurseForge 整合包使用了 recommended Forge，暂不支持自动安装。
+        curseforge_missing_files: 整合包中的部分 CurseForge 文件已不存在，无法继续自动安装。
+        pcl_missing_addons: 该 PCL 标准整合包未提供游戏版本附加信息，无法安装。
+        pcl_missing_game_version: 该 PCL 标准整合包未提供游戏版本信息，无法安装。
+        missing_critical_file: '整合包缺少关键文件：{path}'
+        minecraft_choice_missing: '未找到可用的 Minecraft {version} 安装方案。'
+        loader_choice_missing: '未找到 {option_title} {requested_version} 的安装方案。'
+        file_download_failed: '无法下载整合包文件：{file_name}'
+        curseforge_metadata_empty: CurseForge 文件元数据返回为空。
+        curseforge_metadata_missing_data: CurseForge 文件元数据缺少 data 数组。
+        file_path_outside_instance: '整合包文件路径超出了实例目录：{relative_path}'
+        archive_illegal_path: '整合包包含非法路径：{entry_path}'
+        rar_unsupported: PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试。
+        archive_open_failed: 打开整合包文件失败，文件可能损坏或为不支持的压缩包格式。
+        json_parse_failed: '无法解析整合包内的 JSON 文件：{entry_path}'
   releases:
     empty:
       body: 当前筛选条件下没有可用版本
@@ -2212,17 +2722,34 @@ resource_detail:
     project_fallback_title: 项目 {project_id}
     unspecified_source: 未指定来源
     waiting: 等待选择
+  statuses:
+    archived: 已归档
+    draft: 草稿
+    fallback: '状态 {status}'
+    load_failed: 加载失败
+    published: 已发布
+    removed: 已下架
+    unlisted: 未列出
   suggested_release:
     none: 没有推荐版本
     title: 推荐版本
   translate_description:
     empty: 没有可翻译的简介
   values:
+    and_more: 等
     none: 无
     other: 其他
+    unknown: 未知
   versions:
     legacy: 旧版
     snapshot: 快照
+  warnings:
+    load_failed: '无法从实时来源加载工程数据：{message}'
+  world_archive:
+    extract_failed: '存档压缩包下载完成，但自动解压失败：{message}'
+    install_directory_unavailable: 存档安装目录不可用。
+    no_importable_content: 压缩包中没有可导入的存档内容。
+    unsafe_path: '压缩包中包含不安全的路径：{path}'
 instance:
   common:
     independent: 独立实例
@@ -2230,15 +2757,38 @@ instance:
     no_selection: 未选择实例
     installed: 已安装
     not_installed: 未安装
+    unknown_version: 未知版本
   overview:
     sections:
       info: 信息
       personalization: 个性化
       shortcuts: 快捷操作
       advanced: 高级操作
+    dialogs:
+      rename:
+        title: 重命名实例
+        message: 请输入新的实例名称。名称会同时用于实例文件夹、核心文件和当前选中的实例配置。
+        confirm: 重命名
+        input_label: 实例名称
+      edit_description:
+        title: 更改描述
+        message: 修改实例的描述文本，留空则恢复为默认描述。
+        confirm: 保存
+        input_label: 实例描述
+      reset:
+        title: 实例重置确认
+        message: 确定要重置实例 {instance_name} 吗？操作前会先保存核心备份，然后重新下载当前实例的核心文件、依赖库与资源索引，并尽量复用已通过校验的资源文件。
+        confirm: 开始重置
+      patch_core:
+        title: 修补提示
+        message: 确定要对 {instance_name} 的核心文件进行修补吗？修补完成后会自动关闭文件校验，并先保存一份核心备份。
+        confirm: 选择修补文件
+        file_title: 选择用于修补核心的文件
+        file_filter: 压缩文件
     info:
       launch_count: 启动次数
       launch_count_never: 从未启动
+      launch_count_value: '已启动 {count} 次'
       modpack_version: 整合包版本
       description: 实例描述
     personalization:
@@ -2260,6 +2810,49 @@ instance:
       reset: 重置实例
       delete: 删除实例
       patch_core: 修补核心
+    artifacts:
+      launch_script_name: '启动 {instance_name}'
+    messages:
+      select_to_view_details: 请选择一个实例后再查看详细内容。
+      no_instance_selected: 当前未选择实例。
+      no_saves_directory: 当前实例没有存档目录。
+      no_mods_directory: 当前实例没有 Mod 目录。
+      rename_canceled: 已取消重命名。
+      rename_empty: 实例名称不能为空。
+      rename_unchanged: 实例名称未发生变化。
+      rename_invalid: 实例名称包含无效字符。
+      rename_exists: '已存在同名实例：{name}'
+      description_canceled: 已取消修改。
+      description_restored: 已恢复为默认描述。
+      launch_script_missing: 启动脚本不存在。
+      repair_disable_validation_hint: 请先关闭 [实例设置 -> 设置 -> 高级启动选项 -> 关闭文件校验]，然后再尝试补全文件！
+      repair_completed: '已补全 {downloaded_count} 个文件，复用 {reused_count} 个文件。'
+      repair_canceled_title: 补全文件已取消
+      repair_canceled: 实例文件补全过程已取消。
+      reset_canceled_title: 重置实例已取消
+      reset_canceled: 已取消重置。
+      reset_completed: '已重置核心文件并下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。'
+      delete_permanent: '实例 {instance_name} 已永久删除。'
+      delete_recycled: '实例 {instance_name} 已移入回收区：{trash_directory}'
+      patch_canceled: 已取消修补。
+      patch_file_canceled: 已取消选择修补文件。
+      patched_core_missing: 修补后的核心文件不存在。
+      rename_completed: '已将实例 {old_name} 重命名为 {new_name}。'
+      test_instance_navigated: '已跳转到启动页，准备测试启动 {instance_name}。'
+      repair_task_title: '{action_title}：{instance_name}'
+      repair_summary:
+        instance: '实例：{instance_name}'
+        instance_directory: '实例目录：{path}'
+        core_json: '核心 Json：{status} • {path}'
+        core_jar: '核心 Jar：{status} • {path}'
+        backup_directory: '备份目录：{path}'
+        downloaded_count: '下载文件数：{count}'
+        reused_count: '复用文件数：{count}'
+        downloaded_item: '已下载：{path}'
+        reused_item: '已复用：{path}'
+        intro: 实例修复结果如下。
+        present: 已检测到
+        missing: 缺失
     categories:
       auto: 自动
       hidden: 隐藏实例
@@ -2287,9 +2880,11 @@ instance:
       fabric: 布料（Fabric）
       quilt: 方格（Quilt）
       neoforge: 狐狸（NeoForge）
+      cleanroom: 洁净室（Cleanroom）
   install:
     minecraft:
       header: Minecraft
+      version: 'Minecraft {version}'
     actions:
       apply_changes: 应用更改
       reset_to_scanned: 重置为扫描结果
@@ -2298,6 +2893,9 @@ instance:
       can_add: 可添加
     hints:
       optifine_mod_compatibility: OptiFine 可能与部分 Mod 不兼容。
+      fabric_api_required: 尚未安装 Fabric API，大多数 Mod 将无法使用。
+      qsl_required: 尚未安装 QFAPI / QSL，大多数 Mod 将无法使用。
+      optifabric_required: 尚未安装 OptiFabric，OptiFine 将无法使用。
     unavailable:
       incompatible_with: 与 {target} 不兼容
   content:
@@ -2305,11 +2903,16 @@ instance:
       search: 搜索存档
       quick_actions: 快捷操作
       list: 存档列表
+      summary: '创建时间：{created_at} • 最后修改：{modified_at}'
       actions:
         open_folder: 打开存档文件夹
         paste_clipboard: 粘贴剪贴板内容
+      messages:
+        no_instance_selected: 当前未选择实例。
+        no_importable_paths: 剪贴板中没有可导入的文件或文件夹路径。
     screenshot:
       quick_actions: 快捷操作
+      summary: '{created_at} • {file_size}'
       actions:
         open_folder: 打开截图文件夹
     server:
@@ -2320,6 +2923,42 @@ instance:
         refresh: 刷新
         copy_address: 复制地址
         connect: 连接
+      status:
+        saved: 已保存服务器
+        connecting: 正在连接...
+        online: 服务器在线
+        offline: 服务器离线
+        offline_short: 离线
+        connecting_short: 正在连接
+        connection_failed: '无法连接：{message}'
+      motd:
+        click_to_refresh: 点击刷新查看服务器状态
+        connecting: 正在连接...
+        offline: 服务器离线
+      messages:
+        no_instance_selected: 当前未选择实例。
+        no_saved_servers: 已重新扫描当前实例中的服务器列表，但当前实例没有已保存的服务器。
+        refreshed_count: 已刷新 {count} 个服务器。
+        address_empty: 服务器地址为空。
+        no_server_info: 未返回服务器信息
+        no_copyable_address: '{entry_title} 没有可复制的地址。'
+        copied_address: '{entry_title} • {address}'
+        no_connectable_address: '{entry_title} 没有可用的服务器地址。'
+        added: '{name} • {address}'
+        address_required: 服务器地址不能为空。
+        read_list_failed: |-
+          无法读取当前实例的服务器列表。
+          {error}
+        update_list_failed: |-
+          无法更新当前实例的服务器列表。
+          {error}
+        write_list_failed: 无法写入当前实例的服务器列表。
+      dialogs:
+        edit:
+          title: 编辑服务器信息
+          name_prompt: 请输入新的服务器名称：
+          name_default: Minecraft服务器
+          address_prompt: 请输入新的服务器地址：
     sort:
       label: 排序：{mode}
       file_name: 文件名
@@ -2336,6 +2975,7 @@ instance:
         schematic: 搜索投影
       actions:
         open_folder: 打开文件夹
+        open_homepage: 打开主页
         install_from_file: 从文件安装
         install_from_file_empty: 先安装文件
         download_new: 下载新的资源
@@ -2349,6 +2989,9 @@ instance:
         clear_selection: 清除选择
         instance_select: 选择兼容实例
         go_to_download: 前往下载
+      activities:
+        open_homepage: '打开{surface_title}主页：{entry_title}'
+        view_details: '查看{surface_title}详情'
       filters:
         all: 全部（{count}）
         enabled: 已启用（{count}）
@@ -2357,12 +3000,71 @@ instance:
         search_results: 搜索结果（{count}）
       selection: 已选择 {count} 项
       kind:
+        mod: Mod
+        resource: 资源
         resource_pack: 资源包
         shader: 光影包
         schematic_file: 投影文件
       meta:
         archive: 压缩包
         folder: 文件夹
+        root_directory: 根目录
+      summary:
+        file: '{parent_directory} • {modified_at}'
+        archive: '{modified_at} • {file_size}'
+        folder: '{modified_at} • {folder_kind}'
+      messages:
+        no_instance_selected: 当前未选择实例。
+        list_empty: '{surface_title} 列表为空。'
+        selected_all: '{surface_title} • 已选中 {count} 项。'
+        no_toggleable_entries: 当前没有可切换状态的资源。
+        no_deletable_entries: 当前没有可删除的资源。
+        install_from_file_canceled: 已取消选择资源文件。
+        toggle_not_supported: '{surface_title} 当前不支持启用或禁用操作。'
+        no_selected: 当前没有选中的资源。
+        already_enabled: 选中的资源已经全部启用。
+        already_disabled: 选中的资源已经全部禁用。
+        enabled_completed: '已启用 {count} 项：{titles}'
+        disabled_completed: '已禁用 {count} 项：{titles}'
+        enabled_partial: '已启用 {count} 项，{failed_count} 项失败。'
+        disabled_partial: '已禁用 {count} 项，{failed_count} 项失败。'
+        delete_canceled: 已取消删除。
+        deleted_completed: 已移入回收区 {count} 项。
+        export_missing: 导出文件不存在。
+        entry_missing: '{surface_title} 项目不存在。'
+        details_read_failed: '附加信息读取失败：{error}'
+        checked_mods_summary: '已检查 {instance_name}：启用 {enabled_count} 个，禁用 {disabled_count} 个，重复 {duplicate_count} 组。'
+      dialogs:
+        install_from_file:
+          title: '选择{surface_title}文件'
+        delete:
+          title: 资源删除确认
+          message: '确定要将这 {count} 个{surface_title}项目移入回收区吗？'
+          confirm: 移入回收区
+          extra_items: '- 以及另外 {count} 项'
+      details:
+        fields:
+          name: 名称
+          status: 状态
+          type: 类型
+          loader: 加载器
+          version: 版本
+          authors: 作者
+          description: 描述
+          website: 相关网站
+          summary: 附加信息
+          path: 路径
+          item_kind: 项目类型
+          file_size: 文件大小
+          create_time: 创建时间
+          modify_time: 修改时间
+      check_mods:
+        instance: 实例
+        enabled_mods: 启用 Mod
+        disabled_mods: 已禁用 Mod
+        duplicate_names: 重复名称
+        no_duplicates: 未检测到重复名称的 Mod 文件。
+        duplicate_group_title: 重复名称的 Mod：
       tooltips:
         open_file_location: 打开文件位置
         details: 详情
@@ -2385,6 +3087,10 @@ instance:
       follow_global: 跟随全局设置
       on: 开启
       off: 关闭
+    java_options:
+      auto_select: 自动选择合适的 Java
+      launcher_relative: 选择启动器目录下的 Java
+      launcher_relative_selected: '启动器目录下的 Java | {relative_path}'
     launch:
       isolation: 隔离设置
       window_title: 窗口标题
@@ -2439,6 +3145,14 @@ instance:
       force_x11: 强制使用 X11
       system_default: 系统默认
   export:
+    count:
+      items: '{count} 项'
+    activities:
+      reset: 重置导出选项
+      import_config: 读取配置
+      save_config: 保存配置
+      guide: 整合包制作指南
+      start: 开始导出
     warnings:
       modrinth: Modrinth 导出模式会产出 `.mrpack` 工作流，并可能省略启动器专属内容。
       include_resources: 打包资源文件会显著增加导出包体积。
@@ -2458,6 +3172,27 @@ instance:
       modrinth_mode: Modrinth 上传模式
     config:
       hint: 如果你想复用同一套导出选择，可以读取或保存导出配置。
+    dialogs:
+      import_config:
+        title: 选择整合包导出配置
+        filter_name: 整合包导出配置
+      save_config:
+        title: 选择文件位置
+        default_name: export_config.txt
+        filter_name: 整合包导出配置
+    messages:
+      reset_completed: 实例导出页已恢复到当前实例扫描结果。
+      import_config_canceled: 已取消选择配置文件。
+      no_instance_selected: 当前未选择实例。
+      guide_shown: 已显示制作指南。
+      archive_missing: 导出压缩包不存在。
+    guide:
+      title: 整合包制作指南
+      step_1: 1. 先在实例导出页确认名称、版本号和勾选内容。
+      step_2: 2. 如果需要复用同一套导出规则，先点击“保存配置”，后续可直接“读取配置”。
+      step_3: 3. “打包资源文件”会直接把 Mod、资源包或光影包放进导出包，适合离线分发。
+      step_4: 4. “Modrinth 上传模式”会输出 .mrpack 文件，便于继续整理发布。
+      step_5: 5. 导出完成后，请检查生成的压缩包结构和内容是否符合当前实例需求。
     groups:
       game: 游戏本体
       mods: Mod
@@ -2497,9 +3232,38 @@ instance:
       config_directory_missing: 未检测到配置目录
       pcl_directory: 检测到实例 PCL 配置目录
       pcl_directory_missing: 未检测到实例 PCL 配置目录
+  trash:
+    activities:
+      open_directory: 实例回收区
+    dialogs:
+      delete:
+        title: 实例删除确认
+        confirm_permanent: 永久删除
+        confirm_recycle: 移入回收区
+    messages:
+      launcher_missing: 当前未找到启动目录。
+      delete_canceled: 已取消删除。
+      confirm_permanent: '你确定要永久删除实例 {instance_name} 吗？'
+      confirm_recycle: '你确定要删除实例 {instance_name} 吗？'
+      confirm_indie_warning: 由于该实例开启了版本隔离，删除时该实例对应的存档、资源包、Mod 等文件也将被一并删除！
+      confirm_recycle_note: 实例会先移入实例回收区，便于你手动清理或恢复。
 save_detail:
+  actions:
+    open_save_folder: 打开存档文件夹
+    open_datapack_folder: 打开数据包文件夹
+    view_backup: 查看备份
+  activities:
+    create_backup: 创建存档备份
+    clean_backups: 清理备份记录
+    install_datapack: 安装数据包
+    install_datapack_failed: 安装数据包失败
+    export_datapack_info: 导出数据包信息
   datapack:
     name: 数据包
+  dialogs:
+    datapack_file:
+      title: 选择数据包文件
+      filter_name: 压缩包或数据包文件
   labels:
     instance: 实例
     save_name: 存档名称
@@ -2537,3 +3301,13 @@ save_detail:
     no: 否
     yes: 是
     unknown: 未知
+  messages:
+    no_openable_save: 当前没有可打开的存档
+    no_datapack_directory: 当前存档没有数据包目录
+    backup_missing: 备份文件不存在
+    no_backup_target: 当前没有可备份的存档
+    no_selected_save: 当前没有选中的存档
+    no_empty_backups: 没有检测到需要清理的空备份文件
+    cleaned_empty_backups: 已清理 {count} 个空备份文件
+    install_datapack_canceled: 已取消选择数据包文件
+    export_missing: 导出文件不存在

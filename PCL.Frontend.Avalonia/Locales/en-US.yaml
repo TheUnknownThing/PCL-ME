@@ -194,9 +194,49 @@ shell:
       task_manager: Task Manager
       game_log: Game Log
       home: Back to Home
+      active_summary: Utility surface is active in the shell.
+      pinned_summary: Pinned shell utility surface.
+    status:
+      line: 'Immediate command: {command} | Splash: {splash} | Navigation depth: {depth}'
+      splash_on: On
+      splash_off: Off
+      commands:
+        none: None
+        set_gpu_preference: Set GPU Preference
+        optimize_memory: Optimize Memory
+        invalid: Invalid
+    surface_meta:
+      line: '{kind} surface • {sidebar_group} • {navigation_state}'
+      no_sidebar_group: No sidebar group
+      back_available: Back available
+      top_level_route: Top-level route
+      kinds:
+        top_level: Top-level
+        secondary: Secondary
+        detail: Detail
+        utility: Utility
+    activities:
+      navigated: Navigated to {target} from the {source}.
+      opened_utility: Opened utility surface {target}.
+      stayed_current: Stayed on the current route.
+      followed_back_target: Followed shell back target to {target}.
+      returned_home: Returned to {target}.
+      sources:
+        sidebar: sidebar
+        top_bar: top bar
+        left_pane: launcher-style left pane
     accessories:
       refresh: Refresh
       reset: Reset
+  comp_detail:
+    route:
+      eyebrow: Project details
+      description: View live community information and recent releases for this project.
+      facts:
+        source: Source
+        status: Status
+        updated: Updated
+        downloads: Downloads
   page_content:
     eyebrows:
       top_level: Top-level route
@@ -245,6 +285,150 @@ shell:
     inbox:
       title: '{lane} prompts'
       empty: No prompts are waiting in the {lane} lane.
+    activities:
+      failure_default: Operation failed.
+      switch_lane:
+        title: Switched prompt lane
+        body: '{lane} now has {count} queued prompt(s).'
+      action:
+        title: 'Prompt action: {label}'
+      closed:
+        title: Prompt closed
+        body: '{prompt_id} was dismissed from the {lane} lane.'
+      reject_consent:
+        title: Consent rejected
+        body: The current prompt did not persist any consent state.
+      close_prompt:
+        title: Close prompt
+        body: The current prompt was marked as completed.
+      exit_launcher:
+        title: Exit launcher
+        body: The launcher exit was requested by the prompt.
+      unhandled_command:
+        title: Unhandled prompt command encountered
+      launch_in_progress:
+        title: Launch in progress
+        body: A launch session is already running.
+      launch_blocked:
+        title: Launch blocked by prompt
+        body: Confirm the pre-launch prompts or adjust the current instance settings first.
+      precheck_failed:
+        title: Pre-launch checks failed
+      pending_launch_prompts:
+        title: Pre-launch prompts pending
+        body: '{instance} still has {count} prompt(s) to confirm.'
+      accept_consent:
+        title: Consent accepted
+        body: Consent state was written to shared configuration.
+      continue_launch:
+        title: Continue launch flow
+        body_pending: The pre-launch prompt was approved and the current launch will continue.
+        body_ready: The pre-launch prompt was approved and the launch button is available again.
+      continue_flow:
+        title: Continue current flow
+        body: The prompt-requested continue action completed.
+      abort_launch:
+        title: Launch flow aborted
+        body: The prompt requested a return for further handling, so the current launch action was blocked.
+      persist_setting:
+        title: Prompt setting saved
+        body_non_ascii_disabled: The non-ASCII game path warning was disabled.
+        body_value: 'Saved setting: {value}'
+      persist_java_override_failed:
+        title: Cannot force launch
+        body: There is no writable instance for this setting.
+      persist_java_override:
+        title: Java force launch enabled
+        body: This instance will ignore Java compatibility checks for future launches and continue using your selected Java.
+      ignore_java_once:
+        title: Ignored Java check for this launch
+        body: This launch will continue using your selected Java without changing instance settings.
+      append_argument_failed:
+        title: Failed to append launch argument
+        body: The prompt did not provide an argument to write.
+      argument_exists:
+        title: Launch argument already exists
+      argument_appended:
+        title: Launch argument appended
+      navigate:
+        instance_settings: Prompt routed the shell to instance settings.
+        game_log: Prompt routed the shell to the live game log surface.
+        java_settings: Prompt routed the shell to Java settings after preparing the runtime.
+      open_log:
+        title: Open log
+        body: 'Generated the crash log. You can open it from the live log page: {path}'
+      crash_report_exported:
+        title: Crash report exported
+        body: '{path} • Archived {count} file(s).'
+      java_runtime_prepare_failed:
+        title: Java runtime preparation failed
+        body_missing_plan: The current launch state has no executable Java download plan.
+      java_runtime_preparing:
+        title: Preparing Java runtime
+        body: Java runtime is being downloaded and registered in the background.
+      java_runtime_ready:
+        title: Java runtime ready
+        body: '{path} • Downloaded {downloaded_count} file(s), reused {reused_count} file(s).'
+      game_process_ended:
+        title: Game process ended
+        body: '{instance} • ExitCode {exit_code}'
+      monitor_exception:
+        title: Session monitor exception
+      crash_prompt_shown:
+        title: Minecraft encountered an error
+        body: Crash recovery prompts are now queued. You can view logs or export a crash report directly.
+      crash_test_triggered:
+        title: Crash test triggered
+        body: The crash recovery prompt was added to the queue.
+    commands:
+      none_attached: No commands attached.
+      none: No shell commands.
+      not_available: n/a
+      continue_flow: Continue flow
+      accept_consent: Accept consent
+      reject_consent: Reject consent
+      open_url: 'Open URL ({value})'
+      exit_launcher: Exit launcher
+      abort_launch: Abort launch
+      append_launch_argument: 'Append launch arg ({value})'
+      persist_setting: 'Persist setting ({value})'
+      download_java_runtime: 'Download Java ({value})'
+      persist_java_override: Persist Java compatibility override
+      ignore_java_once: Ignore Java compatibility once
+      close_prompt: Close prompt
+      view_game_log: Open game log
+      open_instance_settings: Open instance settings
+      export_crash_report: Export crash report
+    external_open:
+      success:
+        title: Opened external target
+        body: '{message} {target}'
+        url: Opened the external link requested by the prompt.
+        crash_report_exported: Exported and opened the crash report archive.
+      failure:
+        title: Failed to open external target
+        missing_target: Missing target to open.
+        body: '{target} • {error}'
+        unknown_error: Unknown error
+    launch_logs:
+      process_exited: 'Game process exited with code {exit_code}.'
+      monitor_exception: 'Session monitor exception: {message}'
+    crash:
+      details_header: 'Detailed information:'
+      launch_failure:
+        exit_code: 'Game process exited unexpectedly with code {exit_code}.'
+        raw_output_log: 'Raw output log: {path}'
+    java:
+      runtime_name: 'Java {version}'
+      component_runtime_name: '{component} (Java {version})'
+      tags:
+        bit64: 64 Bit
+        prompt_download: Prompt Download
+        reused_count: 'Reused {count}'
+  surface_actions:
+    sidebar:
+      title: 'Sidebar action: {action}'
+      body: '{title} • {command}'
   game_log:
     actions:
       clear_cache: Clear Cache
@@ -841,6 +1025,12 @@ launch:
       refresh_failed: Failed to refresh profile
       switch: Switch profile
       switch_failed: Failed to switch profile
+    instance_create:
+      title: Create Profile
+      status_default: Imported the third-party authentication server from instance settings.
+      status_named: 'Imported {auth_name} from instance settings.'
+      navigation: Opened the launch route from instance settings for auth profile creation.
+      completed: 'Opened the launch route to create a third-party auth profile for {instance_name}.'
     authlib:
       actions:
         login: Sign In
@@ -1698,6 +1888,8 @@ common:
     search: Search
     select_all: Select all
     continue: Continue
+  activities:
+    failed: '{title} failed'
   filters:
     all: All
     any: Any
@@ -1710,12 +1902,67 @@ common:
     comma: ', '
 download:
   catalog:
+    actions:
+      save_installer: Save Installer
+    activities:
+      entry_action: 'Catalog action: {entry_title}'
+      open_entry: 'Open entry: {entry_title}'
+      open_favorite_entry: 'Open favorite entry: {entry_title}'
+    download:
+      file_type_default: File
+      hints:
+        completed: '{file_name} download completed'
+        started: 'Start downloading {file_name}'
+      installer_type: '{surface_name} Installer'
+      missing_url: There is no available download URL right now.
+      no_save_path: No save location was selected.
+      pick_save_path_title: Choose save location
+      task_title: 'Download {file_name}'
     errors:
       empty_description: The remote catalog is temporarily unavailable. Try again later.
       empty_title: Nothing to show
+      load_failed_body: 'Failed to load the remote catalog. Error: {error}'
       load_failed_title: Failed to load remote catalog
       retry_later: Please try again later.
       section_title: Remote Catalog
+    remote:
+      latest:
+        preview_published: 'Latest preview, published at {published_at}'
+        release_published: 'Latest release, published at {published_at}'
+      groups:
+        snapshot: Snapshots
+      labels:
+        forge_compatible: 'Compatible with Forge {forge_version}'
+        forge_incompatible: Not compatible with Forge
+        installer: Installer
+        latest: Latest
+        no_display_data: Nothing to display
+        published_at: 'Published at {published_at}'
+        recommended: Recommended
+        separator: ', '
+        unknown_version: Unknown version
+        variant_blue: ' (Blue variant)'
+        variant_purple: ' (Purple variant)'
+        variant_red: ' (Red variant)'
+      empty:
+        cleanroom: There are no available Cleanroom remote entries right now.
+        forge_version_entries: 'There are no available Forge entries for {minecraft_version}.'
+        forge_versions: The Forge remote catalog did not return any Minecraft versions.
+        group_entries: 'There are no available entries for {group_name}.'
+        installer_versions: There are no available installer versions right now.
+        labymod_channels: There are no available LabyMod channels right now.
+        latest_versions: The remote version manifest did not return any latest versions.
+        liteloader: There are no available LiteLoader remote entries right now.
+        neoforge: There are no available NeoForge remote entries right now.
+        optifine: There are no available OptiFine remote entries right now.
+      errors:
+        client_versions_missing: Minecraft version manifest is missing the versions field.
+        forge_mirror_parse_failed: Unable to parse the Forge mirror build catalog.
+        forge_versions_missing: The Forge remote catalog did not return any Minecraft versions.
+        lazy_route_unsupported: The current page does not support lazy-loaded remote catalogs.
+        liteloader_versions_missing: LiteLoader catalog is missing the versions field.
+        optifine_format_invalid: The OptiFine official catalog format is not valid.
+        optifine_mirror_parse_failed: Unable to parse the OptiFine mirror catalog.
     intro:
       cleanroom:
         body: Cleanroom is a Forge-derived mod loader for Minecraft 1.12.2 and is theoretically compatible with 99% of Forge mods.
@@ -1767,6 +2014,10 @@ download:
     loading:
       fetch_list: Fetching {surface_name} list
       fetch_versions: Fetching version list
+    sections:
+      latest_versions: Latest Versions
+      remote_catalog: Remote Catalog
+      version_list: Version List
   favorites:
     actions:
       batch_install: Batch Install
@@ -1824,9 +2075,80 @@ download:
     share_selected:
       completed: Copied {count} selected favorite IDs
       empty: No selected favorites to share
+    meta:
+      downloads: '{value} downloads'
+      updated: 'Updated {value}'
     targets:
       default_name: Default Favorites
+      empty_share_code: Nothing to share.
+      manage:
+        title: Manage Targets
+        current_target: 'Current target: {target_name}'
+        failed: Failed to manage targets
+        unknown_action: 'Unknown target action: {action_id}'
+        options:
+          share:
+            label: Share Current Target
+            description: Copy the current target's share code.
+          import:
+            label: Import Favorites
+            description: Import a shared favorites list into the current or a new target.
+          create:
+            label: Create Target
+            description: Create a new favorites target.
+          rename:
+            label: Rename Target
+            description: Change the current target name.
+          delete:
+            label: Delete Current Target
+            description: Delete the current favorites target.
+      share:
+        activity: Share current target
+        completed: Copied the share code for {target_name}
+        failed: Failed to share current target
+      import:
+        title: Import Favorites
+        activity: Import favorites
+        prompt: Enter a shared favorites list.
+        watermark: 'For example: ["23333"]'
+        failed: Failed to import favorites
+        destination_prompt: 'Detected {count} favorite item(s). Where should they be imported?'
+        completed_new: 'Imported into new target: {target_name}'
+        completed_current: 'Imported into current target: {target_name}'
+        options:
+          new_target:
+            label: New Target
+            description: Create a new favorites target and import these favorites.
+          current_target:
+            label: Current Target
+            description: Add these favorites to the current target.
+      create:
+        title: Create Favorites Target
+        prompt: Enter a new favorites target name.
+        activity: Create favorites target
+        failed: Failed to create favorites target
+      rename:
+        title: Rename Target
+        prompt: Enter a favorites target name.
+        activity: Rename favorites target
+        failed: Failed to rename favorites target
+      delete:
+        activity: Delete current target
+        blocked_last: You cannot delete the last favorites target.
+        confirmation_title: Delete Confirmation
+        confirmation_message: |-
+          Delete the {target_name} target?
+
+          This target contains {count} favorite item(s)
+          Target ID: {target_id}
+          This action cannot be undone.
+        confirm: Delete
+        completed: 'Deleted {target_name}.'
+        failed: Failed to delete current target
   install:
+    refresh:
+      title: Refresh Auto Install
+      activity: Auto-install options were reloaded.
     actions:
       clear_selection: Clear Selection
       start: Start Install
@@ -1844,6 +2166,38 @@ download:
         release: Latest release
       load_failed: Failed to load versions
       loading: Loading versions...
+    choices:
+      channels:
+        snapshot: Snapshot
+        stable: Stable
+      summaries:
+        current_instance_with_time: 'Current instance • {published_at}'
+        installer_with_time: 'Installer • {published_at}'
+        labymod_for_minecraft: 'LabyMod 4 • {minecraft_version}'
+        loader_testing: '{loader_name} testing build'
+        preview: Preview
+        quilt_installer: Quilt Installer
+        release: Release
+        release_time_unavailable: Release time unavailable
+        release_with_time: 'Release • {published_at}'
+        stable: Stable
+        status_with_time: '{status} • {published_at}'
+        testing: Testing
+        april_fools_special: 'April Fools special released on {published_at}'
+        april_fools:
+          2013: 2013 | This secret update, planned for two years, took the game to a new level!
+          2013_blue: 2013 | This secret update, planned for two years, took the game to a new level! (Blue version)
+          2013_purple: 2013 | This secret update, planned for two years, took the game to a new level! (Purple version)
+          2013_red: 2013 | This secret update, planned for two years, took the game to a new level! (Red version)
+          2015: 2015 | As a game for all ages, we need peace, love, and hugs.
+          2016: 2016 | It's time to bring modern technology into Minecraft!
+          2019: 2019 | We found this masterpiece from 1994 in the ruins of a basement!
+          2020: 2020 | We added 2 billion new dimensions and turned infinite imagination into reality!
+          2022: 2022 | One block at a time! Meet new digging, crafting, and riding gameplay.
+          2023: 2023 | Research shows players like making choices, and the more the better!
+          2024: 2024 | Poisonous potatoes have always been ignored and underestimated, so we supercharged them!
+          2025: 2025 | You can craft anything, including your world itself!
+          2026: 2026 | Why do you need an inventory? Let the blocks follow you instead!
     generated_name:
       default: New Version
     options:
@@ -1894,31 +2248,66 @@ download:
         asset_files_ready: Asset files ready
         canceled: Canceled
         canceling: Canceling...
+        cleaning_missing_local_libraries: Cleaning missing local dependency references...
         completed: Completed
+        copy_generated_libraries: Copying generated support libraries...
+        copy_optifine_libraries: Copying libraries generated by OptiFine...
+        creating_instance_directories: Creating instance directory structure...
+        download_loader_installer: 'Downloading the installer for {loader_title}...'
+        download_optifine_installer: Downloading the OptiFine installer...
         downloading_asset_files: Downloading asset files
         downloading_dependencies: Downloading dependencies
+        download_vanilla_client: 'Downloading the vanilla client for Minecraft {version}...'
+        extract_loader_libraries: 'Extracting bundled libraries from the {loader_title} installer...'
+        fetch_labymod_manifest: Fetching the LabyMod manifest...
+        fetch_loader_manifest: 'Fetching the manifest for {loader_title}...'
+        fetch_vanilla_manifest: 'Fetching the vanilla manifest for Minecraft {version}...'
+        finalizing_installation: Organizing the instance directory and finishing installation...
         files_ready: '{completed_count}/{total_count} files ready'
+        generating_target_manifest: Generating the target install manifest...
+        initialize_launcher_profiles: Initializing launcher_profiles.json...
+        inspect_loader_installer: 'Inspecting the installer contents for {loader_title}...'
         manifest_written: Manifest written
+        merging_liteloader_manifest: Merging LiteLoader install information...
         no_asset_files_needed: No asset files needed
         no_asset_files_to_download: No asset files to download
         no_support_files_needed: No support files needed
         no_support_files_to_repair: No support files to repair
+        organizing_vanilla_manifest: Organizing the vanilla install manifest...
         prepare_environment: Preparing environment
+        preparing_managed_dependencies: Preparing managed dependency files...
+        preparing_manifest: Writing the install manifest and preparing the environment...
+        prepare_loader_installer: 'Preparing the installer for {loader_title}...'
+        prepare_vanilla_files: 'Preparing vanilla files for Minecraft {version}...'
+        processing_optifine_manifest: Processing OptiFine install information...
         processing_file: Processing {file_name}
         progress_with_file: '{prefix}: {completed_count}/{total_count} ({file_name})'
         progress_without_file: '{prefix}: {completed_count}/{total_count}'
         queued: Queued
+        read_generated_manifest: Reading the generated installer manifest...
+        read_optifine_manifest: Reading the manifest generated by OptiFine...
+        read_vanilla_version_details: 'Reading version details for Minecraft {version}...'
+        repairing_game_files: Completing game core files and support libraries...
+        repair_loader_dependencies: 'Repairing install dependencies for {loader_title}...'
         repairing_support_files: Repairing support files
+        run_loader_installer: 'Running the installation steps for {loader_title}...'
+        run_optifine_installer: Running the OptiFine installer...
         support_files_completed: Support files completed
         support_files_ready: Support files ready
         waiting_asset_files: Waiting for asset files
         waiting_execution: Waiting to execute
         waiting_finalize: Waiting to finalize
         waiting_support_files: Waiting for support files
+        write_loader_libraries: 'Writing support libraries for {loader_title}...'
+        writing_manifest_file: 'Writing install manifest file {file_name}...'
+        writing_instance_config: Writing instance configuration...
+        write_vanilla_manifest: 'Writing the vanilla manifest for Minecraft {version}...'
   resource:
     activities:
+      entry_action: 'Resource action: {entry_title}'
       install_pack: Install Pack
       install_pack_failed: Failed to install pack
+      open_page: 'Open resource page: {entry_title}'
       reset_filters: Reset Filters
       reset_filters_message: Filters reset for {surface_title}
     current_instance:
@@ -2100,9 +2489,59 @@ resource_detail:
   counts:
     hundred_million: '{value} hundred million'
     ten_thousand: '{value} ten thousand'
+  compatibility:
+    no_loaders: No loader information
+    no_versions: No Minecraft version list
+    loaders: 'Loaders: {loaders}'
+    summary: '{version_summary} • {loader_summary}'
+    versions: 'Minecraft {versions}'
   current_instance:
     none_selected: No current instance selected
     summary_none_selected: Select an instance to install this project directly
+  categories:
+    adventure: Adventure
+    automation: Automation
+    biomes: Biomes
+    cartoon: Cartoon
+    combat: Combat
+    data_pack: Data Pack
+    decoration: Decoration
+    dimensions: Dimensions
+    energy: Energy
+    equipment_tools: Equipment and Tools
+    exploration: Exploration
+    fantasy: Fantasy
+    farming: Farming
+    food_cooking: Food and Cooking
+    game_mechanics: Game Mechanics
+    hardcore: Hardcore
+    information: Information Display
+    kitchen_sink: Kitchen Sink
+    library: Library
+    lightweight: Lightweight
+    magic: Magic
+    mobs: Mobs
+    multiplayer: Multiplayer
+    ores_resources: Ores and Resources
+    performance: Performance
+    pipes_logistics: Pipes and Logistics
+    quests: Quests
+    realistic: Realistic
+    redstone: Redstone
+    resolution_16x: 16x
+    resolution_32x: 32x
+    resolution_64x_plus: 64x+
+    server: Server
+    simple: Simple
+    small_modpack: Small Modpack
+    storage: Storage
+    structures: Structures
+    technology: Technology
+    transportation: Transportation
+    tweaks: Tweaks
+    utility: Utility
+    vanilla_style: Vanilla Style
+    worldgen: Worldgen
   dependencies:
     groups:
       embedded: Embedded
@@ -2164,10 +2603,41 @@ resource_detail:
       no_instances: There are no available instances
   links:
     title: Links
+  link_actions:
+    open_community: Open Community
+    open_download: Open Download
+    open_homepage: Open Homepage
+    open_issues: Open Issues
+    open_link: Open Link
+    open_project_page: Open Project Page
+    open_source: Open Source
+    open_wiki: Open Wiki
+  link_titles:
+    community: Community
+    default_support_platform: Donation
+    homepage: Homepage
+    issues: Issues
+    source: Source Repository
+    support_author: 'Support Author: {platform}'
+    wiki: Wiki
   loading:
     releases: Loading releases...
     source: Source
     status: Status
+  project_types:
+    data_pack: Data Pack
+    mod: Mod
+    modpack: Modpack
+    resource_pack: Resource Pack
+    shader: Shader Pack
+    world: World
+  release_info:
+    unavailable: No version information
+    versions: 'Minecraft {versions}'
+  release_meta:
+    downloads: '{count} downloads'
+    published: 'Published {date}'
+    published_with_downloads: 'Published {date} • {downloads}'
   modpack:
     activities:
       install_canceled: 'Canceled modpack install: {entry_title}'
@@ -2189,6 +2659,14 @@ resource_detail:
       install_completed: Installed {instance_name} to {target_directory}
       missing_instance_name: No instance name was provided
     task_title: Install {source_name} as {instance_name}
+    task:
+      canceling: Canceling modpack installation...
+      queued: Added to the task center
+      completed: Modpack installation completed
+      canceled: Modpack installation was canceled
+      copying_archive: Copying modpack archive...
+      downloading_archive: Downloading modpack archive...
+      source_missing: The modpack source is missing
     validation:
       duplicate: An instance with this name already exists
       empty: Enter an instance name
@@ -2198,6 +2676,38 @@ resource_detail:
       too_long: The name is too long
       trailing_dot: The name cannot end with a space or period
       trim_spaces: Remove leading or trailing spaces
+    workflow:
+      status:
+        inspecting_manifest: Inspecting modpack manifest...
+        preparing_install_plan: Preparing instance install plan...
+        extracting_overrides: Extracting modpack overrides...
+        downloading_bundled_files: Downloading bundled modpack files...
+        processing_file: 'Processing {file_name}...'
+        bundled_files_ready: Bundled modpack files are ready.
+        file_ready: '{file_name} is ready'
+        installing_game: Installing game and loaders...
+        repairing_game_files: Completing game files...
+        finalizing_instance: Finalizing instance directory...
+        completed: Modpack installation completed.
+      errors:
+        unsupported_package_kind: Only PCL Standard, Modrinth, and CurseForge modpacks are supported for automatic installation.
+        modrinth_missing_minecraft_version: The Modrinth modpack is missing Minecraft version information.
+        curseforge_missing_minecraft_version: The CurseForge modpack is missing Minecraft version information.
+        curseforge_recommended_forge_unsupported: This CurseForge modpack uses recommended Forge, which is not supported for automatic installation yet.
+        curseforge_missing_files: Some CurseForge files referenced by the modpack no longer exist, so automatic installation cannot continue.
+        pcl_missing_addons: This PCL Standard modpack does not include the required game version addon metadata.
+        pcl_missing_game_version: This PCL Standard modpack does not include Minecraft version information.
+        missing_critical_file: 'The modpack is missing a required file: {path}'
+        minecraft_choice_missing: 'No available installation plan was found for Minecraft {version}.'
+        loader_choice_missing: 'No installation plan was found for {option_title} {requested_version}.'
+        file_download_failed: 'Failed to download modpack file: {file_name}'
+        curseforge_metadata_empty: CurseForge file metadata response was empty.
+        curseforge_metadata_missing_data: CurseForge file metadata did not include a data array.
+        file_path_outside_instance: 'The modpack file path escapes the instance directory: {relative_path}'
+        archive_illegal_path: 'The modpack archive contains an invalid path: {entry_path}'
+        rar_unsupported: RAR archives are not supported. Extract and recompress the modpack as a ZIP archive, then try again.
+        archive_open_failed: Failed to open the modpack archive. The file may be corrupted or use an unsupported archive format.
+        json_parse_failed: 'Failed to parse the JSON file inside the modpack: {entry_path}'
   releases:
     empty:
       body: No releases match the current filters
@@ -2212,17 +2722,34 @@ resource_detail:
     project_fallback_title: Project {project_id}
     unspecified_source: Unspecified source
     waiting: Waiting for selection
+  statuses:
+    archived: Archived
+    draft: Draft
+    fallback: 'Status {status}'
+    load_failed: Load Failed
+    published: Published
+    removed: Removed
+    unlisted: Unlisted
   suggested_release:
     none: No suggested release
     title: Suggested Release
   translate_description:
     empty: There is no description to translate
   values:
+    and_more: ' and more'
     none: None
     other: Other
+    unknown: Unknown
   versions:
     legacy: Legacy
     snapshot: Snapshot
+  warnings:
+    load_failed: 'Failed to load live project data: {message}'
+  world_archive:
+    extract_failed: 'The world archive was downloaded, but automatic extraction failed: {message}'
+    install_directory_unavailable: The save installation directory is unavailable.
+    no_importable_content: The archive does not contain importable world content.
+    unsafe_path: 'The archive contains an unsafe path: {path}'
 instance:
   common:
     independent: Independent instance
@@ -2230,15 +2757,38 @@ instance:
     no_selection: No instance selected
     installed: Installed
     not_installed: Not installed
+    unknown_version: Unknown version
   overview:
     sections:
       info: Info
       personalization: Personalization
       shortcuts: Shortcuts
       advanced: Advanced
+    dialogs:
+      rename:
+        title: Rename Instance
+        message: Enter a new instance name. It will be used for the instance folder, core files, and the selected instance config.
+        confirm: Rename
+        input_label: Instance Name
+      edit_description:
+        title: Change Description
+        message: Edit the instance description. Leave it empty to restore the default description.
+        confirm: Save
+        input_label: Instance Description
+      reset:
+        title: Confirm Instance Reset
+        message: Are you sure you want to reset {instance_name}? A core backup will be saved first, then the current core files, libraries, and asset indexes will be redownloaded while reusing validated files whenever possible.
+        confirm: Start Reset
+      patch_core:
+        title: Patch Core
+        message: Are you sure you want to patch the core files for {instance_name}? File validation will be disabled automatically after patching, and a core backup will be saved first.
+        confirm: Choose Patch File
+        file_title: Choose a file to patch the core
+        file_filter: Archive Files
     info:
       launch_count: Launch count
       launch_count_never: Never launched
+      launch_count_value: 'Launched {count} times'
       modpack_version: Modpack version
       description: Description
     personalization:
@@ -2260,6 +2810,49 @@ instance:
       reset: Reset Instance
       delete: Delete Instance
       patch_core: Patch Core
+    artifacts:
+      launch_script_name: 'Launch {instance_name}'
+    messages:
+      select_to_view_details: Select an instance to view details.
+      no_instance_selected: No instance is currently selected.
+      no_saves_directory: The current instance has no saves directory.
+      no_mods_directory: The current instance has no mods directory.
+      rename_canceled: Rename canceled.
+      rename_empty: Instance name cannot be empty.
+      rename_unchanged: The instance name did not change.
+      rename_invalid: The instance name contains invalid characters.
+      rename_exists: 'An instance with this name already exists: {name}'
+      description_canceled: Description edit canceled.
+      description_restored: Restored the default description.
+      launch_script_missing: The launch script does not exist.
+      repair_disable_validation_hint: Turn off [Instance Settings -> Settings -> Advanced Launch Options -> Disable File Validation] first, then try repairing files again.
+      repair_completed: 'Repaired {downloaded_count} files and reused {reused_count} files.'
+      repair_canceled_title: Repair Files Canceled
+      repair_canceled: The instance repair process was canceled.
+      reset_canceled_title: Reset Instance Canceled
+      reset_canceled: The instance reset was canceled.
+      reset_completed: 'Reset the core files, downloaded {downloaded_count} files, and reused {reused_count} files.'
+      delete_permanent: 'The instance {instance_name} was permanently deleted.'
+      delete_recycled: 'The instance {instance_name} was moved to the recycle area: {trash_directory}'
+      patch_canceled: Patch canceled.
+      patch_file_canceled: Patch file selection canceled.
+      patched_core_missing: The patched core file does not exist.
+      rename_completed: 'Renamed instance {old_name} to {new_name}.'
+      test_instance_navigated: 'Opened the launch route to test {instance_name}.'
+      repair_task_title: '{action_title}: {instance_name}'
+      repair_summary:
+        instance: 'Instance: {instance_name}'
+        instance_directory: 'Instance directory: {path}'
+        core_json: 'Core Json: {status} • {path}'
+        core_jar: 'Core Jar: {status} • {path}'
+        backup_directory: 'Backup directory: {path}'
+        downloaded_count: 'Downloaded files: {count}'
+        reused_count: 'Reused files: {count}'
+        downloaded_item: 'Downloaded: {path}'
+        reused_item: 'Reused: {path}'
+        intro: Repair result summary.
+        present: Present
+        missing: Missing
     categories:
       auto: Auto
       hidden: Hidden instance
@@ -2287,9 +2880,11 @@ instance:
       fabric: Fabric
       quilt: Quilt
       neoforge: NeoForge
+      cleanroom: Cleanroom
   install:
     minecraft:
       header: Minecraft
+      version: 'Minecraft {version}'
     actions:
       apply_changes: Apply Changes
       reset_to_scanned: Reset to Scanned State
@@ -2298,6 +2893,9 @@ instance:
       can_add: Can add
     hints:
       optifine_mod_compatibility: OptiFine may be incompatible with some mods.
+      fabric_api_required: Fabric API is not installed, so most mods will not work.
+      qsl_required: QFAPI / QSL is not installed, so most mods will not work.
+      optifabric_required: OptiFabric is not installed, so OptiFine will not work.
     unavailable:
       incompatible_with: Incompatible with {target}
   content:
@@ -2305,11 +2903,16 @@ instance:
       search: Search worlds
       quick_actions: Quick Actions
       list: World List
+      summary: 'Created: {created_at} • Modified: {modified_at}'
       actions:
         open_folder: Open Saves Folder
         paste_clipboard: Paste from Clipboard
+      messages:
+        no_instance_selected: No instance is currently selected.
+        no_importable_paths: The clipboard does not contain any importable file or folder paths.
     screenshot:
       quick_actions: Quick Actions
+      summary: '{created_at} • {file_size}'
       actions:
         open_folder: Open Folder
     server:
@@ -2320,6 +2923,42 @@ instance:
         refresh: Refresh
         copy_address: Copy Address
         connect: Connect
+      status:
+        saved: Saved server
+        connecting: Connecting...
+        online: Server online
+        offline: Server offline
+        offline_short: Offline
+        connecting_short: Connecting
+        connection_failed: 'Unable to connect: {message}'
+      motd:
+        click_to_refresh: Click refresh to view the server status
+        connecting: Connecting...
+        offline: Server offline
+      messages:
+        no_instance_selected: No instance is currently selected.
+        no_saved_servers: The current instance was rescanned, but it has no saved servers.
+        refreshed_count: 'Refreshed {count} servers.'
+        address_empty: Server address is empty.
+        no_server_info: No server information was returned.
+        no_copyable_address: '{entry_title} has no address to copy.'
+        copied_address: '{entry_title} • {address}'
+        no_connectable_address: '{entry_title} has no usable server address.'
+        added: '{name} • {address}'
+        address_required: Server address cannot be empty.
+        read_list_failed: |-
+          Unable to read the current instance server list.
+          {error}
+        update_list_failed: |-
+          Unable to update the current instance server list.
+          {error}
+        write_list_failed: Unable to write the current instance server list.
+      dialogs:
+        edit:
+          title: Edit Server Info
+          name_prompt: 'Enter a new server name:'
+          name_default: Minecraft Server
+          address_prompt: 'Enter a new server address:'
     sort:
       label: 'Sort: {mode}'
       file_name: File Name
@@ -2336,6 +2975,7 @@ instance:
         schematic: Search schematics
       actions:
         open_folder: Open Folder
+        open_homepage: Open Homepage
         install_from_file: Install from File
         install_from_file_empty: Install First File
         download_new: Download New
@@ -2349,6 +2989,9 @@ instance:
         clear_selection: Clear Selection
         instance_select: Select Compatible Instance
         go_to_download: Go to Download
+      activities:
+        open_homepage: 'Open {surface_title} homepage: {entry_title}'
+        view_details: 'View {surface_title} details'
       filters:
         all: All ({count})
         enabled: Enabled ({count})
@@ -2357,12 +3000,71 @@ instance:
         search_results: Search Results ({count})
       selection: '{count} selected'
       kind:
+        mod: Mod
+        resource: Resource
         resource_pack: Resource pack
         shader: Shader pack
         schematic_file: Schematic file
       meta:
         archive: Archive
         folder: Folder
+        root_directory: Root directory
+      summary:
+        file: '{parent_directory} • {modified_at}'
+        archive: '{modified_at} • {file_size}'
+        folder: '{modified_at} • {folder_kind}'
+      messages:
+        no_instance_selected: No instance is currently selected.
+        list_empty: '{surface_title} list is empty.'
+        selected_all: '{surface_title} • Selected {count} items.'
+        no_toggleable_entries: There are no resources that can change state right now.
+        no_deletable_entries: There are no resources that can be deleted right now.
+        install_from_file_canceled: Resource file selection was canceled.
+        toggle_not_supported: '{surface_title} does not support enable or disable.'
+        no_selected: No resources are selected.
+        already_enabled: All selected resources are already enabled.
+        already_disabled: All selected resources are already disabled.
+        enabled_completed: 'Enabled {count} items: {titles}'
+        disabled_completed: 'Disabled {count} items: {titles}'
+        enabled_partial: 'Enabled {count} items, and {failed_count} failed.'
+        disabled_partial: 'Disabled {count} items, and {failed_count} failed.'
+        delete_canceled: Deletion canceled.
+        deleted_completed: 'Moved {count} items to the recycle area.'
+        export_missing: The exported file does not exist.
+        entry_missing: '{surface_title} item does not exist.'
+        details_read_failed: 'Failed to read additional info: {error}'
+        checked_mods_summary: 'Checked {instance_name}: {enabled_count} enabled, {disabled_count} disabled, {duplicate_count} duplicate groups.'
+      dialogs:
+        install_from_file:
+          title: 'Select {surface_title} file'
+        delete:
+          title: Confirm Resource Deletion
+          message: 'Move these {count} {surface_title} items to the recycle area?'
+          confirm: Move to Recycle Area
+          extra_items: '- and {count} more items'
+      details:
+        fields:
+          name: Name
+          status: Status
+          type: Type
+          loader: Loader
+          version: Version
+          authors: Authors
+          description: Description
+          website: Website
+          summary: Additional Info
+          path: Path
+          item_kind: Item Type
+          file_size: File Size
+          create_time: Created
+          modify_time: Modified
+      check_mods:
+        instance: Instance
+        enabled_mods: Enabled Mods
+        disabled_mods: Disabled Mods
+        duplicate_names: Duplicate Names
+        no_duplicates: No duplicate mod filenames were detected.
+        duplicate_group_title: 'Duplicate mod names:'
       tooltips:
         open_file_location: Open file location
         details: Details
@@ -2385,6 +3087,10 @@ instance:
       follow_global: Follow global setting
       on: On
       off: Off
+    java_options:
+      auto_select: Automatically choose a suitable Java
+      launcher_relative: Choose Java under launcher directory
+      launcher_relative_selected: 'Java under launcher directory | {relative_path}'
     launch:
       isolation: Isolation
       window_title: Window Title
@@ -2439,6 +3145,14 @@ instance:
       force_x11: Force X11
       system_default: System default
   export:
+    count:
+      items: '{count} items'
+    activities:
+      reset: Reset Export Options
+      import_config: Import Export Config
+      save_config: Save Export Config
+      guide: Modpack Packaging Guide
+      start: Start Export
     warnings:
       modrinth: Modrinth export mode produces a `.mrpack` workflow and may omit launcher-specific extras.
       include_resources: Including resource files can significantly increase the size of the export package.
@@ -2458,6 +3172,27 @@ instance:
       modrinth_mode: Modrinth upload mode
     config:
       hint: Import or save an export config if you want to reuse the same selection later.
+    dialogs:
+      import_config:
+        title: Choose Modpack Export Config
+        filter_name: Modpack export config
+      save_config:
+        title: Choose Save Location
+        default_name: export_config.txt
+        filter_name: Modpack export config
+    messages:
+      reset_completed: Instance export page was restored to the current instance scan results.
+      import_config_canceled: Config file selection canceled.
+      no_instance_selected: No instance is currently selected.
+      guide_shown: Displayed the guide.
+      archive_missing: Export archive does not exist.
+    guide:
+      title: Modpack Packaging Guide
+      step_1: 1. Confirm the pack name, version, and selected content on the instance export page first.
+      step_2: 2. If you want to reuse the same export rules, save the config first so you can import it later.
+      step_3: 3. Including resource files packs mods, resource packs, and shader packs directly into the archive, which is useful for offline distribution.
+      step_4: 4. Modrinth upload mode outputs a `.mrpack` file, which is better for continued packaging and publishing.
+      step_5: 5. After exporting, check that the generated archive structure and contents match the current instance.
     groups:
       game: Game
       mods: Mods
@@ -2497,9 +3232,38 @@ instance:
       config_directory_missing: Configuration directory not found
       pcl_directory: Detected instance PCL configuration directory
       pcl_directory_missing: Instance PCL configuration directory not found
+  trash:
+    activities:
+      open_directory: Instance Trash
+    dialogs:
+      delete:
+        title: Instance Delete Confirmation
+        confirm_permanent: Permanently Delete
+        confirm_recycle: Move to Trash
+    messages:
+      launcher_missing: The launcher directory could not be found.
+      delete_canceled: Deletion canceled.
+      confirm_permanent: 'Are you sure you want to permanently delete instance {instance_name}?'
+      confirm_recycle: 'Are you sure you want to delete instance {instance_name}?'
+      confirm_indie_warning: Because this instance uses version isolation, deleting it will also remove its saves, resource packs, mods, and other instance-specific files.
+      confirm_recycle_note: The instance will be moved to the instance trash first so you can clean it up or restore it manually.
 save_detail:
+  actions:
+    open_save_folder: Open Save Folder
+    open_datapack_folder: Open Datapack Folder
+    view_backup: View Backup
+  activities:
+    create_backup: Create Save Backup
+    clean_backups: Clean Backup Records
+    install_datapack: Install Datapack
+    install_datapack_failed: Install Datapack Failed
+    export_datapack_info: Export Datapack Info
   datapack:
     name: Data pack
+  dialogs:
+    datapack_file:
+      title: Choose Datapack File
+      filter_name: Archive or datapack file
   labels:
     instance: Instance
     save_name: Save name
@@ -2537,3 +3301,13 @@ save_detail:
     no: No
     yes: Yes
     unknown: Unknown
+  messages:
+    no_openable_save: There is no save available to open
+    no_datapack_directory: The current save does not have a datapack directory
+    backup_missing: The backup file does not exist
+    no_backup_target: There is no save available for backup operations
+    no_selected_save: No save is currently selected
+    no_empty_backups: No empty backup files were found
+    cleaned_empty_backups: Cleaned {count} empty backup files
+    install_datapack_canceled: Datapack file selection was canceled
+    export_missing: The exported file does not exist

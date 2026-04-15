@@ -647,7 +647,7 @@ internal static class FrontendVersionManifestInspector
             return;
         }
 
-        loaders[key] = string.IsNullOrWhiteSpace(version) ? "已安装" : version;
+        loaders[key] = string.IsNullOrWhiteSpace(version) ? "Installed" : version;
     }
 }
 

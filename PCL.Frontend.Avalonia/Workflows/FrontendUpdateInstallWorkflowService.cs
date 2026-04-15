@@ -112,7 +112,7 @@ internal static class FrontendUpdateInstallWorkflowService
         var normalizedExtractedRoot = NormalizePath(extractedRoot);
         if (!Directory.Exists(normalizedExtractedRoot))
         {
-            throw new DirectoryNotFoundException($"未找到更新解压目录：{normalizedExtractedRoot}");
+            throw new DirectoryNotFoundException($"Update extraction directory was not found: {normalizedExtractedRoot}");
         }
 
         if (platform == FrontendUpdateInstallPlatform.MacOS)
@@ -173,7 +173,7 @@ internal static class FrontendUpdateInstallWorkflowService
         var actual = Convert.ToHexString(hash);
         if (!string.Equals(actual, expectedSha256.Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException($"更新包校验失败，期望 SHA256 为 {expectedSha256}，实际为 {actual}。");
+            throw new InvalidOperationException($"Update package verification failed. Expected SHA256 {expectedSha256}, actual {actual}.");
         }
     }
 
@@ -193,7 +193,7 @@ internal static class FrontendUpdateInstallWorkflowService
             return;
         }
 
-        throw new InvalidOperationException($"不支持的更新归档格式：{Path.GetFileName(archivePath)}");
+        throw new InvalidOperationException($"Unsupported update archive format: {Path.GetFileName(archivePath)}");
     }
 
     private static void WriteInstallerScript(string scriptPath, string contents)
@@ -283,7 +283,7 @@ internal static class FrontendUpdateInstallWorkflowService
             return ".zip";
         }
 
-        throw new InvalidOperationException($"更新下载地址不包含受支持的归档扩展名：{url}");
+        throw new InvalidOperationException($"Update download URL does not contain a supported archive extension: {url}");
     }
 
     private static string GetScriptExtension(FrontendUpdateInstallPlatform platform)

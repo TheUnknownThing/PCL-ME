@@ -277,13 +277,13 @@ internal sealed partial class FrontendShellViewModel
                 return true;
             case LauncherFrontendPageKey.CompDetail:
                 metadata = new DedicatedGenericRouteMetadata(
-                    "工程详情",
-                    "查看资源工程的实时社区信息与最近版本。",
+                    LT("shell.comp_detail.route.eyebrow"),
+                    LT("shell.comp_detail.route.description"),
                     [
-                        new LauncherFrontendPageFact("来源", CommunityProjectSource),
-                        new LauncherFrontendPageFact("状态", CommunityProjectStatus),
-                        new LauncherFrontendPageFact("最近更新", CommunityProjectUpdatedLabel),
-                        new LauncherFrontendPageFact("下载量", CommunityProjectDownloadCountLabel)
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.source"), CommunityProjectSource),
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.status"), CommunityProjectStatus),
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.updated"), CommunityProjectUpdatedLabel),
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.downloads"), CommunityProjectDownloadCountLabel)
                     ]);
                 return true;
             case LauncherFrontendPageKey.HelpDetail:
@@ -628,7 +628,7 @@ internal sealed partial class FrontendShellViewModel
 
         var normalizedExtension = extension.ToLowerInvariant();
         var targetDirectory = Path.Combine(versionsDirectory, instanceName);
-        var archivePath = Path.Combine(targetDirectory, $"原始整合包{normalizedExtension}");
+        var archivePath = Path.Combine(targetDirectory, $"original-modpack{normalizedExtension}");
         var taskTitle = LT("shell.instance_select.tasks.install_modpack", ("name", instanceName));
 
         TaskCenter.Register(new FrontendManagedModpackInstallTask(
@@ -1931,7 +1931,7 @@ internal sealed class InstanceSelectEntryViewModel(
     ActionCommand openFolderCommand,
     ActionCommand deleteCommand)
 {
-    private static readonly FrontendIcon NavigationSettingsIcon = FrontendIconCatalog.GetNavigationIcon("设置");
+    private static readonly FrontendIcon NavigationSettingsIcon = FrontendIconCatalog.GetNavigationIcon("settings");
 
     public string Title { get; } = title;
 

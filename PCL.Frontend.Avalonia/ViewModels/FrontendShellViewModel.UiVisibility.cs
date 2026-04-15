@@ -7,8 +7,8 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowUiFeatureHiddenCard => FrontendUiVisibilityService.ShouldShowFunctionHiddenCard(GetUiVisibilityPreferences());
 
     public string UiFeatureHiddenCardHeader => _showHiddenItemsOverride
-        ? "功能隐藏（已暂时关闭，按 F12 以重新启用）"
-        : "功能隐藏";
+        ? "Features hidden (temporarily disabled, press F12 to re-enable)"
+        : "Features hidden";
 
     public bool ShowLaunchInstanceManagementButtons => FrontendUiVisibilityService.ShouldShowLaunchInstanceManagement(GetUiVisibilityPreferences());
 
@@ -20,7 +20,7 @@ internal sealed partial class FrontendShellViewModel
     public void ToggleHiddenItemsOverride()
     {
         _showHiddenItemsOverride = !_showHiddenItemsOverride;
-        RefreshShell(_showHiddenItemsOverride ? "已暂时关闭功能隐藏设置。" : "已重新启用功能隐藏设置。");
+        RefreshShell(_showHiddenItemsOverride ? "Feature hiding has been temporarily disabled." : "Feature hiding has been re-enabled.");
         RaiseUiVisibilityProperties();
     }
 
