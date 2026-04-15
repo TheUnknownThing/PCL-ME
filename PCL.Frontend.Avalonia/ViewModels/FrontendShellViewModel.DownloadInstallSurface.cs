@@ -233,7 +233,7 @@ internal sealed partial class FrontendShellViewModel
             return [];
         }
 
-        string NormalizeGroupTitle(string group)
+        string GetLocalizedGroupTitle(string group)
         {
             return group switch
             {
@@ -248,7 +248,7 @@ internal sealed partial class FrontendShellViewModel
         var choicesByGroup = _downloadInstallMinecraftCatalogChoices
             .GroupBy(choice => choice.Metadata?["catalogGroup"]?.GetValue<string>() ?? "正式版")
             .ToDictionary(
-                group => NormalizeGroupTitle(group.Key),
+                group => group.Key,
                 group => group
                     .OrderByDescending(GetDownloadInstallChoiceReleaseTime)
                     .ToArray(),
@@ -275,11 +275,11 @@ internal sealed partial class FrontendShellViewModel
 
             var sectionChoices = choices.Select(choice => CreateDownloadInstallMinecraftChoice(choice)).ToArray();
             result.Add(new DownloadInstallMinecraftSectionViewModel(
-                $"{groupTitle} ({sectionChoices.Length})",
+                $"{GetLocalizedGroupTitle(groupTitle)} ({sectionChoices.Length})",
                 sectionChoices,
                 isExpanded: false,
                 canCollapse: true,
-                toggleCommand: new ActionCommand(() => ToggleDownloadInstallMinecraftSection(groupTitle))));
+                toggleCommand: new ActionCommand(() => ToggleDownloadInstallMinecraftSection(GetLocalizedGroupTitle(groupTitle)))));
         }
 
         return result;

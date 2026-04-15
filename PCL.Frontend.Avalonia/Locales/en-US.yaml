@@ -1830,7 +1830,7 @@ download:
       reset_filters_message: Filters reset for {surface_title}
     current_instance:
       actions:
-        switch: Switch Instance
+        switch: Switch
       none_selected: No instance selected
       summary_none_selected: Select an instance to improve compatibility filtering
       summary_suffix: Used for compatibility filtering
