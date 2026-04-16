@@ -535,18 +535,18 @@ internal static class FrontendInstanceCompositionService
             DetermineInstallIconName(manifestSummary),
             hints,
             [
-                new FrontendInstanceInstallOption("Forge", DisplayVersion(manifestSummary.ForgeVersion, i18n), "Anvil.png"),
-                new FrontendInstanceInstallOption("Cleanroom", DisplayVersion(manifestSummary.CleanroomVersion, i18n), "Cleanroom.png"),
-                new FrontendInstanceInstallOption("NeoForge", DisplayVersion(manifestSummary.NeoForgeVersion, i18n), "NeoForge.png"),
-                new FrontendInstanceInstallOption("Fabric", DisplayVersion(manifestSummary.FabricVersion, i18n), "Fabric.png"),
-                new FrontendInstanceInstallOption("Legacy Fabric", DisplayVersion(manifestSummary.LegacyFabricVersion, i18n), "Fabric.png"),
-                new FrontendInstanceInstallOption("Fabric API", DisplayInstalled(manifestSummary.HasFabricApi, manifestSummary.FabricApiVersion, i18n), "Fabric.png"),
-                new FrontendInstanceInstallOption("QFAPI / QSL", DisplayInstalled(manifestSummary.HasQsl, manifestSummary.QslVersion, i18n), "Quilt.png"),
-                new FrontendInstanceInstallOption("Quilt", DisplayVersion(manifestSummary.QuiltVersion, i18n), "Quilt.png"),
-                new FrontendInstanceInstallOption("LabyMod", DisplayVersion(manifestSummary.LabyModVersion, i18n), "LabyMod.png"),
-                new FrontendInstanceInstallOption("OptiFine", DisplayVersion(manifestSummary.OptiFineVersion, i18n), "GrassPath.png"),
-                new FrontendInstanceInstallOption("OptiFabric", DisplayInstalled(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion, i18n), "OptiFabric.png"),
-                new FrontendInstanceInstallOption("LiteLoader", DisplayInstalled(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion, i18n), "Egg.png")
+                new FrontendInstanceInstallOption("Forge", DisplayVersionState(manifestSummary.ForgeVersion, i18n), "Anvil.png"),
+                new FrontendInstanceInstallOption("Cleanroom", DisplayVersionState(manifestSummary.CleanroomVersion, i18n), "Cleanroom.png"),
+                new FrontendInstanceInstallOption("NeoForge", DisplayVersionState(manifestSummary.NeoForgeVersion, i18n), "NeoForge.png"),
+                new FrontendInstanceInstallOption("Fabric", DisplayVersionState(manifestSummary.FabricVersion, i18n), "Fabric.png"),
+                new FrontendInstanceInstallOption("Legacy Fabric", DisplayVersionState(manifestSummary.LegacyFabricVersion, i18n), "Fabric.png"),
+                new FrontendInstanceInstallOption("Fabric API", DisplayInstalledState(manifestSummary.HasFabricApi, manifestSummary.FabricApiVersion, i18n), "Fabric.png"),
+                new FrontendInstanceInstallOption("QFAPI / QSL", DisplayInstalledState(manifestSummary.HasQsl, manifestSummary.QslVersion, i18n), "Quilt.png"),
+                new FrontendInstanceInstallOption("Quilt", DisplayVersionState(manifestSummary.QuiltVersion, i18n), "Quilt.png"),
+                new FrontendInstanceInstallOption("LabyMod", DisplayVersionState(manifestSummary.LabyModVersion, i18n), "LabyMod.png"),
+                new FrontendInstanceInstallOption("OptiFine", DisplayVersionState(manifestSummary.OptiFineVersion, i18n), "GrassPath.png"),
+                new FrontendInstanceInstallOption("OptiFabric", DisplayInstalledState(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion, i18n), "OptiFabric.png"),
+                new FrontendInstanceInstallOption("LiteLoader", DisplayInstalledState(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion, i18n), "Egg.png")
             ]);
     }
 
@@ -1805,19 +1805,23 @@ internal static class FrontendInstanceCompositionService
         };
     }
 
-    private static string DisplayVersion(string? version, II18nService? i18n)
+    private static FrontendInstallSelectionState DisplayVersionState(string? version, II18nService? i18n)
     {
-        return string.IsNullOrWhiteSpace(version) ? Text(i18n, "instance.common.not_installed", "Not installed") : version;
+        return string.IsNullOrWhiteSpace(version)
+            ? FrontendInstallSelectionState.NotInstalled(Text(i18n, "instance.common.not_installed", "Not installed"))
+            : FrontendInstallSelectionState.Versioned(version);
     }
 
-    private static string DisplayInstalled(bool installed, string? version, II18nService? i18n)
+    private static FrontendInstallSelectionState DisplayInstalledState(bool installed, string? version, II18nService? i18n)
     {
         if (!installed)
         {
-            return Text(i18n, "instance.common.not_installed", "Not installed");
+            return FrontendInstallSelectionState.NotInstalled(Text(i18n, "instance.common.not_installed", "Not installed"));
         }
 
-        return string.IsNullOrWhiteSpace(version) ? Text(i18n, "instance.common.installed", "Installed") : version;
+        return string.IsNullOrWhiteSpace(version)
+            ? FrontendInstallSelectionState.Installed(Text(i18n, "instance.common.installed", "Installed"))
+            : FrontendInstallSelectionState.Versioned(version);
     }
 
     private static string PrefixVersion(string title, string? version)

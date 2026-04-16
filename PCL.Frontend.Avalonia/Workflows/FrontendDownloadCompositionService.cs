@@ -102,7 +102,7 @@ internal static class FrontendDownloadCompositionService
             instanceComposition.Install.MinecraftIconName,
             instanceComposition.Install.Hints,
             instanceComposition.Install.Options
-                .Select(option => new FrontendDownloadInstallOption(option.Title, option.Selection, option.IconName))
+                .Select(option => new FrontendDownloadInstallOption(option.Title, option.SelectionState, option.IconName))
                 .ToArray());
     }
 

@@ -59,14 +59,14 @@ internal sealed partial class FrontendShellViewModel
         if (HasInstallSelection(isExistingInstance, "Fabric")
             && !HasInstallSelection(isExistingInstance, "Fabric API"))
         {
-            hints.Add(SD("instance.install.hints.fabric_api_missing"));
+            hints.Add(SD("instance.install.hints.fabric_api_required"));
         }
 
         if (HasInstallSelection(isExistingInstance, "Quilt")
             && !HasInstallSelection(isExistingInstance, "QFAPI / QSL")
             && !HasInstallSelection(isExistingInstance, "Fabric API"))
         {
-            hints.Add(SD("instance.install.hints.qsl_missing"));
+            hints.Add(SD("instance.install.hints.qsl_required"));
         }
 
         if ((HasInstallSelection(isExistingInstance, "Fabric") || HasInstallSelection(isExistingInstance, "Legacy Fabric"))
@@ -102,18 +102,16 @@ internal sealed partial class FrontendShellViewModel
         string optionTitle,
         string minecraftVersion)
     {
-        var selectionText = GetEffectiveSelectionText(isExistingInstance, optionTitle);
+        var selectionState = GetEffectiveSelectionState(isExistingInstance, optionTitle);
         var parts = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(selectionText)
-            || string.Equals(selectionText, SD("instance.common.not_installed"), StringComparison.Ordinal)
-            || string.Equals(selectionText, SD("instance.install.option.can_add"), StringComparison.Ordinal))
+        if (!selectionState.HasSelection)
         {
             parts.Add(SD("instance.install.option.preview_load_candidates", ("version", minecraftVersion)));
         }
         else
         {
-            parts.Add(SD("instance.install.option.preview_current_selection", ("selection", selectionText), ("version", minecraftVersion)));
+            parts.Add(SD("instance.install.option.preview_current_selection", ("selection", selectionState.DisplayText), ("version", minecraftVersion)));
         }
 
         parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
@@ -386,10 +384,7 @@ internal sealed partial class FrontendShellViewModel
 
     private bool HasInstallSelection(bool isExistingInstance, string optionTitle)
     {
-        var selection = GetEffectiveSelectionText(isExistingInstance, optionTitle);
-        return !string.IsNullOrWhiteSpace(selection)
-               && !string.Equals(selection, SD("instance.common.not_installed"), StringComparison.Ordinal)
-               && !string.Equals(selection, SD("instance.install.option.can_add"), StringComparison.Ordinal);
+        return GetEffectiveSelectionState(isExistingInstance, optionTitle).HasSelection;
     }
 
     private bool CanClearInstallSelection(bool isExistingInstance, string optionTitle)

@@ -17,8 +17,11 @@ internal sealed record FrontendDownloadInstallState(
 
 internal sealed record FrontendDownloadInstallOption(
     string Title,
-    string Selection,
-    string? IconName);
+    FrontendInstallSelectionState SelectionState,
+    string? IconName)
+{
+    public string Selection => SelectionState.DisplayText;
+}
 
 internal sealed record FrontendDownloadCatalogState(
     string IntroTitle,
