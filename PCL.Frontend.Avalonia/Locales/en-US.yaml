@@ -3374,20 +3374,22 @@ save_detail:
 
 welcome:
   step_0:
-    title: Choose Your Language
-    description: Select the language you'd like to use in PCL ME.
+    title: Welcome to PCL-ME
+    description: Choose your language and color mode. Both follow your system by default, and language changes apply immediately.
+    language_hint: Switch the launcher language now. The onboarding text updates as soon as you change it.
+    theme_hint: Pick the appearance mode you want PCL-ME to use on first launch.
   step_1:
-    title: License Agreement
-    description: Please read and accept the End User License Agreement before continuing with PCL ME.
+    title: Accepting EULA
+    description: This is a community-built version of PCL-ME. Please acknowledge that and accept the End User License Agreement before continuing.
+    community_notice: This launcher is maintained by community contributors and is not an official release. Features, update cadence, and support may differ from other distributions.
+    community_ack_label: I understand this is a community-built release of PCL-ME.
     eula_summary: PCL ME is free, open-source software provided as-is. By proceeding, you accept the terms of the End User License Agreement (EULA). Read the full EULA for details about permitted use and redistribution.
     open_eula: Open Full EULA
     accept_label: I have read and accept the EULA
     decline: Decline & Exit
   step_2:
-    title: Choose Your Theme
-    description: Pick a color mode and accent palette. You can change this at any time in Settings.
-  step_3:
     title: You're All Set!
-    description: PCL ME is ready to use. Check out these links to get started and stay connected.
+    description: PCL-ME is ready. Open the getting started tutorial or keep the community links nearby for later.
+    tutorial: Open Tutorial
     feedback: Submit Feedback
     github: GitHub

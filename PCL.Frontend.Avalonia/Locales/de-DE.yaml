@@ -3364,20 +3364,22 @@ save_detail:
 
 welcome:
   step_0:
-    title: Sprache auswählen
-    description: Wählen Sie die Anzeigesprache für PCL ME aus.
+    title: Willkommen bei PCL-ME
+    description: Wählen Sie Sprache und Farbmodus aus. Beides folgt standardmäßig dem System, und Sprachänderungen werden auf diesem Bildschirm sofort übernommen.
+    language_hint: Wechseln Sie die Launcher-Sprache jetzt. Der Text dieses Onboardings wird sofort aktualisiert.
+    theme_hint: Wählen Sie den Darstellungsmodus, den PCL-ME beim ersten Start verwenden soll.
   step_1:
-    title: Lizenzvereinbarung
-    description: Bitte lesen und akzeptieren Sie die Endbenutzer-Lizenzvereinbarung (EULA), bevor Sie PCL ME verwenden.
+    title: EULA akzeptieren
+    description: Dies ist eine Community-Build-Version von PCL-ME. Bestätigen Sie dies bitte und akzeptieren Sie anschließend die Endbenutzer-Lizenzvereinbarung (EULA).
+    community_notice: Dieser Launcher wird von Community-Mitwirkenden gepflegt und ist keine offizielle Veröffentlichung. Funktionsumfang, Update-Rhythmus und Support können sich von anderen Distributionen unterscheiden.
+    community_ack_label: Ich verstehe, dass dies eine Community-Build-Version von PCL-ME ist.
     eula_summary: PCL ME ist eine kostenlose, quelloffene Software und wird "wie sie ist" bereitgestellt. Durch die Nutzung akzeptieren Sie die Bedingungen der Endbenutzer-Lizenzvereinbarung. Lesen Sie die vollständige EULA für Details zu zulässiger Nutzung und Weitergabe.
     open_eula: Vollständige EULA öffnen
     accept_label: Ich habe die EULA gelesen und akzeptiere sie
     decline: Ablehnen und beenden
   step_2:
-    title: Design auswählen
-    description: Wählen Sie einen Farbmodus und eine Akzentfarbe. Sie können dies jederzeit in den Einstellungen ändern.
-  step_3:
     title: Alles bereit!
-    description: PCL ME ist einsatzbereit. Erkunden Sie die folgenden Links.
+    description: PCL-ME ist einsatzbereit. Öffnen Sie das Einstiegstutorial oder behalten Sie diese Community-Links für später im Blick.
+    tutorial: Tutorial öffnen
     feedback: Feedback senden
     github: GitHub

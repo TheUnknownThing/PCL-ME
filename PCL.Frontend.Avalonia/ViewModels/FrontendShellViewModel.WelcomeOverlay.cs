@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -6,17 +7,20 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private const string WelcomeEulaUrl = "https://shimo.im/docs/rGrd8pY8xWkt6ryW";
+    private const string WelcomeTutorialFallbackUrl = "https://github.com/TheUnknownThing/PCL-ME#readme";
     private const string WelcomeFeedbackUrl = "https://github.com/TheUnknownThing/PCL-ME/issues";
     private const string WelcomeGitHubUrl = "https://github.com/TheUnknownThing/PCL-ME";
-    private const int WelcomeTotalSteps = 4;
+    private const int WelcomeTotalSteps = 3;
 
     private bool _welcomeOverlayDismissed;
     private int _welcomeCurrentStep;
     private bool _welcomeEulaAccepted;
+    private bool _welcomeCommunityBuildAcknowledged;
 
     private ActionCommand? _welcomeNextStepCommandBacking;
     private ActionCommand? _welcomePreviousStepCommandBacking;
     private ActionCommand? _welcomeOpenEulaCommandBacking;
+    private ActionCommand? _welcomeOpenTutorialCommandBacking;
     private ActionCommand? _welcomeDeclineCommandBacking;
     private ActionCommand? _welcomeOpenFeedbackCommandBacking;
     private ActionCommand? _welcomeOpenGitHubCommandBacking;
@@ -32,9 +36,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool IsWelcomeLanguageStep => _welcomeCurrentStep == 0;
     public bool IsWelcomeLicenseStep => _welcomeCurrentStep == 1;
-    public bool IsWelcomeThemeStep => _welcomeCurrentStep == 2;
-    public bool IsWelcomeDoneStep => _welcomeCurrentStep == 3;
-    public bool IsWelcomeAdvanceArrowVisible => _welcomeCurrentStep < WelcomeTotalSteps - 1;
+    public bool IsWelcomeDoneStep => _welcomeCurrentStep == 2;
 
     // ── Step content ─────────────────────────────────────────────────────────
 
@@ -43,7 +45,6 @@ internal sealed partial class FrontendShellViewModel
         0 => _i18n.T("welcome.step_0.title"),
         1 => _i18n.T("welcome.step_1.title"),
         2 => _i18n.T("welcome.step_2.title"),
-        3 => _i18n.T("welcome.step_3.title"),
         _ => string.Empty
     };
 
@@ -52,24 +53,45 @@ internal sealed partial class FrontendShellViewModel
         0 => _i18n.T("welcome.step_0.description"),
         1 => _i18n.T("welcome.step_1.description"),
         2 => _i18n.T("welcome.step_2.description"),
-        3 => _i18n.T("welcome.step_3.description"),
         _ => string.Empty
     };
 
+    public string WelcomeLanguageEntryDescription => _i18n.T("welcome.step_0.language_hint");
+    public string WelcomeThemeEntryDescription => _i18n.T("welcome.step_0.theme_hint");
+
     // Step 1 – License
 
+    public string WelcomeCommunityNotice => _i18n.T("welcome.step_1.community_notice");
+    public string WelcomeCommunityAcknowledgeLabel => _i18n.T("welcome.step_1.community_ack_label");
     public string WelcomeEulaSummary => _i18n.T("welcome.step_1.eula_summary");
     public string WelcomeOpenEulaButtonText => _i18n.T("welcome.step_1.open_eula");
     public string WelcomeDeclineButtonText => _i18n.T("welcome.step_1.decline");
     public string WelcomeEulaAcceptLabel => _i18n.T("welcome.step_1.accept_label");
 
-    // Step 3 – Done
+    // Step 2 – Done
 
-    public string WelcomeFeedbackButtonText => _i18n.T("welcome.step_3.feedback");
-    public string WelcomeGitHubButtonText => _i18n.T("welcome.step_3.github");
-    public string WelcomeDoneButtonToolTip => _i18n.T("common.actions.confirm");
+    public string WelcomeTutorialButtonText => _i18n.T("welcome.step_2.tutorial");
+    public string WelcomeFeedbackButtonText => _i18n.T("welcome.step_2.feedback");
+    public string WelcomeGitHubButtonText => _i18n.T("welcome.step_2.github");
+    public string WelcomeBackButtonText => _i18n.T("common.actions.back");
+    public string WelcomePrimaryActionText => _welcomeCurrentStep == WelcomeTotalSteps - 1
+        ? _i18n.T("common.actions.confirm")
+        : _i18n.T("common.actions.continue");
 
     // ── EULA checkbox ────────────────────────────────────────────────────────
+
+    public bool WelcomeCommunityBuildAcknowledged
+    {
+        get => _welcomeCommunityBuildAcknowledged;
+        set
+        {
+            if (SetProperty(ref _welcomeCommunityBuildAcknowledged, value))
+            {
+                RaisePropertyChanged(nameof(CanGoToNextWelcomeStep));
+                WelcomeNextStepCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
 
     public bool WelcomeEulaAccepted
     {
@@ -89,17 +111,16 @@ internal sealed partial class FrontendShellViewModel
     public bool CanGoToPreviousWelcomeStep => _welcomeCurrentStep > 0;
 
     /// <summary>
-    /// Next is always enabled except on the License step when the EULA box is unchecked.
+    /// Next is always enabled except on the License step when required confirmations are unchecked.
     /// </summary>
     public bool CanGoToNextWelcomeStep =>
-        _welcomeCurrentStep != 1 || _welcomeEulaAccepted;
+        _welcomeCurrentStep != 1 || (_welcomeEulaAccepted && _welcomeCommunityBuildAcknowledged);
 
     // ── Dot indicator brushes ────────────────────────────────────────────────
 
     public IBrush WelcomeDot0Brush => GetWelcomeDotBrush(0);
     public IBrush WelcomeDot1Brush => GetWelcomeDotBrush(1);
     public IBrush WelcomeDot2Brush => GetWelcomeDotBrush(2);
-    public IBrush WelcomeDot3Brush => GetWelcomeDotBrush(3);
 
     // ── Commands (lazy) ──────────────────────────────────────────────────────
 
@@ -114,6 +135,10 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand WelcomeOpenEulaCommand =>
         _welcomeOpenEulaCommandBacking ??=
             new ActionCommand(OpenWelcomeEulaUrl);
+
+    public ActionCommand WelcomeOpenTutorialCommand =>
+        _welcomeOpenTutorialCommandBacking ??=
+            new ActionCommand(OpenWelcomeTutorial);
 
     public ActionCommand WelcomeDeclineCommand =>
         _welcomeDeclineCommandBacking ??=
@@ -154,6 +179,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void CompleteOnboarding()
     {
+        if (_welcomeOverlayDismissed)
+        {
+            return;
+        }
+
         // Persist acceptance so the old EULA prompt never surfaces.
         _shellActionService.AcceptLauncherEula();
         _shellActionService.PersistSharedValue("SystemOnboardingCompleted", true);
@@ -164,6 +194,7 @@ internal sealed partial class FrontendShellViewModel
 
         _welcomeOverlayDismissed = true;
         RaisePropertyChanged(nameof(IsWelcomeOverlayVisible));
+        RaisePropertyChanged(nameof(IsTopLevelNavigationInteractive));
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
     }
 
@@ -175,6 +206,18 @@ internal sealed partial class FrontendShellViewModel
     private void OpenWelcomeEulaUrl()
     {
         OpenExternalTarget(WelcomeEulaUrl, "Opened EULA URL from the welcome overlay.");
+    }
+
+    private void OpenWelcomeTutorial()
+    {
+        CompleteOnboarding();
+        if (TryResolveHelpEntry("新手教程.json", out var helpEntry))
+        {
+            ShowHelpDetail(helpEntry, addActivity: true);
+            return;
+        }
+
+        OpenExternalTarget(WelcomeTutorialFallbackUrl, "Opened the onboarding tutorial fallback URL.");
     }
 
     private void OpenWelcomeFeedbackUrl()
@@ -193,13 +236,19 @@ internal sealed partial class FrontendShellViewModel
     {
         RaisePropertyChanged(nameof(WelcomeStepTitle));
         RaisePropertyChanged(nameof(WelcomeStepDescription));
+        RaisePropertyChanged(nameof(WelcomeLanguageEntryDescription));
+        RaisePropertyChanged(nameof(WelcomeThemeEntryDescription));
+        RaisePropertyChanged(nameof(WelcomeCommunityNotice));
+        RaisePropertyChanged(nameof(WelcomeCommunityAcknowledgeLabel));
         RaisePropertyChanged(nameof(WelcomeEulaSummary));
         RaisePropertyChanged(nameof(WelcomeOpenEulaButtonText));
         RaisePropertyChanged(nameof(WelcomeDeclineButtonText));
         RaisePropertyChanged(nameof(WelcomeEulaAcceptLabel));
+        RaisePropertyChanged(nameof(WelcomeTutorialButtonText));
         RaisePropertyChanged(nameof(WelcomeFeedbackButtonText));
         RaisePropertyChanged(nameof(WelcomeGitHubButtonText));
-        RaisePropertyChanged(nameof(WelcomeDoneButtonToolTip));
+        RaisePropertyChanged(nameof(WelcomeBackButtonText));
+        RaisePropertyChanged(nameof(WelcomePrimaryActionText));
     }
 
     private void RaiseWelcomeStepProperties()
@@ -207,18 +256,20 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(WelcomeCurrentStep));
         RaisePropertyChanged(nameof(IsWelcomeLanguageStep));
         RaisePropertyChanged(nameof(IsWelcomeLicenseStep));
-        RaisePropertyChanged(nameof(IsWelcomeThemeStep));
         RaisePropertyChanged(nameof(IsWelcomeDoneStep));
-        RaisePropertyChanged(nameof(IsWelcomeAdvanceArrowVisible));
         RaiseWelcomeLocaleProperties();
         RaisePropertyChanged(nameof(CanGoToPreviousWelcomeStep));
         RaisePropertyChanged(nameof(CanGoToNextWelcomeStep));
+        RaiseWelcomeDotBrushProperties();
+        WelcomeNextStepCommand.NotifyCanExecuteChanged();
+        WelcomePreviousStepCommand.NotifyCanExecuteChanged();
+    }
+
+    private void RaiseWelcomeDotBrushProperties()
+    {
         RaisePropertyChanged(nameof(WelcomeDot0Brush));
         RaisePropertyChanged(nameof(WelcomeDot1Brush));
         RaisePropertyChanged(nameof(WelcomeDot2Brush));
-        RaisePropertyChanged(nameof(WelcomeDot3Brush));
-        WelcomeNextStepCommand.NotifyCanExecuteChanged();
-        WelcomePreviousStepCommand.NotifyCanExecuteChanged();
     }
 
     private IBrush GetWelcomeDotBrush(int step)
@@ -226,5 +277,10 @@ internal sealed partial class FrontendShellViewModel
         return _welcomeCurrentStep == step
             ? FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB")
             : FrontendThemeResourceResolver.GetBrush("ColorBrush6", "#CCCCCC");
+    }
+
+    private void HandleWelcomeAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RaiseWelcomeDotBrushProperties, DispatcherPriority.Render);
     }
 }

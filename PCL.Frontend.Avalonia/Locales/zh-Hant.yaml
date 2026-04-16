@@ -3374,20 +3374,22 @@ save_detail:
 
 welcome:
   step_0:
-    title: 選擇語言
-    description: 請選擇 PCL ME 的介面顯示語言。
+    title: 歡迎使用 PCL-ME
+    description: 請選擇語言與明暗主題。兩者預設皆跟隨系統，語言切換會立即更新目前頁面的文字。
+    language_hint: 現在即可切換啟動器語言，當前引導頁文字會立即刷新。
+    theme_hint: 選擇 PCL-ME 首次啟動時要使用的外觀模式。
   step_1:
-    title: 許可協議
-    description: 請閱讀並接受最終用戶許可協議（EULA），以繼續使用 PCL ME。
+    title: 接受 EULA
+    description: 這是 PCL-ME 的社群構建版本。繼續之前，請先確認此事並接受最終用戶許可協議（EULA）。
+    community_notice: 目前發行版由社群貢獻者維護，並非官方版本。功能、更新節奏與支援方式可能與其他發行版本不同。
+    community_ack_label: 我已了解這是 PCL-ME 的社群構建版本。
     eula_summary: PCL ME 是一款免費開源軟體，以「現狀」提供。繼續使用即表示您接受最終用戶許可協議的條款。請閱讀完整 EULA，以了解允許的使用方式及再發行規定。
     open_eula: 查看完整 EULA
     accept_label: 我已閱讀並接受 EULA
     decline: 拒絕並退出
   step_2:
-    title: 選擇主題
-    description: 選擇顏色模式與強調色。您可以隨時在設定中更改。
-  step_3:
-    title: 設置完成！
-    description: PCL ME 已準備就緒，歡迎探索以下連結。
+    title: 一切就緒
+    description: PCL-ME 已準備完成。您可以先開啟入門教學，也可以稍後透過下方連結了解專案與回饋管道。
+    tutorial: 打開教學
     feedback: 提交回饋
     github: GitHub

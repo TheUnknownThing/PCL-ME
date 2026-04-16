@@ -1609,7 +1609,7 @@ setup:
       dark_custom: 深色自定义
       dark_palette: 深色配色
       global_font: 全局
-      locale: 界面语言
+      locale: 语言
       launcher_opacity: 不透明度
       light_custom: 浅色自定义
       light_palette: 浅色配色
@@ -3374,20 +3374,22 @@ save_detail:
 
 welcome:
   step_0:
-    title: 选择语言
-    description: 请选择 PCL ME 的界面显示语言。
+    title: 欢迎使用 PCL-ME
+    description: 请选择语言和明暗主题。两项默认均跟随系统，语言切换会立即更新当前页面文本。
+    language_hint: 现在即可切换启动器语言，当前引导页文本会立刻刷新。
+    theme_hint: 选择 PCL-ME 首次启动时使用的外观模式。
   step_1:
-    title: 许可协议
-    description: 请阅读并接受最终用户许可协议（EULA），以继续使用 PCL ME。
+    title: 接受 EULA
+    description: 这是 PCL-ME 的社区构建版本。在继续之前，请先确认这一点并接受最终用户许可协议（EULA）。
+    community_notice: 当前发行版由社区贡献者维护，并非官方发行版本。功能、更新节奏与支持方式可能与其他分发版本不同。
+    community_ack_label: 我已了解这是 PCL-ME 的社区构建版本。
     eula_summary: PCL ME 是一款免费开源软件，按"现状"提供。继续使用即表示您接受最终用户许可协议的条款。请阅读完整 EULA，以了解允许的使用方式和再发行规定。
     open_eula: 查看完整 EULA
     accept_label: 我已阅读并接受 EULA
     decline: 拒绝并退出
   step_2:
-    title: 选择主题
-    description: 选择颜色模式与强调色。您可以随时在设置中更改。
-  step_3:
-    title: 设置完成！
-    description: PCL ME 已准备就绪，欢迎探索以下链接。
+    title: 一切就绪
+    description: PCL-ME 已准备就绪。您可以先打开入门教程，也可以稍后通过下方链接了解项目与反馈渠道。
+    tutorial: 打开教程
     feedback: 提交反馈
     github: GitHub

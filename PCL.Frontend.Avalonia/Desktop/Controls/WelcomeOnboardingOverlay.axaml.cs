@@ -9,7 +9,6 @@ using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
-using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
@@ -28,32 +27,12 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
     public WelcomeOnboardingOverlay()
     {
         InitializeComponent();
-        ConfigureIcons();
         OverlayRoot.IsVisible = false;
         OverlayRoot.IsHitTestVisible = false;
         PclModalMotion.ResetToClosedState(WelcomeBackdrop, WelcomeCard);
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += (_, _) => QueueOverlaySync();
         DetachedFromVisualTree += (_, _) => ObserveShell(null);
-    }
-
-    private void ConfigureIcons()
-    {
-        WelcomePreviousButton.IconData = FrontendIconCatalog.Back.Data;
-        WelcomePreviousButton.IconScale = FrontendIconCatalog.Back.Scale;
-
-        WelcomeNextButton.IconData = FrontendIconCatalog.Back.Data;
-        WelcomeNextButton.IconScale = FrontendIconCatalog.Back.Scale;
-
-        WelcomeDoneButton.IconData = FrontendIconCatalog.EnableCircle.Data;
-        WelcomeDoneButton.IconScale = 1.1 * FrontendIconCatalog.EnableCircle.Scale;
-
-        var feedbackIcon = FrontendIconCatalog.GetSidebarIcon("feedback");
-        WelcomeFeedbackButton.IconData = feedbackIcon.Data;
-        WelcomeFeedbackButton.IconScale = feedbackIcon.Scale;
-
-        WelcomeGitHubButton.IconData = FrontendIconCatalog.Link.Data;
-        WelcomeGitHubButton.IconScale = FrontendIconCatalog.Link.Scale;
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -169,9 +148,9 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         _lastWelcomeStepIndex = currentStep;
         var version = ++_stepAnimationVersion;
 
-        PrepareStepElement(WelcomeTitleBlock, 0d, 10d);
+        PrepareStepElement(WelcomeStepHeader, 0d, 10d);
         PrepareStepElement(WelcomeStepContentHost, 34d * direction, 0d);
-        PrepareStepElement(WelcomeStepIndicatorDots, 0d, 8d);
+        PrepareStepElement(WelcomeActionBar, 0d, 8d);
 
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
         if (version != _stepAnimationVersion || !_isRenderedOpen)
@@ -179,9 +158,9 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
             return;
         }
 
-        StartStepElementAnimation(WelcomeTitleBlock, useBounce: false);
+        StartStepElementAnimation(WelcomeStepHeader, useBounce: false);
         StartStepElementAnimation(WelcomeStepContentHost, useBounce: true);
-        StartStepElementAnimation(WelcomeStepIndicatorDots, useBounce: false);
+        StartStepElementAnimation(WelcomeActionBar, useBounce: false);
     }
 
     private static void PrepareStepElement(Control target, double offsetX, double offsetY)

@@ -3364,20 +3364,22 @@ save_detail:
 
 welcome:
   step_0:
-    title: Choisir la langue
-    description: Sélectionnez la langue d'affichage pour PCL ME.
+    title: Bienvenue dans PCL-ME
+    description: Choisissez votre langue et le mode de couleur. Les deux suivent le système par défaut et le changement de langue s'applique immédiatement à cet écran.
+    language_hint: Changez la langue du lanceur dès maintenant. Le texte de cette introduction se met à jour immédiatement.
+    theme_hint: Choisissez le mode d'apparence que PCL-ME utilisera au premier démarrage.
   step_1:
-    title: Accord de licence
-    description: Veuillez lire et accepter le Contrat de Licence Utilisateur Final (CLUF) avant d'utiliser PCL ME.
+    title: Acceptation du CLUF
+    description: Cette version de PCL-ME est une compilation communautaire. Avant de continuer, veuillez reconnaître ce point et accepter le Contrat de Licence Utilisateur Final (CLUF).
+    community_notice: Ce lanceur est maintenu par des contributeurs de la communauté et ne constitue pas une version officielle. Les fonctionnalités, le rythme des mises à jour et l'assistance peuvent différer d'autres distributions.
+    community_ack_label: Je comprends qu'il s'agit d'une version communautaire de PCL-ME.
     eula_summary: PCL ME est un logiciel libre et open source fourni "tel quel". En continuant, vous acceptez les termes du Contrat de Licence Utilisateur Final (CLUF). Lisez le CLUF complet pour en savoir plus sur l'utilisation autorisée et la redistribution.
     open_eula: Ouvrir le CLUF complet
     accept_label: J'ai lu et j'accepte le CLUF
     decline: Refuser et quitter
   step_2:
-    title: Choisir le thème
-    description: Choisissez un mode de couleur et une palette d'accentuation. Vous pouvez le modifier à tout moment dans les Paramètres.
-  step_3:
     title: Tout est prêt !
-    description: PCL ME est prêt à l'emploi. Découvrez ces liens pour commencer.
+    description: PCL-ME est prêt. Ouvrez le tutoriel de démarrage ou gardez ces liens communautaires à portée de main pour plus tard.
+    tutorial: Ouvrir le tutoriel
     feedback: Envoyer des commentaires
     github: GitHub

@@ -3388,20 +3388,22 @@ save_detail:
 
 welcome:
   step_0:
-    title: Elige tu idioma
-    description: Selecciona el idioma de visualización para PCL ME.
+    title: Bienvenido a PCL-ME
+    description: Elige el idioma y el modo de color. Ambos siguen al sistema de forma predeterminada y el cambio de idioma se aplica de inmediato en esta pantalla.
+    language_hint: Puedes cambiar el idioma del lanzador ahora mismo y el texto de esta guía se actualizará al instante.
+    theme_hint: Elige el modo visual que PCL-ME usará en el primer inicio.
   step_1:
-    title: Acuerdo de licencia
-    description: Por favor, lee y acepta el Acuerdo de Licencia de Usuario Final (EULA) antes de usar PCL ME.
+    title: Aceptar el EULA
+    description: Esta es una versión comunitaria de PCL-ME. Antes de continuar, confirma este punto y acepta el Acuerdo de Licencia de Usuario Final (EULA).
+    community_notice: Este lanzador es mantenido por colaboradores de la comunidad y no es una versión oficial. Las funciones, el ritmo de actualizaciones y el soporte pueden diferir de otras distribuciones.
+    community_ack_label: Entiendo que esta es una versión comunitaria de PCL-ME.
     eula_summary: PCL ME es software libre de código abierto proporcionado "tal cual". Al continuar, aceptas los términos del Acuerdo de Licencia de Usuario Final (EULA). Lee el EULA completo para más detalles sobre el uso permitido y la redistribución.
     open_eula: Abrir EULA completo
     accept_label: He leído y acepto el EULA
     decline: Rechazar y salir
   step_2:
-    title: Elige tu tema
-    description: Elige un modo de color y una paleta de énfasis. Puedes cambiarlo en cualquier momento en Configuración.
-  step_3:
     title: "¡Todo listo!"
-    description: PCL ME está listo para usar. Explora estos enlaces para empezar.
+    description: PCL-ME está listo. Abre el tutorial inicial o conserva estos enlaces de la comunidad para más tarde.
+    tutorial: Abrir tutorial
     feedback: Enviar comentarios
     github: GitHub
