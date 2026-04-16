@@ -203,6 +203,7 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshSetupLocalizationState()
     {
         RefreshSetupLocalizationCatalog();
+        _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
         _setupComposition = FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n);
         _suppressSetupPersistence = true;
         try
@@ -211,6 +212,7 @@ internal sealed partial class FrontendShellViewModel
             InitializeLogEntries();
             InitializeJavaSurface();
             RefreshUiFeatureToggleGroups();
+            RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
         }
         finally
         {
