@@ -27,7 +27,10 @@
     <DefineConstants Condition="'$(EnableThemeColorSwitch)' == 'true'">$(DefineConstants);PCL_ENABLE_THEME_COLOR_SWITCH</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+  <PropertyGroup Condition="
+      $([MSBuild]::IsOSPlatform('Windows'))
+      or ('$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').ToLowerInvariant().StartsWith('win')))
+    ">
     <OutputType>WinExe</OutputType>
   </PropertyGroup>
 
