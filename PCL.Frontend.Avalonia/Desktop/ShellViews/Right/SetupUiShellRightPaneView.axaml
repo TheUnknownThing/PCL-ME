@@ -17,6 +17,7 @@
                   Margin="0,0,20,0"
                   Text="{Binding SetupText.Ui.LocaleLabel}" />
               <ComboBox
+                  x:Name="LauncherLocaleComboBox"
                   Grid.Column="1"
                   ItemsSource="{Binding LauncherLocaleOptions}"
                   SelectedIndex="{Binding SelectedLauncherLocaleIndex}" />
@@ -53,6 +54,7 @@
               <StackPanel Grid.Row="4" Grid.Column="1" Spacing="8">
                 <Grid ColumnDefinitions="Auto,*,92,Auto,92,Auto">
                   <ComboBox
+                      x:Name="ThemeModeComboBox"
                       Grid.Column="0"
                       ItemsSource="{Binding DarkModeOptions}"
                       SelectedIndex="{Binding SelectedDarkModeIndex}" />
@@ -66,6 +68,7 @@
                       FontSize="12.5"
                       Text="{Binding SetupText.Ui.LightPaletteLabel}" />
                   <ComboBox
+                      x:Name="LightPaletteComboBox"
                       Grid.Column="3"
                       IsVisible="{Binding IsThemeColorSwitchSupported}"
                       ItemsSource="{Binding ThemeColorOptions}"
@@ -80,6 +83,7 @@
                       FontSize="12.5"
                       Text="{Binding SetupText.Ui.DarkPaletteLabel}" />
                   <ComboBox
+                      x:Name="DarkPaletteComboBox"
                       Grid.Column="5"
                       IsVisible="{Binding IsThemeColorSwitchSupported}"
                       ItemsSource="{Binding ThemeColorOptions}"
@@ -207,6 +211,7 @@
                 FontSize="13.5"
                 Text="{Binding SetupText.Ui.GlobalFontLabel}" />
             <ComboBox
+                x:Name="GlobalFontComboBox"
                 Grid.Column="2"
                 ItemsSource="{Binding FontOptions}"
                 SelectedIndex="{Binding SelectedGlobalFontIndex}" />
@@ -217,6 +222,7 @@
                 FontSize="13.5"
                 Text="{Binding SetupText.Ui.MotdFontLabel}" />
             <ComboBox
+                x:Name="MotdFontComboBox"
                 Grid.Row="2"
                 Grid.Column="2"
                 ItemsSource="{Binding FontOptions}"
@@ -236,6 +242,7 @@
                   Margin="0,0,20,0"
                   Text="{Binding SetupText.Ui.BackgroundAdaptLabel}" />
               <ComboBox
+                  x:Name="BackgroundSuitComboBox"
                   Grid.Column="1"
                   ItemsSource="{Binding BackgroundSuitOptions}"
                   SelectedIndex="{Binding SelectedBackgroundSuitIndex}" />
@@ -537,6 +544,7 @@
                   Margin="0,0,25,0"
                   Text="{Binding SetupText.Ui.HomepagePresetLabel}" />
               <ComboBox
+                  x:Name="HomepagePresetComboBox"
                   Grid.Column="1"
                   ItemsSource="{Binding HomepagePresetOptions}"
                   SelectedIndex="{Binding SelectedHomepagePresetIndex}" />
