@@ -342,6 +342,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(UpdateChannelOptions));
         RaisePropertyChanged(nameof(UpdateModeOptions));
         RaisePropertyChanged(nameof(DarkModeOptions));
+        RaisePropertyChanged(nameof(ThemeColorOptions));
         RaisePropertyChanged(nameof(FontOptions));
         RaisePropertyChanged(nameof(CustomThemeColorInputHint));
         RaisePropertyChanged(nameof(DownloadSourceOptions));
