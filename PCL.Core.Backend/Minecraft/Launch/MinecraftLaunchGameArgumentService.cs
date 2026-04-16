@@ -44,7 +44,7 @@ public static class MinecraftLaunchGameArgumentService
         {
             if (arguments.Contains("--tweakClass optifine.OptiFineForgeTweaker", StringComparison.Ordinal))
             {
-                logs.Add("[Launch] 发现正确的 OptiFineForge TweakClass，目前参数：" + arguments);
+                logs.Add("[Launch] Found the correct OptiFineForge TweakClass; current arguments: " + arguments);
                 arguments = arguments
                     .Replace(" --tweakClass optifine.OptiFineForgeTweaker", string.Empty, StringComparison.Ordinal)
                     .Replace("--tweakClass optifine.OptiFineForgeTweaker ", string.Empty, StringComparison.Ordinal)
@@ -53,7 +53,7 @@ public static class MinecraftLaunchGameArgumentService
 
             if (arguments.Contains("--tweakClass optifine.OptiFineTweaker", StringComparison.Ordinal))
             {
-                logs.Add("[Launch] 发现错误的 OptiFineForge TweakClass，目前参数：" + arguments);
+                logs.Add("[Launch] Found an incorrect OptiFineForge TweakClass; current arguments: " + arguments);
                 arguments = arguments
                     .Replace(" --tweakClass optifine.OptiFineTweaker", string.Empty, StringComparison.Ordinal)
                     .Replace("--tweakClass optifine.OptiFineTweaker ", string.Empty, StringComparison.Ordinal)

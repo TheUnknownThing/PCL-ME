@@ -17,13 +17,13 @@ public sealed class MinecraftCrashReportBuilderTest
             "device-123",
             """
             header
-            [Launch] ~ 基础参数 ~
-            玩家用户名：Steve [test]
-            验证方式：Microsoft [test]
-            Java 信息：Zulu 21 [test]
-            MC 文件夹：C:\Games\.minecraft [test]
-            分配的内存：4096 MB [test]
-            开始 Minecraft 日志监控
+            [Launch] ~ Base Parameters ~
+            Player name: Steve [test]
+            Login type: Microsoft [test]
+            Java info: Zulu 21 [test]
+            Minecraft folder: C:\Games\.minecraft [test]
+            Allocated memory: 4096 MB [test]
+            Start Minecraft log monitoring
             footer
             """,
             """
@@ -46,23 +46,23 @@ public sealed class MinecraftCrashReportBuilderTest
         var expected = string.Join(
             "\r\n",
             [
-                "PCL-ME 版本：2.14.5 ",
-                "识别码：device-123",
+                "PCL-ME version: 2.14.5 ",
+                "Identifier: device-123",
                 "",
-                "- 档案信息 -",
-                "档案名称：Steve (验证方式：Microsoft)",
+                "- Profile -",
+                "Profile name: Steve (auth method: Microsoft)",
                 "",
-                "- 实例信息 -",
-                "选定的 Java 虚拟机：Zulu 21",
-                "Log4j2 NoLookups：True",
-                @"MC 文件夹：C:\Games\.minecraft",
+                "- Instance -",
+                "Selected Java runtime: Zulu 21",
+                "Log4j2 NoLookups: True",
+                @"MC folder: C:\Games\.minecraft",
                 "",
-                "- 环境信息 -",
-                "操作系统：Microsoft Windows 11 Pro 10.0.22635.0（64 位：True, ARM64: True）",
-                "CPU：AMD Ryzen",
-                "内存分配 (分配的内存 / 已安装物理内存)：4096 MB / 16 GB (16384 MB)",
-                "显卡 0：GPU A (>= 4096 MB, 31.0)",
-                "显卡 1：GPU B (2048 MB, 30.0)",
+                "- Environment -",
+                "Operating system: Microsoft Windows 11 Pro 10.0.22635.0 (64-bit: True, ARM64: True)",
+                "CPU: AMD Ryzen",
+                "Memory allocation (allocated / installed physical memory): 4096 MB / 16 GB (16384 MB)",
+                "GPU 0: GPU A (>= 4096 MB, 31.0)",
+                "GPU 1: GPU B (2048 MB, 30.0)",
                 "",
             ]);
 
@@ -75,7 +75,7 @@ public sealed class MinecraftCrashReportBuilderTest
         var request = new MinecraftCrashEnvironmentReportRequest(
             "2.14.5",
             "device-123",
-            "没有启动参数片段",
+            "No launch parameter fragment",
             "cmd -Dlog4j2.formatMsgNoLookups=false",
             new SystemEnvironmentSnapshot(
                 "Linux",
@@ -88,8 +88,8 @@ public sealed class MinecraftCrashReportBuilderTest
 
         var report = MinecraftCrashReportBuilder.BuildEnvironmentReport(request);
 
-        StringAssert.Contains(report, "档案名称：没有启动参数片段 (验证方式：没有启动参数片段)");
-        StringAssert.Contains(report, "Log4j2 NoLookups：False");
-        StringAssert.Contains(report, "内存分配 (分配的内存 / 已安装物理内存)：没有启动参数片段 / 0 GB (0 MB)");
+        StringAssert.Contains(report, "Profile name: No launch parameter fragment (auth method: No launch parameter fragment)");
+        StringAssert.Contains(report, "Log4j2 NoLookups: False");
+        StringAssert.Contains(report, "Memory allocation (allocated / installed physical memory): No launch parameter fragment / 0 GB (0 MB)");
     }
 }

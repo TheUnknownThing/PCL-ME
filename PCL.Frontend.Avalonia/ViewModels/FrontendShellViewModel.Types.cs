@@ -532,7 +532,7 @@ internal sealed class DownloadInstallOptionCardViewModel(
         && Choices.Count > 0
         && VisibleChoices.Count == 0;
 
-    public string FilteredEmptyStateText => $"没有找到与“{ChoiceSearchQuery.Trim()}”匹配的版本。";
+    public string FilteredEmptyStateText => $"No versions matched \"{ChoiceSearchQuery.Trim()}\".";
 
     public ActionCommand ToggleCommand { get; } = toggleCommand;
 

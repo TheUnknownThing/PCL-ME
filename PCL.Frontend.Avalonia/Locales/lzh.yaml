@@ -205,6 +205,8 @@ shell:
         set_gpu_preference: 設顯卡所先
         optimize_memory: 理記憶
         invalid: 不可
+        invalid_message:
+          gpu_preference_path_missing: 缺少用於設置顯卡偏好之可執行檔路徑。
     surface_meta:
       line: "{kind} 頁 • {sidebar_group} • {navigation_state}"
       no_sidebar_group: 無側邊欄分組
@@ -706,6 +708,11 @@ shell:
       failure_title: "{title} 失敗"
     help:
       default_group: 常規
+      groups:
+        guides: 指南
+        help: 幫助
+        launcher: 啟動器
+        personalization: 個性化
       search:
         empty_header: 無尋果
         no_results: 今關鍵字無所匹之佐助條目。
@@ -889,6 +896,17 @@ startup:
         {warnings}
       actions:
         acknowledge: 知悉
+    update_log:
+      title: PCL-ME 已更新至 {version_branch} {version_base}
+      actions:
+        confirm: 可
+        full_changelog: 完整更錄
+    milestone:
+      title: 提示
+      message: >-
+        你已開啟 PCL 跨平台版 99 次。感謝長久以來的支持！
+
+        隱藏之 Hardcore Fan 主題未解鎖。跨平台版不含隱藏主題！
 launch:
   announcements:
     community_edition_intro:
@@ -1082,6 +1100,61 @@ launch:
         opened_profile_create_page: 已啟微軟帳號建立頁
         opened_related_web: 已啟相關網頁
         opened_sign_in_page: 已啟微軟登入頁
+      prompts:
+        create_profile:
+          actions:
+            cancel: Cancel
+            create_profile: Create profile
+          message: Please create a Minecraft profile before signing in again.
+          title: Sign-in failed
+        ownership:
+          actions:
+            buy_minecraft: Buy Minecraft
+            cancel: Cancel
+          message: We could not retrieve this account's information. The account may not own Minecraft Java Edition, or the Xbox Game Pass may have expired.
+          title: Sign-in failed
+        password_login:
+          actions:
+            cancel: Cancel
+            retry: Retry sign-in
+            set_password: Set password
+          message: When signing in, choose “Other sign-in options”, then choose “Use my password”. If that option is unavailable, choose “Set password” and sign in again after setting it.
+          title: Password sign-in required
+        refresh_network_error:
+          actions:
+            cancel: Cancel
+            continue: Continue
+          message: The launcher encountered a network error while refreshing account information. You can cancel, check your network, and try again, or ignore the error and continue, but some servers may not work.
+          title: Account refresh failed
+        xsts:
+          ban:
+            actions:
+              ok: OK
+            message: This Microsoft account appears to be banned and cannot sign in.
+            title: Sign-in failed
+          region_restricted:
+            actions:
+              ok: OK
+            message: Your country or region cannot sign in to Microsoft accounts. Please use a VPN or accelerator and try again.
+            title: Sign-in failed
+          signup:
+            actions:
+              cancel: Cancel
+              register: Register
+            message: You have not registered an Xbox account yet. Please register before signing in.
+            title: Sign-in notice
+          underage:
+            actions:
+              i_do_not_know: I do not know
+              over_13: Over 13
+              under_13: Under 13
+            followup:
+              message: Please update the account birth date on the opened page (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              open_page:
+                message: Please follow the instructions on the opened page and update the account birth date (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              title: Sign-in notice
+            message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
+            title: Sign-in notice
       status:
         browser_opened: 瀏覽器已啟，請畢授權而後返此。
         initial: 備以微軟帳號登入
@@ -1141,6 +1214,7 @@ launch:
       empty: 無可用檔
       hint: 擇一個啟動檔
       hint_empty: 未擇啟動檔
+      prompt_title: Select a profile
   status:
     activities:
       canceled: 啟已止
@@ -1867,6 +1941,12 @@ setup:
       disable_hardware_acceleration_restart: 易後將於下次啟啟動器時效。
     labels:
       debug_animation_speed_off: 閉
+    debug_summary:
+      fields:
+        current_instance: 今實例
+        instance_directory: 實例目錄
+      values:
+        not_selected: 未擇
     messages:
       debug_mode_disabled: 已閉額外診斷輸出。
       debug_mode_enabled: 已啟用更詳細的日誌與診斷訊。
@@ -2052,6 +2132,14 @@ download:
         none: 無任務
         skipped: 跳過了 {count} 項
         tasks: "{count} 個任務"
+      target:
+        datapack_instance_unavailable: '{instance_name} 今不可用，故不得擇資料包存檔。'
+        datapack_no_saves: '{instance_name} 無可用存檔，故資料包不得安裝。'
+        datapack_save_title: 擇資料包存檔
+        datapack_save_message: '資料包必裝於某存檔之 datapacks 夾中。請擇 {instance_name} 中之目標存檔。'
+        datapack_save_confirm: 始安裝
+        datapack_save_failed: 擇資料包存檔敗
+        datapack_directory_unresolved: 所擇存檔之資料包目錄不可定。
     empty:
       body: 把項目加入收藏夾，後即可安裝或分享。
       title: 還無收藏項
@@ -2325,10 +2413,30 @@ download:
     current_instance:
       actions:
         switch: 易實例
+        switch_save: 易存檔
+      activities:
+        switch_save: 易存檔
+      dialogs:
+        select_instance:
+          title: 擇實例
+          message: 擇汝所欲覽且裝資料包之實例。
+          failed: 擇實例敗
+        select_save:
+          title: 擇存檔
+          message: 擇 {instance_name} 中將裝資料包之存檔。
+          failed: 擇存檔敗
+      messages:
+        no_instances_available: 無可用實例。
+        instance_unavailable: '{instance_name} 今不可用。'
+        no_saves_available: '{instance_name} 今無可用存檔。'
+        save_not_found: 所擇存檔不可得。
+        save_already_selected: '{instance_name} • {save_name} 已為今所用之存檔。'
       none_selected: 未擇實例
       summary_none_selected: 擇一個實例以提升相容性篩選效果
+      summary_none_selected_save: 今下載頁未擇存檔，故資料包不得直裝。請先自存檔頁啟所欲之存檔。
       summary_suffix: 用於相容性篩選
       title: 今實例
+      title_save: 今存檔
     empty:
       default: 無結果
     filters:
@@ -2479,6 +2587,7 @@ resource_detail:
     download_file: 下載檔：{entry_title}
     download_started: 已開始下載：{entry_title}
     install_current_instance: 安裝到今實例
+    install_current_save: 安裝到今存檔
     install_current_instance_failed: 安裝到今實例失敗
     navigate_back: 返回 {target_title}
     open_dependency_project: 啟依賴專案：{entry_title}
@@ -2510,6 +2619,7 @@ resource_detail:
   current_instance:
     none_selected: 未擇今實例
     summary_none_selected: 擇一個實例即可直接安裝此專案
+    summary_none_selected_save: 今下載頁未擇存檔，故資料包不得直裝。請先自存檔頁啟所欲之存檔。
   categories:
     adventure: 冒險
     automation: 自動化
@@ -2748,6 +2858,7 @@ resource_detail:
     unlisted: 未列出
   suggested_release:
     none: 無建議版本
+    target_save: '目標存檔：{save_name}'
     title: 建議版本
   translate_description:
     empty: 無可翻譯的簡介

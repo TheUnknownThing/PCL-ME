@@ -16,7 +16,7 @@
   <StackPanel Margin="25,40,23,15">
     <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
                Text="Use MyImage for screenshots or reference graphics, MyHint for compact notices, and button-like controls or list items when the article should open another help entry, show a popup, or open a web page." />
-    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="个性化/替换标记.json" Title="Replacement Tokens" Info="Open the related article about supported replacement markers." />
-    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="个性化/自定义事件.json" Title="Custom Events" Info="Open the related article about actions that XAML content can trigger." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Personalization/Replacement Tokens.json" Title="Replacement Tokens" Info="Open the related article about supported replacement markers." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Personalization/Custom Events.json" Title="Custom Events" Info="Open the related article about actions that XAML content can trigger." />
   </StackPanel>
 </local:MyCard>

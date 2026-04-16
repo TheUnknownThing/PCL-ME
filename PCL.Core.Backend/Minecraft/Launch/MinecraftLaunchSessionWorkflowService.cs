@@ -15,7 +15,7 @@ public static class MinecraftLaunchSessionWorkflowService
 
         if (string.IsNullOrWhiteSpace(request.CustomCommandWorkflow.ShellWorkingDirectory))
         {
-            throw new ArgumentException("自定义命令执行目录不能为空。", nameof(request));
+            throw new ArgumentException("The custom command working directory cannot be empty.", nameof(request));
         }
 
         var customCommandPlan = MinecraftLaunchCustomCommandService.BuildPlan(request.CustomCommandWorkflow.CommandRequest);

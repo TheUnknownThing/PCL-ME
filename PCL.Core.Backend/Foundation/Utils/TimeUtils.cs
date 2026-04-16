@@ -39,7 +39,7 @@ public static class TimeUtils {
     /// <returns>格式化后的时间间隔字符串。</returns>
     public static string GetTimeSpanString(TimeSpan span, bool isShortForm) {
         var isPast = span.TotalMilliseconds < 0;
-        var endFix = isPast ? "前" : "后";
+        var endFix = isPast ? " ago" : " from now";
         if (isPast) {
             span = span.Negate();
         }
@@ -64,15 +64,15 @@ public static class TimeUtils {
     public static DateTimeOffset FromUnixTimestamp(long unixTimestamp)
     {
         if (unixTimestamp < 0)
-            throw new ArgumentOutOfRangeException(nameof(unixTimestamp), "Unix 时间戳不能为负数。");
+            throw new ArgumentOutOfRangeException(nameof(unixTimestamp), "Unix timestamps cannot be negative.");
 
         try
         {
             return DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).ToLocalTime();
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (ArgumentOutOfRangeException)
         {
-            throw new ArgumentOutOfRangeException(nameof(unixTimestamp), "Unix 时间戳超出有效范围。", ex.Message);
+            throw new ArgumentOutOfRangeException(nameof(unixTimestamp), unixTimestamp, "Unix timestamp is outside the valid range.");
         }
     }
 

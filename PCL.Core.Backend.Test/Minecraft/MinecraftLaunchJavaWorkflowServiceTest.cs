@@ -21,9 +21,9 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
         });
 
         Assert.AreEqual(new Version(22, 0, 0, 0), result.MinimumVersion);
-        Assert.AreEqual("Mojang 要求至少使用 Java 22", result.RecommendedVersionLogMessage);
-        Assert.AreEqual("Java 版本需求：最低 22.0.0.0，最高 999.999.999.999", result.RequirementLogMessage);
-        Assert.AreEqual("无合适的 Java，需要确认是否自动下载", result.MissingJavaLogMessage);
+        Assert.AreEqual("Mojang requires at least Java 22", result.RecommendedVersionLogMessage);
+        Assert.AreEqual("Java version requirement: minimum 22.0.0.0, maximum 999.999.999.999", result.RequirementLogMessage);
+        Assert.AreEqual("No suitable Java runtime was found; confirm whether it should be downloaded automatically.", result.MissingJavaLogMessage);
         Assert.AreEqual("jre-legacy", result.MissingJavaPrompt.DownloadTarget);
     }
 
@@ -63,7 +63,7 @@ public sealed class MinecraftLaunchJavaWorkflowServiceTest
         var result = MinecraftLaunchJavaWorkflowService.ResolvePostDownloadSelection(plan, hasSelectedJava: false);
 
         Assert.AreEqual(MinecraftLaunchJavaPostDownloadActionKind.AbortLaunch, result.ActionKind);
-        Assert.AreEqual("没有可用的 Java，已取消启动！", result.HintMessage);
+        Assert.AreEqual("No Java runtime is available. Launch has been canceled.", result.HintMessage);
     }
 
     [TestMethod]

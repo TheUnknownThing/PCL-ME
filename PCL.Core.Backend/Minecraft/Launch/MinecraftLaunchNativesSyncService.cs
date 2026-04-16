@@ -12,7 +12,7 @@ public static class MinecraftLaunchNativesSyncService
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.NativeArchives);
 
-        var logs = new List<string> { "正在解压 Natives 文件" };
+        var logs = new List<string> { "Extracting native files" };
         var retainedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var targetRoot = Path.GetFullPath(request.TargetDirectory);
 
@@ -28,10 +28,10 @@ public static class MinecraftLaunchNativesSyncService
                 continue;
             }
 
-            logs.Add("Native 存档：" + archivePath);
+            logs.Add("Native archive: " + archivePath);
             if (archiveRequest.ExtractExcludes.Count > 0)
             {
-                logs.Add("排除规则：" + string.Join(", ", archiveRequest.ExtractExcludes));
+                logs.Add("Exclusion rules: " + string.Join(", ", archiveRequest.ExtractExcludes));
             }
 
             try
@@ -53,7 +53,7 @@ public static class MinecraftLaunchNativesSyncService
                     {
                         if (request.LogSkippedFiles)
                         {
-                            logs.Add("按规则跳过：" + entryPath);
+                            logs.Add("Skipped by rule: " + entryPath);
                         }
 
                         continue;
@@ -69,7 +69,7 @@ public static class MinecraftLaunchNativesSyncService
                     {
                         if (request.LogSkippedFiles)
                         {
-                            logs.Add("按文件类型跳过：" + entryPath);
+                            logs.Add("Skipped by file type: " + entryPath);
                         }
 
                         continue;
@@ -79,7 +79,7 @@ public static class MinecraftLaunchNativesSyncService
                     var targetPath = Path.GetFullPath(Path.Combine(targetRoot, relativePath));
                     if (!IsPathWithinDirectory(targetPath, targetRoot))
                     {
-                        logs.Add("跳过越界路径：" + entryPath);
+                        logs.Add("Skipped out-of-bounds path: " + entryPath);
                         continue;
                     }
 
@@ -98,7 +98,7 @@ public static class MinecraftLaunchNativesSyncService
                         {
                             if (request.LogSkippedFiles)
                             {
-                                logs.Add("无需解压：" + targetPath);
+                                logs.Add("No extraction needed: " + targetPath);
                             }
 
                             continue;
@@ -110,8 +110,8 @@ public static class MinecraftLaunchNativesSyncService
                         }
                         catch (UnauthorizedAccessException exception)
                         {
-                            logs.Add("删除原 Native 文件访问被拒绝，这通常代表有一个 MC 正在运行，跳过解压：" + targetPath);
-                            logs.Add("实际的错误信息：" + exception);
+                            logs.Add("Access denied while deleting the existing native file, which usually means Minecraft is running; skipping extraction: " + targetPath);
+                            logs.Add("Actual error: " + exception);
                             break;
                         }
                     }
@@ -119,13 +119,13 @@ public static class MinecraftLaunchNativesSyncService
                     using var sourceStream = entry.Open();
                     using var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
                     sourceStream.CopyTo(targetStream);
-                    logs.Add("已解压：" + targetPath);
+                    logs.Add("Extracted: " + targetPath);
                 }
             }
             catch (InvalidDataException exception)
             {
                 TryDeleteCorruptedArchive(archivePath);
-                throw new InvalidDataException($"无法打开 Natives 文件（{archivePath}），该文件可能已损坏，请重新尝试启动游戏", exception);
+                throw new InvalidDataException($"Could not open the native archive ({archivePath}); the file may be corrupted. Please try launching again.", exception);
             }
         }
 
@@ -138,13 +138,13 @@ public static class MinecraftLaunchNativesSyncService
 
             try
             {
-                logs.Add("删除：" + filePath);
+                logs.Add("Deleted: " + filePath);
                 File.Delete(filePath);
             }
             catch (UnauthorizedAccessException exception)
             {
-                logs.Add("删除多余文件访问被拒绝，跳过删除步骤");
-                logs.Add("实际的错误信息：" + exception);
+                logs.Add("Access denied while deleting extra files; skipping the delete step");
+                logs.Add("Actual error: " + exception);
                 return new MinecraftLaunchNativesSyncResult(logs);
             }
         }

@@ -31,7 +31,7 @@ public static class MinecraftLaunchLoginProfileWorkflowService
                 duplicateIndex,
                 ShouldSelectCreatedProfile: false,
                 ShouldClearCreatingProfile: false,
-                NoticeMessage: "你已经添加了这个档案...",
+                NoticeMessage: "You have already added this profile...",
                 CreateProfile: null,
                 UpdateProfile: new MinecraftLaunchStoredProfile(
                     MinecraftLaunchStoredProfileKind.Microsoft,

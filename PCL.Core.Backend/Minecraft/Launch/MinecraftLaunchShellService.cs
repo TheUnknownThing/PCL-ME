@@ -38,8 +38,8 @@ public static class MinecraftLaunchShellService
     public static MinecraftLaunchFailureDisplay GetFailureDisplay(bool isScriptExport)
     {
         return isScriptExport
-            ? new MinecraftLaunchFailureDisplay("导出启动脚本失败", "导出启动脚本失败")
-            : new MinecraftLaunchFailureDisplay("启动失败", "Minecraft 启动失败");
+            ? new MinecraftLaunchFailureDisplay("Failed to export launch script", "Failed to export launch script")
+            : new MinecraftLaunchFailureDisplay("Launch failed", "Minecraft launch failed");
     }
 
     public static MinecraftLaunchScriptExportPlan BuildScriptExportPlan(string exportPath)
@@ -48,8 +48,8 @@ public static class MinecraftLaunchShellService
 
         return new MinecraftLaunchScriptExportPlan(
             exportPath,
-            "导出启动脚本完成，强制结束启动过程",
-            "导出启动脚本成功！",
+            "Launch script export completed; forcing the launch process to end",
+            "Launch script exported successfully!",
             exportPath);
     }
 
@@ -104,13 +104,13 @@ public static class MinecraftLaunchShellService
         {
             LauncherVisibility.ExitImmediately => new MinecraftLaunchShellAction(
                 MinecraftLaunchShellActionKind.ExitLauncher,
-                "已根据设置，在启动后关闭启动器"),
+                "Launcher will close after launch because of the current setting"),
             LauncherVisibility.HideAndExit or LauncherVisibility.HideAndReopen => new MinecraftLaunchShellAction(
                 MinecraftLaunchShellActionKind.HideLauncher,
-                "已根据设置，在启动后隐藏启动器"),
+                "Launcher will hide after launch because of the current setting"),
             LauncherVisibility.MinimizeAndReopen => new MinecraftLaunchShellAction(
                 MinecraftLaunchShellActionKind.MinimizeLauncher,
-                "已根据设置，在启动后最小化启动器"),
+                "Launcher will minimize after launch because of the current setting"),
             _ => new MinecraftLaunchShellAction(
                 MinecraftLaunchShellActionKind.None,
                 string.Empty)
@@ -123,14 +123,14 @@ public static class MinecraftLaunchShellService
         {
             return new MinecraftLaunchMusicShellAction(
                 MinecraftLaunchMusicActionKind.Pause,
-                "[Music] 已根据设置，在启动后暂停音乐播放");
+                "[Music] Music will pause after launch because of the current setting");
         }
 
         if (startMusicInGame)
         {
             return new MinecraftLaunchMusicShellAction(
                 MinecraftLaunchMusicActionKind.Resume,
-                "[Music] 已根据设置，在启动后开始音乐播放");
+                "[Music] Music will start playing after launch because of the current setting");
         }
 
         return MinecraftLaunchMusicShellAction.None;
@@ -142,14 +142,14 @@ public static class MinecraftLaunchShellService
         {
             return new MinecraftLaunchMusicShellAction(
                 MinecraftLaunchMusicActionKind.Resume,
-                "[Music] 已根据设置，在结束后开始音乐播放");
+                "[Music] Music will start playing when launch ends because of the current setting");
         }
 
         if (startMusicInGame)
         {
             return new MinecraftLaunchMusicShellAction(
                 MinecraftLaunchMusicActionKind.Pause,
-                "[Music] 已根据设置，在结束后暂停音乐播放");
+                "[Music] Music will pause when launch ends because of the current setting");
         }
 
         return MinecraftLaunchMusicShellAction.None;

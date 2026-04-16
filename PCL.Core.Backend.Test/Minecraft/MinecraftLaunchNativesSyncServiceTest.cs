@@ -41,8 +41,8 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
             Assert.IsTrue(File.Exists(Path.Combine(targetDirectory, "nested", "b.dll")));
             Assert.IsFalse(File.Exists(Path.Combine(targetDirectory, "readme.txt")));
             Assert.IsFalse(File.Exists(Path.Combine(targetDirectory, "stale.dll")));
-            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("已解压：" + Path.Combine(targetDirectory, "a.dll"), StringComparison.Ordinal)));
-            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("删除：" + Path.Combine(targetDirectory, "stale.dll"), StringComparison.Ordinal)));
+            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("Extracted: " + Path.Combine(targetDirectory, "a.dll"), StringComparison.Ordinal)));
+            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("Deleted: " + Path.Combine(targetDirectory, "stale.dll"), StringComparison.Ordinal)));
         }
         finally
         {
@@ -74,7 +74,7 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
                     [new MinecraftLaunchNativeArchive(archivePath, [])],
                     LogSkippedFiles: true));
 
-            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("无需解压：" + Path.Combine(targetDirectory, "match.dll"), StringComparison.Ordinal)));
+            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("No extraction needed: " + Path.Combine(targetDirectory, "match.dll"), StringComparison.Ordinal)));
         }
         finally
         {
@@ -103,7 +103,7 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
                         [new MinecraftLaunchNativeArchive(archivePath, [])],
                         LogSkippedFiles: false)));
 
-            StringAssert.Contains(exception.Message, "无法打开 Natives 文件");
+            StringAssert.Contains(exception.Message, "Could not open the native archive");
             Assert.IsFalse(File.Exists(archivePath));
         }
         finally
@@ -137,7 +137,7 @@ public sealed class MinecraftLaunchNativesSyncServiceTest
 
             Assert.IsTrue(File.Exists(Path.Combine(targetDirectory, "safe.dll")));
             Assert.IsFalse(File.Exists(Path.Combine(root, "natives-escape.dll")));
-            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("跳过越界路径：../natives-escape.dll", StringComparison.Ordinal)));
+            Assert.IsTrue(result.LogMessages.Any(log => log.Contains("Skipped out-of-bounds path: ../natives-escape.dll", StringComparison.Ordinal)));
         }
         finally
         {

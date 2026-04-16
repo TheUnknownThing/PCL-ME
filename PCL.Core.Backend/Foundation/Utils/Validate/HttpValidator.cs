@@ -23,7 +23,7 @@ public class HttpValidator(bool allowNullOrEmpty) : AbstractValidator<string>
                 }
 
                 return x.IsMatch(RegexPatterns.HttpUri);
-            }).WithMessage("输入的网址无效！");
+            }).WithMessage("The provided URL is invalid.");
     }
 
     protected override bool PreValidate(ValidationContext<string> context, ValidationResult result)

@@ -22,8 +22,8 @@ public sealed class LauncherStartupPreparationServiceTest
 
         Assert.AreEqual(UpdateChannel.Beta, result.DefaultUpdateChannel);
         Assert.AreEqual(@"C:\Users\Alice\AppData\Roaming\PCL\", result.DirectoriesToCreate.Last());
-        StringAssert.Contains(result.EnvironmentWarningMessage, "Windows 版本不满足推荐要求");
-        StringAssert.Contains(result.EnvironmentWarningMessage, "当前系统为 32 位");
-        StringAssert.Contains(result.EnvironmentWarningMessage, "临时目录运行");
+        StringAssert.Contains(result.EnvironmentWarningMessage, "Windows does not meet the recommended version");
+        StringAssert.Contains(result.EnvironmentWarningMessage, "The current system is 32-bit");
+        StringAssert.Contains(result.EnvironmentWarningMessage, "temporary directory");
     }
 }

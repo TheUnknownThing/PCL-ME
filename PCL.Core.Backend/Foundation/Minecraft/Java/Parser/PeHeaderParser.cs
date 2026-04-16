@@ -36,7 +36,7 @@ public class PeHeaderParser : IJavaParser
                 return null;
             }
 
-            LogWrapper.Info("Java", $"解析 {javaExePath} 的 Java 程序信息");
+            LogWrapper.Info("Java", $"Parsing Java executable metadata for {javaExePath}");
 
             var versionInfo = FileVersionInfo.GetVersionInfo(javaExePath);
             var fileVersion = Version.Parse(versionInfo.FileVersion ?? "0.0.0.0");
@@ -60,7 +60,7 @@ public class PeHeaderParser : IJavaParser
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, $"[Java] 解析 {javaExePath} 时出错");
+            LogWrapper.Error(ex, $"[Java] Failed to parse {javaExePath}");
             return null;
         }
     }

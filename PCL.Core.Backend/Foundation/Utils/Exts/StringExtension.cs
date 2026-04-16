@@ -47,7 +47,7 @@ public static class StringConvertExtension
             binder: null, types: [typeof(string)], modifiers: null);
         if (parse is not null) return parse.Invoke(null, [value]);
 
-        throw new NotSupportedException($"无法将字符串转换为类型 {targetType.FullName}");
+        throw new NotSupportedException($"Cannot convert a string to type {targetType.FullName}.");
     }
 
     public static T? Convert<T>(this string? value)

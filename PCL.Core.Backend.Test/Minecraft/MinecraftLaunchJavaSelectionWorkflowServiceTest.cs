@@ -17,7 +17,7 @@ public sealed class MinecraftLaunchJavaSelectionWorkflowServiceTest
             "Java 21 (C:\\Java\\bin\\javaw.exe)");
 
         Assert.AreEqual(MinecraftLaunchJavaSelectionActionKind.UseSelectedJava, result.ActionKind);
-        Assert.AreEqual("选择的 Java：Java 21 (C:\\Java\\bin\\javaw.exe)", result.LogMessage);
+        Assert.AreEqual("Selected Java: Java 21 (C:\\Java\\bin\\javaw.exe)", result.LogMessage);
         Assert.IsNull(result.Prompt);
     }
 
@@ -43,7 +43,7 @@ public sealed class MinecraftLaunchJavaSelectionWorkflowServiceTest
             "Java 8u412 (C:\\Minecraft\\.minecraft\\runtime\\jre-8u412)");
 
         Assert.AreEqual(MinecraftLaunchJavaPostDownloadActionKind.UseSelectedJava, result.ActionKind);
-        Assert.AreEqual("选择的 Java：Java 8u412 (C:\\Minecraft\\.minecraft\\runtime\\jre-8u412)", result.LogMessage);
+        Assert.AreEqual("Selected Java: Java 8u412 (C:\\Minecraft\\.minecraft\\runtime\\jre-8u412)", result.LogMessage);
         Assert.IsNull(result.HintMessage);
     }
 

@@ -64,7 +64,7 @@ public static class MinecraftLaunchAuthlibProtocolService
     {
         var root = ParseObject(json);
         var selectedProfile = root["selectedProfile"]?.AsObject()
-                              ?? throw new InvalidOperationException("选择的角色无效！");
+                              ?? throw new InvalidOperationException("The selected profile is invalid.");
 
         return new MinecraftLaunchAuthlibRefreshResponse(
             GetRequiredString(root, "accessToken"),
@@ -102,7 +102,7 @@ public static class MinecraftLaunchAuthlibProtocolService
     {
         var root = ParseObject(json);
         var meta = root["meta"]?.AsObject()
-                   ?? throw new InvalidOperationException("服务器元数据缺少 meta 字段。");
+                   ?? throw new InvalidOperationException("The server metadata is missing the meta field.");
         return GetRequiredString(meta, "serverName");
     }
 
@@ -110,11 +110,11 @@ public static class MinecraftLaunchAuthlibProtocolService
     {
         if (string.IsNullOrWhiteSpace(json))
         {
-            throw new ArgumentException("JSON 内容不能为空。", nameof(json));
+            throw new ArgumentException("JSON content cannot be empty.", nameof(json));
         }
 
         return JsonNode.Parse(json) as JsonObject
-               ?? throw new InvalidOperationException("JSON 内容不是对象。");
+               ?? throw new InvalidOperationException("The JSON content is not an object.");
     }
 
     private static string GetRequiredString(JsonObject obj, string propertyName)
@@ -122,7 +122,7 @@ public static class MinecraftLaunchAuthlibProtocolService
         var value = obj[propertyName]?.ToString();
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"JSON 内容缺少 {propertyName} 字段。");
+            throw new InvalidOperationException($"The JSON content is missing the {propertyName} field.");
         }
 
         return value;

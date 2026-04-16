@@ -51,7 +51,7 @@ public sealed class CommandJavaParser(IJavaRuntimeEnvironment runtime, ICommandR
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, "Java", $"解析 {javaExePath} 时出错");
+            LogWrapper.Error(ex, "Java", $"An error occurred while parsing {javaExePath}");
             return null;
         }
     }

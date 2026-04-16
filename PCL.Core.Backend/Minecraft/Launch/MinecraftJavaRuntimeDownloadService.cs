@@ -11,7 +11,7 @@ public static class MinecraftJavaRuntimeDownloadService
 
         var root = ParseObject(request.IndexJson);
         var platformNode = root[request.PlatformKey] as JsonObject
-                           ?? throw new InvalidOperationException($"Java 运行时索引缺少平台 {request.PlatformKey}。");
+                           ?? throw new InvalidOperationException($"The Java runtime index is missing platform {request.PlatformKey}.");
 
         JsonArray? runtimeEntries = null;
         var componentKey = request.RequestedComponent;
@@ -39,13 +39,13 @@ public static class MinecraftJavaRuntimeDownloadService
 
         if (runtimeEntries is null)
         {
-            throw new InvalidOperationException($"未能找到所需的 Java {request.RequestedComponent}");
+            throw new InvalidOperationException($"Could not find the required Java runtime {request.RequestedComponent}.");
         }
 
         var firstEntry = runtimeEntries.FirstOrDefault() as JsonObject
-                         ?? throw new InvalidOperationException($"Mojang 未提供所需的 Java {componentKey}");
+                         ?? throw new InvalidOperationException($"Mojang did not provide the required Java runtime {componentKey}.");
         var manifest = firstEntry["manifest"] as JsonObject
-                       ?? throw new InvalidOperationException($"Java 运行时 {componentKey} 缺少 manifest。");
+                       ?? throw new InvalidOperationException($"Java runtime {componentKey} is missing a manifest.");
 
         return new MinecraftJavaRuntimeSelection(
             request.PlatformKey,
@@ -65,7 +65,7 @@ public static class MinecraftJavaRuntimeDownloadService
         var baseDirectory = NormalizeBaseDirectory(request.RuntimeBaseDirectory);
         var root = ParseObject(request.ManifestJson);
         var filesNode = root["files"] as JsonObject
-                        ?? throw new InvalidOperationException("Java manifest 缺少 files 字段。");
+                        ?? throw new InvalidOperationException("The Java manifest is missing the files field.");
 
         var filePlans = new List<MinecraftJavaRuntimeDownloadFilePlan>();
         foreach (var file in filesNode)
@@ -91,7 +91,7 @@ public static class MinecraftJavaRuntimeDownloadService
             var targetPath = CombineRuntimePath(baseDirectory, relativePath);
             if (!IsPathWithinDirectory(targetPath, baseDirectory))
             {
-                throw new InvalidOperationException($"{targetPath} 不在 {baseDirectory} 中");
+                throw new InvalidOperationException($"{targetPath} is not inside {baseDirectory}.");
             }
 
             filePlans.Add(new MinecraftJavaRuntimeDownloadFilePlan(
@@ -109,11 +109,11 @@ public static class MinecraftJavaRuntimeDownloadService
     {
         if (string.IsNullOrWhiteSpace(json))
         {
-            throw new ArgumentException("JSON 内容不能为空。", nameof(json));
+            throw new ArgumentException("JSON content cannot be empty.", nameof(json));
         }
 
         return JsonNode.Parse(json) as JsonObject
-               ?? throw new InvalidOperationException("JSON 内容不是对象。");
+               ?? throw new InvalidOperationException("The JSON content is not an object.");
     }
 
     private static string GetRequiredString(JsonObject? obj, string propertyName)
@@ -121,7 +121,7 @@ public static class MinecraftJavaRuntimeDownloadService
         var value = obj?[propertyName]?.ToString();
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"JSON 内容缺少 {propertyName} 字段。");
+            throw new InvalidOperationException($"The JSON content is missing the {propertyName} field.");
         }
 
         return value;
@@ -131,7 +131,7 @@ public static class MinecraftJavaRuntimeDownloadService
     {
         if (obj[propertyName] is null)
         {
-            throw new InvalidOperationException($"JSON 内容缺少 {propertyName} 字段。");
+            throw new InvalidOperationException($"The JSON content is missing the {propertyName} field.");
         }
 
         if (obj[propertyName] is JsonValue value &&
@@ -145,14 +145,14 @@ public static class MinecraftJavaRuntimeDownloadService
             return parsed;
         }
 
-        throw new InvalidOperationException($"JSON 中的 {propertyName} 字段不是数字。");
+        throw new InvalidOperationException($"The {propertyName} field in the JSON is not a number.");
     }
 
     private static string NormalizeBaseDirectory(string runtimeBaseDirectory)
     {
         if (string.IsNullOrWhiteSpace(runtimeBaseDirectory))
         {
-            throw new ArgumentException("运行时目录不能为空。", nameof(runtimeBaseDirectory));
+            throw new ArgumentException("The runtime directory cannot be empty.", nameof(runtimeBaseDirectory));
         }
 
         return IsWindowsStyleAbsolutePath(runtimeBaseDirectory)
@@ -188,13 +188,13 @@ public static class MinecraftJavaRuntimeDownloadService
     {
         if (string.IsNullOrWhiteSpace(relativePath))
         {
-            throw new InvalidOperationException("Java manifest 包含空文件路径。");
+            throw new InvalidOperationException("The Java manifest contains an empty file path.");
         }
 
         var normalized = relativePath.Replace('\\', '/');
         if (normalized.StartsWith("/", StringComparison.Ordinal) || IsWindowsStyleAbsolutePath(normalized))
         {
-            throw new InvalidOperationException($"Java manifest 包含越界路径：{relativePath}");
+            throw new InvalidOperationException($"The Java manifest contains an out-of-bounds path: {relativePath}");
         }
 
         var segments = new List<string>();
@@ -209,7 +209,7 @@ public static class MinecraftJavaRuntimeDownloadService
             {
                 if (segments.Count == 0)
                 {
-                    throw new InvalidOperationException($"Java manifest 包含越界路径：{relativePath}");
+                    throw new InvalidOperationException($"The Java manifest contains an out-of-bounds path: {relativePath}");
                 }
 
                 segments.RemoveAt(segments.Count - 1);
@@ -221,7 +221,7 @@ public static class MinecraftJavaRuntimeDownloadService
 
         if (segments.Count == 0)
         {
-            throw new InvalidOperationException($"Java manifest 包含空文件路径：{relativePath}");
+            throw new InvalidOperationException($"The Java manifest contains an empty file path: {relativePath}");
         }
 
         return string.Join("/", segments);

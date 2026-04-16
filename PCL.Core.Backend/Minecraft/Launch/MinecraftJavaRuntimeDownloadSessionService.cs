@@ -41,7 +41,7 @@ public static class MinecraftJavaRuntimeDownloadSessionService
             MinecraftJavaRuntimeDownloadSessionState.Failed or MinecraftJavaRuntimeDownloadSessionState.Aborted
                 when !string.IsNullOrWhiteSpace(trackedRuntimeDirectory) => new MinecraftJavaRuntimeDownloadStateTransitionPlan(
                     trackedRuntimeDirectory,
-                    $"[Java] 由于下载未完成，清理未下载完成的 Java 文件：{trackedRuntimeDirectory}",
+                    $"[Java] Download did not finish; cleaning up incomplete Java files: {trackedRuntimeDirectory}",
                     ShouldRefreshJavaInventory: false,
                     ShouldClearTrackedRuntimeDirectory: true),
             MinecraftJavaRuntimeDownloadSessionState.Failed or MinecraftJavaRuntimeDownloadSessionState.Aborted => new MinecraftJavaRuntimeDownloadStateTransitionPlan(

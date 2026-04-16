@@ -23,34 +23,97 @@ internal static class FrontendLaunchHintService
         ArgumentNullException.ThrowIfNull(runtimePaths);
         ArgumentNullException.ThrowIfNull(i18n);
 
-        var candidates = new[]
-            {
-                Path.Combine(runtimePaths.DataDirectory, "hints.txt"),
-                FrontendLauncherAssetLocator.GetPath("Resources", "hints.txt")
-            }
-            .Where(File.Exists)
-            .ToArray();
+        var hints = GetHintLines(
+            EnumerateExternalHintPaths(runtimePaths.DataDirectory, i18n.Locale),
+            GetBundledHintDirectory(),
+            i18n);
 
-        foreach (var path in candidates)
+        return hints.Count > 0
+            ? hints[Random.Shared.Next(hints.Count)]
+            : i18n.T("launch.homepage.random_hint.fallback");
+    }
+
+    public static IReadOnlyList<string> GetHintLines(
+        IEnumerable<string> candidatePaths,
+        string bundledHintDirectory,
+        II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(candidatePaths);
+        ArgumentException.ThrowIfNullOrWhiteSpace(bundledHintDirectory);
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        foreach (var path in candidatePaths.Concat(EnumerateBundledHintPaths(bundledHintDirectory, i18n.Locale)))
         {
-            try
+            var lines = TryReadHintLines(path);
+            if (lines.Count > 0)
             {
-                var hints = File.ReadAllLines(path)
-                    .Select(line => line.Trim())
-                    .Where(line => !string.IsNullOrWhiteSpace(line))
-                    .ToArray();
-                if (hints.Length > 0)
-                {
-                    return hints[Random.Shared.Next(hints.Length)];
-                }
-            }
-            catch
-            {
-                // Ignore malformed or temporarily inaccessible hint sources and keep falling back.
+                return lines;
             }
         }
 
-        var key = FallbackHintKeys[Random.Shared.Next(FallbackHintKeys.Length)];
-        return i18n.T(key);
+        return FallbackHintKeys
+            .Select(i18n.T)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToArray();
+    }
+
+    public static IEnumerable<string> EnumerateExternalHintPaths(string dataDirectory, string locale)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dataDirectory);
+
+        foreach (var fileName in EnumerateHintFileNames(locale))
+        {
+            yield return Path.Combine(dataDirectory, fileName);
+        }
+    }
+
+    public static string GetBundledHintDirectory()
+    {
+        return FrontendLauncherAssetLocator.GetPath("Resources", "Hints");
+    }
+
+    private static IReadOnlyList<string> TryReadHintLines(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        try
+        {
+            return File.ReadAllLines(path)
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .ToArray();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static IEnumerable<string> EnumerateBundledHintPaths(string bundledHintDirectory, string locale)
+    {
+        foreach (var fileName in EnumerateHintFileNames(locale))
+        {
+            yield return Path.Combine(bundledHintDirectory, fileName);
+        }
+    }
+
+    private static IEnumerable<string> EnumerateHintFileNames(string locale)
+    {
+        var candidates = new List<string>();
+        if (!string.IsNullOrWhiteSpace(locale))
+        {
+            candidates.Add($"hints.{locale}.txt");
+            var language = locale.Split('-', 2)[0];
+            if (!string.Equals(language, locale, StringComparison.OrdinalIgnoreCase))
+            {
+                candidates.Add($"hints.{language}.txt");
+            }
+        }
+
+        candidates.Add("hints.txt");
+        return candidates.Distinct(StringComparer.OrdinalIgnoreCase);
     }
 }

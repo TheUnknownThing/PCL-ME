@@ -45,7 +45,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
         }
         catch (Exception e)
         {
-            LogWrapper.Error(e,$"[SnapLite] 无法加载位于 {_rootPath} 处的 SnapLite 数据");
+            LogWrapper.Error(e,$"[SnapLite] Failed to load SnapLite data at {_rootPath}");
             throw;
         }
 
@@ -109,17 +109,17 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
 
             // 获取当前的文件信息
             var allFiles = await _GetAllTrackedObjectsAsync().ConfigureAwait(false);
-            LogWrapper.Info($"[SnapLite] 已获取到全部文件，总数量为 {allFiles.Length}");
+            LogWrapper.Info($"[SnapLite] Loaded all tracked files, total count: {allFiles.Length}");
             var newAddFiles = allFiles
                 .Distinct(FileVersionObjectsComparer.Instance)
                 .Where(x => x.ObjectType.Equals(ObjectType.Directory) ||
                             (x.ObjectType.Equals(ObjectType.File) && !_storage.Exists(x.Hash)))
                 .ToList();
             // 存入数据库中
-            LogWrapper.Info($"[SnapLite] 新增对象总数量为 {newAddFiles.Count}");
+            LogWrapper.Info($"[SnapLite] Total new objects: {newAddFiles.Count}");
             var nodeObjects = _database.GetCollection<FileVersionObjects>(_GetNodeTableNameById(nodeId));
             nodeObjects.InsertBulk(allFiles);
-            LogWrapper.Info($"[SnapLite] 记录已压入数据库么，开始存储文件");
+            LogWrapper.Info($"[SnapLite] Records have been written to the database; starting file storage.");
             // 复制到 objects 文件夹中
             await newAddFiles
                 .Where(x => x.ObjectType == ObjectType.File)
@@ -128,18 +128,18 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                     var filePath = Path.Combine(_rootPath, x.Path);
                     try
                     {
-                        LogWrapper.Info($"[SnapLite] 将 {filePath} 放入哈希仓库");
+                        LogWrapper.Info($"[SnapLite] Storing {filePath} in the hash store");
                         await _storage.PutAsync(filePath, x.Hash).ConfigureAwait(false);
-                        LogWrapper.Info($"[SnapLite] 已完成 {filePath} 的存储");
+                        LogWrapper.Info($"[SnapLite] Finished storing {filePath}");
                     }
                     catch (Exception e)
                     {
-                        LogWrapper.Error(e, $"[SnapLite] 存储 {filePath} 文件过程中出现错误");
+                        LogWrapper.Error(e, $"[SnapLite] An error occurred while storing {filePath}");
                         throw;
                     }
                 }), 12).ConfigureAwait(false);
 
-            LogWrapper.Info($"[SnapLite] 文件存储任务完成");
+            LogWrapper.Info($"[SnapLite] File storage task completed");
             // 创建最终记录
             var nodeList = _database.GetCollection<VersionData>(DatabaseIndexTableName);
             var currentNodeInfo = new VersionData()
@@ -151,12 +151,12 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                 Version = 1
             };
             nodeList.Insert(currentNodeInfo);
-            LogWrapper.Info($"[SnapLite] 数据库记录更新完成");
+            LogWrapper.Info($"[SnapLite] Database record update completed");
             return nodeId;
         }
         catch (Exception e)
         {
-            LogWrapper.Error(e, $"[SnapLite] 创建快照出错");
+            LogWrapper.Error(e, $"[SnapLite] Failed to create snapshot");
             throw;
         }
     }
@@ -194,7 +194,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
         }
         catch (Exception e)
         {
-            LogWrapper.Error(e,$"[SnapLite] 删除 {nodeId} 时出现错误");
+            LogWrapper.Error(e,$"[SnapLite] An error occurred while deleting {nodeId}");
             throw;
         }
     }
@@ -207,17 +207,17 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
         }
         catch (Exception e)
         {
-            LogWrapper.Error(e, $"[SnapLite] 获取 {objectId} 的流失败");
+            LogWrapper.Error(e, $"[SnapLite] Failed to get a stream for {objectId}");
             throw;
         }
     }
 
     public async Task ApplyPastVersion(string nodeId)
     {
-        LogWrapper.Info($"[SnapLite] 开始应用 {nodeId} 的快照数据");
-        var applyObjects = GetNodeObjects(nodeId) ?? throw new NullReferenceException("无法获取记录");
+        LogWrapper.Info($"[SnapLite] Starting to apply snapshot data for {nodeId}");
+        var applyObjects = GetNodeObjects(nodeId) ?? throw new NullReferenceException("Unable to load snapshot records.");
         var currentObjects = await _GetAllTrackedObjectsAsync().ConfigureAwait(false);
-        LogWrapper.Info($"[SnapLite] 获取到 {nodeId} 的对象数为 {applyObjects.Count}，当前文件夹对象数为 {currentObjects.Length}");
+        LogWrapper.Info($"[SnapLite] Snapshot object count for {nodeId}: {applyObjects.Count}, current folder object count: {currentObjects.Length}");
         var curDict = currentObjects.ToDictionary(x => x.Path);
 
         List<FileVersionObjects> toDelete = [];
@@ -245,7 +245,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
             let existsInApply = applyObjects.Any(x => x.Path == currentObject.Path)
             where !existsInApply
             select currentObject);
-        LogWrapper.Info($"[SnapLite] 统计出总共需要删除文件 {toDelete.Count} 个，新增文件 {toAdd.Count} 个，修改文件元数据 {toUpdate.Count} 个");
+        LogWrapper.Info($"[SnapLite] Planned changes - delete: {toDelete.Count}, add: {toAdd.Count}, metadata updates: {toUpdate.Count}");
 
         // 先删除文件深度高的文件和文件夹 并且 遵循先删除文件 后 删除文件夹
         await toDelete
@@ -269,18 +269,18 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                     }
                     catch (IOException e)
                     {
-                        LogWrapper.Warn(e, "SnapLite", $"目录 {curDir} 可能已受到外部修改，存在不属于此版本的内容且删除操作失败");
+                        LogWrapper.Warn(e, "SnapLite", $"Directory {curDir} may have been modified externally; deletion failed because it contains content not tracked by this snapshot.");
                     }
                 }
             }
             catch (Exception e)
             {
-                LogWrapper.Error(e, $"[SnapLite] 删除 {deleteFile.Path} 对象时出现错误，对象类型: {deleteFile.ObjectType}，对象 SHA512: {deleteFile.Hash}，对象大小: {deleteFile.Length}");
+                LogWrapper.Error(e, $"[SnapLite] An error occurred while deleting {deleteFile.Path}; type: {deleteFile.ObjectType}, SHA512: {deleteFile.Hash}, size: {deleteFile.Length}");
                 throw;
             }
         }), 25).ConfigureAwait(false);
 
-        LogWrapper.Info($"[SnapLite] 已完成文件的删除");
+        LogWrapper.Info($"[SnapLite] File deletion completed");
         
         // 先应用文件夹，再应用文件
         await toAdd
@@ -295,12 +295,12 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                         {
                             var curFilePath = Path.Combine(_rootPath, addFile.Path);
                             var fileFolder = Path.GetDirectoryName(curFilePath);
-                            if (fileFolder is null) throw new NullReferenceException($"无法获取 {curFilePath} 的目录信息");
+                            if (fileFolder is null) throw new NullReferenceException($"Unable to get directory information for {curFilePath}.");
                             if (!Directory.Exists(fileFolder)) Directory.CreateDirectory(fileFolder);
                             var curFile = new FileInfo(curFilePath);
                             if (curFile.Exists) curFile.Delete();
                             using var ctx = GetObjectContent(addFile.Hash) ??
-                                            throw new NullReferenceException("获取记录文件信息出现错误");
+                                            throw new NullReferenceException("Failed to load stored file information.");
                             using (var fs = curFile.Create())
                             {
                                 await ctx.CopyToAsync(fs).ConfigureAwait(false);
@@ -327,13 +327,13 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                 catch (Exception e)
                 {
                     LogWrapper.Error(e,
-                        $"[SnapLite] 修改/增添 {addFile.Path} 对象时出现错误，对象类型: {addFile.ObjectType}，对象 SHA512: {addFile.Hash}，对象大小: {addFile.Length}");
+                        $"[SnapLite] An error occurred while adding or updating {addFile.Path}; type: {addFile.ObjectType}, SHA512: {addFile.Hash}, size: {addFile.Length}");
                     throw;
                 }
 
             }), 12).ConfigureAwait(false);
 
-        LogWrapper.Info($"[SnapLite] 已完成文件的增添");
+        LogWrapper.Info($"[SnapLite] File addition completed");
 
         await toUpdate
             .ForEachAsync(updateObject => Task.Run(() =>
@@ -347,7 +347,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                         var curFile = new FileInfo(Path.Combine(_rootPath, updateObject.Path));
                         if (!curFile.Exists)
                         {
-                            LogWrapper.Warn($"[SnapLite] 欲修改的文件不存在 {updateObject.Path}");
+                            LogWrapper.Warn($"[SnapLite] File to update does not exist: {updateObject.Path}");
                             return;
                         }
                         curFile.LastWriteTime = updateObject.LastWriteTime;
@@ -359,7 +359,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                         var curDir = new DirectoryInfo(Path.Combine(_rootPath, updateObject.Path));
                         if (!curDir.Exists)
                         {
-                            LogWrapper.Warn($"[SnapLite] 欲修改的文件夹不存在 {updateObject.Path}");
+                            LogWrapper.Warn($"[SnapLite] Folder to update does not exist: {updateObject.Path}");
                             return;
                         }
                         curDir.LastWriteTime = updateObject.LastWriteTime;
@@ -374,11 +374,11 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
             }
             catch (Exception e)
             {
-                LogWrapper.Error(e, $"[SnapLite] 更新文件元数据时出错");
+                LogWrapper.Error(e, $"[SnapLite] An error occurred while updating file metadata");
                 throw;
             }
         }), 20).ConfigureAwait(false);
-        LogWrapper.Info("[SnapLite] 已完成文件元数据修改");
+        LogWrapper.Info("[SnapLite] File metadata update completed");
     }
 
     public async Task<bool> CheckVersion(string nodeId, bool deepCheck = false)
@@ -395,7 +395,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
             if (!File.Exists(filePath)) return false;
             using var ctx = GetObjectContent(x.Hash);
             if (ctx != null) return (await _HashProvider.ComputeHashAsync(ctx).ConfigureAwait(false)).ToHexString() == x.Hash;
-            LogWrapper.Warn($"[SnapLite] 无法打开指定对象的文件流：{x.Hash}");
+            LogWrapper.Warn($"[SnapLite] Unable to open the file stream for object {x.Hash}");
             return false;
         }, deepCheck ? 12 : 25);
         return (await checkTasks.ConfigureAwait(false)).ToArray().All(x => x);
@@ -422,7 +422,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
 
         // 计算出不需要继续存储的 objects
         var uselessObjects = allObjects.Except(objectsInRecord).ToArray();
-        LogWrapper.Info($"[SnapLite] 寻找到 {uselessObjects.Length} 个可清理对象");
+        LogWrapper.Info($"[SnapLite] Found {uselessObjects.Length} objects that can be cleaned up");
 
         var deleteTask = uselessObjects.ForEachAsync(x => Task.Run(async () =>
         {
@@ -432,7 +432,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
             }
             catch (Exception e)
             {
-                LogWrapper.Error(e, $"[SnapLite] 删除文件 {x} 失败。");
+                LogWrapper.Error(e, $"[SnapLite] Failed to delete file {x}");
                 throw;
             }
         }), 20);
@@ -441,7 +441,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
 
     public async Task Export(string nodeId, string saveFilePath)
     {
-        var fileObjects = GetNodeObjects(nodeId) ?? throw new NullReferenceException("获取记录失败");
+        var fileObjects = GetNodeObjects(nodeId) ?? throw new NullReferenceException("Failed to load snapshot records.");
         if (File.Exists(saveFilePath))
             File.Delete(saveFilePath);
         await using var fs = new FileStream(saveFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
@@ -458,7 +458,7 @@ public class SnapLiteVersionControl : IVersionControl , IDisposable
                     var entry = targetZip.CreateEntry(fileObject.Path);
                     entry.LastWriteTime = fileObject.LastWriteTime;
                     await using var writer = entry.Open();
-                    await using var reader = GetObjectContent(fileObject.Hash) ?? throw new Exception("无法找到存储的文件");
+                    await using var reader = GetObjectContent(fileObject.Hash) ?? throw new Exception("Unable to find the stored file.");
                     await reader.CopyToAsync(writer).ConfigureAwait(false);
                     break;
                 }

@@ -195,7 +195,7 @@
                         IconScale="0.72"
                         IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
                         IsVisible="{Binding CanClear}"
-                        ToolTip.Tip="清除选择" />
+                        ToolTip.Tip="Clear selection" />
                   </Grid>
                 </controls:PclCard.HeaderOverlayContent>
                 <controls:PclCard.CardContent>
@@ -218,7 +218,7 @@
                     <controls:PclSearchBox
                         IsVisible="{Binding ShowChoiceSearchBox}"
                         Text="{Binding ChoiceSearchQuery, Mode=TwoWay}"
-                        Watermark="搜索版本" />
+                        Watermark="Search versions" />
 
                     <TextBlock
                         IsVisible="{Binding ShowFilteredEmptyState}"

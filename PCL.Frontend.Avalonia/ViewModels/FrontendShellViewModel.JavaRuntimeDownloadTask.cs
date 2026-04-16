@@ -21,7 +21,7 @@ internal sealed partial class FrontendShellViewModel
 
         TaskCenter.Register(downloadTask, start: false);
         await downloadTask.ExecuteAsync(cancellationToken);
-        return downloadTask.Result ?? throw new InvalidOperationException("Java 下载任务未返回结果。");
+        return downloadTask.Result ?? throw new InvalidOperationException("The Java download task did not return a result.");
     }
 }
 
@@ -54,26 +54,26 @@ internal sealed class FrontendManagedJavaRuntimeDownloadTask(
         }
 
         _cancellation.Cancel();
-        StateChanged(TaskState.Running, "正在取消 Java 下载…");
+        StateChanged(TaskState.Running, "Canceling Java download...");
     }
 
     public async Task ExecuteAsync(CancellationToken cancelToken = default)
     {
         using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancelToken, _cancellation.Token);
         var executionToken = linkedCancellation.Token;
-        StateChanged(TaskState.Waiting, "已加入任务中心");
+        StateChanged(TaskState.Waiting, "Added to task center");
 
         try
         {
-            StateChanged(TaskState.Running, "正在下载 Java 运行时…");
+            StateChanged(TaskState.Running, "Downloading Java runtime...");
             Result = await Task.Run(() => executeDownload(ReportProgress, executionToken), executionToken);
             PublishProgressStatus(1d, 0d, 0);
-            StateChanged(TaskState.Success, $"Java 已保存到 {Result.RuntimeDirectory}");
+            StateChanged(TaskState.Success, $"Java saved to {Result.RuntimeDirectory}");
         }
         catch (OperationCanceledException)
         {
             PublishProgressStatus(_progress, 0d, _progressStatus.RemainingFileCount);
-            StateChanged(TaskState.Canceled, "Java 下载已取消");
+            StateChanged(TaskState.Canceled, "Java download canceled");
             throw;
         }
         catch (Exception ex)
@@ -99,7 +99,7 @@ internal sealed class FrontendManagedJavaRuntimeDownloadTask(
 
         if (!string.IsNullOrWhiteSpace(snapshot.CurrentFileRelativePath))
         {
-            StateChanged(TaskState.Running, $"正在下载 {snapshot.CurrentFileRelativePath}…");
+            StateChanged(TaskState.Running, $"Downloading {snapshot.CurrentFileRelativePath}...");
         }
     }
 

@@ -27,7 +27,7 @@ internal static class FrontendDatapackArchiveInstallService
         }
 
         var datapacksDirectory = Path.GetDirectoryName(archivePath)
-            ?? throw new InvalidOperationException("数据包安装目录不可用。");
+            ?? throw new InvalidOperationException("The datapack install directory is unavailable.");
         var fallbackDirectoryName = Path.GetFileNameWithoutExtension(archivePath);
         var extractionRoot = Path.Combine(
             datapacksDirectory,
@@ -62,7 +62,7 @@ internal static class FrontendDatapackArchiveInstallService
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"数据包下载完成，但自动解压失败：{ex.Message}", ex);
+            throw new InvalidOperationException($"The datapack finished downloading, but automatic extraction failed: {ex.Message}", ex);
         }
         finally
         {
@@ -92,7 +92,7 @@ internal static class FrontendDatapackArchiveInstallService
             var entries = EnumerateRelevantEntries(currentDirectory).ToArray();
             if (entries.Length == 0)
             {
-                throw new InvalidOperationException("压缩包中没有可导入的数据包内容。");
+                throw new InvalidOperationException("The archive does not contain any importable datapack content.");
             }
 
             if (LooksLikeDatapackRootDirectory(entries))
@@ -108,7 +108,7 @@ internal static class FrontendDatapackArchiveInstallService
                 .ToArray();
             if (childDirectories.Length != 1)
             {
-                throw new InvalidOperationException("压缩包中没有可识别的 Minecraft 数据包结构。");
+                throw new InvalidOperationException("The archive does not contain a recognizable Minecraft datapack structure.");
             }
 
             currentDirectory = childDirectories[0].FullName;

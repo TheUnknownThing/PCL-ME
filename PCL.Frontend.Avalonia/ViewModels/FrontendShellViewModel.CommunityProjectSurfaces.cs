@@ -176,7 +176,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 if (!_versionSavesComposition.Selection.HasSelection)
                 {
-                    return "下载页当前还没有选中存档，无法直接安装数据包。请先在存档页打开目标存档详情。";
+                    return T("resource_detail.current_instance.summary_none_selected_save");
                 }
 
                 var datapackParts = new List<string> { _versionSavesComposition.Selection.InstanceName };
@@ -228,17 +228,19 @@ internal sealed partial class FrontendShellViewModel
             if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
                 && _versionSavesComposition.Selection.HasSelection)
             {
-                parts.Add($"目标存档：{_versionSavesComposition.Selection.SaveName}");
+                parts.Add(T("resource_detail.suggested_release.target_save", ("save_name", _versionSavesComposition.Selection.SaveName)));
             }
 
-            if (!string.IsNullOrWhiteSpace(release.Info))
+            var localizedInfo = LocalizeCommunityProjectReleaseInfo(release.Info);
+            if (!string.IsNullOrWhiteSpace(localizedInfo))
             {
-                parts.Add(release.Info);
+                parts.Add(localizedInfo);
             }
 
-            if (!string.IsNullOrWhiteSpace(release.Meta))
+            var localizedMeta = LocalizeCommunityProjectReleaseMeta(release.Meta);
+            if (!string.IsNullOrWhiteSpace(localizedMeta))
             {
-                parts.Add(release.Meta);
+                parts.Add(localizedMeta);
             }
 
             return string.Join(" • ", parts);
@@ -1339,8 +1341,8 @@ internal sealed partial class FrontendShellViewModel
     private string GetCommunityProjectInstallActivityTitle()
     {
         return _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
-            ? "安装到当前存档"
-            : "安装到当前实例";
+            ? T("resource_detail.activities.install_current_save")
+            : T("resource_detail.activities.install_current_instance");
     }
 
     private FrontendCommunityProjectReleaseEntry? GetSuggestedCommunityProjectInstallRelease()

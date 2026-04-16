@@ -198,7 +198,6 @@ public static class MinecraftCrashAnalysisService
                 or "debug.log"
                 or "debug log.txt"
                 or "pre-crash output.txt"
-                or "游戏崩溃前的输出.txt"
                 or "rawoutput.log")
             {
                 _directFilePath ??= file.Path;
@@ -208,19 +207,8 @@ public static class MinecraftCrashAnalysisService
             if (PathsEqual(file.Path, _request.CurrentLauncherLogFilePath) ||
                 matchName is "pcl launcher log.txt"
                     or "launcher log.txt"
-                    or "启动器日志.txt"
-                    or "pcl2 启动器日志.txt"
-                    or "pcl 启动器日志.txt"
-                    or "log1.txt"
-                    or "log-ce1.log"
                     or "pcl.log")
             {
-                if (file.Lines.Any(line => line.Contains("以下为游戏输出的最后一段内容", StringComparison.Ordinal)))
-                {
-                    _directFilePath ??= file.Path;
-                    return AnalyzeFileType.MinecraftLog;
-                }
-
                 return AnalyzeFileType.ExtraLogFile;
             }
 
@@ -267,12 +255,6 @@ public static class MinecraftCrashAnalysisService
                          "rawoutput.log",
                          "Pre-Crash Output.txt",
                          "PCL Launcher Log.txt",
-                         "启动器日志.txt",
-                         "log1.txt",
-                         "log-ce1.log",
-                         "游戏崩溃前的输出.txt",
-                         "PCL2 启动器日志.txt",
-                         "PCL 启动器日志.txt",
                          "PCL.log"
                      })
             {
@@ -281,23 +263,7 @@ public static class MinecraftCrashAnalysisService
                     continue;
                 }
 
-                var hasMarker = false;
-                foreach (var line in currentLog.Lines)
-                {
-                    if (hasMarker)
-                    {
-                        logMcBuilder.AppendLine(line);
-                    }
-                    else if (line.Contains("以下为游戏输出的最后一段内容", StringComparison.Ordinal))
-                    {
-                        hasMarker = true;
-                    }
-                }
-
-                if (!hasMarker)
-                {
-                    logMcBuilder.Append(GetHeadTailLines(currentLog.Lines, 0, 500));
-                }
+                logMcBuilder.Append(GetHeadTailLines(currentLog.Lines, 0, 500));
 
                 break;
             }
@@ -1015,119 +981,119 @@ public static class MinecraftCrashAnalysisService
         {
             if (_reasons.Count == 0)
             {
-                return "很抱歉，你的游戏出现了一些问题……\r\n如果要寻求帮助，请把错误报告文件发给对方，而不是发送这个窗口的照片或者截图。";
+                return "Sorry, your game encountered a problem...\r\nIf you need help, send the crash report file to the other person instead of a photo or screenshot of this window.";
             }
 
             var results = new List<string>();
-            const string loaderIncompatiblePrefix = "Mod 加载器版本与 Mod 不兼容，请前往 实例设置 - 修改 更换加载器版本。\n\n详细信息：\n";
+            const string loaderIncompatiblePrefix = "The mod loader version is incompatible with the mod. Go to Instance Settings - Modify and change the loader version.\n\nDetails:\n";
 
             foreach (var (reason, additional) in _reasons)
             {
                 switch (reason)
                 {
                     case CrashReason.ExtractedModJar:
-                        results.Add("由于 Mod 文件被解压了，导致游戏无法继续运行。\n直接把整个 Mod 文件放进 Mod 文件夹中即可，若解压就会导致游戏出错。\n\n请删除 Mod 文件夹中已被解压的 Mod，然后再启动游戏。");
+                        results.Add("A mod archive was extracted, which prevented the game from continuing.\nPlace the entire mod file directly in the Mods folder; extracting it will break the game.\n\nRemove the extracted mod from the Mods folder, then start the game again.");
                         break;
                     case CrashReason.OutOfMemory:
-                        results.Add("Minecraft 内存不足，导致其无法继续运行。\n这很可能是因为电脑内存不足、游戏分配的内存不足，或是配置要求过高。\n\n你可以尝试在 更多 → 百宝箱 中选择 内存优化，然后再启动游戏。\n如果还是不行，请在启动设置中增加为游戏分配的内存，并删除配置要求较高的材质、Mod、光影。\n如果依然不奏效，请在开始游戏前尽量关闭其他软件，或者……换台电脑？\\h");
+                        results.Add("Minecraft ran out of memory and could not continue.\nThis is usually caused by low system memory, too little memory allocated to the game, or a pack that is too demanding.\n\nTry Memory Optimization in More -> Toolbox, then start the game again.\nIf that does not help, increase the memory allocated to the game and remove demanding resource packs, mods, or shaders.\nIf it still fails, close other software before launching, or... try a different computer?\\h");
                         break;
                     case CrashReason.UsingOpenJ9:
-                        results.Add("游戏因为使用 OpenJ9 而崩溃了。\n请在启动设置的 Java 选择一项中改用非 OpenJ9 的 Java，然后再启动游戏。");
+                        results.Add("The game crashed because it is using OpenJ9.\nIn the Java selection for launch settings, switch to a non-OpenJ9 Java and start the game again.");
                         break;
                     case CrashReason.UsingJdk:
-                        results.Add("游戏似乎因为使用 JDK，或 Java 版本过高而崩溃了。\n请在启动设置的 Java 选择一项中改用 JRE 8（Java 8），然后再启动游戏。\n如果你没有安装 JRE 8，你可以从网络中下载、安装一个。");
+                        results.Add("The game appears to have crashed because it is using a JDK or a Java version that is too new.\nIn the Java selection for launch settings, switch to JRE 8 (Java 8) and start the game again.\nIf you do not have JRE 8 installed, download and install it.");
                         break;
                     case CrashReason.JavaTooHigh:
-                        results.Add("游戏似乎因为你所使用的 Java 版本过高而崩溃了。\n请在启动设置的 Java 选择一项中改用较低版本的 Java，然后再启动游戏。\n如果没有，可以从网络中下载、安装一个。");
+                        results.Add("The game appears to have crashed because the Java version is too new.\nIn the Java selection for launch settings, switch to an older Java version and start the game again.\nIf needed, download and install one from the internet.");
                         break;
                     case CrashReason.IncompatibleJava:
-                        results.Add("游戏不兼容你当前使用的 Java。\n如果没有合适的 Java，可以从网络中下载、安装一个。");
+                        results.Add("The current Java version is incompatible with the game.\nIf you do not have a suitable Java installed, download and install one from the internet.");
                         break;
                     case CrashReason.SpecialCharsInModName:
-                        results.Add("由于有 Mod 的名称包含特殊字符，导致游戏崩溃。\n请尝试修改 Mod 文件名，让它只包含英文字母、数字、减号、下划线等常见字符，然后再启动游戏。");
+                        results.Add("A mod name contains special characters, which caused the game to crash.\nRename the mod file so it uses only common characters such as letters, numbers, hyphens, and underscores, then start the game again.");
                         break;
                     case CrashReason.MissingMixinBootstrap:
-                        results.Add("由于缺少 MixinBootstrap，导致游戏无法继续运行。\n请尝试重新安装对应版本的 Forge 或相关整合包。");
+                        results.Add("The game could not continue because MixinBootstrap is missing.\nTry reinstalling the matching Forge version or the relevant modpack.");
                         break;
                     case CrashReason.StackKeyword:
                         results.Add(additional.Count == 1
-                            ? $"你的游戏遇到了一些问题，PCL 为此找到了一个可疑的关键词：{additional[0]}。\n\n如果你知道某个关键词对应的 Mod，那么有可能就是它引起的错误，你也可以查看错误报告获取详情。\\h"
-                            : $"你的游戏遇到了一些问题，PCL 为此找到了以下可疑的关键词：\n - {string.Join(", ", additional)}\n\n如果你知道某个关键词对应的 Mod，那么有可能就是它引起的错误，你也可以查看错误报告获取详情。\\h");
+                            ? $"Your game encountered a problem, and PCL found a suspicious keyword: {additional[0]}.\n\nIf you know which mod matches that keyword, it may be responsible for the crash. You can also inspect the crash report for details.\\h"
+                            : $"Your game encountered a problem, and PCL found the following suspicious keywords:\n - {string.Join(", ", additional)}\n\nIf you know which mod matches one of those keywords, it may be responsible for the crash. You can also inspect the crash report for details.\\h");
                         break;
                     case CrashReason.StackModName:
                     case CrashReason.SuspectedModCrash:
                         results.Add(additional.Count == 1
-                            ? $"PCL 怀疑名为 {additional[0]} 的 Mod 导致了游戏出错，但不能完全确定。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\\e\\h"
-                            : $"PCL 怀疑以下 Mod 导致了游戏出错，但不能完全确定：\n - {string.Join("\n - ", additional)}\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\\e\\h");
+                            ? $"PCL suspects the mod named {additional[0]} caused the game to fail, but it is not certain.\nTry disabling that mod and see whether the crash still happens.\n\\e\\h"
+                            : $"PCL suspects the following mods caused the game to fail, but it is not certain:\n - {string.Join("\n - ", additional)}\n\nTry disabling them one by one and see whether the crash still happens.\n\\e\\h");
                         break;
                     case CrashReason.ConfirmedModCrash:
                         results.Add(additional.Count == 1
-                            ? $"名为 {additional[0]} 的 Mod 导致了游戏出错。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\\e\\h"
-                            : $"以下 Mod 导致了游戏出错：\n - {string.Join("\n - ", additional)}\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\\e\\h");
+                            ? $"The mod named {additional[0]} caused the game to fail.\nTry disabling that mod and see whether the crash still happens.\n\\e\\h"
+                            : $"The following mods caused the game to fail:\n - {string.Join("\n - ", additional)}\n\nTry disabling them one by one and see whether the crash still happens.\n\\e\\h");
                         break;
                     case CrashReason.ModMixinFailure:
                         if (additional.Count == 0)
                         {
-                            results.Add("部分 Mod 注入失败，导致游戏出错。\n这一般代表着部分 Mod 与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试逐步禁用 Mod，然后观察游戏是否还会崩溃，以此定位导致崩溃的 Mod。\n\\e\\h");
+                            results.Add("Some mods failed to inject, which caused the game to fail.\nThis usually means one or more mods are incompatible with other mods or the current environment, or that they contain a bug.\nTry disabling mods gradually to identify the one causing the crash.\n\\e\\h");
                         }
                         else if (additional.Count == 1)
                         {
-                            results.Add($"名为 {additional[0]} 的 Mod 注入失败，导致游戏出错。\n这一般代表着它与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\\e\\h");
+                            results.Add($"The mod named {additional[0]} failed to inject, which caused the game to fail.\nThis usually means it is incompatible with other mods or the current environment, or that it contains a bug.\nTry disabling that mod and see whether the crash still happens.\n\\e\\h");
                         }
                         else
                         {
-                            results.Add($"以下 Mod 导致了游戏出错：\n - {string.Join("\n - ", additional)}\n这一般代表着它们与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\\e\\h");
+                            results.Add($"The following mods caused the game to fail:\n - {string.Join("\n - ", additional)}\nThis usually means they are incompatible with other mods or the current environment, or that they contain bugs.\nTry disabling them one by one and see whether the crash still happens.\n\\e\\h");
                         }
 
                         break;
                     case CrashReason.ModConfigCrash:
                         results.Add(additional.Count >= 2
-                            ? $"名为 {additional[0]} 的 Mod 导致了游戏出错：\n其配置文件 {additional[1]} 存在异常，无法读取。"
-                            : $"名为 {additional.FirstOrDefault() ?? "未知"} 的 Mod 导致了游戏出错。\n\\e\\h");
+                            ? $"The mod named {additional[0]} caused the game to fail:\nIts configuration file {additional[1]} is invalid and cannot be read."
+                            : $"The mod named {additional.FirstOrDefault() ?? "unknown"} caused the game to fail.\n\\e\\h");
                         break;
                     case CrashReason.ModInitializationFailure:
                         results.Add(additional.Count == 1
-                            ? $"名为 {additional[0]} 的 Mod 初始化失败，导致游戏无法继续加载。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\\e\\h"
-                            : $"以下 Mod 初始化失败，导致游戏出错：\n - {string.Join("\n - ", additional)}\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\\e\\h");
+                            ? $"The mod named {additional[0]} failed to initialize, which prevented the game from continuing to load.\nTry disabling that mod and see whether the crash still happens.\n\\e\\h"
+                            : $"The following mods failed to initialize, which caused the game to fail:\n - {string.Join("\n - ", additional)}\n\nTry disabling them one by one and see whether the crash still happens.\n\\e\\h");
                         break;
                     case CrashReason.ProblematicBlock:
                         results.Add(additional.Count == 1
-                            ? $"游戏似乎因为方块 {additional[0]} 出现了问题。\n\n你可以创建一个新世界，并观察游戏的运行情况：\n - 若正常运行，则是该方块导致出错，你或许需要使用一些方式删除此方块。\n - 若仍然出错，问题就可能来自其他原因……\\h"
-                            : "游戏似乎因为世界中的某些方块出现了问题。\n\n你可以创建一个新世界，并观察游戏的运行情况：\n - 若正常运行，则是某些方块导致出错，你或许需要删除该世界。\n - 若仍然出错，问题就可能来自其他原因……\\h");
+                            ? $"The game appears to have a problem with block {additional[0]}.\n\nCreate a new world and observe the game:\n - If it runs normally, that block is likely causing the issue and you may need to remove it somehow.\n - If it still crashes, the cause is probably something else...\\h"
+                            : "The game appears to have a problem with some blocks in the world.\n\nCreate a new world and observe the game:\n - If it runs normally, some blocks are likely causing the issue and you may need to delete the world.\n - If it still crashes, the cause is probably something else...\\h");
                         break;
                     case CrashReason.DuplicateMods:
                         results.Add(additional.Count >= 2
-                            ? $"你重复安装了多个相同的 Mod：\n - {string.Join("\n - ", additional)}\n\n每个 Mod 只能出现一次，请删除重复的 Mod，然后再启动游戏。"
-                            : "你可能重复安装了多个相同的 Mod，导致游戏出错。\n\n每个 Mod 只能出现一次，请删除重复的 Mod，然后再启动游戏。\\e\\h");
+                            ? $"You have installed multiple copies of the same mod:\n - {string.Join("\n - ", additional)}\n\nEach mod can appear only once. Remove the duplicates, then start the game again."
+                            : "You may have installed multiple copies of the same mod, which caused the game to fail.\n\nEach mod can appear only once. Remove the duplicates, then start the game again.\\e\\h");
                         break;
                     case CrashReason.ProblematicEntity:
                         results.Add(additional.Count == 1
-                            ? $"游戏似乎因为实体 {additional[0]} 出现了问题。\n\n你可以创建一个新世界，并生成一个该实体，然后观察游戏的运行情况：\n - 若正常运行，则是该实体导致出错，你或许需要使用一些方式删除此实体。\n - 若仍然出错，问题就可能来自其他原因……\\h"
-                            : "游戏似乎因为世界中的某些实体出现了问题。\n\n你可以创建一个新世界，并生成各种实体，观察游戏的运行情况：\n - 若正常运行，则是某些实体导致出错，你或许需要删除该世界。\n - 若仍然出错，问题就可能来自其他原因……\\h");
+                            ? $"The game appears to have a problem with entity {additional[0]}.\n\nCreate a new world and spawn that entity, then observe the game:\n - If it runs normally, that entity is likely causing the issue and you may need to remove it somehow.\n - If it still crashes, the cause is probably something else...\\h"
+                            : "The game appears to have a problem with some entities in the world.\n\nCreate a new world and spawn various entities, then observe the game:\n - If it runs normally, some entities are likely causing the issue and you may need to delete the world.\n - If it still crashes, the cause is probably something else...\\h");
                         break;
                     case CrashReason.OptiFineForgeIncompatible:
-                        results.Add("由于 OptiFine 与当前版本的 Forge 不兼容，导致了游戏崩溃。\n\n请前往 OptiFine 官网（https://optifine.net/downloads）查看 OptiFine 所兼容的 Forge 版本，并严格按照对应版本重新安装游戏。");
+                        results.Add("OptiFine is incompatible with the current Forge version, which caused the game to crash.\n\nVisit the OptiFine website (https://optifine.net/downloads) to check which Forge versions it supports, then reinstall the game using the matching versions.");
                         break;
                     case CrashReason.ShadersModWithOptiFine:
-                        results.Add("无需同时安装 OptiFine 和 Shaders Mod，OptiFine 已经集成了 Shaders Mod 的功能。\n在删除 Shaders Mod 后，游戏即可正常运行。");
+                        results.Add("You do not need to install both OptiFine and Shaders Mod. OptiFine already includes Shaders Mod functionality.\nRemove Shaders Mod and the game should run normally.");
                         break;
                     case CrashReason.LegacyForgeHighJavaIncompatible:
-                        results.Add("由于低版本 Forge 与当前 Java 不兼容，导致了游戏崩溃。\n\n请尝试以下解决方案：\n - 更新 Forge 到 36.2.26 或更高版本\n - 换用版本低于 1.8.0.320 的 Java");
+                        results.Add("An older Forge version is incompatible with the current Java version, which caused the game to crash.\n\nTry the following:\n - Update Forge to 36.2.26 or later\n - Switch to a Java version below 1.8.0.320");
                         break;
                     case CrashReason.MultipleForgeInJson:
-                        results.Add("可能由于其他启动器修改了 Forge 版本，当前实例的文件存在异常，导致了游戏崩溃。\n请尝试重新全新安装 Forge，而非使用其他启动器修改 Forge 版本。");
+                        results.Add("Another launcher may have modified the Forge version, leaving the current instance files in an invalid state and causing the game to crash.\nTry reinstalling Forge from scratch instead of modifying the Forge version with another launcher.");
                         break;
                     case CrashReason.ManualDebugCrash:
-                        results.Add("* 事实上，你的游戏没有任何问题，这是你自己触发的崩溃。\n* 你难道没有更重要的事要做吗？");
+                        results.Add("* In fact, there is nothing wrong with your game. This crash was triggered intentionally.\n* Do you not have something more important to do?");
                         break;
                     case CrashReason.ModNeedsJava11:
-                        results.Add("你所安装的部分 Mod 似乎需要使用 Java 11 启动。\n请在启动设置的 Java 选择一项中改用 Java 11，然后再启动游戏。\n如果你没有安装 Java 11，你可以从网络中下载、安装一个。");
+                        results.Add("Some of the installed mods appear to require Java 11.\nIn the Java selection for launch settings, switch to Java 11 and start the game again.\nIf you do not have Java 11 installed, download and install it.");
                         break;
                     case CrashReason.VeryShortOutput:
-                        results.Add($"程序返回了以下信息：\n{additional.FirstOrDefault() ?? string.Empty}\n\\h");
+                        results.Add($"The program returned the following information:\n{additional.FirstOrDefault() ?? string.Empty}\n\\h");
                         break;
                     case CrashReason.OptiFineWorldLoadFailure:
-                        results.Add("你所使用的 OptiFine 可能导致了你的游戏出现问题。\n\n该问题只在特定 OptiFine 版本中出现，你可以尝试更换 OptiFine 的版本。\\h");
+                        results.Add("The OptiFine version you are using may be causing the game to fail.\n\nThis issue only occurs in specific OptiFine versions, so try changing the OptiFine version.\\h");
                         break;
                     case CrashReason.PixelFormatUnsupported:
                     case CrashReason.IntelDriverAccessViolation:
@@ -1135,31 +1101,31 @@ public static class MinecraftCrashAnalysisService
                     case CrashReason.NvidiaDriverAccessViolation:
                     case CrashReason.UnsupportedOpenGl:
                         results.Add(_logAll.Contains("hd graphics ", StringComparison.OrdinalIgnoreCase)
-                            ? "你的显卡驱动存在问题，或未使用独立显卡，导致游戏无法正常运行。\n\n如果你的电脑存在独立显卡，请使用独立显卡而非 Intel 核显启动 PCL 与 Minecraft。\n如果问题依然存在，请尝试升级你的显卡驱动到最新版本，或回退到出厂版本。\n如果还是不行，还可以尝试使用 8.0.51 或更低版本的 Java。\\h"
-                            : "你的显卡驱动存在问题，导致游戏无法正常运行。\n\n请尝试升级你的显卡驱动到最新版本，或回退到出厂版本，然后再启动游戏。\n如果还是不行，可以尝试使用 8.0.51 或更低版本的 Java。\n如果问题依然存在，那么你可能需要换个更好的显卡……\\h");
+                            ? "There is a problem with your graphics driver, or the game is not using the discrete GPU, which prevents it from running normally.\n\nIf your computer has a discrete GPU, start PCL and Minecraft on the discrete GPU instead of the Intel integrated GPU.\nIf the problem persists, try updating the graphics driver to the latest version or rolling back to the factory version.\nIf that still does not help, try Java 8.0.51 or an earlier version.\\h"
+                            : "There is a problem with your graphics driver, which prevents the game from running normally.\n\nTry updating the graphics driver to the latest version or rolling back to the factory version, then start the game again.\nIf that still does not help, try Java 8.0.51 or an earlier version.\nIf the problem persists, you may need a better graphics card...\\h");
                         break;
                     case CrashReason.TooLargeResourcePackOrWeakGpu:
-                        results.Add("你所使用的材质分辨率过高，或显卡配置不足，导致游戏无法继续运行。\n\n如果你正在使用高清材质，请将它移除。\n如果你没有使用材质，那么你可能需要更新显卡驱动，或者换个更好的显卡……\\h");
+                        results.Add("The resource pack resolution is too high, or the GPU is too weak, which prevented the game from continuing.\n\nIf you are using high-resolution textures, remove them.\nIf you are not using a resource pack, you may need to update the graphics driver or use a better GPU...\\h");
                         break;
                     case CrashReason.NightConfigBug:
-                        results.Add("由于 Night Config 存在问题，导致了游戏崩溃。\n你可以尝试安装 Night Config Fixes 模组，这或许能解决此问题。\\h");
+                        results.Add("A problem in Night Config caused the game to crash.\nTry installing the Night Config Fixes mod, which may resolve the issue.\\h");
                         break;
                     case CrashReason.OpenGl1282FromShadersOrResources:
-                        results.Add("你所使用的光影或材质导致游戏出现了一些问题……\n\n请尝试删除你所添加的这些额外资源。\\h");
+                        results.Add("The shaders or resource packs you are using caused a problem with the game...\n\nTry removing those additional resources.\\h");
                         break;
                     case CrashReason.ExceededIdLimit:
-                        results.Add("你所安装的 Mod 过多，超出了游戏的 ID 限制，导致了游戏崩溃。\n请尝试安装 JEID 等修复 Mod，或删除部分大型 Mod。");
+                        results.Add("You have installed too many mods, exceeding the game's ID limit and causing a crash.\nTry installing a fix mod such as JEID, or remove some large mods.");
                         break;
                     case CrashReason.FileValidationFailed:
-                        results.Add("部分文件或内容校验失败，导致游戏出现了问题。\n\n请尝试删除游戏（包括 Mod）并重新下载，或尝试在重新下载时使用 VPN。\\h");
+                        results.Add("Some files or content failed validation, which caused a problem with the game.\n\nTry deleting the game (including mods) and downloading it again, or try using a VPN while re-downloading.\\h");
                         break;
                     case CrashReason.IncompleteForgeInstall:
-                        results.Add("由于安装的 Forge 文件丢失，导致游戏无法正常运行。\n请前往实例设置重置该实例，然后再启动游戏。\n在打包游戏时删除 libraries 文件夹可能导致此错误。\\h");
+                        results.Add("Some installed Forge files are missing, which prevented the game from running normally.\nGo to instance settings, reset the instance, and then start the game again.\nDeleting the libraries folder while packaging the game can cause this error.\\h");
                         break;
                     case CrashReason.FabricError:
                         results.Add(additional.Count == 1
-                            ? $"Fabric 提供了以下错误信息：\n{additional[0]}\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。"
-                            : "Fabric 可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\\h");
+                            ? $"Fabric provided the following error information:\n{additional[0]}\n\nUse the information above to take the appropriate action. If you do not understand the English text, use a translation tool."
+                            : "Fabric may already have provided an error message. Use the log information in the crash report to take the appropriate action. If you do not understand the English text, use a translation tool.\\h");
                         break;
                     case CrashReason.IncompatibleMods:
                         if (additional.Count == 1)
@@ -1167,52 +1133,52 @@ public static class MinecraftCrashAnalysisService
                             var info = additional[0];
                             results.Add(RegexPatterns.IncompatibleModLoaderErrorHint.IsMatch(info)
                                 ? loaderIncompatiblePrefix + info
-                                : $"你所安装的 Mod 不兼容：\n{info}\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。");
+                                : $"The installed mod is incompatible:\n{info}\n\nUse the information above to take the appropriate action. If you do not understand the English text, use a translation tool.");
                         }
                         else
                         {
-                            results.Add("你所安装的 Mod 不兼容，Mod 加载器可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\\h");
+                            results.Add("The installed mods are incompatible. The mod loader may already have provided error information. Use the log information in the crash report to take the appropriate action. If you do not understand the English text, use a translation tool.\\h");
                         }
 
                         break;
                     case CrashReason.ModLoaderFailure:
                         results.Add(additional.Count == 1
-                            ? $"Mod 加载器提供了以下错误信息：\n{additional[0]}\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。"
-                            : "Mod 加载器可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\\h");
+                            ? $"The mod loader provided the following error information:\n{additional[0]}\n\nUse the information above to take the appropriate action. If you do not understand the English text, use a translation tool."
+                            : "The mod loader may already have provided error information. Use the log information in the crash report to take the appropriate action. If you do not understand the English text, use a translation tool.\\h");
                         break;
                     case CrashReason.FabricSolution:
                         results.Add(additional.Count == 1
-                            ? $"Fabric 提供了以下解决方案：\n{additional[0]}\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。"
-                            : "Fabric 可能已经提供了解决方案，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\\h");
+                            ? $"Fabric provided the following solution:\n{additional[0]}\n\nUse the information above to take the appropriate action. If you do not understand the English text, use a translation tool."
+                            : "Fabric may already have provided a solution. Use the log information in the crash report to take the appropriate action. If you do not understand the English text, use a translation tool.\\h");
                         break;
                     case CrashReason.ForgeError:
                         results.Add(additional.Count == 1
-                            ? $"Forge 提供了以下错误信息：\n{additional[0]}\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。"
-                            : "Forge 可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\\h");
+                            ? $"Forge provided the following error information:\n{additional[0]}\n\nUse the information above to take the appropriate action. If you do not understand the English text, use a translation tool."
+                            : "Forge may already have provided error information. Use the log information in the crash report to take the appropriate action. If you do not understand the English text, use a translation tool.\\h");
                         break;
                     case CrashReason.NoAnalysisFiles:
-                        results.Add("你的游戏出现了一些问题，但 PCL 未能找到相关记录文件，因此无法进行分析。\\h");
+                        results.Add("Your game encountered a problem, but PCL could not find any relevant log files, so it cannot analyze the crash.\\h");
                         break;
                     case CrashReason.MissingDependencyOrWrongMcVersion:
                         results.Add(additional.Count > 0
-                            ? $"Mod 缺少前置，或你安装的 Mod 与当前 Minecraft 版本不匹配：\n - {string.Join("\n - ", additional)}\n\n请根据上述信息检查依赖关系、Mod 版本与游戏版本。"
-                            : "部分 Mod 缺少前置，或与当前 Minecraft 版本不匹配。\n请根据错误报告中的日志信息检查依赖关系、Mod 版本与游戏版本。");
+                            ? $"A mod is missing a dependency, or the installed mod does not match the current Minecraft version:\n - {string.Join("\n - ", additional)}\n\nCheck the dependency chain, mod version, and game version using the information above."
+                            : "Some mods are missing dependencies or do not match the current Minecraft version.\nCheck the dependency chain, mod version, and game version using the log information in the crash report.");
                         break;
                     default:
-                        results.Add($"PCL 获取到了没有详细信息的错误原因（{reason}），请向 PCL 作者提交反馈以获取详情。\\h");
+                        results.Add($"PCL found an error reason without detailed information ({reason}). Please report it to the PCL author for more details.\\h");
                         break;
                 }
             }
 
-            var combined = string.Join("\n\n此外，", results)
+            var combined = string.Join("\n\nAdditionally, ", results)
                 .Replace("\n", "\r\n", StringComparison.Ordinal)
                 .Replace("\\h", string.Empty, StringComparison.Ordinal)
-                .Replace("\\e", "\r\n你可以查看错误报告了解错误具体是如何发生的。", StringComparison.Ordinal)
+                .Replace("\\e", "\r\nYou can inspect the crash report to see exactly how the error occurred.", StringComparison.Ordinal)
                 .Trim('\r', '\n');
 
             if (!results.Any(result => result.EndsWith("\\h", StringComparison.Ordinal)))
             {
-                combined += "\r\n如果要寻求帮助，请把错误报告文件发给对方，而不是发送这个窗口的照片或者截图。";
+                combined += "\r\nIf you need help, send the crash report file to the other person instead of a photo or screenshot of this window.";
             }
 
             return combined;

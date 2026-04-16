@@ -27,7 +27,7 @@ public static class MinecraftLaunchJsonArgumentService
             using var document = JsonDocument.Parse(sectionJson);
             if (document.RootElement.ValueKind != JsonValueKind.Array)
             {
-                throw new InvalidOperationException("启动参数节必须是 JSON 数组。");
+                throw new InvalidOperationException("The launch argument section must be a JSON array.");
             }
 
             foreach (var item in document.RootElement.EnumerateArray())

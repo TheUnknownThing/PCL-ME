@@ -31,15 +31,15 @@ public class StringStream : Stream
         set => _innerStream.Position = value;
     }
 
-    public override void Flush() { /* 只读流 无需实现 */ }
+    public override void Flush() { /* No-op for a read-only stream. */ }
 
     public override int Read(byte[] buffer, int offset, int count) => _innerStream.Read(buffer, offset, count);
 
     public override long Seek(long offset, SeekOrigin origin) => _innerStream.Seek(offset, origin);
 
-    public override void SetLength(long value) => throw new NotSupportedException("StringStream 是只读流，不支持 SetLength。");
+    public override void SetLength(long value) => throw new NotSupportedException("StringStream is read-only and does not support SetLength.");
 
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException("StringStream 是只读流，不支持 Write。");
+    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException("StringStream is read-only and does not support Write.");
 
     protected override void Dispose(bool disposing)
     {

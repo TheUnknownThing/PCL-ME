@@ -36,26 +36,26 @@ public sealed class MinecraftLaunchSessionLogServiceTest
             new[]
             {
                 "",
-                "~ 基础参数 ~",
-                "PCL 版本：2.9.0 (123)",
-                "游戏版本：1.20.1（1.20.1，Drop 5，无法完全确定）",
-                "资源版本：1.20",
-                "实例继承：无",
-                "分配的内存：3.5 GB（3584 MB）",
-                @"MC 文件夹：C:\.minecraft",
-                @"实例文件夹：C:\.minecraft\versions\fabric",
-                "版本隔离：True",
-                "HMCL 格式：False",
-                "Java 信息：Java 17",
-                @"Natives 文件夹：C:\natives",
-                "Natives 压缩包：0",
+                "~ Base Parameters ~",
+                "PCL version: 2.9.0 (123)",
+                "Game version: 1.20.1 (1.20.1, Drop 5, not fully confirmed)",
+                "Asset version: 1.20",
+                "Inherited instance: None",
+                "Allocated memory: 3.5 GB (3584 MB)",
+                @"Minecraft folder: C:\.minecraft",
+                @"Instance folder: C:\.minecraft\versions\fabric",
+                "Version isolation: True",
+                "HMCL format: False",
+                "Java info: Java 17",
+                @"Natives folder: C:\natives",
+                "Native archives: 0",
                 "",
-                "~ 档案参数 ~",
-                "玩家用户名：Player",
-                "AccessToken：access",
-                "ClientToken：client",
-                "UUID：uuid",
-                "验证方式：Microsoft",
+                "~ Profile Parameters ~",
+                "Player name: Player",
+                "Access token: access",
+                "Client token: client",
+                "UUID: uuid",
+                "Login type: Microsoft",
                 ""
             },
             result.LogLines.ToArray());
@@ -86,8 +86,8 @@ public sealed class MinecraftLaunchSessionLogServiceTest
             Uuid: "uuid",
             LoginType: "Legacy"));
 
-        Assert.AreEqual("实例继承：无", result.LogLines[5]);
-        Assert.AreEqual("Java 信息：无可用 Java", result.LogLines[11]);
-        Assert.AreEqual("游戏版本：1.7.10（1.7.10，Drop 1）", result.LogLines[3]);
+        Assert.AreEqual("Inherited instance: None", result.LogLines[5]);
+        Assert.AreEqual("Java info: No Java available", result.LogLines[11]);
+        Assert.AreEqual("Game version: 1.7.10 (1.7.10, Drop 1)", result.LogLines[3]);
     }
 }

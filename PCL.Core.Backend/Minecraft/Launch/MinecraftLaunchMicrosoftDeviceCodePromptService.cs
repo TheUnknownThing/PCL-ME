@@ -3,7 +3,7 @@ namespace PCL.Core.Minecraft.Launch;
 public static class MinecraftLaunchMicrosoftDeviceCodePromptService
 {
     public const string DefaultPollUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
-    private const string PromptTitle = "登录 Minecraft";
+    private const string PromptTitle = "Sign in to Minecraft";
 
     public static MinecraftLaunchMicrosoftDeviceCodePromptPlan BuildPromptPlan(
         string responseJson,
@@ -17,13 +17,13 @@ public static class MinecraftLaunchMicrosoftDeviceCodePromptService
             : response.VerificationUrlComplete;
 
         var message = string.IsNullOrWhiteSpace(response.VerificationUrlComplete)
-            ? $"登录网页将自动开启，请在网页中输入授权码 {response.UserCode}（将自动复制）。\n\n" +
-              "如果网络环境不佳，网页可能一直加载不出来，届时请使用 VPN 并重试。\n" +
-              $"你也可以用其他设备打开 {openBrowserUrl} 并输入上述授权码。"
-            : "登录网页将自动开启，授权码将自动填充。\n\n" +
-              "如果网络环境不佳，网页可能一直加载不出来，届时请使用 VPN 并重试。\n" +
-              $"如果没有自动填充，请在页面内粘贴此授权码 {response.UserCode} （将自动复制）\n" +
-              $"你也可以用其他设备打开 {openBrowserUrl} 并输入授权码。";
+            ? $"The sign-in page will open automatically. Enter code {response.UserCode} on the page (it will be copied automatically).\n\n" +
+              "If your network connection is poor, the page may fail to load; use a VPN and try again.\n" +
+              $"You can also open {openBrowserUrl} on another device and enter the code there."
+            : "The sign-in page will open automatically and the code will be filled in automatically.\n\n" +
+              "If your network connection is poor, the page may fail to load; use a VPN and try again.\n" +
+              $"If it is not filled in automatically, paste this code on the page: {response.UserCode} (it will be copied automatically).\n" +
+              $"You can also open {openBrowserUrl} on another device and enter the code.";
 
         return new MinecraftLaunchMicrosoftDeviceCodePromptPlan(
             PromptTitle,
@@ -34,7 +34,7 @@ public static class MinecraftLaunchMicrosoftDeviceCodePromptService
             pollUrl,
             response.IntervalSeconds,
             response.ExpiresInSeconds,
-            $"网页登录地址：{openBrowserUrl}");
+            $"Sign-in page URL: {openBrowserUrl}");
     }
 }
 

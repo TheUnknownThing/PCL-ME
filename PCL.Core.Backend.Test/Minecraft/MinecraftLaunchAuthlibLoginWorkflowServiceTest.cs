@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft.Launch;
 
 namespace PCL.Core.Test.Minecraft;
@@ -53,7 +54,7 @@ public sealed class MinecraftLaunchAuthlibLoginWorkflowServiceTest
                 AuthenticateResponseJson: json));
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.Fail, result.Kind);
-        Assert.AreEqual("$你还没有创建角色，请在创建角色后再试！", result.FailureMessage);
+        Assert.AreEqual("$You have not created a profile yet. Please create one and try again!", result.FailureMessage);
     }
 
     [TestMethod]
@@ -78,7 +79,8 @@ public sealed class MinecraftLaunchAuthlibLoginWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.PromptForSelection, result.Kind);
         Assert.AreEqual(2, result.PromptOptions.Count);
-        Assert.AreEqual("选择使用的角色", result.PromptTitle);
+        Assert.AreEqual("Select a profile", result.PromptTitle);
+        Assert.AreEqual("launch.profile.selection.prompt_title", result.PromptTitleText!.Key);
     }
 
     [TestMethod]

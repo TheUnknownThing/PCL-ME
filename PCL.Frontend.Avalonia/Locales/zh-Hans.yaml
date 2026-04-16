@@ -205,6 +205,8 @@ shell:
         set_gpu_preference: 设置显卡偏好
         optimize_memory: 优化内存
         invalid: 无效
+        invalid_message:
+          gpu_preference_path_missing: 缺少用于设置显卡偏好的可执行文件路径。
     surface_meta:
       line: "{kind} 页面 • {sidebar_group} • {navigation_state}"
       no_sidebar_group: 无侧边栏分组
@@ -706,6 +708,11 @@ shell:
       failure_title: "{title} 失败"
     help:
       default_group: 常规
+      groups:
+        guides: 指南
+        help: 帮助
+        launcher: 启动器
+        personalization: 个性化
       search:
         empty_header: 无搜索结果
         no_results: 当前关键词没有匹配到任何帮助条目。
@@ -891,6 +898,17 @@ startup:
         {warnings}
       actions:
         acknowledge: 我知道了
+    update_log:
+      title: PCL-ME 已更新至 {version_branch} {version_base}
+      actions:
+        confirm: 确定
+        full_changelog: 完整更新日志
+    milestone:
+      title: 提示
+      message: >-
+        你已经打开 PCL 跨平台版 99 次了，感谢你长期以来的支持！
+
+        隐藏的 Hardcore Fan 主题尚未解锁。跨平台版不包含隐藏主题！
 launch:
   announcements:
     community_edition_intro:
@@ -1084,6 +1102,61 @@ launch:
         opened_profile_create_page: 已打开微软账号创建页面
         opened_related_web: 已打开相关网页
         opened_sign_in_page: 已打开微软登录页面
+      prompts:
+        create_profile:
+          actions:
+            cancel: Cancel
+            create_profile: Create profile
+          message: Please create a Minecraft profile before signing in again.
+          title: Sign-in failed
+        ownership:
+          actions:
+            buy_minecraft: Buy Minecraft
+            cancel: Cancel
+          message: We could not retrieve this account's information. The account may not own Minecraft Java Edition, or the Xbox Game Pass may have expired.
+          title: Sign-in failed
+        password_login:
+          actions:
+            cancel: Cancel
+            retry: Retry sign-in
+            set_password: Set password
+          message: When signing in, choose “Other sign-in options”, then choose “Use my password”. If that option is unavailable, choose “Set password” and sign in again after setting it.
+          title: Password sign-in required
+        refresh_network_error:
+          actions:
+            cancel: Cancel
+            continue: Continue
+          message: The launcher encountered a network error while refreshing account information. You can cancel, check your network, and try again, or ignore the error and continue, but some servers may not work.
+          title: Account refresh failed
+        xsts:
+          ban:
+            actions:
+              ok: OK
+            message: This Microsoft account appears to be banned and cannot sign in.
+            title: Sign-in failed
+          region_restricted:
+            actions:
+              ok: OK
+            message: Your country or region cannot sign in to Microsoft accounts. Please use a VPN or accelerator and try again.
+            title: Sign-in failed
+          signup:
+            actions:
+              cancel: Cancel
+              register: Register
+            message: You have not registered an Xbox account yet. Please register before signing in.
+            title: Sign-in notice
+          underage:
+            actions:
+              i_do_not_know: I do not know
+              over_13: Over 13
+              under_13: Under 13
+            followup:
+              message: Please update the account birth date on the opened page (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              open_page:
+                message: Please follow the instructions on the opened page and update the account birth date (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              title: Sign-in notice
+            message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
+            title: Sign-in notice
       status:
         browser_opened: 浏览器已打开，请完成授权后返回这里。
         initial: 准备使用微软账号登录
@@ -1143,6 +1216,7 @@ launch:
       empty: 没有可用档案
       hint: 选择一个启动档案
       hint_empty: 未选择启动档案
+      prompt_title: 选择使用的角色
   status:
     activities:
       canceled: 启动已取消
@@ -1871,6 +1945,12 @@ setup:
       disable_hardware_acceleration_restart: 修改后会在下次启动启动器时生效。
     labels:
       debug_animation_speed_off: 关闭
+    debug_summary:
+      fields:
+        current_instance: 当前实例
+        instance_directory: 实例目录
+      values:
+        not_selected: 未选择
     messages:
       debug_mode_disabled: 已关闭额外的诊断输出。
       debug_mode_enabled: 已启用更详细的日志与诊断信息。
@@ -2062,6 +2142,14 @@ download:
         none: 无任务
         skipped: 跳过了 {count} 项
         tasks: "{count} 个任务"
+      target:
+        datapack_instance_unavailable: '{instance_name} 当前不可用，因此无法选择数据包存档。'
+        datapack_no_saves: '{instance_name} 没有可用存档，因此无法安装数据包。'
+        datapack_save_title: 选择数据包存档
+        datapack_save_message: '数据包必须安装到某个存档的 datapacks 文件夹中。请选择 {instance_name} 中的目标存档。'
+        datapack_save_confirm: 开始安装
+        datapack_save_failed: 选择数据包存档失败
+        datapack_directory_unresolved: 无法定位所选存档的数据包目录。
     empty:
       body: 把项目加入收藏夹，之后即可安装或分享。
       title: 还没有收藏项
@@ -2335,10 +2423,30 @@ download:
     current_instance:
       actions:
         switch: 切换实例
+        switch_save: 切换存档
+      activities:
+        switch_save: 切换存档
+      dialogs:
+        select_instance:
+          title: 选择实例
+          message: 选择你要浏览并安装数据包的实例。
+          failed: 选择实例失败
+        select_save:
+          title: 选择存档
+          message: 选择 {instance_name} 中要安装数据包的目标存档。
+          failed: 选择存档失败
+      messages:
+        no_instances_available: 没有可用实例。
+        instance_unavailable: '{instance_name} 当前不可用。'
+        no_saves_available: '{instance_name} 当前没有可用存档。'
+        save_not_found: 未找到所选存档。
+        save_already_selected: '{instance_name} • {save_name} 已经是当前存档。'
       none_selected: 未选择实例
       summary_none_selected: 选择一个实例以提升兼容性筛选效果
+      summary_none_selected_save: 当前下载页还没有选中存档，因此无法直接安装数据包。请先从存档页打开目标存档。
       summary_suffix: 用于兼容性筛选
       title: 当前实例
+      title_save: 当前存档
     empty:
       default: 没有结果
     filters:
@@ -2489,6 +2597,7 @@ resource_detail:
     download_file: 下载文件：{entry_title}
     download_started: 已开始下载：{entry_title}
     install_current_instance: 安装到当前实例
+    install_current_save: 安装到当前存档
     install_current_instance_failed: 安装到当前实例失败
     navigate_back: 返回 {target_title}
     open_dependency_project: 打开依赖项目：{entry_title}
@@ -2520,6 +2629,7 @@ resource_detail:
   current_instance:
     none_selected: 未选择当前实例
     summary_none_selected: 选择一个实例即可直接安装此项目
+    summary_none_selected_save: 当前下载页还没有选中存档，因此无法直接安装数据包。请先从存档页打开目标存档。
   categories:
     adventure: 冒险
     automation: 自动化
@@ -2758,6 +2868,7 @@ resource_detail:
     unlisted: 未列出
   suggested_release:
     none: 没有推荐版本
+    target_save: '目标存档：{save_name}'
     title: 推荐版本
   translate_description:
     empty: 没有可翻译的简介

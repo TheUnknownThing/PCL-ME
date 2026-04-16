@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,25" Spacing="10">
-      <controls:PclCard Header="调试诊断" IsVisible="{Binding ShowDebugModeSummaryCard}" ContentMargin="20,18,20,16">
+      <controls:PclCard Header="Debug diagnostics" IsVisible="{Binding ShowDebugModeSummaryCard}" ContentMargin="20,18,20,16">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <TextBlock

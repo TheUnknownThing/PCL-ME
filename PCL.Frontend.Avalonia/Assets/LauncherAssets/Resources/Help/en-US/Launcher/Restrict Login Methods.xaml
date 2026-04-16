@@ -14,6 +14,6 @@
 
 <local:MyCard Title="Further reading" Margin="0,0,0,15">
   <StackPanel Margin="25,40,23,15">
-    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="启动器/LittleSkin 外置登录使用教程.json" Title="LittleSkin login setup" Info="Open the related third-party login article." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Launcher/LittleSkin External Login Guide.json" Title="LittleSkin login setup" Info="Open the related third-party login article." />
   </StackPanel>
 </local:MyCard>

@@ -20,7 +20,7 @@ public static class MinecraftLaunchLauncherProfilesService
 
         if (string.IsNullOrWhiteSpace(request.UserName))
         {
-            throw new ArgumentException("Microsoft 登录用户名不能为空。", nameof(request));
+            throw new ArgumentException("The Microsoft sign-in username cannot be empty.", nameof(request));
         }
 
         var existingRoot = ParseExistingProfiles(request.ExistingProfilesJson);
@@ -42,7 +42,7 @@ public static class MinecraftLaunchLauncherProfilesService
         }
 
         return JsonNode.Parse(existingProfilesJson) as JsonObject
-               ?? throw new InvalidOperationException("launcher_profiles.json 的内容不是 JSON 对象。");
+               ?? throw new InvalidOperationException("The contents of launcher_profiles.json are not a JSON object.");
     }
 
     private static JsonObject MergeMicrosoftAccount(JsonObject existingRoot, string userName, string? clientToken)

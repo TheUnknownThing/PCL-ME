@@ -66,7 +66,7 @@ public static class LauncherDataProtectionService
             }
         }
 
-        throw new Exception("Unknown Encryption data, the data may broken", decryptError);
+        throw new Exception("Unknown encryption data; the payload may be corrupted.", decryptError);
     }
 
     private static (IEncryptionProvider Provider, uint Version) SelectBestEncryption()
@@ -91,7 +91,7 @@ public static class LauncherDataProtectionService
         plainText = null;
         if (legacyDecryptKey.IsNullOrEmpty())
         {
-            return new InvalidOperationException("旧版密文缺少可用的兼容解密密钥。可通过 PCL_LEGACY_ENCRYPTION_KEY 提供旧版密钥。");
+            return new InvalidOperationException("The legacy ciphertext has no compatible decryption key. Provide the legacy key through PCL_LEGACY_ENCRYPTION_KEY.");
         }
 
         try

@@ -56,11 +56,11 @@ internal sealed class WindowsProcessPlatformService : IProcessPlatformService
                 gpuPreferenceRegKey,
                 gpuPreferenceRegValueHigh);
 
-            LogWrapper.Info("System", $"当前程序 ({executable}) 的显卡设置为高性能: {isCurrentHighPerformance}");
+            LogWrapper.Info("System", $"Current GPU preference for {executable} is high performance: {isCurrentHighPerformance}");
 
             if (isCurrentHighPerformance == wantHighPerformance)
             {
-                LogWrapper.Info("System", $"程序 ({executable}) 的显卡设置已经是期望的设置，无需修改");
+                LogWrapper.Info("System", $"GPU preference for {executable} already matches the requested state.");
                 return;
             }
 
@@ -73,19 +73,19 @@ internal sealed class WindowsProcessPlatformService : IProcessPlatformService
         }
         catch (UnauthorizedAccessException ex)
         {
-            const string errorMessage = "没有足够的权限访问注册表。请以管理员身份运行程序或检查用户权限设置。";
+            const string errorMessage = "Insufficient permission to access the registry. Run the program as administrator or check user permissions.";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new UnauthorizedAccessException(errorMessage, ex);
         }
         catch (SecurityException ex)
         {
-            const string errorMessage = "安全策略不允许访问注册表。请联系系统管理员检查安全设置。";
+            const string errorMessage = "Security policy does not allow registry access. Contact the system administrator to review security settings.";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new SecurityException(errorMessage, ex);
         }
         catch (Exception ex)
         {
-            var errorMessage = $"设置 GPU 偏好时发生未预期的错误: {ex.Message}";
+            var errorMessage = $"An unexpected error occurred while setting GPU preference: {ex.Message}";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new InvalidOperationException(errorMessage, ex);
         }
@@ -98,7 +98,7 @@ internal sealed class WindowsProcessPlatformService : IProcessPlatformService
             using var readOnlyKey = Registry.CurrentUser.OpenSubKey(regKey, false);
             if (readOnlyKey == null)
             {
-                LogWrapper.Info("System", "GPU 偏好注册表键不存在，将在需要时创建");
+                LogWrapper.Info("System", "GPU preference registry key does not exist and will be created if needed.");
                 return false;
             }
 
@@ -107,7 +107,7 @@ internal sealed class WindowsProcessPlatformService : IProcessPlatformService
         }
         catch (Exception ex)
         {
-            LogWrapper.Warn(ex, "System", $"读取当前 GPU 偏好设置时出现错误: {ex.Message}");
+            LogWrapper.Warn(ex, "System", $"An error occurred while reading the current GPU preference: {ex.Message}");
             return false;
         }
     }
@@ -125,18 +125,18 @@ internal sealed class WindowsProcessPlatformService : IProcessPlatformService
             writeKey = Registry.CurrentUser.OpenSubKey(regKey, true);
             if (writeKey == null)
             {
-                LogWrapper.Info("System", "创建 GPU 偏好注册表键");
+                LogWrapper.Info("System", "Creating GPU preference registry key.");
                 writeKey = Registry.CurrentUser.CreateSubKey(regKey);
 
                 if (writeKey == null)
                 {
-                    throw new InvalidOperationException($"无法创建注册表键: {regKey}");
+                    throw new InvalidOperationException($"Unable to create registry key: {regKey}");
                 }
             }
 
             var valueToSet = wantHighPerformance ? highPerfValue : defaultValue;
             writeKey.SetValue(executable, valueToSet, RegistryValueKind.String);
-            LogWrapper.Info("System", $"成功设置程序 ({executable}) 的GPU偏好: {(wantHighPerformance ? "高性能" : "默认")}");
+            LogWrapper.Info("System", $"Successfully set GPU preference for {executable}: {(wantHighPerformance ? "high performance" : "default")}");
         }
         catch (UnauthorizedAccessException)
         {
@@ -148,7 +148,7 @@ internal sealed class WindowsProcessPlatformService : IProcessPlatformService
         }
         catch (Exception ex)
         {
-            var errorMessage = $"写入注册表时发生错误: {ex.Message}";
+            var errorMessage = $"An error occurred while writing to the registry: {ex.Message}";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new InvalidOperationException(errorMessage, ex);
         }

@@ -134,12 +134,12 @@ internal static class FrontendDownloadCompositionService
         var warnings = new List<string>();
         if (migratedOldFormat)
         {
-            warnings.Add("检测到旧格式收藏夹数据，已按默认收藏夹方式读取。");
+            warnings.Add("Legacy favorite data was detected and has been read as the default favorites target.");
         }
 
         if (unresolvedCount > 0)
         {
-            warnings.Add($"有 {unresolvedCount} 个收藏项暂时无法解析在线元数据，因此保留了本地保存的工程编号。");
+            warnings.Add($"{unresolvedCount} favorites could not be resolved from online metadata for now, so the locally stored project IDs were kept.");
         }
 
         warnings.AddRange(lookup.Errors);
@@ -149,7 +149,7 @@ internal static class FrontendDownloadCompositionService
 
         return new FrontendDownloadFavoritesState(
             targetStates.Length == 0
-                ? [new FrontendDownloadFavoriteTargetState("默认收藏夹", "default", [])]
+                ? [new FrontendDownloadFavoriteTargetState("Default favorites", "default", [])]
                 : targetStates,
             warningText,
             showWarning);
@@ -170,9 +170,9 @@ internal static class FrontendDownloadCompositionService
 
         return new FrontendDownloadFavoritesState(
             targetStates.Length == 0
-                ? [new FrontendDownloadFavoriteTargetState("默认收藏夹", "default", [])]
+                ? [new FrontendDownloadFavoriteTargetState("Default favorites", "default", [])]
                 : targetStates,
-            migratedOldFormat ? "检测到旧格式收藏夹数据，已按默认收藏夹方式读取。" : string.Empty,
+            migratedOldFormat ? "Legacy favorite data was detected and has been read as the default favorites target." : string.Empty,
             migratedOldFormat && hasEntries);
     }
 
@@ -362,7 +362,7 @@ internal static class FrontendDownloadCompositionService
                 results.Add(new LocalManifestEntry(
                     versionName,
                     profile.VanillaVersion,
-                    profile.VersionType ?? "本地版本",
+                    profile.VersionType ?? "Local version",
                     profile.ReleaseTime,
                     manifestPath,
                     loaderMap));
@@ -380,7 +380,7 @@ internal static class FrontendDownloadCompositionService
         migratedOldFormat = false;
         if (string.IsNullOrWhiteSpace(raw))
         {
-            return [new FavoriteTarget("默认收藏夹", "default", [], new Dictionary<string, string>())];
+            return [new FavoriteTarget("Default favorites", "default", [], new Dictionary<string, string>())];
         }
 
         try
@@ -399,7 +399,7 @@ internal static class FrontendDownloadCompositionService
                 .ToArray();
             return targets.Length > 0
                 ? targets
-                : [new FavoriteTarget("默认收藏夹", "default", [], new Dictionary<string, string>())];
+                : [new FavoriteTarget("Default favorites", "default", [], new Dictionary<string, string>())];
         }
         catch
         {
@@ -407,11 +407,11 @@ internal static class FrontendDownloadCompositionService
             {
                 var favorites = JsonSerializer.Deserialize<HashSet<string>>(raw) ?? [];
                 migratedOldFormat = true;
-                return [new FavoriteTarget("默认收藏夹", "default", favorites, new Dictionary<string, string>())];
+                return [new FavoriteTarget("Default favorites", "default", favorites, new Dictionary<string, string>())];
             }
             catch
             {
-                return [new FavoriteTarget("默认收藏夹", "default", [], new Dictionary<string, string>())];
+                return [new FavoriteTarget("Default favorites", "default", [], new Dictionary<string, string>())];
             }
         }
     }
@@ -482,15 +482,15 @@ internal static class FrontendDownloadCompositionService
     {
         return value switch
         {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
-            >= 10_000 => $"{value / 10_000d:0.#}万",
+            >= 100_000_000 => $"{value / 100_000_000d:0.#} hundred-million",
+            >= 10_000 => $"{value / 10_000d:0.#} ten-thousand",
             _ => value.ToString()
         };
     }
 
     private static FavoriteTarget ParseFavoriteTarget(JsonElement element)
     {
-        var name = GetString(element, "Name") ?? "默认收藏夹";
+        var name = GetString(element, "Name") ?? "Default favorites";
         var id = GetString(element, "Id") ?? "default";
         var favorites = ParseFavoriteIds(element);
         var notes = ParseFavoriteNotes(element);

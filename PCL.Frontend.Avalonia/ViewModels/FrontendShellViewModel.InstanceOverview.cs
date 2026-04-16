@@ -166,17 +166,17 @@ internal sealed partial class FrontendShellViewModel
     {
         var overview = _instanceComposition.Overview;
         InstanceOverviewName = overview.Name;
-        InstanceOverviewSubtitle = LocalizeRawInstanceSubtitle(overview.Subtitle);
+        InstanceOverviewSubtitle = overview.Subtitle;
         _selectedInstanceOverviewIconIndex = Math.Clamp(overview.IconIndex, 0, InstanceOverviewIconOptions.Count - 1);
         _selectedInstanceOverviewCategoryIndex = Math.Clamp(overview.CategoryIndex, 0, InstanceOverviewCategoryOptions.Count - 1);
         _isInstanceOverviewStarred = overview.IsStarred;
 
-        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags.Select(LocalizeOverviewTag).ToArray());
+        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags.ToArray());
         ReplaceItems(
             InstanceOverviewInfoEntries,
             overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(
-                LocalizeOverviewInfoLabel(entry.Label),
-                LocalizeOverviewInfoValue(entry.Label, entry.Value))));
+                entry.Label,
+                entry.Value)));
 
         InstanceOverviewSelectedIcon = LoadInstanceBitmap(
             overview.IconPath,
@@ -791,7 +791,7 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            throw new DirectoryNotFoundException($"未找到目录：{sourcePath}");
+            throw new DirectoryNotFoundException($"Directory not found: {sourcePath}");
         }
 
         if (string.Equals(sourcePath, targetPath, StringComparison.Ordinal))
@@ -879,12 +879,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!File.Exists(corePath))
         {
-            throw new FileNotFoundException($"未找到指定文件：{corePath}");
+            throw new FileNotFoundException($"Specified file not found: {corePath}");
         }
 
         if (!File.Exists(patchArchivePath))
         {
-            throw new FileNotFoundException($"未找到指定文件：{patchArchivePath}");
+            throw new FileNotFoundException($"Specified file not found: {patchArchivePath}");
         }
 
         using var coreStream = new FileStream(corePath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 16384, useAsync: true);

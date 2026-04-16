@@ -16,29 +16,29 @@ public static class LauncherStartupEnvironmentWarningService
 
         if (request.DetectedWindowsVersion.Build < 17763)
         {
-            warnings.Add("- Windows 版本不满足推荐要求，推荐至少 Windows 10 1809，建议考虑升级 Windows 系统");
+            warnings.Add("- Windows does not meet the recommended version. Windows 10 1809 or later is recommended; consider upgrading Windows.");
         }
 
         if (!request.Is64BitOperatingSystem)
         {
-            warnings.Add("- 当前系统为 32 位，不受 PCL 和新版 Minecraft 支持，非常建议重装为 64 位系统后再进行游戏");
+            warnings.Add("- The current system is 32-bit and is not supported by PCL or newer Minecraft versions. Reinstalling a 64-bit system is strongly recommended before playing.");
         }
 
         if (isLikelyMacAppTranslocation)
         {
-            warnings.Add("- PCL 当前被 macOS 放在临时隔离路径中运行，请将 PCL 移到应用程序或其他常规目录后再打开，以避免路径识别异常");
+            warnings.Add("- PCL is currently running from a macOS translocation path. Move it to Applications or another normal directory before opening it to avoid path detection issues.");
         }
         else if (executableDirectory.Contains(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase) ||
                  executableDirectory.Contains(@"AppData\Local\Temp\", StringComparison.OrdinalIgnoreCase))
         {
-            warnings.Add("- PCL 正在临时目录运行，请将 PCL 从压缩包中解压之后再使用，否则可能导致游戏存档或设置丢失");
+            warnings.Add("- PCL is running from a temporary directory. Extract it from the archive before using it, or game saves and settings may be lost.");
         }
 
         if (executableDirectory.Contains("wechat_files", StringComparison.OrdinalIgnoreCase) ||
             executableDirectory.Contains("WeChat Files", StringComparison.OrdinalIgnoreCase) ||
             executableDirectory.Contains("Tencent Files", StringComparison.OrdinalIgnoreCase))
         {
-            warnings.Add("- PCL 正在 QQ、微信、TIM 等社交软件的下载目录运行，请考虑移动到其他位置，否则可能导致游戏存档或设置丢失");
+            warnings.Add("- PCL is running from a download directory used by QQ, WeChat, TIM, or similar apps. Consider moving it elsewhere, or game saves and settings may be lost.");
         }
 
         return warnings;

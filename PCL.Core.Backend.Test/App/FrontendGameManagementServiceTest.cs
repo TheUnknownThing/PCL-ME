@@ -16,7 +16,7 @@ public sealed class FrontendGameManagementServiceTest
             "Create 6.0.4",
             0);
 
-        Assert.AreEqual("【机械动力】create-1.21.1-6.0.4.jar", result);
+        Assert.AreEqual("[机械动力] create-1.21.1-6.0.4.jar", result);
     }
 
     [TestMethod]
@@ -40,7 +40,7 @@ public sealed class FrontendGameManagementServiceTest
             "Recreated Worlds",
             0);
 
-        Assert.AreEqual("【Create】recreated-worlds.zip", result);
+        Assert.AreEqual("[Create] recreated-worlds.zip", result);
     }
 
     [TestMethod]

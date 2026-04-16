@@ -46,7 +46,7 @@ internal static class FrontendGameManagementService
 
         var formattedBaseName = formatIndex switch
         {
-            0 => $"【{normalizedProjectTitle}】{baseName}",
+            0 => $"[{normalizedProjectTitle}] {baseName}",
             1 => $"[{normalizedProjectTitle}] {baseName}",
             2 => $"{normalizedProjectTitle}-{baseName}",
             3 => $"{baseName}-{normalizedProjectTitle}",

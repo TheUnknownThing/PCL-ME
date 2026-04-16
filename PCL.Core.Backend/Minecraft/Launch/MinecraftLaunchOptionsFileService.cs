@@ -16,7 +16,7 @@ public static class MinecraftLaunchOptionsFileService
             : MinecraftLaunchOptionsFileTargetKind.Primary;
 
         var selectionLogMessage = targetKind == MinecraftLaunchOptionsFileTargetKind.Yosbr
-            ? "将修改 Yosbr Mod 中的 options.txt"
+            ? "Will modify options.txt in the Yosbr mod"
             : null;
 
         var writes = new List<MinecraftLaunchOptionWrite>();
@@ -39,19 +39,19 @@ public static class MinecraftLaunchOptionsFileService
 
             if (currentLanguage == requiredLanguage)
             {
-                logMessages.Add($"需要的语言为 {requiredLanguage}，当前语言为 {currentLanguage}，无需修改");
+                logMessages.Add($"Required language is {requiredLanguage}; current language is {currentLanguage}; no change needed");
             }
             else
             {
                 writes.Add(new MinecraftLaunchOptionWrite("lang", "-"));
                 writes.Add(new MinecraftLaunchOptionWrite("lang", requiredLanguage));
-                logMessages.Add($"已将语言从 {currentLanguage} 修改为 {requiredLanguage}");
+                logMessages.Add($"Changed language from {currentLanguage} to {requiredLanguage}");
             }
 
             if (shouldUseDefault)
             {
                 writes.Add(new MinecraftLaunchOptionWrite("forceUnicodeFont", "true"));
-                logMessages.Add("已开启 forceUnicodeFont，确保中文字体正常显示");
+                logMessages.Add("Enabled forceUnicodeFont to keep the font rendering correctly");
             }
         }
 

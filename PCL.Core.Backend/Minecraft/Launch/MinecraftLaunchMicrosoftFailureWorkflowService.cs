@@ -5,14 +5,14 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchMicrosoftFailureWorkflowService
 {
-    private static readonly string IpBlockedMessage = "$当前 IP 的登录尝试异常。" + Environment.NewLine +
-                                                      "如果你使用了 VPN 或加速器，请把它们关掉或更换节点后再试！";
+    private static readonly string IpBlockedMessage = "$This IP is showing unusual sign-in activity." + Environment.NewLine +
+                                                      "If you are using a VPN or accelerator, turn it off or switch nodes and try again.";
 
     public static MinecraftLaunchMicrosoftFailureResolution ResolveOAuthRefreshFailure(string exceptionMessage)
     {
         if (string.IsNullOrWhiteSpace(exceptionMessage))
         {
-            throw new ArgumentException("异常消息不能为空。", nameof(exceptionMessage));
+            throw new ArgumentException("Exception message cannot be empty.", nameof(exceptionMessage));
         }
 
         if (exceptionMessage.Contains("must sign in again", StringComparison.OrdinalIgnoreCase) ||
@@ -55,7 +55,7 @@ public static class MinecraftLaunchMicrosoftFailureWorkflowService
         {
             HttpStatusCode.TooManyRequests => new MinecraftLaunchMicrosoftFailureResolution(
                 MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException,
-                WrappedExceptionMessage: "$登录尝试太过频繁，请等待几分钟后再试！"),
+                WrappedExceptionMessage: "$Sign-in attempts are too frequent. Please wait a few minutes and try again."),
             HttpStatusCode.Forbidden => new MinecraftLaunchMicrosoftFailureResolution(
                 MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException,
                 WrappedExceptionMessage: IpBlockedMessage),
@@ -77,7 +77,7 @@ public static class MinecraftLaunchMicrosoftFailureWorkflowService
         {
             HttpStatusCode.TooManyRequests => new MinecraftLaunchMicrosoftFailureResolution(
                 MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException,
-                WrappedExceptionMessage: "$登录尝试太过频繁，请等待几分钟后再试！"),
+                WrappedExceptionMessage: "$Sign-in attempts are too frequent. Please wait a few minutes and try again."),
             HttpStatusCode.NotFound => new MinecraftLaunchMicrosoftFailureResolution(
                 MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort,
                 Prompt: MinecraftLaunchAccountWorkflowService.GetCreateProfilePrompt()),

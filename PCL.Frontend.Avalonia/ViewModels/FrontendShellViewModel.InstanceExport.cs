@@ -228,7 +228,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task OpenInstanceExportGuideAsync()
     {
-        if (TryResolveHelpEntry("指南/整合包制作.json", out var guideEntry))
+        if (TryResolveHelpEntry("Guides/Modpack Creation Guide.json", out var guideEntry))
         {
             ShowHelpDetail(guideEntry, addActivity: true);
             return;
@@ -291,8 +291,8 @@ internal sealed partial class FrontendShellViewModel
     {
         return new ExportOptionEntryViewModel(
             key,
-            LocalizeExportTitle(title),
-            LocalizeExportDescription(description),
+            title,
+            description,
             isChecked);
     }
 
@@ -306,8 +306,8 @@ internal sealed partial class FrontendShellViewModel
         return new ExportOptionGroupViewModel(
             new ExportOptionEntryViewModel(
                 key,
-                LocalizeExportTitle(title),
-                LocalizeExportDescription(description),
+                title,
+                description,
                 isChecked),
             children);
     }

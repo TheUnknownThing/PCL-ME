@@ -23,7 +23,7 @@ public class HttpAndUncValidator(bool allowNullOrEmpty) : AbstractValidator<stri
                 }
 
                 return x.IsMatch(RegexPatterns.HttpUri) || x.IsMatch(RegexPatterns.UncPath);
-            }).WithMessage("输入的网址无效！");
+            }).WithMessage("The provided path or URL is invalid.");
     }
 
     protected override bool PreValidate(ValidationContext<string> context, ValidationResult result)

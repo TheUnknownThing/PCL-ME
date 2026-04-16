@@ -18,7 +18,7 @@ public sealed class MinecraftCrashAnalysisServiceTest
 
         Assert.IsFalse(result.HasKnownReason);
         Assert.IsFalse(result.HasDirectFile);
-        StringAssert.Contains(result.ResultText, "未能找到相关记录文件");
+        StringAssert.Contains(result.ResultText, "could not find any relevant log files");
     }
 
     [TestMethod]
@@ -44,7 +44,7 @@ public sealed class MinecraftCrashAnalysisServiceTest
 
             Assert.IsTrue(result.HasKnownReason);
             Assert.IsTrue(result.HasDirectFile);
-            StringAssert.Contains(result.ResultText, "名为 jei 的 Mod 导致了游戏出错");
+        StringAssert.Contains(result.ResultText, "The mod named jei caused the game to fail.");
         }
         finally
         {
@@ -78,7 +78,7 @@ public sealed class MinecraftCrashAnalysisServiceTest
 
             Assert.IsTrue(result.HasKnownReason);
             Assert.IsTrue(result.HasModLoaderVersionMismatch);
-            StringAssert.StartsWith(result.ResultText, "Mod 加载器版本与 Mod 不兼容");
+            StringAssert.StartsWith(result.ResultText, "The mod loader version is incompatible with the mod.");
             StringAssert.Contains(result.ResultText, "Mod ID: 'forge', Requested by 'demomod'");
         }
         finally

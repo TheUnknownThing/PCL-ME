@@ -78,7 +78,7 @@ internal static class FrontendInstallWorkflowService
                         Summary: Text(
                             i18n,
                             "download.install.choices.summaries.current_instance_with_time",
-                            "Current instance • {published_at}",
+                            "{published_at}",
                             ("published_at", FormatReleaseTime(i18n, extra["releaseTime"]?.GetValue<string>()))),
                         Version: preferredVersion,
                         Kind: FrontendInstallChoiceKind.Minecraft,
@@ -161,7 +161,7 @@ internal static class FrontendInstallWorkflowService
                         Summary: Text(
                             i18n,
                             "download.install.choices.summaries.current_instance_with_time",
-                            "Current instance • {published_at}",
+                            "{published_at}",
                             ("published_at", FormatReleaseTime(i18n, releaseTime))),
                         Version: preferredVersion,
                         Kind: FrontendInstallChoiceKind.Minecraft,
@@ -206,7 +206,11 @@ internal static class FrontendInstallWorkflowService
                 _ => []
             };
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
+        catch (HttpRequestException)
+        {
+            return [];
+        }
+        catch (InvalidOperationException ex) when (ex.InnerException is HttpRequestException)
         {
             return [];
         }
@@ -1457,7 +1461,7 @@ internal static class FrontendInstallWorkflowService
             }
         }
 
-        throw new InvalidOperationException($"无法下载文件：{url}", lastError);
+        throw new InvalidOperationException($"Unable to download file: {url}", lastError);
     }
 
     private static JsonObject BuildLiteLoaderManifest(FrontendInstallChoice choice)
@@ -2685,7 +2689,7 @@ internal static class FrontendInstallWorkflowService
             }
         }
 
-        throw new InvalidOperationException($"无法读取远程内容：{url}", lastError);
+        throw new InvalidOperationException($"Unable to read remote content: {url}", lastError);
     }
 
     private static JsonObject ReadJsonObjectFromEntry(ZipArchive archive, string entryPath)

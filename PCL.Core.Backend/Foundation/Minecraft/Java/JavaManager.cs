@@ -60,7 +60,7 @@ public class JavaManager
         }
         catch(Exception ex)
         {
-            LogWrapper.Error(ex, ModuleName, "保存 Java 配置项失败");
+            LogWrapper.Error(ex, ModuleName, "Failed to save Java configuration.");
         }
     }
 
@@ -107,7 +107,7 @@ public class JavaManager
         }
         catch(Exception ex)
         {
-            LogWrapper.Error(ex, ModuleName, "无法读取 Java 配置项");
+            LogWrapper.Error(ex, ModuleName, "Failed to read Java configuration.");
         }
     }
 

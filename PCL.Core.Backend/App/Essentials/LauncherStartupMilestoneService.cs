@@ -1,3 +1,5 @@
+using PCL.Core.App.I18n;
+
 namespace PCL.Core.App.Essentials;
 
 public static class LauncherStartupMilestoneService
@@ -10,9 +12,8 @@ public static class LauncherStartupMilestoneService
             ShouldAttemptUnlockHiddenTheme: updatedCount >= 99,
             HiddenThemeNotice: updatedCount >= 99
                 ? new LauncherStartupMilestoneNotice(
-                    "提示",
-                    "你已经打开了 99 次 PCL 跨平台版啦，感谢你长期以来的支持！" + System.Environment.NewLine +
-                    "隐藏主题 铁杆粉 未解锁！跨平台版不包含隐藏主题！")
+                    I18nText.Plain("startup.prompts.milestone.title"),
+                    I18nText.Plain("startup.prompts.milestone.message"))
                 : null);
     }
 }
@@ -23,5 +24,5 @@ public sealed record LauncherStartupMilestoneResult(
     LauncherStartupMilestoneNotice? HiddenThemeNotice);
 
 public sealed record LauncherStartupMilestoneNotice(
-    string Title,
-    string Message);
+    I18nText Title,
+    I18nText Message);

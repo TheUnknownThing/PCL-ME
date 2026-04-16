@@ -4,7 +4,7 @@ using FluentValidation.Results;
 
 namespace PCL.Core.Utils.Validate;
 
-public class RegexValidator(string pattern = "", string errorMessage = "正则检查失败！") : AbstractValidator<string>
+public class RegexValidator(string pattern = "", string errorMessage = "Regex validation failed.") : AbstractValidator<string>
 {
     public string Pattern { get; set; } = pattern;
     public string ErrorMessage { get; set; } = errorMessage;

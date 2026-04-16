@@ -704,7 +704,10 @@ internal sealed partial class FrontendShellViewModel
 
     private string GetRandomHomepageHint()
     {
-        var lines = ReadHomepageHintLines();
+        var lines = FrontendLaunchHintService.GetHintLines(
+            EnumerateHomepageHintPaths(),
+            FrontendLaunchHintService.GetBundledHintDirectory(),
+            _i18n);
         if (lines.Count == 0)
         {
             return T("launch.homepage.random_hint.fallback");
@@ -713,31 +716,21 @@ internal sealed partial class FrontendShellViewModel
         return lines[Random.Shared.Next(lines.Count)];
     }
 
-    private static IReadOnlyList<string> ReadHomepageHintLines()
+    private IEnumerable<string> EnumerateHomepageHintPaths()
     {
-        var externalPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath!) ?? Environment.CurrentDirectory, "PCL", "hints.txt");
-        if (File.Exists(externalPath))
+        var portableDirectory = Path.Combine(
+            Path.GetDirectoryName(Environment.ProcessPath!) ?? Environment.CurrentDirectory,
+            "PCL");
+
+        foreach (var path in FrontendLaunchHintService.EnumerateExternalHintPaths(portableDirectory, _i18n.Locale))
         {
-            try
-            {
-                return File.ReadAllLines(externalPath)
-                    .Select(line => line.Trim())
-                    .Where(line => !string.IsNullOrWhiteSpace(line))
-                    .ToArray();
-            }
-            catch
-            {
-                // Fall back to the bundled asset below.
-            }
+            yield return path;
         }
 
-        var bundledPath = Path.Combine(LauncherRootDirectory, "Resources", "hints.txt");
-        return File.Exists(bundledPath)
-            ? File.ReadAllLines(bundledPath)
-                .Select(line => line.Trim())
-                .Where(line => !string.IsNullOrWhiteSpace(line))
-                .ToArray()
-            : [];
+        foreach (var path in FrontendLaunchHintService.EnumerateExternalHintPaths(_shellActionService.RuntimePaths.DataDirectory, _i18n.Locale))
+        {
+            yield return path;
+        }
     }
 }
 

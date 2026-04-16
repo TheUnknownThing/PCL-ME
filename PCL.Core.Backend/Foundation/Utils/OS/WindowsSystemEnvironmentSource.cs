@@ -39,7 +39,7 @@ internal sealed class WindowsSystemEnvironmentSource(ISystemRuntimeInfoSource ru
         }
         catch (Exception ex)
         {
-            LogWrapper.Warn(ex, "System", "获取 CPU 信息时出错");
+            LogWrapper.Warn(ex, "System", "An error occurred while retrieving CPU information.");
         }
 
         return string.Empty;
@@ -68,7 +68,7 @@ internal sealed class WindowsSystemEnvironmentSource(ISystemRuntimeInfoSource ru
                     }
                     catch (Exception ex)
                     {
-                        LogWrapper.Warn(ex, "System", "解析 GPU 显存时出错");
+                        LogWrapper.Warn(ex, "System", "An error occurred while parsing GPU memory.");
                     }
                 }
 
@@ -77,7 +77,7 @@ internal sealed class WindowsSystemEnvironmentSource(ISystemRuntimeInfoSource ru
         }
         catch (Exception ex)
         {
-            LogWrapper.Warn(ex, "System", "获取 GPU 信息时出错");
+            LogWrapper.Warn(ex, "System", "An error occurred while retrieving GPU information.");
         }
 
         return gpus;

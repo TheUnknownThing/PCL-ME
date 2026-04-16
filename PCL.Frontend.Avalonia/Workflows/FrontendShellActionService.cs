@@ -436,7 +436,7 @@ internal sealed class FrontendShellActionService(
                 installPlan,
                 onProgress,
                 cancellationToken),
-            _ => throw new InvalidOperationException($"不支持的 Java 下载方案：{installPlan.Kind}")
+            _ => throw new InvalidOperationException($"Unsupported Java download plan: {installPlan.Kind}")
         };
     }
 
@@ -446,9 +446,9 @@ internal sealed class FrontendShellActionService(
         CancellationToken cancellationToken)
     {
         var manifestPlan = installPlan.MojangManifestPlan
-                           ?? throw new InvalidOperationException("Mojang Java 下载计划缺少 manifest。");
+                           ?? throw new InvalidOperationException("The Mojang Java download plan is missing a manifest.");
         var transferPlan = installPlan.MojangTransferPlan
-                           ?? throw new InvalidOperationException("Mojang Java 下载计划缺少传输计划。");
+                           ?? throw new InvalidOperationException("The Mojang Java download plan is missing a transfer plan.");
         var effectiveTransferPlan = ResolveEffectiveJavaTransferPlan(manifestPlan, transferPlan);
         var runtimeDirectory = effectiveTransferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory;
         var downloadProvider = GetDownloadProvider();
@@ -530,7 +530,7 @@ internal sealed class FrontendShellActionService(
         CancellationToken cancellationToken)
     {
         var archivePlan = installPlan.ArchivePlan
-                          ?? throw new InvalidOperationException("归档 Java 下载计划缺少归档信息。");
+                          ?? throw new InvalidOperationException("The archive Java download plan is missing archive metadata.");
         var runtimeDirectory = installPlan.RuntimeDirectory;
         var downloadProvider = GetDownloadProvider();
         var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
@@ -583,7 +583,7 @@ internal sealed class FrontendShellActionService(
 
             cancellationToken.ThrowIfCancellationRequested();
             onProgress?.Invoke(new FrontendJavaRuntimeInstallProgressSnapshot(
-                "解压 Java 运行时",
+                "Extracting Java runtime",
                 0,
                 1,
                 archivePlan.Size,
@@ -593,7 +593,7 @@ internal sealed class FrontendShellActionService(
             ExtractJavaRuntimeArchive(archivePath, extractDirectory);
             cancellationToken.ThrowIfCancellationRequested();
             var extractedRoot = ResolveExtractedJavaRuntimeRoot(extractDirectory)
-                                ?? throw new InvalidOperationException("归档中未找到可用的 Java 运行时目录。");
+                                ?? throw new InvalidOperationException("No usable Java runtime directory was found in the archive.");
 
             TryDeleteDirectory(runtimeDirectory);
             Directory.CreateDirectory(runtimeDirectory);
@@ -640,10 +640,10 @@ internal sealed class FrontendShellActionService(
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
         cancellationToken.ThrowIfCancellationRequested();
-        onStageChanged?.Invoke("检查运行依赖");
+        onStageChanged?.Invoke("Checking runtime dependencies");
         EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), speedLimiter, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        onStageChanged?.Invoke("同步游戏本地库");
+        onStageChanged?.Invoke("Synchronizing local game libraries");
         var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
         EnsureNativePathAlias(launchComposition.NativePathAliasDirectory, launchComposition.NativesDirectory);
 
@@ -653,7 +653,7 @@ internal sealed class FrontendShellActionService(
         Directory.CreateDirectory(logDirectory);
 
         cancellationToken.ThrowIfCancellationRequested();
-        onStageChanged?.Invoke("写入启动前配置");
+        onStageChanged?.Invoke("Writing pre-launch configuration");
         ApplyPrerunPlan(launchComposition.PrerunPlan);
 
         var launchScriptPath = FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
@@ -680,7 +680,7 @@ internal sealed class FrontendShellActionService(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        onStageChanged?.Invoke("执行启动前命令");
+        onStageChanged?.Invoke("Running pre-launch commands");
         foreach (var shellPlan in launchComposition.SessionStartPlan.CustomCommandShellPlans)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -698,7 +698,7 @@ internal sealed class FrontendShellActionService(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        onStageChanged?.Invoke("启动游戏进程");
+        onStageChanged?.Invoke("Starting game process");
         var process = SystemProcessManager.Current.Start(
             MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(
                 launchComposition.SessionStartPlan.ProcessShellPlan))
@@ -1291,7 +1291,7 @@ internal sealed class FrontendShellActionService(
                     if (!string.Equals(sha256, archivePlan.Sha256, StringComparison.OrdinalIgnoreCase))
                     {
                         TryDeleteFile(tempPath);
-                        throw new InvalidOperationException($"Java 归档校验失败：{archivePlan.PackageName}");
+                        throw new InvalidOperationException($"Java archive validation failed: {archivePlan.PackageName}");
                     }
                 }
 
@@ -1310,7 +1310,7 @@ internal sealed class FrontendShellActionService(
             }
         }
 
-        throw new InvalidOperationException($"无法下载 Java 归档：{archivePlan.PackageName}", lastError);
+        throw new InvalidOperationException($"Unable to download Java archive: {archivePlan.PackageName}", lastError);
     }
 
     private static string ComputeSha1FromFile(string path)
@@ -1345,7 +1345,7 @@ internal sealed class FrontendShellActionService(
             return;
         }
 
-        throw new InvalidOperationException($"不支持的 Java 归档格式：{Path.GetFileName(archivePath)}");
+        throw new InvalidOperationException($"Unsupported Java archive format: {Path.GetFileName(archivePath)}");
     }
 
     private string? ResolveExtractedJavaRuntimeRoot(string extractDirectory)

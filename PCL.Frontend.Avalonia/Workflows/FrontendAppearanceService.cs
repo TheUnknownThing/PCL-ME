@@ -10,7 +10,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendAppearanceService
 {
     private const string CustomThemeColorName = "custom";
-    private const string DefaultFontOptionName = "默认字体";
+    private const string DefaultFontOptionName = "Default font";
     private const string LaunchFontFamilyResourceKey = "LaunchFontFamily";
     private const string LaunchMotdFontFamilyResourceKey = "LaunchMotdFontFamily";
     private const string BundledHarmonyOsSansFontFamily = "avares://PCL.Frontend.Avalonia/Assets/Fonts#HarmonyOS Sans";

@@ -71,18 +71,18 @@ public static class LauncherVersionTransitionService
         {
             shouldStoreThemeHiddenV2 = true;
             notices.Add(new LauncherVersionTransitionNotice(
-                "重新解锁提醒",
-                "由于新版 PCL 修改了欧皇彩的解锁方式，你需要重新解锁欧皇彩。" + Environment.NewLine +
-                "多谢各位的理解啦！"));
+                "Re-unlock notice",
+                "The new PCL version changed how the Lucky theme is unlocked, so you need to unlock it again." + Environment.NewLine +
+                "Thanks for understanding!"));
         }
 
         if (request.LastVersionCode <= 152 && themeIds.Remove("12"))
         {
             shouldStoreThemeHiddenV2 = true;
             notices.Add(new LauncherVersionTransitionNotice(
-                "重新解锁提醒",
-                "由于新版 PCL 修改了滑稽彩的解锁方式，你需要重新解锁滑稽彩。" + Environment.NewLine +
-                "多谢各位的理解啦！"));
+                "Re-unlock notice",
+                "The new PCL version changed how the Comic theme is unlocked, so you need to unlock it again." + Environment.NewLine +
+                "Thanks for understanding!"));
         }
 
         LauncherCustomSkinMigrationSourceKind? customSkinMigrationSource = null;

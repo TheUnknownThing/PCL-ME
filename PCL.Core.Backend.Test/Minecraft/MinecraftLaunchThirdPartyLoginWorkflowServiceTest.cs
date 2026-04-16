@@ -11,8 +11,8 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
     {
         var result = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationTimeoutFailure("gateway timeout");
 
-        Assert.AreEqual("第三方验证失败", result.DialogTitle);
-        StringAssert.Contains(result.DialogMessage, "连接登录服务器超时");
+        Assert.AreEqual("Third-party verification failed", result.DialogTitle);
+        StringAssert.Contains(result.DialogMessage, "connection to the login server timed out");
         StringAssert.Contains(result.DialogMessage, "gateway timeout");
         Assert.AreEqual(result.DialogMessage, result.WrappedExceptionMessage);
     }
@@ -24,7 +24,7 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped, result.Kind);
         Assert.IsNotNull(result.Failure);
-        StringAssert.Contains(result.WrappedExceptionMessage!, "连接登录服务器超时");
+        StringAssert.Contains(result.WrappedExceptionMessage!, "connection to the login server timed out");
     }
 
     [TestMethod]
@@ -42,7 +42,7 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
     {
         var result = MinecraftLaunchThirdPartyLoginWorkflowService.GetValidationFailure("boom");
 
-        Assert.AreEqual("验证登录失败: boom", result.DialogMessage);
+        Assert.AreEqual("Validation login failed: boom", result.DialogMessage);
         Assert.IsNull(result.WrappedExceptionMessage);
     }
 
@@ -60,7 +60,7 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
     {
         var result = MinecraftLaunchThirdPartyLoginWorkflowService.GetRefreshFailure("boom");
 
-        Assert.AreEqual("刷新登录失败: boom", result.DialogMessage);
+        Assert.AreEqual("Refresh login failed: boom", result.DialogMessage);
         Assert.IsNull(result.WrappedExceptionMessage);
     }
 
@@ -80,7 +80,7 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
         var result = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveRefreshFailure("boom", hasRetriedRefresh: true);
 
         Assert.AreEqual(MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped, result.Kind);
-        Assert.AreEqual("二轮刷新登录失败", result.WrappedExceptionMessage);
+        Assert.AreEqual("Second refresh login failed", result.WrappedExceptionMessage);
     }
 
     [TestMethod]
@@ -90,8 +90,8 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
             "raw exception",
             """{"errorMessage":"Invalid password"}""");
 
-        Assert.AreEqual("刷新登录失败: raw exception", result.DialogMessage);
-        Assert.AreEqual("$登录失败：Invalid password", result.WrappedExceptionMessage);
+        Assert.AreEqual("Refresh login failed: raw exception", result.DialogMessage);
+        Assert.AreEqual("$Login failed: Invalid password", result.WrappedExceptionMessage);
     }
 
     [TestMethod]
@@ -102,7 +102,7 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
             """{"errorMessage":"Invalid password"}""");
 
         Assert.AreEqual(MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped, result.Kind);
-        Assert.AreEqual("$登录失败：Invalid password", result.WrappedExceptionMessage);
+        Assert.AreEqual("$Login failed: Invalid password", result.WrappedExceptionMessage);
     }
 
     [TestMethod]
@@ -112,8 +112,8 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
             "raw exception",
             "not json");
 
-        Assert.AreEqual("刷新登录失败: raw exception", result.DialogMessage);
-        StringAssert.Contains(result.WrappedExceptionMessage!, "第三方验证登录失败");
+        Assert.AreEqual("Refresh login failed: raw exception", result.DialogMessage);
+        StringAssert.Contains(result.WrappedExceptionMessage!, "Third-party verification login failed");
         StringAssert.Contains(result.WrappedExceptionMessage!, "not json");
     }
 
@@ -122,8 +122,8 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
     {
         var result = MinecraftLaunchThirdPartyLoginWorkflowService.GetLoginFailure("raw exception");
 
-        Assert.AreEqual("刷新登录失败: raw exception", result.DialogMessage);
-        StringAssert.Contains(result.WrappedExceptionMessage!, "第三方验证登录失败");
+        Assert.AreEqual("Refresh login failed: raw exception", result.DialogMessage);
+        StringAssert.Contains(result.WrappedExceptionMessage!, "Third-party verification login failed");
         StringAssert.Contains(result.WrappedExceptionMessage!, "raw exception");
     }
 
@@ -133,6 +133,6 @@ public sealed class MinecraftLaunchThirdPartyLoginWorkflowServiceTest
         var result = MinecraftLaunchThirdPartyLoginWorkflowService.ResolveLoginFailure("raw exception");
 
         Assert.AreEqual(MinecraftLaunchThirdPartyLoginFailureResolutionKind.ShowFailureAndThrowWrapped, result.Kind);
-        StringAssert.Contains(result.WrappedExceptionMessage!, "第三方验证登录失败");
+        StringAssert.Contains(result.WrappedExceptionMessage!, "Third-party verification login failed");
     }
 }

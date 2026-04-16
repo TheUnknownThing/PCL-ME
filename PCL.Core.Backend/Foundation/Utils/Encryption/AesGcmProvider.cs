@@ -35,7 +35,7 @@ namespace PCL.Core.Utils.Encryption
         public byte[] Decrypt(ReadOnlySpan<byte> data, ReadOnlySpan<byte> key)
         {
             if (data.Length < NonceSize + TagSize)
-                throw new ArgumentException("加密数据长度不足。");
+                throw new ArgumentException("The encrypted data is too short.");
 
             ReadOnlySpan<byte> nonce = data.Slice(0, NonceSize);
             ReadOnlySpan<byte> tag = data.Slice(NonceSize, TagSize);

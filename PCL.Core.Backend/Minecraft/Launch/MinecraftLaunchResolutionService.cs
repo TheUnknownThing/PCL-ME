@@ -48,7 +48,7 @@ public static class MinecraftLaunchResolutionService
             width,
             height,
             shouldApplyLegacyDpiFix,
-            shouldApplyLegacyDpiFix ? $"已应用窗口大小过大修复（{request.JavaRevision}）" : null);
+            shouldApplyLegacyDpiFix ? $"Applied legacy oversized-window fix ({request.JavaRevision})" : null);
     }
 }
 

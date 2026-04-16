@@ -7,6 +7,6 @@ public class NullOrEmptyValidator : AbstractValidator<string>
     public NullOrEmptyValidator()
     {
         RuleFor(x => x)
-            .Must(x => !string.IsNullOrEmpty(x)).WithMessage("输入内容不能为空！");
+            .Must(x => !string.IsNullOrEmpty(x)).WithMessage("Input cannot be empty.");
     }
 }

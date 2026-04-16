@@ -44,7 +44,7 @@ public static class MinecraftLaunchThirdPartyLoginExecutionService
                 MinecraftLaunchThirdPartyLoginStepKind.Fail,
                 0.65,
                 HasRetriedRefresh: true,
-                FailureMessage: "二轮刷新登录失败")
+                FailureMessage: "Second refresh login failed")
             : new MinecraftLaunchThirdPartyLoginStep(
                 MinecraftLaunchThirdPartyLoginStepKind.Authenticate,
                 0.45,

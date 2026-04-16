@@ -12,7 +12,7 @@ public static class LauncherStartupShellService
         {
             LauncherStartupCommandKind.SetGpuPreference when !command.IsValid => new LauncherStartupImmediateCommandPlan(
                 LauncherStartupImmediateCommandKind.Invalid,
-                InvalidMessage: "缺少需要设置显卡偏好的可执行文件路径。"),
+                InvalidMessage: I18nText.Plain("shell.status.commands.invalid_message.gpu_preference_path_missing")),
             LauncherStartupCommandKind.SetGpuPreference => new LauncherStartupImmediateCommandPlan(
                 LauncherStartupImmediateCommandKind.SetGpuPreference,
                 command.Argument),
@@ -46,7 +46,7 @@ public static class LauncherStartupShellService
 public sealed record LauncherStartupImmediateCommandPlan(
     LauncherStartupImmediateCommandKind Kind,
     string? Argument = null,
-    string? InvalidMessage = null)
+    I18nText? InvalidMessage = null)
 {
     public static LauncherStartupImmediateCommandPlan None { get; } = new(LauncherStartupImmediateCommandKind.None);
 }

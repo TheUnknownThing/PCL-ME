@@ -39,7 +39,7 @@ public sealed class LauncherVersionTransitionServiceTest
         Assert.IsTrue(result.ShouldShowCommunityAnnouncement);
         Assert.IsTrue(result.ShouldShowUpdateLog);
         CollectionAssert.AreEqual(
-            new[] { "重新解锁提醒", "重新解锁提醒" },
+            new[] { "Re-unlock notice", "Re-unlock notice" },
             result.Notices.Select(notice => notice.Title).ToArray());
     }
 

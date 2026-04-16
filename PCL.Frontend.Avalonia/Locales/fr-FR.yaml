@@ -205,6 +205,8 @@ shell:
         set_gpu_preference: Définir la préférence GPU
         optimize_memory: Optimiser la mémoire
         invalid: Invalide
+        invalid_message:
+          gpu_preference_path_missing: Le chemin de l'exécutable requis pour configurer la préférence GPU est manquant.
     surface_meta:
       line: Surface {kind} • {sidebar_group} • {navigation_state}
       no_sidebar_group: Aucun groupe de barre latérale
@@ -706,6 +708,11 @@ shell:
       failure_title: Échec de {title}
     help:
       default_group: Général
+      groups:
+        guides: Guides
+        help: Aide
+        launcher: Lanceur
+        personalization: Personnalisation
       search:
         empty_header: Aucun résultat
         no_results: Aucune entrée d'aide ne correspond aux mots-clés actuels.
@@ -889,6 +896,17 @@ startup:
         {warnings}
       actions:
         acknowledge: je comprends
+    update_log:
+      title: PCL-ME a été mis à jour vers {version_branch} {version_base}
+      actions:
+        confirm: OK
+        full_changelog: Journal complet des modifications
+    milestone:
+      title: Notice
+      message: >-
+        Vous avez ouvert l'édition multiplateforme de PCL 99 fois. Merci pour votre soutien de longue date !
+
+        Le thème caché Hardcore Fan n'est pas débloqué. L'édition multiplateforme n'inclut pas de thèmes cachés !
 launch:
   announcements:
     community_edition_intro:
@@ -1082,6 +1100,61 @@ launch:
         opened_profile_create_page: Ouverture de la page de création de compte Microsoft
         opened_related_web: J'ai ouvert la page Web correspondante
         opened_sign_in_page: Ouverture de la page de connexion Microsoft
+      prompts:
+        create_profile:
+          actions:
+            cancel: Cancel
+            create_profile: Create profile
+          message: Please create a Minecraft profile before signing in again.
+          title: Sign-in failed
+        ownership:
+          actions:
+            buy_minecraft: Buy Minecraft
+            cancel: Cancel
+          message: We could not retrieve this account's information. The account may not own Minecraft Java Edition, or the Xbox Game Pass may have expired.
+          title: Sign-in failed
+        password_login:
+          actions:
+            cancel: Cancel
+            retry: Retry sign-in
+            set_password: Set password
+          message: When signing in, choose “Other sign-in options”, then choose “Use my password”. If that option is unavailable, choose “Set password” and sign in again after setting it.
+          title: Password sign-in required
+        refresh_network_error:
+          actions:
+            cancel: Cancel
+            continue: Continue
+          message: The launcher encountered a network error while refreshing account information. You can cancel, check your network, and try again, or ignore the error and continue, but some servers may not work.
+          title: Account refresh failed
+        xsts:
+          ban:
+            actions:
+              ok: OK
+            message: This Microsoft account appears to be banned and cannot sign in.
+            title: Sign-in failed
+          region_restricted:
+            actions:
+              ok: OK
+            message: Your country or region cannot sign in to Microsoft accounts. Please use a VPN or accelerator and try again.
+            title: Sign-in failed
+          signup:
+            actions:
+              cancel: Cancel
+              register: Register
+            message: You have not registered an Xbox account yet. Please register before signing in.
+            title: Sign-in notice
+          underage:
+            actions:
+              i_do_not_know: I do not know
+              over_13: Over 13
+              under_13: Under 13
+            followup:
+              message: Please update the account birth date on the opened page (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              open_page:
+                message: Please follow the instructions on the opened page and update the account birth date (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              title: Sign-in notice
+            message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
+            title: Sign-in notice
       status:
         browser_opened: Navigateur ouvert. Terminez l'autorisation et revenez ici.
         initial: Prêt à vous connecter avec Microsoft
@@ -1141,6 +1214,7 @@ launch:
       empty: Aucun profil disponible
       hint: Choisissez un profil de lancement
       hint_empty: Aucun profil de lancement sélectionné
+      prompt_title: Select a profile
   status:
     activities:
       canceled: Lancement annulé
@@ -1867,6 +1941,12 @@ setup:
       disable_hardware_acceleration_restart: Les modifications prendront effet au prochain démarrage du lanceur.
     labels:
       debug_animation_speed_off: Désactivé
+    debug_summary:
+      fields:
+        current_instance: Current instance
+        instance_directory: Instance directory
+      values:
+        not_selected: Not selected
     messages:
       debug_mode_disabled: La sortie de diagnostic supplémentaire a été désactivée.
       debug_mode_enabled: Les journaux détaillés et les diagnostics sont désormais activés.
@@ -2052,6 +2132,14 @@ download:
         none: Aucune tâche
         skipped: "{count} ignoré"
         tasks: Tâches {count}
+      target:
+        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
+        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
+        datapack_save_title: Select datapack save
+        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
+        datapack_save_confirm: Start install
+        datapack_save_failed: Failed to select datapack save
+        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
     empty:
       body: Ajoutez des projets aux favoris afin de pouvoir les installer ou les partager plus tard.
       title: Pas encore de favoris
@@ -2325,10 +2413,30 @@ download:
     current_instance:
       actions:
         switch: Changer
+        switch_save: Switch save
+      activities:
+        switch_save: Switch save
+      dialogs:
+        select_instance:
+          title: Select instance
+          message: Choose the instance you want to browse and install datapacks for.
+          failed: Failed to select instance
+        select_save:
+          title: Select save
+          message: Choose the target save in {instance_name} where the datapack should be installed.
+          failed: Failed to select save
+      messages:
+        no_instances_available: No instances are available.
+        instance_unavailable: '{instance_name} is currently unavailable.'
+        no_saves_available: '{instance_name} currently has no available saves.'
+        save_not_found: The selected save was not found.
+        save_already_selected: '{instance_name} • {save_name} is already the current save.'
       none_selected: Aucune instance sélectionnée
       summary_none_selected: Sélectionnez une instance pour améliorer le filtrage de compatibilité
+      summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
       summary_suffix: Utilisé pour le filtrage de compatibilité
       title: Instance actuelle
+      title_save: Current save
     empty:
       default: Aucun résultat
     filters:
@@ -2479,6 +2587,7 @@ resource_detail:
     download_file: "Télécharger le fichier : {entry_title}"
     download_started: "Téléchargement démarré : {entry_title}"
     install_current_instance: Installer sur l'instance actuelle
+    install_current_save: Install to current save
     install_current_instance_failed: Échec de l'installation sur l'instance actuelle
     navigate_back: Retour à {target_title}
     open_dependency_project: "Projet de dépendance ouvert : {entry_title}"
@@ -2510,6 +2619,7 @@ resource_detail:
   current_instance:
     none_selected: Aucune instance actuelle sélectionnée
     summary_none_selected: Sélectionnez une instance pour installer ce projet directement
+    summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
   categories:
     adventure: Aventure
     automation: Automatisation
@@ -2748,6 +2858,7 @@ resource_detail:
     unlisted: Non répertorié
   suggested_release:
     none: Aucune version suggérée
+    target_save: 'Target save: {save_name}'
     title: Sortie suggérée
   translate_description:
     empty: Il n'y a pas de description à traduire

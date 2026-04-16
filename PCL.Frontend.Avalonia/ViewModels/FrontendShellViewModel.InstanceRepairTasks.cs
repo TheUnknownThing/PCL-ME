@@ -28,7 +28,7 @@ internal sealed partial class FrontendShellViewModel
 
         TaskCenter.Register(repairTask, start: false);
         await repairTask.ExecuteAsync(cancellationToken);
-        return repairTask.Result ?? throw new InvalidOperationException("实例修复任务未返回结果。");
+        return repairTask.Result ?? throw new InvalidOperationException("The instance repair task did not return a result.");
     }
 }
 

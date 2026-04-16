@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
 
 namespace PCL.Core.Test.App;
@@ -24,7 +25,7 @@ public sealed class LauncherStartupMilestoneServiceTest
         Assert.AreEqual(99, result.UpdatedCount);
         Assert.IsTrue(result.ShouldAttemptUnlockHiddenTheme);
         Assert.IsNotNull(result.HiddenThemeNotice);
-        Assert.AreEqual("提示", result.HiddenThemeNotice.Title);
-        StringAssert.Contains(result.HiddenThemeNotice.Message, "99 次 PCL 跨平台版");
+        Assert.AreEqual("startup.prompts.milestone.title", result.HiddenThemeNotice.Title.Key);
+        Assert.AreEqual("startup.prompts.milestone.message", result.HiddenThemeNotice.Message.Key);
     }
 }

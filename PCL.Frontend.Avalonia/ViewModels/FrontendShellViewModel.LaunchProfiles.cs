@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.Workflows;
@@ -329,7 +330,7 @@ internal sealed partial class FrontendShellViewModel
                 var decisionPrompt = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt(ex.ResponseBody);
                 if (decisionPrompt is not null)
                 {
-                    LaunchMicrosoftStatusText = decisionPrompt.Message;
+                    LaunchMicrosoftStatusText = T(decisionPrompt.MessageText);
                     if (decisionPrompt.Options.FirstOrDefault()?.Decision == MinecraftLaunchAccountDecisionKind.OpenUrlAndAbort &&
                         !string.IsNullOrWhiteSpace(decisionPrompt.Options[0].Url))
                     {
@@ -353,7 +354,7 @@ internal sealed partial class FrontendShellViewModel
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(minecraftAccessToken));
             if (!MinecraftLaunchMicrosoftProtocolService.HasMinecraftOwnership(ownershipJson))
             {
-                LaunchMicrosoftStatusText = MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt().Message;
+                LaunchMicrosoftStatusText = T(MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt().MessageText);
                 ResetMicrosoftDeviceFlow(keepStatus: true);
                 return;
             }
@@ -367,7 +368,7 @@ internal sealed partial class FrontendShellViewModel
             catch (LaunchProfileRequestException ex) when (ex.StatusCode == (int)HttpStatusCode.NotFound)
             {
                 var prompt = MinecraftLaunchAccountWorkflowService.GetCreateProfilePrompt();
-                LaunchMicrosoftStatusText = prompt.Message;
+                LaunchMicrosoftStatusText = T(prompt.MessageText);
                 if (prompt.Options.FirstOrDefault()?.Decision == MinecraftLaunchAccountDecisionKind.OpenUrlAndAbort &&
                     !string.IsNullOrWhiteSpace(prompt.Options[0].Url))
                 {

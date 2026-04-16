@@ -34,7 +34,7 @@ public sealed class LauncherStartupVersionIsolationMigrationServiceTest
 
         Assert.IsTrue(result.ShouldStoreVersionIsolationV2);
         Assert.AreEqual(3, result.VersionIsolationV2Value);
-        Assert.AreEqual("[Start] 从老 PCL 迁移版本隔离", result.LogMessage);
+        Assert.AreEqual("[Start] Migrated version isolation from legacy PCL", result.LogMessage);
     }
 
     [TestMethod]
@@ -49,7 +49,7 @@ public sealed class LauncherStartupVersionIsolationMigrationServiceTest
             VersionIsolationV2DefaultValue: 4));
 
         Assert.AreEqual(2, result.VersionIsolationV2Value);
-        Assert.AreEqual("[Start] 从老 PCL 升级，但此前未调整版本隔离，使用老的版本隔离默认值", result.LogMessage);
+        Assert.AreEqual("[Start] Upgraded from legacy PCL without a version-isolation change; using the legacy default", result.LogMessage);
     }
 
     [TestMethod]
@@ -64,6 +64,6 @@ public sealed class LauncherStartupVersionIsolationMigrationServiceTest
             VersionIsolationV2DefaultValue: 4));
 
         Assert.AreEqual(4, result.VersionIsolationV2Value);
-        Assert.AreEqual("[Start] 全新的 PCL，使用新的版本隔离默认值", result.LogMessage);
+        Assert.AreEqual("[Start] Fresh PCL install, using the new version-isolation default", result.LogMessage);
     }
 }

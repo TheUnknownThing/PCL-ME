@@ -675,7 +675,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var installResult = await ExecuteManagedJavaRuntimeDownloadAsync(
-                $"自动下载 {installPlan.DisplayName} ({installPlan.SourceName})",
+                $"Auto download {installPlan.DisplayName} ({installPlan.SourceName})",
                 installPlan);
             downloadState = MinecraftJavaRuntimeDownloadSessionState.Finished;
 
@@ -742,7 +742,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 _isLaunchBlockedByPrompt = false;
                 _pendingLaunchAfterPrompt = false;
-                AddActivity("Java 下载已取消", "自动下载已取消，未注册新的 Java 运行时。");
+                AddActivity("Java download canceled", "The automatic download was canceled and no new Java runtime was registered.");
             });
         }
         catch (Exception ex)
@@ -765,7 +765,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    AddActivity("Java 下载清理", transitionPlan.CleanupLogMessage);
+                    AddActivity("Java download cleanup", transitionPlan.CleanupLogMessage);
                 });
             }
 
@@ -780,7 +780,7 @@ internal sealed partial class FrontendShellViewModel
                 {
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        AddActivity("Java 下载清理", $"未能自动清理目录：{transitionPlan.CleanupDirectoryPath}");
+                        AddActivity("Java download cleanup", $"Could not clean up directory automatically: {transitionPlan.CleanupDirectoryPath}");
                     });
                 }
             }
@@ -894,8 +894,8 @@ internal sealed partial class FrontendShellViewModel
             RefreshGameLogSurface();
 
             SetLaunchDialogRunningState(
-                "正在启动游戏",
-                "同步实例状态",
+                "Launching game",
+                "Synchronizing instance state",
                 0.01d,
                 showDownload: false,
                 isError: false);
@@ -926,7 +926,7 @@ internal sealed partial class FrontendShellViewModel
                 HideLaunchDialog();
                 SetPromptOverlayOpen(true);
                 SelectPromptLane(AvaloniaPromptLaneKind.Launch, updateActivity: false);
-                AddActivity("启动前提示待处理", $"{LaunchVersionSubtitle} 还有 {_promptCatalog[AvaloniaPromptLaneKind.Launch].Count} 个提示需要确认。");
+                AddActivity("Launch prompts pending", $"{LaunchVersionSubtitle} still has {_promptCatalog[AvaloniaPromptLaneKind.Launch].Count} prompts that need confirmation.");
                 _isLaunchInProgress = false;
                 RaiseLaunchSessionProperties();
                 return;
@@ -971,7 +971,7 @@ internal sealed partial class FrontendShellViewModel
                 _launchComposition,
                 _instanceComposition.Selection.InstanceDirectory,
                 stage => Dispatcher.UIThread.Post(() => SetLaunchDialogRunningState(
-                    "正在启动游戏",
+                    "Launching game",
                     stage,
                     ResolveLaunchDialogStartupProgress(stage),
                     showDownload: false,
@@ -983,10 +983,10 @@ internal sealed partial class FrontendShellViewModel
             _latestLaunchRawOutputLogPath = startResult.RawOutputLogPath;
             RefreshDebugModeSurface();
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
-            AppendLaunchDebugLine("启动脚本", startResult.LaunchScriptPath);
-            AppendLaunchDebugLine("会话摘要", startResult.SessionSummaryPath);
-            AppendLaunchDebugLine("原始输出", startResult.RawOutputLogPath);
-                        AddActivity(T("launch.status.activities.game_process_started"), T("launch.status.messages.game_process_started", ("instance_name", LaunchVersionSubtitle), ("pid", startResult.Process.Id)));
+            AppendLaunchDebugLine("Launch script", startResult.LaunchScriptPath);
+            AppendLaunchDebugLine("Session summary", startResult.SessionSummaryPath);
+            AppendLaunchDebugLine("Raw output", startResult.RawOutputLogPath);
+            AddActivity(T("launch.status.activities.game_process_started"), T("launch.status.messages.game_process_started", ("instance_name", LaunchVersionSubtitle), ("pid", startResult.Process.Id)));
             if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
             {
                 NavigateTo(
@@ -1015,7 +1015,7 @@ internal sealed partial class FrontendShellViewModel
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine(T("launch.status.logs.failed", ("message", ex.Message)));
-            AppendLaunchDebugException("启动失败明细", ex);
+            AppendLaunchDebugException("Launch failure details", ex);
             AddFailureActivity(T("launch.status.activities.failed"), ex.Message);
             SetLaunchDialogStoppedState(T("launch.status.stopped.failed_title"), ex.Message, isError: true);
         }
@@ -1031,11 +1031,11 @@ internal sealed partial class FrontendShellViewModel
     {
         return stage switch
         {
-            "检查运行依赖" => 0.9d,
-            "同步游戏本地库" => 0.93d,
-            "写入启动前配置" => 0.95d,
-            "执行启动前命令" => 0.97d,
-            "启动游戏进程" => 0.99d,
+            "Checking runtime dependencies" => 0.9d,
+            "Synchronizing local game libraries" => 0.93d,
+            "Writing pre-launch configuration" => 0.95d,
+            "Running pre-launch commands" => 0.97d,
+            "Starting game process" => 0.99d,
             _ => 0.9d
         };
     }
@@ -1182,7 +1182,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             AppendLaunchLogLine(T("shell.prompts.launch_logs.monitor_exception", ("message", ex.Message)));
-            AppendLaunchDebugException("会话监控异常明细", ex);
+            AppendLaunchDebugException("Session monitor exception details", ex);
             AddActivity(T("shell.prompts.activities.monitor_exception.title"), ex.Message);
         }
         finally

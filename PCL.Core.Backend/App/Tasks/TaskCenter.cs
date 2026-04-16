@@ -61,7 +61,7 @@ public static class TaskCenter
                         RunOnContext(context, () =>
                         {
                             model!.IsCancelRequested = false;
-                            model!.StateMessage = $"取消失败：{ex.Message}";
+                            model!.StateMessage = $"Cancel failed: {ex.Message}";
                             TouchModel(model, updateStateSince: false);
                         });
                     }

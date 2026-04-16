@@ -605,7 +605,7 @@ internal sealed partial class FrontendShellViewModel
                         .Select(entry => CreateHelpTopic(entry, groupTitle))
                         .ToArray();
                     return new HelpTopicGroupViewModel(
-                        groupTitle,
+                        LocalizeHelpGroupTitle(groupTitle),
                         items,
                         isExpanded: IsPrimaryHelpGuideGroup(groupTitle));
                 })
@@ -626,7 +626,7 @@ internal sealed partial class FrontendShellViewModel
     private HelpTopicViewModel CreateHelpTopic(FrontendToolsHelpEntry entry, string groupTitle)
     {
         return new HelpTopicViewModel(
-            groupTitle,
+            LocalizeHelpGroupTitle(groupTitle),
             entry.Title,
             entry.Summary,
             entry.Keywords,
@@ -634,10 +634,21 @@ internal sealed partial class FrontendShellViewModel
             new ActionCommand(() => OpenHelpTopic(entry)));
     }
 
+    private string LocalizeHelpGroupTitle(string groupTitle)
+    {
+        return groupTitle switch
+        {
+            "Guides" => LT("shell.tools.help.groups.guides"),
+            "Help" => LT("shell.tools.help.groups.help"),
+            "Launcher" => LT("shell.tools.help.groups.launcher"),
+            "Personalization" => LT("shell.tools.help.groups.personalization"),
+            _ => groupTitle
+        };
+    }
+
     private static bool IsPrimaryHelpGuideGroup(string groupTitle)
     {
-        return string.Equals(groupTitle, "指南", StringComparison.Ordinal)
-               || string.Equals(groupTitle, "Guides", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(groupTitle, "Guides", StringComparison.OrdinalIgnoreCase);
     }
 
     private static Bitmap? ResolveHelpTopicIcon(FrontendToolsHelpEntry entry)
@@ -701,12 +712,12 @@ internal sealed partial class FrontendShellViewModel
             : LoadCachedBitmapFromPath(GetLauncherAssetPath(pathSegments));
     }
 
-    private static bool HelpEntryMatchesQuery(FrontendToolsHelpEntry entry, string query)
+    private bool HelpEntryMatchesQuery(FrontendToolsHelpEntry entry, string query)
     {
         return entry.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
             || entry.Summary.Contains(query, StringComparison.OrdinalIgnoreCase)
             || entry.Keywords.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || entry.GroupTitles.Any(groupTitle => groupTitle.Contains(query, StringComparison.OrdinalIgnoreCase));
+            || entry.GroupTitles.Any(groupTitle => LocalizeHelpGroupTitle(groupTitle).Contains(query, StringComparison.OrdinalIgnoreCase));
     }
 
     private static int GetHelpSearchScore(HelpTopicViewModel topic, string query)
@@ -740,7 +751,7 @@ internal sealed partial class FrontendShellViewModel
             title,
             info,
             new ActionCommand(() => AddActivity(
-                T("resource_detail.activities.view_details", ("surface_title", title)),
+                T("resource_detail.actions.view_details"),
                 info)));
     }
 
@@ -906,7 +917,7 @@ internal sealed partial class FrontendShellViewModel
 
     private string LocalizeDownloadCatalogActionText(string actionText)
     {
-        return NormalizeDownloadCatalogActionToken(actionText) switch
+        return actionText switch
         {
             "save_installer" => T("download.catalog.actions.save_installer"),
             "open_website" => T("common.actions.open_website"),
@@ -937,7 +948,7 @@ internal sealed partial class FrontendShellViewModel
             return title;
         }
 
-        var localizedGroup = NormalizeDownloadCatalogSectionGroupToken(match.Groups["group"].Value.Trim()) switch
+        var localizedGroup = match.Groups["group"].Value.Trim() switch
         {
             "latest_versions" => T("download.catalog.sections.latest_versions"),
             "remote_catalog" => T("download.catalog.sections.remote_catalog"),
@@ -1008,13 +1019,7 @@ internal sealed partial class FrontendShellViewModel
             return T("download.catalog.loading.fetch_list", ("surface_name", ResolveDownloadCatalogRouteTitle(route)));
         }
 
-        if (TryParseLegacyDownloadCatalogSurfaceName(loadingText, out var surfaceName))
-        {
-            return T("download.catalog.loading.fetch_list", ("surface_name", surfaceName));
-        }
-
-        if (string.Equals(loadingText, "fetch_versions", StringComparison.Ordinal)
-            || string.Equals(loadingText, "正在获取版本列表", StringComparison.Ordinal))
+        if (string.Equals(loadingText, "fetch_versions", StringComparison.Ordinal))
         {
             return T("download.catalog.loading.fetch_versions");
         }
@@ -1041,45 +1046,6 @@ internal sealed partial class FrontendShellViewModel
                 CreateDownloadCatalogEntry("Complementary Shaders", T("download.favorites.demo.entries.complementary.info"), BuildActivityDetail(T("shell.navigation.subpages.download_shader.title"), T("instance.overview.tags.favorited")), "view_details")
             ])
         ];
-    }
-
-    private static string NormalizeDownloadCatalogActionToken(string actionText)
-    {
-        return actionText switch
-        {
-            "保存安装器" => "save_installer",
-            "打开官网" => "open_website",
-            "查看详情" => "view_details",
-            _ => actionText
-        };
-    }
-
-    private static string NormalizeDownloadCatalogSectionGroupToken(string group)
-    {
-        return group switch
-        {
-            "最新版本" => "latest",
-            "正式版" => "release",
-            "预览版" => "preview",
-            "远古版" => "legacy",
-            "愚人节版" => "april_fools",
-            _ => group
-        };
-    }
-
-    private static bool TryParseLegacyDownloadCatalogSurfaceName(string loadingText, out string surfaceName)
-    {
-        var listMatch = Regex.Match(loadingText, @"^正在获取 (?<surface>.+) 列表$|^正在获取(?<surface2>.+)列表$");
-        if (listMatch.Success)
-        {
-            surfaceName = listMatch.Groups["surface"].Success
-                ? listMatch.Groups["surface"].Value
-                : listMatch.Groups["surface2"].Value;
-            return true;
-        }
-
-        surfaceName = string.Empty;
-        return false;
     }
 
     private ActionCommand CreateLinkCommand(string title, string url)
