@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.Minecraft.Java;
@@ -13,6 +14,7 @@ public sealed class FrontendJavaInventoryServiceTest
     [TestMethod]
     public void ParseStorageItemsPreservesAutoInstalledSource()
     {
+        const string executablePath = "/tmp/runtime/jre-21/bin/java";
         var result = FrontendJavaInventoryService.ParseStorageItems(
             """
             [
@@ -25,7 +27,7 @@ public sealed class FrontendJavaInventoryServiceTest
             """);
 
         Assert.AreEqual(1, result.Count);
-        Assert.AreEqual("/tmp/runtime/jre-21/bin/java", result.Single().Path);
+        Assert.AreEqual(Path.GetFullPath(executablePath), result.Single().Path);
         Assert.AreEqual(JavaSource.AutoInstalled, result.Single().Source);
         Assert.IsTrue(result.Single().IsEnable);
     }
