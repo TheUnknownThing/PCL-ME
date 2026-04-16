@@ -78,7 +78,7 @@
   </ItemGroup>
 
   <Target Name="ValidateI18nResources"
-          BeforeTargets="BeforeBuild"
+          AfterTargets="Build"
           Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipI18nBuildValidation)' != 'true'">
     <Error Text="ERROR|I18N validation tool was not built at $(I18nToolDllPath)."
            Condition="!Exists('$(I18nToolDllPath)')" />
