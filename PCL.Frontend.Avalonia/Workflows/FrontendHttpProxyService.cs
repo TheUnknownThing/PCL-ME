@@ -321,6 +321,11 @@ internal static class FrontendHttpProxyService
 
                 return ordered;
             }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Endpoint-local timeout/cancellation should not abort all DoH fallback attempts.
+                continue;
+            }
             catch (OperationCanceledException)
             {
                 throw;
@@ -478,6 +483,11 @@ internal static class FrontendHttpProxyService
                         .ToArray();
                 }
             }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Endpoint-local timeout/cancellation should not abort all DoH fallback attempts.
+                continue;
+            }
             catch (OperationCanceledException)
             {
                 throw;
@@ -528,8 +538,16 @@ internal static class FrontendHttpProxyService
 
     private static IEnumerable<IPAddress> OrderAddresses(IEnumerable<IPAddress> addresses)
     {
+        var preferIPv4 = OperatingSystem.IsWindows();
         return addresses
-            .OrderByDescending(address => address.AddressFamily == AddressFamily.InterNetworkV6)
+            .OrderBy(address => address.AddressFamily switch
+            {
+                AddressFamily.InterNetwork when preferIPv4 => 0,
+                AddressFamily.InterNetworkV6 when !preferIPv4 => 0,
+                AddressFamily.InterNetwork => 1,
+                AddressFamily.InterNetworkV6 => 1,
+                _ => 2
+            })
             .ThenBy(address => address.ToString(), StringComparer.Ordinal);
     }
 
