@@ -1279,7 +1279,6 @@ setup:
       launcher_visibility: Visibilité du lanceur après le lancement
       process_priority: Priorité du processus de jeu
       window_size: Taille de la fenêtre de jeu
-      microsoft_auth: Méthode de connexion Microsoft
       preferred_ip_stack: Pile IP préférée
       renderer: Moteur de rendu
       jvm_arguments_head: Arguments de la JVM
@@ -1331,9 +1330,6 @@ setup:
         match_launcher: Taille du lanceur de correspondance
         custom: Taille personnalisée
         maximized: Maximisé
-      microsoft_auth:
-        web_account_manager: Gestionnaire de compte Web
-        device_code: Flux de code de périphérique
       preferred_ip_stack:
         ipv4_first: Préférez IPv4
         java_default: Utiliser Java par défaut
@@ -1858,11 +1854,9 @@ setup:
       max_animation_fps: FPS d'animation maximum
       realtime_log_lines: Lignes de journalisation en temps réel
     flags:
-      debug_delay: Ajouter un délai
       debug_mode: Mode débogage
       disable_hardware_acceleration: Désactiver l'accélération matérielle
       enable_doh: Utiliser DoH pour la résolution DNS
-      skip_copy_during_download: Empêcher la copie de fichiers à partir d'autres dossiers pendant les téléchargements
     http_proxy:
       address_watermark: par ex. http://127.0.0.1:1080/
       password: Mot de passe

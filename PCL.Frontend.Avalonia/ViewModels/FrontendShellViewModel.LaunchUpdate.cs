@@ -24,8 +24,6 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> LaunchWindowTypeOptions => SetupText.Launch.WindowTypeOptions;
 
-    public IReadOnlyList<string> LaunchMicrosoftAuthOptions => SetupText.Launch.MicrosoftAuthOptions;
-
     public IReadOnlyList<string> LaunchPreferredIpStackOptions => SetupText.Launch.PreferredIpStackOptions;
 
     public IReadOnlyList<string> LaunchRendererOptions => SetupText.Launch.RendererOptions;
@@ -171,18 +169,6 @@ internal sealed partial class FrontendShellViewModel
     {
         get => _launchWindowHeight;
         set => SetProperty(ref _launchWindowHeight, value);
-    }
-
-    public int SelectedLaunchMicrosoftAuthIndex
-    {
-        get => _selectedLaunchMicrosoftAuthIndex;
-        set
-        {
-            if (TryNormalizeSelectionIndex(value, LaunchMicrosoftAuthOptions.Count, out var normalizedValue))
-            {
-                SetProperty(ref _selectedLaunchMicrosoftAuthIndex, normalizedValue);
-            }
-        }
     }
 
     public int SelectedLaunchPreferredIpStackIndex

@@ -1279,7 +1279,6 @@ setup:
       launcher_visibility: 啟後啟動器可見之狀
       process_priority: 遊戲程序所先
       window_size: 遊戲視窗大小
-      microsoft_auth: 微軟登入之法
       preferred_ip_stack: 所先 IP 協議棧
       renderer: 渲染器
       jvm_arguments_head: JVM 參
@@ -1331,9 +1330,6 @@ setup:
         match_launcher: 與啟動器大小同
         custom: 自定大小
         maximized: 盡張
-      microsoft_auth:
-        web_account_manager: Web Account Manager
-        device_code: 裝置代碼登入
       preferred_ip_stack:
         ipv4_first: 先 IPv4
         java_default: 用 Java 默法
@@ -1858,11 +1854,9 @@ setup:
       max_animation_fps: 最高動畫幀率
       realtime_log_lines: 實時日誌行數
     flags:
-      debug_delay: 加延遲
       debug_mode: 調試模式
       disable_hardware_acceleration: 禁硬體加速
       enable_doh: 用 DoH 析位址
-      skip_copy_during_download: 禁於下載時自他夾複檔
     http_proxy:
       address_watermark: 如 http://127.0.0.1:1080/
       password: 密碼

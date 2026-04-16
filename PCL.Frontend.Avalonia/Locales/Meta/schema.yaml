@@ -1469,7 +1469,6 @@ setup:
       launcher_visibility: []
       process_priority: []
       window_size: []
-      microsoft_auth: []
       preferred_ip_stack: []
       renderer: []
       jvm_arguments_head: []
@@ -1521,9 +1520,6 @@ setup:
         match_launcher: []
         custom: []
         maximized: []
-      microsoft_auth:
-        web_account_manager: []
-        device_code: []
       preferred_ip_stack:
         ipv4_first: []
         java_default: []
@@ -2091,11 +2087,9 @@ setup:
       max_animation_fps: []
       realtime_log_lines: []
     flags:
-      debug_delay: []
       debug_mode: []
       disable_hardware_acceleration: []
       enable_doh: []
-      skip_copy_during_download: []
     http_proxy:
       address_watermark: []
       password: []

@@ -1279,7 +1279,6 @@ setup:
       launcher_visibility: 실행 후 실행기 가시성
       process_priority: 게임 프로세스 우선순위
       window_size: 게임 창 크기
-      microsoft_auth: 마이크로소프트 로그인 방법
       preferred_ip_stack: 기본 IP 스택
       renderer: 렌더러
       jvm_arguments_head: JVM 인수
@@ -1331,9 +1330,6 @@ setup:
         match_launcher: 런처 크기 일치
         custom: 맞춤 크기
         maximized: 극대화
-      microsoft_auth:
-        web_account_manager: 웹 계정 관리자
-        device_code: 장치 코드 흐름
       preferred_ip_stack:
         ipv4_first: IPv4 선호
         java_default: Java 기본값 사용
@@ -1858,11 +1854,9 @@ setup:
       max_animation_fps: 최대 애니메이션 FPS
       realtime_log_lines: 실시간 로그 라인
     flags:
-      debug_delay: 지연 추가
       debug_mode: 디버그 모드
       disable_hardware_acceleration: 하드웨어 가속 비활성화
       enable_doh: DNS 확인을 위해 DoH 사용
-      skip_copy_during_download: 다운로드 중 다른 폴더의 파일 복사 방지
     http_proxy:
       address_watermark: 예를 들어 http://127.0.0.1:1080/
       password: 비밀번호

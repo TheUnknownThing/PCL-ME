@@ -271,8 +271,6 @@ internal sealed partial class FrontendShellViewModel
     private string _httpProxyPassword = string.Empty;
     private double _debugAnimationSpeed = 30;
     private bool _debugModeEnabled;
-    private bool _debugDelayEnabled;
-    private int _selectedLaunchMicrosoftAuthIndex;
     private int _selectedDarkModeIndex = 2;
     private int _selectedLightColorIndex;
     private int _selectedDarkColorIndex;

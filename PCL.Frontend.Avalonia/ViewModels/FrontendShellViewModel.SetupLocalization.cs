@@ -24,7 +24,6 @@ internal sealed partial class FrontendShellViewModel
                 LauncherVisibilityLabel = _i18n.T("setup.launch.fields.launcher_visibility"),
                 ProcessPriorityLabel = _i18n.T("setup.launch.fields.process_priority"),
                 WindowSizeLabel = _i18n.T("setup.launch.fields.window_size"),
-                MicrosoftAuthLabel = _i18n.T("setup.launch.fields.microsoft_auth"),
                 PreferredIpStackLabel = _i18n.T("setup.launch.fields.preferred_ip_stack"),
                 MemoryCardHeader = _i18n.T("setup.launch.cards.memory.header"),
                 Memory32BitWarning = _i18n.T("setup.launch.memory.warnings.java_32_bit"),
@@ -79,11 +78,6 @@ internal sealed partial class FrontendShellViewModel
                     _i18n.T("setup.launch.options.window.match_launcher"),
                     _i18n.T("setup.launch.options.window.custom"),
                     _i18n.T("setup.launch.options.window.maximized")
-                ],
-                MicrosoftAuthOptions =
-                [
-                    _i18n.T("setup.launch.options.microsoft_auth.web_account_manager"),
-                    _i18n.T("setup.launch.options.microsoft_auth.device_code")
                 ],
                 PreferredIpStackOptions =
                 [
@@ -318,9 +312,7 @@ internal sealed partial class FrontendShellViewModel
                 ApplyProxyButton = _i18n.T("setup.launcher_misc.actions.apply_proxy"),
                 DebugCardHeader = _i18n.T("setup.launcher_misc.cards.debug.header"),
                 DebugAnimationSpeedLabel = _i18n.T("setup.launcher_misc.fields.debug_animation_speed"),
-                SkipCopyDuringDownloadLabel = _i18n.T("setup.launcher_misc.flags.skip_copy_during_download"),
                 DebugModeLabel = _i18n.T("setup.launcher_misc.flags.debug_mode"),
-                DebugDelayLabel = _i18n.T("setup.launcher_misc.flags.debug_delay"),
                 SystemActivityOptions =
                 [
                     _i18n.T("setup.launcher_misc.options.system_activity.all"),
@@ -338,7 +330,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchVisibilityOptions));
         RaisePropertyChanged(nameof(LaunchPriorityOptions));
         RaisePropertyChanged(nameof(LaunchWindowTypeOptions));
-        RaisePropertyChanged(nameof(LaunchMicrosoftAuthOptions));
         RaisePropertyChanged(nameof(LaunchPreferredIpStackOptions));
         RaisePropertyChanged(nameof(LaunchRendererOptions));
         RaisePropertyChanged(nameof(UpdateChannelOptions));
@@ -389,7 +380,6 @@ internal sealed class SetupLaunchLocalization
     public required string LauncherVisibilityLabel { get; init; }
     public required string ProcessPriorityLabel { get; init; }
     public required string WindowSizeLabel { get; init; }
-    public required string MicrosoftAuthLabel { get; init; }
     public required string PreferredIpStackLabel { get; init; }
     public required string MemoryCardHeader { get; init; }
     public required string Memory32BitWarning { get; init; }
@@ -419,7 +409,6 @@ internal sealed class SetupLaunchLocalization
     public required IReadOnlyList<string> VisibilityOptions { get; init; }
     public required IReadOnlyList<string> PriorityOptions { get; init; }
     public required IReadOnlyList<string> WindowTypeOptions { get; init; }
-    public required IReadOnlyList<string> MicrosoftAuthOptions { get; init; }
     public required IReadOnlyList<string> PreferredIpStackOptions { get; init; }
     public required IReadOnlyList<string> RendererOptions { get; init; }
 }
@@ -593,8 +582,6 @@ internal sealed class SetupLauncherMiscLocalization
     public required string ApplyProxyButton { get; init; }
     public required string DebugCardHeader { get; init; }
     public required string DebugAnimationSpeedLabel { get; init; }
-    public required string SkipCopyDuringDownloadLabel { get; init; }
     public required string DebugModeLabel { get; init; }
-    public required string DebugDelayLabel { get; init; }
     public required IReadOnlyList<string> SystemActivityOptions { get; init; }
 }

@@ -1281,7 +1281,6 @@ setup:
       launcher_visibility: 启动后启动器可见性
       process_priority: 游戏进程优先级
       window_size: 游戏窗口大小
-      microsoft_auth: 微软登录方式
       preferred_ip_stack: 首选 IP 协议栈
       renderer: 渲染器
       jvm_arguments_head: JVM 参数
@@ -1333,9 +1332,6 @@ setup:
         match_launcher: 与启动器大小一致
         custom: 自定义大小
         maximized: 最大化
-      microsoft_auth:
-        web_account_manager: Web Account Manager
-        device_code: 设备代码登录
       preferred_ip_stack:
         ipv4_first: 优先 IPv4
         java_default: 使用 Java 默认
@@ -1862,11 +1858,9 @@ setup:
       max_animation_fps: 最高动画帧率
       realtime_log_lines: 实时日志行数
     flags:
-      debug_delay: 添加延迟
       debug_mode: 调试模式
       disable_hardware_acceleration: 禁用硬件加速
       enable_doh: 使用 DoH 解析地址
-      skip_copy_during_download: 禁止在下载时从其他文件夹复制文件
     http_proxy:
       address_watermark: 比如 http://127.0.0.1:1080/
       password: 密码
