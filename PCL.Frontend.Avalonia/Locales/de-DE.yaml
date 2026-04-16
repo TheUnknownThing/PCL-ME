@@ -1337,6 +1337,14 @@ crash:
     heading: Exportplan
     suggested_archive: "- Vorgeschlagenes Archiv: {archive_name}"
     source_file_count: "- Anzahl Quelldateien: {file_count}"
+  analysis:
+    generic_failure:
+      message: Entschuldigung, dein Spiel ist auf ein Problem gestoßen...
+    help_suffix: Wenn du Hilfe brauchst, sende der anderen Person bitte die Absturzbericht-Datei statt eines Fotos oder Screenshots dieses Fensters.
+    manual_debug:
+      message: |-
+        * Tatsächlich ist mit deinem Spiel nichts falsch. Dieser Absturz wurde absichtlich ausgelöst.
+        * Hast du wirklich nichts Wichtigeres zu tun?
 setup:
   launch:
     cards:

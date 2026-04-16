@@ -1342,6 +1342,14 @@ crash:
     heading: Plan de exportación
     suggested_archive: "- Archivo sugerido: {archive_name}"
     source_file_count: "- Recuento de archivos de origen: {file_count}"
+  analysis:
+    generic_failure:
+      message: Lo sentimos, tu juego encontró un problema...
+    help_suffix: Si necesitas ayuda, envía el archivo del informe de fallos a la otra persona en lugar de una foto o captura de pantalla de esta ventana.
+    manual_debug:
+      message: |-
+        * En realidad, no hay nada malo en tu juego. Este fallo se provocó intencionalmente.
+        * ¿De verdad no tienes nada más importante que hacer?
 setup:
   launch:
     cards:

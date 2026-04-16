@@ -135,7 +135,7 @@ internal sealed partial class FrontendShellViewModel
             var loadMode = ResolveInstanceCompositionLoadMode(_currentRoute);
             var refreshedState = await Task.Run(() => new DeferredInstanceSelectionRefreshState(
                 FrontendInstanceCompositionService.Compose(runtimePaths, loadMode, _i18n),
-                FrontendLaunchCompositionService.Compose(options, runtimePaths)));
+                FrontendLaunchCompositionService.Compose(options, runtimePaths, i18n: _i18n)));
 
             if (refreshVersion != Volatile.Read(ref _instanceSelectionRefreshVersion))
             {

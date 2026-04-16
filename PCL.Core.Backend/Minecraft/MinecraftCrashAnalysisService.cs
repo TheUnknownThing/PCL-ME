@@ -10,12 +10,12 @@ namespace PCL.Core.Minecraft;
 
 public static class MinecraftCrashAnalysisService
 {
-    public static MinecraftCrashAnalysisResult Analyze(MinecraftCrashAnalysisRequest request)
+    public static MinecraftCrashAnalysisResult Analyze(MinecraftCrashAnalysisRequest request, Func<string, string>? localize = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.SourceFilePaths);
 
-        var analyzer = new Analyzer(request);
+        var analyzer = new Analyzer(request, localize);
         analyzer.Collect();
         analyzer.Prepare();
         analyzer.Analyze();
@@ -25,6 +25,7 @@ public static class MinecraftCrashAnalysisService
     private sealed class Analyzer
     {
         private readonly MinecraftCrashAnalysisRequest _request;
+        private readonly Func<string, string>? _localize;
         private readonly List<AnalyzedFile> _rawFiles = [];
         private readonly Dictionary<CrashReason, List<string>> _reasons = [];
 
@@ -35,9 +36,10 @@ public static class MinecraftCrashAnalysisService
         private string _logAll = string.Empty;
         private string? _directFilePath;
 
-        public Analyzer(MinecraftCrashAnalysisRequest request)
+        public Analyzer(MinecraftCrashAnalysisRequest request, Func<string, string>? localize)
         {
             _request = request;
+            _localize = localize;
         }
 
         public void Collect()
@@ -981,7 +983,7 @@ public static class MinecraftCrashAnalysisService
         {
             if (_reasons.Count == 0)
             {
-                return "Sorry, your game encountered a problem...\r\nIf you need help, send the crash report file to the other person instead of a photo or screenshot of this window.";
+                return $"{Text("crash.analysis.generic_failure.message", "Sorry, your game encountered a problem...")}\r\n{Text("crash.analysis.help_suffix", "If you need help, send the crash report file to the other person instead of a photo or screenshot of this window.")}";
             }
 
             var results = new List<string>();
@@ -1084,7 +1086,9 @@ public static class MinecraftCrashAnalysisService
                         results.Add("Another launcher may have modified the Forge version, leaving the current instance files in an invalid state and causing the game to crash.\nTry reinstalling Forge from scratch instead of modifying the Forge version with another launcher.");
                         break;
                     case CrashReason.ManualDebugCrash:
-                        results.Add("* In fact, there is nothing wrong with your game. This crash was triggered intentionally.\n* Do you not have something more important to do?");
+                        results.Add(Text(
+                            "crash.analysis.manual_debug.message",
+                            "* In fact, there is nothing wrong with your game. This crash was triggered intentionally.\n* Do you not have something more important to do?"));
                         break;
                     case CrashReason.ModNeedsJava11:
                         results.Add("Some of the installed mods appear to require Java 11.\nIn the Java selection for launch settings, switch to Java 11 and start the game again.\nIf you do not have Java 11 installed, download and install it.");
@@ -1178,10 +1182,18 @@ public static class MinecraftCrashAnalysisService
 
             if (!results.Any(result => result.EndsWith("\\h", StringComparison.Ordinal)))
             {
-                combined += "\r\nIf you need help, send the crash report file to the other person instead of a photo or screenshot of this window.";
+                combined += $"\r\n{Text("crash.analysis.help_suffix", "If you need help, send the crash report file to the other person instead of a photo or screenshot of this window.")}";
             }
 
             return combined;
+        }
+
+        private string Text(string key, string fallback)
+        {
+            var translated = _localize?.Invoke(key);
+            return string.IsNullOrWhiteSpace(translated) || string.Equals(translated, key, StringComparison.Ordinal)
+                ? fallback
+                : translated;
         }
 
         private static int CountOccurrences(string input, string value, StringComparison comparison)

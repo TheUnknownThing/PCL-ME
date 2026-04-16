@@ -1339,6 +1339,14 @@ crash:
     heading: 匯出計畫
     suggested_archive: "- 建議壓縮包：{archive_name}"
     source_file_count: "- 來源檔案數量：{file_count}"
+  analysis:
+    generic_failure:
+      message: 抱歉，你的遊戲遇到了一些問題……
+    help_suffix: 如果你需要幫助，請把崩潰報告檔案發給對方，而不是傳送此視窗的照片或截圖。
+    manual_debug:
+      message: |-
+        * 其實，你的遊戲並沒有問題。這次崩潰是故意觸發的。
+        * 你難道沒有更重要的事要做嗎？
 setup:
   launch:
     cards:

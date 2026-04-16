@@ -29,7 +29,8 @@ internal static class FrontendLaunchCompositionService
     public static FrontendLaunchComposition Compose(
         AvaloniaCommandOptions options,
         FrontendRuntimePaths runtimePaths,
-        bool ignoreJavaCompatibilityWarningOnce = false)
+        bool ignoreJavaCompatibilityWarningOnce = false,
+        II18nService? i18n = null)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var localConfig = runtimePaths.OpenLocalConfigProvider();
@@ -72,6 +73,7 @@ internal static class FrontendLaunchCompositionService
             selectedInstanceName,
             manifestSummary,
             selectedJavaRuntime);
+        var resolvedInstanceName = ResolveSelectedInstanceName(selectedInstanceName, i18n);
         var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
             localConfig,
             CreateRuntimeResolutionFallback(),
@@ -110,7 +112,7 @@ internal static class FrontendLaunchCompositionService
             LibrariesDirectory: Path.Combine(launcherFolder, "libraries"),
             LauncherName: "PCLME",
             LauncherVersion: "frontend-avalonia",
-            VersionName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
+            VersionName: resolvedInstanceName,
             VersionType: versionType,
             GameDirectory: indieDirectory,
             AssetsRoot: Path.Combine(launcherFolder, "assets"),
@@ -157,6 +159,7 @@ internal static class FrontendLaunchCompositionService
         var sessionStartPlan = BuildSessionStartPlan(
             launcherFolder,
             selectedInstanceName,
+            resolvedInstanceName,
             instancePath,
             indieDirectory,
             nativesDirectory,
@@ -188,7 +191,7 @@ internal static class FrontendLaunchCompositionService
                 : NullIfWhiteSpace(ReadValue(instanceConfig, "VersionServerAuthServer", string.Empty))
             : null;
         var precheckRequest = new MinecraftLaunchPrecheckRequest(
-            InstanceName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
+            InstanceName: resolvedInstanceName,
             InstancePathIndie: indieDirectory,
             InstancePath: launcherFolder,
             IsInstanceSelected: !string.IsNullOrWhiteSpace(selectedInstanceName),
@@ -215,7 +218,7 @@ internal static class FrontendLaunchCompositionService
 
         return new FrontendLaunchComposition(
             options.Scenario,
-            string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
+            resolvedInstanceName,
             instancePath,
             requiredArtifacts,
             selectedProfile,
@@ -239,10 +242,22 @@ internal static class FrontendLaunchCompositionService
             sessionStartPlan,
             postLaunchShell,
             MinecraftLaunchShellService.GetCompletionNotification(new MinecraftLaunchCompletionRequest(
-                InstanceName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
+                InstanceName: resolvedInstanceName,
                 Outcome: MinecraftLaunchOutcome.Succeeded,
                 IsScriptExport: false,
                 AbortHint: null)));
+    }
+
+    private static string ResolveSelectedInstanceName(string? selectedInstanceName, II18nService? i18n)
+    {
+        return string.IsNullOrWhiteSpace(selectedInstanceName)
+            ? Text(i18n, "instance.common.no_selection", "No instance selected")
+            : selectedInstanceName;
+    }
+
+    private static string Text(II18nService? i18n, string key, string fallback)
+    {
+        return i18n?.T(key) ?? fallback;
     }
 
     private static MinecraftLaunchArgumentPlan BuildArgumentPlan(
@@ -337,6 +352,7 @@ internal static class FrontendLaunchCompositionService
     private static MinecraftLaunchSessionStartWorkflowPlan BuildSessionStartPlan(
         string launcherFolder,
         string selectedInstanceName,
+        string resolvedInstanceName,
         string instanceDirectory,
         string indieDirectory,
         string nativesDirectory,
@@ -376,7 +392,7 @@ internal static class FrontendLaunchCompositionService
         var javawExecutablePath = OperatingSystem.IsWindows()
             ? Path.Combine(javaFolder, "javaw.exe")
             : javaExecutablePath;
-        var instanceName = string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName;
+        var instanceName = resolvedInstanceName;
         var watcherWorkflowRequest = BuildWatcherWorkflowRequest(
             launcherFolder,
             selectedInstanceName,

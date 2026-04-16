@@ -1337,6 +1337,14 @@ crash:
     heading: 수출 계획
     suggested_archive: "- 추천 아카이브: {archive_name}"
     source_file_count: "- 소스 파일 개수: {file_count}"
+  analysis:
+    generic_failure:
+      message: 죄송합니다. 게임에 문제가 발생했습니다...
+    help_suffix: 도움이 필요하다면 이 창의 사진이나 스크린샷 대신 충돌 보고서 파일을 상대방에게 보내 주세요.
+    manual_debug:
+      message: |-
+        * 사실 당신의 게임에는 아무 문제가 없습니다. 이 충돌은 일부러 발생시킨 것입니다.
+        * 정말 더 중요한 일은 없나요?
 setup:
   launch:
     cards:

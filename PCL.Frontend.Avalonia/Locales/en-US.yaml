@@ -1339,6 +1339,14 @@ crash:
     heading: Export plan
     suggested_archive: "- Suggested archive: {archive_name}"
     source_file_count: "- Source file count: {file_count}"
+  analysis:
+    generic_failure:
+      message: Sorry, your game encountered a problem...
+    help_suffix: If you need help, send the crash report file to the other person instead of a photo or screenshot of this window.
+    manual_debug:
+      message: |-
+        * In fact, there is nothing wrong with your game. This crash was triggered intentionally.
+        * Do you not have something more important to do?
 setup:
   launch:
     cards:

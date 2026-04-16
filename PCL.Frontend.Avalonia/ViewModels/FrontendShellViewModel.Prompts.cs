@@ -21,6 +21,9 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
+            ApplyLaunchComposition(
+                FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths, i18n: _i18n),
+                normalizeLaunchProfileSurface: false);
             var hadCrashPrompts = _promptCatalog.TryGetValue(AvaloniaPromptLaneKind.Crash, out var crashPrompts) &&
                                   crashPrompts.Count > 0;
 
@@ -35,6 +38,7 @@ internal sealed partial class FrontendShellViewModel
             }
             else
             {
+                _activeCrashPlan = FrontendCrashCompositionService.Compose(_shellActionService.RuntimePaths, _i18n);
                 _promptCatalog[AvaloniaPromptLaneKind.Crash] = [];
             }
             RebuildPromptLanes();
@@ -1057,7 +1061,8 @@ internal sealed partial class FrontendShellViewModel
             return FrontendLaunchCompositionService.Compose(
                 _options,
                 _shellActionService.RuntimePaths,
-                ignoreJavaCompatibilityWarningOnce);
+                ignoreJavaCompatibilityWarningOnce,
+                _i18n);
         }, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -1208,7 +1213,7 @@ internal sealed partial class FrontendShellViewModel
         ReloadSetupComposition();
         ReloadInstanceComposition();
         ApplyLaunchComposition(
-            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths),
+            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths, i18n: _i18n),
             normalizeLaunchProfileSurface: true);
     }
 
@@ -1216,7 +1221,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var refreshVersion = Interlocked.Increment(ref _launchProfileCompositionRefreshVersion);
         var launchComposition = await Task.Run(() =>
-            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths));
+            FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths, i18n: _i18n));
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -1385,7 +1390,7 @@ internal sealed partial class FrontendShellViewModel
             UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
         var analysisResult = MinecraftCrashAnalysisService.Analyze(new MinecraftCrashAnalysisRequest(
             BuildAnalysisSourcePaths(exportRequest),
-            exportRequest.CurrentLauncherLogFilePath));
+            exportRequest.CurrentLauncherLogFilePath), _i18n.T);
         var resultText = analysisResult.HasKnownReason
             ? analysisResult.ResultText
             : $"{analysisResult.ResultText}{Environment.NewLine}{Environment.NewLine}{T("shell.prompts.crash.details_header")}{Environment.NewLine}{BuildLaunchFailureMessage(startResult)}";

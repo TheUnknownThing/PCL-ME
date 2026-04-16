@@ -39,7 +39,6 @@ internal sealed partial class FrontendShellViewModel
     private FrontendSetupFeedbackSnapshot? _feedbackSnapshot;
     private StartupAvaloniaPlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
-    private readonly CrashAvaloniaPlan _crashPlan;
     private CrashAvaloniaPlan _activeCrashPlan;
     private readonly Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
     private readonly List<LauncherFrontendRoute> _routeAncestors = [];
@@ -350,10 +349,9 @@ internal sealed partial class FrontendShellViewModel
         _startupPlan = new StartupAvaloniaPlan(
             LauncherStartupWorkflowService.BuildPlan(_shellComposition.StartupWorkflowRequest),
             _shellComposition.StartupConsentResult);
-        _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
+        _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths, i18n: _i18n);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
-        _crashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths, _i18n);
-        _activeCrashPlan = _crashPlan;
+        _activeCrashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths, _i18n);
         _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _homeCommand = new ActionCommand(NavigateHome, () => CanGoHome);

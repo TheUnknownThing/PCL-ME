@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.Testing;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -28,6 +29,34 @@ public sealed class FrontendLaunchCompositionServiceTest
             runtimePaths);
 
         Assert.IsFalse(Directory.Exists(Path.Combine(launcherDirectory, "versions", "PCL")));
+    }
+
+    [TestMethod]
+    public void Compose_WithNoSelectedInstance_UsesLocalizedFallbackName()
+    {
+        using var environment = new LaunchCompositionTestEnvironment();
+        var launcherDirectory = Path.Combine(environment.RootDirectory, ".minecraft");
+        Directory.CreateDirectory(Path.Combine(launcherDirectory, "versions"));
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+        localConfig.Set("LaunchFolderSelect", launcherDirectory);
+        localConfig.Set("LaunchInstanceSelect", string.Empty);
+        localConfig.Sync();
+
+        var i18n = new DictionaryI18nService(new Dictionary<string, string>
+        {
+            ["instance.common.no_selection"] = "未选择实例"
+        }, "zh-Hans");
+
+        var result = FrontendLaunchCompositionService.Compose(
+            new AvaloniaCommandOptions("test", ForceCjkFontWarning: false),
+            runtimePaths,
+            i18n: i18n);
+
+        Assert.AreEqual("未选择实例", result.InstanceName);
+        Assert.AreEqual("未选择实例", result.PrecheckRequest.InstanceName);
+        Assert.AreEqual("未选择实例", result.ReplacementPlan.Values["${version_name}"]);
     }
 
     private sealed class LaunchCompositionTestEnvironment : IDisposable

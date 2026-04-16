@@ -1337,6 +1337,14 @@ crash:
     heading: Projet d'exportation
     suggested_archive: "- Archive suggérée : {archive_name}"
     source_file_count: "- Nombre de fichiers sources : {file_count}"
+  analysis:
+    generic_failure:
+      message: Désolé, votre jeu a rencontré un problème...
+    help_suffix: Si vous avez besoin d’aide, envoyez le fichier du rapport de plantage à l’autre personne plutôt qu’une photo ou une capture d’écran de cette fenêtre.
+    manual_debug:
+      message: |-
+        * En réalité, il n’y a rien qui cloche avec votre jeu. Ce crash a été déclenché intentionnellement.
+        * N’avez-vous vraiment rien de plus important à faire ?
 setup:
   launch:
     cards:

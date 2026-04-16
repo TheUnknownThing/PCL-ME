@@ -1337,6 +1337,14 @@ crash:
     heading: 匯出計畫
     suggested_archive: "- 建議壓縮包：{archive_name}"
     source_file_count: "- 來源檔數量：{file_count}"
+  analysis:
+    generic_failure:
+      message: 歉哉，爾之遊戲遇有問題……
+    help_suffix: 若需人助，宜以崩潰報告檔授彼，勿以此窗之影像或截圖代之。
+    manual_debug:
+      message: |-
+        * 其實，爾之遊戲無恙。此潰乃故觸之。
+        * 豈無他務乎？
 setup:
   launch:
     cards:

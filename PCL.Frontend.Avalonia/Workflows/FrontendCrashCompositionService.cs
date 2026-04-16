@@ -22,7 +22,8 @@ internal static class FrontendCrashCompositionService
 
         var analysisResult = MinecraftCrashAnalysisService.Analyze(new MinecraftCrashAnalysisRequest(
             BuildAnalysisSourcePaths(inputs.ExportPlanRequest),
-            inputs.ExportPlanRequest.CurrentLauncherLogFilePath));
+            inputs.ExportPlanRequest.CurrentLauncherLogFilePath),
+            inputs.I18n is null ? null : key => inputs.I18n.T(key));
         var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(inputs.OutputPromptRequest with
         {
             ResultText = analysisResult.ResultText,
@@ -84,7 +85,8 @@ internal static class FrontendCrashCompositionService
                 Environment: GetHostEnvironmentSnapshot(),
                 CurrentAccessToken: null,
                 CurrentUserUuid: null,
-                UserProfilePath: homeDirectory));
+                UserProfilePath: homeDirectory),
+            i18n);
     }
 
     private static IReadOnlyList<string> BuildAnalysisSourcePaths(MinecraftCrashExportPlanRequest request)

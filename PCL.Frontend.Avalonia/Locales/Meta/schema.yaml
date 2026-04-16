@@ -1526,6 +1526,12 @@ crash:
       - archive_name
     source_file_count:
       - file_count
+  analysis:
+    generic_failure:
+      message: []
+    help_suffix: []
+    manual_debug:
+      message: []
 setup:
   launch:
     cards:

@@ -1339,6 +1339,14 @@ crash:
     heading: 导出计划
     suggested_archive: "- 建议压缩包：{archive_name}"
     source_file_count: "- 源文件数量：{file_count}"
+  analysis:
+    generic_failure:
+      message: 抱歉，你的游戏遇到了一些问题……
+    help_suffix: 如果你需要帮助，请把崩溃报告文件发给对方，而不是发送此窗口的照片或截图。
+    manual_debug:
+      message: |-
+        * 其实，你的游戏并没有问题。这次崩溃是故意触发的。
+        * 你难道没有更重要的事要做吗？
 setup:
   launch:
     cards:
