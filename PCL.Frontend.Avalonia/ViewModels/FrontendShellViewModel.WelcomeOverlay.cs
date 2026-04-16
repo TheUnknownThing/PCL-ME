@@ -34,6 +34,7 @@ internal sealed partial class FrontendShellViewModel
     public bool IsWelcomeLicenseStep => _welcomeCurrentStep == 1;
     public bool IsWelcomeThemeStep => _welcomeCurrentStep == 2;
     public bool IsWelcomeDoneStep => _welcomeCurrentStep == 3;
+    public bool IsWelcomeAdvanceArrowVisible => _welcomeCurrentStep < WelcomeTotalSteps - 1;
 
     // ── Step content ─────────────────────────────────────────────────────────
 
@@ -66,6 +67,7 @@ internal sealed partial class FrontendShellViewModel
 
     public string WelcomeFeedbackButtonText => _i18n.T("welcome.step_3.feedback");
     public string WelcomeGitHubButtonText => _i18n.T("welcome.step_3.github");
+    public string WelcomeDoneButtonToolTip => _i18n.T("common.actions.confirm");
 
     // ── EULA checkbox ────────────────────────────────────────────────────────
 
@@ -197,6 +199,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(WelcomeEulaAcceptLabel));
         RaisePropertyChanged(nameof(WelcomeFeedbackButtonText));
         RaisePropertyChanged(nameof(WelcomeGitHubButtonText));
+        RaisePropertyChanged(nameof(WelcomeDoneButtonToolTip));
     }
 
     private void RaiseWelcomeStepProperties()
@@ -206,6 +209,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsWelcomeLicenseStep));
         RaisePropertyChanged(nameof(IsWelcomeThemeStep));
         RaisePropertyChanged(nameof(IsWelcomeDoneStep));
+        RaisePropertyChanged(nameof(IsWelcomeAdvanceArrowVisible));
         RaiseWelcomeLocaleProperties();
         RaisePropertyChanged(nameof(CanGoToPreviousWelcomeStep));
         RaisePropertyChanged(nameof(CanGoToNextWelcomeStep));

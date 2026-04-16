@@ -692,15 +692,15 @@
             <!-- Welcome Onboarding Overlay Backdrop -->
             <Border
                 IsVisible="{Binding IsWelcomeOverlayVisible}"
-                Background="{DynamicResource ColorBrushPromptOverlayBackdrop}"
+                Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}"
                 ZIndex="60" />
 
             <!-- Welcome Onboarding Overlay Card -->
             <Border
                 IsVisible="{Binding IsWelcomeOverlayVisible}"
                 Margin="50,28"
-                Background="{DynamicResource ColorBrushMyCard}"
-                BorderBrush="{DynamicResource ColorBrushMyCardEdge}"
+                Background="{DynamicResource ColorBrushBackground}"
+                BorderBrush="{DynamicResource ColorBrush6}"
                 BorderThickness="1"
                 BoxShadow="{DynamicResource ColorShadowCardBase}"
                 CornerRadius="10"
@@ -810,7 +810,7 @@
                       <StackPanel
                           IsVisible="{Binding IsWelcomeThemeStep}"
                           Spacing="16"
-                          MaxWidth="400"
+                          MaxWidth="460"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"
                           Margin="0,12">
@@ -819,32 +819,108 @@
                             FontSize="14"
                             Text="{Binding WelcomeStepDescription}"
                             TextWrapping="Wrap" />
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto">
+                        <StackPanel Spacing="10">
+                          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto,10,Auto">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource ColorBrush1}"
+                                FontSize="13.5"
+                                Margin="0,0,20,0"
+                                Text="{Binding SetupText.Ui.ThemeLabel}" />
+                            <ComboBox
+                                Grid.Column="1"
+                                ItemsSource="{Binding DarkModeOptions}"
+                                SelectedIndex="{Binding SelectedDarkModeIndex}" />
+                            <TextBlock
+                                Grid.Row="2"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource ColorBrush1}"
+                                FontSize="13.5"
+                                Margin="0,0,20,0"
+                                IsVisible="{Binding IsThemeColorSwitchSupported}"
+                                Text="{Binding SetupText.Ui.LightPaletteLabel}" />
+                            <ComboBox
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                IsVisible="{Binding IsThemeColorSwitchSupported}"
+                                ItemsSource="{Binding ThemeColorOptions}"
+                                SelectedIndex="{Binding SelectedLightColorIndex}" />
+                            <TextBlock
+                                Grid.Row="4"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource ColorBrush1}"
+                                FontSize="13.5"
+                                Margin="0,0,20,0"
+                                IsVisible="{Binding IsThemeColorSwitchSupported}"
+                                Text="{Binding SetupText.Ui.DarkPaletteLabel}" />
+                            <ComboBox
+                                Grid.Row="4"
+                                Grid.Column="1"
+                                IsVisible="{Binding IsThemeColorSwitchSupported}"
+                                ItemsSource="{Binding ThemeColorOptions}"
+                                SelectedIndex="{Binding SelectedDarkColorIndex}" />
+                          </Grid>
+                          <Grid
+                              IsVisible="{Binding IsLightCustomThemeColorEditorVisible}"
+                              ColumnDefinitions="92,*,28"
+                              ColumnSpacing="10">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource ColorBrush1}"
+                                FontSize="12.5"
+                                Text="{Binding SetupText.Ui.LightCustomLabel}" />
+                            <TextBox
+                                Grid.Column="1"
+                                Watermark="{DynamicResource ThemeColorLightSampleText}"
+                                Text="{Binding CustomLightThemeColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                            <Border
+                                Grid.Column="2"
+                                Width="20"
+                                Height="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="{Binding CustomLightThemePreviewBrush}"
+                                BorderBrush="{DynamicResource ColorBrush6}"
+                                BorderThickness="1"
+                                CornerRadius="10" />
+                          </Grid>
                           <TextBlock
-                              VerticalAlignment="Center"
-                              Foreground="{DynamicResource ColorBrush1}"
-                              FontSize="13.5"
-                              Margin="0,0,20,0"
-                              Text="{Binding SetupText.Ui.ThemeLabel}" />
-                          <ComboBox
-                              Grid.Column="1"
-                              ItemsSource="{Binding DarkModeOptions}"
-                              SelectedIndex="{Binding SelectedDarkModeIndex}" />
+                              IsVisible="{Binding IsLightCustomThemeColorInvalid}"
+                              Margin="102,0,0,0"
+                              Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+                              FontSize="12"
+                              Text="{Binding CustomThemeColorInputHint}" />
+                          <Grid
+                              IsVisible="{Binding IsDarkCustomThemeColorEditorVisible}"
+                              ColumnDefinitions="92,*,28"
+                              ColumnSpacing="10">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource ColorBrush1}"
+                                FontSize="12.5"
+                                Text="{Binding SetupText.Ui.DarkCustomLabel}" />
+                            <TextBox
+                                Grid.Column="1"
+                                Watermark="{DynamicResource ThemeColorDarkSampleText}"
+                                Text="{Binding CustomDarkThemeColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                            <Border
+                                Grid.Column="2"
+                                Width="20"
+                                Height="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="{Binding CustomDarkThemePreviewBrush}"
+                                BorderBrush="{DynamicResource ColorBrush6}"
+                                BorderThickness="1"
+                                CornerRadius="10" />
+                          </Grid>
                           <TextBlock
-                              Grid.Row="2"
-                              VerticalAlignment="Center"
-                              Foreground="{DynamicResource ColorBrush1}"
-                              FontSize="13.5"
-                              Margin="0,0,20,0"
-                              IsVisible="{Binding IsThemeColorSwitchSupported}"
-                              Text="{Binding SetupText.Ui.LightPaletteLabel}" />
-                          <ComboBox
-                              Grid.Row="2"
-                              Grid.Column="1"
-                              IsVisible="{Binding IsThemeColorSwitchSupported}"
-                              ItemsSource="{Binding ThemeColorOptions}"
-                              SelectedIndex="{Binding SelectedLightColorIndex}" />
-                        </Grid>
+                              IsVisible="{Binding IsDarkCustomThemeColorInvalid}"
+                              Margin="102,0,0,0"
+                              Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+                              FontSize="12"
+                              Text="{Binding CustomThemeColorInputHint}" />
+                        </StackPanel>
                         <Border
                             IsVisible="{Binding IsThemeColorSwitchUnsupportedNoticeVisible}"
                             Padding="12,10"
@@ -863,7 +939,7 @@
                       <!-- Step 3 – You're all set -->
                       <StackPanel
                           IsVisible="{Binding IsWelcomeDoneStep}"
-                          Spacing="20"
+                          Spacing="18"
                           MaxWidth="420"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"
@@ -874,22 +950,39 @@
                             Text="{Binding WelcomeStepDescription}"
                             TextAlignment="Center"
                             TextWrapping="Wrap" />
+                        <controls:PclIconButton
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            ButtonSize="54"
+                            IdleBackgroundBrush="{DynamicResource ColorBrush2}"
+                            HoverBackgroundBrush="{DynamicResource ColorBrush3}"
+                            IconBrush="#FFFFFFFF"
+                            IconData="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"
+                            IconScale="1.25"
+                            Command="{Binding WelcomeNextStepCommand}"
+                            ToolTip.Tip="{Binding WelcomeDoneButtonToolTip}" />
                         <StackPanel
                             HorizontalAlignment="Center"
                             Orientation="Horizontal"
-                            Spacing="12">
-                          <controls:PclButton
-                              MinWidth="130"
-                              ColorType="Normal"
+                            Spacing="10">
+                          <controls:PclIconButton
+                              ButtonSize="30"
+                              IdleBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                              HoverBackgroundBrush="{DynamicResource ColorBrushEntryHoverBackground}"
+                              IconBrush="{DynamicResource ColorBrush1}"
+                              IconData="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
                               Command="{Binding WelcomeOpenFeedbackCommand}"
-                              ContentPadding="10,5"
-                              Text="{Binding WelcomeFeedbackButtonText}" />
-                          <controls:PclButton
-                              MinWidth="130"
-                              ColorType="Normal"
+                              IconScale="1.05"
+                              ToolTip.Tip="{Binding WelcomeFeedbackButtonText}" />
+                          <controls:PclIconButton
+                              ButtonSize="30"
+                              IdleBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                              HoverBackgroundBrush="{DynamicResource ColorBrushEntryHoverBackground}"
+                              IconBrush="{DynamicResource ColorBrush1}"
+                              IconData="M3.9 12a5 5 0 0 1 5-5h3v2h-3a3 3 0 1 0 0 6h3v2h-3a5 5 0 0 1-5-5zm7-1h2v2h-2v-2zm4.1-4h-3v2h3a3 3 0 1 1 0 6h-3v2h3a5 5 0 0 0 0-10z"
                               Command="{Binding WelcomeOpenGitHubCommand}"
-                              ContentPadding="10,5"
-                              Text="{Binding WelcomeGitHubButtonText}" />
+                              IconScale="1.05"
+                              ToolTip.Tip="{Binding WelcomeGitHubButtonText}" />
                         </StackPanel>
                       </StackPanel>
 
@@ -905,6 +998,7 @@
                       IconScale="1.3"
                       Command="{Binding WelcomeNextStepCommand}"
                       IsEnabled="{Binding CanGoToNextWelcomeStep}"
+                      IsVisible="{Binding IsWelcomeAdvanceArrowVisible}"
                       VerticalAlignment="Center"
                       HorizontalAlignment="Center"
                       ToolTip.Tip="Next" />
