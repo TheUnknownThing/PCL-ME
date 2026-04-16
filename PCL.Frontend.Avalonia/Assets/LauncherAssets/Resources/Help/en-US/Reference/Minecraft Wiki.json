@@ -5,6 +5,6 @@
   "Keywords": "minecraft wiki reference",
   "Types": ["Reference"],
   "IsEvent": true,
-  "EventType": "打开网页",
+  "EventType": "open_web",
   "EventData": "https://minecraft.wiki/w/Minecraft_Wiki"
 }

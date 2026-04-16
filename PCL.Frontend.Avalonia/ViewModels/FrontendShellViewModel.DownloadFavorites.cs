@@ -563,7 +563,9 @@ internal sealed partial class FrontendShellViewModel
         var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, instanceSnapshot.Name);
         if (!targetComposition.Selection.HasSelection)
         {
-            AddActivity("批量安装收藏", $"{instanceSnapshot.Name} 当前不可用，无法选择数据包存档。");
+            AddActivity(
+                T("download.favorites.activities.batch_install"),
+                T("download.favorites.batch_install.target.datapack_instance_unavailable", ("instance_name", instanceSnapshot.Name)));
             return null;
         }
 
@@ -583,7 +585,9 @@ internal sealed partial class FrontendShellViewModel
         var saves = targetComposition.World.Entries;
         if (saves.Count == 0)
         {
-            AddActivity("批量安装收藏", $"{instanceSnapshot.Name} 当前没有可用的存档，无法安装数据包。");
+            AddActivity(
+                T("download.favorites.activities.batch_install"),
+                T("download.favorites.batch_install.target.datapack_no_saves", ("instance_name", instanceSnapshot.Name)));
             return null;
         }
 
@@ -596,19 +600,19 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             selectedSavePath = await _shellActionService.PromptForChoiceAsync(
-                "选择数据包安装存档",
-                $"数据包需要安装到具体存档的 datapacks 文件夹中。请选择 {instanceSnapshot.Name} 中的目标存档。",
+                T("download.favorites.batch_install.target.datapack_save_title"),
+                T("download.favorites.batch_install.target.datapack_save_message", ("instance_name", instanceSnapshot.Name)),
                 saves.Select(entry => new PclChoiceDialogOption(
                     entry.Path,
                     entry.Title,
                     entry.Summary))
                     .ToArray(),
                 defaultSavePath,
-                "开始安装");
+                T("download.favorites.batch_install.target.datapack_save_confirm"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择数据包存档失败", ex.Message);
+            AddFailureActivity(T("download.favorites.batch_install.target.datapack_save_failed"), ex.Message);
             return null;
         }
 
@@ -620,7 +624,9 @@ internal sealed partial class FrontendShellViewModel
         var selection = FrontendVersionSavesCompositionService.Compose(targetComposition, selectedSavePath).Selection;
         if (!selection.HasSelection)
         {
-            AddActivity("批量安装收藏", "未能解析所选存档的数据包目录。");
+            AddActivity(
+                T("download.favorites.activities.batch_install"),
+                T("download.favorites.batch_install.target.datapack_directory_unresolved"));
             return null;
         }
 

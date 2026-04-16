@@ -228,7 +228,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task OpenInstanceExportGuideAsync()
     {
-        if (TryResolveHelpEntry("指南/整合包制作.json", out var guideEntry))
+        if (TryResolveHelpEntry("Guides/Modpack Creation Guide.json", out var guideEntry))
         {
             ShowHelpDetail(guideEntry, addActivity: true);
             return;

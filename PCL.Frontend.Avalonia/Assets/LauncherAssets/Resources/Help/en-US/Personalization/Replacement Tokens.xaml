@@ -15,7 +15,7 @@
 <local:MyCard Title="More details" Margin="0,0,0,15">
   <StackPanel Margin="25,40,23,15">
     <local:MyListItem Margin="-5,0,-5,8"
-                      EventType="打开网页"
+                      EventType="open_web"
                       EventData="https://github.com/PCL-Community/PCL-ME"
                       Title="Project repository"
                       Info="Use the repository and related documentation as the authoritative reference for supported replacement markers." />

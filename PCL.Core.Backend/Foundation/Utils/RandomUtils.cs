@@ -20,7 +20,7 @@ public static class RandomUtils {
     /// <exception cref="ArgumentException">当 <paramref name="collection"/> 为空时抛出。</exception>
     public static T PickRandom<T>(ICollection<T> collection) {
         if (collection.Count == 0)
-            throw new ArgumentException("集合不能为空", nameof(collection));
+            throw new ArgumentException("The collection cannot be empty.", nameof(collection));
         var index = SharedRandom.Next(collection.Count);
         if (collection is IList<T> list)
             return list[index];
@@ -35,7 +35,7 @@ public static class RandomUtils {
     /// <returns>随机整数，范围为 [min, max]。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="min"/> 大于 <paramref name="max"/> 时抛出。</exception>
     public static int NextInt(int min, int max) {
-        return min > max ? throw new ArgumentOutOfRangeException(nameof(min), "最小值不能大于最大值") : SharedRandom.Next(min, max + 1);
+        return min > max ? throw new ArgumentOutOfRangeException(nameof(min), "The minimum value cannot be greater than the maximum value.") : SharedRandom.Next(min, max + 1);
     }
 
     /// <summary>

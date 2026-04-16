@@ -66,7 +66,7 @@ public class YamlFileProvider : CommonFileProvider, IEnumerableKeyProvider
         }
         catch (Exception ex)
         {
-            LogWrapper.Warn(ex, "转换失败，已忽略");
+            LogWrapper.Warn(ex, "YAML conversion failed and was ignored.");
         }
         _rootNode = [];
     }

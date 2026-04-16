@@ -22,7 +22,7 @@ public static class LauncherVersionTransitionWorkflowService
         if (transition.HighestVersionStorageKey is not null && transition.HighestVersionToStore.HasValue)
         {
             settings.Add(new LauncherVersionTransitionSettingWrite(transition.HighestVersionStorageKey, transition.HighestVersionToStore.Value));
-            highestVersionLogMessage = "[Start] 最高版本号从 " + request.TransitionRequest.HighestRecordedVersionCode + " 升高到 " + transition.HighestVersionToStore.Value;
+            highestVersionLogMessage = "[Start] Highest recorded version increased from " + request.TransitionRequest.HighestRecordedVersionCode + " to " + transition.HighestVersionToStore.Value;
         }
 
         if (transition.LaunchArgumentWindowTypeToStore.HasValue)
@@ -39,7 +39,7 @@ public static class LauncherVersionTransitionWorkflowService
         if (transition.ModNameSettingV2ToStore.HasValue)
         {
             settings.Add(new LauncherVersionTransitionSettingWrite("ToolDownloadTranslateV2", transition.ModNameSettingV2ToStore.Value));
-            modNameMigrationLogMessage = "[Start] 已从老版本迁移 Mod 命名设置";
+            modNameMigrationLogMessage = "[Start] Migrated mod naming settings from the legacy version";
         }
 
         var customSkinMigration = BuildCustomSkinMigrationPlan(transition.CustomSkinMigrationSource, request);
@@ -49,7 +49,7 @@ public static class LauncherVersionTransitionWorkflowService
             settings,
             highestVersionLogMessage,
             customSkinMigration,
-            transition.ShouldUnhideSetupAbout ? "[Start] 已解除帮助页面的隐藏" : null,
+            transition.ShouldUnhideSetupAbout ? "[Start] Unhid the help page" : null,
             modNameMigrationLogMessage);
     }
 
@@ -62,11 +62,11 @@ public static class LauncherVersionTransitionWorkflowService
             LauncherCustomSkinMigrationSourceKind.ExecutableDirectory => new LauncherVersionTransitionFileCopyPlan(
                 request.LegacyExecutableCustomSkinPath,
                 request.AppDataCustomSkinPath,
-                "[Start] 已移动离线自定义皮肤 (162)"),
+                "[Start] Moved offline custom skin (162)"),
             LauncherCustomSkinMigrationSourceKind.TempDirectory => new LauncherVersionTransitionFileCopyPlan(
                 request.LegacyTempCustomSkinPath,
                 request.AppDataCustomSkinPath,
-                "[Start] 已移动离线自定义皮肤 (264)"),
+                "[Start] Moved offline custom skin (264)"),
             _ => null
         };
     }

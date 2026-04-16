@@ -24,7 +24,7 @@ public static class PEHeaderReader
 
         if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
         {
-            result.ErrorMessage = "文件不存在或路径无效";
+            result.ErrorMessage = "The file does not exist or the path is invalid.";
             return result;
         }
 
@@ -34,7 +34,7 @@ public static class PEHeaderReader
             // 验证 DOS 头
             if (!_IsValidDosHeader(fs))
             {
-                result.ErrorMessage = "无效的DOS头(MZ签名)";
+                result.ErrorMessage = "The DOS header is invalid (missing MZ signature).";
                 return result;
             }
 
@@ -42,7 +42,7 @@ public static class PEHeaderReader
             var peHeaderOffset = _GetPEOffset(fs);
             if (peHeaderOffset <= 0 || peHeaderOffset >= fs.Length - 24)
             {
-                result.ErrorMessage = "无效的PE头偏移量";
+                result.ErrorMessage = "The PE header offset is invalid.";
                 return result;
             }
 
@@ -50,7 +50,7 @@ public static class PEHeaderReader
             fs.Seek(peHeaderOffset, SeekOrigin.Begin);
             if (!_IsValidPESignature(fs))
             {
-                result.ErrorMessage = "无效的PE签名";
+                result.ErrorMessage = "The PE signature is invalid.";
                 return result;
             }
 
@@ -61,7 +61,7 @@ public static class PEHeaderReader
         catch (Exception ex)
         {
             result.IsValid = false;
-            result.ErrorMessage = $"读取失败: {ex.Message}";
+            result.ErrorMessage = $"Read failed: {ex.Message}";
         }
         return result;
     }

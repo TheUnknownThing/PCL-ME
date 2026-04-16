@@ -16,9 +16,9 @@ public static class EncodingDetector
     public static Encoding DetectEncoding(Stream stream, bool readFromBegin = false)
     {
         if (!stream.CanRead)
-            throw new ArgumentException("流必须支持读操作");
+            throw new ArgumentException("The stream must support reading.");
         if (!stream.CanSeek)
-            throw new ArgumentException("流必须支持 Seek 操作");
+            throw new ArgumentException("The stream must support seeking.");
 
         var originalPosition = stream.Position;
         if (readFromBegin) stream.Seek(0, SeekOrigin.Begin);
@@ -49,7 +49,7 @@ public static class EncodingDetector
         var sampleLength = Math.Min(readableLength, 4);
         var buffer = new byte[sampleLength];
         var actualRead = stream.Read(buffer, 0, buffer.Length);
-        if (actualRead != sampleLength) throw new Exception("无法获取样本长度");
+        if (actualRead != sampleLength) throw new Exception("Unable to read the full sample length.");
 
         // 对样本进行分析
         if (sampleLength >= 3 && buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf)

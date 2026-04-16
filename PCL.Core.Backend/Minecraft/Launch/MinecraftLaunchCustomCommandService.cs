@@ -11,17 +11,17 @@ public static class MinecraftLaunchCustomCommandService
 
         if (string.IsNullOrWhiteSpace(request.InstanceName))
         {
-            throw new ArgumentException("实例名称不能为空。", nameof(request));
+            throw new ArgumentException("The instance name cannot be empty.", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.WorkingDirectory))
         {
-            throw new ArgumentException("工作目录不能为空。", nameof(request));
+            throw new ArgumentException("The working directory cannot be empty.", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.JavaExecutablePath))
         {
-            throw new ArgumentException("Java 可执行文件路径不能为空。", nameof(request));
+            throw new ArgumentException("The Java executable path cannot be empty.", nameof(request));
         }
 
         var useUtf8Encoding = request.JavaMajorVersion > 8;
@@ -36,14 +36,14 @@ public static class MinecraftLaunchCustomCommandService
             }
 
             scriptLines.Add("@echo off");
-            scriptLines.Add($"title 启动 - {request.InstanceName}");
-            scriptLines.Add("echo 游戏正在启动，请稍候。");
+            scriptLines.Add($"title Launch - {request.InstanceName}");
+            scriptLines.Add("echo Game is starting, please wait.");
             scriptLines.Add($"cd /D \"{request.WorkingDirectory}\"");
         }
         else
         {
             scriptLines.Add("#!/bin/sh");
-            scriptLines.Add("printf '%s\\n' '游戏正在启动，请稍候。'");
+            scriptLines.Add("printf '%s\\n' 'Game is starting, please wait.'");
             scriptLines.Add($"cd \"{request.WorkingDirectory}\" || exit 1");
         }
 
@@ -65,12 +65,12 @@ public static class MinecraftLaunchCustomCommandService
         scriptLines.Add($"\"{request.JavaExecutablePath}\" {request.LaunchArguments}");
         if (OperatingSystem.IsWindows())
         {
-            scriptLines.Add("echo 游戏已退出。");
+            scriptLines.Add("echo Game has exited.");
             scriptLines.Add("pause");
         }
         else
         {
-            scriptLines.Add("printf '%s\\n' '游戏已退出。'");
+            scriptLines.Add("printf '%s\\n' 'Game has exited.'");
         }
 
         return new MinecraftLaunchCustomCommandPlan(
@@ -97,11 +97,11 @@ public static class MinecraftLaunchCustomCommandService
             command,
             waitForExit,
             scope == MinecraftLaunchCustomCommandScope.Global
-                ? $"正在执行全局自定义命令：{command}"
-                : $"正在执行实例自定义命令：{command}",
+                ? $"Running global custom command: {command}"
+                : $"Running instance custom command: {command}",
             scope == MinecraftLaunchCustomCommandScope.Global
-                ? "执行全局自定义命令失败"
-                : "执行实例自定义命令失败"));
+                ? "Failed to run the global custom command"
+                : "Failed to run the instance custom command"));
     }
 
     private static void AppendEnvironmentVariables(List<string> scriptLines, IReadOnlyDictionary<string, string> environmentVariables)

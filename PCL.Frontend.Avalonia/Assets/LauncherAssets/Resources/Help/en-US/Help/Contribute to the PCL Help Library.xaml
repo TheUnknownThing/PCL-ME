@@ -1,0 +1,20 @@
+<local:MyCard Title="Overview" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="The help library is maintained like normal project content. If you find outdated instructions, missing screenshots, or unclear wording, you can improve the related files and submit the change through the repository workflow." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Get the help repository" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Help/Contribute to the PCL Help Library - GitHub Desktop.json" Title="GitHub Desktop" Info="Simple GUI workflow for cloning and submitting changes." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Help/Contribute to the PCL Help Library - VSCode.json" Title="VSCode" Info="Lightweight editor workflow." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Help/Contribute to the PCL Help Library - IntelliJ IDEA.json" Title="IntelliJ IDEA" Info="IDE-based workflow." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Writing rules" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="open_help" EventData="Help/Contribute to the PCL Help Library - Writing Rules.json" Title="Writing rules" Info="Open the article about article structure, screenshots, and review expectations." />
+  </StackPanel>
+</local:MyCard>

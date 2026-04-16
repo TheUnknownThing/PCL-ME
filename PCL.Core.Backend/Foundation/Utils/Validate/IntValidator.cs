@@ -15,10 +15,10 @@ public class IntValidator(int max = int.MaxValue, int min = int.MinValue) : Abst
     private void BuildRules()
     {
         RuleFor(x => x)
-            .Must(x => x.Length < 9).WithMessage("请输入一个大小合理的数字！")
-            .Must(x => int.TryParse(x, out _)).WithMessage("请输入一个整数！")
-            .Must(x => int.TryParse(x, out var value) && value <= Max).WithMessage($"不可超过 {Max}！")
-            .Must(x => int.TryParse(x, out var value) && value >= Min).WithMessage($"不可低于 {Min}！");
+            .Must(x => x.Length < 9).WithMessage("Please enter a number within the expected range.")
+            .Must(x => int.TryParse(x, out _)).WithMessage("Please enter an integer.")
+            .Must(x => int.TryParse(x, out var value) && value <= Max).WithMessage($"Must be no greater than {Max}.")
+            .Must(x => int.TryParse(x, out var value) && value >= Min).WithMessage($"Must be no less than {Min}.");
     }
 
     protected override bool PreValidate(ValidationContext<string> context, ValidationResult result)

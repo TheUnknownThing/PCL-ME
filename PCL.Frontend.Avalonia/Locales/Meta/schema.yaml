@@ -2106,6 +2106,12 @@ setup:
       disable_hardware_acceleration_restart: []
     labels:
       debug_animation_speed_off: []
+    debug_summary:
+      fields:
+        current_instance: []
+        instance_directory: []
+      values:
+        not_selected: []
     messages:
       debug_mode_disabled: []
       debug_mode_enabled: []
@@ -2309,6 +2315,17 @@ download:
         - count
         tasks:
         - count
+      target:
+        datapack_instance_unavailable:
+        - instance_name
+        datapack_no_saves:
+        - instance_name
+        datapack_save_title: []
+        datapack_save_message:
+        - instance_name
+        datapack_save_confirm: []
+        datapack_save_failed: []
+        datapack_directory_unresolved: []
     empty:
       body: []
       title: []
@@ -2645,10 +2662,35 @@ download:
     current_instance:
       actions:
         switch: []
+        switch_save: []
+      activities:
+        switch_save: []
+      dialogs:
+        select_instance:
+          title: []
+          message: []
+          failed: []
+        select_save:
+          title: []
+          message:
+          - instance_name
+          failed: []
+      messages:
+        no_instances_available: []
+        instance_unavailable:
+        - instance_name
+        no_saves_available:
+        - instance_name
+        save_not_found: []
+        save_already_selected:
+        - instance_name
+        - save_name
       none_selected: []
       summary_none_selected: []
+      summary_none_selected_save: []
       summary_suffix: []
       title: []
+      title_save: []
     empty:
       default: []
     filters:
@@ -2814,6 +2856,7 @@ resource_detail:
     download_started:
     - entry_title
     install_current_instance: []
+    install_current_save: []
     install_current_instance_failed: []
     navigate_back:
     - target_title
@@ -2861,6 +2904,7 @@ resource_detail:
   current_instance:
     none_selected: []
     summary_none_selected: []
+    summary_none_selected_save: []
   categories:
     adventure: []
     automation: []
@@ -3139,6 +3183,8 @@ resource_detail:
     unlisted: []
   suggested_release:
     none: []
+    target_save:
+    - save_name
     title: []
   translate_description:
     empty: []

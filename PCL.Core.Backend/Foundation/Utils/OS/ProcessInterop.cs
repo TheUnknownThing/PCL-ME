@@ -40,7 +40,7 @@ public class ProcessInterop
     {
         if (string.IsNullOrWhiteSpace(executable))
         {
-            throw new ArgumentException("可执行文件路径不能为空或仅包含空白字符", nameof(executable));
+            throw new ArgumentException("The executable path cannot be empty or whitespace.", nameof(executable));
         }
 
         try
@@ -48,12 +48,12 @@ public class ProcessInterop
             var fullPath = Path.GetFullPath(executable);
             if (!File.Exists(fullPath))
             {
-                LogWrapper.Warn("System", $"指定的可执行文件不存在: {executable}");
+                LogWrapper.Warn("System", $"The specified executable does not exist: {executable}");
             }
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            throw new ArgumentException($"无效的可执行文件路径: {executable}", nameof(executable), ex);
+            throw new ArgumentException($"The executable path is invalid: {executable}", nameof(executable), ex);
         }
 
         try
@@ -62,19 +62,19 @@ public class ProcessInterop
         }
         catch (UnauthorizedAccessException ex)
         {
-            const string errorMessage = "没有足够的权限访问注册表。请以管理员身份运行程序或检查用户权限设置。";
+            const string errorMessage = "Insufficient permission to access the registry. Run the program as administrator or check user permissions.";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new UnauthorizedAccessException(errorMessage, ex);
         }
         catch (SecurityException ex)
         {
-            const string errorMessage = "安全策略不允许访问注册表。请联系系统管理员检查安全设置。";
+            const string errorMessage = "Security policy does not allow registry access. Contact the system administrator to review security settings.";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new SecurityException(errorMessage, ex);
         }
         catch (Exception ex)
         {
-            var errorMessage = $"设置 GPU 偏好时发生未预期的错误: {ex.Message}";
+            var errorMessage = $"An unexpected error occurred while setting GPU preference: {ex.Message}";
             LogWrapper.Error(ex, "System", errorMessage);
             throw new InvalidOperationException(errorMessage, ex);
         }

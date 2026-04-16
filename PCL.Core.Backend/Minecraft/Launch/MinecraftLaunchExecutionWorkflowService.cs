@@ -11,12 +11,12 @@ public static class MinecraftLaunchExecutionWorkflowService
 
         if (string.IsNullOrWhiteSpace(request.Command))
         {
-            throw new ArgumentException("自定义命令不能为空。", nameof(request));
+            throw new ArgumentException("The custom command cannot be empty.", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.WorkingDirectory))
         {
-            throw new ArgumentException("自定义命令工作目录不能为空。", nameof(request));
+            throw new ArgumentException("The custom command working directory cannot be empty.", nameof(request));
         }
 
         var fileName = OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh";
@@ -33,7 +33,7 @@ public static class MinecraftLaunchExecutionWorkflowService
             request.WaitForExit,
             request.StartLogMessage,
             request.FailureLogMessage,
-            "由于取消启动，已强制结束自定义命令 CMD 进程");
+            "Launch was canceled, so the custom command CMD process was forcefully terminated");
     }
 
     public static MinecraftLaunchProcessShellPlan BuildProcessShellPlan(MinecraftLaunchProcessRequest request)
@@ -54,8 +54,8 @@ public static class MinecraftLaunchExecutionWorkflowService
             runtimePlan.AppDataEnvironmentValue,
             runtimePlan.EnvironmentVariables,
             runtimePlan.PriorityKind,
-            "已启动游戏进程：" + runtimePlan.ExecutablePath,
-            "由于取消启动，已强制结束游戏进程");
+            "Started game process: " + runtimePlan.ExecutablePath,
+            "Launch was canceled, so the game process was forcefully terminated");
     }
 }
 

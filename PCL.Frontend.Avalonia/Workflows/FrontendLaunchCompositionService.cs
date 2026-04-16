@@ -109,7 +109,7 @@ internal static class FrontendLaunchCompositionService
             LibrariesDirectory: Path.Combine(launcherFolder, "libraries"),
             LauncherName: "PCLME",
             LauncherVersion: "frontend-avalonia",
-            VersionName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName,
+            VersionName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
             VersionType: versionType,
             GameDirectory: indieDirectory,
             AssetsRoot: Path.Combine(launcherFolder, "assets"),
@@ -187,7 +187,7 @@ internal static class FrontendLaunchCompositionService
                 : NullIfWhiteSpace(ReadValue(instanceConfig, "VersionServerAuthServer", string.Empty))
             : null;
         var precheckRequest = new MinecraftLaunchPrecheckRequest(
-            InstanceName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName,
+            InstanceName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
             InstancePathIndie: indieDirectory,
             InstancePath: launcherFolder,
             IsInstanceSelected: !string.IsNullOrWhiteSpace(selectedInstanceName),
@@ -214,7 +214,7 @@ internal static class FrontendLaunchCompositionService
 
         return new FrontendLaunchComposition(
             options.Scenario,
-            string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName,
+            string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
             instancePath,
             requiredArtifacts,
             selectedProfile,
@@ -238,7 +238,7 @@ internal static class FrontendLaunchCompositionService
             sessionStartPlan,
             postLaunchShell,
             MinecraftLaunchShellService.GetCompletionNotification(new MinecraftLaunchCompletionRequest(
-                InstanceName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName,
+                InstanceName: string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName,
                 Outcome: MinecraftLaunchOutcome.Succeeded,
                 IsScriptExport: false,
                 AbortHint: null)));
@@ -375,7 +375,7 @@ internal static class FrontendLaunchCompositionService
         var javawExecutablePath = OperatingSystem.IsWindows()
             ? Path.Combine(javaFolder, "javaw.exe")
             : javaExecutablePath;
-        var instanceName = string.IsNullOrWhiteSpace(selectedInstanceName) ? "未选择实例" : selectedInstanceName;
+        var instanceName = string.IsNullOrWhiteSpace(selectedInstanceName) ? "No instance selected" : selectedInstanceName;
         var watcherWorkflowRequest = BuildWatcherWorkflowRequest(
             launcherFolder,
             selectedInstanceName,
@@ -490,8 +490,8 @@ internal static class FrontendLaunchCompositionService
                 AppDataEnvironmentValue: string.Empty,
                 EnvironmentVariables: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 PriorityKind: MinecraftLaunchProcessPriorityKind.Normal,
-                StartedLogMessage: "缺少 Java 运行时，尚未生成可执行的启动命令。",
-                AbortKillLogMessage: "缺少 Java 运行时，无需终止游戏进程。"),
+                StartedLogMessage: "Missing Java runtime, so no executable launch command has been generated yet.",
+                AbortKillLogMessage: "Missing Java runtime, so there is no game process to terminate."),
             MinecraftLaunchWatcherWorkflowService.BuildPlan(watcherWorkflowRequest));
     }
 
@@ -1184,7 +1184,7 @@ internal static class FrontendLaunchCompositionService
 
             return new FrontendLaunchProfileSummary(
                 kind,
-                string.IsNullOrWhiteSpace(selectedProfile.Username) ? "未选择档案" : selectedProfile.Username,
+                string.IsNullOrWhiteSpace(selectedProfile.Username) ? "No profile selected" : selectedProfile.Username,
                 selectedProfile.Uuid,
                 selectedProfile.AccessToken,
                 selectedProfile.ClientToken,
@@ -1208,7 +1208,7 @@ internal static class FrontendLaunchCompositionService
             "LoginLegacyName");
         return new FrontendLaunchProfileSummary(
             string.IsNullOrWhiteSpace(legacyName) ? MinecraftLaunchProfileKind.None : MinecraftLaunchProfileKind.Legacy,
-            string.IsNullOrWhiteSpace(legacyName) ? "未选择档案" : legacyName,
+            string.IsNullOrWhiteSpace(legacyName) ? "No profile selected" : legacyName,
             null,
             null,
             null,
@@ -3037,7 +3037,7 @@ internal static class FrontendLaunchCompositionService
         var runtimeLabel = string.IsNullOrWhiteSpace(runtime.DisplayName)
             ? Path.GetFileName(Path.GetDirectoryName(runtime.ExecutablePath)) ?? runtime.ExecutablePath
             : runtime.DisplayName;
-        return $"已忽略 Java 兼容性检查，当前使用 {runtimeLabel}。推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}";
+        return $"Java compatibility checks were skipped. Current runtime: {runtimeLabel}. Recommended range: {javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}";
     }
 
     private static MinecraftLaunchPrompt BuildJavaCompatibilityPrompt(

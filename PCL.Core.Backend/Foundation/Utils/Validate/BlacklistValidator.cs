@@ -21,7 +21,7 @@ public class BlacklistValidator(List<string> contains) : AbstractValidator<strin
                 {
                     if (input.Contains(items))
                     {
-                        context.AddFailure($"输入内容不能包含 {items}！");
+                        context.AddFailure($"Input cannot contain {items}.");
                     }
                 }
             });

@@ -717,13 +717,13 @@ internal sealed partial class FrontendShellViewModel
                 ? null
                 : ToolDownloadUserAgent.Trim();
             TaskCenter.Register(new FrontendManagedFileDownloadTask(
-                $"自定义下载：{fileName}",
+                $"Custom download: {fileName}",
                 uri.ToString(),
                 targetPath,
                 ResolveDownloadRequestTimeout(),
                 _shellActionService.GetDownloadTransferOptions(),
-                onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
-                onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+                onStarted: filePath => AvaloniaHintBus.Show($"Starting download of {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
+                onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} downloaded", AvaloniaHintTheme.Success),
                 onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error),
                 userAgent: userAgent));
 
@@ -1160,7 +1160,7 @@ internal sealed partial class FrontendShellViewModel
         var url = GetAchievementUrl();
         if (string.IsNullOrWhiteSpace(url))
         {
-            AddFailureActivity("预览成就图片失败", "请先填写有效的成就内容。");
+            AddFailureActivity("Achievement preview failed", "Enter valid achievement text first.");
             return;
         }
 
@@ -1171,13 +1171,13 @@ internal sealed partial class FrontendShellViewModel
             using var stream = new MemoryStream(bytes);
             AchievementPreviewImage = new Bitmap(stream);
             ShowAchievementPreview = true;
-            AddActivity("预览成就图片", $"已加载 {AchievementTitle.Trim()} 的成就图像。\n{url}");
+            AddActivity("Achievement preview", $"Loaded the achievement image for {AchievementTitle.Trim()}.\n{url}");
         }
         catch (Exception ex)
         {
             ShowAchievementPreview = false;
             AchievementPreviewImage = null;
-            AddFailureActivity("预览成就图片失败", ex.Message);
+            AddFailureActivity("Achievement preview failed", ex.Message);
         }
     }
 
@@ -1224,7 +1224,7 @@ internal sealed partial class FrontendShellViewModel
             HeadPreviewImage = GenerateHeadPreviewBitmap(SelectedHeadSkinPath, SelectedHeadSizeIndex);
             if (addActivity)
             {
-                AddActivity("头像预览", $"已生成 {HeadSizeOptions[SelectedHeadSizeIndex]} 头像预览。");
+                AddActivity("Head preview", $"Generated a {HeadSizeOptions[SelectedHeadSizeIndex]} head preview.");
             }
         }
         catch (Exception ex)
@@ -1232,7 +1232,7 @@ internal sealed partial class FrontendShellViewModel
             HeadPreviewImage = null;
             if (addActivity)
             {
-                AddFailureActivity("头像预览失败", ex.Message);
+                AddFailureActivity("Head preview failed", ex.Message);
             }
         }
     }
@@ -1284,7 +1284,7 @@ internal sealed partial class FrontendShellViewModel
         var height = skinBitmap.PixelSize.Height;
         if (width < 64 || height < 32 || width % 64 != 0)
         {
-            throw new InvalidOperationException("皮肤尺寸无效，需满足宽度为 64 的整数倍且高度至少为 32 像素。");
+            throw new InvalidOperationException("Invalid skin dimensions. Width must be a multiple of 64 and height must be at least 32 pixels.");
         }
 
         var scale = Math.Max(1, width / 64);

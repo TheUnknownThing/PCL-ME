@@ -4,6 +4,6 @@
   "Description": "Reference material for server-side plugin ecosystems",
   "Types": ["Reference"],
   "IsEvent": true,
-  "EventType": "打开网页",
+  "EventType": "open_web",
   "EventData": "https://mineplugin.org/"
 }

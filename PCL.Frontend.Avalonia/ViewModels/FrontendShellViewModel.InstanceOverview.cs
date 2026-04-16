@@ -791,7 +791,7 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            throw new DirectoryNotFoundException($"未找到目录：{sourcePath}");
+            throw new DirectoryNotFoundException($"Directory not found: {sourcePath}");
         }
 
         if (string.Equals(sourcePath, targetPath, StringComparison.Ordinal))
@@ -879,12 +879,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!File.Exists(corePath))
         {
-            throw new FileNotFoundException($"未找到指定文件：{corePath}");
+            throw new FileNotFoundException($"Specified file not found: {corePath}");
         }
 
         if (!File.Exists(patchArchivePath))
         {
-            throw new FileNotFoundException($"未找到指定文件：{patchArchivePath}");
+            throw new FileNotFoundException($"Specified file not found: {patchArchivePath}");
         }
 
         using var coreStream = new FileStream(corePath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 16384, useAsync: true);

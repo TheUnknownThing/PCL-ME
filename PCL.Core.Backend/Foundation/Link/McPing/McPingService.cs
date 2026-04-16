@@ -67,7 +67,7 @@ public class McPingService : IMcPingService
         }
         catch (OperationCanceledException)
         {
-            LogWrapper.Error(new TimeoutException("连接超时"), ModuleName, $"Failed to connect to the {_endpoint}");
+            LogWrapper.Error(new TimeoutException("Connection timed out."), ModuleName, $"Failed to connect to {_endpoint}");
             return null;
         }
         catch (Exception e)
@@ -109,7 +109,7 @@ public class McPingService : IMcPingService
         }
         catch (OperationCanceledException)
         {
-            LogWrapper.Error(new TimeoutException("数据读写超时"), "McPing", $"Operation timed out on {_endpoint}");
+            LogWrapper.Error(new TimeoutException("Data read or write timed out."), "McPing", $"Operation timed out on {_endpoint}");
             return null;
         }
         catch (Exception e)
@@ -128,10 +128,10 @@ public class McPingService : IMcPingService
         var dataLength =
             Convert.ToInt32(VarIntHelper.Decode(retBinary.Skip(1).ToArray(), out var packDataHeaderLength));
         LogWrapper.Debug(ModuleName, $"ServerDataLength: {dataLength}");
-        if (dataLength > retBinary.Length) throw new Exception("The server data is too large");
+        if (dataLength > retBinary.Length) throw new Exception("The server data is too large.");
         var retCtx = Encoding.UTF8.GetString(retBinary.Skip(1 + packDataHeaderLength).Take(dataLength).ToArray());
 
-        var retJson = JsonNode.Parse(retCtx) ?? throw new NullReferenceException("服务器返回了错误的信息");
+        var retJson = JsonNode.Parse(retCtx) ?? throw new NullReferenceException("The server returned invalid data.");
 #if DEBUG
         var resJsonDebug = retJson.DeepClone();
         if (resJsonDebug is JsonObject jsonObject && jsonObject.ContainsKey("favicon"))
@@ -149,7 +149,7 @@ public class McPingService : IMcPingService
 
         var response = JsonSerializer.Deserialize<McPingResult>(retJson);
         if (response?.Version == null)
-            throw new NullReferenceException("服务器返回了错误的字段，缺失: version");
+            throw new NullReferenceException("The server response is missing the version field.");
 
         response = response with
         {
@@ -178,7 +178,7 @@ public class McPingService : IMcPingService
         handshake.AddRange(VarIntHelper.Encode(0)); //状态头 表明这是一个握手包
         handshake.AddRange(VarIntHelper.Encode(772)); //协议头 表明请求客户端的版本
         var binaryIp = Encoding.UTF8.GetBytes(serverIp);
-        if (binaryIp.Length > 255) throw new Exception("服务器地址过长");
+        if (binaryIp.Length > 255) throw new Exception("The server address is too long.");
         handshake.AddRange(VarIntHelper.Encode((uint)binaryIp.Length)); //服务器地址长度
         handshake.AddRange(binaryIp); //服务器地址
         handshake.AddRange(BitConverter.GetBytes((ushort)serverPort).AsEnumerable().Reverse()); //服务器端口
@@ -256,13 +256,13 @@ public class McPingService : IMcPingService
                     }
                 default:
                     {
-                        LogWrapper.Warn(ModuleName, $"解析到无法处理的 Motd 内容({current.GetValueKind()})：{current}");
+                        LogWrapper.Warn(ModuleName, $"Encountered unsupported Motd content ({current.GetValueKind()}): {current}");
                         break;
                     }
             }
         }
 
-        LogWrapper.Debug(ModuleName, $"处理 Motd 内容完成，结果：{result}");
+        LogWrapper.Debug(ModuleName, $"Finished processing Motd content. Result: {result}");
         return result.ToString();
     }
 

@@ -4,6 +4,6 @@
   "Description": "If automatic Java discovery does not find a runtime, you can pick the Java path yourself.",
   "Types": ["Launcher"],
   "IsEvent": true,
-  "EventType": "弹出窗口",
+  "EventType": "popup",
   "EventData": "Select Java Manually|Open Settings, go to the Java section, click Select Manually, and then choose the java or javaw executable."
 }

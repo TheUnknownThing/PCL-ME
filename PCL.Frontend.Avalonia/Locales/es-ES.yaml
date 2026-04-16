@@ -1880,6 +1880,12 @@ setup:
       disable_hardware_acceleration_restart: Los cambios entran en vigor la próxima vez que se inicia el iniciador.
     labels:
       debug_animation_speed_off: false
+    debug_summary:
+      fields:
+        current_instance: Current instance
+        instance_directory: Instance directory
+      values:
+        not_selected: Not selected
     messages:
       debug_mode_disabled: Se ha desactivado la salida de diagnóstico adicional.
       debug_mode_enabled: Los registros y diagnósticos detallados ahora están habilitados.
@@ -2071,6 +2077,14 @@ download:
         none: Sin tareas
         skipped: '{count} omitido'
         tasks: '{count} tareas'
+      target:
+        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
+        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
+        datapack_save_title: Select datapack save
+        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
+        datapack_save_confirm: Start install
+        datapack_save_failed: Failed to select datapack save
+        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
     empty:
       body: Agregue proyectos a favoritos para poder instalarlos o compartirlos más tarde.
       title: Aún no hay favoritos
@@ -2347,10 +2361,30 @@ download:
     current_instance:
       actions:
         switch: Interruptor
+        switch_save: Switch save
+      activities:
+        switch_save: Switch save
+      dialogs:
+        select_instance:
+          title: Select instance
+          message: Choose the instance you want to browse and install datapacks for.
+          failed: Failed to select instance
+        select_save:
+          title: Select save
+          message: Choose the target save in {instance_name} where the datapack should be installed.
+          failed: Failed to select save
+      messages:
+        no_instances_available: No instances are available.
+        instance_unavailable: '{instance_name} is currently unavailable.'
+        no_saves_available: '{instance_name} currently has no available saves.'
+        save_not_found: The selected save was not found.
+        save_already_selected: '{instance_name} • {save_name} is already the current save.'
       none_selected: Ninguna instancia seleccionada
       summary_none_selected: Seleccione una instancia para mejorar el filtrado de compatibilidad
+      summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
       summary_suffix: Usado para filtrado de compatibilidad
       title: Instancia actual
+      title_save: Current save
     empty:
       default: Sin resultados
     filters:
@@ -2501,6 +2535,7 @@ resource_detail:
     download_file: 'Descargar archivo: {entry_title}'
     download_started: 'Descarga iniciada: {entry_title}'
     install_current_instance: Instalar en la instancia actual
+    install_current_save: Install to current save
     install_current_instance_failed: Error al instalar en la instancia actual
     navigate_back: Volver a {target_title}
     open_dependency_project: 'Proyecto de dependencia abierta: {entry_title}'
@@ -2532,6 +2567,7 @@ resource_detail:
   current_instance:
     none_selected: No se ha seleccionado ninguna instancia actual
     summary_none_selected: Seleccione una instancia para instalar este proyecto directamente
+    summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
   categories:
     adventure: Aventura
     automation: Automatización
@@ -2770,6 +2806,7 @@ resource_detail:
     unlisted: No listado
   suggested_release:
     none: No se sugiere ninguna versión
+    target_save: 'Target save: {save_name}'
     title: Versión sugerida
   translate_description:
     empty: No hay descripción para traducir

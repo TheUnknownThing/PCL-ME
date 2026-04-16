@@ -61,7 +61,7 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
 
         if (request.Plan.Kind == MinecraftLaunchAuthProfileSelectionKind.Fail)
         {
-            throw new InvalidOperationException("无法根据失败的 Authlib 登录计划解析结果。");
+            throw new InvalidOperationException("Cannot resolve a failed Authlib sign-in plan.");
         }
 
         var selectedProfile = ResolveSelectedProfile(request);
@@ -97,14 +97,14 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
         {
             if (string.IsNullOrWhiteSpace(request.SelectedProfileId))
             {
-                throw new ArgumentException("需要提供所选角色 ID。", nameof(request));
+                throw new ArgumentException("The selected profile ID is required.", nameof(request));
             }
 
             var selectedProfile = request.Plan.PromptOptions.FirstOrDefault(profile =>
                 string.Equals(profile.Id, request.SelectedProfileId, StringComparison.Ordinal));
             if (selectedProfile is null)
             {
-                throw new InvalidOperationException("所选角色不在可选列表中。");
+                throw new InvalidOperationException("The selected profile is not in the available list.");
             }
 
             return selectedProfile;
@@ -113,7 +113,7 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
         if (string.IsNullOrWhiteSpace(request.Plan.SelectedProfileId) ||
             string.IsNullOrWhiteSpace(request.Plan.SelectedProfileName))
         {
-            throw new InvalidOperationException("Authlib 登录计划缺少选中的角色。");
+            throw new InvalidOperationException("The Authlib sign-in plan is missing the selected profile.");
         }
 
         return new MinecraftLaunchAuthProfileOption(request.Plan.SelectedProfileId, request.Plan.SelectedProfileName);

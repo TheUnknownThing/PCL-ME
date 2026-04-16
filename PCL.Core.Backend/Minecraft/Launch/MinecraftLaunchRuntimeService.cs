@@ -13,17 +13,17 @@ public static class MinecraftLaunchRuntimeService
 
         if (string.IsNullOrWhiteSpace(request.JavaExecutablePath))
         {
-            throw new ArgumentException("Java 可执行文件路径不能为空。", nameof(request));
+            throw new ArgumentException("The Java executable path cannot be empty.", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.JavaFolder))
         {
-            throw new ArgumentException("Java 文件夹路径不能为空。", nameof(request));
+            throw new ArgumentException("The Java folder path cannot be empty.", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.WorkingDirectory))
         {
-            throw new ArgumentException("工作目录不能为空。", nameof(request));
+            throw new ArgumentException("The working directory cannot be empty.", nameof(request));
         }
 
         var hasJavaw = !string.IsNullOrWhiteSpace(request.JavawExecutablePath);

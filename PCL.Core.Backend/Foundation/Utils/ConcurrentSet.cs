@@ -50,7 +50,7 @@ public sealed class ConcurrentSet<T> : IProducerConsumerCollection<T>, ICollecti
     public void Add(T item)
     {
         if (!_dictionary.TryAdd(item, null) && !IgnoreDuplicated)
-            throw new ArgumentException(nameof(ConcurrentSet<T>) + " 中已存在该元素");
+            throw new ArgumentException($"The set already contains this element: {item}", nameof(item));
     }
 
     public void Clear() => _dictionary.Clear();

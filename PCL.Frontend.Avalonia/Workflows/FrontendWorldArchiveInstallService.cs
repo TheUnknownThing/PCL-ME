@@ -48,7 +48,7 @@ internal static class FrontendWorldArchiveInstallService
         }
 
         var savesDirectory = Path.GetDirectoryName(archivePath)
-            ?? throw new InvalidOperationException("存档安装目录不可用。");
+            ?? throw new InvalidOperationException("The save install directory is unavailable.");
         var fallbackDirectoryName = Path.GetFileNameWithoutExtension(archivePath);
         var extractionRoot = Path.Combine(
             savesDirectory,
@@ -78,7 +78,7 @@ internal static class FrontendWorldArchiveInstallService
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"存档压缩包下载完成，但自动解压失败：{ex.Message}", ex);
+            throw new InvalidOperationException($"The save archive finished downloading, but automatic extraction failed: {ex.Message}", ex);
         }
         finally
         {
@@ -120,7 +120,7 @@ internal static class FrontendWorldArchiveInstallService
             }
         }
 
-        throw new InvalidOperationException("无法确定压缩包文件名编码。");
+        throw new InvalidOperationException("Unable to determine the archive filename encoding.");
     }
 
     internal static ExtractedWorldLayout ResolveExtractedWorldLayout(string extractedRoot, string fallbackDirectoryName)
@@ -135,7 +135,7 @@ internal static class FrontendWorldArchiveInstallService
             var entries = EnumerateRelevantEntries(currentDirectory).ToArray();
             if (entries.Length == 0)
             {
-                throw new InvalidOperationException("压缩包中没有可导入的存档内容。");
+                throw new InvalidOperationException("The archive does not contain any importable save content.");
             }
 
             if (LooksLikeWorldRootDirectory(entries))
@@ -151,7 +151,7 @@ internal static class FrontendWorldArchiveInstallService
                 .ToArray();
             if (childDirectories.Length != 1)
             {
-                throw new InvalidOperationException("压缩包中没有可识别的 Minecraft 存档结构。");
+                throw new InvalidOperationException("The archive does not contain a recognizable Minecraft save structure.");
             }
 
             currentDirectory = childDirectories[0].FullName;

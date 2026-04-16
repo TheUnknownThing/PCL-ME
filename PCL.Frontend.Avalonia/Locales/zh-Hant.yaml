@@ -1877,6 +1877,12 @@ setup:
       disable_hardware_acceleration_restart: 修改後會在下次啟動啓動器時生效。
     labels:
       debug_animation_speed_off: 關閉
+    debug_summary:
+      fields:
+        current_instance: 目前實例
+        instance_directory: 實例目錄
+      values:
+        not_selected: 未選擇
     messages:
       debug_mode_disabled: 已關閉額外的診斷輸出。
       debug_mode_enabled: 已啟用更詳細的日誌與診斷資訊。
@@ -2068,6 +2074,14 @@ download:
         none: 無任務
         skipped: 跳過了 {count} 項
         tasks: '{count} 個任務'
+      target:
+        datapack_instance_unavailable: '{instance_name} 目前不可用，因此無法選擇資料包存檔。'
+        datapack_no_saves: '{instance_name} 沒有可用存檔，因此無法安裝資料包。'
+        datapack_save_title: 選擇資料包存檔
+        datapack_save_message: '資料包必須安裝到某個存檔的 datapacks 資料夾中。請選擇 {instance_name} 中的目標存檔。'
+        datapack_save_confirm: 開始安裝
+        datapack_save_failed: 選擇資料包存檔失敗
+        datapack_directory_unresolved: 無法定位所選存檔的資料包目錄。
     empty:
       body: 把項目加入收藏夾，之後即可安裝或分享。
       title: 還沒有收藏項
@@ -2341,10 +2355,30 @@ download:
     current_instance:
       actions:
         switch: 切換實例
+        switch_save: 切換存檔
+      activities:
+        switch_save: 切換存檔
+      dialogs:
+        select_instance:
+          title: 選擇實例
+          message: 選擇你要瀏覽並安裝資料包的實例。
+          failed: 選擇實例失敗
+        select_save:
+          title: 選擇存檔
+          message: 選擇 {instance_name} 中要安裝資料包的目標存檔。
+          failed: 選擇存檔失敗
+      messages:
+        no_instances_available: 沒有可用實例。
+        instance_unavailable: '{instance_name} 目前不可用。'
+        no_saves_available: '{instance_name} 目前沒有可用存檔。'
+        save_not_found: 找不到所選存檔。
+        save_already_selected: '{instance_name} • {save_name} 已經是目前存檔。'
       none_selected: 未選擇實例
       summary_none_selected: 選擇一個實例以提升相容性篩選效果
+      summary_none_selected_save: 目前下載頁還沒有選取存檔，因此無法直接安裝資料包。請先從存檔頁打開目標存檔。
       summary_suffix: 用於相容性篩選
       title: 目前實例
+      title_save: 目前存檔
     empty:
       default: 沒有結果
     filters:
@@ -2495,6 +2529,7 @@ resource_detail:
     download_file: 下載檔案：{entry_title}
     download_started: 已開始下載：{entry_title}
     install_current_instance: 安裝到目前實例
+    install_current_save: 安裝到目前存檔
     install_current_instance_failed: 安裝到目前實例失敗
     navigate_back: 返回 {target_title}
     open_dependency_project: 開啟依賴專案：{entry_title}
@@ -2526,6 +2561,7 @@ resource_detail:
   current_instance:
     none_selected: 未選擇目前實例
     summary_none_selected: 選擇一個實例即可直接安裝此專案
+    summary_none_selected_save: 目前下載頁還沒有選取存檔，因此無法直接安裝資料包。請先從存檔頁打開目標存檔。
   categories:
     adventure: 冒險
     automation: 自動化
@@ -2764,6 +2800,7 @@ resource_detail:
     unlisted: 未列出
   suggested_release:
     none: 沒有建議版本
+    target_save: '目標存檔：{save_name}'
     title: 建議版本
   translate_description:
     empty: 沒有可翻譯的簡介

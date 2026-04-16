@@ -1873,6 +1873,12 @@ setup:
       disable_hardware_acceleration_restart: Les modifications prendront effet au prochain démarrage du lanceur.
     labels:
       debug_animation_speed_off: Désactivé
+    debug_summary:
+      fields:
+        current_instance: Current instance
+        instance_directory: Instance directory
+      values:
+        not_selected: Not selected
     messages:
       debug_mode_disabled: La sortie de diagnostic supplémentaire a été désactivée.
       debug_mode_enabled: Les journaux détaillés et les diagnostics sont désormais activés.
@@ -2058,6 +2064,14 @@ download:
         none: Aucune tâche
         skipped: "{count} ignoré"
         tasks: Tâches {count}
+      target:
+        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
+        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
+        datapack_save_title: Select datapack save
+        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
+        datapack_save_confirm: Start install
+        datapack_save_failed: Failed to select datapack save
+        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
     empty:
       body: Ajoutez des projets aux favoris afin de pouvoir les installer ou les partager plus tard.
       title: Pas encore de favoris
@@ -2331,10 +2345,30 @@ download:
     current_instance:
       actions:
         switch: Changer
+        switch_save: Switch save
+      activities:
+        switch_save: Switch save
+      dialogs:
+        select_instance:
+          title: Select instance
+          message: Choose the instance you want to browse and install datapacks for.
+          failed: Failed to select instance
+        select_save:
+          title: Select save
+          message: Choose the target save in {instance_name} where the datapack should be installed.
+          failed: Failed to select save
+      messages:
+        no_instances_available: No instances are available.
+        instance_unavailable: '{instance_name} is currently unavailable.'
+        no_saves_available: '{instance_name} currently has no available saves.'
+        save_not_found: The selected save was not found.
+        save_already_selected: '{instance_name} • {save_name} is already the current save.'
       none_selected: Aucune instance sélectionnée
       summary_none_selected: Sélectionnez une instance pour améliorer le filtrage de compatibilité
+      summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
       summary_suffix: Utilisé pour le filtrage de compatibilité
       title: Instance actuelle
+      title_save: Current save
     empty:
       default: Aucun résultat
     filters:
@@ -2485,6 +2519,7 @@ resource_detail:
     download_file: 'Télécharger le fichier : {entry_title}'
     download_started: 'Téléchargement démarré : {entry_title}'
     install_current_instance: Installer sur l'instance actuelle
+    install_current_save: Install to current save
     install_current_instance_failed: Échec de l'installation sur l'instance actuelle
     navigate_back: Retour à {target_title}
     open_dependency_project: 'Projet de dépendance ouvert : {entry_title}'
@@ -2516,6 +2551,7 @@ resource_detail:
   current_instance:
     none_selected: Aucune instance actuelle sélectionnée
     summary_none_selected: Sélectionnez une instance pour installer ce projet directement
+    summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
   categories:
     adventure: Aventure
     automation: Automatisation
@@ -2754,6 +2790,7 @@ resource_detail:
     unlisted: Non répertorié
   suggested_release:
     none: Aucune version suggérée
+    target_save: 'Target save: {save_name}'
     title: Sortie suggérée
   translate_description:
     empty: Il n'y a pas de description à traduire

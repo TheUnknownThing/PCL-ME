@@ -106,8 +106,8 @@ internal sealed partial class FrontendShellViewModel
     }
 
     public string DownloadResourceCurrentInstanceCardTitle => _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack
-        ? "当前存档"
-        : "当前实例";
+        ? T("download.resource.current_instance.title_save")
+        : T("download.resource.current_instance.title");
 
     public string DownloadResourceCurrentInstanceSummary
     {
@@ -117,7 +117,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 if (!_versionSavesComposition.Selection.HasSelection)
                 {
-                    return "当前下载页还没有选中存档，无法直接安装数据包。请先在存档页打开目标存档详情。";
+                    return T("download.resource.current_instance.summary_none_selected_save");
                 }
 
                 var datapackParts = new List<string> { _versionSavesComposition.Selection.InstanceName };
@@ -171,8 +171,8 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowDownloadResourceLoaderFilter => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadWorld;
 
     public string DownloadResourceCurrentInstanceActionText => _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack
-        ? "切换存档"
-        : "切换实例";
+        ? T("download.resource.current_instance.actions.switch_save")
+        : T("download.resource.current_instance.actions.switch");
 
     public ActionCommand SelectDownloadResourceInstanceCommand => new(() => _ = OpenDownloadResourceTargetContextAsync());
 
@@ -1189,10 +1189,11 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task SwitchDownloadResourceDatapackSaveAsync()
     {
+        var activityTitle = T("download.resource.current_instance.activities.switch_save");
         var instances = LoadAvailableDownloadTargetInstances();
         if (instances.Count == 0)
         {
-            AddActivity("切换存档", "当前没有可用的实例。");
+            AddActivity(activityTitle, T("download.resource.current_instance.messages.no_instances_available"));
             return;
         }
 
@@ -1200,19 +1201,19 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             selectedInstanceId = await _shellActionService.PromptForChoiceAsync(
-                "选择实例",
-                "请选择要浏览和安装数据包的实例。",
+                T("download.resource.current_instance.dialogs.select_instance.title"),
+                T("download.resource.current_instance.dialogs.select_instance.message"),
                 instances.Select(entry => new PclChoiceDialogOption(
                     entry.Name,
                     entry.Name,
                     entry.Subtitle))
                     .ToArray(),
                 _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : instances[0].Name,
-                "继续");
+                T("common.actions.continue"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择实例失败", ex.Message);
+            AddFailureActivity(T("download.resource.current_instance.dialogs.select_instance.failed"), ex.Message);
             return;
         }
 
@@ -1227,14 +1228,14 @@ internal sealed partial class FrontendShellViewModel
         var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, selectedInstance.Name);
         if (!targetComposition.Selection.HasSelection)
         {
-            AddActivity("切换存档", $"{selectedInstance.Name} 当前不可用。");
+            AddActivity(activityTitle, T("download.resource.current_instance.messages.instance_unavailable", ("instance_name", selectedInstance.Name)));
             return;
         }
 
         var saves = targetComposition.World.Entries;
         if (saves.Count == 0)
         {
-            AddActivity("切换存档", $"{selectedInstance.Name} 当前没有可用的存档。");
+            AddActivity(activityTitle, T("download.resource.current_instance.messages.no_saves_available", ("instance_name", selectedInstance.Name)));
             return;
         }
 
@@ -1247,19 +1248,19 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             selectedSavePath = await _shellActionService.PromptForChoiceAsync(
-                "选择存档",
-                $"请选择 {selectedInstance.Name} 中要安装数据包的目标存档。",
+                T("download.resource.current_instance.dialogs.select_save.title"),
+                T("download.resource.current_instance.dialogs.select_save.message", ("instance_name", selectedInstance.Name)),
                 saves.Select(entry => new PclChoiceDialogOption(
                     entry.Path,
                     entry.Title,
                     entry.Summary))
                     .ToArray(),
                 defaultSavePath,
-                "切换");
+                T("download.resource.current_instance.actions.switch_save"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择存档失败", ex.Message);
+            AddFailureActivity(T("download.resource.current_instance.dialogs.select_save.failed"), ex.Message);
             return;
         }
 
@@ -1271,7 +1272,7 @@ internal sealed partial class FrontendShellViewModel
         var selectedSave = saves.FirstOrDefault(entry => string.Equals(entry.Path, selectedSavePath, StringComparison.OrdinalIgnoreCase));
         if (selectedSave is null)
         {
-            AddActivity("切换存档", "未找到所选存档。");
+            AddActivity(activityTitle, T("download.resource.current_instance.messages.save_not_found"));
             return;
         }
 
@@ -1279,7 +1280,7 @@ internal sealed partial class FrontendShellViewModel
         var isSameSave = string.Equals(selectedSave.Path, _versionSavesComposition.Selection.SavePath, StringComparison.OrdinalIgnoreCase);
         if (isSameInstance && _versionSavesComposition.Selection.HasSelection && isSameSave)
         {
-            AddActivity("切换存档", $"{selectedInstance.Name} • {selectedSave.Title} 已经是当前存档。");
+            AddActivity(activityTitle, T("download.resource.current_instance.messages.save_already_selected", ("instance_name", selectedInstance.Name), ("save_name", selectedSave.Title)));
             return;
         }
 
@@ -1291,7 +1292,7 @@ internal sealed partial class FrontendShellViewModel
 
         _selectedVersionSavePath = selectedSave.Path;
         ReloadVersionSavesComposition();
-        AddActivity("切换存档", $"{selectedInstance.Name} • {selectedSave.Title}");
+        AddActivity(activityTitle, $"{selectedInstance.Name} • {selectedSave.Title}");
     }
 
     private bool ShouldAutoSyncDownloadResourceFiltersWithInstance()

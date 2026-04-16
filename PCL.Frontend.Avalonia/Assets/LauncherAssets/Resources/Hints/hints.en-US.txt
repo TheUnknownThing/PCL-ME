@@ -1,0 +1,19 @@
+Create `hints.txt` in the PCL folder to customize the "Did you know?" messages shown at launch. The file must be encoded as UTF-8.
+Besides the common languages, Minecraft Java Edition also includes special languages such as Pirate Speak, Upside Down English, and Classical Chinese.
+Son Doong Cave in Vietnam is one of the inspirations for the lush caves biome.
+The pig in Minecraft resembles the real-world Yorkshire pig.
+The white frog is based on the real-world gray tree frog.
+Bedrock has a hardness value of -1.
+A lodestone-less compass always points to the world's spawn point.
+Parrots dance near jukeboxes that are playing music discs.
+Adding a glass pane to a map in the cartography table locks the map content.
+Baby turtles drop a scute at the exact moment they grow up.
+Turtles return near their home beach to lay eggs, no matter how far they swim away.
+Potion damage ignores armor, so do not expect full netherite armor to tank a Harming potion.
+The base unit of in-game time is the tick, and 1 tick equals 0.05 seconds.
+Name a sheep `jeb_` and its wool will continuously cycle through colors.
+Name a vindicator `Johnny` and it will attack almost every nearby mob.
+Crafting coal into a coal block improves smelting efficiency.
+Although allays look similar to vexes, they cannot pass through blocks like vexes can.
+In Java Edition, naming a mob `Dinnerbone` or `Grumm` flips it upside down.
+Minecraft is one of the best-selling video games of all time.

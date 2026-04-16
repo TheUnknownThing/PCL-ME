@@ -10,9 +10,9 @@ public static class LauncherStartupMilestoneService
             ShouldAttemptUnlockHiddenTheme: updatedCount >= 99,
             HiddenThemeNotice: updatedCount >= 99
                 ? new LauncherStartupMilestoneNotice(
-                    "提示",
-                    "你已经打开了 99 次 PCL 跨平台版啦，感谢你长期以来的支持！" + System.Environment.NewLine +
-                    "隐藏主题 铁杆粉 未解锁！跨平台版不包含隐藏主题！")
+                    "Notice",
+                    "You have opened the PCL cross-platform edition 99 times. Thank you for your long-term support!" + System.Environment.NewLine +
+                    "The hidden Hardcore Fan theme is not unlocked. The cross-platform edition does not include hidden themes!")
                 : null);
     }
 }

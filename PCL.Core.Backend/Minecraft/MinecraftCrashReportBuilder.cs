@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using PCL.Core.Utils.Exts;
@@ -17,57 +18,57 @@ public static class MinecraftCrashReportBuilder
 
         var launcherLogContent = request.LauncherLogContent ?? string.Empty;
         var launchScriptContent = request.LaunchScriptContent ?? string.Empty;
-        var launchSection = Between(
+        var launchSection = BetweenAny(
             launcherLogContent,
-            "[Launch] ~ 基础参数 ~",
-            "开始 Minecraft 日志监控");
-        var allocatedMemory = ExtractBracketValue(launchSection, "分配的内存：");
+            ["[Launch] ~ Base Parameters ~", "[Launch] ~ 基础参数 ~"],
+            ["Start Minecraft log monitoring", "开始 Minecraft 日志监控"]);
+        var allocatedMemory = ExtractBracketValue(launchSection, "Allocated memory:", "分配的内存：");
         var totalMemoryMb = (long)(request.Environment.TotalPhysicalMemoryBytes / 1024 / 1024);
         var builder = new StringBuilder();
 
-        builder.Append("PCL-ME 版本：")
+        builder.Append("PCL-ME version: ")
             .Append(request.LauncherVersionName)
             .Append(' ')
             .Append(LineBreak);
-        builder.Append("识别码：")
+        builder.Append("Identifier: ")
             .Append(request.UniqueAddress)
             .Append(LineBreak);
         builder.Append(LineBreak)
-            .Append("- 档案信息 -")
+            .Append("- Profile -")
             .Append(LineBreak);
-        builder.Append("档案名称：")
-            .Append(ExtractBracketValue(launchSection, "玩家用户名："))
-            .Append(" (验证方式：")
-            .Append(ExtractBracketValue(launchSection, "验证方式："))
+        builder.Append("Profile name: ")
+            .Append(ExtractBracketValue(launchSection, "Player name:", "玩家用户名："))
+            .Append(" (auth method: ")
+            .Append(ExtractBracketValue(launchSection, "Login type:", "验证方式："))
             .Append(')')
             .Append(LineBreak);
         builder.Append(LineBreak)
-            .Append("- 实例信息 -")
+            .Append("- Instance -")
             .Append(LineBreak);
-        builder.Append("选定的 Java 虚拟机：")
-            .Append(ExtractBracketValue(launchSection, "Java 信息："))
+        builder.Append("Selected Java runtime: ")
+            .Append(ExtractBracketValue(launchSection, "Java info:", "Java 信息："))
             .Append(LineBreak);
-        builder.Append("Log4j2 NoLookups：")
+        builder.Append("Log4j2 NoLookups: ")
             .Append(!launchScriptContent.ContainsF("-Dlog4j2.formatMsgNoLookups=false"))
             .Append(LineBreak);
-        builder.Append("MC 文件夹：")
-            .Append(ExtractBracketValue(launchSection, "MC 文件夹："))
+        builder.Append("MC folder: ")
+            .Append(ExtractBracketValue(launchSection, "Minecraft folder:", "MC 文件夹："))
             .Append(LineBreak);
         builder.Append(LineBreak)
-            .Append("- 环境信息 -")
+            .Append("- Environment -")
             .Append(LineBreak);
-        builder.Append("操作系统：")
+        builder.Append("Operating system: ")
             .Append(GetOperatingSystemDisplay(request.Environment))
-            .Append("（64 位：")
+            .Append(" (64-bit: ")
             .Append(request.Environment.Is64BitOperatingSystem)
             .Append(", ARM64: ")
             .Append(request.Environment.OsArchitecture == Architecture.Arm64)
-            .Append('）')
+            .Append(')')
             .Append(LineBreak);
-        builder.Append("CPU：")
+        builder.Append("CPU: ")
             .Append(request.Environment.CpuName)
             .Append(LineBreak);
-        builder.Append("内存分配 (分配的内存 / 已安装物理内存)：")
+        builder.Append("Memory allocation (allocated / installed physical memory): ")
             .Append(allocatedMemory)
             .Append(" / ")
             .Append(Math.Round(totalMemoryMb / 1024d, 2))
@@ -79,9 +80,9 @@ public static class MinecraftCrashReportBuilder
         for (var i = 0; i < request.Environment.Gpus.Count; i++)
         {
             var gpu = request.Environment.Gpus[i];
-            builder.Append("显卡 ")
+            builder.Append("GPU ")
                 .Append(i)
-                .Append('：')
+                .Append(": ")
                 .Append(gpu.Name)
                 .Append(" (")
                 .Append(gpu.MemoryMegabytes >= 4095 ? ">= " + gpu.MemoryMegabytes : gpu.MemoryMegabytes)
@@ -99,21 +100,49 @@ public static class MinecraftCrashReportBuilder
         return $"{environment.OsDescription} {environment.OsVersion}".Trim();
     }
 
-    private static string ExtractBracketValue(string source, string prefix)
+    private static string ExtractBracketValue(string source, params string[] prefixes)
     {
-        return Between(source, prefix, "[").TrimEnd('[').Trim();
+        return BetweenAny(source, prefixes, "[", "［").TrimEnd('[', '［').Trim();
     }
 
-    private static string Between(string source, string after, string before)
+    private static string BetweenAny(string source, IReadOnlyList<string> afterValues, params string[] beforeValues)
     {
-        var startPos = string.IsNullOrEmpty(after)
-            ? -1
-            : source.LastIndexOf(after, StringComparison.Ordinal);
-        startPos = startPos >= 0 ? startPos + after.Length : 0;
+        var startPos = -1;
+        foreach (var after in afterValues)
+        {
+            if (string.IsNullOrEmpty(after))
+            {
+                continue;
+            }
 
-        var endPos = string.IsNullOrEmpty(before)
-            ? -1
-            : source.IndexOf(before, startPos, StringComparison.Ordinal);
+            startPos = source.LastIndexOf(after, StringComparison.Ordinal);
+            if (startPos >= 0)
+            {
+                startPos += after.Length;
+                break;
+            }
+        }
+
+        if (startPos < 0)
+        {
+            startPos = 0;
+        }
+
+        var endPos = -1;
+        foreach (var before in beforeValues)
+        {
+            if (string.IsNullOrEmpty(before))
+            {
+                continue;
+            }
+
+            endPos = source.IndexOf(before, startPos, StringComparison.Ordinal);
+            if (endPos >= 0)
+            {
+                break;
+            }
+        }
+
         if (endPos >= 0) return source.Substring(startPos, endPos - startPos);
         if (startPos > 0) return source[startPos..];
         return source;

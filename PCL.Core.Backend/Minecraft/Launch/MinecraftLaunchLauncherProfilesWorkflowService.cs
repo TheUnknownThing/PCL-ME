@@ -38,12 +38,12 @@ public static class MinecraftLaunchLauncherProfilesWorkflowService
             true,
             new MinecraftLaunchLauncherProfilesWriteAttempt(
                 initialAttemptPlan.UpdatedProfilesJson!,
-                "已更新 launcher_profiles.json"),
+                "Updated launcher_profiles.json"),
             new MinecraftLaunchLauncherProfilesWriteAttempt(
                 retryAttemptPlan.UpdatedProfilesJson!,
-                "已在删除后更新 launcher_profiles.json"),
-            "更新 launcher_profiles.json 失败，将在删除文件后重试",
-            "更新 launcher_profiles.json 失败");
+                "Updated launcher_profiles.json after deletion"),
+            "Failed to update launcher_profiles.json; will retry after deleting the file",
+            "Failed to update launcher_profiles.json");
     }
 }
 

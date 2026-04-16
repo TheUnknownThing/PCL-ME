@@ -17,12 +17,12 @@ public static class MinecraftLaunchProfileStorageService
         }
 
         var root = JsonNode.Parse(json) as JsonObject
-                   ?? throw new InvalidOperationException("profiles.json 的内容不是 JSON 对象。");
+                   ?? throw new InvalidOperationException("The contents of profiles.json are not a JSON object.");
 
         var profilesNode = root["profiles"];
         if (profilesNode is not JsonArray profilesArray)
         {
-            throw new InvalidOperationException("profiles.json 的 profiles 字段不是 JSON 数组。");
+            throw new InvalidOperationException("The profiles field in profiles.json is not a JSON array.");
         }
 
         var profiles = new List<MinecraftLaunchPersistedProfile>(profilesArray.Count);

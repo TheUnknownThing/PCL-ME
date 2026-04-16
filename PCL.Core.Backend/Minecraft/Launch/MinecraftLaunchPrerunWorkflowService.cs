@@ -10,17 +10,17 @@ public static class MinecraftLaunchPrerunWorkflowService
 
         if (string.IsNullOrWhiteSpace(request.PrimaryOptionsFilePath))
         {
-            throw new ArgumentException("主 options.txt 路径不能为空。", nameof(request));
+            throw new ArgumentException("The primary options.txt path cannot be empty.", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.YosbrOptionsFilePath))
         {
-            throw new ArgumentException("Yosbr options.txt 路径不能为空。", nameof(request));
+            throw new ArgumentException("The Yosbr options.txt path cannot be empty.", nameof(request));
         }
 
         if (request.IsMicrosoftLogin && string.IsNullOrWhiteSpace(request.LauncherProfilesPath))
         {
-            throw new ArgumentException("Microsoft 登录时 launcher_profiles.json 路径不能为空。", nameof(request));
+            throw new ArgumentException("The launcher_profiles.json path cannot be empty when using Microsoft sign-in.", nameof(request));
         }
 
         var launcherProfilesWorkflow = MinecraftLaunchLauncherProfilesWorkflowService.BuildPlan(

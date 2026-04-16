@@ -31,7 +31,7 @@ public class ChaCha20SoftwareProvider : IEncryptionProvider
 
     public byte[] Decrypt(ReadOnlySpan<byte> data, ReadOnlySpan<byte> key)
     {
-        if (data.Length < 12) throw new ArgumentException("数据长度不足以包含 Nonce");
+        if (data.Length < 12) throw new ArgumentException("The data is too short to contain a nonce.");
 
         var nonce = data[..12];
         var ciphertext = data[12..];
@@ -43,8 +43,8 @@ public class ChaCha20SoftwareProvider : IEncryptionProvider
 
     private static void _Process(ReadOnlySpan<byte> input, Span<byte> output, ReadOnlySpan<byte> key, ReadOnlySpan<byte> nonce)
     {
-        if (key.Length != 32) throw new ArgumentException("Key 必须为 32 字节");
-        if (nonce.Length != 12) throw new ArgumentException("Nonce 必须为 12 字节");
+        if (key.Length != 32) throw new ArgumentException("The key must be 32 bytes long.");
+        if (nonce.Length != 12) throw new ArgumentException("The nonce must be 12 bytes long.");
 
         // 在栈上分配状态矩阵和工作块，避免 GC
         Span<uint> state = stackalloc uint[16];

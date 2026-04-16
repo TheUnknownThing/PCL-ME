@@ -4,8 +4,8 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchJavaWorkflowService
 {
-    private const string MissingJavaLogMessage = "无合适的 Java，需要确认是否自动下载";
-    private const string MissingJavaHintMessage = "没有可用的 Java，已取消启动！";
+    private const string MissingJavaLogMessage = "No suitable Java runtime was found; confirm whether it should be downloaded automatically.";
+    private const string MissingJavaHintMessage = "No Java runtime is available. Launch has been canceled.";
 
     public static MinecraftLaunchJavaWorkflowPlan BuildPlan(MinecraftLaunchJavaWorkflowRequest request)
     {
@@ -40,9 +40,9 @@ public static class MinecraftLaunchJavaWorkflowService
             requirement.RecommendedMajorVersion,
             requirement.RecommendedComponent,
             requirement.RecommendedMajorVersion >= 22
-                ? $"Mojang 要求至少使用 Java {requirement.RecommendedMajorVersion}"
+                ? $"Mojang requires at least Java {requirement.RecommendedMajorVersion}"
                 : null,
-            $"Java 版本需求：最低 {requirement.MinimumVersion}，最高 {requirement.MaximumVersion}",
+            $"Java version requirement: minimum {requirement.MinimumVersion}, maximum {requirement.MaximumVersion}",
             MissingJavaLogMessage,
             MissingJavaHintMessage,
             prompt);

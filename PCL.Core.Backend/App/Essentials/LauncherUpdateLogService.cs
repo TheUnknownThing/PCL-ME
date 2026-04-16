@@ -9,14 +9,14 @@ public static class LauncherUpdateLogService
         ArgumentNullException.ThrowIfNull(request);
 
         var changelog = string.IsNullOrWhiteSpace(request.ChangelogMarkdown)
-            ? "欢迎使用呀~"
+            ? "Welcome."
             : request.ChangelogMarkdown;
 
         return new LauncherUpdateLogPrompt(
             changelog,
-            $"PCL-ME 已更新至 {request.VersionBranchName} {request.VersionBaseName}",
-            "确定",
-            "完整更新日志",
+            $"PCL-ME has been updated to {request.VersionBranchName} {request.VersionBaseName}",
+            "OK",
+            "Full changelog",
             "https://github.com/TheUnknownThing/PCL-ME/releases");
     }
 }

@@ -19,7 +19,7 @@ public static class MinecraftLaunchWatcherWorkflowService
             watcherPlan.RawWindowTitleTemplate,
             watcherPlan.JstackExecutablePath,
             request.OutputRealTimeLog,
-            request.OutputRealTimeLog ? "已显示游戏实时日志" : null);
+            request.OutputRealTimeLog ? "Game real-time logs are being shown" : null);
     }
 }
 

@@ -12,7 +12,7 @@ public static class LauncherStartupShellService
         {
             LauncherStartupCommandKind.SetGpuPreference when !command.IsValid => new LauncherStartupImmediateCommandPlan(
                 LauncherStartupImmediateCommandKind.Invalid,
-                InvalidMessage: "缺少需要设置显卡偏好的可执行文件路径。"),
+                InvalidMessage: "The executable path required for GPU preference configuration is missing."),
             LauncherStartupCommandKind.SetGpuPreference => new LauncherStartupImmediateCommandPlan(
                 LauncherStartupImmediateCommandKind.SetGpuPreference,
                 command.Argument),

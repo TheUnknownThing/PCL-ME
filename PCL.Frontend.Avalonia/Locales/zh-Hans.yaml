@@ -1877,6 +1877,12 @@ setup:
       disable_hardware_acceleration_restart: 修改后会在下次启动启动器时生效。
     labels:
       debug_animation_speed_off: 关闭
+    debug_summary:
+      fields:
+        current_instance: 当前实例
+        instance_directory: 实例目录
+      values:
+        not_selected: 未选择
     messages:
       debug_mode_disabled: 已关闭额外的诊断输出。
       debug_mode_enabled: 已启用更详细的日志与诊断信息。
@@ -2068,6 +2074,14 @@ download:
         none: 无任务
         skipped: 跳过了 {count} 项
         tasks: '{count} 个任务'
+      target:
+        datapack_instance_unavailable: '{instance_name} 当前不可用，因此无法选择数据包存档。'
+        datapack_no_saves: '{instance_name} 没有可用存档，因此无法安装数据包。'
+        datapack_save_title: 选择数据包存档
+        datapack_save_message: '数据包必须安装到某个存档的 datapacks 文件夹中。请选择 {instance_name} 中的目标存档。'
+        datapack_save_confirm: 开始安装
+        datapack_save_failed: 选择数据包存档失败
+        datapack_directory_unresolved: 无法定位所选存档的数据包目录。
     empty:
       body: 把项目加入收藏夹，之后即可安装或分享。
       title: 还没有收藏项
@@ -2341,10 +2355,30 @@ download:
     current_instance:
       actions:
         switch: 切换实例
+        switch_save: 切换存档
+      activities:
+        switch_save: 切换存档
+      dialogs:
+        select_instance:
+          title: 选择实例
+          message: 选择你要浏览并安装数据包的实例。
+          failed: 选择实例失败
+        select_save:
+          title: 选择存档
+          message: 选择 {instance_name} 中要安装数据包的目标存档。
+          failed: 选择存档失败
+      messages:
+        no_instances_available: 没有可用实例。
+        instance_unavailable: '{instance_name} 当前不可用。'
+        no_saves_available: '{instance_name} 当前没有可用存档。'
+        save_not_found: 未找到所选存档。
+        save_already_selected: '{instance_name} • {save_name} 已经是当前存档。'
       none_selected: 未选择实例
       summary_none_selected: 选择一个实例以提升兼容性筛选效果
+      summary_none_selected_save: 当前下载页还没有选中存档，因此无法直接安装数据包。请先从存档页打开目标存档。
       summary_suffix: 用于兼容性筛选
       title: 当前实例
+      title_save: 当前存档
     empty:
       default: 没有结果
     filters:
@@ -2495,6 +2529,7 @@ resource_detail:
     download_file: 下载文件：{entry_title}
     download_started: 已开始下载：{entry_title}
     install_current_instance: 安装到当前实例
+    install_current_save: 安装到当前存档
     install_current_instance_failed: 安装到当前实例失败
     navigate_back: 返回 {target_title}
     open_dependency_project: 打开依赖项目：{entry_title}
@@ -2526,6 +2561,7 @@ resource_detail:
   current_instance:
     none_selected: 未选择当前实例
     summary_none_selected: 选择一个实例即可直接安装此项目
+    summary_none_selected_save: 当前下载页还没有选中存档，因此无法直接安装数据包。请先从存档页打开目标存档。
   categories:
     adventure: 冒险
     automation: 自动化
@@ -2764,6 +2800,7 @@ resource_detail:
     unlisted: 未列出
   suggested_release:
     none: 没有推荐版本
+    target_save: '目标存档：{save_name}'
     title: 推荐版本
   translate_description:
     empty: 没有可翻译的简介

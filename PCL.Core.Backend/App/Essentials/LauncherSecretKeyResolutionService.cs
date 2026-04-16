@@ -60,7 +60,7 @@ public static class LauncherSecretKeyResolutionService
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("环境变量 PCL_ENCRYPTION_KEY 无法转换为有效密钥。", ex);
+            throw new InvalidOperationException("The PCL_ENCRYPTION_KEY environment variable could not be converted into a valid key.", ex);
         }
     }
 

@@ -3,7 +3,7 @@
     <TextBlock Margin="0,0,0,8" LineHeight="17" TextWrapping="Wrap"
                Text="GitHub Desktop is a simple way to clone the repository, create a branch, edit files, and submit changes without memorizing every Git command." />
     <local:MyListItem Margin="-5,0,-5,8"
-                      EventType="打开网页"
+                      EventType="open_web"
                       EventData="https://docs.github.com/en/desktop/overview/getting-started-with-github-desktop"
                       Title="GitHub Desktop getting started"
                       Info="Official installation and sign-in guide." />

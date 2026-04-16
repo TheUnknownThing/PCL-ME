@@ -37,7 +37,7 @@ public static class MinecraftLaunchMicrosoftLoginExecutionService
             MinecraftLaunchMicrosoftOAuthRefreshOutcome.IgnoreAndContinue => new MinecraftLaunchMicrosoftLoginStep(
                 MinecraftLaunchMicrosoftLoginStepKind.FinishWithCachedSession,
                 0.99),
-            _ => throw new InvalidOperationException("未知的微软登录 OAuth 刷新结果。")
+            _ => throw new InvalidOperationException("Unknown Microsoft sign-in OAuth refresh result.")
         };
     }
 
@@ -58,7 +58,7 @@ public static class MinecraftLaunchMicrosoftLoginExecutionService
             MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue => new MinecraftLaunchMicrosoftLoginStep(
                 MinecraftLaunchMicrosoftLoginStepKind.FinishWithCachedSession,
                 0.99),
-            _ => throw new InvalidOperationException("未知的微软登录 Xbox Live Token 结果。")
+            _ => throw new InvalidOperationException("Unknown Microsoft sign-in Xbox Live token result.")
         };
     }
 
@@ -72,7 +72,7 @@ public static class MinecraftLaunchMicrosoftLoginExecutionService
             MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue => new MinecraftLaunchMicrosoftLoginStep(
                 MinecraftLaunchMicrosoftLoginStepKind.FinishWithCachedSession,
                 0.99),
-            _ => throw new InvalidOperationException("未知的微软登录 XSTS 结果。")
+            _ => throw new InvalidOperationException("Unknown Microsoft sign-in XSTS result.")
         };
     }
 
@@ -86,7 +86,7 @@ public static class MinecraftLaunchMicrosoftLoginExecutionService
             MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue => new MinecraftLaunchMicrosoftLoginStep(
                 MinecraftLaunchMicrosoftLoginStepKind.FinishWithCachedSession,
                 0.99),
-            _ => throw new InvalidOperationException("未知的微软登录 Minecraft AccessToken 结果。")
+            _ => throw new InvalidOperationException("Unknown Microsoft sign-in Minecraft access token result.")
         };
     }
 
@@ -107,7 +107,7 @@ public static class MinecraftLaunchMicrosoftLoginExecutionService
             MinecraftLaunchMicrosoftStepOutcome.IgnoreAndContinue => new MinecraftLaunchMicrosoftLoginStep(
                 MinecraftLaunchMicrosoftLoginStepKind.FinishWithCachedSession,
                 0.99),
-            _ => throw new InvalidOperationException("未知的微软登录档案结果。")
+            _ => throw new InvalidOperationException("Unknown Microsoft sign-in profile result.")
         };
     }
 }

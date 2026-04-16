@@ -12,8 +12,8 @@ internal static class FrontendLaunchRepairStageService
         if (assets is not null && assets.TotalFiles > 0 && assets.Progress < 0.999d)
         {
             return string.IsNullOrWhiteSpace(assets.CurrentFileName)
-                ? "校验游戏资源文件"
-                : $"校验资源文件 • {assets.CurrentFileName}";
+                ? "Verifying game assets"
+                : $"Verifying asset file • {assets.CurrentFileName}";
         }
 
         var supportGroups = new[]
@@ -30,10 +30,10 @@ internal static class FrontendLaunchRepairStageService
             }
 
             return string.IsNullOrWhiteSpace(snapshotGroup.CurrentFileName)
-                ? "补全游戏主文件与支持库"
-                : $"补全支持文件 • {snapshotGroup.CurrentFileName}";
+                ? "Completing game files and support libraries"
+                : $"Completing support file • {snapshotGroup.CurrentFileName}";
         }
 
-        return "校验实例文件";
+        return "Verifying instance files";
     }
 }

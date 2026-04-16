@@ -23,7 +23,7 @@ public static class MinecraftLaunchMicrosoftProtocolService
     {
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            throw new ArgumentException("OAuth AccessToken 不能为空。", nameof(accessToken));
+            throw new ArgumentException("The OAuth access token cannot be empty.", nameof(accessToken));
         }
 
         return new MinecraftLaunchXboxLiveTokenRequest(
@@ -44,7 +44,7 @@ public static class MinecraftLaunchMicrosoftProtocolService
     {
         if (string.IsNullOrWhiteSpace(xblToken))
         {
-            throw new ArgumentException("XBLToken 不能为空。", nameof(xblToken));
+            throw new ArgumentException("The XBL token cannot be empty.", nameof(xblToken));
         }
 
         return new MinecraftLaunchXstsTokenRequest(
@@ -59,11 +59,11 @@ public static class MinecraftLaunchMicrosoftProtocolService
     {
         var root = ParseObject(json);
         var displayClaims = root["DisplayClaims"]?.AsObject()
-                            ?? throw new InvalidOperationException("XSTS 响应缺少 DisplayClaims。");
+                            ?? throw new InvalidOperationException("The XSTS response is missing DisplayClaims.");
         var xui = displayClaims["xui"] as JsonArray
-                  ?? throw new InvalidOperationException("XSTS 响应缺少 xui。");
+                  ?? throw new InvalidOperationException("The XSTS response is missing xui.");
         var firstClaim = xui.FirstOrDefault() as JsonObject
-                         ?? throw new InvalidOperationException("XSTS 响应缺少用户声明。");
+                         ?? throw new InvalidOperationException("The XSTS response is missing a user claim.");
 
         return new MinecraftLaunchXstsTokenResponse(
             GetRequiredString(root, "Token"),
@@ -74,12 +74,12 @@ public static class MinecraftLaunchMicrosoftProtocolService
     {
         if (string.IsNullOrWhiteSpace(userHash))
         {
-            throw new ArgumentException("UHS 不能为空。", nameof(userHash));
+            throw new ArgumentException("The UHS cannot be empty.", nameof(userHash));
         }
 
         if (string.IsNullOrWhiteSpace(xstsToken))
         {
-            throw new ArgumentException("XSTS Token 不能为空。", nameof(xstsToken));
+            throw new ArgumentException("The XSTS token cannot be empty.", nameof(xstsToken));
         }
 
         return new Dictionary<string, string>
@@ -130,11 +130,11 @@ public static class MinecraftLaunchMicrosoftProtocolService
     {
         if (string.IsNullOrWhiteSpace(json))
         {
-            throw new ArgumentException("JSON 内容不能为空。", nameof(json));
+            throw new ArgumentException("JSON content cannot be empty.", nameof(json));
         }
 
         return JsonNode.Parse(json) as JsonObject
-               ?? throw new InvalidOperationException("JSON 内容不是对象。");
+               ?? throw new InvalidOperationException("The JSON content is not an object.");
     }
 
     private static string GetRequiredString(JsonObject obj, string propertyName)
@@ -142,7 +142,7 @@ public static class MinecraftLaunchMicrosoftProtocolService
         var value = obj[propertyName]?.ToString();
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"JSON 内容缺少 {propertyName} 字段。");
+            throw new InvalidOperationException($"The JSON content is missing the {propertyName} field.");
         }
 
         return value;
@@ -152,7 +152,7 @@ public static class MinecraftLaunchMicrosoftProtocolService
     {
         if (obj[propertyName] is null)
         {
-            throw new InvalidOperationException($"JSON 内容缺少 {propertyName} 字段。");
+            throw new InvalidOperationException($"The JSON content is missing the {propertyName} field.");
         }
 
         if (obj[propertyName] is JsonValue value &&
@@ -166,7 +166,7 @@ public static class MinecraftLaunchMicrosoftProtocolService
             return parsed;
         }
 
-        throw new InvalidOperationException($"JSON 中的 {propertyName} 字段不是数字。");
+        throw new InvalidOperationException($"The {propertyName} field in the JSON is not a number.");
     }
 }
 

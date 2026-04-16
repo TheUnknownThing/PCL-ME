@@ -1877,6 +1877,12 @@ setup:
       disable_hardware_acceleration_restart: Changes take effect the next time the launcher starts.
     labels:
       debug_animation_speed_off: Off
+    debug_summary:
+      fields:
+        current_instance: Current instance
+        instance_directory: Instance directory
+      values:
+        not_selected: Not selected
     messages:
       debug_mode_disabled: Extra diagnostic output has been turned off.
       debug_mode_enabled: Detailed logs and diagnostics are now enabled.
@@ -2068,6 +2074,14 @@ download:
         none: No tasks
         skipped: '{count} skipped'
         tasks: '{count} tasks'
+      target:
+        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
+        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
+        datapack_save_title: Select datapack save
+        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
+        datapack_save_confirm: Start install
+        datapack_save_failed: Failed to select datapack save
+        datapack_directory_unresolved: The selected save's datapack directory could not be resolved.
     empty:
       body: Add projects to favorites so you can install or share them later.
       title: No Favorites Yet
@@ -2341,10 +2355,30 @@ download:
     current_instance:
       actions:
         switch: Switch
+        switch_save: Switch save
+      activities:
+        switch_save: Switch save
+      dialogs:
+        select_instance:
+          title: Select instance
+          message: Choose the instance you want to browse and install datapacks for.
+          failed: Failed to select instance
+        select_save:
+          title: Select save
+          message: Choose the target save in {instance_name} where the datapack should be installed.
+          failed: Failed to select save
+      messages:
+        no_instances_available: No instances are available.
+        instance_unavailable: '{instance_name} is currently unavailable.'
+        no_saves_available: '{instance_name} currently has no available saves.'
+        save_not_found: The selected save was not found.
+        save_already_selected: '{instance_name} • {save_name} is already the current save.'
       none_selected: No instance selected
       summary_none_selected: Select an instance to improve compatibility filtering
+      summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
       summary_suffix: Used for compatibility filtering
       title: Current Instance
+      title_save: Current save
     empty:
       default: No results
     filters:
@@ -2495,6 +2529,7 @@ resource_detail:
     download_file: 'Download file: {entry_title}'
     download_started: 'Download started: {entry_title}'
     install_current_instance: Install to current instance
+    install_current_save: Install to current save
     install_current_instance_failed: Failed to install to current instance
     navigate_back: Back to {target_title}
     open_dependency_project: 'Open dependency project: {entry_title}'
@@ -2526,6 +2561,7 @@ resource_detail:
   current_instance:
     none_selected: No current instance selected
     summary_none_selected: Select an instance to install this project directly
+    summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
   categories:
     adventure: Adventure
     automation: Automation
@@ -2764,6 +2800,7 @@ resource_detail:
     unlisted: Unlisted
   suggested_release:
     none: No suggested release
+    target_save: 'Target save: {save_name}'
     title: Suggested Release
   translate_description:
     empty: There is no description to translate

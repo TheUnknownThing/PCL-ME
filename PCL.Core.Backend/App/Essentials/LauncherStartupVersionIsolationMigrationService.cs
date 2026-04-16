@@ -18,7 +18,7 @@ public static class LauncherStartupVersionIsolationMigrationService
             return new LauncherStartupVersionIsolationMigrationResult(
                 ShouldStoreVersionIsolationV2: true,
                 VersionIsolationV2Value: request.LegacyVersionIsolationValue,
-                LogMessage: "[Start] 从老 PCL 迁移版本隔离");
+                LogMessage: "[Start] Migrated version isolation from legacy PCL");
         }
 
         if (request.HasWindowHeightSetting)
@@ -26,13 +26,13 @@ public static class LauncherStartupVersionIsolationMigrationService
             return new LauncherStartupVersionIsolationMigrationResult(
                 ShouldStoreVersionIsolationV2: true,
                 VersionIsolationV2Value: request.LegacyVersionIsolationDefaultValue,
-                LogMessage: "[Start] 从老 PCL 升级，但此前未调整版本隔离，使用老的版本隔离默认值");
+                LogMessage: "[Start] Upgraded from legacy PCL without a version-isolation change; using the legacy default");
         }
 
         return new LauncherStartupVersionIsolationMigrationResult(
             ShouldStoreVersionIsolationV2: true,
             VersionIsolationV2Value: request.VersionIsolationV2DefaultValue,
-            LogMessage: "[Start] 全新的 PCL，使用新的版本隔离默认值");
+            LogMessage: "[Start] Fresh PCL install, using the new version-isolation default");
     }
 }
 

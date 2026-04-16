@@ -28,16 +28,16 @@ public class FileNameValidator(
     private void BuildRules()
     {
         RuleFor(x => x)
-            .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage("输入内容不能为空！")
-            .Must(x => !x.StartsWith(' ')).WithMessage("文件名不能以空格开头！")
-            .Must(x => !x.EndsWith(' ')).WithMessage("文件名不能以空格结尾！")
-            .Must(x => !x.EndsWith('.')).WithMessage("文件名不能以小数点结尾！")
+            .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage("Input cannot be empty.")
+            .Must(x => !x.StartsWith(' ')).WithMessage("File names cannot start with a space.")
+            .Must(x => !x.EndsWith(' ')).WithMessage("File names cannot end with a space.")
+            .Must(x => !x.EndsWith('.')).WithMessage("File names cannot end with a period.")
             .Custom((fileName, context) => 
             {
                 var invalidChar = CheckInvalidStrings(fileName, UseMinecraftCharCheck ? ["!;"] : []);
                 if (invalidChar != null)
                 {
-                    context.AddFailure($"文件名不可包含 {invalidChar} 字符！");
+                    context.AddFailure($"File names cannot contain {invalidChar}.");
                 }
             })
             .Custom((fileName, context) => 
@@ -45,10 +45,10 @@ public class FileNameValidator(
                 var reservedWord = CheckReservedWord(fileName, []);
                 if (reservedWord != null)
                 {
-                    context.AddFailure($"文件名不可为 {reservedWord}！");
+                    context.AddFailure($"File names cannot be {reservedWord}.");
                 }
             })
-            .Must(x => !x.IsMatch(RegexPatterns.Ntfs83FileName)).WithMessage("文件名不能包含这一特殊格式！")
+            .Must(x => !x.IsMatch(RegexPatterns.Ntfs83FileName)).WithMessage("File names cannot use this legacy NTFS 8.3 format.")
             .Must(x =>
             {
                 if (ParentFolder is null) return true;
@@ -63,7 +63,7 @@ public class FileNameValidator(
                 _isParentFolderExists = false;
                 return !RequireParentFolderExists;
 
-            }).WithMessage(_isParentFolderExists is not null ? $"父文件夹不存在：{ParentFolder}" : "不可与现有文件重名！");
+            }).WithMessage(_isParentFolderExists is not null ? $"Parent folder does not exist: {ParentFolder}" : "File names cannot duplicate an existing file.");
     }
 
     protected override bool PreValidate(ValidationContext<string> context, ValidationResult result)

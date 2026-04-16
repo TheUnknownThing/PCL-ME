@@ -2,7 +2,7 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchJavaSelectionWorkflowService
 {
-    private const string SelectedJavaLogPrefix = "选择的 Java：";
+    private const string SelectedJavaLogPrefix = "Selected Java: ";
 
     public static MinecraftLaunchResolvedJavaSelection ResolveInitialSelection(
         MinecraftLaunchJavaWorkflowPlan plan,

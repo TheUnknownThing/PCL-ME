@@ -4,13 +4,13 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchThirdPartyLoginWorkflowService
 {
-    private const string FailureTitle = "第三方验证失败";
+    private const string FailureTitle = "Third-party verification failed";
 
     public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveValidationHttpFailure(string exceptionDetails, string? webResponse)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(exceptionDetails);
 
-        var isTimeout = (exceptionDetails.Contains("超时", StringComparison.Ordinal) ||
+        var isTimeout = (exceptionDetails.Contains("timeout", StringComparison.OrdinalIgnoreCase) ||
                          exceptionDetails.Contains("imeout", StringComparison.Ordinal)) &&
                         !exceptionDetails.Contains("403", StringComparison.Ordinal);
         if (isTimeout)
@@ -38,9 +38,9 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
 
     public static MinecraftLaunchThirdPartyLoginFailure GetValidationTimeoutFailure(string? webResponse)
     {
-        var message = "$登录失败：连接登录服务器超时。" + System.Environment.NewLine +
-                      "请检查你的网络状况是否良好，或尝试使用 VPN！" + System.Environment.NewLine + System.Environment.NewLine +
-                      "详细信息：" + webResponse;
+        var message = "$Login failed: the connection to the login server timed out." + System.Environment.NewLine +
+                      "Check your network connection or try using a VPN." + System.Environment.NewLine + System.Environment.NewLine +
+                      "Details: " + webResponse;
         return new MinecraftLaunchThirdPartyLoginFailure(FailureTitle, message, message);
     }
 
@@ -48,7 +48,7 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
     {
         return new MinecraftLaunchThirdPartyLoginFailure(
             FailureTitle,
-            "验证登录失败: " + details,
+            "Validation login failed: " + details,
             null);
     }
 
@@ -56,7 +56,7 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
     {
         return new MinecraftLaunchThirdPartyLoginFailure(
             FailureTitle,
-            "刷新登录失败: " + details,
+            "Refresh login failed: " + details,
             null);
     }
 
@@ -81,11 +81,11 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
     public static MinecraftLaunchThirdPartyLoginFailure GetLoginHttpFailure(string exceptionDetails, string? responseText)
     {
         var wrappedMessage = TryGetLoginErrorMessage(responseText) ??
-                             ("第三方验证登录失败，请检查你的网络状况是否良好。" + System.Environment.NewLine + System.Environment.NewLine +
-                              "详细信息：" + responseText);
+                             ("Third-party verification login failed. Check your network connection." + System.Environment.NewLine + System.Environment.NewLine +
+                              "Details: " + responseText);
         return new MinecraftLaunchThirdPartyLoginFailure(
             FailureTitle,
-            "刷新登录失败: " + exceptionDetails,
+            "Refresh login failed: " + exceptionDetails,
             "$" + wrappedMessage);
     }
 
@@ -93,9 +93,9 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
     {
         return new MinecraftLaunchThirdPartyLoginFailure(
             FailureTitle,
-            "刷新登录失败: " + exceptionDetails,
-            "$第三方验证登录失败" + System.Environment.NewLine + System.Environment.NewLine +
-            "详细信息：" + exceptionDetails);
+            "Refresh login failed: " + exceptionDetails,
+            "$Third-party verification login failed" + System.Environment.NewLine + System.Environment.NewLine +
+            "Details: " + exceptionDetails);
     }
 
     public static MinecraftLaunchThirdPartyLoginFailureResolution ResolveLoginHttpFailure(string exceptionDetails, string? responseText)
@@ -132,7 +132,7 @@ public static class MinecraftLaunchThirdPartyLoginWorkflowService
             var errorMessage = JsonNode.Parse(responseText)?["errorMessage"]?.ToString();
             if (!string.IsNullOrWhiteSpace(errorMessage))
             {
-                return "登录失败：" + errorMessage;
+                return "Login failed: " + errorMessage;
             }
         }
         catch

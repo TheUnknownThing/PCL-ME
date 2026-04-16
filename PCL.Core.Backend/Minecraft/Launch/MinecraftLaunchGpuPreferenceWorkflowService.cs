@@ -20,8 +20,8 @@ public static class MinecraftLaunchGpuPreferenceWorkflowService
         return new MinecraftLaunchGpuPreferenceFailurePlan(
             MinecraftLaunchGpuPreferenceFailureActionKind.RetryAsAdmin,
             $"--gpu \"{request.JavaExecutablePath}\"",
-            "直接调整显卡设置失败，将以管理员权限重启 PCL 再次尝试",
-            "调整显卡设置失败，Minecraft 可能会使用默认显卡运行");
+            "Direct GPU preference changes failed; PCL will restart with administrator privileges and try again",
+            "GPU preference changes failed; Minecraft may run on the default GPU");
     }
 }
 

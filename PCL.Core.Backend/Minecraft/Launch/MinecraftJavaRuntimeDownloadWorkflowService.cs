@@ -55,7 +55,7 @@ public static class MinecraftJavaRuntimeDownloadWorkflowService
             BuildRequestUrlPlan(
                 selection.ManifestUrl,
                 request.ManifestUrlRewrites),
-            $"准备下载 Java {selection.VersionName}（{selection.ComponentKey}）：{selection.ManifestUrl}");
+            $"Preparing to download Java {selection.VersionName} ({selection.ComponentKey}): {selection.ManifestUrl}");
     }
 
     public static MinecraftJavaRuntimeDownloadWorkflowPlan BuildDownloadWorkflowPlan(
@@ -83,7 +83,7 @@ public static class MinecraftJavaRuntimeDownloadWorkflowService
         return new MinecraftJavaRuntimeDownloadWorkflowPlan(
             downloadPlan,
             filePlans,
-            $"[Java] 需要下载 {filePlans.Length} 个文件，目标文件夹：{downloadPlan.RuntimeBaseDirectory}");
+            $"[Java] Need to download {filePlans.Length} files; target folder: {downloadPlan.RuntimeBaseDirectory}");
     }
 
     public static MinecraftJavaRuntimeDownloadTransferPlan BuildTransferPlan(
@@ -116,7 +116,7 @@ public static class MinecraftJavaRuntimeDownloadWorkflowService
             request.WorkflowPlan,
             filesToDownload,
             reusedFiles,
-            $"[Java] 需要下载 {filesToDownload.Count} 个文件，复用 {reusedFiles.Count} 个已存在文件，目标文件夹：{request.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory}");
+            $"[Java] Need to download {filesToDownload.Count} files, reuse {reusedFiles.Count} existing files, target folder: {request.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory}");
     }
 
     private static MinecraftJavaRuntimeRequestUrlPlan BuildRequestUrlPlan(

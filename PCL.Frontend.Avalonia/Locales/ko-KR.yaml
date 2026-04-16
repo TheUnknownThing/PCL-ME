@@ -1873,6 +1873,12 @@ setup:
       disable_hardware_acceleration_restart: 변경 사항은 다음에 실행 프로그램이 시작될 때 적용됩니다.
     labels:
       debug_animation_speed_off: 거짓
+    debug_summary:
+      fields:
+        current_instance: Current instance
+        instance_directory: Instance directory
+      values:
+        not_selected: Not selected
     messages:
       debug_mode_disabled: 추가 진단 출력이 꺼졌습니다.
       debug_mode_enabled: 이제 자세한 로그 및 진단이 활성화되었습니다.
@@ -2058,6 +2064,14 @@ download:
         none: 작업 없음
         skipped: "{count} 건 건너뛰었습니다"
         tasks: "{count} 작업"
+      target:
+        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
+        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
+        datapack_save_title: Select datapack save
+        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
+        datapack_save_confirm: Start install
+        datapack_save_failed: Failed to select datapack save
+        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
     empty:
       body: 나중에 설치하거나 공유할 수 있도록 즐겨찾기에 프로젝트를 추가하세요.
       title: 아직 즐겨찾기가 없습니다.
@@ -2331,10 +2345,30 @@ download:
     current_instance:
       actions:
         switch: 스위치
+        switch_save: Switch save
+      activities:
+        switch_save: Switch save
+      dialogs:
+        select_instance:
+          title: Select instance
+          message: Choose the instance you want to browse and install datapacks for.
+          failed: Failed to select instance
+        select_save:
+          title: Select save
+          message: Choose the target save in {instance_name} where the datapack should be installed.
+          failed: Failed to select save
+      messages:
+        no_instances_available: No instances are available.
+        instance_unavailable: '{instance_name} is currently unavailable.'
+        no_saves_available: '{instance_name} currently has no available saves.'
+        save_not_found: The selected save was not found.
+        save_already_selected: '{instance_name} • {save_name} is already the current save.'
       none_selected: 선택된 인스턴스가 없습니다.
       summary_none_selected: 호환성 필터링을 개선하려면 인스턴스를 선택하세요.
+      summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
       summary_suffix: 호환성 필터링에 사용됩니다.
       title: 현재 인스턴스
+      title_save: Current save
     empty:
       default: 결과 없음
     filters:
@@ -2485,6 +2519,7 @@ resource_detail:
     download_file: '파일 다운로드: {entry_title}'
     download_started: '다운로드 시작됨: {entry_title}'
     install_current_instance: 현재 인스턴스에 설치
+    install_current_save: Install to current save
     install_current_instance_failed: 현재 인스턴스에 설치하지 못했습니다.
     navigate_back: "{target_title}(으)로 돌아가기"
     open_dependency_project: '종속성 프로젝트 열기: {entry_title}'
@@ -2516,6 +2551,7 @@ resource_detail:
   current_instance:
     none_selected: 현재 인스턴스가 선택되지 않았습니다.
     summary_none_selected: 이 프로젝트를 직접 설치하려면 인스턴스를 선택하세요.
+    summary_none_selected_save: The download page does not have a selected save yet, so the datapack cannot be installed directly. Open the target save from the save page first.
   categories:
     adventure: 모험
     automation: 오토메이션
@@ -2754,6 +2790,7 @@ resource_detail:
     unlisted: 미등록
   suggested_release:
     none: 제안된 릴리스가 없습니다.
+    target_save: 'Target save: {save_name}'
     title: 제안된 릴리스
   translate_description:
     empty: 번역할 설명이 없습니다.

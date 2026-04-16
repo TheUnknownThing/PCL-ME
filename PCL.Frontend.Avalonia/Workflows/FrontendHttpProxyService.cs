@@ -430,7 +430,7 @@ internal static class FrontendHttpProxyService
         CancellationToken cancellationToken)
     {
         var endpoint = context.DnsEndPoint
-                       ?? throw new InvalidOperationException("Launcher HTTP client 缺少目标 DnsEndPoint。");
+                       ?? throw new InvalidOperationException("The launcher HTTP client is missing a target DnsEndPoint.");
         var addresses = await ResolveHostAddressesAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
         if (addresses.Length == 0)
         {
@@ -605,7 +605,7 @@ internal sealed class FrontendDnsSrvResource
     {
         if (offset + 6 > length)
         {
-            throw new FormatException("SRV 记录长度不足。");
+            throw new FormatException("SRV record length is insufficient.");
         }
 
         Priority = (ushort)((raw[offset] << 8) | raw[offset + 1]);
@@ -630,7 +630,7 @@ internal sealed class FrontendDnsSrvResource
 
             if (offset + labelLength > length)
             {
-                throw new FormatException("SRV 域名标签越界。");
+                throw new FormatException("SRV domain label is out of range.");
             }
 
             labels.Add(System.Text.Encoding.ASCII.GetString(raw, offset, labelLength));
