@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Transformation;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
@@ -45,6 +46,8 @@ internal sealed partial class MainWindow : Window
     private Compositor? _compositor;
     private int _promptOverlayAnimationVersion;
     private bool _isPromptOverlayRenderedOpen;
+    private int _welcomeStepAnimationVersion;
+    private int _lastWelcomeStepIndex = -1;
     private readonly Dictionary<string, HintPopupState> _activeHints = new(StringComparer.Ordinal);
 
     public MainWindow()
@@ -351,6 +354,8 @@ internal sealed partial class MainWindow : Window
             _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
         }
 
+        _lastWelcomeStepIndex = _shellViewModel?.WelcomeCurrentStep ?? -1;
+
         ApplyWindowOpacity();
         ApplyDynamicBackgroundState();
         UpdatePromptOverlayRowHeights();
@@ -376,6 +381,12 @@ internal sealed partial class MainWindow : Window
         if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayWarning))
         {
             UpdatePromptOverlayBackdropBrush();
+            return;
+        }
+
+        if (e.PropertyName == nameof(FrontendShellViewModel.WelcomeCurrentStep))
+        {
+            QueueWelcomeStepTransition();
             return;
         }
 
@@ -427,6 +438,11 @@ internal sealed partial class MainWindow : Window
     private void QueuePromptOverlayFocus()
     {
         Dispatcher.UIThread.Post(() => _ = FocusPromptOverlayPrimaryControlAsync(), DispatcherPriority.Input);
+    }
+
+    private void QueueWelcomeStepTransition()
+    {
+        Dispatcher.UIThread.Post(() => _ = PlayWelcomeStepTransitionAsync(), DispatcherPriority.Render);
     }
 
     private async Task SyncPromptOverlayAsync()
@@ -493,6 +509,49 @@ internal sealed partial class MainWindow : Window
         {
             PromptOverlayChoiceListBox.Focus();
         }
+    }
+
+    private async Task PlayWelcomeStepTransitionAsync()
+    {
+        if (_shellViewModel is null)
+        {
+            _lastWelcomeStepIndex = -1;
+            return;
+        }
+
+        var currentStep = _shellViewModel.WelcomeCurrentStep;
+        if (!_shellViewModel.IsWelcomeOverlayVisible)
+        {
+            _lastWelcomeStepIndex = currentStep;
+            return;
+        }
+
+        if (_lastWelcomeStepIndex < 0)
+        {
+            _lastWelcomeStepIndex = currentStep;
+            return;
+        }
+
+        if (currentStep == _lastWelcomeStepIndex)
+        {
+            return;
+        }
+
+        var direction = currentStep > _lastWelcomeStepIndex ? 1 : -1;
+        _lastWelcomeStepIndex = currentStep;
+
+        var version = ++_welcomeStepAnimationVersion;
+        WelcomeStepContentHost.Opacity = 0;
+        WelcomeStepContentHost.RenderTransform = TransformOperations.Parse($"translate({18 * direction}px,0px)");
+
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        if (version != _welcomeStepAnimationVersion || _shellViewModel.IsWelcomeOverlayVisible is false)
+        {
+            return;
+        }
+
+        WelcomeStepContentHost.Opacity = 1;
+        WelcomeStepContentHost.RenderTransform = TransformOperations.Parse("translate(0px,0px)");
     }
 
     private void UpdatePromptOverlayBackdropBrush()

@@ -737,9 +737,23 @@
 
                   <!-- Step content (only the active step is visible) -->
                   <ScrollViewer
+                      x:Name="WelcomeStepContentHost"
                       Grid.Column="1"
+                      Opacity="1"
+                      RenderTransform="translate(0px,0px)"
+                      RenderTransformOrigin="0.5,0.5"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Transitions>
+                      <Transitions>
+                        <DoubleTransition
+                            Property="Opacity"
+                            Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+                        <TransformOperationsTransition
+                            Property="RenderTransform"
+                            Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+                      </Transitions>
+                    </ScrollViewer.Transitions>
                     <Grid Margin="8,0">
 
                       <!-- Step 0 – Language selection -->
