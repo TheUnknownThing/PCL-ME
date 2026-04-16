@@ -29,13 +29,13 @@ public sealed class MinecraftCrashExportServiceTest
             File.WriteAllText(launcherLogPath,
                 """
                 header
-                [Launch] ~ 基础参数 ~
-                玩家用户名：Steve [test]
-                验证方式：Microsoft [test]
-                Java 信息：Zulu 21 [test]
-                MC 文件夹：C:\Games\.minecraft [test]
-                分配的内存：4096 MB [test]
-                开始 Minecraft 日志监控
+                [Launch] ~ Base Parameters ~
+                Player name: Steve [test]
+                Login type: Microsoft [test]
+                Java info: Zulu 21 [test]
+                Minecraft folder: C:\Games\.minecraft [test]
+                Allocated memory: 4096 MB [test]
+                Start Minecraft log monitoring
                 footer
                 """,
                 Encoding.UTF8);

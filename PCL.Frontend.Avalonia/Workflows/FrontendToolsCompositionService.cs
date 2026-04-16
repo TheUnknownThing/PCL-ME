@@ -368,6 +368,7 @@ internal static class FrontendToolsCompositionService
             ? typesElement.EnumerateArray()
                 .Select(item => item.GetString())
                 .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(static value => CanonicalizeHelpGroupTitle(value!))
                 .Cast<string>()
                 .ToArray()
             : [];
@@ -384,9 +385,61 @@ internal static class FrontendToolsCompositionService
             ShowInPublic: ReadBool(root, "ShowInPublic", defaultValue: true),
             ShowInSnapshot: ReadBool(root, "ShowInSnapshot", defaultValue: true),
             IsEvent: ReadBool(root, "IsEvent"),
-            EventType: ReadString(root, "EventType"),
+            EventType: CanonicalizeHelpEventType(ReadString(root, "EventType")),
             EventData: ReadString(root, "EventData"),
-            DetailContent: detailContent);
+            DetailContent: CanonicalizeHelpDetailContent(detailContent));
+    }
+
+    private static string CanonicalizeHelpGroupTitle(string value)
+    {
+        return value.Trim() switch
+        {
+            "指南" => "Guides",
+            "帮助" => "Help",
+            "个性化" => "Personalization",
+            "启动器" => "Launcher",
+            _ => value
+        };
+    }
+
+    private static string CanonicalizeHelpEventType(string value)
+    {
+        return value.Trim() switch
+        {
+            "打开网页" => "open_web",
+            "打开文件" => "open_file",
+            "执行命令" => "open_file",
+            "打开帮助" => "open_help",
+            "复制文本" => "copy_text",
+            "下载文件" => "download_file",
+            "弹出窗口" => "popup",
+            "启动游戏" => "launch_game",
+            "内存优化" => "memory_optimize",
+            "清理垃圾" => "clear_rubbish",
+            "刷新主页" => "refresh_homepage",
+            _ => value
+        };
+    }
+
+    private static string? CanonicalizeHelpDetailContent(string? detailContent)
+    {
+        if (string.IsNullOrWhiteSpace(detailContent))
+        {
+            return detailContent;
+        }
+
+        return detailContent
+            .Replace("EventType=\"打开网页\"", "EventType=\"open_web\"", StringComparison.Ordinal)
+            .Replace("EventType=\"打开文件\"", "EventType=\"open_file\"", StringComparison.Ordinal)
+            .Replace("EventType=\"执行命令\"", "EventType=\"open_file\"", StringComparison.Ordinal)
+            .Replace("EventType=\"打开帮助\"", "EventType=\"open_help\"", StringComparison.Ordinal)
+            .Replace("EventType=\"复制文本\"", "EventType=\"copy_text\"", StringComparison.Ordinal)
+            .Replace("EventType=\"下载文件\"", "EventType=\"download_file\"", StringComparison.Ordinal)
+            .Replace("EventType=\"弹出窗口\"", "EventType=\"popup\"", StringComparison.Ordinal)
+            .Replace("EventType=\"启动游戏\"", "EventType=\"launch_game\"", StringComparison.Ordinal)
+            .Replace("EventType=\"内存优化\"", "EventType=\"memory_optimize\"", StringComparison.Ordinal)
+            .Replace("EventType=\"清理垃圾\"", "EventType=\"clear_rubbish\"", StringComparison.Ordinal)
+            .Replace("EventType=\"刷新主页\"", "EventType=\"refresh_homepage\"", StringComparison.Ordinal);
     }
 
     private static TCandidate? SelectBestLocalizedCandidate<TCandidate>(

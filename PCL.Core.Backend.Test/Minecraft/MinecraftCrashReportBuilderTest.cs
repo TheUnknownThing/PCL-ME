@@ -17,13 +17,13 @@ public sealed class MinecraftCrashReportBuilderTest
             "device-123",
             """
             header
-            [Launch] ~ 基础参数 ~
-            玩家用户名：Steve [test]
-            验证方式：Microsoft [test]
-            Java 信息：Zulu 21 [test]
-            MC 文件夹：C:\Games\.minecraft [test]
-            分配的内存：4096 MB [test]
-            开始 Minecraft 日志监控
+            [Launch] ~ Base Parameters ~
+            Player name: Steve [test]
+            Login type: Microsoft [test]
+            Java info: Zulu 21 [test]
+            Minecraft folder: C:\Games\.minecraft [test]
+            Allocated memory: 4096 MB [test]
+            Start Minecraft log monitoring
             footer
             """,
             """
@@ -75,7 +75,7 @@ public sealed class MinecraftCrashReportBuilderTest
         var request = new MinecraftCrashEnvironmentReportRequest(
             "2.14.5",
             "device-123",
-            "没有启动参数片段",
+            "No launch parameter fragment",
             "cmd -Dlog4j2.formatMsgNoLookups=false",
             new SystemEnvironmentSnapshot(
                 "Linux",
@@ -88,8 +88,8 @@ public sealed class MinecraftCrashReportBuilderTest
 
         var report = MinecraftCrashReportBuilder.BuildEnvironmentReport(request);
 
-        StringAssert.Contains(report, "Profile name: 没有启动参数片段 (auth method: 没有启动参数片段)");
+        StringAssert.Contains(report, "Profile name: No launch parameter fragment (auth method: No launch parameter fragment)");
         StringAssert.Contains(report, "Log4j2 NoLookups: False");
-        StringAssert.Contains(report, "Memory allocation (allocated / installed physical memory): 没有启动参数片段 / 0 GB (0 MB)");
+        StringAssert.Contains(report, "Memory allocation (allocated / installed physical memory): No launch parameter fragment / 0 GB (0 MB)");
     }
 }

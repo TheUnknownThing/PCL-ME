@@ -708,6 +708,11 @@ shell:
       failure_title: "{title} 失敗"
     help:
       default_group: 常規
+      groups:
+        guides: 指南
+        help: 幫助
+        launcher: 啟動器
+        personalization: 個性化
       search:
         empty_header: 無搜尋結果
         no_results: 目前關鍵字沒有匹配到任何說明條目。

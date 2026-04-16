@@ -198,7 +198,6 @@ public static class MinecraftCrashAnalysisService
                 or "debug.log"
                 or "debug log.txt"
                 or "pre-crash output.txt"
-                or "游戏崩溃前的输出.txt"
                 or "rawoutput.log")
             {
                 _directFilePath ??= file.Path;
@@ -208,19 +207,8 @@ public static class MinecraftCrashAnalysisService
             if (PathsEqual(file.Path, _request.CurrentLauncherLogFilePath) ||
                 matchName is "pcl launcher log.txt"
                     or "launcher log.txt"
-                    or "启动器日志.txt"
-                    or "pcl2 启动器日志.txt"
-                    or "pcl 启动器日志.txt"
-                    or "log1.txt"
-                    or "log-ce1.log"
                     or "pcl.log")
             {
-                if (file.Lines.Any(line => line.Contains("以下为游戏输出的最后一段内容", StringComparison.Ordinal)))
-                {
-                    _directFilePath ??= file.Path;
-                    return AnalyzeFileType.MinecraftLog;
-                }
-
                 return AnalyzeFileType.ExtraLogFile;
             }
 
@@ -267,12 +255,6 @@ public static class MinecraftCrashAnalysisService
                          "rawoutput.log",
                          "Pre-Crash Output.txt",
                          "PCL Launcher Log.txt",
-                         "启动器日志.txt",
-                         "log1.txt",
-                         "log-ce1.log",
-                         "游戏崩溃前的输出.txt",
-                         "PCL2 启动器日志.txt",
-                         "PCL 启动器日志.txt",
                          "PCL.log"
                      })
             {
@@ -281,23 +263,7 @@ public static class MinecraftCrashAnalysisService
                     continue;
                 }
 
-                var hasMarker = false;
-                foreach (var line in currentLog.Lines)
-                {
-                    if (hasMarker)
-                    {
-                        logMcBuilder.AppendLine(line);
-                    }
-                    else if (line.Contains("以下为游戏输出的最后一段内容", StringComparison.Ordinal))
-                    {
-                        hasMarker = true;
-                    }
-                }
-
-                if (!hasMarker)
-                {
-                    logMcBuilder.Append(GetHeadTailLines(currentLog.Lines, 0, 500));
-                }
+                logMcBuilder.Append(GetHeadTailLines(currentLog.Lines, 0, 500));
 
                 break;
             }

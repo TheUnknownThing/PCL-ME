@@ -708,6 +708,11 @@ shell:
       failure_title: "{title} 실패"
     help:
       default_group: 일반적인
+      groups:
+        guides: 가이드
+        help: 도움말
+        launcher: 런처
+        personalization: 개인화
       search:
         empty_header: 결과 없음
         no_results: 현재 키워드와 일치하는 도움말 항목이 없습니다.

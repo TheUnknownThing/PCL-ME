@@ -822,6 +822,11 @@ shell:
         - title
     help:
       default_group: []
+      groups:
+        guides: []
+        help: []
+        launcher: []
+        personalization: []
       search:
         empty_header: []
         no_results: []

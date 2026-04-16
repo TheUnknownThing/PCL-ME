@@ -51,7 +51,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _currentHelpDetailEntry = entry;
         var route = new LauncherFrontendRoute(LauncherFrontendPageKey.HelpDetail);
-        var navigationReason = LT("resource_detail.activities.view_details", ("surface_title", entry.Title));
+        var navigationReason = LT("shell.help_detail.activities.open", ("title", entry.Title));
         if (_currentRoute == route)
         {
             ChangeRoute(route, navigationReason, ShellNavigationTransitionDirection.Forward);
@@ -349,7 +349,7 @@ internal sealed partial class FrontendShellViewModel
             case FrontendHelpEventType.LaunchGame:
                 NavigateTo(
                     new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-                    LT("resource_detail.activities.view_details", ("surface_title", title)));
+                    title);
                 return;
             case FrontendHelpEventType.MemoryOptimize:
                 OpenMemoryOptimizeDialog();

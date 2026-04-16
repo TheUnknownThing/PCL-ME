@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -157,152 +156,6 @@ internal sealed partial class FrontendShellViewModel
     public string VersionSaveDatapackEmptyTitle => SD("save_detail.datapack.empty.title");
     public string VersionSaveDatapackEmptyDescription => SD("save_detail.datapack.empty.description");
 
-    private string LocalizeInstanceSummarySegment(string segment)
-    {
-        return segment switch
-        {
-            "独立实例" => SD("instance.common.independent"),
-            "共用实例" => SD("instance.common.shared"),
-            "未选择实例" => SD("instance.common.no_selection"),
-            _ => segment
-        };
-    }
-
-    private string LocalizeRawInstanceSubtitle(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return raw;
-        }
-
-        return string.Join(" / ", raw.Split(" / ", StringSplitOptions.TrimEntries).Select(LocalizeInstanceSummarySegment));
-    }
-
-    private string LocalizeOverviewInfoLabel(string label)
-    {
-        return label switch
-        {
-            "启动次数" => SD("instance.overview.info.launch_count"),
-            "整合包版本" => SD("instance.overview.info.modpack_version"),
-            "实例描述" => SD("instance.overview.info.description"),
-            _ => label
-        };
-    }
-
-    private string LocalizeOverviewInfoValue(string label, string value)
-    {
-        return (label, value) switch
-        {
-            ("启动次数", "从未启动") => SD("instance.overview.info.launch_count_never"),
-            (_, "已安装") => SD("instance.common.installed"),
-            (_, "未安装") => SD("instance.common.not_installed"),
-            _ => LocalizeInstanceSummarySegment(value)
-        };
-    }
-
-    private string LocalizeOverviewTag(string tag)
-    {
-        return tag switch
-        {
-            "支持 Mod" => SD("instance.overview.tags.mod_supported"),
-            "已收藏" => SD("instance.overview.tags.favorited"),
-            "自动" => SD("instance.overview.categories.auto"),
-            "隐藏实例" => SD("instance.overview.categories.hidden"),
-            "可安装 Mod" => SD("instance.overview.categories.modable"),
-            "常规实例" => SD("instance.overview.categories.regular"),
-            "不常用实例" => SD("instance.overview.categories.rare"),
-            "愚人节版本" => SD("instance.overview.categories.april_fools"),
-            _ => tag
-        };
-    }
-
-    private string LocalizeOverviewCategoryOption(string label)
-    {
-        return label switch
-        {
-            "自动" => SD("instance.overview.categories.auto"),
-            "从实例列表中隐藏" => SD("instance.overview.categories.hide_from_list"),
-            "可安装 Mod 的实例" => SD("instance.overview.categories.modable_long"),
-            "常规实例" => SD("instance.overview.categories.regular"),
-            "不常用实例" => SD("instance.overview.categories.rare"),
-            "愚人节版本" => SD("instance.overview.categories.april_fools"),
-            _ => label
-        };
-    }
-
-    private string LocalizeOverviewIconOption(string label)
-    {
-        return label switch
-        {
-            "自动" => SD("instance.overview.icons.auto"),
-            "圆石" => SD("instance.overview.icons.cobblestone"),
-            "命令方块" => SD("instance.overview.icons.command_block"),
-            "金块" => SD("instance.overview.icons.gold_block"),
-            "草方块" => SD("instance.overview.icons.grass_block"),
-            "土径" => SD("instance.overview.icons.grass_path"),
-            "铁砧" => SD("instance.overview.icons.anvil"),
-            "红石块" => SD("instance.overview.icons.redstone_block"),
-            "红石灯（开）" => SD("instance.overview.icons.redstone_lamp_on"),
-            "红石灯（关）" => SD("instance.overview.icons.redstone_lamp_off"),
-            "鸡蛋" => SD("instance.overview.icons.egg"),
-            "布料（Fabric）" => SD("instance.overview.icons.fabric"),
-            "方格（Quilt）" => SD("instance.overview.icons.quilt"),
-            "狐狸（NeoForge）" => SD("instance.overview.icons.neoforge"),
-            _ => label
-        };
-    }
-
-    private string LocalizeExportTitle(string title)
-    {
-        return title switch
-        {
-            "游戏本体" => SD("instance.export.groups.game"),
-            "游戏本体设置" => SD("instance.export.items.game_settings"),
-            "游戏本体个人信息" => SD("instance.export.items.game_personal"),
-            "OptiFine 设置" => SD("instance.export.items.optifine_settings"),
-            "Mod" => SD("instance.export.groups.mods"),
-            "已禁用的 Mod" => SD("instance.export.items.disabled_mods"),
-            "整合包重要数据" => SD("instance.export.items.important_data"),
-            "Mod 设置" => SD("instance.export.items.mod_settings"),
-            "资源包" => SD("instance.export.groups.resource_packs"),
-            "光影包" => SD("instance.export.groups.shaders"),
-            "截图" => SD("instance.export.groups.screenshots"),
-            "导出的结构" => SD("instance.export.groups.schematics"),
-            "录像回放" => SD("instance.export.groups.replays"),
-            "单人游戏存档" => SD("instance.export.groups.worlds"),
-            "多人游戏服务器列表" => SD("instance.export.groups.servers"),
-            "PCL 启动器程序" => SD("instance.export.groups.launcher"),
-            "PCL 个性化内容" => SD("instance.export.items.launcher_personalization"),
-            _ => title
-        };
-    }
-
-    private string LocalizeExportDescription(string description)
-    {
-        return description switch
-        {
-            "模组" => SD("instance.export.descriptions.mods"),
-            "纹理包 / 材质包" => SD("instance.export.descriptions.resource_packs"),
-            "schematics 文件夹" => SD("instance.export.descriptions.schematics"),
-            "Replay Mod 的录像文件" => SD("instance.export.descriptions.replays"),
-            "世界 / 地图" => SD("instance.export.descriptions.worlds"),
-            "打包跨平台版 PCL，以便没有启动器的玩家安装整合包" => SD("instance.export.descriptions.launcher"),
-            "检测到 options.txt" => SD("instance.export.detected.options"),
-            "未检测到配置文件" => SD("instance.export.detected.config_missing"),
-            "检测到 OptiFine 设置" => SD("instance.export.detected.optifine_settings"),
-            "未检测到个人设置" => SD("instance.export.detected.personal_missing"),
-            "当前实例包含 OptiFine" => SD("instance.export.detected.optifine_present"),
-            "当前实例未安装 OptiFine" => SD("instance.export.detected.optifine_missing"),
-            "检测到 config 文件夹" => SD("instance.export.detected.config_folder"),
-            "未检测到 config 文件夹" => SD("instance.export.detected.config_folder_missing"),
-            "检测到配置目录" => SD("instance.export.detected.config_directory"),
-            "未检测到配置目录" => SD("instance.export.detected.config_directory_missing"),
-            "检测到实例 PCL 配置目录" => SD("instance.export.detected.pcl_directory"),
-            "未检测到实例 PCL 配置目录" => SD("instance.export.detected.pcl_directory_missing"),
-            _ => description
-        };
-    }
-
     private string LocalizeResourceMeta(string meta)
     {
         if (string.IsNullOrWhiteSpace(meta))
@@ -311,17 +164,11 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return meta
-            .Replace("数据包", SD("save_detail.datapack.name"), StringComparison.Ordinal)
             .Replace("datapack", SD("save_detail.datapack.name"), StringComparison.OrdinalIgnoreCase)
-            .Replace("资源包", SD("instance.content.resource.kind.resource_pack"), StringComparison.Ordinal)
             .Replace("resource pack", SD("instance.content.resource.kind.resource_pack"), StringComparison.OrdinalIgnoreCase)
-            .Replace("光影包", SD("instance.content.resource.kind.shader"), StringComparison.Ordinal)
             .Replace("shader", SD("instance.content.resource.kind.shader"), StringComparison.OrdinalIgnoreCase)
-            .Replace("投影文件", SD("instance.content.resource.kind.schematic_file"), StringComparison.Ordinal)
             .Replace("schematic file", SD("instance.content.resource.kind.schematic_file"), StringComparison.OrdinalIgnoreCase)
-            .Replace("压缩包", SD("instance.content.resource.meta.archive"), StringComparison.Ordinal)
             .Replace("archive", SD("instance.content.resource.meta.archive"), StringComparison.OrdinalIgnoreCase)
-            .Replace("文件夹", SD("instance.content.resource.meta.folder"), StringComparison.Ordinal)
             .Replace("folder", SD("instance.content.resource.meta.folder"), StringComparison.OrdinalIgnoreCase);
     }
 
@@ -333,7 +180,6 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return summary
-            .Replace("文件夹", SD("instance.content.resource.meta.folder"), StringComparison.Ordinal)
             .Replace("Folder", SD("instance.content.resource.meta.folder"), StringComparison.OrdinalIgnoreCase);
     }
 
@@ -341,26 +187,26 @@ internal sealed partial class FrontendShellViewModel
     {
         return label switch
         {
-            "实例" or "instance" => SD("save_detail.labels.instance"),
-            "存档名称" or "save_name" => SD("save_detail.labels.save_name"),
-            "存档路径" or "save_path" => SD("save_detail.labels.save_path"),
-            "最后修改" or "last_modified" => SD("save_detail.labels.last_modified"),
-            "文件大小" or "file_size" => SD("save_detail.labels.file_size"),
-            "文件总数" or "file_count" => SD("save_detail.labels.file_count"),
-            "数据包数量" or "datapack_count" => SD("save_detail.labels.datapack_count"),
-            "备份数量" or "backup_count" => SD("save_detail.labels.backup_count"),
-            "图标" or "icon" => SD("save_detail.labels.icon"),
-            "关卡名称" or "level_name" => SD("save_detail.labels.level_name"),
-            "游戏模式" or "game_mode" => SD("save_detail.labels.game_mode"),
-            "难度" or "difficulty" => SD("save_detail.labels.difficulty"),
-            "允许作弊" or "allow_commands" => SD("save_detail.labels.allow_commands"),
-            "极限模式" or "hardcore" => SD("save_detail.labels.hardcore"),
-            "下雨中" or "raining" => SD("save_detail.labels.raining"),
-            "雷暴中" or "thundering" => SD("save_detail.labels.thundering"),
-            "游戏天数" or "day_count" => SD("save_detail.labels.day_count"),
-            "存档版本" or "save_version" => SD("save_detail.labels.save_version"),
-            "存档格式" or "save_format" => SD("save_detail.labels.save_format"),
-            "玩家维度" or "player_dimension" => SD("save_detail.labels.player_dimension"),
+            "instance" => SD("save_detail.labels.instance"),
+            "save_name" => SD("save_detail.labels.save_name"),
+            "save_path" => SD("save_detail.labels.save_path"),
+            "last_modified" => SD("save_detail.labels.last_modified"),
+            "file_size" => SD("save_detail.labels.file_size"),
+            "file_count" => SD("save_detail.labels.file_count"),
+            "datapack_count" => SD("save_detail.labels.datapack_count"),
+            "backup_count" => SD("save_detail.labels.backup_count"),
+            "icon" => SD("save_detail.labels.icon"),
+            "level_name" => SD("save_detail.labels.level_name"),
+            "game_mode" => SD("save_detail.labels.game_mode"),
+            "difficulty" => SD("save_detail.labels.difficulty"),
+            "allow_commands" => SD("save_detail.labels.allow_commands"),
+            "hardcore" => SD("save_detail.labels.hardcore"),
+            "raining" => SD("save_detail.labels.raining"),
+            "thundering" => SD("save_detail.labels.thundering"),
+            "day_count" => SD("save_detail.labels.day_count"),
+            "save_version" => SD("save_detail.labels.save_version"),
+            "save_format" => SD("save_detail.labels.save_format"),
+            "player_dimension" => SD("save_detail.labels.player_dimension"),
             _ => label
         };
     }
@@ -369,37 +215,21 @@ internal sealed partial class FrontendShellViewModel
     {
         return value switch
         {
-            "未找到" or "not_found" => SD("save_detail.values.not_found"),
-            "已提供" or "provided" => SD("save_detail.values.provided"),
-            "未提供" or "not_provided" => SD("save_detail.values.not_provided"),
-            "生存" or "survival" => SD("save_detail.values.survival"),
-            "创造" or "creative" => SD("save_detail.values.creative"),
-            "冒险" or "adventure" => SD("save_detail.values.adventure"),
-            "旁观" or "spectator" => SD("save_detail.values.spectator"),
-            "和平" or "peaceful" => SD("save_detail.values.peaceful"),
-            "简单" or "easy" => SD("save_detail.values.easy"),
-            "普通" or "normal" => SD("save_detail.values.normal"),
-            "困难" or "hard" => SD("save_detail.values.hard"),
-            "否" or "no" => SD("save_detail.values.no"),
-            "是" or "yes" => SD("save_detail.values.yes"),
-            "未知" or "unknown" => SD("save_detail.values.unknown"),
+            "not_found" => SD("save_detail.values.not_found"),
+            "provided" => SD("save_detail.values.provided"),
+            "not_provided" => SD("save_detail.values.not_provided"),
+            "survival" => SD("save_detail.values.survival"),
+            "creative" => SD("save_detail.values.creative"),
+            "adventure" => SD("save_detail.values.adventure"),
+            "spectator" => SD("save_detail.values.spectator"),
+            "peaceful" => SD("save_detail.values.peaceful"),
+            "easy" => SD("save_detail.values.easy"),
+            "normal" => SD("save_detail.values.normal"),
+            "hard" => SD("save_detail.values.hard"),
+            "no" => SD("save_detail.values.no"),
+            "yes" => SD("save_detail.values.yes"),
+            "unknown" => SD("save_detail.values.unknown"),
             _ => value
-        };
-    }
-
-    private string LocalizeServerStatusText(string text)
-    {
-        return text switch
-        {
-            "已保存服务器" => SD("instance.content.server.status.saved"),
-            "正在连接..." => SD("instance.content.server.status.connecting"),
-            "服务器在线" => SD("instance.content.server.status.online"),
-            "服务器离线" => SD("instance.content.server.status.offline"),
-            "离线" => SD("instance.content.server.status.offline_short"),
-            "正在连接" => SD("instance.content.server.status.connecting_short"),
-            _ when text.StartsWith("无法连接: ", StringComparison.Ordinal) =>
-                SD("instance.content.server.status.connection_failed", ("message", text["无法连接: ".Length..])),
-            _ => text
         };
     }
 

@@ -1094,7 +1094,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyInstanceServerIdleState(InstanceServerEntryViewModel entry, string status)
     {
-        entry.StatusText = string.IsNullOrWhiteSpace(status) ? SD("instance.content.server.status.saved") : LocalizeServerStatusText(status);
+        entry.StatusText = string.IsNullOrWhiteSpace(status) ? SD("instance.content.server.status.saved") : status;
         entry.StatusBrush = global::Avalonia.Media.Brushes.White;
         entry.PlayerCount = "-/-";
         entry.Latency = string.Empty;

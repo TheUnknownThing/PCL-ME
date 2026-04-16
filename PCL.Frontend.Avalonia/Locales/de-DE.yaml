@@ -708,6 +708,11 @@ shell:
       failure_title: "{title} fehlgeschlagen"
     help:
       default_group: Allgemein
+      groups:
+        guides: Anleitungen
+        help: Hilfe
+        launcher: Launcher
+        personalization: Personalisierung
       search:
         empty_header: Keine Ergebnisse
         no_results: Keine Hilfeeinträge entsprechen den aktuellen Suchbegriffen.

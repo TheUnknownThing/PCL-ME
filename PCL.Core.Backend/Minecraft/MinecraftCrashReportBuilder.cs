@@ -20,9 +20,9 @@ public static class MinecraftCrashReportBuilder
         var launchScriptContent = request.LaunchScriptContent ?? string.Empty;
         var launchSection = BetweenAny(
             launcherLogContent,
-            ["[Launch] ~ Base Parameters ~", "[Launch] ~ 基础参数 ~"],
-            ["Start Minecraft log monitoring", "开始 Minecraft 日志监控"]);
-        var allocatedMemory = ExtractBracketValue(launchSection, "Allocated memory:", "分配的内存：");
+            ["[Launch] ~ Base Parameters ~"],
+            ["Start Minecraft log monitoring"]);
+        var allocatedMemory = ExtractBracketValue(launchSection, "Allocated memory:");
         var totalMemoryMb = (long)(request.Environment.TotalPhysicalMemoryBytes / 1024 / 1024);
         var builder = new StringBuilder();
 
@@ -37,22 +37,22 @@ public static class MinecraftCrashReportBuilder
             .Append("- Profile -")
             .Append(LineBreak);
         builder.Append("Profile name: ")
-            .Append(ExtractBracketValue(launchSection, "Player name:", "玩家用户名："))
+            .Append(ExtractBracketValue(launchSection, "Player name:"))
             .Append(" (auth method: ")
-            .Append(ExtractBracketValue(launchSection, "Login type:", "验证方式："))
+            .Append(ExtractBracketValue(launchSection, "Login type:"))
             .Append(')')
             .Append(LineBreak);
         builder.Append(LineBreak)
             .Append("- Instance -")
             .Append(LineBreak);
         builder.Append("Selected Java runtime: ")
-            .Append(ExtractBracketValue(launchSection, "Java info:", "Java 信息："))
+            .Append(ExtractBracketValue(launchSection, "Java info:"))
             .Append(LineBreak);
         builder.Append("Log4j2 NoLookups: ")
             .Append(!launchScriptContent.ContainsF("-Dlog4j2.formatMsgNoLookups=false"))
             .Append(LineBreak);
         builder.Append("MC folder: ")
-            .Append(ExtractBracketValue(launchSection, "Minecraft folder:", "MC 文件夹："))
+            .Append(ExtractBracketValue(launchSection, "Minecraft folder:"))
             .Append(LineBreak);
         builder.Append(LineBreak)
             .Append("- Environment -")
@@ -115,17 +115,23 @@ public static class MinecraftCrashReportBuilder
                 continue;
             }
 
-            startPos = source.LastIndexOf(after, StringComparison.Ordinal);
-            if (startPos >= 0)
+            var candidateStartPos = source.LastIndexOf(after, StringComparison.Ordinal);
+            if (candidateStartPos > startPos)
             {
-                startPos += after.Length;
-                break;
+                startPos = candidateStartPos;
             }
         }
 
         if (startPos < 0)
         {
             startPos = 0;
+        }
+        else
+        {
+            startPos += afterValues
+                .First(after => !string.IsNullOrEmpty(after) &&
+                                source.LastIndexOf(after, StringComparison.Ordinal) == startPos)
+                .Length;
         }
 
         var endPos = -1;

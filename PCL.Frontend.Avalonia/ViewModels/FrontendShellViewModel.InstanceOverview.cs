@@ -166,17 +166,17 @@ internal sealed partial class FrontendShellViewModel
     {
         var overview = _instanceComposition.Overview;
         InstanceOverviewName = overview.Name;
-        InstanceOverviewSubtitle = LocalizeRawInstanceSubtitle(overview.Subtitle);
+        InstanceOverviewSubtitle = overview.Subtitle;
         _selectedInstanceOverviewIconIndex = Math.Clamp(overview.IconIndex, 0, InstanceOverviewIconOptions.Count - 1);
         _selectedInstanceOverviewCategoryIndex = Math.Clamp(overview.CategoryIndex, 0, InstanceOverviewCategoryOptions.Count - 1);
         _isInstanceOverviewStarred = overview.IsStarred;
 
-        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags.Select(LocalizeOverviewTag).ToArray());
+        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags.ToArray());
         ReplaceItems(
             InstanceOverviewInfoEntries,
             overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(
-                LocalizeOverviewInfoLabel(entry.Label),
-                LocalizeOverviewInfoValue(entry.Label, entry.Value))));
+                entry.Label,
+                entry.Value)));
 
         InstanceOverviewSelectedIcon = LoadInstanceBitmap(
             overview.IconPath,

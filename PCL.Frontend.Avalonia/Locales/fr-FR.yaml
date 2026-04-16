@@ -708,6 +708,11 @@ shell:
       failure_title: Échec de {title}
     help:
       default_group: Général
+      groups:
+        guides: Guides
+        help: Aide
+        launcher: Lanceur
+        personalization: Personnalisation
       search:
         empty_header: Aucun résultat
         no_results: Aucune entrée d'aide ne correspond aux mots-clés actuels.

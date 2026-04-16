@@ -291,8 +291,8 @@ internal sealed partial class FrontendShellViewModel
     {
         return new ExportOptionEntryViewModel(
             key,
-            LocalizeExportTitle(title),
-            LocalizeExportDescription(description),
+            title,
+            description,
             isChecked);
     }
 
@@ -306,8 +306,8 @@ internal sealed partial class FrontendShellViewModel
         return new ExportOptionGroupViewModel(
             new ExportOptionEntryViewModel(
                 key,
-                LocalizeExportTitle(title),
-                LocalizeExportDescription(description),
+                title,
+                description,
                 isChecked),
             children);
     }
