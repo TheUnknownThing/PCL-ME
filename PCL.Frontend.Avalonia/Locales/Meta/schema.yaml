@@ -2936,6 +2936,10 @@ resource_detail:
   filters:
     loader: []
     version: []
+  install_modes:
+    current_only: []
+    single_resource: []
+    with_dependencies: []
   install:
     dialogs:
       confirm_dependencies:

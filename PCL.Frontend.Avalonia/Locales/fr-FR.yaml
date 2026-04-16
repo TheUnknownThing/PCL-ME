@@ -1,0 +1,3369 @@
+shell:
+  navigation:
+    pages:
+      launch:
+        title: Lancer
+        summary: Sélection d'instance, configuration du compte et état de lancement.
+      download:
+        title: Télécharger
+        summary: Installer Minecraft, les chargeurs de mods et les ressources communautaires.
+      setup:
+        title: Paramètres
+        summary: Préférences du lanceur, de Java et du jeu.
+      tools:
+        title: Outils
+        summary: Contenu d'aide et utilitaires expérimentaux.
+      instance_select:
+        title: Sélection d'instance
+        summary: Choisir l'instance à lancer.
+      task_manager:
+        title: Gestionnaire de tâches
+        summary: Surveiller les téléchargements et les tâches en arrière-plan.
+      instance_setup:
+        title: Paramètres d'instance
+        summary: Inspecter les détails de l'instance et gérer ses ressources.
+      comp_detail:
+        title: Détails de la ressource
+        summary: Inspecter une ressource communautaire sélectionnée.
+      help_detail:
+        title: Détails de l'aide
+        summary: Lire le sujet d'aide actuellement sélectionné.
+      game_log:
+        title: Journal du jeu
+        summary: Examiner la sortie de lancement et les journaux en direct.
+      version_saves:
+        title: Gestionnaire de sauvegardes
+        summary: Gérer une sauvegarde sélectionnée et ses copies de sécurité.
+    subpages:
+      download_install:
+        title: Installation automatique
+        summary: Créer une nouvelle instance et choisir ses composants d'installation.
+      download_mod:
+        title: Mods
+        summary: Parcourir et installer des mods.
+      download_pack:
+        title: Modpacks
+        summary: Parcourir les modpacks sélectionnés.
+      download_data_pack:
+        title: Data packs
+        summary: Rechercher et installer des data packs.
+      download_resource_pack:
+        title: Packs de ressources
+        summary: Rechercher et installer des packs de ressources.
+      download_shader:
+        title: Shaders
+        summary: Rechercher et installer des packs de shaders.
+      download_world:
+        title: Mondes
+        summary: Importer des cartes et des archives de sauvegardes.
+      download_comp_favorites:
+        title: Favoris
+        summary: Consulter les ressources communautaires en favoris.
+      download_client:
+        title: Minecraft
+        summary: Choisir une version de Minecraft à installer.
+      download_opti_fine:
+        title: OptiFine
+        summary: Installez OptiFine pour la version du jeu sélectionnée.
+      download_forge:
+        title: Forge
+        summary: Installez Forge pour la version du jeu sélectionnée.
+      download_neo_forge:
+        title: NeoForge
+        summary: Installez NeoForge pour la version du jeu sélectionnée.
+      download_cleanroom:
+        title: Cleanroom
+        summary: Installez Cleanroom pour la version du jeu sélectionnée.
+      download_fabric:
+        title: Fabric
+        summary: Installez Fabric pour la version du jeu sélectionnée.
+      download_quilt:
+        title: Quilt
+        summary: Installez Quilt pour la version du jeu sélectionnée.
+      download_lite_loader:
+        title: LiteLoader
+        summary: Installez LiteLoader pour la version du jeu sélectionnée.
+      download_laby_mod:
+        title: LabyMod
+        summary: Installez LabyMod pour la version du jeu sélectionnée.
+      download_legacy_fabric:
+        title: Legacy Fabric
+        summary: Installez Legacy Fabric pour les anciennes versions.
+      setup_launch:
+        title: Lancement
+        summary: Ajuster les arguments de lancement, la visibilité et le comportement à l'exécution.
+      setup_u_i:
+        title: Interface
+        summary: Ajuster les thèmes, les animations et la présentation.
+      setup_game_manage:
+        title: Gestion du jeu
+        summary: Contrôler le stockage des instances et le comportement des fichiers.
+      setup_link:
+        title: Liens
+        summary: Gérer les liens externes liés au lanceur.
+      setup_about:
+        title: À propos
+        summary: Consulter les détails de la version et les informations du projet.
+      setup_log:
+        title: Journaux
+        summary: Configurer la journalisation et la sortie de diagnostic.
+      setup_feedback:
+        title: Commentaires
+        summary: Consulter les issues et les canaux de retour d'information.
+      setup_update:
+        title: Mises à jour
+        summary: Configurer les canaux de mise à jour et la stratégie de vérification.
+      setup_java:
+        title: Java
+        summary: Gérer les environnements Java et les règles de sélection.
+      setup_launcher_misc:
+        title: Divers
+        summary: Ajuster les comportements divers du lanceur.
+      tools_launcher_help:
+        title: Aide
+        summary: Parcourir les sujets d'aide du lanceur.
+      tools_test:
+        title: Essais
+        summary: Ouvrir les utilitaires expérimentaux et de diagnostic.
+      version_overall:
+        title: Vue d'ensemble
+        summary: Examiner l'identité de l'instance et les métadonnées de haut niveau.
+      version_setup:
+        title: Paramètres
+        summary: Configurer les paramètres dédiés de cette instance.
+      version_export:
+        title: Exporter
+        summary: Exporter l'instance ou assembler un pack distribuable.
+      version_world:
+        title: Mondes
+        summary: Parcourir les mondes associés à l'instance.
+      version_screenshot:
+        title: Captures d'écran
+        summary: Parcourir les captures d'écran.
+      version_mod:
+        title: Mods
+        summary: Gérer les mods activés.
+      version_mod_disabled:
+        title: Mods désactivés
+        summary: Consulter les mods actuellement désactivés.
+      version_resource_pack:
+        title: Packs de ressources
+        summary: Gérer les packs de ressources installés.
+      version_shader:
+        title: Shaders
+        summary: Gérer les packs de shaders installés.
+      version_schematic:
+        title: Schémas
+        summary: Gérer les schémas et les fichiers de construction.
+      version_install:
+        title: Modifier
+        summary: Ajuster la version de l'instance et les composants du chargeur.
+      version_server:
+        title: Serveurs
+        summary: Gérer les entrées de serveur enregistrées.
+      version_saves_info:
+        title: Vue d'ensemble
+        summary: Examiner les métadonnées de la sauvegarde sélectionnée.
+      version_saves_backup:
+        title: Sauvegardes
+        summary: Créer, importer et restaurer des copies de sécurité.
+      version_saves_datapack:
+        title: Data packs
+        summary: Gérer les data packs dans la sauvegarde sélectionnée.
+    sidebar_groups:
+      download: Espace de téléchargement
+      setup: Espace de paramétrage
+      tools: Espace outils
+      instance_setup: Espace instance
+      version_saves: Espace sauvegardes
+    sidebar_section_groups:
+      community_resources: Ressources communautaires
+      installers: Installateurs
+      game: Jeu
+      launcher: Lanceur
+      about: À propos
+      tools: Outils
+      instance: Instance
+      content: Contenu
+      resources: Ressources
+      other: Autre
+      saves: Sauvegardes
+    utilities:
+      back: Retour
+      back_target: Retour à {target}
+      task_manager: Gestionnaire de tâches
+      game_log: Journal du jeu
+      home: Retour à l'accueil
+      active_summary: La surface utilitaire est active dans le shell.
+      pinned_summary: Surface utilitaire épinglée du shell.
+    status:
+      line: 'Commande immédiate : {command} | Écran d''accueil : {splash} | Profondeur de navigation : {depth}'
+      splash_on: Activé
+      splash_off: Désactivé
+      commands:
+        none: Aucune
+        set_gpu_preference: Définir la préférence GPU
+        optimize_memory: Optimiser la mémoire
+        invalid: Invalide
+    surface_meta:
+      line: Surface {kind} • {sidebar_group} • {navigation_state}
+      no_sidebar_group: Aucun groupe de barre latérale
+      back_available: Retour disponible
+      top_level_route: Itinéraire de haut niveau
+      kinds:
+        top_level: Niveau supérieur
+        secondary: Secondaire
+        detail: Détail
+        utility: Utilitaire
+    activities:
+      navigated: Accès à {target} à partir de {source}.
+      opened_utility: Surface utilitaire ouverte {target}.
+      stayed_current: Resté sur l'itinéraire actuel.
+      followed_back_target: Suivi de l'obus vers la cible jusqu'à {target}.
+      returned_home: Renvoyé à {target}.
+      sources:
+        sidebar: barre latérale
+        top_bar: barre supérieure
+        left_pane: volet gauche de style lanceur
+    accessories:
+      refresh: Actualiser
+      reset: Réinitialiser
+  comp_detail:
+    route:
+      eyebrow: Détails du projet
+      description: Consultez les informations de la communauté en direct et les versions récentes de ce projet.
+      facts:
+        source: Source
+        status: Statut
+        updated: Mis à jour
+        downloads: Téléchargements
+  page_content:
+    eyebrows:
+      top_level: Itinéraire de haut niveau
+      secondary: Itinéraire secondaire
+      detail: Itinéraire détaillé
+      utility: Itinéraire utilitaire
+    values:
+      none: Aucun
+    facts:
+      current_page: Page actuelle
+      current_section: Rubrique actuelle
+      prompt_count: Invites en file d'attente
+      active_prompt_lane: Voie d'invite active
+      page_kind: Type de page
+      back_target: Cible arrière
+      launch:
+        identity: Identité
+        java: Java
+        resolution: Résolution
+        classpath_count: Entrées du chemin de classe
+        java_warning: Avertissement Java
+      crash:
+        archive_name: Archives suggérées
+        source_file_count: Fichiers sources
+    lines:
+      active_prompt_lane: La superposition d'invites se concentre actuellement sur la voie {lane}.
+      launch:
+        runtime: L'environnement d'exécution actuel utilise {java} en {resolution}.
+        last_completion: 'Dernière notification de lancement : {message}'
+      crash:
+        export: L'exportation sur incident cible actuellement {archive_name} avec les fichiers collectés {file_count}.
+    sections:
+      overview:
+        eyebrow: Aperçu
+  prompts:
+    lanes:
+      startup:
+        title: Démarrage
+        summary: Avis d’amorçage du lanceur et invites de consentement.
+      launch:
+        title: Lancement
+        summary: Vérifications préalables au lancement et invites d'exécution.
+      crash:
+        title: Accident
+        summary: Actions et diagnostics de récupération après incident.
+    inbox:
+      title: Invites {lane}
+      empty: Aucune invite n’attend dans la voie {lane}.
+    activities:
+      failure_default: L'opération a échoué.
+      switch_lane:
+        title: Voie d'invite commutée
+        body: "{lane} a désormais des invites {count} en file d'attente."
+      action:
+        title: 'Action rapide : {label}'
+      closed:
+        title: Invite fermée
+        body: "{prompt_id} a été expulsé de la voie {lane}."
+      reject_consent:
+        title: Consentement rejeté
+        body: L’invite actuelle n’a conservé aucun état de consentement.
+      close_prompt:
+        title: Fermer l'invite
+        body: L'invite actuelle a été marquée comme terminée.
+      exit_launcher:
+        title: Quitter le lanceur
+        body: La sortie du lanceur a été demandée par l'invite.
+      unhandled_command:
+        title: Commande d'invite non gérée rencontrée
+      launch_in_progress:
+        title: Lancement en cours
+        body: Une session de lancement est déjà en cours.
+      launch_blocked:
+        title: Lancement bloqué par l'invite
+        body: Confirmez les invites de pré-lancement ou ajustez d'abord les paramètres actuels de l'instance.
+      precheck_failed:
+        title: Les vérifications préalables au lancement ont échoué
+      pending_launch_prompts:
+        title: Invites de pré-lancement en attente
+        body: "{instance} a toujours des invites {count} à confirmer."
+      accept_consent:
+        title: Consentement accepté
+        body: L’état de consentement a été écrit dans la configuration partagée.
+      continue_launch:
+        title: Continuer le flux de lancement
+        body_pending: L'invite de pré-lancement a été approuvée et le lancement en cours se poursuivra.
+        body_ready: L'invite de pré-lancement a été approuvée et le bouton de lancement est à nouveau disponible.
+      continue_flow:
+        title: Continuer le flux actuel
+        body: L'action de continuation demandée par l'invite est terminée.
+      abort_launch:
+        title: Flux de lancement interrompu
+        body: L'invite demandait un retour pour un traitement ultérieur, de sorte que l'action de lancement en cours a été bloquée.
+      persist_setting:
+        title: Paramètre d'invite enregistré
+        body_non_ascii_disabled: L'avertissement de chemin de jeu non-ASCII a été désactivé.
+        body_value: 'Paramètre enregistré : {value}'
+      persist_java_override_failed:
+        title: Impossible de forcer le lancement
+        body: Il n’existe aucune instance accessible en écriture pour ce paramètre.
+      persist_java_override:
+        title: Lancement forcé Java activé
+        body: Cette instance ignorera les contrôles de compatibilité Java pour les prochains lancements et continuera à utiliser le Java sélectionné.
+      ignore_java_once:
+        title: Vérification Java ignorée pour ce lancement
+        body: Ce lancement continuera à utiliser votre Java sélectionné sans modifier les paramètres de l'instance.
+      append_argument_failed:
+        title: Échec de l'ajout de l'argument de lancement
+        body: L'invite ne fournissait pas d'argument à écrire.
+      argument_exists:
+        title: L'argument de lancement existe déjà
+      argument_appended:
+        title: Argument de lancement ajouté
+      navigate:
+        instance_settings: L'invite a acheminé le shell vers les paramètres de l'instance.
+        game_log: L'invite a acheminé le shell vers l'écran du journal du jeu en direct.
+        java_settings: L'invite a acheminé le shell vers les paramètres Java après avoir préparé l'environnement d'exécution.
+      open_log:
+        title: Ouvrir le journal
+        body: 'Généré le journal des crashs. Vous pouvez l''ouvrir depuis la page du journal en direct : {path}'
+      crash_report_exported:
+        title: Rapport de crash exporté
+        body: '{path} • {count} fichier(s) archivé(s).'
+      java_runtime_prepare_failed:
+        title: Échec de la préparation de l'environnement d'exécution Java
+        body_missing_plan: L'état de lancement actuel n'a pas de plan de téléchargement Java exécutable.
+      java_runtime_preparing:
+        title: Préparation de l'environnement d'exécution Java
+        body: L'environnement d'exécution Java est en cours de téléchargement et d'enregistrement en arrière-plan.
+      java_runtime_ready:
+        title: Environnement d'exécution Java prêt
+        body: '{path} • {downloaded_count} fichier(s) téléchargé(s), {reused_count} fichier(s) réutilisé(s).'
+      game_process_ended:
+        title: Processus de jeu terminé
+        body: "{instance} • Code de sortie {exit_code}"
+      monitor_exception:
+        title: Exception du moniteur de session
+      crash_prompt_shown:
+        title: Minecraft a rencontré une erreur
+        body: Les invites de récupération après incident sont désormais mises en file d'attente. Vous pouvez afficher les journaux ou exporter directement un rapport d'erreur.
+      crash_test_triggered:
+        title: Test de crash déclenché
+        body: L'invite de récupération après incident a été ajoutée à la file d'attente.
+    commands:
+      none_attached: Aucune commande attachée.
+      none: Aucune commande shell.
+      not_available: n/d
+      continue_flow: Continuer le flux
+      accept_consent: Accepter le consentement
+      reject_consent: Rejeter le consentement
+      open_url: Ouvrir l'URL ({value})
+      exit_launcher: Quitter le lanceur
+      abort_launch: Abandonner le lancement
+      append_launch_argument: Ajouter l'argument de lancement ({value})
+      persist_setting: Paramètre de persistance ({value})
+      download_java_runtime: Télécharger Java ({value})
+      persist_java_override: Enregistrer le contournement de compatibilité Java
+      ignore_java_once: Ignorer la compatibilité Java une fois
+      close_prompt: Fermer l'invite
+      view_game_log: Ouvrir le journal de jeu
+      open_instance_settings: Ouvrir les paramètres de l'instance
+      export_crash_report: Exporter le rapport d'erreur
+    external_open:
+      success:
+        title: Cible externe ouverte
+        body: "{message} {target}"
+        url: Ouverture du lien externe demandé par l'invite.
+        crash_report_exported: Exporté et ouvert l'archive du rapport de crash.
+      failure:
+        title: Échec de l'ouverture de la cible externe
+        missing_target: Cible manquante pour ouvrir.
+        body: "{target} • {error}"
+        unknown_error: Erreur inconnue
+    launch_logs:
+      process_exited: Processus de jeu terminé avec le code {exit_code}.
+      monitor_exception: 'Exception du moniteur de session : {message}'
+    crash:
+      details_header: 'Informations détaillées :'
+      launch_failure:
+        exit_code: Le processus de jeu s'est terminé de manière inattendue avec le code {exit_code}.
+        raw_output_log: 'Journal de sortie brute : {path}'
+    java:
+      runtime_name: 'Java {version}'
+      component_runtime_name: "{component} (Java {version})"
+      tags:
+        bit64: 64 bits
+        prompt_download: Téléchargement rapide
+        reused_count: "{count} réutilisé"
+  surface_actions:
+    sidebar:
+      title: 'Action de la barre latérale : {action}'
+      body: "{title} • {command}"
+  game_log:
+    actions:
+      clear_cache: Vider le cache
+      export: Exporter les journaux
+      open_directory: Ouvrir le dossier des journaux
+      open_file: 'Fichier journal ouvert : {name}'
+      refresh: Actualiser les journaux
+    clear_cache:
+      completed: Effacement du cache du journal de la session actuelle.
+    empty:
+      description: Les journaux du lanceur, les scripts de démarrage et les sorties brutes apparaîtront ici après le lancement d'un jeu.
+      title: Pas encore de journaux
+    export:
+      empty_directory: Il n'y a aucun fichier journal à exporter dans le dossier de journaux actuel.
+      export_all_activity: Exporter tous les journaux
+      missing_directory: Le dossier des journaux n'est pas disponible.
+    labels:
+      current_session_output: Résultat de la session en cours
+      live_line_count: Lignes en direct
+      recent_files: Fichiers récents
+      recent_generated_files: Fichiers récemment générés
+    latest_update:
+      none: Aucun fichier journal trouvé pour l'instant
+    live_output:
+      waiting: En attente de la sortie de la session en cours...
+    open_directory_failure: Échec de l'ouverture du dossier de journal
+    route:
+      description: Consultez le résultat de la session en direct et les fichiers journaux du lanceur générés les plus récemment.
+      facts:
+        latest_update: Dernière mise à jour
+        live_lines: Lignes en direct
+        recent_files: Fichiers récents
+  help_detail:
+    actions:
+      copy_text: Copier le texte
+      copy_text_completed: Texte copié dans le presse-papiers.
+      download_file: Télécharger le fichier
+      generic: Action d'aide
+      help_item: Élément d'aide
+      inline_default_info: Informations sur les actions
+      open_file: Ouvrir le fichier
+      open_help: 'Ouvrir l''aide : {name}'
+      open_web: Ouvrir la page Web
+      view_image: Voir l'image
+    activities:
+      open: 'Ouvrir l''aide : {title}'
+    empty:
+      description: Sélectionnez une entrée d'aide pour voir son contenu, sa source et les actions disponibles.
+      title: Aucune entrée d'aide sélectionnée
+    failures:
+      action: Échec de {title}
+      download_target_missing: Le fichier cible téléchargé est manquant.
+      entry_not_found: 'Entrée d''aide introuvable : {reference}'
+      invalid_download_address: Adresse de téléchargement invalide.
+      missing_action_target: Cette action n'a pas de cible.
+      missing_copy_text: Il n'y a aucun texte à copier.
+      missing_target: La cible n'est pas disponible.
+    generated:
+      example_button: 'Exemple de bouton : {title}'
+      example_button_with_summary: 'Exemple de bouton : {summary}'
+      example_button_with_title_and_summary: 'Exemple de bouton : {title} ({summary})'
+      hint: 'Indice : {text}'
+    popup:
+      default_button: D'accord
+      missing_content: Cette fenêtre contextuelle ne contient aucun contenu affichable.
+    route:
+      description: Les détails de l'aide affichent le contenu analysé, les actions intégrées et les informations sources traçables.
+      facts:
+        actions: Actions
+        lines: Lignes
+        source: Source
+    sections:
+      card_default_title: Contenu de l'aide
+      missing_content:
+        body: Cette entrée d'aide ne contient pas de contenu lisible.
+        title: Impossible de charger le contenu
+      no_cards:
+        body: Aucune carte d'aide structurée n'a été trouvée.
+      parse_failed:
+        body: Le document d'aide n'a pas pu être analysé correctement.
+        title: Échec de l'analyse
+      source_line: 'Source : {source}'
+      supplement:
+        title: Supplément
+    source_unresolved: Source non résolue
+    summary_loaded: Le contenu de l'aide analysé et les actions sont présentés ci-dessous.
+    title_default: Détails de l'aide
+  instance_select:
+    activities:
+      refresh_failure: Échec de l'actualisation des instances
+      switch_directory: Changer de dossier d'instance
+      switch_instance: Changer d'instance de lancement
+      switch_instance_detail: L'instance de lancement actuelle est passée à {name}.
+    delete:
+      activity: Supprimer l'instance
+      cancelled: Suppression annulée.
+      confirm_action: Supprimer
+      confirm_message: Supprimer l'instance {name} ? Le lanceur essaiera d’abord de le déplacer vers la corbeille.
+      confirm_title: Supprimer cette instance ?
+      failure: Échec de la suppression de l'instance
+      moved_to_trash: 'Instance {name} déplacée vers la corbeille : {path}'
+      permanently_deleted: Instance {name} supprimée définitivement.
+    detail:
+      last_modified: "{path} • Dernière modification {time}"
+    empty:
+      download: Télécharger une instance
+      no_match_description: Aucune instance ne correspond à « {query} ». Essayez un autre mot-clé ou effacez la recherche.
+      no_match_title: Aucune instance correspondante
+      none_description: Aucune instance n'a été trouvée. Téléchargez d'abord une nouvelle instance ou ajoutez un dossier existant depuis la liste de gauche.
+      none_title: Aucune instance disponible
+      open_download_activity: Ouvrir la page de téléchargement
+    entry:
+      current: Actuelle
+      delete_tooltip: Supprimer l'instance
+      favorite_tooltip: Basculer vers les favoris
+      open_folder_tooltip: Ouvrir le dossier d'instance
+      open_instance_directory: Ouvrir le dossier d'instance
+      open_instance_directory_failure: Échec de l'ouverture du dossier d'instance
+      open_settings_tooltip: Ouvrir les paramètres
+      set_as_launch: Définir comme cible de lancement
+    favorite:
+      added_activity: Ajouté aux favoris
+      failure: Échec de la mise à jour des favoris
+      removed_activity: Supprimé des favoris
+    folder:
+      current_activity: Dossier d'instance actuel
+      open_tooltip: Ouvrir le dossier
+      remove_tooltip: Supprimer le dossier
+      switched: Dossier d'instance basculé vers {directory}.
+    folder_remove:
+      activity: Supprimer le dossier d'instance
+      cancelled: Suppression annulée.
+      confirm_action: Supprimer
+      confirm_message: Supprimer ce dossier de la liste ?{newline}{newline}{path}
+      confirm_title: Supprimer ce dossier ?
+      failure: Échec de la suppression du dossier d'instance
+      not_saved: Ce dossier n'a pas été enregistré et ne peut pas être supprimé de la liste.
+      removed: "{path} supprimé de la liste des dossiers."
+      removed_and_switched: "{removed} supprimé et remplacé par {target}."
+      still_active: "{path} est toujours le dossier d'instance actif."
+    groups:
+      api_installable: Installable par API
+      error: Instances en erreur
+      favorites: Favoris
+      header: "{title} ({count})"
+      hidden: Caché
+      loaders:
+        cleanroom: Cleanroom
+        fabric: Fabric
+        forge: Forge
+        labymod: LabyMod
+        legacy_fabric: Legacy Fabric
+        liteloader: LiteLoader
+        neoforge: NeoForge
+        quilt: Quilt
+      rarely_used: Peu utilisées
+      regular: Régulières
+    left:
+      folders: Dossiers
+      shortcuts: Raccourcis
+    navigation:
+      launch: L'instance de lancement a été remplacée par {name}, puis retour à Lancer.
+      overview: Ouverture de la page de présentation de {name}.
+    open_folder:
+      activity: Ouvrir le dossier
+      failure: Échec de l'ouverture du dossier
+      missing_path: Le chemin du dossier n'est pas disponible.
+      not_found: 'Dossier introuvable : {path}'
+    results:
+      count: Affichage de {count} instance(s)
+      filtered_none: Aucune instance ne correspond au filtre actuel.
+      none: Il n'y a aucune instance disponible dans le répertoire de lancement actuel.
+    route:
+      description: Parcourez les instances dans le répertoire de lancement actuel et changez de cible de lancement.
+      facts:
+        launch_directory: Répertoire de lancement
+        result_count: Résultats
+        selected_instance: Instance sélectionnée
+      values:
+        none_selected: Aucune sélection
+        unresolved: Non résolu
+    search:
+      tooltip: Rechercher des instances par nom, version ou balise
+      watermark: Rechercher des instances
+    shortcuts:
+      add_folder:
+        added_and_switched: Ajout du dossier et passage à {path}.
+        cancelled: Opération annulée.
+        description: Ajoutez un dossier d'instance existant à la liste du lanceur.
+        failure: Échec de l'ajout d'un dossier
+        pick_title: Sélectionner un dossier d'instance
+        switched: Passé à {path}.
+        title: Ajouter un dossier existant
+      import_pack:
+        cancelled: Importation annulée.
+        description: Importez une archive modpack dans le répertoire du lanceur actuel.
+        failure: Échec de l'importation du modpack
+        name_failure: Échec de la résolution du nom de l'instance
+        no_name: Impossible de déterminer un nom d'instance à partir de l'archive sélectionnée.
+        pick_filter: Archives de modpacks
+        pick_title: Sélectionnez l'archive du modpack
+        task_queued: 'Tâche en file d''attente : {task}'
+        title: Importer un modpack
+      trash:
+        description: Ouvrez la corbeille ou la corbeille du système.
+        title: Corbeille / Corbeille
+    subtitle:
+      unknown_version: Version inconnue
+    tags:
+      api: API
+      broken: Cassé
+      favorite: Favoris
+      hidden: Caché
+      rarely_used: Rarement utilisé
+    tasks:
+      install_modpack: 'Installation du modpack : {name}'
+  task_manager:
+    actions:
+      clear_finished: Effacer les tâches terminées
+    activity:
+      canceled: Annulé après {duration}
+      failed: Échec après {duration}
+      running: En cours d'exécution pour {duration} • {recent} mis à jour
+      success: Complété en {duration}
+      waiting: En attente de {duration}
+    duration:
+      hours_minutes: "{hours}h {minutes}m"
+      minutes_seconds: "{minutes}m {seconds}s"
+      seconds: "{seconds}"
+    empty:
+      description: Aucune tâche en arrière-plan n'est active pour le moment.
+      title: Aucune tâche en arrière-plan
+    entries:
+      children: Tâche(s) enfant(s) {count}
+    labels:
+      current_speed: 'Vitesse actuelle : {speed}'
+      install_progress: Progression de l'installation
+      remaining_files: 'Fichiers restants : {count}'
+    left:
+      download_speed: Vitesse de téléchargement
+      overall_progress: Progrès global
+      remaining_files: Fichiers restants
+    placeholders:
+      no_progress: Aucun progrès
+      waiting_state_message: En attente d'exécution
+    recent:
+      just_now: à l'instant
+      minutes_ago: "{minutes} il y a minute(s)"
+      seconds_ago: "{seconds} il y a seconde(s)"
+    route:
+      description: Examinez l’état des tâches en arrière-plan en file d’attente, en cours d’exécution, terminées et ayant échoué.
+      facts:
+        failed: Échec
+        finished: Terminé
+        running: Courir
+        waiting: En attente
+    stage:
+      canceled: Annulé • {duration}
+      failed: Échec • {duration}
+      running: En cours d'exécution • {duration}
+      success: Terminé • {duration}
+      waiting: En attente
+    states:
+      canceled: Annulé
+      failed: Échoué
+      running: En cours
+      success: Terminé
+      waiting: En attente
+    summary:
+      active: "{running} en cours d'exécution, {waiting} en attente"
+      none: Aucune tâche en arrière-plan
+  tools:
+    common:
+      confirm: Confirmer
+      failure_title: Échec de {title}
+    help:
+      default_group: Général
+      search:
+        empty_header: Aucun résultat
+        no_results: Aucune entrée d'aide ne correspond aux mots-clés actuels.
+        results_header: Résultats de la recherche
+        watermark: Rechercher des sujets d'aide
+    test:
+      achievement:
+        block_id: Identifiant de l'article
+        first_line: Ligne 1
+        invalid_content: Le contenu des succès est incomplet.
+        output_missing: L'image de réussite n'a pas été générée.
+        preview: Aperçu de l'image de la réussite
+        preview_activity: Aperçu de l'image de la réussite
+        preview_hidden: L'aperçu est masqué.
+        save: Enregistrer l'image
+        save_activity: Enregistrer l'image de la réussite
+        save_failure: Échec de l'enregistrement de l'image de réussite
+        second_line: Ligne 2
+        title: Titre de la réussite
+      cards:
+        achievement: Générateur d'images de réalisations personnalisées (en anglais uniquement)
+        custom_download: Télécharger le fichier personnalisé
+        head: Générateur de tête de peau
+        official_skin: Télécharger le skin de joueur officiel
+        server_query: Requête du serveur
+        toolbox: Boîte à outils
+      custom_download:
+        address: URL de téléchargement
+        description: Utilisez le moteur de téléchargement multithread de PCL pour télécharger n'importe quel fichier. Certains sites peuvent renvoyer 403 et ne peuvent pas être téléchargés normalement.
+        file_name: Nom du fichier
+        invalid_address: L'URL de téléchargement n'est pas valide.
+        missing_folder: Veuillez d'abord choisir un dossier cible.
+        open_folder: Ouvrir le dossier
+        open_folder_activity: Ouvrir le dossier de téléchargement
+        open_folder_failure: Échec de l'ouverture du dossier de téléchargement
+        pick_folder_activity: Choisissez le dossier de téléchargement
+        pick_folder_cancelled: Sélection de dossier annulée.
+        pick_folder_failure: Échec du choix du dossier de téléchargement
+        pick_folder_title: Sélectionnez le dossier de téléchargement
+        save_to: Enregistrer dans
+        select: Sélectionnez
+        start: Démarrer le téléchargement
+        start_activity: Démarrer le téléchargement personnalisé
+        start_failure: Échec du démarrage du téléchargement personnalisé
+        user_agent: Agent utilisateur
+      head:
+        no_skin_selected: Aucun fichier de skin sélectionné.
+        output_missing: L'image de la tête n'a pas été générée.
+        pick_skin_activity: Sélectionnez la peau
+        pick_skin_cancelled: Sélection de skin annulée.
+        pick_skin_failure: Échec de la sélection du skin
+        pick_skin_filter: Fichiers d'images courants
+        pick_skin_title: Sélectionnez l'image de la peau
+        preview: Aperçu
+        save: Sauver la tête
+        save_activity: Enregistrer l'image de la tête
+        save_failure: Échec de l'enregistrement de l'image de la tête
+        select_skin: Sélectionnez la peau
+        size: Taille de la tête
+      official_skin:
+        missing_player_name: Le nom du joueur ne peut pas être vide.
+        missing_skin_payload: Le joueur sélectionné n'a pas de charge utile de skin téléchargeable.
+        missing_skin_url: Le joueur sélectionné n'a pas d'URL de skin.
+        output_missing: Le fichier skin n'a pas été téléchargé.
+        player_name: Nom officiel du joueur
+        player_not_found: Joueur introuvable.
+        save: Enregistrer la peau
+        save_activity: Enregistrer le skin officiel
+        save_failure: Échec de l'enregistrement du skin officiel
+      refresh:
+        activity: Les formulaires de page de test et les actions de la boîte à outils ont été rechargés à partir de la configuration actuelle du lanceur.
+        title: Actualiser les outils de test
+      server_query:
+        address_watermark: 'Adresse du serveur ou hôte : port'
+        empty_address: L'adresse du serveur est vide et ne peut pas être interrogée.
+        error: 'Impossible de se connecter : {message}'
+        loading: Interrogation...
+        navigation: Passé à la page de test et prêt à interroger {address}.
+        no_result: Aucune information sur le serveur n'a été renvoyée.
+        open_activity: Inspecteur de serveur ouvert
+        query: Requête
+        query_activity: Interroger le serveur Minecraft
+        query_failure: Échec de la requête du serveur Minecraft
+        result_title: Serveur Minecraft
+        validation:
+          empty: L'adresse du serveur ne peut pas être vide.
+          invalid_host: Nom d'hôte invalide.
+          invalid_ipv6: Format d'adresse IPv6 non valide.
+          invalid_port: 'Port invalide : {port}'
+      toolbox:
+        actions:
+          clear_rubbish:
+            none_removed: Aucun cache, journal ou rapport d'erreur n'a dû être nettoyé.
+            removed: Élément(s) du cache ou du journal {count} effacé.
+            title: Supprimer les fichiers indésirables du jeu
+            tooltip: Nettoyez les journaux mis en cache et les rapports de plantage.
+          crash_test:
+            title: Test de collision
+            tooltip: Déclenchez l’invite de crash.
+          create_shortcut:
+            cancelled: Création du raccourci annulée.
+            choice_info: 'Emplacement : {path}'
+            choose_title: Choisir l'emplacement du raccourci
+            confirm: Créer
+            created_hint: Raccourci créé dans {target}.
+            failure_title: Échec de la création du raccourci
+            location: 'Emplacement {title} : {path}'
+            no_targets: Aucun emplacement de raccourci disponible n'est fourni par le système actuel.
+            summary_warning: Ce raccourci ne sera pas supprimé automatiquement. Supprimez-le manuellement avant de supprimer ou de déplacer le lanceur.
+            targets:
+              desktop: Bureau
+              start_menu: Menu Démarrer
+            title: Créer un raccourci
+            tooltip: Créez un raccourci de lanceur.
+            unknown_target: 'Cible de raccourci inconnue : {id}'
+          daily_luck:
+            activity: 'Le score de chance du jour : {value}'
+            dialog_title: La chance du jour - {date}
+            high_message: Votre score de chance aujourd'hui est {value} ! {rating}
+            low_message: Votre score de chance aujourd'hui est {value}... {rating}
+            ratings:
+              r0: C'est une échelle de 100 points.
+              r10: Pas question...
+              r30: Aïe...
+              r40: A peine d'accord...
+              r60: Pas mal.
+              r90: Parfait !
+              r95: Près de 100...
+              r100: 100 ! 100 ! Thème caché ? Attendez, la version multiplateforme n'a probablement pas cela...
+            title: La chance du jour
+            tooltip: Vérifiez la chance d'aujourd'hui.
+          launch_count:
+            dialog_title: Nombre de lancements
+            message: PCL a déjà démarré le jeu {count} time(s) pour vous.
+            title: Nombre de lancements
+            tooltip: Montre combien de fois le lanceur a démarré le jeu.
+          memory_optimize:
+            cancelled: Optimisation de la mémoire annulée.
+            confirm_title: Confirmer l'optimisation de la mémoire ?
+            continue: Continuer
+            prompts:
+              r0: Hein...?
+              r2: La mémoire est serrée. L'ajout de plus de RAM est recommandé pour éviter des optimisations répétées et une forte pression sur le disque.
+              r6: Laissez le système s'installer pendant environ une minute après avoir utilisé cette fonctionnalité.
+              r16: Vous disposez d'une bonne quantité de mémoire. Laissez d'abord le système gérer la mémoire.
+              r32: La mémoire totale est abondante. Fermez les programmes inutiles au lieu d’essayer d’optimiser la mémoire.
+            title: Option mémoire
+            tooltip: Libérez automatiquement de la mémoire.
+            unsupported_other: Cette plateforme ne fournit pas d'optimiseur de mémoire compatible avec l'implémentation standard. Le flux de confirmation est conservé, mais aucun éditeur externe ne sera ouvert.
+            unsupported_windows: L'interface Avalonia n'a pas encore intégré l'optimiseur de mémoire Windows utilisé par l'implémentation standard. Le flux de confirmation est conservé, mais aucun éditeur externe ne sera ouvert.
+        unsupported: Cette action de la boîte à outils n'est pas encore prise en charge dans l'interface Avalonia.
+  startup:
+    migration_warnings:
+      title: Échec de la migration de la configuration
+      message: |-
+        Le lanceur n'a pas pu migrer les fichiers de configuration. Il continuera à fonctionner, mais certains paramètres pourront revenir aux valeurs par défaut.
+
+        {warnings}
+startup:
+  prompts:
+    special_build:
+      title: Construction spéciale
+      debug:
+        message: 'Cette version du lanceur a été produite à des fins de débogage et peut être instable. Configurez {hint_env_var} pour désactiver ce rappel ou ouvrez la dernière version stable : {latest_release_url}'
+      ci:
+        message: 'Cette version du lanceur provient de CI et peut être incomplète. Configurez {hint_env_var} pour désactiver ce rappel ou ouvrez la dernière version stable : {latest_release_url}'
+      actions:
+        continue: Continuer
+        open_release_and_exit: Ouvrir la page de version et quitter
+    eula:
+      title: Accord de licence
+      message: 'Vous devez lire et accepter l''accord du lanceur avant de continuer. Référence : {eula_url}'
+      actions:
+        accept: Accepter
+        reject: Refuser et quitter
+        open: Accord ouvert
+    environment_warning:
+      title: Avertissement environnemental
+      message: |-
+        L’environnement actuel nécessite une attention particulière :
+        {warnings}
+      actions:
+        acknowledge: je comprends
+launch:
+  announcements:
+    community_edition_intro:
+      title: Avis d'édition multiplateforme
+      message: Vous utilisez l'édition multiplateforme de PCL. Cette édition est développée et maintenue de manière indépendante, et sa feuille de route diffère de la version officielle.
+      detail: Cette version est toujours en cours de test actif. Les commentaires et les rapports de bogues sont les bienvenus.
+  notifications:
+    success: "{instance_name} lancé avec succès."
+    abort_with_hint: 'Le lancement a été annulé : {hint}'
+    script_export_canceled: L'exportation du script de lancement est terminée et le lancement a été arrêté.
+    launch_canceled: Lancement annulé.
+    none: ''
+  precheck:
+    failures:
+      instance_path_reserved_chars: Le chemin de l'instance ne peut pas contenir ! ou ; ({path}).
+      instance_indie_path_reserved_chars: Le chemin de jeu indépendant ne peut pas contenir ! ou ; ({path}).
+      instance_not_selected: Aucune instance n'est actuellement sélectionnée.
+      instance_has_error: 'L''instance sélectionnée est dans un état non valide : {detail}'
+      no_profile_selected: Sélectionnez un profil de connexion avant de lancer.
+      microsoft_profile_required: Cette instance nécessite un profil Microsoft.
+      auth_profile_required: Cette instance nécessite un profil Authlib.
+      auth_server_mismatch: Le compte Authlib sélectionné ne correspond pas au serveur d'authentification requis.
+      microsoft_or_auth_profile_required: Cette instance nécessite un profil Microsoft ou Authlib correspondant.
+      unknown: L'instance actuelle n'est pas encore prête à être lancée.
+  prompts:
+    non_ascii_path:
+      title: Avertissement de chemin non-ASCII
+      message: "{instance_name} utilise un chemin avec des caractères non-ASCII. Certains environnements d'exécution ou mods Java peuvent échouer dans cet environnement."
+      actions:
+        continue: Continuer quand même
+        abort: Annuler le lancement
+        disable: Ne préviens plus
+    purchase:
+      optional:
+        title: Propriété Minecraft recommandée
+        message: 'Aucun profil de propriété Microsoft n''est sélectionné. Si vous possédez Minecraft, pensez à vous connecter ou à l''acheter ici : {purchase_url}'
+        actions:
+          buy: Ouvrir la page d'achat
+          continue: Continuer
+      required:
+        title: Propriété Minecraft requise
+        message: Cette fonctionnalité nécessite un profil Minecraft appartenant à Microsoft.
+        actions:
+          buy: Ouvrir la page d'achat
+          demo: Lancer le mode démo
+          abort: Annuler le lancement
+    java_missing:
+      title: Exécution Java manquante
+      manual_java7_with_legacy_fixer:
+        message: Cette instance nécessite la gestion de la compatibilité Java 7 et de Forge hérité. Installez manuellement un environnement d'exécution Java 7 correspondant avant de la lancer.
+      manual_java7:
+        message: Cette instance nécessite Java 7. Installez manuellement un environnement d'exécution Java 7 correspondant avant le lancement.
+      manual_java8u141_to_320:
+        message: Cette instance nécessite les mises à jour Java 8 141 à 320. Installez manuellement un environnement d'exécution Java 8 compatible avant le lancement.
+      manual_java8u141_plus:
+        message: Cette instance nécessite la mise à jour Java 8 141 ou une version ultérieure. Installez manuellement un environnement d'exécution Java 8 compatible avant de la lancer.
+      actions:
+        confirm: Fermer
+      auto_download:
+        title: Télécharger le moteur d'exécution Java
+        message: Aucun environnement d'exécution compatible n’est disponible. Télécharger et enregistrer {version} automatiquement ?
+        actions:
+          download: Télécharger
+          cancel: Annuler
+    support:
+      title: Étape de lancement {launch_count}
+      message: Vous avez lancé le jeu {launch_count} fois. Si PCL-ME a été utile, envisagez de parrainer le projet.
+      actions:
+        sponsor: Commanditaire
+        continue: Continuer
+    java_compatibility:
+      title: Avertissement de compatibilité Java
+      message: "{runtime_label} peut ne pas satisfaire la plage Java requise ({minimum_version} - {maximum_version})."
+      actions:
+        force_current: Utiliser Java actuel
+        use_compatible: Utiliser Java compatible
+        abort: Annuler le lancement
+  actions:
+    launch: Lancer
+    launching: Lancement...
+    version_select: Sélectionner la version
+    version_setup: Paramètres de version
+  dialog:
+    download_speed:
+      zero: 0 B/s
+    labels:
+      did_you_know: Saviez-vous
+      download_speed: Vitesse de téléchargement
+      method: Méthode
+      progress: Progrès
+      step: Étape
+    stages:
+      assets: Téléchargement d'éléments
+      assets_file: 'Actif en téléchargement : {file_name}'
+      support: Réparation des fichiers de support
+      support_file: 'Fichier de réparation : {file_name}'
+      verify_instance: Vérification des fichiers d'instance
+    state:
+      canceling:
+        game_process: Arrêt du processus de jeu
+        prelaunch_tasks: Arrêt des tâches de pré-lancement
+        title: Annulation
+      running:
+        initializing: Initialisation
+        title: Lancement
+    hints:
+      create_hints_file: Créez un fichierhins.txt dans le dossier PCL pour personnaliser les messages Le saviez-vous affichés au démarrage.
+      time_tick: L'unité de temps de base du jeu est le tick. Un tick équivaut à 0,05 seconde.
+      jeb_sheep: Si vous nommez un mouton « jeb_ », sa laine ne cessera de changer de couleur.
+      lodestone_compass: Une boussole qui n'est pas liée à une pierre magnétique pointe toujours vers le point d'apparition du monde.
+      parrots_dance: Des perroquets dansent près d'un juke-box qui joue actuellement un disque de musique.
+      map_lock: Placez une carte et une vitre dans une table de cartographie pour verrouiller le contenu de la carte.
+      baby_turtle_scute: Un bébé tortue laisse tomber une écaille dès qu'il grandit.
+      potion_damage: Les dégâts des potions ignorent l'armure, donc l'armure Netherite ne vous sauvera pas des potions nocives.
+      dinnerbone: Dans Java Edition, nommer un groupe Dinnerbone ou Grumm le bouleverse.
+      best_selling: Minecraft est l'un des jeux vidéo les plus vendus de tous les temps.
+  profile:
+    actions:
+      add_or_login: Ajouter ou se connecter
+      select: Sélectionner
+    activities:
+      authlib_login: Connexion à Authlib
+      authlib_login_failed: La connexion à Authlib a échoué
+      busy: Une autre action de profil est déjà en cours
+      create_offline: Créer un profil hors ligne
+      create_offline_failed: Échec de la création du profil hors ligne
+      delete: Supprimer le profil
+      delete_failed: Échec de la suppression du profil
+      microsoft_login: Connexion Microsoft
+      microsoft_login_failed: Échec de la connexion Microsoft
+      refresh: Actualiser le profil
+      refresh_failed: Échec de l'actualisation du profil
+      switch: Changer de profil
+      switch_failed: Échec du changement de profil
+    instance_create:
+      title: Créer un profil
+      status_default: Importation du serveur d'authentification tiers à partir des paramètres de l'instance.
+      status_named: "{auth_name} importé à partir des paramètres de l'instance."
+      navigation: Ouverture de la route de lancement à partir des paramètres de l'instance pour la création du profil d'authentification.
+      completed: Ouverture de la voie de lancement pour créer un profil d'authentification tiers pour {instance_name}.
+    authlib:
+      actions:
+        login: Connectez-vous
+        use_littleskin: Utiliser LittleSkin
+      activities:
+        use_littleskin: Changer de serveur d'authentification
+      completed: Connecté en tant que {profile_name}
+      errors:
+        invalid_server: Adresse du serveur d'authentification invalide
+        login_failed: La connexion à Authlib a échoué
+        no_roles: Le serveur d'authentification n'a renvoyé aucun rôle disponible
+        required_fields: Entrez l'adresse du serveur, le nom d'utilisateur et le mot de passe
+      password_watermark: Mot de passe
+      server_watermark: URL du serveur d'authentification
+      title: Authlib-Injecteur
+      user_name_watermark: Nom d'utilisateur
+    chooser:
+      authlib: Authlib-Injecteur
+      microsoft: Compte Microsoft
+      offline: Profil hors ligne
+    delete:
+      canceled: Suppression annulée
+      completed: Profil supprimé {profile_name}
+      confirmation:
+        confirm: Supprimer
+        message: Supprimer le profil sélectionné ? Cela ne peut pas être annulé.
+        title: Supprimer le profil
+      list_changed: La liste des profils a changé. Veuillez réessayer.
+    entry:
+      unnamed: Profil sans nom
+    hint:
+      selected: Profil prêt
+    kinds:
+      authlib: Authlib-Injecteur
+      authlib_with_server: Authlib-Injecteur ({server_name})
+      microsoft: Compte Microsoft
+      offline: Profil hors ligne
+    microsoft:
+      actions:
+        continue_after_auth: Continuer
+        reopen_browser: Ouvrir à nouveau le navigateur
+        start: Commencer la connexion
+      completed: Connecté en tant que {user_name}
+      device_code: Code de l'appareil
+      errors:
+        authorization_declined: L'autorisation a été refusée.
+        authorization_timeout: Le délai d'attente de l'autorisation de Microsoft a expiré.
+        device_code_expired: Le code de l'appareil a expiré. Recommencer.
+        missing_client_id: ID client Microsoft intégré manquant.
+      messages:
+        opened_profile_create_page: Ouverture de la page de création de compte Microsoft
+        opened_related_web: J'ai ouvert la page Web correspondante
+        opened_sign_in_page: Ouverture de la page de connexion Microsoft
+      status:
+        browser_opened: Navigateur ouvert. Terminez l'autorisation et revenez ici.
+        initial: Prêt à vous connecter avec Microsoft
+        requesting_device_code: Demande de code d'appareil...
+        waiting_for_auth: En attente de l'autorisation de Microsoft...
+      title: Compte Microsoft
+    none_selected: Aucun profil sélectionné
+    offline:
+      actions:
+        create: Créer
+      completed: Profil hors ligne créé {user_name}
+      custom_uuid_watermark: UUID personnalisé (facultatif)
+      errors:
+        empty_user_name: Entrez un nom d'utilisateur
+        invalid_uuid: Le format UUID personnalisé n'est pas valide
+      title: Profil hors ligne
+      user_name_watermark: Nom d'utilisateur
+      uuid_modes:
+        custom: UUID personnalisé
+        legacy: UUID hérité
+        standard: UUID standard
+    refresh:
+      authlib:
+        completed: Profil Authlib actualisé {profile_name}
+        errors:
+          failed: 'Échec de l''actualisation d''Authlib : {message}'
+          incomplete_session: La session Authlib actuelle est incomplète
+          invalid_server: L'adresse du serveur d'authentification enregistrée n'est pas valide
+          multiple_roles: Plusieurs rôles ont été renvoyés. Veuillez vous reconnecter.
+          profile_changed: Le profil renvoyé ne correspond pas au compte courant
+          relogin_required: Session expirée. Connectez-vous à nouveau.
+        reauthenticate: Réauthentification...
+        reauthenticated: Réauthentifié en tant que {profile_name}
+        refresh_session: Séance de rafraichissement...
+        valid: La session Authlib est valide pour {profile_name}
+        validate_session: Validation de la séance...
+      canceled: Actualisation annulée
+      errors:
+        expired_keyword: expiré
+        request_failed_status: La demande a échoué avec le code d'état {status_code}
+      microsoft:
+        check_ownership: Vérification de la propriété du jeu...
+        completed: Profil Microsoft actualisé {profile_name}
+        errors:
+          failed: 'Échec de l''actualisation Microsoft : {message}'
+          missing_refresh_token: Jeton d'actualisation manquant. Connectez-vous à nouveau.
+          relogin_required: Session expirée. Connectez-vous à nouveau.
+        get_minecraft_access_token: Obtention du jeton d'accès Minecraft...
+        get_xbox_live_token: Obtention du jeton Xbox Live...
+        get_xsts_token: Obtention du jeton XSTS...
+        refresh_account: Actualisation du compte Microsoft...
+        sync_profile: Synchronisation des informations de profil...
+        valid: La session Microsoft est valide pour {profile_name}
+        validate_session: Validation de la séance...
+      not_required: Ce profil n'a pas besoin d'être actualisé
+    selection:
+      empty: Aucun profil disponible
+      hint: Choisissez un profil de lancement
+      hint_empty: Aucun profil de lancement sélectionné
+  status:
+    activities:
+      canceled: Lancement annulé
+      dismiss_announcement: Ignorer l'annonce
+      failed: Le lancement a échoué
+      game_process_started: Le jeu a commencé
+      instance_verification: Vérification des instances
+      java_check_ignored: Avertissement Java ignoré
+      prelaunch_account_check: Vérification du compte avant le lancement
+    current_instance: 'Instance actuelle : {instance_name}'
+    errors:
+      instance_verification_failed: 'Échec de la vérification de l''instance : {message}'
+      java_missing: Aucun environnement d'exécution Java n'est sélectionné
+    hints:
+      launch_succeeded: Le lancement a démarré avec succès
+    lines:
+      java: 'Java : {java_label}'
+      java_warning: 'Avertissement Java : {message}'
+      precheck: Prévérification : {result}
+      profile: 'Profil : {profile_label}'
+      prompts: 'Invites : {prompt_count}, invite d''assistance : {support_prompt}'
+      session: Session : {session_state}
+    logs:
+      canceled: Lancement annulé
+      failed: 'Échec du lancement : {message}'
+      task_manager_progress: La progression du gestionnaire de tâches est suivie
+      verifying_instance_files: Vérification des fichiers d'instance...
+    messages:
+      announcement_dismissed: 'Annonce rejetée : {title}'
+      canceled: Lancement annulé
+      game_process_started: "{instance_name} démarré (PID {pid})"
+      instance_verification_completed: Vérification de l'instance terminée. Fichiers {downloaded_count} téléchargés et fichiers {reused_count} réutilisés.
+      returned_to_launch_page: Retour à la page de lancement
+    overview_title: "{instance_name} - Vue d'ensemble"
+    steps:
+      prepare_arguments: Préparation des argumentaires de lancement
+      read_configuration: Configuration du lancement de la lecture
+      write_launch_script: Rédaction du script de lancement
+    stopped:
+      canceled_title: Lancement annulé
+      failed_title: Le lancement a échoué
+    tasks:
+      verify_instance_files: Vérifier les fichiers d'instance pour {instance_name}
+    title: Statut de lancement
+    values:
+      idle: Inactif
+      launching: Lancement
+      matched: Correspondant
+      not_matched: Ne correspond pas
+      passed: Réussi
+  homepage:
+    actions:
+      inline_default_info: Afficher les informations
+      open_web: Ouvrir sur le Web
+      refresh: Actualiser
+      view_details: Afficher les détails
+    activities:
+      loaded_content: Contenu de la page d'accueil chargé à partir de {source_name}
+      loaded_preset: 'Préréglage chargé : {preset_title}'
+      refresh_failed: Échec de l'actualisation de la page d'accueil
+      switched_to_blank: Passé à une page d'accueil vierge
+    errors:
+      missing_root: Il manque un élément racine dans le balisage de la page d'accueil
+    examples:
+      button: 'Bouton : {title}'
+      button_with_events: 'Bouton : {title} ({summary})'
+      button_with_events_untitled: Bouton avec événements ({summary})
+    hints:
+      prefix: 'Texte : {text}'
+    official_news:
+      author: Actualités officielles
+    presets:
+      announcement_board: Tableau d'annonces
+      daily_modpacks: Modpacks quotidiens
+      github_dashboard: Tableau de bord GitHub
+      magazine: Revue
+      minecraft_news: Actualités Minecraft
+      news_flash: Flash info
+      official_news: Actualités officielles
+      openbmclapi_dashboard: Tableau de bord OpenBMCLAPI
+      random_hint: Indice aléatoire
+      simple_homepage: Page d'accueil simple
+      skin_recommendations: Recommandations pour la peau
+      update_summary: Résumé de la mise à jour
+      whats_new: Quoi de neuf
+    random_hint:
+      actions:
+        next: Suivant
+        next_info: Indice suivant
+      fallback: Aucun indice n'est disponible
+      title: Indice aléatoire
+    sections:
+      content_title: Contenu
+      default_title: Page d'accueil
+    sources:
+      local: Fichier local
+      remote: Page d'accueil distante
+    status:
+      invalid_remote_url: L'URL de la page d'accueil distante n'est pas valide
+      loading_official_news: Chargement des nouvelles officielles...
+      loading_remote: Chargement de la page d'accueil distante...
+      loading_title: Chargement de la page d'accueil
+      local_file_missing: 'Fichier local introuvable : {path}'
+      unavailable_title: Page d'accueil indisponible
+crash:
+  prompts:
+    output:
+      message: "{message}"
+      launch_failure:
+        title: Échec du lancement
+        result_text: Minecraft a rencontré une erreur lors du démarrage ou de l'exécution.
+      manual_analysis:
+        title: Analyse des accidents
+      actions:
+        close: Fermer
+        open_instance_settings: Ouvrir les paramètres de l'instance
+        view_log: Afficher le journal
+        export_report: Exporter le rapport
+  export:
+    heading: Projet d'exportation
+    suggested_archive: "- Archive suggérée : {archive_name}"
+    source_file_count: "- Nombre de fichiers sources : {file_count}"
+setup:
+  launch:
+    cards:
+      options:
+        header: Options de lancement
+      memory:
+        header: Mémoire
+      advanced:
+        header: Options de lancement avancées
+    fields:
+      default_isolation: Mode d'isolement par défaut
+      game_window_title: Titre de la fenêtre de jeu
+      custom_info: Informations personnalisées sur la version
+      launcher_visibility: Visibilité du lanceur après le lancement
+      process_priority: Priorité du processus de jeu
+      window_size: Taille de la fenêtre de jeu
+      microsoft_auth: Méthode de connexion Microsoft
+      preferred_ip_stack: Pile IP préférée
+      renderer: Moteur de rendu
+      jvm_arguments_head: Arguments de la JVM
+      game_arguments_tail: Arguments du jeu
+      before_command: Commande avant le lancement
+      environment_variables: Variables d'environnement
+      environment_variables_hint: Une entrée KEY=VALUE par ligne.
+      wait_for_before_command: Attendez la fin de la commande avant de lancer
+      linux_display_backend: Système d'affichage Linux
+      force_x11: Forcer le mode X11
+      force_x11_hint: Utile lorsque Wayland provoque des problèmes de compatibilité.
+    flags:
+      disable_java_launch_wrapper: Désactiver le wrapper de lancement Java
+      disable_retro_wrapper: Désactiver RetroWrapper
+      require_dedicated_gpu: Préférez un GPU dédié
+      use_java_executable: Utiliser Java au lieu de Javaw
+    instance_settings:
+      hint: Vous pouvez remplacer ces paramètres par instance.
+      button: Ouvrir les paramètres de l'instance
+    memory:
+      modes:
+        automatic: Attribution automatique
+        automatic_description: Allouez automatiquement de la mémoire en fonction de votre appareil et de l'état de votre instance.
+        custom: Allocation personnalisée
+      optimize_before_launch: Optimiser la mémoire avant le lancement
+      warnings:
+        java_32_bit: L'environnement d'exécution Java sélectionné est en 32 bits. Les allocations de mémoire importantes peuvent ne pas fonctionner.
+        overallocated: La mémoire configurée est proche ou dépasse la mémoire physique disponible.
+    options:
+      isolation:
+        disabled: Ne pas isoler
+        mods: Isoler les mods uniquement
+        non_release: Isoler uniquement les versions non publiées
+        mods_and_non_release: Isoler les mods et les versions non publiées
+        all: Isoler complètement tous les fichiers de version
+      visibility:
+        close_after_launch: Fermer le lanceur après le lancement
+        hide_then_close: Masquez-vous d'abord, puis fermez lorsque le jeu démarre
+        hide_then_reopen: Masquer d'abord, puis rouvrir après la fin du jeu
+        minimize: Réduire le lanceur
+        unchanged: Conserver l'état actuel de la fenêtre
+      priority:
+        high: Élevé
+        medium: Normale
+        low: Faible
+      window:
+        fullscreen: Plein écran
+        default: Valeur par défaut du lanceur
+        match_launcher: Taille du lanceur de correspondance
+        custom: Taille personnalisée
+        maximized: Maximisé
+      microsoft_auth:
+        web_account_manager: Gestionnaire de compte Web
+        device_code: Flux de code de périphérique
+      preferred_ip_stack:
+        ipv4_first: Préférez IPv4
+        java_default: Utiliser Java par défaut
+        ipv6_first: Préférez IPv6
+      renderer:
+        game_default: Par défaut du jeu
+        software: Logiciel
+        directx12: DirectX12
+        vulkan: Vulkan
+    activities:
+      reset: Réinitialiser les paramètres de lancement
+      reset_completed: Les options de lancement, les paramètres de mémoire et les paramètres de lancement avancés ont été restaurés aux valeurs par défaut actuelles du lanceur.
+  game_manage:
+    cards:
+      game_resources:
+        header: Ressources du jeu
+      community_resources:
+        header: Ressources communautaires
+      accessibility:
+        header: Accessibilité
+    fields:
+      file_download_source: Source de téléchargement du fichier de jeu
+      version_list_source: Source de la liste des versions
+      max_thread_count: Nombre maximum de fils de téléchargement
+      speed_limit: Limite de vitesse de téléchargement
+      download_timeout: Délai de téléchargement
+      target_folder: Dossier cible
+      target_folder_hint: S'applique aux instances nouvellement installées.
+      install_behavior: Comportement d'installation
+      community_download_source: Source de téléchargement de la communauté
+      file_name_format: Format du nom de fichier de ressource
+      mod_local_name_style: Style de nom local du module
+      game_update_notifications: Notifications de mise à jour du jeu
+      game_language: Langage du jeu
+    flags:
+      auto_select_new_instance: Sélectionnez automatiquement la nouvelle instance après l'installation
+      upgrade_partial_authlib: Mettre à niveau automatiquement la prise en charge partielle d'authlib
+      hide_quilt_loader: Masquer le chargeur Quilt dans les listes de versions
+      release_update_notifications: Notifier les versions
+      snapshot_update_notifications: Notifier les instantanés
+      auto_switch_game_language: Changer automatiquement la langue du jeu
+      detect_clipboard_links: Détecter les liens de ressources du presse-papiers
+    options:
+      download_source:
+        prefer_mirror: Préférer le miroir
+        prefer_official_then_mirror: Préférez l'officiel, revenez au miroir
+        prefer_official: Préférer officiel
+      file_name_format:
+        display_name_brackets: Nom d'affichage (nom du fichier)
+        display_name_square_brackets: Nom d'affichage [nom du fichier]
+        display_name_prefix: Nom d'affichage - nom du fichier
+        display_name_suffix: Nom du fichier - nom d'affichage
+        file_name_only: Nom de fichier uniquement
+      mod_local_name_style:
+        title_local_detail_file: Préférer le nom local, puis la description, puis le nom du fichier
+        title_file_detail_local: Préférer le nom du fichier, puis la description, puis le nom local
+    labels:
+      download_timeout_value: "{value} seconde(s)"
+    activities:
+      reset: Réinitialiser les paramètres de gestion du jeu
+      reset_completed: Les paramètres de téléchargement, de ressources communautaires et d’accessibilité ont été restaurés aux valeurs par défaut actuelles du lanceur.
+    reactions:
+      quilt_hidden: Les entrées liées au quilt sont désormais masquées.
+      quilt_restored: Les entrées liées aux quilts sont désormais restaurées.
+  about:
+    cards:
+      about:
+        header: À propos
+      acknowledgements:
+        header: Remerciements
+    version_summary: 'Version actuelle : {version}'
+    project:
+      original_author:
+        title: Chat de longue durée
+        summary: Auteur original de Plain Craft Launcher.
+        action: Soutenir l'auteur
+        command: Ouvrir la page de l'auteur original
+      community:
+        title: Communauté PCL
+        summary: Maintenance et collaboration pilotées par la communauté pour les projets liés à PCL.
+        action: Ouvrir la page de la communauté
+        command: Dépôt communautaire ouvert
+      repo:
+        title: PCL-ME
+        action: Dépôt ouvert
+        command: Ouvrir le référentiel de projet
+    acknowledgements:
+      bangbang93:
+        title: bangbang93
+        summary: Créateur du lanceur PCL 2 original et de nombreuses idées fondamentales derrière cet écosystème.
+        action: Ouvrir la page d'assistance
+        command: Ouvrir la page d'assistance de bangbang93
+      mcmod:
+        title: Encyclopédie MC
+        summary: Une importante base de connaissances chinoises Minecraft et un site de référence de mods.
+        action: Ouvrir le site Web
+        command: Ouvrir l'encyclopédie MC
+      pysio:
+        title: Pysio @ Réseau Akaere
+        summary: Contributeur et supporter de la communauté.
+        action: Ouvrir le site Web
+        command: Ouvrir le site Web de Pysio
+      yunmoan:
+        title: Yunmoan @ Zhiyuan Guanghui
+        summary: Contributeur et porteur du projet.
+        action: Ouvrir le site Web
+        command: Ouvrir le site Web de Yunmoan
+      z0z0r4:
+        title: z0z0r4
+        summary: Contributeur à l'écosystème des lanceurs.
+      00ll00:
+        title: 00ll00
+        summary: Contributeur à l'écosystème des lanceurs.
+      patrick:
+        title: Patrick
+        summary: Contributeur à l'écosystème des lanceurs.
+      hao_tian:
+        title: Hao_Tian
+        summary: Contributeur à l'écosystème des lanceurs.
+      mcbbs:
+        title: Forum chinois Minecraft
+        summary: Forum communautaire chinois Minecraft de longue date.
+      community:
+        title: Membres de la communauté PCL
+        summary: Tous les membres de la communauté qui ont contribué par leurs commentaires, leurs tests et leurs idées.
+  log:
+    cards:
+      actions:
+        header: Actions
+      all_logs:
+        header: Tous les journaux
+    actions:
+      export_latest: Exporter le dernier journal
+      export_all: Exporter tous les journaux
+      open_directory: Ouvrir le répertoire des journaux
+      clean_history: Nettoyer les journaux d'historique
+    empty:
+      title: Aucun journal pour l'instant
+      summary: Les journaux générés par le lanceur apparaîtront ici.
+    activities:
+      clean_history: Nettoyer les journaux d'historique
+      directory_missing: Le répertoire des journaux n'existe pas. Il n'y a rien à nettoyer.
+      nothing_to_clean: Il n'y a aucun journal archivé à nettoyer. Le journal actuel a été conservé.
+      clean_failed: Aucun fichier journal archivé n'a pu être supprimé.
+      cleaned_count: Fichier(s) journal(s) archivé(s) {count} nettoyé.
+      open_log: 'Journal ouvert : {title}'
+  feedback:
+    cards:
+      submit:
+        header: Soumettre un commentaire
+    submit:
+      hint: Ouvrez la page des problèmes GitHub pour soumettre des commentaires ou des suggestions.
+      button: Ouvrir la page de commentaires
+    loading:
+      section_title: Chargement
+      entry_title: Récupération de la liste de commentaires
+      entry_summary: Veuillez patienter un moment.
+    failed:
+      section_title: Échec du chargement
+      entry_title: Impossible de récupérer la liste des commentaires
+    sections:
+      processing: Traitement
+      waiting_process: En attente de traitement
+      waiting: En attente
+      paused: En pause
+      up_next: À suivre
+      completed: Terminé
+      declined: Refusé
+      ignored: Ignoré
+      duplicate: Dupliquer
+      other: Autre
+    actions:
+      open_issue: 'Problème ouvert #{number}'
+    summary:
+      unknown_author: inconnu
+      unknown_time: heure inconnue
+      uncategorized_type: non classé
+      line: "{author} | {created_at} | {type}"
+    activities:
+      refresh: Actualiser la page de commentaires
+      refresh_completed: Élément(s) de commentaires GitHub {count} synchronisés.
+      refresh_failed: Échec de l'actualisation de la page de commentaires
+  update:
+    fields:
+      channel: Canal de mise à jour
+      mode: Mode de mise à jour
+    actions:
+      download_and_install: Télécharger et installer
+      more_info: Plus d'informations
+      check_again: Vérifier à nouveau
+      view_changelog: Afficher le journal des modifications
+    options:
+      channel:
+        release: Stable
+        beta: Bêta
+        dev: Dev
+      mode:
+        auto_download_and_install: Télécharger et installer automatiquement
+        auto_download_and_prompt: Télécharger automatiquement, puis demander
+        prompt_only: Demander uniquement
+        disabled: Désactivé
+    version_name: Version {version}
+    states:
+      checking: Vérification des mises à jour...
+      available: 'Une mise à jour est disponible : {version}'
+      latest: Vous êtes déjà sur la dernière version.
+      error: 'Échec de la vérification de la mise à jour : {message}'
+    available:
+      publisher: 'Source : {source}'
+      summary_missing: Aucun résumé n'est disponible pour cette version.
+    errors:
+      github_empty_result: GitHub n'a renvoyé aucune donnée de version.
+      no_release: GitHub n'a pas de version disponible pour la chaîne actuelle.
+      metadata_missing: Les métadonnées de la version du lanceur sont introuvables.
+      metadata_invalid: Les métadonnées de la version du lanceur n'ont pas pu être lues.
+    activities:
+      change_channel: Changer de canal de mise à jour
+      change_mode: Modifier le paramètre de mise à jour automatique
+      refresh: Actualiser la page des mises à jour
+      available: 'Mise à jour disponible : {version}'
+      latest: "{version} est déjà la dernière version."
+      checking: Vérification des mises à jour...
+      download_install: Télécharger et installer la mise à jour
+      no_pending_update: Il n’y a aucune mise à jour en attente à télécharger.
+      no_download_url: Aucune URL de téléchargement utilisable n'est disponible pour la source de mise à jour actuelle.
+      download_install_failed: Échec du téléchargement et de l'installation de la mise à jour
+      package_ready: "{version} est prêt. Le lanceur se fermera et appliquera la mise à jour."
+      package_ready_hint: Le package de mise à jour est prêt. Le lanceur se fermera et l'installera automatiquement.
+      view_detail: Afficher les détails de la mise à jour
+      view_detail_title: 'Détails de la mise à jour : {version}'
+      view_detail_failed: Échec de l'affichage des détails de la mise à jour
+      detail_unavailable: Aucun détail de mise à jour n’est disponible pour le moment.
+  ui:
+    activities:
+      reset: Réinitialiser les paramètres de l'interface utilisateur
+      reset_completed: La page de personnalisation a été restaurée aux paramètres par défaut actuels du lanceur.
+    background:
+      actions:
+        clear: Effacer le contenu d'arrière-plan
+        open_folder: Ouvrir le dossier
+        refresh: Actualiser
+      activities:
+        clear: Effacer le contenu d'arrière-plan
+        clear_empty: Il n'y a aucun fichier d'arrière-plan à supprimer.
+        empty: Aucun contenu d'arrière-plan détecté.
+        open_folder: Ouvrir le dossier d'arrière-plan
+        open_folder_failed: Échec de l'ouverture du dossier en arrière-plan
+        refresh: Actualiser le contenu d'arrière-plan
+        clear_count: Fichiers d'arrière-plan {count} effacés.
+        loaded: 'Arrière-plan chargé : {file}'
+      card_header: Images d'arrière-plan
+      fields:
+        blur: Flou d'arrière-plan
+        opacity: Opacité
+        suit: Mode d'ajustement du contenu
+      flags:
+        colorful: Superposer un arrière-plan coloré
+      labels:
+        blur_off: Désactivé
+      card_header_with_count: Images d'arrière-plan ({count})
+    cards:
+      basic:
+        header: Basique
+      font:
+        header: Polices
+      homepage:
+        header: Page d'accueil
+      music:
+        header: Musique de fond
+      title_bar:
+        header: Barre de titre
+    fields:
+      custom_theme_hint: 'Prend en charge #RRGGBB, par exemple #159E95'
+      custom_theme_refresh_hint: Les couleurs d'accent personnalisées mettent à jour la palette actuelle de l'interface utilisateur et le contraste de la barre de titre en temps réel.
+      dark_custom: Personnalisé sombre
+      dark_palette: Palette sombre
+      global_font: Police générale
+      locale: Langue de l'interface
+      launcher_opacity: Opacité
+      light_custom: Clair personnalisé
+      light_palette: Palette claire
+      motd_font: MOTD
+      theme: Thème
+    flags:
+      lock_window_size: Verrouiller la taille de la fenêtre du lanceur
+      show_launcher_logo: Afficher le logo PCL lors de l'ouverture du lanceur
+      show_launching_hint: Afficher « Le saviez-vous ? » en lançant le jeu
+    hidden_features:
+      groups:
+        features: Fonctionnalités spécifiques
+        instance_subpages: Sous-pages d'instance
+        main_pages: Pages principales
+        setup_subpages: Sous-pages de configuration
+        tools_subpages: Sous-pages Outils
+      hint: Vous pouvez masquer les pages inutilisées ou désactiver des fonctionnalités spécifiques. Appuyez sur F12 sur n'importe quelle page pour afficher temporairement les fonctionnalités masquées.
+      items:
+        download: Télécharger
+        feature_hidden: Masquage de fonctionnalités
+        feature_instance_select: Gestion des instances
+        feature_mod_update: Mises à jour des mods
+        instance_export: Exporter
+        instance_install: Modifier
+        instance_mod: Mod
+        instance_resource_pack: Packs de ressources
+        instance_save: Sauvegardes
+        instance_schematic: Schémas
+        instance_screenshot: Captures d'écran
+        instance_server: Serveurs
+        instance_shader: Packs de shaders
+        setup: Configuration
+        setup_about: À propos
+        setup_feedback: Commentaires
+        setup_game_manage: Gérer
+        setup_java: Java
+        setup_launch: Lancement
+        setup_launcher_misc: Divers
+        setup_log: Journaux
+        setup_ui: Personnalisation
+        setup_update: Mises à jour
+        tools: Outils
+        tools_help: Aide
+        tools_test: Tests
+      reactions:
+        hidden: "{title} caché."
+        restored: "{title} restauré."
+    homepage:
+      actions:
+        generate_tutorial: Générer un fichier tutoriel
+        refresh: Actualiser la page d'accueil
+        view_tutorial: Voir le tutoriel
+      activities:
+        generate_tutorial: Générer un fichier tutoriel
+        generate_tutorial_failed: Échec de la génération du fichier tutoriel
+        tutorial_shown: Tutoriel de personnalisation de la page d'accueil affiché.
+        view_tutorial: Voir le didacticiel de la page d'accueil
+        tutorial_content: |-
+          1. Cliquez sur « Générer un fichier de didacticiel » pour créer PCL/Custom.xaml dans le répertoire de travail.
+          2. Modifiez ce fichier avec un éditeur de texte, enregistrez-le, puis cliquez à nouveau sur « Actualiser la page d'accueil ».
+          3. Si vous utilisez une page d'accueil distante, assurez-vous que l'URL de téléchargement pointe vers un contenu fiable.
+        tutorial_template_missing: 'Modèle de didacticiel de page d''accueil introuvable : {path}'
+      fields:
+        preset: Préréglage de la page d'accueil
+        url: URL de téléchargement
+      notices:
+        preset_content: Contenu fourni par ModSetup
+        security_warning: Soyez prudent avec les pages d'accueil provenant de sources non fiables. Un code malveillant peut causer des dommages !
+      options:
+        blank: Vide
+        local_file: Charger le fichier local
+        preset: Préréglage
+        remote: Mise à jour à distance
+    music:
+      actions:
+        clear: Effacer
+        open_folder: Ouvrir le dossier
+        refresh: Actualiser
+      activities:
+        clear: Effacer la musique de fond
+        clear_empty: Il n'y a aucun fichier de musique de fond à supprimer.
+        empty: Aucune musique de fond détectée.
+        open_folder: Ouvrir le dossier de musique
+        open_folder_failed: Échec de l'ouverture du dossier de musique
+        refresh: Actualiser la musique de fond
+        clear_count: Fichiers de musique de fond {count} effacés.
+        refreshed_count: J'ai réanalysé le dossier de musique et trouvé les fichiers {count}.
+      fields:
+        volume: Volume
+      flags:
+        auto_start: Lire automatiquement à l'ouverture du lanceur
+        enable_smtc: Intégration aux contrôles de transport des médias du système (SMTC)
+        random: Lecture aléatoire
+        start_on_game_launch: Lancer la lecture après le démarrage du jeu et la mettre en pause à la fermeture
+        stop_on_game_launch: Mettre en pause au démarrage du jeu et reprendre à la fermeture
+    options:
+      background_suit:
+        bottom_left: En bas à gauche
+        bottom_right: En bas à droite
+        center: Centre
+        fit: Ajustement
+        smart: Intelligent
+        stretch: Étirer
+        tile: Tuile
+        top_left: En haut à gauche
+        top_right: En haut à droite
+      dark_mode:
+        dark: Sombre
+        follow_system: Suivre le système
+        light: Clair
+      font:
+        default: Police par défaut
+        jetbrains_mono: JetBrains Mono
+        lxgw_wenkai: LXGW WenKai
+        source_han_sans: SourceHan Sans
+      theme_color:
+        cat_blue: LTCat Bleu
+        custom: Personnalisé
+        grass_green: Vert herbe
+        lemon_cyan: Citron Cyan
+        oak_brown: Chêne Brun
+        pineapple_yellow: Jaune Ananas
+    theme_switch:
+      unsupported_action: Obtenir la version officielle de l'instantané
+      unsupported_notice: Du bleu, du bleu et encore du bleu. Vous voulez plus de couleurs d’accent ? Utilisez la version officielle de l'instantané.
+    title_bar:
+      actions:
+        change_image: Changer l'image
+        clear_image: Effacer l'image
+      activities:
+        change_image: Changer l'image de la barre de titre
+        change_image_cancelled: Sélection d'image dans la barre de titre annulée.
+        change_image_failed: Échec de la modification de l'image de la barre de titre
+        change_image_pick_filter: Fichiers d'images courants
+        change_image_pick_title: Sélectionner l'image de la barre de titre
+        clear_image: Effacer l'image de la barre de titre
+        clear_image_empty: Il n’y a pas d’image de barre de titre personnalisée.
+      fields:
+        text: Texte de la barre de titre
+      flags:
+        align_left: Barre de titre alignée à gauche
+      options:
+        default: Par défaut
+        image: Images
+        none: Aucun
+        text: Texte
+  java:
+    actions:
+      add: Ajouter
+      details: Détails
+      disable: Désactiver
+      enable: Activer
+      open: Ouvert
+    activities:
+      add: Ajouter Java
+      add_cancelled: Sélection Java annulée.
+      add_failed: Échec de l'ajout de Java
+      add_pick_filter_unix: Exécutables Java
+      add_pick_filter_windows: Programmes Java
+      add_pick_title: Sélectionnez l'exécutable Java
+      auto_select: Sélection automatique
+      detail_shown: Détails de l'exécution Java affichés.
+      disable: Désactiver Java
+      disable_blocked: Désactivation de Java bloquée
+      disable_blocked_reason: Retirez-le comme Java par défaut avant de le désactiver.
+      disabled_state: Désactivé
+      enable: Activer Java
+      enabled_state: Activé
+      folder_missing: Le dossier Java n'existe plus.
+      refresh: Actualiser la liste Java
+      refresh_completed: La liste Java a été rechargée à partir des derniers résultats d'analyse.
+      refresh_failed: Échec de l'actualisation de la liste Java
+      refresh_scanning: Nouvelle analyse des environnements d'exécution Java.
+      select_default: Changer Java par défaut
+      unavailable: Cet environnement d'exécution Java n'est pas disponible. Actualisez la liste.
+      add_completed: "{path} ajouté et sélectionné"
+      add_exists: 'Java existe déjà dans la liste de configuration : {path}'
+      add_unrecognized: 'Le fichier sélectionné n''a pas pu être reconnu comme un environnement d''exécution Java utilisable : {path}'
+      open_folder: 'Ouvrir le dossier Java : {title}'
+      toggle_result: "{title} • {state}"
+      view_detail: 'Afficher les détails de Java : {title}'
+    auto_select:
+      description: Utilisez la sélection Java automatique pour choisir un environnement d'exécution approprié en fonction des besoins du jeu.
+      label: Sélection automatique
+    details:
+      available: Disponible
+      metadata_unavailable: Les métadonnées détaillées de cet environnement d'exécution Java n'ont pas pu être analysées. Assurez-vous que l'exécutable fonctionne toujours.
+      no: Non
+      unavailable: Indisponible
+      yes: Oui
+      architecture: 'Architecture : {value}'
+      availability: 'Disponibilité : {value}'
+      brand: 'Marque : {value}'
+      default_java: 'Java par défaut : {value}'
+      enabled: 'Activé : {value}'
+      executable: 'Exécutable : {value}'
+      folder: 'Dossier : {value}'
+      major_version: 'Version majeure : {value}'
+      path: 'Chemin : {value}'
+      source: 'Source : {value}'
+      tags: 'Balises actuelles : {value}'
+      type: 'Type : {value}'
+      version: 'Version : {value}'
+    tags:
+      auto_installed: Installé automatiquement
+      auto_scanned: Numérisé automatiquement
+      disabled: Désactivé
+      enabled: Activé
+      manual_added: Ajouté manuellement
+  launcher_misc:
+    actions:
+      apply_proxy: Appliquer les paramètres de proxy
+      export_settings: Paramètres d'exportation
+      import_settings: Paramètres d'importation
+      test_proxy: Tester la connexion
+    activities:
+      apply_proxy: Appliquer les paramètres de proxy
+      disable_hardware_acceleration: Désactiver l'accélération matérielle
+      enable_hardware_acceleration: Activer l'accélération matérielle
+      export_settings: Paramètres d'exportation
+      import_settings: Paramètres d'importation
+      import_settings_cancelled: Sélection du fichier de configuration annulée.
+      import_settings_failed: Échec de l'importation des paramètres
+      import_settings_pick_filter: Fichiers de configuration PCL
+      import_settings_pick_title: Sélectionnez le fichier de configuration
+      proxy_cleared: Effacement du proxy HTTP personnalisé.
+      reset: Réinitialiser les paramètres divers du lanceur
+      reset_completed: Les paramètres système, réseau et de débogage ont été restaurés aux valeurs par défaut actuelles du lanceur.
+      test_proxy: Tester la connexion proxy
+      test_proxy_failed: Échec du test de connexion proxy
+      import_settings_completed: 'Configuration partagée importée : {path}. Il est toujours préférable de vérifier certains paramètres système après le redémarrage.'
+    cards:
+      debug:
+        header: Options de débogage
+      network:
+        header: Réseau
+      system:
+        header: Système
+    fields:
+      locale: Langue de l'interface
+      announcements: Annonces du lanceur
+      debug_animation_speed: Vitesse d'animation
+      http_proxy: proxy HTTP
+      max_animation_fps: FPS d'animation maximum
+      realtime_log_lines: Lignes de journalisation en temps réel
+    flags:
+      debug_delay: Ajouter un délai
+      debug_mode: Mode débogage
+      disable_hardware_acceleration: Désactiver l'accélération matérielle
+      enable_doh: Utiliser DoH pour la résolution DNS
+      skip_copy_during_download: Empêcher la copie de fichiers à partir d'autres dossiers pendant les téléchargements
+    http_proxy:
+      address_watermark: par ex. http://127.0.0.1:1080/
+      password: Mot de passe
+      username: Nom d'utilisateur
+      value_watermark: Facultatif
+      warning: N'entrez pas d'adresse proxy non fiable
+    hints:
+      disable_hardware_acceleration_restart: Les modifications prendront effet au prochain démarrage du lanceur.
+    labels:
+      debug_animation_speed_off: Désactivé
+    messages:
+      debug_mode_disabled: La sortie de diagnostic supplémentaire a été désactivée.
+      debug_mode_enabled: Les journaux détaillés et les diagnostics sont désormais activés.
+      proxy_invalid_address: L'adresse proxy personnalisée n'est pas valide.
+      proxy_test_started: Accès à {host} via {mode}.
+      proxy_test_succeeded: Connexion {mode} réussie, HTTP {status_code} {reason_phrase}.
+      proxy_test_succeeded_hint: Le test de connexion proxy a réussi.
+    options:
+      http_proxy:
+        custom: Mandataire personnalisé
+        none: Pas de procuration
+        system: Proxy système
+      system_activity:
+        all: Afficher toutes les annonces
+        disabled: Masquer toutes les annonces
+        important_only: Afficher les annonces uniquement lorsque des avis importants sont disponibles
+common:
+  actions:
+    back: Retour
+    cancel: Annuler
+    close: Fermer
+    confirm: Confirmer
+    open: Ouvrir
+    open_website: Ouvrir le site web
+    search: Rechercher
+    select_all: Tout sélectionner
+    continue: Continuer
+  activities:
+    failed: "{title} a échoué"
+  filters:
+    all: Tout
+    any: Tous
+  memory:
+    summary:
+      allocation_prefix: Attribution des jeux
+      size_gb: "{value} FR"
+      usage_header: Mémoire utilisée / Mémoire installée
+  punctuation:
+    comma: ", "
+download:
+  catalog:
+    actions:
+      save_installer: Enregistrer le programme d'installation
+    activities:
+      entry_action: 'Action de catalogue : {entry_title}'
+      open_entry: 'Entrée ouverte : {entry_title}'
+      open_favorite_entry: 'Ouvrir l''entrée favorite : {entry_title}'
+    download:
+      file_type_default: Fichier
+      hints:
+        completed: Téléchargement de {file_name} terminé
+        started: Commencez à télécharger {file_name}
+      installer_type: Installateur de {surface_name}
+      missing_url: Aucune URL de téléchargement n’est disponible pour le moment.
+      no_save_path: Aucun emplacement de sauvegarde n'a été sélectionné.
+      pick_save_path_title: Choisissez l'emplacement de sauvegarde
+      task_title: Télécharger {file_name}
+    errors:
+      empty_description: Le catalogue distant est temporairement indisponible. Réessayez plus tard.
+      empty_title: Rien à afficher
+      load_failed_body: 'Échec du chargement du catalogue distant. Erreur : {error}'
+      load_failed_title: Échec du chargement du catalogue distant
+      retry_later: Veuillez réessayer plus tard.
+      section_title: Catalogue distant
+    remote:
+      latest:
+        preview_published: Dernier aperçu, publié sur {published_at}
+        release_published: Dernière version, publiée sur {published_at}
+      groups:
+        snapshot: Instantanés
+      labels:
+        forge_compatible: Compatible avec Forge {forge_version}
+        forge_incompatible: Non compatible avec Forge
+        installer: Installateur
+        latest: Dernier
+        no_display_data: Rien à afficher
+        published_at: Publié sur {published_at}
+        recommended: Recommandé
+        separator: ", "
+        unknown_version: Version inconnue
+        variant_blue: " (Variante bleue)"
+        variant_purple: " (Variante violette)"
+        variant_red: " (Variante rouge)"
+      empty:
+        cleanroom: Il n’y a actuellement aucune entrée distante Cleanroom disponible.
+        forge_version_entries: Il n’y a aucune entrée Forge disponible pour {minecraft_version}.
+        forge_versions: Le catalogue distant Forge n'a renvoyé aucune version de Minecraft.
+        group_entries: Il n'y a aucune entrée disponible pour {group_name}.
+        installer_versions: Aucune version d'installation n'est disponible pour le moment.
+        labymod_channels: Il n’y a aucune chaîne LabyMod disponible pour le moment.
+        latest_versions: Le manifeste de la version distante n’a renvoyé aucune version la plus récente.
+        liteloader: Il n’y a aucune entrée distante LiteLoader disponible pour le moment.
+        neoforge: Il n’y a aucune entrée à distance NeoForge disponible pour le moment.
+        optifine: Il n’y a aucune entrée à distance OptiFine disponible pour le moment.
+      errors:
+        client_versions_missing: Le manifeste de la version de Minecraft ne contient pas le champ des versions.
+        forge_mirror_parse_failed: Impossible d'analyser le catalogue de construction du miroir Forge.
+        forge_versions_missing: Le catalogue distant Forge n'a renvoyé aucune version de Minecraft.
+        lazy_route_unsupported: La page actuelle ne prend pas en charge les catalogues distants chargés en différé.
+        liteloader_versions_missing: Le catalogue LiteLoader ne contient pas le champ versions.
+        optifine_format_invalid: Le format du catalogue officiel OptiFine n'est pas valide.
+        optifine_mirror_parse_failed: Impossible d'analyser le catalogue miroir OptiFine.
+    intro:
+      cleanroom:
+        body: Cleanroom est un chargeur de mods dérivé de Forge pour Minecraft 1.12.2 et est théoriquement compatible avec 99 % des mods Forge.
+        title: Présentation de Cleanroom
+      fabric:
+        body: |-
+          Fabric Loader est un chargeur de mods léger pour Minecraft moderne. Vous devez l'installer avant d'utiliser les mods Fabric.
+          Cette page permet de télécharger le programme d'installation de Fabric. Après l'avoir téléchargé, vous devez toujours ouvrir le programme d'installation manuellement pour terminer la configuration.
+        title: Présentation de Fabric
+      forge:
+        body: Forge est un chargeur de mods. Vous devez installer Forge avant de pouvoir utiliser les mods Forge.
+        title: Présentation de Forge
+      labymod:
+        body: |-
+          LabyMod est un client Minecraft optimisé.
+          Cette page fournit le téléchargement du programme d'installation de LabyMod. Après l'avoir téléchargé, vous devez toujours ouvrir le programme d'installation manuellement pour terminer la configuration.
+        title: Présentation de LabyMod
+      legacy_fabric:
+        body: |-
+          Legacy Fabric est un rétroportage de Fabric pour les anciennes versions de Minecraft. Vous devez l'installer avant d'utiliser les mods Legacy Fabric.
+          Cette page permet de télécharger le programme d'installation de Legacy Fabric. Après l'avoir téléchargé, vous devez toujours ouvrir le programme d'installation manuellement pour terminer la configuration.
+        title: Présentation de Legacy Fabric
+      liteloader:
+        body: Semblable à Forge, LiteLoader peut être utilisé pour charger des mods LiteLoader pour les anciennes versions de Minecraft.
+        title: Présentation du LiteLoader
+      neoforge:
+        body: |-
+          NeoForge est un chargeur de mods pour Minecraft 1.20.1 et versions ultérieures. Vous en avez besoin avant d'installer les mods NeoForge, et il est également compatible avec certains mods Forge.
+          Cette page fournit le téléchargement du programme d'installation de NeoForge. Après l'avoir téléchargé, vous devez toujours ouvrir le programme d'installation manuellement pour terminer la configuration.
+        title: Présentation de NeoForge
+      optifine:
+        body: OptiFine, également connu sous le nom de HD Fix, permet l'installation de shaders, des packs de ressources haute résolution et des améliorations de performances, mais sa compatibilité avec les mods est plus faible.
+        title: Présentation de OptiFine
+      quilt:
+        body: |-
+          Quilt Loader est un chargeur de mods léger et modulaire pour Minecraft moderne. Vous devez l'installer avant d'utiliser les mods Quilt.
+          Cette page fournit le téléchargement du programme d'installation de Quilt. Après l'avoir téléchargé, vous devez toujours ouvrir le programme d'installation manuellement pour terminer la configuration.
+        title: Présentation de Quilt
+      stale_cache: |-
+        {body}
+
+        L'actualisation du catalogue distant a échoué. Les résultats synchronisés les plus récemment sont conservés pour le moment. Erreur : {error}
+    loading:
+      fetch_list: Récupération de la liste de {surface_name}
+      fetch_versions: Récupération de la liste des versions
+    sections:
+      latest_versions: Dernières versions
+      remote_catalog: Catalogue distant
+      version_list: Liste des versions
+  favorites:
+    actions:
+      batch_install: Installation par lots
+      clear_selection: Effacer la sélection
+      favorite: Favoris
+      favorite_to: Favoris à...
+      manage_targets: Gérer les cibles
+      remove: Supprimer
+      share_selected: Partager la sélection
+    activities:
+      batch_install: Favoris d'installation par lots
+      batch_install_failed: L'installation par lots a échoué
+      favorite_to: Favoris à cibler
+      remove: Supprimer les favoris
+      remove_failed: Échec de la suppression des favoris
+      select_all: Sélectionnez tous les favoris
+      share_selected: Partager les favoris sélectionnés
+      share_selected_failed: Échec du partage des favoris sélectionnés
+    batch_install:
+      analyzing_activity: Analyse des favoris {count} pour {target_name}
+      analyzing_hint: Analyse des éléments sélectionnés par {count}...
+      canceled: Installation par lots annulée
+      confirmation:
+        confirm: Démarrer l'installation
+        failed: Échec de la confirmation de l'installation par lots
+        title: Favoris d'installation par lots
+      empty_selection: Aucun favori n'est sélectionné
+      started_activity: Installation par lots démarrée pour {target_name}
+      started_hint: L'installation par lots a démarré
+      summary:
+        dependencies: Dépendances {count}
+        none: Aucune tâche
+        skipped: "{count} ignoré"
+        tasks: Tâches {count}
+    empty:
+      body: Ajoutez des projets aux favoris afin de pouvoir les installer ou les partager plus tard.
+      title: Pas encore de favoris
+    favorite_to:
+      already_contains_selected: "{target_name} contient déjà tous les favoris sélectionnés"
+      completed: Ajout des favoris {count} à {target_name}
+      selection_prompt: Choisissez une cible pour les favoris sélectionnés par {count}
+    remove:
+      completed: Favoris {count} supprimés de {target_name}
+      confirmation:
+        message: Supprimer les favoris sélectionnés par {count} de {target_name} ?
+        title: Supprimer les favoris
+      no_matches: Aucun favori correspondant n'a été trouvé dans {target_name}
+    search:
+      watermark: Rechercher des favoris
+    select_all:
+      completed: Favoris visibles {count} sélectionnés dans {target_name}
+      empty: Aucun favori visible dans {target_name}
+    selection:
+      summary: "{count} sélectionné"
+    share_selected:
+      completed: ID favoris sélectionnés {count} copiés
+      empty: Aucun favori sélectionné à partager
+    meta:
+      downloads: Téléchargements {value}
+      updated: "{value} mis à jour"
+    demo:
+      entries:
+        sodium:
+          info: Mod moderne d'optimisation des performances.
+        mod_menu:
+          info: Gérez le menu du mod Fabric.
+        atm9:
+          info: Grande entrée de démonstration du modpack.
+        faithful:
+          info: Pack de ressources de style classique.
+        complementary:
+          info: Entrée préférée du shader commun.
+    targets:
+      default_name: Favoris par défaut
+      empty_share_code: Rien à partager.
+      manage:
+        title: Gérer les cibles
+        current_target: 'Cible actuelle : {target_name}'
+        failed: Échec de la gestion des cibles
+        unknown_action: 'Action cible inconnue : {action_id}'
+        options:
+          share:
+            label: Partager la cible actuelle
+            description: Copiez le code de partage de la cible actuelle.
+          import:
+            label: Importer les favoris
+            description: Importez une liste de favoris partagés dans la cible actuelle ou dans une nouvelle cible.
+          create:
+            label: Créer une cible
+            description: Créez une nouvelle cible de favoris.
+          rename:
+            label: Renommer la cible
+            description: Changez le nom de la cible actuelle.
+          delete:
+            label: Supprimer la cible actuelle
+            description: Supprimez la cible actuelle des favoris.
+      share:
+        activity: Partager l'objectif actuel
+        completed: Copié le code de partage pour {target_name}
+        failed: Échec du partage de la cible actuelle
+      import:
+        title: Importer les favoris
+        activity: Importer des favoris
+        prompt: Entrez une liste de favoris partagée.
+        watermark: 'Par exemple : ["23333"]'
+        failed: Échec de l'importation des favoris
+        destination_prompt: Élément(s) favori(s) {count} détecté(s). Où faut-il les importer ?
+        completed_new: 'Importé dans une nouvelle cible : {target_name}'
+        completed_current: 'Importé dans la cible actuelle : {target_name}'
+        options:
+          new_target:
+            label: Nouvelle cible
+            description: Créez une nouvelle cible de favoris et importez ces favoris.
+          current_target:
+            label: Cible actuelle
+            description: Ajoutez ces favoris à la cible actuelle.
+      create:
+        title: Créer une cible de favoris
+        prompt: Entrez un nouveau nom de cible de favoris.
+        activity: Créer une cible de favoris
+        failed: Échec de la création de la cible des favoris
+      rename:
+        title: Renommer la cible
+        prompt: Entrez un nom de cible favorite.
+        activity: Renommer la cible des favoris
+        failed: Échec du renommage de la cible des favoris
+      delete:
+        activity: Supprimer la cible actuelle
+        blocked_last: Vous ne pouvez pas supprimer la dernière cible des favoris.
+        confirmation_title: Confirmation de suppression
+        confirmation_message: |-
+          Supprimer la cible {target_name} ?
+
+          Cette cible contient les éléments favoris {count}
+          ID cible : {target_id}
+          Cette action ne peut pas être annulée.
+        confirm: Supprimer
+        completed: "{target_name} supprimé."
+        failed: Échec de la suppression de la cible actuelle
+  install:
+    refresh:
+      title: Actualiser l'installation automatique
+      activity: Les options d'installation automatique ont été rechargées.
+    actions:
+      clear_selection: Effacer la sélection
+      start: Démarrer l'installation
+    catalog:
+      empty: Aucune version n'est disponible
+      groups:
+        april_fools: Poisson d'avril
+        latest: Dernier
+        legacy: Héritage
+        preview: Aperçu
+        release: Stable
+      latest:
+        preview: Dernier aperçu
+        published_at: "{label} : {published_at}"
+        release: Dernière version
+      load_failed: Échec du chargement des versions
+      loading: Chargement des versions...
+    choices:
+      channels:
+        snapshot: Instantané
+        stable: Stable
+      summaries:
+        current_instance_with_time: Instance actuelle • {published_at}
+        installer_with_time: Installateur • {published_at}
+        labymod_for_minecraft: LabyMod 4 • {minecraft_version}
+        loader_testing: Version de test {loader_name}
+        preview: Aperçu
+        quilt_installer: Installateur de Quilt
+        release: Stable
+        release_time_unavailable: Heure de sortie indisponible
+        release_with_time: Version • {published_at}
+        stable: Stable
+        status_with_time: "{status} • {published_at}"
+        testing: Tests
+        april_fools_special: Poisson d'avril spécial sorti sur {published_at}
+        april_fools:
+          '2013': 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau !
+          2013_blue: 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau ! (Version bleue)
+          2013_purple: 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau ! (Version violette)
+          2013_red: 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau ! (Version rouge)
+          '2015': 2015 | En tant que jeu pour tous les âges, nous avons besoin de paix, d’amour et de câlins.
+          '2016': 2016 | Il est temps d'introduire la technologie moderne dans Minecraft !
+          '2019': 2019 | Nous avons retrouvé ce chef-d'œuvre de 1994 dans les ruines d'un sous-sol !
+          '2020': 2020 | Nous avons ajouté 2 milliards de nouvelles dimensions et transformé une imagination infinie en réalité !
+          '2022': 2022 | Un bloc à la fois ! Découvrez un nouveau gameplay de creusement, d'artisanat et de conduite.
+          '2023': 2023 | Les recherches montrent que les joueurs aiment faire des choix, et plus c'est mieux !
+          '2024': 2024 | Les pommes de terre vénéneuses ont toujours été ignorées et sous-estimées, nous les avons donc suralimentées !
+          '2025': 2025 | Vous pouvez tout créer, y compris votre monde lui-même !
+          '2026': 2026 | Pourquoi avez-vous besoin d’un inventaire ? Laissez plutôt les blocs vous suivre !
+    generated_name:
+      default: Nouvelle version
+    options:
+      available: Disponible
+      unavailable: Indisponible
+    validation:
+      already_exists: Ce nom existe déjà
+      empty_name: Entrez un nom
+      invalid_characters: Le nom contient des caractères invalides
+      invalid_ending: Le nom ne peut pas se terminer par un espace ou un point
+    workflow:
+      activities:
+        apply_changes: Appliquer les modifications
+        apply_changes_failed: Échec de l'application des modifications
+        load_minecraft_failed: Échec du chargement des versions de Minecraft
+        reset_instance: Réinitialiser l'instance
+        select_option: Sélectionnez {option_title}
+        select_option_failed: Échec de la sélection de {option_title}
+        start_failed: Échec du démarrage de l'installation
+      dialogs:
+        reset_instance:
+          confirm: Réinitialiser
+          message: Aucune modification n'est sélectionnée. Réinitialiser cette instance à son état de base ?
+          title: Réinitialiser l'instance
+        select_minecraft:
+          confirm: Sélectionnez
+          message: Choisissez une version de Minecraft
+          title: Sélectionnez la version de Minecraft
+        select_option:
+          confirm: Sélectionnez
+          message: Choisissez une option disponible
+          title: Sélectionnez {option_title}
+      messages:
+        instance_missing: Aucune instance cible n'est sélectionnée
+        option_not_supported: Cette option n'est pas prise en charge par le programme d'installation frontend
+        queued_in_task_center: 'En file d''attente dans le centre de tâches : {task_title}'
+        select_minecraft_first: Sélectionnez d'abord une version de Minecraft
+        unresolved_selections: 'Résolvez d''abord ces sélections : {options}'
+      selection:
+        none: Aucun
+      stages:
+        asset_files: Fichiers d'actifs
+        finalize: Finaliser
+        prepare: Préparer
+        support_files: Fichiers d'assistance
+      tasks:
+        asset_files_completed: Dossiers d'actifs complétés
+        asset_files_ready: Fichiers d'actifs prêts
+        canceled: Annulé
+        canceling: Annulation...
+        cleaning_missing_local_libraries: Nettoyage des références de dépendances locales manquantes...
+        completed: Terminé
+        copy_generated_libraries: Copie des bibliothèques de support générées...
+        copy_optifine_libraries: Copie des bibliothèques générées par OptiFine...
+        creating_instance_directories: Création de la structure du répertoire de l'instance...
+        download_loader_installer: Téléchargement du programme d'installation pour {loader_title}...
+        download_optifine_installer: Téléchargement du programme d'installation d'OptiFine...
+        downloading_asset_files: Téléchargement de fichiers d'actifs
+        downloading_dependencies: Téléchargement des dépendances
+        download_vanilla_client: Téléchargement du client vanilla pour Minecraft {version}...
+        extract_loader_libraries: Extraction des bibliothèques groupées du programme d'installation {loader_title}...
+        fetch_labymod_manifest: Récupération du manifeste LabyMod...
+        fetch_loader_manifest: Récupération du manifeste pour {loader_title}...
+        fetch_vanilla_manifest: Récupération du manifeste vanille pour Minecraft {version}...
+        finalizing_installation: Organisation du répertoire de l'instance et finition de l'installation...
+        files_ready: Fichiers {completed_count}/{total_count} prêts
+        generating_target_manifest: Génération du manifeste d'installation cible...
+        initialize_launcher_profiles: Initialisation de launcher_profiles.json...
+        inspect_loader_installer: Inspection du contenu du programme d'installation pour {loader_title}...
+        manifest_written: Manifeste écrit
+        merging_liteloader_manifest: Fusion des informations d'installation de LiteLoader...
+        no_asset_files_needed: Aucun fichier d'actifs n'est nécessaire
+        no_asset_files_to_download: Aucun fichier d'actifs à télécharger
+        no_support_files_needed: Aucun fichier de support nécessaire
+        no_support_files_to_repair: Aucun fichier de support à réparer
+        organizing_vanilla_manifest: Organisation du manifeste d'installation vanilla...
+        prepare_environment: Préparation de l'environnement
+        preparing_managed_dependencies: Préparation des fichiers de dépendances gérés...
+        preparing_manifest: Rédaction du manifeste d'installation et préparation de l'environnement...
+        prepare_loader_installer: Préparation du programme d'installation pour {loader_title}...
+        prepare_vanilla_files: Préparation des fichiers vanilla de Minecraft {version}...
+        processing_optifine_manifest: Traitement des informations d'installation d'OptiFine...
+        processing_file: Traitement {file_name}
+        progress_with_file: "{prefix} : {completed_count}/{total_count} ({file_name})"
+        progress_without_file: "{prefix} : {completed_count}/{total_count}"
+        queued: En file d'attente
+        read_generated_manifest: Lecture du manifeste d'installation généré...
+        read_optifine_manifest: Lecture du manifeste généré par OptiFine...
+        read_vanilla_version_details: Lecture des détails de la version pour Minecraft {version}...
+        repairing_game_files: Compléter les fichiers de base du jeu et les bibliothèques de support...
+        repair_loader_dependencies: Réparation des dépendances d'installation pour {loader_title}...
+        repairing_support_files: Réparation des fichiers de support
+        run_loader_installer: Exécution des étapes d'installation de {loader_title}...
+        run_optifine_installer: Exécution du programme d'installation d'OptiFine...
+        support_files_completed: Dossiers de support complétés
+        support_files_ready: Fichiers de support prêts
+        waiting_asset_files: En attente des fichiers d'actifs
+        waiting_execution: En attente d'exécution
+        waiting_finalize: En attendant de finaliser
+        waiting_support_files: En attente des fichiers de support
+        write_loader_libraries: Écriture de bibliothèques de support pour {loader_title}...
+        writing_manifest_file: Écriture du fichier manifeste d'installation {file_name}...
+        writing_instance_config: Écriture de la configuration de l'instance...
+        write_vanilla_manifest: Rédaction du manifeste vanille pour Minecraft {version}...
+  resource:
+    activities:
+      entry_action: 'Action de ressource : {entry_title}'
+      install_pack: Pack d'installation
+      install_pack_failed: Échec de l'installation du pack
+      open_page: 'Ouvrir la page de ressources : {entry_title}'
+      reset_filters: Réinitialiser les filtres
+      reset_filters_message: Réinitialisation des filtres pour {surface_title}
+    current_instance:
+      actions:
+        switch: Changer
+      none_selected: Aucune instance sélectionnée
+      summary_none_selected: Sélectionnez une instance pour améliorer le filtrage de compatibilité
+      summary_suffix: Utilisé pour le filtrage de compatibilité
+      title: Instance actuelle
+    empty:
+      default: Aucun résultat
+    filters:
+      loader: Chargeur
+      sort: Trier
+      source: Source
+      tag: Étiquette
+      version: Version
+    hints:
+      modrinth_unavailable: Modrinth n'est pas disponible pour la source actuelle
+      partial_results: 'Affichage des résultats en direct à partir des sources disponibles. Certaines sources ont échoué : {message}'
+      retry_later: Réessayez plus tard ou ajustez le filtre source.
+      search_failed: 'Échec de la recherche dans la communauté en direct : {message}'
+      unavailable: 'Impossible de récupérer les résultats de la communauté en direct : {message}'
+      version_fallback: Aucun résultat {surface_name} populaire ne correspondait à Minecraft {version}. Revenir à la liste générale de la communauté.
+    entry:
+      count_style: occidental
+      downloads_none: Aucun téléchargement
+      downloads_with_count: Téléchargements {count}
+      updated_unknown: Date inconnue
+      version_unknown: Version non spécifiée
+    install_pack:
+      no_filtered_result: Aucun pack installable dans les résultats actuels
+      no_surface: Aucune surface de téléchargement n'est active
+      open_target_missing: Impossible d'ouvrir le dossier cible
+      runtime_state_missing: L'état de téléchargement n'est pas disponible
+      target_missing: La cible d'installation est manquante
+    results:
+      summary: Affichage de {shown_count} de {total_count}
+    search:
+      data_pack: Packs de données
+      default: Rechercher des projets
+      mod: Mods
+      pack: Modpacks
+      resource_pack: Packs de ressources
+      shader: Shaders
+      world: Mondes
+    sort:
+      default: Par défaut
+      downloads: Téléchargements
+      follows: Abonnés
+      release: Date de sortie
+      relevance: Pertinence
+      update: Mis à jour
+    surface:
+      empty: Aucun {surface_name} trouvé
+      loading: Chargement de {surface_name}...
+      title: "{surface_name}"
+    tag_groups:
+      features: Caractéristiques
+      performance: Performances
+      resolution: Résolution
+      style: Style
+    tags:
+      adventure: Aventure
+      audio: Comprend l'audio
+      automation: Automatisation
+      biomes: Biomes
+      cartoon: Dessin animé
+      chaotic: Chaotique
+      colored_lighting: Éclairage coloré
+      combat: Combattre
+      core_shaders: Shaders de base
+      creative: Créatif
+      creative_mode: Mode créatif
+      data_pack: Pack de données
+      decoration: Décoration
+      dimensions: Dimensions
+      dynamic_effects: Effets dynamiques
+      energy: Énergie
+      entities: Comprend des entités
+      equipment_tools: Équipements et outils
+      exploration: Exploration
+      fantasy: Fantaisie
+      fantasy_style: Fantaisie
+      farming: Agriculture
+      food_cooking: Alimentation et cuisine
+      fonts: Comprend des polices
+      game_mechanics: Mécaniques de jeu
+      gui: Comprend l'interface utilisateur
+      hardcore: Hardcore
+      information: Affichage des informations
+      kitchen_sink: Fourre-tout
+      large: Grand
+      library: Bibliothèque
+      lightweight: Léger
+      locale: Inclut les paramètres régionaux
+      logistics: Logistique
+      magic: Magie
+      map_based: Basé sur une carte
+      medieval: Médiéval
+      minigames: Mini-jeux
+      mobs: Mobs
+      mod_compatible: Compatible avec les mods
+      mod_world: Monde des mods
+      modded: Modifié
+      modern: Moderne
+      models: Comprend des modèles
+      multiplayer: Multijoueur
+      ores_resources: Minerais et ressources
+      parkour: Parkour
+      path_tracing: Traçage du chemin
+      performance: Performances
+      performance_high: Élevé
+      performance_low: Faible
+      performance_medium: Moyen
+      performance_very_low: Très faible
+      puzzle: Casse-tête
+      quests: Quêtes
+      realistic: Réaliste
+      reflections: Réflexions
+      redstone: Pierre rouge
+      resolution_128x: 128x
+      resolution_16x: 16x
+      resolution_256x: 256x
+      resolution_32x: 32x
+      resolution_48x: 48x
+      resolution_512x: 512x ou plus
+      resolution_64x: 64x
+      resolution_8x: 8x ou moins
+      scifi: Science-fiction
+      semi_realistic: Semi-réaliste
+      simple: Simple
+      skyblock: Blocage du ciel
+      steampunk: Steampunk
+      storage: Stockage
+      structures: Structures
+      survival: Survie
+      technology: Technologie
+      themed: Thème
+      transportation: Transport
+      tweaks: Ajustements
+      utility: Utilitaire
+      vanilla_compatible: Compatible vanille
+      vanilla_plus: Vanille+
+      vanilla_style: Style vanilla
+      worldgen: Génération mondiale
+resource_detail:
+  actions:
+    copy_link: Copier le lien
+    copy_name: Copier le nom
+    mc_wiki: Wiki MC
+    translate_description: Traduire la description
+    view_details: Afficher les détails
+  activities:
+    download_canceled: 'Téléchargement annulé : {entry_title}'
+    download_failed: 'Échec du téléchargement : {entry_title}'
+    download_file: 'Télécharger le fichier : {entry_title}'
+    download_started: 'Téléchargement démarré : {entry_title}'
+    install_current_instance: Installer sur l'instance actuelle
+    install_current_instance_failed: Échec de l'installation sur l'instance actuelle
+    navigate_back: Retour à {target_title}
+    open_dependency_project: 'Projet de dépendance ouvert : {entry_title}'
+    open_detail: Ouvrir les détails
+    open_detail_for_project: Ouvrir les détails pour {project_title}
+    open_file: 'Ouvrir le fichier : {entry_title}'
+    open_mc_wiki: Ouvrir le wiki MC pour {project_title}
+    open_project_content: 'Contenu ouvert : {entry_title}'
+    open_project_homepage: Ouvrir la page d'accueil de {project_title}
+    pick_save_path_failed: Échec du choix du chemin de sauvegarde pour {entry_title}
+    view_source: Voir la source de {project_title}
+  copy:
+    messages:
+      completed: Copié avec succès
+      failed: Échec du {title}
+  copy_link:
+    empty: Il n'y a pas de lien pour copier
+  copy_name:
+    empty: Il n'y a pas de nom à copier
+  counts:
+    hundred_million: "{value} cent millions"
+    ten_thousand: "{value} dix mille"
+  compatibility:
+    no_loaders: Aucune information sur le chargeur
+    no_versions: Pas de liste des versions de Minecraft
+    loaders: 'Chargeurs : {loaders}'
+    summary: "{version_summary} • {loader_summary}"
+    versions: Minecraft {versions}
+  current_instance:
+    none_selected: Aucune instance actuelle sélectionnée
+    summary_none_selected: Sélectionnez une instance pour installer ce projet directement
+  categories:
+    adventure: Aventure
+    automation: Automatisation
+    biomes: Biomes
+    cartoon: Dessin animé
+    combat: Combattre
+    data_pack: Pack de données
+    decoration: Décoration
+    dimensions: Dimensions
+    energy: Énergie
+    equipment_tools: Équipements et outils
+    exploration: Exploration
+    fantasy: Fantaisie
+    farming: Agriculture
+    food_cooking: Alimentation et cuisine
+    game_mechanics: Mécaniques de jeu
+    hardcore: Hardcore
+    information: Affichage des informations
+    kitchen_sink: Fourre-tout
+    library: Bibliothèque
+    lightweight: Léger
+    magic: Magie
+    mobs: Mobs
+    multiplayer: Multijoueur
+    ores_resources: Minerais et ressources
+    performance: Performances
+    pipes_logistics: Canalisations et logistique
+    quests: Quêtes
+    realistic: Réaliste
+    redstone: Pierre rouge
+    resolution_16x: 16x
+    resolution_32x: 32x
+    resolution_64x_plus: 64x+
+    server: Serveur
+    simple: Simple
+    small_modpack: Petit modpack
+    storage: Stockage
+    structures: Structures
+    technology: Technologie
+    transportation: Transport
+    tweaks: Ajustements
+    utility: Utilitaire
+    vanilla_style: Style vanilla
+    worldgen: Génération mondiale
+  dependencies:
+    groups:
+      embedded: Intégré
+      included: Inclus
+      incompatible: Incompatible
+      optional: Facultatif
+      other: Autre
+      required: Obligatoire
+      tool: Outil
+    title: Dépendances
+    title_for_release: Dépendances {release_title}
+  download:
+    dialogs:
+      pick_save_path:
+        file_type: Télécharger le fichier
+        title: Choisissez Enregistrer le chemin
+    errors:
+      missing_url: URL de téléchargement manquante
+    hints:
+      completed: "{file_name} téléchargé"
+      started: Commencé à télécharger {file_name}
+    messages:
+      no_save_path: Aucun chemin de sauvegarde n'a été choisi
+    task_title: Télécharger {file_name}
+  filters:
+    loader: Chargeur
+    version: Version
+  install_modes:
+    current_only: Instance actuelle seulement
+    single_resource: Ressource seule
+    with_dependencies: Avec dépendances
+  install:
+    dialogs:
+      confirm_dependencies:
+        confirm: Continuer
+        failed: Échec de la confirmation de l'installation de la dépendance
+        title: Installer également les dépendances ?
+    errors:
+      no_filtered_release: Aucune version correspondante n'est disponible
+      unknown_resource_type: Type de ressource inconnu
+    hints:
+      analyzing: Analyse du plan d'installation...
+      started: Tâches d'installation démarrées
+    messages:
+      analyzing: Analyser comment installer {project_title} dans {instance_name}
+      canceled_with_dependencies: Installation annulée avec dépendances
+      no_tasks: Aucune tâche d'installation n'est nécessaire
+      queued_in_task_center: 'En file d''attente dans le centre de tâches : {task_title}'
+    summary:
+      completed: 'Installation en file d''attente pour {instance_name} : {summary}'
+      dependencies: Dépendances {count}
+      skipped: "{count} ignoré"
+      tasks: Tâches {count}
+  instance_selection:
+    activities:
+      select: Sélectionnez une instance
+      select_failed: Échec de la sélection de l'instance
+    dialog:
+      message: Choisissez une instance dans laquelle installer ce projet
+      title: Choisir une instance
+    messages:
+      already_selected: "{instance_name} est déjà sélectionné"
+      no_instances: Il n'y a aucune instance disponible
+  links:
+    title: Liens
+  link_actions:
+    open_community: Communauté ouverte
+    open_download: Ouvrir le téléchargement
+    open_homepage: Ouvrir la page d'accueil
+    open_issues: Problèmes ouverts
+    open_link: Ouvrir le lien
+    open_project_page: Ouvrir la page du projet
+    open_source: Ouvrir la source
+    open_wiki: Ouvrir le wiki
+  link_titles:
+    community: Communauté
+    default_support_platform: Don
+    homepage: Page d'accueil
+    issues: Problèmes
+    source: Référentiel source
+    support_author: 'Auteur de support : {platform}'
+    wiki: Wiki
+  loading:
+    releases: Chargement des versions...
+    source: Source
+    status: Statut
+  project_types:
+    data_pack: Pack de données
+    mod: Mod
+    modpack: Modpack
+    resource_pack: Pack de ressources
+    shader: Pack de shaders
+    world: Monde
+  release_info:
+    unavailable: Aucune information sur la version
+    versions: Minecraft {versions}
+  release_meta:
+    downloads: Téléchargements {count}
+    published: "{date} publié"
+    published_with_downloads: "{date} publié • {downloads}"
+  modpack:
+    activities:
+      install_canceled: 'Installation du modpack annulée : {entry_title}'
+      install_completed: Modpack installé.
+      install_failed: 'Échec de l''installation du modpack : {entry_title}'
+      prompt_instance_name_failed: Échec de la demande de nom d'instance
+    archive_name: modpack{extension}
+    dialogs:
+      instance_name:
+        message: Entrez un nom pour la nouvelle instance
+        title: Nom de la nouvelle instance
+      invalid_name:
+        confirm: D'accord
+        title: Nom d'instance non valide
+    hints:
+      download_and_install_started: Début du téléchargement et de l'installation de {file_name}
+      install_completed: "{instance_name} a été installé avec succès"
+    messages:
+      install_completed: "{instance_name} installé sur {target_directory}"
+      missing_instance_name: Aucun nom d'instance n'a été fourni
+    task_title: Installez {source_name} en tant que {instance_name}
+    task:
+      canceling: Annulation de l'installation du modpack...
+      queued: Ajouté au centre de tâches
+      completed: Installation du modpack terminée
+      canceled: L'installation du modpack a été annulée
+      copying_archive: Copie de l'archive du modpack...
+      downloading_archive: Téléchargement des archives du modpack...
+      source_missing: La source du modpack est manquante
+    validation:
+      duplicate: Une instance portant ce nom existe déjà
+      empty: Entrez un nom d'instance
+      invalid_characters: Le nom contient des caractères invalides
+      reserved_name: Ce nom est réservé par le système
+      short_name_pattern: Ce nom court est réservé sous Windows
+      too_long: Le nom est trop long
+      trailing_dot: Le nom ne peut pas se terminer par un espace ou un point
+      trim_spaces: Supprimer les espaces de début ou de fin
+    workflow:
+      status:
+        inspecting_manifest: Inspection du manifeste du modpack...
+        preparing_install_plan: Préparation du plan d'installation de l'instance...
+        extracting_overrides: Extraction des remplacements de modpack...
+        downloading_bundled_files: Téléchargement des fichiers modpack fournis...
+        processing_file: Traitement du {file_name}...
+        bundled_files_ready: Les fichiers modpack groupés sont prêts.
+        file_ready: "{file_name} est prêt"
+        installing_game: Installation du jeu et des chargeurs...
+        repairing_game_files: Compléter les fichiers du jeu...
+        finalizing_instance: Finalisation du répertoire d'instance...
+        completed: Installation du modpack terminée.
+      errors:
+        unsupported_package_kind: Seuls les modpacks PCL Standard, Modrinth et CurseForge sont pris en charge pour l'installation automatique.
+        modrinth_missing_minecraft_version: Il manque des informations sur la version de Minecraft dans le modpack Modrinth.
+        curseforge_missing_minecraft_version: Il manque des informations sur la version de Minecraft dans le modpack CurseForge.
+        curseforge_recommended_forge_unsupported: Ce modpack CurseForge utilise Forge recommandé, qui n'est pas encore pris en charge pour l'installation automatique.
+        curseforge_missing_files: Certains fichiers CurseForge référencés par le modpack n'existent plus, l'installation automatique ne peut donc pas continuer.
+        pcl_missing_addons: Ce modpack PCL Standard n'inclut pas les métadonnées du module complémentaire de version de jeu requises.
+        pcl_missing_game_version: Ce modpack PCL Standard n'inclut pas les informations de version de Minecraft.
+        missing_critical_file: 'Il manque un fichier requis dans le modpack : {path}'
+        minecraft_choice_missing: Aucun plan d'installation disponible n'a été trouvé pour Minecraft {version}.
+        loader_choice_missing: Aucun plan d'installation n'a été trouvé pour {option_title} {requested_version}.
+        file_download_failed: 'Échec du téléchargement du fichier modpack : {file_name}'
+        curseforge_metadata_empty: La réponse aux métadonnées du fichier CurseForge était vide.
+        curseforge_metadata_missing_data: Les métadonnées du fichier CurseForge n'incluaient pas de tableau de données.
+        file_path_outside_instance: 'Le chemin du fichier modpack échappe au répertoire d''instance : {relative_path}'
+        archive_illegal_path: 'L''archive du modpack contient un chemin invalide : {entry_path}'
+        rar_unsupported: Les archives RAR ne sont pas prises en charge. Extrayez et recompressez le modpack sous forme d'archive ZIP, puis réessayez.
+        archive_open_failed: Échec de l'ouverture de l'archive du modpack. Le fichier est peut-être corrompu ou utilise un format d'archive non pris en charge.
+        json_parse_failed: 'Échec de l''analyse du fichier JSON dans le modpack : {entry_path}'
+  releases:
+    empty:
+      body: Aucune version ne correspond aux filtres actuels
+      title: Aucune version
+  selection:
+    missing_project_id: ID de projet manquant
+    no_compatibility: Aucune version compatible
+    no_tags: Aucune balise
+    none_selected_summary: Choisissez un projet pour voir ses détails
+    none_selected_title: Rien de sélectionné
+    not_loaded: Pas encore chargé
+    project_fallback_title: Projet {project_id}
+    unspecified_source: Source non précisée
+    waiting: En attente de sélection
+  statuses:
+    archived: Archivé
+    draft: Brouillon
+    fallback: Statut {status}
+    load_failed: Échec du chargement
+    published: Publié
+    removed: Supprimé
+    unlisted: Non répertorié
+  suggested_release:
+    none: Aucune version suggérée
+    title: Sortie suggérée
+  translate_description:
+    empty: Il n'y a pas de description à traduire
+  values:
+    and_more: " et plus"
+    none: Aucun
+    other: Autre
+    unknown: Inconnu
+  versions:
+    legacy: Héritage
+    snapshot: Instantané
+  warnings:
+    load_failed: 'Échec du chargement des données de projet en direct : {message}'
+  world_archive:
+    extract_failed: 'L''archive mondiale a été téléchargée, mais l''extraction automatique a échoué : {message}'
+    install_directory_unavailable: Le répertoire d'installation de sauvegarde n'est pas disponible.
+    no_importable_content: L'archive ne contient pas de contenu mondial importable.
+    unsafe_path: 'L''archive contient un chemin dangereux : {path}'
+instance:
+  common:
+    independent: Instance indépendante
+    shared: Instance partagée
+    no_selection: Aucune instance sélectionnée
+    installed: Installé
+    not_installed: Non installé
+    unknown_version: Version inconnue
+  overview:
+    sections:
+      info: Informations
+      personalization: Personnalisation
+      shortcuts: Raccourcis
+      advanced: Avancé
+    dialogs:
+      rename:
+        title: Renommer l'instance
+        message: Entrez un nouveau nom d'instance. Il sera utilisé pour le dossier d'instance, les fichiers principaux et la configuration d'instance sélectionnée.
+        confirm: Renommer
+        input_label: Nom de l'instance
+      edit_description:
+        title: Description du changement
+        message: Modifiez la description de l'instance. Laissez-le vide pour restaurer la description par défaut.
+        confirm: Enregistrer
+        input_label: Description de l'instance
+      reset:
+        title: Confirmer la réinitialisation de l'instance
+        message: Êtes-vous sûr de vouloir réinitialiser {instance_name} ? Une sauvegarde principale sera d'abord enregistrée, puis les fichiers principaux, les bibliothèques et les index d'actifs actuels seront retéléchargés tout en réutilisant les fichiers validés autant que possible.
+        confirm: Démarrer la réinitialisation
+      patch_core:
+        title: Noyau du correctif
+        message: Êtes-vous sûr de vouloir mettre à jour les fichiers principaux de {instance_name} ? La validation des fichiers sera automatiquement désactivée après l'application des correctifs et une sauvegarde principale sera enregistrée en premier.
+        confirm: Choisissez le fichier de correctif
+        file_title: Choisissez un fichier pour patcher le noyau
+        file_filter: Fichiers d'archive
+    info:
+      launch_count: Nombre de lancements
+      launch_count_never: Jamais lancé
+      launch_count_value: "{count} lancé fois"
+      modpack_version: Version du modpack
+      description: Descriptif
+    personalization:
+      icon: Icône
+      category: Catégorie
+    actions:
+      rename: Renommer
+      edit_description: Modifier la description
+      add_favorite: Ajouter aux favoris
+      remove_favorite: Supprimer des favoris
+    shortcuts:
+      instance_folder: Dossier d'instance
+      saves_folder: Dossier de sauvegardes
+      mods_folder: Dossier de mods
+    advanced:
+      export_script: Exporter le script de lancement
+      test_game: Jeu d'essai
+      repair_files: Réparer les fichiers
+      reset: Réinitialiser l'instance
+      delete: Supprimer l'instance
+      patch_core: Noyau du correctif
+    artifacts:
+      launch_script_name: Lancer {instance_name}
+    messages:
+      select_to_view_details: Sélectionnez une instance pour afficher les détails.
+      no_instance_selected: Aucune instance n'est actuellement sélectionnée.
+      no_saves_directory: L'instance actuelle n'a pas de répertoire de sauvegarde.
+      no_mods_directory: L'instance actuelle n'a pas de répertoire mods.
+      rename_canceled: Renommer annulé.
+      rename_empty: Le nom de l'instance ne peut pas être vide.
+      rename_unchanged: Le nom de l'instance n'a pas changé.
+      rename_invalid: Le nom de l'instance contient des caractères non valides.
+      rename_exists: 'Une instance portant ce nom existe déjà : {name}'
+      description_canceled: Modification de la description annulée.
+      description_restored: Restauration de la description par défaut.
+      launch_script_missing: Le script de lancement n'existe pas.
+      repair_disable_validation_hint: Désactivez d'abord [Paramètres de l'instance -> Paramètres -> Options de lancement avancées -> Désactiver la validation des fichiers], puis essayez à nouveau de réparer les fichiers.
+      repair_completed: Fichiers {downloaded_count} réparés et fichiers {reused_count} réutilisés.
+      repair_canceled_title: Réparer les fichiers annulés
+      repair_canceled: Le processus de réparation de l'instance a été annulé.
+      reset_canceled_title: Réinitialiser l'instance annulée
+      reset_canceled: La réinitialisation de l'instance a été annulée.
+      reset_completed: Réinitialisez les fichiers principaux, téléchargez les fichiers {downloaded_count} et réutilisez les fichiers {reused_count}.
+      delete_permanent: L'instance {instance_name} a été définitivement supprimée.
+      delete_recycled: 'L''instance {instance_name} a été déplacée vers la corbeille : {trash_directory}'
+      patch_canceled: Patch annulé.
+      patch_file_canceled: Sélection du fichier de correctif annulée.
+      patched_core_missing: Le fichier principal corrigé n'existe pas.
+      rename_completed: Instance renommée {old_name} en {new_name}.
+      test_instance_navigated: Ouverture de la route de lancement pour tester {instance_name}.
+      repair_task_title: "{action_title} : {instance_name}"
+      repair_summary:
+        instance: 'Instance : {instance_name}'
+        instance_directory: 'Répertoire d''instance : {path}'
+        core_json: 'Noyau Json : {status} • {path}'
+        core_jar: 'Pot de base : {status} • {path}'
+        backup_directory: 'Répertoire de sauvegarde : {path}'
+        downloaded_count: 'Fichiers téléchargés : {count}'
+        reused_count: 'Fichiers réutilisés : {count}'
+        downloaded_item: 'Téléchargé : {path}'
+        reused_item: 'Réutilisé : {path}'
+        intro: Résumé des résultats de la réparation.
+        present: Présent
+        missing: Manquant
+    categories:
+      auto: Automatique
+      hidden: Instance cachée
+      modable: Compatible avec les mods
+      hide_from_list: Masquer de la liste des instances
+      modable_long: Instance compatible avec l'installation de mods
+      regular: Instance régulière
+      rare: Instance rarement utilisée
+      april_fools: Version poisson d'avril
+    tags:
+      mod_supported: Prend en charge les mods
+      favorited: Favoris
+    icons:
+      auto: Automatique
+      cobblestone: Pavé
+      command_block: Bloc de commande
+      gold_block: Bloc d'or
+      grass_block: Bloc d'herbe
+      grass_path: Chemin d'herbe
+      anvil: Enclume
+      redstone_block: Bloc de pierre rouge
+      redstone_lamp_on: Lampe Redstone (Allumée)
+      redstone_lamp_off: Lampe Redstone (éteinte)
+      egg: Oeuf
+      fabric: Fabric
+      quilt: Quilt
+      neoforge: NeoForge
+      cleanroom: Cleanroom
+  install:
+    minecraft:
+      header: Minecraft
+      version: Minecraft {version}
+    actions:
+      apply_changes: Appliquer les modifications
+      reset_to_scanned: Réinitialiser à l'état analysé
+      modify: Modifier
+    option:
+      can_add: Peut ajouter
+    hints:
+      optifine_mod_compatibility: OptiFine peut être incompatible avec certains mods.
+      fabric_api_required: L'API Fabric n'est pas installée, donc la plupart des mods ne fonctionneront pas.
+      qsl_required: QFAPI / QSL n'est pas installé, donc la plupart des mods ne fonctionneront pas.
+      optifabric_required: OptiFabric n'est pas installé, donc OptiFine ne fonctionnera pas.
+    unavailable:
+      incompatible_with: Incompatible avec {target}
+      no_versions: Aucune version compatible n'est disponible.
+      optifabric_origins: Cette version OptiFabric est uniquement compatible avec la branche Origins.
+      requires_fabric: Nécessite Fabric.
+      requires_legacy_fabric: Nécessite Legacy Fabric.
+      requires_optifine: Nécessite OptiFine.
+      requires_optifine_and_fabric: Nécessite à la fois OptiFine et Fabric.
+      requires_quilt: Nécessite Quilt.
+      specific_forge_only: Nécessite une version Forge spécifique.
+  content:
+    world:
+      search: Rechercher des mondes
+      quick_actions: Actions rapides
+      list: Liste mondiale
+      empty:
+        title: Aucun monde trouvé
+        description: Ouvrez le dossier de sauvegarde ou collez un chemin de fichier ou de dossier mondial à partir du presse-papiers pour en importer un.
+      summary: 'Créé : {created_at} • Modifié : {modified_at}'
+      actions:
+        open_folder: Ouvrir le dossier de sauvegarde
+        paste_clipboard: Coller depuis le Presse-papiers
+      messages:
+        no_instance_selected: Aucune instance n'est actuellement sélectionnée.
+        no_importable_paths: Le presse-papiers ne contient aucun chemin de fichier ou de dossier importable.
+    screenshot:
+      quick_actions: Actions rapides
+      empty:
+        title: Aucune capture d'écran trouvée
+        description: Ouvrez le dossier de capture d'écran et ajoutez ou capturez des captures d'écran pour cette instance.
+      summary: "{created_at} • {file_size}"
+      actions:
+        open_folder: Ouvrir le dossier
+        open_file: Ouvrir la capture d'écran
+      messages:
+        missing_file: Le fichier de capture d'écran sélectionné n'existe pas.
+    server:
+      quick_actions: Actions rapides
+      empty:
+        title: Aucun serveur enregistré
+        description: Actualisez la liste actuelle ou ajoutez un serveur à cette instance.
+      actions:
+        refresh_all: Actualiser tout
+        add: Ajouter un serveur
+        refresh: Actualiser
+        copy_address: Copier l'adresse
+        connect: Se connecter
+      status:
+        saved: Serveur enregistré
+        connecting: Connexion...
+        online: Serveur en ligne
+        offline: Serveur hors ligne
+        offline_short: Hors ligne
+        connecting_short: Connexion
+        connection_failed: 'Impossible de se connecter : {message}'
+      motd:
+        click_to_refresh: Cliquez sur Actualiser pour afficher l'état du serveur
+        connecting: Connexion...
+        offline: Serveur hors ligne
+      messages:
+        no_instance_selected: Aucune instance n'est actuellement sélectionnée.
+        no_saved_servers: L'instance actuelle a été réanalysée, mais elle ne comporte aucun serveur enregistré.
+        refreshed_count: Serveurs {count} actualisés.
+        address_empty: L'adresse du serveur est vide.
+        no_server_info: Aucune information sur le serveur n'a été renvoyée.
+        no_copyable_address: "{entry_title} n'a pas d'adresse à copier."
+        copied_address: "{entry_title} • {address}"
+        no_connectable_address: "{entry_title} n'a pas d'adresse de serveur utilisable."
+        added: "{name} • {address}"
+        address_required: L'adresse du serveur ne peut pas être vide.
+        read_list_failed: |-
+          Impossible de lire la liste actuelle des serveurs d'instance.
+          {error}
+        launch_route_prepared: Je suis passé à la page de lancement et prêt à me connecter à {entry_title}.
+        update_list_failed: |-
+          Impossible de mettre à jour la liste actuelle des serveurs d'instance.
+          {error}
+        write_list_failed: Impossible d'écrire la liste actuelle des serveurs d'instance.
+      dialogs:
+        edit:
+          title: Modifier les informations sur le serveur
+          name_prompt: 'Entrez un nouveau nom de serveur :'
+          name_default: Serveur Minecraft
+          address_prompt: 'Saisissez une nouvelle adresse de serveur :'
+    sort:
+      label: 'Trier : {mode}'
+      file_name: Nom du fichier
+      create_time: Temps de création
+      modify_time: Heure modifiée
+      resource_name: Nom de la ressource
+      added_time: Temps ajouté
+      file_size: Taille du fichier
+    resource:
+      empty:
+        default_title: Aucune ressource trouvée
+        default_description: Ajoutez des fichiers à cette instance ou téléchargez du nouveau contenu pour commencer.
+        mod_unavailable_title: Les mods ne sont pas disponibles
+        mod_unavailable_description: Cette instance ne prend pas en charge les mods. Basculez vers une instance compatible ou ouvrez Télécharger pour parcourir le contenu installable.
+        schematic_unavailable_title: Les schémas nécessitent un mod
+        schematic_unavailable_description: Installez d'abord un mod compatible avec les schémas, puis revenez ici pour gérer les fichiers schématiques.
+      search:
+        default: Rechercher des ressources
+        resource_pack: Rechercher des packs de ressources
+        shader: Rechercher des shaders
+        schematic: Rechercher des schémas
+      actions:
+        open_folder: Ouvrir le dossier
+        open_homepage: Ouvrir la page d'accueil
+        install_from_file: Installer à partir d'un fichier
+        install_from_file_empty: Installer le premier fichier
+        download_new: Télécharger du nouveau contenu
+        download_schematic_mod: Télécharger le mod de schémas
+        select_all: Sélectionner tout
+        export_info: Exporter les informations
+        check_mods: Vérifier les mods
+        enable: Activer
+        disable: Désactiver
+        delete: Supprimer
+        clear_selection: Effacer la sélection
+        instance_select: Sélectionner une instance compatible
+        go_to_download: Aller au téléchargement
+      activities:
+        open_homepage: 'Ouvrir la page d''accueil de {surface_title} : {entry_title}'
+        view_details: Voir les détails de {surface_title}
+      filters:
+        all: Tous ({count})
+        enabled: Activé ({count})
+        disabled: Désactivé ({count})
+        duplicate: Doublons ({count})
+        search_results: Résultats de la recherche ({count})
+      selection: "{count} sélectionné"
+      kind:
+        mod: Mod
+        resource: Ressource
+        resource_pack: Pack de ressources
+        shader: Pack de shaders
+        schematic_file: Fichier schématique
+      meta:
+        archive: Archive
+        folder: Dossier
+        root_directory: Répertoire racine
+      summary:
+        file: "{parent_directory} • {modified_at}"
+        archive: "{modified_at} • {file_size}"
+        folder: "{modified_at} • {folder_kind}"
+      messages:
+        no_instance_selected: Aucune instance n'est actuellement sélectionnée.
+        list_empty: La liste {surface_title} est vide.
+        selected_all: '{surface_title} • {count} élément(s) sélectionné(s).'
+        no_toggleable_entries: Aucune ressource ne peut changer d’état pour le moment.
+        no_deletable_entries: Aucune ressource ne peut être supprimée pour le moment.
+        install_from_file_canceled: La sélection du fichier de ressources a été annulée.
+        toggle_not_supported: "{surface_title} ne prend pas en charge l'activation ou la désactivation."
+        no_selected: Aucune ressource n'est sélectionnée.
+        already_enabled: Toutes les ressources sélectionnées sont déjà activées.
+        already_disabled: Toutes les ressources sélectionnées sont déjà désactivées.
+        enabled_completed: 'Éléments {count} activés : {titles}'
+        disabled_completed: 'Éléments {count} désactivés : {titles}'
+        enabled_partial: '{count} élément(s) activé(s), {failed_count} échec(s).'
+        disabled_partial: '{count} élément(s) désactivé(s), {failed_count} échec(s).'
+        delete_canceled: Suppression annulée.
+        deleted_completed: '{count} élément(s) déplacé(s) vers la corbeille.'
+        export_missing: Le fichier exporté n'existe pas.
+        entry_missing: L'élément {surface_title} n'existe pas.
+        details_read_failed: 'Échec de la lecture des informations supplémentaires : {error}'
+        checked_mods_summary: "{instance_name} vérifié : {enabled_count} activé, {disabled_count} désactivé, groupes en double {duplicate_count}."
+        open_download_route: La page {surface_title} a été ouverte dans Téléchargement.
+      dialogs:
+        install_from_file:
+          title: Sélectionnez le fichier {surface_title}
+          file_types:
+            mod: Fichier de mod
+            resource_pack: Fichier du pack de ressources
+            shader: Fichier de pack de shaders
+            schematic: Fichier schématique
+        delete:
+          title: Confirmer la suppression de la ressource
+          message: Déplacer ces {count} élément(s) {surface_title} vers la corbeille ?
+          confirm: Déplacer vers la corbeille
+          extra_items: '- et {count} élément(s) supplémentaire(s)'
+      details:
+        fields:
+          name: Nom
+          status: Statut
+          type: Type
+          loader: Chargeur
+          version: Version
+          authors: Auteurs
+          description: Descriptif
+          website: Site Web
+          summary: Informations supplémentaires
+          path: Chemin
+          item_kind: Type d'article
+          file_size: Taille du fichier
+          create_time: Créé
+          modify_time: Modifié
+      check_mods:
+        instance: Instance
+        enabled_mods: Mods activés
+        disabled_mods: Mods désactivés
+        duplicate_names: Noms en double
+        no_duplicates: Aucun nom de fichier de mod en double n'a été détecté.
+        duplicate_group_title: 'Noms de mods en double :'
+      tooltips:
+        open_file_location: Emplacement du fichier ouvert
+        details: Détails
+        website: Site Web
+        enable: Activer
+        disable: Désactiver
+        delete: Supprimer
+      tags:
+        disabled: Désactivé
+  settings:
+    intro: Configurez le comportement de lancement dédié, l'allocation de mémoire, les paramètres du serveur et les remplacements avancés pour cette instance.
+    sections:
+      launch: Lancement
+      memory: Mémoire
+      server: Serveur
+      advanced: Avancé
+    actions:
+      global_settings: Ouvrir les paramètres globaux
+    options:
+      follow_global: Suivre les paramètres globaux
+      on: Activé
+      off: Désactivé
+    java_options:
+      auto_select: Choisissez automatiquement un Java approprié
+      launcher_relative: Choisissez Java dans le répertoire du lanceur
+      launcher_relative_selected: Java sous le répertoire du lanceur | {relative_path}
+    launch:
+      isolation: Isolement
+      window_title: Titre de la fenêtre
+      default_window_title: Utiliser le titre de la fenêtre par défaut
+      custom_info: Informations personnalisées
+      java: Java
+    memory:
+      warning_32bit: Le moteur d'exécution Java sélectionné est 32 bits, ce qui peut limiter considérablement la mémoire utilisable.
+      warning_allocation: L'allocation de mémoire actuelle peut laisser trop peu de mémoire système libre.
+      use_global: Utiliser le paramètre global
+      use_auto: Allouer automatiquement
+      use_custom: Définir une allocation personnalisée
+      optimize_before_launch: Optimiser la mémoire avant le lancement
+    server:
+      locked_warning: Les paramètres de connexion au serveur sont verrouillés pour cette instance.
+      login_requirement: Exigence de connexion
+      auth_server: Serveur d'authentification
+      auth_register: Page d'inscription
+      auth_name: Étiquette d'authentification
+      auto_join: Rejoindre automatiquement le serveur
+      set_littleskin: Définir les paramètres par défaut de LittleSkin
+      lock_login: Verrouiller les paramètres de connexion
+      create_profile: Créer un profil de connexion
+      require:
+        none: Aucun
+        official: Officiel uniquement
+        third_party: Tiers uniquement
+        both: Les deux
+    advanced:
+      renderer: Moteur de rendu
+      jvm_head: Arguments JVM (début)
+      game_tail: Arguments du jeu (fin)
+      classpath_head: Préfixe du classpath
+      prelaunch_command: Commande de pré-lancement
+      environment_variables: Variables d'environnement
+      environment_variables_hint: Une variable par ligne, au format KEY=VALUE.
+      linux_backend: Système d'affichage Linux
+      linux_backend_hint: Choisissez comment la fenêtre de jeu s'intègre à Wayland et X11.
+      wait_for_prelaunch: Attendez la fin de la commande de pré-lancement
+      ignore_java_compatibility: Ignorer les contrôles de compatibilité Java
+      disable_file_validation: Désactiver la validation du fichier
+      follow_launcher_proxy: Suivre les paramètres proxy du lanceur
+      disable_java_launch_wrapper: Désactiver le wrapper de lancement Java
+      disable_retro_wrapper: Désactiver RetroWrapper
+      use_debug_log4j: Utiliser la configuration de débogage Log4j
+    renderer:
+      game_default: Par défaut du jeu
+      software: Logiciel
+      directx12: DirectX12
+      vulkan: Vulkan
+    linux:
+      force_x11: Forcer X11
+      system_default: Par défaut du système
+  export:
+    count:
+      items: Articles {count}
+    activities:
+      reset: Réinitialiser les options d'exportation
+      import_config: Importer et exporter la configuration
+      save_config: Enregistrer la configuration d'exportation
+      guide: Guide de création de modpack
+      start: Démarrer l'exportation
+    warnings:
+      modrinth: Le mode d'exportation de Modrinth produit un flux de travail « .mrpack » et peut omettre des extras spécifiques au lanceur.
+      include_resources: L’inclusion de fichiers de ressources peut augmenter considérablement la taille du package d’exportation.
+    sections:
+      content: Contenu
+      advanced: Avancé
+    actions:
+      start: Démarrer l'exportation
+      reset: Réinitialiser
+      import_config: Importer la configuration
+      save_config: Enregistrer la configuration
+      guide: Guide
+    name: Nom du pack
+    version: Version du pack
+    options:
+      include_resources: Inclure directement les fichiers de ressources
+      modrinth_mode: Mode d'export Modrinth
+    config:
+      hint: Importez ou enregistrez une configuration d'exportation si vous souhaitez réutiliser la même sélection ultérieurement.
+    dialogs:
+      import_config:
+        title: Choisissez la configuration d'exportation du modpack
+        filter_name: Configuration d'exportation du modpack
+      save_config:
+        title: Choisissez l'emplacement d'enregistrement
+        default_name: export_config.txt
+        filter_name: Configuration d'exportation du modpack
+    messages:
+      reset_completed: La page d'exportation d'instance a été restaurée avec les résultats d'analyse d'instance actuels.
+      import_config_canceled: Sélection du fichier de configuration annulée.
+      no_instance_selected: Aucune instance n'est actuellement sélectionnée.
+      guide_shown: Affichage du guide.
+      archive_missing: L'archive d'exportation n'existe pas.
+    guide:
+      title: Guide de création de modpack
+      step_1: 1. Confirmez d'abord le nom du pack, la version et le contenu sélectionné sur la page d'exportation de l'instance.
+      step_2: 2. Si vous souhaitez réutiliser les mêmes règles d'exportation, enregistrez d'abord la configuration afin de pouvoir l'importer plus tard.
+      step_3: 3. Inclure les mods, packs de ressources et packs de shaders directement dans l'archive est utile pour une distribution hors ligne.
+      step_4: 4. Le mode de téléchargement de Modrinth génère un fichier « .mrpack », ce qui est préférable pour un packaging et une publication continus.
+      step_5: 5. Après l'exportation, vérifiez que la structure et le contenu de l'archive générée correspondent à l'instance actuelle.
+    groups:
+      game: Jeu
+      mods: Mods
+      resource_packs: Packs de ressources
+      shaders: Packs de shaders
+      screenshots: Captures d'écran
+      schematics: Schémas
+      replays: Rediffusions
+      worlds: Sauvegardes de mondes
+      servers: Liste des serveurs
+      launcher: Lanceur PCL
+    items:
+      game_settings: Paramètres du jeu
+      game_personal: Données de jeu personnelles
+      optifine_settings: Paramètres OptiFine
+      disabled_mods: Mods désactivés
+      important_data: Données importantes du modpack
+      mod_settings: Paramètres des mods
+      launcher_personalization: Contenu de personnalisation PCL
+    descriptions:
+      mods: Mods
+      resource_packs: Packs de textures / packs de ressources
+      schematics: dossier de schémas
+      replays: Enregistrements de Replay Mod
+      worlds: Mondes / cartes
+      launcher: Inclure le lanceur PCL multiplateforme afin que les joueurs qui ne l'ont pas puissent installer le modpack.
+    detected:
+      options: Options.txt détectées
+      config_missing: Fichier de configuration introuvable
+      optifine_settings: Paramètres OptiFine détectés
+      personal_missing: Paramètres personnels introuvables
+      optifine_present: Cette instance inclut OptiFine
+      optifine_missing: OptiFine n'est pas installé sur cette instance
+      config_folder: Dossier de configuration détecté
+      config_folder_missing: Dossier de configuration introuvable
+      config_directory: Répertoire de configuration détecté
+      config_directory_missing: Répertoire de configuration introuvable
+      pcl_directory: Répertoire de configuration PCL de l'instance détectée
+      pcl_directory_missing: Répertoire de configuration PCL de l'instance introuvable
+  trash:
+    activities:
+      open_directory: Corbeille d'instance
+    dialogs:
+      delete:
+        title: Confirmation de suppression d'instance
+        confirm_permanent: Supprimer définitivement
+        confirm_recycle: Déplacer vers la corbeille
+    messages:
+      launcher_missing: Le répertoire du lanceur est introuvable.
+      delete_canceled: Suppression annulée.
+      confirm_permanent: Êtes-vous sûr de vouloir supprimer définitivement l'instance {instance_name} ?
+      confirm_recycle: Êtes-vous sûr de vouloir supprimer l'instance {instance_name} ?
+      confirm_indie_warning: Étant donné que cette instance utilise l'isolation de version, sa suppression entraînera également la suppression de ses sauvegardes, packs de ressources, mods et autres fichiers spécifiques à l'instance.
+      confirm_recycle_note: L'instance sera d'abord déplacée vers la corbeille de l'instance afin que vous puissiez la nettoyer ou la restaurer manuellement.
+save_detail:
+  actions:
+    open_save_folder: Ouvrir le dossier de sauvegarde
+    open_datapack_folder: Ouvrir le dossier Datapack
+    view_backup: Afficher la sauvegarde
+  activities:
+    create_backup: Créer une sauvegarde
+    clean_backups: Nettoyer les enregistrements de sauvegarde
+    install_datapack: Installer le pack de données
+    install_datapack_failed: Échec de l'installation du pack de données
+    export_datapack_info: Exporter les informations sur le pack de données
+  datapack:
+    name: Pack de données
+  dialogs:
+    datapack_file:
+      title: Choisissez le fichier Datapack
+      filter_name: Fichier d'archive ou de pack de données
+  labels:
+    instance: Instance
+    save_name: Nom de la sauvegarde
+    save_path: Chemin de la sauvegarde
+    last_modified: Dernière modification
+    file_size: Taille du fichier
+    file_count: Nombre de fichiers
+    datapack_count: Nombre de paquets de données
+    backup_count: Nombre de sauvegardes
+    icon: Icône
+    level_name: Nom du niveau
+    game_mode: Mode de jeu
+    difficulty: Difficulté
+    allow_commands: Autoriser les commandes
+    hardcore: Hardcore
+    raining: Il pleut
+    thundering: Tonnerre
+    day_count: Décompte des jours
+    save_version: Enregistrer la version
+    save_format: Enregistrer le format
+    player_dimension: Dimension du joueur
+  values:
+    no_selection: Aucune sauvegarde sélectionnée
+    not_found: Pas trouvé
+    provided: Fourni
+    not_provided: Non fourni
+    survival: Survie
+    creative: Créatif
+    adventure: Aventure
+    spectator: Spectateur
+    peaceful: Paisible
+    easy: Facile
+    normal: Normale
+    hard: Difficile
+    no: Non
+    yes: Oui
+    unknown: Inconnu
+  messages:
+    no_openable_save: Il n'y a aucune sauvegarde disponible à ouvrir
+    no_datapack_directory: La sauvegarde actuelle n'a pas de répertoire de pack de données
+    backup_missing: Le fichier de sauvegarde n'existe pas
+    no_backup_target: Aucune sauvegarde n'est disponible pour les opérations de sauvegarde
+    no_selected_save: Aucune sauvegarde n'est actuellement sélectionnée
+    no_empty_backups: Aucun fichier de sauvegarde vide n'a été trouvé
+    cleaned_empty_backups: Fichiers de sauvegarde vides {count} nettoyés
+    install_datapack_canceled: La sélection du fichier Datapack a été annulée
+    export_missing: Le fichier exporté n'existe pas

@@ -2597,6 +2597,10 @@ resource_detail:
   filters:
     loader: 加载器
     version: 版本
+  install_modes:
+    current_only: 仅当前实例
+    single_resource: 单个资源
+    with_dependencies: 包含依赖项
   install:
     dialogs:
       confirm_dependencies:

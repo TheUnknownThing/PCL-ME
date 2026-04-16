@@ -1,0 +1,3369 @@
+shell:
+  navigation:
+    pages:
+      launch:
+        title: 실행
+        summary: 인스턴스 선택, 계정 설정 및 실행 준비.
+      download:
+        title: 다운로드
+        summary: Minecraft, 모드 로더 및 커뮤니티 리소스 설치.
+      setup:
+        title: 설정
+        summary: 런처, Java 및 게임 환경 설정.
+      tools:
+        title: 도구
+        summary: 도움말 콘텐츠 및 실험적 유틸리티.
+      instance_select:
+        title: 인스턴스 선택
+        summary: 실행할 인스턴스를 선택합니다.
+      task_manager:
+        title: 작업 관리자
+        summary: 다운로드 및 백그라운드 작업을 모니터링합니다.
+      instance_setup:
+        title: 인스턴스 설정
+        summary: 인스턴스 세부 정보를 확인하고 리소스를 관리합니다.
+      comp_detail:
+        title: 리소스 상세
+        summary: 선택한 커뮤니티 리소스를 검사합니다.
+      help_detail:
+        title: 도움말 상세
+        summary: 현재 선택한 도움말 항목을 읽습니다.
+      game_log:
+        title: 게임 로그
+        summary: 실행 출력 및 실시간 로그를 검토합니다.
+      version_saves:
+        title: 저장 관리자
+        summary: 선택한 세이브 데이터와 백업을 관리합니다.
+    subpages:
+      download_install:
+        title: 자동 설치
+        summary: 새 인스턴스를 생성하고 설치 구성 요소를 선택합니다.
+      download_mod:
+        title: 모드
+        summary: 모드를 탐색하고 설치합니다.
+      download_pack:
+        title: 모드팩
+        summary: 선별된 모드팩을 탐색합니다.
+      download_data_pack:
+        title: 데이터 팩
+        summary: 데이터 팩을 검색하고 설치합니다.
+      download_resource_pack:
+        title: 리소스 팩
+        summary: 리소스 팩을 검색하고 설치합니다.
+      download_shader:
+        title: 셰이더
+        summary: 셰이더 팩을 검색하고 설치합니다.
+      download_world:
+        title: 월드
+        summary: 맵 및 세이브 아카이브를 가져옵니다.
+      download_comp_favorites:
+        title: 즐겨찾기
+        summary: 즐겨찾기한 커뮤니티 리소스를 확인합니다.
+      download_client:
+        title: Minecraft
+        summary: 설치할 Minecraft 버전을 선택합니다.
+      download_opti_fine:
+        title: OptiFine
+        summary: 선택한 게임 버전에 OptiFine을 설치합니다.
+      download_forge:
+        title: Forge
+        summary: 선택한 게임 버전에 대한 Forge를 설치합니다.
+      download_neo_forge:
+        title: NeoForge
+        summary: 선택한 게임 버전에 맞는 NeoForge를 설치하세요.
+      download_cleanroom:
+        title: Cleanroom
+        summary: 선택한 게임 버전에 대한 클린룸을 설치합니다.
+      download_fabric:
+        title: Fabric
+        summary: 선택한 게임 버전에 대한 Fabric을 설치합니다.
+      download_quilt:
+        title: Quilt
+        summary: 선택한 게임 버전에 대한 Quilt를 설치합니다.
+      download_lite_loader:
+        title: LiteLoader
+        summary: 선택한 게임 버전에 LiteLoader를 설치합니다.
+      download_laby_mod:
+        title: LabyMod
+        summary: 선택한 게임 버전에 맞는 LabyMod를 설치하세요.
+      download_legacy_fabric:
+        title: Legacy Fabric
+        summary: 이전 버전의 경우 Legacy Fabric을 설치하십시오.
+      setup_launch:
+        title: 실행
+        summary: 실행 인수, 가시성 및 런타임 동작을 조정합니다.
+      setup_u_i:
+        title: 인터페이스
+        summary: 테마, 애니메이션 및 셸 표현을 조정합니다.
+      setup_game_manage:
+        title: 게임 관리
+        summary: 인스턴스 저장소 및 파일 동작을 제어합니다.
+      setup_link:
+        title: 링크
+        summary: 런처 관련 외부 링크를 관리합니다.
+      setup_about:
+        title: 정보
+        summary: 버전 세부 정보 및 프로젝트 정보를 확인합니다.
+      setup_log:
+        title: 로그
+        summary: 로깅 및 진단 출력을 구성합니다.
+      setup_feedback:
+        title: 피드백
+        summary: 연결된 이슈 및 피드백 채널을 확인합니다.
+      setup_update:
+        title: 업데이트
+        summary: 업데이트 채널 및 확인 전략을 구성합니다.
+      setup_java:
+        title: Java
+        summary: Java 런타임 및 선택 규칙을 관리합니다.
+      setup_launcher_misc:
+        title: 기타
+        summary: 기타 런처 동작을 조정합니다.
+      tools_launcher_help:
+        title: 도움말
+        summary: 런처 도움말 항목을 탐색합니다.
+      tools_test:
+        title: 테스트
+        summary: 실험적 및 진단 유틸리티를 엽니다.
+      version_overall:
+        title: 개요
+        summary: 인스턴스 식별 및 상위 메타데이터를 검토합니다.
+      version_setup:
+        title: 설정
+        summary: 이 인스턴스의 전용 설정을 구성합니다.
+      version_export:
+        title: 내보내기
+        summary: 인스턴스를 내보내거나 배포 가능한 팩을 조립합니다.
+      version_world:
+        title: 월드
+        summary: 인스턴스에 연결된 월드를 탐색합니다.
+      version_screenshot:
+        title: 스크린샷
+        summary: 캡처된 스크린샷을 탐색합니다.
+      version_mod:
+        title: 모드
+        summary: 활성화된 모드를 관리합니다.
+      version_mod_disabled:
+        title: 비활성 모드
+        summary: 현재 비활성화된 모드를 검토합니다.
+      version_resource_pack:
+        title: 리소스 팩
+        summary: 설치된 리소스 팩을 관리합니다.
+      version_shader:
+        title: 셰이더
+        summary: 설치된 셰이더 팩을 관리합니다.
+      version_schematic:
+        title: 설계도
+        summary: 설계도 및 건축 파일을 관리합니다.
+      version_install:
+        title: 수정
+        summary: 인스턴스 버전 및 로더 구성 요소를 조정합니다.
+      version_server:
+        title: 서버
+        summary: 저장된 서버 항목을 관리합니다.
+      version_saves_info:
+        title: 개요
+        summary: 선택한 세이브의 메타데이터를 검토합니다.
+      version_saves_backup:
+        title: 백업
+        summary: 세이브 백업을 생성, 가져오기 및 복원합니다.
+      version_saves_datapack:
+        title: 데이터 팩
+        summary: 선택한 세이브의 데이터 팩을 관리합니다.
+    sidebar_groups:
+      download: 다운로드 워크스페이스
+      setup: 설정 워크스페이스
+      tools: 도구 워크스페이스
+      instance_setup: 인스턴스 워크스페이스
+      version_saves: 세이브 워크스페이스
+    sidebar_section_groups:
+      community_resources: 커뮤니티 리소스
+      installers: 설치 프로그램
+      game: 게임
+      launcher: 런처
+      about: 정보
+      tools: 도구
+      instance: 인스턴스
+      content: 콘텐츠
+      resources: 리소스
+      other: 기타
+      saves: 세이브
+    utilities:
+      back: 뒤로
+      back_target: "{target}(으)로 돌아가기"
+      task_manager: 작업 관리자
+      game_log: 게임 로그
+      home: 홈으로 돌아가기
+      active_summary: 셸에서 유틸리티 화면이 활성화되어 있습니다.
+      pinned_summary: 고정된 셸 유틸리티 화면입니다.
+    status:
+      line: '즉시 실행 명령: {command} | 스플래시: {splash} | 탐색 깊이: {depth}'
+      splash_on: 켜짐
+      splash_off: 꺼짐
+      commands:
+        none: 없음
+        set_gpu_preference: GPU 기본 설정 지정
+        optimize_memory: 메모리 최적화
+        invalid: 유효하지 않음
+    surface_meta:
+      line: "{kind} 화면 • {sidebar_group} • {navigation_state}"
+      no_sidebar_group: 사이드바 그룹 없음
+      back_available: 뒤로 사용 가능
+      top_level_route: 최상위 경로
+      kinds:
+        top_level: 최상위
+        secondary: 보조
+        detail: 상세
+        utility: 유틸리티
+    activities:
+      navigated: "{source}에서 {target}으로 이동했습니다."
+      opened_utility: 유틸리티 표면 {target}을 열었습니다.
+      stayed_current: 현재 경로를 유지했습니다.
+      followed_back_target: 셸 백 타겟을 따라 {target}까지 이동했습니다.
+      returned_home: "{target}으로 돌아왔습니다."
+      sources:
+        sidebar: 사이드바
+        top_bar: 상단 바
+        left_pane: 런처 스타일 왼쪽 창
+    accessories:
+      refresh: 새로고침
+      reset: 초기화
+  comp_detail:
+    route:
+      eyebrow: 프로젝트 세부정보
+      description: 이 프로젝트에 대한 실시간 커뮤니티 정보와 최신 릴리스를 확인하세요.
+      facts:
+        source: 출처
+        status: 상태
+        updated: 업데이트됨
+        downloads: 다운로드
+  page_content:
+    eyebrows:
+      top_level: 최상위 경로
+      secondary: 보조 경로
+      detail: 상세 경로
+      utility: 유틸리티 경로
+    values:
+      none: 없음
+    facts:
+      current_page: 현재 페이지
+      current_section: 현재 섹션
+      prompt_count: 대기 중인 프롬프트
+      active_prompt_lane: 활성 프롬프트 레인
+      page_kind: 페이지 종류
+      back_target: 뒤로 대상
+      launch:
+        identity: 신원
+        java: Java
+        resolution: 해상도
+        classpath_count: 클래스 경로 항목
+        java_warning: Java 경고
+      crash:
+        archive_name: 추천 아카이브
+        source_file_count: 소스 파일
+    lines:
+      active_prompt_lane: 프롬프트 오버레이는 현재 {lane} 차선에 초점이 맞춰져 있습니다.
+      launch:
+        runtime: 현재 런타임은 {java}를 사용하며 해상도는 {resolution}입니다.
+        last_completion: '최신 실행 알림: {message}'
+      crash:
+        export: 충돌 내보내기는 현재 수집된 파일 {file_count}개가 포함된 {archive_name}을(를) 대상으로 합니다.
+    sections:
+      overview:
+        eyebrow: 개요
+  prompts:
+    lanes:
+      startup:
+        title: 시작
+        summary: 런처 부트스트랩 알림 및 동의 프롬프트.
+      launch:
+        title: 실행
+        summary: 실행 전 확인 및 런타임 프롬프트.
+      crash:
+        title: 충돌
+        summary: 충돌 복구 조치 및 진단.
+    inbox:
+      title: "{lane} 프롬프트"
+      empty: "{lane} 차선에서 대기 중인 메시지가 없습니다."
+    activities:
+      failure_default: 작업이 실패했습니다.
+      switch_lane:
+        title: 프롬프트 차선 전환
+        body: "{lane}에는 이제 {count}개의 프롬프트가 대기 중입니다."
+      action:
+        title: '즉각적인 조치: {label}'
+      closed:
+        title: 프롬프트가 닫혔습니다.
+        body: "{prompt_id}이(가) {lane} 차선에서 벗어났습니다."
+      reject_consent:
+        title: 동의가 거부됨
+        body: 현재 프롬프트는 동의 상태를 유지하지 않았습니다.
+      close_prompt:
+        title: 프롬프트 닫기
+        body: 현재 프롬프트가 완료로 표시되었습니다.
+      exit_launcher:
+        title: 런처 종료
+        body: 프롬프트에서 런처 종료를 요청했습니다.
+      unhandled_command:
+        title: 처리되지 않은 프롬프트 명령이 발생했습니다.
+      launch_in_progress:
+        title: 실행 진행 중
+        body: 실행 세션이 이미 실행 중입니다.
+      launch_blocked:
+        title: 프롬프트에 의해 실행이 차단됨
+        body: 실행 전 메시지를 확인하거나 현재 인스턴스 설정을 먼저 조정하세요.
+      precheck_failed:
+        title: 실행 전 확인에 실패했습니다.
+      pending_launch_prompts:
+        title: 실행 전 메시지가 보류 중입니다.
+        body: "{instance}에는 아직 확인해야 할 메시지가 {count}개 있습니다."
+      accept_consent:
+        title: 동의가 수락됨
+        body: 공유 구성에 동의 상태가 기록되었습니다.
+      continue_launch:
+        title: 실행 흐름 계속
+        body_pending: 실행 전 메시지가 승인되었으며 현재 실행이 계속됩니다.
+        body_ready: 실행 전 프롬프트가 승인되었으며 실행 버튼을 다시 사용할 수 있습니다.
+      continue_flow:
+        title: 현재 흐름을 계속
+        body: 프롬프트에서 요청한 계속 작업이 완료되었습니다.
+      abort_launch:
+        title: 실행 흐름이 중단되었습니다.
+        body: 프롬프트에서 추가 처리를 위해 반환을 요청했기 때문에 현재 실행 작업이 차단되었습니다.
+      persist_setting:
+        title: 프롬프트 설정이 저장되었습니다
+        body_non_ascii_disabled: ASCII가 아닌 게임 경로 경고가 비활성화되었습니다.
+        body_value: '저장된 설정: {value}'
+      persist_java_override_failed:
+        title: 강제 실행 불가
+        body: 이 설정에 대해 쓰기 가능한 인스턴스가 없습니다.
+      persist_java_override:
+        title: Java 강제 실행 활성화됨
+        body: 이 인스턴스는 향후 실행 시 Java 호환성 검사를 무시하고 선택한 Java를 계속 사용합니다.
+      ignore_java_once:
+        title: 이번 실행에 대한 Java 검사가 무시되었습니다.
+        body: 이번 실행은 인스턴스 설정을 변경하지 않고 선택한 Java를 계속 사용합니다.
+      append_argument_failed:
+        title: 시작 인수를 추가하지 못했습니다.
+        body: 프롬프트에서 작성할 인수를 제공하지 않았습니다.
+      argument_exists:
+        title: 시작 인수가 이미 존재합니다.
+      argument_appended:
+        title: 실행 인수가 추가됨
+      navigate:
+        instance_settings: 프롬프트는 셸을 인스턴스 설정으로 라우팅했습니다.
+        game_log: 프롬프트는 셸을 라이브 게임 로그 표면으로 라우팅합니다.
+        java_settings: 런타임을 준비한 후 프롬프트에서 셸을 Java 설정으로 라우팅했습니다.
+      open_log:
+        title: 로그 열기
+        body: 충돌 로그를 생성했습니다. 라이브 로그 페이지({path})에서 열 수 있습니다.
+      crash_report_exported:
+        title: 충돌 보고서를 내보냈습니다.
+        body: "{path} • 보관된 {count}개 파일."
+      java_runtime_prepare_failed:
+        title: Java 런타임 준비 실패
+        body_missing_plan: 현재 실행 상태에는 실행 가능한 Java 다운로드 계획이 없습니다.
+      java_runtime_preparing:
+        title: Java 런타임 준비
+        body: Java 런타임이 백그라운드에서 다운로드 및 등록되고 있습니다.
+      java_runtime_ready:
+        title: Java 런타임 준비 완료
+        body: "{path} • {downloaded_count}개의 파일을 다운로드했고, {reused_count}개의 파일을 재사용했습니다."
+      game_process_ended:
+        title: 게임 프로세스가 종료되었습니다
+        body: "{instance} • 종료 코드 {exit_code}"
+      monitor_exception:
+        title: 세션 모니터 예외
+      crash_prompt_shown:
+        title: 마인크래프트에 오류가 발생했습니다
+        body: 이제 충돌 복구 프롬프트가 대기열에 추가됩니다. 로그를 보거나 충돌 보고서를 직접 내보낼 수 있습니다.
+      crash_test_triggered:
+        title: 충돌 테스트가 실행됨
+        body: 충돌 복구 프롬프트가 대기열에 추가되었습니다.
+    commands:
+      none_attached: 첨부된 명령이 없습니다.
+      none: 쉘 명령이 없습니다.
+      not_available: 해당 없음
+      continue_flow: 계속 흐름
+      accept_consent: 동의 수락
+      reject_consent: 동의 거부
+      open_url: URL 열기({value})
+      exit_launcher: 런처 종료
+      abort_launch: 실행 중단
+      append_launch_argument: 실행 인수 추가({value})
+      persist_setting: 지속 설정({value})
+      download_java_runtime: Java 다운로드({value})
+      persist_java_override: Java 호환성 재정의 유지
+      ignore_java_once: Java 호환성을 한 번 무시
+      close_prompt: 프롬프트 닫기
+      view_game_log: 게임 로그 열기
+      open_instance_settings: 인스턴스 설정 열기
+      export_crash_report: 충돌 보고서 내보내기
+    external_open:
+      success:
+        title: 열린 외부 대상
+        body: "{message} {target}"
+        url: 프롬프트에서 요청한 외부 링크를 열었습니다.
+        crash_report_exported: 충돌 보고서 아카이브를 내보내고 열었습니다.
+      failure:
+        title: 외부 대상을 열지 못했습니다.
+        missing_target: 열려는 대상이 없습니다.
+        body: "{target} • {error}"
+        unknown_error: 알 수 없는 오류
+    launch_logs:
+      process_exited: 게임 프로세스가 {exit_code} 코드로 종료되었습니다.
+      monitor_exception: '세션 모니터 예외: {message}'
+    crash:
+      details_header: '자세한 정보:'
+      launch_failure:
+        exit_code: 코드 {exit_code}로 인해 게임 프로세스가 예기치 않게 종료되었습니다.
+        raw_output_log: '원시 출력 로그: {path}'
+    java:
+      runtime_name: Java {version}
+      component_runtime_name: "{component} (Java {version})"
+      tags:
+        bit64: 64비트
+        prompt_download: 프롬프트 다운로드
+        reused_count: 재사용된 {count}
+  surface_actions:
+    sidebar:
+      title: '사이드바 작업: {action}'
+      body: "{title} • {command}"
+  game_log:
+    actions:
+      clear_cache: 캐시 지우기
+      export: 로그 내보내기
+      open_directory: 로그 폴더 열기
+      open_file: '로그 파일 열기: {name}'
+      refresh: 로그 새로고침
+    clear_cache:
+      completed: 현재 세션 로그 캐시를 지웠습니다.
+    empty:
+      description: 게임을 시작한 후 런처 로그, 생성된 시작 스크립트 및 원시 출력이 여기에 표시됩니다.
+      title: 로그가 아직 없습니다
+    export:
+      empty_directory: 현재 로그 폴더에 내보낼 로그 파일이 없습니다.
+      export_all_activity: 모든 로그 내보내기
+      missing_directory: 로그 폴더를 사용할 수 없습니다.
+    labels:
+      current_session_output: 현재 세션 출력
+      live_line_count: 라이브 라인
+      recent_files: 최근 파일
+      recent_generated_files: 최근 생성된 파일
+    latest_update:
+      none: 아직 로그 파일을 찾을 수 없습니다.
+    live_output:
+      waiting: 현재 세션 출력을 기다리는 중...
+    open_directory_failure: 로그 폴더 열기 실패
+    route:
+      description: 라이브 세션 출력과 가장 최근에 생성된 실행 프로그램 로그 파일을 검토하세요.
+      facts:
+        latest_update: 최신 업데이트
+        live_lines: 라이브 라인
+        recent_files: 최근 파일
+  help_detail:
+    actions:
+      copy_text: 텍스트 복사
+      copy_text_completed: 텍스트가 클립보드에 복사되었습니다.
+      download_file: 파일 다운로드
+      generic: 도움말 작업
+      help_item: 도움말 항목
+      inline_default_info: 액션 정보
+      open_file: 파일 열기
+      open_help: '도움말 열기: {name}'
+      open_web: 웹페이지 열기
+      view_image: 이미지 보기
+    activities:
+      open: '도움말 열기: {title}'
+    empty:
+      description: 내용, 소스 및 사용 가능한 작업을 보려면 도움말 항목을 선택하세요.
+      title: 도움말 항목이 선택되지 않았습니다.
+    failures:
+      action: "{title} 실패"
+      download_target_missing: 다운로드한 대상 파일이 없습니다.
+      entry_not_found: '도움말 항목을 찾을 수 없습니다: {reference}'
+      invalid_download_address: 다운로드 주소가 잘못되었습니다.
+      missing_action_target: 이 작업에는 타겟이 없습니다.
+      missing_copy_text: 복사할 텍스트가 없습니다.
+      missing_target: 대상을 사용할 수 없습니다.
+    generated:
+      example_button: '예시 버튼: {title}'
+      example_button_with_summary: '예시 버튼: {summary}'
+      example_button_with_title_and_summary: '예시 버튼: {title} ({summary})'
+      hint: '힌트: {text}'
+    popup:
+      default_button: 좋아요
+      missing_content: 이 팝업에는 표시 가능한 콘텐츠가 포함되어 있지 않습니다.
+    route:
+      description: 도움말 세부 정보에는 구문 분석된 콘텐츠, 포함된 작업 및 추적 가능한 소스 정보가 표시됩니다.
+      facts:
+        actions: 행위
+        lines: 윤곽
+        source: 출처
+    sections:
+      card_default_title: 도움말 콘텐츠
+      missing_content:
+        body: 이 도움말 항목에는 읽을 수 있는 내용이 포함되어 있지 않습니다.
+        title: 콘텐츠를 로드할 수 없습니다
+      no_cards:
+        body: 구조화된 도움말 카드를 찾을 수 없습니다.
+      parse_failed:
+        body: 도움말 문서를 올바르게 구문 분석할 수 없습니다.
+        title: 구문 분석 실패
+      source_line: '출처: {source}'
+      supplement:
+        title: 보충
+    source_unresolved: 소스가 해상도되지 않음
+    summary_loaded: 구문 분석된 도움말 콘텐츠와 작업은 다음과 같습니다.
+    title_default: 도움말 세부정보
+  instance_select:
+    activities:
+      refresh_failure: 인스턴스 새로 고침 실패
+      switch_directory: 인스턴스 폴더 전환
+      switch_instance: 스위치 실행 인스턴스
+      switch_instance_detail: 현재 시작 인스턴스가 {name}(으)로 전환되었습니다.
+    delete:
+      activity: 인스턴스 삭제
+      cancelled: 삭제가 취소되었습니다.
+      confirm_action: 삭제
+      confirm_message: "{name} 인스턴스를 삭제하시겠습니까? 런처는 먼저 휴지통으로 이동하려고 시도합니다."
+      confirm_title: 이 인스턴스를 삭제하시겠습니까?
+      failure: 인스턴스 삭제 실패
+      moved_to_trash: "{name} 인스턴스를 휴지통으로 이동했습니다: {path}"
+      permanently_deleted: "{name} 인스턴스가 영구적으로 삭제되었습니다."
+    detail:
+      last_modified: "{path} • 마지막 수정 {time}"
+    empty:
+      download: 인스턴스 다운로드
+      no_match_description: "“{query}”와 일치하는 인스턴스가 없습니다. 다른 키워드를 사용해 보거나 검색어를 삭제하세요."
+      no_match_title: 일치하는 인스턴스 없음
+      none_description: 인스턴스를 찾을 수 없습니다. 먼저 새 인스턴스를 다운로드하거나 왼쪽 목록에서 기존 폴더를 추가하세요.
+      none_title: 사용 가능한 인스턴스 없음
+      open_download_activity: 다운로드 페이지 열기
+    entry:
+      current: 현재
+      delete_tooltip: 인스턴스 삭제
+      favorite_tooltip: 즐겨찾기 전환
+      open_folder_tooltip: 인스턴스 폴더 열기
+      open_instance_directory: 인스턴스 폴더 열기
+      open_instance_directory_failure: 인스턴스 폴더 열기 실패
+      open_settings_tooltip: 설정 열기
+      set_as_launch: 실행 대상으로 설정
+    favorite:
+      added_activity: 즐겨찾기에 추가됨
+      failure: 즐겨찾기 업데이트 실패
+      removed_activity: 즐겨찾기에서 삭제됨
+    folder:
+      current_activity: 현재 인스턴스 폴더
+      open_tooltip: 폴더 열기
+      remove_tooltip: 폴더 제거
+      switched: 인스턴스 폴더를 {directory}로 전환했습니다.
+    folder_remove:
+      activity: 인스턴스 폴더 제거
+      cancelled: 제거가 취소되었습니다.
+      confirm_action: 제거하다
+      confirm_message: 목록에서 이 폴더를 제거하시겠습니까?{newline}{newline}{path}
+      confirm_title: 이 폴더를 제거하시겠습니까?
+      failure: 인스턴스 폴더 제거 실패
+      not_saved: 이 폴더는 저장되지 않았으며 목록에서 제거할 수 없습니다.
+      removed: 폴더 목록에서 {path}을(를) 제거했습니다.
+      removed_and_switched: "{removed}를 제거하고 {target}으로 전환했습니다."
+      still_active: "{path}는 여전히 활성 인스턴스 폴더입니다."
+    groups:
+      api_installable: API 설치 가능
+      error: 오류 인스턴스
+      favorites: 즐겨찾기
+      header: "{title}({count})"
+      hidden: 숨겨진
+      loaders:
+        cleanroom: Cleanroom
+        fabric: Fabric
+        forge: Forge
+        labymod: LabyMod
+        legacy_fabric: Legacy Fabric
+        liteloader: LiteLoader
+        neoforge: NeoForge
+        quilt: Quilt
+      rarely_used: 거의 사용되지 않음
+      regular: 정기적인
+    left:
+      folders: 폴더
+      shortcuts: 바로가기
+    navigation:
+      launch: "{name}(으)로 실행 인스턴스를 전환하고 실행 페이지로 돌아왔습니다."
+      overview: "{name}의 개요 페이지를 열었습니다."
+    open_folder:
+      activity: 폴더 열기
+      failure: 폴더 열기 실패
+      missing_path: 폴더 경로를 사용할 수 없습니다.
+      not_found: '폴더를 찾을 수 없습니다: {path}'
+    results:
+      count: "{count}개의 인스턴스 표시 중"
+      filtered_none: 현재 필터와 일치하는 인스턴스가 없습니다.
+      none: 현재 시작 디렉터리에 사용 가능한 인스턴스가 없습니다.
+    route:
+      description: 현재 시작 디렉터리에서 인스턴스를 찾아보고 시작 대상을 전환합니다.
+      facts:
+        launch_directory: 디렉토리 실행
+        result_count: 결과
+        selected_instance: 선택된 인스턴스
+      values:
+        none_selected: 선택한 항목 없음
+        unresolved: 해상도되지 않은
+    search:
+      tooltip: 이름, 버전 또는 태그로 인스턴스 검색
+      watermark: 인스턴스 검색
+    shortcuts:
+      add_folder:
+        added_and_switched: 폴더를 추가하고 {path}로 전환했습니다.
+        cancelled: 작업이 취소되었습니다.
+        description: 실행 프로그램 목록에 기존 인스턴스 폴더를 추가합니다.
+        failure: 폴더 추가 실패
+        pick_title: 인스턴스 폴더 선택
+        switched: "{path}로 전환되었습니다."
+        title: 기존 폴더 추가
+      import_pack:
+        cancelled: 가져오기가 취소되었습니다.
+        description: Modpack 아카이브를 현재 실행기 디렉터리로 가져옵니다.
+        failure: 모드팩 가져오기 실패
+        name_failure: 인스턴스 이름 확인 실패
+        no_name: 선택한 아카이브에서 인스턴스 이름을 확인할 수 없습니다.
+        pick_filter: 모드팩 아카이브
+        pick_title: Modpack 아카이브 선택
+        task_queued: '대기 중인 작업: {task}'
+        title: 모드팩 가져오기
+      trash:
+        description: 시스템 휴지통이나 휴지통을 엽니다.
+        title: 휴지통/쓰레기통
+    subtitle:
+      unknown_version: 알 수 없는 버전
+    tags:
+      api: API
+      broken: 고장난
+      favorite: 가장 좋아하는
+      hidden: 숨겨진
+      rarely_used: 거의 사용되지 않음
+    tasks:
+      install_modpack: 'Modpack 설치: {name}'
+  task_manager:
+    actions:
+      clear_finished: 완료된 작업 지우기
+    activity:
+      canceled: "{duration} 후에 취소됨"
+      failed: "{duration} 후에 실패함"
+      running: "{duration} 동안 실행 중 • 업데이트됨 {recent}"
+      success: "{duration} 내에 완료됨"
+      waiting: "{duration} 동안 기다리는 중"
+    duration:
+      hours_minutes: "{hours}시간 {minutes}분"
+      minutes_seconds: "{minutes}분 {seconds}초"
+      seconds: "{seconds}초"
+    empty:
+      description: 현재 활성화된 백그라운드 작업이 없습니다.
+      title: 백그라운드 작업 없음
+    entries:
+      children: "{count}개 하위 작업"
+    labels:
+      current_speed: '현재 속도: {speed}'
+      install_progress: 설치 진행 상황
+      remaining_files: '남은 파일: {count}'
+    left:
+      download_speed: 다운로드 속도
+      overall_progress: 전반적인 진행 상황
+      remaining_files: 남은 파일
+    placeholders:
+      no_progress: 진전이 없습니다
+      waiting_state_message: 실행을 기다리는 중
+    recent:
+      just_now: 방금
+      minutes_ago: "{minutes}분 전"
+      seconds_ago: "{seconds} 초 전"
+    route:
+      description: 대기 중, 실행 중, 완료 및 실패한 백그라운드 작업의 상태를 검토합니다.
+      facts:
+        failed: 실패한
+        finished: 완성된
+        running: 달리기
+        waiting: 대기 중
+    stage:
+      canceled: 취소됨 • {duration}
+      failed: 실패 • {duration}
+      running: 실행 중 • {duration}
+      success: 완료됨 • {duration}
+      waiting: 대기 중
+    states:
+      canceled: 취소됨
+      failed: 실패
+      running: 실행 중
+      success: 완료
+      waiting: 대기 중
+    summary:
+      active: "{running} 실행 중, {waiting} 대기 중"
+      none: 백그라운드 작업 없음
+  tools:
+    common:
+      confirm: 확인
+      failure_title: "{title} 실패"
+    help:
+      default_group: 일반적인
+      search:
+        empty_header: 결과 없음
+        no_results: 현재 키워드와 일치하는 도움말 항목이 없습니다.
+        results_header: 검색결과
+        watermark: 도움말 항목 검색
+    test:
+      achievement:
+        block_id: 아이템 ID
+        first_line: 1호선
+        invalid_content: 업적 콘텐츠가 불완전합니다.
+        output_missing: 업적 이미지가 생성되지 않았습니다.
+        preview: 업적 이미지 미리보기
+        preview_activity: 업적 이미지 미리보기
+        preview_hidden: 미리보기가 숨겨져 있습니다.
+        save: 이미지 저장
+        save_activity: 업적 이미지 저장
+        save_failure: 업적 이미지 저장 실패
+        second_line: 2호선
+        title: 업적 제목
+      cards:
+        achievement: 사용자 정의 업적 이미지 생성기(영어로만 제공)
+        custom_download: 사용자 정의 파일 다운로드
+        head: 스킨 헤드 생성기
+        official_skin: 공식 플레이어 스킨 다운로드
+        server_query: 서버 쿼리
+        toolbox: 도구 상자
+      custom_download:
+        address: 다운로드 URL
+        description: PCL의 멀티스레드 다운로드 엔진을 사용하여 모든 파일을 다운로드하세요. 일부 사이트에서는 403이 반환되어 정상적으로 다운로드되지 않을 수 있습니다.
+        file_name: 파일 이름
+        invalid_address: 다운로드 URL이 잘못되었습니다.
+        missing_folder: 먼저 대상 폴더를 선택하세요.
+        open_folder: 폴더 열기
+        open_folder_activity: 다운로드 폴더 열기
+        open_folder_failure: 다운로드 폴더 열기 실패
+        pick_folder_activity: 다운로드 폴더를 선택하세요
+        pick_folder_cancelled: 폴더 선택이 취소되었습니다.
+        pick_folder_failure: 다운로드 폴더 선택 실패
+        pick_folder_title: 다운로드 폴더 선택
+        save_to: 다음에 저장
+        select: 선택하다
+        start: 다운로드 시작
+        start_activity: 사용자 정의 다운로드 시작
+        start_failure: 사용자 정의 다운로드 시작 실패
+        user_agent: 사용자 에이전트
+      head:
+        no_skin_selected: 선택한 스킨 파일이 없습니다.
+        output_missing: 머리 이미지가 생성되지 않았습니다.
+        pick_skin_activity: 스킨 선택
+        pick_skin_cancelled: 스킨 선택이 취소되었습니다.
+        pick_skin_failure: 스킨 선택 실패
+        pick_skin_filter: 공통 이미지 파일
+        pick_skin_title: 스킨 이미지 선택
+        preview: 시사
+        save: 머리 저장
+        save_activity: 머리 이미지 저장
+        save_failure: 헤드 이미지 저장 실패
+        select_skin: 스킨 선택
+        size: 머리 크기
+      official_skin:
+        missing_player_name: 플레이어 이름은 비워둘 수 없습니다.
+        missing_skin_payload: 선택한 플레이어에는 다운로드 가능한 스킨 페이로드가 없습니다.
+        missing_skin_url: 선택한 플레이어에는 스킨 URL이 없습니다.
+        output_missing: 스킨 파일이 다운로드되지 않았습니다.
+        player_name: 공식 플레이어 이름
+        player_not_found: 플레이어를 찾을 수 없습니다.
+        save: 스킨 저장
+        save_activity: 공식 스킨 저장
+        save_failure: 공식 스킨 저장 실패
+      refresh:
+        activity: 테스트 페이지 양식과 도구 상자 작업이 현재 실행 프로그램 구성에서 다시 로드되었습니다.
+        title: 테스트 도구 새로 고침
+      server_query:
+        address_watermark: 서버 주소 또는 호스트:포트
+        empty_address: 서버 주소가 비어 있어 쿼리할 수 없습니다.
+        error: '연결할 수 없습니다: {message}'
+        loading: 쿼리 중...
+        navigation: 테스트 페이지로 전환하여 {address} 쿼리를 준비했습니다.
+        no_result: 서버 정보가 반환되지 않았습니다.
+        open_activity: 오픈 서버 인스펙터
+        query: 질문
+        query_activity: Minecraft 서버 쿼리
+        query_failure: Minecraft 서버 쿼리 실패
+        result_title: Minecraft 서버
+        validation:
+          empty: 서버 주소는 비워둘 수 없습니다.
+          invalid_host: 호스트 이름이 잘못되었습니다.
+          invalid_ipv6: IPv6 주소 형식이 잘못되었습니다.
+          invalid_port: '잘못된 포트: {port}'
+      toolbox:
+        actions:
+          clear_rubbish:
+            none_removed: 캐시, 로그 또는 충돌 보고서를 정리할 필요가 없습니다.
+            removed: 캐시된 항목 {count}개 또는 로그 항목을 삭제했습니다.
+            title: 게임 정크 지우기
+            tooltip: 캐시된 로그 및 충돌 보고서를 정리합니다.
+          crash_test:
+            title: 충돌 테스트
+            tooltip: 충돌 프롬프트를 트리거합니다.
+          create_shortcut:
+            cancelled: 바로가기 생성이 취소되었습니다.
+            choice_info: '위치: {path}'
+            choose_title: 바로가기 위치 선택
+            confirm: 만들다
+            created_hint: "{target}에 바로가기가 생성되었습니다."
+            failure_title: 바로가기 생성 실패
+            location: "{title} 위치: {path}"
+            no_targets: 현재 시스템에서는 사용 가능한 바로가기 위치가 제공되지 않습니다.
+            summary_warning: 이 바로가기는 자동으로 제거되지 않습니다. 런처를 삭제하거나 이동하기 전에 수동으로 제거하세요.
+            targets:
+              desktop: 데스크탑
+              start_menu: 시작 메뉴
+            title: 바로가기 만들기
+            tooltip: 런처 바로가기를 만듭니다.
+            unknown_target: '알 수 없는 바로가기 대상: {id}'
+          daily_luck:
+            activity: '오늘의 행운 점수: {value}'
+            dialog_title: 오늘의 행운 - {date}
+            high_message: 오늘 당신의 행운 점수는 {value}입니다! {rating}
+            low_message: 오늘 당신의 행운 점수는 {value}입니다... {rating}
+            ratings:
+              r0: 100점 척도입니다.
+              r10: 안 돼요...
+              r30: 아야...
+              r40: 거의 괜찮아요...
+              r60: 나쁘지 않아요.
+              r90: 훌륭한!
+              r95: 거의 100...
+              r100: 100! 100! 숨겨진 테마? 잠깐, 크로스 플랫폼 빌드에는 아마도 그런 기능이 없을 것입니다...
+            title: 오늘의 행운
+            tooltip: 오늘의 행운을 확인해 보세요.
+          launch_count:
+            dialog_title: 실행 횟수
+            message: PCL이 이미 귀하를 위해 게임을 {count}번 시작했습니다.
+            title: 실행 횟수
+            tooltip: 런처가 게임을 시작한 횟수를 표시합니다.
+          memory_optimize:
+            cancelled: 메모리 최적화가 취소되었습니다.
+            confirm_title: 메모리 최적화를 확인하시겠습니까?
+            continue: 계속하다
+            prompts:
+              r0: 뭐...?
+              r2: 기억력이 빡빡합니다. 반복적인 최적화와 과도한 디스크 압력을 방지하려면 더 많은 RAM을 추가하는 것이 좋습니다.
+              r6: 이 기능을 사용한 후 약 1분 동안 시스템이 안정되도록 기다립니다.
+              r16: 당신은 상당한 양의 기억력을 가지고 있습니다. 시스템이 먼저 메모리를 관리하도록 하십시오.
+              r32: 총 메모리가 풍부합니다. 메모리 최적화를 시도하는 대신 불필요한 프로그램을 닫으세요.
+            title: 메모리 선택
+            tooltip: 일부 메모리를 자동으로 확보합니다.
+            unsupported_other: 이 플랫폼은 표준 구현과 호환되는 메모리 최적화 프로그램을 제공하지 않습니다. 확인 흐름은 유지되지만 외부 편집기는 열리지 않습니다.
+            unsupported_windows: Avalonia 프런트엔드는 표준 구현에서 사용되는 Windows 메모리 최적화 프로그램을 아직 통합하지 않았습니다. 확인 흐름은 유지되지만 외부 편집기는 열리지 않습니다.
+        unsupported: 이 도구 상자 작업은 아직 Avalonia 프런트엔드에서 지원되지 않습니다.
+  startup:
+    migration_warnings:
+      title: 구성 마이그레이션 실패
+      message: |-
+        실행 프로그램이 구성 파일을 마이그레이션할 수 없습니다. 계속 실행되지만 일부 설정은 기본값으로 돌아갈 수 있습니다.
+
+        {warnings}
+startup:
+  prompts:
+    special_build:
+      title: 특수 빌드
+      debug:
+        message: 이 런처 빌드는 디버깅을 위해 제작되었으므로 불안정할 수 있습니다. 이 알림을 비활성화하려면 {hint_env_var}를 설정하거나 최신 안정 릴리스({latest_release_url})를 여세요.
+      ci:
+        message: 이 런처 빌드는 CI에서 제공되었으며 불완전할 수 있습니다. 이 알림을 비활성화하려면 {hint_env_var}를 설정하거나 최신 안정 릴리스({latest_release_url})를 여세요.
+      actions:
+        continue: 계속하다
+        open_release_and_exit: 릴리스 페이지를 열고 종료합니다.
+    eula:
+      title: 라이선스 계약
+      message: '계속하기 전에 런처 계약을 검토하고 동의해야 합니다. 참조: {eula_url}'
+      actions:
+        accept: 동의
+        reject: 거부하고 종료
+        open: 공개 계약
+    environment_warning:
+      title: 환경 경고
+      message: |-
+        현재 환경에 주의가 필요합니다.
+        {warnings}
+      actions:
+        acknowledge: 이해합니다
+launch:
+  announcements:
+    community_edition_intro:
+      title: 크로스 플랫폼 버전 공지
+      message: PCL의 크로스 플랫폼 버전을 사용하고 있습니다. 이 버전은 독립적으로 개발 및 유지 관리되며 로드맵은 공식 릴리스와 다릅니다.
+      detail: 이 빌드는 아직 적극적으로 테스트 중입니다. 피드백과 버그 보고를 환영합니다.
+  notifications:
+    success: "{instance_name}이(가) 성공적으로 실행되었습니다."
+    abort_with_hint: '실행이 취소되었습니다: {hint}'
+    script_export_canceled: 실행 스크립트 내보내기가 완료되고 실행이 중지되었습니다.
+    launch_canceled: 실행이 취소되었습니다.
+    none: ''
+  precheck:
+    failures:
+      instance_path_reserved_chars: 인스턴스 경로에는 ! 또는 ; ({path}).
+      instance_indie_path_reserved_chars: 독립 게임 경로에는 ! 또는 ; ({path}).
+      instance_not_selected: 현재 선택된 인스턴스가 없습니다.
+      instance_has_error: '선택한 인스턴스가 잘못된 상태입니다: {detail}'
+      no_profile_selected: 시작하기 전에 로그인 프로필을 선택하세요.
+      microsoft_profile_required: 이 인스턴스에는 Microsoft 프로필이 필요합니다.
+      auth_profile_required: 이 인스턴스에는 Authlib 프로필이 필요합니다.
+      auth_server_mismatch: 선택한 Authlib 계정이 필수 인증 서버와 일치하지 않습니다.
+      microsoft_or_auth_profile_required: 이 인스턴스에는 Microsoft 또는 일치하는 Authlib 프로필이 필요합니다.
+      unknown: 현재 인스턴스는 아직 시작할 준비가 되지 않았습니다.
+  prompts:
+    non_ascii_path:
+      title: 비ASCII 경로 경고
+      message: "{instance_name}은 ASCII가 아닌 문자가 포함된 경로를 사용하고 있습니다. 이 환경에서는 일부 Java 런타임 또는 모드가 실패할 수 있습니다."
+      actions:
+        continue: 무시하고 계속
+        abort: 실행 취소
+        disable: 다시 경고하지 않음
+    purchase:
+      optional:
+        title: Minecraft 소유권 권장
+        message: Microsoft 소유권 프로필이 선택되지 않았습니다. Minecraft를 소유하고 있다면 여기({purchase_url})에 로그인하거나 구매해 보세요.
+        actions:
+          buy: 구매 페이지 열기
+          continue: 계속하다
+      required:
+        title: Minecraft 소유권이 필요합니다.
+        message: 이 기능을 사용하려면 Microsoft 소유의 Minecraft 프로필이 필요합니다.
+        actions:
+          buy: 구매 페이지 열기
+          demo: 데모 모드 실행
+          abort: 실행 취소
+    java_missing:
+      title: Java 런타임 누락
+      manual_java7_with_legacy_fixer:
+        message: 이 인스턴스에는 Java 7 및 레거시 Forge 호환성 처리가 필요합니다. 시작하기 전에 일치하는 Java 7 런타임을 수동으로 설치하세요.
+      manual_java7:
+        message: 이 인스턴스에는 Java 7이 필요합니다. 시작하기 전에 일치하는 Java 7 런타임을 수동으로 설치하세요.
+      manual_java8u141_to_320:
+        message: 이 인스턴스에는 Java 8 업데이트 141~320이 필요합니다. 시작하기 전에 호환되는 Java 8 런타임을 수동으로 설치하세요.
+      manual_java8u141_plus:
+        message: 이 인스턴스에는 Java 8 업데이트 141 이상이 필요합니다. 시작하기 전에 호환되는 Java 8 런타임을 수동으로 설치하세요.
+      actions:
+        confirm: 닫다
+      auto_download:
+        title: Java 런타임 다운로드
+        message: 호환 가능한 런타임이 없습니다. {version}을(를) 자동으로 다운로드하고 등록하시겠습니까?
+        actions:
+          download: 다운로드
+          cancel: 취소
+    support:
+      title: 실행 마일스톤 {launch_count}
+      message: 게임을 {launch_count}회 시작했습니다. PCL-ME가 유용했다면 프로젝트 후원을 고려해 보세요.
+      actions:
+        sponsor: 스폰서
+        continue: 계속하다
+    java_compatibility:
+      title: Java 호환성 경고
+      message: "{runtime_label}은 필수 Java 범위({minimum_version} - {maximum_version})를 충족하지 못할 수 있습니다."
+      actions:
+        force_current: 현재 Java 사용
+        use_compatible: 호환 가능한 Java 사용
+        abort: 실행 취소
+  actions:
+    launch: 실행
+    launching: 실행 중...
+    version_select: 버전 선택
+    version_setup: 버전 설정
+  dialog:
+    download_speed:
+      zero: 0B/초
+    labels:
+      did_you_know: 알고 계셨나요?
+      download_speed: 다운로드 속도
+      method: 방법
+      progress: 진전
+      step: 단계
+    stages:
+      assets: 자산 다운로드 중
+      assets_file: '자산 다운로드 중: {file_name}'
+      support: 지원 파일 복구
+      support_file: '파일 복구 중: {file_name}'
+      verify_instance: 인스턴스 파일 확인
+    state:
+      canceling:
+        game_process: 게임 프로세스 중지
+        prelaunch_tasks: 실행 전 작업 중지
+        title: 취소 중
+      running:
+        initializing: 초기화 중
+        title: 진수
+    hints:
+      create_hints_file: PCL 폴더에 힌트.txt 파일을 생성하여 시작 시 표시되는 알고 계셨습니까? 메시지를 사용자 정의합니다.
+      time_tick: 게임에서 시간의 기본 단위는 틱(tick)이다. 1틱은 0.05초와 같습니다.
+      jeb_sheep: 양의 이름을 "jeb_"로 지정하면 양털의 색이 계속 변합니다.
+      lodestone_compass: 자철석에 연결되지 않은 나침반은 항상 월드 스폰을 가리킵니다.
+      parrots_dance: 현재 음악 디스크가 재생되고 있는 주크박스 근처에서 앵무새들이 춤을 추고 있습니다.
+      map_lock: 지도 내용을 잠그려면 지도 제작 테이블에 지도와 유리판을 넣으세요.
+      baby_turtle_scute: 아기 거북이는 자라자마자 인갑을 떨어뜨립니다.
+      potion_damage: 물약 피해는 갑옷을 무시하므로 Netherite 갑옷은 물약 손상으로부터 당신을 보호하지 못합니다.
+      dinnerbone: Java Edition에서 몹의 이름을 Dinnerbone 또는 Grumm으로 지정하면 이름이 뒤집어집니다.
+      best_selling: Minecraft는 역사상 가장 많이 팔린 비디오 게임 중 하나입니다.
+  profile:
+    actions:
+      add_or_login: 추가 또는 로그인
+      select: 선택
+    activities:
+      authlib_login: Authlib 로그인
+      authlib_login_failed: Authlib 로그인 실패
+      busy: 다른 프로필 작업이 이미 실행 중입니다.
+      create_offline: 오프라인 프로필 만들기
+      create_offline_failed: 오프라인 프로필을 생성하지 못했습니다.
+      delete: 프로필 삭제
+      delete_failed: 프로필을 삭제하지 못했습니다.
+      microsoft_login: 마이크로소프트 로그인
+      microsoft_login_failed: Microsoft 로그인 실패
+      refresh: 프로필 새로 고침
+      refresh_failed: 프로필을 새로 고치지 못했습니다.
+      switch: 프로필 전환
+      switch_failed: 프로필을 전환하지 못했습니다.
+    instance_create:
+      title: 프로필 만들기
+      status_default: 인스턴스 설정에서 타사 인증 서버를 가져왔습니다.
+      status_named: 인스턴스 설정에서 {auth_name}을(를) 가져왔습니다.
+      navigation: 인증 프로필 생성을 위한 인스턴스 설정에서 시작 경로를 열었습니다.
+      completed: "{instance_name}에 대한 타사 인증 프로필을 생성하기 위한 시작 경로를 열었습니다."
+    authlib:
+      actions:
+        login: 로그인
+        use_littleskin: LittleSkin 사용
+      activities:
+        use_littleskin: 인증 서버 전환
+      completed: "{profile_name}(으)로 로그인됨"
+      errors:
+        invalid_server: 잘못된 인증 서버 주소
+        login_failed: Authlib 로그인 실패
+        no_roles: 인증 서버가 사용 가능한 역할을 반환하지 않았습니다.
+        required_fields: 서버 주소, 사용자 이름, 비밀번호를 입력하세요.
+      password_watermark: 비밀번호
+      server_watermark: 인증 서버 URL
+      title: Authlib 인젝터
+      user_name_watermark: 사용자 이름
+    chooser:
+      authlib: Authlib 인젝터
+      microsoft: Microsoft 계정
+      offline: 오프라인 프로필
+    delete:
+      canceled: 삭제가 취소되었습니다.
+      completed: "{profile_name} 프로필이 삭제되었습니다."
+      confirmation:
+        confirm: 삭제
+        message: 선택한 프로필을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
+        title: 프로필 삭제
+      list_changed: 프로필 목록이 변경되었습니다. 다시 시도해 주세요.
+    entry:
+      unnamed: 이름이 없는 프로필
+    hint:
+      selected: 프로필 준비 완료
+    kinds:
+      authlib: Authlib 인젝터
+      authlib_with_server: Authlib-인젝터({server_name})
+      microsoft: 마이크로소프트 계정
+      offline: 오프라인 프로필
+    microsoft:
+      actions:
+        continue_after_auth: 계속하다
+        reopen_browser: 브라우저를 다시 엽니다
+        start: 로그인 시작
+      completed: "{user_name}(으)로 로그인됨"
+      device_code: 장치 코드
+      errors:
+        authorization_declined: 승인이 거부되었습니다.
+        authorization_timeout: Microsoft 인증을 기다리는 동안 시간이 초과되었습니다.
+        device_code_expired: 장치 코드가 만료되었습니다. 다시 시작하세요.
+        missing_client_id: 내장된 Microsoft 클라이언트 ID가 누락되었습니다.
+      messages:
+        opened_profile_create_page: Microsoft 계정 생성 페이지를 열었습니다.
+        opened_related_web: 관련 웹페이지를 오픈했습니다
+        opened_sign_in_page: Microsoft 로그인 페이지를 열었습니다.
+      status:
+        browser_opened: 브라우저가 열렸습니다. 승인을 완료하고 여기로 돌아오세요.
+        initial: Microsoft에 로그인할 준비가 되었습니다.
+        requesting_device_code: 장치 코드 요청 중...
+        waiting_for_auth: Microsoft 인증을 기다리는 중...
+      title: 마이크로소프트 계정
+    none_selected: 선택된 프로필 없음
+    offline:
+      actions:
+        create: 만들다
+      completed: 오프라인 프로필 {user_name}을(를) 생성했습니다.
+      custom_uuid_watermark: 사용자 정의 UUID(선택 사항)
+      errors:
+        empty_user_name: 사용자 이름을 입력하세요
+        invalid_uuid: 맞춤 UUID 형식이 잘못되었습니다.
+      title: 오프라인 프로필
+      user_name_watermark: 사용자 이름
+      uuid_modes:
+        custom: 맞춤 UUID
+        legacy: 레거시 UUID
+        standard: 표준 UUID
+    refresh:
+      authlib:
+        completed: 새로 고친 Authlib 프로필 {profile_name}
+        errors:
+          failed: 'Authlib 새로고침 실패: {message}'
+          incomplete_session: 현재 Authlib 세션이 불완전합니다
+          invalid_server: 저장된 인증 서버 주소가 유효하지 않습니다.
+          multiple_roles: 여러 역할이 반환되었습니다. 다시 로그인해 주세요.
+          profile_changed: 반환된 프로필이 현재 계정과 일치하지 않습니다.
+          relogin_required: 세션이 만료되었습니다. 다시 로그인하세요.
+        reauthenticate: 재인증 중...
+        reauthenticated: "{profile_name}(으)로 재인증되었습니다."
+        refresh_session: 세션을 새로 고치는 중...
+        valid: Authlib 세션은 {profile_name}에 유효합니다.
+        validate_session: 세션 검증 중...
+      canceled: 새로고침이 취소되었습니다.
+      errors:
+        expired_keyword: 만료됨
+        request_failed_status: 상태 코드 {status_code}로 인해 요청이 실패했습니다.
+      microsoft:
+        check_ownership: 게임 소유권 확인 중...
+        completed: 새로 고쳐진 Microsoft 프로필 {profile_name}
+        errors:
+          failed: 'Microsoft 새로 고침 실패: {message}'
+          missing_refresh_token: 새로 고침 토큰이 누락되었습니다. 다시 로그인하세요.
+          relogin_required: 세션이 만료되었습니다. 다시 로그인하세요.
+        get_minecraft_access_token: Minecraft 액세스 토큰을 가져오는 중...
+        get_xbox_live_token: Xbox Live 토큰을 가져오는 중...
+        get_xsts_token: XSTS 토큰을 가져오는 중...
+        refresh_account: Microsoft 계정을 새로 고치는 중...
+        sync_profile: 프로필 정보 동기화 중...
+        valid: Microsoft 세션은 {profile_name}에 유효합니다.
+        validate_session: 세션 검증 중...
+      not_required: 이 프로필은 새로 고칠 필요가 없습니다
+    selection:
+      empty: 사용 가능한 프로필이 없습니다.
+      hint: 시작 프로필 선택
+      hint_empty: 실행 프로필이 선택되지 않았습니다.
+  status:
+    activities:
+      canceled: 실행이 취소됨
+      dismiss_announcement: 공지 닫기
+      failed: 실행 실패
+      game_process_started: 게임이 시작되었습니다
+      instance_verification: 인스턴스 검증
+      java_check_ignored: Java 경고가 무시되었습니다.
+      prelaunch_account_check: 실행 전 계정 확인
+    current_instance: '현재 인스턴스: {instance_name}'
+    errors:
+      instance_verification_failed: '인스턴스 확인 실패: {message}'
+      java_missing: Java 런타임이 선택되지 않았습니다.
+    hints:
+      launch_succeeded: 실행이 성공적으로 시작되었습니다.
+    lines:
+      java: 'Java: {java_label}'
+      java_warning: 'Java 경고: {message}'
+      precheck: '사전 확인: {result}'
+      profile: '프로필: {profile_label}'
+      prompts: '프롬프트: {prompt_count}, 지원 프롬프트: {support_prompt}'
+      session: '세션: {session_state}'
+    logs:
+      canceled: 실행이 취소됨
+      failed: '실행 실패: {message}'
+      task_manager_progress: 작업 관리자 진행 상황을 추적 중입니다.
+      verifying_instance_files: 인스턴스 파일 확인 중...
+    messages:
+      announcement_dismissed: '취소된 공지사항: {title}'
+      canceled: 실행이 취소됨
+      game_process_started: "{instance_name}(PID {pid}) 시작됨"
+      instance_verification_completed: 인스턴스 확인이 완료되었습니다. {downloaded_count}개의 파일을 다운로드하고 {reused_count}개의 파일을 재사용했습니다.
+      returned_to_launch_page: 실행 페이지로 돌아왔습니다
+    overview_title: "{instance_name} 개요"
+    steps:
+      prepare_arguments: 실행 인수 준비
+      read_configuration: 실행 구성 읽기
+      write_launch_script: 실행 스크립트 작성
+    stopped:
+      canceled_title: 실행이 취소됨
+      failed_title: 실행 실패
+    tasks:
+      verify_instance_files: "{instance_name}의 인스턴스 파일 확인"
+    title: 실행 상태
+    values:
+      idle: 게으른
+      launching: 진수
+      matched: 일치함
+      not_matched: 일치하지 않음
+      passed: 합격
+  homepage:
+    actions:
+      inline_default_info: 정보 보기
+      open_web: 웹에서 열기
+      refresh: 새로 고치다
+      view_details: 세부정보 보기
+    activities:
+      loaded_content: "{source_name}에서 홈페이지 콘텐츠를 로드했습니다."
+      loaded_preset: '로드된 사전 설정: {preset_title}'
+      refresh_failed: 홈페이지 새로고침 실패
+      switched_to_blank: 빈 홈페이지로 전환됨
+    errors:
+      missing_root: 홈페이지 마크업에 루트 요소가 누락되었습니다.
+    examples:
+      button: '버튼: {title}'
+      button_with_events: '버튼: {title}({summary})'
+      button_with_events_untitled: 이벤트가 있는 버튼({summary})
+    hints:
+      prefix: '텍스트: {text}'
+    official_news:
+      author: 공식 뉴스
+    presets:
+      announcement_board: 공지사항 게시판
+      daily_modpacks: 일일 모드팩
+      github_dashboard: GitHub 대시보드
+      magazine: 잡지
+      minecraft_news: Minecraft 뉴스
+      news_flash: 뉴스 플래시
+      official_news: 공식 뉴스
+      openbmclapi_dashboard: OpenBMCLAPI 대시보드
+      random_hint: 무작위 힌트
+      simple_homepage: 간단한 홈페이지
+      skin_recommendations: 피부 추천
+      update_summary: 업데이트 요약
+      whats_new: 새로운 소식
+    random_hint:
+      actions:
+        next: 다음
+        next_info: 다음 힌트
+      fallback: 사용할 수 있는 힌트가 없습니다.
+      title: 무작위 힌트
+    sections:
+      content_title: 콘텐츠
+      default_title: 홈페이지
+    sources:
+      local: 로컬 파일
+      remote: 원격 홈페이지
+    status:
+      invalid_remote_url: 원격 홈페이지 URL이 잘못되었습니다.
+      loading_official_news: 공식 뉴스 로드 중...
+      loading_remote: 원격 홈페이지 로드 중...
+      loading_title: 홈페이지 로드 중
+      local_file_missing: '로컬 파일을 찾을 수 없습니다: {path}'
+      unavailable_title: 홈페이지를 이용할 수 없습니다
+crash:
+  prompts:
+    output:
+      message: "{message}"
+      launch_failure:
+        title: 실행 실패
+        result_text: Minecraft가 시작 또는 실행 중 오류가 발생했습니다.
+      manual_analysis:
+        title: 충돌 분석
+      actions:
+        close: 닫다
+        open_instance_settings: 인스턴스 설정 열기
+        view_log: 로그 보기
+        export_report: 보고서 내보내기
+  export:
+    heading: 수출 계획
+    suggested_archive: "- 추천 아카이브: {archive_name}"
+    source_file_count: "- 소스 파일 개수: {file_count}"
+setup:
+  launch:
+    cards:
+      options:
+        header: 실행 옵션
+      memory:
+        header: 메모리
+      advanced:
+        header: 고급 실행 옵션
+    fields:
+      default_isolation: 기본 격리 모드
+      game_window_title: 게임 창 제목
+      custom_info: 버전 맞춤 정보
+      launcher_visibility: 실행 후 실행기 가시성
+      process_priority: 게임 프로세스 우선순위
+      window_size: 게임 창 크기
+      microsoft_auth: 마이크로소프트 로그인 방법
+      preferred_ip_stack: 기본 IP 스택
+      renderer: 렌더러
+      jvm_arguments_head: JVM 인수
+      game_arguments_tail: 게임 논쟁
+      before_command: 실행 전 명령
+      environment_variables: 환경변수
+      environment_variables_hint: 한 줄에 하나의 KEY=VALUE 항목이 필요합니다.
+      wait_for_before_command: 실행하기 전에 명령이 완료될 때까지 기다리십시오.
+      linux_display_backend: Linux 디스플레이 백엔드
+      force_x11: 강제 X11 모드
+      force_x11_hint: Wayland가 호환성 문제를 일으킬 때 유용합니다.
+    flags:
+      disable_java_launch_wrapper: Java 실행 래퍼 비활성화
+      disable_retro_wrapper: RetroWrapper 비활성화
+      require_dedicated_gpu: 전용 GPU 선호
+      use_java_executable: javaw 대신 java를 사용하세요
+    instance_settings:
+      hint: 인스턴스별로 이러한 설정을 재정의할 수 있습니다.
+      button: 인스턴스 설정 열기
+    memory:
+      modes:
+        automatic: 자동 할당
+        automatic_description: 장치 및 인스턴스 상태에 따라 자동으로 메모리를 할당합니다.
+        custom: 맞춤 할당
+      optimize_before_launch: 실행 전 메모리 최적화
+      warnings:
+        java_32_bit: 선택한 Java 런타임은 32비트입니다. 대용량 메모리 할당은 작동하지 않을 수 있습니다.
+        overallocated: 구성된 메모리가 사용 가능한 실제 메모리에 가깝거나 이를 초과합니다.
+    options:
+      isolation:
+        disabled: 격리하지 마십시오
+        mods: 모드만 격리
+        non_release: 비릴리스 버전만 격리
+        mods_and_non_release: 모드와 미실행 버전 분리
+        all: 모든 버전 파일을 완전히 격리
+      visibility:
+        close_after_launch: 실행 후 실행기 닫기
+        hide_then_close: 먼저 숨긴 다음 게임이 시작되면 닫습니다.
+        hide_then_reopen: 먼저 숨긴 다음 게임이 종료된 후 다시 엽니다.
+        minimize: 런처 최소화
+        unchanged: 현재 창 상태 유지
+      priority:
+        high: 높은
+        medium: 정상
+        low: 낮은
+      window:
+        fullscreen: 전체 화면
+        default: 런처 기본값
+        match_launcher: 런처 크기 일치
+        custom: 맞춤 크기
+        maximized: 극대화
+      microsoft_auth:
+        web_account_manager: 웹 계정 관리자
+        device_code: 장치 코드 흐름
+      preferred_ip_stack:
+        ipv4_first: IPv4 선호
+        java_default: Java 기본값 사용
+        ipv6_first: IPv6 선호
+      renderer:
+        game_default: 게임 기본값
+        software: 소프트웨어
+        directx12: 다이렉트X 12
+        vulkan: 불칸
+    activities:
+      reset: 실행 설정 재설정
+      reset_completed: 실행 옵션, 메모리 설정 및 고급 실행 매개변수가 현재 실행 프로그램 기본값으로 복원되었습니다.
+  game_manage:
+    cards:
+      game_resources:
+        header: 게임 리소스
+      community_resources:
+        header: 커뮤니티 리소스
+      accessibility:
+        header: 접근성
+    fields:
+      file_download_source: 게임 파일 다운로드 소스
+      version_list_source: 버전 목록 소스
+      max_thread_count: 최대 다운로드 스레드
+      speed_limit: 다운로드 속도 제한
+      download_timeout: 다운로드 시간 초과
+      target_folder: 대상 폴더
+      target_folder_hint: 새로 설치된 인스턴스에 적용됩니다.
+      install_behavior: 설치 동작
+      community_download_source: 커뮤니티 다운로드 소스
+      file_name_format: 리소스 파일 이름 형식
+      mod_local_name_style: Mod 로컬 이름 스타일
+      game_update_notifications: 게임 업데이트 알림
+      game_language: 게임 언어
+    flags:
+      auto_select_new_instance: 설치 후 새 인스턴스를 자동으로 선택
+      upgrade_partial_authlib: 부분 authlib 지원을 자동으로 업그레이드
+      hide_quilt_loader: 버전 목록에서 Quilt Loader 숨기기
+      release_update_notifications: 릴리스 알림
+      snapshot_update_notifications: 스냅샷 알림
+      auto_switch_game_language: 게임 언어 자동 전환
+      detect_clipboard_links: 클립보드에서 리소스 링크 감지
+    options:
+      download_source:
+        prefer_mirror: 거울을 선호
+        prefer_official_then_mirror: 공식을 선호하고 미러로 돌아갑니다.
+        prefer_official: 공식 선호
+      file_name_format:
+        display_name_brackets: 표시 이름(파일 이름)
+        display_name_square_brackets: 표시 이름 [파일 이름]
+        display_name_prefix: 표시 이름 - 파일 이름
+        display_name_suffix: 파일 이름 - 표시 이름
+        file_name_only: 파일 이름만
+      mod_local_name_style:
+        title_local_detail_file: 로컬 이름, 설명, 파일 이름 순으로 선택하세요.
+        title_file_detail_local: 파일 이름, 설명, 로컬 이름을 차례로 선택하세요.
+    labels:
+      download_timeout_value: "{value} 초"
+    activities:
+      reset: 게임 관리 설정 재설정
+      reset_completed: 다운로드, 커뮤니티 리소스, 접근성 설정이 현재 런처 기본값으로 복원되었습니다.
+    reactions:
+      quilt_hidden: 이제 Quilt 관련 항목이 숨겨집니다.
+      quilt_restored: 이제 퀼트 관련 항목이 복원됩니다.
+  about:
+    cards:
+      about:
+        header: 정보
+      acknowledgements:
+        header: 감사의 말
+    version_summary: '현재 버전: {version}'
+    project:
+      original_author:
+        title: LT캣
+        summary: Plain Craft Launcher의 원작자.
+        action: 작가를 지지하다
+        command: 원본 작성자 페이지 열기
+      community:
+        title: PCL 커뮤니티
+        summary: PCL 관련 프로젝트를 위한 커뮤니티 중심 유지 관리 및 협업.
+        action: 커뮤니티 페이지 열기
+        command: 커뮤니티 저장소 열기
+      repo:
+        title: PCL-ME
+        action: 저장소 열기
+        command: 프로젝트 저장소 열기
+    acknowledgements:
+      bangbang93:
+        title: 방방93
+        summary: 원래 PCL 2 실행 프로그램의 창시자이자 이 생태계를 뒷받침하는 많은 핵심 아이디어입니다.
+        action: 지원 페이지 열기
+        command: bangbang93 지원 페이지 열기
+      mcmod:
+        title: MC백과사전
+        summary: 주요 Minecraft 중국어 지식 기반 및 모드 참조 사이트입니다.
+        action: 웹사이트 열기
+        command: MC 백과사전 열기
+      pysio:
+        title: Pysio @ Akaere 네트워크
+        summary: 기여자이자 커뮤니티 후원자입니다.
+        action: 웹사이트 열기
+        command: Pysio 웹사이트 열기
+      yunmoan:
+        title: 윤모안 @ 지위안 광휘
+        summary: 기여자이자 프로젝트 후원자입니다.
+        action: 웹사이트 열기
+        command: 윤모안 홈페이지 오픈
+      z0z0r4:
+        title: z0z0r4
+        summary: 런처 생태계에 기여합니다.
+      00ll00:
+        title: 00ll00
+        summary: 런처 생태계에 기여합니다.
+      patrick:
+        title: 패트릭
+        summary: 런처 생태계에 기여합니다.
+      hao_tian:
+        title: 하오_티안
+        summary: 런처 생태계에 기여합니다.
+      mcbbs:
+        title: 마인크래프트 중국어 포럼
+        summary: 오랫동안 지속되어 온 중국 Minecraft 커뮤니티 포럼입니다.
+      community:
+        title: PCL 커뮤니티 회원
+        summary: 피드백, 테스트 및 아이디어를 제공한 커뮤니티의 모든 사람입니다.
+  log:
+    cards:
+      actions:
+        header: 행위
+      all_logs:
+        header: 모든 로그
+    actions:
+      export_latest: 최신 로그 내보내기
+      export_all: 모든 로그 내보내기
+      open_directory: 로그 디렉터리 열기
+      clean_history: 기록 로그 정리
+    empty:
+      title: 아직 로그가 없습니다.
+      summary: 런처에서 생성된 로그가 여기에 표시됩니다.
+    activities:
+      clean_history: 기록 로그 정리
+      directory_missing: 로그 디렉터리가 존재하지 않습니다. 청소할 것이 없습니다.
+      nothing_to_clean: 정리할 보관된 로그가 없습니다. 현재 로그가 유지되었습니다.
+      clean_failed: 보관된 로그 파일을 삭제할 수 없습니다.
+      cleaned_count: "{count}개의 보관된 로그 파일을 정리했습니다."
+      open_log: '로그 열기: {title}'
+  feedback:
+    cards:
+      submit:
+        header: 피드백 제출
+    submit:
+      hint: 피드백이나 제안을 제출하려면 GitHub 문제 페이지를 엽니다.
+      button: 피드백 페이지 열기
+    loading:
+      section_title: 로드 중
+      entry_title: 피드백 목록을 가져오는 중
+      entry_summary: 잠시만 기다려주세요.
+    failed:
+      section_title: 로드 실패
+      entry_title: 피드백 목록을 가져올 수 없습니다.
+    sections:
+      processing: 처리
+      waiting_process: 처리를 기다리는 중
+      waiting: 대기 중
+      paused: 일시중지됨
+      up_next: 다음
+      completed: 완전한
+      declined: 거절됨
+      ignored: 무시됨
+      duplicate: 복제하다
+      other: 다른
+    actions:
+      open_issue: '미해상도 문제 #{number}'
+    summary:
+      unknown_author: 알려지지 않은
+      unknown_time: 알 수 없는 시간
+      uncategorized_type: 분류되지 않은
+      line: "{author} | {created_at} | {type}"
+    activities:
+      refresh: 피드백 페이지 새로 고침
+      refresh_completed: "{count}개의 GitHub 피드백 항목을 동기화했습니다."
+      refresh_failed: 피드백 페이지 새로고침 실패
+  update:
+    fields:
+      channel: 채널 업데이트
+      mode: 업데이트 모드
+    actions:
+      download_and_install: 다운로드 및 설치
+      more_info: 추가 정보
+      check_again: 다시 확인하세요
+      view_changelog: 변경 로그 보기
+    options:
+      channel:
+        release: 풀어 주다
+        beta: 베타
+        dev: 데브
+      mode:
+        auto_download_and_install: 자동으로 다운로드 및 설치
+        auto_download_and_prompt: 자동으로 다운로드한 후 메시지 표시
+        prompt_only: 프롬프트만
+        disabled: 장애가 있는
+    version_name: 버전 {version}
+    states:
+      checking: 업데이트 확인 중...
+      available: '업데이트가 가능합니다: {version}'
+      latest: 이미 최신 버전을 사용하고 있습니다.
+      error: '업데이트 확인 실패: {message}'
+    available:
+      publisher: '출처: {source}'
+      summary_missing: 이 릴리스에는 요약이 없습니다.
+    errors:
+      github_empty_result: GitHub는 릴리스 데이터를 반환하지 않았습니다.
+      no_release: GitHub에는 현재 채널에 사용 가능한 릴리스가 없습니다.
+      metadata_missing: 런처 버전 메타데이터를 찾을 수 없습니다.
+      metadata_invalid: 런처 버전 메타데이터를 읽을 수 없습니다.
+    activities:
+      change_channel: 업데이트 채널 변경
+      change_mode: 자동 업데이트 설정 변경
+      refresh: 업데이트 페이지 새로고침
+      available: '사용 가능한 업데이트: {version}'
+      latest: "{version}은(는) 이미 최신 버전입니다."
+      checking: 업데이트 확인 중...
+      download_install: 업데이트 다운로드 및 설치
+      no_pending_update: 다운로드할 대기 중인 업데이트가 없습니다.
+      no_download_url: 현재 업데이트 소스에 사용할 수 있는 다운로드 URL이 없습니다.
+      download_install_failed: 업데이트 다운로드 및 설치 실패
+      package_ready: "{version}이 준비되었습니다. 런처가 종료되고 업데이트가 적용됩니다."
+      package_ready_hint: 업데이트 패키지가 준비되었습니다. 런처가 닫히고 자동으로 설치됩니다.
+      view_detail: 업데이트 세부정보 보기
+      view_detail_title: '업데이트 세부정보: {version}'
+      view_detail_failed: 업데이트 세부정보 보기 실패
+      detail_unavailable: 현재 업데이트 세부정보가 없습니다.
+  ui:
+    activities:
+      reset: UI 설정 재설정
+      reset_completed: 개인화 페이지가 현재 실행기 기본값으로 복원되었습니다.
+    background:
+      actions:
+        clear: 배경 콘텐츠 지우기
+        open_folder: 폴더 열기
+        refresh: 새로 고치다
+      activities:
+        clear: 배경 콘텐츠 지우기
+        clear_empty: 제거할 배경 파일이 없습니다.
+        empty: 감지된 배경 콘텐츠가 없습니다.
+        open_folder: 배경 폴더 열기
+        open_folder_failed: 배경 폴더를 열지 못했습니다.
+        refresh: 배경 콘텐츠 새로 고침
+        clear_count: "{count}개의 배경 파일을 삭제했습니다."
+        loaded: '로드된 배경: {file}'
+      card_header: 배경 이미지
+      fields:
+        blur: 배경 흐림
+        opacity: 불투명
+        suit: 콘텐츠 맞춤 모드
+      flags:
+        colorful: 오버레이 컬러 배경
+      labels:
+        blur_off: 거짓
+      card_header_with_count: 배경 이미지({count})
+    cards:
+      basic:
+        header: 기초적인
+      font:
+        header: 글꼴
+      homepage:
+        header: 홈페이지
+      music:
+        header: 배경음악
+      title_bar:
+        header: 제목 표시줄
+    fields:
+      custom_theme_hint: "#RRGGBB 지원(예: #159E95)"
+      custom_theme_refresh_hint: 사용자 정의 강조 색상은 현재 UI 팔레트와 제목 표시줄 대비를 실시간으로 업데이트합니다.
+      dark_custom: 다크 커스텀
+      dark_palette: 다크 팔레트
+      global_font: 글로벌
+      locale: 인터페이스 언어
+      launcher_opacity: 불투명
+      light_custom: 라이트 커스텀
+      light_palette: 라이트 팔레트
+      motd_font: MOTD
+      theme: 테마
+    flags:
+      lock_window_size: 잠금 실행기 창 크기
+      show_launcher_logo: 런처를 열 때 PCL 로고 표시
+      show_launching_hint: '"알고 계셨나요?"를 보여주세요. 게임을 시작하는 동안'
+    hidden_features:
+      groups:
+        features: 특정 기능
+        instance_subpages: 인스턴스 하위 페이지
+        main_pages: 메인 페이지
+        setup_subpages: 하위 페이지 설정
+        tools_subpages: 도구 하위 페이지
+      hint: 사용하지 않는 페이지를 숨기거나 특정 기능을 비활성화할 수 있습니다. 숨겨진 기능을 일시적으로 표시하려면 아무 페이지에서나 F12를 누르세요.
+      items:
+        download: 다운로드
+        feature_hidden: 기능 숨기기
+        feature_instance_select: 인스턴스 관리
+        feature_mod_update: 모드 업데이트
+        instance_export: 내보내다
+        instance_install: 편집하다
+        instance_mod: 모드
+        instance_resource_pack: 리소스 팩
+        instance_save: 저장
+        instance_schematic: 회로도
+        instance_screenshot: 스크린샷
+        instance_server: 서버
+        instance_shader: 셰이더 팩
+        setup: 설정
+        setup_about: 에 대한
+        setup_feedback: 피드백
+        setup_game_manage: 관리하다
+        setup_java: Java
+        setup_launch: 실행
+        setup_launcher_misc: 기타
+        setup_log: 로그 보기
+        setup_ui: 개인화
+        setup_update: 소프트웨어 업데이트
+        tools: 도구
+        tools_help: 돕다
+        tools_test: 도구 상자
+      reactions:
+        hidden: "{title}을 숨겼습니다."
+        restored: "{title}을(를) 복원했습니다."
+    homepage:
+      actions:
+        generate_tutorial: 튜토리얼 파일 생성
+        refresh: 홈페이지 새로고침
+        view_tutorial: 튜토리얼 보기
+      activities:
+        generate_tutorial: 튜토리얼 파일 생성
+        generate_tutorial_failed: 튜토리얼 파일을 생성하지 못했습니다.
+        tutorial_shown: 홈페이지 사용자 정의 튜토리얼이 표시됩니다.
+        view_tutorial: 홈페이지 튜토리얼 보기
+        tutorial_content: |-
+          1. "튜토리얼 파일 생성"을 클릭하여 작업 디렉터리에 PCL/Custom.xaml을 생성합니다.
+          2. 이 파일을 텍스트 편집기로 편집하고 저장한 후 다시 '홈페이지 새로고침'을 클릭하세요.
+          3. 원격 홈페이지를 사용하는 경우 다운로드 URL이 신뢰할 수 있는 콘텐츠를 가리키는지 확인하세요.
+        tutorial_template_missing: '홈페이지 튜토리얼 템플릿을 찾을 수 없습니다: {path}'
+      fields:
+        preset: 홈페이지 사전 설정
+        url: 다운로드 URL
+      notices:
+        preset_content: ModSetup에서 제공하는 콘텐츠
+        security_warning: 신뢰할 수 없는 출처의 홈페이지에 주의하세요. 악성코드로 인해 피해가 발생할 수 있습니다!
+      options:
+        blank: 공백
+        local_file: 로컬 파일 로드
+        preset: 프리셋
+        remote: 원격 업데이트
+    music:
+      actions:
+        clear: 분명한
+        open_folder: 폴더 열기
+        refresh: 새로 고치다
+      activities:
+        clear: 명확한 배경 음악
+        clear_empty: 제거할 배경음악 파일이 없습니다.
+        empty: 배경 음악이 감지되지 않았습니다.
+        open_folder: 음악 폴더 열기
+        open_folder_failed: 음악 폴더를 열지 못했습니다.
+        refresh: 배경 음악 새로 고침
+        clear_count: "{count}개의 배경 음악 파일을 삭제했습니다."
+        refreshed_count: 음악 폴더를 다시 검색하여 {count}개의 파일을 찾았습니다.
+      fields:
+        volume: 용량
+      flags:
+        auto_start: 런처가 열리면 자동으로 재생 시작
+        enable_smtc: 시스템 미디어 전송 제어(SMTC)와 통합
+        random: 셔플 재생
+        start_on_game_launch: 게임이 시작된 후 플레이를 시작하고 게임이 종료되면 일시 중지합니다.
+        stop_on_game_launch: 게임 시작 후 일시 중지하고 종료 시 다시 시작
+    options:
+      background_suit:
+        bottom_left: 왼쪽 하단
+        bottom_right: 오른쪽 하단
+        center: 센터
+        fit: 맞다
+        smart: 똑똑한
+        stretch: 뻗기
+        tile: 타일
+        top_left: 왼쪽 위
+        top_right: 오른쪽 상단
+      dark_mode:
+        dark: 어두운
+        follow_system: 팔로우 시스템
+        light: 빛
+      font:
+        default: 기본 글꼴
+        jetbrains_mono: JetBrains 모노
+        lxgw_wenkai: LXGW 원카이
+        source_han_sans: 출처 한산스
+      theme_color:
+        cat_blue: LT캣 블루
+        custom: 관습
+        grass_green: 잔디 녹색
+        lemon_cyan: 레몬청록
+        oak_brown: 오크 브라운
+        pineapple_yellow: 파인애플 옐로우
+    theme_switch:
+      unsupported_action: 공식 스냅샷 빌드 받기
+      unsupported_notice: 파란색, 파란색, 그리고 더 파란색. 더 많은 액센트 색상을 원하시나요? 공식 스냅샷 빌드를 사용하세요.
+    title_bar:
+      actions:
+        change_image: 이미지 변경
+        clear_image: 선명한 이미지
+      activities:
+        change_image: 제목 표시줄 이미지 변경
+        change_image_cancelled: 제목 표시줄 이미지 선택이 취소되었습니다.
+        change_image_failed: 제목 표시줄 이미지를 변경하지 못했습니다.
+        change_image_pick_filter: 공통 이미지 파일
+        change_image_pick_title: 제목 표시줄 이미지 선택
+        clear_image: 제목 표시줄 이미지 지우기
+        clear_image_empty: 사용자 정의 제목 표시줄 이미지가 없습니다.
+      fields:
+        text: 제목 표시줄 텍스트
+      flags:
+        align_left: 제목 표시줄 왼쪽 정렬
+      options:
+        default: 기본
+        image: 영상
+        none: 없음
+        text: 텍스트
+  java:
+    actions:
+      add: 추가하다
+      details: 세부
+      disable: 장애를 입히다
+      enable: 할 수 있게 하다
+      open: 열려 있는
+    activities:
+      add: Java 추가
+      add_cancelled: Java 선택이 취소되었습니다.
+      add_failed: Java를 추가하지 못했습니다.
+      add_pick_filter_unix: Java 실행 파일
+      add_pick_filter_windows: Java 프로그램
+      add_pick_title: Java 실행 파일 선택
+      auto_select: 자동 선택
+      detail_shown: Java 런타임 세부정보가 표시됩니다.
+      disable: Java 비활성화
+      disable_blocked: Java 비활성화가 차단되었습니다.
+      disable_blocked_reason: 비활성화하기 전에 기본 Java로 지우십시오.
+      disabled_state: 장애가 있는
+      enable: Java 활성화
+      enabled_state: 활성화됨
+      folder_missing: Java 폴더가 더 이상 존재하지 않습니다.
+      refresh: Java 목록 새로 고침
+      refresh_completed: 최신 스캔 결과에서 Java 목록이 다시 로드되었습니다.
+      refresh_failed: Java 목록을 새로 고치지 못했습니다.
+      refresh_scanning: Java 런타임을 다시 검색하는 중입니다.
+      select_default: 기본 Java 전환
+      unavailable: 이 Java 런타임을 사용할 수 없습니다. 목록을 새로 고칩니다.
+      add_completed: "{path}을(를) 추가하고 선택했습니다."
+      add_exists: '구성 목록에 Java가 이미 있습니다: {path}'
+      add_unrecognized: '선택한 파일을 사용 가능한 Java 런타임으로 인식할 수 없습니다: {path}'
+      open_folder: 'Java 폴더 열기: {title}'
+      toggle_result: "{title} • {state}"
+      view_detail: 'Java 세부정보 보기: {title}'
+    auto_select:
+      description: 자동 Java 선택을 사용하여 게임 요구 사항에 따라 적합한 런타임을 선택합니다.
+      label: 자동 선택
+    details:
+      available: 사용 가능
+      metadata_unavailable: 이 Java 런타임의 상세 메타데이터를 해석할 수 없습니다. 실행 파일이 계속 정상적으로 동작하는지 확인하세요.
+      unavailable: 사용 불가
+      architecture: '아키텍처: {value}'
+      availability: '사용 가능 여부: {value}'
+      brand: '브랜드: {value}'
+      default_java: '기본 Java: {value}'
+      enabled: '활성화됨: {value}'
+      executable: '실행 파일: {value}'
+      folder: '폴더: {value}'
+      major_version: '주 버전: {value}'
+      path: '경로: {value}'
+      source: '출처: {value}'
+      tags: '현재 태그: {value}'
+      type: '유형: {value}'
+      version: '버전: {value}'
+      'yes': 예
+      'no': 아니요
+    tags:
+      auto_installed: 자동 설치
+      auto_scanned: 자동 스캔
+      disabled: 장애가 있는
+      enabled: 활성화됨
+      manual_added: 수동으로 추가됨
+  launcher_misc:
+    actions:
+      apply_proxy: 프록시 설정 적용
+      export_settings: 설정 내보내기
+      import_settings: 가져오기 설정
+      test_proxy: 연결 테스트
+    activities:
+      apply_proxy: 프록시 설정 적용
+      disable_hardware_acceleration: 하드웨어 가속 비활성화
+      enable_hardware_acceleration: 하드웨어 가속 활성화
+      export_settings: 설정 내보내기
+      import_settings: 가져오기 설정
+      import_settings_cancelled: 구성 파일 선택이 취소되었습니다.
+      import_settings_failed: 설정을 가져오지 못했습니다.
+      import_settings_pick_filter: PCL 구성 파일
+      import_settings_pick_title: 구성 파일 선택
+      proxy_cleared: 사용자 정의 HTTP 프록시를 지웠습니다.
+      reset: 런처 기타 설정 재설정
+      reset_completed: 시스템, 네트워크 및 디버그 설정이 현재 실행기 기본값으로 복원되었습니다.
+      test_proxy: 프록시 연결 테스트
+      test_proxy_failed: 테스트 프록시 연결 실패
+      import_settings_completed: '가져온 공유 구성: {path}. 일부 시스템 설정은 다시 시작한 후에도 여전히 가장 잘 확인됩니다.'
+    cards:
+      debug:
+        header: 디버그 옵션
+      network:
+        header: 회로망
+      system:
+        header: 체계
+    fields:
+      locale: 인터페이스 언어
+      announcements: 런처 공지
+      debug_animation_speed: 애니메이션 속도
+      http_proxy: HTTP 프록시
+      max_animation_fps: 최대 애니메이션 FPS
+      realtime_log_lines: 실시간 로그 라인
+    flags:
+      debug_delay: 지연 추가
+      debug_mode: 디버그 모드
+      disable_hardware_acceleration: 하드웨어 가속 비활성화
+      enable_doh: DNS 확인을 위해 DoH 사용
+      skip_copy_during_download: 다운로드 중 다른 폴더의 파일 복사 방지
+    http_proxy:
+      address_watermark: 예를 들어 http://127.0.0.1:1080/
+      password: 비밀번호
+      username: 사용자 이름
+      value_watermark: 선택 과목
+      warning: 신뢰할 수 없는 프록시 주소를 입력하지 마세요.
+    hints:
+      disable_hardware_acceleration_restart: 변경 사항은 다음에 실행 프로그램이 시작될 때 적용됩니다.
+    labels:
+      debug_animation_speed_off: 거짓
+    messages:
+      debug_mode_disabled: 추가 진단 출력이 꺼졌습니다.
+      debug_mode_enabled: 이제 자세한 로그 및 진단이 활성화되었습니다.
+      proxy_invalid_address: 맞춤 프록시 주소가 잘못되었습니다.
+      proxy_test_started: "{host}를 통해 {mode}에 액세스 중입니다."
+      proxy_test_succeeded: "{mode} 연결이 성공했습니다. HTTP {status_code} {reason_phrase}."
+      proxy_test_succeeded_hint: 프록시 연결 테스트에 성공했습니다.
+    options:
+      http_proxy:
+        custom: 맞춤 프록시
+        none: 프록시 없음
+        system: 시스템 프록시
+      system_activity:
+        all: 모든 공지사항 표시
+        disabled: 모든 공지사항 숨기기
+        important_only: 중요한 공지사항이 있는 경우에만 공지사항 표시
+common:
+  actions:
+    back: 뒤로
+    cancel: 취소
+    close: 닫기
+    confirm: 확인
+    open: 열기
+    open_website: 웹사이트 열기
+    search: 검색
+    select_all: 모두 선택
+    continue: 계속
+  activities:
+    failed: "{title} 실패"
+  filters:
+    all: 전체
+    any: 모두
+  memory:
+    summary:
+      allocation_prefix: 게임 할당
+      size_gb: "{value}GB"
+      usage_header: 사용된 메모리 / 설치된 메모리
+  punctuation:
+    comma: ","
+download:
+  catalog:
+    actions:
+      save_installer: 설치 프로그램 저장
+    activities:
+      entry_action: '카탈로그 작업: {entry_title}'
+      open_entry: '항목 열기: {entry_title}'
+      open_favorite_entry: '즐겨찾는 항목 열기: {entry_title}'
+    download:
+      file_type_default: 파일
+      hints:
+        completed: "{file_name} 다운로드가 완료되었습니다."
+        started: "{file_name} 다운로드 시작"
+      installer_type: "{surface_name} 설치 프로그램"
+      missing_url: 현재 사용 가능한 다운로드 URL이 없습니다.
+      no_save_path: 저장 위치를 ​​선택하지 않았습니다.
+      pick_save_path_title: 저장 위치 선택
+      task_title: "{file_name} 다운로드"
+    errors:
+      empty_description: 원격 카탈로그를 일시적으로 사용할 수 없습니다. 나중에 다시 시도하세요.
+      empty_title: 표시할 항목 없음
+      load_failed_body: '원격 카탈로그를 로드하지 못했습니다. 오류: {error}'
+      load_failed_title: 원격 카탈로그를 로드하지 못했습니다.
+      retry_later: 나중에 다시 시도해 주세요.
+      section_title: 원격 카탈로그
+    remote:
+      latest:
+        preview_published: 최신 미리보기, {published_at}에 게시됨
+        release_published: 최신 릴리스({published_at}에 게시됨)
+      groups:
+        snapshot: 스냅샷
+      labels:
+        forge_compatible: Forge {forge_version}과 호환 가능
+        forge_incompatible: Forge와 호환되지 않음
+        installer: 설치자
+        latest: 최신
+        no_display_data: 표시할 내용이 없습니다.
+        published_at: "{published_at}에 게시됨"
+        recommended: 추천
+        separator: ","
+        unknown_version: 알 수 없는 버전
+        variant_blue: "(파란색 변형)"
+        variant_purple: "(보라색 변형)"
+        variant_red: "(빨간색 변형)"
+      empty:
+        cleanroom: 현재 사용 가능한 Cleanroom 원격 항목이 없습니다.
+        forge_version_entries: "{minecraft_version}에 사용 가능한 Forge 항목이 없습니다."
+        forge_versions: Forge 원격 카탈로그가 Minecraft 버전을 반환하지 않았습니다.
+        group_entries: "{group_name}에 사용 가능한 항목이 없습니다."
+        installer_versions: 현재 사용 가능한 설치 프로그램 버전이 없습니다.
+        labymod_channels: 현재 이용 가능한 LabyMod 채널이 없습니다.
+        latest_versions: 원격 버전 매니페스트가 최신 버전을 반환하지 않았습니다.
+        liteloader: 현재 사용 가능한 LiteLoader 원격 항목이 없습니다.
+        neoforge: 현재 사용 가능한 NeoForge 원격 항목이 없습니다.
+        optifine: 현재 사용 가능한 OptiFine 원격 항목이 없습니다.
+      errors:
+        client_versions_missing: Minecraft 버전 매니페스트에 버전 필드가 없습니다.
+        forge_mirror_parse_failed: Forge 미러 빌드 카탈로그를 구문 분석할 수 없습니다.
+        forge_versions_missing: Forge 원격 카탈로그가 Minecraft 버전을 반환하지 않았습니다.
+        lazy_route_unsupported: 현재 페이지는 지연 로드된 원격 카탈로그를 지원하지 않습니다.
+        liteloader_versions_missing: LiteLoader 카탈로그에 버전 필드가 없습니다.
+        optifine_format_invalid: OptiFine 공식 카탈로그 형식이 유효하지 않습니다.
+        optifine_mirror_parse_failed: OptiFine 미러 카탈로그를 구문 분석할 수 없습니다.
+    intro:
+      cleanroom:
+        body: Cleanroom은 Minecraft 1.12.2용 Forge 파생 모드 로더이며 이론적으로 Forge 모드의 99%와 호환됩니다.
+        title: Cleanroom 개요
+      fabric:
+        body: |-
+          Fabric Loader는 최신 Minecraft용 경량 모드 로더입니다. Fabric 모드를 사용하기 전에 먼저 설치해야 합니다.
+          이 페이지에서는 Fabric 설치 프로그램 다운로드를 제공합니다. 다운로드한 후에도 설치 프로그램을 수동으로 열어 설정을 완료해야 합니다.
+        title: 패브릭 개요
+      forge:
+        body: Forge는 모드 로더입니다. Forge 모드를 사용하려면 먼저 Forge를 설치해야 합니다.
+        title: 포지 개요
+      labymod:
+        body: |-
+          LabyMod는 최적화된 마인크래프트 클라이언트입니다.
+          이 페이지에서는 LabyMod 설치 프로그램 다운로드를 제공합니다. 다운로드한 후에도 설치 프로그램을 수동으로 열어 설정을 완료해야 합니다.
+        title: LabyMod 개요
+      legacy_fabric:
+        body: |-
+          Legacy Fabric은 이전 Minecraft 버전용 Fabric의 백포트입니다. Legacy Fabric 모드를 사용하기 전에 먼저 설치해야 합니다.
+          이 페이지에서는 Legacy Fabric 설치 프로그램 다운로드를 제공합니다. 다운로드한 후에도 설치 프로그램을 수동으로 열어 설정을 완료해야 합니다.
+        title: Legacy Fabric 개요
+      liteloader:
+        body: Forge와 마찬가지로 LiteLoader를 사용하여 이전 Minecraft 버전용 LiteLoader 모드를 로드할 수 있습니다.
+        title: LiteLoader 개요
+      neoforge:
+        body: |-
+          NeoForge는 Minecraft 1.20.1 이상용 모드 로더입니다. NeoForge 모드를 설치하기 전에 필요하며 일부 Forge 모드와도 호환됩니다.
+          이 페이지에서는 NeoForge 설치 프로그램 다운로드를 제공합니다. 다운로드한 후에도 설치 프로그램을 수동으로 열어 설정을 완료해야 합니다.
+        title: NeoForge 개요
+      optifine:
+        body: HD 픽스라고도 알려진 OptiFine을 사용하면 셰이더 설치, 고해상도 리소스 팩, 성능 향상이 가능하지만 모드와의 호환성이 약합니다.
+        title: OptiFine 개요
+      quilt:
+        body: |-
+          Quilt Loader는 현대 Minecraft를 위한 경량의 모듈식 모드 로더입니다. Quilt 모드를 사용하기 전에 먼저 설치해야 합니다.
+          이 페이지에서는 Quilt 설치 프로그램 다운로드를 제공합니다. 다운로드한 후에도 설치 프로그램을 수동으로 열어 설정을 완료해야 합니다.
+        title: 퀼트 개요
+      stale_cache: |-
+        {body}
+
+        원격 카탈로그 새로 고침에 실패하여 현재는 가장 최근에 동기화된 결과가 유지됩니다. 오류: {error}
+    loading:
+      fetch_list: "{surface_name} 목록을 가져오는 중"
+      fetch_versions: 버전 목록을 가져오는 중
+    sections:
+      latest_versions: 최신 버전
+      remote_catalog: 원격 카탈로그
+      version_list: 버전 목록
+  favorites:
+    actions:
+      batch_install: 일괄 설치
+      clear_selection: 선택 지우기
+      favorite: 가장 좋아하는
+      favorite_to: 좋아하는 것...
+      manage_targets: 대상 관리
+      remove: 제거하다
+      share_selected: 선택 항목 공유
+    activities:
+      batch_install: 일괄 설치 즐겨찾기
+      batch_install_failed: 일괄 설치 실패
+      favorite_to: 즐겨찾는 타겟
+      remove: 즐겨찾기 제거
+      remove_failed: 즐겨찾기를 삭제하지 못했습니다.
+      select_all: 즐겨찾기 모두 선택
+      share_selected: 선택한 즐겨찾기 공유
+      share_selected_failed: 선택한 즐겨찾기를 공유하지 못했습니다.
+    batch_install:
+      analyzing_activity: "{target_name}에 대한 즐겨찾기 {count}개를 분석 중입니다."
+      analyzing_hint: 선택한 {count}개 항목을 분석하는 중...
+      canceled: 일괄 설치가 취소되었습니다.
+      confirmation:
+        confirm: 설치 시작
+        failed: 일괄 설치를 확인하지 못했습니다.
+        title: 일괄 설치 즐겨찾기
+      empty_selection: 즐겨찾기가 선택되지 않았습니다.
+      started_activity: "{target_name}에 대한 일괄 설치가 시작되었습니다."
+      started_hint: 일괄 설치가 시작되었습니다.
+      summary:
+        dependencies: "{count} 종속성"
+        none: 작업 없음
+        skipped: "{count} 건 건너뛰었습니다"
+        tasks: "{count} 작업"
+    empty:
+      body: 나중에 설치하거나 공유할 수 있도록 즐겨찾기에 프로젝트를 추가하세요.
+      title: 아직 즐겨찾기가 없습니다.
+    favorite_to:
+      already_contains_selected: "{target_name}에는 선택한 즐겨찾기가 이미 모두 포함되어 있습니다."
+      completed: "{count}개의 즐겨찾기를 {target_name}에 추가했습니다."
+      selection_prompt: 선택한 {count}개의 즐겨찾기에 대한 대상을 선택하세요
+    remove:
+      completed: "{target_name}에서 즐겨찾기 {count}개를 제거했습니다."
+      confirmation:
+        message: "{target_name}에서 선택한 즐겨찾기 {count}개를 제거하시겠습니까?"
+        title: 즐겨찾기 제거
+      no_matches: "{target_name}에서 일치하는 즐겨찾기를 찾을 수 없습니다."
+    search:
+      watermark: 즐겨찾기 검색
+    select_all:
+      completed: "{target_name}에서 표시 중인 즐겨찾기 {count}개를 선택했습니다."
+      empty: "{target_name}에 표시되는 즐겨찾기가 없습니다."
+    selection:
+      summary: "{count}개 선택됨"
+    share_selected:
+      completed: 선택한 즐겨찾기 ID {count}개를 복사했습니다.
+      empty: 공유할 즐겨찾기를 선택하지 않았습니다.
+    meta:
+      downloads: "{value} 다운로드"
+      updated: 업데이트된 {value}
+    demo:
+      entries:
+        sodium:
+          info: 최신 성능 최적화 모드.
+        mod_menu:
+          info: Fabric 모드 메뉴를 관리합니다.
+        atm9:
+          info: 대규모 모드팩 데모 항목.
+        faithful:
+          info: 클래식 스타일의 리소스 팩.
+        complementary:
+          info: 공통 셰이더가 가장 좋아하는 항목입니다.
+    targets:
+      default_name: 기본 즐겨찾기
+      empty_share_code: 공유할 내용이 없습니다.
+      manage:
+        title: 대상 관리
+        current_target: '현재 대상: {target_name}'
+        failed: 대상 관리 실패
+        unknown_action: '알 수 없는 대상 작업: {action_id}'
+        options:
+          share:
+            label: 현재 타겟 공유
+            description: 현재 대상의 공유 코드를 복사합니다.
+          import:
+            label: 즐겨찾기 가져오기
+            description: 공유 즐겨찾기 목록을 현재 또는 새 대상으로 가져옵니다.
+          create:
+            label: 대상 생성
+            description: 새로운 즐겨찾기 대상을 만듭니다.
+          rename:
+            label: 대상 이름 바꾸기
+            description: 현재 대상 이름을 변경합니다.
+          delete:
+            label: 현재 대상 삭제
+            description: 현재 즐겨찾기 대상을 삭제합니다.
+      share:
+        activity: 현재 타겟 공유
+        completed: "{target_name}의 공유 코드를 복사했습니다."
+        failed: 현재 대상을 공유하지 못했습니다.
+      import:
+        title: 즐겨찾기 가져오기
+        activity: 즐겨찾기 가져오기
+        prompt: 공유 즐겨찾기 목록을 입력하세요.
+        watermark: '예: ["23333"]'
+        failed: 즐겨찾기를 가져오지 못했습니다.
+        destination_prompt: "{count}개의 즐겨찾는 항목을 감지했습니다. 어디로 수입해야 합니까?"
+        completed_new: '새 대상으로 가져옴: {target_name}'
+        completed_current: '현재 대상으로 가져옴: {target_name}'
+        options:
+          new_target:
+            label: 새로운 타겟
+            description: 새로운 즐겨찾기 대상을 생성하고 이러한 즐겨찾기를 가져옵니다.
+          current_target:
+            label: 현재 목표
+            description: 이러한 즐겨찾기를 현재 대상에 추가하세요.
+      create:
+        title: 즐겨찾기 대상 생성
+        prompt: 새로운 즐겨찾기 대상 이름을 입력하세요.
+        activity: 즐겨찾기 대상 만들기
+        failed: 즐겨찾기 대상을 생성하지 못했습니다.
+      rename:
+        title: 대상 이름 바꾸기
+        prompt: 즐겨찾기 대상 이름을 입력하세요.
+        activity: 즐겨찾기 대상 이름 바꾸기
+        failed: 즐겨찾기 대상의 이름을 바꾸지 못했습니다.
+      delete:
+        activity: 현재 대상 삭제
+        blocked_last: 마지막 즐겨찾기 대상은 삭제할 수 없습니다.
+        confirmation_title: 삭제 확인
+        confirmation_message: |-
+          {target_name} 대상을 삭제하시겠습니까?
+
+          이 대상에는 {count}개의 즐겨찾는 항목이 포함되어 있습니다.
+          대상 ID: {target_id}
+          이 작업은 취소할 수 없습니다.
+        confirm: 삭제
+        completed: "{target_name}을(를) 삭제했습니다."
+        failed: 현재 대상을 삭제하지 못했습니다.
+  install:
+    refresh:
+      title: 자동 설치 새로 고침
+      activity: 자동 설치 옵션이 다시 로드되었습니다.
+    actions:
+      clear_selection: 선택 지우기
+      start: 설치 시작
+    catalog:
+      empty: 사용 가능한 버전이 없습니다.
+      groups:
+        april_fools: 만우절
+        latest: 최신
+        legacy: 유산
+        preview: 시사
+        release: 풀어 주다
+      latest:
+        preview: 최신 미리보기
+        published_at: "{label}: {published_at}"
+        release: 최신 릴리스
+      load_failed: 버전을 로드하지 못했습니다.
+      loading: 버전 로드 중...
+    choices:
+      channels:
+        snapshot: 스냅 사진
+        stable: 안정적인
+      summaries:
+        current_instance_with_time: 현재 인스턴스 • {published_at}
+        installer_with_time: 설치 프로그램 • {published_at}
+        labymod_for_minecraft: LabyMod 4 • {minecraft_version}
+        loader_testing: "{loader_name} 테스트 빌드"
+        preview: 시사
+        quilt_installer: Quilt 설치 프로그램
+        release: 풀어 주다
+        release_time_unavailable: 출시 시간을 알 수 없음
+        release_with_time: 출시 • {published_at}
+        stable: 안정적인
+        status_with_time: "{status} • {published_at}"
+        testing: 테스트
+        april_fools_special: 만우절 특집이 {published_at}에 출시되었습니다.
+        april_fools:
+          '2013': 2013 | 2년 동안 계획된 이 비밀 업데이트는 게임을 새로운 차원으로 끌어올렸습니다!
+          2013_blue: 2013 | 2년 동안 계획된 이 비밀 업데이트는 게임을 새로운 차원으로 끌어올렸습니다! (블루 버전)
+          2013_purple: 2013 | 2년 동안 계획된 이 비밀 업데이트는 게임을 새로운 차원으로 끌어올렸습니다! (퍼플 버전)
+          2013_red: 2013 | 2년 동안 계획된 이 비밀 업데이트는 게임을 새로운 차원으로 끌어올렸습니다! (레드 버전)
+          '2015': 2015 | 모든 연령대를 위한 게임으로서 우리에게는 평화, 사랑, 포옹이 필요합니다.
+          '2016': 2016 | 이제 Minecraft에 현대 기술을 도입할 시간입니다!
+          '2019': 2019 | 우리는 지하실 폐허에서 1994년 작품을 발견했습니다!
+          '2020': 2020 | 20억 개의 새로운 차원을 추가하고 무한한 상상을 현실로 만들었습니다!
+          '2022': 2022 | 한 블록씩! 새로운 발굴, 제작, 라이딩 게임플레이를 만나보세요.
+          '2023': 2023 | 연구에 따르면 플레이어는 선택을 좋아하며, 선택이 많을수록 더 좋습니다!
+          '2024': 2024년 | 유독한 감자는 항상 무시되고 과소평가되어 왔기 때문에 우리는 이를 강화했습니다!
+          '2025': 2025 | 당신의 세계를 포함해 무엇이든 만들 수 있습니다!
+          '2026': 2026 | 재고가 왜 필요한가요? 대신 블록이 당신을 따라오게 하세요!
+    generated_name:
+      default: 새 버전
+    options:
+      available: 사용 가능
+      unavailable: 없는
+    validation:
+      already_exists: 이미 존재하는 이름입니다.
+      empty_name: 이름을 입력하세요
+      invalid_characters: 이름에 잘못된 문자가 포함되어 있습니다.
+      invalid_ending: 이름은 공백이나 마침표로 끝날 수 없습니다.
+    workflow:
+      activities:
+        apply_changes: 변경 사항 적용
+        apply_changes_failed: 변경사항을 적용하지 못했습니다.
+        load_minecraft_failed: Minecraft 버전을 로드하지 못했습니다.
+        reset_instance: 인스턴스 재설정
+        select_option: "{option_title} 선택"
+        select_option_failed: "{option_title}을(를) 선택하지 못했습니다."
+        start_failed: 설치를 시작하지 못했습니다.
+      dialogs:
+        reset_instance:
+          confirm: 다시 놓기
+          message: 선택된 변경사항이 없습니다. 이 인스턴스를 기본 상태로 재설정하시겠습니까?
+          title: 인스턴스 재설정
+        select_minecraft:
+          confirm: 선택하다
+          message: Minecraft 버전을 선택하세요
+          title: Minecraft 버전 선택
+        select_option:
+          confirm: 선택하다
+          message: 사용 가능한 옵션을 선택하세요
+          title: "{option_title} 선택"
+      messages:
+        instance_missing: 대상 인스턴스가 선택되지 않았습니다.
+        option_not_supported: 이 옵션은 프런트엔드 설치 프로그램에서 지원되지 않습니다.
+        queued_in_task_center: '작업 센터에 대기 중: {task_title}'
+        select_minecraft_first: 먼저 Minecraft 버전을 선택하세요.
+        unresolved_selections: 먼저 다음 선택 사항을 해상도하세요. {options}
+      selection:
+        none: 없음
+      stages:
+        asset_files: 자산 파일
+        finalize: 마무리
+        prepare: 준비하다
+        support_files: 지원 파일
+      tasks:
+        asset_files_completed: 자산 파일이 완료되었습니다.
+        asset_files_ready: 자산 파일 준비됨
+        canceled: 취소
+        canceling: 취소 중...
+        cleaning_missing_local_libraries: 누락된 로컬 종속성 참조를 정리 중...
+        completed: 완전한
+        copy_generated_libraries: 생성된 지원 라이브러리를 복사하는 중...
+        copy_optifine_libraries: OptiFine에서 생성된 라이브러리를 복사하는 중...
+        creating_instance_directories: 인스턴스 디렉터리 구조를 만드는 중...
+        download_loader_installer: "{loader_title} 설치 프로그램 다운로드 중..."
+        download_optifine_installer: OptiFine 설치 프로그램을 다운로드하는 중...
+        downloading_asset_files: 자산 파일 다운로드
+        downloading_dependencies: 종속성 다운로드
+        download_vanilla_client: Minecraft {version}용 바닐라 클라이언트를 다운로드하는 중...
+        extract_loader_libraries: "{loader_title} 설치 프로그램에서 번들 라이브러리를 추출하는 중..."
+        fetch_labymod_manifest: LabyMod 매니페스트를 가져오는 중...
+        fetch_loader_manifest: "{loader_title}의 매니페스트를 가져오는 중..."
+        fetch_vanilla_manifest: Minecraft {version}용 바닐라 매니페스트를 가져오는 중...
+        finalizing_installation: 인스턴스 디렉터리 정리 및 설치 마무리 중...
+        files_ready: "{completed_count}/{total_count}개 파일 준비됨"
+        generating_target_manifest: 대상 설치 매니페스트를 생성하는 중...
+        initialize_launcher_profiles: launcher_profiles.json 초기화 중...
+        inspect_loader_installer: "{loader_title}의 설치 프로그램 콘텐츠를 검사하는 중..."
+        manifest_written: 매니페스트가 작성됨
+        merging_liteloader_manifest: LiteLoader 설치 정보 병합 중...
+        no_asset_files_needed: 자산 파일이 필요하지 않습니다.
+        no_asset_files_to_download: 다운로드할 자산 파일이 없습니다.
+        no_support_files_needed: 지원 파일이 필요하지 않습니다
+        no_support_files_to_repair: 복구할 지원 파일이 없습니다.
+        organizing_vanilla_manifest: 바닐라 설치 매니페스트 정리 중...
+        prepare_environment: 환경 준비
+        preparing_managed_dependencies: 관리형 종속성 파일 준비 중...
+        preparing_manifest: 설치 매니페스트 작성 및 환경 준비...
+        prepare_loader_installer: "{loader_title} 설치 프로그램 준비 중..."
+        prepare_vanilla_files: Minecraft {version}용 바닐라 파일 준비 중...
+        processing_optifine_manifest: OptiFine 설치 정보 처리 중...
+        processing_file: "{file_name} 처리 중"
+        progress_with_file: "{prefix}: {completed_count}/{total_count}({file_name})"
+        progress_without_file: "{prefix}: {completed_count}/{total_count}"
+        queued: 대기 중
+        read_generated_manifest: 생성된 설치 프로그램 매니페스트를 읽는 중...
+        read_optifine_manifest: OptiFine에서 생성된 매니페스트를 읽는 중...
+        read_vanilla_version_details: Minecraft {version} 버전 세부 정보를 읽는 중...
+        repairing_game_files: 게임 코어 파일 및 지원 라이브러리를 완성하는 중...
+        repair_loader_dependencies: "{loader_title}의 설치 종속성을 복구하는 중..."
+        repairing_support_files: 지원 파일 복구
+        run_loader_installer: "{loader_title} 설치 단계 실행 중..."
+        run_optifine_installer: OptiFine 설치 프로그램 실행 중...
+        support_files_completed: 지원 파일 완료
+        support_files_ready: 지원 파일 준비됨
+        waiting_asset_files: 자산 파일을 기다리는 중
+        waiting_execution: 실행 대기 중
+        waiting_finalize: 완료 대기 중
+        waiting_support_files: 지원 파일을 기다리는 중
+        write_loader_libraries: "{loader_title}에 대한 지원 라이브러리 작성 중..."
+        writing_manifest_file: 설치 매니페스트 파일 {file_name} 작성 중...
+        writing_instance_config: 인스턴스 구성 작성 중...
+        write_vanilla_manifest: Minecraft {version}용 바닐라 매니페스트 작성 중...
+  resource:
+    activities:
+      entry_action: '리소스 작업: {entry_title}'
+      install_pack: 팩 설치
+      install_pack_failed: 팩을 설치하지 못했습니다.
+      open_page: '리소스 페이지 열기: {entry_title}'
+      reset_filters: 필터 재설정
+      reset_filters_message: "{surface_title}의 필터가 재설정되었습니다."
+    current_instance:
+      actions:
+        switch: 스위치
+      none_selected: 선택된 인스턴스가 없습니다.
+      summary_none_selected: 호환성 필터링을 개선하려면 인스턴스를 선택하세요.
+      summary_suffix: 호환성 필터링에 사용됩니다.
+      title: 현재 인스턴스
+    empty:
+      default: 결과 없음
+    filters:
+      loader: 짐을 싣는 사람
+      sort: 종류
+      source: 출처
+      tag: 꼬리표
+      version: 버전
+    hints:
+      modrinth_unavailable: 현재 소스에서는 Modrinth를 사용할 수 없습니다.
+      partial_results: '사용 가능한 소스의 실시간 결과를 표시합니다. 일부 소스가 실패했습니다: {message}'
+      retry_later: 나중에 다시 시도하거나 소스 필터를 조정하세요.
+      search_failed: '실시간 커뮤니티 검색 실패: {message}'
+      unavailable: '실시간 커뮤니티 결과를 가져올 수 없습니다: {message}'
+      version_fallback: Minecraft {version}과(와) 일치하는 인기 {surface_name} 결과가 없어 일반 커뮤니티 목록으로 전환합니다.
+    entry:
+      count_style: 서양식
+      downloads_none: 다운로드 없음
+      downloads_with_count: "{count} 다운로드"
+      updated_unknown: 날짜를 알 수 없음
+      version_unknown: 버전이 지정되지 않음
+    install_pack:
+      no_filtered_result: 현재 결과에 설치 가능한 팩이 없습니다.
+      no_surface: 활성화된 다운로드 표면이 없습니다.
+      open_target_missing: 대상 폴더를 열 수 없습니다
+      runtime_state_missing: 다운로드 상태를 사용할 수 없습니다.
+      target_missing: 설치 대상이 누락되었습니다.
+    results:
+      summary: "{total_count}개 중 {shown_count}개 표시 중"
+    search:
+      data_pack: 데이터 팩
+      default: 프로젝트 검색
+      mod: 모드
+      pack: 모드팩
+      resource_pack: 리소스 팩
+      shader: 셰이더
+      world: 세계
+    sort:
+      default: 기본
+      downloads: 다운로드
+      follows: 팔로우
+      release: 출시일
+      relevance: 관련성
+      update: 업데이트됨
+    surface:
+      empty: "{surface_name}을 찾을 수 없습니다."
+      loading: "{surface_name} 로드 중..."
+      title: "{surface_name}"
+    tag_groups:
+      features: 특징
+      performance: 성능
+      resolution: 해상도
+      style: 스타일
+    tags:
+      adventure: 모험
+      audio: 오디오 포함
+      automation: 오토메이션
+      biomes: 생물군계
+      cartoon: 만화
+      chaotic: 혼돈
+      colored_lighting: 컬러 조명
+      combat: 전투
+      core_shaders: 코어 셰이더
+      creative: 창의적인
+      creative_mode: 크리에이티브 모드
+      data_pack: 데이터 팩
+      decoration: 장식
+      dimensions: 치수
+      dynamic_effects: 동적 효과
+      energy: 에너지
+      entities: 엔터티 포함
+      equipment_tools: 장비 및 도구
+      exploration: 탐구
+      fantasy: 공상
+      fantasy_style: 공상
+      farming: 농업
+      food_cooking: 음식과 요리
+      fonts: 글꼴 포함
+      game_mechanics: 게임 메커니즘
+      gui: UI 포함
+      hardcore: 하드코어
+      information: 정보 표시
+      kitchen_sink: 주방 싱크대
+      large: 크기가 큰
+      library: 도서관
+      lightweight: 경량
+      locale: 로캘 포함
+      logistics: 기호 논리학
+      magic: 마법
+      map_based: 지도 기반
+      medieval: 중세
+      minigames: 미니게임
+      mobs: 몹
+      mod_compatible: 모드 호환 가능
+      mod_world: 모드 월드
+      modded: 수정됨
+      modern: 현대의
+      models: 모델 포함
+      multiplayer: 멀티플레이어
+      ores_resources: 광석과 자원
+      parkour: 파쿠르
+      path_tracing: 경로 추적
+      performance: 성능
+      performance_high: 높은
+      performance_low: 낮은
+      performance_medium: 중간
+      performance_very_low: 매우 낮음
+      puzzle: 퍼즐
+      quests: 퀘스트
+      realistic: 현실적
+      reflections: 반사
+      redstone: 레드스톤
+      resolution_128x: 128배
+      resolution_16x: 16배
+      resolution_256x: 256배
+      resolution_32x: 32배
+      resolution_48x: 48배
+      resolution_512x: 512x 이상
+      resolution_64x: 64배
+      resolution_8x: 8배 이하
+      scifi: SF
+      semi_realistic: 반현실적
+      simple: 단순한
+      skyblock: 스카이블록
+      steampunk: 스팀펑크
+      storage: 저장
+      structures: 구조물
+      survival: 활착
+      technology: 기술
+      themed: 테마
+      transportation: 운송
+      tweaks: 개조
+      utility: 공익사업
+      vanilla_compatible: 바닐라 호환
+      vanilla_plus: 바닐라+
+      vanilla_style: 바닐라 스타일
+      worldgen: 세계세대
+resource_detail:
+  actions:
+    copy_link: 링크 복사
+    copy_name: 이름 복사
+    mc_wiki: MC 위키
+    translate_description: 설명 번역
+    view_details: 세부정보 보기
+  activities:
+    download_canceled: '취소된 다운로드: {entry_title}'
+    download_failed: '다운로드 실패: {entry_title}'
+    download_file: '파일 다운로드: {entry_title}'
+    download_started: '다운로드 시작됨: {entry_title}'
+    install_current_instance: 현재 인스턴스에 설치
+    install_current_instance_failed: 현재 인스턴스에 설치하지 못했습니다.
+    navigate_back: "{target_title}(으)로 돌아가기"
+    open_dependency_project: '종속성 프로젝트 열기: {entry_title}'
+    open_detail: 세부정보 열기
+    open_detail_for_project: "{project_title} 세부정보 열기"
+    open_file: '파일 열기: {entry_title}'
+    open_mc_wiki: "{project_title}에 대한 MC Wiki 열기"
+    open_project_content: '콘텐츠 열기: {entry_title}'
+    open_project_homepage: "{project_title} 홈페이지 열기"
+    pick_save_path_failed: "{entry_title}의 저장 경로를 선택하지 못했습니다."
+    view_source: "{project_title} 소스 보기"
+  copy:
+    messages:
+      completed: 성공적으로 복사되었습니다
+      failed: "{title} 실패"
+  copy_link:
+    empty: 복사할 링크가 없습니다.
+  copy_name:
+    empty: 복사할 이름이 없습니다.
+  counts:
+    hundred_million: "{value}억"
+    ten_thousand: "{value} 만"
+  compatibility:
+    no_loaders: 로더 정보 없음
+    no_versions: Minecraft 버전 목록이 없습니다.
+    loaders: '로더: {loaders}'
+    summary: "{version_summary} • {loader_summary}"
+    versions: Minecraft {versions}
+  current_instance:
+    none_selected: 현재 인스턴스가 선택되지 않았습니다.
+    summary_none_selected: 이 프로젝트를 직접 설치하려면 인스턴스를 선택하세요.
+  categories:
+    adventure: 모험
+    automation: 오토메이션
+    biomes: 생물군계
+    cartoon: 만화
+    combat: 전투
+    data_pack: 데이터 팩
+    decoration: 장식
+    dimensions: 치수
+    energy: 에너지
+    equipment_tools: 장비 및 도구
+    exploration: 탐구
+    fantasy: 공상
+    farming: 농업
+    food_cooking: 음식과 요리
+    game_mechanics: 게임 메커니즘
+    hardcore: 하드코어
+    information: 정보 표시
+    kitchen_sink: 주방 싱크대
+    library: 도서관
+    lightweight: 경량
+    magic: 마법
+    mobs: 몹
+    multiplayer: 멀티플레이어
+    ores_resources: 광석과 자원
+    performance: 성능
+    pipes_logistics: 파이프 및 물류
+    quests: 퀘스트
+    realistic: 현실적
+    redstone: 레드스톤
+    resolution_16x: 16배
+    resolution_32x: 32배
+    resolution_64x_plus: 64배+
+    server: 섬기는 사람
+    simple: 단순한
+    small_modpack: 소형 모드팩
+    storage: 저장
+    structures: 구조물
+    technology: 기술
+    transportation: 운송
+    tweaks: 개조
+    utility: 공익사업
+    vanilla_style: 바닐라 스타일
+    worldgen: 월드젠
+  dependencies:
+    groups:
+      embedded: 임베디드
+      included: 포함됨
+      incompatible: 호환되지 않음
+      optional: 선택 과목
+      other: 다른
+      required: 필수의
+      tool: 도구
+    title: 종속성
+    title_for_release: "{release_title} 종속성"
+  download:
+    dialogs:
+      pick_save_path:
+        file_type: 파일 다운로드
+        title: 경로 저장을 선택하세요
+    errors:
+      missing_url: 다운로드 URL 누락
+    hints:
+      completed: "{file_name}을(를) 다운로드했습니다."
+      started: "{file_name} 다운로드를 시작했습니다."
+    messages:
+      no_save_path: 저장 경로를 선택하지 않았습니다.
+    task_title: "{file_name} 다운로드"
+  filters:
+    loader: 짐을 싣는 사람
+    version: 버전
+  install_modes:
+    current_only: 현재 인스턴스만
+    single_resource: 단일 리소스
+    with_dependencies: 종속성 포함
+  install:
+    dialogs:
+      confirm_dependencies:
+        confirm: 계속하다
+        failed: 종속성 설치를 확인하지 못했습니다.
+        title: 종속성도 설치하시겠습니까?
+    errors:
+      no_filtered_release: 일치하는 릴리스가 없습니다.
+      unknown_resource_type: 알 수 없는 리소스 유형
+    hints:
+      analyzing: 설치 계획 분석 중...
+      started: 설치 작업이 시작되었습니다.
+    messages:
+      analyzing: "{instance_name}에 {project_title}을(를) 설치하는 방법을 분석 중입니다."
+      canceled_with_dependencies: 종속성이 있는 설치가 취소되었습니다.
+      no_tasks: 설치 작업이 필요하지 않습니다.
+      queued_in_task_center: '작업 센터에 대기 중: {task_title}'
+    summary:
+      completed: "{instance_name}에 대한 설치가 대기 중입니다: {summary}"
+      dependencies: "{count} 종속성"
+      skipped: "{count} 건 건너뛰었습니다"
+      tasks: "{count} 작업"
+  instance_selection:
+    activities:
+      select: 인스턴스 선택
+      select_failed: 인스턴스를 선택하지 못했습니다.
+    dialog:
+      message: 이 프로젝트를 설치할 인스턴스를 선택하세요.
+      title: 인스턴스 선택
+    messages:
+      already_selected: "{instance_name}이(가) 이미 선택되었습니다."
+      no_instances: 사용 가능한 인스턴스가 없습니다.
+  links:
+    title: 링크
+  link_actions:
+    open_community: 커뮤니티 열기
+    open_download: 다운로드 열기
+    open_homepage: 홈페이지 열기
+    open_issues: 미해상도 이슈
+    open_link: 링크 열기
+    open_project_page: 프로젝트 페이지 열기
+    open_source: 소스 열기
+    open_wiki: 위키 열기
+  link_titles:
+    community: 커뮤니티
+    default_support_platform: 기부
+    homepage: 홈페이지
+    issues: 이슈
+    source: 소스 저장소
+    support_author: '지원 작성자: {platform}'
+    wiki: 위키
+  loading:
+    releases: 릴리스 로드 중...
+    source: 출처
+    status: 상태
+  project_types:
+    data_pack: 데이터 팩
+    mod: 모드
+    modpack: 모드팩
+    resource_pack: 리소스 팩
+    shader: 셰이더 팩
+    world: 월드
+  release_info:
+    unavailable: 버전 정보가 없습니다
+    versions: Minecraft {versions}
+  release_meta:
+    downloads: "{count} 다운로드"
+    published: 게시됨 {date}
+    published_with_downloads: 게시됨 {date} • {downloads}
+  modpack:
+    activities:
+      install_canceled: '모드팩 설치 취소됨: {entry_title}'
+      install_completed: 모드팩이 설치됨
+      install_failed: 'Modpack 설치 실패: {entry_title}'
+      prompt_instance_name_failed: 인스턴스 이름을 요청하지 못했습니다.
+    archive_name: 모드팩{extension}
+    dialogs:
+      instance_name:
+        message: 새 인스턴스의 이름을 입력하세요.
+        title: 새 인스턴스 이름
+      invalid_name:
+        confirm: 좋아요
+        title: 잘못된 인스턴스 이름
+    hints:
+      download_and_install_started: "{file_name} 다운로드 및 설치를 시작했습니다."
+      install_completed: "{instance_name}이(가) 성공적으로 설치되었습니다."
+    messages:
+      install_completed: "{instance_name}을(를) {target_directory}에 설치했습니다."
+      missing_instance_name: 인스턴스 이름이 제공되지 않았습니다.
+    task_title: "{source_name}을(를) {instance_name}(으)로 설치"
+    task:
+      canceling: 모드팩 설치 취소 중...
+      queued: 작업 센터에 추가되었습니다
+      completed: 모드팩 설치 완료
+      canceled: 모드팩 설치가 취소되었습니다
+      copying_archive: 모드팩 아카이브 복사 중...
+      downloading_archive: 모드팩 아카이브 다운로드 중...
+      source_missing: 모드팩 소스가 누락되었습니다
+    validation:
+      duplicate: 이 이름을 가진 인스턴스가 이미 존재합니다.
+      empty: 인스턴스 이름을 입력하세요.
+      invalid_characters: 이름에 잘못된 문자가 포함되어 있습니다.
+      reserved_name: 이 이름은 시스템에 예약되어 있습니다.
+      short_name_pattern: 이 짧은 이름은 Windows에 예약되어 있습니다.
+      too_long: 이름이 너무 깁니다
+      trailing_dot: 이름은 공백이나 마침표로 끝날 수 없습니다.
+      trim_spaces: 선행 또는 후행 공백 제거
+    workflow:
+      status:
+        inspecting_manifest: 모드팩 매니페스트 검사 중...
+        preparing_install_plan: 인스턴스 설치 계획 준비 중...
+        extracting_overrides: 모드팩 재정의 추출 중...
+        downloading_bundled_files: 번들 모드팩 파일을 다운로드하는 중...
+        processing_file: "{file_name} 처리 중..."
+        bundled_files_ready: 번들 모드팩 파일이 준비되었습니다.
+        file_ready: "{file_name}이(가) 준비되었습니다"
+        installing_game: 게임 및 로더 설치 중...
+        repairing_game_files: 게임 파일을 완성하는 중...
+        finalizing_instance: 인스턴스 디렉터리를 마무리하는 중...
+        completed: 모드팩 설치가 완료되었습니다.
+      errors:
+        unsupported_package_kind: 자동 설치에는 PCL Standard, Modrinth 및 CurseForge 모드팩만 지원됩니다.
+        modrinth_missing_minecraft_version: Modrinth 모드팩에 Minecraft 버전 정보가 없습니다.
+        curseforge_missing_minecraft_version: CurseForge 모드팩에 Minecraft 버전 정보가 없습니다.
+        curseforge_recommended_forge_unsupported: 이 CurseForge 모드팩은 아직 자동 설치가 지원되지 않는 권장 Forge를 사용합니다.
+        curseforge_missing_files: 모드팩에서 참조하는 일부 CurseForge 파일이 더 이상 존재하지 않으므로 자동 설치를 계속할 수 없습니다.
+        pcl_missing_addons: 이 PCL 표준 모드팩에는 필수 게임 버전 애드온 메타데이터가 포함되어 있지 않습니다.
+        pcl_missing_game_version: 이 PCL 표준 모드팩에는 Minecraft 버전 정보가 포함되어 있지 않습니다.
+        missing_critical_file: '모드팩에 필수 파일이 없습니다: {path}'
+        minecraft_choice_missing: Minecraft {version}에 사용 가능한 설치 계획을 찾을 수 없습니다.
+        loader_choice_missing: "{option_title} {requested_version}에 대한 설치 계획을 찾을 수 없습니다."
+        file_download_failed: '모드팩 파일을 다운로드하지 못했습니다: {file_name}'
+        curseforge_metadata_empty: CurseForge 파일 메타데이터 응답이 비어 있습니다.
+        curseforge_metadata_missing_data: CurseForge 파일 메타데이터에 데이터 배열이 포함되지 않았습니다.
+        file_path_outside_instance: 'Modpack 파일 경로는 인스턴스 디렉터리: {relative_path}를 이스케이프합니다.'
+        archive_illegal_path: 'Modpack 아카이브에 잘못된 경로가 포함되어 있습니다: {entry_path}'
+        rar_unsupported: RAR 아카이브는 지원되지 않습니다. 모드팩을 ZIP 아카이브로 추출하고 다시 압축한 후 다시 시도하세요.
+        archive_open_failed: 모드팩 아카이브를 열지 못했습니다. 파일이 손상되었거나 지원되지 않는 아카이브 형식을 사용하고 있을 수 있습니다.
+        json_parse_failed: 'Modpack 내부의 JSON 파일을 구문 분석하지 못했습니다: {entry_path}'
+  releases:
+    empty:
+      body: 현재 필터와 일치하는 릴리스가 없습니다.
+      title: 릴리스 없음
+  selection:
+    missing_project_id: 프로젝트 ID가 누락되었습니다.
+    no_compatibility: 호환되는 릴리스가 없습니다.
+    no_tags: 태그 없음
+    none_selected_summary: 세부정보를 보려면 프로젝트를 선택하세요.
+    none_selected_title: 선택된 것이 없습니다
+    not_loaded: 아직 로드되지 않음
+    project_fallback_title: 프로젝트 {project_id}
+    unspecified_source: 소스가 지정되지 않음
+    waiting: 선택을 기다리는 중
+  statuses:
+    archived: 보관됨
+    draft: 초안
+    fallback: 상태 {status}
+    load_failed: 로드 실패
+    published: 게시됨
+    removed: 제거됨
+    unlisted: 미등록
+  suggested_release:
+    none: 제안된 릴리스가 없습니다.
+    title: 제안된 릴리스
+  translate_description:
+    empty: 번역할 설명이 없습니다.
+  values:
+    and_more: 그리고 더
+    none: 없음
+    other: 다른
+    unknown: 알려지지 않은
+  versions:
+    legacy: 유산
+    snapshot: 스냅 사진
+  warnings:
+    load_failed: '라이브 프로젝트 데이터를 로드하지 못했습니다: {message}'
+  world_archive:
+    extract_failed: '월드 아카이브를 다운로드했지만 자동 추출에 실패했습니다: {message}'
+    install_directory_unavailable: 저장 설치 디렉터리를 사용할 수 없습니다.
+    no_importable_content: 아카이브에는 가져올 수 있는 월드 콘텐츠가 포함되어 있지 않습니다.
+    unsafe_path: '아카이브에 안전하지 않은 경로가 포함되어 있습니다: {path}'
+instance:
+  common:
+    independent: 독립 인스턴스
+    shared: 공유 인스턴스
+    no_selection: 선택된 인스턴스 없음
+    installed: 설치됨
+    not_installed: 설치되지 않음
+    unknown_version: 알 수 없는 버전
+  overview:
+    sections:
+      info: 정보
+      personalization: 개인화
+      shortcuts: 단축키
+      advanced: 고급의
+    dialogs:
+      rename:
+        title: 인스턴스 이름 바꾸기
+        message: 새 인스턴스 이름을 입력합니다. 인스턴스 폴더, 코어 파일 및 선택한 인스턴스 구성에 사용됩니다.
+        confirm: 이름 바꾸기
+        input_label: 인스턴스 이름
+      edit_description:
+        title: 설명 변경
+        message: 인스턴스 설명을 편집합니다. 기본 설명을 복원하려면 비워 두세요.
+        confirm: 구하다
+        input_label: 인스턴스 설명
+      reset:
+        title: 인스턴스 재설정 확인
+        message: "{instance_name}을(를) 재설정하시겠습니까? 코어 백업이 먼저 저장된 다음 가능할 때마다 검증된 파일을 재사용하면서 현재 코어 파일, 라이브러리 및 자산 인덱스가 다시 다운로드됩니다."
+        confirm: 재설정 시작
+      patch_core:
+        title: 패치 코어
+        message: "{instance_name}의 코어 파일을 패치하시겠습니까? 패치 후에는 파일 유효성 검사가 자동으로 비활성화되고 코어 백업이 먼저 저장됩니다."
+        confirm: 패치 파일 선택
+        file_title: 코어를 패치할 파일을 선택하세요
+        file_filter: 아카이브 파일
+    info:
+      launch_count: 실행 횟수
+      launch_count_never: 실행한 적 없음
+      launch_count_value: "{count}회 실행됨"
+      modpack_version: 모드팩 버전
+      description: 설명
+    personalization:
+      icon: 상
+      category: 범주
+    actions:
+      rename: 이름 변경
+      edit_description: 설명 편집
+      add_favorite: 즐겨찾기에 추가
+      remove_favorite: 즐겨찾기 안함
+    shortcuts:
+      instance_folder: 인스턴스 폴더
+      saves_folder: 폴더 저장
+      mods_folder: 모드 폴더
+    advanced:
+      export_script: 실행 스크립트 내보내기
+      test_game: 테스트 게임
+      repair_files: 파일 복구
+      reset: 인스턴스 재설정
+      delete: 인스턴스 삭제
+      patch_core: 패치 코어
+    artifacts:
+      launch_script_name: "{instance_name} 실행"
+    messages:
+      select_to_view_details: 세부정보를 보려면 인스턴스를 선택하세요.
+      no_instance_selected: 현재 선택된 인스턴스가 없습니다.
+      no_saves_directory: 현재 인스턴스에는 저장 디렉터리가 없습니다.
+      no_mods_directory: 현재 인스턴스에는 mods 디렉터리가 없습니다.
+      rename_canceled: 이름 변경이 취소되었습니다.
+      rename_empty: 인스턴스 이름은 비워둘 수 없습니다.
+      rename_unchanged: 인스턴스 이름은 변경되지 않았습니다.
+      rename_invalid: 인스턴스 이름에 잘못된 문자가 포함되어 있습니다.
+      rename_exists: '이 이름을 가진 인스턴스가 이미 존재합니다: {name}'
+      description_canceled: 설명 수정이 취소되었습니다.
+      description_restored: 기본 설명을 복원했습니다.
+      launch_script_missing: 시작 스크립트가 존재하지 않습니다.
+      repair_disable_validation_hint: 먼저 [인스턴스 설정 -> 설정 -> 고급 시작 옵션 -> 파일 유효성 검사 비활성화]를 끄고 파일 복구를 다시 시도해보세요.
+      repair_completed: "{downloaded_count}개의 파일을 복구하고 {reused_count}개의 파일을 재사용했습니다."
+      repair_canceled_title: 파일 복구가 취소되었습니다.
+      repair_canceled: 인스턴스 복구 프로세스가 취소되었습니다.
+      reset_canceled_title: 인스턴스 재설정이 취소되었습니다.
+      reset_canceled: 인스턴스 재설정이 취소되었습니다.
+      reset_completed: 코어 파일을 재설정하고 {downloaded_count}개의 파일을 다운로드했으며 {reused_count}개의 파일을 재사용했습니다.
+      delete_permanent: "{instance_name} 인스턴스가 영구적으로 삭제되었습니다."
+      delete_recycled: "{instance_name} 인스턴스가 재활용 영역: {trash_directory}로 이동되었습니다."
+      patch_canceled: 패치가 취소되었습니다.
+      patch_file_canceled: 패치 파일 선택이 취소되었습니다.
+      patched_core_missing: 패치된 코어 파일이 존재하지 않습니다.
+      rename_completed: 인스턴스 이름을 {old_name}에서 {new_name}으로 바꿨습니다.
+      test_instance_navigated: "{instance_name}을 테스트하기 위해 시작 경로를 열었습니다."
+      repair_task_title: "{action_title}: {instance_name}"
+      repair_summary:
+        instance: '인스턴스: {instance_name}'
+        instance_directory: '인스턴스 디렉터리: {path}'
+        core_json: '핵심 JSON: {status} • {path}'
+        core_jar: '핵심 JAR: {status} • {path}'
+        backup_directory: '백업 디렉터리: {path}'
+        downloaded_count: '다운로드한 파일: {count}'
+        reused_count: '재사용된 파일: {count}'
+        downloaded_item: '다운로드됨: {path}'
+        reused_item: '재사용됨: {path}'
+        intro: 수리 결과 요약.
+        present: 현재의
+        missing: 없어진
+    categories:
+      auto: 자동
+      hidden: 숨겨진 인스턴스
+      modable: 모드 가능
+      hide_from_list: 인스턴스 목록에서 숨기기
+      modable_long: 모드 설치를 지원하는 인스턴스
+      regular: 일반 인스턴스
+      rare: 거의 사용되지 않는 인스턴스
+      april_fools: 만우절 버전
+    tags:
+      mod_supported: 모드 지원
+      favorited: 즐겨찾기
+    icons:
+      auto: 자동
+      cobblestone: 조약돌
+      command_block: 명령 블록
+      gold_block: 골드 블록
+      grass_block: 잔디 블록
+      grass_path: 잔디 길
+      anvil: 모루
+      redstone_block: 레드스톤 블록
+      redstone_lamp_on: 레드스톤 램프(켜기)
+      redstone_lamp_off: 레드스톤 램프(꺼짐)
+      egg: 계란
+      fabric: Fabric
+      quilt: Quilt
+      neoforge: NeoForge
+      cleanroom: Cleanroom
+  install:
+    minecraft:
+      header: Minecraft
+      version: Minecraft {version}
+    actions:
+      apply_changes: 변경 사항 적용
+      reset_to_scanned: 스캔된 상태로 재설정
+      modify: 수정
+    option:
+      can_add: 추가 가능
+    hints:
+      optifine_mod_compatibility: OptiFine은 일부 모드와 호환되지 않을 수 있습니다.
+      fabric_api_required: Fabric API가 설치되지 않아 대부분의 모드가 작동하지 않습니다.
+      qsl_required: QFAPI/QSL이 설치되지 않아 대부분의 모드가 작동하지 않습니다.
+      optifabric_required: OptiFabric이 설치되지 않아 OptiFine이 작동하지 않습니다.
+    unavailable:
+      incompatible_with: "{target}과(와) 호환되지 않습니다"
+      no_versions: 호환되는 버전이 없습니다.
+      optifabric_origins: 이 OptiFabric 빌드는 Origins 분기와만 호환됩니다.
+      requires_fabric: 패브릭이 필요합니다.
+      requires_legacy_fabric: Legacy Fabric이 필요합니다.
+      requires_optifine: OptiFine이 필요합니다.
+      requires_optifine_and_fabric: OptiFine과 Fabric이 모두 필요합니다.
+      requires_quilt: Quilt가 필요합니다.
+      specific_forge_only: 특정 Forge 버전이 필요합니다.
+  content:
+    world:
+      search: 월드 검색
+      quick_actions: 빠른 작업
+      list: 월드 목록
+      empty:
+        title: 월드를 찾을 수 없습니다.
+        description: saves 폴더를 열거나 클립보드에서 월드 파일이나 폴더 경로를 붙여넣어 가져옵니다.
+      summary: '생성됨: {created_at} • 수정됨: {modified_at}'
+      actions:
+        open_folder: 저장 폴더 열기
+        paste_clipboard: 클립보드에서 붙여넣기
+      messages:
+        no_instance_selected: 현재 선택된 인스턴스가 없습니다.
+        no_importable_paths: 클립보드에는 가져올 수 있는 파일이나 폴더 경로가 없습니다.
+    screenshot:
+      quick_actions: 빠른 작업
+      empty:
+        title: 스크린샷을 찾을 수 없습니다.
+        description: 스크린샷 폴더를 열고 이 인스턴스에 대한 스크린샷을 추가하거나 캡처하세요.
+      summary: "{created_at} • {file_size}"
+      actions:
+        open_folder: 폴더 열기
+        open_file: 스크린샷 열기
+      messages:
+        missing_file: 선택한 스크린샷 파일이 존재하지 않습니다.
+    server:
+      quick_actions: 빠른 작업
+      empty:
+        title: 저장된 서버 없음
+        description: 현재 목록을 새로 고치거나 이 인스턴스에 서버를 추가하세요.
+      actions:
+        refresh_all: 모두 새로 고침
+        add: 서버 추가
+        refresh: 새로 고치다
+        copy_address: 주소 복사
+        connect: 연결하다
+      status:
+        saved: 저장된 서버
+        connecting: 연결 중...
+        online: 온라인 서버
+        offline: 서버 오프라인
+        offline_short: 오프라인
+        connecting_short: 연결 중
+        connection_failed: '연결할 수 없습니다: {message}'
+      motd:
+        click_to_refresh: 서버 상태를 보려면 새로 고침을 클릭하세요.
+        connecting: 연결 중...
+        offline: 서버 오프라인
+      messages:
+        no_instance_selected: 현재 선택된 인스턴스가 없습니다.
+        no_saved_servers: 현재 인스턴스를 다시 검사했지만 저장된 서버가 없습니다.
+        refreshed_count: "{count}개의 서버를 새로 고쳤습니다."
+        address_empty: 서버 주소가 비어 있습니다.
+        no_server_info: 서버 정보가 반환되지 않았습니다.
+        no_copyable_address: "{entry_title}에는 복사할 주소가 없습니다."
+        copied_address: "{entry_title} • {address}"
+        no_connectable_address: "{entry_title}에는 사용 가능한 서버 주소가 없습니다."
+        added: "{name} • {address}"
+        address_required: 서버 주소는 비워둘 수 없습니다.
+        read_list_failed: |-
+          현재 인스턴스 서버 목록을 읽을 수 없습니다.
+          {error}
+        launch_route_prepared: 시작 페이지로 전환하고 {entry_title}에 연결할 준비를 했습니다.
+        update_list_failed: |-
+          현재 인스턴스 서버 목록을 업데이트할 수 없습니다.
+          {error}
+        write_list_failed: 현재 인스턴스 서버 목록을 쓸 수 없습니다.
+      dialogs:
+        edit:
+          title: 서버 정보 편집
+          name_prompt: 새 서버 이름을 입력하세요.
+          name_default: Minecraft 서버
+          address_prompt: '새 서버 주소를 입력하세요:'
+    sort:
+      label: '정렬: {mode}'
+      file_name: 파일 이름
+      create_time: 생성시간
+      modify_time: 수정된 시간
+      resource_name: 리소스 이름
+      added_time: 추가된 시간
+      file_size: 파일 크기
+    resource:
+      empty:
+        default_title: 리소스를 찾을 수 없습니다.
+        default_description: 시작하려면 이 인스턴스에 파일을 추가하거나 새 콘텐츠를 다운로드하세요.
+        mod_unavailable_title: 모드를 사용할 수 없습니다
+        mod_unavailable_description: 이 인스턴스는 모드를 지원하지 않습니다. 호환되는 인스턴스로 전환하거나 다운로드를 열어 설치 가능한 콘텐츠를 찾아보세요.
+        schematic_unavailable_title: 설계도에는 모드가 필요합니다
+        schematic_unavailable_description: 회로도 호환 모드를 먼저 설치한 다음 여기로 돌아와 회로도 파일을 관리하세요.
+      search:
+        default: 리소스 검색
+        resource_pack: 리소스 팩 검색
+        shader: 셰이더 검색
+        schematic: 회로도 검색
+      actions:
+        open_folder: 폴더 열기
+        open_homepage: 홈페이지 열기
+        install_from_file: 파일에서 설치
+        install_from_file_empty: 첫 번째 파일 설치
+        download_new: 새로 다운로드
+        download_schematic_mod: 설계도 모드 다운로드
+        select_all: 모두 선택
+        export_info: 수출 정보
+        check_mods: 모드 확인
+        enable: 할 수 있게 하다
+        disable: 장애를 입히다
+        delete: 삭제
+        clear_selection: 선택 지우기
+        instance_select: 호환되는 인스턴스 선택
+        go_to_download: 다운로드로 이동
+      activities:
+        open_homepage: "{surface_title} 홈페이지 열기: {entry_title}"
+        view_details: "{surface_title} 세부정보 보기"
+      filters:
+        all: 모두({count})
+        enabled: 활성화됨({count})
+        disabled: 비활성화됨({count})
+        duplicate: 중복({count})
+        search_results: 검색 결과({count})
+      selection: "{count}개 선택됨"
+      kind:
+        mod: 모드
+        resource: 의지
+        resource_pack: 리소스팩
+        shader: 셰이더 팩
+        schematic_file: 회로도 파일
+      meta:
+        archive: 보관소
+        folder: 접는 사람
+        root_directory: 루트 디렉터리
+      summary:
+        file: "{parent_directory} • {modified_at}"
+        archive: "{modified_at} • {file_size}"
+        folder: "{modified_at} • {folder_kind}"
+      messages:
+        no_instance_selected: 현재 선택된 인스턴스가 없습니다.
+        list_empty: "{surface_title} 목록이 비어 있습니다."
+        selected_all: "{surface_title} • {count}개 항목을 선택했습니다."
+        no_toggleable_entries: 현재 상태를 변경할 수 있는 리소스가 없습니다.
+        no_deletable_entries: 지금은 삭제할 수 있는 리소스가 없습니다.
+        install_from_file_canceled: 리소스 파일 선택이 취소되었습니다.
+        toggle_not_supported: "{surface_title}은 활성화 또는 비활성화를 지원하지 않습니다."
+        no_selected: 선택한 리소스가 없습니다.
+        already_enabled: 선택한 모든 리소스가 이미 활성화되어 있습니다.
+        already_disabled: 선택한 리소스는 모두 이미 비활성화되어 있습니다.
+        enabled_completed: '활성화된 {count}개 항목: {titles}'
+        disabled_completed: '비활성화된 {count}개 항목: {titles}'
+        enabled_partial: "{count}개의 항목을 활성화했지만 {failed_count}개는 실패했습니다."
+        disabled_partial: "{count}개의 항목이 비활성화되었으며 {failed_count}개가 실패했습니다."
+        delete_canceled: 삭제가 취소되었습니다.
+        deleted_completed: "{count}개 항목을 재활용 구역으로 옮겼습니다."
+        export_missing: 내보낸 파일이 존재하지 않습니다.
+        entry_missing: "{surface_title} 항목이 존재하지 않습니다."
+        details_read_failed: '추가 정보를 읽지 못했습니다: {error}'
+        checked_mods_summary: "{instance_name} 확인: {enabled_count} 활성화, {disabled_count} 비활성화, {duplicate_count} 중복 그룹."
+        open_download_route: "{surface_title} 페이지가 다운로드에 열렸습니다."
+      dialogs:
+        install_from_file:
+          title: "{surface_title} 파일 선택"
+          file_types:
+            mod: 모드 파일
+            resource_pack: 리소스 팩 파일
+            shader: 셰이더 팩 파일
+            schematic: 회로도 파일
+        delete:
+          title: 리소스 삭제 확인
+          message: 이 {count}개 {surface_title}개 항목을 재활용 구역으로 옮기시겠습니까?
+          confirm: 재활용 구역으로 이동
+          extra_items: "- 그리고 {count}개 이상의 항목"
+      details:
+        fields:
+          name: 이름
+          status: 상태
+          type: 유형
+          loader: 짐을 싣는 사람
+          version: 버전
+          authors: 저자
+          description: 설명
+          website: 웹사이트
+          summary: 추가 정보
+          path: 길
+          item_kind: 품목 유형
+          file_size: 파일 크기
+          create_time: 생성됨
+          modify_time: 수정됨
+      check_mods:
+        instance: 사례
+        enabled_mods: 활성화된 모드
+        disabled_mods: 비활성화된 모드
+        duplicate_names: 중복된 이름
+        no_duplicates: 중복된 모드 파일 이름이 감지되지 않았습니다.
+        duplicate_group_title: '중복된 모드 이름:'
+      tooltips:
+        open_file_location: 파일 위치 열기
+        details: 세부
+        website: 웹사이트
+        enable: 할 수 있게 하다
+        disable: 장애를 입히다
+        delete: 삭제
+      tags:
+        disabled: 장애가 있는
+  settings:
+    intro: 이 인스턴스에 대한 전용 시작 동작, 메모리 할당, 서버 설정 및 고급 재정의를 구성합니다.
+    sections:
+      launch: 실행
+      memory: 메모리
+      server: 섬기는 사람
+      advanced: 고급의
+    actions:
+      global_settings: 전역 설정 열기
+    options:
+      follow_global: 전역 설정 따르기
+      'on': 켜기
+      'off': 끄기
+    java_options:
+      auto_select: 적합한 Java를 자동으로 선택합니다.
+      launcher_relative: 실행기 디렉토리에서 Java를 선택하십시오.
+      launcher_relative_selected: 실행 프로그램 디렉토리 아래의 Java | {relative_path}
+    launch:
+      isolation: 격리
+      window_title: 창 제목
+      default_window_title: 기본 창 제목 사용
+      custom_info: 맞춤 정보
+      java: Java
+    memory:
+      warning_32bit: 선택한 Java 런타임은 32비트이므로 사용 가능한 메모리가 심각하게 제한될 수 있습니다.
+      warning_allocation: 현재 메모리 할당으로 인해 사용 가능한 시스템 메모리가 너무 적게 남을 수 있습니다.
+      use_global: 전역 설정 사용
+      use_auto: 자동으로 할당
+      use_custom: 맞춤 할당 설정
+      optimize_before_launch: 실행 전 메모리 최적화
+    server:
+      locked_warning: 이 인스턴스에 대한 서버 로그인 설정이 잠겨 있습니다.
+      login_requirement: 로그인 요구 사항
+      auth_server: 인증 서버
+      auth_register: 등록 페이지
+      auth_name: 인증라벨
+      auto_join: 자동 가입 서버
+      set_littleskin: LittleSkin 기본값으로 설정
+      lock_login: 로그인 설정 잠금
+      create_profile: 로그인 프로필 만들기
+      require:
+        none: 없음
+        official: 공식 전용
+        third_party: 타사에만 해당
+        both: 둘 다
+    advanced:
+      renderer: 렌더러
+      jvm_head: JVM 인수(헤드)
+      game_tail: 게임 인수(꼬리)
+      classpath_head: 클래스패스 헤드
+      prelaunch_command: 실행 전 명령
+      environment_variables: 환경 변수
+      environment_variables_hint: KEY=VALUE 형식의 변수는 한 줄에 하나씩 있습니다.
+      linux_backend: Linux 디스플레이 백엔드
+      linux_backend_hint: 게임 창이 Wayland 및 X11과 통합되는 방식을 선택하세요.
+      wait_for_prelaunch: 사전 실행 명령이 완료될 때까지 기다립니다.
+      ignore_java_compatibility: Java 호환성 검사 무시
+      disable_file_validation: 파일 유효성 검사 비활성화
+      follow_launcher_proxy: 런처 프록시 설정을 따르세요
+      disable_java_launch_wrapper: Java 실행 래퍼 비활성화
+      disable_retro_wrapper: RetroWrapper 비활성화
+      use_debug_log4j: 디버그 Log4j 구성 사용
+    renderer:
+      game_default: 게임 기본값
+      software: 소프트웨어
+      directx12: 다이렉트X 12
+      vulkan: 불칸
+    linux:
+      force_x11: 포스 X11
+      system_default: 시스템 기본값
+  export:
+    count:
+      items: "{count}개 항목"
+    activities:
+      reset: 내보내기 옵션 재설정
+      import_config: 내보내기 구성 가져오기
+      save_config: 내보내기 구성 저장
+      guide: 모드팩 패키징 가이드
+      start: 내보내기 시작
+    warnings:
+      modrinth: Modrinth 내보내기 모드는 '.mrpack' 작업 흐름을 생성하며 실행 프로그램 관련 추가 항목을 생략할 수 있습니다.
+      include_resources: 리소스 파일을 포함하면 내보내기 패키지의 크기가 크게 늘어날 수 있습니다.
+    sections:
+      content: 콘텐츠
+      advanced: 고급의
+    actions:
+      start: 내보내기 시작
+      reset: 다시 놓기
+      import_config: 구성 가져오기
+      save_config: 구성 저장
+      guide: 가이드
+    name: 팩 이름
+    version: 팩 버전
+    options:
+      include_resources: 리소스 파일을 직접 포함
+      modrinth_mode: 모드린스 업로드 모드
+    config:
+      hint: 나중에 동일한 선택 항목을 재사용하려면 내보내기 구성을 가져오거나 저장하세요.
+    dialogs:
+      import_config:
+        title: Modpack 내보내기 구성 선택
+        filter_name: Modpack 내보내기 구성
+      save_config:
+        title: 위치 저장을 선택하세요
+        default_name: 내보내기_config.txt
+        filter_name: Modpack 내보내기 구성
+    messages:
+      reset_completed: 인스턴스 내보내기 페이지가 현재 인스턴스 검사 결과로 복원되었습니다.
+      import_config_canceled: 구성 파일 선택이 취소되었습니다.
+      no_instance_selected: 현재 선택된 인스턴스가 없습니다.
+      guide_shown: 가이드를 표시했습니다.
+      archive_missing: 내보내기 아카이브가 존재하지 않습니다.
+    guide:
+      title: 모드팩 패키징 가이드
+      step_1: 1. 먼저 인스턴스 내보내기 페이지에서 팩명, 버전, 선택한 콘텐츠를 확인하세요.
+      step_2: 2. 동일한 내보내기 규칙을 재사용하려면 나중에 가져올 수 있도록 구성을 먼저 저장하십시오.
+      step_3: 3. 리소스 파일을 포함하면 모드, 리소스 팩, 셰이더 팩이 아카이브에 직접 팩되므로 오프라인 배포에 유용합니다.
+      step_4: 4. Modrinth 업로드 모드는 '.mrpack' 파일을 출력하므로 지속적인 패키징 및 게시에 더 좋습니다.
+      step_5: 5. 내보낸 후 생성된 아카이브 구조 및 내용이 현재 인스턴스와 일치하는지 확인합니다.
+    groups:
+      game: 게임
+      mods: 모드
+      resource_packs: 리소스 팩
+      shaders: 셰이더 팩
+      screenshots: 스크린샷
+      schematics: 회로도
+      replays: 리플레이
+      worlds: 세계 저장
+      servers: 서버 목록
+      launcher: PCL 실행기
+    items:
+      game_settings: 게임 설정
+      game_personal: 개인 게임 데이터
+      optifine_settings: OptiFine 설정
+      disabled_mods: 비활성화된 모드
+      important_data: 중요한 모드팩 데이터
+      mod_settings: 모드 설정
+      launcher_personalization: PCL 개인화 콘텐츠
+    descriptions:
+      mods: 모드
+      resource_packs: 텍스처 팩/리소스 팩
+      schematics: 회로도 폴더
+      replays: Mod 녹음 재생
+      worlds: 세계 / 지도
+      launcher: 크로스 플랫폼 PCL 런처를 번들로 묶어 플레이어가 없는 플레이어도 모드팩을 설치할 수 있도록 하세요.
+    detected:
+      options: 감지된 options.txt
+      config_missing: 구성 파일을 찾을 수 없습니다.
+      optifine_settings: OptiFine 설정 감지됨
+      personal_missing: 개인 설정을 찾을 수 없습니다.
+      optifine_present: 이 인스턴스에는 OptiFine이 포함되어 있습니다.
+      optifine_missing: 이 인스턴스에는 OptiFine이 설치되어 있지 않습니다.
+      config_folder: 감지된 구성 폴더
+      config_folder_missing: 구성 폴더를 찾을 수 없습니다
+      config_directory: 감지된 구성 디렉터리
+      config_directory_missing: 구성 디렉터리를 찾을 수 없습니다.
+      pcl_directory: 감지된 인스턴스 PCL 구성 디렉터리
+      pcl_directory_missing: 인스턴스 PCL 구성 디렉터리를 찾을 수 없습니다.
+  trash:
+    activities:
+      open_directory: 인스턴스 휴지통
+    dialogs:
+      delete:
+        title: 인스턴스 삭제 확인
+        confirm_permanent: 영구 삭제
+        confirm_recycle: 휴지통으로 이동
+    messages:
+      launcher_missing: 실행 프로그램 디렉토리를 찾을 수 없습니다.
+      delete_canceled: 삭제가 취소되었습니다.
+      confirm_permanent: "{instance_name} 인스턴스를 영구적으로 삭제하시겠습니까?"
+      confirm_recycle: "{instance_name} 인스턴스를 삭제하시겠습니까?"
+      confirm_indie_warning: 이 인스턴스는 버전 격리를 사용하므로 삭제하면 저장 파일, 리소스 팩, 모드 및 기타 인스턴스별 파일도 제거됩니다.
+      confirm_recycle_note: 인스턴스는 먼저 인스턴스 휴지통으로 이동되므로 수동으로 정리하거나 복원할 수 있습니다.
+save_detail:
+  actions:
+    open_save_folder: 저장 폴더 열기
+    open_datapack_folder: Datapack 폴더 열기
+    view_backup: 백업 보기
+  activities:
+    create_backup: 저장 백업 생성
+    clean_backups: 백업 기록 정리
+    install_datapack: 데이터팩 설치
+    install_datapack_failed: 데이터팩 설치 실패
+    export_datapack_info: 데이터팩 정보 내보내기
+  datapack:
+    name: 데이터 팩
+  dialogs:
+    datapack_file:
+      title: 데이터팩 파일 선택
+      filter_name: 아카이브 또는 데이터팩 파일
+  labels:
+    instance: 사례
+    save_name: 이름 저장
+    save_path: 경로 저장
+    last_modified: 최종 수정됨
+    file_size: 파일 크기
+    file_count: 파일 수
+    datapack_count: 데이터 팩 수
+    backup_count: 백업 횟수
+    icon: 상
+    level_name: 레벨 이름
+    game_mode: 게임 모드
+    difficulty: 어려움
+    allow_commands: 명령 허용
+    hardcore: 하드코어
+    raining: 비가 내림
+    thundering: 우뢰 같은
+    day_count: 일수
+    save_version: 버전 저장
+    save_format: 저장 형식
+    player_dimension: 플레이어 차원
+  values:
+    no_selection: 선택된 세이브 없음
+    not_found: 찾을 수 없음
+    provided: 제공됨
+    not_provided: 제공되지 않음
+    survival: 서바이벌
+    creative: 크리에이티브
+    adventure: 어드벤처
+    spectator: 관전
+    peaceful: 평화로움
+    easy: 쉬움
+    normal: 보통
+    hard: 어려움
+    unknown: 알 수 없음
+    'yes': 예
+    'no': 아니요
+  messages:
+    no_openable_save: 열 수 있는 저장 파일이 없습니다.
+    no_datapack_directory: 현재 저장에는 데이터팩 디렉터리가 없습니다.
+    backup_missing: 백업 파일이 존재하지 않습니다
+    no_backup_target: 백업 작업에 사용할 수 있는 저장 파일이 없습니다.
+    no_selected_save: 현재 저장이 선택되어 있지 않습니다.
+    no_empty_backups: 빈 백업 파일을 찾을 수 없습니다.
+    cleaned_empty_backups: "{count}개의 빈 백업 파일을 정리했습니다."
+    install_datapack_canceled: 데이터팩 파일 선택이 취소되었습니다.
+    export_missing: 내보낸 파일이 존재하지 않습니다.

@@ -2597,6 +2597,10 @@ resource_detail:
   filters:
     loader: Loader
     version: Version
+  install_modes:
+    current_only: Current instance only
+    single_resource: Single resource
+    with_dependencies: With dependencies
   install:
     dialogs:
       confirm_dependencies:
