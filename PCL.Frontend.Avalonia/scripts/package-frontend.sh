@@ -34,7 +34,10 @@ get_default_rids() {
   esac
 }
 
-mapfile -t default_rids < <(get_default_rids)
+default_rids=()
+while IFS= read -r rid; do
+  default_rids+=("$rid")
+done < <(get_default_rids)
 if [[ "$#" -gt 0 ]]; then
   rids=("$@")
 else
