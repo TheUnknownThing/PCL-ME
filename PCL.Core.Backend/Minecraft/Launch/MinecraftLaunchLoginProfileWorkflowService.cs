@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Nodes;
 
 namespace PCL.Core.Minecraft.Launch;
@@ -98,6 +99,17 @@ public static class MinecraftLaunchLoginProfileWorkflowService
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var resolvedSkinHeadId = request.SkinHeadId;
+        if (string.IsNullOrWhiteSpace(resolvedSkinHeadId))
+        {
+            resolvedSkinHeadId = TryResolveAuthlibSkinHeadId(request.RawJson);
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedSkinHeadId))
+        {
+            resolvedSkinHeadId = request.ResultUuid;
+        }
+
         var profile = new MinecraftLaunchStoredProfile(
             MinecraftLaunchStoredProfileKind.Authlib,
             request.ResultUuid,
@@ -109,8 +121,8 @@ public static class MinecraftLaunchLoginProfileWorkflowService
             request.LoginName,
             request.Password,
             request.ClientToken,
-            SkinHeadId: request.ResultUuid,
-            RawJson: null);
+            SkinHeadId: resolvedSkinHeadId,
+            RawJson: request.RawJson);
 
         return request.IsExistingProfile
             ? new MinecraftLaunchProfileMutationPlan(
@@ -159,6 +171,118 @@ public static class MinecraftLaunchLoginProfileWorkflowService
         }
 
         return -1;
+    }
+
+    private static string? TryResolveAuthlibSkinHeadId(string? responseJson)
+    {
+        var skinUrl = TryGetActiveAuthlibSkinUrl(responseJson);
+        if (string.IsNullOrWhiteSpace(skinUrl))
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(skinUrl, UriKind.Absolute, out var uri))
+        {
+            var segment = uri.Segments.LastOrDefault()?.Trim('/');
+            return string.IsNullOrWhiteSpace(segment) ? null : Uri.UnescapeDataString(segment);
+        }
+
+        var fileName = Path.GetFileNameWithoutExtension(skinUrl);
+        return string.IsNullOrWhiteSpace(fileName) ? null : fileName;
+    }
+
+    private static string? TryGetActiveAuthlibSkinUrl(string? responseJson)
+    {
+        if (string.IsNullOrWhiteSpace(responseJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            if (JsonNode.Parse(responseJson) is not JsonObject root)
+            {
+                return null;
+            }
+
+            return TryGetSkinUrlFromPropertyCollection(root["selectedProfile"]?["properties"])
+                   ?? TryGetSkinUrlFromPropertyCollection(root["user"]?["properties"]);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryGetSkinUrlFromPropertyCollection(JsonNode? propertiesNode)
+    {
+        switch (propertiesNode)
+        {
+            case JsonArray array:
+            {
+                foreach (var property in array.OfType<JsonObject>())
+                {
+                    if (!string.Equals(property["name"]?.ToString(), "textures", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var skinUrl = TryGetSkinUrlFromEncodedTextures(property["value"]?.ToString());
+                    if (!string.IsNullOrWhiteSpace(skinUrl))
+                    {
+                        return skinUrl;
+                    }
+                }
+
+                break;
+            }
+            case JsonObject obj:
+            {
+                var directSkinUrl = TryGetSkinUrlFromEncodedTextures(obj["textures"]?.ToString());
+                if (!string.IsNullOrWhiteSpace(directSkinUrl))
+                {
+                    return directSkinUrl;
+                }
+
+                if (obj["textures"] is JsonObject textureObject)
+                {
+                    var nestedSkinUrl = TryGetSkinUrlFromEncodedTextures(textureObject["value"]?.ToString());
+                    if (!string.IsNullOrWhiteSpace(nestedSkinUrl))
+                    {
+                        return nestedSkinUrl;
+                    }
+                }
+
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? TryGetSkinUrlFromEncodedTextures(string? encodedTextures)
+    {
+        if (string.IsNullOrWhiteSpace(encodedTextures))
+        {
+            return null;
+        }
+
+        try
+        {
+            var decodedJson = Encoding.UTF8.GetString(Convert.FromBase64String(encodedTextures));
+            if (JsonNode.Parse(decodedJson) is not JsonObject textureRoot)
+            {
+                return null;
+            }
+
+            var skinObject = textureRoot["textures"]?["SKIN"] as JsonObject
+                             ?? textureRoot["textures"]?["skin"] as JsonObject;
+            return skinObject?["url"]?.ToString();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string ResolveMicrosoftSkinHeadId(string profileJson, string fallbackId)
@@ -225,7 +349,9 @@ public sealed record MinecraftLaunchAuthProfileMutationRequest(
     string AccessToken,
     string ClientToken,
     string LoginName,
-    string Password);
+    string Password,
+    string? SkinHeadId,
+    string? RawJson);
 
 public sealed record MinecraftLaunchStoredProfile(
     MinecraftLaunchStoredProfileKind Kind,

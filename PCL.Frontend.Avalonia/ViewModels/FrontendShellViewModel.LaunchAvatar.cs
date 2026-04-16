@@ -1,10 +1,12 @@
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Core.Logging;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -15,6 +17,7 @@ internal sealed partial class FrontendShellViewModel
 {
     private static readonly string LaunchAvatarFallbackImagePath = FrontendLauncherAssetLocator.GetPath("Images", "Heads", "PCL-Community.png");
     private const string LaunchAvatarHeadCacheVersion = "v3";
+    private const string LaunchAvatarLogModule = "AuthlibAvatar";
     private static readonly HttpClient LaunchAvatarHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(15));
     private string _launchAvatarImagePath = LaunchAvatarFallbackImagePath;
     private int _launchAvatarRefreshVersion;
@@ -123,15 +126,30 @@ internal sealed partial class FrontendShellViewModel
     private async Task<string> EnsureLaunchAvatarSkinSourceAsync(FrontendLaunchProfileSummary profile, string headId)
     {
         var fallbackSkinPath = ResolveLaunchAvatarFallbackSkinPath(profile);
-        if (profile.Kind != MinecraftLaunchProfileKind.Microsoft)
+        var skinUrl = profile.Kind switch
         {
+            MinecraftLaunchProfileKind.Microsoft => TryGetActiveMicrosoftSkinUrl(profile.RawJson),
+            MinecraftLaunchProfileKind.Auth => TryGetActiveAuthlibSkinUrl(profile.RawJson),
+            _ => null
+        };
+        if (string.IsNullOrWhiteSpace(skinUrl) && profile.Kind == MinecraftLaunchProfileKind.Auth)
+        {
+            skinUrl = await TryReadAuthlibSessionProfileSkinUrlAsync(profile).ConfigureAwait(false);
+        }
+
+        if (string.IsNullOrWhiteSpace(skinUrl))
+        {
+            if (profile.Kind == MinecraftLaunchProfileKind.Auth)
+            {
+                LogWrapper.Info(LaunchAvatarLogModule, $"No skin URL resolved for profile {profile.UserName ?? "<unknown>"} ({profile.Uuid ?? "<no-uuid>"}); falling back to default skin.");
+            }
+
             return fallbackSkinPath;
         }
 
-        var skinUrl = TryGetActiveMicrosoftSkinUrl(profile.RawJson);
-        if (string.IsNullOrWhiteSpace(skinUrl))
+        if (profile.Kind == MinecraftLaunchProfileKind.Auth)
         {
-            return fallbackSkinPath;
+            LogWrapper.Info(LaunchAvatarLogModule, $"Resolved authlib skin URL host={TryGetHostForLog(skinUrl)}.");
         }
 
         var skinCachePath = GetLaunchAvatarSkinCachePath(headId);
@@ -147,11 +165,85 @@ internal sealed partial class FrontendShellViewModel
             await File.WriteAllBytesAsync(skinCachePath, bytes).ConfigureAwait(false);
             return skinCachePath;
         }
-        catch
+        catch (Exception ex)
         {
+            if (profile.Kind == MinecraftLaunchProfileKind.Auth)
+            {
+                LogWrapper.Warn(ex, LaunchAvatarLogModule, $"Failed to download authlib skin from {skinUrl}.");
+            }
+
             TryDeleteFile(skinCachePath);
             return fallbackSkinPath;
         }
+    }
+
+    private static async Task<string?> TryReadAuthlibSessionProfileSkinUrlAsync(FrontendLaunchProfileSummary profile)
+    {
+        if (string.IsNullOrWhiteSpace(profile.AuthServer) || string.IsNullOrWhiteSpace(profile.Uuid))
+        {
+            return null;
+        }
+
+        var apiRoot = profile.AuthServer.Trim().TrimEnd('/');
+        if (apiRoot.EndsWith("/authserver", StringComparison.OrdinalIgnoreCase))
+        {
+            apiRoot = apiRoot[..^"/authserver".Length];
+        }
+
+        var uuid = profile.Uuid.Replace("-", string.Empty, StringComparison.Ordinal);
+        if (uuid.Length != 32)
+        {
+            return null;
+        }
+
+        var requestUrls = new[]
+        {
+            $"{apiRoot}/sessionserver/session/minecraft/profile/{uuid}",
+            $"{apiRoot}/sessionserver/session/minecraft/profile/{uuid}?unsigned=false",
+            $"{apiRoot}/sessionserver/session/minecraft/profile/{profile.Uuid}",
+            $"{apiRoot}/sessionserver/session/minecraft/profile/{profile.Uuid}?unsigned=false"
+        };
+
+        foreach (var requestUrl in requestUrls)
+        {
+            try
+            {
+                LogWrapper.Info(LaunchAvatarLogModule, $"Trying session profile URL: {requestUrl}");
+                var responseJson = await LaunchAvatarHttpClient.GetStringAsync(requestUrl).ConfigureAwait(false);
+                if (JsonNode.Parse(responseJson) is not JsonObject root)
+                {
+                    LogWrapper.Warn(LaunchAvatarLogModule, $"Session profile response is not an object: {requestUrl}");
+                    continue;
+                }
+
+                var skinUrl = TryGetSkinUrlFromPropertyCollection(root["properties"]);
+                if (!string.IsNullOrWhiteSpace(skinUrl))
+                {
+                    LogWrapper.Info(LaunchAvatarLogModule, $"Session profile resolved skin host={TryGetHostForLog(skinUrl)}");
+                    return skinUrl;
+                }
+
+                LogWrapper.Warn(LaunchAvatarLogModule, $"Session profile has no textures property: {requestUrl}");
+            }
+            catch (Exception ex)
+            {
+                LogWrapper.Warn(ex, LaunchAvatarLogModule, $"Session profile request failed: {requestUrl}");
+            }
+        }
+
+        return null;
+    }
+
+    private static string TryGetHostForLog(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return "<empty>";
+        }
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            ? uri.Host
+            : "<invalid-url>";
     }
 
     private static bool TryWriteLaunchAvatarHeadCache(string skinPath, string cachePath)
@@ -239,6 +331,14 @@ internal sealed partial class FrontendShellViewModel
             return microsoftHeadId;
         }
 
+        var authHeadId = profile.Kind == MinecraftLaunchProfileKind.Auth
+            ? TryResolveAuthlibSkinHeadId(profile.RawJson)
+            : null;
+        if (!string.IsNullOrWhiteSpace(authHeadId))
+        {
+            return authHeadId;
+        }
+
         if (!string.IsNullOrWhiteSpace(profile.SkinHeadId))
         {
             return profile.SkinHeadId;
@@ -295,6 +395,24 @@ internal sealed partial class FrontendShellViewModel
         return string.IsNullOrWhiteSpace(fileName) ? null : fileName;
     }
 
+    private static string? TryResolveAuthlibSkinHeadId(string? rawJson)
+    {
+        var skinUrl = TryGetActiveAuthlibSkinUrl(rawJson);
+        if (string.IsNullOrWhiteSpace(skinUrl))
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(skinUrl, UriKind.Absolute, out var uri))
+        {
+            var segment = uri.Segments.LastOrDefault()?.Trim('/');
+            return string.IsNullOrWhiteSpace(segment) ? null : Uri.UnescapeDataString(segment);
+        }
+
+        var fileName = Path.GetFileNameWithoutExtension(skinUrl);
+        return string.IsNullOrWhiteSpace(fileName) ? null : fileName;
+    }
+
     private static string? TryGetActiveMicrosoftSkinUrl(string? rawJson)
     {
         if (string.IsNullOrWhiteSpace(rawJson))
@@ -316,6 +434,100 @@ internal sealed partial class FrontendShellViewModel
                 .OrderByDescending(skin => string.Equals(skin["state"]?.ToString(), "ACTIVE", StringComparison.OrdinalIgnoreCase))
                 .FirstOrDefault();
             return activeSkin?["url"]?.ToString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryGetActiveAuthlibSkinUrl(string? rawJson)
+    {
+        if (string.IsNullOrWhiteSpace(rawJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            if (JsonNode.Parse(rawJson) is not JsonObject root)
+            {
+                return null;
+            }
+
+            return TryGetSkinUrlFromPropertyCollection(root["selectedProfile"]?["properties"])
+                   ?? TryGetSkinUrlFromPropertyCollection(root["user"]?["properties"]);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryGetSkinUrlFromPropertyCollection(JsonNode? propertiesNode)
+    {
+        switch (propertiesNode)
+        {
+            case JsonArray array:
+            {
+                foreach (var property in array.OfType<JsonObject>())
+                {
+                    if (!string.Equals(property["name"]?.ToString(), "textures", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var skinUrl = TryGetSkinUrlFromEncodedTextures(property["value"]?.ToString());
+                    if (!string.IsNullOrWhiteSpace(skinUrl))
+                    {
+                        return skinUrl;
+                    }
+                }
+
+                break;
+            }
+            case JsonObject obj:
+            {
+                var directSkinUrl = TryGetSkinUrlFromEncodedTextures(obj["textures"]?.ToString());
+                if (!string.IsNullOrWhiteSpace(directSkinUrl))
+                {
+                    return directSkinUrl;
+                }
+
+                if (obj["textures"] is JsonObject textureObject)
+                {
+                    var nestedSkinUrl = TryGetSkinUrlFromEncodedTextures(textureObject["value"]?.ToString());
+                    if (!string.IsNullOrWhiteSpace(nestedSkinUrl))
+                    {
+                        return nestedSkinUrl;
+                    }
+                }
+
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? TryGetSkinUrlFromEncodedTextures(string? encodedTextures)
+    {
+        if (string.IsNullOrWhiteSpace(encodedTextures))
+        {
+            return null;
+        }
+
+        try
+        {
+            var decodedJson = Encoding.UTF8.GetString(Convert.FromBase64String(encodedTextures));
+            if (JsonNode.Parse(decodedJson) is not JsonObject textureRoot)
+            {
+                return null;
+            }
+
+            var skinObject = textureRoot["textures"]?["SKIN"] as JsonObject
+                             ?? textureRoot["textures"]?["skin"] as JsonObject;
+            return skinObject?["url"]?.ToString();
         }
         catch
         {

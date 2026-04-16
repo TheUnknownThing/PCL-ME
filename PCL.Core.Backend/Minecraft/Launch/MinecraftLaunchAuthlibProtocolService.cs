@@ -44,7 +44,7 @@ public static class MinecraftLaunchAuthlibProtocolService
         return payload.ToJsonString();
     }
 
-    public static string BuildAuthenticateRequestJson(string userName, string password)
+    public static string BuildAuthenticateRequestJson(string userName, string password, string clientToken)
     {
         var payload = new JsonObject
         {
@@ -55,6 +55,7 @@ public static class MinecraftLaunchAuthlibProtocolService
             },
             ["username"] = userName,
             ["password"] = password,
+            ["clientToken"] = clientToken,
             ["requestUser"] = true
         };
         return payload.ToJsonString();
@@ -73,7 +74,7 @@ public static class MinecraftLaunchAuthlibProtocolService
             GetRequiredString(selectedProfile, "name"));
     }
 
-    public static MinecraftLaunchAuthlibAuthenticateResponse ParseAuthenticateResponseJson(string json)
+    public static MinecraftLaunchAuthlibAuthenticateResponse ParseAuthenticateResponseJson(string json, string? fallbackClientToken = null)
     {
         var root = ParseObject(json);
         var availableProfilesNode = root["availableProfiles"] as JsonArray ?? [];
@@ -91,9 +92,13 @@ public static class MinecraftLaunchAuthlibProtocolService
             selectedProfileId = GetRequiredString(selectedProfile, "id");
         }
 
+        var resolvedClientToken = GetOptionalString(root, "clientToken")
+                                  ?? fallbackClientToken
+                                  ?? throw new InvalidOperationException("JSON 内容缺少 clientToken 字段。");
+
         return new MinecraftLaunchAuthlibAuthenticateResponse(
             GetRequiredString(root, "accessToken"),
-            GetRequiredString(root, "clientToken"),
+            resolvedClientToken,
             availableProfiles,
             selectedProfileId);
     }
@@ -126,6 +131,12 @@ public static class MinecraftLaunchAuthlibProtocolService
         }
 
         return value;
+    }
+
+    private static string? GetOptionalString(JsonObject obj, string propertyName)
+    {
+        var value = obj[propertyName]?.ToString();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 }
 

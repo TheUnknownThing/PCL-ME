@@ -198,7 +198,9 @@ public sealed class MinecraftLaunchLoginProfileWorkflowServiceTest
                 AccessToken: "token",
                 ClientToken: "client",
                 LoginName: "login",
-                Password: "password"));
+                Password: "password",
+                SkinHeadId: null,
+                RawJson: null));
 
         Assert.AreEqual(MinecraftLaunchProfileMutationKind.UpdateSelected, result.Kind);
         Assert.AreEqual(2, result.TargetProfileIndex);
@@ -219,7 +221,9 @@ public sealed class MinecraftLaunchLoginProfileWorkflowServiceTest
                 AccessToken: "access-refresh",
                 ClientToken: "client-refresh",
                 LoginName: "account@example.com",
-                Password: "password-123"));
+                Password: "password-123",
+                SkinHeadId: null,
+                RawJson: null));
 
         Assert.AreEqual(MinecraftLaunchProfileMutationKind.UpdateSelected, result.Kind);
         Assert.AreEqual("https://auth.example.com/authserver", result.UpdateProfile!.Server);
@@ -244,7 +248,9 @@ public sealed class MinecraftLaunchLoginProfileWorkflowServiceTest
                 AccessToken: "token",
                 ClientToken: "client",
                 LoginName: "login",
-                Password: "password"));
+                Password: "password",
+                SkinHeadId: null,
+                RawJson: null));
 
         Assert.AreEqual(MinecraftLaunchProfileMutationKind.CreateNew, result.Kind);
         Assert.IsTrue(result.ShouldSelectCreatedProfile);

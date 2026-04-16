@@ -13,13 +13,15 @@ public sealed class MinecraftLaunchAuthlibRequestWorkflowServiceTest
         var result = MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
             "https://auth.example.invalid/authserver",
             "demo@example.invalid",
-            "demo-password");
+            "demo-password",
+            "demo-client");
 
         Assert.AreEqual("POST", result.Method);
         Assert.AreEqual("https://auth.example.invalid/authserver/authenticate", result.Url);
         Assert.AreEqual("application/json", result.ContentType);
         Assert.AreEqual("zh-CN", result.Headers!["Accept-Language"]);
         Assert.AreEqual("demo@example.invalid", JsonNode.Parse(result.Body!)?["username"]?.ToString());
+        Assert.AreEqual("demo-client", JsonNode.Parse(result.Body!)?["clientToken"]?.ToString());
     }
 
     [TestMethod]

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace PCL.Core.Minecraft.Launch;
 
@@ -26,7 +27,9 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
                 session.AccessToken,
                 session.ClientToken,
                 request.LoginName,
-                request.Password));
+                request.Password,
+                SkinHeadId: null,
+                RawJson: request.RefreshResponseJson));
         return new MinecraftLaunchAuthlibRefreshWorkflowResult(session, mutationPlan);
     }
 
@@ -34,7 +37,9 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var authResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(request.AuthenticateResponseJson);
+        var authResponse = MinecraftLaunchAuthlibProtocolService.ParseAuthenticateResponseJson(
+            request.AuthenticateResponseJson,
+            request.RequestedClientToken);
         var selectionResult = MinecraftLaunchAccountWorkflowService.ResolveAuthProfileSelection(
             new MinecraftLaunchAuthProfileSelectionRequest(
                 request.ForceReselectProfile,
@@ -66,7 +71,7 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
         }
 
         var selectedProfile = ResolveSelectedProfile(request);
-        var serverName = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(request.MetadataResponseJson);
+        var serverName = ResolveServerName(request.ServerBaseUrl, request.MetadataResponseJson);
         var session = new MinecraftLaunchAuthlibSession(
             request.Plan.AccessToken,
             request.Plan.ClientToken,
@@ -83,7 +88,9 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
                 session.AccessToken,
                 session.ClientToken,
                 request.LoginName,
-                request.Password));
+                request.Password,
+                SkinHeadId: null,
+                RawJson: request.AuthenticateResponseJson));
 
         return new MinecraftLaunchAuthlibAuthenticateWorkflowResult(
             session,
@@ -119,6 +126,45 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
 
         return new MinecraftLaunchAuthProfileOption(request.Plan.SelectedProfileId, request.Plan.SelectedProfileName);
     }
+
+    private static string ResolveServerName(string serverBaseUrl, string? metadataResponseJson)
+    {
+        if (!string.IsNullOrWhiteSpace(metadataResponseJson))
+        {
+            try
+            {
+                return MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(metadataResponseJson);
+            }
+            catch
+            {
+                try
+                {
+                    if (JsonNode.Parse(metadataResponseJson) is JsonObject root)
+                    {
+                        var topLevelName = root["serverName"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(topLevelName))
+                        {
+                            return topLevelName;
+                        }
+
+                        var metaName = root["meta"]?["name"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(metaName))
+                        {
+                            return metaName;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore malformed metadata and fallback to host below.
+                }
+            }
+        }
+
+        return Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out var uri)
+            ? uri.Host
+            : "Authlib Server";
+    }
 }
 
 public sealed record MinecraftLaunchAuthlibSession(
@@ -142,7 +188,8 @@ public sealed record MinecraftLaunchAuthlibRefreshWorkflowResult(
 public sealed record MinecraftLaunchAuthlibAuthenticatePlanRequest(
     bool ForceReselectProfile,
     string? CachedProfileId,
-    string AuthenticateResponseJson);
+    string AuthenticateResponseJson,
+    string RequestedClientToken);
 
 public sealed record MinecraftLaunchAuthlibAuthenticatePlan(
     string AccessToken,
@@ -159,6 +206,7 @@ public sealed record MinecraftLaunchAuthlibAuthenticatePlan(
 
 public sealed record MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
     MinecraftLaunchAuthlibAuthenticatePlan Plan,
+    string AuthenticateResponseJson,
     string MetadataResponseJson,
     bool IsExistingProfile,
     int SelectedProfileIndex,

@@ -51,7 +51,8 @@ public sealed class MinecraftLaunchAuthlibLoginWorkflowServiceTest
             new MinecraftLaunchAuthlibAuthenticatePlanRequest(
                 ForceReselectProfile: false,
                 CachedProfileId: null,
-                AuthenticateResponseJson: json));
+            AuthenticateResponseJson: json,
+            RequestedClientToken: "fallback-client"));
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.Fail, result.Kind);
         Assert.AreEqual("$You have not created a profile yet. Please create one and try again!", result.FailureMessage);
@@ -75,7 +76,8 @@ public sealed class MinecraftLaunchAuthlibLoginWorkflowServiceTest
             new MinecraftLaunchAuthlibAuthenticatePlanRequest(
                 ForceReselectProfile: true,
                 CachedProfileId: null,
-                AuthenticateResponseJson: json));
+            AuthenticateResponseJson: json,
+            RequestedClientToken: "fallback-client"));
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.PromptForSelection, result.Kind);
         Assert.AreEqual(2, result.PromptOptions.Count);
@@ -108,10 +110,12 @@ public sealed class MinecraftLaunchAuthlibLoginWorkflowServiceTest
             new MinecraftLaunchAuthlibAuthenticatePlanRequest(
                 ForceReselectProfile: true,
                 CachedProfileId: null,
-                AuthenticateResponseJson: authenticateJson));
+            AuthenticateResponseJson: authenticateJson,
+            RequestedClientToken: "fallback-client"));
         var result = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
             new MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
                 plan,
+            authenticateJson,
                 metadataJson,
                 IsExistingProfile: false,
                 SelectedProfileIndex: -1,

@@ -130,7 +130,7 @@ public static class MinecraftLaunchProfileStorageService
                 LoginName: decryptSecret(ReadString(profile, "name")),
                 Password: decryptSecret(ReadString(profile, "password")),
                 ClientToken: decryptSecret(ReadString(profile, "clientToken")),
-                RawJson: null),
+                RawJson: decryptSecret(ReadString(profile, "rawJson"))),
             _ => new MinecraftLaunchPersistedProfile(
                 MinecraftLaunchStoredProfileKind.Offline,
                 Uuid: ReadString(profile, "uuid"),
@@ -180,6 +180,7 @@ public static class MinecraftLaunchProfileStorageService
                 ["name"] = encryptSecret(profile.LoginName),
                 ["password"] = encryptSecret(profile.Password),
                 ["clientToken"] = encryptSecret(profile.ClientToken),
+                ["rawJson"] = encryptSecret(profile.RawJson),
                 ["desc"] = profile.Desc,
                 ["skinHeadId"] = profile.SkinHeadId
             },

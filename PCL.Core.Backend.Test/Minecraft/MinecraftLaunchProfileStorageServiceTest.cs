@@ -38,6 +38,7 @@ public sealed class MinecraftLaunchProfileStorageServiceTest
                                   "name": "auth-name",
                                   "password": "auth-password",
                                   "clientToken": "auth-client",
+                                                                    "rawJson": "auth-raw",
                                   "desc": "auth-desc",
                                   "skinHeadId": "auth-skin"
                                 }
@@ -62,6 +63,7 @@ public sealed class MinecraftLaunchProfileStorageServiceTest
         Assert.AreEqual("dec:auth-name", authProfile.LoginName);
         Assert.AreEqual("dec:auth-password", authProfile.Password);
         Assert.AreEqual("dec:auth-client", authProfile.ClientToken);
+        Assert.AreEqual("dec:auth-raw", authProfile.RawJson);
     }
 
     [TestMethod]
@@ -126,7 +128,7 @@ public sealed class MinecraftLaunchProfileStorageServiceTest
                     LoginName: "login",
                     Password: "password",
                     ClientToken: "client",
-                    RawJson: null),
+                    RawJson: "auth-raw"),
                 new MinecraftLaunchPersistedProfile(
                     MinecraftLaunchStoredProfileKind.Offline,
                     Uuid: "offline-uuid",
@@ -153,6 +155,7 @@ public sealed class MinecraftLaunchProfileStorageServiceTest
         Assert.AreEqual("enc:raw", profiles[0]!["rawJson"]!.GetValue<string>());
         Assert.AreEqual("enc:login", profiles[1]!["name"]!.GetValue<string>());
         Assert.AreEqual("enc:password", profiles[1]!["password"]!.GetValue<string>());
+        Assert.AreEqual("enc:auth-raw", profiles[1]!["rawJson"]!.GetValue<string>());
         Assert.AreEqual("offline", profiles[2]!["type"]!.GetValue<string>());
         Assert.IsNull(profiles[2]!["accessToken"]);
     }

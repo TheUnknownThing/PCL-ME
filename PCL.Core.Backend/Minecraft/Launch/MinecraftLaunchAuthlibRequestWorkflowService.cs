@@ -43,13 +43,14 @@ public static class MinecraftLaunchAuthlibRequestWorkflowService
     public static MinecraftLaunchHttpRequestPlan BuildAuthenticateRequest(
         string baseUrl,
         string userName,
-        string password)
+        string password,
+        string clientToken)
     {
         return new MinecraftLaunchHttpRequestPlan(
             "POST",
             CombineAuthserverUrl(baseUrl, "authenticate"),
             "application/json",
-            MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson(userName, password),
+            MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson(userName, password, clientToken),
             DefaultHeaders);
     }
 

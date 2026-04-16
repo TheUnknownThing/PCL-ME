@@ -10,6 +10,7 @@ using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.I18n;
+using PCL.Core.Logging;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
@@ -289,6 +290,7 @@ internal static class FrontendLaunchCompositionService
             launcherFolder,
             selectedInstanceName,
             manifestSummary,
+            selectedProfile,
             selectedJavaRuntime,
             localConfig,
             instanceConfig,
@@ -2671,6 +2673,7 @@ internal static class FrontendLaunchCompositionService
         string launcherFolder,
         string selectedInstanceName,
         FrontendVersionManifestSummary manifestSummary,
+        FrontendLaunchProfileSummary selectedProfile,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
         YamlFileProvider localConfig,
         YamlFileProvider? instanceConfig,
@@ -2689,6 +2692,7 @@ internal static class FrontendLaunchCompositionService
         var javaWrapperOptions = ResolveJavaWrapperOptions(launcherFolder, localConfig, instanceConfig);
         var debugLog4jConfigurationPath = ResolveDebugLog4jConfigurationPath(launcherFolder, indieDirectory, instanceConfig);
         var rendererAgentArgument = ResolveRendererAgentArgument(launcherFolder, localConfig, instanceConfig);
+        var authlibInjectorArgument = ResolveAuthlibInjectorArgument(launcherFolder, selectedProfile);
         return modernJvmSections.Count > 0
             ? MinecraftLaunchJvmArgumentService.BuildModernArguments(
                 new MinecraftLaunchModernJvmArgumentRequest(
@@ -2703,7 +2707,7 @@ internal static class FrontendLaunchCompositionService
                     ResolveAllocatedMemoryMegabytes(indieDirectory, selectedJavaRuntime, localConfig, instanceConfig, manifestSummary),
                     UseRetroWrapper: retroWrapperOptions.UseRetroWrapper,
                     javaMajorVersion,
-                    AuthlibInjectorArgument: null,
+                    AuthlibInjectorArgument: authlibInjectorArgument,
                     DebugLog4jConfigurationFilePath: debugLog4jConfigurationPath,
                     RendererAgentArgument: rendererAgentArgument,
                     ProxyScheme: proxyOptions.Scheme,
@@ -2722,7 +2726,7 @@ internal static class FrontendLaunchCompositionService
                     ResolveAllocatedMemoryMegabytes(indieDirectory, selectedJavaRuntime, localConfig, instanceConfig, manifestSummary),
                     replacementValues["${natives_directory}"],
                     javaMajorVersion,
-                    AuthlibInjectorArgument: null,
+                    AuthlibInjectorArgument: authlibInjectorArgument,
                     DebugLog4jConfigurationFilePath: debugLog4jConfigurationPath,
                     RendererAgentArgument: rendererAgentArgument,
                     ProxyScheme: proxyOptions.Scheme,
@@ -2734,6 +2738,150 @@ internal static class FrontendLaunchCompositionService
                     JavaWrapperTempDirectory: javaWrapperOptions.TempDirectory,
                     JavaWrapperPath: javaWrapperOptions.WrapperPath,
                     MainClass: mainClass));
+    }
+
+    private static string? ResolveAuthlibInjectorArgument(
+        string launcherFolder,
+        FrontendLaunchProfileSummary selectedProfile)
+    {
+        if (selectedProfile.Kind != MinecraftLaunchProfileKind.Auth ||
+            string.IsNullOrWhiteSpace(selectedProfile.AuthServer))
+        {
+            return null;
+        }
+
+        var apiRoot = selectedProfile.AuthServer.Trim().TrimEnd('/');
+        if (apiRoot.EndsWith("/authserver", StringComparison.OrdinalIgnoreCase))
+        {
+            apiRoot = apiRoot[..^"/authserver".Length];
+        }
+
+        var injectorPath = ResolveAuthlibInjectorPath(launcherFolder)
+                           ?? TryDownloadAuthlibInjector(launcherFolder);
+        if (string.IsNullOrWhiteSpace(injectorPath))
+        {
+            LogWrapper.Warn("Launch", "Authlib profile selected but authlib-injector jar is unavailable; multiplayer authentication may fail.");
+            return null;
+        }
+
+        return $"-javaagent:\"{injectorPath}\"={apiRoot}";
+    }
+
+    private static string? ResolveAuthlibInjectorPath(string launcherFolder)
+    {
+        string[] directCandidates =
+        [
+            Path.Combine(launcherFolder, "PCL", "authlib-injector.jar"),
+            Path.Combine(launcherFolder, "PCL", "Authlib-Injector.jar"),
+            Path.Combine(launcherFolder, "libraries", "authlib-injector.jar"),
+            Path.Combine(launcherFolder, "libraries", "authlib-injector", "authlib-injector.jar")
+        ];
+
+        var directMatch = directCandidates.FirstOrDefault(path => File.Exists(path) && IsJavaAgentJar(path));
+        if (!string.IsNullOrWhiteSpace(directMatch))
+        {
+            return directMatch;
+        }
+
+        string[] searchRoots =
+        [
+            Path.Combine(launcherFolder, "PCL"),
+            Path.Combine(launcherFolder, "libraries")
+        ];
+        foreach (var root in searchRoots)
+        {
+            var discovered = TryDiscoverAuthlibInjectorPath(root);
+            if (!string.IsNullOrWhiteSpace(discovered))
+            {
+                return discovered;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? TryDiscoverAuthlibInjectorPath(string rootDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(rootDirectory) || !Directory.Exists(rootDirectory))
+        {
+            return null;
+        }
+
+        try
+        {
+            foreach (var filePath in Directory.EnumerateFiles(rootDirectory, "*.jar", SearchOption.AllDirectories))
+            {
+                var fileName = Path.GetFileName(filePath);
+                if (!fileName.Contains("authlib", StringComparison.OrdinalIgnoreCase) ||
+                    !fileName.Contains("injector", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (IsJavaAgentJar(filePath))
+                {
+                    return filePath;
+                }
+            }
+        }
+        catch
+        {
+            // Best effort discovery only.
+        }
+
+        return null;
+    }
+
+    private static string? TryDownloadAuthlibInjector(string launcherFolder)
+    {
+        var targetPath = Path.Combine(launcherFolder, "PCL", "authlib-injector.jar");
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+
+            using var metadataDocument = JsonDocument.Parse(
+                JavaRuntimeHttpClient.GetStringAsync("https://authlib-injector.yushi.moe/artifact/latest.json")
+                    .GetAwaiter()
+                    .GetResult());
+            var root = metadataDocument.RootElement;
+            if (!root.TryGetProperty("download_url", out var downloadUrlElement))
+            {
+                return null;
+            }
+
+            var downloadUrl = downloadUrlElement.GetString();
+            if (string.IsNullOrWhiteSpace(downloadUrl))
+            {
+                return null;
+            }
+
+            var bytes = JavaRuntimeHttpClient.GetByteArrayAsync(downloadUrl)
+                .GetAwaiter()
+                .GetResult();
+
+            if (root.TryGetProperty("checksums", out var checksums) &&
+                checksums.TryGetProperty("sha256", out var sha256Element))
+            {
+                var expectedSha256 = sha256Element.GetString();
+                if (!string.IsNullOrWhiteSpace(expectedSha256))
+                {
+                    var actualSha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
+                    if (!string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogWrapper.Warn("Launch", $"Downloaded authlib-injector checksum mismatch: expected={expectedSha256}, actual={actualSha256}");
+                        return null;
+                    }
+                }
+            }
+
+            File.WriteAllBytes(targetPath, bytes);
+            return IsJavaAgentJar(targetPath) ? targetPath : null;
+        }
+        catch (Exception ex)
+        {
+            LogWrapper.Warn(ex, "Launch", "Failed to download authlib-injector jar.");
+            return null;
+        }
     }
 
     private static MinecraftLaunchWatcherWorkflowRequest BuildWatcherWorkflowRequest(

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using PCL.Core.Logging;
 using PCL.Core.App.I18n;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Avalonia.Icons;
@@ -439,16 +440,19 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
+            var requestedClientToken = CreateAuthlibClientToken();
             var authenticateJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
                     serverBaseUrl,
                     loginName,
-                    LaunchAuthlibPassword));
+                    LaunchAuthlibPassword,
+                    requestedClientToken));
             var authenticatePlan = MinecraftLaunchAuthlibLoginWorkflowService.PlanAuthenticate(
                 new MinecraftLaunchAuthlibAuthenticatePlanRequest(
                     ForceReselectProfile: false,
                     CachedProfileId: null,
-                    AuthenticateResponseJson: authenticateJson));
+                    AuthenticateResponseJson: authenticateJson,
+                    RequestedClientToken: requestedClientToken));
             if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.Fail)
             {
                 LaunchAuthlibStatusText = (authenticatePlan.FailureMessage ?? T("launch.profile.authlib.errors.login_failed")).TrimStart('$');
@@ -468,6 +472,7 @@ internal sealed partial class FrontendShellViewModel
             var authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
                 new MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
                     authenticatePlan,
+                    authenticateJson,
                     metadataJson,
                     IsExistingProfile: false,
                     SelectedProfileIndex: GetSelectedProfileIndex(profileDocument),
@@ -475,13 +480,40 @@ internal sealed partial class FrontendShellViewModel
                     loginName,
                     LaunchAuthlibPassword,
                     selectedProfileId));
-            FrontendProfileStorageService.Save(
-                _shellActionService.RuntimePaths,
-                FrontendProfileStorageService.ApplyMutation(profileDocument, authenticateResult.MutationPlan, out _));
+            var mutatedDocument = FrontendProfileStorageService.ApplyMutation(
+                profileDocument,
+                authenticateResult.MutationPlan,
+                out var updatedProfileIndex);
+            var completedProfileName = authenticateResult.Session.ProfileName;
+            if (authenticateResult.NeedsRefresh)
+            {
+                var refreshJson = await SendLaunchProfileRequestAsync(
+                    MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
+                        serverBaseUrl,
+                        authenticateResult.Session.AccessToken,
+                        authenticateResult.Session.ClientToken,
+                        authenticateResult.Session.ProfileName,
+                        authenticateResult.Session.ProfileId));
+                var refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
+                    new MinecraftLaunchAuthlibRefreshWorkflowRequest(
+                        refreshJson,
+                        updatedProfileIndex ?? GetSelectedProfileIndex(mutatedDocument),
+                        serverBaseUrl,
+                        authenticateResult.ServerName,
+                        loginName,
+                        LaunchAuthlibPassword));
+                mutatedDocument = FrontendProfileStorageService.ApplyMutation(
+                    mutatedDocument,
+                    refreshResult.MutationPlan,
+                    out _);
+                completedProfileName = refreshResult.Session.ProfileName;
+            }
+
+            FrontendProfileStorageService.Save(_shellActionService.RuntimePaths, mutatedDocument);
             LaunchAuthlibStatusText = string.Empty;
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity(T("launch.profile.activities.authlib_login"), T("launch.profile.authlib.completed", ("profile_name", authenticateResult.Session.ProfileName)));
+            AddActivity(T("launch.profile.activities.authlib_login"), T("launch.profile.authlib.completed", ("profile_name", completedProfileName)));
         }
         catch (Exception ex)
         {
@@ -787,7 +819,7 @@ internal sealed partial class FrontendShellViewModel
                         clientToken),
                     cancellationToken);
                 var metadataJson = await TryReadAuthlibMetadataJsonAsync(serverBaseUrl, cancellationToken);
-                var serverName = MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(metadataJson);
+                var serverName = ResolveAuthlibServerName(serverBaseUrl, metadataJson);
                 var refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
                     new MinecraftLaunchAuthlibRefreshWorkflowRequest(
                         refreshJson,
@@ -824,17 +856,20 @@ internal sealed partial class FrontendShellViewModel
         }
 
         onStatusChanged?.Invoke(T("launch.profile.refresh.authlib.reauthenticate"));
+        var requestedClientToken = CreateAuthlibClientToken();
         var authenticateJson = await SendLaunchProfileRequestAsync(
             MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
                 serverBaseUrl,
                 selectedProfile.LoginName,
-                selectedProfile.Password),
+                selectedProfile.Password,
+                requestedClientToken),
             cancellationToken);
         var authenticatePlan = MinecraftLaunchAuthlibLoginWorkflowService.PlanAuthenticate(
             new MinecraftLaunchAuthlibAuthenticatePlanRequest(
                 ForceReselectProfile: false,
                 CachedProfileId: selectedProfile.Uuid,
-                AuthenticateResponseJson: authenticateJson));
+                AuthenticateResponseJson: authenticateJson,
+                RequestedClientToken: requestedClientToken));
         if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.Fail)
         {
             throw new InvalidOperationException((authenticatePlan.FailureMessage ?? T("launch.profile.authlib.errors.login_failed")).TrimStart('$'));
@@ -857,6 +892,7 @@ internal sealed partial class FrontendShellViewModel
         var authenticateResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveAuthenticate(
             new MinecraftLaunchAuthlibAuthenticateWorkflowRequest(
                 authenticatePlan,
+                authenticateJson,
                 metadataResponseJson,
                 IsExistingProfile: true,
                 SelectedProfileIndex: selectedProfileIndex,
@@ -864,10 +900,35 @@ internal sealed partial class FrontendShellViewModel
                 selectedProfile.LoginName,
                 selectedProfile.Password,
                 selectedProfileId));
+
+        var mutationPlan = authenticateResult.MutationPlan;
+        var completedProfileName = authenticateResult.Session.ProfileName;
+        if (authenticateResult.NeedsRefresh)
+        {
+            var refreshJson = await SendLaunchProfileRequestAsync(
+                MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
+                    serverBaseUrl,
+                    authenticateResult.Session.AccessToken,
+                    authenticateResult.Session.ClientToken,
+                    authenticateResult.Session.ProfileName,
+                    authenticateResult.Session.ProfileId),
+                cancellationToken);
+            var refreshResult = MinecraftLaunchAuthlibLoginWorkflowService.ResolveRefresh(
+                new MinecraftLaunchAuthlibRefreshWorkflowRequest(
+                    refreshJson,
+                    selectedProfileIndex,
+                    serverBaseUrl,
+                    authenticateResult.ServerName,
+                    selectedProfile.LoginName,
+                    selectedProfile.Password));
+            mutationPlan = refreshResult.MutationPlan;
+            completedProfileName = refreshResult.Session.ProfileName;
+        }
+
         FrontendProfileStorageService.Save(
             _shellActionService.RuntimePaths,
-            FrontendProfileStorageService.ApplyMutation(profileDocument, authenticateResult.MutationPlan, out _));
-        return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.authlib.reauthenticated", ("profile_name", authenticateResult.Session.ProfileName)), ShouldInvalidateAvatarCache: true);
+            FrontendProfileStorageService.ApplyMutation(profileDocument, mutationPlan, out _));
+        return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.authlib.reauthenticated", ("profile_name", completedProfileName)), ShouldInvalidateAvatarCache: true);
     }
 
     private void SetLaunchProfileSurface(LaunchProfileSurfaceKind surface)
@@ -1194,14 +1255,102 @@ internal sealed partial class FrontendShellViewModel
                 string.IsNullOrWhiteSpace(plan.ContentType) ? "application/json" : plan.ContentType);
         }
 
+        if (IsAuthlibRequest(plan.Url))
+        {
+            LogWrapper.Info("Authlib", $"HTTP {plan.Method} {plan.Url}");
+        }
+
         using var response = await client.SendAsync(request, cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
+            if (IsAuthlibRequest(plan.Url))
+            {
+                LogWrapper.Warn(
+                    "Authlib",
+                    $"HTTP {(int)response.StatusCode} {plan.Method} {plan.Url} failed: {SummarizeForLog(responseBody)}");
+            }
+
             throw new LaunchProfileRequestException(plan.Url, (int)response.StatusCode, responseBody);
         }
 
+        if (IsAuthlibRequest(plan.Url))
+        {
+            LogWrapper.Info(
+                "Authlib",
+                $"HTTP {(int)response.StatusCode} {plan.Method} {plan.Url} succeeded: {SummarizeForLog(responseBody)}");
+        }
+
         return responseBody;
+    }
+
+    private static bool IsAuthlibRequest(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        return url.Contains("/authserver", StringComparison.OrdinalIgnoreCase) ||
+               url.Contains("yggdrasil", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string SummarizeForLog(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "<empty>";
+        }
+
+        var redacted = Regex.Replace(
+            value,
+            "\"(accessToken|refreshToken|clientToken|password)\"\\s*:\\s*\"[^\"]*\"",
+            "\"$1\":\"***\"",
+            RegexOptions.IgnoreCase);
+        redacted = redacted.Replace(Environment.NewLine, " ");
+        redacted = redacted.Replace("\n", " ").Replace("\r", " ");
+        return redacted.Length > 320
+            ? redacted[..320] + "..."
+            : redacted;
+    }
+
+    private static string ResolveAuthlibServerName(string serverBaseUrl, string? metadataResponseJson)
+    {
+        if (!string.IsNullOrWhiteSpace(metadataResponseJson))
+        {
+            try
+            {
+                return MinecraftLaunchAuthlibProtocolService.ParseServerNameFromMetadataJson(metadataResponseJson);
+            }
+            catch
+            {
+                try
+                {
+                    if (JsonNode.Parse(metadataResponseJson) is JsonObject root)
+                    {
+                        var topLevelName = root["serverName"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(topLevelName))
+                        {
+                            return topLevelName;
+                        }
+
+                        var metaName = root["meta"]?["name"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(metaName))
+                        {
+                            return metaName;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore malformed metadata and fallback to host below.
+                }
+            }
+        }
+
+        return Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out var uri)
+            ? uri.Host
+            : "Authlib Server";
     }
 
     private bool TryGetSelectedStoredLaunchProfile(
@@ -1337,6 +1486,11 @@ internal sealed partial class FrontendShellViewModel
         hash[6] = (byte)((hash[6] & 0x0F) | 0x30);
         hash[8] = (byte)((hash[8] & 0x3F) | 0x80);
         return new Guid(hash).ToString("N");
+    }
+
+    private static string CreateAuthlibClientToken()
+    {
+        return Guid.NewGuid().ToString("N");
     }
 
     private static string CreateOfflineLegacyUuid(string userName)

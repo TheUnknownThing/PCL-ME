@@ -10,10 +10,11 @@ public sealed class MinecraftLaunchAuthlibProtocolServiceTest
     [TestMethod]
     public void BuildAuthenticateRequestJsonIncludesMinecraftAgentAndCredentials()
     {
-        var json = MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson("player@example.com", "secret");
+      var json = MinecraftLaunchAuthlibProtocolService.BuildAuthenticateRequestJson("player@example.com", "secret", "client-token");
 
         StringAssert.Contains(json, "\"username\":\"player@example.com\"");
         StringAssert.Contains(json, "\"password\":\"secret\"");
+        StringAssert.Contains(json, "\"clientToken\":\"client-token\"");
         StringAssert.Contains(json, "\"name\":\"Minecraft\"");
         StringAssert.Contains(json, "\"version\":1");
         StringAssert.Contains(json, "\"requestUser\":true");
