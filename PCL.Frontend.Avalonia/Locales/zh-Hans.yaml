@@ -1012,8 +1012,8 @@ launch:
       add_or_login: 添加或登录
       select: 选择
     activities:
-      authlib_login: Authlib 登录
-      authlib_login_failed: Authlib 登录失败
+      authlib_login: 第三方登录
+      authlib_login_failed: 第三方登录失败
       busy: 已有其他档案操作正在进行
       create_offline: 创建离线档案
       create_offline_failed: 创建离线档案失败
@@ -1040,15 +1040,15 @@ launch:
       completed: 已登录为 {profile_name}
       errors:
         invalid_server: 认证服务器地址无效
-        login_failed: Authlib 登录失败
+        login_failed: 第三方登录失败
         no_roles: 认证服务器未返回可用角色
         required_fields: 请输入服务器地址、用户名和密码
       password_watermark: 密码
       server_watermark: 认证服务器地址
-      title: Authlib-Injector
+      title: 第三方登录
       user_name_watermark: 用户名
     chooser:
-      authlib: Authlib-Injector
+      authlib: 第三方登录
       microsoft: 微软账号
       offline: 离线档案
     delete:
@@ -1064,8 +1064,8 @@ launch:
     hint:
       selected: 已选择档案
     kinds:
-      authlib: Authlib-Injector
-      authlib_with_server: Authlib-Injector（{server_name}）
+      authlib: 第三方登录
+      authlib_with_server: 第三方登录（{server_name}）
       microsoft: 微软账号
       offline: 离线档案
     microsoft:
@@ -1107,10 +1107,10 @@ launch:
         standard: 标准 UUID
     refresh:
       authlib:
-        completed: 已刷新 Authlib 档案 {profile_name}
+        completed: 已刷新第三方登录档案 {profile_name}
         errors:
-          failed: Authlib 刷新失败：{message}
-          incomplete_session: 当前 Authlib 会话不完整
+          failed: 第三方登录刷新失败：{message}
+          incomplete_session: 当前第三方登录会话不完整
           invalid_server: 保存的认证服务器地址无效
           multiple_roles: 返回了多个角色，请重新登录。
           profile_changed: 返回的档案与当前账号不匹配
@@ -1118,7 +1118,7 @@ launch:
         reauthenticate: 正在重新认证...
         reauthenticated: 已重新认证为 {profile_name}
         refresh_session: 正在刷新会话...
-        valid: Authlib 会话对 {profile_name} 仍然有效
+        valid: 第三方登录会话对 {profile_name} 仍然有效
         validate_session: 正在验证会话...
       canceled: 已取消刷新
       errors:

@@ -1010,8 +1010,8 @@ launch:
       add_or_login: Hinzufügen oder Anmelden
       select: Auswählen
     activities:
-      authlib_login: Authlib-Anmeldung
-      authlib_login_failed: Authlib-Anmeldung fehlgeschlagen
+      authlib_login: Drittanbieter-Anmeldung
+      authlib_login_failed: Drittanbieter-Anmeldung fehlgeschlagen
       busy: Eine andere Profilaktion läuft bereits
       create_offline: Offline-Profil erstellen
       create_offline_failed: Offline-Profil erstellen fehlgeschlagen
@@ -1038,15 +1038,15 @@ launch:
       completed: "Angemeldet als {profile_name}"
       errors:
         invalid_server: Ungültige Auth-Server-Adresse
-        login_failed: Authlib-Anmeldung fehlgeschlagen
+        login_failed: Drittanbieter-Anmeldung fehlgeschlagen
         no_roles: Der Auth-Server hat keine verfügbaren Rollen zurückgegeben
         required_fields: Serveradresse, Benutzername und Passwort eingeben
       password_watermark: Passwort
       server_watermark: Auth-Server-URL
-      title: "Authlib-Injector"
+      title: "Drittanbieter-Anmeldung"
       user_name_watermark: Benutzername
     chooser:
-      authlib: "Authlib-Injector"
+      authlib: "Drittanbieter-Anmeldung"
       microsoft: "Microsoft-Konto"
       offline: "Offline-Profil"
     delete:
@@ -1062,8 +1062,8 @@ launch:
     hint:
       selected: Profil bereit
     kinds:
-      authlib: "Authlib-Injector"
-      authlib_with_server: "Authlib-Injector ({server_name})"
+      authlib: "Drittanbieter-Anmeldung"
+      authlib_with_server: "Drittanbieter-Anmeldung ({server_name})"
       microsoft: Microsoft-Konto
       offline: Offline-Profil
     microsoft:
@@ -1105,10 +1105,10 @@ launch:
         standard: Standard UUID
     refresh:
       authlib:
-        completed: "Authlib-Profil {profile_name} aktualisiert"
+        completed: "Drittanbieter-Profil {profile_name} aktualisiert"
         errors:
-          failed: "Authlib-Aktualisierung fehlgeschlagen: {message}"
-          incomplete_session: Die aktuelle Authlib-Sitzung ist unvollständig
+          failed: "Drittanbieter-Aktualisierung fehlgeschlagen: {message}"
+          incomplete_session: Die aktuelle Drittanbieter-Sitzung ist unvollständig
           invalid_server: Die gespeicherte Auth-Server-Adresse ist ungültig
           multiple_roles: Es wurden mehrere Rollen zurückgegeben. Bitte melde dich erneut an.
           profile_changed: Das zurückgegebene Profil stimmt nicht mit dem aktuellen Konto überein
@@ -1116,7 +1116,7 @@ launch:
         reauthenticate: Erneute Authentifizierung...
         reauthenticated: "Erneut authentifiziert als {profile_name}"
         refresh_session: Sitzung wird aktualisiert...
-        valid: "Authlib-Sitzung für {profile_name} ist gültig"
+        valid: "Drittanbieter-Sitzung für {profile_name} ist gültig"
         validate_session: Sitzung wird überprüft...
       canceled: Aktualisierung abgebrochen
       errors:

@@ -1010,8 +1010,8 @@ launch:
       add_or_login: Ajouter ou se connecter
       select: Sélectionner
     activities:
-      authlib_login: Connexion à Authlib
-      authlib_login_failed: La connexion à Authlib a échoué
+      authlib_login: Connexion tierce
+      authlib_login_failed: Échec de la connexion tierce
       busy: Une autre action de profil est déjà en cours
       create_offline: Créer un profil hors ligne
       create_offline_failed: Échec de la création du profil hors ligne
@@ -1038,15 +1038,15 @@ launch:
       completed: Connecté en tant que {profile_name}
       errors:
         invalid_server: Adresse du serveur d'authentification invalide
-        login_failed: La connexion à Authlib a échoué
+        login_failed: Échec de la connexion tierce
         no_roles: Le serveur d'authentification n'a renvoyé aucun rôle disponible
         required_fields: Entrez l'adresse du serveur, le nom d'utilisateur et le mot de passe
       password_watermark: Mot de passe
       server_watermark: URL du serveur d'authentification
-      title: Authlib-Injecteur
+      title: Connexion tierce
       user_name_watermark: Nom d'utilisateur
     chooser:
-      authlib: Authlib-Injecteur
+      authlib: Connexion tierce
       microsoft: Compte Microsoft
       offline: Profil hors ligne
     delete:
@@ -1062,8 +1062,8 @@ launch:
     hint:
       selected: Profil prêt
     kinds:
-      authlib: Authlib-Injecteur
-      authlib_with_server: Authlib-Injecteur ({server_name})
+      authlib: Connexion tierce
+      authlib_with_server: Connexion tierce ({server_name})
       microsoft: Compte Microsoft
       offline: Profil hors ligne
     microsoft:
@@ -1105,10 +1105,10 @@ launch:
         standard: UUID standard
     refresh:
       authlib:
-        completed: Profil Authlib actualisé {profile_name}
+        completed: Profil tiers actualisé {profile_name}
         errors:
-          failed: "Échec de l'actualisation d'Authlib : {message}"
-          incomplete_session: La session Authlib actuelle est incomplète
+          failed: "Échec de l'actualisation de la connexion tierce : {message}"
+          incomplete_session: La session de connexion tierce actuelle est incomplète
           invalid_server: L'adresse du serveur d'authentification enregistrée n'est pas valide
           multiple_roles: Plusieurs rôles ont été renvoyés. Veuillez vous reconnecter.
           profile_changed: Le profil renvoyé ne correspond pas au compte courant
@@ -1116,7 +1116,7 @@ launch:
         reauthenticate: Réauthentification...
         reauthenticated: Réauthentifié en tant que {profile_name}
         refresh_session: Séance de rafraichissement...
-        valid: La session Authlib est valide pour {profile_name}
+        valid: La session de connexion tierce est valide pour {profile_name}
         validate_session: Validation de la séance...
       canceled: Actualisation annulée
       errors:

@@ -1012,8 +1012,8 @@ launch:
       add_or_login: Add or Sign In
       select: Select
     activities:
-      authlib_login: Authlib sign-in
-      authlib_login_failed: Authlib sign-in failed
+      authlib_login: Third-party sign-in
+      authlib_login_failed: Third-party sign-in failed
       busy: Another profile action is already running
       create_offline: Create offline profile
       create_offline_failed: Failed to create offline profile
@@ -1040,15 +1040,15 @@ launch:
       completed: Signed in as {profile_name}
       errors:
         invalid_server: Invalid auth server address
-        login_failed: Authlib sign-in failed
+        login_failed: Third-party sign-in failed
         no_roles: The auth server returned no available roles
         required_fields: Enter the server address, username, and password
       password_watermark: Password
       server_watermark: Auth server URL
-      title: Authlib-Injector
+      title: Third-party sign-in
       user_name_watermark: Username
     chooser:
-      authlib: Authlib-Injector
+      authlib: Third-party sign-in
       microsoft: Microsoft account
       offline: Offline profile
     delete:
@@ -1064,8 +1064,8 @@ launch:
     hint:
       selected: Profile ready
     kinds:
-      authlib: Authlib-Injector
-      authlib_with_server: Authlib-Injector ({server_name})
+      authlib: Third-party sign-in
+      authlib_with_server: Third-party sign-in ({server_name})
       microsoft: Microsoft account
       offline: Offline profile
     microsoft:
@@ -1107,10 +1107,10 @@ launch:
         standard: Standard UUID
     refresh:
       authlib:
-        completed: Refreshed Authlib profile {profile_name}
+        completed: Refreshed third-party profile {profile_name}
         errors:
-          failed: "Authlib refresh failed: {message}"
-          incomplete_session: The current Authlib session is incomplete
+          failed: "Third-party refresh failed: {message}"
+          incomplete_session: The current third-party session is incomplete
           invalid_server: The saved auth server address is invalid
           multiple_roles: Multiple roles were returned. Please sign in again.
           profile_changed: The returned profile does not match the current account
@@ -1118,7 +1118,7 @@ launch:
         reauthenticate: Reauthenticating...
         reauthenticated: Reauthenticated as {profile_name}
         refresh_session: Refreshing session...
-        valid: Authlib session is valid for {profile_name}
+        valid: Third-party session is valid for {profile_name}
         validate_session: Validating session...
       canceled: Refresh canceled
       errors:

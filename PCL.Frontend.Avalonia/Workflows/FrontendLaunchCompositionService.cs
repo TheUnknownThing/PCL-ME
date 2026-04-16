@@ -2933,7 +2933,7 @@ internal static class FrontendLaunchCompositionService
         return profileKind switch
         {
             MinecraftLaunchProfileKind.Microsoft => "Microsoft",
-            MinecraftLaunchProfileKind.Auth => "Authlib-Injector",
+            MinecraftLaunchProfileKind.Auth => "Third-party",
             MinecraftLaunchProfileKind.Legacy => "Offline",
             _ => "Unknown"
         };

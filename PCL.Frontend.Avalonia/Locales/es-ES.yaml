@@ -1012,8 +1012,8 @@ launch:
       add_or_login: Añadir o iniciar sesión
       select: Seleccionar
     activities:
-      authlib_login: Inicio de sesión de Authlib
-      authlib_login_failed: Error al iniciar sesión en Authlib
+      authlib_login: Inicio de sesión de terceros
+      authlib_login_failed: Error al iniciar sesión de terceros
       busy: Ya se está ejecutando otra acción de perfil
       create_offline: Crear perfil sin conexión
       create_offline_failed: No se pudo crear el perfil sin conexión
@@ -1040,15 +1040,15 @@ launch:
       completed: Inicia sesión como {profile_name}
       errors:
         invalid_server: Dirección del servidor de autenticación no válida
-        login_failed: Error al iniciar sesión en Authlib
+        login_failed: Error al iniciar sesión de terceros
         no_roles: El servidor de autenticación no devolvió roles disponibles
         required_fields: Ingrese la dirección del servidor, nombre de usuario y contraseña
       password_watermark: Contraseña
       server_watermark: URL del servidor de autenticación
-      title: Authlib-Inyector
+      title: Inicio de sesión de terceros
       user_name_watermark: Nombre de usuario
     chooser:
-      authlib: Authlib-Inyector
+      authlib: Inicio de sesión de terceros
       microsoft: Cuenta de Microsoft
       offline: Perfil sin conexión
     delete:
@@ -1064,8 +1064,8 @@ launch:
     hint:
       selected: Perfil listo
     kinds:
-      authlib: Authlib-Inyector
-      authlib_with_server: Authlib-Inyector ({server_name})
+      authlib: Inicio de sesión de terceros
+      authlib_with_server: Inicio de sesión de terceros ({server_name})
       microsoft: Cuenta de Microsoft
       offline: Perfil sin conexión
     microsoft:
@@ -1107,10 +1107,10 @@ launch:
         standard: UUID estándar
     refresh:
       authlib:
-        completed: Perfil de Authlib actualizado {profile_name}
+        completed: Perfil de terceros actualizado {profile_name}
         errors:
-          failed: "Error en la actualización de Authlib: {message}"
-          incomplete_session: La sesión actual de Authlib está incompleta
+          failed: "Error al actualizar el inicio de sesión de terceros: {message}"
+          incomplete_session: La sesión actual de terceros está incompleta
           invalid_server: La dirección del servidor de autenticación guardada no es válida
           multiple_roles: Se devolvieron múltiples roles. Por favor inicia sesión nuevamente.
           profile_changed: El perfil devuelto no coincide con la cuenta actual
@@ -1118,7 +1118,7 @@ launch:
         reauthenticate: Reautenticando...
         reauthenticated: Reautenticado como {profile_name}
         refresh_session: Sesión de actualización...
-        valid: La sesión de autenticación es válida para {profile_name}
+        valid: La sesión de terceros es válida para {profile_name}
         validate_session: Validando sesión...
       canceled: Actualización cancelada
       errors:

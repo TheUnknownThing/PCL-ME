@@ -1010,8 +1010,8 @@ launch:
       add_or_login: 增或入
       select: 擇
     activities:
-      authlib_login: Authlib 入
-      authlib_login_failed: Authlib 入敗
+      authlib_login: 第三方登入
+      authlib_login_failed: 第三方登入敗
       busy: 他檔操作方行
       create_offline: 建離線檔
       create_offline_failed: 建離線檔敗
@@ -1038,15 +1038,15 @@ launch:
       completed: 已入為 {profile_name}
       errors:
         invalid_server: 驗證伺服器址無效
-        login_failed: Authlib 入敗
+        login_failed: 第三方登入敗
         no_roles: 驗證伺服器未返可用角色
         required_fields: 請輸伺服器址、用者名與密碼
       password_watermark: 密碼
       server_watermark: 驗證伺服器址
-      title: "Authlib-Injector"
+      title: "第三方登入"
       user_name_watermark: 用者名稱
     chooser:
-      authlib: "Authlib-Injector"
+      authlib: "第三方登入"
       microsoft: 微軟帳號
       offline: 離線檔
     delete:
@@ -1062,8 +1062,8 @@ launch:
     hint:
       selected: 已擇檔
     kinds:
-      authlib: "Authlib-Injector"
-      authlib_with_server: Authlib-Injector（{server_name}）
+      authlib: "第三方登入"
+      authlib_with_server: 第三方登入（{server_name}）
       microsoft: 微軟帳號
       offline: 離線檔
     microsoft:
@@ -1105,10 +1105,10 @@ launch:
         standard: 標準 UUID
     refresh:
       authlib:
-        completed: 已刷 Authlib 檔 {profile_name}
+        completed: 已刷第三方登入檔 {profile_name}
         errors:
-          failed: Authlib 刷敗：{message}
-          incomplete_session: 今之 Authlib 工作階未完
+          failed: 第三方登入刷敗：{message}
+          incomplete_session: 今之第三方登入工作階未完
           invalid_server: 所存驗證伺服器址無效
           multiple_roles: 所返角色眾，宜復登入。
           profile_changed: 所返之檔與今帳號不符
@@ -1116,7 +1116,7 @@ launch:
         reauthenticate: 方復驗證...
         reauthenticated: 已復驗證為 {profile_name}
         refresh_session: 方刷工作階段...
-        valid: Authlib 工作階於 {profile_name} 猶有效
+        valid: 第三方登入工作階於 {profile_name} 猶有效
         validate_session: 方驗證工作階段...
       canceled: 已止刷
       errors:

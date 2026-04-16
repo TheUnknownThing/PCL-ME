@@ -1010,8 +1010,8 @@ launch:
       add_or_login: 추가 또는 로그인
       select: 선택
     activities:
-      authlib_login: Authlib 로그인
-      authlib_login_failed: Authlib 로그인 실패
+      authlib_login: 서드파티 로그인
+      authlib_login_failed: 서드파티 로그인 실패
       busy: 다른 프로필 작업이 이미 실행 중입니다.
       create_offline: 오프라인 프로필 만들기
       create_offline_failed: 오프라인 프로필을 생성하지 못했습니다.
@@ -1038,15 +1038,15 @@ launch:
       completed: "{profile_name}(으)로 로그인됨"
       errors:
         invalid_server: 잘못된 인증 서버 주소
-        login_failed: Authlib 로그인 실패
+        login_failed: 서드파티 로그인 실패
         no_roles: 인증 서버가 사용 가능한 역할을 반환하지 않았습니다.
         required_fields: 서버 주소, 사용자 이름, 비밀번호를 입력하세요.
       password_watermark: 비밀번호
       server_watermark: 인증 서버 URL
-      title: Authlib 인젝터
+      title: 서드파티 로그인
       user_name_watermark: 사용자 이름
     chooser:
-      authlib: Authlib 인젝터
+      authlib: 서드파티 로그인
       microsoft: Microsoft 계정
       offline: 오프라인 프로필
     delete:
@@ -1062,8 +1062,8 @@ launch:
     hint:
       selected: 프로필 준비 완료
     kinds:
-      authlib: Authlib 인젝터
-      authlib_with_server: Authlib-인젝터({server_name})
+      authlib: 서드파티 로그인
+      authlib_with_server: 서드파티 로그인({server_name})
       microsoft: 마이크로소프트 계정
       offline: 오프라인 프로필
     microsoft:
@@ -1105,10 +1105,10 @@ launch:
         standard: 표준 UUID
     refresh:
       authlib:
-        completed: 새로 고친 Authlib 프로필 {profile_name}
+        completed: 새로 고친 서드파티 프로필 {profile_name}
         errors:
-          failed: "Authlib 새로고침 실패: {message}"
-          incomplete_session: 현재 Authlib 세션이 불완전합니다
+          failed: "서드파티 로그인 새로고침 실패: {message}"
+          incomplete_session: 현재 서드파티 로그인 세션이 불완전합니다
           invalid_server: 저장된 인증 서버 주소가 유효하지 않습니다.
           multiple_roles: 여러 역할이 반환되었습니다. 다시 로그인해 주세요.
           profile_changed: 반환된 프로필이 현재 계정과 일치하지 않습니다.
@@ -1116,7 +1116,7 @@ launch:
         reauthenticate: 재인증 중...
         reauthenticated: "{profile_name}(으)로 재인증되었습니다."
         refresh_session: 세션을 새로 고치는 중...
-        valid: Authlib 세션은 {profile_name}에 유효합니다.
+        valid: 서드파티 로그인 세션은 {profile_name}에 유효합니다.
         validate_session: 세션 검증 중...
       canceled: 새로고침이 취소되었습니다.
       errors:
