@@ -21,6 +21,9 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
+            var hadCrashPrompts = _promptCatalog.TryGetValue(AvaloniaPromptLaneKind.Crash, out var crashPrompts) &&
+                                  crashPrompts.Count > 0;
+
             _updateStatus = FrontendSetupUpdateStatusService.Relocalize(_updateStatus, _i18n);
             RefreshSetupLocalizationState();
             RaiseSectionBLocalizedProperties();
@@ -29,7 +32,14 @@ internal sealed partial class FrontendShellViewModel
                 .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
                 .ToList();
             EnsureLaunchPromptLane();
-            EnsureCrashPromptLane();
+            if (hadCrashPrompts)
+            {
+                EnsureCrashPromptLane();
+            }
+            else
+            {
+                _promptCatalog[AvaloniaPromptLaneKind.Crash] = [];
+            }
             RebuildPromptLanes();
             SyncPromptLaneState();
             SelectPromptLane(_selectedPromptLane, updateActivity: false, raiseCollectionState: false);
