@@ -35,5 +35,3 @@
                Text="When a mod refuses to load, check whether it requires another dependency mod, a newer Java runtime, or a different loader version. Those are the most common causes of mod installation failures." />
   </StackPanel>
 </local:MyCard>
-
-<local:MyHint Margin="0,0,0,15" IsWarn="False" Text="English article seed: Install Mods" />

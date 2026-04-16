@@ -30,5 +30,3 @@
                Text="You can also hide unused launcher features and adjust homepage content so the distributed pack presents only the pages your players actually need." />
   </StackPanel>
 </local:MyCard>
-
-<local:MyHint Margin="0,0,0,15" IsWarn="False" Text="English article seed: Modpack Creation Guide" />
