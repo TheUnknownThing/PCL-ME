@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
@@ -27,12 +28,32 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
     public WelcomeOnboardingOverlay()
     {
         InitializeComponent();
+        ConfigureIcons();
         OverlayRoot.IsVisible = false;
         OverlayRoot.IsHitTestVisible = false;
         PclModalMotion.ResetToClosedState(WelcomeBackdrop, WelcomeCard);
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += (_, _) => QueueOverlaySync();
         DetachedFromVisualTree += (_, _) => ObserveShell(null);
+    }
+
+    private void ConfigureIcons()
+    {
+        WelcomePreviousButton.IconData = FrontendIconCatalog.Back.Data;
+        WelcomePreviousButton.IconScale = FrontendIconCatalog.Back.Scale;
+
+        WelcomeNextButton.IconData = FrontendIconCatalog.Back.Data;
+        WelcomeNextButton.IconScale = FrontendIconCatalog.Back.Scale;
+
+        WelcomeDoneButton.IconData = FrontendIconCatalog.EnableCircle.Data;
+        WelcomeDoneButton.IconScale = 1.05 * FrontendIconCatalog.EnableCircle.Scale;
+
+        var feedbackIcon = FrontendIconCatalog.GetSidebarIcon("feedback");
+        WelcomeFeedbackButton.IconData = feedbackIcon.Data;
+        WelcomeFeedbackButton.IconScale = feedbackIcon.Scale;
+
+        WelcomeGitHubButton.IconData = FrontendIconCatalog.Link.Data;
+        WelcomeGitHubButton.IconScale = FrontendIconCatalog.Link.Scale;
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
