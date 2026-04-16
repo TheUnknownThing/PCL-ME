@@ -803,7 +803,7 @@
                             Foreground="{DynamicResource ColorBrush1}"
                             FontSize="13.5"
                             Content="{Binding WelcomeEulaAcceptLabel}"
-                            IsChecked="{Binding WelcomeEulaAccepted}" />
+                            IsChecked="{Binding WelcomeEulaAccepted, Mode=TwoWay}" />
                       </StackPanel>
 
                       <!-- Step 2 – Theme selection -->

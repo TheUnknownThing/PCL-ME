@@ -853,6 +853,15 @@ internal sealed partial class FrontendShellViewModel
         {
             Consent = updatedConsent
         };
+
+        _promptCatalog[AvaloniaPromptLaneKind.Startup] = LauncherFrontendPromptService
+            .BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
+            .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
+            .ToList();
+        RebuildPromptLanes();
+        SyncPromptLaneState();
+        SelectPromptLane(_selectedPromptLane, updateActivity: false);
+        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
     }
 
     private async Task StartLaunchAsync(bool resumeAfterPrompt = false)

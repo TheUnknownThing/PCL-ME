@@ -76,6 +76,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (SetProperty(ref _welcomeEulaAccepted, value))
             {
+                RaisePropertyChanged(nameof(CanGoToNextWelcomeStep));
                 WelcomeNextStepCommand.NotifyCanExecuteChanged();
             }
         }
@@ -161,6 +162,7 @@ internal sealed partial class FrontendShellViewModel
 
         _welcomeOverlayDismissed = true;
         RaisePropertyChanged(nameof(IsWelcomeOverlayVisible));
+        RaisePropertyChanged(nameof(IsPromptOverlayVisible));
     }
 
     private void DeclineOnboarding()
